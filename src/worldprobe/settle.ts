@@ -4,7 +4,7 @@
 import * as THREE from 'three/webgpu';
 import { Batch, type RGB, type Rnd, hash2, seeded } from '../lookprobe/batch';
 import { crops } from '../lookprobe/blocks';
-import { type Model, type Side, type Style, heightOf, houseOf, m, m2, styleOf, tower, townWall } from '../buildings';
+import { type Model, type Side, type Style, heightOf, houseOf, m, m2, styleOf, tower, townWall, type WallGap } from '../buildings';
 import { type Crop, type Ground, Mat, N, type P2, idx, inGrid, occlude } from '../lookprobe/layout';
 import type { Town } from '../figures';
 import { FINER } from './land';
@@ -22,6 +22,20 @@ export interface Parcels { w: number; d: number; x: readonly number[]; z: readon
  * and `dz` south of the town's middle can carry a house (dry, no rock, level with its neighbours, nothing built).
  * The simulation's land register lays its parcels by it (tools/worldprobe/build_ground.ts).
  */
+/**
+ * What the finest step builds, told as it is built: the far steps draw the same places from it
+ * (tools/worldprobe/build_plan.ts). Only what the ground owns at its middle is told. Blocks of the ground.
+ */
+export interface Told {
+  /** a house: its lot, what it belongs to, its height in blocks */
+  house(l: Lot, kind: 'town' | 'village' | 'hamlet' | 'farm', height: number): void;
+  /** a great building: the footprint from (x, z), its height, what it is, the place it belongs to (-1 a monument) */
+  great(kind: string, x: number, z: number, w: number, d: number, y: number, height: number, site: number): void;
+  /** a walled town: its middle, half the side of its paved square, the openings of its wall or null without a wall */
+  town(site: number, cx: number, cz: number, half: number, y: number, wall: readonly WallGap[] | null): void;
+  /** once all is built: whether a column of the ground is dry and no rock */
+  dry?(at: (x: number, z: number) => boolean): void;
+}
 export type Survey = (s: Site, free: (dx: number, dz: number) => boolean) => void;
 /** A monument on the ground: one building of it. */
 export interface Monument { id: number; at: P2; model: Model }
@@ -137,9 +151,11 @@ const blocks = (r: Rnd, lo: number, hi: number) => r.int(Math.max(2, Math.round(
  * on every ground that covers it; only what `own` holds at its middle is added to `things`, but for the houses that
  * have fine blocks for the near view: those are handed back as `lots`.
  */
-export function settle(g: Ground, things: Batch, sites: readonly Site[], monuments: readonly Monument[], farm: (x: number, z: number) => Builds, ploughed: (x: number, z: number) => number, vines: (x: number, z: number) => number, counts: Record<string, number>, own: (x: number, z: number) => boolean = () => true, farms: (x: number, z: number) => number = () => FARMS, courses: (x: number, z: number) => number = () => 1, survey?: Survey): Settled {
+export function settle(g: Ground, things: Batch, sites: readonly Site[], monuments: readonly Monument[], farm: (x: number, z: number) => Builds, ploughed: (x: number, z: number) => number, vines: (x: number, z: number) => number, counts: Record<string, number>, own: (x: number, z: number) => boolean = () => true, farms: (x: number, z: number) => number = () => FARMS, courses: (x: number, z: number) => number = () => 1, survey?: Survey, told?: Told): Settled {
   const used = new Uint8Array(N * N), town = new Uint8Array(N * N), field = new Uint8Array(N * N), mat = new THREE.Matrix4();
   const towns: Town[] = [], lots: Lot[] = [];
+  /** the place that is being built, and what its houses are */
+  let now = -1, kind: 'town' | 'village' | 'hamlet' | 'farm' = 'farm';
   const count = (k: string, n = 1) => { counts[k] = (counts[k] ?? 0) + n; };
   const buildable = (x: number, z: number) => x >= 2 && z >= 2 && x < N - 2 && z < N - 2 && !g.wet[idx(x, z)] && !used[idx(x, z)] && g.mat[idx(x, z)] !== Mat.Rock;
   /** The height to build at on a footprint, if it is free with `gap` columns round it and level to within a step. */
@@ -154,7 +170,7 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
   const claim = (x0: number, z0: number, x1: number, z1: number) => { for (let z = Math.floor(z0); z < Math.ceil(z1); z++) for (let x = Math.floor(x0); x < Math.ceil(x1); x++) if (inGrid(x, z)) used[idx(x, z)] = 1; };
   /** Stands a model of w × d on the footprint from (x, z). */
   const build = (model: Batch, x: number, z: number, w: number, d: number, y: number, height: number, kind: string) => {
-    if (own(Math.floor(x + w / 2), Math.floor(z + d / 2))) { things.append(model, mat.makeRotationY(0).setPosition(x + w / 2, y, z + d / 2)); count(kind); }
+    if (own(Math.floor(x + w / 2), Math.floor(z + d / 2))) { things.append(model, mat.makeRotationY(0).setPosition(x + w / 2, y, z + d / 2)); count(kind); told?.great(kind, x, z, w, d, y, height, now); }
     claim(x, z, x + w, z + d); occlude(g, x, z, x + w, z + d, y + height);
   };
   /** A house on the footprint from (x, z), if it is free, its door towards `front`; returns the persons it holds. */
@@ -164,7 +180,7 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     const { style, region } = by, wall = r.pick(style.house.walls), roof = r.pick(style.house.roofs), seed = r.int(0, 0x7fffffff);
     // a house draws from a source of its own: the place is laid out the same whatever its houses are built from
     const l: Lot = { x, z, w, d, y, floors, wall, roof, seed, front, region };
-    if (own(Math.floor(x + w / 2), Math.floor(z + d / 2))) { if (style.tradition) lots.push(l); else raise(things, l, 0); count('house'); }
+    if (own(Math.floor(x + w / 2), Math.floor(z + d / 2))) { if (style.tradition) lots.push(l); else raise(things, l, 0); count('house'); told?.house(l, kind, heightOf(style, w, d, floors)); }
     claim(x, z, x + w, z + d); occlude(g, x, z, x + w, z + d, y + heightOf(style, w, d, floors));
     return w * d * floors * PERSONS_PER_FLOOR_BLOCK;
   };
@@ -210,19 +226,25 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
    * Returns how far the houses reach from the middle, in blocks; a parcel whose ground is taken, wet or steep gets
    * no house, and the count says so.
    */
-  const onParcels = (s: Site, r: Rnd, cx: number, cz: number, tall: boolean): number => {
+  /** the persons the houses of the last place built on parcels hold */
+  let housedOnParcels = 0;
+  const onParcels = (s: Site, r: Rnd, cx: number, cz: number, tall: boolean, what = 'parcel'): number => {
     const L = s.lots!, mine = own(cx, cz);
     let reach = 0;
+    housedOnParcels = 0;
     for (let k = 0; k < L.x.length; k++) {
       const side = L.front[k], across = side === 0 || side === 2, along = across ? L.x[k] : L.z[k], into = across ? L.z[k] : L.x[k];
       // the edges of neighbouring parcels round to the same block, so that their houses neither overlap nor gape
       const a0 = Math.round(m(along - L.w / 2)), a1 = Math.max(a0 + 2, Math.round(m(along + L.w / 2))), b0 = Math.round(m(into - L.d / 2)), b1 = Math.max(b0 + 2, Math.round(m(into + L.d / 2)));
-      const deep = Math.min(b1 - b0, r.int(3, 5)), b = side === 0 || side === 3 ? b0 : b1 - deep, floors = tall ? (r.chance(0.35) ? 3 : 2) : r.chance(0.5) ? 2 : 1;
-      const x = cx + (across ? a0 : b), z = cz + (across ? b : a0), w = across ? a1 - a0 : deep, d = across ? deep : a1 - a0;
-      if (home(r, x, z, w, d, floors, 0, s, (['nz', 'px', 'pz', 'nx'] as const)[side])) reach = Math.max(reach, Math.abs(x - cx), Math.abs(x + w - cx), Math.abs(z - cz), Math.abs(z + d - cz));
-      else if (mine) count('parcel without house');
+      // a town house fills the width of its parcel; a farmhouse is small and stands in the middle of its farmstead's street side
+      const farm = what === 'farmstead', wide = farm ? Math.min(a1 - a0, r.int(3, 4)) : a1 - a0, a = a0 + ((a1 - a0 - wide) >> 1);
+      const deep = Math.min(b1 - b0, farm ? 3 : r.int(3, 5)), b = side === 0 || side === 3 ? b0 : b1 - deep, floors = farm ? (r.chance(0.3) ? 2 : 1) : tall ? (r.chance(0.35) ? 3 : 2) : r.chance(0.5) ? 2 : 1;
+      const x = cx + (across ? a : b), z = cz + (across ? b : a), w = across ? wide : deep, d = across ? deep : wide;
+      const got = home(r, x, z, w, d, floors, 0, s, (['nz', 'px', 'pz', 'nx'] as const)[side]);
+      if (got) { housedOnParcels += got; reach = Math.max(reach, Math.abs(x - cx), Math.abs(x + w - cx), Math.abs(z - cz), Math.abs(z + d - cz)); }
+      else if (mine) count(`${what} without house`);
     }
-    if (mine) count('parcel', L.x.length);
+    if (mine) count(what, L.x.length);
     return reach;
   };
 
@@ -240,17 +262,21 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     }
     if (cx < 0) return;
     const pop = s.pop ?? POP_OF_SIZE[s.size], size = s.size;
+    now = s.id; kind = s.hamlet ? 'hamlet' : size < WALLED_FROM ? 'village' : 'town';
     const r = seeded(1000 + s.id), need = pop / PEOPLE_PER_PERSON;
     let housed = 0;
     if (s.hamlet) {
       // a hamlet: its houses close together on ground levelled to that of its middle, built outwards from it
-      const y = g.h[idx(cx, cz)], level = 2 + 0.8 * Math.sqrt(need);
+      // with a land register every farmstead stands on its parcel, two rows at a lane
+      const span = s.lots ? Math.max(...s.lots.x.map((x) => Math.abs(m(x)) + m(s.lots!.w)), ...s.lots.z.map((z) => Math.abs(m(z)) + m(s.lots!.d))) : 0;
+      const y = g.h[idx(cx, cz)], level = s.lots ? span + 1 : 2 + 0.8 * Math.sqrt(need);
       for (let z = Math.floor(cz - level); z <= cz + level; z++) for (let x = Math.floor(cx - level); x <= cx + level; x++) {
-        if (Math.hypot(x - cx, z - cz) > level || !buildable(x, z) || Math.abs(g.h[idx(x, z)] - y) > HAMLET_STEPS || g.wet[idx(x + 1, z)] || g.wet[idx(x - 1, z)] || g.wet[idx(x, z + 1)] || g.wet[idx(x, z - 1)]) continue;
+        if ((!s.lots && Math.hypot(x - cx, z - cz) > level) || !buildable(x, z) || Math.abs(g.h[idx(x, z)] - y) > HAMLET_STEPS || g.wet[idx(x + 1, z)] || g.wet[idx(x - 1, z)] || g.wet[idx(x, z + 1)] || g.wet[idx(x, z - 1)]) continue;
         g.h[idx(x, z)] = y; g.occ[idx(x, z)] = y;
       }
       let reach = 0;
-      for (const [dx, dz] of outwards(r, HAMLET_FAR)) {
+      if (s.lots) { reach = onParcels(s, r, cx, cz, false, 'farmstead'); housed = housedOnParcels; }
+      else for (const [dx, dz] of outwards(r, HAMLET_FAR)) {
         if (housed >= need) break;
         if (!buildable(cx + dx, cz + dz)) continue;
         const turn = r.chance(0.5), long = blocks(r, 5.7, 7.2), short = blocks(r, 4.3, 5.7), w = turn ? short : long, d = turn ? long : short;
@@ -307,23 +333,37 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     }
     half -= 1;
     // the wall, where the ground round the town carries it; inside it the ground is paved
-    let lo = Infinity, hi = -Infinity, carries = true;
-    for (let k = -half - 1; k <= half; k++) for (const [x, z] of [[cx + k, cz - half - 1], [cx + k, cz + half], [cx - half - 1, cz + k], [cx + half, cz + k]]) {
-      if (!inGrid(x, z) || g.wet[idx(x, z)] || g.mat[idx(x, z)] === Mat.Rock) { carries = false; continue; }
-      lo = Math.min(lo, g.h[idx(x, z)]); hi = Math.max(hi, g.h[idx(x, z)]);
+    let lo = Infinity, hi = -Infinity, carries = true, dry = 0;
+    const gaps: WallGap[] = [];
+    for (const [side, at] of [['nz', (k: number) => [cx + k, cz - half - 1]], ['pz', (k: number) => [cx + k, cz + half]], ['nx', (k: number) => [cx - half - 1, cz + k]], ['px', (k: number) => [cx + half, cz + k]]] as [WallGap['side'], (k: number) => [number, number]][]) {
+      let from: number | null = null;
+      for (let k = -half - 1; k <= half + 1; k++) {
+        const [x, z] = at(k), water = k <= half && inGrid(x, z) && g.wet[idx(x, z)] === 1;
+        // a river or the sea crosses the ring: the wall is open there, half a block beyond the water on either side
+        if (water) from ??= k;
+        else if (from !== null) { gaps.push({ side, from: from - 0.5, to: k + 0.5 }); from = null; }
+        if (k > half || water) continue;
+        if (!inGrid(x, z) || g.mat[idx(x, z)] === Mat.Rock) { carries = false; continue; }
+        dry++; lo = Math.min(lo, g.h[idx(x, z)]); hi = Math.max(hi, g.h[idx(x, z)]);
+      }
     }
+    // a town with a third of its ring in the water has no wall
+    if (dry * 3 < 2 * 8 * (half + 1)) carries = false;
     // paved as far as the houses reach: within three blocks of a building
     const built = (x: number, z: number) => { for (let dz = -3; dz <= 3; dz++) for (let dx = -3; dx <= 3; dx++) if (inGrid(x + dx, z + dz) && used[idx(x + dx, z + dz)] === 1) return true; return false; };
     for (let z = cz - half; z < cz + half; z++) for (let x = cx - half; x < cx + half; x++) if (inGrid(x, z) && !g.wet[idx(x, z)] && g.mat[idx(x, z)] !== Mat.Rock && built(x, z)) { g.mat[idx(x, z)] = Mat.Paved; town[idx(x, z)] = 1; }
     for (let i = 0; i < N * N; i++) if (town[i]) used[i] = 2;
-    if (carries && hi - lo <= 2) {
-      if (own(cx, cz)) { things.append(townWall(half * 2 + 2, half * 2 + 2), mat.makeRotationY(0).setPosition(cx, lo + 1, cz)); count('wall'); }
+    const walled = carries && hi - lo <= 2;
+    if (walled) {
+      if (own(cx, cz)) { things.append(townWall(half * 2 + 2, half * 2 + 2, gaps), mat.makeRotationY(0).setPosition(cx, lo + 1, cz)); count('wall'); }
       claim(cx - half - 2, cz - half - 2, cx + half + 2, cz + half + 2);
     }
     towns.push({ site: s.id, cx: cx + (g.ox ?? 0), cz: cz + (g.oz ?? 0), half });
+    if (own(cx, cz)) told?.town(s.id, cx, cz, half, g.h[idx(cx, cz)], walled ? gaps : null);
     if (own(cx, cz)) count('town');
   });
 
+  now = -1; kind = 'farm';
   // fields: the world is cut into lots, and of the lots as many are fields as hold the land under the plough
   const ox = g.ox ?? 0, oz = g.oz ?? 0;
   for (let lz = Math.floor(oz / LOT_D); lz * LOT_D < oz + N; lz++) for (let lx = Math.floor(ox / LOT_W) - 1; lx * LOT_W < ox + N; lx++) {
@@ -348,5 +388,6 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     if (mine) { if (CROPS[kind]) crops(things, g, [x0 + sown / 2, mz], sown, d, CROPS[kind]!, r); count('field'); count('tilled', sown * d); if (kind >= FALLOW) count(kind === FALLOW ? 'fallow' : 'spring'); }
     claim(x0, z0, x0 + w, z0 + d);
   }
+  told?.dry?.((x, z) => inGrid(x, z) && !g.wet[idx(x, z)] && g.mat[idx(x, z)] !== Mat.Rock);
   return { used, town, field, towns, lots };
 }

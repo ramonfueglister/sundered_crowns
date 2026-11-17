@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import { Batch } from '../../src/lookprobe/batch';
 import { LAND_Y, Mat, N, SEA_Y, type Ground } from '../../src/lookprobe/layout';
-import { styleOf } from '../../src/buildings';
+import { styleOf, townWall } from '../../src/buildings';
 import { PEOPLE_PER_PERSON, type Site, blockOf, settle } from '../../src/worldprobe/settle';
 import { HAMLET_FAMILIES, hamletAt, hamletLandsOf, hamletsOf } from '../../src/worldprobe/hamlets';
 
@@ -81,6 +81,54 @@ describe('the houses of a town with a land register', () => {
     expect(church).toBeGreaterThan(8);
     expect(open).toBeGreaterThan(150);
     expect(used.some((u) => u === 1)).toBe(true);
+  });
+  it('keeps its wall where a river crosses it, open at the water; a town in the sea has none', () => {
+    const walls = (wet: (x: number, z: number) => boolean) => {
+      const g = meadow(), c = N / 2, counts: Record<string, number> = {};
+      for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) if (wet(x - c, z - c)) g.wet[z * N + x] = 1;
+      const site: Site = { id: 5, at: [c + 0.5, c + 0.5], size: 4, pop: 60000, region: '', style: styleOf('') };
+      settle(g, new Batch(), [site], [], () => ({ region: '', style: styleOf('') }), () => 0, () => 0, counts);
+      return counts.wall ?? 0;
+    };
+    expect(walls(() => false)).toBe(1);
+    // a river three blocks wide from north to south beside the middle
+    expect(walls((x) => x >= 6 && x < 9)).toBe(1);
+    // the sea from just west of the middle on
+    expect(walls((x) => x < -3)).toBe(0);
+  });
+  it('has no turret on a corner of its wall that stands in the water, and piers at an opening', () => {
+    const whole = townWall(40, 40).triangles;
+    expect(townWall(40, 40, [{ side: 'nz', from: -20, to: -12 }]).triangles).toBeLessThan(whole);
+    expect(townWall(40, 40, [{ side: 'nz', from: -3, to: 3 }]).triangles).toBeGreaterThan(whole);
+  });
+  it('tells what it builds: every house, its great buildings, its wall', () => {
+    const c = N / 2, counts: Record<string, number> = {}, houses: string[] = [], greats: string[] = [], walled: (readonly unknown[] | null)[] = [];
+    const town: Site = { id: 5, at: [c + 0.5, c + 0.5], size: 4, pop: 60000, region: '', style: styleOf('') };
+    const hamlet: Site = { id: 1 << 20, at: [c + 80.5, c + 0.5], size: 1, pop: 40 * PEOPLE_PER_PERSON, region: '', style: styleOf(''), hamlet: true };
+    settle(meadow(), new Batch(), [town, hamlet], [], () => ({ region: '', style: styleOf('') }), () => 0, () => 0, counts, undefined, undefined, undefined, undefined, {
+      house: (l, kind, height) => { expect(height).toBeGreaterThan(1); expect(l.w * l.d).toBeGreaterThan(0); houses.push(kind); },
+      great: (kind, _x, _z, w, d, _y, height, site) => { expect(site).toBe(5); expect(w * d * height).toBeGreaterThan(0); greats.push(kind); },
+      town: (site, cx, cz, half, _y, wall) => { expect([site, cx, cz]).toEqual([5, c, c]); expect(half).toBeGreaterThan(5); walled.push(wall); },
+    });
+    expect(houses.length).toBe(counts.house);
+    expect(houses.filter((k) => k === 'hamlet').length).toBeGreaterThanOrEqual(3);
+    expect(houses.filter((k) => k === 'town').length).toBeGreaterThan(10);
+    expect(greats).toContain('landmark');
+    expect(walled).toEqual([[]]);
+  });
+  it('builds a hamlet of the land register as farmsteads at a lane, a small house on each', () => {
+    // two rows of five farmsteads of 10 m by 17.5 m at a lane running east and west
+    const x = [...Array(5).keys(), ...Array(5).keys()].map((k) => (k - 2) * 10), z = [...Array(5).fill(-11.3), ...Array(5).fill(11.3)], front = [...Array(5).fill(2), ...Array(5).fill(0)];
+    const counts: Record<string, number> = {}, c = N / 2, widths: number[] = [];
+    const site: Site = { id: 1 << 20, at: [c + 0.5, c + 0.5], size: 1, pop: 20 * PEOPLE_PER_PERSON, region: '', style: styleOf(''), hamlet: true, lots: { w: 10, d: 17.5, x, z, front } };
+    const { used } = settle(meadow(), new Batch(), [site], [], () => ({ region: '', style: styleOf('') }), () => 0, () => 0, counts, undefined, undefined, undefined, undefined, { house: (l, kind) => { expect(kind).toBe('hamlet'); widths.push(l.w); }, great: () => {}, town: () => {} });
+    expect(counts.farmstead).toBe(10);
+    expect(counts.house).toBe(10);
+    expect(counts['farmstead without house']).toBeUndefined();
+    expect(counts.housed).toBeGreaterThanOrEqual(20);
+    expect(Math.max(...widths)).toBeLessThanOrEqual(4);
+    // the lane between the rows stays open
+    for (let dx = -10; dx < 10; dx++) expect(used[c * N + c + dx]).not.toBe(1);
   });
 });
 

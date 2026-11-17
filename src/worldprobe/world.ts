@@ -19,9 +19,9 @@ import { BARE, FINER, FINER_STEPS, SNOW_LINE, TINT, TREE_LINE, WOODS, blockOfCel
 import { type Region, Water, cellOf, latOf, sample, waterAt } from './region';
 import { type Cover, type Woods, coverLand, lotFill } from './far';
 import { unshade } from './mean';
-import { FARMS, FIELD_GROUND, LOT_BLOCKS, LOT_FILL, type Lot, type Monument, PEOPLE_PER_PERSON, type Settled, type Site, type Survey, farmsFor, firstHalf, raise, settle } from './settle';
+import { FARMS, FIELD_GROUND, LOT_BLOCKS, LOT_FILL, type Lot, type Monument, PEOPLE_PER_PERSON, type Settled, type Site, type Survey, type Told, farmsFor, firstHalf, raise, settle } from './settle';
 import { type Columns, columnsOf } from './nearground';
-import { MONUMENTS, modelOf, styleOf } from '../buildings';
+import { MONUMENTS, m, modelOf, styleOf } from '../buildings';
 
 /**
  * The world is laid out in blocks: one block of the finest step is a part of a cell of the game map's data (FINER
@@ -133,7 +133,7 @@ export function terrace(level: Int16Array, mat: Uint8Array) {
  * then nothing is drawn. With `mean` the ground of a coarser step is covered by what the finer step shows there
  * (mean.ts) instead of what far.ts lays out.
  */
-export function buildWorld(region: Region, piece: Piece, places: readonly Place[], landmarks: readonly Landmark[], bakedSky = true, step = 0, climate: Climate | null = null, inhabitants: ReadonlyMap<number, number> = new Map(), models: ReadonlyMap<string, Batch> = new Map(), forest: Forest | null = null, rural: Rural | null = null, arable: Arable | null = null, hamlets: HamletLands | null = null, parcels: TownParcels | null = null, survey?: Survey, mean: Cover | null = null): WorldScene {
+export function buildWorld(region: Region, piece: Piece, places: readonly Place[], landmarks: readonly Landmark[], bakedSky = true, step = 0, climate: Climate | null = null, inhabitants: ReadonlyMap<number, number> = new Map(), models: ReadonlyMap<string, Batch> = new Map(), forest: Forest | null = null, rural: Rural | null = null, arable: Arable | null = null, hamlets: HamletLands | null = null, parcels: TownParcels | null = null, survey?: Survey, mean: Cover | null = null, told?: Told): WorldScene {
   // a block's width in cells of the data: the rules of the land were made for those cells
   const cell = 2 ** (step - FINER_STEPS), flatter = cell ** 0.6, valleyFrom = Math.min(250, VALLEY_FROM + 32 * Math.max(0, step - FINER_STEPS)), rockFoot = Math.max(1, Math.round(FOOT / Math.sqrt(cell)));
   const { ox, oz, part } = piece, c0x = region.x0 * region.cells, c0y = region.y0 * region.cells;
@@ -316,6 +316,16 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     // what the fields are held against: the blocks of ploughed ground the town's arable is at the finest step
     if (step === 0 && own(Math.floor(at[0]), Math.floor(at[1]))) counts.arable = (counts.arable ?? 0) + h.km2 * perKm * perKm;
     if (r > 0 && at[0] > -1.4 * r && at[1] > -1.4 * r && at[0] < N + 1.4 * r && at[1] < N + 1.4 * r) fields.push({ x: at[0], z: at[1], r });
+    // its hamlets stand where the land register has them, each farmstead on its parcel; without a register they are
+    // spread over the ground between the walls and the edge of the fields
+    const held = parcels?.get(id)?.hamlets;
+    if (held) {
+      held.forEach((l, k) => {
+        const here: [number, number] = [at[0] + m(l.east) / 2 ** step, at[1] + m(l.south) / 2 ** step];
+        if (onGround(here)) sites.push({ id: HAMLET_IDS + id * 256 + k, at: here, size: 1, pop: (l.persons ? l.persons.reduce((a, b) => a + b, 0) : h.hamlet / held.length) * PEOPLE_PER_PERSON, region: p.region, style: site.style, hamlet: true, lots: step === 0 ? l : undefined });
+      });
+      return;
+    }
     const inner = (firstHalf(h.inside * PEOPLE_PER_PERSON) + 10) / 2 ** step, outer = Math.max(0.8 * r, inner + (5 * Math.sqrt(n)) / 2 ** step), turn = hash2(id, 3, 91) * Math.PI * 2;
     for (let k = 0; k < n; k++) {
       const q = hamletAt(k, n, inner, outer), a = turn + k * HAMLET_TURN, here: [number, number] = [at[0] + Math.cos(a) * q, at[1] + Math.sin(a) * q];
@@ -431,9 +441,9 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
       const here = toGround(...cellOf(region, l.lon, l.lat));
       if (l.built_state !== 'not_yet_built' && onGround(here)) (MONUMENTS[l.id] ?? []).forEach((m, k) => monuments.push({ id: id * 8 + k, at: [here[0] + m.dx, here[1] + m.dz], model: modelOf(m, models) }));
     });
-    const built = settled = settle(g, things, sites, monuments, farm, ploughed, vines, counts, own, farms, courses, survey);
+    const built = settled = settle(g, things, sites, monuments, farm, ploughed, vines, counts, own, farms, courses, survey, told);
     // a survey of the building ground needs no more than the towns' ground
-    if (survey) return { ground: new Batch(), things, water: new Batch(), cells: [], counts };
+    if (survey || told) return { ground: new Batch(), things, water: new Batch(), cells: [], counts };
 
     // woods where the forest of the world's year stood (`wooded`), up to the tree line:
     // leafy in the low country, dark conifers towards the heights and in the north, the crowns of the rain forest, flat

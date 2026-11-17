@@ -30,7 +30,7 @@ export { domedChurch } from './sacred/domed-church';
 export { mosque } from './sacred/mosque';
 export { tower } from './fortified/tower';
 export { castle } from './fortified/castle';
-export { townWall } from './fortified/town-wall';
+export { townWall, type WallGap } from './fortified/town-wall';
 export { bridge } from './works/bridge';
 export { lighthouse } from './works/lighthouse';
 export { type FileModel, MONUMENTS, MONUMENT_FILES, type MonumentPart, isFile, modelOf } from './landmarks';
