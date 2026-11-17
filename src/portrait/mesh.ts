@@ -2,9 +2,18 @@
 // (sim/godot/src/portrait.rs): a surface without normals is faceted (one normal a triangle); a surface with
 // texture coordinates gets tangents along v, the way MakeHuman's hair strands run.
 import { BufferAttribute, BufferGeometry } from 'three';
+import { smoothSurface } from './subdivide';
 import type { PortraitSurface } from './wire';
 
-export function surfaceGeometry(s: PortraitSurface): BufferGeometry {
+/** The geometry of a surface. `finer` > 0 draws it as the smooth surface its triangles stand for, each triangle
+ *  split in four that many times, after `fit` rounds of moving the net so that the surface comes nearer the
+ *  corners the builder gave (subdivide.ts). A surface with normals only: a faceted one is meant to be so. */
+export function surfaceGeometry(s: PortraitSurface, finer = 0, fit = 0): BufferGeometry {
+  const textured = s.uv.length === 2 * (s.pos.length / 3);
+  if (finer > 0 && s.nrm.length === s.pos.length) {
+    const fine = smoothSurface(s.pos, textured ? [{ data: s.col, size: 3 }, { data: s.uv, size: 2 }] : [{ data: s.col, size: 3 }], finer, fit);
+    return geometry(fine.pos, fine.nrm, fine.carried[0]!, textured ? fine.carried[1]! : null);
+  }
   const n = s.pos.length / 3, pos = s.pos;
   const nrm = new Float32Array(3 * n);
   for (let t = 0; t < n; t += 3) {
@@ -20,13 +29,17 @@ export function surfaceGeometry(s: PortraitSurface): BufferGeometry {
       else { nrm[i] = x; nrm[i + 1] = y; nrm[i + 2] = z; }
     }
   }
+  return geometry(pos, nrm, s.col, textured ? s.uv : null);
+}
+
+function geometry(pos: Float32Array, nrm: Float32Array, col: Float32Array, uv: Float32Array | null): BufferGeometry {
   const g = new BufferGeometry();
   g.setAttribute('position', new BufferAttribute(pos, 3));
   g.setAttribute('normal', new BufferAttribute(nrm, 3));
-  g.setAttribute('color', new BufferAttribute(s.col, 3));
-  if (s.uv.length === 2 * n) {
-    g.setAttribute('uv', new BufferAttribute(s.uv, 2));
-    g.setAttribute('tangent', new BufferAttribute(tangents(pos, nrm, s.uv), 4));
+  g.setAttribute('color', new BufferAttribute(col, 3));
+  if (uv) {
+    g.setAttribute('uv', new BufferAttribute(uv, 2));
+    g.setAttribute('tangent', new BufferAttribute(tangents(pos, nrm, uv), 4));
   }
   return g;
 }

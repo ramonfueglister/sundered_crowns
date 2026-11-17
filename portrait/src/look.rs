@@ -263,7 +263,7 @@ impl Look {
     /// A face gene as it shows (-1 .. 1), the child's face mixed in.
     pub fn face(&self, i: usize) -> f32 {
         let g = self.grown();
-        (self.g(i) - 128.0) / 127.0 * (0.35 + 0.65 * g) + KID[i] * (1.0 - g)
+        (self.g(i) - 128.0) / 127.0 * (0.35 + 0.65 * g) + KID[i] * (1.0 - g) * self.dress.set().map_or(1.0, |d| d.kid)
     }
 
     /// The gene as it shows: muscles grow with work, weight with food.
@@ -289,6 +289,8 @@ impl Look {
         let r = Rng::new(self.seed ^ 0x9e37_79b9).next();
         // a man in mourning does not shave
         let b = self.usual_beard(r);
+        // a dress with a table wears its own beards
+        let b = self.dress.set().map_or(b, |d| d.beards[b as usize]);
         if self.life.mourn > 0.25 && b == Shaven {
             return Stubble;
         }
@@ -413,7 +415,11 @@ impl Look {
 
     pub fn hair_colour(&self) -> Rgb {
         let mut c = chain(&["#1a1411", "#3e281a", "#6e4a2a", "#a07a45", "#d9bb78"], self.u(HAIR_L));
-        c = cmix(c, hex("#a4461d"), self.u(HAIR_R) * 0.75);
+        let red = self.dress.set().map_or(self.u(HAIR_R), |d| {
+            let t = c01((self.u(HAIR_R) - d.hair_red[0]) / (d.hair_red[1] - d.hair_red[0]));
+            t * t * (3.0 - 2.0 * t)
+        });
+        c = cmix(c, hex("#a4461d"), red * 0.75);
         let start = 28.0 + (1.0 - self.u(GREY)) * 32.0;
         cmix(c, hex("#cfcac2"), c01((self.age - start) / 25.0))
     }

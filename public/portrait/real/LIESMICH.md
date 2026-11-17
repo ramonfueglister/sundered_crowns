@@ -7,11 +7,42 @@ liest die Dateien direkt (darum nur beim Start aus den Quellen, nicht in einem E
 - Frisuren (crop01, roman01, curly01, receding01, bald01, sidepart01, bun01, braid01): Karten
   (`name.txt.zst`: je Ecke drei Kopf-Ecken, Gewichte, Versatz; `name.webp` Farbe mit Alpha,
   `name_n.webp` Normalen), bemalte Kappe (`name_cap.*`), Kopfhaut je Kopf-Ecke (`name_scalp.txt`).
+  Im Kleid England 1356 (bob01 bis bob07, plait01): das Kopfhaar besteht aus Strähnen statt Karten (Männer,
+  Knaben und Kleinkinder seit Runde 87, Mädchen und junge Frauen seit Runde 88): `<name>_locks.txt.zst`
+  (gewölbte Bänder, fest, mit Schatten; alle mit dem einen Bild `hair1356_locks.webp`, dessen unteres Viertel
+  die ausgefransten Enden sind), darunter die bemalte Kappe (`<name>_cap.*`). Die Zöpfe der Mädchen sind runde
+  Stränge (`plait01_rope.*`). Karten hat im Kleid England 1356 keine Frisur mehr.
+  Seit Runde 89 ist das Haar der sieben Schnitte geschnitten statt auf eine Länge gewachsen (jede Strähne
+  läuft bis zur Schnittlinie, die Fransen liegen mehrere Strähnen tief), eine kurze Strähne trägt nur so viel
+  vom Strähnenbild, wie sie lang ist, und die bemalte Kappe läuft ausserhalb des Haaransatzes weich aus
+  (Aufrufe in `tools/portrait/pipeline/README.md`).
 - Bärte (beard_stubble, beard_short, beard_full, beard_phil, beard_chin): wie die Frisuren.
+  beard_crop (Vollbart im Kleid England 1356): ohne Karten; die bemalte Schicht, die von der Haut absteht, und
+  seit Runde 90 darüber 300 kurze, gewellte Strähnen (`beard_crop_locks.txt.zst`: gewölbte Bänder, fest, mit
+  Schatten wie die Strähnen des Kopfhaars; sie liegen auf der Form des Bartes, nicht auf der Haut, und enden,
+  wo der Bart endet), gezeichnet mit dem Bild `beard1356_locks.webp` (`_n` Normalen: weniger und breitere
+  Haare als im Bild des Kopfhaars, stärker geschwungen). Seit Runde 91 sind es 390 Strähnen: der Schnurrbart
+  hat 90 eigene, schmale Strähnen, die der Oberlippe entlang nach aussen und um den Mundwinkel in den Bart
+  laufen; die Strähnen lassen einen kleineren Mund frei als die bemalte Schicht (sie reichen bis an die Lippen),
+  eine Strähne beginnt breit und dort, wo ihre vordersten Haare wurzeln, und die Zone des Bartes endet hinten
+  vor dem Kieferwinkel mit runder Ecke (vorher lag sie hinter dem Kiefer auf dem Hals: im Profil ein Latz).
+  Dafür neu geschrieben: `beard_crop_locks.txt.zst`, `beard_crop_cap.*`, `beard_crop_scalp.txt`.
+  Kurzer Bart und Stoppeln bleiben bemalte Schichten.
+  beard_short1356 (kurzer Bart im Kleid England 1356): Apoleias kurzer Bart mit freiem Mund; die Haare der
+  Oberlippe enden über der Mundlinie (bei Apoleias Bart liegen sie auf einem geschlossenen Mund wie Zähne).
+  beard_stubble1356 (Stoppeln im Kleid England 1356): Apoleias Stoppeln mit freiem Mund, aus demselben Grund.
 - Kleider (cloth_tunic, cloth_toga, cloth_palla, cloth_veil): in Blender drapiert, `_ao.txt`
   Schatten in den Falten.
-- Haut (skin_<alter>_<geschlecht>.webp, `_n` Poren), skin_ao.txt, skin_red.txt, uvs.txt;
+- Haut (skin_<alter>_<geschlecht>.webp, `_n` Poren), skin_ao.txt, skin_red.txt, uvs.txt; skin_lash.txt (Wimpernrand am
+  Lid, nur im Kleid England 1356 gelesen; tools/portrait/pipeline/skin_lash.py); skin_lip.txt (Lippenrot entlang
+  des Lippenumrisses und Anteil Oberlippe, aus MakeHumans Hautbild der jungen Frau gelesen, nur im Kleid England
+  1356 gelesen; tools/portrait/pipeline/skin_lip.py);
   Augen (eyeball.webp: 4 x 4 Irisfarben), Brauen und Wimpern (eyebrow001, Eyelashes01, MakeHuman CC0).
+  eyebrow1356.webp und Eyelashes1356.webp (nur im Kleid England 1356, auf den Karten von eyebrow001 und
+  Eyelashes01): die Braue mit den weichen Haaren von MakeHumans Bild (Apoleias eyebrow001.webp hat deren
+  Deckung mal 2,5: ein geschlossenes Band mit hartem Rand) und ohne den dünnen Strich am äusseren Ende; die
+  Wimpern als weicher Saum statt einzelner Haare (tools/portrait/pipeline/brow_tail.py, lash_soft.py). Die
+  Namen müssen mit eyebrow und Eyelashes beginnen: daran erkennt die Bühne Brauen und Wimpern.
 
 Gebaut mit der Realismus-Pipeline (Blender 5.2, Skripte in /mnt/project-files/portraits/realismus-pipeline/),
 verkleinert auf höchstens 1024 px, WebP; Textdateien über 64 KB zstd-gepackt.

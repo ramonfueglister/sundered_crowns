@@ -19,6 +19,11 @@ use std::f32::consts::PI;
 /// triangles.
 pub const LODS: usize = 4;
 
+/// A scar of a dress with a table (dress.rs `ScarLine`): how far its ribbon stands off the skin (0.1 = 1 cm), and
+/// into how many steps it is cut along its length.
+const SCAR_OFF: f32 = 0.004;
+const SCAR_STEPS: usize = 12;
+
 pub struct Portrait {
     /// One per material.
     pub surfaces: Vec<Surface>,
@@ -259,14 +264,17 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
     let beard = p.beard_style();
     let cov = p.u(BEARD_G);
     // (real look: with the textured skin lips only a little redder than the skin;
-    // the full mix read as lipstick there)
+    // the full mix read as lipstick there. A dress with a table has its lips drawn per vertex, from the lips'
+    // own outline: real_look.rs `real_skin`, `DressSet::lips`)
     let lip_c = cmix(skin, hex(if fem { "#9a3238" } else { "#8a3a36" }), match (real.is_some(), fem) {
-        (true, true) => garb.map_or(0.3, |d| d.lips[0]),
-        (true, false) => garb.map_or(0.2, |d| d.lips[1]),
+        (true, true) => garb.map_or(0.3, |_| 0.0),
+        (true, false) => garb.map_or(0.2, |_| 0.0),
         (false, true) => 0.55,
         (false, false) => 0.3,
     });
-    let brow_c = cmix(skin, hair, if fem { 0.4 } else { 0.55 });
+    let brow_c = cmix(skin, hair, (if fem { 0.4 } else { 0.55 }) * garb.filter(|_| real.is_some()).map_or(1.0, |d| d.brow_paint[if fem { 0 } else { 1 }]));
+    // (a dress with a table says how much of this paint the skin under stubble keeps: `DressSet::stubble_paint`)
+    let stub_paint = if beard == Beard::Stubble { garb.filter(|_| real.is_some()).map_or(1.0, |d| d.stubble_paint) } else { 1.0 };
     let stub_c = cmix(skin, cmix(hex("#33271f"), hair, 0.3), (if p.age < 20.0 { 0.22 } else { 0.4 }) + 0.22 * cov);
     let in_brow = |c: V3| {
         let ax = c[0].abs();
@@ -301,9 +309,9 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
         crate::real::folder().and_then(|d| {
             let n = match beard {
                 Beard::Shaven => return None,
-                Beard::Stubble => "beard_stubble",
-                Beard::Short => "beard_short",
-                Beard::Full => "beard_full",
+                Beard::Stubble => p.dress.set().map_or("beard_stubble", |d| d.beard_stubble),
+                Beard::Short => p.dress.set().map_or("beard_short", |d| d.beard_short),
+                Beard::Full => p.dress.set().map_or("beard_full", |d| d.beard_full),
                 Beard::Philosopher => "beard_phil",
                 Beard::Chin => "beard_chin",
             };
@@ -326,16 +334,16 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
             if in_brow(c) {
                 return cmul(brow_c, 0.9 + 0.15 * hh);
             }
-            if beard != Beard::Shaven && in_beard(c, a, b, cc) {
-                return cmul(cmix(skin, stub_c, 0.55 + 0.45 * hh), 0.94 + 0.08 * hash(cc, a, b));
+            if beard != Beard::Shaven && stub_paint > 0.0 && in_beard(c, a, b, cc) {
+                return cmul(cmix(skin, stub_c, (0.55 + 0.45 * hh) * stub_paint), 0.94 + 0.08 * hash(cc, a, b));
             }
             let cm = Ctx::mask3(&h.cheek, a, b, cc);
             if cm > 0.35 {
-                col = cmix(col, hex("#c06a58"), (if fem { 0.2 } else { 0.1 }) * cm);
+                col = cmix(col, hex("#c06a58"), garb.filter(|_| real.is_some()).map_or(if fem { 0.2 } else { 0.1 }, |d| d.cheeks[if fem { 0 } else { 1 }]) * cm);
             }
             let (ex, ey) = (c[0].abs() - 0.31, c[1] - 7.36);
             if c[2] > 1.1 && ey > -0.02 && (ex * 0.8).hypot(ey) < 0.15 {
-                col = cmul(col, if fem { 0.8 } else { 0.9 });
+                col = cmul(col, 1.0 - garb.filter(|_| real.is_some()).map_or(if fem { 0.2 } else { 0.1 }, |d| d.sockets[if fem { 0 } else { 1 }]));
             }
             if Ctx::mask3(&h.ear, a, b, cc) > 0.3 {
                 col = cmix(col, hex("#c06a58"), 0.08);
@@ -364,7 +372,7 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
             // a shadow of beard in the skin's colour instead of grains
             if beard == Beard::Stubble || (beard != Beard::Shaven && !fem) {
                 let dc = linear(cmix(hex("#2b211b"), hair, 0.35));
-                let k = (if beard == Beard::Stubble { 0.1 + 0.15 * cov } else { 0.07 }) * if real_beard.is_some() { 0.4 } else { 1.0 };
+                let k = (if beard == Beard::Stubble { 0.1 + 0.15 * cov } else { 0.07 }) * if real_beard.is_some() { 0.4 } else { 1.0 } * stub_paint;
                 for (t, f) in h.parts["body"][lod].chunks_exact(3).enumerate() {
                     let (a, b, c) = (f[0], f[1], f[2]);
                     if in_beard(x.base_c(a, b, c), a, b, c) {
@@ -377,7 +385,7 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
             // the scalp under the hair this person wears (name_scalp.txt beside it), if bare-headed
             let bare = !matches!(p.hat_style(), Hat::Cap | Hat::Pileus | Hat::Petasos) && !(long_hair && p.hair_style() == Hair::Veil);
             let sf = if bare { mh_pick(p, long_hair).map(|(d, n)| format!("{d}/{n}_scalp.txt")).filter(|f| crate::real::exists(f)) } else { None };
-            real_skin(&mut s, &h.parts["body"][lod], &x.pp, dir, p.age, fem, hair, sf, lf.sun, p.seed);
+            real_skin(&mut s, &h.parts["body"][lod], &x.pp, dir, p.age, fem, hair, sf, lf.sun, p.seed, garb.map_or((1.0, "skin_red.txt"), |d| (d.flush[if fem { 0 } else { 1 }], d.flush_map)), garb.map_or(0.0, |d| d.lash_line[if fem { 0 } else { 1 }] * d.eyes_of(fem, p.age)[1]), garb.map(|d| d.lips_of(fem, p.age)));
         }
         out.push(s);
     }
@@ -734,9 +742,82 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
         }
         out.push(sd);
     }
-    // scars: narrow, slightly raised ribbons on the morphed skin (each point
-    // found by triangle in the base mesh's front view)
-    if !scars.is_empty() {
+    // scars. A dress with a table may ask for a fine line in the skin itself (dress.rs `ScarLine`): a ribbon that
+    // takes the skin's image, normals and colours from where it lies, lighter along its middle (the corners of the
+    // skin's surface are those of the head's finest list, three per triangle). Else Apoleia's raised ribbon.
+    let skin_at = garb.and_then(|d| d.scar.as_ref()).filter(|_| real.is_some()).and_then(|line| {
+        let n = h.parts["body"][lod].len();
+        let at = out.iter().position(|s| s.pos.len() >= n && s.uv.len() == s.pos.len() && s.nrm.len() == s.pos.len() && s.tex.as_deref().is_some_and(|t| t.contains("skin")));
+        at.map(|si| (si, line))
+    });
+    if let (false, Some((si, line))) = (scars.is_empty(), skin_at) {
+        let idx = &h.parts["body"][lod];
+        let sk = &out[si];
+        let front: Vec<usize> = (0..idx.len()).step_by(3).filter(|&f| (0..3).map(|q| h.base[idx[f + q] as usize][2]).sum::<f32>() > 2.1).collect();
+        // the skin under a point of the base head's front view: its place, normal, place on the image and colour,
+        // and which way round its triangle is wound
+        let under = |xx: f32, yy: f32| -> Option<(V3, V3, [f32; 2], Rgb, f32)> {
+            for &f in &front {
+                let b = |q: usize| h.base[idx[f + q] as usize];
+                let (x1, y1, x2, y2, x3, y3) = (b(0)[0], b(0)[1], b(1)[0], b(1)[1], b(2)[0], b(2)[1]);
+                let den = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3);
+                if den.abs() < 1e-9 {
+                    continue;
+                }
+                let l1 = ((y2 - y3) * (xx - x3) + (x3 - x2) * (yy - y3)) / den;
+                let l2 = ((y3 - y1) * (xx - x3) + (x1 - x3) * (yy - y3)) / den;
+                let l3 = 1.0 - l1 - l2;
+                if l1 < 0.0 || l2 < 0.0 || l3 < 0.0 {
+                    continue;
+                }
+                let at = |v: &[V3]| add(add(mul(v[f], l1), mul(v[f + 1], l2)), mul(v[f + 2], l3));
+                let n = norm(at(&sk.nrm));
+                let uv = [sk.uv[f][0] * l1 + sk.uv[f + 1][0] * l2 + sk.uv[f + 2][0] * l3, sk.uv[f][1] * l1 + sk.uv[f + 1][1] * l2 + sk.uv[f + 2][1] * l3];
+                let wound = dot(cross(sub(sk.pos[f + 1], sk.pos[f]), sub(sk.pos[f + 2], sk.pos[f])), n).signum();
+                return Some((madd(at(&sk.pos), n, SCAR_OFF), n, uv, at(&sk.col), wound));
+            }
+            None
+        };
+        let mut ss = Surface::new(sk.mat);
+        (ss.tex, ss.nmap) = (sk.tex.clone(), sk.nmap.clone());
+        for sc in &scars {
+            let (dx, dy) = (sc.x1 - sc.x0, sc.y1 - sc.y0);
+            let l = dx.hypot(dy).max(1e-6);
+            let (px, py) = (-dy / l, dx / l);
+            // across the scar: the skin's own colour at either edge, the scar's along the middle
+            let mut rows = Vec::new();
+            for k in 0..=SCAR_STEPS {
+                let t = k as f32 / SCAR_STEPS as f32;
+                let (cx, cy) = (lerp(sc.x0, sc.x1, t) + 0.006 * (t * 13.8).sin(), lerp(sc.y0, sc.y1, t));
+                let w = line.half * (1.0 - 0.7 * (2.0 * t - 1.0).abs());
+                if let (Some(a), Some(mut m), Some(b)) = (under(cx - px * w, cy - py * w), under(cx, cy), under(cx + px * w, cy + py * w)) {
+                    // (faint at its ends)
+                    let k = 1.0 - (2.0 * t - 1.0).abs().powi(4);
+                    m.3 = std::array::from_fn(|c| m.3[c] * (1.0 + (line.tone[c] - 1.0) * k));
+                    rows.push([a, m, b]);
+                }
+            }
+            for pair in rows.windows(2) {
+                for side in 0..2 {
+                    let quad = [pair[0][side], pair[0][side + 1], pair[1][side + 1], pair[1][side]];
+                    for t in [[0, 1, 2], [0, 2, 3]] {
+                        let (a, b, c) = (quad[t[0]], quad[t[1]], quad[t[2]]);
+                        // wound as the skin under it
+                        let turn = dot(cross(sub(b.0, a.0), sub(c.0, a.0)), a.1) * a.4 < 0.0;
+                        for q in if turn { [a, c, b] } else { [a, b, c] } {
+                            ss.pos.push(q.0);
+                            ss.nrm.push(q.1);
+                            ss.uv.push(q.2);
+                            ss.col.push(q.3);
+                        }
+                    }
+                }
+            }
+        }
+        out.push(ss);
+    } else if !scars.is_empty() {
+        // Apoleia's: narrow, slightly raised ribbons on the morphed skin (each point
+        // found by triangle in the base mesh's front view)
         let front: Vec<usize> = (0..body_full.len()).step_by(3).filter(|&f| (0..3).map(|q| h.base[body_full[f + q] as usize][2]).sum::<f32>() > 2.1).collect();
         let surf = |xx: f32, yy: f32| -> Option<(V3, V3)> {
             for &f in &front {
@@ -816,11 +897,12 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
                 c = add(c, x.pp[v as usize]);
             }
             c = mul(c, 1.0 / idx.len() as f32);
+            let ball = idx.iter().map(|&v| len(sub(x.pp[v as usize], c))).sum::<f32>() / idx.len() as f32;
             let mut seen = vec![false; h.n];
             for &v in idx {
                 if !seen[v as usize] {
                     seen[v as usize] = true;
-                    x.pp[v as usize][2] += 0.012;
+                    x.pp[v as usize][2] += garb.map_or(0.012, |d| d.eye_forward);
                 }
             }
             if eye_tex.is_some() {
@@ -828,12 +910,28 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
                 let (cx, cy) = ((cell % 4) as f32, (cell / 4) as f32);
                 // +u away from the nose; a child's iris fills more of the eye
                 let temporal = if c[0] >= 0.0 { 1.0 } else { -1.0 };
-                let ks = 1.0 / (1.0 + 0.23 * (1.0 - grown));
+                let mut ks = 1.0 / (1.0 + 0.23 * (1.0 - grown) * garb.map_or(1.0, |d| d.kid));
+                // a dress that gives the iris in millimetres: the image has it at 27.5 degrees of the ball
+                // (eye_tex.py), this ball has it where a disc of that size meets it (1 = 10 cm)
+                if let Some(mm) = garb.map(|d| d.iris_mm).filter(|&mm| mm > 0.0) {
+                    ks = 27.5_f32.to_radians() / (mm / 200.0 / ball.max(1e-6)).min(1.0).asin();
+                }
                 let old = ((p.age - 45.0) / 35.0).clamp(0.0, 1.0);
+                // where the eyes look, seen from the head: straight ahead, or turned as the dress asks (the ball's
+                // image is laid round that direction, which on a ball is the same as turning the eye)
+                let gaze = garb.map(|d| d.gaze_of(temporal, crate::dress::by_sex(d.lean[0], d.lean[1], fem, grown))).filter(|g| *g != [0.0, 0.0]).map(|[yaw, pitch]| {
+                    let g = [yaw.sin() * pitch.cos(), pitch.sin(), yaw.cos() * pitch.cos()];
+                    let r = norm(cross([0.0, 1.0, 0.0], g));
+                    (r, cross(g, r), g)
+                });
                 for &v in idx {
-                    let q = sub(x.pp[v as usize], c);
+                    let mut q = sub(x.pp[v as usize], c);
+                    if let Some((r, u, g)) = gaze {
+                        q = [dot(q, r), dot(q, u), dot(q, g)];
+                    }
                     let l = len(q).max(1e-9);
-                    let rr = (q[2] / l).clamp(-1.0, 1.0).acos() * ks / PI * 0.5;
+                    // (a smaller iris stretches the image: what would lie beyond its cell is the ball's back)
+                    let rr = ((q[2] / l).clamp(-1.0, 1.0).acos() * ks / PI * 0.5).min(0.5);
                     let rho = q[0].hypot(q[1]).max(1e-9);
                     let a = eye_ao.get(v as usize).copied().unwrap_or(1.0).clamp(0.0, 1.0);
                     // linear shade, stored for the sRGB vertex colour
@@ -879,8 +977,10 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
     };
     let hatted_mh = hatted;
     let veiled = long_hair && p.hair_style() == Hair::Veil;
-    // (a dress with a table has hair under the veil, the Roman veil the builder's own)
+    // (a dress with a table has hair under the veil, the Roman veil the builder's own; a dress whose veil hides
+    // all hair has none, `hair_veiled` empty)
     let mh = if hatted_mh || veiled && garb.is_none() { None } else { mh_pick(p, long_hair) };
+    let no_hair = veiled && garb.is_some_and(|d| d.hair_veiled.is_empty());
     if let Some((dir, name)) = &mh {
         // hair thins with age: women diffusely over the crown (female pattern
         // hair loss, rising to about half of women past 80; Gan & Sinclair,
@@ -889,7 +989,18 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
         // cards (their short cut shows gaps as patches; the bald pattern does
         // the work). Shares PLACEHOLDER
         let thin = if fem { c01((p.age - 45.0) / 40.0) * (0.3 + 0.7 * p.u(BALD)) * 0.55 } else { 0.0 };
-        if let Some(sf) = mh_hair2(dir, name, &x.pp, &h.base, hc, &|_| hair, false, (thin, p.seed ^ 0x3c6e_f372)) {
+        // plaits hang below the head: their light is that of the side they hang on, not of the head's underside
+        let hangs = garb.is_some_and(|d| name == d.hair_girl);
+        if let Some(sf) = mh_hair2(dir, name, &x.pp, &h.base, hc, &|_| hair, hangs, (thin, p.seed ^ 0x3c6e_f372)) {
+            out.push(sf);
+        }
+        // hair that is solid, each kind in a file of its own beside the cards: a style's locks (England's
+        // `bob01_locks`, `plait01_locks`: no cards any more), drawn with the dress set's image of locks, and the
+        // round strands of its plaits (England's `plait01_rope`), drawn with their own
+        if let Some(sf) = mh_rope(dir, &format!("{name}_locks"), garb.map_or("", |d| d.lock_image), &x.pp, &h.base, &|_| hair) {
+            out.push(sf);
+        }
+        if let Some(sf) = mh_rope(dir, &format!("{name}_rope"), "", &x.pp, &h.base, &|_| hair) {
             out.push(sf);
         }
         // real look: a painted cap of fine hairs under the cards, if there is one
@@ -906,6 +1017,11 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
         let hcb = [fit[0][1], ym(6.9), fit[2][0] * 0.35 + fit[2][1]];
         let bcol = |v: V3| cmix(cmul(hair, 1.12), hex("#d6d1c9"), beard_grey * 0.6 * c01((ym(6.8) - v[1]) / (0.6 * hs)));
         if let Some(sf) = mh_hair2(dir, name, &x.pp, &h.base, hcb, &bcol, true, (0.0, 0)) {
+            out.push(sf);
+        }
+        // a beard's locks (England's `beard_crop_locks`): solid as a head's, drawn with the dress set's image of
+        // a beard's locks
+        if let Some(sf) = mh_rope(dir, &format!("{name}_locks"), garb.map_or("", |d| d.beard_lock_image), &x.pp, &h.base, &bcol) {
             out.push(sf);
         }
         if let Some(sf) = mh_hair2(dir, &format!("{name}_cap"), &x.pp, &h.base, hcb, &bcol, false, (0.0, 0)) {
@@ -984,8 +1100,51 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
         // real look: MakeHuman brows and lashes as textured cards
         if let Some(dir) = &real {
             // (lashes a very dark shade of the brows' colour, not black; PLACEHOLDER)
-            for (name, col) in [("eyebrow001", cmul(bc, 0.75)), ("Eyelashes01", cmix(cmul(bc, 0.5), hex("#140d08"), 0.5))] {
-                if let Some(sf) = mh_hair(dir, name, &x.pp, &h.base, hc, col) {
+            let brow = garb.map_or("eyebrow001", |d| d.brows[if fem { 0 } else { 1 }]);
+            let young = garb.map_or(0.0, |d| d.brows_child * (1.0 - p.grown()));
+            // a dress may have the brow grow higher on the forehead than MakeHuman's, which lies on the rim of the
+            // eye's socket: along the skin, by where along the eye a hair stands
+            let lift = garb.map(|d| d.brow_lift_of(fem, p.age)).filter(|l| *l != [0.0; 3]);
+            let band = garb.map_or(1.0, |d| d.brow_band_of(fem, p.age));
+            for (name, col) in [(brow, cmix(cmul(bc, 0.75), skin, young)), ("Eyelashes01", cmix(cmul(bc, 0.5), hex("#140d08"), 0.5))] {
+                if let Some(mut sf) = mh_hair(dir, name, &x.pp, &h.base, hc, col) {
+                    // a dress may draw another image on the brow's cards and on the lashes' (`DressSet::brow_image`,
+                    // `lash_image`)
+                    if let Some(img) = garb.map(|d| if name == brow { d.brow_image } else { d.lash_image }).filter(|i| !i.is_empty()) {
+                        sf.tex = Some(crate::real::image(dir, img));
+                    }
+                    // a narrower band: every corner drawn towards the middle of those that stand at its place along
+                    // the brow (the card is a strip of five corners across, columns a good 4 mm apart)
+                    if band != 1.0 && name == brow {
+                        let was = sf.pos.clone();
+                        for q in sf.pos.iter_mut() {
+                            let (mut c, mut n) = ([0.0; 3], 0.0);
+                            for o in was.iter().filter(|o| (o[0] - q[0]).abs() < 0.02) {
+                                c = add(c, *o);
+                                n += 1.0;
+                            }
+                            *q = madd(mul(c, 1.0 / n), sub(*q, mul(c, 1.0 / n)), band);
+                        }
+                    }
+                    if let Some(lift) = lift.filter(|_| name == brow) {
+                        let eyes = crate::morph::eye_spans(h, &x.pp);
+                        // (a corner is shared by up to six triangles: each place is looked up once)
+                        let mut done: std::collections::HashMap<[u32; 3], V3> = std::collections::HashMap::new();
+                        for (q, n) in sf.pos.iter_mut().zip(sf.nrm.iter_mut()) {
+                            *q = *done.entry(q.map(f32::to_bits)).or_insert_with(|| {
+                                let up = crate::dress::brow_lift_at(q[0].abs(), eyes[if q[0] < 0.0 { 1 } else { 0 }], lift) / 100.0;
+                                let (d0, moved) = (sub(*q, hc), [q[0], q[1] + up, q[2]]);
+                                let d1 = sub(moved, hc);
+                                // as far off the skin as it was. The skin is the last the ray from the head's
+                                // centre meets (before it, the inside of the eye's socket): a ray to the brow
+                                // leaves the head through the face, and `outer_skin` takes a face that stands
+                                // far out for a shoulder
+                                let (r0, r1) = (cast_h.cast(d0, true), cast_h.cast(d1, true));
+                                if r0 > 0.0 && r1 > 0.0 { madd(hc, norm(d1), r1 + len(d0) - r0) } else { moved }
+                            });
+                            *n = norm(sub(*q, hc));
+                        }
+                    }
                     out.push(sf);
                 }
             }
@@ -1046,8 +1205,8 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
             let f = (i % w) as f32 / w as f32 * 2.0 - 1.0 + 1.0 / w as f32;
             (1.0 - 1.3 * f * f, 1.0 - f.abs())
         };
-        // (with a Blender hairstyle (real look) the bands stay away)
-        if mh.is_none() {
+        // (with a Blender hairstyle (real look) the bands stay away, and under a veil that hides all hair)
+        if mh.is_none() && !no_hair {
         for sg in [1f32, -1.0] {
             let (mut g, mut sk) = (Vec::new(), Vec::new());
             for i in 0..=ns {
@@ -1784,10 +1943,30 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
         }
     }
     let tris = merged.iter().map(|s| s.tris()).sum();
+    // the bust leaning back, where the dress asks for it
+    let lean = garb.map_or(0.0, |d| crate::dress::by_sex(d.lean[0], d.lean[1], fem, p.grown()));
+    if lean != 0.0 {
+        lean_back(&mut merged, (y0 + y1) / 2.0, hz / hn.max(1) as f32, lean);
+    }
     // the picture's foot (0.86 of its height below the top) stays above
     // where the chest's data ends
     let top = (y1 + 0.12).max(hat_top + 0.06);
     let low = body_full.iter().filter(|&&v| h.base[v as usize][0].abs() < 1.0).map(|&v| x.pp[v as usize][1]).fold(f32::MAX, f32::min);
     let fill = (0.86 * (top - y0).max(0.8) / (top - low - 0.1)).max(0.53);
     Portrait { surfaces: merged, top, chin: y0, cx: hx / hn.max(1) as f32, cz: hz / hn.max(1) as f32, fill, tris, targets }
+}
+
+/// Leans surfaces back by `a` radians about the axis from ear to ear at height `cy` and depth `cz`: what lies above
+/// goes back, what lies in front goes up.
+pub(crate) fn lean_back(surfaces: &mut [Surface], cy: f32, cz: f32, a: f32) {
+    let (cs, sn) = (a.cos(), a.sin());
+    for s in surfaces.iter_mut() {
+        for q in s.pos.iter_mut() {
+            let (dy, dz) = (q[1] - cy, q[2] - cz);
+            *q = [q[0], cy + dy * cs + dz * sn, cz + dz * cs - dy * sn];
+        }
+        for n in s.nrm.iter_mut() {
+            *n = [n[0], n[1] * cs + n[2] * sn, n[2] * cs - n[1] * sn];
+        }
+    }
 }

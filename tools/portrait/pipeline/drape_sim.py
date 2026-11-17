@@ -174,7 +174,10 @@ if GRID:
             ph = 360.0 * k / NPH - 180.0    # 0 in front
             if kind == 'cowl':
                 continue
-            if kind == 'veil' and abs(ph) < 42 and th < float(os.environ.get('VTH', '38')):
+            # a veil is open in front of the face, and wider below the jaw (VJ, to VW2 at 30 degrees lower), so
+            # that its front edges hang from the temples to the shoulders instead of clinging to the neck
+            _vj = float(os.environ.get('VJ', '-90')); _vw = 42 + (float(os.environ.get('VW2', '42')) - 42) * min(1.0, max(0.0, (_vj - th) / 30.0))
+            if kind == 'veil' and abs(ph) < _vw and th < float(os.environ.get('VTH', '38')):
                 continue
             if kind == 'hood' and (th < float(os.environ.get('TH0', '-33')) or th > float(os.environ.get('THMAX', '90'))):
                 continue
@@ -201,10 +204,10 @@ if GRID:
         R0 = max(r_ for r_, th in enumerate(ths) if th >= TH0) if kind == 'hood' else int(os.environ.get('NU', '9'))
         for key in [key for key in idx if key[0] > R0]:
             del idx[key]
-        def outer(y, dx, dz):
+        def outer(y, dx, dz, of=None):
             o_ = np.array([AX[0] + dx * 6, y, AX[2] + dz * 6])
             best = 0.0
-            for bv in (hb, tbv):
+            for bv in (of or (hb, tbv)):
                 h = bv.ray_cast(Vector(np.array([o_[0], -o_[2], o_[1]]) * S), Vector([-dx, dz, 0.0]), 0.6)
                 if h[0] is not None:
                     best = max(best, 6 - h[3] / S)
@@ -219,9 +222,15 @@ if GRID:
                 back = 0.5 - 0.5 * math.cos(ph)          # 0 in front, 1 behind
                 dx, dz = math.sin(ph), math.cos(ph)
                 yn = float(os.environ.get('CW_Y', '5.72')) + 0.2 * back
-                rn = outer(yn, dx, dz) + 0.06
+                ro = outer(yn, dx, dz) + 0.06
+                # CW_IN draws the roll's inner edge from the gown's neckline in to the neck itself (1: on the
+                # neck); the roll then grows wider by as much, so that its foot stays outside the gown
+                # and CW_UP lifts that edge up the neck (fully at the nape, two fifths of it under the chin, where
+                # CW_GAP lets it hang off the throat)
+                yi = yn + float(os.environ.get('CW_UP', '0')) * (0.4 + 0.6 * back)
+                rn = ro - float(os.environ.get('CW_IN', '0')) * (ro - outer(yi, dx, dz, (hb,)) - 0.06 - float(os.environ.get('CW_GAP', '0')) * (1 - back))
                 _c = [float(t) for t in os.environ.get('COWL', '0.3,0.75,0.26,0.5').split(',')]
-                w = _c[0] + _c[1] * back ** 1.5; hgt = _c[2] + _c[3] * back ** 1.5
+                w = _c[0] + _c[1] * back ** 1.5 + (ro - rn); hgt = _c[2] + _c[3] * back ** 1.5
                 # the bunched cloth: folds running across the roll, uneven
                 _fa = float(os.environ.get('FOLD', '0.0')); _kk = 2 * math.pi * k / NPH
                 _f1 = math.sin(11 * _kk + 0.7) + 0.6 * math.sin(17 * _kk + 2.1) + 0.4 * math.sin(29 * _kk + 4.0)
@@ -230,8 +239,30 @@ if GRID:
                 for j in range(R0 + 1):
                     u = math.pi * (0.12 + 0.88 * j / R0)
                     rho = rn + w * (1 - math.cos(u)) / 2 + 0.05 * _fa * _f1 * math.sin(u) * math.sin(3 * u + 0.8 * _f2)
-                    idx[(j, k)] = len(gp); gp.append([AX[0] + dx * rho, yn + hgt * math.sin(u), AX[2] + dz * rho]); rows.append(0.0)
+                    idx[(j, k)] = len(gp); gp.append([AX[0] + dx * rho, yn + (yi - yn) * (1 + math.cos(u)) / 2 + hgt * math.sin(u), AX[2] + dz * rho]); rows.append(0.0)
         UCUT = [tuple(float(t) for t in c.split(':')) for c in os.environ.get('UCUT', '').split(',') if c]
+        DCUT = [tuple(float(t) for t in c.split(':')) for c in os.environ.get('DCUT', '').split(',') if c]
+        # CHIN=angle: the hood closed under the chin. Where the face's oval has cut the last row of rays (FACE_LO
+        # below TH0), that row is laid under the jaw instead: on the skin a ray from the head's centre leaves the
+        # head through (the first thing it meets in front is the mouth's cavity), at `angle` below the horizon in
+        # the middle, rising to the row's own angle beside the oval
+        CHIN = [float(t) for t in os.environ.get('CHIN', '').split(',') if t]
+        if kind == 'hood' and CHIN:
+            K0 = NPH // 2
+            miss = [k for k in range(NPH) if (R0, k) not in idx and abs(k - K0) < NPH // 6]
+            kl = min(miss) - 1
+            for k in miss:
+                t_ = abs(k - K0) / (K0 - kl)
+                th = math.radians(CHIN[0] + (ths[R0] - CHIN[0]) * t_ ** 2); ph = math.radians(360.0 * k / NPH - 180.0)
+                d = np.array([math.cos(th) * math.sin(ph), math.sin(th), math.cos(th) * math.cos(ph)])
+                o_ = Vector(np.array([C[0], -C[2], C[1]]) * S); dv = Vector([d[0], -d[2], d[1]]); far, t, q = 1.7 * S, 0.0, None
+                while True:
+                    h = hb.ray_cast(o_ + dv * t, dv, far - t)
+                    if h[0] is None:
+                        break
+                    q = np.array(h[0]) / S; t += h[3] + 1e-3 * S
+                idx[(R0, k)] = len(gp); gp.append([q[0], q[2], -q[1]]); rows.append(0.0)
+            print('chin: columns', kl + 1, 'to', max(miss), 'in the middle at', [round(float(c), 2) for c in gp[idx[(R0, K0)]]])
         st = {}
         for k in range(NPH):
             i0 = idx.get((R0, k))
@@ -260,6 +291,9 @@ if GRID:
                 # the face's opening goes on below the chin as a U cut into the front
                 phd = abs(360.0 * k / NPH - 180.0)
                 if kind == 'hood' and any(phd < w_ and j <= n_ for w_, n_ in UCUT):
+                    continue
+                # and may widen further down (DCUT=width:from ring), for a veil that hangs behind the shoulders
+                if kind == 'hood' and any(phd < w_ and j >= n_ for w_, n_ in DCUT):
                     continue
                 idx[(R0 + j, k)] = len(gp); gp.append([AX[0] + dx * raw[k], ys[k], AX[2] + dz * raw[k]]); rows.append(0.0)
     # below the last ring of rays the cloth goes on as a skirt, a little
@@ -320,7 +354,46 @@ elif kind == 'cowl':
     off = np.full(len(B), 0.02 * S)
 elif kind == 'hood':
     # close on the crown, baggy round the neck, the cape standing off the shoulders
-    off = (0.12 + LOOSE * np.clip((7.6 - B[:, 1]) / 1.6, 0, 1)) * S
+    off = (float(os.environ.get('OFF0', '0.12')) + LOOSE * np.clip((7.6 - B[:, 1]) / 1.6, 0, 1)) * S
+    # THROAT=share,height,width,span: a hood that lies close round the neck (closed under the chin): that share of the
+    # bagginess is taken off below `height` (wholly from `span` further down), within `width` degrees to either
+    # side of the front (300: all round)
+    _t = [float(t) for t in os.environ.get('THROAT', '0,6.9,300,0.9').split(',')]
+    _ph = np.degrees(np.abs(np.arctan2(B[:, 0], B[:, 2] - 0.1)))
+    off = off - LOOSE * S * np.clip((7.6 - B[:, 1]) / 1.6, 0, 1) * _t[0] * np.clip((_t[1] - B[:, 1]) / _t[3], 0, 1) * np.clip((_t[2] - _ph) / 25.0, 0, 1)
+    # EARS=extra,width: a hood that lies close to the skull stands off by `extra` more over the ears, within `width`
+    # degrees of them as seen from the head's centre (the ears stand 2 cm off the head and came through the cloth)
+    _e = [float(t) for t in os.environ.get('EARS', '').split(',') if t]
+    if _e:
+        _d = B - np.array([0.0, 6.95, 0.2])
+        _th = np.degrees(np.arcsin(_d[:, 1] / np.linalg.norm(_d, axis=1))); _pe = np.degrees(np.abs(np.arctan2(_d[:, 0], _d[:, 2])))
+        off = off + _e[0] * S * np.exp(-(((_th - 5.0) / _e[1]) ** 2 + ((_pe - 92.0) / _e[1]) ** 2))
+    # FACE_ON=off,rings[,height]: the cloth lies on the skin round the face (a veil held on the forehead and at the
+    # cheeks, where a cloth that stands off shows the bare head under it): at the edge of the face's opening
+    # above `height` it stands off by `off` only, and by its full distance from `rings` edges of the grid further in
+    _f = [float(t) for t in os.environ.get('FACE_ON', '').split(',') if t]
+    if _f:
+        _cnt = {}
+        for p_ in me.polygons:
+            vs = list(p_.vertices)
+            for a_, b_ in zip(vs, vs[1:] + vs[:1]):
+                _cnt[(min(a_, b_), max(a_, b_))] = _cnt.get((min(a_, b_), max(a_, b_)), 0) + 1
+        _nb = [[] for _ in range(len(B))]
+        for a_, b_ in _cnt:
+            _nb[a_].append(b_); _nb[b_].append(a_)
+        _y0 = _f[2] if len(_f) > 2 else 6.7
+        ring = sorted({v for (a_, b_), c_ in _cnt.items() if c_ == 1 for v in (a_, b_) if B[v, 1] > _y0 and _ph[v] < 110})
+        dist = np.full(len(B), 1e9); dist[ring] = 0.0
+        while ring:
+            nxt = []
+            for v in ring:
+                for w in _nb[v]:
+                    if dist[w] > dist[v] + 1:
+                        dist[w] = dist[v] + 1; nxt.append(w)
+            ring = nxt
+        _k = np.clip(dist / max(_f[1], 1.0), 0, 1); _k = _k * _k * (3 - 2 * _k)
+        off = _f[0] * S + (off - _f[0] * S) * _k
+        print('face: the cloth on the skin at', int((dist == 0).sum()), 'points of the opening')
 else:
     off = (0.15 + LOOSE * np.clip((5.4 - B[:, 1]) / 1.4, 0, 1)) * S
 # start outside the tunic: where a ray along the normal meets the tunic, at
