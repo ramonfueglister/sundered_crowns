@@ -6,7 +6,8 @@ The simulation cultivates for every place (src/sim/systems/cultivation.ts, featu
     arable = min(c · people, min(s, fertile) · land)
 
 with c hectares a head and the land limit s fitted to England in 1300 and 1380 (public/data/cultivation.json), the
-people of the start year (public/data/setup_<year>.json, `pop`) and the share of a place's land that bears a harvest
+people of the place in a new world of the start year (its persons, tools/sim/place_people.ts: only the persons live in
+the world, src/sim/systems/hamlets.ts) and the share of a place's land that bears a harvest
 (public/data/land.json, `curve.fertile`). The arable counts the fallow in. The world graphic lays its fields by this
 share (src/worldprobe/world.ts), so that it shows as much ploughed land as the simulation reckons with.
 
@@ -18,6 +19,7 @@ round(250 · share).
 """
 import gzip
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -30,12 +32,15 @@ HECTARES_PER_KM2 = 100
 
 def main(year: int) -> None:
     data = ROOT / 'public/data'
-    geo, setup = json.loads((data / 'geo.json').read_text()), json.loads((data / f'setup_{year}.json').read_text())
+    geo = json.loads((data / 'geo.json').read_text())
     land, cultivation = json.loads((data / 'land.json').read_text()), json.loads((data / 'cultivation.json').read_text())
     w, h, places = geo['W'], geo['H'], geo['L']
     ids = np.frombuffer(gzip.open(ROOT / 'public/map/ids.bin.gz').read(), dtype='<u2').reshape(h, w)
     hectares = np.array(geo['loc']['area'][:places], float) * HECTARES_PER_KM2
-    people = np.array([p or 0 for p in setup['pop']], float)
+    run = subprocess.run(['npx', 'tsx', 'tools/sim/place_people.ts', str(year)], cwd=ROOT, check=True, capture_output=True, text=True)
+    people = np.zeros(places)
+    counted = np.array(json.loads(run.stdout.strip().splitlines()[-1]), float)
+    people[:min(places, len(counted))] = counted[:places]
     limit = np.minimum(cultivation['landLimit'], np.array(land['curve']['fertile'][:places], float))
     arable = np.minimum(cultivation['arablePerHead'] * people, limit * hectares)
     share = np.where(hectares > 0, arable / np.maximum(hectares, 1e-9), 0)

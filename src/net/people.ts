@@ -17,6 +17,8 @@ export interface PlacePeople {
   /** 0 female, 1 male */
   sex: number[];
   family: number[];
+  /** 1: the person's family lives in a hamlet outside the walls (src/sim/systems/hamlets.ts) */
+  hamlet: number[];
 }
 
 /** The part of a person in the economy of the city (economy feature 10, src/sim/systems/economy.ts): what the economy
@@ -120,14 +122,14 @@ export const MAX_PLACES_PER_REQUEST = 200;
 /** The living persons of several places, one list each in the order asked, in a single pass over the persons: the
  *  figures of a world with persons in hundreds of towns ask for them in a few requests, not one per place. */
 export function manyPlacesPeople(s: WorldState, places: readonly number[]): PlacePeople[] {
-  const P = s.person.cols, out = places.map((place): PlacePeople => ({ place, day: s.day, id: [], born: [], sex: [], family: [] }));
+  const P = s.person.cols, out = places.map((place): PlacePeople => ({ place, day: s.day, id: [], born: [], sex: [], family: [], hamlet: [] }));
   const at = new Map<number, PlacePeople>();
   out.forEach((o) => { if (!at.has(o.place)) at.set(o.place, o); });
   for (let i = 0; i < s.person.size; i++) {
     if (!s.person.alive[i] || P.died[i] !== ALIVE) continue;
     const o = at.get(s.family.cols.place[P.family[i]]);
     if (!o) continue;
-    o.id.push(i); o.born.push(P.born[i]); o.sex.push(P.sex[i]); o.family.push(P.family[i]);
+    o.id.push(i); o.born.push(P.born[i]); o.sex.push(P.sex[i]); o.family.push(P.family[i]); o.hamlet.push(s.family.cols.hamlet[P.family[i]]);
   }
   return out.map((o) => at.get(o.place)!);
 }
