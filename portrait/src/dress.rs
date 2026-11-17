@@ -293,6 +293,12 @@ pub struct DressSet {
     /// (src/measure.rs `LIPS`, tests/faces.rs).
     /// Since round 77 the women have none of `cheek-bones-incr` (0.4 in round 65, 0.15 from round 69): it is a
     /// pad on the front of the cheek and no cheekbone (see `genes`).
+    /// Until round 93 the table held `chin-jaw-drop-decr` at 0.6 for both sexes, from round 50 as "the jaw closing
+    /// the mouth". The target moves no jaw and no lip: it lifts 25 vertices of skin on each side of the chin, on
+    /// the jaw's lower edge, by up to 4.2 mm (at 0.6 2.5 mm up, 1.8 mm into the surface there): a dent beside the
+    /// chin on every face, which light from the side drew as a dark patch with a bump behind it, and the chin as
+    /// a block set under the face. The row is gone, and the gene's share of the target with it (`without`);
+    /// tests/faces.rs holds what the target moves.
     /// A boy's weight grows from the women's to the men's as he grows up (MakeHuman's child stands as
     /// its woman does; `by_sex`), and a child's face takes a third of them, growing to all (as the genes of the
     /// face do, `Look::face`: on a child's small mouth they gave a pout).
@@ -407,6 +413,12 @@ pub struct DressSet {
     /// it in `rest` 0.7 over 1.0 mm, 1.5 at most; men 0.9 to 0.6 mm). 0.4 is by eye, PLACEHOLDER: no measured
     /// outline of real faces read.
     pub genes: &'static [(&'static str, f32)],
+    /// Targets of MakeHuman this dress's heads take nothing of, whoever asks for them (genes, age, a mood).
+    /// England (round 93): `chin-jaw-drop-decr`, which lifts the skin on the jaw's edge beside the chin into the
+    /// surface (see `rest`). The gene of the chin's height asks for it on a short chin, with up to 0.27 (1.1 mm):
+    /// on a child's jaw still a faint shade where the dent was. Its counterpart `-incr`, a jowl that hangs,
+    /// stays. By eye, PLACEHOLDER: no measured outline of a jaw read.
+    pub without: &'static [&'static str],
     pub sources: &'static [Source],
 }
 
@@ -470,7 +482,6 @@ pub static ENGLAND_1356: DressSet = DressSet {
         ("head/head-fat-decr", 0.0, 0.5),
         ("cheek/l-cheek-bones-incr", 0.0, 0.5),
         ("cheek/r-cheek-bones-incr", 0.0, 0.5),
-        ("chin/chin-jaw-drop-decr", 0.6, 0.6),
         ("chin/chin-height-incr", 0.3, 0.15),
         ("nose/nose-scale-vert-incr", 0.4, 0.0),
         ("head/head-scale-vert-incr", 0.0, 0.2),
@@ -508,6 +519,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
         ("mouth/mouth-lowerlip-volume-decr", 0.3, 0.3),
     ],
     genes: &[("lips", 0.4), ("cheek", 0.4)],
+    without: &["chin/chin-jaw-drop-decr"],
     sources: &[
         Source { what: "gown (cote) of wool, pulled over the head, close at the shoulders, round neck", source: "Crowfoot, Pritchard & Staniland 1992 (London finds); Østergård 2004 (Herjolfsnes). Summaries only. Cut PLACEHOLDER." },
         Source { what: "hood with a short cape for men, worn on the head or thrown back", source: "Østergård 2004 (Herjolfsnes hoods); Newton 1980. Summaries only. Shares 4:3:3 PLACEHOLDER (unsourced)." },
@@ -522,7 +534,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
         Source { what: "the iris 11.7 mm across, whatever the size of the head", source: "Rüfer, Schröder & Erb 2005, Cornea 24: 259-261 (white-to-white corneal diameter 11.71 mm, SD 0.42, 390 people of 10 to 80; from the abstract). Opening between the lids 25.6 mm long and 8.7 mm high: Rana et al. 2023, Int Ophthalmol 43: 2695-2701 (380 adults in Adelaide); the lids of England are by eye, not by that." },
         Source { what: "the measures of a woman's and a man's face (length, breadth at the cheekbones and at the jaw's corners, distance between the pupils, breadth and protrusion of the nose, length of the lips): the means of the face at rest", source: "Zhuang & Bradtmiller 2005, Head-and-face anthropometric survey of U.S. respirator users, Journal of Occupational and Environmental Hygiene 2(11): 567-576 (2543 men, 1454 women of 18 to 66; read from the copy at stacks.cdc.gov/view/cdc/190020). People of today: used for how the sexes differ and how a face's parts stand to each other. No measured heads of 1356 read." },
         Source { what: "a woman's brows above the rim of the eye's socket: the upper edge over the pupil 19.6 mm above the line through the eyes' inner corners", source: "Matros, Garcia & Yaremchuk 2009, Plastic and Reconstructive Surgery 124: 1296-1301 (36 women of 20 to 30: 15.7 mm over the inner corner, 19.8 over the pupil, 21.3 over the outer corner; numbers read from the summary at dryaremchuk.com, volume and pages from memory). The inner end is left higher than theirs and the outer lower: by those numbers the brow slants, and MakeHuman's with its heavy inner end then reads as a frown. Men: Sclafani & Jung 2010, Archives of Facial Plastic Surgery 12(2) (lower and more level; abstract, no numbers). The band's breadth PLACEHOLDER, by eye." },
-        Source { what: "lids, closed mouth, the face at rest, a child's face, strength of moods, the eyeballs' place in their sockets, how far the eyes turn towards each other, a child's lids and lash line, women's jaw, cheeks and lifted inner brow, the lips' colour, the upper lip's share of it, the seam and a child's share of the colour, the form of the mouth (cupid's bow, the lips' volume, the lower jaw forward), the lash line, flush, where it lies and its strength for women and men, the line of a scar, brows, how much of Apoleia's paint (brow, cheeks, sockets) and child's face is left, a small child's brows, how strongly the gene of the lips shows, and that ears under a veil keep MakeHuman's form", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
+        Source { what: "lids, closed mouth, the face at rest, a child's face, strength of moods, the eyeballs' place in their sockets, how far the eyes turn towards each other, a child's lids and lash line, women's jaw, cheeks and lifted inner brow, the lips' colour, the upper lip's share of it, the seam and a child's share of the colour, the form of the mouth (cupid's bow, the lips' volume, the lower jaw forward), the lash line, flush, where it lies and its strength for women and men, the line of a scar, brows, how much of Apoleia's paint (brow, cheeks, sockets) and child's face is left, a small child's brows, how strongly the gene of the lips shows, that ears under a veil keep MakeHuman's form, and that no head has the skin beside the chin lifted (`without`)", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
         Source { what: "a grown woman's eyes brought forward by 2 mm with their lids: how deep a woman's eye lies in her head against a man's", source: "Exophthalmometry at eyewiki.org (Hertel's reading from the bone's rim beside the eye to the cornea: 16.5 mm in white men, 15.4 mm in white women, after Erb et al. 2003 and Migliori & Gladstone 1984). Shin, Lee, Koh & Song 2017, Anatomy & Cell Biology 50: 41-47 (computed tomography of 70 men and 71 women of Korea, 20 to 30: the cornea 5.3 and 6.3 mm behind the rim over the eye, 11.6 and 12.4 mm in front of the rim under it; read from a summary of the paper's table, which column is which sex inferred). Bone, where ours reads skin, and people of today: only the difference between the sexes is used, and the 2 mm is fitted to it." },
         Source { what: "how the grown hold their heads (the bust's lean, women 0.12 and men 0.10)", source: "Arnett, Jelic, Kim, Cummings, Beress, Worley, Chung & Bergman 1999, American Journal of Orthodontics and Dentofacial Orthopedics 116(3): 239-253 (20 white men and 26 white women with balanced faces, in natural head position: glabella, lips and chin against the true vertical line through the subnasale; read from a copy of the paper). The lean is the best fit to it: women then lie within 1.2 of its standard deviations at every point, men's glabella 1.85 behind and their lips about 1 (MakeHuman's form; no lean brings them nearer)." },
         Source { what: "the mouth at 0.31 of the way from the nose's foot to the chin's lowest point (the upper lip's share of the lower face)", source: "Arnett, Jelic, Kim, Cummings, Beress, Worley, Chung & Bergman 1999, American Journal of Orthodontics and Dentofacial Orthopedics 116(3): 239-253 (table of facial lengths, lips at rest: upper lip 21.0 of 71.1 mm in 26 women, 24.4 of 81.1 in 20 men; read from a copy of the paper). Farkas, Katic, Hreczko, Deutsch & Munro 1984, American Journal of Orthodontics 86(1): 52-60 (lips closed: 20.1 of 64.3 mm in women, 22.3 of 72.6 in men; not read itself, the means as cited by Woelfel, Igarashi & Dong 2014, Journal of Advanced Prosthodontics 6(6): 483-490). 0.31 lies between the two readings for closed lips; that every grown face has the same share is a simplification." },

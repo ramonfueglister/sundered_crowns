@@ -5,8 +5,8 @@
 mod common;
 
 use common::{head, person};
-use sc_portrait::measure::{face, far_cheek, lips, lower_face, marks, LIPS, LOWER_FACE, MEASURES, MENTON, SELLION, STAGE_TURN, SUBNASALE};
-use sc_portrait::{build, morph_test, morph_test_mouth, mouth_field, real, Beard, Head, Look, LODS};
+use sc_portrait::measure::{face, far_cheek, lips, lower_face, marks, JAW, LIPS, LIP_FOOT, LIP_TOP, LOWER_FACE, MEASURES, MENTON, SELLION, STAGE_TURN, STOMION, SUBNASALE};
+use sc_portrait::{build, morph_targets, morph_test, morph_test_mouth, mouth_field, real, Beard, Head, Look, LODS};
 
 #[test]
 fn the_grown_of_england_have_faces_of_human_measure() {
@@ -485,6 +485,56 @@ fn the_mouth_of_england_lies_between_nose_and_chin_where_a_real_one_lies() {
     let p = person(0, true, 35.0);
     let (a, b) = (lips(&morph_test_mouth(&h, &p, 0.0)), lips(&morph_test(&h, &p)));
     assert!((0..3).all(|k| (a[k] - b[k]).abs() < 0.01), "the lips' red {b:?} mm, before {a:?}");
+}
+
+#[test]
+fn the_jaw_of_england_has_no_dent_beside_the_chin() {
+    // Until round 93 every face of England had a dent beside the chin, on the jaw's lower edge: lit from the side
+    // a dark patch with a bump behind it, the chin a block set under the face. From round 50 the dress table's
+    // `rest` held MakeHuman's `chin-jaw-drop-decr` at 0.6 as "the jaw closing the mouth". The target moves no jaw
+    // and no lip. What it is, held here so that the name is not read so again: 25 vertices of skin on each side
+    // of the chin, between the chin's lowest point and the mouth's line, lifted by up to 4.2 mm.
+    let Some(h) = head() else { return };
+    let show = std::env::var("SHOW").is_ok();
+    let (decr, incr) = ("chin/chin-jaw-drop-decr", "chin/chin-jaw-drop-incr");
+    let t = &h.targets[decr];
+    let lip = real::column("real/skin_lip.txt", 0.0);
+    let marks: Vec<usize> = [MENTON, SUBNASALE].into_iter().chain(STOMION).chain(LIP_TOP).chain(LIP_FOOT).chain(JAW.iter().flat_map(|&(a, b)| [a, b])).collect();
+    let (mut most, mut sides) = (0.0f32, [0, 0]);
+    for (j, &i) in t.ids.iter().enumerate() {
+        let (v, at, up) = (i as usize, h.base[i as usize], t.d[j][1] as f32 / 30.0);
+        assert!(at[0].abs() > 0.2 && at[0].abs() < 0.5, "vertex {v} lies {} mm from the middle", at[0] * 100.0);
+        assert!(at[1] > h.base[MENTON][1] && at[1] < h.base[STOMION[0]][1], "vertex {v} lies at {}", at[1]);
+        assert!(up > -0.05, "vertex {v} is moved down, {up} mm");
+        assert!(!marks.contains(&v) && lip[v] < 0.05, "vertex {v} is a landmark of the face or lip");
+        most = most.max(up);
+        sides[(at[0] > 0.0) as usize] += 1;
+    }
+    assert!(sides == [25, 25] && most > 4.0 && most < 4.4, "{sides:?} vertices, lifted by up to {most} mm");
+    // The table names neither of the two targets, and England's heads take nothing of the lifting one, whoever
+    // asks for it (`DressSet::without`): the gene of the chin's height asked for up to 0.27 of it on a short
+    // chin, 1.1 mm, which on a child's jaw still drew a faint shade. With the table's row the grown had 1.5 to
+    // 3.5 mm. The other target, a jowl that hangs, stays the person's own: on about half of them, 1.5 mm at most.
+    let set = sc_portrait::dress::Dress::England1356.set().unwrap();
+    assert!(set.rest.iter().all(|r| !r.0.contains("chin-jaw-drop")), "the table's rest moves the skin beside the chin");
+    assert!(set.without.contains(&decr), "the table takes of {decr}");
+    let hang = h.targets[incr].d.iter().map(|d| -(d[1] as f32) / 30.0).fold(0.0, f32::max);
+    for (who, ages) in [("the grown", [24.0, 35.0, 50.0, 68.0]), ("children", [2.0, 5.0, 8.0, 13.0])] {
+        let (n, mut with, mut far) = (120u32, 0u32, 0.0f32);
+        for k in 0..n {
+            let made = morph_targets(&h, &person(k, k % 2 == 0, ages[(k / 2) as usize % 4]));
+            let weight = |name: &str| made.iter().filter(|m| m.0 == name).map(|m| m.1).sum::<f32>();
+            assert!(weight(decr) == 0.0, "{who}, person {k}: the skin beside the chin lifted by {} mm", weight(decr) * most);
+            let mm = weight(incr) * hang;
+            assert!(mm < 1.6, "{who}, person {k}: a jowl of {mm} mm");
+            with += (mm > 0.1) as u32;
+            far = far.max(mm);
+        }
+        if show {
+            println!("{who}: none lifted beside the chin; {with} of {n} with a jowl of more than 0.1 mm, {far:.2} mm at most");
+        }
+        assert!(with > n / 4 && with < 3 * n / 4, "{who}: {with} of {n} with a jowl");
+    }
 }
 
 #[test]

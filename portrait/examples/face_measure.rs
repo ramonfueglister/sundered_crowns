@@ -8,6 +8,8 @@
 //!                           as leye.u32 and reye.u32
 //!   ... --target <name>     how far one of MakeHuman's targets moves the landmarks at weight 1 (mm: x y z)
 //!   ... --marks             where the landmarks lie on the skin's image (u v), for tools/portrait/face_colour.mjs
+//!   ... --made <person>     the targets of MakeHuman the head of one of the people is made of (its number as printed, 940000
+//!                           and up): the weight of each, how many vertices it moves and how far at that weight (mm)
 //!
 //! The survey, the lips' reference (three measures) and the landmarks: src/measure.rs. The last two measures are
 //! the outline of the cheek that is turned away from the viewer (`far_cheek`), for which no survey is read.
@@ -15,7 +17,7 @@
 use sc_portrait::dna::{founder, ORIGINS};
 use sc_portrait::measure::{face, far_cheek, lips, marks, CHEEK, CHEEKBONES, JAW, LIDS, LIPS, MEASURES, MENTON, NOSE, SELLION, STAGE_TURN, SUBNASALE};
 use sc_portrait::person::{look_of, Lived};
-use sc_portrait::{build, morph_test, real, Head, LODS};
+use sc_portrait::{build, morph_targets, morph_test, real, Head, LODS};
 
 /// SplitMix64, as in examples/sample.rs.
 fn draws(seed: u64, n: usize) -> Vec<u64> {
@@ -46,7 +48,7 @@ fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let (origin, pool, n, dir) = match args.as_slice() {
         [origin, pool, n, dir, ..] => (origin.as_str(), pool.as_str(), n.parse::<u32>().expect("how many people"), dir.as_str()),
-        _ => panic!("face_measure <origin of the people> <pool of genes> <how many> <folder of the portraits' files> [--dump <folder>] [--target <name>]"),
+        _ => panic!("face_measure <origin of the people> <pool of genes> <how many> <folder of the portraits' files> [--grown] [--dump <folder>] [--target <name>] [--marks] [--made <person>]"),
     };
     let option = |name: &str| args.iter().position(|a| a == name).and_then(|i| args.get(i + 1)).cloned();
     let head = Head::load(&std::fs::read(format!("{dir}/head.bin.zst")).expect("the head file")).expect("the head");
@@ -91,6 +93,7 @@ fn main() {
         }
     }
     let many = args.iter().any(|a| a == "--grown");
+    let made = option("--made");
     let mut grown: [Vec<Vec<f32>>; 2] = [Vec::new(), Vec::new()];
     println!("{:>7} {:>3} {:>4} {}", "person", "sex", "age", (1..=MEASURES.len() + LIPS.len() + CHEEK.len()).map(|k| format!("{k:>6}")).collect::<String>());
     for k in 0..n {
@@ -98,6 +101,23 @@ fn main() {
         let genes = founder(o, |i| r[i as usize]).bytes();
         let (female, age) = (k % 2 == 0, if many { [24.0, 35.0, 50.0][(k / 2) as usize % 3] } else if k < 28 { ages[(k / 2) as usize % ages.len()] } else { small[(k / 2) as usize % small.len()] });
         let look = look_of(&genes, female, age, 1, "Bauern", 1000.0, 1000.0, 940000 + k, origin, Lived { loss_days: None, rank: Some(0.5), clothes_pct: Some(100.0) });
+        if made.as_deref() == Some((940000 + k).to_string().as_str()) {
+            // a target may come more than once (genes, the dress table's rest, age): summed, in the order of their first coming
+            let mut sums: Vec<(String, f32)> = Vec::new();
+            for (name, w) in morph_targets(&head, &look) {
+                match sums.iter_mut().find(|s| s.0 == name) {
+                    Some(s) => s.1 += w,
+                    None => sums.push((name, w)),
+                }
+            }
+            println!("{}, {} of {age}: {} targets", 940000 + k, if female { "a woman" } else { "a man" }, sums.len());
+            for (name, w) in sums {
+                let t = &head.targets[name.as_str()];
+                let far = t.d.iter().map(|d| (d[0] as f32).hypot(d[1] as f32).hypot(d[2] as f32) / 30.0).fold(0.0, f32::max);
+                println!("{w:7.3}  {name:<56} {:5} vertices, {:5.1} mm at most", t.ids.len(), far * w);
+            }
+            return;
+        }
         let pp = morph_test(&head, &look);
         if let Some(folder) = &dump {
             let bytes: Vec<u8> = pp.iter().flatten().flat_map(|x| x.to_le_bytes()).collect();

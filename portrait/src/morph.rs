@@ -15,26 +15,40 @@ pub fn morph_test(h: &Head, p: &Look) -> Vec<V3> {
 /// (`DressSet::mouth_at`; 0: where the morph targets leave it), for tests that hold the table's value against the
 /// head without it.
 pub fn morph_test_mouth(h: &Head, p: &Look, mouth_at: f32) -> Vec<V3> {
-    morph_as(h, p, Some(mouth_at)).0
+    morph_as(h, p, Some(mouth_at), None).0
+}
+
+/// The targets of MakeHuman a person's head is made of and the weight of each, in the order they are added (a target
+/// may come more than once: from the genes, from the dress table's `rest`, from age or a mood), for tests and for
+/// tools that ask what gives a face its form (examples/face_measure.rs `--made`).
+pub fn morph_targets(h: &Head, p: &Look) -> Vec<(String, f32)> {
+    let mut list = Vec::new();
+    morph_as(h, p, None, Some(&mut list));
+    list
 }
 
 pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
-    morph_as(h, p, None)
+    morph_as(h, p, None, None)
 }
 
-fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>) -> (Vec<V3>, usize) {
+fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, mut list: Option<&mut Vec<(String, f32)>>) -> (Vec<V3>, usize) {
     let mut pp = h.base.clone();
     let mut used = 0;
+    // targets a dress with a table takes nothing of (`DressSet::without`)
+    let without: &[&str] = p.dress.set().map_or(&[], |d| d.without);
     // Ears under a veil keep MakeHuman's form: they are hidden there, and linen is bound to the skin under it. The
     // wimple, close on the skin, went out with an ear that is large or has grown with age, the veil over it,
     // further off, did not: the wimple came through the veil at the ears (round 70)
     let ears_hidden = p.dress.set().is_some_and(|d| d.veiled(p.female, p.age));
     let mut add = |name: &str, w: f32| {
-        if w <= 1e-3 || ears_hidden && name.starts_with("ears/") {
+        if w <= 1e-3 || ears_hidden && name.starts_with("ears/") || without.contains(&name) {
             return;
         }
         let Some(t) = h.targets.get(name) else { return };
         used += 1;
+        if let Some(list) = list.as_deref_mut() {
+            list.push((name.to_string(), w));
+        }
         let k = w * DELTA_SCALE;
         for (j, &i) in t.ids.iter().enumerate() {
             let d = t.d[j];
@@ -277,6 +291,9 @@ fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>) -> (Vec<V3>, usize) {
             for &(name, share) in with {
                 let Some(t) = h.targets.get(name) else { continue };
                 used += 1;
+                if let Some(list) = list.as_deref_mut() {
+                    list.push((name.to_string(), w * share));
+                }
                 let k = w * share * DELTA_SCALE;
                 for (j, &i) in t.ids.iter().enumerate() {
                     let dd = t.d[j];

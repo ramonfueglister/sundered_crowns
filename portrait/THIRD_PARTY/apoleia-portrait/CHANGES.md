@@ -267,3 +267,10 @@ whose upper lip takes less of the height from the nose's foot to the chin's lowe
 `measure.rs`: `lower_face`, `LOWER_FACE` (Arnett and others 1999; Farkas and others 1984 as cited);
 `dress.rs`: `DressSet::mouth_at` (England 0.31) and its source. `tests/faces.rs`: a fourteenth test. A head
 without a dress table is morphed as before: Roman bytes unchanged.
+
+Round 93: no dent beside the chin. `dress.rs`: the row `chin/chin-jaw-drop-decr` (0.6, in `rest` since round 50
+as "the jaw closing the mouth") is gone: the target lifts 25 vertices of skin on each side of the chin and moves
+no jaw; `DressSet::without`, targets a dress's heads take nothing of (England: that one, which the gene of the
+chin's height asks for too). `morph.rs`: `add` leaves those out; `morph_targets`, the targets a head is made of
+with their weights (`morph_as` takes a list to fill); `examples/face_measure.rs`: `--made <person>`.
+`tests/faces.rs`: a fifteenth test. A head without a dress table is morphed as before: Roman bytes unchanged.

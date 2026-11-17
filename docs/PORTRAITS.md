@@ -2255,6 +2255,73 @@ flat chin of the women and the pale patch beside the nose are as they were. The 
 out with the skin under them (3 mm on a man). 0.31 lies between two readings: no PLACEHOLDER, but one
 number for both sexes and all ages.
 
+**The jaw without a dent beside the chin (round 93).** Round 92 left "the dark dent beside the chin on the lit
+side" open. Held large (896 by 1120), every grown face had it: on the jaw's lower edge, two to four centimetres
+beside the chin's middle, a dark patch with a bump behind it, and the chin as a block set under the face
+(`runde93_kinn_vorher_nachher.png`, upper row).
+
+Light or form: the same heads drawn without shadows, with the key light alone, without it, and without the
+pores, and the dent is in every one of them. It is form. A head written out (`face_measure --dump`) and drawn
+as grey clay shows a groove from under the mouth's corner down to the jaw's edge (`runde93_kinn_ton.png`, left).
+
+The cause, found by leaving targets out: the targets a girl of 17 is made of were listed (99 of them) and her
+head summed again without one group at a time. Without MakeHuman's macro targets, without those of the cheeks,
+the mouth or the head the groove stays; without the chin's the jaw is smooth; and of the chin's ten it is one,
+`chin/chin-jaw-drop-decr`. That target stood in the dress table's `rest` at 0.6 for both sexes since round 50,
+entered there as "the jaw closing the mouth". It moves no jaw and no lip. It moves 25 vertices of skin on each
+side of the chin, 22 to 46 mm from the middle and 6 to 29 mm above the chin's lowest point on the base head,
+upward by up to 4.2 mm; none of them is a landmark of the face, none is lip. MakeHuman's name means the soft
+tissue on the jaw's edge, which hangs (`-incr`, a jowl) or is lifted (`-decr`). At 0.6 the skin there was
+lifted by 2.5 mm, and since it faces down and outward that is 1.8 mm into the surface: a dent beside the chin
+on everyone. The mouth is closed by its own rule (`mouth_shut`, as far as it stands open), which the row never
+helped.
+
+The row is gone. That left the person's own gene of the chin's height, which asks for the same target on a
+short chin (up to 0.27 of it, 1.1 mm): with the row gone a girl of 13 with 0.15 of it still had a faint shade
+where the dent had been. England's heads now take nothing of `-decr`, whoever asks (`DressSet::without`); the
+jowl that hangs on a long chin (`-incr`) stays the person's own. The skin beside the chin at the vertex both
+targets move most, upward, 120 people each, mm:
+
+| | before: mean (from, to) | the row gone, the gene left | now |
+|---|---|---|---|
+| the grown of 24 to 68, and of 17 | 2.39 (1.19, 3.47) | -0.13 (-1.33, 0.95) | -0.33 (-1.33, 0.00) |
+| children of 13 | 2.22 (1.10, 3.35) | -0.12 (-1.29, 0.92) | -0.31 (-1.29, 0.00) |
+| children of 8 | 1.54 (0.75, 2.35) | -0.09 (-0.91, 0.65) | -0.22 (-0.91, 0.00) |
+| children of 5 | 1.11 (0.55, 1.67) | -0.06 (-0.65, 0.46) | -0.16 (-0.65, 0.00) |
+| children of 2 | 0.86 (0.42, 1.25) | -0.05 (-0.49, 0.35) | -0.12 (-0.49, 0.00) |
+
+No landmark is moved, so every measure of the survey, the lips' red and the mouth's place are what they were
+(`face_measure`, 200 grown of each sex, with the row and without: the same to the last digit printed). All 35
+portraits of the sample changed, each in 0.05 to 0.54 % of its pixels by more than 8 of 255 in a channel: the
+two patches beside the chin. The Roman pictures are the same pixel for pixel (a head without a dress table
+has no `rest` and no `without`).
+
+A measure of the dent itself was looked for and not found, which is why the test holds the cause. Tried on the
+heads before and after the row went: the height of the edge where the skin's normal looks 45 degrees down, on
+cuts round the chin (a hump of 5.6 mm on the girl before and 1.3 after, but it jumps on old faces and finds no
+edge on some); fixed rows of the mesh along the jaw's edge (no hump: the lift is 1.6 mm on an edge that rises
+by 26); the patch against an affine fit of its surroundings (-1.8 mm before, -3.8 after, on a base head that
+reads 0 and has no dent); the patch over a membrane spanned by its surroundings (women 3.1 mm before and 4.4
+after, men 2.5 and 4.0, the base head 2.9: the two states overlap).
+
+New and kept: `morph_targets` (`morph.rs`) lists the targets a head is made of with their weights, and
+`face_measure --made <person>` prints them with how many vertices each moves and how far. Rounds 77, 92 and
+this one each built that list by hand to find a cause.
+
+Tests: `portrait/tests/faces.rs`, `the_jaw_of_england_has_no_dent_beside_the_chin`, the fifteenth (what the
+target is: 25 vertices a side, 2 to 5 cm from the middle, between chin and mouth, none moved down, none a
+landmark or lip, 4.0 to 4.4 mm at most; the table's `rest` names neither of the two targets and its `without`
+names the lifting one; of 120 grown and 120 children no head has any of it, and between a quarter and three
+quarters of them have a jowl, of less than 1.6 mm). With the row, or without the table's `without`, it fails.
+Pictures: `runde93_kinn_vorher_nachher.png` (three women of 17, 35 and 50 and three men of 17, 35 and 24, the
+lower face; before above), `runde93_kinn_ton.png` (the girl's head as clay, with the row and without),
+`runde93_stichprobe.png`.
+Still open: half of the people now have the base head's jaw edge exactly and the other half a jowl of up to
+1.3 mm; real jaws differ both ways, and no measured outline of one was read (the list is by eye, PLACEHOLDER).
+Age draws its jowls with the cheek's targets; the target made for them (`-incr`) is not used for age. A speck
+of three pixels of lit skin on the shaded side of the chin, at this size only, is not explained. The pale
+stripe beside the nose on the far cheek, the women's square jaw and the flat lower lip are as they were.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since
