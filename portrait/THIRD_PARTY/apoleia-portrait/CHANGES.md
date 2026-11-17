@@ -289,3 +289,12 @@ the back, as the survey's). `morph.rs`: `lower_band`, `lower_share`, and `add` w
 per vertex by the base's height. `measure.rs`: the head's breadth over the ears (`SKULL`) and its length
 (`GLABELLA`, `BACK`) with the survey's values. `lib.rs` exports the two functions. `tests/faces.rs`: a
 sixteenth test. A head without a dress table is morphed as before: Roman bytes unchanged.
+
+Round 96: a woman's jaw runs in to her chin. `dress.rs`: `DressSet::jaw_women` is gone (it shifted a woman's
+gene of the jaw towards `head/head-diamond`, which narrows the cheeks and hardly the chin) and with it its line
+in `morph.rs`; in `rest` women take `head/head-invertedtriangular` at 1.0, which is in `lower_only` now (the
+part under the cheekbones), and the women's `mouth/mouth-scale-horiz-incr` is 0.85 (0.4), since that target
+draws the mouth's corners in. `measure.rs`: `TRAGION`, `CHIN`, `FOREHEAD`, `ARCS`, `arcs`, `arcs_from` (the
+survey's four arcs from ear to ear) and `JAW_FRONT`, `jaw_front` (the breadth of the jaw's front at a height
+over the chin's lowest point). `examples/face_measure.rs` prints them. `tests/faces.rs`: a seventeenth and an
+eighteenth test. A head without a dress table is morphed as before: Roman bytes unchanged.

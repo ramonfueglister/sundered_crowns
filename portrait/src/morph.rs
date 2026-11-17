@@ -148,11 +148,6 @@ fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, mut list: Option<&mut Vec
         for (k, loads) in FACE_MOD.iter().enumerate() {
             let xl = (p.g(k) - 128.0) / 127.0;
             let xl = if soft > 0.0 { soft * (xl / soft).tanh() } else { xl };
-            // a dress with a table may read women's jaws softer on average (genes headF and jaw)
-            let xl = match p.dress.set() {
-                Some(d) if p.female && k == 4 => xl + d.jaw_women,
-                _ => xl,
-            };
             let x = xl * (0.35 + 0.65 * gr) * gain * p.dress.set().map_or(1.0, |d| d.gene_gain(k));
             for &(n, lo, hi, w) in loads.iter() {
                 let v = if !n.is_empty() && lo.is_empty() { (x * w).max(0.0) } else { x * w };

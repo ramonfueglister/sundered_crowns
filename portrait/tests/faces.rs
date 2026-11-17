@@ -5,7 +5,7 @@
 mod common;
 
 use common::{head, person};
-use sc_portrait::measure::{face, far_cheek, lips, lower_face, marks, JAW, LIPS, LIP_FOOT, LIP_TOP, LOWER_FACE, MEASURES, MENTON, SELLION, STAGE_TURN, STOMION, SUBNASALE};
+use sc_portrait::measure::{arcs, arcs_from, face, far_cheek, jaw_front, lips, lower_face, marks, ARCS, CHEEKBONES, JAW, LIPS, LIP_FOOT, LIP_TOP, LOWER_FACE, MEASURES, MENTON, SELLION, SKULL, STAGE_TURN, STOMION, SUBNASALE, TRAGION};
 use sc_portrait::{build, lower_band, lower_share, morph_targets, morph_test, morph_test_mouth, mouth_field, real, Beard, Head, Look, LODS};
 
 #[test]
@@ -543,9 +543,10 @@ fn the_jaw_of_england_has_no_dent_beside_the_chin() {
 fn the_gene_of_the_jaw_of_england_moves_the_jaw_and_not_the_skull() {
     // Until round 95 a narrow jaw came with a skull narrowed to a point and a wide jaw with a skull narrowed too:
     // the gene of the jaw asks for MakeHuman's diamond or triangular head, and each of them is two things, a jaw
-    // and a skull, with nothing between them. Every woman of England had the diamond at about 0.9 (the table
-    // shifts her gene towards the narrow jaw): the skull over the ears up to 15 mm narrower a side, a head like
-    // an egg's point under plaits and veil.
+    // and a skull, with nothing between them. Every woman of England had the diamond at about 0.9 (until round 96
+    // the table shifted her gene towards the narrow jaw): the skull over the ears up to 15 mm narrower a side, a
+    // head like an egg's point under plaits and veil. Round 96 added the head that is broad above and narrow
+    // below (the women's rest): a jaw that runs in to the chin, and above it wider cheekbones and a wider skull.
     let Some(h) = head() else { return };
     let show = std::env::var("SHOW").is_ok();
     let band = lower_band(&h);
@@ -553,8 +554,8 @@ fn the_gene_of_the_jaw_of_england_moves_the_jaw_and_not_the_skull() {
     assert!(band[0] < band[1] && lower_share(band[0], band) == 1.0 && lower_share(band[1], band) == 0.0);
     assert!((lower_share((band[0] + band[1]) / 2.0, band) - 0.5).abs() < 1e-3);
     let set = sc_portrait::dress::Dress::England1356.set().unwrap();
-    assert_eq!(set.lower_only, ["head/head-diamond", "head/head-triangular"]);
-    for (name, jaw_min, skull_min) in [("head/head-diamond", 6.0, 20.0), ("head/head-triangular", 12.0, 12.0)] {
+    assert_eq!(set.lower_only, ["head/head-diamond", "head/head-triangular", "head/head-invertedtriangular"]);
+    for (name, jaw_min, band_max, skull_min) in [("head/head-diamond", 6.0, 4.5, 20.0), ("head/head-triangular", 12.0, 4.5, 12.0), ("head/head-invertedtriangular", 7.0, 6.5, 4.0)] {
         // what the target is: how far it moves a vertex at most under the band, in it and over it
         let t = &h.targets[name];
         let mut most = [0.0f32; 3];
@@ -566,7 +567,7 @@ fn the_gene_of_the_jaw_of_england_moves_the_jaw_and_not_the_skull() {
         if show {
             println!("{name}: moves a vertex by up to {:.1} mm under the cheekbones, {:.1} between them and the root of the nose ({:.0} to {:.0} mm over the menton), {:.1} above", most[0], most[1], (band[0] - menton) * 100.0, (band[1] - menton) * 100.0, most[2]);
         }
-        assert!(most[0] > jaw_min && most[2] > skull_min && most[1] < 4.5, "{name}: {most:?} mm");
+        assert!(most[0] > jaw_min && most[2] > skull_min && most[1] < band_max, "{name}: {most:?} mm");
     }
     // The same person with the gene at its two ends: with England's table nothing from the root of the nose up
     // moves and the head is as broad over the ears, while the jaw goes from narrow to wide. Without a table
@@ -599,6 +600,154 @@ fn the_gene_of_the_jaw_of_england_moves_the_jaw_and_not_the_skull() {
         println!("the gene of the jaw from end to end, 40 grown: the jaw at least {least:.1} mm broader, the head over the root of the nose moved by {most_up:.3} mm at most, its breadth by {most_skull:.3}; without a table the skull moves by at least {roman:.1} mm");
     }
     assert!(roman > 10.0, "without a table the skull moves by {roman} mm only");
+}
+
+#[test]
+fn a_tape_from_ear_to_ear_of_england_is_about_as_long_as_on_real_heads() {
+    // How full a face is, the breadths do not tell: the survey's four arcs do, a tape laid from the notch over one
+    // ear's flap to the other's, over the chin, under the nose, over the forehead and over the crown (round 96).
+    // The men's lie within half a standard deviation of the survey's, and the women's over the forehead.
+    // What is open: a woman's tape is 0.6 standard deviations short over the chin and 0.8 under the nose, her
+    // cheeks are leaner than the survey's (whose people are of today's United States and heavier than those of
+    // the fourteenth century; how much of the gap that is, nobody measured). No target of MakeHuman tried fills
+    // them without a lump on the far cheek's outline (twelve variants, docs/PORTRAITS.md). Held here so that it
+    // grows no further. Over the crown the survey's tape lies on hair, a woman's more: ours lies on the skin.
+    let Some(h) = head() else { return };
+    let show = std::env::var("SHOW").is_ok();
+    let n = 150;
+    let mut sums = [[0.0f32; 4]; 2];
+    for k in 0..2 * n {
+        let female = k % 2 == 0;
+        let m = arcs(&h, &morph_test(&h, &person(k, female, [24.0, 35.0, 50.0][(k / 2) as usize % 3])));
+        for (s, x) in sums[female as usize].iter_mut().zip(&m) {
+            *s += x / n as f32;
+        }
+    }
+    // how far a woman's mean may lie under the survey's, in its standard deviations
+    let short = [0.8, 1.0, 0.5, 1.2];
+    for (k, &(name, men, women)) in ARCS.iter().enumerate() {
+        let (m, w) = ((sums[0][k] - men[0]) / men[1], (sums[1][k] - women[0]) / women[1]);
+        if show {
+            println!("{name}: men {:.1} mm (the survey {}, {m:+.2} SD), women {:.1} mm ({}, {w:+.2} SD), women {:.3} of men (the survey {:.3})", sums[0][k], men[0], sums[1][k], women[0], sums[1][k] / sums[0][k], women[0] / men[0]);
+        }
+        assert!(m.abs() < 0.5, "{name}, men: {} mm, the survey {} ({})", sums[0][k], men[0], men[1]);
+        assert!(w < 0.5 && w > -short[k], "{name}, women: {} mm, the survey {} ({})", sums[1][k], women[0], women[1]);
+        assert!(sums[1][k] < sums[0][k], "{name}: women {} mm, men {}", sums[1][k], sums[0][k]);
+    }
+    // The ear's landmark was placed by eye, to about 3 mm. What that is worth: the same tapes from each vertex
+    // within 3 mm of it (the other ear's mirrored). No arc changes by more than 7 mm, half a standard deviation.
+    let mirror = |v: usize| (0..h.n).min_by(|&a, &b| {
+        let d = |u: usize| dist(&h.base[u], &[-h.base[v][0], h.base[v][1], h.base[v][2]]);
+        d(a).total_cmp(&d(b))
+    }).unwrap();
+    assert!(mirror(TRAGION.0) == TRAGION.1, "the ears' landmarks are not each other's mirror: {} and {}", mirror(TRAGION.0), TRAGION.1);
+    let near: Vec<usize> = (0..h.n).filter(|&v| v != TRAGION.0 && dist(&h.base[v], &h.base[TRAGION.0]) < 0.03).collect();
+    assert!(near.len() >= 4, "{} vertices within 3 mm of the ear's landmark", near.len());
+    let mut most = [0.0f32; 4];
+    for k in 0..8 {
+        let pp = morph_test(&h, &person(k, k % 2 == 0, [24.0, 35.0, 50.0][(k / 2) as usize % 3]));
+        let at = arcs(&h, &pp);
+        for &v in &near {
+            let moved = arcs_from(&h, &pp, (v, mirror(v)));
+            for (m, (a, b)) in most.iter_mut().zip(at.iter().zip(&moved)) {
+                *m = m.max((a - b).abs());
+            }
+        }
+    }
+    if show {
+        println!("the ear's landmark moved to one of {} vertices within 3 mm: the arcs change by up to {most:.1?} mm", near.len());
+    }
+    assert!(most.iter().all(|&m| m > 0.5 && m < 7.0), "the arcs change by up to {most:?} mm");
+}
+
+#[test]
+fn a_woman_of_england_has_a_jaw_that_runs_in_to_her_chin() {
+    // Until round 96 a woman's chin was broad and flat beside the references' small round one. The table shifted
+    // her gene of the jaw towards MakeHuman's diamond, which narrows the cheeks at the mouth's height and hardly
+    // the chin: the front of her jaw was as broad as a man's from the chin up to the mouth (5 mm over the chin's
+    // lowest point 56.9 mm, a man's 54.8), under a face 8 % smaller. Now her gene is not shifted and her `rest`
+    // holds the lower part of MakeHuman's head that is broad above and narrow below: the jaw runs in to the chin.
+    // That a woman's jaw does so is anatomy's common knowledge; that the weight is 1 is held by the survey's
+    // breadth at the jaw's corners (the first test of this file), the breadth near the chin itself no survey gave.
+    let Some(h) = head() else { return };
+    let show = std::env::var("SHOW").is_ok();
+    let name = "head/head-invertedtriangular";
+    let heights = [3.0, 5.0, 9.0, 11.0, 15.0, 19.0, 25.0, 31.0];
+    let n = 150;
+    let mut sums = [[0.0f32; 8]; 2];
+    for k in 0..2 * n {
+        let female = k % 2 == 0;
+        let p = person(k, female, [24.0, 35.0, 50.0][(k / 2) as usize % 3]);
+        let weight: f32 = morph_targets(&h, &p).iter().filter(|m| m.0 == name).map(|m| m.1).sum();
+        assert!(weight == if female { 1.0 } else { 0.0 }, "person {k}: {name} at {weight}");
+        let pp = morph_test(&h, &p);
+        for (s, &over) in sums[female as usize].iter_mut().zip(&heights) {
+            *s += jaw_front(&h, &pp, over) / n as f32;
+        }
+    }
+    let share: Vec<f32> = (0..heights.len()).map(|k| sums[1][k] / sums[0][k]).collect();
+    if show {
+        println!("the jaw's front at {heights:?} mm over the menton: men {:.1?} mm, women {:.1?} mm, women as a share of men {share:.3?}", sums[0], sums[1]);
+    }
+    // 5 mm over the chin's lowest point a woman's jaw is narrower than a man's, and from 9 to 19 mm (up to under
+    // the mouth) by about a tenth; before, 1.04 and 0.97 to 0.99
+    assert!(share[1] < 0.98, "5 mm over the menton a woman's jaw is {} of a man's", share[1]);
+    for k in 2..6 {
+        assert!(share[k] > 0.86 && share[k] < 0.95, "{} mm over the menton a woman's jaw is {} of a man's", heights[k], share[k]);
+    }
+    // A small child of either sex has a third of it (as of all of the women's `rest`: a small child's face is not
+    // a man's); a girl grows into the whole, a boy out of it.
+    let of = |female: bool, age: f32| morph_targets(&h, &person(if female { 0 } else { 1 }, female, age)).iter().filter(|m| m.0 == name).map(|m| m.1).sum::<f32>();
+    let (mut girl, mut boy) = (of(true, 2.0), of(false, 2.0));
+    assert!(girl > 0.3 && girl < 0.45 && (girl - boy).abs() < 0.05, "at 2 a girl has {girl} of it and a boy {boy}");
+    for age in [5.0, 8.0, 13.0, 17.0, 24.0] {
+        let (g, b) = (of(true, age), of(false, age));
+        if show {
+            println!("at {age}: a girl has {g:.2} of {name}, a boy {b:.2}");
+        }
+        assert!(g >= girl && b <= boy.max(0.45) && g >= b, "at {age} a girl has {g} of it (before {girl}) and a boy {b} (before {boy})");
+        (girl, boy) = (g, b);
+    }
+    assert!(girl == 1.0 && boy == 0.0, "grown, a woman has {girl} of it and a man {boy}");
+    // What the table takes of the target (its part under the cheekbones, `DressSet::lower_only`) moves nothing of
+    // the skull and the lowest of the cheekbones' landmarks by 1.6 mm a side; whole, the target would widen the
+    // skull and the cheekbones. Taken off a woman's head again (the target's part times its weight, vertex by
+    // vertex), her breadth over the cheekbones is the same to a millimetre, over the ears the same, and the front
+    // of her jaw 9 mm over the chin's lowest point 12 mm broader (broader than it was with the shifted gene).
+    let set = sc_portrait::dress::Dress::England1356.set().unwrap();
+    assert!(set.lower_only.contains(&name) && set.rest.iter().any(|r| r.0 == name && r.1 == 1.0 && r.2 == 0.0));
+    let (t, band) = (&h.targets[name], lower_band(&h));
+    let out = |v: usize, taken: bool| {
+        let d = t.ids.iter().position(|&i| i as usize == v).map_or(0.0, |j| t.d[j][0] as f32 / 30.0 * h.base[v][0].signum());
+        if taken { d * lower_share(h.base[v][1], band) } else { d }
+    };
+    let far = |marks: &[(usize, usize)], taken: bool| marks.iter().map(|&(a, b)| out(a, taken).abs().max(out(b, taken).abs())).fold(0.0, f32::max);
+    let (skull, cheek, whole) = (far(&SKULL, true), far(&CHEEKBONES, true), [far(&SKULL, false), far(&CHEEKBONES, false)]);
+    if show {
+        println!("{name} at the landmarks, sideways a side: the skull {skull:.2} mm, the cheekbones {cheek:.2} mm; whole {whole:.1?} mm");
+    }
+    assert!(skull == 0.0 && cheek < 2.0, "the taken part moves the skull's landmarks by {skull} mm, the cheekbones' by {cheek}");
+    assert!(whole[0] > 2.0 && whole[1] > 2.0, "whole, the target moves them by {whole:?} mm");
+    let (at_cheek, at_skull) = (MEASURES.iter().position(|m| m.0.starts_with("breadth at the cheekbones")).unwrap(), MEASURES.iter().position(|m| m.0.starts_with("head breadth")).unwrap());
+    let (mut most, mut front) = ([0.0f32; 2], [0.0f32; 2]);
+    for k in (0..40).step_by(2) {
+        let with = morph_test(&h, &person(k, true, [24.0, 35.0, 50.0][(k / 2) as usize % 3]));
+        let mut without = with.clone();
+        for (j, &i) in t.ids.iter().enumerate() {
+            let share = lower_share(h.base[i as usize][1], band);
+            for c in 0..3 {
+                without[i as usize][c] -= t.d[j][c] as f32 / 3000.0 * share;
+            }
+        }
+        let (a, b) = (face(&h, &with), face(&h, &without));
+        most = [most[0].max((a[at_cheek] - b[at_cheek]).abs()), most[1].max((a[at_skull] - b[at_skull]).abs())];
+        front = [front[0] + jaw_front(&h, &with, 9.0) / 20.0, front[1] + jaw_front(&h, &without, 9.0) / 20.0];
+    }
+    if show {
+        println!("the target's part taken off 20 women: the breadth over the cheekbones changes by up to {:.2} mm, over the ears by {:.2}; the jaw's front 9 mm over the menton {:.1} mm with it, {:.1} without", most[0], most[1], front[0], front[1]);
+    }
+    assert!(most[0] < 1.0 && most[1] < 0.01, "the breadth over the cheekbones changes by {} mm, over the ears by {}", most[0], most[1]);
+    assert!(front[1] - front[0] > 4.0, "the jaw's front 9 mm over the menton: {} mm with the target, {} without", front[0], front[1]);
 }
 
 #[test]

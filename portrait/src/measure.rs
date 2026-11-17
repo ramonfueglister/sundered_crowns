@@ -166,6 +166,124 @@ pub fn skin_front(h: &Head, pp: &[V3], x: f32, y: f32) -> Option<f32> {
     front
 }
 
+/// The ears' landmark of the survey's arcs, at the head's left and right: the notch over the flap in front of the
+/// ear's opening (tragion). Placed by eye on a drawing of the mesh, to about 3 mm.
+pub const TRAGION: (usize, usize) = (5410, 2665);
+/// Where the survey's tape crosses the chin: "the most protruding point on the bottom edge of the chin, along the
+/// jawline" (its report's list of landmarks), in the middle, where the chin's front turns under. And a point of
+/// the forehead about 1 cm over the brows' ridge, in the middle.
+pub const CHIN: usize = 2262;
+pub const FOREHEAD: usize = 237;
+
+/// What `arcs` measures, and the survey's mean and standard deviation for men and for women (its bitragion chin,
+/// subnasale, frontal and coronal arc; table VI of the same paper).
+pub const ARCS: [(&str, [f32; 2], [f32; 2]); 4] = [
+    ("arc from ear to ear over the chin", [331.2, 15.5], [303.9, 14.9]),
+    ("arc from ear to ear under the nose", [294.8, 13.2], [277.5, 13.1]),
+    ("arc from ear to ear over the forehead", [304.1, 13.0], [287.4, 11.9]),
+    ("arc from ear to ear over the crown", [350.7, 13.9], [339.3, 15.0]),
+];
+
+/// A tape drawn tight from one ear's landmark to the other's across a third point, in millimetres: the skin cut
+/// by the plane through the three, of which the part on the third point's side of the line between the ears
+/// counts, and round it the tightest line from outside (a tape lies across a hollow, not in it). The ears
+/// themselves are left out but for the two landmarks. `over`: the third point; None for the arc over the crown,
+/// whose plane stands upright through the two ears.
+fn arc(h: &Head, pp: &[V3], ears: (usize, usize), over: Option<V3>) -> f32 {
+    let sub = |a: V3, b: V3| [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+    let dot = |a: V3, b: V3| a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    let cross = |a: V3, b: V3| [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+    let unit = |a: V3| {
+        let l = dot(a, a).sqrt();
+        [a[0] / l, a[1] / l, a[2] / l]
+    };
+    let (a, b) = (pp[ears.0], pp[ears.1]);
+    let u = unit(sub(b, a));
+    // in the plane and square to the line between the ears, towards the third point
+    let v = match over {
+        Some(c) => {
+            let w = sub(c, a);
+            let along = dot(w, u);
+            unit([w[0] - along * u[0], w[1] - along * u[1], w[2] - along * u[2]])
+        }
+        None => unit([-u[1] * u[0], 1.0 - u[1] * u[1], -u[1] * u[2]]),
+    };
+    let n = cross(u, v);
+    let mut pts: Vec<[f32; 2]> = vec![[0.0, 0.0], [dot(sub(b, a), u), 0.0]];
+    for t in h.body_full().chunks_exact(3) {
+        for k in 0..3 {
+            let (i, j) = (t[k] as usize, t[(k + 1) % 3] as usize);
+            let (di, dj) = (dot(sub(pp[i], a), n), dot(sub(pp[j], a), n));
+            if di * dj < 0.0 {
+                let f = di / (di - dj);
+                if h.ear[i] + f * (h.ear[j] - h.ear[i]) > 0.2 {
+                    continue;
+                }
+                let p = sub([pp[i][0] + f * (pp[j][0] - pp[i][0]), pp[i][1] + f * (pp[j][1] - pp[i][1]), pp[i][2] + f * (pp[j][2] - pp[i][2])], a);
+                let at = [dot(p, u), dot(p, v)];
+                if at[1] > 0.0 {
+                    pts.push(at);
+                }
+            }
+        }
+    }
+    // the tightest line round the points (Andrew's chain); its length without the line between the ears
+    pts.sort_by(|p, q| p[0].total_cmp(&q[0]).then(p[1].total_cmp(&q[1])));
+    let turn = |o: [f32; 2], p: [f32; 2], q: [f32; 2]| (p[0] - o[0]) * (q[1] - o[1]) - (p[1] - o[1]) * (q[0] - o[0]);
+    let mut hull: Vec<[f32; 2]> = Vec::new();
+    for half in 0..2 {
+        let start = hull.len();
+        let order: Vec<[f32; 2]> = if half == 0 { pts.clone() } else { pts.iter().rev().copied().collect() };
+        for p in order {
+            while hull.len() >= start + 2 && turn(hull[hull.len() - 2], hull[hull.len() - 1], p) <= 0.0 {
+                hull.pop();
+            }
+            hull.push(p);
+        }
+        hull.pop();
+    }
+    let round: f32 = (0..hull.len()).map(|k| (hull[k][0] - hull[(k + 1) % hull.len()][0]).hypot(hull[k][1] - hull[(k + 1) % hull.len()][1])).sum();
+    100.0 * (round - pts_line(a, b))
+}
+
+fn pts_line(a: V3, b: V3) -> f32 {
+    ((a[0] - b[0]).powi(2) + (a[1] - b[1]).powi(2) + (a[2] - b[2]).powi(2)).sqrt()
+}
+
+/// The measures of `ARCS` on a morphed head (`morph_test`), in millimetres.
+pub fn arcs(h: &Head, pp: &[V3]) -> [f32; 4] {
+    arcs_from(h, pp, TRAGION)
+}
+
+/// The same from another pair of vertices as the ears' landmark: how much the measures hang on where it was put.
+pub fn arcs_from(h: &Head, pp: &[V3], ears: (usize, usize)) -> [f32; 4] {
+    [arc(h, pp, ears, Some(pp[CHIN])), arc(h, pp, ears, Some(pp[SUBNASALE])), arc(h, pp, ears, Some(pp[FOREHEAD])), arc(h, pp, ears, None)]
+}
+
+/// What `jaw_front` measures at 5 mm (no survey read for it: the zeros).
+pub const JAW_FRONT: [(&str, [f32; 2], [f32; 2]); 1] = [("the jaw's front 5 mm over the menton", [0.0; 2], [0.0; 2])];
+
+/// How broad the front of the jaw is just over the chin, in millimetres: `over` mm above the chin's lowest point
+/// (the head as MakeHuman holds it), twice as far as the skin reaches to one side of the middle, of the skin that
+/// lies no more than 1 cm behind that point (the neck and the jaw's corners lie further back). A chin that is
+/// a broad base under the face has much of it; a jaw that runs in to the chin little.
+pub fn jaw_front(h: &Head, pp: &[V3], over: f32) -> f32 {
+    let (y, back) = (pp[MENTON][1] + over / 100.0, pp[MENTON][2] - 0.10);
+    let mut out = 0.0f32;
+    for t in h.body_full().chunks_exact(3) {
+        for k in 0..3 {
+            let (p, q) = (pp[t[k] as usize], pp[t[(k + 1) % 3] as usize]);
+            if (p[1] - y) * (q[1] - y) < 0.0 {
+                let f = (y - p[1]) / (q[1] - p[1]);
+                if p[2] + f * (q[2] - p[2]) > back {
+                    out = out.max((p[0] + f * (q[0] - p[0])).abs() * 200.0);
+                }
+            }
+        }
+    }
+    out
+}
+
 /// How far the stage turns a head of England away from the camera, in radians (src/portrait/profile.ts
 /// `ENGLAND_1356.turn`, there with the other sign; the dress table's `gaze` turns the eyes back by as much,
 /// which tests hold): the turn at which `far_cheek` is read.
