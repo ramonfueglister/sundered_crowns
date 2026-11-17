@@ -4,7 +4,7 @@
 
 > Jede Familie, die in einer Stadt wohnt, hat im Grundbuch der Welt eine Parzelle mit festem Platz, Breite und Tiefe. Die Fläche der Stadt folgt der Zahl ihrer Bewohner nach einem Gesetz, das an 173 Städten um 1300 gemessen ist.
 
-Der Entwurf ist gebaut, aber nicht im Spiel. Die Simulation führt das Grundbuch; die 3D-Welt stellt auf jede Parzelle ein Haus, sobald der Entwurf live geht.
+Der Entwurf ist gebaut und seit dem 17. November 2026 auf main. Die Simulation führt das Grundbuch, die 3D-Welt stellt auf jede Parzelle ein Haus.
 
 ## Das Feature
 
@@ -16,7 +16,7 @@ Nicht dabei: wo ein neues Haus entsteht, wie Gassen wachsen, Mauern, Tore, Brüc
 
 ## Im Spiel
 
-Noch nicht sichtbar. Der Weltserver gibt die Parzellen einer Stadt aus; die 3D-Welt stellt in der nächsten Ansicht auf jede Parzelle ein Haus an die Gassenseite, sobald der Entwurf live ist.
+Die 3D-Welt liest die Parzellen der Welt von 1291 aus einer Datei, die das Grundbuch schreibt, und stellt in der nächsten Ansicht auf jede Parzelle ein Haus an die Gassenseite. Die fernen Ansichten zeigen dieselben Häuser. Der Weltserver gibt die Parzellen einer Stadt ebenfalls aus; die 3D-Welt liest sie von dort noch nicht.
 
 ## Das Modell
 
