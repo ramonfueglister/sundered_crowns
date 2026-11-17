@@ -1,0 +1,197 @@
+index	name	full_name	status	overlord	capital	quarter	page
+0	Adyghe	Adyghe People	dependent	Ottoman Empire		SE	entity_6233.html
+1	Ahlat	Lordship of Ahlat	dependent	Ottoman Empire		SE	entity_9658.html
+2	Algiers	Eyalet of Algiers	dependent	Ottoman Empire		SW	entity_419.html
+3	Altenburg	Duchy of Saxe-Gotha-Altenburg	sovereign			NW	entity_7839.html
+4	Amadya	Hereditary Sanjak of Amadya	dependent	Ottoman Empire		SE	entity_9645.html
+5	Anah	Sanjak of Anah	dependent	Ottoman Empire		SE	entity_647.html
+6	Andorra	Co-Principality of Andorra under the Bishop of La Seu d'Urgell and the King of France	sovereign			SW	entity_7436.html
+7	Athos	Monastic Community of Mount Athos	dependent	Ottoman Empire		SE	entity_2158.html
+8	Augsburg	Imperial City of Augsburg	sovereign			NW	entity_9634.html
+9	Baden	Margravate of Baden	sovereign			NW	entity_5683.html
+10	Barka	Beylik of Barka	dependent	Ottoman Empire		SE	entity_2830.html
+11	Bashkala	Lordship of Bashkala and Hakkari	dependent	Ottoman Empire		SE	entity_9647.html
+12	Bavaria	Electorate of Bavaria	sovereign			NW	entity_1702.html
+13	Beni Snassen	Beni Snassen	people			SW	entity_6780.html
+14	Bernburg	Principality of Anhalt-Bernburg	sovereign			NW	entity_1160.html
+15	Biberach	Imperial City of Biberach	sovereign			NW	entity_9641.html
+16	Bitlis	Hereditary Sanjak of Bitlis	dependent	Ottoman Empire		SE	entity_9660.html
+17	Bouillon	Duchy of Bouillon	dependent	France		NW	entity_7939.html
+18	Brandenburg-Ansbach	Margravate of Brandenburg-Ansbach	sovereign			NW	entity_7938.html
+19	Brandenburg-Bayreuth	Margravate of Brandenburg-Bayreuth	sovereign			NW	entity_3635.html
+20	Brandenburg-Prussia	Duchy of Prussia and Margraviate of Brandenburg	sovereign			NW	entity_5141.html
+21	Bremen	Imperial City of Bremen	sovereign			NW	entity_9651.html
+22	Brunswick-Wolfenbuttel	Duchy of Brunswick-Wolfenbüttel	sovereign			NW	entity_7136.html
+23	Buchhorn	Imperial City of Buchhorn	sovereign			NW	entity_9668.html
+24	Bzyb Abkhazia	Principality of Abkhazia	dependent	Ottoman Empire		SE	entity_15027.html
+25	Cizre	Lordship of Cizre	dependent	Ottoman Empire		SE	entity_1882.html
+26	Coburg	Duchy of Saxe-Coburg	sovereign			NW	entity_7934.html
+27	Cologne	Imperial City of Cologne	sovereign			NW	entity_9683.html
+28	Cologne	Electorate of Cologne	sovereign			NW	entity_9684.html
+29	Courland	Duchy of Courland	dependent	Poland-Lithuania-Saxony		NE	entity_15121.html
+30	Crimea	Khanate of Crimea	dependent	Ottoman Empire		NE	entity_5184.html
+31	Denmark	Kingdom of Denmark	sovereign			NW	entity_892.html
+32	Dessau	Principality of Anhalt-Dessau	sovereign			NW	entity_7937.html
+33	Dombes	Principality of the Dombes	dependent	France		NW	entity_601.html
+34	Dortmund	Imperial City of Dortmund	sovereign			NW	entity_15038.html
+35	East Abkhazia	Lordship of East Abkhazia	dependent	Ottoman Empire		SE	entity_1300.html
+36	Eisenach	Duchy of Saxe-Eisenach	sovereign			NW	entity_7935.html
+37	Engelberg	Allied Abbey of Engelberg	dependent	Swiss Cantons		NW	entity_9670.html
+38	England-Scotland-Netherlands	Kingdom of England and Ireland in Personal Union with the Kingdom of Scotland and the Republic of the Seven United Netherlands	sovereign			NW	entity_1423.html
+39	Eğil	Hereditary Sanjak of Eğil	dependent	Ottoman Empire		SE	entity_6132.html
+40	Fez-Morocco	Empire of Fez and Morocco	sovereign			SW	entity_2054.html
+41	Fezzan	Pashalik of the Fezzan	dependent	Ottoman Empire		SW	entity_2260.html
+42	France	Kingdom of France	sovereign			NW	entity_1225.html
+43	Frankfurt	Imperial City of Frankfurt	sovereign			NW	entity_9632.html
+44	Freiamt	Swiss Bailiwick of the Freie Ämter	dependent	Swiss Cantons		NW	entity_9672.html
+45	Friesland	County of East Friesland	dependent	Netherlands-England-Scotland		NW	entity_1281.html
+46	Gaster-Sargans	Swiss Bailiwick of Gaster-Sargans	dependent	Swiss Cantons		NW	entity_9678.html
+47	Geneva	Allied City of Geneva	dependent	Swiss Cantons		NW	entity_15008.html
+48	Genoa	Republic of Genoa	sovereign			SW	entity_1345.html
+49	Genç	Hereditary Sanjak of Genç	dependent	Ottoman Empire		SE	entity_9654.html
+50	Georgia	Kingdoms of Kartli and Kakheti	sovereign			SE	entity_343.html
+51	Gersau	Allied Republic of Gersau	dependent	Swiss Cantons		NW	entity_9671.html
+52	Ghadamès	Pashalik of Ghadames	dependent	Ottoman Empire		SW	entity_7012.html
+53	Goslar	Imperial City of Goslar	sovereign			NW	entity_9636.html
+54	Grandson	Swiss Bailiwick of Grandson	dependent	Swiss Cantons		NW	entity_9675.html
+55	Grasburg	Swiss Bailiwick of Grasburg	dependent	Swiss Cantons		NW	entity_9673.html
+56	Guria	Gurieli Kingdom	dependent	Ottoman Empire		SE	entity_7290.html
+57	Göksun	Autonomy of Göksun	dependent	Ottoman Empire		SE	entity_9624.html
+58	Habsburg	Habsburg Monarchy	sovereign			NW	entity_5689.html
+59	Hakkari	Principality of Hakkari	dependent	Ottoman Empire		SE	entity_1304.html
+60	Hamburg	Imperial City of Hamburg	sovereign			NW	entity_15024.html
+61	Hananeshas	Hananeshas	people			SW	entity_15319.html
+62	Hanover	Electorate of Brunswick-Lüneburg	sovereign			NW	entity_7708.html
+63	Haraktas	Haraktas	people			SW	entity_1664.html
+64	Hazro-Tercil	Hereditary Sanjak of Hazro-Tercil	dependent	Ottoman Empire		SE	entity_602.html
+65	Hazzo	Hereditary Sanjak of Hazzo	dependent	Ottoman Empire		SE	entity_9617.html
+66	Hechingen	Principality of Hohenzollern-Hechingen	sovereign			NW	entity_8583.html
+67	Hesse-Darmstadt	Landgraviate of Hesse-Darmstadt	sovereign			NW	entity_7838.html
+68	Hesse-Kassel	Landgraviate of Hesse-Kassel	sovereign			NW	entity_5700.html
+69	Hosap	Lordship of Hoşap	dependent	Ottoman Empire		SE	entity_9648.html
+70	Imereti	Kingdom of Imereti	dependent	Ottoman Empire		SE	entity_2562.html
+71	Kabards	Kabards	people			SE	entity_15215.html
+72	Karachays	Karachays	people			SE	entity_15344.html
+73	Kaufbeuren	Imperial City of Kaufbeuren	sovereign			NW	entity_9639.html
+74	Kempten	Imperial City of Kempten	sovereign			NW	entity_15015.html
+75	Kouko	Sultanate of Kouko	dependent	Ottoman Empire		SW	entity_7567.html
+76	Kulp	Hereditary Sanjak of Kulp	dependent	Ottoman Empire		SE	entity_9653.html
+77	Köthen	Principality of Anhalt-Köthen	sovereign			NW	entity_7936.html
+78	Laghouat	City of Laghouat	sovereign			SW	entity_1331.html
+79	Lebanon	Emirate of Lebanon	dependent	Ottoman Empire		SE	entity_2309.html
+80	Lesser Kabylia	Kalaat of the Beni Abbes	sovereign			SW	entity_15183.html
+81	Lindau	Imperial City of Lindau	sovereign			NW	entity_9633.html
+82	Lippe	County of Lippe	sovereign			NW	entity_8584.html
+83	Livane	Hereditary Sanjak of Livane	dependent	Ottoman Empire		SE	entity_1305.html
+84	Liège	Prince-Bishopric of Liège	sovereign			NW	entity_5671.html
+85	Lorraine	Duchy of Lorraine	sovereign			NW	entity_2514.html
+86	Lucca	Lordship of Lucca	sovereign			SW	entity_4974.html
+87	Lübeck	Imperial City of Lübeck	sovereign			NW	entity_15011.html
+88	Mainz	Electorate of Mainz	sovereign			NW	entity_15204.html
+89	Man	Kingdom of Man	dependent	England-Scotland-Netherlands		NW	entity_8804.html
+90	Mani	Capetans of Mani	dependent	Venice		SE	entity_1155.html
+91	Mantua	Duchy of Mantua	sovereign			SW	entity_2310.html
+92	Massa	Duchy of Massa and Carrara	sovereign			SW	entity_15058.html
+93	Masserano	Principality of Masserano	sovereign			NW	entity_7184.html
+94	Mecklenburg	Duchy of Mecklenburg	sovereign			NW	entity_4918.html
+95	Meiningen	Duchy of Saxe-Meiningen	sovereign			NW	entity_8247.html
+96	Memmingen	Imperial City of Memmingen	sovereign			NW	entity_9643.html
+97	Mingrelia	Principality of Mingrelia	dependent	Ottoman Empire		SE	entity_331.html
+98	Mirdita	Autonomy of the Mirdita Villages	dependent	Ottoman Empire		SE	entity_15005.html
+99	Modena	Duchy of Modena and Reggio	sovereign			SW	entity_5562.html
+100	Moks	Lordship of Moks	dependent	Ottoman Empire		SE	entity_1307.html
+101	Moldavia	Principality of Moldavia	dependent	Ottoman Empire		NE	entity_5162.html
+102	Monaco	Principality of Monaco	sovereign			SW	entity_9347.html
+103	Montenegro	Prince-Bishopric of Montenegro	dependent	Ottoman Empire		SW	entity_4693.html
+104	Montferrat	Duchy of Montferrat	dependent	Mantua		SW	entity_5668.html
+105	Mukriyan	Emirate of Mukriyan	dependent	Persia		SE	entity_9646.html
+106	Mulhouse	Allied City of Mulhouse	sovereign			NW	entity_9618.html
+107	Murten	Swiss Bailiwick of Murten	dependent	Swiss Cantons		NW	entity_9674.html
+108	Muscovy Rus	Tsardom of Rus	sovereign			NE	entity_2344.html
+109	Mzab	Cities of the Mzab	sovereign			SW	entity_3429.html
+110	Mühlhausen	Imperial City of Mühlhausen	sovereign			NW	entity_9635.html
+111	Nassau	Lordships of the House of Nassau	sovereign			NW	entity_7709.html
+112	Nemenchas	Nemenchas	people			SW	entity_2530.html
+113	Netherlands-England-Scotland	Republic of the Seven United Netherlands in Personal Union with the Kingdom of England and Ireland and the Kingdom of Scotland	sovereign			NW	entity_4117.html
+114	Neuchâtel	Allied County of Neuchâtel	dependent	Swiss Cantons		NW	entity_9669.html
+115	North Mingrelia	Land of North Mingrelia	dependent	Ottoman Empire		SE	entity_7281.html
+116	Nuremberg	Imperial City of Nuremberg	sovereign			NW	entity_9662.html
+117	Orange	Principality of Orange	sovereign			SW	entity_2528.html
+118	Ossetians	Ossetians	people			SE	entity_6193.html
+119	Ottoman Empire	Sublime Ottoman State	sovereign			SE	entity_6084.html
+120	Oulaid Nail	Oulaid Nail	people			SW	entity_15320.html
+121	Oulaid Sidi Sheikh	Oulaid Sidi Sheikh	people			SW	entity_15321.html
+122	Palu	Hereditary Sanjak of Palu	dependent	Ottoman Empire		SE	entity_9621.html
+123	Papal States	State of the Church	sovereign			SW	entity_2140.html
+124	Parma Piacenza	Duchy of Parma and Piacenza	sovereign			SW	entity_4908.html
+125	Passau	Prince-Bishopric of Passau	sovereign			NW	entity_9642.html
+126	Persia	Sefevid Empire of Persia	sovereign			SE	entity_165.html
+127	Pertakrek	Hereditary Sanjak of Pertakrek	dependent	Ottoman Empire		SE	entity_9649.html
+128	Pertek	Hereditary Sanjak of Pertek	dependent	Ottoman Empire		SE	entity_15004.html
+129	Piombino	Principality of Piombino	sovereign			SW	entity_8797.html
+130	Poland-Lithuania-Saxony	Commonwealth of the Crown of the Polish Kingdom and the Grand Duchy of Lithuania in Personal Union with the Electorate of Saxony	sovereign			NE	entity_2750.html
+131	Porrentruy	Prince-Bishopric of Basel	sovereign			NW	entity_9611.html
+132	Portugal	Kingdom of Portugal	sovereign			SW	entity_3852.html
+133	Ragusa	Republic of Ragusa	sovereign			SW	entity_3437.html
+134	Ratzeburg	Prince-Bishopric of Ratzeburg	sovereign			NW	entity_8445.html
+135	Regensburg	Imperial City of Regensburg	sovereign			NW	entity_9682.html
+136	Reutlingen	Imperial City of Reutlingen	sovereign			NW	entity_9644.html
+137	Rothenburg	Imperial City of Rothenburg	sovereign			NW	entity_9663.html
+138	Rottweil	Imperial City of Rottweil	sovereign			NW	entity_15007.html
+139	Sagman	Hereditary Sanjak of Sagman	dependent	Ottoman Empire		SE	entity_604.html
+140	Saint John	Order of Saint-John of Malta	sovereign			SW	entity_68.html
+141	Salm	Principality of Salm-Salm	sovereign			NW	entity_15025.html
+142	Salzburg	Archbishopric of Salzburg	sovereign			NW	entity_9652.html
+143	San Marino	Republic of San Marino	sovereign			SW	entity_5708.html
+144	Sargans	Swiss Bailiwicks of the Rhine Valley	dependent	Swiss Cantons		NW	entity_9680.html
+145	Savoy	Duchy of Savoy	sovereign			SW	entity_4705.html
+146	Savur	Autonomy of Savur	dependent	Ottoman Empire		SE	entity_9630.html
+147	Saxe-Hildburghausen	Duchy of Saxe-Hildburghausen	sovereign			NW	entity_4289.html
+148	Saxony-Poland-Lithuania	Electorate of Saxony in Personal Union with the Polish-Lithuanian Commonwealth	sovereign			NW	entity_4870.html
+149	Schleswig-Holstein-Gottorp	Duchy of Schleswig-Holstein-Gottorp	sovereign			NW	entity_6788.html
+150	Schwabisches Hall	Imperial City of Schwabisches Hall	sovereign			NW	entity_9665.html
+151	Schweinfurt	Imperial City of Schweinfurt	sovereign			NW	entity_9637.html
+152	Scotland-England-Netherlands	Kingdom of Scotland in Personal Union with the Kingdom of England and Ireland and with the Republic of the Seven United Netherlands	sovereign			NW	entity_2165.html
+153	Shavsheti	Hereditary Sanjak of Savsat	dependent	Ottoman Empire		SE	entity_9650.html
+154	Sigmaringen	Principality of Hohenzollern-Sigmaringen	sovereign			NW	entity_4074.html
+155	Sirvan	Lordship of Sirvan	dependent	Ottoman Empire		SE	entity_9661.html
+156	Small States	Small States of the Holy Roman Empire of the Germans	sovereign			NW	entity_2160.html
+157	Soran	Lordship of Soran	dependent	Ottoman Empire		SE	entity_9628.html
+158	Souss	Kingdom of the Souss	dependent	Fez-Morocco		SW	entity_15001.html
+159	Spanish	Spanish Monarchy	sovereign			SW	entity_1122.html
+160	St. Gallen	Allied Prince-Abbey of Saint Gall	dependent	Swiss Cantons		NW	entity_9677.html
+161	Suli	Autonomy of the Suli Mountain	dependent	Ottoman Empire		SE	entity_603.html
+162	Sulzbach	Duchy of Palatinate-Sulzbach	sovereign			NW	entity_7234.html
+163	Svaneti	Principality of Svaneti	sovereign			SE	entity_8078.html
+164	Sweden	Kingdom of Sweden	sovereign			NW	entity_8246.html
+165	Swiss Cantons	Swiss Confederation	sovereign			NW	entity_5666.html
+166	Three Leagues	Allied Free State of the Three Leagues	dependent	Swiss Cantons		NW	entity_15009.html
+167	Thurgau	Swiss Bailiwick of Thurgau	dependent	Swiss Cantons		NW	entity_9655.html
+168	Tomarza	Autonomy of Tomarza	dependent	Ottoman Empire		SE	entity_9622.html
+169	Touggourt	Sultanate of Touggourt	dependent	Ottoman Empire		SW	entity_1076.html
+170	Trier	Electorate of Trier	sovereign			NW	entity_3674.html
+171	Tripoli	Beylik of Tripoli in Africa	dependent	Ottoman Empire		SW	entity_7586.html
+172	Tunis	Hereditary Eyalet of Tunis	dependent	Ottoman Empire		SW	entity_2146.html
+173	Tuscany	Grand-Duchy of Tuscany	sovereign			SW	entity_4973.html
+174	Ukraine	Ukraine	dependent	Muscovy Rus		NE	entity_2115.html
+175	Ulm	Imperial City of Ulm	sovereign			NW	entity_9664.html
+176	Ultramontani	Swiss Bailiwicks Beyond the Mountains	dependent	Swiss Cantons		NW	entity_9679.html
+177	Vaghashkert	Lordship of Vaghashkert	dependent	Ottoman Empire		SE	entity_9657.html
+178	Valais	Allied Zehnden of Valais	dependent	Swiss Cantons		NW	entity_9626.html
+179	Venice	Republic of Venice	sovereign			SW	entity_2490.html
+180	Vostan	Hereditary Sanjak of Vostan	dependent	Ottoman Empire		SE	entity_9659.html
+181	Waldeck	Principality of Waldeck-Pyrmont	sovereign			NW	entity_2746.html
+182	Wallachia	Principality of Wallachia	dependent	Ottoman Empire		SE	entity_5170.html
+183	Weimar	Duchy of Saxe-Weimar	sovereign			NW	entity_113.html
+184	Wetzlar	Imperial City of Wetzlar	sovereign			NW	entity_15023.html
+185	Wittelsbach	House of Wittelsbach	sovereign			NW	entity_923.html
+186	Württemberg	Duchy of Württemberg	sovereign			NW	entity_2624.html
+187	Zagorohoria	Koinon of the Zagorisians	dependent	Ottoman Empire		SE	entity_7847.html
+188	Zerbst	Principality of Anhalt-Zerbst	sovereign			NW	entity_6319.html
+189	Zeytun	Autonomy of Zeytun	dependent	Ottoman Empire		SE	entity_9623.html
+190	Zweibrücken	Duchy of Zweibrücken	sovereign			NW	entity_15028.html
+191	Çabakcur	Hereditary Sanjak of Çabakcur	dependent	Ottoman Empire		SE	entity_9620.html
+192	Çatak	Hereditary Sanjak of Çatak	dependent	Ottoman Empire		SE	entity_1306.html
+193	Çermik	Hereditary Sanjak of Çermik	dependent	Ottoman Empire		SE	entity_9631.html
+194	Échallens	Swiss Bailiwick of Échallens	dependent	Swiss Cantons		NW	entity_9676.html
+195	Überlingen	Imperial City of Überlingen	sovereign			NW	entity_9667.html

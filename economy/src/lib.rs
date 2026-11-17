@@ -35,13 +35,31 @@ pub const WORKER: usize = 5;
 pub const FIRM: usize = 8;
 pub const PERSON: usize = 3;
 
-/// The sum of a series of the national accounts over the last `window` periods. While fewer periods are computed,
-/// the first row (the starting position) stands for the periods before the start.
-fn over_window(series: &[f64], computed: usize, window: usize) -> f64 {
+/// Number of series of the national accounts that [`Economy::figures`] sums over a window.
+pub const SUMMED: usize = 7;
+
+/// Row `t` of the series of the national accounts that [`Economy::figures`] sums over a window, in this order: real
+/// and nominal GDP, real consumption of the households and of the government, real fixed capital formation, real
+/// exports and real imports.
+pub(crate) fn summed(d: &Data, t: usize) -> [f64; SUMMED] {
+    [
+        d.real_gdp[t],
+        d.nominal_gdp[t],
+        d.real_household_consumption[t],
+        d.real_government_consumption[t],
+        d.real_fixed_capitalformation[t],
+        d.real_exports[t],
+        d.real_imports[t],
+    ]
+}
+
+/// The sum of series `k` of the kept rows ([`clock::DailyClock::accounts`]) over the last `window` periods. While
+/// fewer periods are computed, the first row is the starting position and stands for the periods before the start.
+fn over_window(rows: &[[f64; SUMMED]], k: usize, computed: usize, window: usize) -> f64 {
     if computed >= window {
-        return series[series.len() - window..].iter().sum();
+        return rows[rows.len() - window..].iter().map(|r| r[k]).sum();
     }
-    (window - computed) as f64 * series[0] + series[1..].iter().sum::<f64>()
+    (window - computed) as f64 * rows[0][k] + rows[1..].iter().map(|r| r[k]).sum::<f64>()
 }
 
 impl Economy {
@@ -57,6 +75,7 @@ impl Economy {
         let Model { w_act, w_inact, firms, banks, cb, gov, rotw, agg, prop, data, ext: _ } = Model::new(&p, &ic, &mut rng)?;
         let mut ext = DailyClock::new(plan, window, firms.len())?;
         ext.start = [data.real_gdp[0], data.nominal_gdp[0]];
+        ext.accounts = vec![summed(&data, 0)];
         Ok(Economy { model: AbstractModel { w_act, w_inact, firms, banks, cb, gov, rotw, agg, prop, data, ext }, rng })
     }
 
@@ -85,15 +104,13 @@ impl Economy {
         Ok(self)
     }
 
-    /// Computes `periods` periods: the port's `run`, one step and one row of its national accounts per period. Of
-    /// the rows only the last `window` are kept (no rule of the port reads them).
+    /// Computes `periods` periods: the port's `run`, one step and one row of its national accounts per period. No
+    /// rule of the port reads these rows. Of every new row the clock keeps the series that [`Economy::figures`]
+    /// sums, for the last `window` periods ([`clock::DailyClock::accounts`]); of the port's rows only the last
+    /// stays.
     pub fn step(&mut self, periods: usize) {
         self.model.run(periods, &mut self.rng);
-        let keep = self.model.ext.window;
-        let rows = self.model.data.collection_time.len();
-        if rows > keep {
-            drop_rows(&mut self.model.data, rows - keep);
-        }
+        take_rows(&mut self.model);
     }
 
     /// Periods computed so far.
@@ -106,22 +123,22 @@ impl Economy {
     /// model's own units; "real" means at the prices of the starting position. The order is the order of
     /// src/sim/economy/engine.ts.
     pub fn figures(&self) -> [f64; FIGURES] {
-        let (m, d) = (&self.model, &self.model.data);
+        let m = &self.model;
         let (n, window) = (self.periods(), m.ext.window);
-        let flow = |v: &[f64]| over_window(v, n, window);
+        let flow = |k: usize| over_window(&m.ext.accounts, k, n, window);
         let sum = |v: &[f64]| v.iter().sum::<f64>();
         let employees = m.w_act.O_h.iter().filter(|o| o.is_some()).count();
         [
             n as f64,
-            flow(&d.real_gdp),
+            flow(0),
             window as f64 * m.ext.start[0],
-            flow(&d.nominal_gdp),
+            flow(1),
             window as f64 * m.ext.start[1],
-            flow(&d.real_household_consumption),
-            flow(&d.real_government_consumption),
-            flow(&d.real_fixed_capitalformation),
-            flow(&d.real_exports),
-            flow(&d.real_imports),
+            flow(2),
+            flow(3),
+            flow(4),
+            flow(5),
+            flow(6),
             employees as f64,
             (m.firms.len() + m.banks.len()) as f64,
             (m.w_act.len() - employees) as f64,
@@ -131,10 +148,6 @@ impl Economy {
         ]
     }
 
-    /// The port's accounting identities, each 0 up to rounding: value added against incomes, nominal GDP against its
-    /// uses, real GDP against its uses (summed over the rows of the national accounts that are kept), the balance
-    /// sheet of the central bank, the combined balance sheet of the banks; then nominal GDP summed over those rows,
-    /// as the scale to judge the first three by.
     /// The persons and the firms of the economy one by one (economy feature 10): what the world writes to the persons
     /// and firms of its city after every day. First four counts: the workers, the firms, the banks and the persons
     /// who do not work, each in the order of the port's lists (a position in a list never changes: the cities of the
@@ -178,6 +191,10 @@ impl Economy {
         v
     }
 
+    /// The port's accounting identities, each 0 up to rounding: value added against incomes, nominal GDP against its
+    /// uses, real GDP against its uses (each for the last period computed), the balance sheet of the central bank,
+    /// the combined balance sheet of the banks; then the nominal GDP of that period, as the scale to judge the first
+    /// three by.
     pub fn checks(&self) -> [f64; 6] {
         let (a, b, c) = get_accounting_identities(&self.model.data);
         let (cb, banks) = get_accounting_identity_banks(&self.model);
@@ -194,6 +211,22 @@ impl Economy {
         let (model, rng) = state::load(bytes)?;
         Ok(Economy { model, rng })
     }
+}
+
+/// Moves the rows of the national accounts that the port has added since the last call into the rows the clock keeps
+/// (the series of [`summed`], for the last `window` periods), and leaves the port its last row alone. All series of
+/// the port keep the same length: its collector writes a new row at the position the first series gives.
+pub(crate) fn take_rows(m: &mut AbstractModel<DailyClock>) {
+    let rows = m.data.collection_time.len();
+    for t in 1..rows {
+        let row = summed(&m.data, t);
+        m.ext.accounts.push(row);
+    }
+    let kept = m.ext.accounts.len();
+    if kept > m.ext.window {
+        m.ext.accounts.drain(..kept - m.ext.window);
+    }
+    drop_rows(&mut m.data, rows - 1);
 }
 
 /// Removes the first `n` rows of the national accounts. Every series is named without `..`: when the port gains a
@@ -230,28 +263,33 @@ pub mod abi {
     use super::Economy;
     use crate::trade::Cities;
     use std::cell::{RefCell, UnsafeCell};
+    use std::rc::Rc;
     use std::sync::Once;
 
     thread_local! {
-        static OUT: RefCell<Vec<u8>> = const { RefCell::new(Vec::new()) };
+        /// The result of the last call.
+        static OUT: RefCell<Rc<Vec<u8>>> = RefCell::new(Rc::new(Vec::new()));
         /// The cities of the state that the last [`sce_step`] or [`sce_create`] handed out, beside that state. A
         /// call that is given exactly these bytes again (the world server computes day after day) takes the cities
         /// from here instead of reading the bytes; any other bytes are read. So the answers stay a function of the
-        /// bytes alone.
-        static LAST: RefCell<Option<(Vec<u8>, Cities)>> = const { RefCell::new(None) };
+        /// bytes alone. The bytes are the same list as the result in [`OUT`], not a copy: the state of a world is
+        /// tens of megabytes, and the memory of an instance never shrinks.
+        static LAST: RefCell<Option<(Rc<Vec<u8>>, Cities)>> = const { RefCell::new(None) };
     }
 
-    /// The cities of a state, taken out of [`LAST`] when the bytes are those it holds.
+    /// The cities of a state, taken out of [`LAST`] when the bytes are those it holds. The result of the call before
+    /// is given up first, so that the bytes it shares with [`LAST`] are free before the next state is written.
     fn take(state: &[u8]) -> Result<Cities, String> {
+        OUT.with(|o| *o.borrow_mut() = Rc::new(Vec::new()));
         match LAST.with(|l| l.borrow_mut().take()) {
-            Some((bytes, all)) if bytes == state => Ok(all),
+            Some((bytes, all)) if *bytes == state => Ok(all),
             _ => Cities::load(state),
         }
     }
 
     /// Hands out the state of `all` and keeps both in [`LAST`].
-    fn keep(all: Cities) -> Vec<u8> {
-        let bytes = all.save();
+    fn keep(all: Cities) -> Rc<Vec<u8>> {
+        let bytes = Rc::new(all.save());
         LAST.with(|l| *l.borrow_mut() = Some((bytes.clone(), all)));
         bytes
     }
@@ -259,7 +297,7 @@ pub mod abi {
     /// What `f` says about the cities of a state, which stay in [`LAST`] when they are the ones there.
     fn look<T>(state: &[u8], f: impl FnOnce(&Cities) -> T) -> Result<T, String> {
         LAST.with(|l| match &*l.borrow() {
-            Some((bytes, all)) if bytes == state => Ok(f(all)),
+            Some((bytes, all)) if **bytes == state => Ok(f(all)),
             _ => Cities::load(state).map(|all| f(&all)),
         })
     }
@@ -292,17 +330,17 @@ pub mod abi {
         });
     }
 
-    fn answer(r: Result<Vec<u8>, String>) -> u32 {
+    fn answer(r: Result<Rc<Vec<u8>>, String>) -> u32 {
         let (ok, bytes) = match r {
             Ok(b) => (1, b),
-            Err(e) => (0, e.into_bytes()),
+            Err(e) => (0, Rc::new(e.into_bytes())),
         };
         OUT.with(|o| *o.borrow_mut() = bytes);
         ok
     }
 
-    fn floats(v: impl IntoIterator<Item = f64>) -> Vec<u8> {
-        v.into_iter().flat_map(|x| x.to_le_bytes()).collect()
+    fn floats(v: impl IntoIterator<Item = f64>) -> Rc<Vec<u8>> {
+        Rc::new(v.into_iter().flat_map(|x| x.to_le_bytes()).collect())
     }
 
     /// SAFETY: `ptr` and `len` describe memory from [`sce_alloc`] that the caller has filled.

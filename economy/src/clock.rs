@@ -66,6 +66,10 @@ pub struct DailyClock {
     pub periods: Vec<u32>,
     /// real and nominal GDP of the starting position, per period
     pub start: [f64; 2],
+    /// of the national accounts, the series that the key figures sum over a window ([`crate::summed`]): one row per
+    /// period for the last `window` periods, oldest first; while fewer periods are computed, the first row is the
+    /// starting position. The port's own rows are not kept (no rule reads them).
+    pub accounts: Vec<[f64; crate::SUMMED]>,
     /// the wage in money (economy feature 7): per firm the wage in money it pays for a unit of work, and the real
     /// wage it had when the wage in money was set. Both empty: the wage follows the consumer prices, as in the port.
     pub wage: Vec<f64>,
@@ -85,7 +89,7 @@ impl DailyClock {
         if plan == 0 || window == 0 {
             return Err(format!("a plan every {plan} periods and windows of {window} periods: both need at least one period"));
         }
-        Ok(DailyClock { plan, window, demand: vec![0.0; firms], periods: vec![0; firms], start: [f64::NAN; 2], wage: Vec::new(), real_wage: Vec::new(), demand_pull: false, trade: None })
+        Ok(DailyClock { plan, window, demand: vec![0.0; firms], periods: vec![0; firms], start: [f64::NAN; 2], accounts: Vec::new(), wage: Vec::new(), real_wage: Vec::new(), demand_pull: false, trade: None })
     }
 
     /// Whether firm `i` plans in period `t` (counted from 1). Every firm plans in the first period; after that

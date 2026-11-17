@@ -348,6 +348,8 @@ export class WorldCore {
     const changes: [number, number][] = [];
     const o = this.s.place.owner;
     for (let i = 0; i < o.length; i++) if (o[i] !== this.prevOwner[i]) { changes.push([i, o[i]]); this.prevOwner[i] = o[i]; }
+    // the borders moved (src/sim/systems/borders.ts): the realms first, a realm may have come in and the counts changed
+    if (changes.length) this.rulersChanged();
     for (const ss of this.sessions) {
       ss.send({ type: 'tick', day: this.s.day });
       if (changes.length) ss.send({ type: 'owners', changes });

@@ -8,6 +8,9 @@ import { wasmEconomyEngine, type EconomyClock, type EconomyEngine, type EconomyP
 import { createWorldState, type SetupState } from '../../src/sim/setup';
 import type { WorldState } from '../../src/sim/state';
 import { compileChronicle, type Chronicle } from '../../src/sim/content/chronicle';
+import { compileBorders, type Borders } from '../../src/sim/content/borders';
+import { cityPeopleByPlace } from '../../src/sim/systems/people';
+import { toHeads } from '../../src/sim/scale';
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '../..');
 export const dataPath = (name: string): string => resolve(ROOT, 'public/data', name);
@@ -57,11 +60,26 @@ export function loadChronicle(year: number): Chronicle | null {
   const f = dataPath(`rulers_${year}.json`);
   return existsSync(f) ? compileChronicle(JSON.parse(readFileSync(f, 'utf8'))) : null;
 }
-/** The world with the chronicle of rulers of `year`. */
+/** The chronicle of borders of a start year (public/data/borders_<year>.json), compiled; null when there is none. */
+export function loadBorders(year: number): Borders | null {
+  const f = dataPath(`borders_${year}.json`);
+  return existsSync(f) ? compileBorders(JSON.parse(readFileSync(f, 'utf8'))) : null;
+}
+/** The world with the chronicles of rulers and of borders of `year`. */
 export function loadWorldFor(year: number): World {
   const w = loadWorld();
   if (w.chronicle?.year !== year) w.chronicle = loadChronicle(year);
+  if (w.borders?.year !== year) w.borders = loadBorders(year);
   return w;
+}
+/** The people of every place of the map in heads (1:100), as the setup of `year` spreads them, no place smaller than
+ *  its cities: the numbers of the sources, which the calibrations spread the people of their cases by. The world has
+ *  only its persons (src/sim/systems/hamlets.ts). */
+export function peopleOfMap(year = 1356): Float32Array {
+  const setup = loadSetup(year), pop = new Float32Array(loadWorld().L);
+  for (let i = 0; i < pop.length; i++) pop[i] = toHeads(Math.max(0, setup.pop[i] ?? 0));
+  for (const [p, n] of cityPeopleByPlace(year)) if (pop[p] < toHeads(n)) pop[p] = toHeads(n);
+  return pop;
 }
 export function newWorldState(seed = 1356, year = 1356): { s: WorldState; w: World } {
   const w = loadWorldFor(year);

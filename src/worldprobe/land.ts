@@ -6,14 +6,14 @@ import { Land } from './climate';
 
 /**
  * The finest blocks are drawn this many steps finer than the cells of the land's data: a cell of the data is about
- * 0.77 km × cos(latitude) wide, a finest block half of that (some 260 m in middle Europe). Houses, trees and people
- * are as large in blocks as they would be on the data's own cells, so that the land is less far too small for them:
- * Paris (200,000 people at one person to a hundred) would take 30 km of the data's cells and takes about 16 km. At
- * two steps finer it took 8 km, but a picture then held a quarter of the land and read as too fine a grain. Step 0
- * of the map is drawn from the data's finest cells (region.ts), step 1 is drawn from them as they are, and each
- * coarser step from the data's next coarser one.
+ * 0.77 km × cos(latitude) wide, a finest block a quarter of that (some 130 m in middle Europe). Houses, trees and
+ * people are as large in blocks as they would be on the data's own cells, so that the land is less far too small for
+ * them: Paris (200,000 people at one person to a hundred) would take 30 km of the data's cells and takes about 8 km;
+ * at one step finer it took 16 km, and houses and trees read as too large for the land. Step 0 of the map is drawn
+ * from the data's finest cells (region.ts), step 2 is drawn from them as they are, and each coarser step from the
+ * data's next coarser one.
  */
-export const FINER_STEPS = 1;
+export const FINER_STEPS = 2;
 /** finest blocks along a cell of the data */
 export const FINER = 2 ** FINER_STEPS;
 
