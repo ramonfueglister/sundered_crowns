@@ -3,6 +3,7 @@
 import type { WorldState } from './state';
 import { STATE_VERSION, PERSON_SCHEMA, FAMILY_SCHEMA, REALM_SCHEMA, ALIVE } from './state';
 import { foundRulers } from './systems/rulers';
+import { foundBorders } from './systems/borders';
 import { type Column, makeColumns } from './ecs';
 import type { World } from './world';
 import { foundEconomy } from './systems/economy';
@@ -105,6 +106,12 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     countPeople(s);
     cultivate(s, w); bringInHarvest(s, w);
     s.v = 17;
+  }
+  if (s.v === 17) { // 17 → 18: the borders (src/sim/systems/borders.ts). The changes of the chronicle of borders up to
+    // the day the world has reached, as a world that had them from the first day; the realms that came in on the way
+    // get their rows in the same order.
+    foundBorders(s, w);
+    s.v = 18;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one

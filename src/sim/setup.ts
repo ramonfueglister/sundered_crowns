@@ -13,6 +13,7 @@ import { foundEconomy } from './systems/economy';
 import { foundPeople } from './systems/people';
 import { countPeople, settleHamlets } from './systems/hamlets';
 import { foundRulers } from './systems/rulers';
+import { foundBorders } from './systems/borders';
 import { toHeads } from './scale';
 
 export interface SetupRealm {
@@ -55,6 +56,7 @@ export function createWorldState(w: World, setup: SetupState, seed: number): Wor
   // a capital the realm does not hold is no capital
   for (let r = 0; r < realm.size; r++) { const c = realm.cols.capital[r]; if (c >= 0 && place.owner[c] !== r) realm.cols.capital[r] = -1; }
   foundPeople(s);
+  foundBorders(s, w); // the borders of the day the world starts on (src/sim/systems/borders.ts), before the rulers' seats
   foundRulers(s, w); // before the economy, which leaves them out (src/sim/systems/work.ts) but keeps their purse
   foundEconomy(s, w);
   settleHamlets(s); // the families who live from agriculture, by the firms of the economy
