@@ -11,7 +11,8 @@ export const CYPRESS = [rgb(0x327234), rgb(0x2c6831), rgb(0x387a38)];
 export const JUNGLE = [rgb(0x4f9a2e), rgb(0x5aa232), rgb(0x47902c), rgb(0x62a636)];
 const PALM_TRUNK = rgb(0xa98558);
 export const PALM = [rgb(0x5aa23a), rgb(0x66aa3e), rgb(0x4f9636)], ACACIA = [rgb(0x8a9a34), rgb(0x94a23a), rgb(0x7e9230)];
-export const WHEAT = [rgb(0xffcb4e), rgb(0xf8c146), rgb(0xffd154)], WHEAT_SIDE = rgb(0xdea43e);
+// ripe corn as pale straw gold, near the meadow's own yellow-green: an orange field shouts from every zoom
+export const WHEAT = [rgb(0xecd26a), rgb(0xe6ca62), rgb(0xf0d672)], WHEAT_SIDE = rgb(0xd0b050);
 /** the spring corn: still green when the winter corn is ripe, and not yet as tall */
 export const OATS = [rgb(0x9ccc52), rgb(0x92c44a), rgb(0xa6d25a)], OATS_SIDE = rgb(0x74a83c);
 /** sides of crops turned from the sun: brighter than a real surface could be, see `crops` */
