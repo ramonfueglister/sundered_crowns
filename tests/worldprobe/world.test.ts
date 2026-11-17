@@ -198,6 +198,11 @@ describe('a walled town of the plan from farther away', () => {
     }
     expect(paved).toBe(8 * 7 - 4 - 4 * 3);
   });
+  it('keeps the houses that the plan lists in a piece after the town\'s', () => {
+    usePlan({ pieceBlocks: 200, greatKinds: [], pieces: { '1,0': { houses: [], towns: [{ site: 0, cx: 300, cz: 190, half: 40, wall: null }] }, '1,1': { houses: [290, 204, 8, 6, 2, 60, 0xffffff, 0xff0000, 0] } } });
+    const c = coverLand(ground(0), 1, new Batch(), [], { ploughed: () => 0, vines: () => 0, farm: () => styleOf('').house, own: () => true, woods: () => null });
+    for (let z = 102; z < 105; z++) for (let x = 145; x < 149; x++) expect(c.kind![z * N + x], `${x}, ${z}`).toBe(1);
+  });
 });
 
 describe('a monument', () => {

@@ -311,6 +311,12 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
         if (o.own(Math.floor(mx), Math.floor(mz))) things.append(model.build(seeded(1000 + id + k)), m.makeScale(1 / wider, 1 / wider, 1 / wider).setPosition(mx, y, mz));
         occlude(g, x0, z0, x1, z1, y + tenths / 10 / wider);
       }
+    }
+    // the towns after all the houses: a town's paving and wall leave the ground of every house free, also of
+    // those in a piece that comes after the town's
+    for (let pz = fine(oz); pz <= fine(oz + N); pz++) for (let px = fine(ox); px <= fine(ox + N); px++) {
+      const here = plan.pieces[`${px},${pz}`];
+      if (!here) continue;
       // a walled town's ground is paved round its houses, and at the first far step its wall stands about it,
       // open where the finest step's wall is open for water
       for (const t of here.towns ?? []) {
