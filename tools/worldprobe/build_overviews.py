@@ -18,7 +18,9 @@ STEPS = 7
 LAND, SEA, LAKE = 0, 1, 2
 BAND = 2048
 # the rivers of a step: those of at most this rank (Natural Earth's scale rank; rivers read from the drainage are 9 and 10)
-RANK = {1: 10, 2: 8, 3: 6, 4: 5, 5: 4, 6: 3, 7: 2}
+# A river narrower than a block is drawn as a tint of the blocks it runs through (world.ts STREAM_BELOW), so the
+# smaller ones go along a step farther than they did as rows of water blocks, and fade there instead of vanishing.
+RANK = {1: 10, 2: 10, 3: 8, 4: 6, 5: 5, 6: 4, 7: 3}
 
 
 def write(out, meta, layers, rivers, gx0, gy0):

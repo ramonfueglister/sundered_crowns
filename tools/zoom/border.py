@@ -1,5 +1,5 @@
 """Signed colour difference across the borders of the map's steps: stills of tools/zoom/sweep.mjs in pairs (finer, coarser),
-laid over each other as tools/zoom/jumps.py does. Prints the mean of coarser minus finer on the land (0 … 255).
+laid over each other as tools/zoom/jumps.py does. Prints the mean of coarser minus finer on the land (0 … 255), of the sRGB numbers and (`light`) of the light they stand for.
 Usage: python3 border.py <dir>"""
 import glob, math, re, sys
 import numpy as np
@@ -16,4 +16,10 @@ for k in range(0, len(files) - 1, 2):
     a = np.asarray(near.resize((w, tall), Image.LANCZOS).crop((0, (tall - h) // 2, w, (tall - h) // 2 + h)).filter(ImageFilter.GaussianBlur(6)), float)
     b = np.asarray(far.crop(box).filter(ImageFilter.GaussianBlur(6)), float)
     d = (b - a).reshape(-1, 3); land = (a.reshape(-1,3)[:,2] < 120)  # not sea
-    print(f'{wide[k]:6d}->{wide[k+1]:6d} signed land {d[land].mean(0).round(1)} abs {np.abs(d[land]).mean():.1f}  all {d.mean(0).round(1)}')
+    # the eye mixes light, not sRGB numbers: a pattern of dark and light blocks and their even mix look alike, so
+    # the means are taken of the light and told as the sRGB colour of that light
+    lin = lambda v: np.where(v <= 10.31, v / 3294.6, ((v / 255 + 0.055) / 1.055) ** 2.4)
+    back = lambda v: np.where(v <= 0.0031308, v * 3294.6, 255 * (1.055 * v ** (1 / 2.4) - 0.055))
+    la, lb = np.asarray(near.resize((w, tall), Image.LANCZOS).crop((0, (tall - h) // 2, w, (tall - h) // 2 + h)), float).reshape(-1, 3), np.asarray(far.crop(box), float).reshape(-1, 3)
+    light = back(lin(lb)[land].mean(0)) - back(lin(la)[land].mean(0))
+    print(f'{wide[k]:6d}->{wide[k+1]:6d} signed land {d[land].mean(0).round(1)} abs {np.abs(d[land]).mean():.1f}  all {d.mean(0).round(1)}  light {light.round(1)}')

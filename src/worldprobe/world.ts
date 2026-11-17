@@ -7,7 +7,7 @@ import { ACACIA, CYPRESS, JUNGLE, LEAVES, PALM, acacia, cypress, palm, tree } fr
 import { type Ground, type GroundTraits, LAND_Y, Mat, N, SEA_Y, SUMMIT, idx, inGrid, measureShore, occlude, rockPillar } from '../lookprobe/layout';
 import type { Shape, StageScene } from '../lookprobe/stage';
 import { crowd } from '../figures';
-import { type Part, buildTerrain, buildWater } from '../lookprobe/terrain';
+import { type Part, WATER_SHALLOW, buildTerrain, buildWater } from '../lookprobe/terrain';
 import { buildShore } from '../lookprobe/shore';
 import { type Climate, FIELDS_KNOWN, KIND, Land, WOODS_KNOWN, climateAt, snowLineAt, treeLineAt } from './climate';
 import { type Arable, arableAt } from './arable';
@@ -71,6 +71,15 @@ const SLOPE = rgb(0x86983c);
  * 300 m, more than most were, so that they show from the low camera; never less than a block
  */
 const RIVER_HALF = 0.5, BROOK_HALF = 0.3;
+/**
+ * From afar a block is wider than a river. A river narrower than STREAM_BELOW blocks is then no row of water blocks
+ * (which made a brook many times its width, until the next step dropped it at once) but colours the blocks it runs
+ * through: by its width as a share of the block, STREAM_SEEN times that for the banks that show with it, and never
+ * less than STREAM_LEAST, so that its line can be followed. The greatest rivers of a step stay water: by the data's
+ * step (1 is the first coarser than the land's cells) those of at most this rank, the rivers that are still there
+ * two steps farther out (tools/worldprobe/build_overviews.py RANK).
+ */
+const STREAM_BELOW = 0.4, STREAM_SEEN = 1.5, STREAM_LEAST = 0.35, STREAM_RANK: Record<number, number> = { 1: 8, 2: 6, 3: 5, 4: 4, 5: 3, 6: 2, 7: 2 };
 /** trees stand on a world grid of this pitch, each moved a little off its point */
 const TREE_PITCH = 2.4;
 /** of the places for a tree, this share carries one on the open land (single trees), and this much more inside a wood: the woods stand closed, the land between them is clear */
@@ -242,10 +251,24 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   terrace(level, g.mat);
 
   // rivers: each line is walked from its high end, never rising again, and cut one block into the valley floor
-  const river = new Int16Array(N * N).fill(-1);
+  const river = new Int16Array(N * N).fill(-1), stream = new Float32Array(N * N);
   for (const r of region.rivers) {
+    const wide = (2 * (r.rank <= 6 ? RIVER_HALF : BROOK_HALF)) / cell;
+    // a river much narrower than a block, and not one of the step's great ones, is no water of its own: it colours
+    // the blocks it runs through as far as it covers them (below, on the cover), and cuts no valley
+    if (wide < STREAM_BELOW && r.rank > (STREAM_RANK[step - FINER_STEPS] ?? 0)) {
+      const share = Math.min(1, Math.max(STREAM_LEAST, wide * STREAM_SEEN));
+      for (let k = 0; k + 1 < r.pts.length; k++) {
+        const a = toGround(...r.pts[k]), b = toGround(...r.pts[k + 1]), len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+        for (let t = 0; t <= len; t += 0.5) {
+          const x = Math.floor(a[0] + ((b[0] - a[0]) * t) / Math.max(len, 1e-6)), z = Math.floor(a[1] + ((b[1] - a[1]) * t) / Math.max(len, 1e-6));
+          if (inGrid(x, z) && kind[idx(x, z)] === Water.Land) stream[idx(x, z)] = Math.max(stream[idx(x, z)], share);
+        }
+      }
+      continue;
+    }
     // a river is as wide as at the finest step, and never narrower than a block
-    const half = Math.max(0.6, (r.rank <= 6 ? RIVER_HALF : BROOK_HALF) / cell), steps: [number, number, number][] = [];
+    const half = Math.max(0.6, wide / 2), steps: [number, number, number][] = [];
     for (let k = 0; k + 1 < r.pts.length; k++) {
       const a = toGround(...r.pts[k]), b = toGround(...r.pts[k + 1]), len = Math.hypot(b[0] - a[0], b[1] - a[1]);
       for (let t = 0; t < len; t += 0.5) {
@@ -435,7 +458,17 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
       if (here === Land.Savanna) return { share, crowns: ACACIA, tall: false, laid };
       return hash2(x + ox, z + oz, 76) < conifers(i) ? { share, crowns: CYPRESS, tall: true, laid, conifers: conifers(i) } : { share, crowns: LEAVES, tall: false, laid, conifers: conifers(i) };
     } });
-  } else {
+  }
+  // the rivers narrower than a block lie on what covers the ground: the blocks they run through take the water's colour
+  if (cover) for (let i = 0; i < N * N; i++) {
+    const wet = stream[i];
+    if (!wet || g.wet[i] || g.mat[i] === Mat.Rock || cover.town[i]) continue;
+    const was = cover.has[i] ? cover.share[i] * (1 - wet) : 0, all = wet + was;
+    for (let k = 0; k < 3; k++) cover.top[i * 3 + k] = (WATER_SHALLOW[k] * wet + cover.top[i * 3 + k] * was) / all;
+    if (!cover.has[i]) { cover.has[i] = 1; cover.rise[i] = 0; cover.side.set(WATER_SHALLOW, i * 3); }
+    cover.share[i] = all;
+  }
+  if (step === 0) {
     // the monuments that stood in 1356 and have a model
     landmarks.forEach((l, id) => {
       const here = toGround(...cellOf(region, l.lon, l.lat));

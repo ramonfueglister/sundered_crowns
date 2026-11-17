@@ -96,8 +96,14 @@ const tinted = (c: RGB, by: readonly [number, number, number]): RGB => [c[0] * b
  * of both sides of the steps' borders (2300 against 2500 blocks across, 4600 against 5000, 9200 against 10000,
  * 18400 against 20000; tools/zoom/border.py) at Paris, checked in the Black Forest, in Tuscany and in Sweden.
  */
+/** from this step on a block is larger than a wood (forest.ts WOOD: forty finest blocks) */
+const WOODS_BLEND = 5;
+/** a walled town smaller than a block still shows on the block of its middle, this much of it its roofs: a town is found from as far as the land is seen */
+const TOWN_LEAST = 0.6;
+/** mixed evenly into a block the woods show paler than as blocks of their own beside open ones: this much more of them, measured at the border of the steps (9200 against 10000 blocks across at Paris) */
+const BLEND_SEEN = 1.3;
 const SIDE_FLAT = 0.55, LONE_SEEN = 1.6, EDGE_SEEN = 16;
-const FLAT_WOODS = [0.55, 0.55, 0.55] as const, STANDS_OVER: Record<number, number> = { 3: 8, 4: 10, 5: 8, 6: 6, 7: 2 };
+const FLAT_WOODS = [0.55, 0.55, 0.55] as const, STANDS_OVER: Record<number, number> = { 3: 8, 4: 10, 5: 8, 6: 7, 7: 4 };
 /**
  * The same for the fields, as a share of the colours far.ts gave them by eye: the rows of the winter corn stand
  * in each other's shade and creases, the spring corn shows more of its ground, and the finest step's vineyards
@@ -293,6 +299,18 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
       // open where the finest step's wall is open for water
       for (const t of here.towns ?? []) {
         const x0 = Math.floor((t.cx - t.half) / wider) - ox, x1 = Math.ceil((t.cx + t.half) / wider) - ox, z0 = Math.floor((t.cz - t.half) / wider) - oz, z1 = Math.ceil((t.cz + t.half) / wider) - oz;
+        if (wider > 2 * t.half) {
+          // a town smaller than a block: the blocks it lies on show its roofs as far as it covers them
+          const s = sites.find((q) => q.id === t.site), roofs = s ? shade(pick(s.style.house.roofs, 0), ROOF_SEEN) : null;
+          for (let z = z0; roofs && z < z1; z++) for (let x = x0; x < x1; x++) {
+            if (!inGrid(x, z) || g.wet[idx(x, z)] || !(free(x, z) || c.kind![idx(x, z)] === 1)) continue;
+            const bx = (x + ox) * wider, bz = (z + oz) * wider, i = idx(x, z);
+            const covers = Math.max(0, Math.min(t.cx + t.half, bx + wider) - Math.max(t.cx - t.half, bx)) * Math.max(0, Math.min(t.cz + t.half, bz + wider) - Math.max(t.cz - t.half, bz)) / (wider * wider), here = t.cx >= bx && t.cx < bx + wider && t.cz >= bz && t.cz < bz + wider, seen = Math.max(here ? TOWN_LEAST : 0, Math.min(1, covers * HOUSES * seenStanding));
+            if (seen <= (c.kind![i] === 1 ? c.share[i] : 0)) continue;
+            put(x, z, 0, roofs, pick(s!.style.house.walls, 0), 1); c.share[i] = seen;
+          }
+          continue;
+        }
         for (let z = z0; z < z1; z++) for (let x = x0; x < x1; x++) if (free(x, z)) { c.town[idx(x, z)] = 1; g.mat[idx(x, z)] = Mat.Paved; } else if (inGrid(x, z) && c.kind![idx(x, z)] === 1) g.mat[idx(x, z)] = Mat.Paved;
         const open = (side: 'nz' | 'px' | 'pz' | 'nx', along: number) => (t.wall ?? []).some((gap) => gap.side === side && along >= gap.from && along <= gap.to);
         if (step === 1 && t.wall !== null) for (let z = z0 - 1; z <= z1; z++) for (let x = x0 - 1; x <= x1; x++) {
@@ -398,7 +416,7 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
   // shaded sides before the land behind them: the blocks behind a wood take the colour of its sides as far as a
   // tree's height reaches over them (STANDS_OVER).
   if (blended) {
-    const over = STANDS_OVER[step] ?? 0, reach = Math.min(1, over / wider), tops = new Float32Array(N * N * 3), sides = new Float32Array(N * N * 3), wood = new Uint8Array(N * N);
+    const over = STANDS_OVER[step] ?? 0, reach = Math.min(1, over / wider), tops = new Float32Array(N * N * 3), sides = new Float32Array(N * N * 3), wood = new Float32Array(N * N);
     for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
       if (!free(x, z) || g.mat[idx(x, z)] !== Mat.Grass) continue;
       const w = o.woods(x, z);
@@ -407,9 +425,12 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
       const tall = w.conifers === undefined ? w.tall : lot < w.conifers, crowns = w.conifers === undefined ? w.crowns : tall ? CYPRESS : LEAVES;
       // a lone tree darkens its crown's ground and what its side hides
       const lone = (STRAY * (1 + over / TREE_PITCH) * LONE_SEEN + TREES_CLOSED * w.share * (1 + over / EDGE_SEEN)) * (tall ? (CROWN_TALL / CROWN) ** 2 : 1);
-      if (!(w.share > 0.5 || hash2(wx, wz, 73 + step) < lone)) continue;
+      // while a block is smaller than a wood it is a wood's or a tree's or not; a larger one holds woods and open
+      // land both and is wooded as far as they cover it, a little more or less from block to block
+      const some = Math.min(1, lone * BLEND_SEEN), grown = step < WOODS_BLEND ? (w.share > 0.5 || hash2(wx, wz, 73 + step) < lone ? 1 : 0) : some + (soft(some, hash2(wx, wz, 73 + step)) - some) * (w.laid ? LAID_CHANCE : 1);
+      if (grown <= 0) continue;
       const crown = pick(crowns, lot), seen = crowns === LEAVES ? SEEN_LEAVES : crowns === CYPRESS ? SEEN_CONIFERS : null;
-      wood[idx(x, z)] = 1;
+      wood[idx(x, z)] = grown;
       tops.set(tinted(seen ? tinted(crown, seen.top) : shade(crown, CANOPY_LIGHT), FLAT_WOODS), idx(x, z) * 3);
       sides.set(shade(seen ? tinted(crown, seen.side) : shade(crown, 0.7), SIDE_FLAT), idx(x, z) * 3);
     }
@@ -419,7 +440,7 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
       if (reach > 0) for (const [dx, dz, share] of [[1, 1, 0.5], [1, 0, 0.25], [0, 1, 0.25]] as const) {
         const j = inGrid(x + dx, z + dz) ? idx(x + dx, z + dz) : -1;
         if (j < 0 || !wood[j]) continue;
-        hid += share; for (let k = 0; k < 3; k++) col[k] += share * sides[j * 3 + k];
+        hid += share * wood[j]; for (let k = 0; k < 3; k++) col[k] += share * wood[j] * sides[j * 3 + k];
       }
       return hid > 0 ? [hid * reach, [col[0] / hid, col[1] / hid, col[2] / hid]] : [0, col];
     };
@@ -430,8 +451,9 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
       // one the green spring corn, and the rest the winter corn
       const ploughed = o.ploughed(x + 0.5, z + 0.5), n = courses(x + 0.5, z + 0.5), idle = n >= 2 ? ploughed / n : 0, green = n >= 3 ? ploughed / n : 0, sown = ploughed - idle - green;
       const tilled = sown + (soft(sown, hash2(wx, wz, 65 + step)) - sown) * (o.laid ? LAID_CHANCE : 1), bare = idle * FALLOW_SHOWS, fields = Math.min(1, tilled + green + bare);
-      // the fields lie where they lie first, the woods on the rest, and the sides of the wood in front before both
-      const [hid, side] = before(x, z), grown = wood[i] ? 1 - fields : 0, lies = fields + grown, share = hid + (1 - hid) * lies;
+      // the fields lie where they lie first, the woods on the rest (in a block larger than both they lie apart, as
+      // in the landscape), and the sides of the wood in front before both
+      const [hid, side] = before(x, z), grown = step < WOODS_BLEND ? wood[i] * (1 - fields) : Math.min(wood[i], 1 - fields), lies = fields + grown, share = hid + (1 - hid) * lies;
       if (share <= 0) continue;
       const corn = mix(cropOf(wx, wz, x + 0.5, z + 0.5)[0], springOf(wx, wz)[0], tilled + green > 0 ? green / (tilled + green) : 0);
       const crop = mix(corn, SOIL_FALLOW, fields > 0 ? bare / fields : 0), crown: RGB = [tops[i * 3], tops[i * 3 + 1], tops[i * 3 + 2]];
