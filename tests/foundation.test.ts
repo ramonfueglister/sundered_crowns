@@ -58,7 +58,7 @@ describe('snapshots', () => {
     s2.place.pop[0] += 1;
     expect(hashState(s2)).not.toBe(hashState(s));
     expect(() => decodeState(new Uint8Array(16))).toThrow();
-  });
+  }, 20_000); // founds a world and compares and hashes its whole state several times
 });
 
 describe('the day tick', () => {

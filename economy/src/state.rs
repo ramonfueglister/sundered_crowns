@@ -18,6 +18,7 @@ use beforeit::{
 
 use crate::Economy;
 use crate::clock::DailyClock;
+use crate::past::{Past, Phase, Series};
 use crate::trade::{Cities, Merchants};
 
 const TAG: &[u8; 4] = b"SCEC";
@@ -28,8 +29,9 @@ pub const FORMAT_CITIES: u32 = 1;
 /// Version of the byte format. A change to the pinned port that changes its state needs a new number and a step in
 /// the world's upgrade chain (src/sim/upgrade.ts). 2: the fields of the daily clock. 3: the wages in money.
 /// 4: the demand pull. 5: of the national accounts the clock keeps the series that the key figures sum, the port
-/// keeps its last row; a state of format 4 is still read and becomes one of format 5 ([`load`]).
-pub const FORMAT: u32 = 5;
+/// keeps its last row. 6: the clock can keep the past in a fixed size ([`crate::past`]). States of formats 4 and 5
+/// are still read and become format 6 when they are saved ([`load`]); they keep the whole past, as they had it.
+pub const FORMAT: u32 = 6;
 const NONE: u32 = u32::MAX;
 /// The length of the last state of cities written ([`save_cities`]): how much room the next one is given at once.
 /// It changes no byte of a state.
@@ -654,7 +656,7 @@ fn get_data(i: &mut In) -> Res<Data> {
 
 fn put_clock(o: &mut Out, c: &DailyClock) {
     // `trade` is set for the length of a period only (src/trade.rs): a saved economy has none
-    let DailyClock { plan, window, demand, periods, start, accounts, wage, real_wage, demand_pull, trade: _ } = c;
+    let DailyClock { plan, window, demand, periods, start, accounts, wage, real_wage, demand_pull, past, trade: _ } = c;
     o.n(*plan);
     o.n(*window);
     o.f64s(demand);
@@ -673,6 +675,36 @@ fn put_clock(o: &mut Out, c: &DailyClock) {
             o.f64(x);
         }
     }
+    o.bool(past.is_some());
+    if let Some(Past { periods, Y, pi }) = past {
+        o.n(*periods);
+        for Series { log, origin, history, early, days, sum, phases } in [Y, pi] {
+            o.bool(*log);
+            o.f64(*origin);
+            o.n(*history);
+            o.f64(early[0]);
+            o.f64(early[1]);
+            o.f64s(days);
+            o.f64(*sum);
+            for &Phase { last, x, xx, xy } in phases {
+                for v in [last, x, xx, xy] {
+                    o.f64(v);
+                }
+            }
+        }
+    }
+}
+
+fn get_series(i: &mut In, window: usize) -> Res<Series> {
+    let (log, origin, history, early, days, sum) = (i.bool()?, i.f64()?, i.n()?, [i.f64()?, i.f64()?], i.f64s()?, i.f64()?);
+    if days.len() != window || history < 2 {
+        return Err(format!("a past of {} periods with {history} entries of history and windows of {window} periods", days.len()));
+    }
+    let mut phases = Vec::with_capacity(window);
+    for _ in 0..window {
+        phases.push(Phase { last: i.f64()?, x: i.f64()?, xx: i.f64()?, xy: i.f64()? });
+    }
+    Ok(Series { log, origin, history, early, days, sum, phases })
 }
 
 fn get_clock(i: &mut In, format: u32) -> Res<DailyClock> {
@@ -707,7 +739,9 @@ fn get_clock(i: &mut In, format: u32) -> Res<DailyClock> {
             accounts.push(row);
         }
     }
-    Ok(DailyClock { plan, window, demand, periods, start, accounts, wage, real_wage, demand_pull, trade: None })
+    // formats before 6 keep the whole past in the port's lists
+    let past = if format >= 6 && i.bool()? { Some(Past { periods: i.n()?, Y: get_series(i, window)?, pi: get_series(i, window)? }) } else { None };
+    Ok(DailyClock { plan, window, demand, periods, start, accounts, wage, real_wage, demand_pull, past, trade: None })
 }
 
 /// The model and its random number generator as bytes. The same model always gives the same bytes.
@@ -744,8 +778,8 @@ pub fn load(bytes: &[u8]) -> Result<(AbstractModel<DailyClock>, Xoshiro), String
         return Err("these bytes are not the state of an economy".into());
     }
     let format = i.u32()?;
-    if format != FORMAT && format != 4 {
-        return Err(format!("state format {format}, this engine reads formats 4 and {FORMAT}"));
+    if !(4..=FORMAT).contains(&format) {
+        return Err(format!("state format {format}, this engine reads formats 4 to {FORMAT}"));
     }
     let rng = Xoshiro::from_state([i.u64()?, i.u64()?, i.u64()?, i.u64()?])?;
     let mut model = AbstractModel {

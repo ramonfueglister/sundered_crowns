@@ -13,6 +13,7 @@
 #![allow(non_snake_case)] // the fields of the port carry the names of the paper's appendix
 
 pub mod clock;
+pub mod past;
 pub mod state;
 pub mod trade;
 
@@ -108,14 +109,54 @@ impl Economy {
     /// rule of the port reads these rows. Of every new row the clock keeps the series that [`Economy::figures`]
     /// sums, for the last `window` periods ([`clock::DailyClock::accounts`]); of the port's rows only the last
     /// stays.
+    ///
+    /// An economy that keeps its past in a fixed size ([`Economy::with_bounded_past`]) computes every period as the
+    /// port's first: the port appends the real GDP and the inflation of a period to its lists at the place its
+    /// count of periods gives, so the count is set back and the two values go to the clock.
     pub fn step(&mut self, periods: usize) {
-        self.model.run(periods, &mut self.rng);
+        if self.model.ext.past.is_none() {
+            self.model.run(periods, &mut self.rng);
+        } else {
+            for _ in 0..periods {
+                self.model.run(1, &mut self.rng);
+                let m = &mut self.model;
+                let (Y, pi) = (m.agg.Y.pop().expect("the port appends the real GDP of a period"), m.agg.pi_.pop().expect("the port appends the inflation of a period"));
+                m.agg.t = 1;
+                let past = m.ext.past.as_mut().expect("checked above");
+                past.Y.push(past.periods, Y);
+                past.pi.push(past.periods, pi);
+                past.periods += 1;
+            }
+        }
         take_rows(&mut self.model);
     }
 
     /// Periods computed so far.
     pub fn periods(&self) -> usize {
-        self.model.agg.t - 1
+        self.model.ext.periods_computed(self.model.agg.t)
+    }
+
+    /// The same economy with a past of a fixed size from now on ([`past`]): for the expectations of growth and
+    /// inflation it keeps, instead of the real GDP and the inflation of every period since the start, the values of
+    /// the last window and the sums that the port's estimate is made of. The rule is the port's; its results agree
+    /// with the estimate on the whole past up to rounding, not bit for bit. The lists of the port go back to the
+    /// history before the start and its count of periods to 1; [`Economy::periods`] goes on counting. An economy
+    /// that has it already stays as it is.
+    pub fn with_bounded_past(mut self) -> Economy {
+        let m = &mut self.model;
+        if m.ext.past.is_none() {
+            let (history, window) = (m.prop.T_prime, m.ext.window);
+            let n = history + m.agg.t - 1;
+            m.ext.past = Some(past::Past {
+                periods: m.agg.t - 1,
+                Y: past::Series::new(&m.agg.Y[..n], history, window, true),
+                pi: past::Series::new(&m.agg.pi_[..n], history, window, false),
+            });
+            m.agg.Y.truncate(history);
+            m.agg.pi_.truncate(history);
+            m.agg.t = 1;
+        }
+        self
     }
 
     /// The key figures. Flows are sums over the last `window` periods (a year of the daily clock); before that many
@@ -377,7 +418,9 @@ pub mod abi {
             let ic = text(&mut list, "the initial conditions", c)?;
             let e = Economy::new(p, ic, seed, plan, window).map_err(|e| format!("city {c}: {e}"))?;
             let e = if wage == 1 { e.with_wages_in_money() } else { e };
-            all.push(if prices == 1 { e.with_demand_pull().map_err(|e| format!("city {c}: {e}"))? } else { e });
+            let e = if prices == 1 { e.with_demand_pull().map_err(|e| format!("city {c}: {e}"))? } else { e };
+            // the cities of the game run for centuries: their past has a fixed size
+            all.push(e.with_bounded_past());
         }
         Cities::new(all)
     }
@@ -427,6 +470,8 @@ pub mod abi {
         hook();
         answer((|| {
             let mut all = take(unsafe { bytes(state, len) })?;
+            // cities from before the past of a fixed size take it on the day they are computed again
+            all.cities = std::mem::take(&mut all.cities).into_iter().map(Economy::with_bounded_past).collect();
             all.step(periods as usize);
             Ok(keep(all))
         })())

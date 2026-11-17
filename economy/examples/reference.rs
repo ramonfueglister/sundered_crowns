@@ -2,7 +2,8 @@
 //! JSON files of each city's calibration and prints the key figures of all cities after every period as the 16 hex
 //! digits of each float, one period per line.
 //! With `money` the firms pay wages in money (economy feature 7), with `prices` the port's wage. With `demand` they
-//! plan by the demand pull of CANVAS (feature 8), with `costs` by the rule of the paper.
+//! plan by the demand pull of CANVAS (feature 8), with `costs` by the rule of the paper. The cities keep their past in
+//! a fixed size (src/past.rs), as the engine founds them for the game.
 //! usage: reference <periods> <plan> <window> <prices|money> <costs|demand> (<seed> <parameters.json> <initial_conditions.json>)…
 use sc_economy::Economy;
 use sc_economy::trade::Cities;
@@ -21,7 +22,9 @@ fn main() {
         .map(|c| {
             let e = Economy::new(&read(&c[1]), &read(&c[2]), c[0].parse().expect("seed"), plan, window).expect("economy");
             let e = if money { e.with_wages_in_money() } else { e };
-            if pull { e.with_demand_pull().expect("demand pull") } else { e }
+            let e = if pull { e.with_demand_pull().expect("demand pull") } else { e };
+            // as the engine founds the cities of the game (src/lib.rs)
+            e.with_bounded_past()
         })
         .collect();
     let mut all = Cities::new(cities).expect("cities");

@@ -8,6 +8,9 @@
 //! world: the same cities without merchants, to set the linked ones against.
 //! With `money` the firms pay wages in money (economy feature 7), with `prices` the port's wage. With `demand` they
 //! plan by the demand pull of CANVAS (feature 8), with `costs` by the rule of the paper.
+//! With `PAST=fixed` in the environment the cities keep their past in a fixed size (src/past.rs), as the cities of
+//! the game do. Every line of a day is followed on the error output by the time since the start and the size of the
+//! state.
 //! usage: cities <days> <every> <seed> <plan> <window> <linked|alone> <prices|money> <costs|demand> (<parameters.json> <initial_conditions.json>)…
 use sc_economy::Economy;
 use sc_economy::trade::Cities;
@@ -69,13 +72,15 @@ fn main() {
     let (days, every, seed, plan, window) = (n(1, "days"), n(2, "every"), n(3, "seed") as u64, n(4, "plan"), n(5, "window"));
     let read = |p: &str| std::fs::read_to_string(p).unwrap_or_else(|e| panic!("{p}: {e}"));
     let (money, pull) = (a[7] == "money", a[8] == "demand");
+    let fixed = std::env::var("PAST").is_ok_and(|v| v == "fixed");
     let mut cities: Vec<Economy> = a[9..]
         .chunks(2)
         .enumerate()
         .map(|(c, f)| {
             let e = Economy::new(&read(&f[0]), &read(&f[1]), seed + c as u64, plan, window).expect("economy");
             let e = if money { e.with_wages_in_money() } else { e };
-            if pull { e.with_demand_pull().expect("demand pull") } else { e }
+            let e = if pull { e.with_demand_pull().expect("demand pull") } else { e };
+            if fixed { e.with_bounded_past() } else { e }
         })
         .collect();
     let t0 = std::time::Instant::now();
@@ -105,6 +110,7 @@ fn main() {
             }
             let checks: Vec<String> = all.checks().iter().map(|[off, scale]| format!("{:.2e}", if *scale > 0.0 { off / scale } else { *off })).collect();
             println!("# {day} checks {}", checks.join(" "));
+            eprintln!("day {day}: {:.1} s, state {} bytes", t0.elapsed().as_secs_f64(), all.save().len());
         }
     }
     eprintln!("{days} days of {} cities in {:.1} s, state {} bytes", all.cities.len(), t0.elapsed().as_secs_f64(), all.save().len());
