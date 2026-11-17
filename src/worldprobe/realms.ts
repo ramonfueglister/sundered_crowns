@@ -23,6 +23,8 @@ const AHEAD = 0.3;
 const SOON = 2;
 /** how much wider than its middle the far side of the picture is, and how far beyond its far edge the ground is seen, as shares of its half width and depth */
 const FAR_SIDE = 1.2, FAR_END = 1.1;
+/** the rank of the coarser levels under the picture: after the picture's own tiles (1e9 and their distance), before those around it (2e9) */
+const UNDER = 1.5e9;
 /** tiles kept beyond those the view asks for, and how many the worker is given at once */
 const SPARE = 16, AT_ONCE = 4;
 
@@ -158,12 +160,23 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ye
     };
 
     // what the view asks for once the realms are near: the coarser level under the picture first, then its own level
-    // in the picture, then around it
+    // in the picture, then every coarser level under the picture, the coarsest first (a tile or two each, and the
+    // whole map lies in the coarsest: so wherever the view goes next and however far it zooms out at once, the land
+    // it comes to lies under the realms' colours from the first picture on, coarsely until its own tiles are
+    // painted; without them it showed its own colours there for a moment), then around the picture
     const wanted: Want[] = [], want = (l: number, t: { x: number; y: number }, rank: number) => wanted.push({ key: keyOf(l, t.x, t.y), level: l, x: t.x, y: t.y, rank, age });
     if (soon) {
       if (o.ahead && level < PAPER_COARSEST) for (const t of near(level + 1, 0)) want(level + 1, t, t.far);
       for (const t of near(level, o.ahead ? AHEAD * v.wide : 0)) want(level, t, (t.out > 0 ? 2e9 : 1e9) + t.far);
+      if (o.ahead) for (let l = level + 2; l <= PAPER_COARSEST; l++) for (const t of near(l, 0)) want(l, t, UNDER - l);
       if (!named) { named = true; ask({ kind: 'names' }, 'names'); }
+    }
+    // for measuring (`__probe.counts`): the most tiles of a picture that lay under no painted tile of any level, so
+    // that the land showed there without the realms' colours
+    if (lies.strength > 0) {
+      let bare = 0;
+      for (const t of near(level, 0)) { let l = level, x = t.x, y = t.y; while (l <= PAPER_COARSEST && !held.has(keyOf(l, x, y))) { l++; x >>= 1; y >>= 1; } if (l > PAPER_COARSEST) bare++; }
+      stage.probe.counts['paper bare most'] = Math.max(stage.probe.counts['paper bare most'] ?? 0, bare);
     }
     let missing = 0;
     for (const w of wanted) { const h = held.get(w.key); if (h) h.seen = looks; else if (lies.strength > 0 && w.level === level && w.rank < 2e9) missing++; }
