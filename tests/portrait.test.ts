@@ -643,7 +643,8 @@ describe('portraits', { timeout: 20_000 }, () => {
     // it stands behind the plane of that cheek, not in it (round 85): until then it stood 2 degrees in front of
     // the plane, and skin that a light skims shines pale towards whoever looks at it from the other side: a grey
     // patch between the nose and the far eye, on a child's flat face the whole field (16.4 % of it grey on the
-    // children, 6.2 % on the reference's woman; now 8.3 %)
+    // children, 6.2 % on the reference's woman; then 8.3 %, and 1.0 % since round 94, when the highlight of the
+    // hidden rim went)
     expect(facing(rim, 0.5)).toBeLessThan(-0.05);
     // and it stays above the head: hair that hangs straight down shines most under a level light (a girl's far
     // plait 11.5 L lighter with the rim level, a pale lilac, while a plait was cards), and level it lays more
@@ -656,7 +657,8 @@ describe('portraits', { timeout: 20_000 }, () => {
     // light from below reaches it: with the head's whole shadow in the rim light it was a black wedge between
     // nose and far eye (55 L darker than the nose's back on the women, the reference's woman 35, on whom a pale
     // bluish streak lies along the nose's far side). The rim light shines on that side from 43 degrees off its
-    // normal (36 until round 85), and half of the head's shadow is taken off it (round 83)
+    // normal (36 until round 85), and half of the head's shadow is taken off it (round 83; as light, and since
+    // round 94 without the highlight of a lamp that is hidden there)
     expect(facing(rim, Math.PI / 2)).toBeGreaterThan(0.6);
     expect(ENGLAND_1356.rimShadow).toBeGreaterThan(0.3);
     expect(ENGLAND_1356.rimShadow).toBeLessThan(0.7);
@@ -695,6 +697,55 @@ describe('portraits', { timeout: 20_000 }, () => {
     expect(APOLEIA.lights.bounce.energy).toBe(0);
     expect(APOLEIA.rimShadow).toBe(0);
     expect(APOLEIA.exposure).toBe(0.92);
+  });
+  it('the skin of England shows no highlight of a lamp that is hidden', () => {
+    // A shadow that is not full lets a share of its light through (the key's 0.3, the rim's half): that share
+    // stands for light that comes by other ways, off a wall, off the cheek, through the nose. three.js lets the
+    // same share of the lamp's highlight through, which nothing stands for: from a place in a lamp's shadow the
+    // lamp is not seen, and a highlight is the lamp seen in the skin. Until round 94 the rim light's highlight
+    // came through the head at half strength, strongest where the lamp would skim the skin: a pale grey patch
+    // between the nose and the far eye of every face (of that field grey on children 8.3 %, the young 7.0,
+    // women 6.3, men 7.8; now 1.0, 4.4, 3.5, 6.3: what is left lies where the rim light itself falls)
+    const of = (tex: string, double: boolean) => ({ rough: 0.5, metal: 0, double, tex, nmap: '', pos: new Float32Array(9), col: new Float32Array(9).fill(0.5), uv: new Float32Array(6), nrm: new Float32Array(9) });
+    const compiled = (s: ReturnType<typeof of>, p = ENGLAND_1356): string => surfaceMaterials(s, null, null, p).map(m => {
+      const shader = { uniforms: {}, vertexShader: ShaderLib.physical.vertexShader, fragmentShader: ShaderLib.physical.fragmentShader };
+      m.onBeforeCompile(shader as never, null as never);
+      return shader.fragmentShader;
+    }).join('\n');
+    const skin = compiled(of('real/skin_young_female.webp', false));
+    // the loop over the lights is the skin's own, every light begins as a lamp that is seen, and each light's
+    // highlight is taken by what the loop found
+    expect(skin).not.toContain('#include <lights_fragment_begin>');
+    expect(skin).toContain('getDirectionalLightInfo( directionalLight, directLight ); skinGloss = 1.0;');
+    expect(skin).toContain('directLight.color *= skinLit;');
+    expect(skin).toContain('reflectedLight.directSpecular += irradiance * specularBRDF * material.multiScatteringCompensation * skinGloss;');
+    expect(skin.indexOf('* skinGloss;')).toBeLessThan(skin.indexOf('void main()'));
+    // the shader's own arithmetic, run here: of a lamp of which the share `seen` is seen through a shadow of
+    // some strength, the light keeps what the shadow lets through and the highlight only the share seen
+    const line = /skinGloss = (saturate\(.*\));/.exec(skin)![1]!;
+    const gloss = new Function('saturate', 'max', 'skinLit', 'directionalLightShadow', `return ${line};`) as
+      (saturate: (x: number) => number, max: (a: number, b: number) => number, lit: number, shadow: { shadowIntensity: number }) => number;
+    const saturate = (x: number): number => Math.min(1, Math.max(0, x));
+    const shown = (seen: number, strength: number): [number, number] => {
+      const lit = 1 - strength * (1 - seen);
+      return [lit, lit * gloss(saturate, Math.max, lit, { shadowIntensity: strength })];
+    };
+    for (const strength of [ENGLAND_1356.rimShadow, ENGLAND_1356.shadow.strength, 1, 0.05]) {
+      for (const seen of [0, 0.25, 0.5, 1]) {
+        const [light, highlight] = shown(seen, strength);
+        expect(light, `light, ${seen} seen through ${strength}`).toBeCloseTo(1 - strength + strength * seen, 6);
+        expect(highlight, `highlight, ${seen} seen through ${strength}`).toBeCloseTo(seen, 3);
+      }
+    }
+    // half of the rim light still comes through the head as light (round 83), none of it as a highlight
+    expect(shown(0, ENGLAND_1356.rimShadow)[0]).toBeGreaterThan(0.3);
+    expect(shown(0, ENGLAND_1356.rimShadow)[1]).toBe(0);
+    // a light that throws no shadow (the fill, what chest and ground throw back) keeps its highlight
+    expect(gloss(saturate, Math.max, 1, { shadowIntensity: 0 })).toBe(1);
+    // hair, beards and cloth are lit as they were, and so is Apoleia's skin (three.js' own loop)
+    expect(compiled(of('real/bob01_cap.webp', true))).not.toContain('skinGloss');
+    expect(compiled(of('real/plait01_rope.webp', false))).not.toContain('skinGloss');
+    expect(compiled(of('real/skin_young_female.webp', false), APOLEIA)).toContain('#include <lights_fragment_begin>');
   });
   it('England\'s key light has a size, so that the shadows it throws have soft edges', () => {
     // a light without size throws shadows with hard edges, whatever throws them: the nose's shadow on the far

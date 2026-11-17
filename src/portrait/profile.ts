@@ -15,7 +15,8 @@ export interface StageProfile {
    *  camera sees, and `bounce`: what chest and ground throw back at a face from below (energy 0 = none). */
   lights: { key: StageLight; rim: StageLight; fill: StageLight; bounce: StageLight };
   /** How dark the rim light's shadow falls (0 = it throws none, as on Apoleia's stage; 1 = no rim light in it).
-   *  Without a shadow the rim shines through the head from behind onto the far side of the nose. */
+   *  Without a shadow the rim shines through the head from behind onto the far side of the nose. What a shadow
+   *  lets through is light without a highlight on a profile's skin (materials.ts `hidden`). */
   rimShadow: number;
   /** The shadows: pixels of a shadow's map (its side), how dark the key light's shadow falls (1 = no key light in
    *  it), how far the edge of a shadow is blurred in the map (three.js' `radius`, pixels of the map), and the size
@@ -262,6 +263,20 @@ export const APOLEIA: StageProfile = {
  *  locks are). `sheen.light` 0.5 (1.5 until then): the further darkening of the image's dark strands on light
  *  hair was set for cards, which had no depth of their own; on locks, which are lit by their form and throw
  *  shadows, it drew white hair and white beards as grey wool.
+ *  Round 94: a pale grey patch still lay between the nose and the far eye of every face, with a cloudy edge.
+ *  It was the rim light's highlight in the rim's own shadow: `rimShadow` 0.5 let half of it through the head,
+ *  and three.js lets a light's highlight through with the light. From a place in a lamp's shadow the lamp is
+ *  not seen, and a highlight is the lamp seen in the skin: the skin's highlight now takes each shadow whole
+ *  (materials.ts `hidden`; the light let through stays, it stands for light off the cheek and through the
+ *  nose). Grey share of that field: children 1.0 % (8.3), the young 4.4 (7.0), women 3.5 (6.3), men 6.3 (7.8);
+ *  what is left lies where the rim light itself falls, a streak down the nose's far flank as on the
+ *  reference's emperor. Nothing of this profile changed. The shade beside the nose is darker for it: women
+ *  40.8 L under the nose's back (37.9; the reference's woman 35), men 34.9 (30.4); far cheek, eye and the rest
+ *  of the face as they were (within 0.1 L; the women's nose's back 0.5 darker). Tried and not kept: less of
+ *  the rim's shadow (0.35 and 0.25: the shade beside a woman's nose 39.6 and 38.9, a man's 33.1 and 32.1; by
+ *  a rough reckoning the half let through is already twice what the lit far cheek throws back at the nose),
+ *  the fill at 0.35 (38.8 and 32.8, but the women's far cheek 22.2 L under the lit one where the reference's
+ *  is 27.7, and fill and the light from below together more than a quarter of the key).
  *  All values of this profile are PLACEHOLDER: held against one face of the reference, set by measure and by
  *  eye (docs/PORTRAITS.md). */
 export const ENGLAND_1356: StageProfile = {

@@ -2322,6 +2322,74 @@ Age draws its jowls with the cheek's targets; the target made for them (`-incr`)
 of three pixels of lit skin on the shaded side of the chin, at this size only, is not explained. The pale
 stripe beside the nose on the far cheek, the women's square jaw and the flat lower lip are as they were.
 
+**A highlight only of a lamp that is seen: the pale patch beside the nose (round 94).** Round 93 left "the pale
+stripe beside the nose on the far cheek" open. Held large, every face had it: a pale, bluish grey patch with a
+cloudy, wavy edge from the far eye's inner corner down the nose's far flank to the nostril, at the game's size
+a whitish smear beside the nose, plainest on children (`runde94_nase_vorher_nachher.png`, upper row). Round 85
+had read it as the rim light's gloss and moved the rim behind the plane of the cheek; a patch stayed (of the
+field between the nose and the far eye grey on children 8.3 %, the reference's woman 6.2 %).
+
+Which light: four heads drawn large with one thing changed at a time. Without the pores the patch is the same;
+without the fill it is the same; without the rim light it is gone and the far side of the face is skin in
+shade. With no shadow of the rim it is a broad band, with the rim's shadow full (1 in place of 0.5) a narrow
+streak along the nose's flank. So it is the rim light's highlight, and most of it lies where the rim light's
+own shadow lies: on skin that faces the lamp behind the head but has the cheek or the head between itself and
+the lamp.
+
+The cause is the half shadow of round 83 (`rimShadow` 0.5). It lets half of the rim light through the head,
+to stand for light the stage does not have: what the lit far cheek throws back at the nose, and what goes
+through the nose. three.js darkens a light's highlight by the same share as the light. But a highlight is the
+lamp itself, seen in the skin, and from a place in the lamp's shadow the lamp is not seen: light that comes
+back off a cheek has no highlight where the lamp's would be. Where a lamp skims the skin and the eye looks
+along it from the other side, a highlight is at its strongest, so half of it was a pale patch, and its edge
+was the edge of the head's shadow thrown along a surface it skims: cloudy and bent.
+
+Now the skin's highlight takes each light's shadow whole, and the light keeps what the profile's shadow lets
+through (`materials.ts` `hidden`: the loop over the lights is the skin's own; of a lamp of which a share is
+seen through a shadow of any strength the highlight keeps that share, so a soft edge stays soft). It holds for
+the key light too (its shadow is 0.7 strong); there it changes 0.10 to 0.64 % of a picture's pixels by more
+than 2 of 255 and none by more than 18 (six people, the rim's shadow full in both): a band on the cheek under
+a veil's or a hood's edge. No value of the profile changed.
+
+| grey share of the field between the nose and the far eye | before | now |
+|---|---|---|
+| children of 2 to 8 (6) | 8.3 % | 1.0 % |
+| the young, 13 and 17 (8) | 7.0 % | 4.4 % |
+| grown women (8) | 6.3 % | 3.5 % |
+| grown men (8) | 7.8 % | 6.3 % |
+| the reference's woman | 6.2 % | |
+
+What is left lies where the rim light itself falls: a streak down the nose's far flank, as on the reference's
+emperor, and on men the skin between the nose and the far eye. The face against its lit cheek reads as it did
+(16 grown, `face_colour.mjs`: far cheek, forehead, lips, chin and eye within 0.1 L; the women's nose's back
+0.5 darker). The shade beside the nose is darker, since the patch had been part of its light: women 40.8 L
+under the nose's back (before 37.9; the reference's woman 35), men 34.9 (30.4). With the rim's shadow full it
+would be 47.5 and 40.6: of the 9.6 L the half shadow gave a woman's nose, 6.7 were light and stay, 2.9 were
+highlight and are gone (a man's: 5.7 and 4.5). All 35 portraits of the sample changed, each in 0.18 to 0.91 %
+of its pixels by more than 8 of 255. The Roman pictures are the same pixel for pixel (Apoleia's skin keeps
+three.js' own loop).
+
+Tried and not kept, to give the shade beside the nose its 3 L back: less of the rim's shadow (0.35 and 0.25:
+women 39.6 and 38.9, men 33.1 and 32.1; by a rough reckoning the half let through is already about twice what
+a far cheek lit by the rim throws back at the nose's flank, a quarter of the rim's light off the cheek, of
+which the flank sees a third); the fill at 0.35 (38.8 and 32.8, but the women's far cheek 22.2 L under the lit
+one where the reference's is 27.7, and fill and the light from below together more than a quarter of the key,
+which the stage's test forbids).
+
+Tests: `tests/portrait.test.ts`, "the skin of England shows no highlight of a lamp that is hidden" (the skin's
+shader has its own loop over the lights and multiplies each light's highlight by what the loop found; the
+shader's own line of arithmetic is run in the test: of a lamp seen to 0, a quarter, a half and wholly through
+a shadow of the rim's, the key's, full and nearly no strength, the light keeps what the shadow lets through and
+the highlight the share seen; hair, beards, cloth and Apoleia's skin are lit as they were). Without the change
+it fails. vitest 1072.
+Pictures: `runde94_nase_vorher_nachher.png` (boys of 8 and 13, a girl of 8, a woman of 35, men of 17 and 35;
+before above), `runde94_nase_gross.png` (a woman of 35 and a man of 17 large, before and after),
+`runde94_stichprobe.png`.
+Still open: the shade beside a woman's nose is 5.8 L darker than the reference's; the stage has no light that
+comes back off skin, and the half shadow that stands for it is by eye (PLACEHOLDER). Hair, beards and cloth
+still take the rim's sheen through its half shadow (a white beard's far half, the inside of a hood). The
+women's square jaw and the flat lower lip are as they were.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since

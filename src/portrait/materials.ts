@@ -71,10 +71,29 @@ const f = (v: number): string => v.toFixed(3);
 const DIFFUSE = 'reflectedLight.directDiffuse += irradiance * diffuseBRDF * ( 1.0 - F );';
 /** three.js' direct lighting with the light bleeding round the edge of the shadow by `wrap` (a vec3 in GLSL), in
  *  the diffuse part only: the highlight keeps to the lit side (lit by the wrapped light as well, its term for
- *  grazing angles, which divides by N.L, turned single pixels at the head's outline white). */
-function wrapped(wrap: string): string {
-  return swap(ShaderChunk.lights_physical_pars_fragment, DIFFUSE,
+ *  grazing angles, which divides by N.L, turned single pixels at the head's outline white). With `gloss` the
+ *  highlight is multiplied by the shader's `skinGloss` (see `hidden`). */
+function wrapped(wrap: string, gloss = false): string {
+  const code = swap(ShaderChunk.lights_physical_pars_fragment, DIFFUSE,
     `vec3 wrapBy = ${wrap}; reflectedLight.directDiffuse += saturate( ( dot( geometryNormal, directLight.direction ) + wrapBy ) / ( 1.0 + wrapBy ) ) * directLight.color * diffuseBRDF * ( 1.0 - F );`);
+  return gloss ? swap(code, SPECULAR, SPECULAR.replace(';', ' * skinGloss;')) : code;
+}
+const SPECULAR = 'reflectedLight.directSpecular += irradiance * specularBRDF * material.multiScatteringCompensation;';
+const DIR_LIGHT = 'getDirectionalLightInfo( directionalLight, directLight );';
+const DIR_SHADOW = 'directLight.color *= ( directLight.visible && receiveShadow ) ? getShadow( directionalShadowMap[ i ], directionalLightShadow.shadowMapSize, directionalLightShadow.shadowIntensity, directionalLightShadow.shadowBias, directionalLightShadow.shadowRadius, vDirectionalShadowCoord[ i ] ) : 1.0;';
+/** three.js' loop over the lights, telling the shader's `skinGloss` how much of each light's highlight is left
+ *  beside its light. A shadow that is not full (profile.ts `shadow.strength`, `rimShadow`) lets a share of the
+ *  light through, which stands for light that reaches the place by other ways (off a wall, off the cheek,
+ *  through the nose). Such light is there, but it has no highlight where the lamp's would be: from that place
+ *  the lamp is hidden. The highlight takes the shadow whole (`skinLit` is three.js' shadow, 1 = lit; in the
+ *  soft edge of a shadow the highlight fades with the share of the lamp still seen). Until round 94 the rim
+ *  light's highlight came through the head at half strength: a pale grey patch between the nose and the far
+ *  eye, on skin the lamp would skim, where a highlight is at its strongest. */
+function hidden(): string {
+  return swap(swap(ShaderChunk.lights_fragment_begin, DIR_LIGHT, `${DIR_LIGHT} skinGloss = 1.0;`),
+    DIR_SHADOW, `skinLit = ${DIR_SHADOW.slice('directLight.color *= '.length)}
+		directLight.color *= skinLit;
+		skinGloss = saturate( 1.0 - ( 1.0 - skinLit ) / max( directionalLightShadow.shadowIntensity, 1e-4 ) ) / max( skinLit, 1e-4 );`);
 }
 const NOISE = `
 varying vec3 vSkinP;
@@ -94,7 +113,7 @@ function swap(code: string, piece: string, by: string): string {
  *  patches a little redder or paler and a fine speckle in brightness, as noise over the head. */
 function skinLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageProfile['skin']>, tone: number): void {
   m.roughness = k.rough; m.ior = ior(k.specular); m.normalScale.set(k.pores, k.pores);
-  const lights = wrapped(`vec3( ${k.wrap.map(f).join(', ')} )`);
+  const lights = wrapped(`vec3( ${k.wrap.map(f).join(', ')} )`, true), loop = hidden();
   // the tint by the person's skin as a whole (none on dark skin, all of it on light skin), the same over the whole
   // head: taken point by point (until round 54) everything painted darker on light skin lost its red and turned
   // olive, the shadow of a beard most of all, where in living skin the darker places are the redder ones
@@ -105,7 +124,8 @@ function skinLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<Stage
     shader.vertexShader = swap(swap(shader.vertexShader, '#include <common>', '#include <common>\nvarying vec3 vSkinP;'),
       '#include <begin_vertex>', '#include <begin_vertex>\nvSkinP = position;');
     let code = swap(shader.fragmentShader, '#include <lights_physical_pars_fragment>', lights);
-    code = swap(code, '#include <common>', `#include <common>${NOISE}\nuniform vec3 skinTint;`);
+    code = swap(code, '#include <lights_fragment_begin>', loop);
+    code = swap(code, '#include <common>', `#include <common>${NOISE}\nuniform vec3 skinTint;\nfloat skinGloss = 1.0;\nfloat skinLit = 1.0;`);
     shader.fragmentShader = swap(code, '#include <color_fragment>', `#include <color_fragment>
 float skinA = skinNoise( vSkinP * 7.0 ) * 0.6 + skinNoise( vSkinP * 15.0 ) * 0.4 - 0.5;
 float skinB = skinNoise( vSkinP * 60.0 ) * 0.5 + skinNoise( vSkinP * 130.0 ) * 0.5 - 0.5;

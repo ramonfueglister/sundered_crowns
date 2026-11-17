@@ -274,3 +274,9 @@ no jaw; `DressSet::without`, targets a dress's heads take nothing of (England: t
 chin's height asks for too). `morph.rs`: `add` leaves those out; `morph_targets`, the targets a head is made of
 with their weights (`morph_as` takes a list to fill); `examples/face_measure.rs`: `--made <person>`.
 `tests/faces.rs`: a fifteenth test. A head without a dress table is morphed as before: Roman bytes unchanged.
+
+Round 94: nothing in the builder. The stage (`src/portrait/materials.ts`, the game's own file): the skin of a
+profile takes each light's highlight only as far as the lamp is seen (`hidden`: the skin's own loop over the
+lights; a shadow that is not full lets light through, not the lamp's highlight). The rim light's highlight had
+come through the head at half strength, a pale grey patch beside the nose. `tests/portrait.test.ts`: one test
+more. Apoleia's skin keeps three.js' loop: Roman pictures unchanged.
