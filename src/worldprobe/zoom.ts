@@ -37,14 +37,14 @@ export const PAPER_COARSEST = 6 + FINER_STEPS;
  * a land: it rises and the land sinks only over the last stretch before the realms' map (which begins once the camera
  * looks straight down, REALMS_FROM).
  */
-const TILT_FROM = 6000 * FINER, TILT_UNTIL = 7400 * FINER, STRAIGHT_DOWN = 89.5;
+const TILT_FROM = 5100 * FINER, TILT_UNTIL = 9000 * FINER, STRAIGHT_DOWN = 89.5;
 /** the relief keeps its strength up to here and is all but flat where the camera looks straight down */
-const RELIEF_FROM = 6000 * FINER, RELIEF_LEAST = 0.06;
+const RELIEF_FROM = 5100 * FINER, RELIEF_LEAST = 0.06;
 /**
  * the realms colour the flat world from here, fully from there: a short way, well after the world lies flat, so that
  * the map comes in one move of the wheel and the world is not seen half under it for long
  */
-const REALMS_FROM = 7500 * FINER, REALMS_FULL = 8750 * FINER;
+const REALMS_FROM = 9100 * FINER, REALMS_FULL = 10500 * FINER;
 /** blocks across the picture at the middle of a step: there its heights are drawn as they were built */
 const MIDDLE = STEP_FROM * Math.SQRT2;
 /** a step's blocks stand for heights flattened by this power of their width (see buildWorld) */
