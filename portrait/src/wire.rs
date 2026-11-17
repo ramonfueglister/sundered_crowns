@@ -5,7 +5,7 @@
 //! age f32, health f32, fed f32, loss_days f32, rank f32, clothes_pct f32, the 68 bytes of the genes, job and
 //! origin as texts.
 //!
-//! Portrait: top, chin, cx, cz, fill f32, tris u32, the two background colours of the look (sRGB, 6 f32), the
+//! Portrait: top, chin, cx, cz, fill, young f32, tris u32, the two background colours of the look (sRGB, 6 f32), the
 //! look's name as text, the number of surfaces u32; then per surface rough f32, metal f32, double u8, texture and
 //! normal map as texts (empty for none), vertices u32, texture coordinates u32, normals u32 (counts, 0 for none),
 //! then positions (3 f32 each), colours (3 f32 each, linear), texture coordinates (2 f32 each), normals (3 f32
@@ -88,7 +88,7 @@ fn floats<const N: usize>(out: &mut Vec<u8>, v: &[[f32; N]]) {
 pub fn portrait(p: &Portrait, look: &Look) -> Vec<u8> {
     let st = &STANDS[look.stand.min(STANDS.len() - 1)];
     let mut out = Vec::with_capacity(64 + p.tris * 3 * 44);
-    for x in [p.top, p.chin, p.cx, p.cz, p.fill] {
+    for x in [p.top, p.chin, p.cx, p.cz, p.fill, p.young] {
         out.extend(x.to_le_bytes());
     }
     out.extend((p.tris as u32).to_le_bytes());

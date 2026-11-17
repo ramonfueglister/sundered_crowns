@@ -111,8 +111,10 @@ function swap(code: string, piece: string, by: string): string {
 /** Skin of a profile: light bleeds round the edge of its shadow, reddest furthest (three.js has no scattering
  *  inside skin as Godot has); and living skin is blotchy where the images of the young are nearly flat: broad
  *  patches a little redder or paler and a fine speckle in brightness, as noise over the head. */
-function skinLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageProfile['skin']>, tone: number): void {
-  m.roughness = k.rough; m.ior = ior(k.specular); m.normalScale.set(k.pores, k.pores);
+function skinLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageProfile['skin']>, tone: number, young = 0): void {
+  // a child's skin has less of the fine structure the images and the noise give a grown person's (`skin.child`)
+  const fine = 1 + (k.child - 1) * Math.min(1, Math.max(0, young));
+  m.roughness = k.rough; m.ior = ior(k.specular); m.normalScale.set(k.pores * fine, k.pores * fine);
   // the down on skin: light that skims it is thrown back towards whoever looks along it (three.js' sheen)
   if (k.fuzz > 0) { m.sheen = k.fuzz; m.sheenRoughness = 0.6; m.sheenColor.setRGB(1, 0.86, 0.78); }
   const lights = wrapped(`vec3( ${k.wrap.map(f).join(', ')} )`, true), loop = hidden();
@@ -123,18 +125,19 @@ function skinLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<Stage
   const tint = new Vector3(...k.tint.map(c => 1 + (c - 1) * share));
   m.onBeforeCompile = shader => {
     shader.uniforms.skinTint = { value: tint };
+    shader.uniforms.skinFine = { value: fine };
     shader.vertexShader = swap(swap(shader.vertexShader, '#include <common>', '#include <common>\nvarying vec3 vSkinP;'),
       '#include <begin_vertex>', '#include <begin_vertex>\nvSkinP = position;');
     let code = swap(shader.fragmentShader, '#include <lights_physical_pars_fragment>', lights);
     code = swap(code, '#include <lights_fragment_begin>', loop);
-    code = swap(code, '#include <common>', `#include <common>${NOISE}\nuniform vec3 skinTint;\nfloat skinGloss = 1.0;\nfloat skinLit = 1.0;\nfloat skinOil = 1.0;`);
+    code = swap(code, '#include <common>', `#include <common>${NOISE}\nuniform vec3 skinTint;\nuniform float skinFine;\nfloat skinGloss = 1.0;\nfloat skinLit = 1.0;\nfloat skinOil = 1.0;`);
     // the skin's fine relief: no skin is a smooth surface, and a highlight on a smooth surface is one pale patch
     // with a soft edge, as on vinyl. The relief is noise over the head at two sizes (4 and 2 mm), as a height
     // whose slope leans the normal (three.js' bump mapping, with the height reckoned instead of read from an
     // image); and the skin's film of oil is not even: the highlight is weaker and stronger in patches
     if (k.relief > 0 || k.oil > 0) code = swap(code, '#include <normal_fragment_maps>', `#include <normal_fragment_maps>
 {
-  float skinH = ${f(k.relief)} * ( skinNoise( vSkinP * 24.0 ) * 0.6 + skinNoise( vSkinP * 51.0 ) * 0.4 );
+  float skinH = ${f(k.relief)} * skinFine * ( skinNoise( vSkinP * 24.0 ) * 0.6 + skinNoise( vSkinP * 51.0 ) * 0.4 );
   vec3 skinDx = dFdx( - vViewPosition ), skinDy = dFdy( - vViewPosition );
   vec3 skinR1 = cross( skinDy, normal ), skinR2 = cross( normal, skinDx );
   float skinDet = dot( skinDx, skinR1 );
@@ -145,7 +148,7 @@ function skinLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<Stage
     shader.fragmentShader = swap(code, '#include <color_fragment>', `#include <color_fragment>
 float skinA = skinNoise( vSkinP * 7.0 ) * 0.6 + skinNoise( vSkinP * 15.0 ) * 0.4 - 0.5;
 float skinB = skinNoise( vSkinP * 60.0 ) * 0.5 + skinNoise( vSkinP * 130.0 ) * 0.5 - 0.5;
-diffuseColor.rgb *= vec3( 1.0, 1.0 - ${f(k.blotch * 0.9)} * skinA, 1.0 - ${f(k.blotch * 1.1)} * skinA ) * ( 1.0 + ${f(k.speckle)} * skinB );
+diffuseColor.rgb *= vec3( 1.0, 1.0 - ${f(k.blotch * 0.9)} * skinFine * skinA, 1.0 - ${f(k.blotch * 1.1)} * skinFine * skinA ) * ( 1.0 + ${f(k.speckle)} * skinFine * skinB );
 float skinGrey = dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) );
 diffuseColor.rgb = mix( vec3( skinGrey ), diffuseColor.rgb, ${f(k.colour)} ) * skinTint;`);
   };
@@ -301,8 +304,9 @@ export function portraitSkinTone(surfaces: readonly PortraitSurface[]): number |
 }
 
 /** The materials of a surface, drawn in this order (hair cards have two, everything else one). `tone`: how light
- *  the person's skin is as a whole (`portraitSkinTone`; left out, the surface's own). */
-export function surfaceMaterials(s: PortraitSurface, map: Texture | null, normalMap: Texture | null, p: StageProfile = APOLEIA, tone?: number): MeshPhysicalMaterial[] {
+ *  the person's skin is as a whole (`portraitSkinTone`; left out, the surface's own); `young`: how much of a child's
+ *  skin the person has (`Portrait.young`). */
+export function surfaceMaterials(s: PortraitSurface, map: Texture | null, normalMap: Texture | null, p: StageProfile = APOLEIA, tone?: number, young = 0): MeshPhysicalMaterial[] {
   const kind = surfaceKind(s);
   const m = new MeshPhysicalMaterial({
     vertexColors: true, roughness: s.rough, metalness: s.metal, ior: ior(0.5),
@@ -311,7 +315,7 @@ export function surfaceMaterials(s: PortraitSurface, map: Texture | null, normal
   });
   switch (kind) {
     case 'plain': break;
-    case 'skin': if (p.skin) skinLook(m, p, p.skin, tone ?? skinTone(s.col)); break;
+    case 'skin': if (p.skin) skinLook(m, p, p.skin, tone ?? skinTone(s.col), young); break;
     case 'cloth': m.side = DoubleSide; m.roughness = 0.95; m.ior = ior(0.15); break;
     case 'cap': blended(m); m.roughness = 0.85; m.ior = ior(0.15); m.side = DoubleSide; if (p.cap) capLook(m, p, p.cap, s.tex); break;
     case 'eyeball': m.roughness = 0.08; m.ior = ior(0.6); if (p.eye) eyeLook(m, p, p.eye); break;

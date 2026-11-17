@@ -163,7 +163,7 @@ export class PortraitStage {
       // the skin as the smooth surface its triangles stand for (subdivide.ts)
       const skin = surfaceKind(s) === 'skin' ? profile.skin : null;
       const geometry = surfaceGeometry(s, skin ? skin.finer : 0, skin ? skin.fit : 0);
-      for (const material of surfaceMaterials(s, map, normalMap, profile, tone)) {
+      for (const material of surfaceMaterials(s, map, normalMap, profile, tone, p.young)) {
         const mesh = new Mesh(geometry, material);
         mesh.castShadow = material.colorWrite && !material.transparent;
         // the painted layer of short hairs may be lit without shadows (profile.ts `cap.shadow`)

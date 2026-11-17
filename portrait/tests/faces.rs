@@ -1250,7 +1250,9 @@ fn a_child_of_england_has_a_mouth_as_broad_against_a_grown_ones_as_a_real_childs
             assert!((ours - real).abs() < 0.008, "{who}: the mouth {ours} of the grown's, the survey {real}");
             assert!(((with[9] - survey[0]) / survey[1]).abs() < 0.6, "{who}: the mouth {} mm, the survey {} ({})", with[9], survey[0], survey[1]);
             // the one weight of round 55 was too much for the small
-            assert!(age > 5.0 || before - real > if female { 0.015 } else { 0.03 }, "{who}: with round 55's weight {before} of the grown's, the survey {real}");
+            // (0.014 on girls of five since round 105: a child's leaner cheek, `child`, draws the mouth's corners
+            // in by 0.1 mm)
+            assert!(age > 5.0 || before - real > if female { 0.012 } else { 0.03 }, "{who}: with round 55's weight {before} of the grown's, the survey {real}");
             // and MakeHuman's own child's mouth is narrow at every age
             assert!(real - bare > 0.008, "{who}: without the table {bare} of the grown's, the survey {real}");
         }

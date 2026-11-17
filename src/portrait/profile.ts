@@ -43,8 +43,10 @@ export interface StageProfile {
    *  as a whole (none on dark skin, all of it on light skin: blood shows through light skin, melanin hides it; the
    *  same over the whole head, so that what is painted darker on it keeps its red). `finer`: how many times each
    *  of its triangles is split in four to draw it as the smooth surface its net stands for, after `fit` rounds
-   *  of moving the net so that this surface keeps to the builder's corners (subdivide.ts; 0 = the net as built). */
-  skin: null | { rough: number; specular: number; pores: number; wrap: readonly [number, number, number]; finer: number; fit: number; blotch: number; speckle: number; colour: number; tint: readonly [number, number, number]; relief: number; oil: number; fuzz: number };
+   *  of moving the net so that this surface keeps to the builder's corners (subdivide.ts; 0 = the net as built).
+   *  `child`: how much of the pores, the relief, the blotches and the speckle a child's skin has (1 = a grown
+   *  person's; in full on a child up to eleven, `Portrait.young`). */
+  skin: null | { rough: number; specular: number; pores: number; wrap: readonly [number, number, number]; finer: number; fit: number; blotch: number; speckle: number; colour: number; tint: readonly [number, number, number]; relief: number; oil: number; fuzz: number; child: number };
   /** The eyeball: null as it is. Else the upper lid's shadow (darkening to `dark` between these heights of the
    *  ball's normal), the shade in the corners of the eye (darkening to `dark` between these distances to the side
    *  of the gaze), a tint, how much lighter the white of the eye and how much darker the iris are drawn than the
@@ -314,6 +316,9 @@ export const APOLEIA: StageProfile = {
  *  0.12), and the head is nearer (`close` 1.12, before 1.3). Grown women: lit cheek L 55.7, a* 22.4, b* 26.6
  *  (the reference's 56.1, 22.9, 25.4), far cheek 22.1 under it (27.7; round 102 24.1; men 32.3), lower lip
  *  24.5 under and a* 4.5 over (22.9, 6.2; the lips' paint, dress.rs `Lips`), eye 30.5 under (37.5).
+ *  Round 105: a child's skin (`skin.child`). The skin's images, their pores and the stage's relief, blotches and
+ *  speckle are a grown person's; on a child of two they drew leather. The builder says how much of a child a
+ *  person still is (`Portrait.young`), and a child's skin has 0.3 of all four (by eye; tried 1 and 0).
  *  All values of this profile are PLACEHOLDER: held against one face of the reference, set by measure and by
  *  eye (docs/PORTRAITS.md). */
 export const ENGLAND_1356: StageProfile = {
@@ -330,7 +335,7 @@ export const ENGLAND_1356: StageProfile = {
   exposure: 0.35,
   turn: -0.24, rise: 0.03, close: 1.12,
   anisotropy: 8,
-  skin: { rough: 0.55, specular: 0.42, pores: 0.8, wrap: [0.2, 0.16, 0.13], finer: 1, fit: 1, blotch: 0.05, speckle: 0.10, colour: 1.0, tint: [1, 0.75, 0.77], relief: 0.0015, oil: 0.5, fuzz: 0.3 },
+  skin: { rough: 0.55, specular: 0.42, pores: 0.8, wrap: [0.2, 0.16, 0.13], finer: 1, fit: 1, blotch: 0.05, speckle: 0.10, colour: 1.0, tint: [1, 0.75, 0.77], relief: 0.0015, oil: 0.5, fuzz: 0.3, child: 0.3 },
   eye: { corner: { from: 0.3, to: 0.8, dark: 0.35 }, lid: { from: -0.35, to: 0.05, dark: 0.5 }, tint: [0.84, 0.77, 0.64], white: 1.95, iris: 1.3, colour: 1.1, lift: 0.6, rough: 0.14, specular: 0.6, wrap: 0.5, cornea: 0.36, ring: 0.55 },
   brow: { rough: 1, specular: 0.05, lashes: 0.6, brows: 0.85 },
   cap: { tone: 1.7, light: 2.6, colour: 0.7, wrap: 1, shadow: false, stubble: 0, beard: { tone: 5.5, light: 3.2, colour: 0.65, wrap: 0.3 } },

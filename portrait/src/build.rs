@@ -36,6 +36,11 @@ pub struct Portrait {
     /// Share of the picture's height the head fills: 0.53, more for a
     /// small child, whose short body would otherwise end inside the picture.
     pub fill: f32,
+    /// How much of a child's skin the person has: 1 for as long as the head is MakeHuman's child (up to eleven), 0
+    /// from where it has its adult form on (`dress::child_share`), 0 in a look without a dress table. The stage
+    /// draws a child's skin with less of the grown's pores, relief, blotches and speckle (src/portrait/profile.ts
+    /// `skin.child`): the skin's images and the stage's noise are a grown person's.
+    pub young: f32,
     pub tris: usize,
     /// Morph targets in use.
     pub targets: usize,
@@ -1953,7 +1958,8 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
     let top = (y1 + 0.12).max(hat_top + 0.06);
     let low = body_full.iter().filter(|&&v| h.base[v as usize][0].abs() < 1.0).map(|&v| x.pp[v as usize][1]).fold(f32::MAX, f32::min);
     let fill = (0.86 * (top - y0).max(0.8) / (top - low - 0.1)).max(0.53);
-    Portrait { surfaces: merged, top, chin: y0, cx: hx / hn.max(1) as f32, cz: hz / hn.max(1) as f32, fill, tris, targets }
+    let young = garb.map_or(0.0, |d| crate::dress::child_share(d.adult[if fem { 0 } else { 1 }], p.age));
+    Portrait { surfaces: merged, top, chin: y0, cx: hx / hn.max(1) as f32, cz: hz / hn.max(1) as f32, fill, young, tris, targets }
 }
 
 /// Leans surfaces back by `a` radians about the axis from ear to ear at height `cy` and depth `cz`: what lies above
