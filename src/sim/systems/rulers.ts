@@ -127,6 +127,21 @@ export function foundRulers(s: WorldState, w: World): number {
   return playChronicle(s, w, Number.MIN_SAFE_INTEGER, s.day);
 }
 
+/** Gives every ruler of the world the culture and faith of the realm the ruler entered the world in, as the day of
+ *  entering does (for a world from before the persons had cultures, src/sim/upgrade.ts). */
+export function rulerCultures(s: WorldState, w: World): void {
+  const c = w.chronicle;
+  if (!c || c.year !== s.startYear) return;
+  const x = indexOf(s), done = new Set<number>();
+  for (const e of c.events) {
+    if (e.day > s.day) break;
+    if (e.what !== Happening.Enter || !e.realm) continue;
+    const id = x.persons.get(c.persons[e.person].key), realm = x.realms.get(e.realm);
+    if (id === undefined || realm === undefined || done.has(id)) continue;
+    done.add(id); setRulerCulture(s, id, realm);
+  }
+}
+
 /** Every day: what the chronicle says for that day. */
 export const rulers: System = {
   id: 'rulers',

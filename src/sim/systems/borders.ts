@@ -64,16 +64,16 @@ function largestPlace(s: WorldState, realm: number): number {
   return best;
 }
 
-/** The culture and faith a realm that comes in takes from its capital: those of most of the capital's persons
- *  (src/sim/systems/cultures.ts); a world from before state 19 still has them per place; a capital without persons
+/** The culture and faith a realm that comes in takes from its capital: those of most of the capital's persons who are
+ *  not rulers (src/sim/systems/cultures.ts); a world from before state 19 still has them per place; a capital without persons
  *  has none known, a realm without a capital the first of the lists. */
 function cultureOfCapital(s: WorldState, cap: number): [number, number] {
   if (cap < 0) return [0, 0];
-  const { culture, faith, persons } = placeCultures(s, cap);
+  const { culture, faith, persons } = placeCultures(s, cap, new Set(s.named.map((n) => n.person))); // the rulers there have those of their own realms
   if (persons > 0) {
     if ((s.person.cols as Record<string, unknown>).culture) return [majority(culture), majority(faith)];
-    const old = s.place as unknown as { culture: ArrayLike<number>; faith: ArrayLike<number> }; // the persons there have it
-    return [old.culture[cap], old.faith[cap]];
+    const old = s.place as unknown as { culture?: ArrayLike<number>; faith?: ArrayLike<number> }; // the persons there have it
+    if (old.culture && old.faith) return [old.culture[cap], old.faith[cap]];
   }
   return [cultureIndex(null), faithIndex(null)];
 }

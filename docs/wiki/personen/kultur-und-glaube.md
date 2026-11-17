@@ -9,7 +9,8 @@
 Ramon, 16.11.2026: In der Welt gibt es nur, was die Simulation rechnet. Eine Stadt hat eine Kultur, auch mit Minderheiten, aber gezogene Anteile sind keine Arbeit der Simulation. Darum gilt:
 
 - **Personen der Städte** bekommen beim Gründen Kultur und Glauben, die das Setup für den Ort ihrer Stadt nennt. Für 1291 sind das die 13 Regeln mit Quellen in `data/history/1291/peoples.json`, sonst die Einordnung von 1356.
-- **Herrscher** bekommen Kultur und Glauben ihres Reiches.
+- **Herrscher** bekommen Kultur und Glauben des Reiches, in dem sie in die Welt kommen.
+- **Reiche, die mit den Grenzen dazukommen**, bekommen Kultur und Glauben der meisten Personen ihrer Hauptstadt.
 - **Minderheiten** kommen nur in die Welt, wo eine Quelle sie für diese eine Stadt zählt (`src/sim/content/communities_1291.json`). Aus *n* gezählten Menschen werden bei 1:100 round(*n* / 100) Personen. Genommen werden ganze Familien der Stadt, in einer festen Reihenfolge (Hash aus Seed und Familie). Eine Familie, die die Gemeinde grösser machen würde als gezählt, wird übersprungen. Herrscherfamilien werden nie genommen.
 - **Der Ort** hat keine eigene Kultur mehr. Die Ortsansicht zählt Kultur und Glauben seiner Personen. Ein Ort ohne Personen hat keine.
 - Niemand wechselt bisher Kultur oder Glauben. Wanderung, Heirat zwischen Gruppen und Bekehrung sind eigene Features.

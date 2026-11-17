@@ -36,15 +36,9 @@ export const faithIndex = (f: string | null | undefined): number => FAITH_INDEX[
 /** The counted communities of a start year; none for a year without them. */
 export const communitiesOf = (year: number): readonly Community[] => COMMUNITIES.get(year) ?? [];
 
-/** Every person's culture and faith at once, as the upgrade to state 19 gives them; a new world does the two halves
- *  apart (src/sim/setup.ts). */
-export function foundCultures(s: WorldState, setup: SetupState): void {
-  foundPersonCultures(s, setup);
-  foundRulerCultures(s);
-}
-
 /** The persons who are not rulers get the culture and faith of the setup for their place, then the counted
- *  communities. A new world does it before the borders, whose realms take theirs from their capitals. */
+ *  communities. A new world does it before the borders, whose realms take theirs from their capitals; the rulers take
+ *  theirs from the realm they enter the world in (src/sim/systems/rulers.ts). */
 export function foundPersonCultures(s: WorldState, setup: SetupState): void {
   const P = s.person.cols, F = s.family.cols, ruler = new Set(s.named.map((n) => n.person));
   for (let id = 0; id < s.person.size; id++) {
@@ -53,16 +47,6 @@ export function foundPersonCultures(s: WorldState, setup: SetupState): void {
     P.culture[id] = cultureIndex(setup.culture[place]); P.faith[id] = faithIndex(setup.faith[place]);
   }
   setCommunities(s);
-}
-
-/** Every ruler takes the culture and faith of the first realm the ruler holds, else of the owner of the seat. */
-export function foundRulerCultures(s: WorldState): void {
-  const P = s.person.cols, F = s.family.cols, R = s.realm.cols, holds = new Map<number, number>();
-  for (let r = s.realm.size - 1; r >= 0; r--) if (R.holder[r] >= 0) holds.set(R.holder[r], r); // the first realm a ruler holds
-  for (const { person: id } of s.named) {
-    if (!s.person.alive[id]) continue;
-    setRulerCulture(s, id, holds.get(id) ?? s.place.owner[F.place[P.family[id]]]);
-  }
 }
 
 /** A ruler takes the culture and faith of the realm `realm` (none known: those of the setup's unknown). */
@@ -100,13 +84,14 @@ export function setCommunities(s: WorldState): void {
   }
 }
 
-/** The living persons of every place by culture and by faith: index of the culture or faith → persons. */
-export function placeCultures(s: WorldState, place: number): { culture: Map<number, number>; faith: Map<number, number>; persons: number } {
+/** The living persons of every place by culture and by faith: index of the culture or faith → persons (without the
+ *  persons of `without`). */
+export function placeCultures(s: WorldState, place: number, without?: ReadonlySet<number>): { culture: Map<number, number>; faith: Map<number, number>; persons: number } {
   const P = s.person.cols, F = s.family.cols, culture = new Map<number, number>(), faith = new Map<number, number>();
   const known = P.culture !== undefined; // a world from before state 19 counts only the persons
   let persons = 0;
   for (let id = 0; id < s.person.size; id++) {
-    if (!s.person.alive[id] || P.died[id] !== ALIVE || F.place[P.family[id]] !== place) continue;
+    if (!s.person.alive[id] || P.died[id] !== ALIVE || F.place[P.family[id]] !== place || without?.has(id)) continue;
     persons++;
     if (!known) continue;
     culture.set(P.culture[id], (culture.get(P.culture[id]) ?? 0) + 1);

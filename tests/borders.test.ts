@@ -8,6 +8,7 @@ import { dayOf } from '../src/sim/content/chronicle';
 import { type BordersJson } from '../src/sim/content/borders';
 import { playBorders, rankOfName } from '../src/sim/systems/borders';
 import { STATE_VERSION, RANKS, type WorldState } from '../src/sim/state';
+import { ALL_CULTURES, FAITHS } from '../src/sim/content/peoples';
 import { upgradeState } from '../src/sim/upgrade';
 import { hashState, encodeState, decodeState } from '../src/sim/snapshot';
 
@@ -20,6 +21,15 @@ const at = (lon: number, lat: number) => {
   for (let i = 0; i < w.L; i++) { const e = (w.lon[i] - lon) ** 2 + (w.lat[i] - lat) ** 2; if (e < d) { d = e; best = i; } }
   return best;
 };
+/** A world as it was before state 19: the persons had no culture or faith, the places had those of the setup. */
+function asBeforeCultures(old: WorldState): void {
+  const P = old.person.cols as unknown as Record<string, unknown>, s1291 = loadSetup(1291);
+  delete P.culture; delete P.faith;
+  Object.assign(old.place, {
+    culture: Uint16Array.from(s1291.culture.slice(0, w.L), (c) => Math.max(0, ALL_CULTURES.indexOf(c ?? 'unknown'))),
+    faith: Uint8Array.from(s1291.faith.slice(0, w.L), (f) => Math.max(0, FAITHS.findIndex((x) => x.id === (f ?? 'latin')))),
+  });
+}
 const ownerKey = (s: WorldState, p: number) => (s.place.owner[p] < 0 ? null : s.realmText[s.place.owner[p]].key);
 /** Plays the borders up to a date, as the daily system would. */
 const until = (s: WorldState, date: string) => { const d = dayOf(date, 1291)!; playBorders(s, w, s.day + 1, d); s.day = d; };
@@ -86,6 +96,7 @@ describe('a world of 1291 saved before the borders', () => {
     until(s, '1400-01-01');
     const old = decodeState(encodeState(fresh()));
     old.day = s.day; old.v = 17;
+    asBeforeCultures(old);
     const up = upgradeState(old, w, () => loadSetup(1291));
     expect(up.v).toBe(STATE_VERSION);
     expect(Array.from(up.place.owner)).toEqual(Array.from(s.place.owner));

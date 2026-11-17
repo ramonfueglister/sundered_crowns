@@ -5,7 +5,7 @@ import type { WorldState, RealmText } from './state';
 import { STATE_VERSION, REALM_SCHEMA, RANKS, PERSON_SCHEMA, FAMILY_SCHEMA, FIRM_SCHEMA } from './state';
 import { createTable, spawn } from './ecs';
 import { seedRng } from './rng';
-import { cultureIndex, faithIndex, foundPersonCultures, foundRulerCultures } from './systems/cultures';
+import { cultureIndex, faithIndex, foundPersonCultures } from './systems/cultures';
 import type { I18n } from './i18n';
 import { cultivate } from './systems/cultivation';
 import { bringInHarvest } from './systems/harvest';
@@ -56,7 +56,6 @@ export function createWorldState(w: World, setup: SetupState, seed: number): Wor
   // realms the borders bring in take theirs from their capitals
   foundBorders(s, w); // the borders of the day the world starts on (src/sim/systems/borders.ts), before the rulers' seats
   foundRulers(s, w); // before the economy, which leaves them out (src/sim/systems/work.ts) but keeps their purse
-  foundRulerCultures(s); // a ruler has those of the first realm the ruler holds
   foundEconomy(s, w);
   settleHamlets(s); // the families who live from agriculture, by the firms of the economy
   countPeople(s); // the people of a place are its persons (the setup's numbers are only the start of the persons)

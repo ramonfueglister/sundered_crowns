@@ -11,6 +11,7 @@ import { personDetail } from '../src/net/people';
 import { upgradeState } from '../src/sim/upgrade';
 import { hashState } from '../src/sim/snapshot';
 import { STATE_VERSION } from '../src/sim/state';
+import { Happening } from '../src/sim/content/chronicle';
 
 const { s, w } = newWorldState(1291, 1291);
 const setup = loadSetup(1291);
@@ -38,14 +39,17 @@ describe('the culture and faith of a person', () => {
     expect(persons).toBeGreaterThan(100_000);
     expect(differ).toBe(0);
   });
-  it('of a ruler are those of the realm the ruler holds', () => {
-    const R = s.realm.cols;
-    for (let r = 0; r < s.realm.size; r++) {
-      const h = R.holder[r];
-      if (h < 0) continue;
-      const first = [...Array(s.realm.size).keys()].find((q) => R.holder[q] === h)!;
-      expect(P.culture[h]).toBe(R.culture[first]); expect(P.faith[h]).toBe(R.faith[first]);
+  it('of a ruler are those of the realm the ruler enters the world in', () => {
+    const c = w.chronicle!, R = s.realm.cols, person = new Map(s.named.map((n) => [n.key, n.person]));
+    const realm = new Map(s.realmText.map((r, k) => [r.key, k])), seen = new Set<number>();
+    for (const e of c.events) {
+      if (e.day > s.day) break;
+      const id = person.get(c.persons[e.person].key), r = e.realm ? realm.get(e.realm) : undefined;
+      if (e.what !== Happening.Enter || id === undefined || r === undefined || seen.has(id)) continue;
+      seen.add(id);
+      expect(P.culture[id]).toBe(R.culture[r]); expect(P.faith[id]).toBe(R.faith[r]);
     }
+    expect(seen.size).toBe(rulers.size);
   });
   it('are told to a client: the portrait dresses the person by the person\'s culture', () => {
     const id = members.get('Nuremberg')![0];
@@ -83,11 +87,11 @@ describe('the counted communities of 1291', () => {
 });
 
 describe('a world of 1291 saved before the persons had cultures', () => {
-  it('gets them by the upgrade from 17 and encodes as a new world', () => {
+  it('gets them by the upgrade from 18 and encodes as a new world', () => {
     const old = structuredClone(s) as any;
-    old.v = 17;
+    old.v = 18;
     delete old.person.cols.culture; delete old.person.cols.faith;
-    // version 17 kept a culture and a faith for every place (here those of 1356, as the running world was founded)
+    // version 18 kept a culture and a faith for every place (here those of 1356, as the running world was founded)
     const s1356 = loadSetup(1356), owner = old.place.owner, pop = old.place.pop, harvest = old.place.harvest, arable = old.place.arable;
     old.place = { owner, culture: Uint16Array.from(s1356.culture.slice(0, w.L), (c) => Math.max(0, ALL_CULTURES.indexOf(c ?? 'unknown'))),
       faith: Uint8Array.from(s1356.faith.slice(0, w.L), (f) => Math.max(0, FAITHS.findIndex((x) => x.id === f))), pop, harvest, arable };

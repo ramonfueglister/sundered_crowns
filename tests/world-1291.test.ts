@@ -14,6 +14,15 @@ import { createWorldState } from '../src/sim/setup';
 
 const { s, w } = newWorldState(1291, 1291);
 const s1291 = loadSetup(1291), s1356 = loadSetup(1356);
+/** A world as it was before state 19: the persons had no culture or faith, the places had those of the setup. */
+function asBeforeCultures(old: ReturnType<typeof createWorldState>): void {
+  const P = old.person.cols as unknown as Record<string, unknown>;
+  delete P.culture; delete P.faith;
+  Object.assign(old.place, {
+    culture: Uint16Array.from(s1291.culture.slice(0, w.L), (c) => Math.max(0, ALL_CULTURES.indexOf(c ?? 'unknown'))),
+    faith: Uint8Array.from(s1291.faith.slice(0, w.L), (f) => Math.max(0, FAITHS.findIndex((x) => x.id === (f ?? 'latin'))))
+  });
+}
 const sum = (a: ArrayLike<number | null>) => { let t = 0; for (let i = 0; i < a.length; i++) t += a[i] ?? 0; return t; };
 
 describe('a world of 1291', () => {
@@ -76,7 +85,7 @@ describe('a world of 1291', () => {
     list.splice(30);
     let old: ReturnType<typeof createWorldState>;
     try { old = createWorldState(w, s1291, 1291); } finally { list.splice(0, list.length, ...all); }
-    old.v = 14;
+    old.v = 14; asBeforeCultures(old);
     expect(old.person.size - old.named.length).toBe(24_828); // and the rulers after them expect(old.economy.cities!.places.length).toBe(30);
     const before = decodeState(encodeState(old));
     const up = upgradeState(old, w, () => s1291);
@@ -134,7 +143,7 @@ describe('the peoples of 1291', () => {
   });
   it('come into a world of 1291 by the upgrade from 12 only as borders: Murcia goes to Castile', () => {
     const old = structuredClone(s);
-    old.v = 12;
+    old.v = 12; asBeforeCultures(old);
     const aragon = old.realmText.findIndex((r) => r.key === 'aragon');
     for (const n of ['Cieza', 'Mula', 'Villena', 'Almansa', 'Moya']) old.place.owner[at(n)] = aragon;
     expect(hashState(old)).not.toBe(hashState(s));
