@@ -62,18 +62,26 @@ async function meanOf(job: PieceJob): Promise<Cover> {
 /**
  * Measures what far.ts laid out on a piece against the mean of the finer step there (the counts `cmp <kind> …`,
  * sums over the blocks whose four neighbours are of the same kind, so that a tool can take their means): the
- * colours of the tops and sides and the rise, of far.ts (`far`) and of the mean (`mean`).
+ * colours of the tops and sides and the rise, of far.ts (`far`) and of the mean (`mean`), and the top as the far
+ * ground is drawn (`drawn`).
  */
-function compare(counts: Record<string, number>, mean: Cover, part: Piece['part']) {
+function compare(counts: Record<string, number>, mean: Cover, part: Piece['part'], ground: Batch) {
   const far = laidOut();
   if (!far?.kind) return;
+  // the tops of the far ground as they are drawn, with the sky's light baked into them
+  const drawn = above(N, N);
+  lay(drawn, ground, 0, 0, true);
   const add = (k: string, v: number) => { counts[k] = (counts[k] ?? 0) + v; };
   for (let z = part.z0; z < part.z1; z++) for (let x = part.x0; x < part.x1; x++) {
     const i = x + z * N, kind = far.kind[i];
-    if (!mean.has[i] || [i - 1, i + 1, i - N, i + N].some((j) => far.kind![j] !== kind)) continue;
+    if (!mean.has[i]) continue;
+    // all the land of the piece, whatever it carries
+    add('cmp all n', 1);
+    for (let k = 0; k < 3; k++) { add(`cmp all mean top ${k}`, mean.top[i * 3 + k]); add(`cmp all drawn top ${k}`, drawn.top[i * 3 + k]); }
+    if ([i - 1, i + 1, i - N, i + N].some((j) => far.kind![j] !== kind)) continue;
     const name = `cmp ${KINDS[kind]}`;
     add(`${name} n`, 1); add(`${name} far rise`, far.rise[i]); add(`${name} mean rise`, mean.rise[i]); add(`${name} risen ${Math.min(3, mean.rise[i])}`, 1);
-    for (let k = 0; k < 3; k++) { add(`${name} far top ${k}`, far.has[i] ? far.top[i * 3 + k] : 0); add(`${name} mean top ${k}`, mean.top[i * 3 + k]); add(`${name} far side ${k}`, far.has[i] ? far.side[i * 3 + k] : 0); add(`${name} mean side ${k}`, mean.side[i * 3 + k]); }
+    for (let k = 0; k < 3; k++) { add(`${name} far top ${k}`, far.has[i] ? far.top[i * 3 + k] : 0); add(`${name} mean top ${k}`, mean.top[i * 3 + k]); add(`${name} far side ${k}`, far.has[i] ? far.side[i * 3 + k] : 0); add(`${name} mean side ${k}`, mean.side[i * 3 + k]); add(`${name} drawn top ${k}`, drawn.top[i * 3 + k]); }
   }
 }
 
@@ -82,7 +90,7 @@ self.onmessage = async (e: MessageEvent<PieceJob>) => {
   try {
     const began = performance.now(), mean = step === 1 && e.data.mean !== false ? await meanOf(e.data) : null, meant = performance.now();
     const built = await build(e.data, step, piece, e.data.mean === 'compare' ? null : mean);
-    if (built && mean && e.data.mean === 'compare') compare(built.counts, mean, piece.part);
+    if (built && mean && e.data.mean === 'compare') compare(built.counts, mean, piece.part, built.ground);
     // how long the piece took to build, and of that the finer step under it (a tool reads the sums)
     if (built) { built.counts[`ms step ${step}`] = Math.round(performance.now() - began); built.counts[`pieces step ${step}`] = 1; if (mean) built.counts['ms mean'] = Math.round(meant - began); }
     const scene: WorldScene<Shape> = built ? { ground: flat(built.ground), things: flat(built.things), water: flat(built.water), raised: flat(built.raised!), figures: built.figures, cells: built.cells.map((c) => ({ ...c, far: flat(c.far) })), counts: built.counts }

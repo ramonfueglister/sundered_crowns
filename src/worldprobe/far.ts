@@ -78,7 +78,7 @@ const CROWN = 1.2, CROWN_TALL = 0.6;
  * against the mean of the finest step (mean.ts, `?mean=compare`) at Paris, in the Black Forest, in Sweden and in
  * Tuscany.
  */
-const SEEN_LEAVES = { top: [0.5, 0.6, 0.86], side: [0.34, 0.57, 0.91] } as const, SEEN_CONIFERS = { top: [1.9, 1, 1], side: [1.6, 1.09, 1.1] } as const;
+const SEEN_LEAVES = { top: [0.66, 0.73, 0.95], side: [0.34, 0.57, 0.91] } as const, SEEN_CONIFERS = { top: [2.34, 1.14, 1.03], side: [1.6, 1.09, 1.1] } as const;
 const tinted = (c: RGB, by: readonly [number, number, number]): RGB => [c[0] * by[0], c[1] * by[1], c[2] * by[2]];
 /** how much of the chance from block to block is left where the woods and the fields are laid out */
 const LAID_CHANCE = 0.25;
@@ -213,11 +213,15 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
         if (Math.abs(tx * TREE_PITCH + (hash2(tx, tz, 71) - 0.5) * 2.4 - px) <= reach && Math.abs(tz * TREE_PITCH + (hash2(tx, tz, 72) - 0.5) * 2.4 - pz) <= reach) { under++; break crowned; }
       }
     }
-    if (!under) continue;
-    const crown = pick(w.crowns, hash2(x + ox, z + oz, 74)), seen = w.crowns === LEAVES ? SEEN_LEAVES : w.crowns === CYPRESS ? SEEN_CONIFERS : null, rise = under === 4 ? (w.tall ? 1 : 2) : under === 3 ? 1 : 0;
+    // inside a wood the camera, looking from low down, sees trees wherever it looks: the trunks and crowns in
+    // front hide the ground between them. So a block of a closed wood shows the wood whole, whether a crown
+    // stands on it or not; out of the woods a block shows as much of a tree as stands on it.
+    const closed = w.share > 0.5;
+    if (!under && !closed) continue;
+    const crown = pick(w.crowns, hash2(x + ox, z + oz, 74)), seen = w.crowns === LEAVES ? SEEN_LEAVES : w.crowns === CYPRESS ? SEEN_CONIFERS : null, rise = w.tall ? (under >= 2 ? 1 : 0) : under === 4 ? 2 : under === 3 ? 1 : 0;
     if (rise && !level(x, z)) continue;
     put(x, z, 0, seen ? tinted(crown, seen.top) : crown, seen ? tinted(crown, seen.side) : shade(crown, 0.7), w.tall ? 9 : 8);
-    c.share[idx(x, z)] = under / 4;
+    c.share[idx(x, z)] = closed ? 1 : under / 4;
     raised[idx(x, z)] = rise;
   }
   // farther out: woods as raised ground, then as its colour
