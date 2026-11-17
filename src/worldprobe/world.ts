@@ -19,7 +19,7 @@ import { BARE, FINER, FINER_STEPS, SNOW_LINE, TINT, TREE_LINE, WOODS, blockOfCel
 import { type Region, Water, cellOf, latOf, sample, waterAt } from './region';
 import { type Cover, type Woods, coverLand, lotFill } from './far';
 import { unshade } from './mean';
-import { FARMS, FIELD_GROUND, LOT_BLOCKS, LOT_FILL, type Lot, type Monument, PEOPLE_PER_PERSON, type Settled, type Site, farmsFor, firstHalf, raise, settle } from './settle';
+import { FARMS, FIELD_GROUND, LOT_BLOCKS, LOT_FILL, type Lot, type Monument, PEOPLE_PER_PERSON, type Settled, type Site, type Survey, farmsFor, firstHalf, raise, settle } from './settle';
 import { type Columns, columnsOf } from './nearground';
 import { MONUMENTS, modelOf, styleOf } from '../buildings';
 
@@ -129,10 +129,11 @@ export function terrace(level: Int16Array, mat: Uint8Array) {
  * `forest` the forest of the world's start year, where one was made for it (forest.ts); `rural` the people on the
  * land of that year (rural.ts). With `hamlets` (hamlets.ts) only what the simulation holds persons for stands in the
  * world: its towns, their hamlets before the walls, and the fields round them. With `parcels` (lots.ts) the houses of
- * a town stand on the parcels of its families. With `mean` the ground of a coarser step is covered by what the finer
- * step shows there (mean.ts) instead of what far.ts lays out.
+ * a town stand on the parcels of its families. `survey` is asked for the building ground of every town (settle.ts);
+ * then nothing is drawn. With `mean` the ground of a coarser step is covered by what the finer step shows there
+ * (mean.ts) instead of what far.ts lays out.
  */
-export function buildWorld(region: Region, piece: Piece, places: readonly Place[], landmarks: readonly Landmark[], bakedSky = true, step = 0, climate: Climate | null = null, inhabitants: ReadonlyMap<number, number> = new Map(), models: ReadonlyMap<string, Batch> = new Map(), forest: Forest | null = null, rural: Rural | null = null, arable: Arable | null = null, hamlets: HamletLands | null = null, parcels: TownParcels | null = null, mean: Cover | null = null): WorldScene {
+export function buildWorld(region: Region, piece: Piece, places: readonly Place[], landmarks: readonly Landmark[], bakedSky = true, step = 0, climate: Climate | null = null, inhabitants: ReadonlyMap<number, number> = new Map(), models: ReadonlyMap<string, Batch> = new Map(), forest: Forest | null = null, rural: Rural | null = null, arable: Arable | null = null, hamlets: HamletLands | null = null, parcels: TownParcels | null = null, survey?: Survey, mean: Cover | null = null): WorldScene {
   // a block's width in cells of the data: the rules of the land were made for those cells
   const cell = 2 ** (step - FINER_STEPS), flatter = cell ** 0.6, valleyFrom = Math.min(250, VALLEY_FROM + 32 * Math.max(0, step - FINER_STEPS)), rockFoot = Math.max(1, Math.round(FOOT / Math.sqrt(cell)));
   const { ox, oz, part } = piece, c0x = region.x0 * region.cells, c0y = region.y0 * region.cells;
@@ -429,7 +430,9 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
       const here = toGround(...cellOf(region, l.lon, l.lat));
       if (l.built_state !== 'not_yet_built' && onGround(here)) (MONUMENTS[l.id] ?? []).forEach((m, k) => monuments.push({ id: id * 8 + k, at: [here[0] + m.dx, here[1] + m.dz], model: modelOf(m, models) }));
     });
-    const built = settled = settle(g, things, sites, monuments, farm, ploughed, vines, counts, own, farms, courses);
+    const built = settled = settle(g, things, sites, monuments, farm, ploughed, vines, counts, own, farms, courses, survey);
+    // a survey of the building ground needs no more than the towns' ground
+    if (survey) return { ground: new Batch(), things, water: new Batch(), cells: [], counts };
 
     // woods where the forest of the world's year stood (`wooded`), up to the tree line:
     // leafy in the low country, dark conifers towards the heights and in the north, the crowns of the rain forest, flat

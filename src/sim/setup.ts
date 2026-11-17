@@ -5,13 +5,15 @@ import type { WorldState, RealmText } from './state';
 import { STATE_VERSION, REALM_SCHEMA, RANKS, PERSON_SCHEMA, FAMILY_SCHEMA, FIRM_SCHEMA } from './state';
 import { createTable, spawn } from './ecs';
 import { seedRng } from './rng';
-import { ALL_CULTURES, FAITH_INDEX } from './content/peoples';
+import { cultureIndex, faithIndex, foundPersonCultures } from './systems/cultures';
 import type { I18n } from './i18n';
 import { cultivate } from './systems/cultivation';
 import { bringInHarvest } from './systems/harvest';
 import { foundEconomy } from './systems/economy';
-import { fitPlacesToCities, foundPeople } from './systems/people';
+import { foundPeople } from './systems/people';
+import { countPeople, settleHamlets } from './systems/hamlets';
 import { foundRulers } from './systems/rulers';
+import { foundBorders } from './systems/borders';
 import { toHeads } from './scale';
 
 export interface SetupRealm {
@@ -24,11 +26,7 @@ export interface SetupState {
   owner: number[]; culture: (string | null)[]; faith: (string | null)[]; pop: (number | null)[];
 }
 
-export function cultureIndex(c: string | null | undefined): number {
-  const i = ALL_CULTURES.indexOf(c || 'unknown');
-  return i < 0 ? ALL_CULTURES.indexOf('unknown') : i;
-}
-export const faithIndex = (f: string | null | undefined): number => FAITH_INDEX[f || 'latin'] ?? 0;
+export { cultureIndex, faithIndex } from './systems/cultures';
 
 /** '#rrggbb' → 0xrrggbb (grey when malformed) */
 export function parseColor(h: string | undefined): number {
@@ -40,7 +38,7 @@ export function createWorldState(w: World, setup: SetupState, seed: number): Wor
   const L = w.L;
   const realm = createTable(REALM_SCHEMA, setup.states.length);
   const place = {
-    owner: new Int16Array(L).fill(-1), culture: new Uint16Array(L), faith: new Uint8Array(L), pop: new Float32Array(L),
+    owner: new Int16Array(L).fill(-1), pop: new Float32Array(L),
     harvest: new Float64Array(L), arable: new Float64Array(L), // in the order the columns were added (src/sim/upgrade.ts)
   };
   const s: WorldState = {
@@ -53,11 +51,15 @@ export function createWorldState(w: World, setup: SetupState, seed: number): Wor
   setPlaces(s, setup, 0, L);
   // a capital the realm does not hold is no capital
   for (let r = 0; r < realm.size; r++) { const c = realm.cols.capital[r]; if (c >= 0 && place.owner[c] !== r) realm.cols.capital[r] = -1; }
-  fitPlacesToCities(s); // no place is smaller than its cities (those of the start year)
   foundPeople(s);
-  cultivate(s, w); bringInHarvest(s, w); // the arable and the harvest of the year before the start
+  foundPersonCultures(s, setup); // every person's culture and faith, the counted minorities among them, before the
+  // realms the borders bring in take theirs from their capitals
+  foundBorders(s, w); // the borders of the day the world starts on (src/sim/systems/borders.ts), before the rulers' seats
   foundRulers(s, w); // before the economy, which leaves them out (src/sim/systems/work.ts) but keeps their purse
   foundEconomy(s, w);
+  settleHamlets(s); // the families who live from agriculture, by the firms of the economy
+  countPeople(s); // the people of a place are its persons (the setup's numbers are only the start of the persons)
+  cultivate(s, w); bringInHarvest(s, w); // the arable and the harvest of the year before the start
   return s;
 }
 
@@ -79,14 +81,13 @@ export function addRealms(s: WorldState, setup: SetupState, from: number, L: num
   }
 }
 
-/** Sets the places `from` … `to` − 1 as the setup has them: holder, culture, faith and people. */
+/** Sets the places `from` … `to` − 1 as the setup has them: holder and people (a place's culture and faith are those of
+ *  its persons, src/sim/systems/cultures.ts). */
 export function setPlaces(s: WorldState, setup: SetupState, from: number, to: number): void {
   const place = s.place, n = s.realm.size;
   for (let i = from; i < to; i++) {
     const o = setup.owner[i];
     place.owner[i] = Number.isInteger(o) && o >= 0 && o < n ? o : -1;
-    place.culture[i] = cultureIndex(setup.culture[i]);
-    place.faith[i] = faithIndex(setup.faith[i]);
     place.pop[i] = toHeads(Math.max(0, setup.pop[i] ?? 0)); // the setup counts the real people of the time, the world a hundredth of them
   }
 }

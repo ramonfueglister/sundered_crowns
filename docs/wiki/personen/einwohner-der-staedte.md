@@ -12,7 +12,9 @@ Ramon, 16.11.2026: In der Welt gibt es nur, was die Simulation rechnet, und alle
 - **Woher die Zahlen kommen:** 65 Städte nach Chandler für 1291 (Reba, Reitsma & Seto 2016). Für die 493 übrigen gilt die Schätzung des Gazetteers für 1356 mal den Faktor ihrer Region aus `data/history/1291/demography.json`. Annahme: Eine Stadt verlor in der Pest denselben Anteil wie ihr Land. Diese Zahlen sind grob.
 - **Reihenfolge:** Zuerst kommen Chandlers Städte, dann die übrigen, jede Gruppe nach Grösse. So behalten die Personen der 30 grössten Städte, die die Welt seit dem 16.11.2026 hatte, ihre Nummern, Familien und Gene. Die neuen Städte kommen dazu.
 - **Wirtschaft:** Jeder Ort mit einer Stadt hat eine eigene Wirtschaft (550). Die kleinste Stadt hat 40 Personen. Die Kalibrierung braucht mindestens einen Betrieb und eine beschäftigte Person je Sektor, das reicht in jeder Stadt.
-- **Noch nicht dabei:** die 131 Hauptstädte ohne Stadt auf der Karte, die Bauern der Städte in Weilern vor den Mauern, Kultur und Glaube pro Person. Das Land ausserhalb der Städte ist noch eine Zahl pro Ort und soll verschwinden, sobald die Weiler gebaut sind.
+- **Weiler:** Die Bauernfamilien der Städte wohnen in Weilern vor den Mauern, und ein Ort hat nur noch seine Personen ([Weiler der Bauern](weiler-der-bauern.md)).
+- **Kultur und Glaube:** pro Person, mit den gezählten Minderheiten der Städte ([Kultur und Glaube](kultur-und-glaube.md)).
+- **Noch nicht dabei:** Die 131 Hauptstädte ohne Stadt auf der Karte bleiben weg, weil es für sie keine belegten Einwohnerzahlen gibt.
 
 Prüfung: In einem Lauf über 30 Jahre mit 4 Seeds blieb keine Wirtschaft stehen. Ohne Arbeit war im Median niemand, in der schlechtesten Stadt höchstens 7 % (das sind Städte mit unter 20 Erwerbstätigen, wo eine Person schon 5 % ist). Die Produktion steigt auf rund 115 % und bleibt dort, wie mit den 30 Städten.
 

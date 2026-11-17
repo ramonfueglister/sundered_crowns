@@ -15,16 +15,19 @@ import type { Table } from './ecs';
  *  11); the economies are founded anew. 15: a world of 1291 has persons in every town of the world graphic inside
  *  the world frame (558 towns in 550 places), and an economy in each of those places. 16: the rulers of the
  *  chronicle (src/sim/systems/rulers.ts): every realm has a holder, every person a day of death, and the persons of
- *  history are named. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
-export const STATE_VERSION = 16;
+ *  history are named. 17: the families who live from agriculture live in hamlets outside the walls of their town, and
+ *  every place has the people who live there: its persons, counted (src/sim/systems/hamlets.ts). 18: the borders of the chronicle of borders
+ *  (src/sim/systems/borders.ts): places change hands on their days, realms come in with their first places. 19: every
+ *  person has a culture and a faith, the counted minorities of the towns among them; a place has none of its own: it
+ *  has those of its persons (src/sim/systems/cultures.ts). Snapshots from 11 on are brought up to date by
+ *  src/sim/upgrade.ts. */
+export const STATE_VERSION = 19;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
   /** realm that owns the place (−1: nobody) */
   owner: Int16Array;
-  culture: Uint16Array;
-  faith: Uint8Array;
-  /** people living there */
+  /** people living there: its living persons, counted once a year (src/sim/systems/hamlets.ts) */
   pop: Float32Array;
   /** the last harvest: kilocalories of food from arable farming in a year (src/sim/systems/harvest.ts) */
   harvest: Float64Array;
@@ -75,6 +78,9 @@ export const PERSON_SCHEMA = {
   /** the day the person died (the persons of the cities do not die yet; a ruler dies on the real day), ALIVE while
    *  the person lives. A dead person keeps the row: ids are never reused */
   died: 'i32',
+  /** the culture and the faith of the person (indices of ALL_CULTURES and FAITHS, src/sim/content/peoples.ts;
+   *  src/sim/systems/cultures.ts) */
+  culture: 'u16', faith: 'u8',
 } as const;
 /** `died` of a living person. */
 export const ALIVE = 0x7fffffff;
@@ -92,6 +98,8 @@ export const FAMILY_SCHEMA = {
   /** of the last day, in £ at the scale of the world: the disposable income and the spending of all its members;
    *  and their savings */
   income: 'f32', spent: 'f32', savings: 'f32',
+  /** 1: the family lives from agriculture and lives in a hamlet outside the walls of its town (src/sim/systems/hamlets.ts) */
+  hamlet: 'u8',
 } as const;
 export type FamilySchema = typeof FAMILY_SCHEMA;
 /** A firm of the economy of a city (economy feature 10): an entity for every firm the engine computes. The firms of

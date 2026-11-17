@@ -2,7 +2,7 @@
 // and every firm is an entity. Who works (src/sim/systems/work.ts), the founding and the daily writing
 // (src/sim/systems/economy.ts), the state, the upgrade, and what the server and the panel say of a person.
 import { describe, it, expect } from 'vitest';
-import { newWorldState } from '../tools/sim/load';
+import { newWorldState, loadSetup } from '../tools/sim/load';
 import { advanceDay } from '../src/sim/engine';
 import { FIGURE, FIGURES } from '../src/sim/economy/engine';
 import { activePersons } from '../src/sim/economy/calibration';
@@ -14,6 +14,9 @@ import { upgradeState } from '../src/sim/upgrade';
 import { STATE_VERSION, PERSON_SCHEMA, type WorldState } from '../src/sim/state';
 import { personDetail, personEconomy } from '../src/net/people';
 import { economyRows, lsd, pence } from '../src/people/economy_rows';
+import { countPeople, settleHamlets } from '../src/sim/systems/hamlets';
+import { cultivate } from '../src/sim/systems/cultivation';
+import { bringInHarvest } from '../src/sim/systems/harvest';
 
 const { s, w } = newWorldState();
 const P = s.person.cols, F = s.firm.cols, e = s.economy.cities!;
@@ -173,10 +176,12 @@ describe('the state', () => {
     const old = decodeState(encodeState(s)) as any;
     for (const k of ['role', 'agent', 'firm', 'wage', 'income', 'spent', 'savings']) delete old.person.cols[k];
     delete old.firm; delete old.economy.cities.places; delete old.economy.cities.firm0; old.v = 11;
-    const up = upgradeState(decodeState(encodeState(old)), w);
+    const up = upgradeState(decodeState(encodeState(old)), w, () => loadSetup(1356));
     expect(up.v).toBe(STATE_VERSION);
     expect(Object.keys(up.person.cols)).toEqual(Object.keys(PERSON_SCHEMA));
     const founded = decodeState(encodeState(s)); foundEconomy(founded, w);
+    // step 17 settles the families by the firms of the new economies and sets the people, arable and harvest anew
+    settleHamlets(founded); countPeople(founded); cultivate(founded, w); bringInHarvest(founded, w);
     expect(hashState(up)).toBe(hashState(founded));
     const c = up.economy.cities!;
     expect(c.day).toBe(s.day); expect(c.years.length).toBe(0); expect(c.halted).toBe('');

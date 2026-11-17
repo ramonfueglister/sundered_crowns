@@ -14,6 +14,9 @@ export interface RealmInfo {
 }
 export interface PlaceDetail {
   id: number; name: string; nameDe: string; owner: number; terrain: string; resource: string; culture: I18n; faith: I18n; pop: number;
+  /** the cultures and faiths of the place's persons, most persons first (culture and faith above are the first; a place
+   *  without persons has none). Absent when the server is older than the client. */
+  peoples?: { culture: I18n; faith: I18n; persons: number }[];
   /** the last grain harvest and what it was computed from (absent when the server is older than the client) */
   harvest?: HarvestDetail;
   /** the economy of the place's city (only the places with one of the 30 largest cities; absent when the world has

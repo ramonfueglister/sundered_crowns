@@ -23,11 +23,11 @@ describe('the realms of the rest of the globe', () => {
       expect(s.place.owner[cap], key).toBe(r);
     }
   });
-  it('have the cultures and faiths of their lands', () => {
-    const han = ALL_CULTURES.indexOf('han'), maha = FAITHS.findIndex((f) => f.id === 'mahayana');
+  it('have the cultures and faiths of their lands in the setup', () => {
+    const han = 'han', maha = 'mahayana';
     const yuan = realmOf('yuan');
     let held = 0, hanHeld = 0, mahaHeld = 0;
-    for (let i = GAME_MAP; i < w.L; i++) if (s.place.owner[i] === yuan) { held++; if (s.place.culture[i] === han) hanHeld++; if (s.place.faith[i] === maha) mahaHeld++; }
+    for (let i = GAME_MAP; i < w.L; i++) if (s.place.owner[i] === yuan) { held++; if (setup.culture[i] === han) hanHeld++; if (setup.faith[i] === maha) mahaHeld++; }
     expect(held).toBeGreaterThan(500);
     expect(hanHeld / held).toBeGreaterThan(0.4);
     expect(mahaHeld / held).toBeGreaterThan(0.3);

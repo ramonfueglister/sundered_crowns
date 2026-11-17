@@ -6,7 +6,8 @@ import { computed } from '@preact/signals';
 import { status, refusal, me, world, realms, placeInfo, connect, disconnect, claim, abdicate, askPlace } from '../net/client';
 import { MapView, selectedPlace, mapCtl } from './MapView';
 import { WorldView } from './WorldView';
-import { IconDefs, IconPlaces, IconCalendar, IconGear, IconPolitical, IconTerrain, IconClose } from './icons';
+import { IconDefs, IconPlaces, IconCalendar, IconGear, IconPolitical, IconTerrain, IconClose, IconReplay } from './icons';
+import { replay, startReplay, stopReplay } from './replay';
 import { type TextKey, t, L, lang, setLang, terrainName, resourceName, num, heads, pct, kcalText, pounds, index } from './i18n';
 import { fmtDate } from '../sim/calendar';
 import type { RealmInfo } from '../net/protocol';
@@ -41,6 +42,9 @@ const myRealm = computed(() => { const m = me.value; return m && m.realm >= 0 ? 
 
 /** Realms with a drawn coat of arms; the others show their initial. */
 const ARMS: Record<string, string> = { venice: '/ui/arms/venice.svg' };
+
+/** A share in percent: one decimal below 1 %, else whole. */
+const share = (n: number, of: number) => { const p = 100 * n / Math.max(1, of); return (p < 1 ? p.toFixed(1) : Math.round(p).toString()).replace('.', lang.value === 'de' ? ',' : '.'); };
 
 function RealmBanner() {
   const r = myRealm.value;
@@ -130,9 +134,12 @@ function TopBar() {
   return <header class="hud-top">
     <div class={`hud-values${mine ? ' ruled' : ''}`}>
       <MapModes />
+      <button class={`tool mode${replay.value ? ' on' : ''}`} aria-pressed={!!replay.value} aria-label={t(replay.value ? 'replay_stop' : 'replay')}
+        title={replay.value ? t('replay_stop') : `${t('replay')}\n${t('replay_hint')}`}
+        onClick={() => { if (replay.value) stopReplay(); else startReplay(world.value?.startYear ?? 1291).catch((e) => { console.error(e); stopReplay(); }); }}><IconReplay /></button>
       {mine && <span class="val" title={`${L(mine.name)}: ${num(mine.places)} ${t('places')}`}><IconPlaces /><b>{num(mine.places)}</b></span>}
     </div>
-    <div class="hud-date"><IconCalendar /><span>{wi ? fmtDate(wi.day, wi.startYear, lang.value) : ''}</span>{wi?.paused && <small>{t('paused')}</small>}</div>
+    <div class="hud-date"><IconCalendar /><span>{replay.value ? String(replay.value.year) : wi ? fmtDate(wi.day, wi.startYear, lang.value) : ''}</span>{replay.value ? <small>{t('replay')}</small> : wi?.paused && <small>{t('paused')}</small>}</div>
     <button class="tb" title={t('settings')} aria-label={t('settings')} aria-expanded={menu} onClick={() => setMenu(!menu)}><IconGear /></button>
     {menu && <div class="hud-menu" onClick={() => setMenu(false)}>
       <MusicSettings />
@@ -157,8 +164,9 @@ function PlacePanel() {
     {d && <table class="facts"><tbody>
       <tr><th>{t('owner')}</th><td>{r ? <><i class="swatch" style={{ background: hex(r.color) }} />{L(r.name)}</> : t('nobody')}</td></tr>
       <tr><th>{t('population')}</th><td>{heads(d.pop)}</td></tr>
-      <tr><th>{t('culture')}</th><td>{L(d.culture)}</td></tr>
-      <tr><th>{t('faith')}</th><td>{L(d.faith)}</td></tr>
+      {d.peoples && d.peoples.length > 1
+        ? <tr><th>{t('culture')}</th><td>{d.peoples.map((x) => `${L(x.culture)}, ${L(x.faith)} ${share(x.persons, d.pop)} %`).join(' · ')}</td></tr>
+        : <><tr><th>{t('culture')}</th><td>{L(d.culture)}</td></tr><tr><th>{t('faith')}</th><td>{L(d.faith)}</td></tr></>}
       <tr><th>{t('terrain')}</th><td>{terrainName(d.terrain)}</td></tr>
       <tr><th>{t('resource')}</th><td>{resourceName(d.resource)}</td></tr>
     </tbody></table>}
