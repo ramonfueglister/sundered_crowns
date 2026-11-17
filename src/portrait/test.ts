@@ -86,6 +86,8 @@ async function main(): Promise<void> {
     picture.title = `${person.pid}: ${portrait.look}, ${portrait.tris} triangles, built in ${(t1 - t0).toFixed(0)} ms, drawn in ${(performance.now() - t1).toFixed(0)} ms`;
     picture.getContext('2d')!.drawImage(stage.renderer.domElement, 0, 0);
     if (places) picture.dataset.at = places;
+    // a beard over lips and chin (stubble aside): what measures the lips' colour leaves such a man out
+    if (portrait.surfaces.some(s => s.tex.includes('/beard') && !s.tex.includes('/beard_stubble'))) picture.dataset.beard = '1';
     wall.append(picture);
     console.log(picture.title);
   }

@@ -3411,6 +3411,84 @@ holds that a child's portrait says so and that its skin is drawn with the share.
 boys of 8 to 17 within 0.3 (their skin is smoother; the tool measures no one younger). Pictures: `runde105_kinder_vorher_nachher.png` (the eight small children,
 round 104 above), `runde105_stichprobe.png` (the sample of 36).
 
+**The portraits' gauntlet, and the stage held to it (round 106).** Until now a round measured what it was
+about and nothing else, and a later round could undo an earlier one's fit without anyone seeing it. The map
+has a script that holds every round against the same numbers (`tools/lookprobe/gauntlet.py`); the portraits
+have one now: `tools/portrait/gauntlet.mjs`. It runs `face_colour.mjs` over the sample and holds the means
+of the grown women and men against what rounds 71 to 83 read off the reference's woman and emperor, line by
+line, PASS or FAIL (the call is at the head of the file; `--strict` ends with an error). The screenshots are
+not in the repository; their numbers are, in this file, and the script has them with the round each comes
+from. The limits are by judgement (3 L of a place's lightness, 2 of its a\* and b\*, 4 where one place stands
+against another): PLACEHOLDER.
+
+Two things had to be put right in the measuring first.
+
+- The men's lips were read as the mean of all eight grown men, four of whom wear a beard over lips and chin:
+  hair there reads darker and less red than any lip. The test page says who wears a beard (stubble aside),
+  `face_colour.mjs` prints the shaven men as a group of their own, and the emperor's lips are held against
+  those. On them a man's lower lip was 18.0 L under his lit cheek (the emperor's 25.8), with the red right
+  (a\* 6.9 over the cheek, his 7.1): the mean over all men had said 24.0 and 3.8, the opposite.
+- The shade beside the nose on the far side (round 83's black wedge) was read by a scratch script that is
+  gone. `face_colour.mjs` reads it now: on two level lines from the nose's back across the far cheek (at half
+  and at 0.65 of the way from sellion to nose's tip, steps of 2.2 % of the face's length) the darkest place
+  within 13 % of the face's length, and the lightest place of the cheek beyond it, both against the lit
+  cheek. Round 83 read the reference's woman at -34 to -35 and -16 there.
+
+What the gauntlet said of round 105, and what it says now (the whole sample; against the lit cheek where a
+line says "against"):
+
+| | the reference's | round 105 | now |
+|---|---|---|---|
+| woman: lit cheek L, a\*, b\* | 56.1, 22.9, 25.4 | 55.7, 22.4, 26.6 | 54.6, 22.0, 26.2 |
+| woman: far cheek against the lit | -27.7 | -22.1 FAIL | -24.5 |
+| woman: beside the nose | -34.5 | -30.6 | -33.6 |
+| woman: cheek beyond the nose | -16 | -16.9 | -18.3 |
+| woman: nose's back | +8 | +2.3 FAIL | +4.3 |
+| woman: lower lip, and its red (a\*) | -22.9, +6.2 | -24.5, +4.5 | -24.5, +4.3 |
+| woman: upper lip, over the lip | -35.1, -4.4 | -37.1, -1.8 | -38.5, -2.2 |
+| woman: eye | -40.2 | -30.5 FAIL | -36.8 |
+| emperor: lower lip, and its red (shaven men) | -25.8, +7.1 | -18.0 FAIL, +6.9 | -22.4, +6.5 |
+| emperor: eye | -40.6 | -37.4 | -43.7 |
+| lines that pass | | 15 of 19 | 19 of 19 |
+
+What was changed for it, each by a scan of the value over the sixteen grown faces and then by eye at the
+panel's size:
+
+| line | cause | change |
+|---|---|---|
+| the far cheek 5.6 L too light: a face without a shaded half | the fill light | `lights.fill.energy` 0.14 (0.24). Round 85 had made it stronger against the black wedge beside the nose, under ACES, which darkens what is dark; since round 103 the picture has a curve of its own, and with the weaker fill the wedge is at the reference's lightness (-33.6, hers -34.5) where it was 3.9 L too light |
+| the nose's back as dull as the cheek, a nose without a ridge at the panel's size | one gloss over the whole face | `skin.zone` 2.5: the oil's film is that much thicker in a stripe along the face's middle line, from the forehead's middle down the nose's back, fading out over its tip (places on the skin's image, the same for everyone). Skin is oilier there |
+| a woman's eye 9.7 L too light: wide open, staring | the upper lid threw too little shade on the ball | `eye.lid.dark` 0.3 (0.5), `eye.white` 1.75 (1.95), `eye.iris` 1.15 (1.3). The lid's shade is the lever: with the iris alone at 1.0 the women's eye stayed 6.4 too light and the men's went to the limit |
+| a shaven man's lips 7.8 L too light, pink | the paint | a man's `Lips`: 0.24 of the skin's own colour (0.3) and blood 0.30, 0.05, 0.05 (0.33, 0.075, 0.074): darker, and with less green and blue so that the red stays (darker alone lost it: a\* 3.9) |
+
+And one thing by eye, with no line in the gauntlet: a boy before his beard wears the girls' image of the
+skin (`DressSet::boy_skin`, 14 years). MakeHuman's image of a young man has the shade of a shaven beard round
+mouth and jaw; on a boy of eight it was a man's stubble.
+
+Tried and not kept: the key light further to the front (65 and 60 degrees round from where the face looks instead of 70: the far cheek
+-18.1 and -14.0, lighter, the wrong way; with the weaker fill -19.5 and -15.0); the gloss stripe at 1.5 (the
+nose's back +3.6, fails) and narrow at 3 (a drawn line on a man's nose; it is half as broad again now, and
+weaker); `eye.lid.dark` 0.65 (the value is what the light is darkened to: lighter eyes); a boy's face growing
+into a man's later (`grown` from eleven instead of one: a small gain, and the tables `skull`, `child_mouth`
+and `child_nose` are fitted to the course as it is).
+
+Honest about it. Nineteen lines that pass are nineteen places of two faces of the reference; they do not say
+that a picture is good, and several pass by less than one L of their limit (far cheek, nose's back, a woman's
+eye and upper lip, a shaven man's lips). The women's eyes are 7 L lighter against the cheek than the men's,
+whose brows shade them, where the reference's woman and emperor read the same: one value of the lid's shade
+serves both, and each is 3 L from its number on its own side. Girls' and boys' eyes are darker by the same
+change (-42.3 against the lit cheek; -36.2 and -35.3 before), and no picture of the reference shows a child.
+A boy's lips follow a man's: their red over the cheek is a\* 3.0 (5.7). Girls' lips have hardly any red over
+the cheek (a\* 0.5, as before). The forms the gauntlet does not hold are as round 105 left them: boys of
+thirteen with a grown man's folds, the women's veils, a small child's mouth.
+
+Tests: `tests/portrait.test.ts` holds the fill between 0.06 and 0.11 of the key (before: above 0.13) with
+the reason, and that the skin's gloss has its stripe from the forehead's middle to the nose's tip and none
+without the value; `portrait/tests/faces.rs` holds a man's lips at 0.38 to 0.50 of the cheek's light
+(measured 0.40 to 0.44; before 0.45 to 0.61) and that a boy of England under fourteen has the girls' image,
+a boy without a dress table the men's. Apoleia's portraits are the same to the byte. Pictures:
+`runde106_vorher_nachher.png` (eight faces, round 105 above), `runde106_stichprobe.png` (the sample of 36).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since

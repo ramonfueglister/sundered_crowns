@@ -663,6 +663,39 @@ describe('portraits', { timeout: 20_000 }, () => {
     expect(fine(1)[1]).toBeCloseTo(k.child);
     expect(fine(0.5)[1]).toBeCloseTo((1 + k.child) / 2);
   });
+  it('the skin of England shines along the nose\'s back, where a face is oily', () => {
+    // (round 106) one gloss over the whole face left the nose's back as dull as the cheek: 2.3 L lighter than a
+    // woman's lit cheek where the reference's is 8 lighter, and a nose without a ridge at the panel's size. The
+    // oil's film is `skin.zone` times thicker in a stripe along the face's middle line from the nose's root to
+    // its tip (places of the skin's image, the same for everyone); elsewhere, and without the value, as it was.
+    const k = ENGLAND_1356.skin!;
+    expect(k.zone).toBeGreaterThan(1.5);
+    expect(k.zone).toBeLessThan(3.5);
+    const skin = { rough: 0.5, metal: 0, double: false, tex: 'real/skin_young_female.webp', nmap: '', pos: new Float32Array(9), col: new Float32Array(9).fill(0.3), uv: new Float32Array(6), nrm: new Float32Array(9) };
+    const drawn = (profile: typeof ENGLAND_1356) => {
+      const m = surfaceMaterials(skin, null, null, profile, 0.3)[0]!;
+      const shader = { uniforms: {} as Record<string, { value: number }>, vertexShader: ShaderLib.physical.vertexShader, fragmentShader: ShaderLib.physical.fragmentShader };
+      m.onBeforeCompile(shader as never, null as never);
+      return shader;
+    };
+    const stripe = (zone: number) => `skinOil *= 1.0 + ${zone.toFixed(3)} * exp( - pow( ( vSkinUv.y - 0.517 ) /`;
+    const shader = drawn(ENGLAND_1356);
+    expect(shader.vertexShader).toContain('vSkinUv = uv;');
+    expect(shader.fragmentShader).toContain(stripe(k.zone));
+    // the stripe runs from the forehead's middle down the nose's back and fades out over the nose's tip, before
+    // the lips (places on the skin's image, tools/portrait/face_colour.mjs: sellion 0.8350, the nose's tip
+    // 0.8732, the lips' top 0.8961)
+    const reach = /smoothstep\( ([\d.]+), ([\d.]+), vSkinUv\.x \) \* \( 1\.0 - smoothstep\( ([\d.]+), ([\d.]+), vSkinUv\.x \) \)/.exec(shader.fragmentShader)!.slice(1).map(Number);
+    const [from, full, fading, to] = reach as [number, number, number, number];
+    expect(from).toBeGreaterThan(0.76);
+    expect(full).toBeLessThan(0.8350);
+    expect(fading).toBeGreaterThan(0.8350 + 0.6 * (0.8732 - 0.8350));
+    expect(fading).toBeLessThan(0.8732);
+    expect(to).toBeGreaterThan(0.8732);
+    expect(to).toBeLessThan(0.8961);
+    // a profile without the value draws the film as one
+    expect(drawn({ ...ENGLAND_1356, skin: { ...k, zone: 0 } }).fragmentShader).toContain(stripe(0));
+  });
   it('England\'s stage lights a face from above and from the side it is turned away from', () => {
     // a face lit level and from the side it is turned to has no shaded half and no shade under brow, nose and
     // lip (rounds 60 to 72: flat, pale, the eyes wide in full light). The key light stands on the other side of
@@ -729,12 +762,18 @@ describe('portraits', { timeout: 20_000 }, () => {
     // was the rim's grey gloss, and with the rim behind the cheek's plane and the fill as it was (a tenth of the
     // key) the shade beside a woman's nose was 6 L darker and a man's far cheek 6 (with the fill at 0.16 of the
     // key 2 L darker each; the reference's woman 9 L lighter there than ours)
-    expect(fill.energy).toBeGreaterThan(0.13 * key.energy);
+    // That was under ACES, which darkens what is dark. Since round 103 the picture is finished through a curve of
+    // its own, and round 106 held the stage against the reference's numbers line by line (tools/portrait/
+    // gauntlet.mjs): with the fill above 0.13 of the key a woman's far cheek was 22.1 L under the lit one and the
+    // shade beside her nose 30.6 (the reference's 27.7 and 34 to 35), a face without a shaded half; at 0.078 of
+    // the key they are 24.4 and 33.6. The fill is still a light, and the stronger of the two
+    expect(fill.energy).toBeGreaterThan(0.06 * key.energy);
+    expect(fill.energy).toBeLessThan(0.11 * key.energy);
     expect(fill.energy).toBeGreaterThan(bounce.energy);
     // each of the two is a light, and both together far weaker than the key: the face keeps its shaded half
     for (const l of [fill, bounce]) expect(l.energy).toBeGreaterThan(0.05 * key.energy);
-    expect(fill.energy + bounce.energy).toBeGreaterThan(0.15 * key.energy);
-    expect(fill.energy + bounce.energy).toBeLessThan(0.25 * key.energy);
+    expect(fill.energy + bounce.energy).toBeGreaterThan(0.11 * key.energy);
+    expect(fill.energy + bounce.energy).toBeLessThan(0.18 * key.energy);
     expect(ENGLAND_1356.sky.energy).toBeLessThan(0.15 * key.energy);
     // Apoleia's stage is as it was
     expect(APOLEIA.lights.key.from).toEqual([-3.5, 4.5, 5.0]);

@@ -171,7 +171,10 @@ fn the_lips_of_england_are_as_light_against_the_skin_as_the_references() {
     // curve that keeps a colour's hue (src/portrait/finish.ts), the same paint read 15 L under a woman's lit
     // cheek and less red than it (a* -1.9): the red has to be in the paint itself. Less of the skin's own colour
     // and a blood with half the green and blue for women, more red in a man's: 0.26 to 0.30 on women (24.5 L
-    // under the lit cheek in the picture) and 0.50 to 0.55 on men.
+    // under the lit cheek in the picture) and 0.50 to 0.55 on men. Round 106 read the men's lips on the men who
+    // wear no beard over them (the mean over all men had a beard's hair in it): 18.5 L under the lit cheek, the
+    // reference's emperor's 25.8. A man's are darker now, with less green and blue in the blood so that they keep
+    // their red: 0.40 to 0.44 of the cheek's light (22.4 L under the lit cheek, a* 6.5 over it; his 7.1).
     let Some(h) = head() else { return };
     let idx = &h.parts["body"][LODS - 1];
     let red = real::rows("real/skin_lip.txt").expect("the lips' red");
@@ -197,7 +200,7 @@ fn the_lips_of_england_are_as_light_against_the_skin_as_the_references() {
         if std::env::var("SHOW").is_ok() {
             println!("{} {k}: the lower lip {:.3} of the cheek's light ({} corners of the cheek)", if female { "woman" } else { "man" }, lip / cheek, near.len());
         }
-        let bounds = if female { (0.23, 0.34) } else { (0.45, 0.61) };
+        let bounds = if female { (0.23, 0.34) } else { (0.38, 0.50) };
         assert!(lip / cheek > bounds.0 && lip / cheek < bounds.1, "{} {k}: the lower lip {} of the cheek's light", if female { "woman" } else { "man" }, lip / cheek);
     }
 }
@@ -930,6 +933,28 @@ fn the_neck_of_a_woman_of_england_is_as_thick_as_a_lean_womans() {
     // the thinnest place stays where it was (no waist over the part made thicker), and the face is as it was
     assert!((sums[3] - sums[4]).abs() < 4.0, "the thinnest place {} mm over the chin's lowest point, {} without", sums[3], sums[4]);
     assert!(worst < 0.01 && arc_most < 0.5, "the table's neck moves a breadth by {worst} mm, an arc from ear to ear by {arc_most}");
+}
+
+#[test]
+fn a_boy_of_england_before_his_beard_has_the_skin_of_a_girl() {
+    // (round 106) MakeHuman's image of a young man's skin has the shade of a shaven beard round mouth and jaw: a
+    // boy of eight wore a man's stubble. Up to the dress table's `boy_skin` a boy wears the girls' image; from
+    // there on, and without a dress table, the men's as before; a girl's and a woman's are what they were.
+    let Some(h) = head() else { return };
+    let set = sc_portrait::dress::Dress::England1356.set().unwrap();
+    assert!(set.boy_skin >= 12.0 && set.boy_skin <= 15.0, "a boy's skin up to {}", set.boy_skin);
+    let image = |p: &Look| build(&h, p, 1).surfaces.iter().find_map(|s| s.tex.clone().filter(|t| t.contains("/skin_"))).expect("the skin");
+    for k in 0..4 {
+        for (age, wants) in [(2.0, "skin_young_female"), (8.0, "skin_young_female"), (13.0, "skin_young_female"), (14.0, "skin_young_male"), (24.0, "skin_young_male"), (60.0, "skin_old_male")] {
+            let mut p = person(k, false, age);
+            assert!(image(&p).contains(wants), "boy {k} of {age}: {}", image(&p));
+            p.dress = sc_portrait::dress::Dress::Roman;
+            assert!(image(&p).contains("_male"), "a Roman boy {k} of {age}: {}", image(&p));
+        }
+        for age in [8.0, 24.0] {
+            assert!(image(&person(k, true, age)).contains("skin_young_female"));
+        }
+    }
 }
 
 #[test]
