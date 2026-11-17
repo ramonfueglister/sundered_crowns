@@ -2390,6 +2390,89 @@ comes back off skin, and the half shadow that stands for it is by eye (PLACEHOLD
 still take the rim's sheen through its half shadow (a white beard's far half, the inside of a hood). The
 women's square jaw and the flat lower lip are as they were.
 
+**A jaw that does not shape the skull: the pointed head (round 95).** Round 94 left "the women's square jaw"
+open. Measured first (`face_measure --grown`, 150 women and 150 men): the jaw is as broad as the survey's
+(women 109.6 mm at the jaw's corners against 110.1, men 120.4 against 120.4), the cheekbones as well (135.1
+and 143.1), and the jaw's corner lies 27 mm above and 64 mm behind the chin's lowest point on a woman, its
+lower edge rising by 23 degrees as on a man. So it is not the jaw.
+
+Held beside the reference's woman with the veil taken off (`without=veil`), ours had a skull like the point of
+an egg: narrow over the ears and narrower upwards, the cheekbones standing out against it, the cheek hollow
+under them. A diamond, and that is its name. The gene of the jaw (`look.rs` `FACE_MOD`) asks for MakeHuman's
+`head-diamond` on a narrow jaw (2.9 per unit of the gene) and for `head-triangular` on a wide one (1.3). The
+dress table shifts a woman's gene towards the narrow jaw (`jaw_women` -0.2, times the faces' gain of 1.6): the
+diamond lay on nearly every woman at 0.9, and on every man whose gene is under the middle.
+
+What the two targets are, on MakeHuman's base head (heights over the chin's lowest point; `tests/faces.rs`
+prints them with `SHOW=1`): each is a jaw and a skull with next to nothing between.
+
+| | under the cheekbones (to 93 mm) | 93 to 116 mm | above the root of the nose |
+|---|---|---|---|
+| `head-diamond` moves a vertex by at most | 7.2 mm | 4.4 mm | 22.4 mm |
+| `head-triangular` | 13.0 mm | 0.9 mm | 13.4 mm |
+
+The diamond narrows the head's outline by 2 to 5 mm a side at the jaw, and over the ears by 2 mm, 4 cm higher
+by 11 mm and 7 cm higher by 15 mm a side. The triangular head widens the jaw by 8 to 15 mm a side and narrows
+the skull by up to 12. Apoleia draws heads so, to be told apart at the size of a coin; in the real look it is
+a head no one has.
+
+Now England's heads take of these two targets the part under the cheekbones only (`DressSet::lower_only`;
+`morph.rs` `lower_band`, `lower_share`: whole up to the lowest of the cheekbones' landmarks, nothing from the
+root of the nose up, a smooth step between). Nothing was fitted. The survey has the head's breadth over the
+ears and its length (Zhuang & Bradtmiller 2005, table VI, read in this round from the same copy: head breadth
+153.0 mm, SD 6.0, for men and 146.8, SD 5.6, for women; head length 197.3, SD 7.4, and 187.5, SD 7.2); both
+are measured now (`measure.rs` `SKULL`, `GLABELLA`, `BACK`) and held by the test of round 69.
+
+| mean of the grown, mm | before | now | the survey (SD) |
+|---|---|---|---|
+| head breadth over the ears, women | 140.6 | 144.5 | 146.8 (5.6) |
+| the same, men | 150.1 | 152.4 | 153.0 (6.0) |
+| 4 cm above the widest place, women (60) | 115.8 | 134.4 | |
+| the same, men (60) | 128.0 | 139.4 | |
+| 5.5 cm above it, women | 99.4 | 121.1 | |
+| the same, men | 114.3 | 127.2 | |
+| breadth at the jaw's corners, women and men | 109.6, 120.4 | 109.6, 120.4 | 110.1 (8.9), 120.4 (10.4) |
+| head length, women | 187.4 | 187.4 | 187.5 (7.2) |
+| the same, men | 204.2 | 197.2 | 197.3 (7.4) |
+
+A woman's head was 1.1 standard deviations narrower than the survey's and is 0.4 narrower now; 4 cm higher it
+gained 19 mm in the mean and up to 29 on one head, and the spread there halved (SD 10.3 to 5.7): the skull no
+longer goes with the jaw. The men's heads were 7 mm longer than the survey's (0.9 SD), which the new measure
+showed: MakeHuman's man. Men now take `head-back-scale-depth-decr` at 0.28 (`rest`), which moves the back of
+the head and no landmark of the face. Where on a head the 7 mm are too many the survey does not say; they are
+taken from the part no portrait shows.
+
+Seen (`runde95_schaedel_vorher_nachher.png`): the hair of a girl with plaits, a veil and a bald man's head
+are round where they rose to a point; the face under them reads broader at the forehead and no longer as a
+diamond. All 35 portraits of the sample changed, each in 0.5 to 7.7 % of its pixels by more than 8 of 255;
+nothing comes through hair, veil or hood. Apoleia's heads keep both targets whole: Roman bytes and pictures
+unchanged.
+
+The lower face is as it was, and beside the reference's women it is still lean: theirs are full at the
+mouth's height with a small round chin, ours narrow there with a broad, flat chin whose corners show. Tried as
+portraits on six women and not kept (`runde95_untergesicht_varianten.png`): MakeHuman's inverted triangle at
+0.6 (the chin narrower and more pointed, the face longer and leaner still); `chin-width-decr` 0.6 more (the
+chin a little narrower, its corners stay); `cheek-volume-incr` 0.6 (a pouch on the far cheek over a narrow
+jaw). None is nearer the reference, and no measure says how full a real cheek is there. The survey has one:
+the arcs from ear to ear over the chin, under the nose, over the forehead and over the crown (bitragion chin
+arc 303.9 mm, SD 14.9, on women and 331.2, SD 15.5, on men). They start at the tragion, which is not placed
+on this head yet.
+
+Tests: `tests/faces.rs`, a sixteenth, "the gene of the jaw of England moves the jaw and not the skull" (what
+the two targets move under, in and over the band; the same 40 people with the gene at either end: no vertex
+from the root of the nose up moves, the head's breadth is the same, the jaw 16 mm broader at least; without a
+table the skull moves by 12 mm at least). The test of round 69 now holds the head's breadth and length as
+well: with the heads of round 94 it fails on both. `lib.rs`: the names in `without` and `lower_only` are
+targets the head has. cargo 26/16/6/2/2, vitest 1072.
+Pictures: `runde95_schaedel_vorher_nachher.png` (girls of 13 and 17, a woman of 35, two bald men of 50, a
+child of 5; before above), `runde95_untergesicht_varianten.png` (a woman of 17 and a woman of 24 without her
+veil: now, inverted triangle, narrower chin, fuller cheeks), `runde95_stichprobe.png`.
+Still open: the lean lower face and the broad chin (next: the arcs, for which the tragion has to be found);
+the pad of the far cheekbone; the head's height and the forehead's breadth are not held against the survey
+(no height read; the landmark of the minimum frontal breadth, 102.9 mm on women, is not placed); MakeHuman's
+`head-square` and `head-oval` (gene of the head's form, men's `rest`) move the skull as well and were not
+looked at; the flat lower lip.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since

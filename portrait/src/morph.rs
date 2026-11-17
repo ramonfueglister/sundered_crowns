@@ -27,6 +27,22 @@ pub fn morph_targets(h: &Head, p: &Look) -> Vec<(String, f32)> {
     list
 }
 
+/// Where on MakeHuman's base head a target of `DressSet::lower_only` fades out (heights, 1 unit = 10 cm): whole up to
+/// the lowest of the cheekbones' landmarks, gone from the root of the nose (sellion) up, 23 mm higher. MakeHuman's
+/// head forms are two things with next to nothing between them: a jaw, which ends under the cheekbones, and a
+/// skull, which begins over the ears (in the band the triangular head moves a vertex by 0.9 mm at most, the
+/// diamond by 4.4 at its upper end, where its skull begins; tests/faces.rs).
+pub fn lower_band(h: &Head) -> [f32; 2] {
+    [h.base[crate::measure::CHEEKBONES[2].0][1], h.base[crate::measure::SELLION][1]]
+}
+
+/// How much of a target of `DressSet::lower_only` a vertex at the base's height `y` takes (1 below the band, 0
+/// above it, a smooth step between).
+pub fn lower_share(y: f32, band: [f32; 2]) -> f32 {
+    let t = ((band[1] - y) / (band[1] - band[0])).clamp(0.0, 1.0);
+    t * t * (3.0 - 2.0 * t)
+}
+
 pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
     morph_as(h, p, None, None)
 }
@@ -40,6 +56,9 @@ fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, mut list: Option<&mut Vec
     // wimple, close on the skin, went out with an ear that is large or has grown with age, the veil over it,
     // further off, did not: the wimple came through the veil at the ears (round 70)
     let ears_hidden = p.dress.set().is_some_and(|d| d.veiled(p.female, p.age));
+    // targets a dress with a table takes the part below the cheekbones of only (`DressSet::lower_only`)
+    let lower: &[&str] = p.dress.set().map_or(&[], |d| d.lower_only);
+    let band = lower_band(h);
     let mut add = |name: &str, w: f32| {
         if w <= 1e-3 || ears_hidden && name.starts_with("ears/") || without.contains(&name) {
             return;
@@ -50,8 +69,10 @@ fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, mut list: Option<&mut Vec
             list.push((name.to_string(), w));
         }
         let k = w * DELTA_SCALE;
+        let part = lower.contains(&name);
         for (j, &i) in t.ids.iter().enumerate() {
             let d = t.d[j];
+            let k = if part { k * lower_share(h.base[i as usize][1], band) } else { k };
             let v = &mut pp[i as usize];
             v[0] += d[0] as f32 * k;
             v[1] += d[1] as f32 * k;

@@ -25,7 +25,7 @@ mod wasm;
 pub mod wire;
 
 pub use build::{build, Portrait, LODS};
-pub use morph::{morph_targets, morph_test, morph_test_mouth, mouth_field, MOUTH_FIELD};
+pub use morph::{lower_band, lower_share, morph_targets, morph_test, morph_test_mouth, mouth_field, MOUTH_FIELD};
 pub use geo::{Mat, Surface};
 pub use head::Head;
 pub use look::{default_life, Beard, Hair, Hat, Jewel, Life, Look, Mood, GENES, NG, STANDS};
@@ -172,7 +172,7 @@ mod tests {
         // a target the head does not have is left out without a word (morph.rs), so a misspelt name would do nothing
         let Some(h) = head() else { return };
         for (_, set) in crate::dress::SETS.iter() {
-            for name in set.mouth_shut.iter().chain(set.mouth_part).map(|t| t.0).chain(set.child.iter().map(|t| t.0)) {
+            for name in set.mouth_shut.iter().chain(set.mouth_part).map(|t| t.0).chain(set.child.iter().map(|t| t.0)).chain(set.without.iter().copied()).chain(set.lower_only.iter().copied()) {
                 assert!(h.targets.contains_key(name), "{}: {name}", set.key);
             }
             for (gene, gain) in set.genes {

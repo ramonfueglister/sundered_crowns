@@ -12,7 +12,8 @@
 //! (subnasale), the tip of the nose, the lowest point of the chin (menton), the corners of the mouth (the ends of
 //! morph.rs `LIP_SEAM`), the corners of the eye's opening (morph.rs `EYE_CORNERS`) and the lids' edges over and
 //! under the pupil; and per breadth a handful of vertices of which the widest pair counts, as a caliper finds the
-//! widest place: the cheekbones in front of the ears, the jaw's corners under them, the wings of the nose.
+//! widest place: the cheekbones in front of the ears, the jaw's corners under them, the wings of the nose, the
+//! skull's sides over the ears; and for the head's length the brows' middle and the back of the head.
 
 use crate::geo::V3;
 use crate::head::Head;
@@ -30,6 +31,13 @@ pub const LIP_TOP: [usize; 2] = [455, 466];
 pub const LIP_FOOT: [usize; 2] = [496, 492];
 pub const CHEEKBONES: [(usize, usize); 5] = [(5240, 2493), (3678, 867), (3144, 269), (3679, 868), (5236, 2489)];
 pub const JAW: [(usize, usize); 4] = [(3703, 895), (5089, 2332), (3702, 894), (3797, 997)];
+/// The skull's sides above the ears, from just over them to 4 cm higher: the survey's head breadth is the widest
+/// place of the head above the ears.
+pub const SKULL: [(usize, usize); 7] = [(3671, 860), (3781, 979), (5209, 2460), (3808, 1008), (3674, 863), (3780, 978), (3779, 977)];
+/// The foremost point of the forehead between the brows, and the middle line of the back of the head, of which the
+/// point furthest from it counts: the survey's head length.
+pub const GLABELLA: usize = 227;
+pub const BACK: [usize; 4] = [955, 2480, 962, 2470];
 pub const NOSE: [(usize, usize); 3] = [(4992, 2230), (4908, 2142), (4924, 2160)];
 /// The lids' edges over and under the pupil, of the eye at positive x and of the other.
 pub const LIDS: [(usize, usize); 2] = [(2891, 2934), (1, 44)];
@@ -55,7 +63,7 @@ pub fn marks() -> Vec<(&'static str, usize)> {
 }
 
 /// What `face` measures, and the survey's mean and standard deviation for men and for women (0 where it has none).
-pub const MEASURES: [(&str, [f32; 2], [f32; 2]); 13] = [
+pub const MEASURES: [(&str, [f32; 2], [f32; 2]); 15] = [
     ("face length (sellion to menton)", [122.7, 7.0], [113.4, 6.1]),
     ("sellion to subnasale", [52.0, 4.1], [48.2, 3.8]),
     ("subnasale to menton", [0.0, 0.0], [0.0, 0.0]),
@@ -69,6 +77,8 @@ pub const MEASURES: [(&str, [f32; 2], [f32; 2]); 13] = [
     ("lips' height (red of both)", [0.0, 0.0], [0.0, 0.0]),
     ("eye's opening, length", [0.0, 0.0], [0.0, 0.0]),
     ("eye's opening, height", [0.0, 0.0], [0.0, 0.0]),
+    ("head breadth (widest above the ears)", [153.0, 6.0], [146.8, 5.6]),
+    ("head length (glabella to the back of the head)", [197.3, 7.4], [187.5, 7.2]),
 ];
 
 /// The red of the lips on the middle line, and its mean and standard deviation for men and for women: the upper
@@ -130,6 +140,8 @@ pub fn face(h: &Head, pp: &[V3]) -> Vec<f32> {
         dist(between(pp[LIP_TOP[0]], pp[LIP_TOP[1]]), between(pp[LIP_FOOT[0]], pp[LIP_FOOT[1]])),
         (dist(pp[EYE_CORNERS[0][0]], pp[EYE_CORNERS[0][1]]) + dist(pp[EYE_CORNERS[1][0]], pp[EYE_CORNERS[1][1]])) / 2.0,
         (dist(pp[LIDS[0].0], pp[LIDS[0].1]) + dist(pp[LIDS[1].0], pp[LIDS[1].1])) / 2.0,
+        widest(&SKULL),
+        BACK.iter().map(|&v| dist(pp[GLABELLA], pp[v])).fold(0.0, f32::max),
     ]
 }
 

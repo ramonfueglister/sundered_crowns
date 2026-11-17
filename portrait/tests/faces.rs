@@ -6,14 +6,16 @@ mod common;
 
 use common::{head, person};
 use sc_portrait::measure::{face, far_cheek, lips, lower_face, marks, JAW, LIPS, LIP_FOOT, LIP_TOP, LOWER_FACE, MEASURES, MENTON, SELLION, STAGE_TURN, STOMION, SUBNASALE};
-use sc_portrait::{build, morph_targets, morph_test, morph_test_mouth, mouth_field, real, Beard, Head, Look, LODS};
+use sc_portrait::{build, lower_band, lower_share, morph_targets, morph_test, morph_test_mouth, mouth_field, real, Beard, Head, Look, LODS};
 
 #[test]
 fn the_grown_of_england_have_faces_of_human_measure() {
     // Until round 69 the women's faces were as long as the men's and broader (face length 0.99 of the men's where
     // the survey's women have 0.92, the cheekbones 152 mm across, two and a half standard deviations over the
     // survey's women), and the men's were short: a woman read as a man. Now every measure the survey has lies
-    // within half a standard deviation of its mean for either sex.
+    // within half a standard deviation of its mean for either sex. Since round 95 the head's breadth over the
+    // ears and its length are among them: until then a woman's head was 140.6 mm broad (1.1 standard deviations
+    // under the survey's, the gene of the jaw narrowed the skull) and a man's 204.2 mm long (0.9 over).
     let Some(h) = head() else { return };
     let mut sums = [vec![0.0; MEASURES.len()], vec![0.0; MEASURES.len()]];
     let n = 150;
@@ -535,6 +537,68 @@ fn the_jaw_of_england_has_no_dent_beside_the_chin() {
         }
         assert!(with > n / 4 && with < 3 * n / 4, "{who}: {with} of {n} with a jowl");
     }
+}
+
+#[test]
+fn the_gene_of_the_jaw_of_england_moves_the_jaw_and_not_the_skull() {
+    // Until round 95 a narrow jaw came with a skull narrowed to a point and a wide jaw with a skull narrowed too:
+    // the gene of the jaw asks for MakeHuman's diamond or triangular head, and each of them is two things, a jaw
+    // and a skull, with nothing between them. Every woman of England had the diamond at about 0.9 (the table
+    // shifts her gene towards the narrow jaw): the skull over the ears up to 15 mm narrower a side, a head like
+    // an egg's point under plaits and veil.
+    let Some(h) = head() else { return };
+    let show = std::env::var("SHOW").is_ok();
+    let band = lower_band(&h);
+    let (menton, mm) = (h.base[MENTON][1], |d: [i16; 3]| (d.iter().map(|&c| (c as f32 / 30.0).powi(2)).sum::<f32>()).sqrt());
+    assert!(band[0] < band[1] && lower_share(band[0], band) == 1.0 && lower_share(band[1], band) == 0.0);
+    assert!((lower_share((band[0] + band[1]) / 2.0, band) - 0.5).abs() < 1e-3);
+    let set = sc_portrait::dress::Dress::England1356.set().unwrap();
+    assert_eq!(set.lower_only, ["head/head-diamond", "head/head-triangular"]);
+    for (name, jaw_min, skull_min) in [("head/head-diamond", 6.0, 20.0), ("head/head-triangular", 12.0, 12.0)] {
+        // what the target is: how far it moves a vertex at most under the band, in it and over it
+        let t = &h.targets[name];
+        let mut most = [0.0f32; 3];
+        for (j, &i) in t.ids.iter().enumerate() {
+            let y = h.base[i as usize][1];
+            let part = if y < band[0] { 0 } else if y < band[1] { 1 } else { 2 };
+            most[part] = most[part].max(mm(t.d[j]));
+        }
+        if show {
+            println!("{name}: moves a vertex by up to {:.1} mm under the cheekbones, {:.1} between them and the root of the nose ({:.0} to {:.0} mm over the menton), {:.1} above", most[0], most[1], (band[0] - menton) * 100.0, (band[1] - menton) * 100.0, most[2]);
+        }
+        assert!(most[0] > jaw_min && most[2] > skull_min && most[1] < 4.5, "{name}: {most:?} mm");
+    }
+    // The same person with the gene at its two ends: with England's table nothing from the root of the nose up
+    // moves and the head is as broad over the ears, while the jaw goes from narrow to wide. Without a table
+    // (Apoleia's look, which stays as it is) the skull goes with the jaw.
+    let (jaw, skull) = (MEASURES.iter().position(|m| m.0.starts_with("breadth at the jaw")).unwrap(), MEASURES.iter().position(|m| m.0.starts_with("head breadth")).unwrap());
+    let (mut least, mut most_up, mut most_skull, mut roman) = (f32::MAX, 0.0f32, 0.0f32, f32::MAX);
+    for k in 0..40 {
+        let p = person(k, k % 2 == 0, [24.0, 35.0, 50.0][(k / 2) as usize % 3]);
+        let ends = |p: &Look| {
+            let (mut a, mut b) = (p.clone(), p.clone());
+            (a.genes[4], b.genes[4]) = (0.0, 255.0);
+            (morph_test(&h, &a), morph_test(&h, &b))
+        };
+        let (a, b) = ends(&p);
+        let moved = |a: &[[f32; 3]], b: &[[f32; 3]]| (0..h.n).filter(|&v| h.base[v][1] >= band[1]).map(|v| 100.0 * dist(&a[v], &b[v])).fold(0.0, f32::max);
+        let up = moved(&a, &b);
+        let (fa, fb) = (face(&h, &a), face(&h, &b));
+        assert!(up < 0.01, "person {k}: the gene of the jaw moves the head over the root of the nose by {up} mm");
+        assert!((fa[skull] - fb[skull]).abs() < 0.01, "person {k}: the head {} and {} mm broad", fa[skull], fb[skull]);
+        assert!(fb[jaw] - fa[jaw] > 12.0, "person {k}: the jaw {} and {} mm broad", fa[jaw], fb[jaw]);
+        least = least.min(fb[jaw] - fa[jaw]);
+        most_up = most_up.max(up);
+        most_skull = most_skull.max((fa[skull] - fb[skull]).abs());
+        let mut r = p.clone();
+        r.dress = sc_portrait::dress::Dress::Roman;
+        let (a, b) = ends(&r);
+        roman = roman.min(moved(&a, &b));
+    }
+    if show {
+        println!("the gene of the jaw from end to end, 40 grown: the jaw at least {least:.1} mm broader, the head over the root of the nose moved by {most_up:.3} mm at most, its breadth by {most_skull:.3}; without a table the skull moves by at least {roman:.1} mm");
+    }
+    assert!(roman > 10.0, "without a table the skull moves by {roman} mm only");
 }
 
 #[test]

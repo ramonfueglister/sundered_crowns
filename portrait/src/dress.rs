@@ -419,6 +419,19 @@ pub struct DressSet {
     /// on a child's jaw still a faint shade where the dent was. Its counterpart `-incr`, a jowl that hangs,
     /// stays. By eye, PLACEHOLDER: no measured outline of a jaw read.
     pub without: &'static [&'static str],
+    /// Targets of MakeHuman of which this dress's heads take the part below the cheekbones only (morph.rs
+    /// `lower_band`). England (round 95): the two head forms the gene of the jaw asks for, a narrow jaw as
+    /// MakeHuman's diamond and a wide one as its triangular head (look.rs `FACE_MOD`). Each of the two is a jaw
+    /// and a skull: the diamond narrows the jaw by 4 mm a side and the skull over the ears by up to 15 mm a side,
+    /// to a point; the triangular widens the jaw by 12 mm and narrows the skull by up to 12. Apoleia draws a head
+    /// so, to be told apart at the size of a coin. In the real look every woman had a skull like an egg's point
+    /// (the table shifts her gene towards the narrow jaw, `jaw_women`: the diamond at 0.9 on nearly all of them),
+    /// and so had every man with a narrow jaw: under plaits and a veil a head too high and too narrow over
+    /// cheekbones that stood out, on a bald man a dome. Measured (tests/faces.rs): the head's breadth over the
+    /// ears was 140.6 mm on women, 1.1 standard deviations under the survey's (measure.rs), and 150.1 on men
+    /// (-0.5); with the jaw's part alone 144.5 (-0.4) and 152.4 (-0.1), nothing fitted. The jaw's own breadth is
+    /// what it was.
+    pub lower_only: &'static [&'static str],
     pub sources: &'static [Source],
 }
 
@@ -498,6 +511,10 @@ pub static ENGLAND_1356: DressSet = DressSet {
         ("mouth/mouth-lowerlip-volume-incr", 0.3, 0.2),
         ("mouth/mouth-upperlip-volume-incr", 0.15, 0.0),
         ("chin/chin-prognathism-incr", 0.2, 0.0),
+        // (round 95) MakeHuman's man has a head 204 mm long from the brows to the back, the survey's men 197.3
+        // (measure.rs; women 187.4 to its 187.5): the back of the head less deep. Where on a head the 7 mm are
+        // too many the survey does not say; they are taken from the back, which no portrait shows.
+        ("head/head-back-scale-depth-decr", 0.0, 0.28),
     ],
     mood: 0.6,
     eye_forward: 0.0,
@@ -520,6 +537,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     ],
     genes: &[("lips", 0.4), ("cheek", 0.4)],
     without: &["chin/chin-jaw-drop-decr"],
+    lower_only: &["head/head-diamond", "head/head-triangular"],
     sources: &[
         Source { what: "gown (cote) of wool, pulled over the head, close at the shoulders, round neck", source: "Crowfoot, Pritchard & Staniland 1992 (London finds); Østergård 2004 (Herjolfsnes). Summaries only. Cut PLACEHOLDER." },
         Source { what: "hood with a short cape for men, worn on the head or thrown back", source: "Østergård 2004 (Herjolfsnes hoods); Newton 1980. Summaries only. Shares 4:3:3 PLACEHOLDER (unsourced)." },
@@ -532,7 +550,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
         Source { what: "no trimmings, belts' fittings or jewels on common people", source: "Not built: nothing read that shows them; rather none than invented ones." },
         Source { what: "share of red hair", source: "PLACEHOLDER. The two values are set so that of founders of the pool England draws from (alleles 20 to 170) about 5 in 100 have clearly red hair (a third of the red mixed in or more) and about 18 in 100 a tint of it. The 5 in 100 is an estimate, not a count: a press report (IrishCentral on a survey by BritainsDNA of 2,343 people, 2013, read as a summary) gives 34 to 40 in 100 carriers of a red-hair variant in Yorkshire and south-east Scotland; if the trait needs two such alleles, that is 4 to 6 in 100 with red hair. No source for 1356." },
         Source { what: "the iris 11.7 mm across, whatever the size of the head", source: "Rüfer, Schröder & Erb 2005, Cornea 24: 259-261 (white-to-white corneal diameter 11.71 mm, SD 0.42, 390 people of 10 to 80; from the abstract). Opening between the lids 25.6 mm long and 8.7 mm high: Rana et al. 2023, Int Ophthalmol 43: 2695-2701 (380 adults in Adelaide); the lids of England are by eye, not by that." },
-        Source { what: "the measures of a woman's and a man's face (length, breadth at the cheekbones and at the jaw's corners, distance between the pupils, breadth and protrusion of the nose, length of the lips): the means of the face at rest", source: "Zhuang & Bradtmiller 2005, Head-and-face anthropometric survey of U.S. respirator users, Journal of Occupational and Environmental Hygiene 2(11): 567-576 (2543 men, 1454 women of 18 to 66; read from the copy at stacks.cdc.gov/view/cdc/190020). People of today: used for how the sexes differ and how a face's parts stand to each other. No measured heads of 1356 read." },
+        Source { what: "the measures of a woman's and a man's face (length, breadth at the cheekbones and at the jaw's corners, distance between the pupils, breadth and protrusion of the nose, length of the lips) and of the head (breadth over the ears, length from the brows to the back): the means of the face at rest, the gene of the jaw kept off the skull, a man's head less deep at the back", source: "Zhuang & Bradtmiller 2005, Head-and-face anthropometric survey of U.S. respirator users, Journal of Occupational and Environmental Hygiene 2(11): 567-576 (2543 men, 1454 women of 18 to 66; read from the copy at stacks.cdc.gov/view/cdc/190020). People of today: used for how the sexes differ and how a face's parts stand to each other. No measured heads of 1356 read." },
         Source { what: "a woman's brows above the rim of the eye's socket: the upper edge over the pupil 19.6 mm above the line through the eyes' inner corners", source: "Matros, Garcia & Yaremchuk 2009, Plastic and Reconstructive Surgery 124: 1296-1301 (36 women of 20 to 30: 15.7 mm over the inner corner, 19.8 over the pupil, 21.3 over the outer corner; numbers read from the summary at dryaremchuk.com, volume and pages from memory). The inner end is left higher than theirs and the outer lower: by those numbers the brow slants, and MakeHuman's with its heavy inner end then reads as a frown. Men: Sclafani & Jung 2010, Archives of Facial Plastic Surgery 12(2) (lower and more level; abstract, no numbers). The band's breadth PLACEHOLDER, by eye." },
         Source { what: "lids, closed mouth, the face at rest, a child's face, strength of moods, the eyeballs' place in their sockets, how far the eyes turn towards each other, a child's lids and lash line, women's jaw, cheeks and lifted inner brow, the lips' colour, the upper lip's share of it, the seam and a child's share of the colour, the form of the mouth (cupid's bow, the lips' volume, the lower jaw forward), the lash line, flush, where it lies and its strength for women and men, the line of a scar, brows, how much of Apoleia's paint (brow, cheeks, sockets) and child's face is left, a small child's brows, how strongly the gene of the lips shows, that ears under a veil keep MakeHuman's form, and that no head has the skin beside the chin lifted (`without`)", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
         Source { what: "a grown woman's eyes brought forward by 2 mm with their lids: how deep a woman's eye lies in her head against a man's", source: "Exophthalmometry at eyewiki.org (Hertel's reading from the bone's rim beside the eye to the cornea: 16.5 mm in white men, 15.4 mm in white women, after Erb et al. 2003 and Migliori & Gladstone 1984). Shin, Lee, Koh & Song 2017, Anatomy & Cell Biology 50: 41-47 (computed tomography of 70 men and 71 women of Korea, 20 to 30: the cornea 5.3 and 6.3 mm behind the rim over the eye, 11.6 and 12.4 mm in front of the rim under it; read from a summary of the paper's table, which column is which sex inferred). Bone, where ours reads skin, and people of today: only the difference between the sexes is used, and the 2 mm is fitted to it." },

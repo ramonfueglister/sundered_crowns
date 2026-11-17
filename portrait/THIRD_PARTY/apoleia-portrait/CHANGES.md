@@ -280,3 +280,12 @@ profile takes each light's highlight only as far as the lamp is seen (`hidden`: 
 lights; a shadow that is not full lets light through, not the lamp's highlight). The rim light's highlight had
 come through the head at half strength, a pale grey patch beside the nose. `tests/portrait.test.ts`: one test
 more. Apoleia's skin keeps three.js' loop: Roman pictures unchanged.
+
+Round 95: the gene of the jaw no longer shapes the skull. `dress.rs`: `DressSet::lower_only`, targets of which
+a dress's heads take the part under the cheekbones only (England: `head/head-diamond` and
+`head/head-triangular`, which the gene of the jaw asks for and which each narrow the skull by up to 15 and 12 mm
+a side); in `rest` men take `head/head-back-scale-depth-decr` at 0.28 (a head 7 mm shorter from the brows to
+the back, as the survey's). `morph.rs`: `lower_band`, `lower_share`, and `add` weighs a target of that list
+per vertex by the base's height. `measure.rs`: the head's breadth over the ears (`SKULL`) and its length
+(`GLABELLA`, `BACK`) with the survey's values. `lib.rs` exports the two functions. `tests/faces.rs`: a
+sixteenth test. A head without a dress table is morphed as before: Roman bytes unchanged.
