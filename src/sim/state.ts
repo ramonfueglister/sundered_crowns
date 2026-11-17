@@ -17,16 +17,16 @@ import type { Table } from './ecs';
  *  chronicle (src/sim/systems/rulers.ts): every realm has a holder, every person a day of death, and the persons of
  *  history are named. 17: the families who live from agriculture live in hamlets outside the walls of their town, and
  *  every place has the people who live there: its persons, counted (src/sim/systems/hamlets.ts). 18: the borders of the chronicle of borders
- *  (src/sim/systems/borders.ts): places change hands on their days, realms come in with their first places. Snapshots
- *  from 11 on are brought up to date by src/sim/upgrade.ts. */
-export const STATE_VERSION = 18;
+ *  (src/sim/systems/borders.ts): places change hands on their days, realms come in with their first places. 19: every
+ *  person has a culture and a faith, the counted minorities of the towns among them; a place has none of its own: it
+ *  has those of its persons (src/sim/systems/cultures.ts). Snapshots from 11 on are brought up to date by
+ *  src/sim/upgrade.ts. */
+export const STATE_VERSION = 19;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
   /** realm that owns the place (−1: nobody) */
   owner: Int16Array;
-  culture: Uint16Array;
-  faith: Uint8Array;
   /** people living there: its living persons, counted once a year (src/sim/systems/hamlets.ts) */
   pop: Float32Array;
   /** the last harvest: kilocalories of food from arable farming in a year (src/sim/systems/harvest.ts) */
@@ -78,6 +78,9 @@ export const PERSON_SCHEMA = {
   /** the day the person died (the persons of the cities do not die yet; a ruler dies on the real day), ALIVE while
    *  the person lives. A dead person keeps the row: ids are never reused */
   died: 'i32',
+  /** the culture and the faith of the person (indices of ALL_CULTURES and FAITHS, src/sim/content/peoples.ts;
+   *  src/sim/systems/cultures.ts) */
+  culture: 'u16', faith: 'u8',
 } as const;
 /** `died` of a living person. */
 export const ALIVE = 0x7fffffff;
