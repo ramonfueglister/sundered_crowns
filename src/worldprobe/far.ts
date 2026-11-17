@@ -84,6 +84,8 @@ const SEEN_LEAVES = { top: [0.61, 0.66, 0.87], side: [0.31, 0.51, 0.83] } as con
  * about Taranto, as `SEEN_LEAVES`: steep roofs of the north and low ones of the south come out within a tenth.
  */
 const ROOF_SEEN = 0.82, WALL_SEEN = 0.115;
+/** the walls of a house as the camera sees them: a fifth of them is windows, doors and the dark under the eaves (the upright faces of the houses' models by their area, buildings/houses, against the colour of their walls) */
+const WALLS_SEEN = 0.8;
 const roofSeen = (roof: RGB, wall: RGB): RGB => [roof[0] * ROOF_SEEN + wall[0] * WALL_SEEN, roof[1] * ROOF_SEEN + wall[1] * WALL_SEEN, roof[2] * ROOF_SEEN + wall[2] * WALL_SEEN];
 /** the tops of a closed wood at the second far step, as a share of those of the first: measured on the pictures of both sides of the border between them (width 1150 against 1242, tools/zoom) at Paris, checked in the Black Forest */
 const ROOFED = 0.72;
@@ -263,7 +265,7 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
         // where a block is larger than a house, it is the houses' as far as they cover it: a block for every
         // house made a town many times its size
         for (let k = 0; k + 8 < here.houses.length; k += 9) {
-          const [hx, hz, w, d, , tenths, wall, roof] = here.houses.slice(k, k + 9), walls = rgb(wall), top = roofSeen(rgb(roof), walls);
+          const [hx, hz, w, d, , tenths, wall, roof] = here.houses.slice(k, k + 9), walls = shade(rgb(wall), WALLS_SEEN), top = roofSeen(rgb(roof), rgb(wall));
           for (let bz = Math.floor(hz / wider); bz * wider < hz + d; bz++) for (let bx = Math.floor(hx / wider); bx * wider < hx + w; bx++) {
             const x = bx - ox, z = bz - oz;
             if (!inGrid(x, z)) continue;
@@ -277,7 +279,7 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
           }
         }
       } else for (let k = 0; k + 8 < here.houses.length; k += 9) {
-        const [hx, hz, w, d, , tenths, wall, roof] = here.houses.slice(k, k + 9), walls = rgb(wall), top = roofSeen(rgb(roof), walls);
+        const [hx, hz, w, d, , tenths, wall, roof] = here.houses.slice(k, k + 9), walls = shade(rgb(wall), WALLS_SEEN), top = roofSeen(rgb(roof), rgb(wall));
         const on: [number, number][] = [];
         for (let bz = Math.floor(hz / wider); bz * wider < hz + d; bz++) for (let bx = Math.floor(hx / wider); bx * wider < hx + w; bx++) {
           const covered = (Math.min(hx + w, (bx + 1) * wider) - Math.max(hx, bx * wider)) * (Math.min(hz + d, (bz + 1) * wider) - Math.max(hz, bz * wider)) / (wider * wider);
@@ -321,7 +323,7 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
             const bx = (x + ox) * wider, bz = (z + oz) * wider, i = idx(x, z);
             const covers = Math.max(0, Math.min(t.cx + t.half, bx + wider) - Math.max(t.cx - t.half, bx)) * Math.max(0, Math.min(t.cz + t.half, bz + wider) - Math.max(t.cz - t.half, bz)) / (wider * wider), here = t.cx >= bx && t.cx < bx + wider && t.cz >= bz && t.cz < bz + wider, seen = Math.max(here ? TOWN_LEAST : 0, Math.min(1, covers * HOUSES * seenStanding));
             if (seen <= (c.kind![i] === 1 ? c.share[i] : 0)) continue;
-            put(x, z, 0, roofs, pick(shownBy(s!.style).walls, 0), 1); c.share[i] = seen;
+            put(x, z, 0, roofs, shade(pick(shownBy(s!.style).walls, 0), WALLS_SEEN), 1); c.share[i] = seen;
           }
           continue;
         }
