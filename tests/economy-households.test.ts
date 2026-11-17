@@ -236,7 +236,7 @@ describe('the state', () => {
     expect(Object.keys(up.family.cols)).toEqual(Object.keys(FAMILY_SCHEMA));
     const founded = decodeState(encodeState(s)); foundEconomy(founded, w);
     settleHamlets(founded); countPeople(founded); cultivate(founded, w); bringInHarvest(founded, w); // step 17
-    foundLots(founded); // step 20: the parcels of the families who live in the towns now
+    foundLots(founded, w.ground); // step 20: the parcels of the families who live in the towns now
     expect(hashState(up)).toBe(hashState(founded));
     const c = up.economy.cities!;
     expect(c.day).toBe(s.day); expect(c.years.length).toBe(0); expect(c.halted).toBe('');

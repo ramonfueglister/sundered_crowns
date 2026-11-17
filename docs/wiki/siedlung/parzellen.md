@@ -30,6 +30,7 @@ Noch nicht sichtbar. Der Weltserver gibt die Parzellen einer Stadt aus; die 3D-W
 
    Breite = √(0,76 · Baugrund / Familien / 3), Tiefe = 3 · Breite
 4. **Lage.** Die Parzellen liegen in quadratischen Blöcken aus zwei Reihen zu sechs Parzellen, Rücken an Rücken, mit der Front zur Gasse im Norden oder Süden. Die Stadt füllt sich von der Mitte nach aussen als Quadrat. Dieses Raster ist ein Platzhalter.
+5. **Baugrund.** Eine Parzelle liegt nur dort, wo ihr Haus stehen kann: nicht im Wasser, nicht auf Fels, nicht an einer Stufe und nicht unter der Kirche oder einem Wahrzeichen. Plätze im Raster, die das nicht erfüllen, bleiben frei, und die Stadt reicht entsprechend weiter hinaus.
 
 ## Daten und Parameter
 
@@ -46,20 +47,20 @@ Noch nicht sichtbar. Der Weltserver gibt die Parzellen einer Stadt aus; die 3D-W
 
 - **Bodenfläche je Familie.** Das Gesetz gibt einer Familie in einer mittleren Stadt der Welt (Bayonne, 12 Familien in der Stadt) 365 m² Stadtfläche. Grenade war mit 333 m² je Hausplatz geplant. Die beiden Quellen sind voneinander unabhängig. Anteil und Seitenverhältnis der Parzelle stammen dagegen von Grenade selbst.
 - **Platz für ein Haus je Familie.** Die schmalste Parzelle der Welt ist 5,9 m breit, belegt sind Parzellen ab etwa 4,1 m.
-- **Buchhaltung.** Tests prüfen für alle 558 Städte: Jede Familie in der Stadt hat genau eine Parzelle, keine Parzelle hat zwei Familien, die Parzellen einer Stadt überlappen nicht und ergeben zusammen 76 % ihres Baugrunds.
+- **Buchhaltung.** Tests prüfen für alle 558 Städte: Jede Familie in der Stadt hat genau eine Parzelle, jedes Haus steht auf Baugrund, keine Parzelle hat zwei Familien, die Parzellen einer Stadt überlappen nicht und ergeben zusammen 76 % ihres Baugrunds.
 
 Was die Welt von 1291 bekommt: 8'150 Parzellen in 558 Städten, für die 8'150 Familien (26'124 Personen), die in den Städten wohnen. Die 18'665 Familien der Weiler haben noch keine.
 
 | Stadt | Einwohner der Zeit | Familien in der Stadt | Parzelle | Breite der Stadt |
 |---|---|---|---|---|
 | Limoges (kleinste Stadt, vermessen) | 4'000 | 3 | 17,3 mal 51,9 m | 6,5 km |
-| Bayonne (mittlere Stadt, nach Formel) | 11'000 | 12 | 9,6 mal 28,9 m | 3,6 km |
-| Zürich (vermessen) | 11'550 | 9 | 9,0 mal 26,9 m | 3,4 km |
-| Venedig (vermessen) | 106'400 | 78 | 6,0 mal 17,9 m | 7,4 km |
-| Paris (vermessen) | 214'667 | 182 | 6,8 mal 20,4 m | 11,7 km |
-| Kairo (nach Formel) | 382'000 | 280 | 6,2 mal 18,7 m | 13,1 km |
+| Bayonne (mittlere Stadt, nach Formel) | 11'000 | 12 | 9,6 mal 28,9 m | 8,3 km |
+| Zürich (vermessen) | 11'550 | 9 | 9,0 mal 26,9 m | 5,5 km |
+| Venedig (vermessen) | 106'400 | 78 | 6,0 mal 17,9 m | 15,4 km |
+| Paris (vermessen) | 214'667 | 182 | 6,8 mal 20,4 m | 14,2 km |
+| Kairo (nach Formel) | 382'000 | 280 | 6,2 mal 18,7 m | 16,1 km |
 
-«Einwohner der Zeit» sind alle Menschen der echten Stadt. In der Stadt der Welt wohnt rund ein Viertel ihrer Personen, die übrigen sind Bauern in den Weilern; die Fläche der Stadt folgt nur aus denen in der Stadt. Die Breite gilt bei halber Hausgrösse (ein Hausblock von 2 m steht für 125 m Land). Über alle Städte ist die mittlere Breite 4,2 km. Zwei Städtepaare würden sich berühren: Kairo und Fustat, Rabat und Salé.
+«Einwohner der Zeit» sind alle Menschen der echten Stadt. In der Stadt der Welt wohnt rund ein Viertel ihrer Personen, die übrigen sind Bauern in den Weilern; die Fläche der Stadt folgt nur aus denen in der Stadt. Die Breite gilt bei halber Hausgrösse (ein Hausblock von 2 m steht für 125 m Land). Über alle Städte ist die mittlere Breite 4,7 km. Wo Wasser, Fels oder die Kirche im Weg sind, liegt die Stadt lockerer: Venedig ist in der Lagune doppelt so breit wie auf freiem Grund. Zwei Städtepaare würden sich berühren: Kairo und Fustat, Rabat und Salé.
 
 ## Massstab 1 : 100
 
@@ -72,7 +73,7 @@ Die Stadt hat ein Hundertstel der Menschen auf einem Hundertstel der Fläche. Di
 - Anteil und Form der Parzelle kommen von einer einzigen Planstadt in Südfrankreich. Freiburg im Breisgau hatte Hofstätten von 16,2 mal 32,4 m im Verhältnis 1 zu 2 (Löbbecke).
 - Eigene Festlegungen ohne Quelle: Alle Parzellen einer Stadt sind gleich gross. Wer in der Mitte wohnt, folgt der Nummer der Familie. Eine Familie je Parzelle (zu Familien je Haus ist keine Quelle gelesen). Die Umrechnung der vermessenen Städte auf die Einwohnerzahl der Welt.
 - Das Raster ist ein Platzhalter ohne Platz, Kirche und Mauer. Gewachsene Städte hatten kein Raster.
-- Die Simulation kennt den Boden noch nicht: Parzellen können im Wasser oder auf Fels liegen, bis die Baugrund-Schicht der Landschaft da ist.
+- Den Baugrund kennt die Simulation aus einer Datei der Landschaft. Ändert sich die Landschaft, legt eine neue Welt ihre Parzellen anders als eine laufende. Der hintere Teil einer Parzelle kann auf Grund liegen, der kein Haus trüge.
 - Kleine Städte sind breiter, als ihre Fläche erwarten lässt, weil der äusserste Ring der Blöcke nur teilweise gefüllt ist. Limoges hat drei Parzellen in einer Reihe.
 - Die Höfe der Bauernfamilien in den Weilern stehen noch nicht im Grundbuch.
 

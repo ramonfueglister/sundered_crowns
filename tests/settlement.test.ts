@@ -2,7 +2,8 @@
 // land register in the state, the snapshot, the upgrade of an older world and what the world server tells of it.
 import { describe, it, expect } from 'vitest';
 import { AREA_LAW, PARCEL_SHARE, DEPTH_PER_WIDTH, PARCELS_PER_ROW, NARROWEST_FRONT, FRONT, settledHectares, townGround, parcelSize, layParcels, measuredTown } from '../src/sim/settlement/rule';
-import { foundLots, townFamilies } from '../src/sim/systems/lots';
+import { foundLots, houseGround, townFamilies } from '../src/sim/systems/lots';
+import { compileGround } from '../src/sim/content/ground';
 import { townLots, manyTownsLots } from '../src/net/lots';
 import { citiesOf } from '../src/sim/content/cities';
 import { STATE_VERSION, LOT_KIND, NO_LOT, type WorldState } from '../src/sim/state';
@@ -66,10 +67,32 @@ describe('the parcels of a town', () => {
     expect(width).toBeCloseTo(4 * pitch + PARCELS_PER_ROW * p.w, 6);
     expect((n * p.w * p.d) / (5 * pitch) ** 2).toBeCloseTo(PARCEL_SHARE, 9); // with half a street around
   });
+  it('are fewer than asked when the ground within reach does not hold them', () => {
+    const lots = layParcels(1000, { w: 9, d: 27 }, () => true, 100); // the blocks within 100 m of the centre: 25
+    expect(lots.length).toBe(25 * 2 * PARCELS_PER_ROW);
+  });
   it('leave out ground a town cannot build on', () => {
     const p = { w: 9, d: 27 }, lots = layParcels(40, p, (x) => x <= 0); // nothing east of the centre
     expect(lots.length).toBe(40);
     for (const l of lots) expect(l.x).toBeLessThanOrEqual(0);
+  });
+});
+
+describe('the building ground of a town', () => {
+  it('is free only inside the survey and where its bit is set', () => {
+    // 3 by 3 blocks, the middle row free: bits 3, 4, 5 of the field
+    const g = compileGround({ year: 1291, metresPerBlock: 2, sites: [{ site: 7, w: 3, d: 3, cells: btoa(String.fromCharCode(0b00111000, 0)) }] });
+    expect(g.has(7)).toBe(true); expect(g.has(8)).toBe(false); expect(g.reach(7)).toBe(1);
+    for (const bx of [-1, 0, 1]) { expect(g.free(7, bx, 0)).toBe(true); expect(g.free(7, bx, -1)).toBe(false); expect(g.free(7, bx, 1)).toBe(false); }
+    expect(g.free(7, 2, 0)).toBe(false); expect(g.free(7, -2, 0)).toBe(false); expect(g.free(8, 0, 0)).toBe(false);
+  });
+  it('holds the house of a parcel when the strip at its street is free', () => {
+    const all = compileGround({ year: 1291, metresPerBlock: 2, sites: [{ site: 7, w: 41, d: 41, cells: btoa(String.fromCharCode(...new Array(Math.ceil((41 * 41) / 8)).fill(255))) }] });
+    const size = { w: 8, d: 24 };
+    expect(houseGround(all, 7, { x: 0, z: 0, front: FRONT.north }, size)).toBe(true);
+    expect(houseGround(all, 7, { x: 40, z: 0, front: FRONT.north }, size)).toBe(false); // its east edge lies beyond the survey
+    expect(houseGround(all, 7, { x: 0, z: -30, front: FRONT.south }, size)).toBe(true); // the back of the parcel may lie beyond it
+    expect(houseGround(all, 7, { x: 0, z: -30, front: FRONT.north }, size)).toBe(false);
   });
 });
 
@@ -109,11 +132,25 @@ describe('the land register of a world of 1291', () => {
       for (const a of ids) for (const b of ids) if (a < b) expect(overlap({ x: L.x[a], z: L.z[a] }, { x: L.x[b], z: L.z[b] }, { w: L.w[a], d: L.d[a] })).toBe(false);
     }
   });
+  it('lays every parcel where its house can stand, by the building ground of the towns', () => {
+    const g = w.ground!, house = (t: WorldState, i: number) => { const C = t.lot.cols; return houseGround(g, C.site[i], { x: C.x[i], z: C.z[i], front: C.front[i] }, { w: C.w[i], d: C.d[i] }); };
+    expect(g.year).toBe(1291);
+    for (const c of cities) expect(g.has(c.site)).toBe(true);
+    let off = 0;
+    for (let i = 0; i < s.lot.size; i++) if (!house(s, i)) off++;
+    expect(off).toBe(0);
+    // laid out without the ground, the houses of many parcels stand in the water, on rock or under a church
+    const bare = decodeState(encodeState(s));
+    expect(foundLots(bare, g)).toEqual([]); // no town is too tight for its families
+    foundLots(bare, null);
+    for (let i = 0; i < bare.lot.size; i++) if (!house(bare, i)) off++;
+    expect(off).toBeGreaterThan(1000);
+  });
   it('is the same from the same seed, survives a snapshot, and founding it again changes nothing', () => {
     const t = decodeState(encodeState(s));
     expect(hashState(t)).toBe(hashState(s));
     expect(Array.from(t.lot.cols.x.subarray(0, t.lot.size))).toEqual(Array.from(L.x.subarray(0, s.lot.size)));
-    foundLots(t);
+    foundLots(t, w.ground);
     expect(hashState(t)).toBe(hashState(s));
   });
 });

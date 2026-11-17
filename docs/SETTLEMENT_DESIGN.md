@@ -57,6 +57,13 @@ change while the world runs, the graphic has to read `/lots` instead.
 4. **Where.** A grid of square blocks, each two rows of six parcels back to back, fronting the streets north and
    south of the block; streets as wide as leaves the parcels 76 % (0.147 of a block's side). The town fills from the
    centre outwards as a square; the family with the lowest id gets the innermost parcel.
+5. **Building ground.** A parcel lies only where its house can stand (`houseGround`): every block of the strip at its
+   street, as wide as the parcel and five blocks deep (the deepest house the world graphic builds), is building
+   ground of the town (`public/data/ground_<year>.json`, written by `tools/worldprobe/build_ground.ts` from the
+   ground of the world graphic: no water, no rock, no step higher than a block, not under the church, the great
+   buildings, the towers or a monument; `src/sim/content/ground.ts`, `World.ground`). Parcels that cannot stand are
+   left out of the grid, and the town reaches farther. A town without a survey, or one whose surveyed ground does
+   not hold all its families, is laid out without regard to the ground (none in 1291).
 
 ### Parameters
 
@@ -79,17 +86,19 @@ the law's level, not of the share, which is Grenade's own).
 | Town | People of the time | Families in the town | Parcel | Ground | Width at 125 m per house block |
 |---|---|---|---|---|---|
 | Limoges (smallest, measured) | 4,000 | 3 | 17.3 × 51.9 m | 3,544 m² | 6.5 km |
-| Bayonne (median, by the law) | 11,000 | 12 | 9.6 × 28.9 m | 4,379 m² | 3.6 km |
-| Zürich (measured) | 11,550 | 9 | 9.0 × 26.9 m | 2,851 m² | 3.4 km |
-| Venice (measured) | 106,400 | 78 | 6.0 × 17.9 m | 10,989 m² | 7.4 km |
-| Paris (measured) | 214,667 | 182 | 6.8 × 20.4 m | 33,173 m² | 11.7 km |
-| Cairo (by the law) | 382,000 | 280 | 6.2 × 18.7 m | 42,979 m² | 13.1 km |
+| Bayonne (median, by the law) | 11,000 | 12 | 9.6 × 28.9 m | 4,379 m² | 8.3 km |
+| Zürich (measured) | 11,550 | 9 | 9.0 × 26.9 m | 2,851 m² | 5.5 km |
+| Venice (measured) | 106,400 | 78 | 6.0 × 17.9 m | 10,989 m² | 15.4 km |
+| Paris (measured) | 214,667 | 182 | 6.8 × 20.4 m | 33,173 m² | 14.2 km |
+| Cairo (by the law) | 382,000 | 280 | 6.2 × 18.7 m | 42,979 m² | 16.1 km |
 
 "People of the time" are all people of the real town; about a quarter of the world's persons of a town live inside
 it, and the ground follows from them alone. Width = the larger side of the box around the parcels, in house blocks
-of 2 m, each shown as 125 m of land (the half house size, live since PR #59). Median over all towns 4.2 km (1.8 to
-13.1). The outer ring of blocks is only partly filled, so a small town is wider than the square root of its ground
-(Limoges: three parcels in a row). Two pairs of towns would touch: Cairo and Fustat, Rabat and Salé.
+of 2 m, each shown as 125 m of land (the half house size, live since PR #59). Median over all towns 4.7 km (2.0 to
+16.1). A town is wider than the square root of its ground: the outer ring of blocks is only partly filled, and the
+parcels that cannot stand (2,454 of the 8,150 of the bare grid, in 363 towns: water, rock, the church) lie farther
+out instead; Venice is twice as wide as on open ground. Two pairs of towns would touch: Cairo and Fustat, Rabat and
+Salé.
 
 ### Own rules and gaps (no source)
 
@@ -100,9 +109,11 @@ of 2 m, each shown as 125 m of land (the half house size, live since PR #59). Me
   farmers of the town live in hamlets), so its towns stand for real towns of 300 to 94,700 people.
 - The law is fitted to western European towns of 1,000 to 200,000; Cairo (382,000) and towns outside western Europe
   are extrapolated.
-- The grid is a placeholder: no square, no church, no bent streets, no wall. The ground (water, rock, slope) is not
-  known to the simulation: `foundLots` and `layParcels` take a `free` test for it, which nothing passes yet. The
-  landscape thread's building-ground layer (`public/data/ground_<year>.json`, draft PR #62) is to be passed to it.
+- The grid is a placeholder: no square, no bent streets, no wall; the church and the great buildings stand where the
+  world graphic sets them, and the parcels keep off them.
+- The building ground is a file of the world graphic's ground: when that ground changes (terrain, monuments), the
+  file is written anew and a new world lays its parcels differently from a running one. The back of a parcel (its
+  yard) may lie on ground no house could stand on.
 - The town stands still until persons are born, die and move.
 - The world graphic (src/worldprobe/lots.ts, settle.ts `onParcels`, on main since PR #59) sets one house on each
   parcel of `public/data/lots_<year>.json`, at the nearest zoom step only, and not yet from `/lots`; without the file

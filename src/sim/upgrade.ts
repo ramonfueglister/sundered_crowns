@@ -138,7 +138,7 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     const cols = s.family.cols as Record<string, Column>, fresh = makeColumns(FAMILY_SCHEMA, s.family.alive.length) as Record<string, Column>;
     for (const k of Object.keys(fresh)) if (k in cols) fresh[k] = cols[k]; // in the order of the schema
     (s.family as { cols: unknown }).cols = fresh;
-    foundLots(s);
+    foundLots(s, w.ground);
     s.v = 20;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
