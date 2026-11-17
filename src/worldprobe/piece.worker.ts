@@ -82,7 +82,7 @@ function compare(counts: Record<string, number>, mean: Cover, part: Piece['part'
     for (let k = 0; k < 3; k++) { add(`cmp all mean top ${k}`, mean.top[i * 3 + k]); add(`cmp all drawn top ${k}`, drawn.top[i * 3 + k]); add(`cmp all mean whole ${k}`, mean.whole![i * 3 + k]); }
     if ([i - 1, i + 1, i - N, i + N].some((j) => far.kind![j] !== kind)) continue;
     const name = `cmp ${KINDS[kind]}`;
-    add(`${name} n`, 1); add(`${name} far rise`, far.rise[i]); add(`${name} mean rise`, mean.rise[i]); add(`${name} risen ${Math.min(3, mean.rise[i])}`, 1);
+    add(`${name} n`, 1); add(`${name} share`, far.share[i]); add(`${name} far rise`, far.rise[i]); add(`${name} mean rise`, mean.rise[i]); add(`${name} risen ${Math.min(3, mean.rise[i])}`, 1);
     for (let k = 0; k < 3; k++) { add(`${name} far top ${k}`, far.has[i] ? far.top[i * 3 + k] : 0); add(`${name} mean top ${k}`, mean.top[i * 3 + k]); add(`${name} far side ${k}`, far.has[i] ? far.side[i * 3 + k] : 0); add(`${name} mean side ${k}`, mean.side[i * 3 + k]); add(`${name} drawn top ${k}`, drawn.top[i * 3 + k]); add(`${name} mean whole ${k}`, mean.whole![i * 3 + k]); }
   }
 }

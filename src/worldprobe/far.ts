@@ -81,13 +81,16 @@ const CROWN = 1.2, CROWN_TALL = 0.6;
  * Tuscany.
  */
 const SEEN_LEAVES = { top: [0.61, 0.66, 0.87], side: [0.31, 0.51, 0.83] } as const, SEEN_CONIFERS = { top: [2.34, 1.14, 1.03], side: [1.6, 1.09, 1.1] } as const;
+/** a house of the plan as the camera sees it from afar, by its roof's own colour: both sides of the roof, the gable and what shows of the walls are this much lighter than the roof (measured against the mean of the finest step on the house blocks about Paris, as `SEEN_LEAVES`; one number, so that every roof keeps its hue) */
+const ROOF_SEEN = 1.42;
 const tinted = (c: RGB, by: readonly [number, number, number]): RGB => [c[0] * by[0], c[1] * by[1], c[2] * by[2]];
 /**
  * The same for the fields, as a share of the colours far.ts gave them by eye: the rows of the winter corn stand
  * in each other's shade and creases, the spring corn shows more of its ground, and the finest step's vineyards
- * are not dark green but the colour of their ground between the rows. Measured at Paris and in the Black Forest.
+ * are not dark green but the colour of their ground between the rows. The fallow's soil showed too
+ * pale and grey beside the finest step's stubble in the grass. Measured at Paris and in the Black Forest.
  */
-const SEEN_WINTER = [0.84, 0.9, 0.9] as const, SEEN_SPRING = [1.08, 0.83, 0.94] as const, SEEN_VINES = [1.53, 1.1, 1.13] as const;
+const SEEN_WINTER = [0.84, 0.9, 0.9] as const, SEEN_SPRING = [1.08, 0.83, 0.94] as const, SEEN_VINES = [1.53, 1.1, 1.13] as const, SEEN_FALLOW = [0.99, 1.14, 0.76] as const;
 /** how much of the chance from block to block is left where the woods and the fields are laid out */
 const LAID_CHANCE = 0.25;
 /** seen from above without the shade between the crowns, woods are darker than a crown in the sun */
@@ -216,19 +219,22 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
       const here = plan.pieces[`${px},${pz}`];
       if (!here) continue;
       for (let k = 0; k + 8 < here.houses.length; k += 9) {
-        const [hx, hz, w, d, , tenths, wall, roof] = here.houses.slice(k, k + 9), rise = stands(tenths / 10), top = rgb(roof, ROOF_LIGHT), walls = rgb(wall);
-        let set = 0;
+        const [hx, hz, w, d, , tenths, wall, roof] = here.houses.slice(k, k + 9), top = shade(rgb(roof), ROOF_SEEN), walls = rgb(wall);
+        const on: [number, number][] = [];
         for (let bz = Math.floor(hz / wider); bz * wider < hz + d; bz++) for (let bx = Math.floor(hx / wider); bx * wider < hx + w; bx++) {
           const covered = (Math.min(hx + w, (bx + 1) * wider) - Math.max(hx, bx * wider)) * (Math.min(hz + d, (bz + 1) * wider) - Math.max(hz, bz * wider)) / (wider * wider);
-          if (covered >= 0.5 && free(bx - ox, bz - oz)) { put(bx - ox, bz - oz, rise, top, walls, 1); set++; }
+          if (covered >= 0.5 && free(bx - ox, bz - oz)) on.push([bx - ox, bz - oz]);
         }
         const mx = Math.floor((hx + w / 2) / wider) - ox, mz = Math.floor((hz + d / 2) / wider) - oz;
-        if (!set && free(mx, mz)) put(mx, mz, rise, top, walls, 1);
+        if (!on.length && free(mx, mz)) on.push([mx, mz]);
+        // the far blocks hold as much as the house does: it stands lower by as much as they are wider than it
+        const rise = stands((tenths / 10) * Math.min(1, (w * d) / (on.length * wider * wider)));
+        for (const [x, z] of on) put(x, z, rise, top, walls, 1);
       }
       // a walled town's ground is paved between its houses, and at the first far step its wall stands about it
       for (const t of here.towns ?? []) {
         const x0 = Math.floor((t.cx - t.half) / wider) - ox, x1 = Math.ceil((t.cx + t.half) / wider) - ox, z0 = Math.floor((t.cz - t.half) / wider) - oz, z1 = Math.ceil((t.cz + t.half) / wider) - oz;
-        for (let z = z0; z < z1; z++) for (let x = x0; x < x1; x++) if (free(x, z)) { c.town[idx(x, z)] = 1; g.mat[idx(x, z)] = Mat.Paved; }
+        for (let z = z0; z < z1; z++) for (let x = x0; x < x1; x++) if (free(x, z)) { c.town[idx(x, z)] = 1; g.mat[idx(x, z)] = Mat.Paved; } else if (inGrid(x, z) && c.kind![idx(x, z)] === 1) g.mat[idx(x, z)] = Mat.Paved;
         if (step === 1) for (let z = z0 - 1; z <= z1; z++) for (let x = x0 - 1; x <= x1; x++) if ((x === x0 - 1 || x === x1 || z === z0 - 1 || z === z1) && x !== (x0 + x1) >> 1 && z !== (z0 + z1) >> 1 && free(x, z)) put(x, z, 1, WALL, WALL, 2);
       }
     }
@@ -250,7 +256,7 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
     if (hash2(lx, lz, 65) > o.ploughed(mx, mz) / FIELD_GROUND) continue;
     // the course of the block of fields the lot lies in, the same as at the finest step (settle.ts)
     const course = courseOf(courses(mx, mz), hash2(...blockOf(fx, fz), 66));
-    if (course === FALLOW) { put(x, z, 0, SOIL_FALLOW, SOIL_FALLOW, 4); c.share[idx(x, z)] = FALLOW_SHOWS; continue; }
+    if (course === FALLOW) { put(x, z, 0, tinted(SOIL_FALLOW, SEEN_FALLOW), SOIL_FALLOW, 4); c.share[idx(x, z)] = FALLOW_SHOWS; continue; }
     const vines = course !== SPRING && hash2(lx, lz, 67) < o.vines(mx, mz);
     put(x, z, 0, ...(course === SPRING ? springOf(lx, lz) : cropOf(lx, lz, mx, mz)), course === SPRING ? 5 : vines ? 7 : 6);
   }
