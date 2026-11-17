@@ -294,14 +294,28 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
     c.share[idx(x, z)] = closed || stand ? 1 : under / 4;
     raised[idx(x, z)] = rise;
   }
-  // farther out: woods as raised ground, then as its colour
+  // farther out, while a tree still stands a block high: a block is woods by the trees of the finest step that
+  // stand on it, in the same colours; a closed wood shows whole
   if (!blended && step > 1) for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
     if (!free(x, z) || g.mat[idx(x, z)] !== Mat.Grass) continue;
     const w = o.woods(x, z);
-    if (!w || hash2(x + ox, z + oz, 73 + step) > STRAY + CANOPY * w.share) continue;
-    const crown = pick(w.crowns, hash2(x + ox, z + oz, 74)), rise = step === 2 ? 1 : 0;
+    if (!w) continue;
+    const fx = (x + ox) * wider, fz = (z + oz) * wider;
+    let conifers = 0, leafy = 0;
+    for (let tz = Math.floor((fz - 1.2) / TREE_PITCH); tz * TREE_PITCH < fz + wider + 1.2; tz++) for (let tx = Math.floor((fx - 1.2) / TREE_PITCH); tx * TREE_PITCH < fx + wider + 1.2; tx++) {
+      if (hash2(tx, tz, 73) > STRAY + TREES_CLOSED * w.share) continue;
+      const px = tx * TREE_PITCH + (hash2(tx, tz, 71) - 0.5) * 2.4, pz = tz * TREE_PITCH + (hash2(tx, tz, 72) - 0.5) * 2.4;
+      if (px < fx || px >= fx + wider || pz < fz || pz >= fz + wider) continue;
+      if (w.conifers === undefined ? w.tall : hash2(tx, tz, 74) < w.conifers) conifers++; else leafy++;
+    }
+    const closed = w.share > 0.5, trees = conifers + leafy;
+    if (!trees && !closed) continue;
+    const tall = w.conifers === undefined ? w.tall : conifers > leafy || (conifers === leafy && w.tall), crowns = w.conifers === undefined ? w.crowns : tall ? CYPRESS : LEAVES;
+    const crown = pick(crowns, hash2(x + ox, z + oz, 74)), seen = crowns === LEAVES ? SEEN_LEAVES : crowns === CYPRESS ? SEEN_CONIFERS : null, rise = trees ? stands(TREE_STANDS * 2) : 0;
     if (rise && !level(x, z)) continue;
-    put(x, z, 0, shade(crown, CANOPY_LIGHT), shade(crown, 0.7), w.tall ? 9 : 8);
+    put(x, z, 0, seen ? tinted(crown, seen.top) : shade(crown, CANOPY_LIGHT), seen ? tinted(crown, seen.side) : shade(crown, 0.7), tall ? 9 : 8);
+    // out of the woods a block shows as much of its trees as their crowns cover of it
+    c.share[idx(x, z)] = closed ? 1 : Math.min(1, (trees * (2 * (tall ? CROWN_TALL : CROWN)) ** 2) / (wider * wider));
     raised[idx(x, z)] = rise;
   }
   // fields and woods as the colour of the ground
