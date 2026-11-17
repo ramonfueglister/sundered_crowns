@@ -59,7 +59,10 @@ export const elevationOf = (wide: number) => VIEW.elevation + (NEAR_ELEVATION - 
  * different things at the same place (single houses and trees against blocks of town and wood), and laid over each
  * other in a resting view they made a milky double picture where the finer step alone is sharp (seen in Chrome on a
  * Mac at 360 and at 1000 blocks across, 16 November 2026). The steps take each other's place in a short dissolve at
- * the border instead (pieces.ts). To be switched on again once a coarser step is the mean of the finer one.
+ * the border instead (pieces.ts). Tried again on 17 November 2026, with the far steps showing what the finest step
+ * shows (far.ts): the colours of two steps now agree, but their blocks do not lie on each other, so a resting view
+ * between two steps is still a grainy, soft picture with every town drawn twice (1000 and 2000 blocks across at
+ * Paris). It stays off; with the steps this close in colour the short dissolve at the border is hardly seen.
  */
 export const BLENDS: boolean = false;
 const BLEND = 1.6;
