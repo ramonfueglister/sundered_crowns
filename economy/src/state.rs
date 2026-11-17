@@ -10,6 +10,7 @@
 //! are 32 bit (`u32::MAX` stands for "none"), amounts are the 64 bits of the float, so a state loads bit for bit.
 
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use beforeit::{
     AbstractModel, Aggregates, Banks, CentralBank, Data, Firms, Government, Properties, RestOfTheWorld, Workers, Xoshiro,
@@ -26,9 +27,13 @@ const TAG_CITIES: &[u8; 4] = b"SCET";
 pub const FORMAT_CITIES: u32 = 1;
 /// Version of the byte format. A change to the pinned port that changes its state needs a new number and a step in
 /// the world's upgrade chain (src/sim/upgrade.ts). 2: the fields of the daily clock. 3: the wages in money.
-/// 4: the demand pull.
-pub const FORMAT: u32 = 4;
+/// 4: the demand pull. 5: of the national accounts the clock keeps the series that the key figures sum, the port
+/// keeps its last row; a state of format 4 is still read and becomes one of format 5 ([`load`]).
+pub const FORMAT: u32 = 5;
 const NONE: u32 = u32::MAX;
+/// The length of the last state of cities written ([`save_cities`]): how much room the next one is given at once.
+/// It changes no byte of a state.
+static SIZE: AtomicUsize = AtomicUsize::new(0);
 
 // ---- writing
 
@@ -649,7 +654,7 @@ fn get_data(i: &mut In) -> Res<Data> {
 
 fn put_clock(o: &mut Out, c: &DailyClock) {
     // `trade` is set for the length of a period only (src/trade.rs): a saved economy has none
-    let DailyClock { plan, window, demand, periods, start, wage, real_wage, demand_pull, trade: _ } = c;
+    let DailyClock { plan, window, demand, periods, start, accounts, wage, real_wage, demand_pull, trade: _ } = c;
     o.n(*plan);
     o.n(*window);
     o.f64s(demand);
@@ -662,9 +667,15 @@ fn put_clock(o: &mut Out, c: &DailyClock) {
     o.f64s(wage);
     o.f64s(real_wage);
     o.bool(*demand_pull);
+    o.n(accounts.len());
+    for row in accounts {
+        for &x in row {
+            o.f64(x);
+        }
+    }
 }
 
-fn get_clock(i: &mut In) -> Res<DailyClock> {
+fn get_clock(i: &mut In, format: u32) -> Res<DailyClock> {
     let (plan, window) = (i.n()?, i.n()?);
     if plan == 0 || window == 0 {
         return Err(format!("a clock with a plan every {plan} periods and windows of {window} periods"));
@@ -680,30 +691,50 @@ fn get_clock(i: &mut In) -> Res<DailyClock> {
     if wage.len() != real_wage.len() || (!wage.is_empty() && wage.len() != demand.len()) {
         return Err(format!("a clock with wages in money of {} firms, real wages of {} and {} firms", wage.len(), real_wage.len(), demand.len()));
     }
-    Ok(DailyClock { plan, window, demand, periods, start, wage, real_wage, demand_pull: i.bool()?, trade: None })
+    let demand_pull = i.bool()?;
+    // format 4 has no rows of the clock: `load` takes them from the port's rows
+    let mut accounts = Vec::new();
+    if format >= 5 {
+        let n = i.len(8 * crate::SUMMED)?;
+        if n == 0 || n > window {
+            return Err(format!("a clock with {n} rows of the national accounts and windows of {window} periods"));
+        }
+        for _ in 0..n {
+            let mut row = [0.0; crate::SUMMED];
+            for x in &mut row {
+                *x = i.f64()?;
+            }
+            accounts.push(row);
+        }
+    }
+    Ok(DailyClock { plan, window, demand, periods, start, accounts, wage, real_wage, demand_pull, trade: None })
 }
 
 /// The model and its random number generator as bytes. The same model always gives the same bytes.
 pub fn save(model: &AbstractModel<DailyClock>, rng: &Xoshiro) -> Vec<u8> {
-    let AbstractModel { w_act, w_inact, firms, banks, cb, gov, rotw, agg, prop, data, ext } = model;
     let mut o = Out(Vec::new());
+    put(&mut o, model, rng);
+    o.0
+}
+
+fn put(o: &mut Out, model: &AbstractModel<DailyClock>, rng: &Xoshiro) {
+    let AbstractModel { w_act, w_inact, firms, banks, cb, gov, rotw, agg, prop, data, ext } = model;
     o.0.extend_from_slice(TAG);
     o.u32(FORMAT);
     for word in rng.state() {
         o.u64(word);
     }
-    put_workers(&mut o, w_act);
-    put_workers(&mut o, w_inact);
-    put_firms(&mut o, firms);
-    put_banks(&mut o, banks);
-    put_central_bank(&mut o, cb);
-    put_government(&mut o, gov);
-    put_rest_of_the_world(&mut o, rotw);
-    put_aggregates(&mut o, agg);
-    put_properties(&mut o, prop);
-    put_data(&mut o, data);
-    put_clock(&mut o, ext);
-    o.0
+    put_workers(o, w_act);
+    put_workers(o, w_inact);
+    put_firms(o, firms);
+    put_banks(o, banks);
+    put_central_bank(o, cb);
+    put_government(o, gov);
+    put_rest_of_the_world(o, rotw);
+    put_aggregates(o, agg);
+    put_properties(o, prop);
+    put_data(o, data);
+    put_clock(o, ext);
 }
 
 /// Reads the bytes of [`save`].
@@ -713,11 +744,11 @@ pub fn load(bytes: &[u8]) -> Result<(AbstractModel<DailyClock>, Xoshiro), String
         return Err("these bytes are not the state of an economy".into());
     }
     let format = i.u32()?;
-    if format != FORMAT {
-        return Err(format!("state format {format}, this engine reads format {FORMAT}"));
+    if format != FORMAT && format != 4 {
+        return Err(format!("state format {format}, this engine reads formats 4 and {FORMAT}"));
     }
     let rng = Xoshiro::from_state([i.u64()?, i.u64()?, i.u64()?, i.u64()?])?;
-    let model = AbstractModel {
+    let mut model = AbstractModel {
         w_act: get_workers(&mut i)?,
         w_inact: get_workers(&mut i)?,
         firms: get_firms(&mut i)?,
@@ -728,8 +759,16 @@ pub fn load(bytes: &[u8]) -> Result<(AbstractModel<DailyClock>, Xoshiro), String
         agg: get_aggregates(&mut i)?,
         prop: get_properties(&mut i)?,
         data: get_data(&mut i)?,
-        ext: get_clock(&mut i)?,
+        ext: get_clock(&mut i, format)?,
     };
+    if format == 4 {
+        // the port's rows held the window: the clock takes the series the key figures sum, the port keeps its last row
+        if model.data.collection_time.is_empty() {
+            return Err("a state of format 4 without a row of the national accounts".into());
+        }
+        model.ext.accounts = vec![crate::summed(&model.data, 0)];
+        crate::take_rows(&mut model);
+    }
     if i.at != bytes.len() {
         return Err(format!("{} bytes are left over after the state", bytes.len() - i.at));
     }
@@ -744,14 +783,20 @@ pub fn load(bytes: &[u8]) -> Result<(AbstractModel<DailyClock>, Xoshiro), String
 pub fn save_cities(all: &Cities) -> Vec<u8> {
     let Cities { cities, merchants } = all;
     let Merchants { stock, value, orders, share, bought, sold, start, start_stock } = merchants;
-    let mut o = Out(Vec::new());
+    // the bytes are written into one list that is as long as the state of the call before, with a little room: the
+    // state of a world is tens of megabytes, and a list that grows by doubling would hold it twice over
+    let hint = SIZE.load(Ordering::Relaxed);
+    let mut o = Out(Vec::with_capacity(hint + hint / 256 + 4096));
     o.0.extend_from_slice(TAG_CITIES);
     o.u32(FORMAT_CITIES);
     o.n(cities.len());
     for e in cities {
-        let bytes = e.save();
-        o.n(bytes.len());
-        o.0.extend_from_slice(&bytes);
+        let at = o.0.len();
+        o.u32(0);
+        put(&mut o, &e.model, &e.rng);
+        let len = o.0.len() - at - 4;
+        assert!((len as u64) < NONE as u64, "{len} does not fit the state format");
+        o.0[at..at + 4].copy_from_slice(&(len as u32).to_le_bytes());
     }
     for v in [stock, value] {
         o.f64ss(v);
@@ -765,6 +810,7 @@ pub fn save_cities(all: &Cities) -> Vec<u8> {
     }
     o.f64(*start);
     o.f64s(start_stock);
+    SIZE.store(o.0.len(), Ordering::Relaxed);
     o.0
 }
 
