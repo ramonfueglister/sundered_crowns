@@ -628,6 +628,41 @@ describe('portraits', { timeout: 20_000 }, () => {
     expect(tint(scar, tone)).toEqual(tint(skin, tone));
     expect(tint(scar)).not.toEqual(tint(skin));
   });
+  it('a child of England has a child\'s skin: less of the pores, the relief and the blotches of the grown', () => {
+    // (round 105) the skin's images and the stage's noise are a grown person's: on a child of two they drew a
+    // small adult's leathery skin. The builder says how much of a child the person still is, the stage takes that
+    // share of the way from the grown's fine structure to `skin.child` of it.
+    const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
+    const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
+    const young = (age: number, female: boolean) => b.build({ ...sample.find(q => q.female === female)!, age }).young;
+    for (const female of [true, false]) {
+      for (const age of [2, 5, 8, 11]) expect(young(age, female), `${age}`).toBe(1);
+      expect(young(13, female)).toBeGreaterThan(0);
+      expect(young(13, female)).toBeLessThan(1);
+      for (const age of [17, 24, 68]) expect(young(age, female), `${age}`).toBe(0);
+    }
+    // a look without a dress table has none of it
+    expect(b.build(people[0]!).young).toBe(0);
+    const k = ENGLAND_1356.skin!;
+    expect(k.child).toBeGreaterThan(0.1);
+    expect(k.child).toBeLessThan(0.6);
+    const skin = { rough: 0.5, metal: 0, double: false, tex: 'real/skin_young_female.webp', nmap: '', pos: new Float32Array(9), col: new Float32Array(9).fill(0.3), uv: new Float32Array(6), nrm: new Float32Array(9) };
+    const fine = (share?: number): [number, number] => {
+      const m = surfaceMaterials(skin, null, null, ENGLAND_1356, 0.3, share)[0]!;
+      const shader = { uniforms: {} as Record<string, { value: number }>, vertexShader: ShaderLib.physical.vertexShader, fragmentShader: ShaderLib.physical.fragmentShader };
+      m.onBeforeCompile(shader as never, null as never);
+      // relief, blotches and speckle are drawn by the share
+      expect(shader.fragmentShader).toContain('* skinFine * ( skinNoise');
+      expect(shader.fragmentShader).toContain('* skinFine * skinA');
+      expect(shader.fragmentShader).toContain('* skinFine * skinB');
+      return [m.normalScale.x, shader.uniforms.skinFine!.value];
+    };
+    expect(fine()).toEqual([k.pores, 1]);
+    expect(fine(0)).toEqual([k.pores, 1]);
+    expect(fine(1)[0]).toBeCloseTo(k.pores * k.child);
+    expect(fine(1)[1]).toBeCloseTo(k.child);
+    expect(fine(0.5)[1]).toBeCloseTo((1 + k.child) / 2);
+  });
   it('England\'s stage lights a face from above and from the side it is turned away from', () => {
     // a face lit level and from the side it is turned to has no shaded half and no shade under brow, nose and
     // lip (rounds 60 to 72: flat, pale, the eyes wide in full light). The key light stands on the other side of

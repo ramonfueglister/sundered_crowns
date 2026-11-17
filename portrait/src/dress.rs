@@ -221,6 +221,11 @@ pub struct DressSet {
     pub hair_girl: &'static str,
     /// The hair of children under seven. Apoleia's `crop01`, cropped short, begins far back on a child's large
     /// skull: half the head a bare forehead, which reads as a shaven head.
+    /// England: until round 104 the grown's `bob01`, whose fringe ends 2 cm over the eyes. A small child's face is
+    /// small under a large braincase (`skull`), and its forehead is the larger part of what a picture shows of
+    /// it: with the fringe at the brows a child of two was a small adult under a bowl. Round 105: `bob08`, a cut
+    /// of its own (tools/portrait/pipeline/README.md): the fringe 46 to 52 mm over the eyes, in the forehead's
+    /// upper half, ragged; the sides to the ear's lobe; lying closer to the head. By eye, PLACEHOLDER.
     pub hair_small: &'static str,
     /// The image of a hair's locks (the file `<hair>_locks`, tools/portrait/pipeline/hairlib.py
     /// `locks_from_wisps`) where the file has none of its own beside it: one image for the locks of every cut.
@@ -654,7 +659,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     hair_hooded: "bob02",
     hair_veiled: "",
     hair_girl: "plait01",
-    hair_small: "bob01",
+    hair_small: "bob08",
     lock_image: "hair1356_locks",
     beard_lock_image: "beard1356_locks",
     beards: [Beard::Shaven, Beard::Stubble, Beard::Short, Beard::Full, Beard::Full, Beard::Short],
@@ -742,6 +747,14 @@ pub static ENGLAND_1356: DressSet = DressSet {
     child: &[
         ("mouth/mouth-upperlip-volume-decr", 0.5, 0.5),
         ("mouth/mouth-lowerlip-volume-decr", 0.3, 0.3),
+        // (round 105) MakeHuman's child has a cheek that hangs beside the mouth and under it, a jowl: with the
+        // skin's folds an old face on a small head. Leaner cheeks, by eye, PLACEHOLDER (the mouth's corners
+        // 0.1 mm closer; nothing else of the survey's measures moves). Tried with it and dropped: `head-oval`
+        // 0.5, which narrows the jaw further and widens the braincase (a boy of two's breadth 0.914 of the
+        // grown's, the survey 0.883: `skull` is fitted to that); `head-fat-decr` and `chin-width-decr` at 0.6 (a
+        // gaunt small adult); Apoleia's child's face (`kid` 0.4 and 0.7: rounder still, with a smirk).
+        ("cheek/l-cheek-volume-decr", 0.6, 0.6),
+        ("cheek/r-cheek-volume-decr", 0.6, 0.6),
     ],
     genes: &[("lips", 0.4), ("cheek", 0.4)],
     without: &["chin/chin-jaw-drop-decr"],

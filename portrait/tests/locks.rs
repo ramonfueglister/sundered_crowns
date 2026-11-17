@@ -62,7 +62,9 @@ fn a_man_of_england_wears_locks() {
         // a band is not a closed surface: it is seen from both sides
         assert!(hair.mat.double, "{who}: a lock is seen from both sides");
         let n = hair.pos.len() / 3;
-        assert!(n > CARDS / 2 && n < CARDS * 13 / 10, "{who}: {n} triangles of locks, the cards had {CARDS}");
+        // round 104: 950 to 1100 narrow locks of three corners across in place of 420 broad ones of five (a
+        // thatched roof at the panel's size): 35 800 to 44 700 triangles, before 30 000 to 37 000
+        assert!(n > CARDS / 2 && n < CARDS * 16 / 10, "{who}: {n} triangles of locks, the cards had {CARDS}");
         assert_eq!((hair.uv.len(), hair.nrm.len()), (hair.pos.len(), hair.pos.len()), "{who}: every corner has its place in the image and its direction");
         // the upper side of a lock faces away from the head: the directions of its corners are its own surface's
         // (a card's were the direction from the head's centre)
@@ -120,7 +122,12 @@ fn locks_lie_on_a_head_of_any_size() {
         let balls = out.surfaces.iter().find(|s| s.tex.as_deref().is_some_and(|t| t.contains("eyeball"))).unwrap_or_else(|| panic!("{who}: eyes"));
         let eyes = balls.pos.iter().map(|p| p[1]).sum::<f32>() / balls.pos.len() as f32;
         let ends = (fringe - eyes) / (eyes - out.chin);
-        assert!((0.15..0.30).contains(&ends), "{who}: the fringe ends {ends} of the way from eyes to chin over the eyes ({} mm)", (fringe - eyes) * 100.0);
+        // Round 105: a small child wears a cut of its own (`DressSet::hair_small`, `bob08`), its fringe cut high:
+        // with the grown's fringe 2 cm over its eyes a child of two showed nothing of its forehead, which is the
+        // larger part of a small child's face, and read as a small adult under a bowl. Measured 0.50 to 0.59 of
+        // the way from eyes to chin over the eyes (46 to 52 mm): in the upper half of the forehead.
+        let bounds = if age < 7.0 { 0.45..0.65 } else { 0.15..0.30 };
+        assert!(bounds.contains(&ends), "{who}: the fringe ends {ends} of the way from eyes to chin over the eyes ({} mm)", (fringe - eyes) * 100.0);
     }
 }
 
@@ -235,7 +242,12 @@ fn hair_that_is_cut_runs_to_the_cut_and_wears_as_much_of_the_image_as_it_is_long
         deep.sort();
         // measured: 3 to 6 locks in the median and 1 to 2 at the lowest tenth; before 0 to 1 and 0
         let (median, tenth) = (deep[deep.len() / 2], deep[deep.len() / 10]);
-        assert!(median >= 2 && tenth >= 1, "{who}: the fringe is {median} locks deep in the median and {tenth} at its thinnest tenth");
+        // (round 105) a small child's own cut is ragged, not cut along a line (its ends 3 degrees up and down
+        // round the head and a lock up to a tenth shorter than its strands): above its lowest end there is hair
+        // at four places in five, not at nine in ten. Measured 2 and 4 locks in the median, 1 at the thinnest
+        // fifth, none at 15 and 9 of the 84 places.
+        let thin = if age < 7.0 { deep[deep.len() / 5] } else { tenth };
+        assert!(median >= 2 && thin >= 1, "{who}: the fringe is {median} locks deep in the median and {tenth} at its thinnest tenth ({} at its thinnest fifth)", deep[deep.len() / 5]);
     }
 }
 
