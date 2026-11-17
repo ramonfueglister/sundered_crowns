@@ -114,9 +114,9 @@ const CANOPY_LIGHT = 0.8;
  * What the finest step builds in its places (public/data/plan_<year>.json, written by tools/worldprobe/build_plan.ts):
  * per piece of `pieceBlocks` finest world blocks the houses whose middle lies in it (nine numbers each: x, z, w, d
  * in finest world blocks, floors, height in tenths of a block, wall and roof as 0xRRGGBB, kind) and the walled
- * towns (their paved ground is the square of 2 * half about (cx, cz)).
+ * towns (their paved ground is the square of 2 * half about (cx, cz)), and the great buildings where they stand.
  */
-export interface Plan { pieceBlocks: number; pieces: Record<string, { houses: readonly number[]; towns?: readonly { site: number; cx: number; cz: number; half: number }[] } | undefined> }
+export interface Plan { pieceBlocks: number; /** the kinds of the great buildings: church, landmark (a town's greatest), tower, monument */ greatKinds?: readonly string[]; pieces: Record<string, { houses: readonly number[]; /** seven numbers a great building: kind, x, z, w, d, height in tenths, site (-1 a monument) */ greats?: readonly number[]; towns?: readonly { site: number; cx: number; cz: number; half: number; /** null: the town has no wall; else where its wall is open for water (buildings/fortified/town-wall.ts) */ wall?: readonly { side: 'nz' | 'px' | 'pz' | 'nx'; from: number; to: number }[] | null }[] } | undefined> }
 let plan: Plan | null = null, plans = new Map<string, Promise<Plan | null>>();
 /** The plan of a year's places, loaded once; null where the file is not there (then the far steps lay out their places by rules of their own, as before). */
 export function loadPlan(base: string, year: number): Promise<Plan | null> {
@@ -191,7 +191,8 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
     const cx = Math.floor(s.at[0]), cz = Math.floor(s.at[1]), style = s.style.house, r = seeded(1000 + s.id), roof = pick(style.roofs, 0), near = (reach: number) => Math.round(r.int(-reach, reach) / wider);
     // as many blocks of houses as hold the place's people (settle.ts), as tall as a house is at this step
     const need = (s.pop ?? POP_OF_SIZE[s.size]) / PEOPLE_PER_PERSON, holds = wider * wider * STOREYS * PERSONS_PER_FLOOR_BLOCK, tall = stands(HOUSE_TALL);
-    // with the plan of the finest step the houses are its houses (below); only the great buildings are set here
+    // with the plan of the finest step the houses and the great buildings are its own (below)
+    if (plan?.greatKinds) continue;
     if (plan && s.hamlet) continue;
     if (s.hamlet) {
       // a hamlet is a few houses close together, low against the towns
@@ -268,11 +269,39 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
         const rise = stands((tenths / 10) * Math.min(1, (w * d) / (on.length * wider * wider)));
         for (const [x, z] of on) put(x, z, rise, top, walls, 1);
       }
-      // a walled town's ground is paved between its houses, and at the first far step its wall stands about it
+      // the great buildings where the finest step has them: its models made smaller while they are a few blocks
+      // wide, then stone under their roof as far as they cover a block
+      for (let k = 0; plan.greatKinds && here.greats && k + 6 < here.greats.length; k += 7) {
+        const [kind, gx, gz, gw, gd, tenths, id] = here.greats.slice(k, k + 7), s = sites.find((q) => q.id === id), name = plan.greatKinds[kind];
+        const model: Model | null = !s ? null : name === 'church' ? s.style.church : name === 'landmark' ? s.style.great : name === 'tower' ? { build: tower, w: 3, d: 3, height: 10 } : null;
+        const roof = s ? pick(s.style.house.roofs, 0) : STONE, x0 = Math.floor(gx / wider) - ox, z0 = Math.floor(gz / wider) - oz, x1 = Math.max(x0 + 1, Math.round((gx + gw) / wider) - ox), z1 = Math.max(z0 + 1, Math.round((gz + gd) / wider) - oz);
+        if (step > MODELS_UNTIL || !model) {
+          const covers = Math.min(1, (seenStanding * gw * gd) / ((x1 - x0) * (z1 - z0) * wider * wider));
+          if (covers >= 0.25) for (let z = z0; z < z1; z++) for (let x = x0; x < x1; x++) if (free(x, z)) { put(x, z, stands(tenths / 10), roof, STONE, 3); c.share[idx(x, z)] = covers; }
+          continue;
+        }
+        let y = -Infinity;
+        for (let z = z0; z < z1; z++) for (let x = x0; x < x1; x++) if (inGrid(x, z) && !g.wet[idx(x, z)]) y = Math.max(y, g.h[idx(x, z)]);
+        if (y === -Infinity) continue;
+        // the model stands on level, paved ground
+        for (let z = z0; z < z1; z++) for (let x = x0; x < x1; x++) if (inGrid(x, z) && !g.wet[idx(x, z)]) { const i = idx(x, z); g.h[i] = y; c.town[i] = 1; c.has[i] = 0; g.mat[i] = Mat.Paved; }
+        const mx = (gx + gw / 2) / wider - ox, mz = (gz + gd / 2) / wider - oz;
+        if (o.own(Math.floor(mx), Math.floor(mz))) things.append(model.build(seeded(1000 + id + k)), m.makeScale(1 / wider, 1 / wider, 1 / wider).setPosition(mx, y, mz));
+        occlude(g, x0, z0, x1, z1, y + tenths / 10 / wider);
+      }
+      // a walled town's ground is paved between its houses, and at the first far step its wall stands about it,
+      // open where the finest step's wall is open for water
       for (const t of here.towns ?? []) {
         const x0 = Math.floor((t.cx - t.half) / wider) - ox, x1 = Math.ceil((t.cx + t.half) / wider) - ox, z0 = Math.floor((t.cz - t.half) / wider) - oz, z1 = Math.ceil((t.cz + t.half) / wider) - oz;
         for (let z = z0; z < z1; z++) for (let x = x0; x < x1; x++) if (free(x, z)) { c.town[idx(x, z)] = 1; g.mat[idx(x, z)] = Mat.Paved; } else if (inGrid(x, z) && c.kind![idx(x, z)] === 1) g.mat[idx(x, z)] = Mat.Paved;
-        if (step === 1) for (let z = z0 - 1; z <= z1; z++) for (let x = x0 - 1; x <= x1; x++) if ((x === x0 - 1 || x === x1 || z === z0 - 1 || z === z1) && x !== (x0 + x1) >> 1 && z !== (z0 + z1) >> 1 && free(x, z)) put(x, z, 1, WALL, WALL, 2);
+        const open = (side: 'nz' | 'px' | 'pz' | 'nx', along: number) => (t.wall ?? []).some((gap) => gap.side === side && along >= gap.from && along <= gap.to);
+        if (step === 1 && t.wall !== null) for (let z = z0 - 1; z <= z1; z++) for (let x = x0 - 1; x <= x1; x++) {
+          if (!(x === x0 - 1 || x === x1 || z === z0 - 1 || z === z1) || x === (x0 + x1) >> 1 || z === (z0 + z1) >> 1 || !free(x, z)) continue;
+          // where the block lies along its side of the wall, in finest blocks from the side's middle
+          const ax = (x + ox + 0.5) * wider - t.cx, az = (z + oz + 0.5) * wider - t.cz;
+          if (z === z0 - 1 ? open('nz', ax) : z === z1 ? open('pz', ax) : x === x0 - 1 ? open('nx', az) : open('px', az)) continue;
+          put(x, z, 1, WALL, WALL, 2);
+        }
       }
     }
   }
