@@ -496,9 +496,27 @@ pub struct DressSet {
     /// (`nose-scale-vert-decr`, boys of two at 1.2) and a longer chin (`chin-height-incr`, at two 0.36 and 0.49),
     /// which brought the nose's length and the lower face's height to the survey's shares too and drew a worse
     /// face: from 0.6 the nose folds across its bridge and the skin under it smears, and the chin, at half its
-    /// weight too, is long and heavy, not a child's. A small child's nose stays long (at two 34.9 and 32.9 mm, the survey 29) and its lower face
-    /// short (77.1 and 73.5, the survey 82 and 80) until its head has a child's form of its own.
+    /// weight too, is long and heavy, not a child's. A small child's nose stayed long (at two 34.9 and 32.9 mm,
+    /// the survey 29) until round 102 (`child_nose`); its lower face is short still (77.1 and 73.5, the survey
+    /// 82 and 80).
     pub child_mouth: &'static [(f32, [f32; 1], [f32; 1])],
+    /// How long a child's nose is: per age in years the factor on the nose's length from sellion to its foot,
+    /// girls' and boys' (`child_nose_of`, morph.rs `nose_set`; linear between the ages, the first row before it,
+    /// 1 from the row of ones on). MakeHuman's child has a grown face's proportions: at two a boy's nose was
+    /// 34.9 mm long and a girl's 32.9 where the survey of measure.rs `CHILDREN` has 29 (2.0 and 1.3 standard
+    /// deviations over), a boy's 1.1 over at five and eight. The factors bring the nose to the share of
+    /// England's grown that the survey's children have of its oldest group (60 an age and sex): a boy's 29.1
+    /// mm at two, 34.6 at five, 38.6 at eight, a girl's 30.2 at two; a boy's within 0.4 standard deviations of
+    /// the survey at every year of age. Girls from five on are left (1): their noses are at the share or short
+    /// of it (0.4 to 0.6 standard deviations under the survey at 8 to 12), and a longer nose over a chin that
+    /// stays would take its length from the lower face, which is short. `nose_set` moves heights only, of the
+    /// face's front: the skin between the lower lids and the nose's foot shortened evenly (MakeHuman's target
+    /// for a shorter nose folds it: round 101), and what the nose loses the skin between its foot and the chin
+    /// gains, the lips' red as high as it was, the chin where it was. So the lower face from sellion to the chin
+    /// is as high as before (1.0 and 1.6 under the survey at two). Tried in round 102 and dropped: the lower
+    /// face longer as well, to the survey's share (the chin 7 to 10 mm lower at two, the skin under the nose
+    /// drawn out evenly): as in round 101 a long, heavy lower face, an older child's.
+    pub child_nose: &'static [(f32, [f32; 1], [f32; 1])],
     /// Targets of MakeHuman's that make a neck thicker, with their weights for a grown woman and a grown man;
     /// a head takes of them the part under the jaw only (morph.rs `neck_share`), over and above what its gene
     /// of the neck asks for. A child has none of it and grows into it (`neck_of`).
@@ -649,6 +667,14 @@ pub static ENGLAND_1356: DressSet = DressSet {
         (13.0, [0.169], [0.084]),
         (15.0, [0.0], [0.0]),
     ],
+    child_nose: &[
+        (2.0, [0.918], [0.834]),
+        (5.0, [1.0], [0.903]),
+        (8.0, [1.0], [0.921]),
+        (11.0, [1.0], [0.952]),
+        (13.0, [1.0], [0.969]),
+        (15.0, [1.0], [1.0]),
+    ],
     neck: &[("neck/neck-scale-horiz-incr", 0.45, 0.0), ("neck/neck-back-scale-depth-incr", 0.7, 0.0)],
     sources: &[
         Source { what: "gown (cote) of wool, pulled over the head, close at the shoulders, round neck", source: "Crowfoot, Pritchard & Staniland 1992 (London finds); Østergård 2004 (Herjolfsnes). Summaries only. Cut PLACEHOLDER." },
@@ -670,7 +696,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
         Source { what: "the mouth at 0.31 of the way from the nose's foot to the chin's lowest point (the upper lip's share of the lower face)", source: "Arnett, Jelic, Kim, Cummings, Beress, Worley, Chung & Bergman 1999, American Journal of Orthodontics and Dentofacial Orthopedics 116(3): 239-253 (table of facial lengths, lips at rest: upper lip 21.0 of 71.1 mm in 26 women, 24.4 of 81.1 in 20 men; read from a copy of the paper). Farkas, Katic, Hreczko, Deutsch & Munro 1984, American Journal of Orthodontics 86(1): 52-60 (lips closed: 20.1 of 64.3 mm in women, 22.3 of 72.6 in men; not read itself, the means as cited by Woelfel, Igarashi & Dong 2014, Journal of Advanced Prosthodontics 6(6): 483-490). 0.31 lies between the two readings for closed lips; that every grown face has the same share is a simplification." },
         Source { what: "the pupil at 0.57 of the way from the lower lid's edge to the upper lid's", source: "Neuro-ophthalmology Illustrated, ch. 1, at neuro-ophthalmology.stanford.edu (the upper lid's edge 4 to 5 mm over the pupil's middle, covering the upper 1 to 2 mm of the iris; the lower lid just reaching the iris's foot; opening 9 to 12 mm high) and Margin to reflex distance at eyewiki.org (lower lid 5.5 mm under the pupil). Ours are set by moving the ball, not the lids. The opening is 8.9 mm high in grown women and 9.1 in men, the upper lid 3.8 to 3.9 mm over the pupil and the lower 5.0 to 5.2 under it: at the low end of theirs." },
         Source { what: "the height of the lips' red (upper, lower, both), which the form of the mouth is held against", source: "Ferrario, Sforza, Tartaglia, Sozzi & Carù 2003, Plastic and Reconstructive Surgery 111(7): 2149-2156 (89 men and 73 women, healthy young northern Italians, measured in three dimensions). Means from the paper's table; the standard deviations read from a summary of it. The lips' form itself and how far the upper lip stands in front of the lower: PLACEHOLDER, nothing read on real profiles." },
-        Source { what: "how large a child's braincase is against its face and how broad its mouth, by age and sex (head breadth, head length, tragion to the top of the head, mouth breadth: fitted; head circumference, head height, breadth at the cheekbones and between the ears, lower face height, nose length, neck circumference: held against)", source: "Snyder, Schneider, Owings, Reynolds, Golomb & Schork 1977, Anthropometry of infants, children, and youths to age 18 for product safety design, University of Michigan Highway Safety Research Institute, report UM-HSRI-77-17 (also SAE SP-450), for the U.S. Consumer Product Safety Commission: means and standard deviations by sex in sixteen groups of age from 2 to 19, read from the tables as served by NIST's AnthroKids (math.nist.gov/~SRessler/anthrokids, data of 1977) through an account of each page, not line by line. Children of the United States of the 1970s: used for how a child's head stands to a grown one's, not for its size (the shares are taken of England's own grown). Kesterke, Raffensperger, Heike, Cunningham, Hecht, Kau, Nidey, Moreno, Wehby, Marazita & Weinberg 2016, Biology of Sex Differences 7:23, table 4 (the cranium at 88 to 91 in 100 of its adult size at 3 to 6 years, the face at 80 to 84, the nose at 74 to 78), says the same; its measures by year of age were not reached. The braincase's lower edge, the breadth of the band it fades over and the middle it grows from: PLACEHOLDER, by anatomy and by eye." },
+        Source { what: "how large a child's braincase is against its face, how broad its mouth and how long its nose, by age and sex (head breadth, head length, tragion to the top of the head, mouth breadth, nose length where it was too long: fitted; head circumference, head height, breadth at the cheekbones and between the ears, lower face height, neck circumference: held against)", source: "Snyder, Schneider, Owings, Reynolds, Golomb & Schork 1977, Anthropometry of infants, children, and youths to age 18 for product safety design, University of Michigan Highway Safety Research Institute, report UM-HSRI-77-17 (also SAE SP-450), for the U.S. Consumer Product Safety Commission: means and standard deviations by sex in sixteen groups of age from 2 to 19, read from the tables as served by NIST's AnthroKids (math.nist.gov/~SRessler/anthrokids, data of 1977) through an account of each page, not line by line. Children of the United States of the 1970s: used for how a child's head stands to a grown one's, not for its size (the shares are taken of England's own grown). Kesterke, Raffensperger, Heike, Cunningham, Hecht, Kau, Nidey, Moreno, Wehby, Marazita & Weinberg 2016, Biology of Sex Differences 7:23, table 4 (the cranium at 88 to 91 in 100 of its adult size at 3 to 6 years, the face at 80 to 84, the nose at 74 to 78), says the same; its measures by year of age were not reached. The braincase's lower edge, the breadth of the band it fades over and the middle it grows from: PLACEHOLDER, by anatomy and by eye." },
         Source { what: "how far apart the corners of a child's mouth lie, which the children's mouths are held against (not fitted to it)", source: "Sforza, Laino, D'Alessio, Dellavia, Grandi & Ferrario 2007, Angle Orthodontist 77(6): 1026-1033 (Italian children measured in three dimensions; its reference groups: girls of 4 to 5 36.9 mm (SD 3.6), boys 39.8 (5.0); of 6 to 7 40.9 and 41.7; of 8 to 9 42.4 (3.7) and 43.3 (3.8); the red of both lips 12.4 and 12.8, 13.7 and 13.4, 15.1 and 14.1 mm). Read through a summary of the paper's tables, not line by line. The sample's four of eight are 2.4 to 5.0 mm narrower and its four of five have lips 2.2 to 2.8 mm higher: not fitted, open." },
     ],
 };
@@ -778,6 +804,12 @@ impl DressSet {
     /// the table's ages in a straight line, before its first age that age's, from its last on that one's.
     pub fn skull_of(&self, female: bool, yrs: f32) -> [f32; 3] {
         by_age(self.skull, female, yrs).unwrap_or([1.0; 3])
+    }
+
+    /// The factor on a person's nose's length (`child_nose`), read as `skull_of` reads its table; 1 where the
+    /// table has no row.
+    pub fn child_nose_of(&self, female: bool, yrs: f32) -> f32 {
+        by_age(self.child_nose, female, yrs).map_or(1.0, |f| f[0])
     }
 
     /// The weight of a wider mouth for a person (`child_mouth`), read as `skull_of` reads its table.

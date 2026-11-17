@@ -15,28 +15,35 @@ pub fn morph_test(h: &Head, p: &Look) -> Vec<V3> {
 /// (`DressSet::mouth_at`; 0: where the morph targets leave it), for tests that hold the table's value against the
 /// head without it.
 pub fn morph_test_mouth(h: &Head, p: &Look, mouth_at: f32) -> Vec<V3> {
-    morph_as(h, p, Some(mouth_at), None, None, None, None).0
+    morph_as(h, p, Some(mouth_at), None, None, None, None, None).0
 }
 
 /// `morph_test` with another share of the lips' slit closed along the seam than the dress table's
 /// (`DressSet::seam_shut`; 0: the mouth as it is closed in its middle alone), for tests that hold the table's
 /// value against the head without it.
 pub fn morph_test_seam(h: &Head, p: &Look, seam_shut: f32) -> Vec<V3> {
-    morph_as(h, p, None, Some(seam_shut), None, None, None).0
+    morph_as(h, p, None, Some(seam_shut), None, None, None, None).0
 }
 
 /// `morph_test` with the braincase larger by other factors than the dress table's (`DressSet::skull`: breadth,
 /// length, height; ones: the head as MakeHuman's targets leave it), for tests and for the tool that finds the
 /// table's values (examples/face_measure.rs `--children --skull`).
 pub fn morph_test_skull(h: &Head, p: &Look, by: [f32; 3]) -> Vec<V3> {
-    morph_as(h, p, None, None, Some(by), None, None).0
+    morph_as(h, p, None, None, Some(by), None, None, None).0
 }
 
 /// `morph_test` with another weight for a wider mouth than the dress table's (`DressSet::child_mouth`; 0: the
 /// mouth as MakeHuman's child and the rest of the table leave it), for tests and for the tool that finds the
 /// table's values (examples/face_measure.rs `--children --mouth`).
 pub fn morph_test_wide(h: &Head, p: &Look, wide: f32) -> Vec<V3> {
-    morph_as(h, p, None, None, None, Some(wide), None).0
+    morph_as(h, p, None, None, None, Some(wide), None, None).0
+}
+
+/// `morph_test` with another factor on the nose's length than the dress table's (`DressSet::child_nose`; 1: the
+/// nose as MakeHuman's targets leave it), for tests and for the tool that finds the table's values
+/// (examples/face_measure.rs `--children --nose`).
+pub fn morph_test_nose(h: &Head, p: &Look, by: f32) -> Vec<V3> {
+    morph_as(h, p, None, None, None, None, Some(by), None).0
 }
 
 /// The targets of MakeHuman a person's head is made of and the weight of each, in the order they are added (a target
@@ -44,7 +51,7 @@ pub fn morph_test_wide(h: &Head, p: &Look, wide: f32) -> Vec<V3> {
 /// tools that ask what gives a face its form (examples/face_measure.rs `--made`).
 pub fn morph_targets(h: &Head, p: &Look) -> Vec<(String, f32)> {
     let mut list = Vec::new();
-    morph_as(h, p, None, None, None, None, Some(&mut list));
+    morph_as(h, p, None, None, None, None, None, Some(&mut list));
     list
 }
 
@@ -133,11 +140,82 @@ pub(crate) fn skull_grow(h: &Head, pp: &mut [V3], by: [f32; 3]) {
     }
 }
 
-pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
-    morph_as(h, p, None, None, None, None, None)
+/// Where the face's front begins on MakeHuman's base head (`face_front`), in units before tragion (1 unit =
+/// 10 cm): nothing of it up to the first (the ear, the neck's front, the back of the jaw's corner), all of it
+/// from the second (the nose, the mouth, the chin, the cheeks' front). PLACEHOLDER: by anatomy and by eye.
+pub const FACE_FRONT: [f32; 2] = [0.18, 0.48];
+/// The heights of `nose_set`, in units: how far under the lower lid's edge the nose's band has its whole
+/// strain (the skin over the eyeball's lower half moves next to nothing), and over how far a strain sets in
+/// at a border (the nose's foot, the edges of the lips' red, the chin). PLACEHOLDER: by anatomy and by eye.
+pub const NOSE_HEIGHTS: [f32; 2] = [0.06, 0.02];
+/// The step of heights in which `nose_ways` adds up the ways, in units (a twentieth of a millimetre).
+const NOSE_STEP: f32 = 0.0005;
+
+/// How much of the face's front each vertex of the base head is (`nose_set`): by its depth before tragion, a
+/// smooth step between the two of `FACE_FRONT`. The eyeballs are not of it: a ball keeps its form.
+pub fn face_front(h: &Head) -> Vec<f32> {
+    use crate::measure::TRAGION;
+    let tz = (h.base[TRAGION.0][2] + h.base[TRAGION.1][2]) / 2.0;
+    let balls = [ball_of(h, 0), ball_of(h, 1)];
+    let ball = |v: usize| balls.iter().any(|b| b.get(v).copied().unwrap_or(false));
+    h.base.iter().enumerate().map(|(v, q)| if ball(v) { 0.0 } else { sm(FACE_FRONT[0], FACE_FRONT[1], q[2] - tz) }).collect()
 }
 
-fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, skull: Option<[f32; 3]>, wide: Option<f32>, mut list: Option<&mut Vec<(String, f32)>>) -> (Vec<V3>, usize) {
+/// How far up `nose_set` moves the skin at each height of a person's head: the height of the lower lids' edge
+/// under the pupils, the height of the chin's lowest point and, from the one down to the other in steps of
+/// `NOSE_STEP`, the way up at each. The nose's
+/// band (from the lids' edge to the nose's foot) is shortened evenly so that the nose is `by` times as long
+/// from sellion to its foot; what the nose loses the skin between its foot and the chin gains, drawn out
+/// evenly, the lips' red keeping its height; the chin's lowest point stays.
+fn nose_ways(pp: &[V3], by: f32) -> ([f32; 2], Vec<f32>) {
+    use crate::measure::{LIDS, LIP_FOOT, LIP_TOP, MENTON, SELLION, SUBNASALE};
+    let mid = |a: usize, b: usize| (pp[a][1] + pp[b][1]) / 2.0;
+    // (the lower of the two lids' edges under the pupils: neither moves)
+    let (lid, se, sn, me) = (pp[LIDS[0].1][1].min(pp[LIDS[1].1][1]), pp[SELLION][1], pp[SUBNASALE][1], pp[MENTON][1]);
+    let (red_top, red_foot) = (mid(LIP_TOP[0], LIP_TOP[1]).min(sn), mid(LIP_FOOT[0], LIP_FOOT[1]).max(me));
+    let [ramp, soft] = NOSE_HEIGHTS;
+    // how much of the nose's strain and of the lower face's the skin at a height has (each begins at its
+    // border with nothing: the nose's foot and the edges of the lips' red are moved by what lies over them)
+    let nose = |y: f32| sm(lid, lid - ramp, y) * sm(sn, sn + soft, y);
+    let lower = |y: f32| sm(sn, sn - soft, y) * sm(me, me + soft, y) * (1.0 - sm(red_top + soft, red_top, y) * sm(red_foot - soft, red_foot, y));
+    let n = ((lid - me) / NOSE_STEP).ceil() as usize + 1;
+    let at = |k: usize| lid - k as f32 * NOSE_STEP;
+    // the two bands' lengths as the strains weigh them
+    let (ln, ll) = (0..n).fold((0.0, 0.0), |(a, b), k| (a + nose(at(k)) * NOSE_STEP, b + lower(at(k)) * NOSE_STEP));
+    // the nose's foot goes up by what the nose loses
+    let up = (1.0 - by) * (se - sn);
+    let (en, el) = (if ln > 0.0 { up / ln } else { 0.0 }, if ll > 0.0 { up / ll } else { 0.0 });
+    let mut way = 0.0;
+    let ways = (0..n)
+        .map(|k| {
+            let here = way;
+            way += (en * nose(at(k)) - el * lower(at(k))) * NOSE_STEP;
+            here
+        })
+        .collect();
+    ([lid, me], ways)
+}
+
+/// A child's nose as long against a grown one's as a real child's (`DressSet::child_nose`): the skin of the
+/// face's front (`face_front`) moved up by the ways of `nose_ways`. Heights only; nothing over the lower lids'
+/// edges moves, nor the chin's lowest point and what lies under it, the ears, the neck or the back of the jaw.
+pub(crate) fn nose_set(h: &Head, pp: &mut [V3], by: f32) {
+    let ([lid, chin], ways) = nose_ways(pp, by);
+    for (v, w) in face_front(h).into_iter().enumerate().take(pp.len()) {
+        let t = (lid - pp[v][1]) / NOSE_STEP;
+        if w > 0.0 && t > 0.0 && pp[v][1] >= chin && (t as usize) + 1 < ways.len() {
+            let (k, f) = (t as usize, t.fract());
+            pp[v][1] += w * (ways[k] + f * (ways[k + 1] - ways[k]));
+        }
+    }
+}
+
+pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
+    morph_as(h, p, None, None, None, None, None, None)
+}
+
+#[allow(clippy::too_many_arguments)]
+fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, skull: Option<[f32; 3]>, wide: Option<f32>, nose: Option<f32>, mut list: Option<&mut Vec<(String, f32)>>) -> (Vec<V3>, usize) {
     let mut pp = h.base.clone();
     let mut used = 0;
     // targets a dress with a table takes nothing of (`DressSet::without`)
@@ -455,6 +533,11 @@ fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, s
     if let Some(d) = p.dress.set().filter(|d| d.pupil > 0.0) {
         let lean = crate::dress::by_sex(d.lean[0], d.lean[1], p.female, p.grown());
         pupils_set(h, &mut pp, d.pupil, |side| d.gaze_of(side, lean)[1]);
+    }
+    // a child's nose as long against a grown one's as a real child's, where a dress with a table asks for it
+    // (`DressSet::child_nose`); heights of the face's front between the lower lids and the chin only
+    if let Some(by) = p.dress.set().map(|d| nose.unwrap_or(d.child_nose_of(p.female, p.age))).filter(|by| *by != 1.0) {
+        nose_set(h, &mut pp, by);
     }
     // a child's braincase as large against its face as a real child's, where a dress with a table asks for it
     // (`DressSet::skull`); the face and the ears stay

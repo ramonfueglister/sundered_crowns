@@ -348,3 +348,14 @@ reading of a table by age, shared with `skull_of`); the row `mouth-scale-horiz-i
 with `--mouth`. `tests/faces.rs`: a twenty-third test. Tried in the same round and not kept: weights for a
 shorter nose and a longer chin, fitted to the same survey (the faces were worse). A head without a dress
 table is morphed as before: Roman bytes unchanged.
+
+Round 102: a child's nose as long against a grown one's as a real child's. `morph.rs`: `FACE_FRONT`,
+`face_front` (how much of the face's front a vertex of the base head is; the eyeballs none), `NOSE_HEIGHTS`,
+`nose_ways`, `nose_set` (after the eyes are set: heights of the face's front only, the band from the lower
+lids to the nose's foot shortened evenly, the skin from there to the chin drawn out by as much, the lips'
+red and the chin as they are) and the hook `morph_test_nose`. `dress.rs`: `DressSet::child_nose` (England:
+per age the factor on the nose's length, girls' and boys', from the survey of round 100), `child_nose_of`;
+the survey's source names the nose's length as fitted. `lib.rs` exports them. `examples/face_measure.rs`:
+`--children` with `--nose`, and the lips' red printed with the children's measures. `tests/faces.rs`: a
+twenty-fourth test. Tried in the same round and not kept: the lower face drawn out to the survey's share as
+well (a long, heavy lower face). A head without a dress table is morphed as before: Roman bytes unchanged.

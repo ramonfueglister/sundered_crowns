@@ -5,8 +5,8 @@
 mod common;
 
 use common::{head, person};
-use sc_portrait::measure::{children, children_at, CHILDREN, CHILD_AGES, EAR_RIM, GLABELLA, BACK, arcs, arcs_from, face, far_at_mouth, far_cheek, jaw_front, lips, lower_face, marks, seam, ARCS, CHEEKBONES, CHIN, JAW, LIPS, LIP_FOOT, LIP_TOP, LOWER_FACE, MEASURES, MENTON, SELLION, SKULL, STAGE_TURN, STOMION, SUBNASALE, TRAGION, neck_at, NECK, NECK_LEAN};
-use sc_portrait::{build, cheek_field, lower_band, lower_share, morph_targets, morph_test, morph_test_mouth, morph_test_seam, morph_test_skull, morph_test_wide, mouth_field, real, seam_field, skull_field, Beard, Head, Look, CHEEK_FIELD, LIP_SEAM, LODS, neck_share, NECK_UNDER, SEAM_REACH};
+use sc_portrait::measure::{children, children_at, CHILDREN, CHILD_AGES, EAR_RIM, GLABELLA, BACK, arcs, arcs_from, face, far_at_mouth, far_cheek, jaw_front, lips, lower_face, marks, seam, ARCS, CHEEKBONES, CHIN, JAW, LIDS, LIPS, LIP_FOOT, LIP_TOP, LOWER_FACE, MEASURES, MENTON, SELLION, SKULL, STAGE_TURN, STOMION, SUBNASALE, TRAGION, neck_at, NECK, NECK_LEAN};
+use sc_portrait::{build, cheek_field, lower_band, lower_share, morph_targets, morph_test, morph_test_mouth, morph_test_seam, morph_test_nose, morph_test_skull, morph_test_wide, face_front, mouth_field, real, seam_field, skull_field, Beard, Head, Look, CHEEK_FIELD, LIP_SEAM, LODS, neck_share, NECK_UNDER, SEAM_REACH};
 
 #[test]
 fn the_grown_of_england_have_faces_of_human_measure() {
@@ -1253,6 +1253,136 @@ fn a_child_of_england_has_a_mouth_as_broad_against_a_grown_ones_as_a_real_childs
     for (k, female, age) in [(0u32, true, 24.0f32), (1, false, 24.0), (2, true, 15.0), (3, false, 17.0), (4, true, 68.0), (5, false, 50.0)] {
         let p = person(k, female, age);
         assert!(morph_test(&h, &p) == morph_test_wide(&h, &p, 0.0), "a person of {age} ({k}) has another head");
+    }
+}
+
+#[test]
+fn a_child_of_england_has_a_nose_as_long_against_a_grown_ones_as_a_real_childs() {
+    // MakeHuman's child has a grown face's proportions: at two a boy's nose was 34.9 mm long from sellion to its
+    // foot and a girl's 32.9, where the survey of children's heads (measure.rs `CHILDREN`) has 29 (2.0 and 1.3
+    // of its standard deviations over; 0.67 of England's grown, the survey's children 0.56 and 0.62 of its
+    // oldest group), a boy's still 1.1 over at five and eight. MakeHuman's target for a shorter nose folds it
+    // (round 101). The table's `child_nose` has a factor on the nose's length by age and sex, and morph.rs
+    // `nose_set` moves heights only: the face's front between the lower lids and the nose's foot is shortened
+    // evenly, and what the nose loses the skin between its foot and the chin gains, the lips' red left as high
+    // as it is, the chin where it is.
+    let Some(h) = head() else { return };
+    let show = std::env::var("SHOW").is_ok();
+    let set = sc_portrait::dress::Dress::England1356.set().unwrap();
+    // The table: ages rising, factors that shorten a nose and by no more than a fifth, ones in its last row; ones
+    // for the grown.
+    assert!(set.child_nose.len() >= 2 && set.child_nose.windows(2).all(|w| w[0].0 < w[1].0), "the table's ages rise");
+    assert!(set.child_nose.iter().all(|row| [row.1[0], row.2[0]].iter().all(|f| *f > 0.8 && *f <= 1.0)), "factors that shorten a nose");
+    let last = set.child_nose.last().unwrap();
+    assert!(last.1 == [1.0] && last.2 == [1.0] && last.0 <= set.adult[0].min(set.adult[1]), "the table ends in ones at {}", last.0);
+    for (female, age) in [(true, 15.0), (true, 24.0), (false, 17.0), (false, 68.0)] {
+        assert!(set.child_nose_of(female, age) == 1.0, "{age}: {}", set.child_nose_of(female, age));
+    }
+    assert!(set.child_nose_of(true, 0.0) == set.child_nose[0].1[0] && set.child_nose_of(false, 1.0) == set.child_nose[0].2[0], "before the first age that age's");
+    let between = set.child_nose_of(false, (set.child_nose[0].0 + set.child_nose[1].0) / 2.0);
+    assert!((between - (set.child_nose[0].2[0] + set.child_nose[1].2[0]) / 2.0).abs() < 1e-6, "between two ages in a straight line: {between}");
+    // The field: all of the nose, the mouth and the chin; nothing of the ears and of the eyeballs; the same left
+    // and right.
+    let field = face_front(&h);
+    for v in [SELLION, SUBNASALE, MENTON, GLABELLA].into_iter().chain(STOMION).chain(LIP_TOP).chain(LIP_FOOT) {
+        assert!(field[v] == 1.0, "the landmark {v} is {} of the face's front", field[v]);
+    }
+    assert!(field[TRAGION.0] == 0.0 && field[TRAGION.1] == 0.0, "the ears are none of it");
+    let balls: Vec<usize> = ["leye", "reye"].iter().flat_map(|part| h.parts[*part][0].iter().map(|v| *v as usize)).collect();
+    assert!(balls.len() > 100 && balls.iter().all(|&v| field[v] == 0.0), "the eyeballs are none of it");
+    for (a, b) in CHEEKBONES.into_iter().chain(JAW) {
+        assert!((field[a] - field[b]).abs() < 1e-4, "{a} and {b}: {} left, {} right", field[a], field[b]);
+    }
+    let n = 20u32;
+    let grown: Vec<[f32; 11]> = [false, true].iter().map(|&female| mean((0..n).map(|k| children(&h, &morph_test(&h, &person(k, female, 24.0)))))).collect();
+    let (mut stretch, mut squeeze, mut way) = (1.0f32, 1.0f32, 0.0f32);
+    for age in [2.0f32, 5.0, 8.0, 11.0, 13.0] {
+        for female in [false, true] {
+            let who = format!("{} of {age}", if female { "girls" } else { "boys" });
+            let by = set.child_nose_of(female, age);
+            let (mut with_all, mut none_all, mut red, mut lip) = (Vec::new(), Vec::new(), [0.0f32; 2], [0.0f32; 2]);
+            for k in 0..n {
+                let p = person(k, female, age);
+                let (with, none) = (morph_test(&h, &p), morph_test_nose(&h, &p, 1.0));
+                if by == 1.0 {
+                    assert!(with == none, "{who} ({k}): a factor of 1 moves the head");
+                }
+                let (lid, foot, chin) = (none[LIDS[0].1][1].min(none[LIDS[1].1][1]), none[SUBNASALE][1], none[MENTON][1]);
+                // heights only; nothing at and over the lower lids' edges, nothing under the chin, nothing that
+                // is not of the face's front; what moves goes up, and nothing further than the nose's foot,
+                // which goes up by what the nose is shorter
+                let up = (1.0 - by) * (none[SELLION][1] - foot);
+                for v in 0..with.len() {
+                    assert!(with[v][0] == none[v][0] && with[v][2] == none[v][2], "{who} ({k}): the vertex {v} moves sideways or in depth");
+                    let d = with[v][1] - none[v][1];
+                    if field[v] == 0.0 || none[v][1] >= lid || none[v][1] < chin {
+                        assert!(d == 0.0, "{who} ({k}): the vertex {v} moves by {d}");
+                    }
+                    assert!(d > -1e-5 && d < up + 1e-5, "{who} ({k}): the vertex {v} moves by {d}, the nose's foot by {up}");
+                    way = way.max(d);
+                }
+                assert!((with[SUBNASALE][1] - foot - up).abs() < 1e-4, "{who} ({k}): the nose's foot goes up by {}, not {up}", with[SUBNASALE][1] - foot);
+                assert!((with[MENTON][1] - chin).abs() < 1e-5, "{who} ({k}): the chin moves by {}", with[MENTON][1] - chin);
+                for v in balls.iter().copied().chain(LIDS.into_iter().flat_map(|l| [l.0, l.1])).chain([TRAGION.0, TRAGION.1]) {
+                    assert!(with[v] == none[v], "{who} ({k}): an eye or an ear moves at {v}");
+                }
+                // the skin is shortened and drawn out evenly: no edge of it much shorter or longer than before
+                if k < 4 {
+                    for tri in h.body_full().chunks_exact(3) {
+                        for e in 0..3 {
+                            let (i, j) = (tri[e] as usize, tri[(e + 1) % 3] as usize);
+                            let (before, after) = (dist(&none[i], &none[j]), dist(&with[i], &with[j]));
+                            if before > 0.005 {
+                                stretch = stretch.max(after / before);
+                                squeeze = squeeze.min(after / before);
+                            }
+                        }
+                    }
+                }
+                // the lips' red is as high as it was, and the mouth lies between the nose's foot and the chin
+                // where it lay (`DressSet::mouth_at`)
+                let lean = sc_portrait::dress::by_sex(set.lean[0], set.lean[1], female, p.grown());
+                for (j, pp) in [&none, &with].into_iter().enumerate() {
+                    red[j] += lips(pp)[2] / n as f32;
+                    let f = lower_face(pp, lean);
+                    lip[j] += f[0] / f[2] / n as f32;
+                }
+                with_all.push(children(&h, &with));
+                none_all.push(children(&h, &none));
+            }
+            let (with, none) = (mean(with_all.into_iter()), mean(none_all.into_iter()));
+            // every other measure of the survey's is what it is without the table
+            for m in (0..11).filter(|m| *m != 8) {
+                assert!((with[m] - none[m]).abs() < 0.01, "{who}: {} {} with, {} without", CHILDREN[m].name, with[m], none[m]);
+            }
+            assert!((red[1] - red[0]).abs() < 0.2, "{who}: the lips' red {} mm high, {} without the table", red[1], red[0]);
+            assert!((lip[1] - lip[0]).abs() < 0.02, "{who}: the upper lip {} of the way from the nose's foot to the chin, {} without the table", lip[1], lip[0]);
+            let (survey, oldest) = (children_at(8, female, age), children_at(8, female, 18.0));
+            let g = grown[female as usize][8];
+            let (ours, bare, real) = (with[8] / g, none[8] / g, survey[0] / oldest[0]);
+            if show {
+                println!("{who}: the nose {:.1} mm long ({:+.1} SD), of the grown {ours:.3}; MakeHuman's {:.1} ({:+.1} SD), {bare:.3}; the survey {:.1}, {real:.3}; the lips' red {:.1} mm ({:.1}), the upper lip {:.3} of the way to the chin ({:.3})", with[8], (with[8] - survey[0]) / survey[1], none[8], (none[8] - survey[0]) / survey[1], survey[0], red[1], red[0], lip[1], lip[0]);
+            }
+            if by < 1.0 {
+                // a nose that was too long stands to the grown as the survey's children's stands to its oldest
+                // group's, and without the table it was longer than that
+                assert!((ours - real).abs() < 0.012, "{who}: the nose {ours} of the grown's, the survey {real}");
+                assert!(bare - real > 0.02, "{who}: without the table {bare} of the grown's, the survey {real}");
+            } else {
+                // a nose that is no longer than the survey's share is left as it is
+                assert!(bare - real < 0.012, "{who}: the nose {bare} of the grown's, the survey {real}, and the table leaves it");
+            }
+            assert!(((with[8] - survey[0]) / survey[1]).abs() < 0.75, "{who}: the nose {} mm, the survey {} ({})", with[8], survey[0], survey[1]);
+        }
+    }
+    if show {
+        println!("a vertex moves up {:.1} mm at the most; an edge of the skin grows to {stretch:.3} of its length at the most and shrinks to {squeeze:.3}", way * 100.0);
+    }
+    assert!(way * 100.0 < 8.0 && stretch < 1.35 && squeeze > 0.7, "{} mm, {stretch}, {squeeze}", way * 100.0);
+    // The grown, and the young whose head has its adult form, are what they were, to the bit.
+    for (k, female, age) in [(0u32, true, 24.0f32), (1, false, 24.0), (2, true, 15.0), (3, false, 17.0), (4, true, 68.0), (5, false, 50.0)] {
+        let p = person(k, female, age);
+        assert!(morph_test(&h, &p) == morph_test_nose(&h, &p, 1.0), "a person of {age} ({k}) has another head");
     }
 }
 

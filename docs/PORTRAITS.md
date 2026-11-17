@@ -50,7 +50,8 @@ the parts the builder knows (a gown, a hood up or back, a veil, a wimple, three 
 | Veil of linen for women from 20, with a wimple from 50 | `veil_from`, `wimple_from` | ages invented |
 | Hair: cut round with a fringe (men), flat under a hood, none under the veil (it hides all of it; a bun until round 69); girls from 7 and women too young for the veil a centre parting and two plaits in front of the shoulders | `hair`, `hair_receding`, `hair_bald`, `hair_curly`, `hair_hooded`, `hair_veiled`, `hair_girl` | by eye |
 | Children: a braincase as large against the face as a real child's, by age and sex (round 100; MakeHuman's child is a grown head made small) | `skull`, `skull_of` | fitted to a survey of children's heads (Snyder and others 1977); where the braincase begins and the band it fades over by anatomy and by eye |
-| Children: a mouth as broad against a grown one's as a real child's, by age and sex (round 101; until then one weight for all ages, by eye) | `child_mouth`, `child_mouth_of` | fitted to the same survey; a child's nose is still too long and its lower face too short (tried in round 101 and dropped) |
+| Children: a mouth as broad against a grown one's as a real child's, by age and sex (round 101; until then one weight for all ages, by eye) | `child_mouth`, `child_mouth_of` | fitted to the same survey |
+| Children: a nose as long against a grown one's as a real child's (round 102; MakeHuman's child has a grown face's proportions) | `child_nose`, `child_nose_of` | fitted to the same survey where a nose was too long (boys, girls of two); the lower face is still too short (tried in rounds 101 and 102 and dropped); where the face's front begins and how a strain sets in by anatomy and by eye |
 | Faces: relaxed lids, a closed mouth with the lips on each other from corner to corner (round 99), the eyeballs deeper in their sockets (they came through the lower lid), for women a jaw that runs in to the chin (until round 96 a shifted gene of the jaw, `jaw_women`), cheeks filled out between cheekbone and jaw (round 97) and a thicker neck (round 98), redder lips, more flush on cheeks and nose | `lids`, `mouth_shut`, `seam_shut`, `eye_forward`, `rest` with `lower_only`, `cheek_fill`, `neck`, `lips`, `flush` | by eye, against the reference |
 
 **Sources.** Each row of the table names what it rests on (`sources`). All of them were read only as summaries
@@ -3151,6 +3152,98 @@ Still open: a small child's nose and lower face (a child's form of the head of i
 lips' form, the nose's wings, the spread of the necks, the cheek's fill by eye, a man's cheek, the fold
 beside the mouth, the women's small heads, the forehead's least breadth, the chin's breadth by eye,
 `head-square` and `head-oval`.
+
+**A child's nose (round 102).** Open since round 101: a small child's nose was long and its lower face
+short, and MakeHuman's targets for the two deform the face. This round tried a form of its own.
+
+*The form.* Not a target, but a shift of heights (`morph.rs` `nose_set`, `nose_ways`, `face_front`): every
+vertex of the face's front is moved up or down by an amount that depends on its height alone, so that a
+band of the face is shortened or drawn out evenly, as a whole, with nothing folded. The face's front is the
+skin from 48 mm before tragion on the base head (nose, mouth, chin, the cheeks' front), fading to nothing
+18 mm before it (`FACE_FRONT`: the ears, the neck and the back of the jaw stay; the eyeballs are left out).
+The heights are the person's own: the lower lids' edge under the pupils, the nose's foot, the edges of the
+lips' red, the chin's lowest point. A strain sets in over 6 mm under the lids (the skin over the eyeball
+moves next to nothing) and over 2 mm at each other border (`NOSE_HEIGHTS`).
+
+*Tried: nose and lower face by measure.* First with two factors per age and sex: the band from the lids to
+the nose's foot shortened until the nose has the survey's share of England's grown, and the skin from the
+nose's foot to the chin drawn out until the lower face (sellion to the chin) has its share too, the lips'
+red kept as high as it is (it is 2 mm high already against Sforza and others 2007 at five). At two that is
+the nose's foot 5.8 mm (boys) and 2.7 mm (girls) higher and the chin 7.3 and 9.9 mm lower: the nose 29.1
+and 30.2 mm (the survey 29), the lower face 84.4 and 83.5 (82 and 80), exact by construction, and no crease
+or smear anywhere. Looked at (`runde102_varianten_zweijaehrige.png`, `runde102_varianten_fuenfjaehrige.png`:
+round 101, the nose alone, the nose with half of the lower face's gain, the nose with all of it): the
+shorter nose is a gain, a small nose set high as a small child has it; the longer lower face is not. With
+all of it, and with half, the face under the mouth is long and heavy, an older child's or a grown one's,
+as in round 101, though here the skin was drawn out evenly from the nose's foot to the chin. So it is not
+the target's fault: on this head a lower face as high as the survey's reads wrong. (A guess, not measured:
+a real small child's lower face is as broad as it is high, with full cheeks down to the jaw, and ours runs
+in to the chin; the survey has no breadth of the jaw to hold that against.) The lower face's factor was
+dropped; the code keeps no trace of it.
+
+*Kept: the nose.* `DressSet::child_nose`: per age the factor on the nose's length, girls' and boys'
+(`child_nose_of`). What the nose loses the skin between its foot and the chin gains, the lips' red left as
+it is, the chin where it is: from the nose's foot to the chin a boy of two has 48 mm where he had 42 (the
+survey's share asks for 55).
+
+| age | girls | boys | nose now, mm (round 101; the survey, its SD): girls | boys |
+|---|---|---|---|---|
+| 2 | 0.918 | 0.834 | 30.2 (32.9; 29, 3) | 29.1 (34.9; 29, 3) |
+| 5 | 1 | 0.903 | 35.4 (the same; 34, 4) | 34.6 (38.3; 34.5, 3.5) |
+| 8 | 1 | 0.921 | 37.9 (the same; 39, 3) | 38.6 (41.9; 38.5, 3) |
+| 11 | 1 | 0.952 | 40.5 (the same; 43, 4) | 43.2 (45.4; 43, 4) |
+| 13 | 1 | 0.969 | 44.8 (the same; 44.5, 3.5) | 46.2 (47.7; 46, 4) |
+| 15 | 1 | 1 | 49.0 (the same) | 50.0 (the same) |
+
+The factors are the survey's share of England's grown over what the nose measured (60 girls and 60 boys an
+age; the shift scales every nose by the factor, so no search was needed). Between two ages in a straight
+line, under two the two-year-olds'. A boy's nose now lies within 0.4 of the survey's standard deviations at
+every year of age from 2 to 15 (before, 2.0 over at two, 1.1 over at five and eight). Girls from five on
+are left: at five their nose is at the share, from 8 to 12 it is 0.4 to 0.6 short, and a longer nose over
+a chin that stays would take its length from the lower face, which is short.
+
+*What stays.* Heights only: no vertex moves sideways or in depth. Nothing at or over the lower lids' edges
+moves, nothing under the chin's lowest point, no eyeball, no ear; the chin's lowest point stays to a
+thousandth of a millimetre. The ten other measures of the survey are the same to 0.01 mm (the mouth's
+breadth, the breadth at the cheekbones, the head's height among them); the lips' red is as high as it was
+to 0.1 mm; of the way from the nose's foot to the chin the upper lip takes 0.32 where it took 0.33 (boys of
+two; `mouth_at` 0.31). An edge of the skin grows to 1.27 of its length at the most and shrinks to 0.75. On 400 grown people each of the 28 measures is the same to the last digit printed as in round
+101; of the sample's 35 pictures 26 are the same pixel for pixel (everyone from 17 on, every girl from
+five on), the nine of boys of 2 to 13 and girls of two change in 1.0 to 4.2 in 100 of their pixels (by more
+than 8 of 255).
+
+Seen (`runde102_kinder_vorher_nachher.png`, `runde102_bub_zwei_gross.png`,
+`runde102_seite_vorher_nachher.png`, `runde102_fuenf_acht_vorher_nachher.png`, `runde102_stichprobe.png`):
+a boy of two has a small nose set high, turned up a little from the side, and reads younger; on the girls
+of two and the boys of five and eight the same in small. The clearest gain of the three rounds on the
+children's faces for the boys, next to none for the girls.
+
+Honest about the rest. The lower face is as short as before against the survey: at two 1.0 and 1.6
+standard deviations under (boys, girls), the girls' 1.4 to 1.6 under through eight and 1.1 under at eleven;
+lengthening it was tried twice and looked worse both times. The girls' noses of 8 to 12 are 0.4 to 0.6
+short and were left. A small child's mouth is still a flat stroke with a fold beside each corner.
+`FACE_FRONT` and `NOSE_HEIGHTS` are PLACEHOLDERS, by anatomy and by eye. The rest as in rounds 100 and 101.
+
+Tests: `tests/faces.rs`, 24 now. "A child of England has a nose as long against a grown one's as a real
+child's": the table (ages rising, factors between 0.8 and 1, ones from where the head is grown, read in a
+straight line between the ages); the field (all of nose, mouth and chin, nothing of the ears and the
+eyeballs, the same left and right); on 20 girls and 20 boys of 2, 5, 8, 11 and 13 heights only, nothing
+at or over the lower lids, under the chin or off the face's front moves, what moves goes up and no further
+than the nose's foot, which goes up by what the nose is shorter; the chin stays; ten measures of the survey
+to 0.01 mm, the lips' red to 0.2 mm, the upper lip's share to 0.02; where the table shortens a nose it
+stands to the grown within 0.012 of the survey's share and was more than 0.02 over it, where the table
+leaves it, it was not over the share; an edge of the skin between 0.7 and 1.35 of its length; the grown, a
+girl of 15 and a boy of 17 are the same to the bit. `examples/face_measure.rs --children --nose b,g`
+measures with other factors.
+Pictures: `runde102_kinder_vorher_nachher.png` (four of two, two of five; round 101 above),
+`runde102_bub_zwei_gross.png` (a boy of two large, front and side, round 101 first),
+`runde102_seite_vorher_nachher.png`, `runde102_fuenf_acht_vorher_nachher.png`, `runde102_stichprobe.png`,
+`runde102_varianten_zweijaehrige.png` and `runde102_varianten_fuenfjaehrige.png` (what was tried: round
+101, the nose alone, with half and with all of the lower face's gain).
+Still open: a small child's lower face and the form of its mouth; and as before the lips' form, the nose's
+wings, the spread of the necks, the cheek's fill by eye, a man's cheek, the fold beside the mouth, the
+women's small heads, the forehead's least breadth, the chin's breadth by eye, `head-square` and
+`head-oval`.
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
