@@ -49,7 +49,7 @@ the parts the builder knows (a gown, a hood up or back, a veil, a wimple, three 
 | Hood (men): up, thrown back, or none, by chance per person; none under 14 | `hood`, `hood_from` | shares 4 : 3 : 3 invented |
 | Veil of linen for women from 20, with a wimple from 50 | `veil_from`, `wimple_from` | ages invented |
 | Hair: cut round with a fringe (men), flat under a hood, none under the veil (it hides all of it; a bun until round 69); girls from 7 and women too young for the veil a centre parting and two plaits in front of the shoulders | `hair`, `hair_receding`, `hair_bald`, `hair_curly`, `hair_hooded`, `hair_veiled`, `hair_girl` | by eye |
-| Faces: relaxed lids, a closed mouth, the eyeballs deeper in their sockets (they came through the lower lid), for women a jaw that runs in to the chin (until round 96 a shifted gene of the jaw, `jaw_women`) and cheeks filled out between cheekbone and jaw (round 97), redder lips, more flush on cheeks and nose | `lids`, `mouth_shut`, `eye_forward`, `rest` with `lower_only`, `cheek_fill`, `lips`, `flush` | by eye, against the reference |
+| Faces: relaxed lids, a closed mouth, the eyeballs deeper in their sockets (they came through the lower lid), for women a jaw that runs in to the chin (until round 96 a shifted gene of the jaw, `jaw_women`), cheeks filled out between cheekbone and jaw (round 97) and a thicker neck (round 98), redder lips, more flush on cheeks and nose | `lids`, `mouth_shut`, `eye_forward`, `rest` with `lower_only`, `cheek_fill`, `neck`, `lips`, `flush` | by eye, against the reference |
 
 **Sources.** Each row of the table names what it rests on (`sources`). All of them were read only as summaries
 (proposal of 15.11.2026), none in the original, and no value is taken from a source. Everything is PLACEHOLDER
@@ -2714,6 +2714,108 @@ the lower cheek 2 mm short of the trace; the fold beside the mouth; the wide mou
 and the ear's landmark behind the short arcs; the thin necks; the forehead's least breadth and the head's
 height, not held; the chin's breadth by eye; the flat lower lip; `head-square` and `head-oval` still move
 the skull.
+
+**A woman's neck as thick as a lean woman's (round 98).** Round 96 measured the necks in passing with a tool
+that was not kept: thin beside the survey's, the women's most. This round the measure is in the repository,
+the question which necks are thin is put to sources on lean people, and the women's neck is made thicker.
+
+*The measure.* `measure.rs` `neck_at`: the smallest loop round the neck. Of all planes that hold the
+direction from ear to ear, tilted by 0 to 45 degrees (the front lower than the back) and set from 5 cm under
+to 2 cm over the chin's lowest point (on the upright 9 cm behind it), the one whose cut with the skin, the
+part of it that goes round that upright, has the shortest taut line (a tape lies taut over hollows); sought
+in steps of 3 degrees and 5 mm, then of 1 degree and 1 mm round the best. A tape is laid round a neck just
+under the larynx, square to the neck's axis (so the study of lean people below; the survey's own words on
+it were not read). The head's net has no larynx. The smallest loop is no longer than the one under the
+larynx, so the measure reads a neck as thin as it can be read. On grown heads the loop is found tilted by
+20 to 23 degrees, within 3 mm of the height of the chin's lowest point.
+
+*Which necks are thin.* 200 grown women and 200 grown men: 290.5 mm (SD 9.0) and 366.1 (11.2). The survey
+(Zhuang & Bradtmiller 2005) has 339.5 (30.9) and 406.7 (32.6): ours 1.6 and 1.2 standard deviations thin.
+But the survey's people are of the United States of 2003, and a neck is soft tissue that grows with weight:
+370 mm on a man and 340 on a woman part those with a body mass index under 25 from those over (Ben-Noun,
+Sohar & Laor 2001, Obesity Research; 460 men and 519 women; the neck goes with the index at r 0.83 and
+0.71), so the survey's means are those of people at that border. People who worked the land in the
+fourteenth century were lean. Two studies of lean young people: 41 men and 109 women of 18 to 20 with an
+index of 21.7 and 21.0 have 355.6 (27.7) and 315.2 (19.6) mm, those of them of normal weight 354.5 and
+312.6 (Hingorjo, Qureshi & Mehdi 2012, Journal of the Pakistan Medical Association 62(1)); 60 Japanese
+women of 18 to 20 with an index of 20.5 have 316 (20) (Nitta and others 2017, Hiroshima Journal of Medical
+Sciences 66(4): 109-115). All three were read as a reading tool's account of the paper's page, not line by
+line; the measured data of the army's survey of 1988 (lean people too, with their heads' measures) could
+not be fetched (the host is not allowed, the report is a scan without text).
+
+| the neck's loop, mm | men | women | a woman's of a man's |
+|---|---|---|---|
+| the survey (people of the United States, 2003) | 406.7 (32.6) | 339.5 (30.9) | 0.835 |
+| lean young people (Hingorjo and others 2012) | 355.6 (27.7) | 315.2 (19.6) | 0.886 |
+| ours until round 97 | 366.1 (11.2) | 290.5 (9.0) | 0.793 |
+| ours now | 366.1 (11.2) | 314.3 (9.0) | 0.858 |
+
+A man's neck lies between the lean men's and the survey's: it stays. A woman's was thin by either measure,
+1.3 of the lean women's standard deviations under their mean, and thin against the men's: 0.79 of a man's,
+under both sources' shares. MakeHuman's young woman has that neck.
+
+*What makes it thicker.* MakeHuman's targets of the neck, each whole and at weight 1 on 24 grown women (mm):
+
+| target | the neck's loop | else |
+|---|---|---|
+| `neck-scale-horiz-incr` | +29.0 | the jaw's corners +5.7 |
+| `neck-scale-depth-incr` | +26.8 | the chin's lowest point 3.8 forward, the face 0.7 shorter |
+| `neck-back-scale-depth-incr` | +16.8 | nothing of the face |
+| `neck-double-incr` | +8.2 | the chin's lowest point 2.3 lower, the jaw's front -6.0 |
+| `neck-scale-vert-decr` | -7.7 | the head 27.7 lower |
+| `neck-trans-out`, `-forward`, `-backward`, `-up`, `-down` | -1.3 to +0.0 | |
+
+The first makes the neck broader, the third deeper at the nape. The first also widens the jaw's corners,
+which are at the survey's. So a head takes of the table's targets of the neck (`DressSet::neck`) only the
+part under the jaw (`morph.rs` `neck_share`, `NECK_UNDER`): whole up to 20 mm over the plane of the smallest
+loop, nothing from 40 mm over it; the jaw's landmarks lie 51 mm and more over it. With the band 10 mm lower
+the neck got a waist over the part made thicker (the smallest loop moved up by 8 to 16 mm). The gene of the
+neck, which uses the first target for thin and thick necks from person to person, is taken whole as before:
+nothing changes for men. England's table: `neck-scale-horiz-incr` 0.45 and `neck-back-scale-depth-incr`
+0.7 for women, none for men. The two together because the loop then stays as round as it was: 92 mm broad
+and 92 deep before, 100 and 100 now (ten women; ten men's 116 and 120); the broader target alone leaves the
+depth as it is. A child has none of it and grows into it with `Look::grown` (`neck_of`): MakeHuman's
+child keeps a child's neck, for which no measure was read. Girls of the sample: of 2 unchanged (227 mm), of
+5 +5 mm (232 and 240), of 8 +12.5 (252 and 255), of 13 +23 (293), of 17 +23.5 (311 and 316).
+
+On the same 400 every other measure is the same to the last digit printed: cheekbones, the jaw's corners,
+head breadth and length, the arcs from ear to ear, the lips, the far cheek. The weights are chosen so that
+the mean meets the lean women's (314.3 against 315.2 and 316): fitted to a sourced value, not by eye. What
+is by eye: that the two targets share the gain as they do (PLACEHOLDER; no measured shape of a neck's
+section was read).
+
+Seen (`runde98_hals_vorher_nachher.png`, `runde98_ohne_schleier.png`): the neck no longer reads as a stalk
+under the head; its sides run from under the ear down and out to the shoulders. Girls with plaits show it
+most; under a veil the throat between the veil's sides is broader, a wimple lies round the thicker neck
+without skin showing through. All women and girls from 8 of the sample changed, in 3.5 to 5.5 % of the
+pixels by more than 8 of 255, girls of 5 in 0.9 %, girls of 2 in 0.06 %, no boy and no man in any. Honest
+about the rest: the nape's gain (a third of it) is not seen in a portrait from the front; the spread of
+our necks is small (SD 9 mm, lean people's 20, those of normal weight among them 14): people differ less in
+the neck than real people do; a woman's neck is still 0.8 of the survey's standard deviations under the
+survey's; the men's were not changed and children's were not held against anything; the smallest loop is a
+lower bound of what a tape under the larynx reads. Apoleia's heads are untouched: Roman bytes and pictures
+unchanged.
+
+Tests: `tests/faces.rs`, 20 now. "The neck of a woman of England is as thick as a lean woman's": the table
+gives women targets of the neck and men none; the landmarks of the jaw's corners, cheekbones, ears and skull
+take nothing of them and no landmark is moved (whole, the targets move one by more than 0.5 mm); of each
+target more than a third of the vertices are taken whole and not all; a grown woman has all, a man
+and a boy none, a girl of 2 under 0.05, of 8 between 0.3 and 0.7, of 13 over 0.8; on 60 grown women the
+loop lies within a third of the lean women's standard deviation of their mean (313.8) and more than one
+whole deviation under it with the table's neck taken off again (290.0); 60 men's between the lean men's and
+the survey's (365.3); a woman's as a share of a man's between the survey's and the lean people's; the
+thinnest place stays within 4 mm of where it was; breadths, lengths and the lips' length are the same to a
+hundredth of a millimetre and the arcs from ear to ear to half a millimetre. `examples/face_measure.rs`
+prints the neck as measure 27. cargo 26/20/6/2/2, vitest 1072.
+Pictures: `runde98_hals_vorher_nachher.png` (girls of 5, 8, 13 and 17, women of 24, 50 and 68; before
+above), `runde98_ohne_schleier.png` (the reference's woman, two of ours without the veil before and now),
+`runde98_stichprobe.png`.
+Still open: the spread of the necks; children's necks (a boy of 8 has 280 mm, a girl of 8 253: no source
+read); the measure's place against a larynx the net does not have; how the gain is shared between breadth
+and nape; and from round 97: the amount of the cheek's fill by eye on one face, a man's cheek, the fold
+beside the mouth, the wide mouth, the women's small heads and the ear's landmark behind the short arcs, the
+forehead's least breadth and the head's height, the chin's breadth by eye, the flat lower lip,
+`head-square` and `head-oval`.
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,

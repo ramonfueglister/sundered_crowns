@@ -260,6 +260,138 @@ pub fn arcs_from(h: &Head, pp: &[V3], ears: (usize, usize)) -> [f32; 4] {
     [arc(h, pp, ears, Some(pp[CHIN])), arc(h, pp, ears, Some(pp[SUBNASALE])), arc(h, pp, ears, Some(pp[FOREHEAD])), arc(h, pp, ears, None)]
 }
 
+/// What `neck` measures, with the survey's circumference of the neck.
+pub const NECK: [(&str, [f32; 2], [f32; 2]); 1] = [("neck circumference (the smallest loop)", [406.7, 32.6], [339.5, 30.9])];
+
+/// The same measure on lean young people, men and women, mean and standard deviation in mm: 41 men and 109
+/// women of 18 to 20 with a body mass index of 21.7 and 21.0 in the mean (Hingorjo, Qureshi & Mehdi 2012,
+/// Neck circumference as a useful marker of obesity, Journal of the Pakistan Medical Association 62(1); the
+/// tape just under the larynx, square to the neck's axis; those of them of normal weight: 354.5 and 312.6).
+/// 60 Japanese women of 18 to 20 with an index of 20.5: 316 (20) (Nitta and others 2017, Hiroshima Journal of
+/// Medical Sciences 66(4): 109-115; the mean of three heights round the larynx). A neck grows with weight:
+/// 370 mm on a man and 340 on a woman part those under an index of 25 from those over (Ben-Noun, Sohar &
+/// Laor 2001, Obesity Research; 460 men and 519 women; the neck goes with the index at r 0.83 and 0.71). The
+/// survey's people are of the United States of 2003 and heavier; people of the fourteenth century who worked
+/// the land were lean: for the neck, which is soft tissue, these are the nearer measure. All three read as a
+/// reading tool's account of the paper's page, not line by line.
+pub const NECK_LEAN: [[f32; 2]; 2] = [[355.6, 27.7], [315.2, 19.6]];
+
+/// How far behind the chin's lowest point the upright stands on which `neck` sets its planes, in units: inside
+/// the neck of a grown head (whose neck reaches from 4 to 14 cm behind that point).
+const NECK_BEHIND: f32 = 0.9;
+
+/// The length of the tightest line round the part of the skin's cut with a plane that goes round the point
+/// `at`, in units: the plane holds the direction from ear to ear and is tilted by `tilt` (radians; its front
+/// lower than its back). None where no part of the cut goes round the point.
+fn loop_round(h: &Head, pp: &[V3], at: V3, tilt: f32) -> Option<f32> {
+    let (c, s) = (tilt.cos(), tilt.sin());
+    let over = |p: V3| (p[1] - at[1]) * c + (p[2] - at[2]) * s;
+    let tris = h.body_full();
+    // the cut: per triangle the points where its edges pass through the plane; triangles that share a cut
+    // edge are of one part of the cut
+    let mut part: Vec<usize> = (0..tris.len() / 3).collect();
+    fn root(part: &mut [usize], mut i: usize) -> usize {
+        while part[i] != i {
+            part[i] = part[part[i]];
+            i = part[i];
+        }
+        i
+    }
+    let mut pts: Vec<(usize, [f32; 2])> = Vec::new();
+    let mut edges: Vec<((usize, usize), usize)> = Vec::new();
+    for (k, t) in tris.chunks_exact(3).enumerate() {
+        for e in 0..3 {
+            let (i, j) = (t[e] as usize, t[(e + 1) % 3] as usize);
+            let (di, dj) = (over(pp[i]), over(pp[j]));
+            if (di > 0.0) != (dj > 0.0) {
+                let f = di / (di - dj);
+                let q = [pp[i][0] + f * (pp[j][0] - pp[i][0]) - at[0], pp[i][1] + f * (pp[j][1] - pp[i][1]) - at[1], pp[i][2] + f * (pp[j][2] - pp[i][2]) - at[2]];
+                pts.push((k, [q[0], q[2] * c - q[1] * s]));
+                edges.push(((i.min(j), i.max(j)), k));
+            }
+        }
+    }
+    edges.sort();
+    for w in edges.windows(2) {
+        if w[0].0 == w[1].0 {
+            let (a, b) = (root(&mut part, w[0].1), root(&mut part, w[1].1));
+            part[a] = b;
+        }
+    }
+    let mut by_part: Vec<(usize, [f32; 2])> = pts.iter().map(|&(k, q)| (root(&mut part, k), q)).collect();
+    by_part.sort_by(|a, b| a.0.cmp(&b.0).then(a.1[0].total_cmp(&b.1[0])).then(a.1[1].total_cmp(&b.1[1])));
+    let turn = |o: [f32; 2], p: [f32; 2], q: [f32; 2]| (p[0] - o[0]) * (q[1] - o[1]) - (p[1] - o[1]) * (q[0] - o[0]);
+    let mut least: Option<f32> = None;
+    let mut from = 0;
+    while from < by_part.len() {
+        let to = from + by_part[from..].iter().take_while(|q| q.0 == by_part[from].0).count();
+        let group: Vec<[f32; 2]> = by_part[from..to].iter().map(|q| q.1).collect();
+        from = to;
+        if group.len() < 6 {
+            continue;
+        }
+        // the tightest line round the part (Andrew's chain; the points are in order already)
+        let mut hull: Vec<[f32; 2]> = Vec::new();
+        for half in 0..2 {
+            let start = hull.len();
+            let order: Vec<[f32; 2]> = if half == 0 { group.clone() } else { group.iter().rev().copied().collect() };
+            for p in order {
+                while hull.len() >= start + 2 && turn(hull[hull.len() - 2], hull[hull.len() - 1], p) <= 0.0 {
+                    hull.pop();
+                }
+                hull.push(p);
+            }
+            hull.pop();
+        }
+        if hull.len() < 3 || !(0..hull.len()).all(|k| turn(hull[k], hull[(k + 1) % hull.len()], [0.0, 0.0]) > 0.0) {
+            continue;
+        }
+        let round: f32 = (0..hull.len()).map(|k| (hull[k][0] - hull[(k + 1) % hull.len()][0]).hypot(hull[k][1] - hull[(k + 1) % hull.len()][1])).sum();
+        if least.is_none_or(|l| round < l) {
+            least = Some(round);
+        }
+    }
+    least
+}
+
+/// The neck's circumference on a morphed head, in millimetres, with where it was found: the tilt of the tape's
+/// plane (degrees; its front lower than its back) and its height over the chin's lowest point on the upright
+/// `NECK_BEHIND` that point (mm). The tape lies round the neck under the larynx, square to the neck's axis
+/// (so the study of `NECK_LEAN` says; the survey's own words were not read); the head's net has no larynx,
+/// so this is the smallest loop round the neck: of all planes that
+/// hold the direction from ear to ear, tilted by 0 to 45 degrees and set from 5 cm under to 2 cm over the
+/// chin's lowest point, the one whose cut round the neck has the shortest taut line (a tape lies taut over
+/// hollows). The smallest loop is no longer than the one under the larynx: the measure reads a neck as thin
+/// as it can be read.
+pub fn neck_at(h: &Head, pp: &[V3]) -> [f32; 3] {
+    let m = pp[MENTON];
+    let read = |tilt: f32, up: f32| loop_round(h, pp, [m[0], m[1] + up / 100.0, m[2] - NECK_BEHIND], tilt.to_radians());
+    let mut best = [f32::MAX, 0.0, 0.0];
+    // coarsely, then round the best by degrees and millimetres
+    for (tilts, ups, step) in [((0.0, 45.0), (-50.0, 20.0), (3.0, 5.0)), ((-3.0, 3.0), (-5.0, 5.0), (1.0, 1.0))] {
+        let around = if step.0 < 3.0 { [best[1], best[2]] } else { [0.0, 0.0] };
+        let mut tilt = tilts.0;
+        while tilt <= tilts.1 {
+            let mut up = ups.0;
+            while up <= ups.1 {
+                if let Some(round) = read(around[0] + tilt, around[1] + up) {
+                    if round * 100.0 < best[0] {
+                        best = [round * 100.0, around[0] + tilt, around[1] + up];
+                    }
+                }
+                up += step.1;
+            }
+            tilt += step.0;
+        }
+    }
+    best
+}
+
+/// The measure of `NECK` on a morphed head (`morph_test`), in millimetres.
+pub fn neck(h: &Head, pp: &[V3]) -> f32 {
+    neck_at(h, pp)[0]
+}
+
 /// What `jaw_front` measures at 5 mm (no survey read for it: the zeros).
 pub const JAW_FRONT: [(&str, [f32; 2], [f32; 2]); 1] = [("the jaw's front 5 mm over the menton", [0.0; 2], [0.0; 2])];
 

@@ -5,8 +5,8 @@
 mod common;
 
 use common::{head, person};
-use sc_portrait::measure::{arcs, arcs_from, face, far_at_mouth, far_cheek, jaw_front, lips, lower_face, marks, ARCS, CHEEKBONES, CHIN, JAW, LIPS, LIP_FOOT, LIP_TOP, LOWER_FACE, MEASURES, MENTON, SELLION, SKULL, STAGE_TURN, STOMION, SUBNASALE, TRAGION};
-use sc_portrait::{build, cheek_field, lower_band, lower_share, morph_targets, morph_test, morph_test_mouth, mouth_field, real, Beard, Head, Look, CHEEK_FIELD, LODS};
+use sc_portrait::measure::{arcs, arcs_from, face, far_at_mouth, far_cheek, jaw_front, lips, lower_face, marks, ARCS, CHEEKBONES, CHIN, JAW, LIPS, LIP_FOOT, LIP_TOP, LOWER_FACE, MEASURES, MENTON, SELLION, SKULL, STAGE_TURN, STOMION, SUBNASALE, TRAGION, neck_at, NECK, NECK_LEAN};
+use sc_portrait::{build, cheek_field, lower_band, lower_share, morph_targets, morph_test, morph_test_mouth, mouth_field, real, Beard, Head, Look, CHEEK_FIELD, LODS, neck_share, NECK_UNDER};
 
 #[test]
 fn the_grown_of_england_have_faces_of_human_measure() {
@@ -835,6 +835,95 @@ fn the_cheek_of_a_woman_of_england_keeps_its_breadth_to_the_mouth() {
     assert!(men > 11.0, "a man's far cheek lies {men} mm inside its top at the mouth's height");
     assert!(sums[2] < sums[3] + 0.2 && sums[4] < 1.0, "the pad {} mm ({} without the fill), the dent {}", sums[2], sums[3], sums[4]);
     assert!(worst < 0.01 && lips_most < 0.01, "the fill moves a breadth by {worst} mm, the lips' length by {lips_most}");
+}
+
+#[test]
+fn the_neck_of_a_woman_of_england_is_as_thick_as_a_lean_womans() {
+    // Until round 98 the smallest loop round a grown woman's neck was 290.5 mm and a man's 366.1: a woman's
+    // 0.79 of a man's, where the survey has 0.835 (339.5 and 406.7 mm, on people heavier than ours) and lean
+    // young people 0.886 (315.2 and 355.6; `NECK_LEAN`). The men's lies between the lean and the survey's; the
+    // women's was thin by either. The table's `neck` gives a grown woman two of MakeHuman's targets, of which
+    // a head takes the part under the jaw (`neck_share`): 314.3 mm.
+    let Some(h) = head() else { return };
+    let show = std::env::var("SHOW").is_ok();
+    let set = sc_portrait::dress::Dress::England1356.set().unwrap();
+    assert!(!set.neck.is_empty() && set.neck.iter().all(|r| r.1 > 0.0 && r.2 == 0.0 && h.targets.contains_key(r.0)), "the table's neck: {:?}", set.neck);
+    // The part taken: the landmarks at the jaw's corners, the cheekbones, the ears and the skull are not in
+    // it, and no landmark of the face is moved by it (whole, the first target moves a jaw's corner by 2 mm);
+    // of each target some vertices are taken whole and some not at all (what lies at the jaw).
+    let pairs = |p: &[(usize, usize)]| p.iter().flat_map(|&(a, b)| [a, b]).collect::<Vec<usize>>();
+    for v in [TRAGION.0, TRAGION.1].into_iter().chain(pairs(&JAW)).chain(pairs(&CHEEKBONES)).chain(pairs(&SKULL)) {
+        assert!(neck_share(&h, v) == 0.0, "the landmark {v} takes {} of a target of the neck", neck_share(&h, v));
+    }
+    let marks: Vec<usize> = [MENTON, SUBNASALE, SELLION, CHIN, TRAGION.0, TRAGION.1].into_iter().chain(STOMION).chain(pairs(&JAW)).chain(pairs(&CHEEKBONES)).chain(pairs(&SKULL)).collect();
+    let mut whole_moves = 0.0f32;
+    for &(name, women, _) in set.neck {
+        let t = &h.targets[name];
+        for (j, &i) in t.ids.iter().enumerate() {
+            if marks.contains(&(i as usize)) {
+                let far = (t.d[j][0] as f32).hypot(t.d[j][1] as f32).hypot(t.d[j][2] as f32) / 30.0 * women;
+                whole_moves = whole_moves.max(far);
+                assert!(far * neck_share(&h, i as usize) == 0.0, "{name} moves the landmark {i} by {} mm", far * neck_share(&h, i as usize));
+            }
+        }
+    }
+    assert!(whole_moves > 0.5, "whole, the neck's targets move a landmark by {whole_moves} mm at most");
+    for &(name, _, _) in set.neck {
+        let t = &h.targets[name];
+        let (whole, none) = (t.ids.iter().filter(|&&i| neck_share(&h, i as usize) == 1.0).count(), t.ids.iter().filter(|&&i| neck_share(&h, i as usize) == 0.0).count());
+        if show {
+            println!("{name}: {} vertices, {whole} taken whole, {none} not at all", t.ids.len());
+        }
+        assert!(whole * 3 > t.ids.len() && whole < t.ids.len(), "{name}: {whole} of {} vertices whole, {none} not at all", t.ids.len());
+    }
+    assert!(NECK_UNDER.2[0] < NECK_UNDER.2[1]);
+    // Who has how much: the grown their sex's, a child what it has grown.
+    let of = |female: bool, age: f32| set.neck_of(1.0, 0.0, female, person(0, female, age).grown());
+    assert!(of(true, 24.0) == 1.0 && of(false, 24.0) == 0.0 && of(false, 8.0) == 0.0, "grown: a woman {}, a man {}; a boy of 8 {}", of(true, 24.0), of(false, 24.0), of(false, 8.0));
+    assert!(of(true, 2.0) < 0.05 && of(true, 8.0) > 0.3 && of(true, 8.0) < 0.7 && of(true, 13.0) > 0.8, "a girl of 2 {}, of 8 {}, of 13 {}", of(true, 2.0), of(true, 8.0), of(true, 13.0));
+    // On people: the loop with the table's neck and with it taken off again, and what else that moves.
+    let pos = |name: &str| MEASURES.iter().position(|m| m.0.starts_with(name)).unwrap();
+    let same = [pos("breadth at the cheekbones"), pos("breadth at the jaw"), pos("head breadth"), pos("head length"), pos("face length"), pos("lip length")];
+    let n = 60;
+    let (mut sums, mut worst, mut arc_most) = ([0.0f32; 5], 0.0f32, 0.0f32);
+    for k in 0..n {
+        let age = [24.0, 35.0, 50.0][k as usize % 3];
+        let with = morph_test(&h, &person(2 * k, true, age));
+        let mut without = with.clone();
+        for &(name, women, _) in set.neck {
+            let t = &h.targets[name];
+            for (j, &i) in t.ids.iter().enumerate() {
+                for c in 0..3 {
+                    without[i as usize][c] -= t.d[j][c] as f32 / 3000.0 * women * neck_share(&h, i as usize);
+                }
+            }
+        }
+        let (a, b) = (face(&h, &with), face(&h, &without));
+        for &i in &same {
+            worst = worst.max((a[i] - b[i]).abs());
+        }
+        for (x, y) in arcs(&h, &with).iter().zip(arcs(&h, &without)) {
+            arc_most = arc_most.max((x - y).abs());
+        }
+        let (na, nb, man) = (neck_at(&h, &with), neck_at(&h, &without), neck_at(&h, &morph_test(&h, &person(2 * k + 1, false, age))));
+        for (s, x) in sums.iter_mut().zip([na[0], nb[0], man[0], na[2], nb[2]]) {
+            *s += x / n as f32;
+        }
+    }
+    if show {
+        println!("{n} grown women: the neck's smallest loop {:.1} mm, {:.1} without the table's neck ({n} men {:.1}); it lies {:.1} mm over the chin's lowest point, {:.1} without; breadths and lengths differ by {worst:.3} mm at most, an arc from ear to ear by {arc_most:.3}", sums[0], sums[1], sums[2], sums[3], sums[4]);
+    }
+    let ([men, women], survey) = (NECK_LEAN, NECK[0]);
+    // a woman's within a third of the lean women's standard deviation of their mean, and thin without
+    assert!((sums[0] - women[0]).abs() < women[1] / 3.0 && sums[1] < women[0] - women[1], "a woman's neck {} mm round, {} without the table's (lean women {} ({}))", sums[0], sums[1], women[0], women[1]);
+    // a man's between the lean men's and the survey's
+    assert!(sums[2] > men[0] && sums[2] < survey.1[0], "a man's neck {} mm round (lean men {}, the survey {})", sums[2], men[0], survey.1[0]);
+    // a woman's as a share of a man's between the survey's and the lean people's
+    let share = sums[0] / sums[2];
+    assert!(share > survey.2[0] / survey.1[0] && share < women[0] / men[0], "a woman's neck {share} of a man's (the survey {}, lean people {})", survey.2[0] / survey.1[0], women[0] / men[0]);
+    // the thinnest place stays where it was (no waist over the part made thicker), and the face is as it was
+    assert!((sums[3] - sums[4]).abs() < 4.0, "the thinnest place {} mm over the chin's lowest point, {} without", sums[3], sums[4]);
+    assert!(worst < 0.01 && arc_most < 0.5, "the table's neck moves a breadth by {worst} mm, an arc from ear to ear by {arc_most}");
 }
 
 #[test]

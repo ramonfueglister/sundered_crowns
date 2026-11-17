@@ -446,6 +446,19 @@ pub struct DressSet {
     /// the nose 0.928 (0.941; 0.917), and both stay under the survey's own lengths. The amount is by eye on one
     /// traced face: PLACEHOLDER. Men: none (not looked at; a man's cheek has a dent of 3.6 mm under its pad).
     pub cheek_fill: [f32; 2],
+    /// Targets of MakeHuman's that make a neck thicker, with their weights for a grown woman and a grown man;
+    /// a head takes of them the part under the jaw only (morph.rs `neck_share`), over and above what its gene
+    /// of the neck asks for. A child has none of it and grows into it (`neck_of`).
+    /// England (round 98): the smallest loop round a woman's neck was 290.5 mm (measure.rs `neck`, 200 grown
+    /// women), a man's 366.1: a woman's 0.79 of a man's. The survey has 339.5 and 406.7 (0.835), on people
+    /// heavier than ours; lean young women have 315 and 316 mm, lean young men 356 (0.886; measure.rs
+    /// `NECK_LEAN`). The men's lies between the lean and the survey's and stays; the women's was thin by either.
+    /// `neck-scale-horiz-incr` makes the neck broader (29.0 mm of loop per unit) and
+    /// `neck-back-scale-depth-incr` deeper at the nape (16.8): together, so that the loop stays as round as it
+    /// was (92 by 92 mm, now 100 by 100), 314.3 mm, 0.86 of a man's. Whole, the first widens the jaw's
+    /// corners, which are at the survey's, by 5.7 mm per unit; under the jaw it moves no landmark.
+    /// `neck-scale-depth-incr` would do for the depth too but pushes the chin forward (3.8 mm per unit).
+    pub neck: &'static [(&'static str, f32, f32)],
     pub sources: &'static [Source],
 }
 
@@ -567,6 +580,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     without: &["chin/chin-jaw-drop-decr"],
     lower_only: &["head/head-diamond", "head/head-triangular", "head/head-invertedtriangular"],
     cheek_fill: [6.0, 0.0],
+    neck: &[("neck/neck-scale-horiz-incr", 0.45, 0.0), ("neck/neck-back-scale-depth-incr", 0.7, 0.0)],
     sources: &[
         Source { what: "gown (cote) of wool, pulled over the head, close at the shoulders, round neck", source: "Crowfoot, Pritchard & Staniland 1992 (London finds); Østergård 2004 (Herjolfsnes). Summaries only. Cut PLACEHOLDER." },
         Source { what: "hood with a short cape for men, worn on the head or thrown back", source: "Østergård 2004 (Herjolfsnes hoods); Newton 1980. Summaries only. Shares 4:3:3 PLACEHOLDER (unsourced)." },
@@ -662,6 +676,12 @@ impl DressSet {
     /// How far a person's cheeks are filled out (`cheek_fill`), in mm: the women's in full on a grown woman, a
     /// third of it on a small child of either sex; a boy grows out of it into the men's (as the table's `rest`;
     /// `grown` is `Look::grown`).
+    /// The weight of a row of `neck` (its two weights `women` and `men`) for someone: the grown have their
+    /// sex's, a child the share it has grown (`Look::grown`): MakeHuman's child keeps the neck of a child.
+    pub fn neck_of(&self, women: f32, men: f32, female: bool, grown: f32) -> f32 {
+        (if female { women } else { men }) * grown
+    }
+
     pub fn cheek_fill_of(&self, female: bool, grown: f32) -> f32 {
         by_sex(self.cheek_fill[0], self.cheek_fill[1], female, grown) * (0.35 + 0.65 * grown)
     }

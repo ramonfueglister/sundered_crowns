@@ -307,3 +307,12 @@ targets and before `mouth_set`, only where a dress table asks for it. `dress.rs`
 before, as its own function), `FAR_MOUTH`, `far_at_mouth`. `lib.rs` exports `cheek_field` and `CHEEK_FIELD`.
 `examples/face_measure.rs` prints the new measure. `tests/faces.rs`: a nineteenth test. A head without a
 dress table is morphed as before: Roman bytes unchanged.
+
+Round 98: a woman's neck thicker under the jaw. `measure.rs`: `NECK`, `NECK_LEAN`, `neck_at`, `neck` (the
+smallest loop round the neck; lean people's measures beside the survey's). `dress.rs`: `DressSet::neck`
+(targets with weights for women and men; England `neck/neck-scale-horiz-incr` 0.45 and
+`neck/neck-back-scale-depth-incr` 0.7 for women) and `neck_of`. `morph.rs`: `NECK_UNDER`, `neck_share` and
+their use in `morph_as` after the targets (the part of those targets under the jaw, over and above the gene
+of the neck, which is taken whole as before). `lib.rs` exports `neck_share` and `NECK_UNDER`.
+`examples/face_measure.rs` prints the neck. `tests/faces.rs`: a twentieth test. A head without a dress table
+is morphed as before: Roman bytes unchanged.

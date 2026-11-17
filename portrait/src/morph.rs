@@ -43,6 +43,24 @@ pub fn lower_share(y: f32, band: [f32; 2]) -> f32 {
     t * t * (3.0 - 2.0 * t)
 }
 
+/// Where on MakeHuman's base head a target of `DressSet::neck` fades out, in mm: a plane through the point this
+/// far over and before the chin's lowest point, tilted by so many degrees (its front lower than its back: the
+/// plane of a tape round the neck where it is thinnest, as measure.rs `neck_at` finds it on grown women), and
+/// how far over that plane a target is taken whole and from where not at all. The jaw's landmarks lie 51 mm
+/// and more over the plane and take nothing (whole, `neck-scale-horiz-incr` moves a jaw's corner by 2 mm per
+/// unit); the chin's lowest point lies 35 mm over it, in the band, and is moved by neither target of
+/// England's. With the band 10 mm lower the neck gets a waist over the part made thicker (the smallest loop
+/// moves up into it by 8 mm and more).
+pub const NECK_UNDER: ([f32; 2], f32, [f32; 2]) = ([-1.0, -90.0], 22.0, [20.0, 40.0]);
+
+/// How much of a target of `DressSet::neck` the vertex `v` of the base head takes (1 under the band of
+/// `NECK_UNDER`, 0 over it, a smooth step between).
+pub fn neck_share(h: &Head, v: usize) -> f32 {
+    let (b, m, (at, tilt, band)) = (h.base[v], h.base[crate::measure::MENTON], NECK_UNDER);
+    let (y, z) = ((b[1] - m[1]) * 100.0 - at[0], (b[2] - m[2]) * 100.0 - at[1]);
+    1.0 - sm(band[0], band[1], y * tilt.to_radians().cos() + z * tilt.to_radians().sin())
+}
+
 pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
     morph_as(h, p, None, None)
 }
@@ -317,6 +335,23 @@ fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, mut list: Option<&mut Vec
                     v[0] += dd[0] as f32 * k;
                     v[1] += dd[1] as f32 * k;
                     v[2] += dd[2] as f32 * k;
+                }
+            }
+        }
+    }
+    // the neck thicker under the jaw, where a dress with a table asks for it (`DressSet::neck`, `neck_share`)
+    if let Some(d) = p.dress.set() {
+        for &(name, women, men) in d.neck {
+            let w = d.neck_of(women, men, p.female, p.grown());
+            let Some(t) = h.targets.get(name).filter(|_| w > 1e-3) else { continue };
+            used += 1;
+            if let Some(list) = list.as_deref_mut() {
+                list.push((name.to_string(), w));
+            }
+            for (j, &i) in t.ids.iter().enumerate() {
+                let k = w * DELTA_SCALE * neck_share(h, i as usize);
+                for c in 0..3 {
+                    pp[i as usize][c] += t.d[j][c] as f32 * k;
                 }
             }
         }
