@@ -4,8 +4,8 @@
 //!   cargo run --release --example face_measure -- England Gallia 36 ../public/portrait
 //!   ... --grown             the people are that many grown ones instead (of 24, 35 and 50 in turn), for steadier means
 //!   ... --dump <folder>     also writes each morphed head as <pid>.f32 (x y z per vertex, little endian), the
-//!                           skin's triangles as body.u32 (three vertex numbers each) and the eyeballs' vertices
-//!                           as leye.u32 and reye.u32
+//!                           skin's triangles as body.u32 (three vertex numbers each), the eyeballs' vertices
+//!                           as leye.u32 and reye.u32 and MakeHuman's head before any target as base.f32
 //!   ... --target <name>     how far one of MakeHuman's targets moves the landmarks at weight 1 (mm: x y z)
 //!   ... --marks             where the landmarks lie on the skin's image (u v), for tools/portrait/face_colour.mjs
 //!   ... --made <person>     the targets of MakeHuman the head of one of the people is made of (its number as printed, 940000
@@ -14,11 +14,12 @@
 //! The survey, the lips' reference (three measures) and the landmarks: src/measure.rs. After them the outline of the
 //! cheek that is turned away from the viewer (`far_cheek`, two measures, no survey read), the survey's four arcs
 //! from ear to ear (`arcs`), the breadth of the jaw's front 5 mm over the menton (`jaw_front`, no survey read),
-//! how far the far cheek's outline has run in at the mouth's height (`far_at_mouth`, no survey read) and the
-//! neck's circumference (`neck`; lean people's beside the survey's: measure.rs `NECK_LEAN`).
+//! how far the far cheek's outline has run in at the mouth's height (`far_at_mouth`, no survey read), the
+//! neck's circumference (`neck`; lean people's beside the survey's: measure.rs `NECK_LEAN`) and how far the
+//! lips stand apart along their seam where that is most (`seam`, no survey read).
 
 use sc_portrait::dna::{founder, ORIGINS};
-use sc_portrait::measure::{arcs, face, far_at_mouth, far_cheek, jaw_front, lips, marks, neck, ARCS, CHEEK, CHEEKBONES, FAR_MOUTH, JAW, JAW_FRONT, LIDS, LIPS, MEASURES, MENTON, NECK, NOSE, SELLION, STAGE_TURN, SUBNASALE};
+use sc_portrait::measure::{arcs, face, far_at_mouth, far_cheek, jaw_front, lips, marks, neck, seam, ARCS, CHEEK, CHEEKBONES, FAR_MOUTH, JAW, JAW_FRONT, LIDS, LIPS, MEASURES, MENTON, NECK, NOSE, SEAM, SELLION, STAGE_TURN, SUBNASALE};
 use sc_portrait::person::{look_of, Lived};
 use sc_portrait::{build, morph_targets, morph_test, real, Head, LODS};
 
@@ -89,6 +90,9 @@ fn main() {
         // the skin's triangles (three corners each, as numbers of the head's vertices), for tools that need normals
         let bytes: Vec<u8> = head.parts["body"][LODS - 1].iter().flat_map(|i| (*i as u32).to_le_bytes()).collect();
         std::fs::write(format!("{folder}/body.u32"), bytes).expect("the folder to dump into");
+        // MakeHuman's head as it comes, before any target (x y z per vertex, as the people's heads)
+        let bytes: Vec<u8> = head.base.iter().flatten().flat_map(|x| x.to_le_bytes()).collect();
+        std::fs::write(format!("{folder}/base.f32"), bytes).expect("the folder to dump into");
         // and the eyeballs' vertices (the eye at positive x first)
         for part in ["leye", "reye"] {
             let bytes: Vec<u8> = head.parts[part][0].iter().flat_map(|i| (*i as u32).to_le_bytes()).collect();
@@ -98,7 +102,7 @@ fn main() {
     let many = args.iter().any(|a| a == "--grown");
     let made = option("--made");
     let mut grown: [Vec<Vec<f32>>; 2] = [Vec::new(), Vec::new()];
-    println!("{:>7} {:>3} {:>4} {}", "person", "sex", "age", (1..=MEASURES.len() + LIPS.len() + CHEEK.len() + ARCS.len() + JAW_FRONT.len() + FAR_MOUTH.len() + NECK.len()).map(|k| format!("{k:>6}")).collect::<String>());
+    println!("{:>7} {:>3} {:>4} {}", "person", "sex", "age", (1..=MEASURES.len() + LIPS.len() + CHEEK.len() + ARCS.len() + JAW_FRONT.len() + FAR_MOUTH.len() + NECK.len() + SEAM.len()).map(|k| format!("{k:>6}")).collect::<String>());
     for k in 0..n {
         let r = draws(if many { 8000 } else { 7000 } + k as u64, 68);
         let genes = founder(o, |i| r[i as usize]).bytes();
@@ -133,6 +137,7 @@ fn main() {
         m.push(jaw_front(&head, &pp, 5.0));
         m.push(far_at_mouth(&head, &pp, STAGE_TURN));
         m.push(neck(&head, &pp));
+        m.push(seam(&head, &pp));
         if !many {
             println!("{:>7} {:>3} {:>4} {}", 940000 + k, if female { "f" } else { "m" }, age, m.iter().map(|x| format!("{x:6.1}")).collect::<String>());
         }
@@ -144,7 +149,7 @@ fn main() {
     println!("{:>2} {:<32} {:>34} {:>34} {:>14}", "", "", "men", "women", "women / men");
     let mean = |g: &Vec<Vec<f32>>, k: usize| g.iter().map(|m| m[k]).sum::<f32>() / g.len().max(1) as f32;
     let spread = |g: &Vec<Vec<f32>>, k: usize| (g.iter().map(|m| (m[k] - mean(g, k)).powi(2)).sum::<f32>() / g.len().max(1) as f32).sqrt();
-    for (k, &(name, men, women)) in MEASURES.iter().chain(&LIPS).chain(&CHEEK).chain(&ARCS).chain(&JAW_FRONT).chain(&FAR_MOUTH).chain(&NECK).enumerate() {
+    for (k, &(name, men, women)) in MEASURES.iter().chain(&LIPS).chain(&CHEEK).chain(&ARCS).chain(&JAW_FRONT).chain(&FAR_MOUTH).chain(&NECK).chain(&SEAM).enumerate() {
         let (a, b) = (mean(&grown[0], k), mean(&grown[1], k));
         let cell = |x: f32, sd: f32, s: [f32; 2]| if s[0] > 0.0 { format!("{x:6.1} ({sd:4.1}) {:6.1} ({:4.1}) {:+5.1}", s[0], s[1], (x - s[0]) / s[1]) } else { format!("{x:6.1} ({sd:4.1}) {:>19}", "") };
         let ratio = if men[0] > 0.0 { format!("{:5.3} {:5.3}", b / a, women[0] / men[0]) } else { format!("{:5.3}", b / a) };

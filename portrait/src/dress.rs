@@ -75,7 +75,9 @@ pub struct Lips {
     pub upper: f32,
     /// The seam of the lips. MakeHuman's closed mouth is a slit of a millimetre between the edges where the lips
     /// turn inward, through which one looks into the mouth; a strip from edge to edge closes it (morph.rs
-    /// `LIP_SEAM`). It has the lips' colour times this, and so has the upper lip's edge: above 1, because the
+    /// `LIP_SEAM`; since round 99 the lips lie on each other, `DressSet::seam_shut`, and the strip closes what
+    /// is left: a ledge, the lower lip's edge lying behind the upper's, seen from above alone). It has the
+    /// lips' colour times this, and so has the upper lip's edge: above 1, because the
     /// seam lies in the lips' own shade and the stage has no light that comes through flesh, which is what makes
     /// the line of a real mouth dark red instead of black. 0 = no strip, the slit stays open. 1.3 since the lips
     /// are lighter (round 82; 1.6 before): the strip keeps the colour it had, about the skin's own red.
@@ -446,6 +448,24 @@ pub struct DressSet {
     /// the nose 0.928 (0.941; 0.917), and both stay under the survey's own lengths. The amount is by eye on one
     /// traced face: PLACEHOLDER. Men: none (not looked at; a man's cheek has a dent of 3.6 mm under its pad).
     pub cheek_fill: [f32; 2],
+    /// How much of what the lips' edges stand apart along the seam is closed (morph.rs `lips_meet`): 0 leaves
+    /// the mouth as it is closed in its middle, 1 lays the lips on each other from corner to corner.
+    /// England (round 99): 1. The mouth read as a long hard stroke, and wide for it, though it is not wide: the
+    /// corners of a grown woman's mouth lie 46.5 mm apart (the survey's women 48.0), 0.754 of the distance
+    /// between her pupils (the survey 0.775; the reference's woman about 0.78, read by eye off one enlarged
+    /// screenshot), and those of the sample's four children of five 35.5 to 41.3 mm (girls of four and five
+    /// 36.9, boys 39.8: Sforza and others 2007). What made the stroke: MakeHuman's closed mouth is a slit from
+    /// corner to corner (1.0 mm at its widest on the base head), the targets of a face open it beside the
+    /// middle, and `mouth_shut` closes the middle alone. At its widest the slit was 1.9 mm on 200 grown women
+    /// and 2.1 on 200 grown men (measure.rs `seam`; 1.2 to 1.5 on the sample's children of two to eight), and
+    /// towards the corners the lower lip's edge lies some 3 mm behind the upper's (two women looked at): the
+    /// strip that closes the slit (`Lips::seam`) lay there as a ledge in the light, a pale line under the dark
+    /// one from corner to corner, ending in a hook at each corner. With the lips on each other 0.1 to 0.2 mm
+    /// are left (0.3 to 0.4 on children to eight); only heights within 6 mm of the edges change, by 1.1 mm at
+    /// the most, and each of the 27 measures of the face is what it was. The line between the lips is 45.8 to
+    /// 48.0 L darker than the lit cheek on eight grown women (before 48.3 to 48.9; the reference's woman 41 to
+    /// 47, round 82), on eight men 50.3 to 52.5 (before 51.2 to 53.1).
+    pub seam_shut: f32,
     /// Targets of MakeHuman's that make a neck thicker, with their weights for a grown woman and a grown man;
     /// a head takes of them the part under the jaw only (morph.rs `neck_share`), over and above what its gene
     /// of the neck asks for. A child has none of it and grows into it (`neck_of`).
@@ -580,6 +600,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     without: &["chin/chin-jaw-drop-decr"],
     lower_only: &["head/head-diamond", "head/head-triangular", "head/head-invertedtriangular"],
     cheek_fill: [6.0, 0.0],
+    seam_shut: 1.0,
     neck: &[("neck/neck-scale-horiz-incr", 0.45, 0.0), ("neck/neck-back-scale-depth-incr", 0.7, 0.0)],
     sources: &[
         Source { what: "gown (cote) of wool, pulled over the head, close at the shoulders, round neck", source: "Crowfoot, Pritchard & Staniland 1992 (London finds); Østergård 2004 (Herjolfsnes). Summaries only. Cut PLACEHOLDER." },
@@ -601,6 +622,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
         Source { what: "the mouth at 0.31 of the way from the nose's foot to the chin's lowest point (the upper lip's share of the lower face)", source: "Arnett, Jelic, Kim, Cummings, Beress, Worley, Chung & Bergman 1999, American Journal of Orthodontics and Dentofacial Orthopedics 116(3): 239-253 (table of facial lengths, lips at rest: upper lip 21.0 of 71.1 mm in 26 women, 24.4 of 81.1 in 20 men; read from a copy of the paper). Farkas, Katic, Hreczko, Deutsch & Munro 1984, American Journal of Orthodontics 86(1): 52-60 (lips closed: 20.1 of 64.3 mm in women, 22.3 of 72.6 in men; not read itself, the means as cited by Woelfel, Igarashi & Dong 2014, Journal of Advanced Prosthodontics 6(6): 483-490). 0.31 lies between the two readings for closed lips; that every grown face has the same share is a simplification." },
         Source { what: "the pupil at 0.57 of the way from the lower lid's edge to the upper lid's", source: "Neuro-ophthalmology Illustrated, ch. 1, at neuro-ophthalmology.stanford.edu (the upper lid's edge 4 to 5 mm over the pupil's middle, covering the upper 1 to 2 mm of the iris; the lower lid just reaching the iris's foot; opening 9 to 12 mm high) and Margin to reflex distance at eyewiki.org (lower lid 5.5 mm under the pupil). Ours are set by moving the ball, not the lids. The opening is 8.9 mm high in grown women and 9.1 in men, the upper lid 3.8 to 3.9 mm over the pupil and the lower 5.0 to 5.2 under it: at the low end of theirs." },
         Source { what: "the height of the lips' red (upper, lower, both), which the form of the mouth is held against", source: "Ferrario, Sforza, Tartaglia, Sozzi & Carù 2003, Plastic and Reconstructive Surgery 111(7): 2149-2156 (89 men and 73 women, healthy young northern Italians, measured in three dimensions). Means from the paper's table; the standard deviations read from a summary of it. The lips' form itself and how far the upper lip stands in front of the lower: PLACEHOLDER, nothing read on real profiles." },
+        Source { what: "how far apart the corners of a child's mouth lie, which the children's mouths are held against (not fitted to it)", source: "Sforza, Laino, D'Alessio, Dellavia, Grandi & Ferrario 2007, Angle Orthodontist 77(6): 1026-1033 (Italian children measured in three dimensions; its reference groups: girls of 4 to 5 36.9 mm (SD 3.6), boys 39.8 (5.0); of 6 to 7 40.9 and 41.7; of 8 to 9 42.4 (3.7) and 43.3 (3.8); the red of both lips 12.4 and 12.8, 13.7 and 13.4, 15.1 and 14.1 mm). Read through a summary of the paper's tables, not line by line. The sample's four of eight are 2.4 to 5.0 mm narrower and its four of five have lips 2.2 to 2.8 mm higher: not fitted, open." },
     ],
 };
 

@@ -5,8 +5,8 @@
 mod common;
 
 use common::{head, person};
-use sc_portrait::measure::{arcs, arcs_from, face, far_at_mouth, far_cheek, jaw_front, lips, lower_face, marks, ARCS, CHEEKBONES, CHIN, JAW, LIPS, LIP_FOOT, LIP_TOP, LOWER_FACE, MEASURES, MENTON, SELLION, SKULL, STAGE_TURN, STOMION, SUBNASALE, TRAGION, neck_at, NECK, NECK_LEAN};
-use sc_portrait::{build, cheek_field, lower_band, lower_share, morph_targets, morph_test, morph_test_mouth, mouth_field, real, Beard, Head, Look, CHEEK_FIELD, LODS, neck_share, NECK_UNDER};
+use sc_portrait::measure::{arcs, arcs_from, face, far_at_mouth, far_cheek, jaw_front, lips, lower_face, marks, seam, ARCS, CHEEKBONES, CHIN, JAW, LIPS, LIP_FOOT, LIP_TOP, LOWER_FACE, MEASURES, MENTON, SELLION, SKULL, STAGE_TURN, STOMION, SUBNASALE, TRAGION, neck_at, NECK, NECK_LEAN};
+use sc_portrait::{build, cheek_field, lower_band, lower_share, morph_targets, morph_test, morph_test_mouth, morph_test_seam, mouth_field, real, seam_field, Beard, Head, Look, CHEEK_FIELD, LIP_SEAM, LODS, neck_share, NECK_UNDER, SEAM_REACH};
 
 #[test]
 fn the_grown_of_england_have_faces_of_human_measure() {
@@ -924,6 +924,79 @@ fn the_neck_of_a_woman_of_england_is_as_thick_as_a_lean_womans() {
     // the thinnest place stays where it was (no waist over the part made thicker), and the face is as it was
     assert!((sums[3] - sums[4]).abs() < 4.0, "the thinnest place {} mm over the chin's lowest point, {} without", sums[3], sums[4]);
     assert!(worst < 0.01 && arc_most < 0.5, "the table's neck moves a breadth by {worst} mm, an arc from ear to ear by {arc_most}");
+}
+
+#[test]
+fn the_lips_of_england_lie_on_each_other_from_corner_to_corner() {
+    // MakeHuman's closed mouth is a slit from corner to corner (1.0 mm at its widest on the base head), and the
+    // targets of a face open it beside the middle, where closing the middle does not reach: until round 99 the
+    // lips' edges of a grown person stood 1.9 to 2.1 mm apart at the widest place (a child's 1.2 to 1.5), and
+    // the strip that closes the slit lay in the light as a pale line across the whole mouth. The table's
+    // `seam_shut` lays the lips on each other (morph.rs `lips_meet`): every point of either edge comes to lie
+    // on the middle between the two; what is left (0.4 mm at the most) is what the straight pieces between the
+    // points of the one edge miss of the other's bends.
+    let Some(h) = head() else { return };
+    let show = std::env::var("SHOW").is_ok();
+    let set = sc_portrait::dress::Dress::England1356.set().unwrap();
+    assert!(set.seam_shut == 1.0, "the table's seam_shut: {}", set.seam_shut);
+    assert!(seam(&h, &h.base) > 0.8 && seam(&h, &h.base) < 1.2, "the base head's slit: {} mm", seam(&h, &h.base));
+    // The field: each lip's edge goes its whole way (the upper lip's down, the lower lip's up), every other
+    // landmark of the face none, the borders of the lips' red among them; the field is a few hundred vertices
+    // round the mouth and the same on both sides.
+    let field = seam_field(&h);
+    for side in &LIP_SEAM {
+        assert!(side.0.iter().all(|&v| field[v].0 == 1.0) && side.1.iter().all(|&v| field[v].0 == -1.0), "the lips' edges go their whole way");
+        assert!(field[side.0[0]].1 == 0.0 && field[side.0[side.0.len() - 1]].1 == 1.0, "from the middle to the corner");
+    }
+    let edges: Vec<usize> = marks().into_iter().filter(|(name, _)| name.contains("lip's edge") || name.contains("mouth's corner")).map(|m| m.1).collect();
+    assert!(edges.len() == 4, "the landmarks on the lips' edges: {edges:?}");
+    for (name, v) in marks() {
+        assert!(edges.contains(&v) || field[v].0 == 0.0, "the landmark {name} goes {} of the lips' way", field[v].0);
+    }
+    for v in LIP_TOP.into_iter().chain(LIP_FOOT).chain([MENTON, SUBNASALE]) {
+        assert!(field[v].0 == 0.0, "the landmark {v} goes {} of the lips' way", field[v].0);
+    }
+    let taking = field.iter().filter(|f| f.0 != 0.0).count();
+    let (left, right) = ((0..h.base.len()).filter(|&v| field[v].0 != 0.0 && h.base[v][0] > 1e-4).count(), (0..h.base.len()).filter(|&v| field[v].0 != 0.0 && h.base[v][0] < -1e-4).count());
+    if show {
+        println!("the field: {taking} vertices, {left} left of the middle and {right} right of it; reach {SEAM_REACH} mm");
+    }
+    assert!(taking > 200 && taking < 400 && left == right, "{taking} vertices, {left} and {right}");
+    // On people of every age: the slit with and without, and what else moves.
+    let pos = |name: &str| MEASURES.iter().position(|m| m.0.starts_with(name)).unwrap();
+    let (mut most, mut least_without, mut way, mut n) = (0.0f32, f32::MAX, 0.0f32, 0);
+    for k in 0..48u32 {
+        let (female, age) = (k % 2 == 0, [2.0, 5.0, 8.0, 13.0, 17.0, 24.0, 35.0, 50.0, 68.0][(k / 2) as usize % 9]);
+        let p = person(k, female, age);
+        let (with, without) = (morph_test(&h, &p), morph_test_seam(&h, &p, 0.0));
+        let (a, b) = (seam(&h, &with), seam(&h, &without));
+        most = most.max(a);
+        least_without = least_without.min(b);
+        assert!(a < 0.5, "{} of {age} ({k}): the lips' edges {a} mm apart at the most", if female { "a woman" } else { "a man" });
+        assert!(b > if age >= 17.0 { 1.6 } else { 1.0 }, "{} of {age} ({k}): without the table's value the slit is {b} mm", if female { "a woman" } else { "a man" });
+        // only heights change, by no more than the slit; the middle between the lips keeps its height
+        for v in 0..with.len() {
+            assert!(with[v][0] == without[v][0] && with[v][2] == without[v][2], "{k}: the vertex {v} moves sideways or in depth");
+            way = way.max((with[v][1] - without[v][1]).abs() * 100.0);
+            assert!((with[v][1] - without[v][1]).abs() * 100.0 <= b / 2.0 + 0.01 && (field[v].0 != 0.0 || with[v][1] == without[v][1]), "{k}: the vertex {v} moves {} mm", (with[v][1] - without[v][1]) * 100.0);
+        }
+        let line = |pp: &[[f32; 3]]| (pp[STOMION[0]][1] + pp[STOMION[1]][1]) / 2.0;
+        assert!((line(&with) - line(&without)).abs() < 1e-5, "{k}: the line between the lips moves");
+        // and every measure of the face and of the lips' red stays
+        let (fa, fb) = (face(&h, &with), face(&h, &without));
+        for m in 0..MEASURES.len() {
+            assert!((fa[m] - fb[m]).abs() < 0.01, "{k}: {} {} with, {} without", MEASURES[m].0, fa[m], fb[m]);
+        }
+        let (la, lb) = (lips(&with), lips(&without));
+        for m in 0..LIPS.len() {
+            assert!((la[m] - lb[m]).abs() < 0.01, "{k}: {} {} with, {} without", LIPS[m].0, la[m], lb[m]);
+        }
+        assert!(fa[pos("lip length")] > 30.0);
+        n += 1;
+    }
+    if show {
+        println!("{n} people: the lips' edges at most {most:.2} mm apart, without the table's value at least {least_without:.2}; a vertex moves {way:.2} mm at the most");
+    }
 }
 
 #[test]

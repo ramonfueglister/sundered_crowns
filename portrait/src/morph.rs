@@ -15,7 +15,14 @@ pub fn morph_test(h: &Head, p: &Look) -> Vec<V3> {
 /// (`DressSet::mouth_at`; 0: where the morph targets leave it), for tests that hold the table's value against the
 /// head without it.
 pub fn morph_test_mouth(h: &Head, p: &Look, mouth_at: f32) -> Vec<V3> {
-    morph_as(h, p, Some(mouth_at), None).0
+    morph_as(h, p, Some(mouth_at), None, None).0
+}
+
+/// `morph_test` with another share of the lips' slit closed along the seam than the dress table's
+/// (`DressSet::seam_shut`; 0: the mouth as it is closed in its middle alone), for tests that hold the table's
+/// value against the head without it.
+pub fn morph_test_seam(h: &Head, p: &Look, seam_shut: f32) -> Vec<V3> {
+    morph_as(h, p, None, Some(seam_shut), None).0
 }
 
 /// The targets of MakeHuman a person's head is made of and the weight of each, in the order they are added (a target
@@ -23,7 +30,7 @@ pub fn morph_test_mouth(h: &Head, p: &Look, mouth_at: f32) -> Vec<V3> {
 /// tools that ask what gives a face its form (examples/face_measure.rs `--made`).
 pub fn morph_targets(h: &Head, p: &Look) -> Vec<(String, f32)> {
     let mut list = Vec::new();
-    morph_as(h, p, None, Some(&mut list));
+    morph_as(h, p, None, None, Some(&mut list));
     list
 }
 
@@ -62,10 +69,10 @@ pub fn neck_share(h: &Head, v: usize) -> f32 {
 }
 
 pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
-    morph_as(h, p, None, None)
+    morph_as(h, p, None, None, None)
 }
 
-fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, mut list: Option<&mut Vec<(String, f32)>>) -> (Vec<V3>, usize) {
+fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, mut list: Option<&mut Vec<(String, f32)>>) -> (Vec<V3>, usize) {
     let mut pp = h.base.clone();
     let mut used = 0;
     // targets a dress with a table takes nothing of (`DressSet::without`)
@@ -339,6 +346,11 @@ fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, mut list: Option<&mut Vec
             }
         }
     }
+    // the lips laid on each other from corner to corner, where a dress with a table asks for it
+    // (`DressSet::seam_shut`); after the middle of the mouth is closed
+    if let Some(share) = p.dress.set().map(|d| seam_shut.unwrap_or(d.seam_shut)).filter(|s| *s > 0.0) {
+        lips_meet(h, &mut pp, share);
+    }
     // the neck thicker under the jaw, where a dress with a table asks for it (`DressSet::neck`, `neck_share`)
     if let Some(d) = p.dress.set() {
         for &(name, women, men) in d.neck {
@@ -492,6 +504,89 @@ pub(crate) fn mouth_set(h: &Head, pp: &mut [V3], share: f32, lean: f32) {
     }
 }
 
+/// How far from the lips' edges the lips still move when they are laid on each other (`lips_meet`), in mm on
+/// MakeHuman's base head: all at the edge, nothing from here on. The red of a grown lip is 7 to 9 mm high in the
+/// middle of the base head's mouth, so its upper and lower border stay where they are. PLACEHOLDER: by eye,
+/// between the edge and the border.
+pub const SEAM_REACH: f32 = 6.0;
+
+/// How far a point lies from a line of points (the nearest place on its pieces).
+fn from_line(q: V3, line: &[V3]) -> f32 {
+    line.windows(2)
+        .map(|w| {
+            let (d, r) = (sub(w[1], w[0]), sub(q, w[0]));
+            let t = (dot(r, d) / dot(d, d).max(1e-12)).clamp(0.0, 1.0);
+            len(sub(r, [d[0] * t, d[1] * t, d[2] * t]))
+        })
+        .fold(f32::MAX, f32::min)
+}
+
+/// The height of a line of points, each with its share of a way, at the share `along` of that way (the shares
+/// rise; before the first and after the last point their heights).
+fn height_at(line: &[(f32, f32)], along: f32) -> f32 {
+    line.windows(2)
+        .find(|w| along <= w[1].0)
+        .map_or(line[line.len() - 1].1, |w| w[0].1 + (w[1].1 - w[0].1) * ((along - w[0].0) / (w[1].0 - w[0].0).max(1e-9)).clamp(0.0, 1.0))
+}
+
+/// The two edges of the lips on one side of a head (`LIP_SEAM`: the upper lip's and the lower lip's), each
+/// point with its share of the way from the middle of the mouth to its corner, read sideways on the base head
+/// (so that every head has the same shares), and its height on the head `pp`.
+fn seam_heights(h: &Head, pp: &[V3], side: usize) -> [Vec<(f32, f32)>; 2] {
+    let of = |e: &[usize]| -> Vec<(f32, f32)> { e.iter().map(|&i| (h.base[i][0] / h.base[e[e.len() - 1]][0], pp[i][1])).collect() };
+    [of(&LIP_SEAM[side].0), of(&LIP_SEAM[side].1)]
+}
+
+/// How far the lips' edges of the head `pp` stand apart along the seam, in mm (the upper lip's over the lower
+/// lip's: above 0 a slit, below 0 the lips lie in each other): at each point of the upper lip's edge and then
+/// at each of the lower lip's, from the middle of the mouth out to the corner (between the points the edges
+/// run straight, so the widest place is among these), on the side at positive x and on the other.
+pub fn seam_gaps(h: &Head, pp: &[V3]) -> [Vec<f32>; 2] {
+    std::array::from_fn(|side| {
+        let [up, lo] = seam_heights(h, pp, side);
+        up.iter().map(|&(along, y)| y - height_at(&lo, along)).chain(lo.iter().map(|&(along, y)| height_at(&up, along) - y)).map(|g| g * 100.0).collect()
+    })
+}
+
+/// For every vertex of the base head: which lip it moves with when the lips are laid on each other and how
+/// much of their way it goes (above 0 with the upper lip, down; below 0 with the lower lip, up; 1 at the lip's
+/// edge, 0 from `SEAM_REACH` away from it), and where along the seam it lies (0 the middle of the mouth, 1 its
+/// corner and beyond). What lies over the middle between the two edges goes with the upper lip.
+pub fn seam_field(h: &Head) -> Vec<(f32, f32)> {
+    let lines: Vec<[Vec<V3>; 2]> = LIP_SEAM.iter().map(|side| [side.0.iter().map(|&i| h.base[i]).collect(), side.1.iter().map(|&i| h.base[i]).collect()]).collect();
+    let heights: Vec<[Vec<(f32, f32)>; 2]> = (0..2).map(|side| seam_heights(h, &h.base, side)).collect();
+    h.base
+        .iter()
+        .map(|&b| {
+            let side = if b[0] >= 0.0 { 0 } else { 1 };
+            let [up, lo] = &lines[side];
+            let along = (b[0] / up[up.len() - 1][0]).clamp(0.0, 1.0);
+            let upper = b[1] > (height_at(&heights[side][0], along) + height_at(&heights[side][1], along)) / 2.0;
+            let far = from_line(b, if upper { up } else { lo }) * 100.0;
+            ((if upper { 1.0 } else { -1.0 }) * (1.0 - sm(0.0, SEAM_REACH, far)), along)
+        })
+        .collect()
+}
+
+/// Lays the lips of a morphed head on each other along the whole seam: at each place between the middle of
+/// the mouth and its corner the upper lip's edge comes down and the lower lip's comes up by half of what they
+/// stand apart there (times `share`), and each lip follows its edge by `seam_field`. MakeHuman's closed mouth
+/// is a slit of 0.7 to 1 mm from corner to corner, and the targets of a face open it further beside the middle
+/// (to 1.9 mm on a grown woman of England), where the closing of the middle (`lip_gap`) does not reach: the
+/// strip that closes the slit (real_look.rs) lay in the light as a pale line from corner to corner. Only
+/// heights change: the corners keep their distance, and the middle between the lips its height. Every point
+/// of either edge then lies on the middle between the two; the edges have their points at different places
+/// (11 and 8), so between them up to 0.4 mm are left where one edge bends and the other runs straight.
+pub(crate) fn lips_meet(h: &Head, pp: &mut [V3], share: f32) {
+    let heights: Vec<[Vec<(f32, f32)>; 2]> = (0..2).map(|side| seam_heights(h, pp, side)).collect();
+    for (v, (w, along)) in seam_field(h).into_iter().enumerate().take(pp.len()) {
+        if w != 0.0 {
+            let [up, lo] = &heights[if h.base[v][0] >= 0.0 { 0 } else { 1 }];
+            pp[v][1] -= w * share * (height_at(up, along) - height_at(lo, along)) / 2.0;
+        }
+    }
+}
+
 /// The field in which an eye is brought forward (`eyes_out`), in halves of the opening's length: how far it
 /// reaches sideways and up and down from the opening's middle, and the share of that way on which all moves in
 /// full. With an opening of 29 mm: in full to 2 mm over the upper lid's edge and under the lower lid's, nothing
@@ -558,7 +653,7 @@ pub(crate) const LIP_LOWER: usize = 493;
 /// The two edges where the lips turn inward, from the middle of the mouth outward to its corner, on either side:
 /// the upper lip's and the lower lip's (vertices of MakeHuman's base head; lib.rs tests that they lie on the lips
 /// and run outward). Between them the closed mouth is a slit (real_look.rs `real_skin` closes it).
-pub(crate) const LIP_SEAM: [([usize; 11], [usize; 8]); 2] = [
+pub const LIP_SEAM: [([usize; 11], [usize; 8]); 2] = [
     ([474, 3335, 3334, 3333, 3332, 5203, 3331, 3285, 3284, 3296, 3293], [493, 3348, 3342, 3336, 3303, 3310, 3298, 3356]),
     ([474, 473, 472, 471, 470, 2453, 469, 419, 418, 430, 427], [493, 487, 481, 475, 437, 444, 432, 501]),
 ];

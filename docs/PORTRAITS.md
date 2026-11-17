@@ -49,7 +49,7 @@ the parts the builder knows (a gown, a hood up or back, a veil, a wimple, three 
 | Hood (men): up, thrown back, or none, by chance per person; none under 14 | `hood`, `hood_from` | shares 4 : 3 : 3 invented |
 | Veil of linen for women from 20, with a wimple from 50 | `veil_from`, `wimple_from` | ages invented |
 | Hair: cut round with a fringe (men), flat under a hood, none under the veil (it hides all of it; a bun until round 69); girls from 7 and women too young for the veil a centre parting and two plaits in front of the shoulders | `hair`, `hair_receding`, `hair_bald`, `hair_curly`, `hair_hooded`, `hair_veiled`, `hair_girl` | by eye |
-| Faces: relaxed lids, a closed mouth, the eyeballs deeper in their sockets (they came through the lower lid), for women a jaw that runs in to the chin (until round 96 a shifted gene of the jaw, `jaw_women`), cheeks filled out between cheekbone and jaw (round 97) and a thicker neck (round 98), redder lips, more flush on cheeks and nose | `lids`, `mouth_shut`, `eye_forward`, `rest` with `lower_only`, `cheek_fill`, `neck`, `lips`, `flush` | by eye, against the reference |
+| Faces: relaxed lids, a closed mouth with the lips on each other from corner to corner (round 99), the eyeballs deeper in their sockets (they came through the lower lid), for women a jaw that runs in to the chin (until round 96 a shifted gene of the jaw, `jaw_women`), cheeks filled out between cheekbone and jaw (round 97) and a thicker neck (round 98), redder lips, more flush on cheeks and nose | `lids`, `mouth_shut`, `seam_shut`, `eye_forward`, `rest` with `lower_only`, `cheek_fill`, `neck`, `lips`, `flush` | by eye, against the reference |
 
 **Sources.** Each row of the table names what it rests on (`sources`). All of them were read only as summaries
 (proposal of 15.11.2026), none in the original, and no value is taken from a source. Everything is PLACEHOLDER
@@ -2816,6 +2816,117 @@ and nape; and from round 97: the amount of the cheek's fill by eye on one face, 
 beside the mouth, the wide mouth, the women's small heads and the ear's landmark behind the short arcs, the
 forehead's least breadth and the head's height, the chin's breadth by eye, the flat lower lip,
 `head-square` and `head-oval`.
+
+**Lips that lie on each other from corner to corner (round 99).** Open since round 97: the mouth reads
+wide. In round 98's sample the small children's mouths read widest: a flat stroke across the face.
+
+*Is the mouth wide?* By the caliper it is not. The corners of a grown woman's mouth lie 46.5 mm apart (SD
+3.2; 200 women), the survey's women's 48.0 (4.0); a man's 49.5, the survey's 51.1: both 0.4 standard
+deviations narrow. Against the distance between the pupils a woman's mouth is 0.754, the survey's 0.775; on
+the reference's woman about 0.78 (corners and pupils read by eye off one screenshot enlarged six times: 39
+of its pixels over 50, so not better than to 0.03). For children a source was read (Sforza, Laino,
+D'Alessio, Dellavia, Grandi & Ferrario 2007, Angle Orthodontist 77(6): 1026-1033; Italian children measured
+in three dimensions, its reference groups; through a reading tool's account of the paper's tables, not line
+by line):
+
+| between the mouth's corners, mm | girls | boys | the sample's two girls and two boys |
+|---|---|---|---|
+| of 4 to 5 (ours of 5) | 36.9 (3.6) | 39.8 (5.0) | 36.6, 35.5 and 36.9, 41.3 |
+| of 6 to 7 | 40.9 (4.9) | 41.7 (4.5) | |
+| of 8 to 9 (ours of 8) | 42.4 (3.7) | 43.3 (3.8) | 38.9, 37.4 and 40.9, 40.3 |
+
+Ours of five are as broad as the source's, ours of eight 2.4 to 5.0 mm narrower. (The red of both lips of
+its children of 4 to 5 is 12.4 and 12.8 mm high, of ours of five 14.6 to 15.4; of 8 to 9 15.1 and 14.1, of
+ours 14.6 to 15.9.) Nothing here asks for a narrower mouth, and none was made.
+
+*What made it read wide.* In the picture a mouth was a dark line with a pale line under it, both from
+corner to corner, ending in a small hook at each corner: a stroke as long as the mouth and harder than
+anything else in the face. Drawn without colour (the dumped head lit from one side, and cuts through the
+lips; scratch tools, not in the repository) the cause shows: the lips do not lie on each other. MakeHuman's
+closed mouth is a slit between the edges where the lips turn inward, 0.7 mm in the middle of the base head
+and 1.0 at its widest; the targets of a face open it beside the middle, and the table's `mouth_shut` (round
+53) closes the middle alone, to the base head's own slit. `measure.rs` `seam` (`morph.rs` `seam_gaps`): how
+far the upper lip's edge stands over the lower lip's where that is most, read at every point of either edge.
+
+| the slit at its widest, mm | men | women | the sample's children of 2, 5, 8 |
+|---|---|---|---|
+| MakeHuman's base head | 1.0 | | |
+| until round 98 (200 and 200 grown) | 2.1 (0.1) | 1.9 (0.1) | 1.2 to 1.5 |
+| now | 0.1 (0.0) | 0.2 (0.0) | 0.3 to 0.4 |
+
+Towards the corners the lower lip's edge also lies behind the upper's (3.3 and 3.5 mm at the corner on the
+two women looked at, where their slit is widest too). The strip that closes the slit (real_look.rs) runs
+from edge to edge: there it was a ledge up to 2 mm high and 3 deep, facing up and forward into the key
+light, in the lips' colour times 1.3. That is the pale line; the hooks were its ends.
+
+*The fix.* `morph.rs` `lips_meet`, after the middle is closed: at each place between the middle of the
+mouth and its corner the upper lip's edge comes down and the lower lip's comes up, each by half of what they
+stand apart there, and each lip follows its edge with a share that falls from all at the edge to nothing
+6 mm from it (`seam_field`, `SEAM_REACH`; PLACEHOLDER: by eye between the edge and the border of the lips'
+red, 7 to 9 mm away on the base head). Half each, so that the line between the lips keeps its height (the
+mouth's place of round 92 and the heights of the upper and lower red hold). Only heights change; the corners
+keep their distance. Where a point lies along the seam is read on the base head, so every head has the same
+field: 294 vertices, the same on both sides. A vertex moves by 1.1 mm at the most (48 people of 2 to 68).
+After it every point of either edge lies on the middle between the two edges; what is left is what the
+straight pieces of one edge (11 points) miss of the other's bends (8 points). A second and a third pass
+leave 0.29 and 0.21 mm at the most where one leaves 0.42 (48 people), a sixth 0.09: they draw the two edges
+towards a line without bends. One pass is kept. `DressSet::seam_shut`: 1 for England; Apoleia's heads have
+no table and stay (Roman bytes and pictures unchanged).
+
+On 200 grown women and 200 grown men each of the 27 measures is the same to the last digit printed.
+
+*The line in the picture* (a scratch tool on the test page's landmarks, 8 grown women and 8 grown men at
+896 by 1120: the darkest place on three upright lines through the lips, in the middle and half way to each
+corner, in L against the lit cheek):
+
+| the line between the lips, L under the lit cheek | women | men |
+|---|---|---|
+| until round 98 | 48.3, 48.9, 48.5 | 51.2, 51.6, 53.1 |
+| lips on each other, `Lips::seam` 1.3 (kept) | 45.8, 48.0, 47.2 | 51.3, 50.3, 52.5 |
+| the same with `seam` 1.0 | 48.1, 49.2, 49.3 | 53.3, 52.4, 53.7 |
+| the same with `seam` 1.6 | 43.6, 47.6, 46.8 | 49.8, 49.1, 52.3 |
+
+The reference's woman has 41 to 47 (round 82). The strip's colour stays as it was: with the lips closed
+it lightens the upper lip's edge alone, and a woman's line lies at the dark end of the reference's or 1 L
+under it (before 1 to 2 L under it).
+
+Seen (`runde99_mund_vorher_nachher.png`, `runde99_form.png`): one clean line where the lips meet; the
+double line and the hooks at the corners are gone; the upper lip reads a little fuller, because its
+underside no longer ends over a gap. On some mouths a pale hairline is left under the line on the lit side.
+It is not the strip: with the lower lip's edge at 0.6 of its colour (tried, not kept) the picture is the
+same, so it is the gloss on the lower lip's rim, which a real lower lip has too, broader. At the size of
+the game's panel the change is small (`runde99_paare.png`): of each of the sample's 35 pictures 0.14 to
+0.42 % of the pixels change by more than 2 of 255.
+
+Honest about the rest. The mouth's form is as it was: a lower lip as full at the corners as in the middle
+and a thin upper lip, where the reference's lips are full in the middle and run out to the corners. The
+small children's mouths are still a flat stroke with a fold beside each corner (`runde99_stichprobe.png`,
+the lowest row): by the numbers above their mouths are not too broad, so the fault lies in the form of
+lips and cheeks, and a child's face needs a round of its own, against children's measures (the tables by
+age of Kesterke and others 2016, Biology of Sex Differences 7: 23, are in a supplement that was not read).
+And seen on the way: in the picture a nose reads narrower than the caliper has it (two women: 30.2 and 39.3
+mm between the wings' landmarks, about 23 and 29 between what the eye takes for the wings): the nostrils
+show from the front as two dark hooks, and the wings beside them have no groove against the cheek on the
+lit side. A narrow-looking nose makes the mouth under it look broad. Not touched.
+
+Tests: `tests/faces.rs`, 21 now. "The lips of England lie on each other from corner to corner": the table
+closes all of the slit; the base head's slit is 0.8 to 1.2 mm; the points of the lips' edges go their whole
+way, down on the upper lip and up on the lower, and no other landmark of the face goes any of it (the
+borders of the lips' red, nose's foot and chin among them); the field is 200 to 400 vertices, as many on
+one side as on the other; on 48 people of 2 to 68 the slit is under 0.5 mm with the table and over 1.0
+(children) and 1.6 mm (from 17) without it; no vertex moves sideways or in depth, none outside the field
+moves, none by more than half the slit; the line between the lips keeps its height; the 15 measures of the
+face and the 3 of the lips' red are the same to a hundredth of a millimetre. The library's test of the
+closed mouth holds both steps: closed in the middle to the base head's slit without `seam_shut`, and the
+edges at one height with it (864 heads). `examples/face_measure.rs` prints the slit as measure 28 and
+`--dump` writes MakeHuman's head before any target as `base.f32`.
+Pictures: `runde99_mund_vorher_nachher.png` (two women and two small children large; before above),
+`runde99_form.png` (the shape alone, lit from the left: two women, a man, a child of two; before above),
+`runde99_paare.png` (ten of the sample as the panel shows them; before above), `runde99_stichprobe.png`.
+Still open: the lips' form; small children's faces; the nose's wings; and from the rounds before: the
+spread of the necks, the amount of the cheek's fill by eye on one face, a man's cheek, the fold beside the
+mouth, the women's small heads and the ear's landmark behind the short arcs, the forehead's least breadth
+and the head's height, the chin's breadth by eye, `head-square` and `head-oval`.
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,

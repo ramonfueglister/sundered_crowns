@@ -392,6 +392,16 @@ pub fn neck(h: &Head, pp: &[V3]) -> f32 {
     neck_at(h, pp)[0]
 }
 
+/// What `seam` measures (no survey read: lips at rest lie on each other).
+pub const SEAM: [(&str, [f32; 2], [f32; 2]); 1] = [("the lips apart along their seam, at the most", [0.0; 2], [0.0; 2])];
+
+/// The measure of `SEAM` on a morphed head (`morph_test`), in millimetres: how far the upper lip's edge stands
+/// over the lower lip's (or lies under it) where that is most, between the middle of the mouth and its corners
+/// (morph.rs `seam_gaps`).
+pub fn seam(h: &Head, pp: &[V3]) -> f32 {
+    crate::morph::seam_gaps(h, pp).iter().flatten().fold(0.0, |most, g| most.max(g.abs()))
+}
+
 /// What `jaw_front` measures at 5 mm (no survey read for it: the zeros).
 pub const JAW_FRONT: [(&str, [f32; 2], [f32; 2]); 1] = [("the jaw's front 5 mm over the menton", [0.0; 2], [0.0; 2])];
 

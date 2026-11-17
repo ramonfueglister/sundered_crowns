@@ -25,7 +25,7 @@ mod wasm;
 pub mod wire;
 
 pub use build::{build, Portrait, LODS};
-pub use morph::{cheek_field, lower_band, lower_share, morph_targets, morph_test, morph_test_mouth, mouth_field, neck_share, CHEEK_FIELD, MOUTH_FIELD, NECK_UNDER};
+pub use morph::{cheek_field, lower_band, lower_share, morph_targets, morph_test, morph_test_mouth, morph_test_seam, mouth_field, neck_share, seam_field, seam_gaps, CHEEK_FIELD, LIP_SEAM, MOUTH_FIELD, NECK_UNDER, SEAM_REACH};
 pub use geo::{Mat, Surface};
 pub use head::Head;
 pub use look::{default_life, Beard, Hair, Hat, Jewel, Life, Look, Mood, GENES, NG, STANDS};
@@ -203,8 +203,13 @@ mod tests {
                         p.mood = mood;
                         widest_roman = widest_roman.max(lip_gap(&h, &morph(&h, &p).0).abs());
                         p.dress = crate::dress::Dress::England1356;
-                        let gap = lip_gap(&h, &morph(&h, &p).0);
+                        // closed in its middle to MakeHuman's own slit (before the lips are laid on each other
+                        // along the whole seam: `DressSet::seam_shut`), and then no slit left there
+                        let gap = lip_gap(&h, &crate::morph::morph_test_seam(&h, &p, 0.0));
                         assert!(gap.abs() < 0.002, "{} of {age}, seed {seed}, {mood:?}: lips {gap} apart", if female { "woman" } else { "man" });
+                        let pp = morph(&h, &p).0;
+                        let apart = pp[LIP_UPPER][1] - pp[LIP_LOWER][1];
+                        assert!(apart.abs() < 0.0002, "{} of {age}, seed {seed}, {mood:?}: the lips' edges {apart} apart", if female { "woman" } else { "man" });
                         n += 1;
                     }
                 }

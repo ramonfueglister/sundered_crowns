@@ -185,7 +185,9 @@ pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age:
     }
     // real look: the seam of the lips. MakeHuman's closed mouth is a slit of a millimetre between the edges where
     // the lips turn inward, the lower edge some millimetres behind the upper: one looks through it into the
-    // mouth, which is black, and no target closes it beside the middle. A strip from edge to edge closes it, in
+    // mouth, which is black, and no target closes it beside the middle (a dress with a table lays the lips on
+    // each other: morph.rs `lips_meet`; the edges then stand at one height, one behind the other). A strip from
+    // edge to edge closes it, in
     // the lips' colour times `seam`, facing the way the lips do (crate::morph::LIP_SEAM, the two edges from the
     // middle outward on either side)
     if seam > 0.0 {

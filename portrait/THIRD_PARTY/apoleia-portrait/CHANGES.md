@@ -316,3 +316,12 @@ their use in `morph_as` after the targets (the part of those targets under the j
 of the neck, which is taken whole as before). `lib.rs` exports `neck_share` and `NECK_UNDER`.
 `examples/face_measure.rs` prints the neck. `tests/faces.rs`: a twentieth test. A head without a dress table
 is morphed as before: Roman bytes unchanged.
+
+Round 99: the lips laid on each other from corner to corner. `morph.rs`: `SEAM_REACH`, `seam_field`,
+`seam_gaps`, `lips_meet` (after the middle of the mouth is closed, before the neck and the cheeks' fill: each
+lip's edge moves half of what the edges stand apart at its place along the seam, the lip follows within 6 mm;
+heights only) and the hook `morph_test_seam`; `LIP_SEAM` is public. `dress.rs`: `DressSet::seam_shut` (England
+1) and a source for children's mouths. `measure.rs`: `SEAM`, `seam` (the slit at its widest).
+`lib.rs` exports them. `examples/face_measure.rs` prints the new measure and `--dump` writes the base head.
+`tests/faces.rs`: a twenty-first test; the library's test of the closed mouth holds both steps. A head
+without a dress table is morphed as before: Roman bytes unchanged.
