@@ -22,8 +22,8 @@ export interface Cover { /** what far.ts laid on each column (KINDS), for measur
  */
 export interface Woods { share: number; crowns: readonly RGB[]; tall: boolean; laid?: boolean; /** where leafy trees and conifers stand mixed: the share of conifers among the trees, which the finest step draws tree by tree */ conifers?: number }
 
-/** a house of the finest step has two storeys on most of its ground and stands about five blocks high with its roof; it stands out of the ground while that is two thirds of a block */
-const STOREYS = 2, HOUSE_TALL = 4.5, STANDS_FROM = 2 / 3;
+/** a house of the finest step has two storeys on most of its ground and stands about five blocks high with its roof; it stands out of the ground while that is two thirds of a block; from front to back it is about six blocks deep */
+const STOREYS = 2, HOUSE_TALL = 4.5, STANDS_FROM = 2 / 3, HOUSE_DEEP = 6;
 /** between its streets this share of a town's blocks is houses, the rest yards and squares */
 const HOUSES = 0.8;
 /** a roof lies in the sun with one side only: seen as a flat top it is this much darker */
@@ -158,17 +158,21 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
   const pick = <T>(list: readonly T[], lot: number) => list[Math.min(list.length - 1, Math.floor(lot * list.length))];
   const house = (style: HouseStyle, x: number, z: number, rise: number) => { if (free(x, z)) put(x, z, rise, shade(pick(style.roofs, hash2(x + ox, z + oz, 211)), ROOF_LIGHT), pick(style.walls, hash2(x + ox, z + oz, 212)), 1); };
   /** how many blocks something as tall as `height` finest blocks stands out of the ground at this step */
+  /** what stands on a block too large for it shows its walls too, as the trees their sides (STANDS_OVER): this much more of the block than its ground */
+  const seenStanding = 1 + (STANDS_OVER[step] ?? 0) / HOUSE_DEEP;
   const stands = (height: number) => (height / wider >= STANDS_FROM ? Math.max(1, Math.round(height / wider)) : 0);
   /** A great building as near a column as it finds free ground. */
   const landmark = (model: Model, r: Rnd, cx: number, cz: number, roof: RGB) => {
     const w = Math.max(1, Math.round(model.w / wider)), d = Math.max(1, Math.round(model.d / wider)), reach = Math.round(SEARCH / wider);
     /** the height to build at on the footprint from (x0, z0), if all of it is free */
     const lot = (x0: number, z0: number) => { let y = -Infinity; for (let z = z0; z < z0 + d; z++) for (let x = x0; x < x0 + w; x++) { if (!free(x, z)) return null; y = Math.max(y, g.h[idx(x, z)]); } return y; };
+    // a building that covers less than a quarter of a block is no block of its own: its town's houses show there
+    if (step > MODELS_UNTIL && model.w * model.d < 0.25 * w * d * wider * wider) return;
     for (let k = 0; k <= reach; k++) for (let dz = -k; dz <= k; dz++) for (let dx = -k; dx <= k; dx += Math.abs(dz) === k ? 1 : 2 * k || 1) {
       const x0 = cx + dx - (w >> 1), z0 = cz + dz - (d >> 1), y = lot(x0, z0);
       if (y === null) continue;
       for (let z = z0; z < z0 + d; z++) for (let x = x0; x < x0 + w; x++) {
-        if (step > MODELS_UNTIL) { put(x, z, stands(model.height), roof, STONE, 3); continue; }
+        if (step > MODELS_UNTIL) { put(x, z, stands(model.height), roof, STONE, 3); c.share[idx(x, z)] = Math.min(1, (seenStanding * model.w * model.d) / (w * d * wider * wider)); continue; }
         // the model stands on level, paved ground
         const i = idx(x, z);
         g.h[i] = y; c.town[i] = 1; g.mat[i] = Mat.Paved;
@@ -228,11 +232,30 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
   // the houses of the finest step, where its plan is known: a far block is a house if a house covers half of it
   // or more (a house too small for that, the block under its middle), as tall as the house stands at this step
   if (plan) {
+    /** how much of a block the houses laid on it cover */
+    const housed = new Float32Array(N * N);
     const side = plan.pieceBlocks, fine = (v: number) => Math.floor((v * wider) / side);
     for (let pz = fine(oz); pz <= fine(oz + N); pz++) for (let px = fine(ox); px <= fine(ox + N); px++) {
       const here = plan.pieces[`${px},${pz}`];
       if (!here) continue;
-      for (let k = 0; k + 8 < here.houses.length; k += 9) {
+      if (step > MODELS_UNTIL) {
+        // where a block is larger than a house, it is the houses' as far as they cover it: a block for every
+        // house made a town many times its size
+        for (let k = 0; k + 8 < here.houses.length; k += 9) {
+          const [hx, hz, w, d, , tenths, wall, roof] = here.houses.slice(k, k + 9), top = shade(rgb(roof), ROOF_SEEN), walls = rgb(wall);
+          for (let bz = Math.floor(hz / wider); bz * wider < hz + d; bz++) for (let bx = Math.floor(hx / wider); bx * wider < hx + w; bx++) {
+            const x = bx - ox, z = bz - oz;
+            if (!inGrid(x, z)) continue;
+            const i = idx(x, z), was = c.kind![i] === 1 ? housed[i] : 0;
+            if (!was && !free(x, z)) continue;
+            const covered = (Math.min(hx + w, (bx + 1) * wider) - Math.max(hx, bx * wider)) * (Math.min(hz + d, (bz + 1) * wider) - Math.max(hz, bz * wider)) / (wider * wider), all = was + covered;
+            // the roofs of a block's houses in the mean, by the ground each covers
+            const mean = (of: Float32Array, c1: RGB): RGB => [(of[i * 3] * was + c1[0] * covered) / all, (of[i * 3 + 1] * was + c1[1] * covered) / all, (of[i * 3 + 2] * was + c1[2] * covered) / all];
+            put(x, z, all >= 0.5 ? stands(tenths / 10) : 0, was ? mean(c.top, top) : top, was ? mean(c.side, walls) : walls, 1);
+            housed[i] = all; c.share[i] = Math.min(1, all * seenStanding);
+          }
+        }
+      } else for (let k = 0; k + 8 < here.houses.length; k += 9) {
         const [hx, hz, w, d, , tenths, wall, roof] = here.houses.slice(k, k + 9), top = shade(rgb(roof), ROOF_SEEN), walls = rgb(wall);
         const on: [number, number][] = [];
         for (let bz = Math.floor(hz / wider); bz * wider < hz + d; bz++) for (let bx = Math.floor(hx / wider); bx * wider < hx + w; bx++) {
