@@ -419,10 +419,11 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
       if (metres[i] > woodsEnd[i]) return null;
       if (oasis(i)) return byWater(x, z, Math.max(1, Math.round(0.75 / cell))) ? { share: 0.8, crowns: PALM, tall: true } : null;
       const known = forestOf(x + 0.5, z + 0.5), share = wooded(x + 0.5, z + 0.5, known), laid = known !== null;
-      if (!share) return null;
+      // without woods a lone tree still stands here and there, as at the finest step, but not on bare land
+      if (!share && BARE.includes(here)) return null;
       if (here === Land.Rainforest) return { share, crowns: JUNGLE, tall: true, laid };
       if (here === Land.Savanna) return { share, crowns: ACACIA, tall: false, laid };
-      return hash2(x + ox, z + oz, 76) < conifers(i) ? { share, crowns: CYPRESS, tall: true, laid } : { share, crowns: LEAVES, tall: false, laid };
+      return hash2(x + ox, z + oz, 76) < conifers(i) ? { share, crowns: CYPRESS, tall: true, laid, conifers: conifers(i) } : { share, crowns: LEAVES, tall: false, laid, conifers: conifers(i) };
     } });
   } else {
     // the monuments that stood in 1356 and have a model

@@ -20,7 +20,7 @@ export interface Cover { /** what far.ts laid on each column (KINDS), for measur
  * trees are tall ones. `laid` says that the share is that of this very column, from the forest of the world's
  * year (forest.ts): then chance makes a block only a little more or less wooded than it says.
  */
-export interface Woods { share: number; crowns: readonly RGB[]; tall: boolean; laid?: boolean }
+export interface Woods { share: number; crowns: readonly RGB[]; tall: boolean; laid?: boolean; /** where leafy trees and conifers stand mixed: the share of conifers among the trees, which the finest step draws tree by tree */ conifers?: number }
 
 /** a house of the finest step has two storeys on most of its ground and stands about five blocks high with its roof; it stands out of the ground while that is two thirds of a block */
 const STOREYS = 2, HOUSE_TALL = 4.5, STANDS_FROM = 2 / 3;
@@ -263,29 +263,34 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
     if (!free(x, z) || g.mat[idx(x, z)] !== Mat.Grass) continue;
     const w = o.woods(x, z);
     if (!w) continue;
-    const reach = w.tall ? CROWN_TALL : CROWN, fx = (x + ox) * 2, fz = (z + oz) * 2;
-    let under = 0, stand = 0;
+    const fx = (x + ox) * 2, fz = (z + oz) * 2;
+    /** whether the tree at a place is a conifer: drawn tree by tree as at the finest step, where the two stand mixed */
+    const dark = (tx: number, tz: number) => (w.conifers === undefined ? w.tall : hash2(tx, tz, 74) < w.conifers);
+    let under = 0, stand = 0, conifers = 0, leafy = 0;
     // the trees that stand on the block itself
     for (let tz = Math.floor((fz - 1.2) / TREE_PITCH); tz * TREE_PITCH < fz + 3.2; tz++) for (let tx = Math.floor((fx - 1.2) / TREE_PITCH); tx * TREE_PITCH < fx + 3.2; tx++) {
       if (hash2(tx, tz, 73) > STRAY + TREES_CLOSED * w.share) continue;
       const px = tx * TREE_PITCH + (hash2(tx, tz, 71) - 0.5) * 2.4, pz = tz * TREE_PITCH + (hash2(tx, tz, 72) - 0.5) * 2.4;
-      if (px >= fx && px < fx + 2 && pz >= fz && pz < fz + 2) stand++;
+      if (px >= fx && px < fx + 2 && pz >= fz && pz < fz + 2) { stand++; if (dark(tx, tz)) conifers += 4; else leafy += 4; }
     }
     for (let q = 0; q < 4; q++) {
       const px = fx + 0.5 + (q & 1), pz = fz + 0.5 + (q >> 1);
-      crowned: for (let tz = Math.floor((pz - 1.2 - reach) / TREE_PITCH); tz * TREE_PITCH <= pz + 1.2 + reach; tz++) for (let tx = Math.floor((px - 1.2 - reach) / TREE_PITCH); tx * TREE_PITCH <= px + 1.2 + reach; tx++) {
+      crowned: for (let tz = Math.floor((pz - 1.2 - CROWN) / TREE_PITCH); tz * TREE_PITCH <= pz + 1.2 + CROWN; tz++) for (let tx = Math.floor((px - 1.2 - CROWN) / TREE_PITCH); tx * TREE_PITCH <= px + 1.2 + CROWN; tx++) {
         if (hash2(tx, tz, 73) > STRAY + TREES_CLOSED * w.share) continue;
-        if (Math.abs(tx * TREE_PITCH + (hash2(tx, tz, 71) - 0.5) * 2.4 - px) <= reach && Math.abs(tz * TREE_PITCH + (hash2(tx, tz, 72) - 0.5) * 2.4 - pz) <= reach) { under++; break crowned; }
+        const tall = dark(tx, tz), reach = tall ? CROWN_TALL : CROWN;
+        if (Math.abs(tx * TREE_PITCH + (hash2(tx, tz, 71) - 0.5) * 2.4 - px) <= reach && Math.abs(tz * TREE_PITCH + (hash2(tx, tz, 72) - 0.5) * 2.4 - pz) <= reach) { under++; if (tall) conifers++; else leafy++; break crowned; }
       }
     }
+    // the block is of the kind most of its trees are
+    const tall = w.conifers === undefined ? w.tall : conifers > leafy || (conifers === leafy && w.tall), crowns = w.conifers === undefined ? w.crowns : tall ? CYPRESS : LEAVES;
     // inside a wood the camera, looking from low down, sees trees wherever it looks: the trunks and crowns in
     // front hide the ground between them. So a block of a closed wood shows the wood whole, whether a crown
     // stands on it or not; out of the woods a block shows as much of a tree as stands on it.
     const closed = w.share > 0.5;
     if (!under && !closed) continue;
-    const crown = pick(w.crowns, hash2(x + ox, z + oz, 74)), seen = w.crowns === LEAVES ? SEEN_LEAVES : w.crowns === CYPRESS ? SEEN_CONIFERS : null, rise = stand ? TREE_STANDS : under >= 2 ? 1 : 0;
+    const crown = pick(crowns, hash2(x + ox, z + oz, 74)), seen = crowns === LEAVES ? SEEN_LEAVES : crowns === CYPRESS ? SEEN_CONIFERS : null, rise = stand ? TREE_STANDS : under >= 2 ? 1 : 0;
     if (rise && !level(x, z)) continue;
-    put(x, z, 0, seen ? tinted(crown, seen.top) : crown, seen ? tinted(crown, seen.side) : shade(crown, 0.7), w.tall ? 9 : 8);
+    put(x, z, 0, seen ? tinted(crown, seen.top) : crown, seen ? tinted(crown, seen.side) : shade(crown, 0.7), tall ? 9 : 8);
     c.share[idx(x, z)] = closed || stand ? 1 : under / 4;
     raised[idx(x, z)] = rise;
   }
