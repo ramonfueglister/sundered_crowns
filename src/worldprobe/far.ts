@@ -83,6 +83,8 @@ const CROWN = 1.2, CROWN_TALL = 0.6;
 const SEEN_LEAVES = { top: [0.61, 0.66, 0.87], side: [0.31, 0.51, 0.83] } as const, SEEN_CONIFERS = { top: [2.34, 1.14, 1.03], side: [1.6, 1.09, 1.1] } as const;
 /** a house of the plan as the camera sees it from afar, by its roof's own colour: both sides of the roof, the gable and what shows of the walls are this much lighter than the roof (measured against the mean of the finest step on the house blocks about Paris, as `SEEN_LEAVES`; one number, so that every roof keeps its hue) */
 const ROOF_SEEN = 1.42;
+/** the tops of a closed wood at the second far step, as a share of those of the first: measured on the pictures of both sides of the border between them (width 1150 against 1242, tools/zoom) at Paris, checked in the Black Forest */
+const ROOFED = 0.72;
 const tinted = (c: RGB, by: readonly [number, number, number]): RGB => [c[0] * by[0], c[1] * by[1], c[2] * by[2]];
 /**
  * The same for the fields, as a share of the colours far.ts gave them by eye: the rows of the winter corn stand
@@ -319,7 +321,9 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
     const tall = w.conifers === undefined ? w.tall : conifers > leafy || (conifers === leafy && w.tall), crowns = w.conifers === undefined ? w.crowns : tall ? CYPRESS : LEAVES;
     const crown = pick(crowns, hash2(x + ox, z + oz, 74)), seen = crowns === LEAVES ? SEEN_LEAVES : crowns === CYPRESS ? SEEN_CONIFERS : null, rise = trees ? stands(TREE_STANDS * 2) : 0;
     if (rise && !level(x, z)) continue;
-    put(x, z, 0, seen ? tinted(crown, seen.top) : shade(crown, CANOPY_LIGHT), seen ? tinted(crown, seen.side) : shade(crown, 0.7), tall ? 9 : 8);
+    // a closed wood is one roof of blocks here: of the shaded sides between the crowns, which the first far step
+    // shows as the sides of its blocks, nothing is seen, so the tops carry them
+    put(x, z, 0, shade(seen ? tinted(crown, seen.top) : shade(crown, CANOPY_LIGHT), closed ? ROOFED : 1), seen ? tinted(crown, seen.side) : shade(crown, 0.7), tall ? 9 : 8);
     // out of the woods a block shows as much of its trees as their crowns cover of it
     c.share[idx(x, z)] = closed ? 1 : Math.min(1, (trees * (2 * (tall ? CROWN_TALL : CROWN)) ** 2) / (wider * wider));
     raised[idx(x, z)] = rise;
