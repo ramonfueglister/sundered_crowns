@@ -185,13 +185,13 @@ describe('the state', () => {
     const up = upgradeState(decodeState(encodeState(old)), w, () => loadSetup(1356));
     expect(up.v).toBe(STATE_VERSION);
     expect(Object.keys(up.person.cols)).toEqual(Object.keys(PERSON_SCHEMA));
-    // step 22 founds the persons anew on the day reached, and everything that hangs on them: as it does for the world that ran
-    const founded = decodeState(encodeState(s)); founded.v = 21; upgradeState(founded, w, () => loadSetup(1356));
+    // step 23 founds the persons anew on the day reached, and everything that hangs on them: as it does for the world that ran
+    const founded = decodeState(encodeState(s)); founded.v = 22; upgradeState(founded, w, () => loadSetup(1356));
     expect(hashState(up)).toBe(hashState(founded));
     const c = up.economy.cities!;
     expect(c.day).toBe(s.day); expect(c.years.length).toBe(0); expect(c.halted).toBe('');
     for (let k = 0; k < N; k++) expect(c.figures[k * FIGURES + FIGURE.periods]).toBe(0);
-    // the persons are new ones (step 22), all alive, and those of them who work are of working age on the day reached
+    // the persons are new ones (step 23), all alive, and those of them who work are of working age on the day reached
     let working = 0;
     for (let id = 0; id < up.person.size; id++) {
       expect(up.person.cols.died[id]).toBe(ALIVE);

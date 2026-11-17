@@ -17,7 +17,7 @@ nothing built before Ramon agrees. Proposal with sources (German): https://claud
 |---|---|---|
 | 1 | Persons of the 30 largest cities in 1356 | agreed by Ramon 15 Nov 2026 and built; in the running world once the world server is redeployed |
 | 1b | 1291: persons in every town of the world graphic inside the world frame (558 towns, ~102,000 persons; state 15) | agreed by Ramon 16 Nov 2026 (world of towns); tools/history/1291/towns.py writes src/sim/content/cities_1291.json |
-| 2 | The persons live: a list of events, death, birth, marriage | built as a draft, 17 Nov 2026 (Ramon: all persons, event-driven, demography first; then, on the proposal of part 2: the mortality of the source and marriage only into a vacant household). It founds the persons anew (state 22) |
+| 2 | The persons live: a list of events, death, birth, marriage | built as a draft, 17 Nov 2026 (Ramon: all persons, event-driven, demography first; then, on the proposal of part 2: the mortality of the source and marriage only into a vacant household). It founds the persons anew (state 23) |
 
 ## Feature 1: persons of the 30 largest cities
 
@@ -130,7 +130,7 @@ Paping 2025).
 
 Code: `src/sim/systems/deaths.ts`, `src/sim/systems/families.ts`, the rules and their numbers in
 `src/sim/people/marriage.ts` and `src/sim/people/lifetable.ts`; the columns `person.dies`, `person.bears` and
-`family.seat` (state 22). Check: `npm run families:check`.
+`family.seat` (state 23). Check: `npm run families:check`.
 
 ### Death
 

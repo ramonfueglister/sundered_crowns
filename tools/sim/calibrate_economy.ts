@@ -32,7 +32,7 @@ export function cityCalibrations(t?: CalibrationTable): { place: number; name: s
 /** The file as it is written: one key per line at the top, one city per line. */
 export function calibrationJson(t: CalibrationTable = readTable()): string {
   const cities = cityCalibrations(t), c = cities[0].calibration;
-  return `{\n "case": ${JSON.stringify(`${t.case} at the size of each city`)},\n "table": "data/economy/england_1356.json",\n "year": ${c.year},\n "world": ${JSON.stringify(REFERENCE)},\n "scale": ${t.scale.value},\n "periods_per_year": ${c.periods_per_year},\n "clock": ${JSON.stringify(c.clock)},\n "wage": ${JSON.stringify(t.cities.wage.value)},\n "prices": ${JSON.stringify(t.cities.prices.value)},\n "cities": [\n`
+  return `{\n "case": ${JSON.stringify(`${t.case} at the size of each city`)},\n "table": "data/economy/england_1356.json",\n "year": ${c.year},\n "world": ${JSON.stringify(REFERENCE)},\n "scale": ${t.scale.value},\n "periods_per_year": ${c.periods_per_year},\n "clock": ${JSON.stringify(c.clock)},\n "wage": ${JSON.stringify(t.cities.wage.value)},\n "prices": ${JSON.stringify(t.cities.prices.value)},\n "savings_spent_per_year": ${t.cities.savings_spent_per_year.value},\n "cities": [\n`
     + cities.map((x) => `  ${JSON.stringify({ place: x.place, name: x.name, people: x.people, working: x.working.length, parameters: x.calibration.parameters, initial_conditions: x.calibration.initial_conditions })}`).join(',\n')
     + '\n ]\n}\n';
 }
@@ -51,5 +51,6 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   console.log(`${c.periods_per_year} periods a year; a firm plans every ${c.clock.plan} days, expectations on windows of ${c.clock.window} days`);
   console.log(t.cities.wage.value === 'money' ? 'the firms pay a wage in money that never changes' : 'the firms pay a real wage that follows the consumer prices, as in the port');
   console.log(t.cities.prices.value === 'demand' ? 'a planning firm changes its supply or its price by the gap between demand and supply (CANVAS)' : 'a planning firm sets supply and price by the rule of the paper');
+  console.log(t.cities.savings_spent_per_year.value === 0 ? 'a household spends out of its income only, as in the port' : `a household spends ${t.cities.savings_spent_per_year.value} of what it holds above its target in a year`);
   console.log(t.cities.unemployment_benefit.value === 0 ? 'a person without work is paid nothing' : `a person without work is paid ${t.cities.unemployment_benefit.value} of the last wage after tax`);
 }

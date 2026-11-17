@@ -96,7 +96,7 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     }
     if (!hadDied) s.person.cols.died.fill(ALIVE);
     if (!hadHolder) s.realm.cols.holder.fill(-1);
-    if (!s.named) { s.named = []; foundRulers(s, w); writeHouseholds(s); } // their families count in the purses, as in a new world
+    if (!s.named) { s.named = []; foundRulers(s, w); writeHouseholds(s, w); } // their families count in the purses, as in a new world
     s.v = 16;
   }
   if (s.v === 16) { // 16 → 17: the families who live from agriculture live in hamlets outside the walls of their town,
@@ -143,23 +143,34 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     foundLots(s, w.ground, w.dry);
     s.v = 20;
   }
-  if (s.v === 20) { // 20 → 21: the persons of the towns die (src/sim/systems/deaths.ts). Every living person gets the
+  if (s.v === 20) { // 20 → 21: households spend out of their savings, and a family has a need of food (economy
+    // feature 15). The families get the two columns of the need. The rule of the households changes what every city
+    // computes, so the economies are founded anew on the day the world has reached, as in the steps to 12 and 14:
+    // their days and yearly figures are gone, and the first period is the next day of the world. Nobody has been
+    // born or has died.
+    const cols = s.family.cols as Record<string, Column>, fresh = makeColumns(FAMILY_SCHEMA, s.family.alive.length) as Record<string, Column>;
+    for (const k of Object.keys(fresh)) if (k in cols) fresh[k] = cols[k]; // in the order of the schema
+    (s.family as { cols: unknown }).cols = fresh;
+    foundEconomy(s, w);
+    s.v = 21;
+  }
+  if (s.v === 21) { // 21 → 22: the persons of the towns die (src/sim/systems/deaths.ts). Every living person gets the
     // day of death, drawn from the life table for the age the person has on the day the world has reached: nobody
     // has died since the first day, so the persons are who they were. A ruler keeps the day of the chronicle.
     const cols = s.person.cols as Record<string, Column>, fresh = makeColumns(PERSON_SCHEMA, s.person.alive.length) as Record<string, Column>;
     for (const k of Object.keys(fresh)) if (k in cols) fresh[k] = cols[k]; // in the order of the schema
     (s.person as { cols: unknown }).cols = fresh;
     foundDeaths(s);
-    s.v = 21;
+    s.v = 22;
   }
-  if (s.v === 21) { // 21 → 22: the persons marry and are born (src/sim/systems/families.ts), after England around
+  if (s.v === 22) { // 22 → 23: the persons marry and are born (src/sim/systems/families.ts), after England around
     // 1300: another life table (La Poutré & Janssen 2021), a fixed number of households in every town, and other
     // ages and couples for it. The persons of the towns are founded anew on the day the world has reached, as a new
     // world founds them, and with them everything that hangs on who they are: their cultures, the rulers (who come
     // into the world again as they would have since the first day), the days of death and of birth, the economies
     // (their days and yearly figures are gone, as in the steps to 12, 14 and 15), the hamlets, the people of the
     // places, the arable, the harvest and the land register. A world on its first day becomes the new world.
-    if (!setup) throw new Error('the upgrade to 22 needs the setup of the start year');
+    if (!setup) throw new Error('the upgrade to 23 needs the setup of the start year');
     for (const [table, schema] of [[s.person, PERSON_SCHEMA], [s.family, FAMILY_SCHEMA]] as const) {
       const cols = table.cols as Record<string, Column>, fresh = makeColumns(schema, table.alive.length) as Record<string, Column>;
       for (const k of Object.keys(fresh)) if (k in cols) fresh[k] = cols[k]; // in the order of the schema
@@ -174,7 +185,7 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     settleHamlets(s); countPeople(s);
     cultivate(s, w); bringInHarvest(s, w);
     foundLots(s, w.ground, w.dry);
-    s.v = 22;
+    s.v = 23;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one

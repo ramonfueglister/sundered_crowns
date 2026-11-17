@@ -47,6 +47,9 @@ export interface PersonHousehold {
   income: number; spent: number; savings: number;
   /** what this person consumed that day: the person's share by baskets of what the family spent */
   consumed: number;
+  /** what the food the family needs cost that day, and the part of it the family covered, 0 to 1 (economy feature
+   *  15); `need` 0: the family's place has no economy */
+  need: number; fed: number;
 }
 
 /** One person in full. */
@@ -109,7 +112,7 @@ export function personEconomy(s: WorldState, id: number): PersonEconomy | null {
 export function personHousehold(s: WorldState, id: number): PersonHousehold | null {
   if (!s.economy.cities) return null;
   const F = s.family.cols, f = s.person.cols.family[id];
-  return { persons: F.persons[f], working: F.working[f], baskets: F.baskets[f], income: F.income[f], spent: F.spent[f], savings: F.savings[f], consumed: s.person.cols.consumed[id] };
+  return { persons: F.persons[f], working: F.working[f], baskets: F.baskets[f], income: F.income[f], spent: F.spent[f], savings: F.savings[f], consumed: s.person.cols.consumed[id], need: F.need[f], fed: F.fed[f] };
 }
 
 export function placePeople(s: WorldState, place: number): PlacePeople {
