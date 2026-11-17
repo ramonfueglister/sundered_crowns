@@ -104,39 +104,42 @@ fn a_planning_firm_supplies_the_mean_demand_since_its_last_plan() {
 }
 
 #[test]
-fn the_national_accounts_keep_the_rows_of_one_window() {
+fn the_clock_keeps_one_window_of_the_series_that_the_figures_sum() {
     let mut e = austria_with(1, 2, 4);
-    assert_eq!(e.model.data.real_gdp.len(), 1);
+    assert_eq!((e.model.ext.accounts.len(), e.model.data.real_gdp.len()), (1, 1));
     let start = e.figures();
     assert_eq!(start[0], 0.0);
     assert_eq!(start[1], 4.0 * e.model.data.real_gdp[0]); // the starting position stands for the periods before
     assert_eq!(start[1], start[2]);
     assert_eq!(start[3], start[4]);
     assert_eq!(start[15], 1.0); // the price level of the starting position
+    let column = |e: &Economy, k: usize| e.model.ext.accounts.iter().map(|r| r[k]).collect::<Vec<f64>>();
     e.step(3);
-    assert_eq!(e.model.data.real_gdp.len(), 4); // the starting position and three periods
-    let d = &e.model.data;
-    assert_eq!(e.figures()[1], d.real_gdp[0] + (d.real_gdp[1] + d.real_gdp[2] + d.real_gdp[3]));
+    let rows = column(&e, 0);
+    assert_eq!(rows.len(), 4); // the starting position and three periods
+    assert_eq!(e.figures()[1], rows[0] + (rows[1] + rows[2] + rows[3]));
     assert_eq!(e.figures()[2], start[2]);
     e.step(1);
-    assert_eq!(e.model.data.real_gdp.len(), 4); // the starting position has left
+    assert_eq!(e.model.ext.accounts.len(), 4); // the starting position has left
     e.step(6);
+    // the port keeps its last row, in every series
     let d = &e.model.data;
-    assert_eq!(d.real_gdp.len(), 4);
-    assert_eq!(d.collection_time.len(), 4);
-    assert_eq!(d.nominal_sector_gva.len(), 4);
-    assert_eq!(d.roe_per_bank.len(), 4);
+    assert_eq!(d.real_gdp.len(), 1);
+    assert_eq!(d.collection_time.len(), 1);
+    assert_eq!(d.nominal_sector_gva.len(), 1);
+    assert_eq!(d.roe_per_bank.len(), 1);
+    assert_eq!(e.model.ext.accounts.len(), 4);
+    assert_eq!(e.model.ext.accounts[3], [
+        d.real_gdp[0], d.nominal_gdp[0], d.real_household_consumption[0], d.real_government_consumption[0],
+        d.real_fixed_capitalformation[0], d.real_exports[0], d.real_imports[0],
+    ]);
     let f = e.figures();
     assert_eq!(f[0], 10.0);
-    assert_eq!(f[1], d.real_gdp.iter().sum::<f64>());
     assert_eq!(f[2], start[2]); // the starting position is remembered
     assert_eq!(f[4], start[4]);
-    assert_eq!(f[3], d.nominal_gdp.iter().sum::<f64>());
-    assert_eq!(f[5], d.real_household_consumption.iter().sum::<f64>());
-    assert_eq!(f[6], d.real_government_consumption.iter().sum::<f64>());
-    assert_eq!(f[7], d.real_fixed_capitalformation.iter().sum::<f64>());
-    assert_eq!(f[8], d.real_exports.iter().sum::<f64>());
-    assert_eq!(f[9], d.real_imports.iter().sum::<f64>());
+    for (figure, k) in [(1, 0), (3, 1), (5, 2), (6, 3), (7, 4), (8, 5), (9, 6)] {
+        assert_eq!(f[figure], column(&e, k).iter().sum::<f64>());
+    }
     assert_eq!(f[15], e.model.agg.P_bar);
     // one call for many periods equals many calls
     let mut other = austria_with(1, 2, 4);
@@ -269,4 +272,33 @@ fn the_figures_are_those_of_the_model() {
     assert_eq!((f[10] + f[11] + f[12]) as usize, m.prop.H_act);
     let employees: i64 = m.firms.N_i.iter().sum();
     assert_eq!(f[10] as i64, employees);
+}
+
+#[test]
+fn a_state_of_format_4_is_read_and_computes_on_bit_for_bit() {
+    // tests/data/format4_city.bin was written by the engine of format 4 (main 2bf3210), which kept a window of all
+    // the port's rows: the city of the game with the fewest persons, seed 7, a plan every 2 days and windows of 8,
+    // wages in money and the demand pull, after 5 days. format4_city.txt holds what that engine computed, as the bits
+    // of the numbers: the key figures of that state, the key figures 10 days later, and a mix of all numbers of the
+    // persons and firms then.
+    let bytes = include_bytes!("data/format4_city.bin");
+    let mut lines = include_str!("data/format4_city.txt").lines().skip(1);
+    let mut figures = || lines.next().unwrap().split(' ').map(|x| u64::from_str_radix(x, 16).unwrap()).collect::<Vec<u64>>();
+    let (then, later, agents) = (figures(), figures(), figures()[0]);
+    let bits = |e: &Economy| e.figures().iter().map(|x| x.to_bits()).collect::<Vec<u64>>();
+    let mix = |v: &[f64]| v.iter().fold(0u64, |h, x| (h.rotate_left(5) ^ x.to_bits()).wrapping_mul(0x9E37_79B9_7F4A_7C15));
+
+    let mut e = Economy::load(bytes).unwrap();
+    assert_eq!(e.periods(), 5);
+    assert_eq!(e.model.ext.accounts.len(), 6); // the starting position and five days
+    assert_eq!(e.model.data.real_gdp.len(), 1);
+    assert_eq!(bits(&e), then);
+    // saved again it is a smaller state of the format of today, and loads as the same economy
+    let now = e.save();
+    assert!(now.len() < bytes.len());
+    assert_eq!(Economy::load(&now).unwrap(), e);
+    e.step(10);
+    assert_eq!(e.model.ext.accounts.len(), 8);
+    assert_eq!(bits(&e), later);
+    assert_eq!(mix(&e.agents()), agents);
 }
