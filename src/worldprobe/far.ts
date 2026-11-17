@@ -9,7 +9,7 @@
 import * as THREE from 'three/webgpu';
 import { type Batch, type RGB, type Rnd, hash2, mix, noise2, rgb, seeded, shade } from '../lookprobe/batch';
 import { CYPRESS, LEAVES, OATS, OATS_SIDE, VINE_BODY, WHEAT, WHEAT_SIDE } from '../lookprobe/blocks';
-import { type HouseStyle, type Model, tower } from '../buildings';
+import { type HouseStyle, type Model, type Style, tower } from '../buildings';
 import { type Ground, Mat, N, idx, inGrid, occlude } from '../lookprobe/layout';
 import { FALLOW_SHOWS, SOIL_FALLOW } from '../lookprobe/terrain';
 import { blockOf, FALLOW, FIELD_GROUND, PEOPLE_PER_PERSON, PERSONS_PER_FLOOR_BLOCK, POP_OF_SIZE, type Site, SPRING, WALLED_FROM, courseOf } from './settle';
@@ -82,8 +82,12 @@ const ROOF_SEEN = 1.42;
 /** the tops of a closed wood at the second far step, as a share of those of the first: measured on the pictures of both sides of the border between them (width 1150 against 1242, tools/zoom) at Paris, checked in the Black Forest */
 const ROOFED = 0.72;
 const tinted = (c: RGB, by: readonly [number, number, number]): RGB => [c[0] * by[0], c[1] * by[1], c[2] * by[2]];
+/** the roofs and the walls the houses of a land show: a tradition's own (buildings/houses/choose.ts `shownOf`), else those of its style */
+const shownBy = (s: Style): HouseStyle => (s.tradition ? { ...s.house, roofs: [s.tradition.roof], walls: s.tradition.walls } : s.house);
 /** a walled town smaller than a block still shows on the block of its middle, this much of it its roofs: a town is found from as far as the land is seen */
 const TOWN_LEAST = 0.6;
+/** a walled town is paved within this many finest blocks of its buildings (settle.ts) */
+const PAVED_ROUND = 3;
 /** what stands on a block too large for it shows its walls too: this many finest blocks more of the block than its ground, by step */
 const STANDS_OVER: Record<number, number> = { 3: 8, 4: 10, 5: 8, 6: 7, 7: 4 };
 /** of the open land's blocks at the second far step this share carries a tree (a place for one every TREE_PITCH finest blocks, STRAY of them with a tree): as many carry trees farther out */
@@ -198,7 +202,7 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
   for (const s of sites) {
     if (s.size < step - 1) continue;
     // the same great buildings as at the finest step (settle.ts)
-    const cx = Math.floor(s.at[0]), cz = Math.floor(s.at[1]), style = s.style.house, r = seeded(1000 + s.id), roof = pick(style.roofs, 0), near = (reach: number) => Math.round(r.int(-reach, reach) / wider);
+    const cx = Math.floor(s.at[0]), cz = Math.floor(s.at[1]), style = shownBy(s.style), r = seeded(1000 + s.id), roof = pick(s.style.house.roofs, 0), near = (reach: number) => Math.round(r.int(-reach, reach) / wider);
     // as many blocks of houses as hold the place's people (settle.ts), as tall as a house is at this step
     const need = (s.pop ?? POP_OF_SIZE[s.size]) / PEOPLE_PER_PERSON, holds = wider * wider * STOREYS * PERSONS_PER_FLOOR_BLOCK, tall = stands(HOUSE_TALL);
     // with the plan of the finest step the houses and the great buildings are its own (below)
@@ -299,23 +303,33 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
         if (o.own(Math.floor(mx), Math.floor(mz))) things.append(model.build(seeded(1000 + id + k)), m.makeScale(1 / wider, 1 / wider, 1 / wider).setPosition(mx, y, mz));
         occlude(g, x0, z0, x1, z1, y + tenths / 10 / wider);
       }
-      // a walled town's ground is paved between its houses, and at the first far step its wall stands about it,
+      // a walled town's ground is paved round its houses, and at the first far step its wall stands about it,
       // open where the finest step's wall is open for water
       for (const t of here.towns ?? []) {
         const x0 = Math.floor((t.cx - t.half) / wider) - ox, x1 = Math.ceil((t.cx + t.half) / wider) - ox, z0 = Math.floor((t.cz - t.half) / wider) - oz, z1 = Math.ceil((t.cz + t.half) / wider) - oz;
         if (wider > 2 * t.half) {
           // a town smaller than a block: the blocks it lies on show its roofs as far as it covers them
-          const s = sites.find((q) => q.id === t.site), roofs = s ? shade(pick(s.style.house.roofs, 0), ROOF_SEEN) : null;
+          const s = sites.find((q) => q.id === t.site), roofs = s ? shade(pick(shownBy(s.style).roofs, 0), ROOF_SEEN) : null;
           for (let z = z0; roofs && z < z1; z++) for (let x = x0; x < x1; x++) {
             if (!inGrid(x, z) || g.wet[idx(x, z)] || !(free(x, z) || c.kind![idx(x, z)] === 1)) continue;
             const bx = (x + ox) * wider, bz = (z + oz) * wider, i = idx(x, z);
             const covers = Math.max(0, Math.min(t.cx + t.half, bx + wider) - Math.max(t.cx - t.half, bx)) * Math.max(0, Math.min(t.cz + t.half, bz + wider) - Math.max(t.cz - t.half, bz)) / (wider * wider), here = t.cx >= bx && t.cx < bx + wider && t.cz >= bz && t.cz < bz + wider, seen = Math.max(here ? TOWN_LEAST : 0, Math.min(1, covers * HOUSES * seenStanding));
             if (seen <= (c.kind![i] === 1 ? c.share[i] : 0)) continue;
-            put(x, z, 0, roofs, pick(s!.style.house.walls, 0), 1); c.share[i] = seen;
+            put(x, z, 0, roofs, pick(shownBy(s!.style).walls, 0), 1); c.share[i] = seen;
           }
           continue;
         }
-        for (let z = z0; z < z1; z++) for (let x = x0; x < x1; x++) if (free(x, z)) { c.town[idx(x, z)] = 1; g.mat[idx(x, z)] = Mat.Paved; } else if (inGrid(x, z) && c.kind![idx(x, z)] === 1) g.mat[idx(x, z)] = Mat.Paved;
+        // paved as the finest step paves it: within PAVED_ROUND of its blocks of a building (settle.ts), a far
+        // block where half of it is
+        const across = 2 * t.half, fx0 = t.cx - t.half, fz0 = t.cz - t.half, near = new Uint8Array(across * across);
+        const round = (bx: number, bz: number, bw: number, bd: number) => { for (let z = Math.max(0, Math.floor(bz) - PAVED_ROUND - fz0); z < Math.min(across, Math.ceil(bz + bd) + PAVED_ROUND - fz0); z++) for (let x = Math.max(0, Math.floor(bx) - PAVED_ROUND - fx0); x < Math.min(across, Math.ceil(bx + bw) + PAVED_ROUND - fx0); x++) near[z * across + x] = 1; };
+        for (let qz = Math.floor((fz0 - PAVED_ROUND) / side); qz <= Math.floor((fz0 + across + PAVED_ROUND) / side); qz++) for (let qx = Math.floor((fx0 - PAVED_ROUND) / side); qx <= Math.floor((fx0 + across + PAVED_ROUND) / side); qx++) {
+          const there = plan.pieces[`${qx},${qz}`];
+          for (let k = 0; there && k + 8 < there.houses.length; k += 9) round(there.houses[k], there.houses[k + 1], there.houses[k + 2], there.houses[k + 3]);
+          for (let k = 0; there?.greats && k + 6 < there.greats.length; k += 7) round(there.greats[k + 1], there.greats[k + 2], there.greats[k + 3], there.greats[k + 4]);
+        }
+        const paved = (x: number, z: number) => { let n = 0; for (let fz = Math.max(0, (z + oz) * wider - fz0); fz < Math.min(across, (z + oz + 1) * wider - fz0); fz++) for (let fx = Math.max(0, (x + ox) * wider - fx0); fx < Math.min(across, (x + ox + 1) * wider - fx0); fx++) n += near[fz * across + fx]; return 2 * n >= wider * wider; };
+        for (let z = z0; z < z1; z++) for (let x = x0; x < x1; x++) if (inGrid(x, z) && paved(x, z)) { if (free(x, z)) { c.town[idx(x, z)] = 1; g.mat[idx(x, z)] = Mat.Paved; } else if (c.kind![idx(x, z)] === 1) g.mat[idx(x, z)] = Mat.Paved; }
         const open = (side: 'nz' | 'px' | 'pz' | 'nx', along: number) => (t.wall ?? []).some((gap) => gap.side === side && along >= gap.from && along <= gap.to);
         if (step === 1 && t.wall !== null) for (let z = z0 - 1; z <= z1; z++) for (let x = x0 - 1; x <= x1; x++) {
           if (!(x === x0 - 1 || x === x1 || z === z0 - 1 || z === z1) || x === (x0 + x1) >> 1 || z === (z0 + z1) >> 1 || !free(x, z)) continue;

@@ -77,3 +77,35 @@ describe('the Venice tradition keeps its sources', () => {
     expect(tr.arched).toBe(venice.oeffnungen.bogenanteil);
   });
 });
+
+describe('what a house shows from afar (shownOf)', () => {
+  /** the colour that covers most of the faces `of` kind (by their normal's height), by their area */
+  const most = (b: Batch, of: (ny: number) => boolean) => {
+    const areas = new Map<string, number>();
+    for (let t = 0; t < b.triangles; t++) {
+      if (!of(b.nor[t * 9 + 1])) continue;
+      const p = b.pos, o = t * 9, u = [p[o + 3] - p[o], p[o + 4] - p[o + 1], p[o + 5] - p[o + 2]], v = [p[o + 6] - p[o], p[o + 7] - p[o + 1], p[o + 8] - p[o + 2]];
+      const key = [0, 1, 2].map((k) => b.col[o + k]).join(','), area = Math.hypot(u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]) / 2;
+      areas.set(key, (areas.get(key) ?? 0) + area);
+    }
+    return [...areas.entries()].sort((a, c) => c[1] - a[1])[0][0].split(',').map(Number);
+  };
+  /** the same hue: one colour is the other, lighter or darker */
+  const shadeOf = (a: readonly number[], b: readonly number[]) => { const by = a[0] / b[0]; expect(a[1] / b[1]).toBeCloseTo(by, 3); expect(a[2] / b[2]).toBeCloseTo(by, 3); };
+  const drawn: [number, number, number] = [0.1, 0.5, 0.9];
+
+  it('is the wall its house is built of and the roof of its tradition, where the land has one', () => {
+    const style = B.styleOf('italy');
+    for (const seed of [1, 77, 12345]) {
+      const shown = B.shownOf(style, drawn, drawn, seed), { model } = B.houseOf(style, 6, 8, 2, drawn, drawn, seeded(seed), 0);
+      expect(tr.walls).toContainEqual(shown.wall); expect(shown.roof).toEqual(tr.roof);
+      // most of the house's upright faces are that wall
+      shadeOf(most(model, (ny) => Math.abs(ny) < 0.1), shown.wall);
+    }
+  });
+  it('is the colours drawn from the style elsewhere', () => {
+    const shown = B.shownOf(B.styleOf('france'), drawn, [0.9, 0.5, 0.1], 5);
+    expect(B.styleOf('france').tradition).toBeUndefined();
+    expect(shown).toEqual({ wall: drawn, roof: [0.9, 0.5, 0.1] });
+  });
+});

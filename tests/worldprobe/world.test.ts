@@ -5,7 +5,7 @@ import { Batch } from '../../src/lookprobe/batch';
 import { LEAVES } from '../../src/lookprobe/blocks';
 import { type Ground, LAND_Y, Mat, N, SEA_Y } from '../../src/lookprobe/layout';
 import { heightOf, styleOf } from '../../src/buildings';
-import { coverLand } from '../../src/worldprobe/far';
+import { coverLand, usePlan } from '../../src/worldprobe/far';
 import { type Region, Water, cellOf, loadWindow, projectionOf, refine } from '../../src/worldprobe/region';
 import { columnsOf, pave } from '../../src/worldprobe/nearground';
 import { type Lot, type Site, raise, settle } from '../../src/worldprobe/settle';
@@ -178,6 +178,26 @@ describe('the land from farther away', () => {
       expect(woods / land, `step ${step}`).toBeLessThan(0.7);
     }
   }, 60000);
+});
+
+describe('a walled town of the plan from farther away', () => {
+  afterAll(() => usePlan(null));
+  it('is paved round its houses as at the finest step, and the rest of its square stays the land', () => {
+    // a town of 80 finest blocks about (300, 200) with one house of 8 by 6 in its north-west
+    usePlan({ pieceBlocks: 200, greatKinds: [], pieces: { '1,1': { houses: [270, 170, 8, 6, 2, 60, 0xffffff, 0xff0000, 0], towns: [{ site: 0, cx: 300, cz: 200, half: 40, wall: null }] } } });
+    const g = ground(0), c = coverLand(g, 1, new Batch(), [], { ploughed: () => 0, vines: () => 0, farm: () => styleOf('').house, own: () => true, woods: () => null });
+    // the house, in blocks two finest blocks wide
+    for (let z = 85; z < 88; z++) for (let x = 135; x < 139; x++) expect([c.kind![z * N + x], g.mat[z * N + x]], `${x}, ${z}`).toEqual([1, Mat.Paved]);
+    // three finest blocks round it are paved: the blocks of which half lies that near, so not those at its corners
+    let paved = 0;
+    for (let z = 80; z < 120; z++) for (let x = 130; x < 170; x++) {
+      const i = z * N + x, near = x >= 133 && x <= 140 && z >= 83 && z <= 89 && !((x === 133 || x === 140) && (z === 83 || z === 89));
+      paved += c.town[i];
+      expect(c.kind![i] === 1 || c.town[i] === 1, `${x}, ${z}`).toBe(near);
+      if (!near) expect(g.mat[i], `${x}, ${z}`).toBe(Mat.Grass);
+    }
+    expect(paved).toBe(8 * 7 - 4 - 4 * 3);
+  });
 });
 
 describe('a monument', () => {
