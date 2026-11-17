@@ -4,7 +4,7 @@
 import * as THREE from 'three/webgpu';
 import { Batch, type RGB, type Rnd, hash2, seeded } from '../lookprobe/batch';
 import { crops } from '../lookprobe/blocks';
-import { type Model, type Side, type Style, heightOf, houseOf, m, m2, styleOf, tower, townWall } from '../buildings';
+import { type Model, type Side, type Style, heightOf, houseOf, m, m2, styleOf, tower, townWall, type WallGap } from '../buildings';
 import { type Crop, type Ground, Mat, N, type P2, idx, inGrid, occlude } from '../lookprobe/layout';
 import type { Town } from '../figures';
 import { FINER } from './land';
@@ -307,17 +307,28 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     }
     half -= 1;
     // the wall, where the ground round the town carries it; inside it the ground is paved
-    let lo = Infinity, hi = -Infinity, carries = true;
-    for (let k = -half - 1; k <= half; k++) for (const [x, z] of [[cx + k, cz - half - 1], [cx + k, cz + half], [cx - half - 1, cz + k], [cx + half, cz + k]]) {
-      if (!inGrid(x, z) || g.wet[idx(x, z)] || g.mat[idx(x, z)] === Mat.Rock) { carries = false; continue; }
-      lo = Math.min(lo, g.h[idx(x, z)]); hi = Math.max(hi, g.h[idx(x, z)]);
+    let lo = Infinity, hi = -Infinity, carries = true, dry = 0;
+    const gaps: WallGap[] = [];
+    for (const [side, at] of [['nz', (k: number) => [cx + k, cz - half - 1]], ['pz', (k: number) => [cx + k, cz + half]], ['nx', (k: number) => [cx - half - 1, cz + k]], ['px', (k: number) => [cx + half, cz + k]]] as [WallGap['side'], (k: number) => [number, number]][]) {
+      let from: number | null = null;
+      for (let k = -half - 1; k <= half + 1; k++) {
+        const [x, z] = at(k), water = k <= half && inGrid(x, z) && g.wet[idx(x, z)] === 1;
+        // a river or the sea crosses the ring: the wall is open there, half a block beyond the water on either side
+        if (water) from ??= k;
+        else if (from !== null) { gaps.push({ side, from: from - 0.5, to: k + 0.5 }); from = null; }
+        if (k > half || water) continue;
+        if (!inGrid(x, z) || g.mat[idx(x, z)] === Mat.Rock) { carries = false; continue; }
+        dry++; lo = Math.min(lo, g.h[idx(x, z)]); hi = Math.max(hi, g.h[idx(x, z)]);
+      }
     }
+    // a town with a third of its ring in the water has no wall
+    if (dry * 3 < 2 * 8 * (half + 1)) carries = false;
     // paved as far as the houses reach: within three blocks of a building
     const built = (x: number, z: number) => { for (let dz = -3; dz <= 3; dz++) for (let dx = -3; dx <= 3; dx++) if (inGrid(x + dx, z + dz) && used[idx(x + dx, z + dz)] === 1) return true; return false; };
     for (let z = cz - half; z < cz + half; z++) for (let x = cx - half; x < cx + half; x++) if (inGrid(x, z) && !g.wet[idx(x, z)] && g.mat[idx(x, z)] !== Mat.Rock && built(x, z)) { g.mat[idx(x, z)] = Mat.Paved; town[idx(x, z)] = 1; }
     for (let i = 0; i < N * N; i++) if (town[i]) used[i] = 2;
     if (carries && hi - lo <= 2) {
-      if (own(cx, cz)) { things.append(townWall(half * 2 + 2, half * 2 + 2), mat.makeRotationY(0).setPosition(cx, lo + 1, cz)); count('wall'); }
+      if (own(cx, cz)) { things.append(townWall(half * 2 + 2, half * 2 + 2, gaps), mat.makeRotationY(0).setPosition(cx, lo + 1, cz)); count('wall'); }
       claim(cx - half - 2, cz - half - 2, cx + half + 2, cz + half + 2);
     }
     towns.push({ site: s.id, cx: cx + (g.ox ?? 0), cz: cz + (g.oz ?? 0), half });

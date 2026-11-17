@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import { Batch } from '../../src/lookprobe/batch';
 import { LAND_Y, Mat, N, SEA_Y, type Ground } from '../../src/lookprobe/layout';
-import { styleOf } from '../../src/buildings';
+import { styleOf, townWall } from '../../src/buildings';
 import { PEOPLE_PER_PERSON, type Site, blockOf, settle } from '../../src/worldprobe/settle';
 import { HAMLET_FAMILIES, hamletAt, hamletLandsOf, hamletsOf } from '../../src/worldprobe/hamlets';
 
@@ -81,6 +81,25 @@ describe('the houses of a town with a land register', () => {
     expect(church).toBeGreaterThan(8);
     expect(open).toBeGreaterThan(150);
     expect(used.some((u) => u === 1)).toBe(true);
+  });
+  it('keeps its wall where a river crosses it, open at the water; a town in the sea has none', () => {
+    const walls = (wet: (x: number, z: number) => boolean) => {
+      const g = meadow(), c = N / 2, counts: Record<string, number> = {};
+      for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) if (wet(x - c, z - c)) g.wet[z * N + x] = 1;
+      const site: Site = { id: 5, at: [c + 0.5, c + 0.5], size: 4, pop: 60000, region: '', style: styleOf('') };
+      settle(g, new Batch(), [site], [], () => ({ region: '', style: styleOf('') }), () => 0, () => 0, counts);
+      return counts.wall ?? 0;
+    };
+    expect(walls(() => false)).toBe(1);
+    // a river three blocks wide from north to south beside the middle
+    expect(walls((x) => x >= 6 && x < 9)).toBe(1);
+    // the sea from just west of the middle on
+    expect(walls((x) => x < -3)).toBe(0);
+  });
+  it('has no turret on a corner of its wall that stands in the water, and piers at an opening', () => {
+    const whole = townWall(40, 40).triangles;
+    expect(townWall(40, 40, [{ side: 'nz', from: -20, to: -12 }]).triangles).toBeLessThan(whole);
+    expect(townWall(40, 40, [{ side: 'nz', from: -3, to: 3 }]).triangles).toBeGreaterThan(whole);
   });
 });
 
