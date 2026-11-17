@@ -44,6 +44,22 @@ describe('the hamlets of a town', () => {
   });
 });
 
+describe('the houses of a town with a land register', () => {
+  it('stand one to a parcel, at its street, wall to wall with the neighbours', () => {
+    // two rows of six parcels back to back, 6 m at the street and 18 m deep: the north row fronts north, the south row south
+    const x = [...Array(6).keys(), ...Array(6).keys()].map((k) => (k - 2.5) * 6), z = [...Array(6).fill(-9), ...Array(6).fill(9)], front = [...Array(6).fill(0), ...Array(6).fill(2)];
+    const counts: Record<string, number> = {};
+    const site: Site = { id: 5, at: [N / 2 + 0.5, N / 2 + 0.5], size: 1, pop: 4800, region: '', style: styleOf(''), lots: { w: 6, d: 18, x, z, front } };
+    const { used } = settle(meadow(), new Batch(), [site], [], () => ({ region: '', style: styleOf('') }), () => 0, () => 0, counts);
+    expect(counts.parcel).toBe(12);
+    expect(counts.house).toBe(12);
+    expect(counts['parcel without house']).toBeUndefined();
+    // the yards between the two rows stay open
+    const c = N / 2;
+    for (let dx = -8; dx < 8; dx++) expect(used[c * N + c + dx]).not.toBe(1);
+  });
+});
+
 describe('the fields', () => {
   it('lie in blocks of one course, three lots by two', () => {
     expect(blockOf(0, 0)).toEqual([0, 0]);
