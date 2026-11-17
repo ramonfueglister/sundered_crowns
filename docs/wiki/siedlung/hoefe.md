@@ -4,7 +4,7 @@
 
 > Jede Bauernfamilie hat einen Hof in einem Weiler vor den Mauern ihrer Stadt. Weiler und Höfe stehen mit Ort und Grösse im Grundbuch der Welt.
 
-Der Entwurf ist gebaut, aber nicht im Spiel. Die 3D-Welt setzt ihre Weiler heute noch selbst auf eine Spirale um die Stadt.
+Der Entwurf ist gebaut und seit dem 17. November 2026 auf main. Die 3D-Welt setzt die Weiler dorthin, wo das Grundbuch sie hat.
 
 ## Das Feature
 
@@ -14,7 +14,7 @@ Nicht dabei: welches Feld zu welchem Hof gehört, Kirche und Mühle im Weiler, W
 
 ## Im Spiel
 
-Noch nicht sichtbar. Der Weltserver gibt zu jeder Stadt ihre Weiler und Höfe aus; die 3D-Welt kann die Weiler danach an ihren Ort setzen und auf jeden Hof ein Bauernhaus stellen.
+Die 3D-Welt liest Weiler und Höfe der Welt von 1291 aus der Datei des Grundbuchs, setzt jeden Weiler an seinen Ort und stellt auf jeden Hof ein Bauernhaus. Der Weltserver gibt sie ebenfalls aus; die 3D-Welt liest sie von dort noch nicht.
 
 ## Das Modell
 
@@ -26,7 +26,7 @@ Noch nicht sichtbar. Der Weltserver gibt zu jeder Stadt ihre Weiler und Höfe au
 2. **Hof.** Jede Familie hat einen Hof von 10 m Breite am Weg und 17,5 m Tiefe.
 3. **Im Weiler.** Die Höfe stehen in zwei Reihen an einem Weg, die Front zum Weg. Ein Weiler mit zehn Höfen misst 50 mal 40 m.
 4. **Lage.** Die Weiler einer Stadt liegen gleichmässig verteilt zwischen dem Stadtrand und dem Rand ihrer Felder, so dass jeder Weiler gleich viel Land um sich hat. Der Rand der Felder ist der Radius der Kreisfläche, die das Ackerland der Stadt fasst.
-5. **Boden.** Ein Weiler rückt bis zu einem Kilometer von seinem Platz ab, wenn dort Wasser, Fels oder ein anderer Weiler im Weg ist.
+5. **Boden.** Ein Weiler rückt bis zu einem Kilometer von seinem Platz ab, wenn dort Wasser, Fels, die Stadt oder ein anderer Weiler im Weg ist. Findet er so keinen freien Platz, liegt er weiter draussen (28 von 2'127 Weilern).
 
 ## Daten und Parameter
 
