@@ -15,7 +15,7 @@ import { loadModels } from './models';
 import { FINER_STEPS } from './land';
 import { Water, loadWindow } from './region';
 import { type Piece, type WorldScene, buildWorld, windowOf } from './world';
-import { type Cover, KINDS, laidOut } from './far';
+import { type Cover, KINDS, laidOut, loadPlan, usePlan } from './far';
 import { above, lay, meanCover, summary } from './mean';
 import { N } from '../lookprobe/layout';
 import { loadTownPeople } from '../figures';
@@ -34,6 +34,8 @@ async function build(job: PieceJob, step: number, piece: Piece, mean: Cover | nu
   const data = Math.max(0, step - FINER_STEPS), w = windowOf(piece.ox, piece.oz);
   const region = await loadWindow(data ? `${name}/z${data}` : name, w.gx0, w.gy0, w.w, w.h, base, 2 ** Math.max(0, FINER_STEPS - step));
   if (region.water.every((k) => k === Water.Sea)) return null;
+  // a far step lays out its places by the plan of the finest step, where there is one (far.ts)
+  if (step > 0) usePlan(await loadPlan(base, year ?? 1356));
   if (step === 0) await loadTownPeople(undefined, year); // the persons of the 30 cities walk in their towns (src/figures/people.ts)
   return buildWorld(region, piece, gazetteer.places, landmarks.landmarks, bakedSky, step, await loadClimate(base, region.worldW ?? region.mapW, region.worldH ?? region.mapH), await loadInhabitants(base, year), await loadModels(base), await loadForest(base, year, region.worldW ?? region.mapW, region.worldH ?? region.mapH), await loadRural(base, year, region.mapW, region.mapH), await loadArable(base, year, region.mapW, region.mapH), await loadHamletLands(base, year ?? 1356), await loadParcels(base, year ?? 1356), undefined, mean);
 }

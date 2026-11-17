@@ -93,6 +93,26 @@ const LAID_CHANCE = 0.25;
 /** seen from above without the shade between the crowns, woods are darker than a crown in the sun */
 const CANOPY_LIGHT = 0.8;
 
+/**
+ * What the finest step builds in its places (public/data/plan_<year>.json, written by tools/worldprobe/build_plan.ts):
+ * per piece of `pieceBlocks` finest world blocks the houses whose middle lies in it (nine numbers each: x, z, w, d
+ * in finest world blocks, floors, height in tenths of a block, wall and roof as 0xRRGGBB, kind) and the walled
+ * towns (their paved ground is the square of 2 * half about (cx, cz)).
+ */
+export interface Plan { pieceBlocks: number; pieces: Record<string, { houses: readonly number[]; towns?: readonly { site: number; cx: number; cz: number; half: number }[] } | undefined> }
+let plan: Plan | null = null, plans = new Map<string, Promise<Plan | null>>();
+/** The plan of a year's places, loaded once; null where the file is not there (then the far steps lay out their places by rules of their own, as before). */
+export function loadPlan(base: string, year: number): Promise<Plan | null> {
+  let p = plans.get(`${base}|${year}`);
+  if (!p) {
+    p = fetch(`${base}data/plan_${year}.json`).then(async (r) => (r.ok && (r.headers.get('content-type') ?? '').includes('json') ? await r.json() as Plan : null)).catch(() => null);
+    plans.set(`${base}|${year}`, p);
+  }
+  return p;
+}
+/** The plan `coverLand` lays its places by from now on (the worker sets it before it builds a far piece). */
+export const usePlan = (p: Plan | null) => { plan = p; };
+
 /** what a column carries, by the number in `Cover.kind` */
 export const KINDS = ['open', 'house', 'wall', 'great', 'fallow', 'spring', 'winter', 'vines', 'wood', 'tall wood', 'blend'] as const;
 let last: Cover | null = null;
@@ -150,6 +170,8 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
     const cx = Math.floor(s.at[0]), cz = Math.floor(s.at[1]), style = s.style.house, r = seeded(1000 + s.id), roof = pick(style.roofs, 0), near = (reach: number) => Math.round(r.int(-reach, reach) / wider);
     // as many blocks of houses as hold the place's people (settle.ts), as tall as a house is at this step
     const need = (s.pop ?? POP_OF_SIZE[s.size]) / PEOPLE_PER_PERSON, holds = wider * wider * STOREYS * PERSONS_PER_FLOOR_BLOCK, tall = stands(HOUSE_TALL);
+    // with the plan of the finest step the houses are its houses (below); only the great buildings are set here
+    if (plan && s.hamlet) continue;
     if (s.hamlet) {
       // a hamlet is a few houses close together, low against the towns
       for (let k = Math.max(1, Math.round(need / holds)), q = 0; k > 0 && q <= 3; q++) for (let dz = -q; dz <= q && k > 0; dz++) for (let dx = -q; dx <= q && k > 0; dx += Math.abs(dz) === q ? 1 : 2 * q || 1) {
@@ -160,6 +182,7 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
     if (s.size < WALLED_FROM) {
       // a village is houses scattered about its middle, a small town has its church among them
       if (s.size === 2 && step <= MODELS_UNTIL) landmark(s.style.church, r, cx, cz, roof);
+      if (plan) continue;
       const reach = (5 + SCATTER * Math.sqrt(need)) / wider;
       for (let k = Math.max(1, Math.round(need / holds)), tries = 0; k > 0 && tries < 60; tries++) {
         const a = r.range(0, Math.PI * 2), q = Math.sqrt(r.next()) * reach, x = Math.round(cx + Math.cos(a) * q), z = Math.round(cz + Math.sin(a) * q);
@@ -170,6 +193,7 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
     landmark(s.size >= 4 ? s.style.great : s.style.church, r, cx, cz, roof);
     for (let k = s.size - 3; k > 0; k--) landmark(s.style.church, r, cx + near(14), cz + near(14), roof);
     if (s.style.towers) for (let k = s.size - 2; k > 0; k--) landmark({ build: tower, w: 3, d: 3, height: 10 }, r, cx + near(7), cz + near(7), roof);
+    if (plan) continue;
     // houses between the streets, ring by ring from the middle until all are housed; what is left of the last ring is paved
     const pitch = Math.round(STREETS / wider);
     let half = 0;
@@ -182,6 +206,32 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
     }
     // the wall, with a gate in the middle of each side, while it is a block wide
     if (step === 1 && half > 1) for (let k = -half; k <= half; k++) for (const [x, z] of [[cx + k, cz - half], [cx + k, cz + half], [cx - half, cz + k], [cx + half, cz + k]]) if (k !== 0 && free(x, z)) put(x, z, 1, WALL, WALL, 2);
+  }
+
+  // the houses of the finest step, where its plan is known: a far block is a house if a house covers half of it
+  // or more (a house too small for that, the block under its middle), as tall as the house stands at this step
+  if (plan) {
+    const side = plan.pieceBlocks, fine = (v: number) => Math.floor((v * wider) / side);
+    for (let pz = fine(oz); pz <= fine(oz + N); pz++) for (let px = fine(ox); px <= fine(ox + N); px++) {
+      const here = plan.pieces[`${px},${pz}`];
+      if (!here) continue;
+      for (let k = 0; k + 8 < here.houses.length; k += 9) {
+        const [hx, hz, w, d, , tenths, wall, roof] = here.houses.slice(k, k + 9), rise = stands(tenths / 10), top = rgb(roof, ROOF_LIGHT), walls = rgb(wall);
+        let set = 0;
+        for (let bz = Math.floor(hz / wider); bz * wider < hz + d; bz++) for (let bx = Math.floor(hx / wider); bx * wider < hx + w; bx++) {
+          const covered = (Math.min(hx + w, (bx + 1) * wider) - Math.max(hx, bx * wider)) * (Math.min(hz + d, (bz + 1) * wider) - Math.max(hz, bz * wider)) / (wider * wider);
+          if (covered >= 0.5 && free(bx - ox, bz - oz)) { put(bx - ox, bz - oz, rise, top, walls, 1); set++; }
+        }
+        const mx = Math.floor((hx + w / 2) / wider) - ox, mz = Math.floor((hz + d / 2) / wider) - oz;
+        if (!set && free(mx, mz)) put(mx, mz, rise, top, walls, 1);
+      }
+      // a walled town's ground is paved between its houses, and at the first far step its wall stands about it
+      for (const t of here.towns ?? []) {
+        const x0 = Math.floor((t.cx - t.half) / wider) - ox, x1 = Math.ceil((t.cx + t.half) / wider) - ox, z0 = Math.floor((t.cz - t.half) / wider) - oz, z1 = Math.ceil((t.cz + t.half) / wider) - oz;
+        for (let z = z0; z < z1; z++) for (let x = x0; x < x1; x++) if (free(x, z)) { c.town[idx(x, z)] = 1; g.mat[idx(x, z)] = Mat.Paved; }
+        if (step === 1) for (let z = z0 - 1; z <= z1; z++) for (let x = x0 - 1; x <= x1; x++) if ((x === x0 - 1 || x === x1 || z === z0 - 1 || z === z1) && x !== (x0 + x1) >> 1 && z !== (z0 + z1) >> 1 && free(x, z)) put(x, z, 1, WALL, WALL, 2);
+      }
+    }
   }
 
   // fields: the lots of the finest step, as large as they are, each all field and flat, in the colour of its crop.
