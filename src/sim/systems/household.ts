@@ -18,6 +18,7 @@
 // is the family's spending times the person's baskets over the baskets of the family. Nobody goes hungry yet in a
 // family that spends nothing.
 import type { WorldState } from '../state';
+import { ALIVE } from '../state';
 import { ROLE } from './work';
 import { ageOn } from './people';
 
@@ -38,14 +39,18 @@ export function writeHouseholds(s: WorldState): void {
   for (let id = 0; id < s.person.size; id++) {
     if (!s.person.alive[id]) continue;
     const f = P.family[id], role = P.role[id];
-    own[id] = basketsOf(ageOn(P.born[id], e.day));
-    F.persons[f]++; baskets[f] += own[id];
-    if (role === ROLE.worker || role === ROLE.owner || role === ROLE.banker) F.working[f]++;
+    // the dead are no members; the money of a dead person whose part nobody has taken yet (src/sim/systems/deaths.ts)
+    // stays with the family
+    if (P.died[id] === ALIVE) {
+      own[id] = basketsOf(ageOn(P.born[id], e.day));
+      F.persons[f]++; baskets[f] += own[id];
+      if (role === ROLE.worker || role === ROLE.owner || role === ROLE.banker) F.working[f]++;
+    }
     income[f] += P.income[id]; spent[f] += P.spent[id]; savings[f] += P.savings[id];
   }
   for (let f = 0; f < n; f++) { F.baskets[f] = baskets[f]; F.income[f] = income[f]; F.spent[f] = spent[f]; F.savings[f] = savings[f]; }
   for (let id = 0; id < s.person.size; id++) {
-    if (!s.person.alive[id]) continue;
+    if (!s.person.alive[id] || P.died[id] !== ALIVE) continue;
     const f = P.family[id];
     P.consumed[id] = (spent[f] * own[id]) / baskets[f];
   }

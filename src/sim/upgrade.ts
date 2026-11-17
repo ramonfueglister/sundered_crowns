@@ -14,6 +14,7 @@ import { countPeople, settleHamlets } from './systems/hamlets';
 import { cultivate } from './systems/cultivation';
 import { bringInHarvest } from './systems/harvest';
 import { foundPersonCultures } from './systems/cultures';
+import { foundDeaths } from './systems/deaths';
 import type { SetupState } from './setup';
 
 /** The fields of a WorldState in the order createWorldState writes them. */
@@ -140,6 +141,15 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     (s.family as { cols: unknown }).cols = fresh;
     foundLots(s, w.ground, w.dry);
     s.v = 20;
+  }
+  if (s.v === 20) { // 20 → 21: the persons of the towns die (src/sim/systems/deaths.ts). Every living person gets the
+    // day of death, drawn from the life table for the age the person has on the day the world has reached: nobody
+    // has died since the first day, so the persons are who they were. A ruler keeps the day of the chronicle.
+    const cols = s.person.cols as Record<string, Column>, fresh = makeColumns(PERSON_SCHEMA, s.person.alive.length) as Record<string, Column>;
+    for (const k of Object.keys(fresh)) if (k in cols) fresh[k] = cols[k]; // in the order of the schema
+    (s.person as { cols: unknown }).cols = fresh;
+    foundDeaths(s);
+    s.v = 21;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one

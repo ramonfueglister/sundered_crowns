@@ -69,7 +69,7 @@ function happen(s: WorldState, w: World, c: Chronicle, e: Chronicle['events'][nu
     const born = c.bornDay[e.person];
     P.born[id] = born ?? BORN_UNKNOWN; P.sex[id] = cp.sex; P.mother[id] = -1; P.father[id] = -1;
     P.role[id] = 0; P.agent[id] = 0; // as the economy leaves every person outside it (src/sim/systems/economy.ts)
-    P.firm[id] = -1; P.died[id] = ALIVE;
+    P.firm[id] = -1; P.died[id] = ALIVE; P.dies[id] = ALIVE; // a ruler dies on the day of the chronicle
     setRulerCulture(s, id, realm); // the culture and faith of the realm the ruler enters the world in
     const z = (j: number) => normal(seed, kh, K.trait + 2 * j);
     P.iq[id] = clampU8(100 + 15 * z(0));

@@ -20,8 +20,9 @@ import type { Table } from './ecs';
  *  (src/sim/systems/borders.ts): places change hands on their days, realms come in with their first places. 19: every
  *  person has a culture and a faith, the counted minorities of the towns among them; a place has none of its own: it
  *  has those of its persons (src/sim/systems/cultures.ts). 20: the land register (src/sim/systems/lots.ts): every family that
- *  lives in a town has a parcel, and every family of the hamlets a farmstead in a hamlet. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
-export const STATE_VERSION = 20;
+ *  lives in a town has a parcel, and every family of the hamlets a farmstead in a hamlet. 21: the persons of the towns die
+ *  (src/sim/systems/deaths.ts): every person has the day of death that was drawn from the life table. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
+export const STATE_VERSION = 21;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
@@ -81,6 +82,9 @@ export const PERSON_SCHEMA = {
   /** the culture and the faith of the person (indices of ALL_CULTURES and FAITHS, src/sim/content/peoples.ts;
    *  src/sim/systems/cultures.ts) */
   culture: 'u16', faith: 'u8',
+  /** the day the person will die, drawn from the life table when the person comes into the world
+   *  (src/sim/systems/deaths.ts); ALIVE for a ruler, who dies on the day of the chronicle */
+  dies: 'i32',
 } as const;
 /** `died` of a living person. */
 export const ALIVE = 0x7fffffff;

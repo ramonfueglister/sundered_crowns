@@ -3,6 +3,8 @@
 // (src/sim/systems/household.ts), the state, the upgrade, and what the server and the panel say of a household.
 import { namedPersons } from '../src/sim/systems/rulers';
 import { describe, it, expect } from 'vitest';
+import { ALIVE } from '../src/sim/state';
+import { foundDeaths } from '../src/sim/systems/deaths';
 import { newWorldState, loadSetup } from '../tools/sim/load';
 import { advanceDay } from '../src/sim/engine';
 import { FIGURE, FIGURES } from '../src/sim/economy/engine';
@@ -32,7 +34,7 @@ const near = (a: number, b: number) => expect(Math.abs(a - b)).toBeLessThanOrEqu
 /** The persons of each family of the cities (the rulers, src/sim/systems/rulers.ts, have no part in the economy). */
 function members(x: WorldState): number[][] {
   const out: number[][] = Array.from({ length: x.family.size }, () => []), named = namedPersons(x);
-  for (let id = 0; id < x.person.size; id++) if (x.person.alive[id] && !named.has(id)) out[x.person.cols.family[id]].push(id);
+  for (let id = 0; id < x.person.size; id++) if (x.person.alive[id] && x.person.cols.died[id] === ALIVE && !named.has(id)) out[x.person.cols.family[id]].push(id); // the living: the dead are no members (src/sim/systems/deaths.ts)
   return out;
 }
 /** A woman without a husband: at the head of a family without a man at its head, or on her own. */
@@ -137,7 +139,8 @@ describe('the purse of a family', () => {
       expect(F.baskets[f]).toBe(adults + 0.5 * (ids.length - adults));
       persons += ids.length; baskets += F.baskets[f];
     });
-    expect(persons).toBe(s.person.size);
+    let alive = 0; for (let id = 0; id < s.person.size; id++) if (P.died[id] === ALIVE) alive++;
+    expect(persons).toBe(alive);
     expect(baskets).toBeGreaterThan(0.8 * persons); expect(baskets).toBeLessThan(0.9 * persons); // a third are children
   });
   it('has the income, the spending and the savings of all its members', () => {
@@ -237,6 +240,7 @@ describe('the state', () => {
     const founded = decodeState(encodeState(s)); foundEconomy(founded, w);
     settleHamlets(founded); countPeople(founded); cultivate(founded, w); bringInHarvest(founded, w); // step 17
     foundLots(founded, w.ground, w.dry); // step 20: the parcels of the families who live in the towns now
+    foundDeaths(founded); // step 21: the days of death, drawn for the age reached
     expect(hashState(up)).toBe(hashState(founded));
     const c = up.economy.cities!;
     expect(c.day).toBe(s.day); expect(c.years.length).toBe(0); expect(c.halted).toBe('');

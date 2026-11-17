@@ -17,6 +17,7 @@ nothing built before Ramon agrees. Proposal with sources (German): https://claud
 |---|---|---|
 | 1 | Persons of the 30 largest cities in 1356 | agreed by Ramon 15 Nov 2026 and built; in the running world once the world server is redeployed |
 | 1b | 1291: persons in every town of the world graphic inside the world frame (558 towns, ~102,000 persons; state 15) | agreed by Ramon 16 Nov 2026 (world of towns); tools/history/1291/towns.py writes src/sim/content/cities_1291.json |
+| 2 | The persons live: a list of events, death, birth, marriage (part 1: the list of events and death) | part 1 built as a draft, 17 Nov 2026 (Ramon: all persons, event-driven, demography first; only the list of events and death until the sources for fertility are clear). Not for a running world before births are in: it would shrink |
 
 ## Feature 1: persons of the 30 largest cities
 
@@ -107,3 +108,100 @@ lodgers and three-generation households are not modelled.
 - Briggs, C. (2024): Marriage in the Middle Ages. CAMPOP blog. https://www.campop.geog.cam.ac.uk/blog/2024/07/25/marriage-in-the-middle-ages/
 - Anglim, J. et al. (2022): Personality and intelligence: a meta-analysis. Psychological Bulletin 148, 301–336.
 - demogR, `cdmltw`: https://raw.githubusercontent.com/hanase/demogR/master/R/cdmltw.R
+
+## Feature 2: the persons live (part 1: the list of events and death)
+
+Ramon, 17 November 2026: all persons are to be simulated, a person is computed only when something is due
+(event-driven), and what a person does is to depend on IQ, the Big Five and the town; demography comes first. The
+research behind it (agent papers of 2025/26, Dwarf Fortress, Songs of Syx and other games, day planners such as
+MATSim, demographic microsimulation, personality and life outcomes) and the order of the steps are in the proposals
+(German): https://claude.ai/artifact/HvQdfFSJ1Mb35L4vZXRbQf and https://claude.ai/artifact/CSHcS21ac1gcX31d12bMFV.
+
+Ramon also decided that day: there are only the persons of the simulation, in the ECS and on the map, so nobody
+comes in from outside; and a world that shrinks as a whole is wrong for 1291. Births, marriage and remarriage are
+therefore part of this feature, and part 1 alone must not reach a running world.
+
+Code: `src/sim/systems/deaths.ts`, the column `person.dies` (state 21). Check: `npm run deaths:check`.
+
+### Model
+
+The day of death is drawn once, when a person comes into the world (at the founding for everybody), from the life
+table of feature 1 (Coale-Demeny West level 3), given the age reached: l(t*) = (1 − u) · l(a), with l the
+survivorship of the person's sex and u a draw of the person's own stream (`hash01(seed, id, 40)`). Within a year of
+age the force of mortality is constant, as `survivorship` takes it. This is the next-event method of demographic
+microsimulation (Modgen/DYNAMIS-POP, MicSim): a waiting time is drawn instead of a daily throw, and the earliest
+event is the next. Death depends on age and sex only; IQ and the Big Five do not move it yet (step 3 of the plan).
+
+The list of events is a heap over the column `person.dies`, built when a state is first seen: it is no state of its
+own, so a snapshot stays its arrays. The system `deaths` runs before the economy every day and lets everybody die
+whose day has come: about 12 persons a day in the world of 1291.
+
+A death writes `person.died`, and the family loses its head if the dead person was one. A ruler dies on the day of
+the chronicle as before.
+
+**Succession in the economy (assumption, no source).** The engine computes a fixed list of persons for every town
+and cannot add or remove one. A dead person's part (worker, owner of a firm, owner of the bank, the person who does
+not work) goes to a living person of the town of 15 or older who has none: first of the dead person's family, then
+a child, then anybody of the town, in the order of `work.ts`; with the place in the engine's list go the employer,
+the firm and the money. Where nobody is free the part stays with the dead (an estate) and is looked at again on the
+first day of each month. So the number of persons in a town's economy does not change with the town.
+
+### Measured (`npm run deaths:check`, world of 1291, seed 1291, only the deaths run)
+
+| Figure | Model | Life table |
+|---|---|---|
+| Persons at the founding | 102,042 in 550 places | |
+| Dead within 10 years, aged under 1 at the founding | 37.7 % | 39.3 % |
+| aged 1 to 4 | 18.9 % | 19.0 % |
+| aged 20 to 29 | 17.4 % | 17.6 % |
+| aged 40 to 49 | 29.6 % | 29.1 % |
+| aged 60 to 69 | 66.2 % | 66.3 % |
+| Deaths in year 1 / 2 / 10 / 30 | 3,473 / 2,724 / 2,144 / 1,588 | |
+| Living after 30 years without births | 39,804 | |
+| Parts of the economy held by the dead after 5 / 20 / 30 years | 3 / 264 / 7,794 of 47,332 | |
+
+The draw itself is tested against the table for 200,000 even draws per sex (`tests/deaths.test.ts`): survival to
+every tested age to three decimals. Without births the deaths per 1,000 fall from 34 to 25 in five years (the
+infants, who die most, are not replaced) and the estates pile up after year 15: both end with part 2.
+
+### What makes the closed world stable (probe, not built)
+
+A closed population of 20,000 persons run for 300 years with the marriage rule of the founding (growth of the last
+200 years; `tools/sim/closed_population_probe.ts`). Fertility is the natural schedule
+of Coale and Trussell, r(a) = M · n(a) (n = 0.460, 0.431, 0.395, 0.322, 0.167, 0.024 for 20–24 … 45–49; single
+years 15–19: 0.325, 0.375, 0.421, 0.460, 0.475).
+
+| West level (e0 women) | Marriage age f / m | M | Remarriage | Growth a year | Married of women 15–49 |
+|---|---|---|---|---|---|
+| 3 (25.0) | 24 / 27 | 1.0 | no | −0.65 % | 46 % |
+| 3 (25.0) | 24 / 27 | 1.0 | yes | −0.06 % | 65 % |
+| 3 (25.0) | 24 / 27 | 0.9 | yes | −0.27 % | 63 % |
+| 3 (25.0) | 24 / 27 | 0.75 | yes | −0.66 % | 66 % |
+| 3 (25.0) | 24 / 27, 10 % never marry | 1.0 | yes | −0.33 % | 59 % |
+| 3 (25.0) | 20 / 23 | 0.75 | yes | +0.03 % | 77 % |
+| 3 (25.0) | 18 / 21 | 0.75 | yes | +0.38 % | 84 % |
+| 5 (30.0) | 24 / 27 | 0.75 | yes | −0.07 % | 68 % |
+| 7 (35.0) | 24 / 27 | 0.75 | yes | +0.46 % | 68 % |
+| 7 (35.0) | 24 / 27 | 0.75 | no | −0.14 % | 57 % |
+
+Nothing is stable without remarriage. M = 0.75 is our arithmetic from the English family reconstitutions of
+1540–1850 (total marital fertility 6.7 to 6.8 against 9.0 of the standard; Alter, Newton & Oeppen 2020); no value
+for 1300 was found. La Poutré & Paping 2025 give men 25 years of life left at marriage at 27: level 3 gives 25.3.
+Open before part 2: the level of fertility around 1300, how often the widowed married again, the share who never
+married (Ramon, 17 November 2026: clear the source first).
+
+### Limits
+
+- One life table for everybody; no plague, no famine, no death in childbed.
+- Who works is not drawn anew: the shares of men and women who work drift with the successions, and a woman who
+  loses her husband does not start to work (economy feature 11 drew that at the founding).
+- A family keeps its ground and its hamlet whoever of it works now; the farmers of a place (the harvest) are
+  counted from the families that were settled at the founding.
+- Orphans stay a family without a head.
+
+### Sources
+
+- Modgen / DYNAMIS-POP, methods: https://dynamis.ihsn.org/guide/Report/10_Methods.html
+- Zinn, S. (2024): MicSim (slides, IMA 2024). https://ima-2024.wifo.ac.at/_downloads/034811e70c6ee9068b5214e504efaab3/zinn.pdf
+- Coale, A. J., Trussell, T. J. (1974): Model fertility schedules. Population Index 40(2), 185–258 (values read in https://journal.ipb.ac.id/index.php/jmap/article/download/20244/13979 and https://journals.utm.my/jurnalteknologi/article/download/457/447/454).
+- Alter, G., Newton, G., Oeppen, J. (2020), on the Cambridge Group reconstitutions. https://pmc.ncbi.nlm.nih.gov/articles/PMC10923557

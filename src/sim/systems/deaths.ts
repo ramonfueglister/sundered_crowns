@@ -1,0 +1,170 @@
+// The persons of the towns die (people feature 2, first part; docs/PEOPLE_DESIGN.md).
+//
+// A person is computed only when something is due (Ramon, 17 November 2026: all persons, event-driven). The day of
+// death is drawn once, when the person comes into the world, from the life table the people were founded with
+// (Coale-Demeny West, src/sim/people/lifetable.ts), given the age the person has reached:
+//
+//   P(T > t | T > a) = l(t) / l(a),   so   l(t*) = (1 − u) · l(a)
+//
+// with l the survivorship of the person's sex and u a draw of the person's own stream. Within a year of age the
+// force of mortality is constant, as the life table itself takes it. This is the next-event method of demographic
+// microsimulation (Modgen: https://dynamis.ihsn.org/guide/Report/10_Methods.html; MicSim, Zinn 2014): the waiting
+// time is drawn, and the earliest event of all persons is the next one. Death depends on age and sex only: IQ and
+// the Big Five do not move it yet.
+//
+// The days of death are a column of the persons (`person.dies`), so the list of events is no state of its own: it
+// is a heap over that column, built when a state is first seen and kept beside it.
+//
+// When a person dies: the day is written (`person.died`; the row stays, ids are never reused), and the family loses
+// its head if the person was one; the others stay in the family. A person who had a part in the economy of the town
+// (src/sim/systems/work.ts) leaves it to a successor, because the engine computes a fixed list of persons for every
+// town (it has no way to add or remove one): the successor takes the place in the engine's list with the employer,
+// the firm and the money that the engine holds for it. The successor is a living person of the town of 15 or older
+// who has no part yet: first of the dead person's own family, then a child of the dead person, then anybody of the
+// town, each in the order of src/sim/systems/work.ts. Where nobody is free the place stays with the dead person
+// until somebody is (an estate; looked at again on the first day of every month). These rules of succession are an assumption, no source.
+//
+// A ruler dies on the day of the chronicle (src/sim/systems/rulers.ts), not here.
+//
+// Nobody is born yet, so a world in which this system runs shrinks: births, marriage and remarriage are the next
+// part of the feature and must be in before a running world gets this one.
+import type { WorldState } from '../state';
+import { ALIVE } from '../state';
+import type { System } from '../schedule';
+import { MinHeap } from '../minheap';
+import { hash01 } from '../rng';
+import { survivorship, type Sex } from '../people/lifetable';
+import { ageOn, LIFE_TABLE_LEVEL } from './people';
+import { namedPersons } from './rulers';
+import { ROLE, WORKING_AGE, K as WORK_K } from './work';
+
+/** Draws of a person's own stream (src/sim/systems/people.ts uses 0 to 21 and 100 on, work.ts 30 and 31). */
+const K = { death: 40 } as const;
+const DAYS_PER_YEAR = 365.25;
+const L: Record<Sex, Float64Array> = { f: survivorship('f', LIFE_TABLE_LEVEL), m: survivorship('m', LIFE_TABLE_LEVEL) };
+
+/** The age at death of a person of `sex` who has reached the age `age` (years), for the draw `u` in [0, 1): the age
+ *  at which the survivorship has fallen to (1 − u) of what it is at `age`. Nobody lives past 120. */
+export function ageAtDeath(sex: Sex, age: number, u: number): number {
+  const l = L[sex], a = Math.max(0, age), y0 = Math.min(119, Math.floor(a));
+  if (a >= 120 || l[y0] <= 0) return a;
+  // survivorship at the age reached, with the constant force of the year
+  const within = (y: number, x: number) => (l[y + 1] > 0 ? l[y] * Math.pow(l[y + 1] / l[y], x - y) : l[y] * (1 - (x - y)));
+  const target = (1 - u) * within(y0, a);
+  let y = y0;
+  while (y < 119 && l[y + 1] > target) y++;
+  if (l[y + 1] > target) return 120;
+  const top = y === y0 ? within(y0, a) : l[y], x0 = y === y0 ? a : y;
+  // top · (l[y+1]/l[y])^(x − x0) = target
+  const ratio = l[y + 1] > 0 ? Math.log(target / top) / Math.log(l[y + 1] / l[y]) : 1 - target / top;
+  return Math.min(120, x0 + Math.max(0, ratio));
+}
+
+/** The day of death of the person `id` who lives on `day`: at least the next day. */
+export function drawDeath(s: WorldState, id: number, day: number): number {
+  const P = s.person.cols, sex: Sex = P.sex[id] ? 'm' : 'f';
+  const at = ageAtDeath(sex, ageOn(P.born[id], day), hash01(s.seed >>> 0, id, K.death));
+  return Math.max(day + 1, P.born[id] + Math.ceil(at * DAYS_PER_YEAR));
+}
+
+/** Gives every living person the day of death, on the day the world has reached; a ruler has none here. */
+export function foundDeaths(s: WorldState): void {
+  const P = s.person.cols, named = namedPersons(s);
+  P.dies.fill(ALIVE);
+  for (let id = 0; id < s.person.size; id++) {
+    if (!s.person.alive[id] || P.died[id] !== ALIVE || named.has(id)) continue;
+    P.dies[id] = drawDeath(s, id, s.day);
+  }
+  queues.delete(s);
+}
+
+/** The list of events of a state: the days of death of its living persons, the earliest first; and the dead whose
+ *  place in the economy is still theirs. Derived from the columns, so a loaded state builds it anew. */
+interface Queue { heap: MinHeap; estates: number[]; /** the persons of each place who are no rulers, living or dead */ byPlace: Map<number, number[]> }
+const queues = new WeakMap<WorldState, Queue>();
+function queueOf(s: WorldState): Queue {
+  let q = queues.get(s);
+  if (!q) {
+    q = { heap: new MinHeap(), estates: [], byPlace: new Map() };
+    const P = s.person.cols, F = s.family.cols, named = namedPersons(s);
+    for (let id = 0; id < s.person.size; id++) {
+      if (!s.person.alive[id] || named.has(id)) continue;
+      const place = F.place[P.family[id]], list = q.byPlace.get(place);
+      if (list) list.push(id); else q.byPlace.set(place, [id]);
+      if (P.died[id] === ALIVE) { if (P.dies[id] !== ALIVE) q.heap.push(P.dies[id], id); }
+      else if (P.role[id] !== ROLE.none) q.estates.push(id);
+    }
+    queues.set(s, q);
+  }
+  return q;
+}
+/** Puts a person who has come into the world after the list was built on it: the day of death, and the place. */
+export function scheduleDeath(s: WorldState, id: number): void {
+  const had = queues.has(s), q = queueOf(s);
+  if (!had) return; // the list was built just now, with the person
+  const P = s.person.cols, d = P.dies[id], place = s.family.cols.place[P.family[id]], list = q.byPlace.get(place);
+  if (d !== ALIVE) q.heap.push(d, id);
+  if (list) list.push(id); else q.byPlace.set(place, [id]);
+}
+
+/** Who takes the part of `dead` in the economy of the town: a living person of the same place of 15 or older
+ *  without a part, who is no ruler; −1 where there is none. */
+function successor(s: WorldState, q: Queue, dead: number, day: number): number {
+  const P = s.person.cols, F = s.family.cols, seed = s.seed >>> 0;
+  const family = P.family[dead], place = F.place[family];
+  let best = -1, bestRank = 3, bestOrder = Infinity;
+  for (const id of q.byPlace.get(place) ?? []) {
+    if (P.died[id] !== ALIVE || P.role[id] !== ROLE.none) continue;
+    const f = P.family[id];
+    if (ageOn(P.born[id], day) < WORKING_AGE) continue;
+    const rank = f === family ? 0 : P.mother[id] === dead || P.father[id] === dead ? 1 : 2, order = hash01(seed, id, WORK_K.order);
+    if (rank < bestRank || (rank === bestRank && order < bestOrder)) { best = id; bestRank = rank; bestOrder = order; }
+  }
+  return best;
+}
+
+/** Hands the part of `dead` in the economy to a successor. False where nobody is free. */
+function succeed(s: WorldState, q: Queue, dead: number, day: number): boolean {
+  const P = s.person.cols, heir = successor(s, q, dead, day);
+  if (heir < 0) return false;
+  P.role[heir] = P.role[dead]; P.agent[heir] = P.agent[dead]; P.firm[heir] = P.firm[dead];
+  P.wage[heir] = P.wage[dead]; P.income[heir] = P.income[dead]; P.spent[heir] = P.spent[dead]; P.savings[heir] = P.savings[dead];
+  if (P.role[dead] === ROLE.owner && P.firm[dead] >= 0) s.firm.cols.owner[P.firm[dead]] = heir;
+  P.role[dead] = ROLE.none; P.agent[dead] = 0; P.firm[dead] = -1; P.wage[dead] = 0; P.income[dead] = 0; P.spent[dead] = 0; P.savings[dead] = 0;
+  return true;
+}
+
+/** The person `id` dies on `day`. */
+function die(s: WorldState, q: Queue, id: number, day: number): void {
+  const P = s.person.cols, F = s.family.cols, f = P.family[id];
+  P.died[id] = day;
+  if (F.man[f] === id) F.man[f] = -1;
+  if (F.woman[f] === id) F.woman[f] = -1;
+  if (P.role[id] !== ROLE.none && !succeed(s, q, id, day)) q.estates.push(id);
+}
+
+/** Everybody whose day has come dies. Returns the number of persons who died. */
+export function deathsTo(s: WorldState, day: number): number {
+  const q = queueOf(s), P = s.person.cols;
+  let n = 0;
+  while (q.heap.size && q.heap.peekKey() <= day) {
+    const [due, id] = q.heap.pop();
+    if (!s.person.alive[id] || P.died[id] !== ALIVE || P.dies[id] !== due) continue; // an entry that no longer holds
+    die(s, q, id, due); n++;
+  }
+  return n;
+}
+
+/** The estates find their successors where somebody of the town has become free (has turned 15). */
+export function settleEstates(s: WorldState, day: number): void {
+  const q = queueOf(s), P = s.person.cols;
+  if (!q.estates.length) return;
+  q.estates = q.estates.filter((id) => P.role[id] !== ROLE.none && !succeed(s, q, id, day));
+}
+
+/** Every day: the deaths that are due; on the first day of a month the estates look for their successors. Before
+ *  the economy, which then computes the day with the successors. */
+export const deaths: System = {
+  id: 'deaths',
+  run(s, _w, t) { deathsTo(s, t.day); if (t.newMonth) settleEstates(s, t.day); },
+};
