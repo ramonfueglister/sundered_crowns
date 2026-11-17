@@ -7,6 +7,10 @@ signs are laid over it by tools/atlas/labels.ts.
 Run: python3 tools/atlas/probe.py <out> <lon> <lat> <wide> <political|terrain> [w h year]
   wide: finest blocks across the picture, as in the world probe (16 of them make a map pixel).
 Writes <out>.base.png and <out>.frame.json.
+With ATLAS_3D=1 the still is the skin of a landscape (tools/atlas/land3d.mjs): the relief is only hinted at (the
+light falls on the land's own shape there), paper grain and dark corners are left out, and the heights
+(<out>.height.f32, 1025 x 1025 floats of metres) and the woods as single clumps (<out>.trees.f32: x, y in pixels,
+metres, size, r, g, b) are written too.
 """
 import gzip, json, math, os, sys
 import numpy as np
@@ -18,6 +22,7 @@ PUB = os.path.join(ROOT, 'public')
 out, lon, lat, wide, mode = sys.argv[1], float(sys.argv[2]), float(sys.argv[3]), float(sys.argv[4]), sys.argv[5]
 W, H = (int(sys.argv[6]), int(sys.argv[7])) if len(sys.argv) > 7 else (1280, 720)
 year = int(sys.argv[8]) if len(sys.argv) > 8 else 1291
+SKIN = os.environ.get('ATLAS_3D') == '1'
 BLOCKS_PER_MAP_PIXEL = 16
 index = json.load(open(f'{PUB}/map/regions/world/index.json'))
 T, CELLS, MAPW, MAPH, WORLDW = index['tile'], index['cells'], index['mapW'], index['mapH'], index['worldW']
@@ -184,7 +189,7 @@ edge = np.where(has[..., None], EDGE[np.clip(realm, 0, len(FILL) - 1)], SAND * 0
 ink = np.where(has[..., None], INK[np.clip(realm, 0, len(FILL) - 1)], SAND * 0.55)
 
 # ---------------------------------------------------------------- the picture
-shade = lambda c, r, k: c * (1 + k * (r - 1))[..., None]
+shade = lambda c, r, k: c * (1 + k * (0.3 if SKIN else 1) * (r - 1))[..., None]
 if mode == 'political':
     grey = (terrain * np.array([0.2126, 0.7152, 0.0722])).sum(-1, keepdims=True)
     img = mix(fill, fill * (grey / 0.55), 0.18)                     # a breath of the land's own lightness
@@ -233,9 +238,9 @@ img = mix(img, RIVER * np.ones_like(img), riv * land * (0.95 if mode == 'terrain
 
 # paper: a faint grain, and the corners a little darker
 rng = np.random.default_rng(7); grain = ndi.gaussian_filter(rng.standard_normal((H, W)).astype(np.float32), 0.8)
-img = img * (1 + 0.012 * grain / grain.std())[..., None]
+if not SKIN: img = img * (1 + 0.012 * grain / grain.std())[..., None]
 yy, xx = np.mgrid[0:H, 0:W]; r2 = ((xx / W - 0.5) ** 2 + (yy / H - 0.5) ** 2) * 2
-img = img * (1 - 0.1 * np.clip(r2 - 0.3, 0, 1))[..., None]
+if not SKIN: img = img * (1 - 0.1 * np.clip(r2 - 0.3, 0, 1))[..., None]
 Image.fromarray((np.clip(srgb(img), 0, 1) * 255 + 0.5).astype(np.uint8)).save(out + '.base.png')
 
 # ---------------------------------------------------------------- towns, for the labels
@@ -246,5 +251,22 @@ for g, p in zip(gaz, people):
     tx_, ty_ = map_pixel(g['lon'], g['lat']); px, py = (tx_ - x0) / mpp, (ty_ - y0) / mpp
     if -20 < px < W + 20 and -20 < py < H + 20:
         towns.append({'name': g['name'], 'x': round(px, 1), 'y': round(py, 1), 'people': p or {1: 1500, 2: 3000, 3: 6000, 4: 12000, 5: 25000}.get(g.get('size') or 1, 1500), 'capital': (round(g['lat'], 2), round(g['lon'], 2)) in capitals})
-json.dump({'w': W, 'h': H, 'x0': x0, 'y0': y0, 'mpp': mpp, 'mx': mx, 'my': my, 'mode': mode, 'year': year, 'wide': wide, 'towns': towns}, open(out + '.frame.json', 'w'))
+if SKIN:
+    G = 1025
+    gyy, gxx = np.meshgrid(np.linspace(0, H - 1, G), np.linspace(0, W - 1, G), indexing='ij')
+    ndi.map_coordinates(np.where(sea, 0, np.maximum(hgt, 1)).astype(np.float32), [gyy, gxx], order=1).astype('<f4').tofile(out + '.height.f32')
+    # the woods as clumps: on a jittered grid, the more of them the more wood a place holds
+    # only where the wood is closed, and there one by the other: a wood is a patch with a rough canopy, not pepper
+    step = 3.2; rng = np.random.default_rng(11)
+    ty_, tx_ = np.mgrid[step / 2:H:step, step / 2:W:step]
+    tx_ = tx_ + rng.uniform(-0.4, 0.4, tx_.shape) * step; ty_ = ty_ + rng.uniform(-0.4, 0.4, ty_.shape) * step
+    ix, iy = np.clip(tx_.astype(int), 0, W - 1), np.clip(ty_.astype(int), 0, H - 1)
+    closed = ndi.gaussian_filter(woods * np.clip((treeline - hgt) / 150 + 0.5, 0, 1), 2.0)
+    keep = land[iy, ix] & (closed[iy, ix] > 0.5 + 0.06 * rng.uniform(-1, 1, tx_.shape)) & (riv[iy, ix] < 0.3)
+    under = img[iy, ix][keep]; n = int(keep.sum())
+    leaf = lin((62, 104, 62)) * (0.8 + 0.4 * rng.uniform(0, 1, (n, 1)))
+    colour = mix(under * 0.86, leaf, 0.16) if mode == 'political' else leaf
+    np.concatenate([tx_[keep][:, None], ty_[keep][:, None], hgt[iy, ix][keep][:, None], (0.75 + 0.5 * rng.uniform(0, 1, (n, 1))), colour], 1).astype('<f4').tofile(out + '.trees.f32')
+    print(f'{n} clumps of wood')
+json.dump({'metres': metres, 'w': W, 'h': H, 'x0': x0, 'y0': y0, 'mpp': mpp, 'mx': mx, 'my': my, 'mode': mode, 'year': year, 'wide': wide, 'towns': towns}, open(out + '.frame.json', 'w'))
 print(f'{out}.base.png: level z{z}, {metres:.0f} m to a pixel, {len(rivers)} rivers, {len(towns)} towns, {len(np.unique(realm))} realms')

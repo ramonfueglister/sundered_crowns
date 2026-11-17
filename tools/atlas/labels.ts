@@ -1,6 +1,7 @@
 // The writing over a still of the atlas probe (tools/atlas/probe.py): the realms' names along their curves as the game
 // lays them out (names.ts), here with a light halo, and the towns as signs by their size with their names.
-// Run: npx tsx tools/atlas/labels.ts <out>   (reads <out>.base.png and <out>.frame.json, writes <out>.png)
+// Run: npx tsx tools/atlas/labels.ts <out>   (reads <out>.base.png and <out>.frame.json, writes <out>.png and <out>.towns.json;
+// with ATLAS_3D=1 the towns' signs are left out: tools/atlas/land3d.mjs builds them)
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { gunzipSync } from 'node:zlib';
@@ -28,6 +29,7 @@ const boxes: [number, number, number, number][] = [];
 for (const n of laid) { const m = /M([\d.-]+) ([\d.-]+)Q([\d.-]+) ([\d.-]+) ([\d.-]+) ([\d.-]+)/.exec(n.d); if (m) { const [ax, ay, cx, cy, bx, by] = m.slice(1).map(Number); for (let k = 0; k <= 8; k++) { const t = 0.5 + ((k / 8 - 0.5) * n.length) / Math.max(1, Math.hypot(bx - ax, by - ay)), px = (1 - t) ** 2 * ax + 2 * (1 - t) * t * cx + t * t * bx, py = (1 - t) ** 2 * ay + 2 * (1 - t) * t * cy + t * t * by; boxes.push([px - n.size * 0.6, py - n.size * 0.6, px + n.size * 0.6, py + n.size * 0.6]); } } }
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
 let signs = '', words = '';
+const stood: Town[] = [];
 for (const t of shown) {
   const big = t.people >= least * 4, mid = t.people >= least * 1.8, r = big ? 4.2 : mid ? 3.3 : 2.5, size = big ? 15 : mid ? 13 : 11.5;
   if (t.x < 4 || t.y < 4 || t.x > frame.w - 4 || t.y > frame.h - 4) continue;
@@ -42,8 +44,9 @@ for (const t of shown) {
     if (box[0] < 2 || box[2] > frame.w - 2 || box[1] < 2 || box[3] > frame.h - 2) continue;
     if (boxes.some((b) => box[0] < b[2] && box[2] > b[0] && box[1] < b[3] && box[3] > b[1])) continue;
     boxes.push(box, [t.x - r - 2, t.y - r - 2, t.x + r + 2, t.y + r + 2]);
-    signs += sign;
-    words += `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" font-size="${size}" text-anchor="${anchor}" class="town${big ? ' big' : ''}">${esc(t.name)}</text>`;
+    if (process.env.ATLAS_3D !== '1') signs += sign;
+    stood.push({ ...t, rank: big ? 2 : mid ? 1 : 0 } as Town);
+    if (process.env.ATLAS_3D !== '1') words += `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" font-size="${size}" text-anchor="${anchor}" class="town${big ? ' big' : ''}">${esc(t.name)}</text>`;
     break;
   }
 }
@@ -58,6 +61,7 @@ svg{font-family:'EB Garamond',serif}
 <img src="file://${out}.base.png" width="${frame.w}" height="${frame.h}">
 <svg width="${frame.w}" height="${frame.h}"><g class="realm">${laid.map((n) => nameSvg(n, `n${n.realm}`)).join('')}</g>${signs}${words}</svg>`;
 writeFileSync(`${out}.html`, html);
+writeFileSync(`${out}.towns.json`, JSON.stringify(stood));
 const req = createRequire(import.meta.url);
 let playwright: typeof import('playwright');
 try { playwright = req('playwright'); } catch { playwright = createRequire('/opt/node22/lib/node_modules/')('playwright'); }
@@ -66,5 +70,10 @@ await page.goto(`file://${out}.html`);
 await page.evaluate(() => document.fonts.ready);
 await page.waitForTimeout(200);
 await page.screenshot({ path: `${out}.png` });
+// for the landscape (land3d.mjs) the names alone, on nothing: they are laid over the woods there
+if (process.env.ATLAS_3D === '1') {
+  await page.evaluate(() => { document.body.style.background = 'transparent'; document.querySelector('img')!.style.visibility = 'hidden'; });
+  await page.screenshot({ path: `${out}.names.png`, omitBackground: true });
+}
 await browser.close();
 console.log(`${out}.png: ${laid.length} names of realms, ${shown.length} towns`);
