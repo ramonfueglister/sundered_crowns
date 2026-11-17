@@ -67,7 +67,7 @@ export interface Pieces {
  * `ahead`: build the coarser step and the surroundings of the picture too (a tool that takes one picture does not
  * need them). `changed` is called whenever a piece has arrived.
  */
-export function createPieces(stage: Stage, o: { region: string; base: string; bakedSky: boolean; ahead: boolean; changed(): void; /** the world's start year, whose towns are built */ year?: number; /** false: the far steps as far.ts lays them out, not as the mean of the finer step (mean.ts); 'compare': as far.ts lays them out, and measured against that mean (the counts `cmp …`) */ mean?: boolean | 'compare' }): Pieces {
+export function createPieces(stage: Stage, o: { region: string; base: string; bakedSky: boolean; ahead: boolean; changed(): void; /** the world's start year, whose towns are built */ year?: number; /** true: the first far step as the mean of the finest step (mean.ts: exact, but it builds four finest pieces for each far piece); 'compare': as far.ts lays it out, and measured against that mean (the counts `cmp …`); else as far.ts lays it out */ mean?: boolean | 'compare' }): Pieces {
   const held = new Map<string, Held>(), building = new Set<string>(), jobs = new Map<number, Spot>(), idle: Worker[] = [];
   const workers: Worker[] = [];
   const fine = createFine(stage, { still: !o.ahead, changed: o.changed });
