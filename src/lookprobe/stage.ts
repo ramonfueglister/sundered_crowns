@@ -395,6 +395,10 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     made.castShadow = casts; made.receiveShadow = true; made.userData.dots = new THREE.Vector2(0, 1);
     return made;
   };
+  // The renderer keeps a record of every mesh it has drawn, and each record hangs on the material, which all pieces
+  // share and which is never let go: only the mesh's own 'dispose' takes the record, and with it the mesh and its
+  // numbers, out of the renderer. Letting go of the geometry alone leaves them held for good.
+  const gone = (made: THREE.Mesh) => { made.dispatchEvent({ type: 'dispose' } as never); made.geometry.dispose(); };
   const stage: Stage = {
     canvas, aim, soften, busy: true,
     probe: { ready: false, counts: {}, backend: flag('webgl', false) ? 'webgl2' : 'webgpu' },
@@ -415,11 +419,11 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     remove(group) {
       scene.remove(group);
       // the figures' kit is shared by every piece: only their own mesh is let go (figures/stage.ts)
-      for (const mesh of group.children) if (mesh.userData.figures === 'near') (mesh as THREE.InstancedMesh).dispose(); else if (!mesh.userData.figures) (mesh as THREE.Mesh).geometry.dispose();
+      for (const mesh of group.children) if (mesh.userData.figures === 'near') (mesh as THREE.InstancedMesh).dispose(); else if (!mesh.userData.figures) gone(mesh as THREE.Mesh);
       pending = Math.max(pending, 1);
     },
     more(group, things) { const part = mesh(things, solid, true); group.add(part); pending = Math.max(pending, 3); return part; },
-    drop(part) { part.removeFromParent(); part.geometry.dispose(); pending = Math.max(pending, 1); },
+    drop(part) { part.removeFromParent(); gone(part); pending = Math.max(pending, 1); },
     dissolve(thing, from, until) {
       // the figures are too small to dissolve dot by dot: they come and go one by one instead, and are all gone
       // well before the other layer has taken a third of the dots, so that it is not seen through them
