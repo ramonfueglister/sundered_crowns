@@ -11,7 +11,18 @@ pub fn morph_test(h: &Head, p: &Look) -> Vec<V3> {
     morph(h, p).0
 }
 
+/// `morph_test` with the mouth at another share of the way from nose to chin than the dress table's
+/// (`DressSet::mouth_at`; 0: where the morph targets leave it), for tests that hold the table's value against the
+/// head without it.
+pub fn morph_test_mouth(h: &Head, p: &Look, mouth_at: f32) -> Vec<V3> {
+    morph_as(h, p, Some(mouth_at)).0
+}
+
 pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
+    morph_as(h, p, None)
+}
+
+fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>) -> (Vec<V3>, usize) {
     let mut pp = h.base.clone();
     let mut used = 0;
     // Ears under a veil keep MakeHuman's form: they are hidden there, and linen is bound to the skin under it. The
@@ -277,6 +288,11 @@ pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
             }
         }
     }
+    // the mouth set between nose and chin where a real one lies, where a dress with a table asks for it
+    // (`DressSet::mouth_at`); after the lips are closed, which moves the line where they meet
+    if let Some((d, at)) = p.dress.set().map(|d| (d, mouth_at.unwrap_or(d.mouth_at))).filter(|(_, at)| *at > 0.0) {
+        mouth_set(h, &mut pp, at, crate::dress::by_sex(d.lean[0], d.lean[1], p.female, p.grown()));
+    }
     // the eyes brought forward with their lids, where a dress with a table asks for it (`DressSet::eye_out`)
     if let Some(mm) = p.dress.set().map(|d| d.eye_out_of(p.female, p.age)).filter(|mm| *mm != 0.0) {
         eyes_out(h, &mut pp, mm / 100.0);
@@ -317,6 +333,44 @@ pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
         }
     }
     (pp, used)
+}
+
+/// The field in which the mouth is moved down (`mouth_set`), on the base head (1 unit = 10 cm). By height: in
+/// full between the first two (the lips' red lies between 6.489 and 6.719 on the base head, the peaks of the
+/// upper lip's bow higher than its middle: real/skin_lip.txt; tests/faces.rs holds that all of it moves in full),
+/// nothing at the nose's foot (subnasale) and above it and nothing at the chin's lowest point (menton) and below
+/// it. Sideways: in full to this far from the middle line and nothing from that far (the mouth's corners lie at
+/// 0.24, the cheek turns back from 0.5). In depth: nothing behind the first and all in front of the second (the
+/// nape lies at the mouth's height too).
+pub const MOUTH_FIELD: ([f32; 2], [f32; 2], [f32; 2]) = ([6.725, 6.485], [0.28, 0.55], [0.6, 0.9]);
+
+/// How much of the mouth's way down (`mouth_set`) a vertex of the base head goes: `MOUTH_FIELD`.
+pub fn mouth_field(h: &Head, v: usize) -> f32 {
+    use crate::measure::{MENTON, SUBNASALE};
+    let (b, (lips, side, depth)) = (&h.base, MOUTH_FIELD);
+    let (q, nose, chin) = (b[v], b[SUBNASALE][1], b[MENTON][1]);
+    if q[1] >= nose || q[1] <= chin {
+        return 0.0;
+    }
+    let wy = if q[1] > lips[0] { 1.0 - sm(lips[0], nose, q[1]) } else if q[1] < lips[1] { sm(chin, lips[1], q[1]) } else { 1.0 };
+    wy * (1.0 - sm(side[0], side[1], q[0].abs())) * sm(depth[0], depth[1], q[2])
+}
+
+/// Moves the mouth of a morphed head down so that the line where the lips meet lies `share` of the way from the
+/// nose's foot to the chin's lowest point (`measure::lower_face`, on a bust leaning back by `lean`), if it lies
+/// higher; a mouth that lies lower stays. The lips move as they are, with their corners and what lies in the
+/// mouth; the skin between nose and upper lip is drawn out and the chin's pressed together by as much
+/// (`MOUTH_FIELD`); nose and chin stay where they are. MakeHuman's own `mouth-trans-down` moves the nose's foot
+/// down by more than half of the lips' way and presses the 9 mm under the lower lip alone.
+pub(crate) fn mouth_set(h: &Head, pp: &mut [V3], share: f32, lean: f32) {
+    let m = crate::measure::lower_face(pp, lean);
+    let down = (share * m[2] - m[0]) / 100.0 / lean.cos();
+    if down <= 0.0 {
+        return;
+    }
+    for (v, q) in pp.iter_mut().enumerate().take(h.base.len()) {
+        q[1] -= down * mouth_field(h, v);
+    }
 }
 
 /// The field in which an eye is brought forward (`eyes_out`), in halves of the opening's length: how far it

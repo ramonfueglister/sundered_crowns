@@ -5,8 +5,8 @@
 mod common;
 
 use common::{head, person};
-use sc_portrait::measure::{face, far_cheek, lips, marks, LIPS, MEASURES, MENTON, SELLION, STAGE_TURN};
-use sc_portrait::{build, morph_test, real, Beard, Head, Look, LODS};
+use sc_portrait::measure::{face, far_cheek, lips, lower_face, marks, LIPS, LOWER_FACE, MEASURES, MENTON, SELLION, STAGE_TURN, SUBNASALE};
+use sc_portrait::{build, morph_test, morph_test_mouth, mouth_field, real, Beard, Head, Look, LODS};
 
 #[test]
 fn the_grown_of_england_have_faces_of_human_measure() {
@@ -422,6 +422,69 @@ fn the_grown_of_england_hold_their_heads_as_people_do() {
         assert!(worst < 1.5, "{}: {worst} standard deviations from the reference", if female { "women" } else { "men" });
     }
     assert!(rms(true, -0.1, false) > 3.0);
+}
+
+#[test]
+fn the_mouth_of_england_lies_between_nose_and_chin_where_a_real_one_lies() {
+    // Until round 92 the mouth of the grown lay right under the nose over a long chin: `rest` gives a woman's face
+    // the survey's length with a longer nose and a longer chin, which moves the nose's foot and the chin away from
+    // a mouth that stays. Of the height from the nose's foot to the chin's lowest point the upper lip took 0.22 on
+    // a woman and 0.27 on a man, where real faces have 0.30 to 0.31 (src/measure.rs `LOWER_FACE`): an upper lip
+    // of 14 mm over 50 mm of lower lip and chin. Now the mouth lies at the dress table's share (`mouth_at`).
+    let Some(h) = head() else { return };
+    let set = sc_portrait::dress::Dress::England1356.set().unwrap();
+    let show = std::env::var("SHOW").is_ok();
+    let (lo, hi) = LOWER_FACE.iter().flat_map(|&(_, men, women)| [men[0], women[0]]).fold((f32::MAX, f32::MIN), |(lo, hi), x| (lo.min(x), hi.max(x)));
+    assert!(set.mouth_at > lo && set.mouth_at < hi + 0.005, "the table's share {} and the real ones {lo} to {hi}", set.mouth_at);
+    for female in [true, false] {
+        let lean = set.lean[if female { 0 } else { 1 }];
+        let (n, mut was, mut is, mut mm) = (60, 0.0, 0.0, [0.0; 2]);
+        for k in 0..n {
+            let p = person(2 * k + !female as u32, female, [24.0, 35.0, 50.0, 68.0][k as usize % 4]);
+            let (before, after) = (lower_face(&morph_test_mouth(&h, &p, 0.0), lean), lower_face(&morph_test(&h, &p), lean));
+            // nose's foot and chin stay: the height between them is what it was
+            assert!((before[2] - after[2]).abs() < 0.01, "person {k}: from the nose's foot to the chin {} mm, before {}", after[2], before[2]);
+            // and everyone grown has the mouth at the table's share, or lower where it lay lower
+            let share = after[0] / after[2];
+            assert!(share > set.mouth_at - 0.002 && share < 0.40, "person {k}: the upper lip takes {share} of the lower face");
+            assert!(share < set.mouth_at + 0.002 || (share - before[0] / before[2]).abs() < 1e-4, "person {k}: a mouth that lay lower was moved, {share}");
+            was += before[0] / before[2] / n as f32;
+            is += share / n as f32;
+            mm[0] += after[0] / n as f32;
+            mm[1] += after[1] / n as f32;
+        }
+        if show {
+            println!("{}: the upper lip's share of the lower face {is:.3}, without the table's share {was:.3}; upper lip {:.1} mm, lower lip and chin {:.1} mm", if female { "women" } else { "men" }, mm[0], mm[1]);
+        }
+        // the head without the table's share has the fault (women 0.22, men 0.27)
+        assert!(was < if female { 0.24 } else { 0.285 }, "{}: {was} without the table's share", if female { "women" } else { "men" });
+        assert!(is > lo && is < hi + 0.005, "{}: {is}, real faces {lo} to {hi}", if female { "women" } else { "men" });
+    }
+    // small children, whose mouths lie low enough as MakeHuman has them, keep theirs: in the mean of 40 the share
+    // moves by less than 0.01
+    let (n, mut was, mut is) = (40, 0.0, 0.0);
+    for k in 0..n {
+        let p = person(k, k % 2 == 0, [2.0, 5.0][(k / 2) as usize % 2]);
+        let (before, after) = (lower_face(&morph_test_mouth(&h, &p, 0.0), set.lean[0]), lower_face(&morph_test(&h, &p), set.lean[0]));
+        was += before[0] / before[2] / n as f32;
+        is += after[0] / after[2] / n as f32;
+    }
+    if show {
+        println!("children of 2 and 5: {is:.3}, without the table's share {was:.3}");
+    }
+    assert!(is - was < 0.01 && is >= was, "children of 2 and 5: {is}, before {was}");
+    // The lips move as they are: every vertex that is lip (real/skin_lip.txt) goes the whole way, the nose's foot
+    // and the chin's lowest point none of it, and the lips' red is as high as it was
+    let lip = real::column("real/skin_lip.txt", 0.0);
+    let red: Vec<usize> = (0..lip.len()).filter(|&v| lip[v] > 0.05).collect();
+    assert!(red.len() > 200, "{} vertices of the lips", red.len());
+    for &v in &red {
+        assert!(mouth_field(&h, v) > 0.999, "vertex {v} of the lips goes {} of the way", mouth_field(&h, v));
+    }
+    assert!(mouth_field(&h, SUBNASALE) == 0.0 && mouth_field(&h, MENTON) == 0.0 && mouth_field(&h, SELLION) == 0.0);
+    let p = person(0, true, 35.0);
+    let (a, b) = (lips(&morph_test_mouth(&h, &p, 0.0)), lips(&morph_test(&h, &p)));
+    assert!((0..3).all(|k| (a[k] - b[k]).abs() < 0.01), "the lips' red {b:?} mm, before {a:?}");
 }
 
 #[test]

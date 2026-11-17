@@ -2179,6 +2179,82 @@ to far side as far from the reference as before. The short beard and stubble as 
 same beard. One man's mouth was measured against (the ring was read off renders of 940021), and the
 locks' mouth is the same for every man. All measures PLACEHOLDER, by eye.
 
+**The mouth between nose and chin where a real one lies (round 92).** After six rounds on hair and beards the
+faces were held beside the reference's again, large, from the front and from the side
+(`runde92_mund_vorher_nachher.png`, upper row). A grown woman's mouth lay right under her nose over a long,
+heavy chin: from the front a third more chin than face above it would bear, from the side a muzzle. The
+survey's measures (round 69) did not show it: face length, the nose's length and the lips are at its means.
+It has no measure for where the mouth lies between them.
+
+Measured on the morphed head (`measure::lower_face`: heights along the upright line of a bust leaning as the
+dress table leans it; 120 people each): of the height from the nose's foot (subnasale) to the chin's lowest
+point (menton), the upper lip, down to the line where the lips meet, took
+
+| | upper lip, mm | lower lip and chin, mm | the upper lip's share (SD) | after: mm | after: share (SD) |
+|---|---|---|---|---|---|
+| women of 24, 35, 50 | 13.9 | 50.3 | 0.216 (0.037) | 19.9 / 44.3 | 0.310 (0.000) |
+| men of 24, 35, 50 | 19.0 | 52.3 | 0.266 (0.030) | 22.2 / 49.1 | 0.311 (0.004) |
+| women of 68 | 12.8 | 52.9 | 0.194 | 20.4 / 45.4 | 0.310 |
+| men of 68 | 17.8 | 50.0 | 0.262 | 21.1 / 46.7 | 0.311 |
+| girls of 17 | 14.1 | 49.7 | 0.220 | 19.8 / 44.1 | 0.310 |
+| boys of 17 | 19.2 | 53.5 | 0.264 | 22.6 / 50.1 | 0.311 |
+| girls of 13 | 14.4 | 45.1 | 0.241 | 18.4 / 41.0 | 0.310 |
+| boys of 13 | 18.2 | 45.8 | 0.284 | 20.1 / 44.0 | 0.314 |
+| girls of 8 | 14.7 | 36.0 | 0.289 | 15.9 / 34.7 | 0.315 |
+| boys of 8 | 16.4 | 37.5 | 0.304 | 17.2 / 36.7 | 0.319 |
+| girls of 5 | 14.6 | 31.9 | 0.313 | 15.0 / 31.5 | 0.322 |
+| boys of 5 | 15.6 | 33.2 | 0.319 | 15.8 / 32.9 | 0.325 |
+| girls of 2 | 14.3 | 28.3 | 0.336 | 14.4 / 28.3 | 0.337 |
+| boys of 2 | 14.9 | 29.3 | 0.337 | 14.9 / 29.2 | 0.337 |
+
+Real faces: 0.295 (women) and 0.301 (men) with the lips at rest and 3.3 and 2.4 mm apart (Arnett and others
+1999, the table of facial lengths: upper lip 21.0 of 71.1 mm and 24.4 of 81.1; the paper round 74 took the
+profile from), 0.313 and 0.307 with the lips closed (Farkas, Katic, Hreczko, Deutsch & Munro 1984: 20.1 of
+64.3 mm and 22.3 of 72.6; not read itself, its means as Woelfel, Igarashi & Dong 2014 cite them). MakeHuman's
+base head has 0.295. A woman's upper lip was 6 mm too short and her chin as much too long; a man's 3 mm.
+
+The cause, found as round 77 found the cheek's (every `add` of `morph.rs` traced for 60 women and 60 men, and
+each target's share in the two heights summed): `rest` gives a woman's face the survey's length with
+`chin/chin-height-incr` (0.3 and the genes: 8.6 mm more chin under the mouth) and its nose's length with
+`nose/nose-scale-vert-incr` (0.4 and the genes: the nose's foot 2.4 mm lower, the upper lip as much shorter). Nose's foot and
+chin moved away from a mouth that stayed where it was. Age adds to it (the nose grows down).
+
+What was weighed: MakeHuman's own `mouth/mouth-trans-down` moves the lips 8.8 mm at weight 1 and the nose's
+foot 4.8 mm with them, so that the nose would have to be shortened again with `nose-scale-vert-decr`, which
+lifts the nose's wings more than its foot (another nose); and it takes the lips' whole way out of the 9 mm
+under the lower lip. Making the face longer with `head-scale-vert-incr` in place of nose and chin keeps the
+mouth's place but needs three large weights against each other and makes the whole skull higher (hair, veil).
+Built instead: the mouth is set, as round 74 set the pupil between the lids. `morph.rs` `mouth_set`: after
+the lips are closed, the mouth of a head whose upper lip takes less than the dress table's `mouth_at` (0.31)
+is moved down to it; a mouth that lies lower stays. The lips move as they are, with their corners (`MOUTH_FIELD`,
+`mouth_field`: on the base head in full where the lips' red lies, nothing at the nose's foot and above, nothing
+at the chin's lowest point and below, fading out sideways from 2.8 to 5.5 cm): the skin between nose and lip
+is drawn out, the chin's pressed together, nose and chin stay. Beards, bound to the skin, go with it. Roman
+portraits have no table and are untouched.
+
+All of the survey's measures and the lips' red are what they were (`face_measure`: from the mouth's line to
+the chin 47.6 mm on women where it was 52.9, 52.3 on men where it was 55.2; nothing else moved). Of the
+sample's 35 portraits 25 changed, in 0.3 to 6.2 % of their pixels by more than 8 of 255 in a channel: everyone
+from 13 on but a boy of 13 and a man of 24 whose mouths lay low enough, two children of 8 and one small child.
+Seven are the same pixel for pixel (those two and five small children), three within less than 0.05 % of
+their pixels (two children of 8, a small child). The Roman pictures are the same pixel for pixel.
+
+Tests: `portrait/tests/faces.rs`, `the_mouth_of_england_lies_between_nose_and_chin_where_a_real_one_lies` (60
+women and 60 men of 24 to 68: without the table's share, `morph_test_mouth(.., 0.0)`, the women's mean is
+under 0.24 and the men's under 0.285; with it everyone lies at it, or lower where the mouth lay lower, and
+the height from nose's foot to chin is the same to 0.01 mm; 40 children of 2 and 5 move by less than 0.01 in
+the mean; every vertex of the lips' red goes the whole way, nose's foot, chin and nose's root none; the
+lips' red is as high as before). Pictures: `runde92_mund_vorher_nachher.png` (a girl of 17 from the front, as
+the panel turns her and from the side, and a woman of 35; before above),
+`runde92_gesichter_vorher_nachher.png` (seven women and five men as the panel shows them, before above),
+`runde92_stichprobe.png`.
+Still open: everyone grown has the same share, where real faces differ (no spread was read; ours had 0.03 to
+0.04, which was the fault's own). The source for closed lips is cited through another paper. Children's
+mouths were not held against children's measures. The dark dent beside the chin on the lit side, the broad
+flat chin of the women and the pale patch beside the nose are as they were. The moustache's locks are drawn
+out with the skin under them (3 mm on a man). 0.31 lies between two readings: no PLACEHOLDER, but one
+number for both sexes and all ages.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since

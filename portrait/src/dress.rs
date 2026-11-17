@@ -324,6 +324,18 @@ pub struct DressSet {
     /// with an iris of 11.7 mm whose upper 1.5 mm are covered and whose foot the lower lid touches:
     /// 5.85 / (5.85 + 4.35). Round 74.
     pub pupil: f32,
+    /// Where the mouth lies between nose and chin: the share of the height from the nose's foot (subnasale) to the
+    /// chin's lowest point (menton) that the upper lip takes, down to the line where the lips meet (0: the mouth
+    /// stays where the morph targets leave it; morph.rs `mouth_set`, which moves a mouth that lies higher down to
+    /// this and leaves one that lies lower). MakeHuman's base has 0.295. `rest` made a woman's face as long as
+    /// the survey's with a longer nose and a longer chin (`nose-scale-vert-incr`, `chin-height-incr`): nose's foot
+    /// and chin moved away from a mouth that stayed. 120 grown women had 0.216 (an upper lip of 13.9 mm over
+    /// 50.3 mm of lower lip and chin: the mouth right under the nose over a long, heavy chin), men 0.266, women of
+    /// 68 0.194; children of 2 and 5, who take a third of `rest`, 0.31 to 0.34. Real faces: 0.295 (women) and 0.301
+    /// (men) with the lips at rest and 3.3 and 2.4 mm apart (Arnett and others 1999), 0.313 and 0.307 with the
+    /// lips closed (Farkas and others 1984; src/measure.rs `LOWER_FACE`). 0.31 for both: closed lips. Everyone
+    /// grown then has this one share; real faces differ in it (no spread was read). Round 92.
+    pub mouth_at: f32,
     /// How far the bust leans back, women and men (radians, about the axis from ear to ear through the head's
     /// centre). As MakeHuman forms them both sexes stand with the head bowed, alike (the line from chin to
     /// glabella 8.7 and 8.6 degrees off upright, the top forward): seen from eye level the brow hangs over the eyes
@@ -480,6 +492,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     eye_forward: 0.0,
     eye_out: [2.0, 0.0],
     pupil: 0.57,
+    mouth_at: 0.31,
     lean: [0.12, 0.10],
     iris_mm: 11.7,
     eyes_child: [0.6, 0.5],
@@ -512,6 +525,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
         Source { what: "lids, closed mouth, the face at rest, a child's face, strength of moods, the eyeballs' place in their sockets, how far the eyes turn towards each other, a child's lids and lash line, women's jaw, cheeks and lifted inner brow, the lips' colour, the upper lip's share of it, the seam and a child's share of the colour, the form of the mouth (cupid's bow, the lips' volume, the lower jaw forward), the lash line, flush, where it lies and its strength for women and men, the line of a scar, brows, how much of Apoleia's paint (brow, cheeks, sockets) and child's face is left, a small child's brows, how strongly the gene of the lips shows, and that ears under a veil keep MakeHuman's form", source: "PLACEHOLDER, by eye against the reference pictures; not a matter of dress but kept with it so that Apoleia's faces stay as they were." },
         Source { what: "a grown woman's eyes brought forward by 2 mm with their lids: how deep a woman's eye lies in her head against a man's", source: "Exophthalmometry at eyewiki.org (Hertel's reading from the bone's rim beside the eye to the cornea: 16.5 mm in white men, 15.4 mm in white women, after Erb et al. 2003 and Migliori & Gladstone 1984). Shin, Lee, Koh & Song 2017, Anatomy & Cell Biology 50: 41-47 (computed tomography of 70 men and 71 women of Korea, 20 to 30: the cornea 5.3 and 6.3 mm behind the rim over the eye, 11.6 and 12.4 mm in front of the rim under it; read from a summary of the paper's table, which column is which sex inferred). Bone, where ours reads skin, and people of today: only the difference between the sexes is used, and the 2 mm is fitted to it." },
         Source { what: "how the grown hold their heads (the bust's lean, women 0.12 and men 0.10)", source: "Arnett, Jelic, Kim, Cummings, Beress, Worley, Chung & Bergman 1999, American Journal of Orthodontics and Dentofacial Orthopedics 116(3): 239-253 (20 white men and 26 white women with balanced faces, in natural head position: glabella, lips and chin against the true vertical line through the subnasale; read from a copy of the paper). The lean is the best fit to it: women then lie within 1.2 of its standard deviations at every point, men's glabella 1.85 behind and their lips about 1 (MakeHuman's form; no lean brings them nearer)." },
+        Source { what: "the mouth at 0.31 of the way from the nose's foot to the chin's lowest point (the upper lip's share of the lower face)", source: "Arnett, Jelic, Kim, Cummings, Beress, Worley, Chung & Bergman 1999, American Journal of Orthodontics and Dentofacial Orthopedics 116(3): 239-253 (table of facial lengths, lips at rest: upper lip 21.0 of 71.1 mm in 26 women, 24.4 of 81.1 in 20 men; read from a copy of the paper). Farkas, Katic, Hreczko, Deutsch & Munro 1984, American Journal of Orthodontics 86(1): 52-60 (lips closed: 20.1 of 64.3 mm in women, 22.3 of 72.6 in men; not read itself, the means as cited by Woelfel, Igarashi & Dong 2014, Journal of Advanced Prosthodontics 6(6): 483-490). 0.31 lies between the two readings for closed lips; that every grown face has the same share is a simplification." },
         Source { what: "the pupil at 0.57 of the way from the lower lid's edge to the upper lid's", source: "Neuro-ophthalmology Illustrated, ch. 1, at neuro-ophthalmology.stanford.edu (the upper lid's edge 4 to 5 mm over the pupil's middle, covering the upper 1 to 2 mm of the iris; the lower lid just reaching the iris's foot; opening 9 to 12 mm high) and Margin to reflex distance at eyewiki.org (lower lid 5.5 mm under the pupil). Ours are set by moving the ball, not the lids. The opening is 8.9 mm high in grown women and 9.1 in men, the upper lid 3.8 to 3.9 mm over the pupil and the lower 5.0 to 5.2 under it: at the low end of theirs." },
         Source { what: "the height of the lips' red (upper, lower, both), which the form of the mouth is held against", source: "Ferrario, Sforza, Tartaglia, Sozzi & Carù 2003, Plastic and Reconstructive Surgery 111(7): 2149-2156 (89 men and 73 women, healthy young northern Italians, measured in three dimensions). Means from the paper's table; the standard deviations read from a summary of it. The lips' form itself and how far the upper lip stands in front of the lower: PLACEHOLDER, nothing read on real profiles." },
     ],

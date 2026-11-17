@@ -283,6 +283,37 @@ pub fn profile(h: &Head, pp: &[V3], lean: f32) -> [f32; 4] {
         .map(|q| 100.0 * ((q[2] - sn[2]) * cs - (q[1] - sn[1]) * sn_))
 }
 
+/// The heights of the lower face on the middle line, each as a share of the height from the subnasale to the
+/// chin's lowest point (menton), and that share for men and for women: the upper lip (subnasale to the line where
+/// the lips meet) and the lower lip with the chin (that line to menton). Two readings of real faces, a row each.
+/// Arnett and others 1999 (as `PROFILE`; the table's facial lengths, read from a copy of the paper): on
+/// radiographs of 20 men and 26 women in natural head position with the lips at rest, upper lip 24.4 (SD 2.5) and
+/// 21.0 (1.9) mm, the gap between the lips 2.4 and 3.3, lower lip and chin 54.3 (2.4) and 46.9 (2.3), the lower
+/// third 81.1 (4.7) and 71.1 (3.5). Farkas, Katic, Hreczko, Deutsch & Munro 1984, Anthropometric proportions in
+/// the upper lip-lower lip-chin area of the lower face in young white adults, American Journal of Orthodontics
+/// 86(1): 52-60, measured on the face with the lips closed (not read itself: its means as Woelfel, Igarashi & Dong
+/// 2014, Journal of Advanced Prosthodontics 6(6): 483-490, cite them): subnasale to stomion 22.3 and 20.1 mm,
+/// stomion to gnathion 50.7 and 43.4, subnasale to gnathion 72.6 and 64.3. A radiograph is enlarged and its chin
+/// point is the soft tissue's: the millimetres of the two differ, the shares agree.
+pub const LOWER_FACE: [(&str, [f32; 2], [f32; 2]); 2] = [
+    ("Arnett and others 1999, lips at rest", [24.4 / 81.1, 54.3 / 81.1], [21.0 / 71.1, 46.9 / 71.1]),
+    ("Farkas and others 1984, lips closed", [22.3 / 72.6, 50.7 / 72.6], [20.1 / 64.3, 43.4 / 64.3]),
+];
+
+/// The heights of `LOWER_FACE` on a morphed head (`morph_test`) whose bust leans back by `lean` radians, in
+/// millimetres along the upright line, as a radiograph in natural head position shows them: the upper lip
+/// (subnasale to the line where the lips meet), the lower lip and chin (that line to menton), and from the
+/// subnasale to menton. The lips' line is taken at the height of the head's seam between the lips and at the
+/// depth of the lips' front (the seam itself lies 5 to 7 mm inside the mouth).
+pub fn lower_face(pp: &[V3], lean: f32) -> [f32; 3] {
+    let (cs, sn_) = (lean.cos(), lean.sin());
+    let up = |q: V3| 100.0 * (q[1] * cs + q[2] * sn_);
+    let seam = between(pp[STOMION[0]], pp[STOMION[1]]);
+    let front = pp[LIP_TOP[0]][2].max(pp[LIP_FOOT[0]][2]);
+    let line = up([seam[0], seam[1], front]);
+    [up(pp[SUBNASALE]) - line, line - up(pp[MENTON]), up(pp[SUBNASALE]) - up(pp[MENTON])]
+}
+
 /// How the lids of the eye at positive x stand to the pupil of a morphed head (`morph_test`) whose eye looks
 /// `pitch` radians up from straight ahead, in millimetres: the upper lid's edge over the pupil and the lower
 /// lid's under it (the margin reflex distances of a clinic).

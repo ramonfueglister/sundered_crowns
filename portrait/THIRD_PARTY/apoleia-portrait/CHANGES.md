@@ -260,3 +260,10 @@ in front of the jaw's angle, its corner rounded); `hairlib.py`: `locks_from_wisp
 `<key>_LOCK_FIRST` (a lock begins where the foremost of its strands are rooted), `write_locks(write=False,
 extra=)`. Written anew: `beard_crop_locks.txt.zst` (390 locks), `beard_crop_cap.txt.zst`, `beard_crop_cap.webp`,
 `beard_crop_cap_n.webp`, `beard_crop_scalp.txt`. `tests/locks.rs`: a sixth test. Roman bytes unchanged.
+
+Round 92: the mouth is set between nose and chin. `morph.rs`: `mouth_set` after the lips are closed (a head
+whose upper lip takes less of the height from the nose's foot to the chin's lowest point than the dress table's
+`mouth_at` has its mouth moved down to it; `MOUTH_FIELD`, `mouth_field`), `morph_test_mouth` for tests;
+`measure.rs`: `lower_face`, `LOWER_FACE` (Arnett and others 1999; Farkas and others 1984 as cited);
+`dress.rs`: `DressSet::mouth_at` (England 0.31) and its source. `tests/faces.rs`: a fourteenth test. A head
+without a dress table is morphed as before: Roman bytes unchanged.
