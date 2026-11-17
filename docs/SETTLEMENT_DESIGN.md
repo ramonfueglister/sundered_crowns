@@ -13,8 +13,8 @@ computes is in the world: what a town shows must be state of the ECS.
 
 | # | Feature | Status |
 |---|---|---|
-| 1 | Every family who lives in a town has a parcel (the land register) | agreed by Ramon 16 Nov 2026 as a draft; built in state 20, not merged. The world graphic on main sets a house on each parcel as soon as `public/data/lots_1291.json` is on main |
-| 2 | Every farming family has a farmstead in a hamlet (hamlets and farmsteads in the land register) | agreed by Ramon 17 Nov 2026 as a draft with the small farmstead ("Ja, mit kleinem Hof"); built in the same state step, not merged. The world graphic still sets its own hamlets on a spiral until it reads them from the file |
+| 1 | Every family who lives in a town has a parcel (the land register) | agreed by Ramon 16 Nov 2026 as a draft; built in state 20, on main since 17 Nov 2026 (PR #61). The world graphic sets a house on each parcel of `public/data/lots_1291.json` |
+| 2 | Every farming family has a farmstead in a hamlet (hamlets and farmsteads in the land register) | agreed by Ramon 17 Nov 2026 as a draft with the small farmstead ("Ja, mit kleinem Hof"); built in the same state step, on main since 17 Nov 2026 (PR #61). The world graphic sets the hamlets where the register has them and a farmhouse on each farmstead (PR #64) |
 | – | Where a new house arises and streets grow; walls and gates; bridges; landmarks on their ground; which field belongs to which farm; building by players | not proposed yet |
 
 ## Feature 1: every family of a town has a parcel
@@ -116,9 +116,11 @@ Salé.
   file is written anew and a new world lays its parcels differently from a running one. The back of a parcel (its
   yard) may lie on ground no house could stand on.
 - The town stands still until persons are born, die and move.
-- The world graphic (src/worldprobe/lots.ts, settle.ts `onParcels`, on main since PR #59) sets one house on each
-  parcel of `public/data/lots_<year>.json`, at the nearest zoom step only, and not yet from `/lots`; without the file
-  it packs its towns as before. The far zoom steps (far.ts) do not know the parcels yet.
+- The world graphic (src/worldprobe/lots.ts, settle.ts `onParcels`) sets one house on each parcel of
+  `public/data/lots_<year>.json` at the nearest zoom step, and not yet from `/lots`; without the file it packs its
+  towns as before. The far zoom steps (far.ts) show the houses the nearest step builds through
+  `public/data/plan_<year>.json` (tools/worldprobe/build_plan.ts, PR #64): when the register changes, the plan must
+  be written anew.
 
 ### Sources
 
