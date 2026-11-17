@@ -63,6 +63,12 @@ export function layoutNames(names: readonly (RealmName & { name: string })[], w:
  * how the names look, as measured on the EU5 reference (karte/referenz-eu5): EB Garamond medium, ink 53,46,28; a breath
  * of pale halo keeps them readable over the woods of the diorama (on the printed map it is the paper's own colour)
  */
+/**
+ * The halo is a stroke round every letter, which a browser draws anew, letter by letter, whenever the names move:
+ * with it a picture of the moving map took more than twice as long (36 ms against under 17 for ninety names at two
+ * device pixels to one). So the names move without it, and it comes back this many ms after the view has come to rest.
+ */
+const HALO_AFTER = 200;
 export const NAME_STYLE = { font: "'EB Garamond',Garamond,'Palatino Linotype',serif", weight: 500, ink: '#352e1c', opacity: 1, halo: 'rgba(255,248,232,0.45)' } as const;
 
 /** One name as SVG: its curve and its letters spread along it from the middle. */
@@ -83,9 +89,9 @@ export function createNames(into: HTMLElement = document.body): Names {
   const SVG = 'http://www.w3.org/2000/svg', layer = document.createElementNS(SVG, 'svg');
   layer.setAttribute('style', `position:fixed;overflow:hidden;pointer-events:none;font-family:${NAME_STYLE.font};font-weight:${NAME_STYLE.weight};fill:${NAME_STYLE.ink};stroke:${NAME_STYLE.halo};stroke-width:0.1em;stroke-linejoin:round;paint-order:stroke fill`);
   into.append(layer);
-  let last = '';
+  let last = '', rest: ReturnType<typeof setTimeout> | undefined;
   return {
-    remove() { layer.remove(); },
+    remove() { clearTimeout(rest); layer.remove(); },
     show(names, box, x, y, scale, squash, strength) {
       layer.style.display = strength > 0 ? '' : 'none';
       if (strength <= 0) return;
@@ -97,7 +103,11 @@ export function createNames(into: HTMLElement = document.body): Names {
       const laid = layoutNames(names, box.width, tall, x, y, scale, squash / lie, SMALLEST / lie).map((n) => nameSvg(n, `realm-name-${n.realm}`)).join('');
       const svg = `<g transform="translate(0 ${(box.height / 2).toFixed(1)}) scale(1 ${lie.toFixed(4)}) translate(0 ${(-tall / 2).toFixed(1)})">${laid}</g>`;
       // the names are laid out anew only when the view has changed them
-      if (svg !== last) { layer.innerHTML = svg; last = svg; }
+      if (svg !== last) {
+        layer.innerHTML = svg; last = svg;
+        layer.style.stroke = 'none'; clearTimeout(rest);
+        rest = setTimeout(() => { layer.style.stroke = NAME_STYLE.halo; }, HALO_AFTER);
+      }
     },
   };
 }

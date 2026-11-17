@@ -271,8 +271,10 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   const creased = uniform(1);
   let reached: { value: number } | null = null;
   // beside the picture: which way every point faces, and with it the share of the dots its mesh is drawn on
-  scenePass.setMRT(mrt({ output, normal: vec4(normalView, shareCode), ink: vec4(inkOf, 0, 0, 1) }));
-  const facing = scenePass.getTextureNode('normal'), inked = scenePass.getTextureNode('ink');
+  // (`?ink=0` leaves the third picture out, for measuring what it costs: then the realms' colour lies on everything alike)
+  const inks = flag('ink', true);
+  scenePass.setMRT(mrt(inks ? { output, normal: vec4(normalView, shareCode), ink: vec4(inkOf, 0, 0, 1) } : { output, normal: vec4(normalView, shareCode) }));
+  const facing = scenePass.getTextureNode('normal'), inked = inks ? scenePass.getTextureNode('ink') : null;
   if (flag('ao', true)) {
     const creases = ao(far, facing, camera);
     creases.radius.value = LOOK.creaseReach; reached = creases.radius; creases.thickness.value = CREASES.thickness; creases.scale.value = LOOK.creaseDepth; creases.samples.value = 24;
@@ -315,7 +317,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     // the sea keeps its own look unless the paper is laid flat as a printed map
     const land = max(smoothstep(laid.seaTop.sub(0.05), laid.seaTop.add(0.05), there.y), laid.flat);
     // houses, trees and fields keep more of their own colours under the paper than the ground, until it lies flat as a printed map
-    const ink = dots.rgb.div(max(dots.a, 1 / 255)), cover = dots.a.mul(laid.strength).mul(inside).mul(land).mul(mix(mix(laid.things, 1, inked.sample(screenUV).r), 1, laid.flat));
+    const ink = dots.rgb.div(max(dots.a, 1 / 255)), cover = dots.a.mul(laid.strength).mul(inside).mul(land).mul((inked ? mix(mix(laid.things, 1, inked.sample(screenUV).r), 1, laid.flat) : float(1)));
     // the land's light and shade, as a share of how sunlit level ground is drawn, colours the ink with it
     // (softened: the light and shade of the relief should show, the colours of woods and fields much less)
     const light = clamp(dot(picture.rgb, vec3(0.2126, 0.7152, 0.0722)).div(LIT_GROUND).pow(0.5), 0.45, 1.25);
