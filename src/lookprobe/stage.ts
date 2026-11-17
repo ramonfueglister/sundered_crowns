@@ -113,8 +113,10 @@ export interface Stage {
    * How the paper lies on the picture: `strength` how much it covers (0: not at all); `flat` how much of the land's own
    * light and shade it hides and whether it covers the sea too (0: the land shows through it and the sea is left
    * free, 1: the paper's colours as they are, sea and all, as on a printed map); the water's surface lies below `seaTop`.
+   * `things`: how much of it lies on what stands on the ground (houses, trees, fields), as a share of what lies on the
+   * ground itself (default: as much).
    */
-  lay(strength: number, flat: number, seaTop: number): void;
+  lay(strength: number, flat: number, seaTop: number, things?: number): void;
   /** Points camera and lights at a ground point, with `frameW` blocks across the picture, looking down by `elevation` degrees, from `away` times the look's own distance (the farther, the less the far side of the picture is drawn smaller than the near). */
   aim(x: number, z: number, frameW: number, elevation: number, away?: number): void;
   /** Asks for a new picture. */
@@ -153,7 +155,9 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   // (written by the picture's own pass alone, for everything on the stage: the mirror's and the shadows' passes have no such second picture)
   const shareCode = select(marks.x.greaterThan(0), marks.x.mul(0.5).add(0.5), marks.y.mul(0.5));
   /** everything on the stage carries its two marks, all the dots unless it is dissolved */
-  const marked = (thing: THREE.Object3D) => thing.traverse((part) => { part.userData.dots ??= new THREE.Vector2(0, 1); });
+  const marked = (thing: THREE.Object3D) => thing.traverse((part) => { part.userData.dots ??= new THREE.Vector2(0, 1); part.userData.ink ??= 1; });
+  // whether a mesh is ground to the map's paper (1) or stands on the ground (0, see Stage.lay)
+  const inkOf = userData('ink', 'float') as unknown as ReturnType<typeof float>;
   // water: a soft mirror image of piers, hulls and houses is laid over the water colour
   let water = solid;
   const tint = uniform(new THREE.Color());
@@ -262,8 +266,8 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   const creased = uniform(1);
   let reached: { value: number } | null = null;
   // beside the picture: which way every point faces, and with it the share of the dots its mesh is drawn on
-  scenePass.setMRT(mrt({ output, normal: vec4(normalView, shareCode) }));
-  const facing = scenePass.getTextureNode('normal');
+  scenePass.setMRT(mrt({ output, normal: vec4(normalView, shareCode), ink: vec4(inkOf, 0, 0, 1) }));
+  const facing = scenePass.getTextureNode('normal'), inked = scenePass.getTextureNode('ink');
   if (flag('ao', true)) {
     const creases = ao(far, facing, camera);
     creases.radius.value = LOOK.creaseReach; reached = creases.radius; creases.thickness.value = CREASES.thickness; creases.scale.value = LOOK.creaseDepth; creases.samples.value = 24;
@@ -296,7 +300,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   // scene then takes its colour from by where each of its points lies on the ground
   const paper = new THREE.Scene(), paperEye = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 4000);
   const paperPicture = new THREE.RenderTarget(1, 1, { type: THREE.HalfFloatType, depthBuffer: false });
-  const laid = { strength: uniform(0), flat: uniform(1), seaTop: uniform(SEA_Y) };
+  const laid = { strength: uniform(0), flat: uniform(1), seaTop: uniform(SEA_Y), things: uniform(1) };
   const paperFrom = uniform(new THREE.Matrix4()), eyeInverse = uniform(camera.projectionMatrixInverse), eyeWorld = uniform(camera.matrixWorld);
   {
     const depth = far.sample(screenUV).r, inView = getViewPosition(screenUV, depth, eyeInverse), there = eyeWorld.mul(vec4(inView, 1));
@@ -305,7 +309,8 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     const inside = step(0, at.x).mul(step(at.x, 1)).mul(step(0, at.y)).mul(step(at.y, 1)).mul(step(depth, 0.999999));
     // the sea keeps its own look unless the paper is laid flat as a printed map
     const land = max(smoothstep(laid.seaTop.sub(0.05), laid.seaTop.add(0.05), there.y), laid.flat);
-    const ink = dots.rgb.div(max(dots.a, 1 / 255)), cover = dots.a.mul(laid.strength).mul(inside).mul(land);
+    // houses, trees and fields keep more of their own colours under the paper than the ground, until it lies flat as a printed map
+    const ink = dots.rgb.div(max(dots.a, 1 / 255)), cover = dots.a.mul(laid.strength).mul(inside).mul(land).mul(mix(mix(laid.things, 1, inked.sample(screenUV).r), 1, laid.flat));
     // the land's light and shade, as a share of how sunlit level ground is drawn, colours the ink with it
     // (softened: the light and shade of the relief should show, the colours of woods and fields much less)
     const light = clamp(dot(picture.rgb, vec3(0.2126, 0.7152, 0.0722)).div(LIT_GROUND).pow(0.5), 0.45, 1.25);
@@ -318,7 +323,8 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     const { x, z, wide, elev } = ground, size = new THREE.Vector2(), deep = wide / camera.aspect / Math.sin(elev);
     renderer.getDrawingBufferSize(size);
     // what stands tall is seen beyond the ground's edges at the far side of a slanted picture
-    const halfW = wide * 0.52, halfD = deep * 0.52 + (o.tall ?? 36) / Math.tan(elev);
+    // (the far side of the picture is wider than its middle by as much as it lies farther from the camera)
+    const halfW = wide * 0.52 * (1 + ((deep / 2) * Math.cos(elev)) / distance), halfD = deep * 0.52 + (o.tall ?? 36) / Math.tan(elev);
     paperEye.left = -halfW; paperEye.right = halfW; paperEye.top = halfD; paperEye.bottom = -halfD; paperEye.updateProjectionMatrix();
     paperEye.position.set(x, 2000, z); paperEye.up.set(-NEAR[0], 0, -NEAR[1]); paperEye.lookAt(x, 0, z); paperEye.updateMatrixWorld();
     const across = Math.min(4096, Math.max(256, size.x)), down = Math.min(4096, Math.max(256, Math.round((across * halfD) / halfW)));
@@ -341,7 +347,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
 
   const mesh = (shape: Shape, material: THREE.Material, casts: boolean) => {
     const made = new THREE.Mesh(geometry(shape), material);
-    made.castShadow = casts; made.receiveShadow = true; made.userData.dots = new THREE.Vector2(0, 1);
+    made.castShadow = casts; made.receiveShadow = true; made.userData.dots = new THREE.Vector2(0, 1); made.userData.ink = 1;
     return made;
   };
   const stage: Stage = {
@@ -354,6 +360,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
         if (!shape || !shape.pos.length) continue;
         const part = mesh(shape, material, casts);
         part.userData.ground = shape === built.ground;
+        if (shape === built.things) part.userData.ink = 0;
         group.add(part);
       }
       if (built.figures?.count) { const f = figureMeshes(built.figures); f.near.layers.set(FIGURES_LAYER); f.far.layers.set(FIGURES_LAYER); group.add(f.near, f.far); marked(group); showFigures(frameW); }
@@ -367,7 +374,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
       for (const mesh of group.children) if (mesh.userData.figures === 'near') (mesh as THREE.InstancedMesh).dispose(); else if (!mesh.userData.figures) (mesh as THREE.Mesh).geometry.dispose();
       pending = Math.max(pending, 1);
     },
-    more(group, things) { const part = mesh(things, solid, true); group.add(part); pending = Math.max(pending, 3); return part; },
+    more(group, things) { const part = mesh(things, solid, true); part.userData.ink = 0; group.add(part); pending = Math.max(pending, 3); return part; },
     drop(part) { part.removeFromParent(); part.geometry.dispose(); pending = Math.max(pending, 1); },
     dissolve(thing, from, until) {
       // the figures are too small to dissolve dot by dot: they come and go one by one instead, and are all gone
@@ -382,9 +389,9 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     put(thing) { marked(thing); scene.add(thing); pending = Math.max(pending, 1); },
     take(thing) { scene.remove(thing); pending = Math.max(pending, 1); },
     paper,
-    lay(strength, flat, seaTop) {
-      if (laid.strength.value === strength && laid.flat.value === flat && laid.seaTop.value === seaTop) return;
-      laid.strength.value = strength; laid.flat.value = flat; laid.seaTop.value = seaTop; pending = Math.max(pending, 1);
+    lay(strength, flat, seaTop, things = 1) {
+      if (laid.strength.value === strength && laid.flat.value === flat && laid.seaTop.value === seaTop && laid.things.value === things) return;
+      laid.strength.value = strength; laid.flat.value = flat; laid.seaTop.value = seaTop; laid.things.value = things; pending = Math.max(pending, 1);
     },
     creases(share, reach = 1) {
       if (creased.value !== share) { creased.value = share; pending = Math.max(pending, 1); }

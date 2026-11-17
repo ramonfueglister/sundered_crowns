@@ -56,8 +56,11 @@ export function layoutNames(names: readonly (RealmName & { name: string })[], w:
   return kept.map(({ pts: _, ...n }) => n);
 }
 
-/** how the names look, as measured on the EU5 reference (karte/referenz-eu5): EB Garamond medium, ink 53,46,28, no halo */
-export const NAME_STYLE = { font: "'EB Garamond',Garamond,'Palatino Linotype',serif", weight: 500, ink: '#352e1c', opacity: 1, halo: 'none' } as const;
+/**
+ * how the names look, as measured on the EU5 reference (karte/referenz-eu5): EB Garamond medium, ink 53,46,28; a breath
+ * of pale halo keeps them readable over the woods of the diorama (on the printed map it is the paper's own colour)
+ */
+export const NAME_STYLE = { font: "'EB Garamond',Garamond,'Palatino Linotype',serif", weight: 500, ink: '#352e1c', opacity: 1, halo: 'rgba(255,248,232,0.45)' } as const;
 
 /** One name as SVG: its curve and its letters spread along it from the middle. */
 export function nameSvg(n: LaidName, id: string): string {
@@ -75,7 +78,7 @@ export interface Names {
 /** The names are written into `into`, over all of it that the picture's box covers. */
 export function createNames(into: HTMLElement = document.body): Names {
   const SVG = 'http://www.w3.org/2000/svg', layer = document.createElementNS(SVG, 'svg');
-  layer.setAttribute('style', `position:fixed;overflow:hidden;pointer-events:none;font-family:${NAME_STYLE.font};font-weight:${NAME_STYLE.weight};fill:${NAME_STYLE.ink};stroke:${NAME_STYLE.halo}`);
+  layer.setAttribute('style', `position:fixed;overflow:hidden;pointer-events:none;font-family:${NAME_STYLE.font};font-weight:${NAME_STYLE.weight};fill:${NAME_STYLE.ink};stroke:${NAME_STYLE.halo};stroke-width:0.1em;stroke-linejoin:round;paint-order:stroke fill`);
   into.append(layer);
   let last = '';
   return {

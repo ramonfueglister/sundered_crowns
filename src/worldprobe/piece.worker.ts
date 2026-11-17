@@ -13,6 +13,7 @@ import { loadHamletLands } from './hamlets';
 import { loadParcels } from './lots';
 import { loadModels } from './models';
 import { FINER_STEPS } from './land';
+import { DIORAMA_FAR } from './zoom';
 import { Water, loadWindow } from './region';
 import { type Piece, type WorldScene, buildWorld, windowOf } from './world';
 import { type Cover, KINDS, laidOut, loadPlan, usePlan } from './far';
@@ -90,7 +91,7 @@ function compare(counts: Record<string, number>, mean: Cover, part: Piece['part'
 self.onmessage = async (e: MessageEvent<PieceJob>) => {
   const { id, piece, step } = e.data;
   try {
-    const began = performance.now(), mean = step === 1 && e.data.mean ? await meanOf(e.data) : null, meant = performance.now();
+    const began = performance.now(), mean = step === 1 && e.data.mean && !DIORAMA_FAR ? await meanOf(e.data) : null, meant = performance.now();
     const built = await build(e.data, step, piece, e.data.mean === 'compare' ? null : mean);
     if (built && mean && e.data.mean === 'compare') compare(built.counts, mean, piece.part, built.ground);
     // how long the piece took to build, and of that the finer step under it (a tool reads the sums)
@@ -99,7 +100,7 @@ self.onmessage = async (e: MessageEvent<PieceJob>) => {
       : { ground: nothing, things: nothing, water: flat(buildOpenSea(piece.ox, piece.oz, piece.part)), cells: [], counts: {} };
     const lists = [scene.ground, scene.things, scene.water, scene.raised ?? nothing, ...scene.cells.map((c) => c.far)].flatMap((s) => [s.pos, s.nor, s.col]).concat(scene.figures ? [scene.figures.a, scene.figures.b, scene.figures.c, scene.figures.d, scene.figures.e] : []).map((a) => (a as Float32Array).buffer).filter((buf) => buf.byteLength > 0);
     // (summed before the lists are handed over)
-    const sum = step === 0 && e.data.mean === true ? summed(built, piece.part) ?? undefined : undefined;
+    const sum = step === 0 && e.data.mean === true && !DIORAMA_FAR ? summed(built, piece.part) ?? undefined : undefined;
     (self as unknown as Worker).postMessage({ id, scene, summary: sum } satisfies PieceDone, sum ? [...lists, sum.buffer as ArrayBuffer] : lists);
   } catch (err) {
     (self as unknown as Worker).postMessage({ id, error: String(err) } satisfies PieceDone);

@@ -138,7 +138,7 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ye
     const cu = u - realms.lap;
     looks++;
     // the land's own light shows through the colours until the world lies flat; there the sea is part of the map
-    stage.lay(lies.strength, lies.flat, SEA_Y + 0.3 * (LAND_Y - SEA_Y) * reliefOf(v.wide, at.step));
+    stage.lay(lies.strength, lies.flat, SEA_Y + 0.3 * (LAND_Y - SEA_Y) * reliefOf(v.wide, at.step), lies.things);
     realms.named = lies.names;
     /** how far a tile lies outside the picture, in finest cells (0: it reaches into it); the map's cells run with the picture's sides */
     const outside = (l: number, x: number, y: number) => { const side = TILE * 2 ** l; return Math.max(0, Math.abs((x + 0.5) * side - cu) - halfW - side / 2, Math.abs((y + 0.5) * side - cv) - halfD - side / 2); };
