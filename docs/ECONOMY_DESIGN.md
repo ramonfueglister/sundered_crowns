@@ -789,6 +789,34 @@ With the trial program set to the same plan days and the same power, the engine 
 without work and deposits of households and firms on each of 401 days. The numbers of the game above are measured
 again and are not those of the trial.
 
+**The past in a fixed size (`economy/src/past.rs`).** The port estimates the expectations on the whole past (A.6,
+A.7, A.10): real GDP and inflation of every period since the start stay in the state, 16 bytes per city and day
+without end, and every day all windows of the whole past are summed again. For a world that runs 557 years that is
+1.8 GB of state for 550 cities and a day that computes longer the older the world is. The cities of the game
+therefore keep the past in a fixed size (`Economy::with_bounded_past`; the engine does it for every city it founds,
+and for cities of an older state on the first day it computes them). The rule stays the port's. The windows of a day
+are the windows of the same day a year before and one more, and least squares of a value on the value before it and
+a constant needs of all those pairs only their number and five sums, which follow from three sums, the first window
+and the last. The clock keeps these per day of the year (365 positions, for real GDP and for inflation), and the
+values of the last 365 days, from which the new window is summed: 29 KB per city, for good. The estimate is computed from the sums with the port's handling of regressors
+that do not differ (its pseudoinverse); it is the port's estimate up to rounding, not bit for bit (12 digits for a
+city of the game, `economy/src/past.rs` tests). Because the last digits decide single hirings and purchases, a world
+that goes over is from then on another run of the same rules than it would have been: the same economy, not the
+same numbers. The port appends real GDP and inflation of a period to its lists at the place its count of periods
+gives; so with the fixed size every day is computed as the port's first period, its lists stay the history before
+the start, and the clock counts the days. An economy made without it (the tests against the port, a state of an
+older format that is only read) keeps the whole past and computes bit for bit as before. State format 6; formats 4
+and 5 are still read. Measured (2026-11-17): 29 cities over 150 years keep a state of 3.4 MB and compute every year in
+the same time; with the whole past the state grows by 1.7 MB in 10 years and the fourth decade computes twice as long
+as the first. Output and prices of the two runs are the same economy (year 40: 116.0 and 95.2 against 116.3 and
+95.3). For the 558 towns the state is 12.5 MB larger at first (45.0 MB instead of 32.5 MB at day 408) and smaller
+from about the fifth year of the world on. Tests: `economy/src/past.rs` (the estimate from the sums against the
+port's estimate on the whole past, fed day by day and built from a whole past, also with a history that never
+moved) and `economy/tests/past.rs` (an economy with the fixed size expects what the whole past gives and computes
+the same days until a last digit decides a hiring; its state stops growing; it loads bit for bit and continues as a
+straight run; an economy that kept the whole past goes over on any day; a state of format 5 is read and keeps the
+whole past).
+
 **Tests.** `economy/src/clock.rs` and `economy/tests/shell.rs` (cargo test, 15 tests): with a plan and a window of
 one period the engine computes what the port computes; a firm sets supply and price only on its plan day, as the
 mean demand times the expected growth; the clock keeps one window of the series of the accounts that the figures

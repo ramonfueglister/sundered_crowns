@@ -515,10 +515,10 @@ describe('the economies of the cities in the world', () => {
     expect(yearRow(N)).toBe(1 + N * FIGURES);
     expect(e.years[0]).toBe(1356);
     expect(bits(e.years.slice(1))).toBe(bits(at[365].figures));
-    // from the 366th day on the accounts hold 365 days: a day adds only its GDP and its inflation to the history
-    // of every city
-    expect(at[367].model - at[366].model).toBe(N * 16);
-    expect(e.model.length - at[367].model).toBe(33 * N * 16);
+    // from the 366th day on the accounts hold 365 days, and the past of the expectations has a fixed size from the
+    // first day: the state of the economies no longer grows
+    expect(at[367].model - at[366].model).toBe(0);
+    expect(e.model.length - at[367].model).toBe(0);
   });
   it('keep the books of every city and of the merchants after a year of the world', () => {
     const k = run.w.economyEngine.checks(run.s.economy.cities!.model);

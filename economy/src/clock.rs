@@ -52,6 +52,7 @@
 
 use beforeit::{AbstractModel, Extension, Firms, FirmsDecisions, Randomness, base};
 
+use crate::past::Past;
 use crate::trade::{self, Trade};
 
 /// The model type of the daily clock and the fields it adds to a model.
@@ -78,6 +79,9 @@ pub struct DailyClock {
     /// it had planned (the demand pull of CANVAS, economy feature 8); without it the firm plans by the rule of the
     /// paper (A.5, A.8)
     pub demand_pull: bool,
+    /// the past in a fixed size ([`crate::past`]); `None`: the expectations are estimated on the port's lists of
+    /// every period since the start, bit for bit as the port does
+    pub past: Option<Past>,
     /// what the merchants want from this economy and bring to it in the period that is being computed
     /// ([`crate::trade`]); `None` between two periods and in an economy on its own. Not part of the saved state.
     pub trade: Option<Trade>,
@@ -89,7 +93,7 @@ impl DailyClock {
         if plan == 0 || window == 0 {
             return Err(format!("a plan every {plan} periods and windows of {window} periods: both need at least one period"));
         }
-        Ok(DailyClock { plan, window, demand: vec![0.0; firms], periods: vec![0; firms], start: [f64::NAN; 2], accounts: Vec::new(), wage: Vec::new(), real_wage: Vec::new(), demand_pull: false, trade: None })
+        Ok(DailyClock { plan, window, demand: vec![0.0; firms], periods: vec![0; firms], start: [f64::NAN; 2], accounts: Vec::new(), wage: Vec::new(), real_wage: Vec::new(), demand_pull: false, past: None, trade: None })
     }
 
     /// Whether firm `i` plans in period `t` (counted from 1). Every firm plans in the first period; after that
@@ -103,6 +107,12 @@ impl DailyClock {
     pub fn pay_in_money(&mut self, w_bar_i: &[f64], P_bar_HH: f64) {
         self.wage = w_bar_i.iter().map(|w| w * P_bar_HH).collect();
         self.real_wage = w_bar_i.to_vec();
+    }
+
+    /// Periods computed so far, given the port's count of periods `t` (1 before the first): with a past of a fixed
+    /// size the port's count stays at 1 and the past counts.
+    pub fn periods_computed(&self, t: usize) -> usize {
+        self.past.as_ref().map_or(t - 1, |p| p.periods)
     }
 
     /// Whether the firms pay wages in money ([`DailyClock::pay_in_money`]).
@@ -145,16 +155,22 @@ impl Extension for DailyClock {
     /// the next period.
     fn growth_inflation_expectations<R: Randomness + ?Sized>(m: &mut AbstractModel<Self>, rng: &mut R) -> (f64, f64, f64) {
         let window = m.ext.window;
-        let n = m.prop.T_prime + m.agg.t - 1;
-        let Y = windows(&m.agg.Y[..n], m.prop.T_prime, window);
-        let pi = windows(&m.agg.pi_[..n], m.prop.T_prime, window);
-        let last = Y.len() - 1;
-        let log_Y: Vec<f64> = Y.iter().map(|&y| libm::log(y)).collect();
-        let Y_e = libm::exp(Self::estimate_next_value(&log_Y, rng));
-        let gamma_e = Y_e / Y[last] - 1.0;
-        let mut pi_e = libm::exp(Self::estimate_next_value(&pi, rng)) - 1.0;
+        // the forecasts of the logarithm of real GDP and of inflation, and the two windows that end today
+        let (next_Y, next_pi, Y, pi) = if let Some(past) = &m.ext.past {
+            (past.Y.next_value(past.periods, rng), past.pi.next_value(past.periods, rng), past.Y.sum, past.pi.sum)
+        } else {
+            let n = m.prop.T_prime + m.agg.t - 1;
+            let Y = windows(&m.agg.Y[..n], m.prop.T_prime, window);
+            let pi = windows(&m.agg.pi_[..n], m.prop.T_prime, window);
+            let last = Y.len() - 1;
+            let log_Y: Vec<f64> = Y.iter().map(|&y| libm::log(y)).collect();
+            (Self::estimate_next_value(&log_Y, rng), Self::estimate_next_value(&pi, rng), Y[last], pi[last])
+        };
+        let Y_e = libm::exp(next_Y);
+        let gamma_e = Y_e / Y - 1.0;
+        let mut pi_e = libm::exp(next_pi) - 1.0;
         let omega_pi = m.prop.omega_pi;
-        pi_e = (1.0 - omega_pi) * pi_e + (omega_pi * pi[last]);
+        pi_e = (1.0 - omega_pi) * pi_e + (omega_pi * pi);
         (Y_e / window as f64, per_period(gamma_e, window), per_period(pi_e, window))
     }
 
@@ -204,7 +220,7 @@ impl Extension for DailyClock {
             }
         }
         let mut d = base::firms_expectations_and_decisions(m, rng);
-        let (plan, t) = (m.ext.plan, m.agg.t);
+        let (plan, t) = (m.ext.plan, m.ext.periods_computed(m.agg.t) + 1);
         let (growth, inflation) = (compound(m.agg.gamma_e, plan), compound(m.agg.pi_e, plan));
         let cost_push = Self::cost_push_inflation(m, &m.firms);
         for i in 0..I {
