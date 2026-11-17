@@ -1,0 +1,201 @@
+index	name	full_name	status	overlord	capital	quarter	page
+0	Achaia	Principality of Achaia	sovereign			SE	entity_9603.html
+1	Adyghe	Adyghe or Circassians	sovereign			SE	entity_6233.html
+2	Aegina	Lordship of Aegina and Salamine	sovereign			SE	entity_15086.html
+3	Ancona	March of Ancona	dependent	Papal States		SW	entity_7334.html
+4	Andorra	Co-Principality of Andorra under the Bishop of La Seu d'Urgell and the Count of Foix	sovereign			SW	entity_7436.html
+5	Anhalt	Principality of Anhalt	sovereign			NW	entity_6319.html
+6	Aragón	Crown of Aragon	sovereign			SW	entity_3723.html
+7	Arborea	Giudicato of Arborea	sovereign			SW	entity_4910.html
+8	Arta	Despotate of Arta	sovereign			SE	entity_9708.html
+9	Athens	Duchy of Athens	sovereign			SE	entity_5793.html
+10	Athos	Monastic Community of the Mount Athos	dependent	Ottoman Sultanate		SE	entity_2158.html
+11	Auschwitz	Principality of Auschwitz	dependent	Bohemia		NW	entity_4616.html
+12	B. Tekke	Beylik of Tekke	sovereign			SE	entity_15088.html
+13	Baden	Margravate of Baden	sovereign			NW	entity_5683.html
+14	Banu Sulaym	Territory of the Banu Sulaym Tribe	sovereign			SW	entity_2830.html
+15	Bar	Duchy of Bar	sovereign			NW	entity_5670.html
+16	Bavaria-Landshut	Duchy of Lower Bavaria-Landshut	sovereign			NW	entity_5685.html
+17	Bavaria-Munich	Duchy of Upper Bavaria-Munich	sovereign			NW	entity_1702.html
+18	Bavaria-Straubing	Duchy of Lower Bavaria in Straubing	sovereign			NW	entity_7058.html
+19	Berat	Lordship of Berat	sovereign			SE	entity_809.html
+20	Beuthen	Principality of Beuthen	dependent	Bohemia		NW	entity_15108.html
+21	Black Sheep	Tribal Federation of the Black Sheep Turkomans	dependent	Ottoman Sultanate		SE	entity_6612.html
+22	Bodonitsa	Marquisate of Bodonitsa	dependent	Ottoman Sultanate		SE	entity_206.html
+23	Bohemia	Crown of Bohemia	sovereign			NW	entity_35.html
+24	Boisbelle	Principality of Boisbelle	dependent	France		NW	entity_15002.html
+25	Bologna	Lordship of Bologna	dependent	Papal States		SW	entity_4936.html
+26	Bosnia	Kingdom of Bosnia	sovereign			SW	entity_3088.html
+27	Brabant	Duchy of Brabant	sovereign			NW	entity_4718.html
+28	Brandenburg	Electorate of Brandenburg	dependent	Bohemia		NW	entity_5863.html
+29	Brieg	Principality of Brieg	dependent	Bohemia		NW	entity_3635.html
+30	Brittany	Duchy of Brittany	dependent	France		NW	entity_1208.html
+31	Bréifne	Kingdom of Bréifne	sovereign			NW	entity_2858.html
+32	Burgundy	Lordships of the House of Burgundy	sovereign			NW	entity_2515.html
+33	Busseto	Margravate of Busseto	sovereign			SW	entity_3382.html
+34	Caithness	Lordship of Caithness	dependent	Scotland		NW	entity_9706.html
+35	Castile	Crown of Castile	sovereign			SW	entity_1122.html
+36	Cephallenia	County of Cephallenia and Zante	sovereign			SE	entity_4152.html
+37	Chalybia	Chalybia	dependent	Trebizond		SE	entity_15363.html
+38	Chepni	Chepni Homeland	dependent	Trebizond		SE	entity_9711.html
+39	Chios Maona	Maona of Chios and Phocaea	sovereign			SE	entity_15362.html
+40	Cilli	Lordship of Cilli	dependent	Hungary, Habsburg		NW	entity_928.html
+41	Cologne	Electorate of Cologne	sovereign			NW	entity_9684.html
+42	Corsica	County of Corsica	dependent	Aragón		SW	entity_6723.html
+43	Cortona	Lordship of Cortona	sovereign			SW	entity_603.html
+44	Courland	Bishopric of Courland	sovereign			NE	entity_15353.html
+45	Croia	Lordship of Croia	sovereign			SE	entity_6532.html
+46	Cyprus	Kingdom of Cyprus	sovereign			SE	entity_4131.html
+47	Desmond	Earldom of Desmond	sovereign			NW	entity_1414.html
+48	Dombes	Principality of the Dombes	dependent	France		NW	entity_601.html
+49	Dorpat	Bishopric of Dorpat	sovereign			NE	entity_15351.html
+50	Dulkadir	Beylik of Dulkadir	sovereign			SE	entity_6592.html
+51	Egypt	Sultanate of Egypt	sovereign			SE	entity_2604.html
+52	England	Kingdom of England	sovereign			NW	entity_1423.html
+53	Epirus	Despotate of Epirus	sovereign			SE	entity_15087.html
+54	Erzincan	Emirate of Erzincan	dependent	Timur Empire		SE	entity_3851.html
+55	Este	House of Este	sovereign			SW	entity_406.html
+56	Falkenberg	Principality of Falkenberg	dependent	Bohemia		NW	entity_5325.html
+57	Finland	Duchy of Finland	dependent	Kalmar		NE	entity_5599.html
+58	Florence	Republic of Florence	sovereign			SW	entity_4973.html
+59	Forli	Lordship of Forli	dependent	Papal States		SW	entity_3476.html
+60	France	Kingdom of France	sovereign			NW	entity_1225.html
+61	Friesland	Friesland	dependent	Hainaut-Holland		NW	entity_1281.html
+62	Gafsa	Emirate of Gafsa and Tozeur	sovereign			SW	entity_3436.html
+63	Galata	City of Galata	sovereign				entity_3066.html
+64	Garay	Garay Lordship	dependent	Hungary		SW	entity_1523.html
+65	Gazaria	Office of Gazaria	sovereign			SE	entity_15361.html
+66	Genoa	Republic of Genoa	dependent	France, Galata, Gazaria, Chios Maona		SE	entity_1345.html
+67	Georgia	Kingdom of Georgia	sovereign			SE	entity_343.html
+68	Germiyan	Beylik of Germiyan	sovereign			SE	entity_6116.html
+69	Glogau	Principality of Glogau	dependent	Bohemia		NW	entity_4573.html
+70	Golden Horde	Territories of the Golden Horde in Conflict	sovereign			NE	entity_6683.html
+71	Gorizia	County of Gorizia and Gradisca	sovereign			NW	entity_6041.html
+72	Granada	Kingdom of Granada	sovereign			SW	entity_15188.html
+73	Guelders	Duchy of Guelders	sovereign			NW	entity_5673.html
+74	Habsburg	Habsburg Dominions	sovereign			NW	entity_5689.html
+75	Hainaut-Holland	Counties of Hainaut and Holland	sovereign			NW	entity_4117.html
+76	Hebrides and Mann	Lordship of the Isles	dependent	Scotland		NW	entity_2312.html
+77	Hesse	Landgraviate of Hesse	sovereign			NW	entity_5700.html
+78	Holstein	County of Holstein	dependent	Kalmar		NW	entity_6788.html
+79	Hungary	Kingdom of Hungary	sovereign			NE	entity_2669.html
+80	Ibadites	Ibadi Cities of the Mzab	sovereign			SW	entity_3429.html
+81	Jalayrids	Jalayirid Sultanate	sovereign			SE	entity_178.html
+82	Kalmar	Kalmar Union between the Kingdoms of Denmark, Sweden and Norway	sovereign			NW	entity_892.html
+83	Karaman	Emirate of Karaman	sovereign			SE	entity_320.html
+84	Karpathos	Lordship of Karpathos	sovereign			SE	entity_7660.html
+85	Kotor	Republic of Kotor	sovereign			SW	entity_7185.html
+86	Leinster	Kingdom of Leinster	sovereign			NW	entity_1396.html
+87	Lesbos	Lordship of Lesbos	sovereign			SE	entity_9710.html
+88	Liegnitz	Principality of Liegnitz	dependent	Bohemia		NW	entity_1879.html
+89	Liège	Prince-Bishopric of Liège	sovereign			NW	entity_5671.html
+90	Lorraine	Duchy of Lorraine	sovereign			NW	entity_2514.html
+91	Luxembourg	Duchy of Luxembourg	sovereign			NW	entity_5672.html
+92	Lüneburg	Duchy of Brunswick-Lüneburg	sovereign			NW	entity_4857.html
+93	Mac Carthy	Mac Carthy Mor Lordship	sovereign			NW	entity_6826.html
+94	Mainz	Electorate of Mainz	sovereign			NW	entity_15204.html
+95	Man	Kingdom of Man	dependent	England		NW	entity_6980.html
+96	Mantua	County of Mantua	sovereign			SW	entity_2310.html
+97	Mardin	Emirate of Mardin	sovereign			SE	entity_3199.html
+98	Masserano	Principality of Masserano	sovereign			NW	entity_7184.html
+99	Mat-Vumenesti	Lordship of Mat and Vumenesti	sovereign			SE	entity_7206.html
+100	Mayo	Lordship of Connacht in Mayo	sovereign			NW	entity_293.html
+101	Mazovia	Duchy of Mazovia	dependent	Poland-Lithuania		NE	entity_4209.html
+102	Mecklenburg	Duchy of Mecklenburg	sovereign			NW	entity_1872.html
+103	Milan	Duchy of Milan	sovereign			SW	entity_5471.html
+104	Moldavia	Principality of Moldavia	dependent	Poland-Lithuania		NE	entity_5162.html
+105	Monaco	Lordship of Monaco	sovereign			SW	entity_9347.html
+106	Montefeltro	Montefeltro Lordship	dependent	Papal States		SW	entity_15060.html
+107	Montferrat	Margravate of Montferrat	sovereign			SW	entity_5668.html
+108	Moravia	Margravate of Moravia	dependent	Bohemia		NW	entity_1531.html
+109	Morocco	Kingdom of Maghreb	sovereign			SW	entity_2054.html
+110	Muscovy	Grand Duchy of Vladimir	sovereign			NE	entity_2344.html
+111	Namur	County of Namur	sovereign			NW	entity_15094.html
+112	Naples	Kingdom of Naples	sovereign			SW	entity_1689.html
+113	Navarre	Kingdom of Navarre	sovereign			SW	entity_1136.html
+114	Naxos	Duchy of Naxos	dependent	Venice		SE	entity_15068.html
+115	Neisse	Principality of Neisse	dependent	Bohemia		NW	entity_15091.html
+116	Novgorod	Principality of Novgorod	sovereign			NE	entity_3498.html
+117	O'Sullivan	O'Sullivan Beare Lordship	sovereign			NW	entity_15324.html
+118	Oels	Principality of Oels	dependent	Bohemia		NW	entity_6501.html
+119	Oka	Small Lordships of the Oka Basin	sovereign			NE	entity_3516.html
+120	Onogost	Lordship of Onogost	dependent	Bosnia		SW	entity_7202.html
+121	Oppeln	Principality of Oppeln	dependent	Bohemia		NW	entity_5887.html
+122	Orange	Principality of Orange	sovereign			SW	entity_2528.html
+123	Orkney	Earldom of Orkney	dependent	Scotland		NW	entity_2311.html
+124	Ormonde	Earldom of Ormonde	dependent	England		NW	entity_6389.html
+125	Ossetians	Ossetian Population	sovereign			SE	entity_6193.html
+126	Ottoman Sultanate	Sublime Ottoman State	sovereign			SE	entity_6084.html
+127	Oulaid Nail	Oulaid Nail	people			SW	entity_15320.html
+128	Oulaid Sidi Sheikh	Oulaid Sidi Sheikh	people			SW	entity_15321.html
+129	Padua	Lordship of Padua	sovereign			SW	entity_6516.html
+130	Palatinate	Electoral Palatinate	sovereign			NW	entity_5684.html
+131	Palatinate	Upper Palatinate	sovereign			NW	entity_7234.html
+132	Papal States	State of the Church	sovereign			SW	entity_2140.html
+133	Patras	Archbishopric of Patras	sovereign			SE	entity_9707.html
+134	Pereslavl-Ryazanski	Principality of Pereslavl-Ryazanski	sovereign			NE	entity_4073.html
+135	Perugia	Lordship of Perugia	dependent	Papal States		SW	entity_6722.html
+136	Piombino	Lordship of Piombino	sovereign			SW	entity_8797.html
+137	Poland-Lithuania	United Kingdom of Poland and Lithuania	sovereign			NE	entity_2750.html
+138	Pomerania-Stettin	Duchy of Pomerania of Stettin	sovereign			NW	entity_2254.html
+139	Portugal	Kingdom of Portugal	sovereign			SW	entity_3852.html
+140	Provence	County of Provence	sovereign			NW	entity_15065.html
+141	Pskov	Republic of Pskov	sovereign			NE	entity_7160.html
+142	Ragusa	Republic of Ragusa	sovereign			SW	entity_3437.html
+143	Ramadan	Beylik of Ramadan	dependent	Egypt		SE	entity_6593.html
+144	Ratibor	Principality of Ratibor	dependent	Bohemia		NW	entity_6467.html
+145	Raška	Despotate of Raška	dependent	Ottoman Sultanate		SE	entity_9709.html
+146	Rhodes	Military Hospitaller Order of St. John of Rhodes	sovereign			SE	entity_68.html
+147	Riga	Archbishopric of Riga	sovereign			NE	entity_15350.html
+148	Riga	City of Riga	sovereign			NE	entity_15358.html
+149	Rimini	Lordship of Rimini	dependent	Papal States		SW	entity_7323.html
+150	Romagna	Lordships of Romagna	dependent	Papal States		SW	entity_15070.html
+151	Roman Empire	Roman Empire	sovereign			SE	entity_4.html
+152	Rostov	Principality of Rostov	sovereign			NE	entity_5040.html
+153	Saluzzo	Marquisate of Saluzzo	dependent	France		SW	entity_15061.html
+154	San Marino	Republic of San Marino	sovereign			SW	entity_5708.html
+155	Savona	Margravate of Savona	sovereign			SW	entity_15063.html
+156	Savoy	County of Savoy	sovereign			SW	entity_4705.html
+157	Saxony	Electorate of Saxony	sovereign			NW	entity_4289.html
+158	Scotland	Kingdom of Scotland	sovereign			NW	entity_2165.html
+159	Serbia	Despotate of Serbia	dependent	Ottoman Sultanate		SE	entity_1663.html
+160	Sicily	Kingdom of Sicily	sovereign			SW	entity_2875.html
+161	Sinop	Beylik of Sinop	dependent	Ottoman Sultanate		SE	entity_118.html
+162	Sligo	Lordship of Connacht in Sligo Under the O Conor Sligo	sovereign			NW	entity_6373.html
+163	Small States	Small States of the Holy Roman Empire	sovereign			NW	entity_2160.html
+164	Smolensk	Principality of Smolensk	dependent	Poland-Lithuania		NE	entity_15110.html
+165	Sovana	County of Sovana	sovereign			SW	entity_4909.html
+166	Split	Duchy of Split under Hrvoje Vukčić	dependent	Hungary		SW	entity_15097.html
+167	Spoleto	Duchy of Spoleto	dependent	Papal States		SW	entity_1688.html
+168	Strehlitz	Principality of Strehlitz	dependent	Bohemia		NW	entity_6446.html
+169	Tende	County of Tende	sovereign			SW	entity_6813.html
+170	Teschen	Principality of Teschen	dependent	Bohemia		NW	entity_4574.html
+171	Teutonic Knights	Monastic State of the Teutonic Knights	sovereign			NE	entity_5141.html
+172	Theodoro	Principality of Theodoro	sovereign			SE	entity_4509.html
+173	Thomond	Kingdom of Thomond	sovereign			NW	entity_2198.html
+174	Thuringia-Meissen	Landgraviate of Thuringia and Margravate of Meissen	sovereign			NW	entity_4870.html
+175	Timur Empire	Dominions of Emir Timur	sovereign			SE	entity_165.html
+176	Tlemcen	Abdalwadid Kingdom of Tlemcen	sovereign			SW	entity_419.html
+177	Travunia	Lordship of Travunia	dependent	Zeta		SW	entity_2605.html
+178	Trebizond	Empire of Trebizond	sovereign			SE	entity_5243.html
+179	Trier	Electorate of Trier	sovereign			NW	entity_3674.html
+180	Troppau	Principality of Troppau	dependent	Bohemia		NW	entity_6494.html
+181	Tunis	Hafsid Caliphate of Africa	sovereign			SW	entity_2146.html
+182	Tver	Principality of Tver	sovereign			NE	entity_5431.html
+183	Tír Conaill	Kingdom of Tír Conaill	sovereign			NW	entity_2361.html
+184	Tír Eógain	Kingdom of Tír Eógain	sovereign			NW	entity_6382.html
+185	Ulster	Earldom of Ulster	dependent	England		NW	entity_1383.html
+186	Valona	Despotate of Valona	sovereign			SE	entity_7215.html
+187	Venice	Republic of Venice	sovereign			SE	entity_2490.html
+188	Waldstätte	Forest Cantons	sovereign			NW	entity_5666.html
+189	Wales	Principality of Wales	dependent	England		NW	entity_2453.html
+190	Wallachia	Principality of Wallachia	sovereign			SE	entity_5170.html
+191	White Sheep	Tribal Federation of the White Sheep Turkomans	dependent	Timur Empire		SE	entity_3853.html
+192	Wolfenbüttel	Duchy of Brunswick-Wolfenbüttel	sovereign			NW	entity_7136.html
+193	Württemberg	County of Württemberg	sovereign			NW	entity_2624.html
+194	Yaroslavl	Principality of Yaroslavl	sovereign			NE	entity_6546.html
+195	Yvetot	Lordship of Yvetot	dependent	France		NW	entity_7446.html
+196	Zab	Emirate of the Zab	sovereign			SW	entity_1076.html
+197	Zachlumia	Duchy of Zachlumia	dependent	Bosnia		SW	entity_2618.html
+198	Zeta	Lordship of Zeta and The Sea	sovereign			SW	entity_15098.html
+199	Ösel-Wiek	Bishopric of Ösel-Wiek	sovereign			NE	entity_15352.html

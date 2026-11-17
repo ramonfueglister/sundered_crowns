@@ -3,7 +3,8 @@
 import type { WorldState } from './state';
 import { STATE_VERSION, PERSON_SCHEMA, FAMILY_SCHEMA, REALM_SCHEMA, ALIVE } from './state';
 import { foundLots } from './systems/lots';
-import { foundRulers } from './systems/rulers';
+import { foundRulers, rulerCultures } from './systems/rulers';
+import { foundBorders } from './systems/borders';
 import { type Column, makeColumns } from './ecs';
 import type { World } from './world';
 import { foundEconomy } from './systems/economy';
@@ -12,6 +13,7 @@ import { fitPlacesToCities, foundPeople } from './systems/people';
 import { countPeople, settleHamlets } from './systems/hamlets';
 import { cultivate } from './systems/cultivation';
 import { bringInHarvest } from './systems/harvest';
+import { foundPersonCultures } from './systems/cultures';
 import type { SetupState } from './setup';
 
 /** The fields of a WorldState in the order createWorldState writes them. */
@@ -84,7 +86,7 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     // since the first day, so the holders are those of the day the world has reached. The economies stay as they
     // are: rulers have no part in them.
     const hadDied = 'died' in s.person.cols, hadHolder = 'holder' in s.realm.cols;
-    // (the families too: founding a ruler writes the family's column of the parcel, which step 17 fills)
+    // (the families too: founding a ruler writes the family's column of the parcel, which the step to 20 fills)
     for (const [table, schema] of [[s.realm, REALM_SCHEMA], [s.person, PERSON_SCHEMA], [s.family, FAMILY_SCHEMA]] as const) {
       const cols = table.cols as Record<string, Column>, fresh = makeColumns(schema, table.alive.length) as Record<string, Column>;
       for (const k of Object.keys(fresh)) if (k in cols) fresh[k] = cols[k]; // in the order of the schema
@@ -108,7 +110,28 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     cultivate(s, w); bringInHarvest(s, w);
     s.v = 17;
   }
-  if (s.v === 17) { // 17 → 18: the land register (src/sim/systems/lots.ts). The families get the column of their
+  if (s.v === 17) { // 17 → 18: the borders (src/sim/systems/borders.ts). The changes of the chronicle of borders up to
+    // the day the world has reached, as a world that had them from the first day; the realms that came in on the way
+    // get their rows in the same order.
+    foundBorders(s, w);
+    s.v = 18;
+  }
+  if (s.v === 18) { // 18 → 19: every person has a culture and a faith, and a place has none of its own (Ramon, 16
+    // November 2026: only what the simulation computes is in the world; a town has the culture of its persons, with
+    // its minorities). The persons get them as a new world gives them (src/sim/systems/cultures.ts): the culture and
+    // faith of the setup for their place, a ruler those of the realm the ruler entered in, and the counted communities of the start year.
+    // Nobody has been born, married or moved since the first day, so the persons get what they were founded with. The
+    // places' own columns go.
+    if (!setup) throw new Error('the upgrade to 19 needs the setup of the start year');
+    const cols = s.person.cols as Record<string, Column>, fresh = makeColumns(PERSON_SCHEMA, s.person.alive.length) as Record<string, Column>;
+    for (const k of Object.keys(fresh)) if (k in cols) fresh[k] = cols[k]; // in the order of the schema
+    (s.person as { cols: unknown }).cols = fresh;
+    foundPersonCultures(s, setup()); rulerCultures(s, w);
+    const place = s.place as unknown as Record<string, unknown>;
+    delete place.culture; delete place.faith;
+    s.v = 19;
+  }
+  if (s.v === 19) { // 19 → 20: the land register (src/sim/systems/lots.ts). The families get the column of their
     // parcel, and the parcels of the towns are laid out as a new world lays them out, for the families who live in the
     // towns on the day the world has reached: nobody has been born, has died or has moved among the persons of the
     // towns since the first day. The families of the hamlets and the rulers have none. Nothing else changes.
@@ -116,7 +139,7 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     for (const k of Object.keys(fresh)) if (k in cols) fresh[k] = cols[k]; // in the order of the schema
     (s.family as { cols: unknown }).cols = fresh;
     foundLots(s);
-    s.v = 18;
+    s.v = 20;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one

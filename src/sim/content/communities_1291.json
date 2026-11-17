@@ -1,0 +1,13 @@
+{
+  "note": "Minorities of the towns of 1291 that a source counts for that town (step 4 of the world of towns, Ramon 16 November 2026: no shares are drawn, only counted communities come into the world). people: the people of the community in the source; families: whole families where the source counts households. At 1:100 a community becomes round(people / 100) persons, as whole families of its town. Sources and the counting are in docs/wiki/personen/kultur-und-glaube.md (src/sim/systems/cultures.ts).",
+  "communities": [
+    { "town": "Paris", "culture": "ashkenazi", "faith": "jewish", "families": 1, "count": "at least 100 heads of families", "year": 1292, "source": "Encyclopaedia Judaica, Paris (Blumenkranz): the taille rolls of 1292 and 1296" },
+    { "town": "Würzburg", "culture": "ashkenazi", "faith": "jewish", "people": 810, "count": "810 named victims, besides 100 foreign Jews", "year": 1298, "source": "Salfeld 1898, Das Martyrologium des Nürnberger Memorbuches, pp. 192-199 (names counted)" },
+    { "town": "Nuremberg", "culture": "ashkenazi", "faith": "jewish", "people": 628, "count": "628 killed (704 names counted)", "year": 1298, "source": "Salfeld 1898, p. 179" },
+    { "town": "Rothenburg ob der Tauber", "culture": "ashkenazi", "faith": "jewish", "people": 503, "count": "about 53 and nearly 450 killed (472 names counted)", "year": 1298, "source": "Salfeld 1898, p. 192" },
+    { "town": "Heilbronn", "culture": "ashkenazi", "faith": "jewish", "people": 200, "count": "200 killed after the Sontheim memorbook (105 names counted)", "year": 1298, "source": "Salfeld 1898, p. 214" },
+    { "town": "Bamberg", "culture": "ashkenazi", "faith": "jewish", "people": 124, "count": "124 names counted", "year": 1298, "source": "Salfeld 1898, pp. 201-203" },
+    { "town": "Amberg", "culture": "ashkenazi", "faith": "jewish", "people": 14, "count": "14 names counted", "year": 1298, "source": "Salfeld 1898, p. 182" },
+    { "town": "Nördlingen", "culture": "ashkenazi", "faith": "jewish", "people": 8, "count": "8 names counted", "year": 1298, "source": "Salfeld 1898, p. 181" }
+  ]
+}

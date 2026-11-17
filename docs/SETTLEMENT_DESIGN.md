@@ -13,7 +13,7 @@ computes is in the world: what a town shows must be state of the ECS.
 
 | # | Feature | Status |
 |---|---|---|
-| 1 | Every family who lives in a town has a parcel (the land register) | agreed by Ramon 16 Nov 2026 as a draft; built in state 18, not merged. The world graphic on main sets a house on each parcel as soon as `public/data/lots_1291.json` is on main |
+| 1 | Every family who lives in a town has a parcel (the land register) | agreed by Ramon 16 Nov 2026 as a draft; built in state 20, not merged. The world graphic on main sets a house on each parcel as soon as `public/data/lots_1291.json` is on main |
 | – | Parcels of the farmers' hamlets; where a new house arises and streets grow; walls and gates; bridges; landmarks on their ground; building by players | not proposed yet |
 
 ## Feature 1: every family of a town has a parcel
@@ -23,7 +23,7 @@ Code: `src/sim/settlement/rule.ts` (the arithmetic), `src/sim/systems/lots.ts` (
 `src/sim/content/settled_area_1300.json` (written by `tools/history/1291/settled_area.py`). Tests:
 `tests/settlement.test.ts`.
 
-Written once when a world is founded (or by the upgrade 17 → 18 of an older one). Nothing changes while the world
+Written once when a world is founded (or by the upgrade 19 → 20 of an older one). Nothing changes while the world
 runs yet: nobody is born, dies, marries or moves, so no parcel is laid out, split or left. No row is ever freed.
 
 | Table | Column | Type | Meaning |

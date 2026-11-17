@@ -58,6 +58,30 @@ describe('the houses of a town with a land register', () => {
     const c = N / 2;
     for (let dx = -8; dx < 8; dx++) expect(used[c * N + c + dx]).not.toBe(1);
   });
+  it('has its building ground surveyed: no house on water, on a step or where the church stands', () => {
+    const g = meadow(), c = N / 2;
+    // a river three blocks wide east of the middle, a ledge three blocks high west of it
+    for (let z = 0; z < N; z++) { for (let x = c + 10; x < c + 13; x++) g.wet[z * N + x] = 1; for (let x = 0; x < c - 10; x++) g.h[z * N + x] = LAND_Y + 3; }
+    const site: Site = { id: 5, at: [c + 0.5, c + 0.5], size: 2, pop: 4800, region: '', style: styleOf('') };
+    let asked = 0, open = 0, church = 0;
+    const { used } = settle(g, new Batch(), [site], [], () => ({ region: '', style: styleOf('') }), () => 0, () => 0, {}, undefined, undefined, undefined, (s, free) => {
+      asked++;
+      expect(s.id).toBe(5);
+      for (let dz = -20; dz <= 20; dz++) {
+        for (let dx = 10; dx < 13; dx++) expect(free(dx, dz)).toBe(false);
+        expect(free(-10, dz)).toBe(false);
+        expect(free(-11, dz)).toBe(false);
+        expect(free(-14, dz)).toBe(true);
+        expect(free(15, dz)).toBe(true);
+      }
+      // the church stands when the ground is asked, the houses do not yet
+      for (let dz = -8; dz <= 8; dz++) for (let dx = -8; dx <= 8; dx++) free(dx, dz) ? open++ : church++;
+    });
+    expect(asked).toBe(1);
+    expect(church).toBeGreaterThan(8);
+    expect(open).toBeGreaterThan(150);
+    expect(used.some((u) => u === 1)).toBe(true);
+  });
 });
 
 describe('the fields', () => {

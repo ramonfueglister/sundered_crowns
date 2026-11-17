@@ -121,7 +121,7 @@ describe('the land register of a world of 1291', () => {
 describe('a world of 1291 saved before the land register', () => {
   it('gets the parcels a new world has, and encodes as one', () => {
     const old = decodeState(encodeState(s)) as WorldState;
-    old.v = 17;
+    old.v = 19;
     delete (old.family.cols as Record<string, unknown>).lot; delete (old as Partial<WorldState>).lot;
     const up = upgradeState(decodeState(encodeState(old)), w, () => loadSetup(1291));
     expect(up.v).toBe(STATE_VERSION);

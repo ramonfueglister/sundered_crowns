@@ -14,6 +14,7 @@ import { spawn } from '../ecs';
 import type { World } from '../world';
 import type { System } from '../schedule';
 import { type Chronicle, Happening, firstEventOn } from '../content/chronicle';
+import { setRulerCulture } from './cultures';
 import { hash01 } from '../rng';
 import { founder, origin, NG } from '../people/genes';
 
@@ -69,6 +70,7 @@ function happen(s: WorldState, w: World, c: Chronicle, e: Chronicle['events'][nu
     P.born[id] = born ?? BORN_UNKNOWN; P.sex[id] = cp.sex; P.mother[id] = -1; P.father[id] = -1;
     P.role[id] = 0; P.agent[id] = 0; // as the economy leaves every person outside it (src/sim/systems/economy.ts)
     P.firm[id] = -1; P.died[id] = ALIVE;
+    setRulerCulture(s, id, realm); // the culture and faith of the realm the ruler enters the world in
     const z = (j: number) => normal(seed, kh, K.trait + 2 * j);
     P.iq[id] = clampU8(100 + 15 * z(0));
     P.o[id] = clampU8(50 + 10 * z(1)); P.c[id] = clampU8(50 + 10 * z(2)); P.e[id] = clampU8(50 + 10 * z(3));
@@ -124,6 +126,21 @@ export function playChronicle(s: WorldState, w: World, from: number, to: number)
 export function foundRulers(s: WorldState, w: World): number {
   s.realm.cols.holder.fill(-1);
   return playChronicle(s, w, Number.MIN_SAFE_INTEGER, s.day);
+}
+
+/** Gives every ruler of the world the culture and faith of the realm the ruler entered the world in, as the day of
+ *  entering does (for a world from before the persons had cultures, src/sim/upgrade.ts). */
+export function rulerCultures(s: WorldState, w: World): void {
+  const c = w.chronicle;
+  if (!c || c.year !== s.startYear) return;
+  const x = indexOf(s), done = new Set<number>();
+  for (const e of c.events) {
+    if (e.day > s.day) break;
+    if (e.what !== Happening.Enter || !e.realm) continue;
+    const id = x.persons.get(c.persons[e.person].key), realm = x.realms.get(e.realm);
+    if (id === undefined || realm === undefined || done.has(id)) continue;
+    done.add(id); setRulerCulture(s, id, realm);
+  }
 }
 
 /** Every day: what the chronicle says for that day. */

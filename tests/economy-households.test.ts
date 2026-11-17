@@ -3,7 +3,7 @@
 // (src/sim/systems/household.ts), the state, the upgrade, and what the server and the panel say of a household.
 import { namedPersons } from '../src/sim/systems/rulers';
 import { describe, it, expect } from 'vitest';
-import { newWorldState } from '../tools/sim/load';
+import { newWorldState, loadSetup } from '../tools/sim/load';
 import { advanceDay } from '../src/sim/engine';
 import { FIGURE, FIGURES } from '../src/sim/economy/engine';
 import { ROLE, WORKING_AGE, rateOfOtherWomen, workforce } from '../src/sim/systems/work';
@@ -230,13 +230,13 @@ describe('the state', () => {
     for (const k of ['persons', 'working', 'baskets', 'income', 'spent', 'savings']) delete old.family.cols[k];
     delete old.person.cols.consumed; old.v = 13;
     old.person.cols.role.fill(0); // whatever the parts were: they are given out again
-    const up = upgradeState(decodeState(encodeState(old)), w);
+    const up = upgradeState(decodeState(encodeState(old)), w, () => loadSetup(1356));
     expect(up.v).toBe(STATE_VERSION);
     expect(Object.keys(up.person.cols)).toEqual(Object.keys(PERSON_SCHEMA));
     expect(Object.keys(up.family.cols)).toEqual(Object.keys(FAMILY_SCHEMA));
     const founded = decodeState(encodeState(s)); foundEconomy(founded, w);
     settleHamlets(founded); countPeople(founded); cultivate(founded, w); bringInHarvest(founded, w); // step 17
-    foundLots(founded); // step 18: the parcels of the families who live in the towns now
+    foundLots(founded); // step 20: the parcels of the families who live in the towns now
     expect(hashState(up)).toBe(hashState(founded));
     const c = up.economy.cities!;
     expect(c.day).toBe(s.day); expect(c.years.length).toBe(0); expect(c.halted).toBe('');
