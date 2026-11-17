@@ -4,7 +4,7 @@
 // which the reference does not have), ?shadows=0, ?mirror=0 (no mirror image on the water), ?sky=0 (without the baked sky share: light step 1 only),
 // ?ao=0 (without the darkening of creases and corners).
 import * as THREE from 'three/webgpu';
-import { clamp, convertToTexture, dot, float, fract, getViewPosition, max, mix, mrt, normalView, output, pass, reflector, screenCoordinate, screenUV, smoothstep, step, texture, uniform, userData, vec2, vec3, vec4 } from 'three/tsl';
+import { clamp, convertToTexture, dot, float, fract, getViewPosition, max, mix, mrt, normalView, output, pass, reflector, screenCoordinate, screenSize, screenUV, select, smoothstep, step, texture, uniform, userData, vec2, vec3, vec4 } from 'three/tsl';
 import { MapControls } from 'three/addons/controls/MapControls.js';
 import { dof } from 'three/addons/tsl/display/DepthOfFieldNode.js';
 import { denoise } from 'three/addons/tsl/display/DenoiseNode.js';
@@ -12,7 +12,8 @@ import { ao } from 'three/addons/tsl/display/GTAONode.js';
 import { hashBlur } from 'three/addons/tsl/display/hashBlur.js';
 import { FRAME_W, LAND_Y, N, NEAR, RIGHT, SEA_Y, VIEW } from './layout';
 import type { Batch } from './batch';
-import { type Figures, anyFigures, figureMeshes, showFigures } from '../figures/stage';
+import { RIG, towards, CREASES } from './light';
+import { type Figures, anyFigures, figureMeshes, keepFigures, showFigures, warmFigures } from '../figures/stage';
 import { OPEN_WATER } from './terrain';
 
 const q = new URLSearchParams(location.search);
@@ -26,11 +27,11 @@ const flag = (k: string, fallback: boolean) => (q.has(k) ? q.get(k) !== '0' : fa
  */
 const LOOK = {
   distance: 3000,
-  sun: 0.9, sunElevation: 48, sunTurn: 12, sunColor: 0xffe9c8,
-  side: 0.78, sideColor: 0xfff0dc,
-  sky: 0.36, skyColor: 0xa8c4ff, bounce: 0.12, bounceColor: 0xffe2c0, fill: 0.1, fillColor: 0xffe0c4,
+  sun: RIG.sun as number, sunElevation: RIG.sunElevation, sunTurn: RIG.sunTurn, sunColor: 0xffe9c8,
+  side: RIG.side as number, sideColor: 0xfff0dc,
+  sky: RIG.sky as number, skyColor: 0xa8c4ff, bounce: RIG.bounce as number, bounceColor: 0xffe2c0, fill: RIG.fill as number, fillColor: 0xffe0c4,
   mirror: 0.38, mirrorTint: 0x73c0cc, mirrorBlur: 0.003,
-  creaseReach: 2.0, creaseDepth: 1.2, creaseColor: 0x44485a,
+  creaseReach: CREASES.reach as number, creaseDepth: CREASES.depth as number, creaseColor: CREASES.colour as number,
   focusRange: 150, blur: 2.6,
 };
 
@@ -44,6 +45,10 @@ export const NEAR_LIGHT: Light = { sun: 1.05, sunColor: 0xfff2e4, side: 0.7, sky
 const FAR_SHADOW = 2;
 /** how bright level, sunlit ground is drawn (luminance, linear light): the map's ink under the land's own light and shade is as bright as on the paper there */
 const LIT_GROUND = 0.32;
+/** the figures of a piece are gone when another layer has taken this share of its dots (see `dissolve`) */
+const FIGURES_GONE = 0.3;
+/** the layer the figures are drawn on: the picture's camera sees it, the water mirror's does not */
+const FIGURES_LAYER = 1;
 
 /** A mesh as flat lists: three numbers per corner for position, direction and colour. A `Batch` is one. */
 export interface Shape { pos: ArrayLike<number>; nor: ArrayLike<number>; col: ArrayLike<number> }
@@ -87,14 +92,15 @@ export interface Stage {
   /**
    * Draws a group, or one mesh of it, on a share of the picture's dots only, to dissolve it into the picture or out of it: of a fine
    * pattern that gives every dot a value from 0 to 1, those from `from` up to `until` (0 and 1: all of the group).
-   * Two groups whose shares meet take each other's place dot by dot.
+   * Two groups whose shares meet take each other's place dot by dot; the picture is then put together from the two,
+   * each made whole from its own dots and mixed by the share, so that they blend and no pattern of dots shows.
    */
   dissolve(thing: THREE.Group | THREE.Mesh, from: number, until: number): void;
   /** Puts a thing of the page's own making on the stage, or takes it off again (the page lets go of what it is made of). */
   put(thing: THREE.Object3D): void;
   take(thing: THREE.Object3D): void;
-  /** How deep creases and corners are drawn, as a share of the look's own depth (1: as in the reference, 0: not at all). */
-  creases(share: number): void;
+  /** How deep creases and corners are drawn, as a share of the look's own depth (1: as in the reference, 0: not at all), and how far they reach, as a share of the look's own reach in the stage's blocks. */
+  creases(share: number, reach?: number): void;
   /** Softens the light towards the near view's, by a share (0: the page's own light, 1: the light of the near view). */
   soften(share: number): void;
   /**
@@ -109,8 +115,8 @@ export interface Stage {
    * free, 1: the paper's colours as they are, sea and all, as on a printed map); the water's surface lies below `seaTop`.
    */
   lay(strength: number, flat: number, seaTop: number): void;
-  /** Points camera and lights at a ground point, with `frameW` blocks across the picture, looking down by `elevation` degrees. */
-  aim(x: number, z: number, frameW: number, elevation: number): void;
+  /** Points camera and lights at a ground point, with `frameW` blocks across the picture, looking down by `elevation` degrees, from `away` times the look's own distance (the farther, the less the far side of the picture is drawn smaller than the near). */
+  aim(x: number, z: number, frameW: number, elevation: number, away?: number): void;
   /** Asks for a new picture. */
   redraw(): void;
   /** Stops drawing and lets go of the renderer; the stage is not used after that. */
@@ -141,14 +147,22 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   // pattern is interleaved gradient noise, which has no stripes or clumps
   const dots = fract(fract(dot(screenCoordinate.xy, vec2(0.06711056, 0.00583715))).mul(52.9829189)), marks = userData('dots', 'vec2') as unknown as ReturnType<typeof vec2>;
   solid.maskNode = dots.greaterThanEqual(marks.x).and(dots.lessThan(marks.y));
+  // what share of the dots a mesh is drawn on is written beside the picture, for putting the picture together from
+  // the two sets of dots (see below): the dots from 0 up to a mark as half the mark, those from a mark up to 1 as a
+  // half and half the mark; all of the dots is 0.5
+  // (written by the picture's own pass alone, for everything on the stage: the mirror's and the shadows' passes have no such second picture)
+  const shareCode = select(marks.x.greaterThan(0), marks.x.mul(0.5).add(0.5), marks.y.mul(0.5));
+  /** everything on the stage carries its two marks, all the dots unless it is dissolved */
+  const marked = (thing: THREE.Object3D) => thing.traverse((part) => { part.userData.dots ??= new THREE.Vector2(0, 1); });
   // water: a soft mirror image of piers, hulls and houses is laid over the water colour
   let water = solid;
   const tint = uniform(new THREE.Color());
+  let mirrored: ReturnType<typeof reflector> | null = null;
   if (flag('mirror', true)) {
-    const mirror = reflector({ resolutionScale: 0.5 });
+    const mirror = mirrored = reflector({ resolutionScale: 0.5 });
     mirror.target.rotateX(-Math.PI / 2);
     mirror.target.position.y = SEA_Y;
-    scene.add(mirror.target);
+    marked(mirror.target); scene.add(mirror.target);
     water = new THREE.MeshLambertNodeMaterial({ vertexColors: true });
     water.maskNode = solid.maskNode;
     // the mirror image is tinted like the water, so a white sail shows as a pale green shape, not as a light
@@ -164,10 +178,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   // light step 1: sun, side light and sky; strengths are multiplied by π because a Lambert surface returns light / π
   const rad = THREE.MathUtils.degToRad;
   /** a direction on the ground given by its share to the right of the picture and towards its back, raised by `elev` */
-  const from = (turn: number, elev: number) => {
-    const right = Math.cos(rad(turn)) * Math.cos(rad(elev)), back = Math.sin(rad(turn)) * Math.cos(rad(elev));
-    return new THREE.Vector3(RIGHT[0] * right - NEAR[0] * back, Math.sin(rad(elev)), RIGHT[1] * right - NEAR[1] * back);
-  };
+  const from = (turn: number, elev: number) => new THREE.Vector3(...towards(turn, elev));
   const L = { ...LOOK, ...o.light };
   const sun = new THREE.DirectionalLight();
   sun.castShadow = true;
@@ -196,35 +207,43 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
 
   // the camera: far away with a long lens, so that the whole picture has one scale (the "parallel" look of the reference)
   const camera = new THREE.PerspectiveCamera(6.5, 1672 / 941, 1, LOOK.distance * 2);
+  // The figures are not in the water's mirror image: there they are smaller than its blur, and the frame in which
+  // the mirror was first drawn stood for 70 to 90 ms building their shader for its pass (Chrome on a Mac, 16 November 2026).
+  camera.layers.enable(FIGURES_LAYER);
+  mirrored?.reflector.getVirtualCamera(camera).layers.set(0);
+  // one figure of each kit stands out of sight below the stage from the start, so that the figures' shaders are
+  // built while the world loads and not in the frame in which a piece's figures or the other kit first show
+  { const warm = warmFigures(); warm.position.y = -5000; marked(warm); scene.add(warm); }
   const controls = o.fixed ? null : new MapControls(camera, canvas);
   if (controls) { controls.minDistance = 600; controls.maxDistance = 4200; controls.maxPolarAngle = rad(80); }
-  let frameW = o.frameW ?? FRAME_W;
+  let frameW = o.frameW ?? FRAME_W, distance: number = LOOK.distance;
   const lens = () => {
     // frameW ground units across the picture at the middle distance, whatever the window shape
-    camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(frameW / camera.aspect / 2 / LOOK.distance));
+    camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(frameW / camera.aspect / 2 / distance));
     camera.updateProjectionMatrix();
   };
   /** the ground the picture shows, last laid out by `aim` (see `aimPaper`) */
   let ground = { x: 0, z: 0, wide: 1, elev: 1 };
-  const aim = (x: number, z: number, across: number, elevation: number) => {
-    frameW = across;
-    const elev = rad(elevation), frameD = (frameW * 941) / 1672 / Math.sin(elev), centre = new THREE.Vector3(x, LAND_Y, z);
+  const aim = (x: number, z: number, across: number, elevation: number, away = 1) => {
+    // the picture's middle lies on the land, above the sea by the look's own height times `away`: as far above it in the world at every size of the stage's blocks
+    frameW = across; distance = LOOK.distance * away;
+    const elev = rad(elevation), frameD = (frameW * 941) / 1672 / Math.sin(elev), landY = SEA_Y + (LAND_Y - SEA_Y) * away, centre = new THREE.Vector3(x, landY, z);
     const toSun = from(LOOK.sunTurn, LOOK.sunElevation);
     sun.position.copy(centre).addScaledVector(toSun, 420); sun.target.position.copy(centre);
     // the shadow map covers the ground of the picture and what stands on it, seen from the sun
     const sc = sun.shadow.camera, wide = new THREE.Vector3().crossVectors(toSun, new THREE.Vector3(0, 1, 0)).normalize(), up = new THREE.Vector3().crossVectors(wide, toSun);
     let halfW = 0, halfH = 0, depth = 0;
     for (const s of [-0.02, 1.02]) for (const t of [-0.02, 1.02]) for (const y of [0, o.tall ?? 36]) {
-      const u = (s - 0.5) * frameW, v = (t - 0.5) * frameD, p = new THREE.Vector3(u * RIGHT[0] + v * NEAR[0], y - LAND_Y, u * RIGHT[1] + v * NEAR[1]);
+      const u = (s - 0.5) * frameW, v = (t - 0.5) * frameD, p = new THREE.Vector3(u * RIGHT[0] + v * NEAR[0], y - landY, u * RIGHT[1] + v * NEAR[1]);
       halfW = Math.max(halfW, Math.abs(p.dot(wide))); halfH = Math.max(halfH, Math.abs(p.dot(up))); depth = Math.max(depth, Math.abs(p.dot(toSun)));
     }
     sc.left = -halfW; sc.right = halfW; sc.top = halfH; sc.bottom = -halfH; sc.near = 420 - depth - 10; sc.far = 420 + depth + 10;
     sc.updateProjectionMatrix();
     side.position.copy(centre).addScaledVector(from(0, 0), 100); side.target.position.copy(centre);
-    fill.position.copy(centre).addScaledVector(from(180 + VIEW.turn, 20), 100); fill.target.position.copy(centre);
+    fill.position.copy(centre).addScaledVector(from(RIG.fillTurn, RIG.fillElevation), 100); fill.target.position.copy(centre);
     const reach = (frameD / 2) * Math.cos(elev) + 80 + (o.tall ?? 0);
-    camera.near = LOOK.distance - reach; camera.far = LOOK.distance + reach;
-    camera.position.copy(centre).add(new THREE.Vector3(NEAR[0] * Math.cos(elev), Math.sin(elev), NEAR[1] * Math.cos(elev)).multiplyScalar(LOOK.distance));
+    camera.near = distance - reach; camera.far = distance + reach;
+    camera.position.copy(centre).add(new THREE.Vector3(NEAR[0] * Math.cos(elev), Math.sin(elev), NEAR[1] * Math.cos(elev)).multiplyScalar(distance));
     camera.lookAt(centre);
     ground = { x, z, wide: frameW, elev };
     if (controls) { controls.target.copy(centre); controls.update(); }
@@ -241,14 +260,37 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   const colour = scenePass.getTextureNode('output'), far = scenePass.getTextureNode('depth');
   let picture: typeof colour | ReturnType<typeof colour.mul> = colour;
   const creased = uniform(1);
+  let reached: { value: number } | null = null;
+  // beside the picture: which way every point faces, and with it the share of the dots its mesh is drawn on
+  scenePass.setMRT(mrt({ output, normal: vec4(normalView, shareCode) }));
+  const facing = scenePass.getTextureNode('normal');
   if (flag('ao', true)) {
-    scenePass.setMRT(mrt({ output, normal: normalView }));
-    const facing = scenePass.getTextureNode('normal'), creases = ao(far, facing, camera);
-    creases.radius.value = LOOK.creaseReach; creases.thickness.value = 4; creases.scale.value = LOOK.creaseDepth; creases.samples.value = 24;
+    const creases = ao(far, facing, camera);
+    creases.radius.value = LOOK.creaseReach; reached = creases.radius; creases.thickness.value = CREASES.thickness; creases.scale.value = LOOK.creaseDepth; creases.samples.value = 24;
     // the raw result is speckled; the smoothing keeps to surfaces of like depth and direction
     // a crease does not turn grey: it keeps a share of bluish light, as the shadows of the reference do
     const open = convertToTexture(denoise(creases.getTextureNode(), far, facing, camera)).r, deep = new THREE.Color(LOOK.creaseColor);
     picture = colour.mul(mix(vec3(1, 1, 1), mix(vec3(deep.r, deep.g, deep.b), vec3(1, 1, 1), open), creased));
+  }
+  // things that share the picture's dots (see Stage.dissolve): at every dot the thing drawn there is taken as it is,
+  // what it shares the dots with is the mean of the dots around that are drawn on the other set, and the two are
+  // mixed by their shares. So both are whole pictures again, as in a resolve of screen-door transparency, and they
+  // blend without single dots showing. Where a thing has all the dots, the picture is as it was drawn.
+  {
+    const whole = convertToTexture(picture);
+    /** of a dot: whether it is of the set from a mark up to 1, and the mark */
+    const read = (at: Parameters<typeof facing.sample>[0]) => { const code = facing.sample(at).a, upper = step(0.5001, code).mul(step(code, 0.999)); return { upper, mark: mix(code.mul(2).min(1), code.sub(0.5).mul(2), upper) }; };
+    const own = read(screenUV), here = whole.sample(screenUV).rgb, mine = mix(own.mark, own.mark.oneMinus(), own.upper);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- sums of nodes: every `add` is a node type of its own
+    let others: any = vec3(0, 0, 0), found: any = float(0);
+    for (const by of [[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]] as [number, number][]) {
+      const at = screenUV.add(vec2(...by).div(screenSize)), it = read(at);
+      // of the other set, and sharing its dots (a thing with all the dots is no one's other half)
+      const counts = it.upper.sub(own.upper).abs().mul(max(it.upper, step(it.mark, 0.9999)));
+      others = others.add(whole.sample(at).rgb.mul(counts)); found = found.add(counts);
+    }
+    const other = mix(here, others.div(max(found, 1)), step(0.5, found));
+    picture = mix(other, here, mine) as unknown as typeof picture;
   }
   // the map's paper (see Stage.paper): drawn from straight above into a picture of its own, which the picture of the
   // scene then takes its colour from by where each of its points lies on the ground
@@ -314,7 +356,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
         part.userData.ground = shape === built.ground;
         group.add(part);
       }
-      if (built.figures?.count) { const f = figureMeshes(built.figures); group.add(f.near, f.far); showFigures(frameW); }
+      if (built.figures?.count) { const f = figureMeshes(built.figures); f.near.layers.set(FIGURES_LAYER); f.far.layers.set(FIGURES_LAYER); group.add(f.near, f.far); marked(group); showFigures(frameW); }
       scene.add(group);
       pending = Math.max(pending, 3);
       return group;
@@ -328,18 +370,26 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     more(group, things) { const part = mesh(things, solid, true); group.add(part); pending = Math.max(pending, 3); return part; },
     drop(part) { part.removeFromParent(); part.geometry.dispose(); pending = Math.max(pending, 1); },
     dissolve(thing, from, until) {
-      // the figures are too small to dissolve: they show with the whole group only
-      for (const part of (thing as THREE.Mesh).isMesh ? [thing] : thing.children) if (part.userData.figures) part.visible = from <= 0 && until >= 1; else (part.userData.dots as THREE.Vector2).set(from, until);
+      // the figures are too small to dissolve dot by dot: they come and go one by one instead, and are all gone
+      // well before the other layer has taken a third of the dots, so that it is not seen through them
+      const kept = Math.max(0, Math.min(1, until) * (1 - from / FIGURES_GONE));
+      for (const part of (thing as THREE.Mesh).isMesh ? [thing] : thing.children) {
+        if (part.userData.figures) keepFigures(part, kept);
+        else (part.userData.dots as THREE.Vector2).set(from, until);
+      }
       pending = Math.max(pending, 1);
     },
-    put(thing) { scene.add(thing); pending = Math.max(pending, 1); },
+    put(thing) { marked(thing); scene.add(thing); pending = Math.max(pending, 1); },
     take(thing) { scene.remove(thing); pending = Math.max(pending, 1); },
     paper,
     lay(strength, flat, seaTop) {
       if (laid.strength.value === strength && laid.flat.value === flat && laid.seaTop.value === seaTop) return;
       laid.strength.value = strength; laid.flat.value = flat; laid.seaTop.value = seaTop; pending = Math.max(pending, 1);
     },
-    creases(share) { if (creased.value !== share) { creased.value = share; pending = Math.max(pending, 1); } },
+    creases(share, reach = 1) {
+      if (creased.value !== share) { creased.value = share; pending = Math.max(pending, 1); }
+      if (reached && reached.value !== LOOK.creaseReach * reach) { reached.value = LOOK.creaseReach * reach; pending = Math.max(pending, 1); }
+    },
     redraw() { pending = Math.max(pending, 1); },
     dispose() { renderer.setAnimationLoop(null); removeEventListener('resize', resize); renderer.dispose(); },
     pick(px, py) {

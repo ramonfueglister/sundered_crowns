@@ -1,0 +1,301 @@
+// Feature 1 of the settlement (docs/SETTLEMENT_DESIGN.md): the ground of a town, the parcels of its families, the
+// land register in the state, the snapshot, the upgrade of an older world and what the world server tells of it.
+import { describe, it, expect } from 'vitest';
+import { AREA_LAW, PARCEL_SHARE, DEPTH_PER_WIDTH, PARCELS_PER_ROW, NARROWEST_FRONT, FRONT, settledHectares, townGround, parcelSize, layParcels, measuredTown } from '../src/sim/settlement/rule';
+import { foundLots, houseGround, townFamilies } from '../src/sim/systems/lots';
+import { compileGround } from '../src/sim/content/ground';
+import { townLots, manyTownsLots } from '../src/net/lots';
+import { citiesOf } from '../src/sim/content/cities';
+import { STATE_VERSION, LOT_KIND, NO_LOT, NO_HAMLET, type WorldState } from '../src/sim/state';
+import { FARM, LANE, HAMLET_FARMS, HAMLET_GAP, HAMLET_OFF, LAND_PER_BLOCK, hamletsOf, hamletSizes, hamletBox, layFarms, hamletSpots, hamletRing, fieldReach } from '../src/sim/settlement/hamlets';
+import { encodeState, decodeState, hashState } from '../src/sim/snapshot';
+import { upgradeState } from '../src/sim/upgrade';
+import { namedPersons } from '../src/sim/systems/rulers';
+import { readFileSync } from 'node:fs';
+import { newWorldState, loadSetup, dataPath } from '../tools/sim/load';
+import { lotsFile } from '../tools/sim/write_lots';
+
+const { s, w } = newWorldState(1291, 1291);
+const cities = citiesOf(1291), site = (name: string) => cities.find((c) => c.name === name)!.site;
+/** Whether two parcels (middle, size) share ground: more than a millimetre (the register stores 32-bit floats). */
+const overlap = (a: { x: number; z: number }, b: { x: number; z: number }, p: { w: number; d: number }) =>
+  Math.abs(a.x - b.x) < p.w - 1e-3 && Math.abs(a.z - b.z) < p.d - 1e-3;
+
+describe('the settled area of a town', () => {
+  it('follows the line through the 173 towns of Cesaretti et al. (2016)', () => {
+    expect(AREA_LAW.beta).toBeCloseTo(0.714, 3); // the pooled exponent of the paper's Table 1
+    expect(AREA_LAW.a).toBeCloseTo(0.1194, 4);
+    expect(settledHectares(11000)).toBeCloseTo(91.8, 0);
+    expect(settledHectares(0)).toBe(0);
+    // a town of ten times the people takes about five times the ground: larger towns are denser
+    expect(settledHectares(100000) / settledHectares(10000)).toBeCloseTo(10 ** 0.7141, 6);
+  });
+  it('is the measured area for a town of the data, carried along the law to the people the world gives it', () => {
+    const paris = measuredTown(site('Paris'))!;
+    expect(paris).toEqual({ people: 200000, hectares: 800 });
+    expect(settledHectares(200000, site('Paris'))).toBeCloseTo(800, 9);
+    expect(settledHectares(214667, site('Paris'))).toBeCloseTo(800 * (214667 / 200000) ** AREA_LAW.beta, 9);
+    expect(measuredTown(site('Cairo'))).toBeUndefined(); // outside the data: the law
+    expect(cities.filter((c) => measuredTown(c.site)).length).toBe(156); // 17 of the 173 are no town of the world
+  });
+  it('is a hundredth of the real town at the scale of the houses, so a family has the ground of a real one', () => {
+    expect(townGround(110)).toBeCloseTo(settledHectares(11000) * 100, 9); // 1 ha = 10,000 m², a hundredth of it
+    // Grenade-sur-Garonne (1290) was planned with about 100 ha for 3,000 house lots: 333 m² of town a lot. A town of
+    // 11,000 with families of 3.9 persons has 325 m² of town a family by the law
+    const perFamily = townGround(110) / (110 / 3.9);
+    expect(perFamily).toBeGreaterThan(300); expect(perFamily).toBeLessThan(350);
+  });
+});
+
+describe('the parcels of a town', () => {
+  it('share 76 % of the ground equally and are three times as deep as wide', () => {
+    const p = parcelSize(9183, 28);
+    expect(p.d).toBeCloseTo(DEPTH_PER_WIDTH * p.w, 9);
+    expect(28 * p.w * p.d).toBeCloseTo(PARCEL_SHARE * 9183, 6);
+  });
+  it('lie on a grid of blocks around the centre without sharing ground, the innermost first', () => {
+    const p = parcelSize(84156, 570), lots = layParcels(570, p);
+    expect(lots.length).toBe(570);
+    for (let i = 0; i < lots.length; i++) for (let j = i + 1; j < lots.length; j++) expect(overlap(lots[i], lots[j], p)).toBe(false);
+    const far = lots.map((l) => Math.max(Math.abs(l.x), Math.abs(l.z)));
+    for (let i = 1; i < far.length; i++) expect(far[i]).toBeGreaterThanOrEqual(far[i - 1] - 1e-9);
+    for (const l of lots) expect([FRONT.north, FRONT.south]).toContain(l.front);
+  });
+  it('take 76 % of a town of whole blocks, the streets the rest', () => {
+    const n = 25 * 2 * PARCELS_PER_ROW, p = { w: 9, d: 27 }, lots = layParcels(n, p); // five by five blocks
+    const pitch = (PARCELS_PER_ROW * p.w) / Math.sqrt(PARCEL_SHARE);
+    const xs = lots.map((l) => l.x), width = Math.max(...xs) - Math.min(...xs) + p.w;
+    expect(width).toBeCloseTo(4 * pitch + PARCELS_PER_ROW * p.w, 6);
+    expect((n * p.w * p.d) / (5 * pitch) ** 2).toBeCloseTo(PARCEL_SHARE, 9); // with half a street around
+  });
+  it('are fewer than asked when the ground within reach does not hold them', () => {
+    const lots = layParcels(1000, { w: 9, d: 27 }, () => true, 100); // the blocks within 100 m of the centre: 25
+    expect(lots.length).toBe(25 * 2 * PARCELS_PER_ROW);
+  });
+  it('leave out ground a town cannot build on', () => {
+    const p = { w: 9, d: 27 }, lots = layParcels(40, p, (x) => x <= 0); // nothing east of the centre
+    expect(lots.length).toBe(40);
+    for (const l of lots) expect(l.x).toBeLessThanOrEqual(0);
+  });
+});
+
+describe('the building ground of a town', () => {
+  it('is free only inside the survey and where its bit is set', () => {
+    // 3 by 3 blocks, the middle row free: bits 3, 4, 5 of the field
+    const g = compileGround({ year: 1291, metresPerBlock: 2, sites: [{ site: 7, w: 3, d: 3, cells: btoa(String.fromCharCode(0b00111000, 0)) }] });
+    expect(g.has(7)).toBe(true); expect(g.has(8)).toBe(false); expect(g.reach(7)).toBe(1);
+    for (const bx of [-1, 0, 1]) { expect(g.free(7, bx, 0)).toBe(true); expect(g.free(7, bx, -1)).toBe(false); expect(g.free(7, bx, 1)).toBe(false); }
+    expect(g.free(7, 2, 0)).toBe(false); expect(g.free(7, -2, 0)).toBe(false); expect(g.free(8, 0, 0)).toBe(false);
+  });
+  it('holds the house of a parcel when the strip at its street is free', () => {
+    const all = compileGround({ year: 1291, metresPerBlock: 2, sites: [{ site: 7, w: 41, d: 41, cells: btoa(String.fromCharCode(...new Array(Math.ceil((41 * 41) / 8)).fill(255))) }] });
+    const size = { w: 8, d: 24 };
+    expect(houseGround(all, 7, { x: 0, z: 0, front: FRONT.north }, size)).toBe(true);
+    expect(houseGround(all, 7, { x: 40, z: 0, front: FRONT.north }, size)).toBe(false); // its east edge lies beyond the survey
+    expect(houseGround(all, 7, { x: 0, z: -30, front: FRONT.south }, size)).toBe(true); // the back of the parcel may lie beyond it
+    expect(houseGround(all, 7, { x: 0, z: -30, front: FRONT.north }, size)).toBe(false);
+  });
+});
+
+describe('the hamlets of a town', () => {
+  it('are as few as hold its farming families at ten farmsteads each, the families shared out evenly', () => {
+    expect(HAMLET_FARMS).toBe(10);
+    expect([0, 1, 10, 11, 20, 21, 388].map(hamletsOf)).toEqual([0, 1, 1, 2, 2, 3, 39]);
+    expect(hamletSizes(0)).toEqual([]); expect(hamletSizes(7)).toEqual([7]); expect(hamletSizes(11)).toEqual([6, 5]); expect(hamletSizes(18)).toEqual([9, 9]);
+    for (const f of [1, 9, 23, 388, 703]) { const z = hamletSizes(f); expect(z.reduce((a, b) => a + b, 0)).toBe(f); expect(Math.max(...z)).toBeLessThanOrEqual(HAMLET_FARMS); expect(Math.max(...z) - Math.min(...z)).toBeLessThanOrEqual(1); }
+  });
+  it('have farmsteads of 10 m by 17.5 m in two rows at a lane, fronting it', () => {
+    expect(FARM).toEqual({ w: 10, d: 17.5 }); // half the sides of Cottam's 20 m by 35 m (Ramon, 17 November 2026)
+    expect(LANE).toBeCloseTo(2 * 17.5 * (1 / Math.sqrt(PARCEL_SHARE) - 1), 9); // as the streets of a town of such parcels
+    for (const n of [1, 2, 5, 9, 10]) {
+      const farms = layFarms(n), box = hamletBox(n);
+      expect(farms.length).toBe(n);
+      for (const a of farms) {
+        expect(a.front).toBe(a.z < 0 ? FRONT.south : FRONT.north); // the lane lies between the rows
+        expect(Math.abs(a.z)).toBeCloseTo((LANE + FARM.d) / 2, 9);
+        expect(Math.abs(a.x) + FARM.w / 2).toBeLessThanOrEqual(box.w / 2 + 1e-9); expect(Math.abs(a.z) + FARM.d / 2).toBeLessThanOrEqual(box.d / 2 + 1e-9);
+        for (const b of farms) if (a !== b) expect(overlap(a, b, FARM)).toBe(false);
+      }
+      expect(farms.filter((f) => f.z < 0).length).toBe(Math.ceil(n / 2));
+    }
+    expect(hamletBox(10)).toEqual({ w: 50, d: 35 + LANE });
+  });
+  it('lie spread evenly over the ring between the town and the edge of its fields', () => {
+    const spots = hamletSpots(40, 100, 300), r = spots.map((p) => Math.hypot(p.x, p.z));
+    expect(spots.length).toBe(40);
+    for (const p of spots) { expect(Math.abs(p.x % 2)).toBe(0); expect(Math.abs(p.z % 2)).toBe(0); } // on the middle of a block
+    for (const v of r) { expect(v).toBeGreaterThan(98); expect(v).toBeLessThan(302); }
+    // as many in the inner half of the ring's ground as in the outer
+    const mid = Math.sqrt((100 * 100 + 300 * 300) / 2);
+    expect(r.filter((v) => v < mid).length).toBe(20);
+    // a quarter of the turn holds about a quarter of them
+    expect(spots.filter((p) => p.x > 0 && p.z > 0).length).toBeGreaterThanOrEqual(8); expect(spots.filter((p) => p.x > 0 && p.z > 0).length).toBeLessThanOrEqual(12);
+  });
+  it('reach as far as the fields of the town, and farther where they would have no room', () => {
+    expect(LAND_PER_BLOCK).toBe(125);
+    expect(fieldReach(31416)).toBeCloseTo((10000 / 125) * 2, 0); // 314 km² are a disc of 10 km: 80 blocks of 2 m
+    const wide = hamletRing(40, [10, 10], 20000), tight = hamletRing(40, new Array(39).fill(10), 100);
+    expect(wide.inner).toBeCloseTo(40 + HAMLET_OFF + 25, 9); // half the width of a hamlet of ten farmsteads
+    expect(wide.outer).toBeCloseTo(fieldReach(20000), 9);
+    expect(Math.PI * (tight.outer ** 2 - tight.inner ** 2)).toBeCloseTo(39 * (50 * 50 + (35 + LANE) ** 2), 3);
+  });
+});
+
+describe('the farmsteads of a world of 1291', () => {
+  const L = s.lot.cols, F = s.family.cols, H = s.hamlets.cols, towns = townFamilies(s);
+  const farms = Array.from({ length: s.lot.size }, (_, i) => i).filter((i) => L.kind[i] === LOT_KIND.farmstead);
+  it('are one for every family of the hamlets, in a hamlet of its town', () => {
+    const held = new Set<number>();
+    let families = 0, hamlets = 0;
+    cities.forEach((c, k) => {
+      const mine = new Set<number>();
+      for (const f of towns[k].farmers) {
+        const l = F.lot[f], h = L.hamlet[l];
+        expect(F.hamlet[f]).toBe(1);
+        expect(L.kind[l]).toBe(LOT_KIND.farmstead); expect(held.has(l)).toBe(false); held.add(l);
+        expect(L.site[l]).toBe(c.site); expect(L.place[l]).toBe(c.place); expect(L.w[l]).toBe(FARM.w); expect(L.d[l]).toBe(FARM.d);
+        expect(H.site[h]).toBe(c.site); expect(H.place[h]).toBe(c.place); mine.add(h);
+      }
+      expect(mine.size).toBe(hamletsOf(towns[k].farmers.length));
+      families += towns[k].farmers.length; hamlets += mine.size;
+    });
+    expect(farms.length).toBe(families);
+    expect(s.hamlets.size).toBe(hamlets);
+    const count = new Map<number, number>();
+    for (const i of farms) count.set(L.hamlet[i], (count.get(L.hamlet[i]) ?? 0) + 1);
+    for (let h = 0; h < s.hamlets.size; h++) { expect(count.get(h)).toBe(H.farms[h]); expect(H.farms[h]).toBeLessThanOrEqual(HAMLET_FARMS); expect(H.farms[h]).toBeGreaterThanOrEqual(1); }
+    let all = 0; for (let f = 0; f < s.family.size; f++) all += F.hamlet[f];
+    expect(families).toBe(all); // no family of a hamlet is without a farmstead
+  });
+  it('lie round the middle of their hamlet, clear of the town and of every other hamlet', () => {
+    const boxes = Array.from({ length: s.hamlets.size }, (_, h) => ({ x: H.x[h], z: H.z[h], ...hamletBox(H.farms[h]) }));
+    for (const i of farms) { const b = boxes[L.hamlet[i]]; expect(Math.abs(L.x[i] - b.x) + L.w[i] / 2).toBeLessThanOrEqual(b.w / 2 + 1e-3); expect(Math.abs(L.z[i] - b.z) + L.d[i] / 2).toBeLessThanOrEqual(b.d / 2 + 1e-3); }
+    const near = (a: typeof boxes[number], b: typeof boxes[number], gap: number) => Math.abs(a.x - b.x) < (a.w + b.w) / 2 + gap - 1e-3 && Math.abs(a.z - b.z) < (a.d + b.d) / 2 + gap - 1e-3;
+    const of = new Map<number, number[]>();
+    for (let h = 0; h < s.hamlets.size; h++) of.set(H.site[h], [...(of.get(H.site[h]) ?? []), h]);
+    const built = new Map<number, typeof boxes>();
+    for (let i = 0; i < s.lot.size; i++) if (L.kind[i] === LOT_KIND.parcel) built.set(L.site[i], [...(built.get(L.site[i]) ?? []), { x: L.x[i], z: L.z[i], w: L.w[i], d: L.d[i] }]);
+    for (const [town, hs] of of) {
+      hs.forEach((h, a) => { for (const g of hs.slice(0, a)) expect(near(boxes[h], boxes[g], HAMLET_GAP)).toBe(false); });
+      for (const h of hs) for (const p of built.get(town) ?? []) expect(near(boxes[h], p, HAMLET_OFF)).toBe(false);
+    }
+  });
+  it('stand on dry ground in all but a few hamlets: a hamlet whose own spot is wet lies on the nearest ground that carries it', () => {
+    const dry = w.dry!, C = s.lot.cols, wet = new Set<number>();
+    for (let i = 0; i < s.lot.size; i++) {
+      if (C.kind[i] !== LOT_KIND.farmstead) continue;
+      expect(dry.has(C.site[i])).toBe(true);
+      if (!houseGround(dry, C.site[i], { x: C.x[i], z: C.z[i], front: C.front[i] }, { w: C.w[i], d: C.d[i] })) wet.add(C.hamlet[i]);
+    }
+    const found = foundLots(decodeState(encodeState(s)), w.ground, w.dry);
+    expect(found.rough).toBe(wet.size);
+    expect(found.rough).toBeLessThan(s.hamlets.size / 30);
+    expect(found.crowded).toBeLessThan(s.hamlets.size / 50);
+    // by the building ground alone, which ends 96 blocks from the centre and counts every step, more hamlets stay rough
+    expect(foundLots(decodeState(encodeState(s)), w.ground, null).rough).toBeGreaterThan(found.rough);
+  });
+});
+
+describe('the land register of a world of 1291', () => {
+  const L = s.lot.cols, F = s.family.cols, P = s.person.cols, towns = townFamilies(s);
+  const parcels = Array.from({ length: s.lot.size }, (_, i) => i).filter((i) => L.kind[i] === LOT_KIND.parcel);
+  it('gives every family who lives in a town a parcel of its own in that town', () => {
+    const rulers = namedPersons(s), held = new Set<number>();
+    let inTowns = 0, farmers = 0;
+    cities.forEach((c, k) => {
+      for (const f of towns[k].families) {
+        const l = F.lot[f];
+        expect(F.hamlet[f]).toBe(0);
+        expect(l).toBeGreaterThanOrEqual(0); expect(held.has(l)).toBe(false); held.add(l);
+        expect(L.site[l]).toBe(c.site); expect(L.place[l]).toBe(c.place); expect(L.kind[l]).toBe(LOT_KIND.parcel); expect(L.hamlet[l]).toBe(NO_HAMLET);
+      }
+      inTowns += towns[k].families.length; farmers += towns[k].farmers.length;
+    });
+    expect(parcels.length).toBe(inTowns);
+    expect(farmers).toBeGreaterThan(inTowns); // most families live from agriculture
+    expect(towns.reduce((n, t) => n + t.persons + t.farmPersons, 0)).toBe(s.person.size - rulers.size);
+    // everybody else is a ruler, and a ruler has no ground
+    for (const id of rulers) expect(F.lot[P.family[id]]).toBe(NO_LOT);
+    expect(s.family.size - inTowns - farmers).toBe(rulers.size);
+  });
+  it('gives the parcels of each town 76 % of the ground the law gives its persons', () => {
+    const sum = new Map<number, number>();
+    for (const i of parcels) sum.set(L.site[i], (sum.get(L.site[i]) ?? 0) + L.w[i] * L.d[i]);
+    cities.forEach((c, k) => expect(sum.get(c.site)! / (PARCEL_SHARE * townGround(towns[k].persons, c.site))).toBeCloseTo(1, 4));
+  });
+  it('has no parcel narrower than the narrowest the sources know, and none of a town on another', () => {
+    for (const i of parcels) expect(L.w[i]).toBeGreaterThan(NARROWEST_FRONT);
+    for (const name of ['Paris', 'Zürich', 'Limoges']) {
+      const ids = towns[cities.findIndex((c) => c.name === name)].families.map((f) => F.lot[f]);
+      for (const a of ids) for (const b of ids) if (a < b) expect(overlap({ x: L.x[a], z: L.z[a] }, { x: L.x[b], z: L.z[b] }, { w: L.w[a], d: L.d[a] })).toBe(false);
+    }
+  });
+  it('lays every parcel where its house can stand, by the building ground of the towns', () => {
+    const g = w.ground!, house = (t: WorldState, i: number) => { const C = t.lot.cols; return houseGround(g, C.site[i], { x: C.x[i], z: C.z[i], front: C.front[i] }, { w: C.w[i], d: C.d[i] }); };
+    expect(g.year).toBe(1291);
+    for (const c of cities) expect(g.has(c.site)).toBe(true);
+    let off = 0;
+    for (const i of parcels) if (!house(s, i)) off++;
+    expect(off).toBe(0);
+    // laid out without the ground, the houses of many parcels stand in the water, on rock or under a church
+    const bare = decodeState(encodeState(s));
+    expect(foundLots(bare, g).tight).toEqual([]); // no town is too tight for its families
+    foundLots(bare, null);
+    for (let i = 0; i < bare.lot.size; i++) if (bare.lot.cols.kind[i] === LOT_KIND.parcel && !house(bare, i)) off++;
+    expect(off).toBeGreaterThan(1000);
+  });
+  it('is the same from the same seed, survives a snapshot, and founding it again changes nothing', () => {
+    const t = decodeState(encodeState(s));
+    expect(hashState(t)).toBe(hashState(s));
+    expect(Array.from(t.lot.cols.x.subarray(0, t.lot.size))).toEqual(Array.from(L.x.subarray(0, s.lot.size)));
+    foundLots(t, w.ground, w.dry);
+    expect(hashState(t)).toBe(hashState(s));
+  });
+});
+
+describe('a world of 1291 saved before the land register', () => {
+  it('gets the parcels a new world has, and encodes as one', () => {
+    const old = decodeState(encodeState(s)) as WorldState;
+    old.v = 19;
+    delete (old.family.cols as Record<string, unknown>).lot; delete (old as Partial<WorldState>).lot; delete (old as Partial<WorldState>).hamlets;
+    const up = upgradeState(decodeState(encodeState(old)), w, () => loadSetup(1291));
+    expect(up.v).toBe(STATE_VERSION);
+    expect(hashState(up)).toBe(hashState(s));
+  });
+});
+
+describe('what the world server tells of the ground of a town', () => {
+  it('are its parcels and the farmsteads of its hamlets in columns of equal length, each with its family and its persons', () => {
+    const k = cities.findIndex((c) => c.name === 'Zürich'), v = townLots(s, cities[k].site), t = townFamilies(s)[k];
+    expect(v.id.length).toBe(t.families.length + t.farmers.length);
+    for (const key of ['kind', 'hamlet', 'x', 'z', 'w', 'd', 'front', 'family', 'persons'] as const) expect(v[key].length).toBe(v.id.length);
+    expect([...v.family].sort((a, b) => a - b)).toEqual([...t.families, ...t.farmers].sort((a, b) => a - b));
+    v.id.forEach((id, i) => expect(s.family.cols.lot[v.family[i]]).toBe(id));
+    expect(v.persons.reduce((a, b) => a + b, 0)).toBe(t.persons + t.farmPersons);
+    expect(v.kind.filter((x) => x === LOT_KIND.parcel).length).toBe(t.families.length);
+    // its hamlets: every farmstead lies in one of them, and each has as many as it says
+    expect(v.hamlets.id.length).toBe(hamletsOf(t.farmers.length));
+    expect(v.hamlets.farms.reduce((a, b) => a + b, 0)).toBe(t.farmers.length);
+    v.hamlets.id.forEach((h, i) => expect(v.hamlet.filter((x) => x === h).length).toBe(v.hamlets.farms[i]));
+    v.kind.forEach((kind, i) => expect(v.hamlet[i] === NO_HAMLET).toBe(kind === LOT_KIND.parcel));
+  });
+  it('of several towns come in one pass, each as the one of its town alone, a site without ground empty', () => {
+    const none = [...Array(100).keys()].find((x) => !cities.some((c) => c.site === x))!; // a site that is no town of 1291
+    const sites = [site('Paris'), none, site('Zürich')], many = manyTownsLots(s, sites);
+    expect(many.map((m) => m.site)).toEqual(sites);
+    sites.forEach((x, i) => expect(many[i]).toEqual(townLots(s, x)));
+    expect(many[1].id.length).toBe(0);
+  });
+});
+
+describe('the file of parcels the world graphic reads', () => {
+  it('is the land register of a new world of 1291 (npx tsx tools/sim/write_lots.ts 1291)', () => {
+    const file = JSON.parse(readFileSync(dataPath('lots_1291.json'), 'utf8'));
+    expect(file).toEqual(JSON.parse(JSON.stringify(lotsFile(s))));
+    expect(file.towns.length).toBe(cities.length);
+    type Rows = { x: number[]; w: number; d: number };
+    expect(file.towns.reduce((n: number, t: Rows & { hamlets: Rows[] }) => n + t.x.length + t.hamlets.reduce((m, h) => m + h.x.length, 0), 0)).toBe(s.lot.size);
+    expect(file.towns.reduce((n: number, t: { hamlets: Rows[] }) => n + t.hamlets.length, 0)).toBe(s.hamlets.size);
+    for (const t of file.towns) for (const h of t.hamlets) { expect(h.w).toBe(FARM.w); expect(h.d).toBe(FARM.d); }
+  });
+});

@@ -15,6 +15,7 @@ import { STATE_VERSION, PERSON_SCHEMA, type WorldState } from '../src/sim/state'
 import { personDetail, personEconomy } from '../src/net/people';
 import { economyRows, lsd, pence } from '../src/people/economy_rows';
 import { countPeople, settleHamlets } from '../src/sim/systems/hamlets';
+import { foundLots } from '../src/sim/systems/lots';
 import { cultivate } from '../src/sim/systems/cultivation';
 import { bringInHarvest } from '../src/sim/systems/harvest';
 
@@ -182,6 +183,7 @@ describe('the state', () => {
     const founded = decodeState(encodeState(s)); foundEconomy(founded, w);
     // step 17 settles the families by the firms of the new economies and sets the people, arable and harvest anew
     settleHamlets(founded); countPeople(founded); cultivate(founded, w); bringInHarvest(founded, w);
+    foundLots(founded, w.ground, w.dry); // step 20: the parcels of the families who live in the towns now
     expect(hashState(up)).toBe(hashState(founded));
     const c = up.economy.cities!;
     expect(c.day).toBe(s.day); expect(c.years.length).toBe(0); expect(c.halted).toBe('');
