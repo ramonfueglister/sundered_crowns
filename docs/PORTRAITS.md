@@ -3636,10 +3636,58 @@ files, `portraits/`): `runde107_vergleich_ck3_nah.png`, `runde107_vergleich_ck3_
 `runde107_vergleich_ck3_maenner.png` (the reference above, ours below), `runde107_vorher_nachher.png` (eight
 faces, round 106 above), `runde107_stichprobe.png` (the sample of 36).
 
+**Clothes that are a colour (round 108).** On round 107's sheets the next thing the eye meets after the face
+is what is under it: the reference's people wear a mustard gown, a mauve one, a red hood over a yellow cowl;
+ours had a black shape under the head. Read on the three sheets (the lower sixth of a cell, its middle), seventeen
+pairs:
+
+| the chest | the reference's | round 107 | now |
+|---|---|---|---|
+| L (lowest to highest) | 29.9 (11.4 to 52.9) | 10.6 (7.2 to 20.5) | 26.5 (21.2 to 41.4) |
+| chroma | 16.3 (7.6 to 24.8) | 7.0 (3.6 to 10.0) | 17.4 (7.9 to 25.4) |
+
+No light was the cause. On six people (the chest's box in the picture, L 9.1): without the key light's shadow
+9.4, without the vignette 11.0, the fill at 0.5 or the bounce at 0.6 instead of 0.14 and 0.1, 11.2 each (and
+the face 5 to 7 L lighter). The cloth is: the builder gives wool its own colour, a quarter as light as skin
+(a luminance of 0.17 against 0.48, times the weave's image), a chest takes less of the key light than a
+cheek, and under the straight part of the picture's curve a value is drawn darker than it is (`black` 1.5).
+A wool as it is, lit as the face is, comes out near black, as hair did until the hair's layer was drawn
+lighter (`cap.light` 2.6).
+
+| change | value | what it does |
+|---|---|---|
+| `cloth.wool` (stage profile, new) | 2.6 | gown and hood drawn that many times lighter: the chest L 25.5 with the old wools (20.0 at 2, 30.2 at 3.2) |
+| `cloth.linen` | 1 | veil and wimple as they were: light enough (the stage tells linen by an image named `_veil` or `_wimple`) |
+| `wool` (dress table) | `#958565`, `#6e665a`, `#7d5c40`, `#51647c`, `#84503f`, `#6c6c45` | the same six wools (two undyed, a brown, a dull blue, a russet, an olive) with more colour: before, four of the six had their strongest of red, green and blue under 1.3 times the weakest, and lifted they were six pale greys (chroma 13.0 on the six people); the dyed ones are 1.5 to 2.1 times now (chroma 17.2, L 24.8) |
+
+The gauntlet is as round 107 left it to the tenth (19 of 19): no line of it reads cloth, and the stage has no
+light that cloth throws back onto a face.
+
+Tried and not kept: `cloth.wool` 3.2 with the old wools (L 30, the reference's mean, but six pastel greys); a
+russet of `#8a4b38`, an olive of `#70713f` and a blue of `#4f6480` (chroma 20.3; the russet an orange, the
+olive a grass green; toned to the values above).
+
+Honest about it. The colours are by eye, not from a source: the dress table's source names the kinds (undyed
+greys and browns, russet, a dull blue), not how strong they were, and an olive has no source at all. What a
+gown is cut like has not changed: one piece with a round neck, no shirt showing at the neck, no collar, no
+trim, no belt, where every one of the reference's people wears two or three layers. Lifted, the weave's image
+shows: a coarse plain weave with dark blotches, sackcloth more than fulled wool, and on a hood the blotches
+read as stains. Looked at and left for a round of its own: the hair. A fringe ends in bands cut straight
+across with steps between them, as if cut from paper with scissors, and the hair lies on the skull as a
+thatch; the reference's bowl cuts are a thick rounded mass with soft ends.
+
+Tests: `tests/portrait.test.ts` holds that England's wool is drawn 2 to 3.5 times lighter and its linen as it
+is, that the garments the sample wears are the five the name rule knows, that Apoleia's cloth is untouched,
+and why the factor is needed (a chest's value lies in the curve's toe, and lifted it comes out more than 3.5
+times as light). Pictures (project files, `portraits/`): `runde108_vergleich_ck3_nah.png`,
+`runde108_vergleich_ck3_frauen.png`, `runde108_vergleich_ck3_maenner.png`, `runde108_vorher_nachher.png`
+(eight people, round 107 above), `runde108_stichprobe.png` (the sample of 36).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
-reached. Since round 107 real pictures are set beside ours (above): the face's proportions and the tone of the
-skin are close; the hair (no volume), the clothes (no collar, colour or trim), the veil (no folds), the fine
-forms of the face (lids, nostrils, edge of the lips), stubble, children and the variety of faces are not; the
+reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
+skin and, since round 108, how light and how coloured the clothes are, are close; the hair (no volume, a
+fringe cut from paper), the clothes' cut (one layer, no collar or trim), the veil (no folds), the fine forms
+of the face (lids, nostrils, edge of the lips), stubble, children and the variety of faces are not; the
 thrown-back hood closes round the neck since round 35, but has no folds across its cloth.
 
 **Genes.** The pools of the founders are still Apoleia's seven Roman-era regions (`dna.rs` `origin`). Places

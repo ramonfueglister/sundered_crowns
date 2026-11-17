@@ -819,6 +819,34 @@ describe('portraits', { timeout: 20_000 }, () => {
     // the backdrop is part of the picture: nothing of the page shows through it
     expect(f.backdrop).not.toBeNull();
   });
+  it('the wool of England is drawn light enough to be a colour, its linen as it is', () => {
+    // (round 108) Set beside the reference, England's gowns and hoods were black shapes under the heads: read on
+    // the sheets, the chest of six people had L 10 and a chroma of 7 where the reference's clothes have 30 and
+    // 17. The builder's wools are a cloth's own colour, a quarter as light as skin, and the picture's curve draws
+    // the darks together. The stage draws wool `cloth.wool` times lighter, as `cap.light` does hair: L 25 and a
+    // chroma of 17 with the wools of that round. Linen, light as it is, is left.
+    const k = ENGLAND_1356.cloth!;
+    expect(APOLEIA.cloth).toBeNull();
+    expect(k.wool).toBeGreaterThan(2);
+    expect(k.wool).toBeLessThan(3.5);
+    expect(k.linen).toBe(1);
+    const of = (tex: string) => ({ rough: 0.9, metal: 0, double: true, tex, nmap: '', pos: new Float32Array(9), col: new Float32Array(9).fill(0.2), uv: new Float32Array(6), nrm: new Float32Array(9) });
+    const light = (tex: string, p = ENGLAND_1356): number => surfaceMaterials(of(tex), null, null, p)[0]!.color.r;
+    for (const wool of ['real/cloth_cote.webp', 'real/cloth_hood_up.webp', 'real/cloth_hood_down.webp']) expect(light(wool), wool).toBe(k.wool);
+    for (const linen of ['real/cloth_veil_linen.webp', 'real/cloth_wimple.webp']) expect(light(linen), linen).toBe(k.linen);
+    expect(light('real/cloth_tunic.webp', APOLEIA)).toBe(1);
+    // the garments England's sample wears are those: the stage tells wool from linen by an image's name
+    const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
+    const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
+    const worn = new Set(sample.flatMap(p => b.build(p).surfaces.filter(s => surfaceKind(s) === 'cloth').map(s => s.tex)));
+    expect([...worn].sort()).toEqual(['cloth_cote', 'cloth_hood_down', 'cloth_hood_up', 'cloth_veil_linen', 'cloth_wimple'].map(n => `real/${n}.webp`));
+    // what the factor is for: a wool of the builder under the light a chest gets lies deep in the curve's toe,
+    // where a value is drawn darker than it is; lifted, it comes out at more than three times its lightness
+    const y = (x: number): number => toneCurve(x, ENGLAND_1356.finish!.curve);
+    const chest = 0.03;
+    expect(y(chest)).toBeLessThan(chest * 0.5);
+    expect(y(chest * k.wool) / y(chest)).toBeGreaterThan(3.5);
+  });
   it('the skin of England shows no highlight of a lamp that is hidden', () => {
     // A shadow that is not full lets a share of its light through (the key's 0.3, the rim's half): that share
     // stands for light that comes by other ways, off a wall, off the cheek, through the nose. three.js lets the

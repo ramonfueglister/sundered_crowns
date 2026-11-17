@@ -75,6 +75,12 @@ export interface StageProfile {
    *  one sees, not the shade under hair, and wants the lightness of the head's hair and a lit and a shaded side. */
   cap: null | { tone: number; light: number; colour: number; wrap: number; shadow: boolean; stubble: number;
     beard: { tone: number; light: number; colour: number; wrap: number } };
+  /** Cloth: null draws it with the colours the builder gives it. Else how many times lighter wool is drawn
+   *  (`wool`: gown and hood) and linen (`linen`: a cloth whose image is named `_veil` or `_wimple`). The builder's
+   *  wools are a cloth's own colour, a quarter as light as skin; under a light set for the face, and through a
+   *  tone curve that draws the darks together, a gown of them is a black shape under the head. As `cap.light`
+   *  is for hair. */
+  cloth: null | { wool: number; linen: number };
   /** Hair cards, the round strands of a plait and the locks of a head's hair: roughness, "specular", anisotropy
    *  of the glint. */
   cards: { rough: number; specular: number; anisotropy: number };
@@ -126,7 +132,7 @@ export const APOLEIA: StageProfile = {
   exposure: 0.92,
   turn: -0.35, rise: 0.08, close: 1,
   anisotropy: 1,
-  skin: null, eye: null, brow: null, cap: null,
+  skin: null, eye: null, brow: null, cap: null, cloth: null,
   cards: { rough: 0.55, specular: 0.3, anisotropy: 0.5 },
   sheen: null,
   finish: null,
@@ -329,6 +335,12 @@ export const APOLEIA: StageProfile = {
  *  (portrait/src/dress.rs `Style`: broad, with large eyes). In the larger opening between the lids the white
  *  at 1.75 was a white patch beside the iris, where the reference's is a grey that hardly stands out of the
  *  face: 1.3. The reference's brows are a dark, closed band, ours were single hairs over the skin: 1.15 (0.85).
+ *  Round 108: the clothes. On the sheets beside the reference the chest of six people read L 10 with a chroma of
+ *  7, a black shape under the head, where the reference's clothes read 30 and 17. No light mends it (without the
+ *  key's shadow 9.4, without the vignette 11.0, the fill or the bounce several times as strong 11.2): the
+ *  builder's wools are a quarter as light as skin, and under the curve's straight part a value is drawn darker
+ *  than it is. `cloth.wool` 2.6, as `cap.light` for hair: L 25, and with the stronger wools of that round
+ *  (portrait/src/dress.rs `wool`) a chroma of 17. Linen is light enough as it is (1).
  *  All values of this profile are PLACEHOLDER: held against one face of the reference, set by measure and by
  *  eye (docs/PORTRAITS.md). */
 export const ENGLAND_1356: StageProfile = {
@@ -349,6 +361,7 @@ export const ENGLAND_1356: StageProfile = {
   eye: { corner: { from: 0.3, to: 0.8, dark: 0.35 }, lid: { from: -0.35, to: 0.05, dark: 0.3 }, tint: [0.84, 0.77, 0.64], white: 1.3, iris: 1.15, colour: 1.1, lift: 0.6, rough: 0.14, specular: 0.6, wrap: 0.5, cornea: 0.36, ring: 0.55 },
   brow: { rough: 1, specular: 0.05, lashes: 0.6, brows: 1.15 },
   cap: { tone: 1.7, light: 2.6, colour: 0.7, wrap: 1, shadow: false, stubble: 0, beard: { tone: 5.5, light: 3.2, colour: 0.65, wrap: 0.3 } },
+  cloth: { wool: 2.6, linen: 1 },
   cards: { rough: 0.72, specular: 0.2, anisotropy: 0.3 },
   sheen: { white: 0.3, whiteSharp: 120, whiteShift: 0.1, own: 0.45, ownSharp: 40, ownShift: -0.1, ragged: 0.15, strands: 1.35, light: 0.5, colour: 0.7, wrap: 1 },
   finish: {

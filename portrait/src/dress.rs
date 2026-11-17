@@ -145,7 +145,12 @@ pub struct DressSet {
     pub origins: &'static [&'static str],
     /// The body garment of everyone.
     pub gown: &'static str,
-    /// Wool colours of gown and hood.
+    /// Wool colours of gown and hood: a cloth's own colour (the stage draws wool lighter than that,
+    /// src/portrait/profile.ts `cloth`). England's until round 108 were greys with a breath of colour (four of
+    /// the six with the strongest of red, green and blue under 1.3 times the weakest): set beside the
+    /// reference's clothes they were one dark grey, chroma 7 in the picture where its clothes have 17. Since then
+    /// the same six (two undyed, a brown, a dull blue, a russet, an olive) with more colour, the dyed ones 1.5
+    /// to 2.1 times: chroma 17. PLACEHOLDER, by eye.
     pub wool: &'static [&'static str],
     /// Linen of veil and wimple.
     pub linen: &'static str,
@@ -604,7 +609,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     key: "england1356",
     origins: &["England"],
     gown: "cloth_cote",
-    wool: &["#8f8371", "#6e675c", "#7a6352", "#5f6b73", "#7d554a", "#73705a"],
+    wool: &["#958565", "#6e665a", "#7d5c40", "#51647c", "#84503f", "#6c6c45"],
     linen: "#e6dfcd",
     hood: [Up, Up, Up, Up, Back, Back, Back, Bare, Bare, Bare],
     hood_from: 14.0,
