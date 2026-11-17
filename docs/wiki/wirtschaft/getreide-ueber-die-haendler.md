@@ -53,7 +53,7 @@ Venedig fällt in den ersten Jahren auf 83 und steht nach 30 Jahren bei 94, mit 
 
 ## Grenzen
 
-- Städte, die mehr einführen als ausführen, bezahlen mit Geld, das abfliesst. Es sammelt sich als Guthaben der Händler und wächst ohne Grenze (Venedig nach 20 Jahren 7 Jahres-BIP). Keine Regel liest es.
+- Städte, die mehr einführen als ausführen, bezahlen mit Geld, das abfliesst. Es sammelt sich als Guthaben der Händler und wächst ohne Grenze (Venedig nach 20 Jahren 7 Jahres-BIP). Keine Regel liest es. Das Gegenstück liegt bei der Bank der Stadt: ihre Firmen machen Verlust, die Bank schreibt ab und hat in Paris nach 20 Jahren ein Eigenkapital von minus 5,8 Jahres-BIP. Die gelesenen Arbeiten geben dafür keine Regel, darum wurde keine gebaut (docs/ECONOMY_DESIGN.md, Abschnitt 13).
 - Keine guten und schlechten Jahre: Der Faktor bleibt, wie er bei der Gründung war.
 - Alle essen wie Engländer, und niemand hungert, wenn das Essen teuer ist.
 - Nur der eigene Ort zählt. Paris, Venedig und Genua haben darin wenig Acker.

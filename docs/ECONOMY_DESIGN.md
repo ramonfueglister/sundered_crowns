@@ -40,6 +40,7 @@ players and the AI of realms without a player act through the same commands.
 | 10 | The persons of the cities' economies are the persons of the cities | direction given by Ramon 16 Nov 2026 ("das wollen wir mit ecs", 14:18 UTC), variant A agreed by him the same day ("A: Grösse aus den ECS-Personen", 15:57 UTC): the economies take their head count from the persons of the world, with tests and numbers from the game; nothing goes live. Built; in the running world since 16 Nov 2026 ("mergen und weiter", 17:36 UTC, and his release of the world server, 17:41 UTC) |
 | 11 | The family is the purse, and a woman without a husband works | chosen by Ramon 16 Nov 2026 as the next feature ("Haushalt der Familie", 17:50 UTC), variant B agreed by him the same day ("B: Kasse, Frauen ohne Mann arbeiten", 18:01 UTC): the family as purse, and women without a husband work, so the economies are founded anew. Built, with tests and numbers from the game; in the running world since 16 Nov 2026 ("mergen und live", 18:22 UTC, and his release of the world server, 18:45 UTC) |
 | 12 | The harvest feeds the cities: a city buys the food its harvest lacks | chosen by Ramon 17 Nov 2026 as the next feature ("Ernte speist die Städte", 15:49 UTC), variant A ("A, Ägypten vorerst wie England", 15:54 UTC); after the first build failed, the trade in food ("Getreide über die Händler kaufen", 16:03 UTC) and the rule as proposed ("Ja, so bauen", 16:16 UTC). Built, with tests and numbers from the game; not yet in the running world |
+| 13 | The merchants' money (examined, nothing built) | chosen by Ramon 17 Nov 2026 as the next feature ("Händlerguthaben abbauen"), with "möglichst papernah" and "kein delulu"; after the reading and the measurement he left the decision to Claude ("du entscheidest selbständig", 17:19 UTC): the finding is recorded, no rule is built (section 13) |
 
 ## 1. Grain harvest per place
 
@@ -2321,10 +2322,10 @@ are off by at most 5e-11 of the amount they are judged by. A world of 1291 (550 
 ### Limits
 
 - A city that buys more than it sells pays with money that leaves it: it lies as the merchants' deposits at the
-  city's central bank (the port's `D_RoW`). No rule of the model reads it, but it grows without bound: Venice 7 years
-  of its GDP after 20 years, Paris 4.4; in cities with a surplus it is negative. The outflow is why prices fall in
-  those cities (Venice 66), as in Hume's flow of money and prices; trade does not come back into balance, because the
-  merchants order by the fixed import shares of the cities.
+  city's central bank (the port's `D_RoW`). No rule of the model reads it, and it grows without bound: Venice 7 years
+  of its GDP after 20 years, Paris 4.4; in cities with a surplus it is negative. Trade does not come back into
+  balance, because the merchants order by the fixed import shares of the cities. Where the money comes from, and
+  why no rule was built against it, is section 13.
 - The cities of 1356 together want more food than the others sell: most have a factor below 1. In the world of 1291
   it is the other way round (mean 1.42).
 - The factor is set when the economies are founded and not again: no good or bad years (a candidate for a feature of
@@ -2336,4 +2337,76 @@ are off by at most 5e-11 of the amount they are judged by. A world of 1291 (550 
   hinterland (variant B of the proposal, not chosen).
 - The kilocalories of the harvest and the pounds of the port are linked by a ratio only: the value of the output of
   agriculture per farmer is taken to rise as its kilocalories do.
+
+## 13. The merchants' money: examined, nothing built
+
+Feature 12 left a limit: the merchants' deposits in a city that buys more than it sells (`D_RoW`) grow without
+bound. Ramon chose to work them down, as near to the papers as possible. No rule was built, because no paper that
+was read gives one that fits what was measured. This section records what was read and measured, so that the
+question is not asked again from the start.
+
+### What was measured
+
+One world of 1356 (seed 1356), 29 cities, 20 years, at the scale 1:100, in pounds (the figures of every city and
+year: `/mnt/project-files/wirtschaft/feature13/bilanz_20_jahre.txt` in the project files, with the trial program).
+
+| City, year 20 | Merchants' deposits | Households' deposits (start) | Firms' deposits | Equity of the bank (start) | GDP a year |
+|---|---|---|---|---|---|
+| Paris (buys more) | +9302 | 8756 (792) | −2366 | −13326 (50) | 2300 |
+| Venice (buys more) | +3111 | 2790 (309) | −821 | −4711 (19) | 549 |
+| Cairo (sells more) | −12898 | 12354 (1204) | 297 | 75 (75) | 7162 |
+
+- The counterpart of the merchants' money is the city's bank, not its households. In a city that buys more, prices
+  fall (Paris 79, Venice 83), the wage in money stays (feature 7), the firms lose and become insolvent. By the
+  port's rule (A.38 to A.40, A.67) the firm is replaced and its bank writes off the debt. The bank's equity falls
+  without bound (Paris: minus 5.8 years of GDP), and it is overdrawn at the central bank. No rule of the port stops
+  a bank with negative equity; the capital requirement only stops new loans, not overdrafts.
+- The households' deposits grow about tenfold in all 29 cities, in Cairo as in Paris: they spend a fixed share of
+  their income (A.46) and save the rest for ever.
+- The port's own wage (a real wage times the price level) is no way out: with the demand pull of feature 8 the
+  cities compute no finite numbers by year 5.
+
+### What was read
+
+Read through a fetching tool that returns the text; quotations are from that text. What was not read is said.
+
+- Godley (1999), "Open Economy Macroeconomics Using Models of Closed Systems", Levy WP 281. Model 1, a fixed rate
+  settled in gold: "no mechanism which corrects an emergent deficit in the balance of payments" but the fall of
+  output; "there is simply a drop in reserves which continues until they run out". "No vestige of the
+  'price-specie-flow' mechanism survives, even when all foreign balances are settled in gold."
+- Godley & Lavoie (2003), "Two-Country Stock-Flow-Consistent Macroeconomics Using a Closed Model Within a Dollar
+  Exchange Regime", CERF WP 10. Imports in logs, eq. (20), with a price and an output term; no values given. At a
+  fixed rate "there is no corrective mechanism in operation"; when gold runs out "the government is forced to act".
+- Godley & Lavoie (2007), Monetary Economics, ch. 6, Model REG (two regions, one money): not the book, but two
+  reproductions with all equations and values (the R packages sfcr and godley). IM = μ·Y, V = V₋₁ + YD − C,
+  C = α1·YD + α2·V₋₁ with α1 = 0.7, α2 = 0.3, μ = 0.15. Here the households of the region that buys more lose
+  wealth and spend less. In our cities they do not lose wealth (see above), so this rule would not close the gap.
+- Caiani & Catullo (2023), LEM WP 2023/19, a currency union: purchases are paid from deposit to deposit, wages
+  follow unemployment (eqs. 1, 15), no rule for the trade balance. Appendix and values not read; Caiani, Catullo &
+  Gallegati (2018) was not freely readable.
+- Poledna et al. (2023), main text only (the appendix was not reachable; the rules are known from the port's code):
+  credit is bound by the capital ratio; nothing on a bank with negative equity or a limit of the central bank's
+  advances.
+- Hommes et al. (2022), CANVAS, Bank of Canada SWP 2022-51, up to section 3.7: "When bank capital and leverage
+  requirements are not met, no lending can take place", and nothing else follows; interest on deposits "generate[s]
+  no wealth effects on consumption" (footnote 8); the wage (eq. 21) answers neither unemployment nor prices; the
+  rest of the world is closed "via the accounting identity" (eq. 57).
+- Wiese et al. (2024), arXiv 2409.18760, and Jaraiz & Pinacho (2024), arXiv 2409.04876: no rule for deposits of
+  the rest of the world or for the trade balance.
+
+### Why nothing was built
+
+The family of models the cities stand on has no rule at any of the three places where the gap could close (the
+bank, the wage, the households' wealth): it was built to forecast a few years, not thirty. The rules found
+elsewhere either miss the counterpart that was measured (consumption out of wealth) or have no values that were
+read (a wage that follows unemployment; a price term of imports). A rule of our own would have closed the books
+with numbers nobody measured.
+
+### Candidates, each needing a source first
+
+- A wage that follows unemployment, as in Caiani, Catullo & Gallegati (2018): it meets the cause, the firms that
+  lose because the wage does not fall. Needs the paper with its equation and values.
+- A limit for a bank without equity (no overdraft for its firms): an extension of the rule of CANVAS, and ours.
+- A stock of coin for every city that can run out, as the gold of Godley & Lavoie: needs a source for the coin of
+  the cities around 1356.
 
