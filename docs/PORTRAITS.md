@@ -20,7 +20,7 @@ one, changes nothing: same people in, same pictures out, measured.
 | Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; no set: Apoleia's Roman dress |
 | Stage profile | `src/portrait/profile.ts` | Light and materials per set of dress; Apoleia's portraits keep Apoleia's |
 | Pipeline | `tools/portrait/pipeline/` | Blender scripts that wrote the draped clothes and hair (not part of the build) |
-| Files of the real look | `public/portrait/` (29 MB) | The head (1.1 MB), data files (4.1 MB: hair and beard cards, draped clothes, skin shading), images (16 MB: skin by age and sex, wrinkle maps, hair, cloth, eyes) |
+| Files of the real look | `public/portrait/` (38 MB) | The head (1.1 MB), data files (12.2 MB since round 104, 10.4 before: hair and beard locks, draped clothes, skin shading), images (23.8 MB: skin by age and sex, wrinkle maps, hair, cloth, eyes) |
 | Stage | `src/portrait/` (three.js) | Lights, frames and draws one portrait; materials per kind of surface |
 | Finish | `src/portrait/finish.ts` | For a profile that asks for it (England's, round 103): the picture is drawn in linear light at twice the size and brought to the screen by a tone curve that keeps a colour's hue, on a backdrop of its own; Apoleia's portraits keep three.js' ACES curve |
 | Test page | `portrait-test.html` | The twelve test people; `?origin=England` puts them into the dress of 1356, `?female=1&age=17` and `?gene=27:135,28:95` set sex, age and genes of all of them, `?only=930000,930003` draws these alone, `?turn=-1.25` shows every head from the side, `?without=_cap.` leaves out the surfaces whose image name contains the text, `?sample=england` draws England's own sample of 36 people (`tests/portrait/sample_england.json`) in place of the twelve, `?set=exposure:0.5,skin.tint.1:0.75,sky.top:ffe9d6` sets values of the stage's profile by their path (a number, or a colour as six hex digits) |
@@ -3324,6 +3324,48 @@ paint against the cheek's (0.26 to 0.30 on women, 0.50 to 0.55 on men).
 Pictures: `runde103_vorher_nachher.png` (eight of the sample, round 102 above), `runde103_stichprobe.png`
 (the sample of 36).
 
+**Hair that reads as hair, not as thatch (round 104).** What a picture showed first after round 103: every
+head of loose hair a helmet of shingles, worst on the children. Seen large, the cause is plain: 420 locks of
+2.2 to 4 cm, each an arch of five corners with its own highlight and its own frayed end, lie on each other
+like the straw of a thatched roof. The hair's image (single hairs side by side) was never the fault; it was
+stretched over bands as broad as two fingers.
+
+| seen | cause | fix |
+|---|---|---|
+| a thatched roof, tiers of pointed ends | 420 broad locks, each read on its own | 950 to 1100 locks of 1 to 2 cm (a girl's 738 in place of 300), three corners across in place of five, 0.10 of their breadth high (0.12), 0.25 to 0.85 cm over the skin (0.3 to 1.1): the same hair image lies over a band half as broad, and a hair in it is half as thick |
+| the fringe a row of spikes (with the narrow locks) | a lock's end was up to 1.8 cm long and half the lock's breadth: on a lock of a centimetre that is a spike, and between two spikes the forehead shows | an end at most 0.9 cm long and 0.6 of the breadth; a lock ends at most 0.7 cm before its strands (1.5); the fringe's line rises and falls by 1.5 degrees round the head (3) and lies 1.5 degrees higher, since the ends no longer stop short of it |
+
+Written with `tools/portrait/pipeline/styles.py` as before (its README has the calls; the old calls were
+first checked to write `bob01_locks.txt` and `plait01_locks.txt` byte for byte). The locks alone are new:
+the painted layer under the hair, the scalp, the plaits, the beards and the hair's image are as they were,
+and nothing of the builder or the stage changed.
+
+| file | locks | triangles | before |
+|---|---|---|---|
+| `bob01_locks` (a man's, a boy's, a small child's hair) | 950 asked | 39 184 | 420 locks, 32 688 |
+| `bob02_locks` (under a hood) | 1100 | 42 144 | 420 |
+| `bob03_locks` (gone back at the temples) | 950 | 40 632 | 420 |
+| `bob04_locks` (a horseshoe round a bare top) | 1100 | 39 216 | 420 |
+| `bob05_locks` (wavy) | 800 | 44 712 | 420 locks, 42 912 |
+| `bob06_locks`, `bob07_locks` (shorter, longer) | 950 | 35 760, 42 200 | 420 |
+| `plait01_locks` (a girl's head above her plaits) | 738 | 34 440 | 300 locks, 28 032 |
+
+Tried and not kept: 1100 locks with a ring of corners every 1.7 cm instead of 1.4 (a tenth fewer triangles;
+the top of the head reads lumpy); the old ends on narrow locks (spikes, a tenth of the fringe bare); the
+fringe's line left at 3 degrees of rise and fall (the same).
+
+Honest about the rest. The eight files are 5.5 MB packed where they were 3.7, and all of them are loaded
+with the first portrait: 1.8 MB more on the line, for hair of which one head wears one file. Loading a
+head's own file alone is open. Every small child wears the same bowl (`hair_small` is one file), and the
+bowl stands as far off a small head as off a grown one. The fringe is one clean line; no strand lies across
+another. Hair under a veil is still none. All measures are PLACEHOLDER, by eye.
+
+Tests: `portrait/tests/locks.rs` holds what it held (a fringe that ends 19 to 31 mm over the eyes, at least
+two locks deep in the median and one at its thinnest tenth, the hair's top 0.7 to 1.8 cm over the crown, the
+image no closer pressed than before); the bound on a cut's triangles is 1.6 times the old cards' (1.3).
+Pictures: `runde104_haare_vorher_nachher.png` (eight of the sample, round 103 above),
+`runde104_stichprobe.png` (the sample of 36).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since
@@ -3375,7 +3417,8 @@ Baghdad as Syria. New pools and new sets of dress need sources and Ramon's choic
   values (the free functions around it are split off into `morph.rs`, `hair.rs`, `real_look.rs`). It is to be cut
   up together with the new clothes and headwear, which replace about half of it.
 - Cultures, clothes and hairstyles as data instead of code, so that a new culture needs data only.
-- Loading: the 4.1 MB of data files are loaded together on the first portrait; not measured on a slow line.
+- Loading: the 12.2 MB of data files are loaded together on the first portrait (the eight files of hair alone are
+  5.5 MB, and a head wears one of them); not measured on a slow line.
 - Speed: a portrait of the real look has 44,000 to 119,000 triangles and takes 40 to 160 ms to build in WebAssembly
   (cloud machine). Drawing was only timed on the software driver (0.3 to 1.6 s), which says nothing about a real
   graphics card.

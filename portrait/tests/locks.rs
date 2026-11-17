@@ -62,7 +62,9 @@ fn a_man_of_england_wears_locks() {
         // a band is not a closed surface: it is seen from both sides
         assert!(hair.mat.double, "{who}: a lock is seen from both sides");
         let n = hair.pos.len() / 3;
-        assert!(n > CARDS / 2 && n < CARDS * 13 / 10, "{who}: {n} triangles of locks, the cards had {CARDS}");
+        // round 104: 950 to 1100 narrow locks of three corners across in place of 420 broad ones of five (a
+        // thatched roof at the panel's size): 35 800 to 44 700 triangles, before 30 000 to 37 000
+        assert!(n > CARDS / 2 && n < CARDS * 16 / 10, "{who}: {n} triangles of locks, the cards had {CARDS}");
         assert_eq!((hair.uv.len(), hair.nrm.len()), (hair.pos.len(), hair.pos.len()), "{who}: every corner has its place in the image and its direction");
         // the upper side of a lock faces away from the head: the directions of its corners are its own surface's
         // (a card's were the direction from the head's centre)
