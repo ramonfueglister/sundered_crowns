@@ -15,13 +15,13 @@ import { loadModels } from './models';
 import { FINER_STEPS } from './land';
 import { Water, loadWindow } from './region';
 import { type Piece, type WorldScene, buildWorld, windowOf } from './world';
-import type { Cover } from './far';
+import { type Cover, KINDS, laidOut } from './far';
 import { above, lay, meanCover, summary } from './mean';
 import { N } from '../lookprobe/layout';
 import { loadTownPeople } from '../figures';
 import { loadInhabitants } from './towns';
 
-export interface PieceJob { id: number; piece: Piece; region: string; /** step of the map: blocks 2^step cells wide */ step: number; base: string; bakedSky: boolean; /** the world's start year, whose towns are built, whose forest stands and whose people live on the land (default 1356) */ year?: number; /** false: a far step as far.ts lays it out, not as the mean of the finer step */ mean?: boolean; /** for a piece of the first far step: the summaries of the four finest pieces under it that the page holds (mean.ts), in rows */ under?: (Float32Array | undefined)[] }
+export interface PieceJob { id: number; piece: Piece; region: string; /** step of the map: blocks 2^step cells wide */ step: number; base: string; bakedSky: boolean; /** the world's start year, whose towns are built, whose forest stands and whose people live on the land (default 1356) */ year?: number; /** false: a far step as far.ts lays it out, not as the mean of the finer step */ mean?: boolean | 'compare'; /** for a piece of the first far step: the summaries of the four finest pieces under it that the page holds (mean.ts), in rows */ under?: (Float32Array | undefined)[] }
 export interface PieceDone { id: number; scene?: WorldScene<Shape>; /** of a piece of the finest step: what it shows, summed up for the piece of the next step over it (mean.ts) */ summary?: Float32Array; error?: string }
 
 const flat = (b: Batch): Shape => ({ pos: new Float32Array(b.pos), nor: new Float32Array(b.nor), col: new Float32Array(b.col) });
@@ -59,11 +59,30 @@ async function meanOf(job: PieceJob): Promise<Cover> {
   return meanCover(quarters, side / 2, N, part.x0, part.z0);
 }
 
+/**
+ * Measures what far.ts laid out on a piece against the mean of the finer step there (the counts `cmp <kind> …`,
+ * sums over the blocks whose four neighbours are of the same kind, so that a tool can take their means): the
+ * colours of the tops and sides and the rise, of far.ts (`far`) and of the mean (`mean`).
+ */
+function compare(counts: Record<string, number>, mean: Cover, part: Piece['part']) {
+  const far = laidOut();
+  if (!far?.kind) return;
+  const add = (k: string, v: number) => { counts[k] = (counts[k] ?? 0) + v; };
+  for (let z = part.z0; z < part.z1; z++) for (let x = part.x0; x < part.x1; x++) {
+    const i = x + z * N, kind = far.kind[i];
+    if (!mean.has[i] || [i - 1, i + 1, i - N, i + N].some((j) => far.kind![j] !== kind)) continue;
+    const name = `cmp ${KINDS[kind]}`;
+    add(`${name} n`, 1); add(`${name} far rise`, far.rise[i]); add(`${name} mean rise`, mean.rise[i]); add(`${name} risen ${Math.min(3, mean.rise[i])}`, 1);
+    for (let k = 0; k < 3; k++) { add(`${name} far top ${k}`, far.has[i] ? far.top[i * 3 + k] : 0); add(`${name} mean top ${k}`, mean.top[i * 3 + k]); add(`${name} far side ${k}`, far.has[i] ? far.side[i * 3 + k] : 0); add(`${name} mean side ${k}`, mean.side[i * 3 + k]); }
+  }
+}
+
 self.onmessage = async (e: MessageEvent<PieceJob>) => {
   const { id, piece, step } = e.data;
   try {
     const began = performance.now(), mean = step === 1 && e.data.mean !== false ? await meanOf(e.data) : null, meant = performance.now();
-    const built = await build(e.data, step, piece, mean);
+    const built = await build(e.data, step, piece, e.data.mean === 'compare' ? null : mean);
+    if (built && mean && e.data.mean === 'compare') compare(built.counts, mean, piece.part);
     // how long the piece took to build, and of that the finer step under it (a tool reads the sums)
     if (built) { built.counts[`ms step ${step}`] = Math.round(performance.now() - began); built.counts[`pieces step ${step}`] = 1; if (mean) built.counts['ms mean'] = Math.round(meant - began); }
     const scene: WorldScene<Shape> = built ? { ground: flat(built.ground), things: flat(built.things), water: flat(built.water), raised: flat(built.raised!), figures: built.figures, cells: built.cells.map((c) => ({ ...c, far: flat(c.far) })), counts: built.counts }
