@@ -98,7 +98,7 @@ fn locks_lie_on_a_head_of_any_size() {
     // A lock is bound to the head ring by ring and goes with it; its way with the head is evened out along it a
     // few times only (the file's own count). Evened out to the end, as a plait's is, a lock moves as one stiff
     // piece: on a child of two the hair then stood 2.7 cm over the crown as a hat (on the head it was laid on,
-    // 1.4) and the fringe hung over the eyes (0.49 of the head's height below the crown; now 0.37).
+    // 1.4) and the fringe hung over the eyes; now it ends 19 to 31 mm over them.
     let Some(h) = head() else { return };
     for (k, female, age) in [(28u32, true, 2.0f32), (29, false, 2.0), (30, true, 5.0), (31, false, 5.0), (1, false, 8.0), (3, false, 13.0), (45, false, 13.0), (21, false, 24.0), (27, false, 68.0)] {
         let out = build(&h, &person(k, female, age), 1);
@@ -111,8 +111,16 @@ fn locks_lie_on_a_head_of_any_size() {
         let upper = crown - 0.3 * (crown - out.chin);
         let broad = skin.pos.iter().filter(|p| p[1] > upper).map(|p| (p[0] - out.cx).abs()).fold(0f32, f32::max);
         let fringe = hair.pos.iter().filter(|p| (p[0] - out.cx).abs() < 0.25 * broad && p[2] > out.cz).map(|p| p[1]).fold(f32::MAX, f32::min);
-        let ends = (crown - fringe) / (crown - out.chin);
-        assert!((0.27..0.42).contains(&ends), "{who}: the fringe ends {ends} of the head's height below the crown");
+        // where it ends on the face: over the eyes' middle by a share of the way from the eyes down to the chin
+        // (measured 0.18 to 0.25, 19 to 31 mm; a fringe that hangs over the eyes ends at 0 or under it). Until
+        // round 100 this was held as a share of the head's height below the crown (0.27 to 0.42): since a
+        // child's braincase is as large against its face as a real child's (`DressSet::skull`), the crown of
+        // a child of two lies 2 cm higher over the same face and the same fringe, and that share says nothing
+        // of the face any more (0.43 on a boy of two whose fringe ends 19 mm over his eyes).
+        let balls = out.surfaces.iter().find(|s| s.tex.as_deref().is_some_and(|t| t.contains("eyeball"))).unwrap_or_else(|| panic!("{who}: eyes"));
+        let eyes = balls.pos.iter().map(|p| p[1]).sum::<f32>() / balls.pos.len() as f32;
+        let ends = (fringe - eyes) / (eyes - out.chin);
+        assert!((0.15..0.30).contains(&ends), "{who}: the fringe ends {ends} of the way from eyes to chin over the eyes ({} mm)", (fringe - eyes) * 100.0);
     }
 }
 

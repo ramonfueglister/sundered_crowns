@@ -325,3 +325,16 @@ heights only) and the hook `morph_test_seam`; `LIP_SEAM` is public. `dress.rs`: 
 `lib.rs` exports them. `examples/face_measure.rs` prints the new measure and `--dump` writes the base head.
 `tests/faces.rs`: a twenty-first test; the library's test of the closed mouth holds both steps. A head
 without a dress table is morphed as before: Roman bytes unchanged.
+
+Round 100: a child's braincase as large against its face as a real child's. `measure.rs`: `CHILD_AGES`,
+`ByAge`, `CHILDREN` (a survey of children's heads: eleven measures by sex in sixteen groups of age),
+`children_at`, `children` (the same eleven measures off a morphed head), `vertex`, `head_round` (the head's
+circumference as a taut loop, the ears left out), `EAR_RIM` (the ear told by where it lies on the base head;
+the head file's own field of the ear covers the skull's side). `morph.rs`: `SKULL_FLOOR`, `SKULL_REACH`,
+`SKULL_CENTRE`, `skull_field`, `skull_grow` (after all targets: the braincase larger in breadth, length and
+height by the dress table's factors, the face, the eyes, the ears and the neck left where they are) and the
+hook `morph_test_skull`. `dress.rs`: `DressSet::skull` (England: per age, girls' and boys', fitted to the
+survey), `skull_of`, a source. `lib.rs` exports them. `examples/face_measure.rs`: `--children` with `--ages`
+and `--skull`. `tests/faces.rs`: a twenty-second test. `tests/locks.rs`: the fringe's end is held against
+the eyes, not as a share of the head's height under the crown. A head without a dress table is morphed as
+before: Roman bytes unchanged.

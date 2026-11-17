@@ -49,6 +49,7 @@ the parts the builder knows (a gown, a hood up or back, a veil, a wimple, three 
 | Hood (men): up, thrown back, or none, by chance per person; none under 14 | `hood`, `hood_from` | shares 4 : 3 : 3 invented |
 | Veil of linen for women from 20, with a wimple from 50 | `veil_from`, `wimple_from` | ages invented |
 | Hair: cut round with a fringe (men), flat under a hood, none under the veil (it hides all of it; a bun until round 69); girls from 7 and women too young for the veil a centre parting and two plaits in front of the shoulders | `hair`, `hair_receding`, `hair_bald`, `hair_curly`, `hair_hooded`, `hair_veiled`, `hair_girl` | by eye |
+| Children: a braincase as large against the face as a real child's, by age and sex (round 100; MakeHuman's child is a grown head made small) | `skull`, `skull_of` | fitted to a survey of children's heads (Snyder and others 1977); where the braincase begins and the band it fades over by anatomy and by eye |
 | Faces: relaxed lids, a closed mouth with the lips on each other from corner to corner (round 99), the eyeballs deeper in their sockets (they came through the lower lid), for women a jaw that runs in to the chin (until round 96 a shifted gene of the jaw, `jaw_women`), cheeks filled out between cheekbone and jaw (round 97) and a thicker neck (round 98), redder lips, more flush on cheeks and nose | `lids`, `mouth_shut`, `seam_shut`, `eye_forward`, `rest` with `lower_only`, `cheek_fill`, `neck`, `lips`, `flush` | by eye, against the reference |
 
 **Sources.** Each row of the table names what it rests on (`sources`). All of them were read only as summaries
@@ -2927,6 +2928,132 @@ Still open: the lips' form; small children's faces; the nose's wings; and from t
 spread of the necks, the amount of the cheek's fill by eye on one face, a man's cheek, the fold beside the
 mouth, the women's small heads and the ear's landmark behind the short arcs, the forehead's least breadth
 and the head's height, the chin's breadth by eye, `head-square` and `head-oval`.
+
+**A child's braincase (round 100).** Open since round 99: the small children's faces. In the sample's
+lowest row a child of two or five read as a small adult: a face that fills its head.
+
+*What a child's head measures.* A survey of children's heads was read: Snyder, Schneider, Owings, Reynolds,
+Golomb & Schork 1977, Anthropometry of infants, children, and youths to age 18 for product safety design
+(University of Michigan, Highway Safety Research Institute, UM-HSRI-77-17; children of the United States),
+from the tables NIST's AnthroKids serves: mean and standard deviation by sex in sixteen groups of age from 2
+to 19, eleven measures of head, face and neck (`measure.rs` `CHILDREN`, `children_at`; read through a
+reading tool's account of each table, not line by line). A real child's braincase is nearly grown when its
+face is not: at two the head's circumference is 0.88 (boys) and 0.90 (girls) of the oldest group's, its
+length 0.89 and 0.92, and the breadth at the cheekbones 0.78 and 0.82. Kesterke and others 2016 (Biology of
+Sex Differences 7: 23, table 4) have the same: at 3 to 6 the cranium at 88 to 91 in 100 of its adult size,
+the face at 80 to 84, the nose at 74 to 78.
+
+*What ours measured.* `measure.rs` `children` reads the survey's eleven measures off a morphed head, each as
+the survey describes it (`examples/face_measure.rs --children`). The face of England's children was right
+and the braincase was not: at two the breadth at the cheekbones was 110.7 and 107.8 mm against the survey's
+109 and 108, and the head's circumference 433.6 and 415.6 against 502 and 487, which is 4.3 and 4.8 of the
+survey's standard deviations under it. MakeHuman's child and baby are a grown head made small, the
+braincase with the face. In a picture framed from the crown to the chin that is a large face.
+
+(Two measures had to be made right first. The head's breadth read the skin round the ear's root, and with
+the head file's own field of the ear, which is broad and covers the skull's side, it read too little: now
+the ear is told by where it lies on the base head (`EAR_RIM`: further out than the skull's side and no
+higher than 22.5 mm over tragion). The circumference is a taut loop in the plane through glabella and the
+furthest point of the back of the head, the ears left out. England's grown then stand at 565.5 and 531.4 mm
+of circumference against the survey's oldest group's 572 and 543, 153.8 and 144.9 of breadth against 154
+and 149, 196.2 and 186.9 of length against 200 and 186.)
+
+*The fix.* `DressSet::skull`: per age the factors by which a child's braincase is larger in breadth, in
+length and in height over the ears, girls' and boys'; `morph.rs` `skull_grow` after all targets. Each vertex
+takes the share `skull_field` gives it on the base head: nothing at and under a floor that lies 2 cm over
+glabella at the forehead, just over the ear's upper rim at the ear's depth, and runs down to the nape behind
+the ear; all of it from 4 cm over that floor (`SKULL_FLOOR`, `SKULL_REACH`). 480 of 7001 vertices, 258 in
+full. The breadth grows from the middle, the height from tragion's, the length from an upright 3 cm behind
+glabella (`SKULL_CENTRE`), so that the forehead keeps its place and the length is added behind. The face,
+the eyes, the ears and the neck do not move.
+
+The factors are fitted (`fit100.py`, a scratch tool: 60 girls and 60 boys an age, by the secant method to
+0.1 in 100) so that breadth, length and tragion to the top of the head stand to England's own grown as the
+survey's children stand to its oldest group. The shares are fitted, not the sizes: England's grown keep
+their own heads.
+
+| age | girls: breadth, length, height | boys: breadth, length, height |
+|---|---|---|
+| 2 | 1.141, 1.229, 1.191 | 1.150, 1.182, 1.198 |
+| 5 | 1.126, 1.199, 1.149 | 1.106, 1.128, 1.129 |
+| 8 | 1.093, 1.165, 1.101 | 1.050, 1.079, 1.065 |
+| 11 | 1.053, 1.106, 1.053 | 1, 1.018, 1.027 |
+| 13 | 1.037, 1.066, 1.033 | 1, 1, 1 |
+| 15 | 1, 1, 1 | 1, 1, 1 |
+
+Between two ages in a straight line; under two the two-year-olds'. Where the fit asked for less than 1 (a
+boy's breadth from 11: 0.96; all of a boy's from 13: 0.96 to 1.02) the table has 1: a braincase is not made
+smaller, and a boy's head is what it was from 13 on.
+
+| mm, 60 an age and sex: before, now (the survey, its SD) | head circumference | head breadth | head length | tragion to the top |
+|---|---|---|---|---|
+| boys of 2 | 433.6, now 490.9 (502, 16) | 119.0, now 135.8 (136, 6) | 151.8, now 174.7 (178, 7) | 95.2, now 114.0 (115, 8) |
+| girls of 2 | 415.6, now 478.0 (487, 15) | 113.9, now 128.3 (132, 5) | 145.8, now 172.8 (172, 6) | 92.3, now 110.0 (112, 6) |
+| boys of 5 | 464.0, now 507.5 (514, 14.5) | 127.9, now 140.3 (140.5, 5) | 162.5, now 180.0 (183.5, 7) | 103.1, now 116.4 (117.5, 7.5) |
+| girls of 5 | 438.1, now 496.0 (503.5, 14.5) | 120.5, now 133.7 (137.5, 4.5) | 154.3, now 179.3 (178.5, 7.5) | 98.3, now 112.9 (115, 7.5) |
+| boys of 8 | 494.3, now 520.8 (526, 16) | 137.6, now 142.9 (143, 5) | 172.4, now 183.9 (187.5, 7) | 111.7, now 119.0 (120, 8.5) |
+| girls of 8 | 460.9, now 510.5 (519, 16) | 127.4, now 137.1 (141, 4.5) | 162.8, now 184.9 (184, 5) | 103.9, now 114.4 (116.5, 8) |
+| girls of 13 | 507.3, now 528.7 (538.5, 16.5) | 138.8, now 142.4 (146.5, 5) | 179.1, now 189.0 (188, 6) | 114.6, now 118.4 (120.5, 7) |
+
+The circumference was not fitted and lands within 1.2 in 100 of its share. Children of every age from 2 to
+17 now lie within one standard deviation of the survey in all four (circumference 0.2 to 0.9 under it,
+breadth from 0.9 under to 0.2 over, length from 0.8 under to 0.2 over, tragion to the top from 0.6 under to 0.1 over);
+before, up to 4.8 under. The head's height from menton to vertex, 16 and 18 mm short at two, is 3 mm over
+and at the survey's.
+
+*A check the table was not fitted to.* The survey's depth from the ear to sellion grows as the face does
+(0.78 of the oldest group's at two, both sexes together), so its head length less that depth, roughly the
+head behind the ear, is as long at two as on the grown: 95 and 91 mm. Ours behind the ear (20 an age and
+sex): 95.6 and 97.0 mm at two, where it was 74.1 and 70.9, and 95.9 and 94.9 on the grown. The length is
+added where a child's head has it.
+
+*What stays.* On 400 grown people each of the 28 measures is the same to the last digit printed; of the
+sample's 35 pictures the 22 of people from 17 on and of the boys of 13 are the same pixel for pixel. On the
+children every measure of the face (13 of them), the lips' red, the breadth at the cheekbones, the nose, the
+mouth and the neck are what they were. The hair is bound to the skin and goes with the skull; a fringe ends
+where it did, 19 to 31 mm over the eyes. One test of the hair had held the fringe's end as a share of the
+head's height under the crown (0.27 to 0.42): on a boy of two whose fringe ends 19 mm over his eyes as
+before, that share is now 0.43, because the crown lies 2 cm higher. It is held against the eyes now.
+
+Seen (`runde100_kinder_vorher_nachher.png`, `runde100_fuenf_acht_vorher_nachher.png`,
+`runde100_seite_vorher_nachher.png`, `runde100_ohne_locken.png`, `runde100_stichprobe.png`): the face of a
+small child is smaller in its picture, under a larger head of hair, and the head reaches further back
+behind the ear; the children of the lowest row read as children at first sight. Without the locks the
+forehead is high and round, and the painted hairline, drawn for a grown head, stands high on it.
+
+Honest about the rest. The features in that smaller face are still a grown person's: at two the nose is
+34.9 and 32.9 mm long from sellion to its foot where the survey has 29 (2.0 and 1.3 standard deviations
+over), and the face from sellion to the chin 77.1 and 73.5 mm where it has 82 and 80, so from the nose's
+foot to the chin a child of two has 42 and 41 mm where a real one has about 53 and 51. The mouth is 37.0
+and 35.7 mm broad against 33. The mouth is still a flat stroke with a fold beside each corner. That is the
+next round. Further: boys' cheekbones are broad at 8 and 13 (1.3 and 1.7 over), boys' heads high from 13 on (menton to vertex 1.1
+to 1.7 over); girls' necks are 0.9 to 1.3 under the survey at 2 to 8; "from tragion to tragion" reads 9 to 24 mm
+over the survey at every age, which is the landmark or the net at the ear and not the children; our
+children differ less from each other than real ones (a breadth's SD 2.7 mm at two against 6). In the band
+where the braincase grows away from what stays, the skin is drawn out: an edge of it to twice its length on
+girls of two; no fold shows in the pictures. The hair's cap is a little thicker on a child, since its
+offsets go with the head's size. Children under two take the two-year-olds' factors (the survey's infants
+were not read). `SKULL_FLOOR`, `SKULL_REACH` and `SKULL_CENTRE` are PLACEHOLDERS, by anatomy and by eye.
+The survey is of children of the 1970s, used for shares, not sizes.
+
+Tests: `tests/faces.rs`, 22 now. "A child of England has a braincase as large against its face as a real
+child's": the table (ages rising, factors from 1 to 1.25 that fall with age, ones for the grown); the field
+(nothing of the face's landmarks, the eyes, the ears, what lies under the chin; all of the crown and the
+back of the head; the same left and right); on 20 girls and 20 boys of 2, 5, 8 and 11 what is not of the
+braincase does not move at all and what is moves outwards and upwards, by 29.2 mm at the most; 13 measures
+of the face and the lips' red are identical; breadth, length, tragion to the top and circumference stand to
+the grown within 0.015 of the survey's share and lie within one of its standard deviations, and without
+the table they were 0.07 and more short at two and five; the head behind the ear within 0.08 of the
+survey's share; the grown, a girl of 15 and a boy of 13 are the same to the bit. `tests/locks.rs`: the
+fringe's end against the eyes.
+Pictures: `runde100_kinder_vorher_nachher.png` (four of two and two of five; before above),
+`runde100_fuenf_acht_vorher_nachher.png` (two of five, four of eight; before above),
+`runde100_seite_vorher_nachher.png` (from the side; before above), `runde100_ohne_locken.png` (without the
+locks, front and side), `runde100_stichprobe.png`.
+Still open: a small child's nose, lower face and mouth against the survey; and as before the lips' form,
+the nose's wings, the spread of the necks, the cheek's fill by eye, a man's cheek, the fold beside the
+mouth, the women's small heads, the forehead's least breadth, the chin's breadth by eye, `head-square` and
+`head-oval`.
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,

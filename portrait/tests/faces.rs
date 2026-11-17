@@ -5,8 +5,8 @@
 mod common;
 
 use common::{head, person};
-use sc_portrait::measure::{arcs, arcs_from, face, far_at_mouth, far_cheek, jaw_front, lips, lower_face, marks, seam, ARCS, CHEEKBONES, CHIN, JAW, LIPS, LIP_FOOT, LIP_TOP, LOWER_FACE, MEASURES, MENTON, SELLION, SKULL, STAGE_TURN, STOMION, SUBNASALE, TRAGION, neck_at, NECK, NECK_LEAN};
-use sc_portrait::{build, cheek_field, lower_band, lower_share, morph_targets, morph_test, morph_test_mouth, morph_test_seam, mouth_field, real, seam_field, Beard, Head, Look, CHEEK_FIELD, LIP_SEAM, LODS, neck_share, NECK_UNDER, SEAM_REACH};
+use sc_portrait::measure::{children, children_at, CHILDREN, CHILD_AGES, EAR_RIM, GLABELLA, BACK, arcs, arcs_from, face, far_at_mouth, far_cheek, jaw_front, lips, lower_face, marks, seam, ARCS, CHEEKBONES, CHIN, JAW, LIPS, LIP_FOOT, LIP_TOP, LOWER_FACE, MEASURES, MENTON, SELLION, SKULL, STAGE_TURN, STOMION, SUBNASALE, TRAGION, neck_at, NECK, NECK_LEAN};
+use sc_portrait::{build, cheek_field, lower_band, lower_share, morph_targets, morph_test, morph_test_mouth, morph_test_seam, morph_test_skull, mouth_field, real, seam_field, skull_field, Beard, Head, Look, CHEEK_FIELD, LIP_SEAM, LODS, neck_share, NECK_UNDER, SEAM_REACH};
 
 #[test]
 fn the_grown_of_england_have_faces_of_human_measure() {
@@ -997,6 +997,200 @@ fn the_lips_of_england_lie_on_each_other_from_corner_to_corner() {
     if show {
         println!("{n} people: the lips' edges at most {most:.2} mm apart, without the table's value at least {least_without:.2}; a vertex moves {way:.2} mm at the most");
     }
+}
+
+#[test]
+fn a_child_of_england_has_a_braincase_as_large_against_its_face_as_a_real_childs() {
+    // MakeHuman's child and baby are a grown head made small, the braincase with the face. A real child's
+    // braincase is nearly grown when its face is not: at two the head's circumference is 0.88 to 0.90 of a
+    // grown one's and its length 0.89 to 0.92, the breadth at the cheekbones 0.78 to 0.82 (the survey of
+    // measure.rs `CHILDREN`). Until round 100 the faces of England's children had the survey's breadth and
+    // their braincases were far too small: at two the circumference 432 and 415 mm where the survey has 502
+    // and 487 (4.3 and 4.8 of its standard deviations under it), at eight still 2.0 and 3.6 under. A grown face
+    // on a small head, in the picture's frame a large face: a child read as a small adult. The table's `skull`
+    // makes the braincase larger by age and sex (morph.rs `skull_grow`), so that its breadth, its length and its
+    // height over the ears stand to the grown of England as the survey's children stand to its grown; the
+    // circumference, which the table was not fitted to, then does too. The face, the ears and the neck stay.
+    let Some(h) = head() else { return };
+    let show = std::env::var("SHOW").is_ok();
+    let set = sc_portrait::dress::Dress::England1356.set().unwrap();
+    // The table: ages rising, each factor from 1 to 1.25 and no larger than at the age before, ones in its last
+    // row; and ones for everyone whose head has its adult form (a girl's at 15, a boy's at 17).
+    assert!(set.skull.len() >= 2 && set.skull.windows(2).all(|w| w[0].0 < w[1].0), "the table's ages rise");
+    for w in set.skull.windows(2) {
+        for (a, b) in [(w[0].1, w[1].1), (w[0].2, w[1].2)] {
+            assert!((0..3).all(|k| (1.0..=1.25).contains(&a[k]) && b[k] <= a[k] && b[k] >= 1.0), "{} to {}: {a:?} and {b:?}", w[0].0, w[1].0);
+        }
+    }
+    let last = set.skull.last().unwrap();
+    assert!(last.1 == [1.0; 3] && last.2 == [1.0; 3] && last.0 <= set.adult[0].min(set.adult[1]), "the table ends in ones at {}", last.0);
+    for (female, age) in [(true, 15.0), (true, 24.0), (false, 17.0), (false, 68.0)] {
+        assert!(set.skull_of(female, age) == [1.0; 3], "{age}: {:?}", set.skull_of(female, age));
+    }
+    assert!(set.skull_of(true, 0.0) == set.skull[0].1 && set.skull_of(false, 1.0) == set.skull[0].2, "before the first age that age's");
+    let between = set.skull_of(true, (set.skull[0].0 + set.skull[1].0) / 2.0);
+    assert!((0..3).all(|k| (between[k] - (set.skull[0].1[k] + set.skull[1].1[k]) / 2.0).abs() < 1e-6), "between two ages in a straight line: {between:?}");
+    // The field: nothing of the face, of the eyes, of the ears, of the neck; all of the crown and of the back
+    // of the head; the same left and right.
+    let field = skull_field(&h);
+    let b = &h.base;
+    for (name, v) in marks() {
+        assert!(field[v] == 0.0, "the landmark {name} is {} of the braincase", field[v]);
+    }
+    let pairs = CHEEKBONES.into_iter().chain(JAW).chain([TRAGION]);
+    for v in [SELLION, SUBNASALE, MENTON, GLABELLA, CHIN, sc_portrait::measure::FOREHEAD].into_iter().chain(pairs.flat_map(|p| [p.0, p.1])) {
+        assert!(field[v] == 0.0, "the landmark {v} is {} of the braincase", field[v]);
+    }
+    for part in ["leye", "reye"] {
+        assert!(h.parts[part][0].iter().all(|&v| field[v as usize] == 0.0), "an eye is of the braincase");
+    }
+    let t = b[TRAGION.0];
+    let (mut ears, mut neck) = (0, 0);
+    let mut skin = vec![false; b.len()];
+    h.body_full().iter().for_each(|&v| skin[v as usize] = true);
+    for v in 0..b.len() {
+        // the ear: the skin that stands out from the head beside tragion, up to the ear's upper rim (the old
+        // cap of hair, which England's heads do not wear, lies out there too and is no ear)
+        if skin[v] && b[v][0].abs() > t[0] + 0.025 && b[v][1] < t[1] + EAR_RIM && b[v][1] > t[1] - 0.5 {
+            ears += 1;
+            assert!(field[v] == 0.0, "the ear's vertex {v} is {} of the braincase", field[v]);
+        }
+        if b[v][1] < b[MENTON][1] {
+            neck += 1;
+            assert!(field[v] == 0.0, "the vertex {v} under the chin is {} of the braincase", field[v]);
+        }
+    }
+    assert!(ears > 200 && neck > 1000, "{ears} vertices of the ears, {neck} under the chin");
+    let top = h.body_full().iter().map(|&v| v as usize).max_by(|&i, &j| b[i][1].total_cmp(&b[j][1])).unwrap();
+    assert!(field[top] == 1.0 && field[BACK[2]] == 1.0 && field[BACK[3]] == 1.0, "the crown {} and the back of the head {} {}", field[top], field[BACK[2]], field[BACK[3]]);
+    // up the skull's side over the ear (the seven places of the head's breadth, from just over the ear to 4 cm
+    // higher): a third of it at the lowest, rising without a step back, all of it from the fifth on
+    let side: Vec<f32> = SKULL.iter().map(|p| field[p.0]).collect();
+    assert!(SKULL.iter().all(|p| field[p.0] == field[p.1]), "left as right");
+    assert!(side[0] > 0.2 && side[0] < 0.45 && side[4..].iter().all(|f| *f == 1.0) && side.windows(2).all(|w| w[0] <= w[1]), "up the skull's side: {side:?}");
+    let taking = field.iter().filter(|f| **f > 0.0).count();
+    if show {
+        println!("the field: {taking} of {} vertices, {} in full; up the skull's side {side:?}", field.len(), field.iter().filter(|f| **f == 1.0).count());
+    }
+    assert!(taking > 400 && taking < 600, "{taking} vertices of the braincase");
+    // On children: what moves and what stays, and the measures beside the survey's.
+    let n = 20u32;
+    let grown: Vec<[f32; 11]> = [false, true].iter().map(|&female| mean((0..n).map(|k| children(&h, &morph_test(&h, &person(k, female, 24.0)))))).collect();
+    // how far the head reaches behind the ears (from tragion's depth to the rearmost skin over it), in mm
+    let behind = |pp: &[[f32; 3]]| {
+        let (ty, tz) = ((pp[TRAGION.0][1] + pp[TRAGION.1][1]) / 2.0, (pp[TRAGION.0][2] + pp[TRAGION.1][2]) / 2.0);
+        (tz - h.body_full().iter().map(|&v| pp[v as usize]).filter(|q| q[1] > ty).fold(f32::MAX, |z, q| z.min(q[2]))) * 100.0
+    };
+    let grown_behind: Vec<f32> = [false, true].iter().map(|&female| (0..n).map(|k| behind(&morph_test(&h, &person(k, female, 24.0)))).sum::<f32>() / n as f32).collect();
+    // The survey's depth from the ear to sellion, boys and girls together, by its sixteen groups of age (cm):
+    // the face before the ear grows as the face does. Its head length less this depth is, roughly, the head
+    // behind the ear: 95 mm at two, 91 on the oldest. The braincase behind the ear is grown at two.
+    const EAR_TO_SELLION: [f32; 16] = [8.0, 8.4, 8.6, 8.8, 8.8, 8.9, 9.0, 9.3, 9.5, 9.4, 9.6, 9.8, 9.9, 10.0, 9.9, 10.2];
+    let survey_behind = |age: f32| {
+        let j = CHILD_AGES.iter().position(|a| *a > age + 0.5).unwrap_or(16).clamp(1, 15);
+        let f = ((age + 0.5 - CHILD_AGES[j - 1]) / (CHILD_AGES[j] - CHILD_AGES[j - 1])).clamp(0.0, 1.0);
+        (children_at(2, false, age)[0] + children_at(2, true, age)[0]) / 2.0 - 10.0 * (EAR_TO_SELLION[j - 1] + f * (EAR_TO_SELLION[j] - EAR_TO_SELLION[j - 1]))
+    };
+    let (mut stretch, mut squeeze, mut way) = (1.0f32, 1.0f32, 0.0f32);
+    for age in [2.0f32, 5.0, 8.0, 11.0] {
+        for female in [false, true] {
+            let who = format!("{} of {age}", if female { "girls" } else { "boys" });
+            let (mut with_all, mut without_all) = (Vec::new(), Vec::new());
+            let (mut back_with, mut back_without) = (0.0f32, 0.0f32);
+            for k in 0..n {
+                let p = person(k, female, age);
+                let (with, without) = (morph_test(&h, &p), morph_test_skull(&h, &p, [1.0; 3]));
+                // what is not of the braincase stays where it is; what is moves outwards, upwards, and no
+                // further than the crown does
+                for v in 0..with.len() {
+                    if field[v] == 0.0 {
+                        assert!(with[v] == without[v], "{who} ({k}): the vertex {v} moves");
+                    } else {
+                        assert!(with[v][0].abs() >= without[v][0].abs() && with[v][1] >= without[v][1], "{who} ({k}): the vertex {v} moves inwards or down");
+                        way = way.max(dist(&with[v], &without[v]));
+                    }
+                }
+                // the skin is stretched evenly: no edge of it much longer or shorter than before
+                if k < 4 {
+                    for tri in h.body_full().chunks_exact(3) {
+                        for e in 0..3 {
+                            let (i, j) = (tri[e] as usize, tri[(e + 1) % 3] as usize);
+                            let (before, after) = (dist(&without[i], &without[j]), dist(&with[i], &with[j]));
+                            if before > 0.005 {
+                                stretch = stretch.max(after / before);
+                                squeeze = squeeze.min(after / before);
+                            }
+                        }
+                    }
+                }
+                // every measure of the face stays (the head's breadth and length, the last two, do not)
+                let (fa, fb) = (face(&h, &with), face(&h, &without));
+                for m in 0..MEASURES.len() - 2 {
+                    assert!(fa[m] == fb[m], "{who} ({k}): {} {} with, {} without", MEASURES[m].0, fa[m], fb[m]);
+                }
+                // (a boy's breadth is the grown share from eleven on: there the table leaves it)
+                let broader = if set.skull_of(female, age)[0] > 1.0 { fa[13] > fb[13] + 2.0 } else { fa[13] == fb[13] };
+                assert!(broader && fa[14] > fb[14] + 2.0, "{who} ({k}): the head {} by {} mm, without {} by {}", fa[13], fa[14], fb[13], fb[14]);
+                assert!(lips(&with) == lips(&without), "{who} ({k}): the lips' red");
+                with_all.push(children(&h, &with));
+                without_all.push(children(&h, &without));
+                back_with += behind(&with) / n as f32;
+                back_without += behind(&without) / n as f32;
+            }
+            // a check the table was not fitted to: the head behind the ear stands to the grown's as the survey's
+            // does (which has it as long at two as on the grown), and without the table it was a child's face's
+            // share of it
+            let (ours, before, real) = (back_with / grown_behind[female as usize], back_without / grown_behind[female as usize], survey_behind(age) / survey_behind(18.0));
+            if show {
+                println!("{who}: behind the ear {back_with:.1} mm, of the grown {ours:.3} (without {back_without:.1}, {before:.3}), the survey {real:.3}");
+            }
+            assert!((ours - real).abs() < 0.08, "{who}: behind the ear {ours} of the grown, the survey {real}");
+            assert!(age > 8.0 || real - before > 0.15, "{who}: behind the ear without the table {before} of the grown, the survey {real}");
+            let (with, without) = (mean(with_all.into_iter()), mean(without_all.into_iter()));
+            // the face's and the neck's measures are what they were
+            for m in 5..11 {
+                assert!((with[m] - without[m]).abs() < 0.01, "{who}: {} {} with, {} without", CHILDREN[m].name, with[m], without[m]);
+            }
+            // the braincase stands to the grown of England as the survey's children stand to its oldest
+            // (circumference, breadth, length, tragion to the top of the head: the table was fitted to the last
+            // three on 60 children of each sex, to 0.1 in 100)
+            for m in [0, 1, 2, 4] {
+                let (survey, oldest) = (children_at(m, female, age), children_at(m, female, 18.0));
+                let (ours, before, real) = (with[m] / grown[female as usize][m], without[m] / grown[female as usize][m], survey[0] / oldest[0]);
+                if show {
+                    println!("{who}: {:<32} {:6.1} mm ({:+.1} SD; without {:6.1}, {:+.1}), of the grown {ours:.3} (without {before:.3}), the survey {real:.3}", CHILDREN[m].name, with[m], (with[m] - survey[0]) / survey[1], without[m], (without[m] - survey[0]) / survey[1]);
+                }
+                assert!((ours - real).abs() < 0.015, "{who}: {} {ours} of the grown, the survey {real}", CHILDREN[m].name);
+                assert!(((with[m] - survey[0]) / survey[1]).abs() < 1.0, "{who}: {} {} mm, the survey {} ({})", CHILDREN[m].name, with[m], survey[0], survey[1]);
+                // and without the table it did not: by 0.07 and more at two and five, by 0.03 and more after
+                // (the breadth of boys from eight on was near: 0.02 at eight, 0.02 over at eleven)
+                if m != 1 || age < 8.0 || female {
+                    assert!(real - before > if age < 8.0 { 0.07 } else if age < 11.0 { 0.03 } else { 0.01 }, "{who}: {} without the table {before} of the grown, the survey {real}", CHILDREN[m].name);
+                }
+            }
+            // the head's circumference without the table, in the survey's standard deviations
+            let s = children_at(0, female, age);
+            assert!(age > 8.0 || (without[0] - s[0]) / s[1] < -1.8, "{who}: without the table the circumference is {} mm, the survey {} ({})", without[0], s[0], s[1]);
+        }
+    }
+    if show {
+        println!("a vertex moves {:.1} mm at the most; an edge of the skin grows to {stretch:.3} of its length at the most and shrinks to {squeeze:.3}", way * 100.0);
+    }
+    // (The band in which the braincase grows away from what stays, over the ears and round the back of the
+    // head, is drawn out: the head behind the ear is a quarter longer than without the table and the ear stays
+    // where it is. An edge of it comes to twice its length on girls of two, the largest of all.)
+    assert!(way * 100.0 < 35.0 && stretch < 2.1 && squeeze > 0.9, "{} mm, {stretch}, {squeeze}", way * 100.0);
+    // The grown, and the young whose head has its adult form, are what they were, to the bit.
+    for (k, female, age) in [(0u32, true, 24.0f32), (1, false, 24.0), (2, true, 15.0), (3, false, 13.0), (4, true, 68.0), (5, false, 50.0)] {
+        let p = person(k, female, age);
+        assert!(morph_test(&h, &p) == morph_test_skull(&h, &p, [1.0; 3]), "a person of {age} ({k}) has another head");
+    }
+}
+
+/// The mean of each of the eleven measures of a head (measure.rs `children`) over some heads.
+fn mean(heads: impl Iterator<Item = [f32; 11]>) -> [f32; 11] {
+    let all: Vec<[f32; 11]> = heads.collect();
+    std::array::from_fn(|m| all.iter().map(|x| x[m]).sum::<f32>() / all.len() as f32)
 }
 
 #[test]

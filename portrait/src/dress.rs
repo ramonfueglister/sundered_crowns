@@ -466,6 +466,21 @@ pub struct DressSet {
     /// 48.0 L darker than the lit cheek on eight grown women (before 48.3 to 48.9; the reference's woman 41 to
     /// 47, round 82), on eight men 50.3 to 52.5 (before 51.2 to 53.1).
     pub seam_shut: f32,
+    /// By how much a child's braincase is larger than MakeHuman's child's: per age in years the factors of its
+    /// breadth, its length and its height over the ears, girls' and boys' (`skull_of`, morph.rs `skull_grow`).
+    /// MakeHuman's child and baby are a grown head made small, the braincase with the face; a real child's
+    /// braincase is nearly grown when its face is not. Until round 100 the faces of England's children were as
+    /// broad as real ones (at the cheekbones 111 and 108 mm at two, the survey of measure.rs `CHILDREN` 109 and
+    /// 108) and their braincases far too small: at two the head's circumference 434 and 416 mm against 502 and
+    /// 487 (4.3 and 4.8 standard deviations under), its length 152 and 146 against 178 and 172, at eight the
+    /// circumference still 2.0 and 3.6 under. A grown face on a small head: in a picture framed from the crown to
+    /// the chin a large face, a small adult. The factors are fitted (60 girls and 60 boys per age, to 0.1 in 100)
+    /// so that breadth, length and height over the ears stand to England's grown as the survey's children stand
+    /// to its oldest group; the circumference, which was not fitted, then lies within 1.2 in 100 of that too, and
+    /// children of 2 to 17 within one standard deviation of the survey in all four. Factors under 1 (boys'
+    /// breadth from 11, all of a boy's from 13: up to 4 in 100) are left at 1, a braincase is not made smaller.
+    /// Under two the two-year-olds' (the survey's infants are not read).
+    pub skull: &'static [(f32, [f32; 3], [f32; 3])],
     /// Targets of MakeHuman's that make a neck thicker, with their weights for a grown woman and a grown man;
     /// a head takes of them the part under the jaw only (morph.rs `neck_share`), over and above what its gene
     /// of the neck asks for. A child has none of it and grows into it (`neck_of`).
@@ -601,6 +616,14 @@ pub static ENGLAND_1356: DressSet = DressSet {
     lower_only: &["head/head-diamond", "head/head-triangular", "head/head-invertedtriangular"],
     cheek_fill: [6.0, 0.0],
     seam_shut: 1.0,
+    skull: &[
+        (2.0, [1.141, 1.229, 1.191], [1.150, 1.182, 1.198]),
+        (5.0, [1.126, 1.199, 1.149], [1.106, 1.128, 1.129]),
+        (8.0, [1.093, 1.165, 1.101], [1.050, 1.079, 1.065]),
+        (11.0, [1.053, 1.106, 1.053], [1.0, 1.018, 1.027]),
+        (13.0, [1.037, 1.066, 1.033], [1.0, 1.0, 1.0]),
+        (15.0, [1.0, 1.0, 1.0], [1.0, 1.0, 1.0]),
+    ],
     neck: &[("neck/neck-scale-horiz-incr", 0.45, 0.0), ("neck/neck-back-scale-depth-incr", 0.7, 0.0)],
     sources: &[
         Source { what: "gown (cote) of wool, pulled over the head, close at the shoulders, round neck", source: "Crowfoot, Pritchard & Staniland 1992 (London finds); Østergård 2004 (Herjolfsnes). Summaries only. Cut PLACEHOLDER." },
@@ -622,6 +645,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
         Source { what: "the mouth at 0.31 of the way from the nose's foot to the chin's lowest point (the upper lip's share of the lower face)", source: "Arnett, Jelic, Kim, Cummings, Beress, Worley, Chung & Bergman 1999, American Journal of Orthodontics and Dentofacial Orthopedics 116(3): 239-253 (table of facial lengths, lips at rest: upper lip 21.0 of 71.1 mm in 26 women, 24.4 of 81.1 in 20 men; read from a copy of the paper). Farkas, Katic, Hreczko, Deutsch & Munro 1984, American Journal of Orthodontics 86(1): 52-60 (lips closed: 20.1 of 64.3 mm in women, 22.3 of 72.6 in men; not read itself, the means as cited by Woelfel, Igarashi & Dong 2014, Journal of Advanced Prosthodontics 6(6): 483-490). 0.31 lies between the two readings for closed lips; that every grown face has the same share is a simplification." },
         Source { what: "the pupil at 0.57 of the way from the lower lid's edge to the upper lid's", source: "Neuro-ophthalmology Illustrated, ch. 1, at neuro-ophthalmology.stanford.edu (the upper lid's edge 4 to 5 mm over the pupil's middle, covering the upper 1 to 2 mm of the iris; the lower lid just reaching the iris's foot; opening 9 to 12 mm high) and Margin to reflex distance at eyewiki.org (lower lid 5.5 mm under the pupil). Ours are set by moving the ball, not the lids. The opening is 8.9 mm high in grown women and 9.1 in men, the upper lid 3.8 to 3.9 mm over the pupil and the lower 5.0 to 5.2 under it: at the low end of theirs." },
         Source { what: "the height of the lips' red (upper, lower, both), which the form of the mouth is held against", source: "Ferrario, Sforza, Tartaglia, Sozzi & Carù 2003, Plastic and Reconstructive Surgery 111(7): 2149-2156 (89 men and 73 women, healthy young northern Italians, measured in three dimensions). Means from the paper's table; the standard deviations read from a summary of it. The lips' form itself and how far the upper lip stands in front of the lower: PLACEHOLDER, nothing read on real profiles." },
+        Source { what: "how large a child's braincase is against its face, by age and sex (head breadth, head length, tragion to the top of the head: fitted; head circumference, head height, breadth at the cheekbones and between the ears, lower face height, nose length, mouth breadth, neck circumference: held against)", source: "Snyder, Schneider, Owings, Reynolds, Golomb & Schork 1977, Anthropometry of infants, children, and youths to age 18 for product safety design, University of Michigan Highway Safety Research Institute, report UM-HSRI-77-17 (also SAE SP-450), for the U.S. Consumer Product Safety Commission: means and standard deviations by sex in sixteen groups of age from 2 to 19, read from the tables as served by NIST's AnthroKids (math.nist.gov/~SRessler/anthrokids, data of 1977) through an account of each page, not line by line. Children of the United States of the 1970s: used for how a child's head stands to a grown one's, not for its size (the shares are taken of England's own grown). Kesterke, Raffensperger, Heike, Cunningham, Hecht, Kau, Nidey, Moreno, Wehby, Marazita & Weinberg 2016, Biology of Sex Differences 7:23, table 4 (the cranium at 88 to 91 in 100 of its adult size at 3 to 6 years, the face at 80 to 84, the nose at 74 to 78), says the same; its measures by year of age were not reached. The braincase's lower edge, the breadth of the band it fades over and the middle it grows from: PLACEHOLDER, by anatomy and by eye." },
         Source { what: "how far apart the corners of a child's mouth lie, which the children's mouths are held against (not fitted to it)", source: "Sforza, Laino, D'Alessio, Dellavia, Grandi & Ferrario 2007, Angle Orthodontist 77(6): 1026-1033 (Italian children measured in three dimensions; its reference groups: girls of 4 to 5 36.9 mm (SD 3.6), boys 39.8 (5.0); of 6 to 7 40.9 and 41.7; of 8 to 9 42.4 (3.7) and 43.3 (3.8); the red of both lips 12.4 and 12.8, 13.7 and 13.4, 15.1 and 14.1 mm). Read through a summary of the paper's tables, not line by line. The sample's four of eight are 2.4 to 5.0 mm narrower and its four of five have lips 2.2 to 2.8 mm higher: not fitted, open." },
     ],
 };
@@ -695,17 +719,30 @@ impl DressSet {
         self.eye_out[k] * (1.0 - child_share(self.adult[k], yrs))
     }
 
-    /// How far a person's cheeks are filled out (`cheek_fill`), in mm: the women's in full on a grown woman, a
-    /// third of it on a small child of either sex; a boy grows out of it into the men's (as the table's `rest`;
-    /// `grown` is `Look::grown`).
     /// The weight of a row of `neck` (its two weights `women` and `men`) for someone: the grown have their
     /// sex's, a child the share it has grown (`Look::grown`): MakeHuman's child keeps the neck of a child.
     pub fn neck_of(&self, women: f32, men: f32, female: bool, grown: f32) -> f32 {
         (if female { women } else { men }) * grown
     }
 
+    /// How far a person's cheeks are filled out (`cheek_fill`), in mm: the women's in full on a grown woman, a
+    /// third of it on a small child of either sex; a boy grows out of it into the men's (as the table's `rest`;
+    /// `grown` is `Look::grown`).
     pub fn cheek_fill_of(&self, female: bool, grown: f32) -> f32 {
         by_sex(self.cheek_fill[0], self.cheek_fill[1], female, grown) * (0.35 + 0.65 * grown)
+    }
+
+    /// By how much a person's braincase is larger than MakeHuman's (`skull`: breadth, length, height): between
+    /// the table's ages in a straight line, before its first age that age's, from its last on that one's.
+    pub fn skull_of(&self, female: bool, yrs: f32) -> [f32; 3] {
+        let of = |row: &(f32, [f32; 3], [f32; 3])| if female { row.1 } else { row.2 };
+        let Some(j) = self.skull.iter().position(|row| row.0 > yrs) else { return self.skull.last().map_or([1.0; 3], of) };
+        if j == 0 {
+            return of(&self.skull[0]);
+        }
+        let (a, b) = (&self.skull[j - 1], &self.skull[j]);
+        let f = (yrs - a.0) / (b.0 - a.0);
+        std::array::from_fn(|k| of(a)[k] + f * (of(b)[k] - of(a)[k]))
     }
 
     /// The breadth of the brow's band for a person (`brow_band`), by how much of the head has its adult form.

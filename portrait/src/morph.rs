@@ -15,14 +15,21 @@ pub fn morph_test(h: &Head, p: &Look) -> Vec<V3> {
 /// (`DressSet::mouth_at`; 0: where the morph targets leave it), for tests that hold the table's value against the
 /// head without it.
 pub fn morph_test_mouth(h: &Head, p: &Look, mouth_at: f32) -> Vec<V3> {
-    morph_as(h, p, Some(mouth_at), None, None).0
+    morph_as(h, p, Some(mouth_at), None, None, None).0
 }
 
 /// `morph_test` with another share of the lips' slit closed along the seam than the dress table's
 /// (`DressSet::seam_shut`; 0: the mouth as it is closed in its middle alone), for tests that hold the table's
 /// value against the head without it.
 pub fn morph_test_seam(h: &Head, p: &Look, seam_shut: f32) -> Vec<V3> {
-    morph_as(h, p, None, Some(seam_shut), None).0
+    morph_as(h, p, None, Some(seam_shut), None, None).0
+}
+
+/// `morph_test` with the braincase larger by other factors than the dress table's (`DressSet::skull`: breadth,
+/// length, height; ones: the head as MakeHuman's targets leave it), for tests and for the tool that finds the
+/// table's values (examples/face_measure.rs `--children --skull`).
+pub fn morph_test_skull(h: &Head, p: &Look, by: [f32; 3]) -> Vec<V3> {
+    morph_as(h, p, None, None, Some(by), None).0
 }
 
 /// The targets of MakeHuman a person's head is made of and the weight of each, in the order they are added (a target
@@ -30,7 +37,7 @@ pub fn morph_test_seam(h: &Head, p: &Look, seam_shut: f32) -> Vec<V3> {
 /// tools that ask what gives a face its form (examples/face_measure.rs `--made`).
 pub fn morph_targets(h: &Head, p: &Look) -> Vec<(String, f32)> {
     let mut list = Vec::new();
-    morph_as(h, p, None, None, Some(&mut list));
+    morph_as(h, p, None, None, None, Some(&mut list));
     list
 }
 
@@ -68,11 +75,62 @@ pub fn neck_share(h: &Head, v: usize) -> f32 {
     1.0 - sm(band[0], band[1], y * tilt.to_radians().cos() + z * tilt.to_radians().sin())
 }
 
-pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
-    morph_as(h, p, None, None, None)
+/// Where the braincase begins on MakeHuman's base head (`skull_field`), in units (1 unit = 10 cm): its floor
+/// lies this far over glabella at the forehead (2 cm: the lower forehead stays with the face, whose breadth it
+/// has in the survey of measure.rs `CHILDREN`, and a fringe lies on it), this far over tragion at the ear's
+/// depth (just over the ear's upper rim, which reaches 20.5 mm over tragion) and, behind a point this far behind
+/// tragion, runs down to this far over tragion at the back of the head (the nape). PLACEHOLDER: by anatomy and
+/// by eye, as `SKULL_REACH` and `SKULL_CENTRE` are; the factors of `DressSet::skull` are fitted with these.
+pub const SKULL_FLOOR: [f32; 4] = [0.20, 0.25, 0.10, -0.05];
+/// How far over that floor a vertex is of the braincase in full, in units (a smooth step from the floor up).
+/// In this band the skin is drawn out, since the braincase grows and what lies under the floor stays: an edge
+/// of it to twice its length at the most, on girls of two (tests/faces.rs).
+pub const SKULL_REACH: f32 = 0.40;
+/// How far behind glabella the upright stands from which the braincase grows in length, in units: the forehead
+/// stands about there over the brows, so it keeps its place, and all of the length is added behind it. That is
+/// where a child's head has it: the survey's depth from the ear to sellion grows as the face does (0.78 of the
+/// oldest group's at two) and its head length less that depth is as long at two as on the grown (95 and 91 mm).
+/// Ours behind the ear: 96 and 97 mm at two (74 and 71 before round 100), 96 and 95 on the grown.
+pub const SKULL_CENTRE: f32 = 0.30;
+
+/// How much of the braincase each vertex of the base head is (`skull_grow`): 0 on the face, on the ears and on
+/// the neck (at and under the floor of `SKULL_FLOOR`), 1 from `SKULL_REACH` over it.
+pub fn skull_field(h: &Head) -> Vec<f32> {
+    use crate::measure::{GLABELLA, TRAGION};
+    let b = &h.base;
+    let (ty, tz, g) = ((b[TRAGION.0][1] + b[TRAGION.1][1]) / 2.0, (b[TRAGION.0][2] + b[TRAGION.1][2]) / 2.0, b[GLABELLA]);
+    let back = h.body_full().iter().map(|&v| b[v as usize]).filter(|q| q[1] > ty).fold(f32::MAX, |z, q| z.min(q[2]));
+    let (front, ear, nape, turn) = (g[1] + SKULL_FLOOR[0], ty + SKULL_FLOOR[1], ty + SKULL_FLOOR[3], tz - SKULL_FLOOR[2]);
+    let level = |z: f32| ear + (front - ear) * (z - tz) / (g[2] - tz);
+    b.iter()
+        .map(|q| {
+            let floor = if q[2] >= turn { level(q[2]) } else { level(turn) + (nape - level(turn)) * c01((turn - q[2]) / (turn - back)) };
+            sm(0.0, SKULL_REACH, q[1] - floor)
+        })
+        .collect()
 }
 
-fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, mut list: Option<&mut Vec<(String, f32)>>) -> (Vec<V3>, usize) {
+/// The braincase made larger by the factors `by` (its breadth, its length, its height), each vertex by its share
+/// of `skull_field`: sideways from the middle, backwards and forwards from the upright `SKULL_CENTRE` behind the
+/// person's glabella, upwards from the height of the person's tragion. What lies at or under the field's floor
+/// does not move: the face, the ears, the neck.
+pub(crate) fn skull_grow(h: &Head, pp: &mut [V3], by: [f32; 3]) {
+    use crate::measure::{GLABELLA, TRAGION};
+    let (ty, cz) = ((pp[TRAGION.0][1] + pp[TRAGION.1][1]) / 2.0, pp[GLABELLA][2] - SKULL_CENTRE);
+    for (v, w) in skull_field(h).into_iter().enumerate().take(pp.len()) {
+        if w > 0.0 {
+            pp[v][0] *= 1.0 + w * (by[0] - 1.0);
+            pp[v][2] = cz + (pp[v][2] - cz) * (1.0 + w * (by[1] - 1.0));
+            pp[v][1] = ty + (pp[v][1] - ty) * (1.0 + w * (by[2] - 1.0));
+        }
+    }
+}
+
+pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
+    morph_as(h, p, None, None, None, None)
+}
+
+fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, skull: Option<[f32; 3]>, mut list: Option<&mut Vec<(String, f32)>>) -> (Vec<V3>, usize) {
     let mut pp = h.base.clone();
     let mut used = 0;
     // targets a dress with a table takes nothing of (`DressSet::without`)
@@ -386,6 +444,11 @@ fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, m
     if let Some(d) = p.dress.set().filter(|d| d.pupil > 0.0) {
         let lean = crate::dress::by_sex(d.lean[0], d.lean[1], p.female, p.grown());
         pupils_set(h, &mut pp, d.pupil, |side| d.gaze_of(side, lean)[1]);
+    }
+    // a child's braincase as large against its face as a real child's, where a dress with a table asks for it
+    // (`DressSet::skull`); the face and the ears stay
+    if let Some(by) = p.dress.set().map(|d| skull.unwrap_or(d.skull_of(p.female, p.age))).filter(|by| by.iter().any(|k| *k != 1.0)) {
+        skull_grow(h, &mut pp, by);
     }
     // arms down from the A pose, softly weighted around the shoulder joint
     for sg in [1.0f32, -1.0] {

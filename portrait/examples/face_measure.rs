@@ -8,6 +8,10 @@
 //!                           as leye.u32 and reye.u32 and MakeHuman's head before any target as base.f32
 //!   ... --target <name>     how far one of MakeHuman's targets moves the landmarks at weight 1 (mm: x y z)
 //!   ... --marks             where the landmarks lie on the skin's image (u v), for tools/portrait/face_colour.mjs
+//!   ... --children          that many girls and that many boys at each of the ages 2, 5, 8, 13 and 17 (or those of
+//!                           --ages 2,3,4), measured as a survey of children's heads measures (measure.rs `CHILDREN`);
+//!                           with --skull bx,lz,hy,bx,lz,hy the braincase larger by these factors (boys' breadth,
+//!                           length and height, then girls') instead of the dress table's: 1,1,1,1,1,1 is MakeHuman's
 //!   ... --made <person>     the targets of MakeHuman the head of one of the people is made of (its number as printed, 940000
 //!                           and up): the weight of each, how many vertices it moves and how far at that weight (mm)
 //!
@@ -19,9 +23,9 @@
 //! lips stand apart along their seam where that is most (`seam`, no survey read).
 
 use sc_portrait::dna::{founder, ORIGINS};
-use sc_portrait::measure::{arcs, face, far_at_mouth, far_cheek, jaw_front, lips, marks, neck, seam, ARCS, CHEEK, CHEEKBONES, FAR_MOUTH, JAW, JAW_FRONT, LIDS, LIPS, MEASURES, MENTON, NECK, NOSE, SEAM, SELLION, STAGE_TURN, SUBNASALE};
+use sc_portrait::measure::{arcs, children, children_at, face, far_at_mouth, far_cheek, jaw_front, lips, marks, neck, seam, ARCS, CHEEK, CHEEKBONES, FAR_MOUTH, JAW, JAW_FRONT, LIDS, LIPS, MEASURES, MENTON, CHILDREN, NECK, NOSE, SEAM, SELLION, STAGE_TURN, SUBNASALE};
 use sc_portrait::person::{look_of, Lived};
-use sc_portrait::{build, morph_targets, morph_test, real, Head, LODS};
+use sc_portrait::{build, morph_targets, morph_test, morph_test_skull, real, Head, LODS};
 
 /// SplitMix64, as in examples/sample.rs.
 fn draws(seed: u64, n: usize) -> Vec<u64> {
@@ -52,7 +56,7 @@ fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let (origin, pool, n, dir) = match args.as_slice() {
         [origin, pool, n, dir, ..] => (origin.as_str(), pool.as_str(), n.parse::<u32>().expect("how many people"), dir.as_str()),
-        _ => panic!("face_measure <origin of the people> <pool of genes> <how many> <folder of the portraits' files> [--grown] [--dump <folder>] [--target <name>] [--marks] [--made <person>]"),
+        _ => panic!("face_measure <origin of the people> <pool of genes> <how many> <folder of the portraits' files> [--grown] [--dump <folder>] [--target <name>] [--marks] [--children [--ages <a,b,c>] [--skull <bx,lz,hy,bx,lz,hy>]] [--made <person>]"),
     };
     let option = |name: &str| args.iter().position(|a| a == name).and_then(|i| args.get(i + 1)).cloned();
     let head = Head::load(&std::fs::read(format!("{dir}/head.bin.zst")).expect("the head file")).expect("the head");
@@ -84,6 +88,40 @@ fn main() {
         return;
     }
     let o = ORIGINS.iter().position(|k| *k == pool).unwrap_or_else(|| panic!("no pool {pool}: {ORIGINS:?}")) as u8;
+    if args.iter().any(|a| a == "--children") {
+        // that many girls and that many boys at each age (the genes of the people of --grown), beside the survey
+        // of children's heads (measure.rs `CHILDREN`)
+        // --skull bx,lz,hy,bx,lz,hy: the braincase larger by these factors instead of the dress table's (boys', girls')
+        let skull: Option<[[f32; 3]; 2]> = option("--skull").map(|s| {
+            let f: Vec<f32> = s.split(',').map(|a| a.parse().expect("a factor")).collect();
+            [[f[0], f[1], f[2]], [f[3], f[4], f[5]]]
+        });
+        let ages: Vec<f32> = option("--ages").map_or(vec![2.0, 5.0, 8.0, 13.0, 17.0], |s| s.split(',').map(|a| a.parse().expect("an age")).collect());
+        for &age in &ages {
+            let mut rows: [Vec<[f32; 11]>; 2] = [Vec::new(), Vec::new()];
+            for k in 0..n {
+                for female in [false, true] {
+                    let r = draws(8000 + k as u64, 68);
+                    let genes = founder(o, |i| r[i as usize]).bytes();
+                    let look = look_of(&genes, female, age, 1, "Bauern", 1000.0, 1000.0, 940000 + k, origin, Lived { loss_days: None, rank: Some(0.5), clothes_pct: Some(100.0) });
+                    let by = skull.map(|by| by[female as usize]);
+                    rows[female as usize].push(children(&head, &by.map_or_else(|| morph_test(&head, &look), |by| morph_test_skull(&head, &look, by))));
+                }
+            }
+            println!("\nage {age}: ours (SD), the survey's (SD), how many of the survey's SDs ours lies from it");
+            println!("{:<40} {:>34} {:>34}", "", "boys", "girls");
+            for (m, by_age) in CHILDREN.iter().enumerate() {
+                let cell = |sex: usize| {
+                    let mean = rows[sex].iter().map(|r| r[m]).sum::<f32>() / n as f32;
+                    let sd = (rows[sex].iter().map(|r| (r[m] - mean).powi(2)).sum::<f32>() / n as f32).sqrt();
+                    let s = children_at(m, sex == 1, age);
+                    format!("{mean:6.1} ({sd:4.1}) {:6.1} ({:4.1}) {:+5.1}", s[0], s[1], (mean - s[0]) / s[1])
+                };
+                println!("{:<40} {:>34} {:>34}", by_age.name, cell(0), cell(1));
+            }
+        }
+        return;
+    }
     let (ages, small) = ([8.0, 13.0, 17.0, 24.0, 35.0, 50.0, 68.0], [2.0, 5.0]);
     let dump = option("--dump");
     if let Some(folder) = &dump {

@@ -392,6 +392,214 @@ pub fn neck(h: &Head, pp: &[V3]) -> f32 {
     neck_at(h, pp)[0]
 }
 
+/// The ages at which `CHILDREN` holds a measure: the middles of the survey's groups of age, in years (2.0 to 3.5,
+/// 3.5 to 4.5 and so on by the year to 16.5 to 17.5, and 17.5 to 19.0).
+pub const CHILD_AGES: [f32; 16] = [2.75, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.25];
+
+/// A measure of children's heads by age: its mean and its standard deviation at each of `CHILD_AGES`, of boys
+/// and of girls, in millimetres.
+pub struct ByAge {
+    pub name: &'static str,
+    pub mean: [[f32; 16]; 2],
+    pub sd: [[f32; 16]; 2],
+}
+
+/// Heads, faces and necks of children of 2 to 18, measured: Snyder, Schneider, Owings, Reynolds, Golomb &
+/// Schork 1977, Anthropometry of infants, children, and youths to age 18 for product safety design (University
+/// of Michigan, Highway Safety Research Institute, UM-HSRI-77-17, for the Consumer Product Safety Commission):
+/// children of the United States, measured between April 1975 and April 1977. Read from the tables NIST's
+/// AnthroKids serves
+/// (math.nist.gov/~SRessler/anthrokids/data1977/, one table a measure and sex: age, how many, mean, standard
+/// deviation; given in centimetres to one decimal, so a mean here is true to half a millimetre), through a reading
+/// tool's account of each table, not line by line. The head's circumference and breadth were taken on about 100
+/// children a group, the others on 20 to 60. What `children` measures on a morphed head is each of them as
+/// the survey's own description has it (data1977/descrip.htm):
+/// the circumference with a tape "at the level of the plane passing above glabella"; the breadth as the largest
+/// "above and behind the ears"; the length from glabella to the furthest point of the back of the head; the
+/// head's height from menton to vertex, upright to the Frankfort plane; tragion to the top of the head, upright;
+/// the breadth between the zygomatic arches at its largest; from tragion to tragion; the lower face's height,
+/// upright from menton to sellion; the nose's length, upright from subnasale to sellion; the mouth's breadth
+/// between its corners; the neck's circumference square to its axis at its middle.
+/// People of today and of another country, as the survey of the grown: what it is used for is how a child's head
+/// stands to a grown one's and how its parts stand to each other.
+pub const CHILDREN: [ByAge; 11] = [
+    ByAge {
+        name: "head circumference",
+        mean: [[502.0, 507.0, 512.0, 516.0, 519.0, 526.0, 526.0, 529.0, 536.0, 538.0, 543.0, 548.0, 554.0, 565.0, 567.0, 572.0], [487.0, 497.0, 502.0, 505.0, 511.0, 518.0, 520.0, 527.0, 528.0, 531.0, 537.0, 540.0, 543.0, 542.0, 546.0, 543.0]],
+        sd: [[16.0, 13.0, 13.0, 16.0, 16.0, 15.0, 17.0, 14.0, 15.0, 17.0, 17.0, 19.0, 17.0, 19.0, 17.0, 16.0], [15.0, 14.0, 15.0, 14.0, 15.0, 16.0, 16.0, 17.0, 19.0, 16.0, 18.0, 15.0, 18.0, 16.0, 16.0, 14.0]],
+    },
+    ByAge {
+        name: "head breadth",
+        mean: [[136.0, 138.0, 140.0, 141.0, 142.0, 143.0, 143.0, 145.0, 146.0, 147.0, 148.0, 149.0, 151.0, 153.0, 154.0, 154.0], [132.0, 136.0, 137.0, 138.0, 140.0, 140.0, 142.0, 142.0, 144.0, 144.0, 146.0, 147.0, 147.0, 148.0, 148.0, 149.0]],
+        sd: [[6.0, 6.0, 5.0, 5.0, 5.0, 5.0, 5.0, 4.0, 5.0, 5.0, 5.0, 5.0, 6.0, 6.0, 5.0, 6.0], [5.0, 5.0, 5.0, 4.0, 6.0, 4.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 6.0]],
+    },
+    ByAge {
+        name: "head length",
+        mean: [[178.0, 182.0, 183.0, 184.0, 184.0, 188.0, 187.0, 188.0, 187.0, 189.0, 190.0, 193.0, 193.0, 197.0, 196.0, 200.0], [172.0, 177.0, 177.0, 180.0, 180.0, 184.0, 184.0, 184.0, 185.0, 186.0, 187.0, 189.0, 191.0, 187.0, 189.0, 186.0]],
+        sd: [[7.0, 5.0, 7.0, 7.0, 7.0, 6.0, 8.0, 5.0, 6.0, 7.0, 8.0, 6.0, 6.0, 6.0, 6.0, 7.0], [6.0, 6.0, 8.0, 7.0, 7.0, 4.0, 6.0, 6.0, 7.0, 7.0, 6.0, 6.0, 7.0, 7.0, 8.0, 7.0]],
+    },
+    ByAge {
+        name: "head height (menton to vertex)",
+        mean: [[176.0, 181.0, 181.0, 187.0, 189.0, 191.0, 193.0, 196.0, 201.0, 202.0, 204.0, 208.0, 213.0, 219.0, 218.0, 221.0], [170.0, 177.0, 177.0, 181.0, 186.0, 186.0, 188.0, 195.0, 198.0, 198.0, 202.0, 203.0, 203.0, 206.0, 206.0, 203.0]],
+        sd: [[11.0, 10.0, 7.0, 10.0, 11.0, 10.0, 9.0, 9.0, 10.0, 8.0, 11.0, 11.0, 12.0, 11.0, 9.0, 12.0], [8.0, 7.0, 7.0, 9.0, 8.0, 10.0, 9.0, 10.0, 10.0, 11.0, 10.0, 8.0, 9.0, 9.0, 9.0, 9.0]],
+    },
+    ByAge {
+        name: "tragion to the top of the head",
+        mean: [[115.0, 117.0, 117.0, 118.0, 121.0, 119.0, 121.0, 123.0, 125.0, 126.0, 124.0, 124.0, 129.0, 128.0, 128.0, 131.0], [112.0, 116.0, 115.0, 115.0, 116.0, 116.0, 117.0, 120.0, 118.0, 117.0, 120.0, 121.0, 120.0, 120.0, 124.0, 122.0]],
+        sd: [[8.0, 7.0, 8.0, 7.0, 10.0, 9.0, 8.0, 9.0, 8.0, 6.0, 7.0, 8.0, 8.0, 8.0, 8.0, 8.0], [6.0, 6.0, 7.0, 8.0, 6.0, 8.0, 8.0, 8.0, 9.0, 9.0, 7.0, 7.0, 6.0, 10.0, 8.0, 6.0]],
+    },
+    ByAge {
+        name: "breadth at the cheekbones",
+        mean: [[109.0, 113.0, 113.0, 117.0, 120.0, 119.0, 120.0, 123.0, 125.0, 126.0, 127.0, 129.0, 133.0, 135.0, 137.0, 139.0], [108.0, 112.0, 113.0, 115.0, 119.0, 119.0, 121.0, 121.0, 124.0, 125.0, 127.0, 130.0, 130.0, 132.0, 131.0, 132.0]],
+        sd: [[5.0, 6.0, 7.0, 6.0, 7.0, 6.0, 5.0, 5.0, 6.0, 5.0, 6.0, 6.0, 6.0, 6.0, 6.0, 5.0], [6.0, 5.0, 6.0, 5.0, 5.0, 5.0, 5.0, 5.0, 6.0, 6.0, 6.0, 6.0, 4.0, 5.0, 5.0, 6.0]],
+    },
+    ByAge {
+        name: "from tragion to tragion",
+        mean: [[105.0, 107.0, 111.0, 113.0, 116.0, 116.0, 116.0, 119.0, 120.0, 122.0, 122.0, 125.0, 128.0, 130.0, 130.0, 131.0], [102.0, 107.0, 107.0, 111.0, 114.0, 114.0, 116.0, 117.0, 120.0, 120.0, 124.0, 125.0, 125.0, 126.0, 126.0, 125.0]],
+        sd: [[4.0, 4.0, 6.0, 5.0, 6.0, 5.0, 5.0, 5.0, 5.0, 5.0, 6.0, 5.0, 6.0, 5.0, 5.0, 4.0], [5.0, 4.0, 5.0, 4.0, 6.0, 5.0, 5.0, 4.0, 7.0, 6.0, 5.0, 7.0, 4.0, 5.0, 4.0, 5.0]],
+    },
+    ByAge {
+        name: "lower face height (menton to sellion)",
+        mean: [[82.0, 85.0, 88.0, 90.0, 93.0, 93.0, 98.0, 99.0, 101.0, 102.0, 105.0, 110.0, 111.0, 114.0, 114.0, 119.0], [80.0, 86.0, 86.0, 89.0, 92.0, 93.0, 95.0, 97.0, 101.0, 102.0, 105.0, 107.0, 107.0, 109.0, 107.0, 107.0]],
+        sd: [[5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 6.0, 5.0, 6.0, 5.0, 6.0, 6.0, 7.0, 5.0, 6.0, 7.0], [4.0, 5.0, 5.0, 5.0, 6.0, 5.0, 5.0, 6.0, 6.0, 7.0, 6.0, 5.0, 6.0, 6.0, 6.0, 6.0]],
+    },
+    ByAge {
+        name: "nose length (subnasale to sellion)",
+        mean: [[29.0, 32.0, 34.0, 35.0, 38.0, 37.0, 40.0, 42.0, 43.0, 43.0, 44.0, 48.0, 50.0, 50.0, 50.0, 52.0], [29.0, 32.0, 33.0, 35.0, 36.0, 38.0, 40.0, 41.0, 42.0, 44.0, 44.0, 45.0, 45.0, 45.0, 45.0, 47.0]],
+        sd: [[3.0, 3.0, 3.0, 4.0, 4.0, 3.0, 3.0, 3.0, 4.0, 4.0, 3.0, 5.0, 4.0, 4.0, 4.0, 3.0], [3.0, 3.0, 4.0, 4.0, 4.0, 3.0, 3.0, 3.0, 4.0, 4.0, 3.0, 4.0, 4.0, 4.0, 4.0, 3.0]],
+    },
+    ByAge {
+        name: "mouth breadth",
+        mean: [[33.0, 34.0, 35.0, 37.0, 38.0, 38.0, 40.0, 40.0, 40.0, 41.0, 42.0, 43.0, 45.0, 46.0, 46.0, 48.0], [33.0, 34.0, 36.0, 36.0, 38.0, 39.0, 40.0, 41.0, 42.0, 43.0, 42.0, 44.0, 45.0, 46.0, 45.0, 46.0]],
+        sd: [[4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 3.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0], [4.0, 4.0, 3.0, 4.0, 3.0, 3.0, 4.0, 4.0, 5.0, 5.0, 4.0, 5.0, 4.0, 6.0, 4.0, 4.0]],
+    },
+    ByAge {
+        name: "neck circumference",
+        mean: [[242.0, 246.0, 253.0, 258.0, 262.0, 271.0, 278.0, 281.0, 281.0, 295.0, 303.0, 322.0, 328.0, 352.0, 358.0, 366.0], [234.0, 240.0, 245.0, 257.0, 260.0, 270.0, 275.0, 276.0, 285.0, 293.0, 297.0, 302.0, 308.0, 308.0, 314.0, 314.0]],
+        sd: [[11.0, 13.0, 13.0, 13.0, 14.0, 17.0, 19.0, 16.0, 12.0, 16.0, 18.0, 19.0, 19.0, 27.0, 20.0, 25.0], [11.0, 13.0, 14.0, 15.0, 17.0, 19.0, 16.0, 22.0, 22.0, 18.0, 16.0, 18.0, 14.0, 15.0, 16.0, 17.0]],
+    },
+];
+
+/// A measure of `CHILDREN` at an age: its mean and standard deviation, in millimetres, between the two groups
+/// of age the person stands between (a person of `age` years is in the mean half a year older: the game counts
+/// whole years); under the first group's middle and over the last one's that group's own.
+pub fn children_at(k: usize, female: bool, age: f32) -> [f32; 2] {
+    let (m, sex, at) = (&CHILDREN[k], if female { 1 } else { 0 }, age + 0.5);
+    let j = CHILD_AGES.iter().position(|a| *a > at).unwrap_or(CHILD_AGES.len());
+    if j == 0 || j == CHILD_AGES.len() {
+        let j = j.min(CHILD_AGES.len() - 1);
+        return [m.mean[sex][j], m.sd[sex][j]];
+    }
+    let f = (at - CHILD_AGES[j - 1]) / (CHILD_AGES[j] - CHILD_AGES[j - 1]);
+    [m.mean[sex][j - 1] + f * (m.mean[sex][j] - m.mean[sex][j - 1]), m.sd[sex][j - 1] + f * (m.sd[sex][j] - m.sd[sex][j - 1])]
+}
+
+/// How far over tragion the ear's upper rim lies on the base head, in units, with a little room: the ear's
+/// outermost corners reach 20.5 mm over it, and from 22.5 mm on the skin is the skull's side.
+pub const EAR_RIM: f32 = 0.225;
+
+/// Is this vertex of an ear: on the base head further out than the skull's side beside it (25 mm and more
+/// beyond tragion's own place sideways) and no higher than the ear's upper rim. (The head file's own share of
+/// the ear, `Head::ear`, is a broad field round the ear that takes in the skull's side to 6 cm over tragion.)
+fn of_ear(h: &Head, v: usize) -> bool {
+    let (b, t) = (h.base[v], h.base[TRAGION.0]);
+    b[0].abs() > t[0].abs() + 0.025 && b[1] < t[1] + EAR_RIM
+}
+
+/// The top of the head: the height of the highest point of the skin, in units (the head as MakeHuman holds it,
+/// which is upright: the Frankfort plane level to about a degree).
+pub fn vertex(h: &Head, pp: &[V3]) -> f32 {
+    h.body_full().iter().map(|&v| pp[v as usize][1]).fold(f32::MIN, f32::max)
+}
+
+/// The head's circumference in millimetres: a tape drawn tight in the plane that holds the direction from ear
+/// to ear, glabella and the point of the back of the head furthest from it (the largest loop a tape finds over
+/// the brows; the ears are left out).
+pub fn head_round(h: &Head, pp: &[V3]) -> f32 {
+    let g = pp[GLABELLA];
+    let far = skull_back(h, pp);
+    let along = [far[1] - g[1], far[2] - g[2]];
+    let l = along[0].hypot(along[1]);
+    let (uy, uz) = (along[0] / l, along[1] / l);
+    // over the plane: the distance along the normal (0, -uz, uy)
+    let over = |p: V3| -(p[1] - g[1]) * uz + (p[2] - g[2]) * uy;
+    let mut pts: Vec<[f32; 2]> = Vec::new();
+    for t in h.body_full().chunks_exact(3) {
+        for k in 0..3 {
+            let (i, j) = (t[k] as usize, t[(k + 1) % 3] as usize);
+            let (di, dj) = (over(pp[i]), over(pp[j]));
+            if (di > 0.0) != (dj > 0.0) && !of_ear(h, i) && !of_ear(h, j) {
+                let f = di / (di - dj);
+                let q = [pp[i][0] + f * (pp[j][0] - pp[i][0]), pp[i][1] + f * (pp[j][1] - pp[i][1]), pp[i][2] + f * (pp[j][2] - pp[i][2])];
+                pts.push([q[0], (q[1] - g[1]) * uy + (q[2] - g[2]) * uz]);
+            }
+        }
+    }
+    pts.sort_by(|p, q| p[0].total_cmp(&q[0]).then(p[1].total_cmp(&q[1])));
+    let turn = |o: [f32; 2], p: [f32; 2], q: [f32; 2]| (p[0] - o[0]) * (q[1] - o[1]) - (p[1] - o[1]) * (q[0] - o[0]);
+    let mut hull: Vec<[f32; 2]> = Vec::new();
+    for half in 0..2 {
+        let start = hull.len();
+        let order: Vec<[f32; 2]> = if half == 0 { pts.clone() } else { pts.iter().rev().copied().collect() };
+        for p in order {
+            while hull.len() >= start + 2 && turn(hull[hull.len() - 2], hull[hull.len() - 1], p) <= 0.0 {
+                hull.pop();
+            }
+            hull.push(p);
+        }
+        hull.pop();
+    }
+    100.0 * (0..hull.len()).map(|k| (hull[k][0] - hull[(k + 1) % hull.len()][0]).hypot(hull[k][1] - hull[(k + 1) % hull.len()][1])).sum::<f32>()
+}
+
+/// The point of the back of the head furthest from glabella: of the skin within 1 cm of the middle line, behind
+/// the ears and over them.
+fn skull_back(h: &Head, pp: &[V3]) -> V3 {
+    let (g, ear) = (pp[GLABELLA], between(pp[TRAGION.0], pp[TRAGION.1]));
+    let mut far = (0.0, g);
+    for &v in h.body_full() {
+        let p = pp[v as usize];
+        if p[0].abs() < 0.1 && p[2] < ear[2] && p[1] > ear[1] {
+            let d = dist(g, p);
+            if d > far.0 {
+                far = (d, p);
+            }
+        }
+    }
+    far.1
+}
+
+/// The measures of `CHILDREN` on a morphed head (`morph_test`), in millimetres, in that order.
+pub fn children(h: &Head, pp: &[V3]) -> [f32; 11] {
+    let ear = between(pp[TRAGION.0], pp[TRAGION.1]);
+    let top = vertex(h, pp);
+    // the largest breadth above the ears: of the skin that lies over the ears' upper rim on the base head
+    let rim = (h.base[TRAGION.0][1] + h.base[TRAGION.1][1]) / 2.0 + EAR_RIM;
+    let (mut left, mut right) = (0.0f32, 0.0f32);
+    for &v in h.body_full() {
+        let p = pp[v as usize];
+        if h.base[v as usize][1] > rim {
+            left = left.max(p[0]);
+            right = right.min(p[0]);
+        }
+    }
+    let widest = |pairs: &[(usize, usize)]| pairs.iter().map(|&(a, b)| dist(pp[a], pp[b])).fold(0.0, f32::max);
+    let corner = |side: usize| pp[LIP_SEAM[side].0[LIP_SEAM[side].0.len() - 1]];
+    [
+        head_round(h, pp),
+        100.0 * (left - right),
+        dist(pp[GLABELLA], skull_back(h, pp)),
+        100.0 * (top - pp[MENTON][1]),
+        100.0 * (top - ear[1]),
+        widest(&CHEEKBONES),
+        dist(pp[TRAGION.0], pp[TRAGION.1]),
+        100.0 * (pp[SELLION][1] - pp[MENTON][1]),
+        100.0 * (pp[SELLION][1] - pp[SUBNASALE][1]),
+        dist(corner(0), corner(1)),
+        neck(h, pp),
+    ]
+}
+
 /// What `seam` measures (no survey read: lips at rest lie on each other).
 pub const SEAM: [(&str, [f32; 2], [f32; 2]); 1] = [("the lips apart along their seam, at the most", [0.0; 2], [0.0; 2])];
 
