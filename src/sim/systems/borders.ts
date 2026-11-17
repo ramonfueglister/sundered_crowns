@@ -15,6 +15,7 @@
 import type { WorldState } from '../state';
 import { RANKS } from '../state';
 import { spawn } from '../ecs';
+import { cultureIndex, faithIndex, majority, placeCultures } from './cultures';
 import type { World } from '../world';
 import type { System } from '../schedule';
 import { type Borders, firstBorderEventOn } from '../content/borders';
@@ -63,6 +64,20 @@ function largestPlace(s: WorldState, realm: number): number {
   return best;
 }
 
+/** The culture and faith a realm that comes in takes from its capital: those of most of the capital's persons who are
+ *  not rulers (src/sim/systems/cultures.ts); a world from before state 19 still has them per place; a capital without persons
+ *  has none known, a realm without a capital the first of the lists. */
+function cultureOfCapital(s: WorldState, cap: number): [number, number] {
+  if (cap < 0) return [0, 0];
+  const { culture, faith, persons } = placeCultures(s, cap, new Set(s.named.map((n) => n.person))); // the rulers there have those of their own realms
+  if (persons > 0) {
+    if ((s.person.cols as Record<string, unknown>).culture) return [majority(culture), majority(faith)];
+    const old = s.place as unknown as { culture?: ArrayLike<number>; faith?: ArrayLike<number> }; // the persons there have it
+    if (old.culture && old.faith) return [old.culture[cap], old.faith[cap]];
+  }
+  return [cultureIndex(null), faithIndex(null)];
+}
+
 /** A realm that comes in on the way, with the places it comes with. */
 function addRealm(s: WorldState, b: Borders, key: string, places: Int32Array): number {
   const info = b.realms.get(key);
@@ -71,7 +86,7 @@ function addRealm(s: WorldState, b: Borders, key: string, places: Int32Array): n
   let cap = -1;
   for (const p of places) if (p < s.place.owner.length && (cap < 0 || s.place.pop[p] > s.place.pop[cap])) cap = p;
   R.capital[id] = cap; R.holder[id] = -1; R.color[id] = colorOfKey(key);
-  R.culture[id] = cap >= 0 ? s.place.culture[cap] : 0; R.faith[id] = cap >= 0 ? s.place.faith[cap] : 0;
+  [R.culture[id], R.faith[id]] = cultureOfCapital(s, cap);
   R.rank[id] = rankOfName(name);
   const text = { en: name, de: name }, shortText = { en: short, de: short };
   s.realmText.push({ key, name: text, short: shortText, adjective: shortText });
