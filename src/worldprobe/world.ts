@@ -126,9 +126,10 @@ export function terrace(level: Int16Array, mat: Uint8Array) {
  * index in `places`) for which more is known than the gazetteer says; `models` the monument parts loaded from files;
  * `forest` the forest of the world's start year, where one was made for it (forest.ts); `rural` the people on the
  * land of that year (rural.ts). With `hamlets` (hamlets.ts) only what the simulation holds persons for stands in the
- * world: its towns, their hamlets before the walls, and the fields round them.
+ * world: its towns, their hamlets before the walls, and the fields round them. With `mean` the ground of a coarser
+ * step is covered by what the finer step shows there (mean.ts) instead of what far.ts lays out.
  */
-export function buildWorld(region: Region, piece: Piece, places: readonly Place[], landmarks: readonly Landmark[], bakedSky = true, step = 0, climate: Climate | null = null, inhabitants: ReadonlyMap<number, number> = new Map(), models: ReadonlyMap<string, Batch> = new Map(), forest: Forest | null = null, rural: Rural | null = null, arable: Arable | null = null, hamlets: HamletLands | null = null): WorldScene {
+export function buildWorld(region: Region, piece: Piece, places: readonly Place[], landmarks: readonly Landmark[], bakedSky = true, step = 0, climate: Climate | null = null, inhabitants: ReadonlyMap<number, number> = new Map(), models: ReadonlyMap<string, Batch> = new Map(), forest: Forest | null = null, rural: Rural | null = null, arable: Arable | null = null, hamlets: HamletLands | null = null, mean: Cover | null = null): WorldScene {
   // a block's width in cells of the data: the rules of the land were made for those cells
   const cell = 2 ** (step - FINER_STEPS), flatter = cell ** 0.6, valleyFrom = Math.min(250, VALLEY_FROM + 32 * Math.max(0, step - FINER_STEPS)), rockFoot = Math.max(1, Math.round(FOOT / Math.sqrt(cell)));
   const { ox, oz, part } = piece, c0x = region.x0 * region.cells, c0y = region.y0 * region.cells;
@@ -401,7 +402,12 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   /** a farm is built as the place nearest to it builds */
   const farm = (x: number, z: number) => { let best = all[0]; for (const s of all) if (Math.hypot(s.at[0] - x, s.at[1] - z) < Math.hypot(best.at[0] - x, best.at[1] - z)) best = s; return best ?? { region: '', style: styleOf('') }; };
   let settled: Settled | undefined, cover: Cover | undefined;
-  if (step > 0) {
+  if (step > 0 && mean) {
+    // the mean of the finer step, seen from above (mean.ts); what stands out of it raises the ground
+    cover = mean;
+    for (let i = 0; i < N * N; i++) if (mean.rise[i] && !g.wet[i]) { g.h[i] += mean.rise[i]; g.occ[i] = Math.max(g.occ[i], g.h[i]); }
+  }
+  else if (step > 0) {
     // from farther away the towns, the fields and the woods are part of the ground
     cover = coverLand(g, step, things, sites, { ploughed, laid: arable !== null || hamlets !== null, courses, vines, farm: (x, z) => farm(x, z).style.house, farms, own, woods: (x, z): Woods | null => {
       const i = idx(x, z), here = land[i] & KIND;

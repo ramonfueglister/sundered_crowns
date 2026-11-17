@@ -80,7 +80,7 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
   const frame = extentOf(projection), farthest = Math.min(FARTHEST, frame.east - frame.west);
   // the view: the place at the middle of the picture in the finest blocks, and how many of them lie across the picture
   let [x, z] = blockOfCell(...projection.cellOf(o.lon, o.lat)), wide = Math.min(farthest, Math.max(NEAREST, o.wide));
-  const pieces = createPieces(stage, { region: name, base, bakedSky: bakedSky(), ahead: !still, changed: () => look(), year: o.year });
+  const pieces = createPieces(stage, { region: name, base, bakedSky: bakedSky(), ahead: !still, changed: () => look(), year: o.year, mean: new URLSearchParams(location.search).get('mean') !== '0' });
   const realms = createRealms(stage, { region: name, base, year: o.year, map: projection.map, cells: projection.cells, round: projection.round, rows: projection.rows, ahead: !still, changed: () => look() }), names = createNames(o.names);
   const middle = (): [number, number] => { const box = canvas.getBoundingClientRect(); return [box.left + box.width / 2, box.top + box.height / 2]; };
 

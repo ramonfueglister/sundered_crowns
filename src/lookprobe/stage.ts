@@ -12,6 +12,7 @@ import { ao } from 'three/addons/tsl/display/GTAONode.js';
 import { hashBlur } from 'three/addons/tsl/display/hashBlur.js';
 import { FRAME_W, LAND_Y, N, NEAR, RIGHT, SEA_Y, VIEW } from './layout';
 import type { Batch } from './batch';
+import { RIG, towards } from './light';
 import { type Figures, anyFigures, figureMeshes, keepFigures, showFigures, warmFigures } from '../figures/stage';
 import { OPEN_WATER } from './terrain';
 
@@ -26,9 +27,9 @@ const flag = (k: string, fallback: boolean) => (q.has(k) ? q.get(k) !== '0' : fa
  */
 const LOOK = {
   distance: 3000,
-  sun: 0.9, sunElevation: 48, sunTurn: 12, sunColor: 0xffe9c8,
-  side: 0.78, sideColor: 0xfff0dc,
-  sky: 0.36, skyColor: 0xa8c4ff, bounce: 0.12, bounceColor: 0xffe2c0, fill: 0.1, fillColor: 0xffe0c4,
+  sun: RIG.sun as number, sunElevation: RIG.sunElevation, sunTurn: RIG.sunTurn, sunColor: 0xffe9c8,
+  side: RIG.side as number, sideColor: 0xfff0dc,
+  sky: RIG.sky as number, skyColor: 0xa8c4ff, bounce: RIG.bounce as number, bounceColor: 0xffe2c0, fill: RIG.fill as number, fillColor: 0xffe0c4,
   mirror: 0.38, mirrorTint: 0x73c0cc, mirrorBlur: 0.003,
   creaseReach: 2.0, creaseDepth: 1.2, creaseColor: 0x44485a,
   focusRange: 150, blur: 2.6,
@@ -177,10 +178,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   // light step 1: sun, side light and sky; strengths are multiplied by π because a Lambert surface returns light / π
   const rad = THREE.MathUtils.degToRad;
   /** a direction on the ground given by its share to the right of the picture and towards its back, raised by `elev` */
-  const from = (turn: number, elev: number) => {
-    const right = Math.cos(rad(turn)) * Math.cos(rad(elev)), back = Math.sin(rad(turn)) * Math.cos(rad(elev));
-    return new THREE.Vector3(RIGHT[0] * right - NEAR[0] * back, Math.sin(rad(elev)), RIGHT[1] * right - NEAR[1] * back);
-  };
+  const from = (turn: number, elev: number) => new THREE.Vector3(...towards(turn, elev));
   const L = { ...LOOK, ...o.light };
   const sun = new THREE.DirectionalLight();
   sun.castShadow = true;
@@ -242,7 +240,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     sc.left = -halfW; sc.right = halfW; sc.top = halfH; sc.bottom = -halfH; sc.near = 420 - depth - 10; sc.far = 420 + depth + 10;
     sc.updateProjectionMatrix();
     side.position.copy(centre).addScaledVector(from(0, 0), 100); side.target.position.copy(centre);
-    fill.position.copy(centre).addScaledVector(from(180 + VIEW.turn, 20), 100); fill.target.position.copy(centre);
+    fill.position.copy(centre).addScaledVector(from(RIG.fillTurn, RIG.fillElevation), 100); fill.target.position.copy(centre);
     const reach = (frameD / 2) * Math.cos(elev) + 80 + (o.tall ?? 0);
     camera.near = distance - reach; camera.far = distance + reach;
     camera.position.copy(centre).add(new THREE.Vector3(NEAR[0] * Math.cos(elev), Math.sin(elev), NEAR[1] * Math.cos(elev)).multiplyScalar(distance));
