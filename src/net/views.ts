@@ -48,14 +48,35 @@ export function placePeoples(s: WorldState, place: number): { culture: I18n; fai
   return personsOfPlace(s, place).peoples;
 }
 
-/** The culture and faith pairs of a place's living persons, most persons first, and how many of them live in its hamlets: one pass over the persons. */
+/** The persons of every place, grouped once a day (a click on a place reads only its own persons): person ids by the
+ *  place of their family, ids of place p at start[p] … start[p + 1]. Rebuilt when the day, the persons or the families
+ *  change in number (persons and families are only made and freed by the day's systems); who is alive and what a
+ *  person is are read when asked. */
+const grouped = new WeakMap<WorldState, { day: number; persons: number; families: number; start: Int32Array; ids: Int32Array }>();
+const count = (t: { size: number; free: number[] }) => t.size * 65536 + t.free.length;
+function personsByPlace(s: WorldState): { start: Int32Array; ids: Int32Array } {
+  let g = grouped.get(s);
+  if (g && g.day === s.day && g.persons === count(s.person) && g.families === count(s.family)) return g;
+  const L = s.place.owner.length, P = s.person.cols, F = s.family.cols, start = new Int32Array(L + 1);
+  for (let id = 0; id < s.person.size; id++) { const p = F.place[P.family[id]]; if (p >= 0 && p < L) start[p + 1]++; }
+  for (let p = 0; p < L; p++) start[p + 1] += start[p];
+  const ids = new Int32Array(start[L]), at = start.slice(0, L);
+  for (let id = 0; id < s.person.size; id++) { const p = F.place[P.family[id]]; if (p >= 0 && p < L) ids[at[p]++] = id; }
+  g = { day: s.day, persons: count(s.person), families: count(s.family), start, ids };
+  grouped.set(s, g);
+  return g;
+}
+
+/** The culture and faith pairs of a place's living persons, most persons first, and how many of them live in its
+ *  hamlets. */
 function personsOfPlace(s: WorldState, place: number): { peoples: { culture: I18n; faith: I18n; persons: number }[]; farmers: number } {
-  const P = s.person.cols, F = s.family.cols, n = new Map<number, number>();
+  const P = s.person.cols, F = s.family.cols, n = new Map<number, number>(), { start, ids } = personsByPlace(s);
   let farmers = 0;
-  for (let id = 0; id < s.person.size; id++) {
+  for (let j = start[place]; j < start[place + 1]; j++) {
+    const id = ids[j];
     if (!s.person.alive[id] || P.died[id] !== ALIVE) continue;
     const f = P.family[id];
-    if (F.place[f] !== place) continue;
+    if (F.place[f] !== place) continue; // moved since the persons were grouped
     if (F.hamlet[f]) farmers++;
     const k = P.culture[id] * 256 + P.faith[id];
     n.set(k, (n.get(k) ?? 0) + 1);

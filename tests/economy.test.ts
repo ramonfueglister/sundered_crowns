@@ -653,7 +653,7 @@ describe('what a player sees of the economy', () => {
     const york = w.names.indexOf('York');
     expect(york).toBeGreaterThanOrEqual(0);
     expect(placeDetail(s, w, york)!.cityEconomy).toBeUndefined();
-  }, 60_000); // the view of one place counts its persons; this asks it for all 25,103 places
+  });
   it('shows the last 365 days of the city and its price level of today, new every day', () => {
     const { s, w } = newWorldState();
     const london = w.names.indexOf('London'), k = cityAt(s.economy.cities!, london);
