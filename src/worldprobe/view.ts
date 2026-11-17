@@ -20,7 +20,7 @@ import type { RealmsNow } from './realms.worker';
 import { extentOf, heldIn } from './extent';
 import { projectionOf } from './region';
 import { FINER, blockOfCell, cellOfBlock } from './land';
-import { FARTHEST, NEAREST, creasesOf, elevationOf, nearOf, reliefOf } from './zoom';
+import { FARTHEST, NEAREST, awayOf, creaseReachOf, creasesOf, elevationOf, nearOf, reliefOf } from './zoom';
 
 /** the view closes this share of the way to where the wheel sent it, and a glide loses this share of its speed, every millisecond */
 const ZOOM_EASE = 1 / 90, GLIDE_EASE = 1 / 280;
@@ -80,7 +80,7 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
   const frame = extentOf(projection), farthest = Math.min(FARTHEST, frame.east - frame.west);
   // the view: the place at the middle of the picture in the finest blocks, and how many of them lie across the picture
   let [x, z] = blockOfCell(...projection.cellOf(o.lon, o.lat)), wide = Math.min(farthest, Math.max(NEAREST, o.wide));
-  const pieces = createPieces(stage, { region: name, base, bakedSky: bakedSky(), ahead: !still, changed: () => look(), year: o.year });
+  const pieces = createPieces(stage, { region: name, base, bakedSky: bakedSky(), ahead: !still, changed: () => look(), year: o.year, mean: new URLSearchParams(location.search).get('mean') === 'compare' ? 'compare' : new URLSearchParams(location.search).get('mean') === '1' });
   const realms = createRealms(stage, { region: name, base, year: o.year, map: projection.map, cells: projection.cells, round: projection.round, rows: projection.rows, ahead: !still, changed: () => look() }), names = createNames(o.names);
   const middle = (): [number, number] => { const box = canvas.getBoundingClientRect(); return [box.left + box.width / 2, box.top + box.height / 2]; };
 
@@ -93,8 +93,8 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
     if (held !== v0 || u !== u0) [x, z] = blockOfCell(u, held);
     const view = { x, z, wide, aspect, pixels: canvas.clientWidth, elevation };
     const at = pieces.look(view), missing = at.missing + realms.look(view, at), failed = pieces.failed || realms.failed;
-    stage.aim(x / at.coarse - at.homeX, z / at.coarse - at.homeZ, wide / at.coarse, elevation);
-    stage.creases(creasesOf(wide)); stage.soften(nearOf(wide)); laid = at;
+    stage.aim(x / at.coarse - at.homeX, z / at.coarse - at.homeZ, wide / at.coarse, elevation, awayOf(wide) / at.coarse);
+    stage.creases(creasesOf(wide), creaseReachOf(wide) / at.coarse); stage.soften(nearOf(wide)); laid = at;
     const box = canvas.getBoundingClientRect();
     names.show(realms.names, box, (u - realms.lap) / projection.cells, held / projection.cells, (box.width / wide) * projection.cells, squash, realms.named);
     stage.busy = missing > 0 && !failed;

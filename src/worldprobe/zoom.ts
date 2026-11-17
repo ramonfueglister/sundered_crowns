@@ -53,10 +53,39 @@ export const nearOf = (wide: number) => 1 - over(FINE_UNTIL, NEAR_FROM, wide);
 export const stepOf = (wide: number) => (wide < DETAIL_UNTIL ? 0 : Math.max(1, Math.min(COARSEST, Math.floor(Math.log2(wide / STEP_FROM)))));
 /** How far the camera looks down, in degrees. */
 export const elevationOf = (wide: number) => VIEW.elevation + (NEAR_ELEVATION - VIEW.elevation) * nearOf(wide) + (STRAIGHT_DOWN - VIEW.elevation) * over(TILT_FROM, TILT_UNTIL, wide);
+/**
+ * Whether a coarser step is laid into the picture of the finer one by the zoom, dot by dot over the last stretch
+ * before its border (from the border's width divided by BLEND). OFF: as the steps are built today they show
+ * different things at the same place (single houses and trees against blocks of town and wood), and laid over each
+ * other in a resting view they made a milky double picture where the finer step alone is sharp (seen in Chrome on a
+ * Mac at 360 and at 1000 blocks across, 16 November 2026). The steps take each other's place in a short dissolve at
+ * the border instead (pieces.ts). To be switched on again once a coarser step is the mean of the finer one.
+ */
+export const BLENDS: boolean = false;
+const BLEND = 1.6;
+/** How much of the next coarser step a view already shows in place of its own, 0 … 1 (1 only at the step's border). */
+export function blendOf(wide: number): number {
+  const step = stepOf(wide);
+  if (!BLENDS || step === 0 || step >= COARSEST) return 0;
+  return over((STEP_FROM * 2 ** (step + 1)) / BLEND, STEP_FROM * 2 ** (step + 1), wide);
+}
 /** The level of the realms' map a view is drawn from: its dots are 2^level finest cells wide, about one to a pixel of a picture `pixels` wide. */
 export const paperLevelOf = (wide: number, pixels: number) => Math.max(0, Math.min(PAPER_COARSEST, Math.ceil(Math.log2((0.7 * wide) / pixels))));
 /** How deep the creases and corners of the blocks are drawn, 1 … 0: they go as the relief goes. */
 export const creasesOf = (wide: number) => 1 - over(RELIEF_FROM, TILT_UNTIL, wide);
+/**
+ * How far the creases reach, in finest blocks, as a share of the look's own reach. The stage draws them in its own
+ * blocks, which double in width at every step of the map; so that the picture does not darken at a step's border,
+ * their reach grows evenly with the view instead: as that of the steps does in the mean (a step's blocks are 1/300
+ * to 1/600 of the picture wide, 1/424 at the middle), and never below that of the finest step.
+ */
+export const creaseReachOf = (wide: number) => Math.max(1, wide / MIDDLE);
+/**
+ * How far away the camera stands, in finest blocks, as a share of the look's own distance. The stage keeps it at a
+ * fixed count of its own blocks, so at every step of the map the camera would leap to twice as far and the far side
+ * of the picture be drawn wider at once; it moves away evenly with the view instead, as the creases' reach does.
+ */
+export const awayOf = creaseReachOf;
 /** How strongly the realms colour the world, 0 … 1. */
 export const realmsOf = (wide: number) => over(REALMS_FROM, REALMS_FULL, wide);
 /**

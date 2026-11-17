@@ -18,6 +18,7 @@ import { HAMLET_TURN, type HamletLands, hamletAt, hamletsOf } from './hamlets';
 import { BARE, FINER, FINER_STEPS, SNOW_LINE, TINT, TREE_LINE, WOODS, blockOfCell, cellOfBlock, lineShift, paleFrom, rockAt, woodsUntil } from './land';
 import { type Region, Water, cellOf, latOf, sample, waterAt } from './region';
 import { type Cover, type Woods, coverLand, lotFill } from './far';
+import { unshade } from './mean';
 import { FARMS, FIELD_GROUND, LOT_BLOCKS, LOT_FILL, type Lot, type Monument, PEOPLE_PER_PERSON, type Settled, type Site, type Survey, farmsFor, firstHalf, raise, settle } from './settle';
 import { type Columns, columnsOf } from './nearground';
 import { MONUMENTS, modelOf, styleOf } from '../buildings';
@@ -129,9 +130,10 @@ export function terrace(level: Int16Array, mat: Uint8Array) {
  * land of that year (rural.ts). With `hamlets` (hamlets.ts) only what the simulation holds persons for stands in the
  * world: its towns, their hamlets before the walls, and the fields round them. With `parcels` (lots.ts) the houses of
  * a town stand on the parcels of its families. `survey` is asked for the building ground of every town (settle.ts);
- * then nothing is drawn.
+ * then nothing is drawn. With `mean` the ground of a coarser step is covered by what the finer step shows there
+ * (mean.ts) instead of what far.ts lays out.
  */
-export function buildWorld(region: Region, piece: Piece, places: readonly Place[], landmarks: readonly Landmark[], bakedSky = true, step = 0, climate: Climate | null = null, inhabitants: ReadonlyMap<number, number> = new Map(), models: ReadonlyMap<string, Batch> = new Map(), forest: Forest | null = null, rural: Rural | null = null, arable: Arable | null = null, hamlets: HamletLands | null = null, parcels: TownParcels | null = null, survey?: Survey): WorldScene {
+export function buildWorld(region: Region, piece: Piece, places: readonly Place[], landmarks: readonly Landmark[], bakedSky = true, step = 0, climate: Climate | null = null, inhabitants: ReadonlyMap<number, number> = new Map(), models: ReadonlyMap<string, Batch> = new Map(), forest: Forest | null = null, rural: Rural | null = null, arable: Arable | null = null, hamlets: HamletLands | null = null, parcels: TownParcels | null = null, survey?: Survey, mean: Cover | null = null): WorldScene {
   // a block's width in cells of the data: the rules of the land were made for those cells
   const cell = 2 ** (step - FINER_STEPS), flatter = cell ** 0.6, valleyFrom = Math.min(250, VALLEY_FROM + 32 * Math.max(0, step - FINER_STEPS)), rockFoot = Math.max(1, Math.round(FOOT / Math.sqrt(cell)));
   const { ox, oz, part } = piece, c0x = region.x0 * region.cells, c0y = region.y0 * region.cells;
@@ -404,17 +406,24 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   /** a farm is built as the place nearest to it builds */
   const farm = (x: number, z: number) => { let best = all[0]; for (const s of all) if (Math.hypot(s.at[0] - x, s.at[1] - z) < Math.hypot(best.at[0] - x, best.at[1] - z)) best = s; return best ?? { region: '', style: styleOf('') }; };
   let settled: Settled | undefined, cover: Cover | undefined;
-  if (step > 0) {
+  if (step > 0 && mean) {
+    // the mean of the finer step, seen from above (mean.ts); what stands out of it raises the ground
+    cover = mean;
+    for (let i = 0; i < N * N; i++) if (mean.rise[i] && !g.wet[i]) { g.h[i] += mean.rise[i]; g.occ[i] = Math.max(g.occ[i], g.h[i]); }
+    unshade(mean, N, g.h);
+  }
+  else if (step > 0) {
     // from farther away the towns, the fields and the woods are part of the ground
     cover = coverLand(g, step, things, sites, { ploughed, laid: arable !== null || hamlets !== null, courses, vines, farm: (x, z) => farm(x, z).style.house, farms, own, woods: (x, z): Woods | null => {
       const i = idx(x, z), here = land[i] & KIND;
       if (metres[i] > woodsEnd[i]) return null;
       if (oasis(i)) return byWater(x, z, Math.max(1, Math.round(0.75 / cell))) ? { share: 0.8, crowns: PALM, tall: true } : null;
       const known = forestOf(x + 0.5, z + 0.5), share = wooded(x + 0.5, z + 0.5, known), laid = known !== null;
-      if (!share) return null;
+      // without woods a lone tree still stands here and there, as at the finest step, but not on bare land
+      if (!share && BARE.includes(here)) return null;
       if (here === Land.Rainforest) return { share, crowns: JUNGLE, tall: true, laid };
       if (here === Land.Savanna) return { share, crowns: ACACIA, tall: false, laid };
-      return hash2(x + ox, z + oz, 76) < conifers(i) ? { share, crowns: CYPRESS, tall: true, laid } : { share, crowns: LEAVES, tall: false, laid };
+      return hash2(x + ox, z + oz, 76) < conifers(i) ? { share, crowns: CYPRESS, tall: true, laid, conifers: conifers(i) } : { share, crowns: LEAVES, tall: false, laid, conifers: conifers(i) };
     } });
   } else {
     // the monuments that stood in 1356 and have a model
