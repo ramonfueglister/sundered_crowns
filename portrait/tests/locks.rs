@@ -4,7 +4,7 @@
 mod common;
 
 use common::{head, person};
-use sc_portrait::{build, Portrait, Surface};
+use sc_portrait::{build, Beard, Portrait, Surface};
 
 type V3 = [f32; 3];
 
@@ -29,6 +29,9 @@ const LOCK_BODY: f32 = 0.75;
 const LOCK_END: f32 = 0.985;
 /// The triangles of the cards the locks took the place of (`bob01`: 520 cards of 14 pieces of four).
 const CARDS: usize = 29_120;
+
+/// The image the locks of England's beards are drawn with (`DressSet::beard_lock_image`).
+const BEARD_IMAGE: &str = "/beard1356_locks.";
 
 fn locks(out: &Portrait) -> Option<&Surface> {
     out.surfaces.iter().find(|s| s.tex.as_deref().is_some_and(|t| t.contains(IMAGE)))
@@ -225,5 +228,55 @@ fn hair_that_is_cut_runs_to_the_cut_and_wears_as_much_of_the_image_as_it_is_long
         // measured: 3 to 6 locks in the median and 1 to 2 at the lowest tenth; before 0 to 1 and 0
         let (median, tenth) = (deep[deep.len() / 2], deep[deep.len() / 10]);
         assert!(median >= 2 && tenth >= 1, "{who}: the fringe is {median} locks deep in the median and {tenth} at its thinnest tenth");
+    }
+}
+
+#[test]
+fn a_full_beard_of_england_is_locks_over_its_painted_layer() {
+    // Until round 90 a full beard was its painted layer alone: a smooth shell 3 to 6 mm off the jaw, with the
+    // jaw's outline and a ruled upper edge on the cheek. Now locks lie over that layer (`beards.py`, style `crop`
+    // with `CROP_LOCKS`): short and wavy, solid, each with a lit and a shaded flank, their ends the beard's
+    // outline. They lie over the beard's form, not the skin's, and end where the beard does: left to run their
+    // length they hang 0.17 to 0.22 of the head's height below the chin (as built 0.02 at most), and laid over
+    // the skin itself they went down the throat as a collar (the first trial).
+    let Some(h) = head() else { return };
+    for (k, age) in [(1u32, 24.0f32), (3, 35.0), (5, 50.0), (7, 68.0), (9, 35.0), (11, 50.0), (13, 68.0)] {
+        let mut p = person(k, false, age);
+        p.beard = Some(Beard::Full);
+        let out = build(&h, &p, 1);
+        let who = format!("person {k} of {age}");
+        let found: Vec<&Surface> = out.surfaces.iter().filter(|s| s.tex.as_deref().is_some_and(|t| t.contains(BEARD_IMAGE))).collect();
+        assert_eq!(found.len(), 1, "{who}: one surface of a beard's locks");
+        let beard = found[0];
+        assert!(beard.mat.double, "{who}: a lock is seen from both sides");
+        assert!(out.surfaces.iter().any(|s| s.tex.as_deref().is_some_and(|t| t.contains("/beard_crop_cap."))), "{who}: the painted layer under the locks");
+        // a head's locks are a surface of their own, with their own image
+        assert!(locks(&out).is_none_or(|hair| !std::ptr::eq(hair, beard)), "{who}: the beard's locks are drawn with the hair's image");
+        let n = beard.pos.len() / 3;
+        assert!((8_000..30_000).contains(&n), "{who}: {n} triangles of locks");
+        let (skin, crown) = skin(&out);
+        let height = crown - out.chin;
+        // the beard ends under the jaw: nothing of it lower than a tenth of the head's height below the chin,
+        // and nothing of it above the eyes' height
+        let (low, high) = beard.pos.iter().fold((f32::MAX, f32::MIN), |(l, t), p| (l.min(p[1]), t.max(p[1])));
+        assert!((out.chin - low) / height < 0.1, "{who}: the beard hangs {} of the head's height below the chin", (out.chin - low) / height);
+        assert!((crown - high) / height > 0.45, "{who}: the beard begins {} of the head's height below the crown", (crown - high) / height);
+        // it has a thickness: its corners stand 3 mm off the skin in the median, the farthest less than 3 cm
+        let near: Vec<&V3> = skin.pos.iter().filter(|q| q[1] < out.chin + 0.5 * height && q[1] > low - 0.1).collect();
+        let mut off: Vec<f32> = beard.pos.iter().step_by(7).map(|p| near.iter().map(|q| len(sub(*p, **q))).fold(f32::MAX, f32::min)).collect();
+        off.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        if std::env::var("SHOW").is_ok() {
+            println!("{who}: {n} triangles, lowest {:.3} of the head's height below the chin, off the skin {:.3} in the median and {:.3} at most", (out.chin - low) / height, off[off.len() / 2], off[off.len() - 1]);
+        }
+        assert!(off[off.len() / 2] > 0.03 && off[off.len() - 1] < 0.3, "{who}: the locks stand {} off the skin in the median, {} at most (1 is 10 cm)", off[off.len() / 2], off[off.len() - 1]);
+        // a beard greys from the chin: on an old man its colour is not one (a head's hair has one)
+        let (dark, light) = beard.col.iter().map(|c| c[0] + c[1] + c[2]).fold((f32::MAX, f32::MIN), |(d, l), c| (d.min(c), l.max(c)));
+        assert!(age < 68.0 || light > 1.02 * dark, "{who}: a beard of one colour");
+    }
+    // who wears another beard, or none, wears no locks on the jaw
+    for beard in [Beard::Shaven, Beard::Stubble, Beard::Short] {
+        let mut p = person(1, false, 35.0);
+        p.beard = Some(beard);
+        assert!(!build(&h, &p, 1).surfaces.iter().any(|s| s.tex.as_deref().is_some_and(|t| t.contains(BEARD_IMAGE))), "locks on a jaw without a full beard");
     }
 }

@@ -180,7 +180,8 @@ describe('portraits', { timeout: 20_000 }, () => {
     expect(people.some(p => b.build(p).surfaces.some(s => s.tex.includes('/beard_stubble_cap.'))), "a Roman wears Apoleia's stubble").toBe(true);
   });
   it('a beard of England is a layer of its own to the stage, not the shade under a head of hair', () => {
-    // England's beards are their painted layer alone, with no hair cards over it (since round 53). Until round 80
+    // England's beards are a painted layer with no hair cards over it (since round 53; a full beard wears locks
+    // over it since round 90, the next test). Until round 80
     // the stage drew that layer with the values of the layer under the hair of the head, which is the shade
     // between the cards there: dark, and lit all the way round. A brown beard was 13 L darker than the same man's
     // hair and as dark on the lit side of the face as on the far one, a black shape (docs/PORTRAITS.md, round 80)
@@ -214,6 +215,47 @@ describe('portraits', { timeout: 20_000 }, () => {
     expect(cap.beard.light).toBeGreaterThan(cap.light);
     expect(cap.beard.wrap).toBeLessThan(0.5);
     expect(cap.wrap).toBe(1);
+  });
+  it('a full beard of England is locks over its painted layer, and light hair keeps its strands', () => {
+    // Until round 90 a full beard was its painted layer alone: a smooth shell with hairs drawn on it, lit as one
+    // form, its outline the layer's own edge (relief round the lit jaw 5 to 9 L between the darkest and the
+    // lightest tenth; with locks 10 to 17). Now 300 short locks lie over the layer, solid hair as a head's
+    // locks: open bands seen from both sides, cut out by their image, in the stage's shadows. The short beard
+    // and stubble stay painted (a short beard of locks read as a dark full beard on a boy of 17)
+    const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
+    const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
+    let full = 0;
+    for (const p of sample) {
+      const surfaces = b.build(p).surfaces, worn = surfaces.map(s => s.tex);
+      const locks = surfaces.filter(s => s.tex.includes('/beard1356_locks.'));
+      const wears = worn.some(t => t.includes('/beard_crop_cap.'));
+      expect(locks.length, `person ${p.pid}: a beard's locks with the full beard alone`).toBe(wears ? 1 : 0);
+      if (!wears) continue;
+      full++;
+      const lock = locks[0]!;
+      expect([surfaceKind(lock), lock.double, drawOrder(lock)], `person ${p.pid}`).toEqual(['rope', true, 0]);
+      const [m, ...more] = surfaceMaterials(lock, null, null, ENGLAND_1356);
+      expect(more.length).toBe(0);
+      expect([m!.transparent, m!.depthWrite, m!.side, m!.alphaTest]).toEqual([false, true, DoubleSide, LOCK_OPAQUE]);
+      // the beard's locks are not the head's: an image of their own (coarser hairs that sway more), and a
+      // surface of their own beside the head's locks where the man has hair
+      expect(lock.tex.includes('/hair1356_locks.')).toBe(false);
+      expect(lock.pos.length / 9).toBeGreaterThan(8000);
+    }
+    // four of the sample's men wear the full beard (940011, 940013, 940021, 940027)
+    expect(full).toBe(4);
+    expect(people.some(p => b.build(p).surfaces.some(s => s.tex.includes('/beard1356_locks.'))), "no Roman wears England's beard").toBe(false);
+    // The image of locks has dark strands between light ones. The stage darkens them further on light hair
+    // (`sheen.light`, an exponent that grows with the hair's brightness), which cards needed: blended sheets
+    // of white hair showed no strands at all. On solid locks, each lit by its own form, 1.5 turned white hair
+    // and white beards into grey wool (round 90: 1.5 grey wool, 0 plastic, 0.5 white hair with strands)
+    const sheen = ENGLAND_1356.sheen!;
+    expect(sheen.light).toBeGreaterThan(0);
+    expect(sheen.light).toBeLessThan(1);
+    const shader = { uniforms: {}, vertexShader: ShaderLib.physical.vertexShader, fragmentShader: ShaderLib.physical.fragmentShader };
+    surfaceMaterials({ rough: 0.6, metal: 0, double: true, tex: 'real/beard1356_locks.webp', nmap: '', pos: new Float32Array(9), col: new Float32Array(9).fill(0.5), uv: new Float32Array(6), nrm: new Float32Array(9) }, null, null, ENGLAND_1356)[0]!.onBeforeCompile(shader as never, null as never);
+    expect(shader.fragmentShader).toContain(`pow( min( hairStrand / 0.8, 1.0 ), ${sheen.light.toFixed(3)} * smoothstep(`);
+    expect(shader.fragmentShader).toContain('directLight.color * hairLit * hairStrand');
   });
   it('the iris of a person of England is as large as a real one', () => {
     // MakeHuman's eyeball is 30 mm across (a real one 24) and England's resting face scales the eyes up: with the

@@ -305,7 +305,11 @@ def crop_lift(V, m, tris):
     l0, l1 = (float(t) for t in os.environ.get('CROP_LIFT', '0.03,0.06').split(','))
     x, y, z = V[:, 0], V[:, 1], V[:, 2]
     ax = np.abs(x)
-    inside = np.clip((m - 0.5) / 4.0, 0, 1) ** 0.7
+    # CROP_EDGE: over how far from the zone's edge the layer comes to its full distance (units of 1.5 mm) and the
+    # exponent of that rise (4, 0.7 until round 90: full within 7 mm, steep at the edge, which under locks is a
+    # slab with a straight side below the ear)
+    e0, e1 = (float(t) for t in os.environ.get('CROP_EDGE', '4.0,0.7').split(','))
+    inside = np.clip((m - 0.5) / e0, 0, 1) ** e1
     must = np.clip((y - 6.62) / 0.06, 0, 1) * np.clip((0.6 - ax) / 0.12, 0, 1) * np.clip((z - 1.05) / 0.2, 0, 1)
     chin = np.clip(1 - ax / 0.6, 0, 1) * np.clip((6.6 - y) / 0.3, 0, 1)
     amt = inside * (1 - 0.85 * must) * (l0 + (l1 - l0) * chin)
@@ -340,6 +344,66 @@ def mouth_cut(root, d):
     (xr, yr), (x, y) = lips(root), lips(d)
     r = np.sqrt((x / MOUTH_CUT[0]) ** 2 + ((y - 6.6) / MOUTH_CUT[1]) ** 2)
     return np.where(yr > 6.6, np.clip((r - (1 - MOUTH_CUT[2])) / MOUTH_CUT[2], 0, 1), 1.0)
+
+# --- a beard's locks (round 90): `CROP_LOCKS` in front of the call of `crop` writes `name_locks.txt` ---
+# The painted layer is a shell: smooth, with one outline. A beard is a mass of short locks, each with a lit and a
+# shaded flank, and its outline is their ends. The locks lie over the beard's form, which is the painted layer's
+# (the skin lifted by `crop_lift`: off the cheeks and jaw, further at the chin, drawn taut under the jaw), not
+# over the skin. Strands are grown on that form along the beard's flow (CROP_LOCK_L: their length on the cheeks,
+# at the chin, on the upper lip), cut where they come to the lips and where they leave the beard's zone
+# (CROP_LOCK_CUT: how far outside it, in units of 1.5 mm), and gathered into locks as a head's hair is
+# (`hairlib.py` `write_locks`, switches `CROP_LOCK_...`).
+if style == 'crop' and os.environ.get('CROP_LOCKS'):
+    from hairlib import grow, write_locks, farthest
+    def beard_form():
+        V, T = H.V, H.T
+        cm = margin(*ang(unit(V - hc)))
+        # the layer's triangles as `paint_cap` takes them: near the zone, the skin's outer side alone
+        ts = np.array([t for t in T if cm[t].max() > -7 and V[t][:, 1].min() > 5.7])
+        cen = V[ts].mean(1)
+        nrm = np.cross(V[ts[:, 1]] - V[ts[:, 0]], V[ts[:, 2]] - V[ts[:, 0]])
+        ts = ts[(((cen - hc) * nrm).sum(1) > 0) & (np.linalg.norm(cen - hc, axis=1) > 0.85 * H.skin(unit(cen - hc)))]
+        P = V + H.vn * 0.008 + crop_lift(V, cm, ts)
+        D = dirs(*np.meshgrid(H.TH, H.EL, indexing='ij')).reshape(-1, 3)
+        form = Head.__new__(Head)
+        form.__dict__.update(H.__dict__)
+        form.R = np.maximum(H.R, farthest(hc, P[ts[:, 0]], P[ts[:, 1]], P[ts[:, 2]], D).reshape(H.R.shape))
+        return form
+    form = beard_form()
+    rl_ = np.random.default_rng(90)
+    NR = int(os.environ.get('CROP_LOCK_ROOTS', '9000'))
+    Pl = golden(NR * 24, rl_, 0.003)
+    Pl = Pl[margin(*ang(Pl)) > 0.5]
+    Pl = Pl[rl_.permutation(len(Pl))[:NR]]
+    skl = H.at(Pl, np.zeros(len(Pl)))
+    axl, yl, zl = np.abs(skl[:, 0]), skl[:, 1], skl[:, 2]
+    L0, L1, L2 = (float(t) for t in os.environ.get('CROP_LOCK_L', '0.32,0.45,0.14').split(','))
+    chin_l = np.clip(1 - axl / 0.55, 0, 1) ** 0.8 * np.clip((6.6 - yl) / 0.25, 0, 1) ** 0.5
+    must_l = (yl > 6.66) & (axl < 0.55) & (zl > 1.1)
+    Ll = np.where(must_l, L2, L0 + (L1 - L0) * chin_l) * (0.85 + 0.3 * rl_.random(len(Pl)))
+    Sl = grow(form, Pl, Ll, 10, flow, lambda s_, d_, P0: 0.0 * d_[..., 0])
+    # a strand ends where it comes to the mouth (a lock run on over it lies on the lips as a bar) and where it
+    # leaves the zone (below the jaw the form goes on as the neck: a beard down to the collar)
+    dl = unit(Sl - hc)
+    xm_, ym_ = lips(dl)
+    gone = ((xm_ / 0.39) ** 2 + ((ym_ - 6.6) / 0.12) ** 2 < 1) | (margin(*ang(dl)) < -float(os.environ.get('CROP_LOCK_CUT', '7')))
+    tt = np.arange(Sl.shape[1])
+    whole = np.ones(len(Sl), bool)
+    for i in np.where(gone.any(1))[0]:
+        k = int(np.argmax(gone[i]))
+        whole[i] = k > 3                                  # rooted at the very edge: no strand
+        u = np.linspace(0, max(k - 1, 0), Sl.shape[1])
+        for c in range(3):
+            Sl[i, :, c] = np.interp(u, tt, Sl[i, :, c])
+    Sl = Sl[whole]
+    # CROP_LOCK_WAVE: a lock swings to the side and off the beard along its way (how far, how far, the length
+    # of a wave; 0: straight)
+    WAVE = tuple(float(t) for t in os.environ.get('CROP_LOCK_WAVE', '0.012,0.006,0.15').split(','))
+    WAVE = WAVE if len(WAVE) == 3 else None
+    write_locks(H, H, out, name, Sl, 'CROP', wave=WAVE, form=form, tip='0.45,0.18,0.75,0.5', root='0.3,0.1,0.25,0.3', vary='0.4,0.25,0.06',
+                jitter='0.008', ring='0.04', seed=90, label=style)
+    if os.environ.get('CROP_LOCKS_ONLY'):
+        sys.exit(0)
 
 cov = paint_cap(H, out, name, margin, flow, rng, Lfun, shade, n=P_['n'], steps=8, cut=mouth_cut if MOUTH_CUT else None,
                 base=P_['base'], base_ramp=float(os.environ.get('CROP_RAMP', '1.5')) if style == 'crop' else 4.0, mean=P_['mean'], ymin=5.7, uvc=UVC,

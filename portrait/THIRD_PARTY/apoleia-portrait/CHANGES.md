@@ -241,3 +241,14 @@ cuts the hair at a line round the head instead of growing it to a length (`BOB_C
 `BOB_CUT_VARY`, `BOB_ROUND`); `lock_tex.py` `POINTS` 0.75; new check tool `cap_edge.py`. Written anew:
 `bob01_locks.txt.zst` to `bob07_locks.txt.zst`, their `_cap.txt`, `_cap.webp`, `_cap_n.webp`,
 `plait01_locks.txt.zst`, `hair1356_locks.webp`, `_n`. `tests/locks.rs`: a fourth test. Roman bytes unchanged.
+
+Round 90: a beard can bring locks as a head of hair does. `build.rs` reads `<beard>_locks` after the beard's
+cards and painted layer; `real_look.rs`: `mh_rope` takes the hair's colour by place (a head's hair has one, a
+beard greys first at the chin); `dress.rs`: `DressSet::beard_lock_image` (England: `beard1356_locks`).
+Pipeline: `hairlib.py` `farthest` (the ray table of `Head.__init__`, for any surface) and `write_locks` (moved
+from `styles.py`, with `form=`: the skin the locks lie over given whole); `beards.py` style `crop` writes
+locks with `CROP_LOCKS` (over the painted layer's own surface, strands cut at the lips and at the zone's
+edge), `CROP_EDGE`. New files `beard_crop_locks.txt.zst`, `beard1356_locks.webp`, `beard1356_locks_n.webp`;
+written anew `beard_crop_cap.txt.zst` (the layer further off the skin). `tests/locks.rs`: a fifth test. The
+game's stage draws them as solid hair by the image's name; its `sheen.light` for England 0.5 (was 1.5).
+Roman bytes unchanged.

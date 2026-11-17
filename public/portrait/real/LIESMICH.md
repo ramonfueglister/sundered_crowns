@@ -17,7 +17,11 @@ liest die Dateien direkt (darum nur beim Start aus den Quellen, nicht in einem E
   vom Strähnenbild, wie sie lang ist, und die bemalte Kappe läuft ausserhalb des Haaransatzes weich aus
   (Aufrufe in `tools/portrait/pipeline/README.md`).
 - Bärte (beard_stubble, beard_short, beard_full, beard_phil, beard_chin): wie die Frisuren.
-  beard_crop (Vollbart im Kleid England 1356): ohne Karten, nur die bemalte Schicht, die von der Haut absteht.
+  beard_crop (Vollbart im Kleid England 1356): ohne Karten; die bemalte Schicht, die von der Haut absteht, und
+  seit Runde 90 darüber 300 kurze, gewellte Strähnen (`beard_crop_locks.txt.zst`: gewölbte Bänder, fest, mit
+  Schatten wie die Strähnen des Kopfhaars; sie liegen auf der Form des Bartes, nicht auf der Haut, und enden,
+  wo der Bart endet), gezeichnet mit dem Bild `beard1356_locks.webp` (`_n` Normalen: weniger und breitere
+  Haare als im Bild des Kopfhaars, stärker geschwungen). Kurzer Bart und Stoppeln bleiben bemalte Schichten.
   beard_short1356 (kurzer Bart im Kleid England 1356): Apoleias kurzer Bart mit freiem Mund; die Haare der
   Oberlippe enden über der Mundlinie (bei Apoleias Bart liegen sie auf einem geschlossenen Mund wie Zähne).
   beard_stubble1356 (Stoppeln im Kleid England 1356): Apoleias Stoppeln mit freiem Mund, aus demselben Grund.

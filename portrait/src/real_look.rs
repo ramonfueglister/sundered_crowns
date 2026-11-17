@@ -578,8 +578,9 @@ const ROPE_EVEN: usize = 300;
 /// carried, evened out along the plait (tests/plait.rs).
 ///
 /// `image`: the image of the surface where the file has none of its own beside it (all hair of a dress set's
-/// locks is drawn with one image, `DressSet::lock_image`).
-pub(crate) fn mh_rope(dir: &str, name: &str, image: &str, pp: &[V3], base: &[V3], hair: Rgb) -> Option<Surface> {
+/// locks is drawn with one image, `DressSet::lock_image`). `color`: the hair's colour at a place (a head's hair
+/// has one; a beard greys first at the chin).
+pub(crate) fn mh_rope(dir: &str, name: &str, image: &str, pp: &[V3], base: &[V3], color: &dyn Fn(V3) -> Rgb) -> Option<Surface> {
     let rows = crate::real::rows(&format!("{dir}/{name}.txt"))?;
     let (carried, tris) = bound(&rows, pp, base)?;
     let (laid, _) = bound(&rows, base, base)?;
@@ -633,12 +634,11 @@ pub(crate) fn mh_rope(dir: &str, name: &str, image: &str, pp: &[V3], base: &[V3]
     // its own image beside the file, else the one given
     let own = crate::real::image(dir, name);
     s.tex = Some(if crate::real::has(&own) || image.is_empty() { own } else { crate::real::image(dir, image) });
-    let c = linear(hair);
     for f in tris {
         for k in 0..3 {
             let i = f[k] as usize;
             s.pos.push(vs[i]);
-            s.col.push(c);
+            s.col.push(linear(color(vs[i])));
             s.uv.push([f[3 + 2 * k], 1.0 - f[4 + 2 * k]]);
             s.nrm.push(nn[i]);
         }

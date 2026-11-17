@@ -2013,6 +2013,87 @@ the same cut wears the same locks. `bob05` and `bob07` are worn by nobody in the
 on the test's heads and not looked at in a portrait this round. Beards are a painted shell as before. All
 measures PLACEHOLDER, by eye; the cut itself is unsourced as before.
 
+**A full beard of locks over its painted layer (round 90).** After rounds 87 to 89 the hair of the head is
+locks, each lit by its own form. Beside it the full beard (`beard_crop`) was the last hair that is a painted
+shell (rounds 53 to 80): a smooth surface 3 to 6 mm off the jaw with hairs drawn on it, lit as one form, its
+outline the layer's own edge, a ruled line on the cheek (`runde90_bart_vorher_nachher.png`, upper row). As a
+measure of that, the relief round the lit jaw: in a disc of 0.075 of the face's breadth, the lightness of
+the darkest tenth, the median and the lightest tenth of its pixels (`beard90.mjs`, four men of the sample).
+The span between the tenths was 4.6 to 8.8 L. There is no such number for the reference: its faces are about
+a third as large in the screenshots.
+
+What was tried, in order (the four men with the full beard from the front, two from the side, each time):
+
+| trial | what showed |
+|---|---|
+| a: 360 locks of 0.7 to 1.4 cm laid over the skin plus a thickness, with a bow under the jaw; strands of 2 cm on the cheeks, 3 at the chin, 1.2 on the upper lip | the beard ran down the throat to the collar bones as a collar (a step laid on the neck's slope is far longer than on the jaw), and read as pellets |
+| b: the locks over the beard's own form (the painted layer's lifted surface), strands cut 4.5 mm outside the beard's zone | the right outline; the locks grains of rice, the upper edge on the cheek scalloped |
+| c: 300 locks of 0.9 to 1.8 cm, 18 % as thick as broad; strands of 3.2, 4.5 and 1.4 cm; ends longer and less drawn in, beginnings pointed; waves (1.2 mm sideways, 0.6 mm off the beard, 1.5 cm long) | wavy tufts, a soft edge on the cheek; the outline below smooth |
+| d: strands cut 10.5 mm outside the zone, the layer 4 mm off cheeks and jaw and 9 mm at the chin | tufts at the outline, a fuller chin |
+| e: the image of the locks with lighter gaps between the hairs (`DEEP=0.12`) | a white beard whiter, a brown one without strands: not kept |
+| the stage's `sheen.light` 1.5, 0.5 and 0 | grey wool, white hair with strands, plastic: 0.5 |
+| g: the layer comes to its full distance over 13.5 mm from its edge instead of 6 (`CROP_EDGE=9,1`) | the edge on the cheek thinner; as built |
+| s1: the short beard (`beard_short1356`) as locks too (340 locks, the layer 1.5 to 3.5 mm off, strands of 2, 2.6 and 1 cm) | on the boy of 17 a dark full beard: the short beard stays painted |
+
+As built. In `beards.py`, the style `crop` with `CROP_LOCKS` in front writes `beard_crop_locks.txt` beside
+its painted layer: the beard's form is the layer's surface (the skin lifted by `crop_lift`), cast into the
+head's table of directions (`hairlib.py` `farthest`, taken out of `Head.__init__` for it); 9 000 roots in
+the zone, each a strand grown along the beard's flow over that form (`CROP_LOCK_L`: 3.2 cm on the cheeks,
+4.5 at the chin, 1.4 on the upper lip, each by 15 % more or less), cut where it comes to the lips and where
+it leaves the zone by more than `CROP_LOCK_CUT` (7 units of 1.5 mm); a strand with fewer than four points
+left is dropped. The strands are gathered into 300 locks as a head's hair is (`write_locks`, which moved
+from `styles.py` to `hairlib.py` and takes the form the locks lie over; `styles.py` calls it under its own
+head): 0.9 to 1.8 cm broad, 18 % as thick, on the layer at their beginning and 3.5 mm over it after
+1.2 cm, with waves (`CROP_LOCK_WAVE`). `CROP_EDGE`: over how far from its edge the layer comes to its full
+distance. The layer itself is written with `CROP_LIFT=0.04,0.09`; its images and its scalp came out the same
+byte for byte, its net differs. `lock_tex.py` draws the image of a beard's locks
+(`beard1356_locks.webp`: 300 hairs, broader, swaying more than a head's). In the builder a beard may bring
+locks as a head of hair does: `build.rs` reads `<beard>_locks`, `real_look.rs` `mh_rope` takes the hair's
+colour by place (a beard greys first at the chin), `DressSet::beard_lock_image` names the image. On the
+stage they are solid hair as a head's locks (kind `rope`, by the image's name); `sheen.light` 0.5 where it
+was 1.5 is the one stage value changed, and it changes all light hair of England: the further darkening of
+the image's dark strands was made for cards, and on solid locks it turned white hair to grey wool (round
+89's open point). Every cut and the plaits written anew with round 89's calls are the same byte for byte
+(41 files), and so are the three beards with the calls as documented before this round.
+
+Numbers, old against new (the sample's four men with the full beard: 940011, 940013, 940021, 940027):
+
+| | round 89 | round 90 |
+|---|---|---|
+| relief round the lit jaw, lightest tenth less darkest tenth (L) | 4.6, 8.6, 7.4, 8.8 | 10.0, 13.2, 10.3, 17.4 |
+| the same disc, darkest tenth / median / lightest tenth, 940021 (brown) | 20.8 / 24.2 / 28.2 | 20.8 / 25.2 / 31.1 |
+| the same, 940027 (white) | 56.1 / 61.1 / 64.9 | 58.2 / 64.2 / 75.6 |
+| 940021: beard on the lit jaw / at the chin / over the lip / on the far jaw (L; his hair 18.6) | 25.2 / 20.7 / 25.0 / 17.0 | 26.1 / 30.6 / 28.0 / 16.9 |
+| 940027: his hair / lit jaw / chin / far jaw | 52.7 / 61.7 / 55.8 / 50.5 | 59.8 / 62.9 / 73.9 / 50.0 |
+| lit jaw less far jaw, 940021 (the reference's emperor: 18) | 8.2 | 9.2 |
+| triangles of a full beard's locks | none | 16 528 |
+| the locks' lowest point below the chin, share of the head's height (seven heads of the test) | | -0.009 to 0.020 |
+| the locks off the skin, median / at most | | 6.7 to 7.2 mm / 1.45 to 1.56 cm |
+| building a man's portrait as the test draws him and with the full beard, best of 40, native (two men) | | 13.0 and 18.4 ms, 20.2 and 27.9 ms |
+
+Of the sample's 35 portraits 18 changed: the four full beards, and 14 people with hair light enough for
+`sheen.light` to count (by at most 19 of 255 in a channel; two of them in fewer than 30 pixels by one step).
+The Roman pictures are the same pixel for pixel.
+
+Tests: `portrait/tests/locks.rs`, `a_full_beard_of_england_is_locks_over_its_painted_layer` (seven men
+given the full beard: one surface of a beard's locks, seen from both sides, over the painted layer, 8 000
+to 30 000 triangles, nothing of it lower than a tenth of the head's height below the chin (locks left to
+run their length hang 0.17 to 0.22 below it and fail on one head of the seven; the bound is by that
+measure), nothing of it higher than 0.45 of the head's height below the crown, off the skin in the
+median more than 3 mm and at most less than 3 cm, not of one colour on a man of 68; no other beard brings
+locks). `tests/portrait.test.ts`, `a full
+beard of England is locks over its painted layer, and light hair keeps its strands` (the sample's four,
+solid and cut out as a head's locks, an image of their own; `sheen.light` between 0 and 1 and in the
+program). Pictures: `runde90_bart_vorher_nachher.png` (round 89 above, round 90 below), `runde90_stichprobe.png`.
+Still open: on the upper lip the short locks stand as small scales, on a white beard with grey gaps between
+them, and so along the beard's upper edge. From the far side the beard's back edge below the ear and its
+line on the neck are straight: the zone's border. The outline below is fairly even from the front. Lit to
+far side 9 L where the reference has 18. The short beard is a painted layer still (as locks it read as a
+full beard), stubble as it was. Every man with the full beard wears the same locks and the same outline;
+a boy of 17 can wear a beard. The chin of a brown beard is now 12 L lighter than the man's hair (the
+reference's emperor: 2 to 8), since the locks there catch the key light. All measures PLACEHOLDER, by eye,
+`sheen.light` by eye on three values.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
 nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since

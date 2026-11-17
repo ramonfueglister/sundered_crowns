@@ -997,10 +997,10 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
         // hair that is solid, each kind in a file of its own beside the cards: a style's locks (England's
         // `bob01_locks`, `plait01_locks`: no cards any more), drawn with the dress set's image of locks, and the
         // round strands of its plaits (England's `plait01_rope`), drawn with their own
-        if let Some(sf) = mh_rope(dir, &format!("{name}_locks"), garb.map_or("", |d| d.lock_image), &x.pp, &h.base, hair) {
+        if let Some(sf) = mh_rope(dir, &format!("{name}_locks"), garb.map_or("", |d| d.lock_image), &x.pp, &h.base, &|_| hair) {
             out.push(sf);
         }
-        if let Some(sf) = mh_rope(dir, &format!("{name}_rope"), "", &x.pp, &h.base, hair) {
+        if let Some(sf) = mh_rope(dir, &format!("{name}_rope"), "", &x.pp, &h.base, &|_| hair) {
             out.push(sf);
         }
         // real look: a painted cap of fine hairs under the cards, if there is one
@@ -1017,6 +1017,11 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
         let hcb = [fit[0][1], ym(6.9), fit[2][0] * 0.35 + fit[2][1]];
         let bcol = |v: V3| cmix(cmul(hair, 1.12), hex("#d6d1c9"), beard_grey * 0.6 * c01((ym(6.8) - v[1]) / (0.6 * hs)));
         if let Some(sf) = mh_hair2(dir, name, &x.pp, &h.base, hcb, &bcol, true, (0.0, 0)) {
+            out.push(sf);
+        }
+        // a beard's locks (England's `beard_crop_locks`): solid as a head's, drawn with the dress set's image of
+        // a beard's locks
+        if let Some(sf) = mh_rope(dir, &format!("{name}_locks"), garb.map_or("", |d| d.beard_lock_image), &x.pp, &h.base, &bcol) {
             out.push(sf);
         }
         if let Some(sf) = mh_hair2(dir, &format!("{name}_cap"), &x.pp, &h.base, hcb, &bcol, false, (0.0, 0)) {

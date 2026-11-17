@@ -258,6 +258,10 @@ export const APOLEIA: StageProfile = {
  *  it; hair above the brows reads 2 L darker (eight heads, median 25.5, with cards 27.3).
  *  Round 88: the head hair of girls and young women is locks too, parted and drawn sleek to the plaits: no
  *  hair of England's dress is cards any more (this profile's `cards` is the look of its solid hair).
+ *  Round 90: a full beard is locks over its painted layer (the builder's `<beard>_locks`, drawn as a head's
+ *  locks are). `sheen.light` 0.5 (1.5 until then): the further darkening of the image's dark strands on light
+ *  hair was set for cards, which had no depth of their own; on locks, which are lit by their form and throw
+ *  shadows, it drew white hair and white beards as grey wool.
  *  All values of this profile are PLACEHOLDER: held against one face of the reference, set by measure and by
  *  eye (docs/PORTRAITS.md). */
 export const ENGLAND_1356: StageProfile = {
@@ -279,7 +283,7 @@ export const ENGLAND_1356: StageProfile = {
   brow: { rough: 1, specular: 0.05, lashes: 0.6, brows: 0.85 },
   cap: { tone: 1.7, light: 2.6, colour: 0.7, wrap: 1, shadow: false, stubble: 0, beard: { tone: 5.5, light: 3.2, colour: 0.65, wrap: 0.3 } },
   cards: { rough: 0.72, specular: 0.2, anisotropy: 0.3 },
-  sheen: { white: 0.3, whiteSharp: 120, whiteShift: 0.1, own: 0.45, ownSharp: 40, ownShift: -0.1, ragged: 0.15, strands: 1.35, light: 1.5, colour: 0.7, wrap: 1 },
+  sheen: { white: 0.3, whiteSharp: 120, whiteShift: 0.1, own: 0.45, ownSharp: 40, ownShift: -0.1, ragged: 0.15, strands: 1.35, light: 0.5, colour: 0.7, wrap: 1 },
 };
 
 const PROFILES = [ENGLAND_1356];

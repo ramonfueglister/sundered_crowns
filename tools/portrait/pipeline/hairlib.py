@@ -28,6 +28,24 @@ def tangent(v, d):
     return unit(v - (v * d).sum(-1, keepdims=True) * d)
 
 
+def farthest(hc, A, B, C, D):
+    """For each direction of D the farthest place from hc where it meets one of the triangles A, B, C; 0 where it
+    meets none."""
+    e1, e2 = B - A, C - A
+    R = np.zeros(len(D))
+    for s in range(0, len(D), 400):
+        d = D[s:s + 400][:, None, :]
+        p = np.cross(d, e2[None]); det = (e1[None] * p).sum(-1)
+        inv = 1 / np.where(np.abs(det) < 1e-9, np.nan, det)
+        tv = hc[None, None] - A[None]
+        u = (tv * p).sum(-1) * inv
+        q = np.cross(tv, e1[None]); v = (d * q).sum(-1) * inv
+        t = (e2[None] * q).sum(-1) * inv
+        ok = (u >= 0) & (v >= 0) & (u + v <= 1) & (t > 0)
+        R[s:s + 400] = np.where(ok, t, 0).max(1)
+    return R
+
+
 class Head:
     def __init__(self, base, ymin=6.4, hc=None, xmax=2.85, elmin=-70, step=2.0, tkeep=None):
         vs, faces, g = [], {}, None
@@ -61,19 +79,7 @@ class Head:
         self.TH = np.arange(-180, 180 + step / 2, step)
         self.EL = np.arange(elmin, 90 + step / 2, step)
         D = dirs(*np.meshgrid(self.TH, self.EL, indexing='ij')).reshape(-1, 3)
-        e1, e2 = B - A, C - A
-        R = np.zeros(len(D))
-        for s in range(0, len(D), 400):
-            d = D[s:s + 400][:, None, :]
-            p = np.cross(d, e2[None]); det = (e1[None] * p).sum(-1)
-            inv = 1 / np.where(np.abs(det) < 1e-9, np.nan, det)
-            tv = self.hc[None, None] - A[None]
-            u = (tv * p).sum(-1) * inv
-            q = np.cross(tv, e1[None]); v = (d * q).sum(-1) * inv
-            t = (e2[None] * q).sum(-1) * inv
-            ok = (u >= 0) & (v >= 0) & (u + v <= 1) & (t > 0)
-            R[s:s + 400] = np.where(ok, t, 0).max(1)
-        R = R.reshape(len(self.TH), len(self.EL))
+        R = farthest(self.hc, A, B, C, D).reshape(len(self.TH), len(self.EL))
         for _ in range(4):
             m = R == 0
             if not m.any():
@@ -442,6 +448,56 @@ def write_tubes(head, out, name, tubes, even=None, closed=True):
         for t in tri_list:
             f.write('f %d %d %d\n' % (t[0] + 1, t[1] + 1, t[2] + 1))
     return len(verts), len(tri_list)
+
+
+def write_locks(head, bind, out, name, S, key, wave=None, over='8,6,35,30', tip='0.3,0.25,0.8,0.4', root='0.15,0.2,0.7,0.3', back='0', trend='0', jitter='0.012', vary='', seed=87, form=None, label='', ring='0.14', m='5'):
+    """Locks (round 87): the grown strands `S` gathered into wisps, each an arched band that is solid (`hairlib.py`
+    `locks_from_wisps`), written as `name_locks.txt` in `out`, bound to the head `bind`; `head`: the head they are
+    laid over (its centre and skin). The switches are read under the style's own name `key` (`BOB`, `PLAIT`,
+    `CROP` for a beard):
+    `<key>_LOCKS`: how many, their least and greatest breadth, their height as a share of the breadth, their height
+    over the skin at the root and far from it, and the run over which it rises (base units, 0.1 = 1 cm), an
+    eighth number: how much higher still for every unit it has run (`locks_from_wisps(layer=)`);
+    `<key>_LOCK_JITTER`: how much higher or lower a lock lies than the next, by chance;
+    `<key>_LOCK_OVER`: the locks pass the ears in one bow: how far round a place the skin is looked at for that,
+    over how many degrees it is evened out, and from how many degrees off the face's middle over how many more (in
+    front the locks keep to the forehead: over a bow that takes in the brows a fringe hangs lower); a fifth and
+    sixth number: the height in degrees up to which nothing of the bow is taken, and from which all of it (hair
+    that goes on down the neck lies on the neck: over the bow from skull to shoulder it stands off as a sheet);
+    `<key>_LOCK_TREND`: the bow is taken over what the skin stands off its own mean over so many degrees
+    (`Head.covered(trend=)`: for hair that goes on down to the neck);
+    `<key>_LOCK_TIP`, `<key>_LOCK_ROOT`: a lock's end and its beginning as a share of its length and at most so
+    long, and its breadth and thickness there against its middle; `<key>_LOCK_BACK`: how far before its strands'
+    roots a lock begins (`locks_from_wisps(back=)`: for a parting); `<key>_LOCK_VARY`: no two locks end alike:
+    by how much of itself an end is longer or shorter than `_LOCK_TIP` says, by how much of the lock's breadth it
+    is broader or narrower, and by how much at most the lock ends before its strands do (`locks_from_wisps(vary=)`;
+    nothing: all ends alike); `<key>_LOCK_M`: corners across a band;
+    `<key>_LOCK_RING`: from ring to ring; `<key>_LOCK_EVEN`: how often the builder evens out the locks' way with a
+    head along them (a few times, so that a lock stays the head's form: evened out to the end it would move as a
+    stiff piece). The wisps are drawn with random numbers of their own (`seed`): the cards and the painted layer
+    of a style stay as they were. `form`: the skin the locks lie over, given whole (a beard's own form:
+    `<key>_LOCK_OVER` is not read then). All PLACEHOLDER by eye."""
+    get = lambda name, default: os.environ.get(key + name, default)
+    LK, LW0, LW1, LFLAT, *LAYER = [float(t) for t in os.environ[key + '_LOCKS'].split(',')]
+    rl = np.random.default_rng(seed)
+    lab2 = wisps(S, int(LK), rl)
+    cover = [float(t) for t in get('_LOCK_OVER', over).split(',')]
+    def beside(th, el):
+        g = np.clip((np.abs(th) - cover[2]) / cover[3], 0, 1)
+        g = g * g * (3 - 2 * g)
+        if len(cover) > 4:
+            e = np.clip((el - cover[4]) / (cover[5] - cover[4]), 0, 1)
+            g = g * e * e * (3 - 2 * e)
+        return g
+    fours = lambda name, default: tuple(float(t) for t in get(name, default).split(','))
+    VARY = (fours('_LOCK_VARY', vary) + (0.0, 0.0, 0.0))[:3] + (seed * 1000,) if get('_LOCK_VARY', vary) else None
+    bands = locks_from_wisps(head, S, lab2, int(LK), rl, LW0, LW1, LFLAT, tuple(LAYER), m=int(get('_LOCK_M', m)), jitter=float(get('_LOCK_JITTER', jitter)),
+                             tip=fours('_LOCK_TIP', tip), root=fours('_LOCK_ROOT', root),
+                             wave=wave, ring=float(get('_LOCK_RING', ring)), back=float(get('_LOCK_BACK', back)), vary=VARY,
+                             over=form if form is not None else head.covered(cover[0], cover[1], beside, trend=float(get('_LOCK_TREND', trend))) if cover[0] > 0 else None)
+    nvr, ntr = write_tubes(bind, out, name + '_locks', bands, even=int(get('_LOCK_EVEN', '3')), closed=False)
+    print(label, 'locks', len(bands), 'corners', nvr, 'tris', ntr)
+    return bands
 
 
 def write_head_obj(head, path):

@@ -35,7 +35,11 @@
   },
   {
    "name": "beard_crop_cap.txt.zst",
-   "bytes": 45154
+   "bytes": 44805
+  },
+  {
+   "name": "beard_crop_locks.txt.zst",
+   "bytes": 234963
   },
   {
    "name": "beard_crop_scalp.txt",
@@ -412,6 +416,8 @@
   "bald01.webp",
   "bald01_cap.webp",
   "bald01_cap_n.webp",
+  "beard1356_locks.webp",
+  "beard1356_locks_n.webp",
   "beard_chin.webp",
   "beard_chin_cap.webp",
   "beard_chin_cap_n.webp",

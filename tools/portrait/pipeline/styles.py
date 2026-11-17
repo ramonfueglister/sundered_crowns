@@ -5,7 +5,8 @@
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(sys.argv[0])))
 import numpy as np
-from hairlib import Head, dirs, ang, unit, tangent, roots, grow, wisps, cards_from_wisps, locks_from_wisps, write_cards, write_tubes, paint_cap, make_shade, write_head_obj
+from hairlib import Head, dirs, ang, unit, tangent, roots, grow, wisps, cards_from_wisps, write_cards, write_tubes, paint_cap, make_shade, write_head_obj
+from hairlib import write_locks as _write_locks
 
 base, out, style, name = sys.argv[1:5]
 rng = np.random.default_rng(int(os.environ.get('SEED', '17')))
@@ -46,51 +47,9 @@ def e_dn(d):
     return tangent(np.broadcast_to(np.array([0, -1.0, 0]), d.shape).copy(), d)
 
 
-def write_locks(S, bind, key, wave=None, over='8,6,35,30', tip='0.3,0.25,0.8,0.4', root='0.15,0.2,0.7,0.3', back='0', trend='0', jitter='0.012', vary='', seed=87):
-    """Locks (round 87): the grown strands `S` gathered into wisps, each an arched band that is solid (`hairlib.py`
-    `locks_from_wisps`), written as `name_locks.txt`, bound to the head `bind`. The switches are read under the
-    style's own name `key` (`BOB`, `PLAIT`):
-    `<key>_LOCKS`: how many, their least and greatest breadth, their height as a share of the breadth, their height
-    over the skin at the root and far from it, and the run over which it rises (base units, 0.1 = 1 cm), an
-    eighth number: how much higher still for every unit it has run (`locks_from_wisps(layer=)`);
-    `<key>_LOCK_JITTER`: how much higher or lower a lock lies than the next, by chance;
-    `<key>_LOCK_OVER`: the locks pass the ears in one bow: how far round a place the skin is looked at for that,
-    over how many degrees it is evened out, and from how many degrees off the face's middle over how many more (in
-    front the locks keep to the forehead: over a bow that takes in the brows a fringe hangs lower); a fifth and
-    sixth number: the height in degrees up to which nothing of the bow is taken, and from which all of it (hair
-    that goes on down the neck lies on the neck: over the bow from skull to shoulder it stands off as a sheet);
-    `<key>_LOCK_TREND`: the bow is taken over what the skin stands off its own mean over so many degrees
-    (`Head.covered(trend=)`: for hair that goes on down to the neck);
-    `<key>_LOCK_TIP`, `<key>_LOCK_ROOT`: a lock's end and its beginning as a share of its length and at most so
-    long, and its breadth and thickness there against its middle; `<key>_LOCK_BACK`: how far before its strands'
-    roots a lock begins (`locks_from_wisps(back=)`: for a parting); `<key>_LOCK_VARY`: no two locks end alike:
-    by how much of itself an end is longer or shorter than `_LOCK_TIP` says, by how much of the lock's breadth it
-    is broader or narrower, and by how much at most the lock ends before its strands do (`locks_from_wisps(vary=)`;
-    nothing: all ends alike); `<key>_LOCK_M`: corners across a band;
-    `<key>_LOCK_RING`: from ring to ring; `<key>_LOCK_EVEN`: how often the builder evens out the locks' way with a
-    head along them (a few times, so that a lock stays the head's form: evened out to the end it would move as a
-    stiff piece). The wisps are drawn with random numbers of their own (`seed`): the cards and the painted layer
-    of a style stay as they were. All PLACEHOLDER by eye."""
-    get = lambda name, default: os.environ.get(key + name, default)
-    LK, LW0, LW1, LFLAT, *LAYER = [float(t) for t in os.environ[key + '_LOCKS'].split(',')]
-    rl = np.random.default_rng(seed)
-    lab2 = wisps(S, int(LK), rl)
-    cover = [float(t) for t in get('_LOCK_OVER', over).split(',')]
-    def beside(th, el):
-        g = np.clip((np.abs(th) - cover[2]) / cover[3], 0, 1)
-        g = g * g * (3 - 2 * g)
-        if len(cover) > 4:
-            e = np.clip((el - cover[4]) / (cover[5] - cover[4]), 0, 1)
-            g = g * e * e * (3 - 2 * e)
-        return g
-    fours = lambda name, default: tuple(float(t) for t in get(name, default).split(','))
-    VARY = (fours('_LOCK_VARY', vary) + (0.0, 0.0, 0.0))[:3] + (seed * 1000,) if get('_LOCK_VARY', vary) else None
-    bands = locks_from_wisps(H, S, lab2, int(LK), rl, LW0, LW1, LFLAT, tuple(LAYER), m=int(get('_LOCK_M', '5')), jitter=float(get('_LOCK_JITTER', jitter)),
-                             tip=fours('_LOCK_TIP', tip), root=fours('_LOCK_ROOT', root),
-                             wave=wave, ring=float(get('_LOCK_RING', '0.14')), back=float(get('_LOCK_BACK', back)), vary=VARY,
-                             over=H.covered(cover[0], cover[1], beside, trend=float(get('_LOCK_TREND', trend))) if cover[0] > 0 else None)
-    nvr, ntr = write_tubes(bind, out, name + '_locks', bands, even=int(get('_LOCK_EVEN', '3')), closed=False)
-    print(style, 'locks', len(bands), 'corners', nvr, 'tris', ntr)
+def write_locks(S, bind, key, **more):
+    """A style's locks: `hairlib.py` `write_locks`, over this script's head, into its folder, under its name."""
+    return _write_locks(H, bind, out, name, S, key, label=style, **more)
 
 
 def empty_cards():
