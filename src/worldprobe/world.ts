@@ -18,6 +18,7 @@ import { HAMLET_TURN, type HamletLands, hamletAt, hamletsOf } from './hamlets';
 import { BARE, FINER, FINER_STEPS, SNOW_LINE, TINT, TREE_LINE, WOODS, blockOfCell, cellOfBlock, lineShift, paleFrom, rockAt, woodsUntil } from './land';
 import { type Region, Water, cellOf, latOf, sample, waterAt } from './region';
 import { type Cover, type Woods, coverLand, lotFill } from './far';
+import { unshade } from './mean';
 import { FARMS, FIELD_GROUND, LOT_BLOCKS, LOT_FILL, type Lot, type Monument, PEOPLE_PER_PERSON, type Settled, type Site, farmsFor, firstHalf, raise, settle } from './settle';
 import { type Columns, columnsOf } from './nearground';
 import { MONUMENTS, modelOf, styleOf } from '../buildings';
@@ -408,6 +409,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     // the mean of the finer step, seen from above (mean.ts); what stands out of it raises the ground
     cover = mean;
     for (let i = 0; i < N * N; i++) if (mean.rise[i] && !g.wet[i]) { g.h[i] += mean.rise[i]; g.occ[i] = Math.max(g.occ[i], g.h[i]); }
+    unshade(mean, N, g.h);
   }
   else if (step > 0) {
     // from farther away the towns, the fields and the woods are part of the ground

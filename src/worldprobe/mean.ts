@@ -12,7 +12,7 @@
 // light it (lookprobe/light.ts), and every finer block gets the mean of the dots of that picture that show it.
 import type { Batch } from '../lookprobe/batch';
 import { NEAR, RIGHT, VIEW } from '../lookprobe/layout';
-import { litness } from '../lookprobe/light';
+import { SUN, litness, sunlit } from '../lookprobe/light';
 import type { Cover } from './far';
 
 /** the sides of what stands out are this much darker than its top where the finer step shows no side of its own there */
@@ -60,10 +60,31 @@ export function lay(a: Above, mesh: Pick<Batch, 'pos' | 'nor' | 'col'>, dx: numb
   }
 }
 
+/** the sun's view of the land: to its right and upwards in its picture */
+const SUN_LEN = Math.hypot(SUN[0], SUN[2]), SUN_A = [SUN[2] / SUN_LEN, 0, -SUN[0] / SUN_LEN], SUN_B = [SUN[1] * SUN_A[2], SUN[2] * SUN_A[0] - SUN[0] * SUN_A[2], -SUN[1] * SUN_A[0]];
+/** how far a point is lifted off its face before the sun's view is asked whether something lies before it, in blocks */
+const BIAS = 0.03;
+/** dots of the sun's view to a finer block's width */
+const SUN_DOTS = 4;
+
+/** Calls `each` for every dot of a picture of W by H dots whose middle lies in the triangle with corners (U, V), with the dot's number and the shares of the three corners at its middle. */
+function dots(U: readonly number[], V: readonly number[], W: number, H: number, each: (i: number, s0: number, s1: number, s2: number) => void) {
+  const area = (U[1] - U[0]) * (V[2] - V[0]) - (U[2] - U[0]) * (V[1] - V[0]);
+  if (Math.abs(area) < 1e-9) return;
+  const fromU = Math.max(0, Math.ceil(Math.min(U[0], U[1], U[2]) - 0.5)), untilU = Math.min(W - 1, Math.floor(Math.max(U[0], U[1], U[2]) - 0.5));
+  const fromV = Math.max(0, Math.ceil(Math.min(V[0], V[1], V[2]) - 0.5)), untilV = Math.min(H - 1, Math.floor(Math.max(V[0], V[1], V[2]) - 0.5));
+  for (let v = fromV; v <= untilV; v++) for (let u = fromU; u <= untilU; u++) {
+    const pu = u + 0.5, pv = v + 0.5;
+    const s1 = ((pu - U[0]) * (V[2] - V[0]) - (U[2] - U[0]) * (pv - V[0])) / area, s2 = ((U[1] - U[0]) * (pv - V[0]) - (pu - U[0]) * (V[1] - V[0])) / area, s0 = 1 - s1 - s2;
+    if (s0 < -1e-6 || s1 < -1e-6 || s2 < -1e-6) continue;
+    each(u + v * W, s0, s1, s2);
+  }
+}
+
 /**
  * What the far camera sees of every finer block: the meshes are drawn as a picture from where the camera stands
  * (from afar, so that every line of sight runs the same way), each face in its colour as brightly as the lights
- * light it, the nearer before the farther. Returns for every block the sum of the colours of the dots that show a
+ * light it, the nearer before the farther, and without the sun's light where something stands between it and the sun. Returns for every block the sum of the colours of the dots that show a
  * point of it, and their number: first of the dots that show a face looking up, then of those that show a side
  * (eight numbers a block).
  */
@@ -78,35 +99,58 @@ export function look(a: Above): Float32Array {
     const u = x * ACROSS[0] + z * ACROSS[2], v = x * UPWARDS[0] + y * UPWARDS[1] + z * UPWARDS[2];
     u0 = Math.min(u0, u); u1 = Math.max(u1, u); v0 = Math.min(v0, v); v1 = Math.max(v1, v);
   }
+  // what lies in the sun's shadow: the same meshes as the sun sees them, the nearest to it at every dot
+  let a0 = Infinity, a1 = -Infinity, b0 = Infinity, b1 = -Infinity;
+  for (const x of [0, a.w]) for (const z of [0, a.d]) for (const y of [low - 1, high + 1]) {
+    const sa = x * SUN_A[0] + z * SUN_A[2], sb = x * SUN_B[0] + y * SUN_B[1] + z * SUN_B[2];
+    a0 = Math.min(a0, sa); a1 = Math.max(a1, sa); b0 = Math.min(b0, sb); b1 = Math.max(b1, sb);
+  }
+  // of every dot of the sun's view: how near the face it shows is to the sun at the dot's middle, and how that changes across the dot (so that a point of the same face is never taken to lie behind it)
+  const SW = Math.ceil((a1 - a0) * SUN_DOTS) + 1, SH = Math.ceil((b1 - b0) * SUN_DOTS) + 1, sunward = new Float32Array(SW * SH).fill(-Infinity), slope = new Float32Array(SW * SH * 2);
+  const U = [0, 0, 0], V = [0, 0, 0], D = [0, 0, 0];
+  for (const { mesh: { pos, nor }, dx, dz } of a.meshes) for (let t = 0; t < pos.length; t += 9) {
+    if (nor[t] * SUN[0] + nor[t + 1] * SUN[1] + nor[t + 2] * SUN[2] <= 0) continue;
+    for (let k = 0; k < 3; k++) {
+      const x = pos[t + k * 3] + dx, y = pos[t + k * 3 + 1], z = pos[t + k * 3 + 2] + dz;
+      U[k] = (x * SUN_A[0] + z * SUN_A[2] - a0) * SUN_DOTS; V[k] = (x * SUN_B[0] + y * SUN_B[1] + z * SUN_B[2] - b0) * SUN_DOTS; D[k] = x * SUN[0] + y * SUN[1] + z * SUN[2];
+    }
+    const area = (U[1] - U[0]) * (V[2] - V[0]) - (U[2] - U[0]) * (V[1] - V[0]);
+    if (Math.abs(area) < 1e-9) continue;
+    const across = ((D[1] - D[0]) * (V[2] - V[0]) - (D[2] - D[0]) * (V[1] - V[0])) / area, upwards = ((D[2] - D[0]) * (U[1] - U[0]) - (D[1] - D[0]) * (U[2] - U[0])) / area;
+    dots(U, V, SW, SH, (i, s0, s1, s2) => { const near = s0 * D[0] + s1 * D[1] + s2 * D[2]; if (near > sunward[i]) { sunward[i] = near; slope[i * 2] = across; slope[i * 2 + 1] = upwards; } });
+  }
   const W = Math.ceil((u1 - u0) * DOTS) + 1, H = Math.ceil((v1 - v0) * DOTS) + 1;
-  const depth = new Float32Array(W * H).fill(-Infinity), block = new Int32Array(W * H).fill(-1), colour = new Float32Array(W * H * 3), upward = new Uint8Array(W * H);
+  // of every dot of the picture: how near what it shows is, the block under it, its colour as the lights without the sun light it, and as the sun does where it reaches it
+  const depth = new Float32Array(W * H).fill(-Infinity), block = new Int32Array(W * H).fill(-1), colour = new Float32Array(W * H * 3), sunny = new Float32Array(W * H * 3), upward = new Uint8Array(W * H), spot = new Float32Array(W * H * 3);
+  const X = [0, 0, 0], Y = [0, 0, 0], Z = [0, 0, 0];
   for (const { mesh: { pos, nor, col }, dx, dz } of a.meshes) for (let t = 0; t < pos.length; t += 9) {
     const n: [number, number, number] = [nor[t], nor[t + 1], nor[t + 2]];
     // faces turned away from the camera are not seen
     if (n[0] * NEARER[0] + n[1] * NEARER[1] + n[2] * NEARER[2] <= 0) continue;
-    const X = [pos[t] + dx, pos[t + 3] + dx, pos[t + 6] + dx], Y = [pos[t + 1], pos[t + 4], pos[t + 7]], Z = [pos[t + 2] + dz, pos[t + 5] + dz, pos[t + 8] + dz];
-    const U = [0, 0, 0], V = [0, 0, 0], D = [0, 0, 0];
     for (let k = 0; k < 3; k++) {
+      X[k] = pos[t + k * 3] + dx; Y[k] = pos[t + k * 3 + 1]; Z[k] = pos[t + k * 3 + 2] + dz;
       U[k] = (X[k] * ACROSS[0] + Z[k] * ACROSS[2] - u0) * DOTS; V[k] = (X[k] * UPWARDS[0] + Y[k] * UPWARDS[1] + Z[k] * UPWARDS[2] - v0) * DOTS;
       D[k] = X[k] * NEARER[0] + Y[k] * NEARER[1] + Z[k] * NEARER[2];
     }
-    const area = (U[1] - U[0]) * (V[2] - V[0]) - (U[2] - U[0]) * (V[1] - V[0]);
-    if (Math.abs(area) < 1e-9) continue;
-    const lit = litness(n), r = (lit * (col[t] + col[t + 3] + col[t + 6])) / 3, g = (lit * (col[t + 1] + col[t + 4] + col[t + 7])) / 3, b = (lit * (col[t + 2] + col[t + 5] + col[t + 8])) / 3;
-    const fromU = Math.max(0, Math.ceil(Math.min(U[0], U[1], U[2]) - 0.5)), untilU = Math.min(W - 1, Math.floor(Math.max(U[0], U[1], U[2]) - 0.5));
-    const fromV = Math.max(0, Math.ceil(Math.min(V[0], V[1], V[2]) - 0.5)), untilV = Math.min(H - 1, Math.floor(Math.max(V[0], V[1], V[2]) - 0.5));
-    for (let v = fromV; v <= untilV; v++) for (let u = fromU; u <= untilU; u++) {
-      const pu = u + 0.5, pv = v + 0.5;
-      const s1 = ((pu - U[0]) * (V[2] - V[0]) - (U[2] - U[0]) * (pv - V[0])) / area, s2 = ((U[1] - U[0]) * (pv - V[0]) - (pu - U[0]) * (V[1] - V[0])) / area, s0 = 1 - s1 - s2;
-      if (s0 < -1e-6 || s1 < -1e-6 || s2 < -1e-6) continue;
-      const near = s0 * D[0] + s1 * D[1] + s2 * D[2], i = u + v * W;
-      if (near <= depth[i]) continue;
+    const sun = sunlit(n), rest = litness(n) - sun, r = (col[t] + col[t + 3] + col[t + 6]) / 3, g = (col[t + 1] + col[t + 4] + col[t + 7]) / 3, b = (col[t + 2] + col[t + 5] + col[t + 8]) / 3, up = n[1] > 0.5 ? 1 : 0;
+    dots(U, V, W, H, (i, s0, s1, s2) => {
+      const near = s0 * D[0] + s1 * D[1] + s2 * D[2];
+      if (near <= depth[i]) return;
       depth[i] = near;
-      // the block under the point that is seen, a hair inside the face
-      const x = Math.floor(s0 * X[0] + s1 * X[1] + s2 * X[2] - n[0] * 0.01), z = Math.floor(s0 * Z[0] + s1 * Z[1] + s2 * Z[2] - n[2] * 0.01);
+      // the point that is seen, a hair inside the face for the block under it, a hair outside it for the sun's view of it
+      const px = s0 * X[0] + s1 * X[1] + s2 * X[2], py = s0 * Y[0] + s1 * Y[1] + s2 * Y[2], pz = s0 * Z[0] + s1 * Z[1] + s2 * Z[2];
+      const x = Math.floor(px - n[0] * 0.01), z = Math.floor(pz - n[2] * 0.01);
       block[i] = x >= 0 && z >= 0 && x < a.w && z < a.d ? x + z * a.w : -1;
-      colour[i * 3] = r; colour[i * 3 + 1] = g; colour[i * 3 + 2] = b; upward[i] = n[1] > 0.5 ? 1 : 0;
-    }
+      colour[i * 3] = r * rest; colour[i * 3 + 1] = g * rest; colour[i * 3 + 2] = b * rest; sunny[i * 3] = r * sun; sunny[i * 3 + 1] = g * sun; sunny[i * 3 + 2] = b * sun; upward[i] = up;
+      const qx = px + n[0] * BIAS, qy = py + n[1] * BIAS, qz = pz + n[2] * BIAS;
+      spot[i * 3] = (qx * SUN_A[0] + qz * SUN_A[2] - a0) * SUN_DOTS; spot[i * 3 + 1] = (qx * SUN_B[0] + qy * SUN_B[1] + qz * SUN_B[2] - b0) * SUN_DOTS; spot[i * 3 + 2] = qx * SUN[0] + qy * SUN[1] + qz * SUN[2];
+    });
+  }
+  // the sun reaches a dot's point if nothing lies nearer to the sun there
+  for (let i = 0; i < W * H; i++) if (block[i] >= 0 && sunny[i * 3] + sunny[i * 3 + 1] + sunny[i * 3 + 2] > 0) {
+    const su = Math.floor(spot[i * 3]), sv = Math.floor(spot[i * 3 + 1]), at = su + sv * SW;
+    if (su >= 0 && sv >= 0 && su < SW && sv < SH && sunward[at] + slope[at * 2] * (spot[i * 3] - su - 0.5) + slope[at * 2 + 1] * (spot[i * 3 + 1] - sv - 0.5) > spot[i * 3 + 2] + BIAS) continue;
+    colour[i * 3] += sunny[i * 3]; colour[i * 3 + 1] += sunny[i * 3 + 1]; colour[i * 3 + 2] += sunny[i * 3 + 2];
   }
   for (let i = 0; i < W * H; i++) if (block[i] >= 0) { const j = block[i] * 8 + (upward[i] ? 0 : 4); seen[j] += colour[i * 3]; seen[j + 1] += colour[i * 3 + 1]; seen[j + 2] += colour[i * 3 + 2]; seen[j + 3]++; }
   return seen;
@@ -172,4 +216,33 @@ export function meanCover(quarters: readonly (Float32Array | null)[], half: numb
     }
   }
   return c;
+}
+
+/**
+ * The coarser step casts shadows of its own: a block behind a raised one lies in its shadow on the stage, and what
+ * the camera sees of the finer blocks under it is dark with the finer step's shadow already. So that the shadow is
+ * not laid on twice, a block's top colour is given as much brighter as the stage's sun will fall short on it: by
+ * the share of its top that the heights `h` of the coarser step's own ground (n blocks a side, with what stands
+ * out) hide from the sun.
+ */
+export function unshade(c: Cover, n: number, h: ArrayLike<number>) {
+  let highest = -Infinity;
+  for (let i = 0; i < n * n; i++) highest = Math.max(highest, h[i]);
+  const flat = Math.hypot(SUN[0], SUN[2]), sx = SUN[0] / flat, sz = SUN[2] / flat, climb = SUN[1] / flat, sun = sunlit([0, 1, 0]);
+  for (let z = 0; z < n; z++) for (let x = 0; x < n; x++) {
+    const j = x + z * n;
+    if (!c.has[j]) continue;
+    let hidden = 0;
+    for (let q = 0; q < 4; q++) {
+      const px = x + 0.25 + 0.5 * (q & 1), pz = z + 0.25 + 0.5 * (q >> 1);
+      for (let t = 0.25; h[j] + t * climb < highest; t += 0.5) {
+        const bx = Math.floor(px + t * sx), bz = Math.floor(pz + t * sz);
+        if (bx < 0 || bz < 0 || bx >= n || bz >= n) break;
+        if ((bx !== x || bz !== z) && h[bx + bz * n] > h[j] + t * climb) { hidden++; break; }
+      }
+    }
+    if (!hidden) continue;
+    const brighter = LIT_UP / (LIT_UP - (sun * hidden) / 4);
+    for (let k = 0; k < 3; k++) c.top[j * 3 + k] *= brighter;
+  }
 }

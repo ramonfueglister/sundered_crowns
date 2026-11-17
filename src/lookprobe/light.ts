@@ -12,8 +12,13 @@ export function towards(turn: number, elev: number): [number, number, number] {
   const right = Math.cos(rad(turn)) * Math.cos(rad(elev)), back = Math.sin(rad(turn)) * Math.cos(rad(elev));
   return [RIGHT[0] * right - NEAR[0] * back, Math.sin(rad(elev)), RIGHT[1] * right - NEAR[1] * back];
 }
-const SUN = towards(RIG.sunTurn, RIG.sunElevation), SIDE = towards(0, 0), FILL = towards(RIG.fillTurn, RIG.fillElevation);
+/** towards the sun, the only light that casts shadows */
+export const SUN = towards(RIG.sunTurn, RIG.sunElevation);
+const SIDE = towards(0, 0), FILL = towards(RIG.fillTurn, RIG.fillElevation);
 const facing = (n: readonly [number, number, number], l: readonly [number, number, number]) => Math.max(0, n[0] * l[0] + n[1] * l[1] + n[2] * l[2]);
+
+/** How brightly the sun alone lights a surface that faces `n` (unit length) and lies in no shadow: what a cast shadow takes away. */
+export const sunlit = (n: readonly [number, number, number]) => RIG.sun * facing(n, SUN);
 
 /** How brightly the far view's lights light a surface that faces `n` (unit length) and lies in no shadow: sun, side light, fill, and the sky above with the ground's light from below. */
 export const litness = (n: readonly [number, number, number]) => RIG.sun * facing(n, SUN) + RIG.side * facing(n, SIDE) + RIG.fill * facing(n, FILL) + RIG.sky * (0.5 + 0.5 * n[1]) + RIG.bounce * (0.5 - 0.5 * n[1]);
