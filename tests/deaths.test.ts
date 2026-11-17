@@ -4,8 +4,8 @@ import { describe, it, expect } from 'vitest';
 import { newWorldState, loadSetup } from '../tools/sim/load';
 import { advanceDay } from '../src/sim/engine';
 import { ageAtDeath, drawDeath, deathsTo, foundDeaths } from '../src/sim/systems/deaths';
-import { survivorship, lifeExpectancy } from '../src/sim/people/lifetable';
-import { ageOn, LIFE_TABLE_LEVEL } from '../src/sim/systems/people';
+import { lifeTable, survival, yearsLeft } from '../src/sim/people/lifetable';
+import { ageOn } from '../src/sim/systems/people';
 import { namedPersons } from '../src/sim/systems/rulers';
 import { ROLE, WORKING_AGE } from '../src/sim/systems/work';
 import { encodeState, decodeState, hashState } from '../src/sim/snapshot';
@@ -14,30 +14,41 @@ import { ALIVE, STATE_VERSION, type WorldState } from '../src/sim/state';
 
 const living = (x: WorldState, id: number) => x.person.alive[id] === 1 && x.person.cols.died[id] === ALIVE;
 
+describe('the life table of England around 1300 (La Poutré & Janssen 2021)', () => {
+  it('has the values of its formula: 16 % die in the first year, 70 % reach 15, 25.8 years are left at 27', () => {
+    expect(1 - survival(1)).toBeCloseTo(0.160, 3);
+    expect(survival(15)).toBeCloseTo(0.698, 3);
+    expect(survival(27)).toBeCloseTo(0.617, 3);
+    expect(yearsLeft(0)).toBeCloseTo(35.1, 1);
+    expect(yearsLeft(27)).toBeCloseTo(25.8, 1);
+    const l = lifeTable();
+    expect(l[0]).toBe(1);
+    for (let a = 1; a < l.length; a++) expect(l[a]).toBeLessThanOrEqual(l[a - 1]);
+    expect(l[120]).toBe(0);
+  });
+});
+
 describe('the day of death is drawn from the life table', () => {
-  const N = 200000, u = (k: number) => (k + 0.5) / N;
-  for (const sex of ['f', 'm'] as const) {
-    const l = survivorship(sex, LIFE_TABLE_LEVEL);
-    it(`a newborn ${sex === 'f' ? 'girl' : 'boy'} survives as the table says`, () => {
-      const ages = Array.from({ length: N }, (_, k) => ageAtDeath(sex, 0, u(k)));
-      for (const x of [1, 5, 15, 30, 50, 70, 90]) expect(ages.filter((a) => a > x).length / N).toBeCloseTo(l[x], 3);
-      // the mean age at death is the life expectancy at birth (the table counts an infant who dies as a0 of a year,
-      // the draw with the constant force of the year: a little more)
-      const mean = ages.reduce((a, b) => a + b, 0) / N;
-      expect(Math.abs(mean - lifeExpectancy(sex, LIFE_TABLE_LEVEL))).toBeLessThan(0.15);
-    });
-    it('a person who has reached an age survives from there', () => {
-      const from = 32.4, ages = Array.from({ length: N }, (_, k) => ageAtDeath(sex, from, u(k)));
-      const at = (x: number) => { const y = Math.floor(x); return l[y] * Math.pow(l[y + 1] / l[y], x - y); };
-      expect(ages.reduce((a, b) => Math.min(a, b), Infinity)).toBeGreaterThanOrEqual(from);
-      for (const x of [35, 40, 55, 75]) expect(ages.filter((a) => a > x).length / N).toBeCloseTo(l[x] / at(from), 3);
-    });
-  }
+  const N = 200000, u = (k: number) => (k + 0.5) / N, l = lifeTable();
+  it('a newborn survives as the table says', () => {
+    const ages = Array.from({ length: N }, (_, k) => ageAtDeath(0, u(k)));
+    for (const x of [1, 5, 15, 30, 50, 70, 90]) expect(ages.filter((a) => a > x).length / N).toBeCloseTo(l[x], 3);
+    // the mean age at death is the life expectancy at birth (the draw takes the force of a year as constant, the
+    // table integrates the formula: in the first year the draw lives a little longer)
+    const mean = ages.reduce((a, b) => a + b, 0) / N;
+    expect(Math.abs(mean - yearsLeft(0))).toBeLessThan(0.15);
+  });
+  it('a person who has reached an age survives from there', () => {
+    const from = 32.4, ages = Array.from({ length: N }, (_, k) => ageAtDeath(from, u(k)));
+    const at = (x: number) => { const y = Math.floor(x); return l[y] * Math.pow(l[y + 1] / l[y], x - y); };
+    expect(ages.reduce((a, b) => Math.min(a, b), Infinity)).toBeGreaterThanOrEqual(from);
+    for (const x of [35, 40, 55, 75]) expect(ages.filter((a) => a > x).length / N).toBeCloseTo(l[x] / at(from), 3);
+  });
   it('nobody lives past 120, and a later draw is a later death', () => {
-    expect(ageAtDeath('f', 0, 1 - 1e-12)).toBeLessThanOrEqual(120);
-    expect(ageAtDeath('m', 119.5, 0.999999)).toBeLessThanOrEqual(120);
+    expect(ageAtDeath(0, 1 - 1e-12)).toBeLessThanOrEqual(120);
+    expect(ageAtDeath(119.5, 0.999999)).toBeLessThanOrEqual(120);
     let last = 0;
-    for (let k = 0; k < 1000; k++) { const a = ageAtDeath('f', 10, k / 1000); expect(a).toBeGreaterThanOrEqual(last); last = a; }
+    for (let k = 0; k < 1000; k++) { const a = ageAtDeath(10, k / 1000); expect(a).toBeGreaterThanOrEqual(last); last = a; }
   });
 });
 
@@ -59,10 +70,10 @@ describe('a world whose persons die', () => {
     expect(s.economy.cities!.halted).toBe('');
     let dead = 0;
     for (let id = 0; id < s.person.size; id++) {
-      if (named.has(id)) continue;
+      if (named.has(id) || P.born[id] > 0) continue; // (a child born since is src/sim/systems/families.ts)
       if (P.dies[id] <= s.day) { expect(P.died[id]).toBe(P.dies[id]); dead++; } else expect(P.died[id]).toBe(ALIVE);
     }
-    expect(dead).toBeGreaterThan(100); // about 11 a day by the life table
+    expect(dead).toBeGreaterThan(20); // about 1 a day in the world of 1356 by the life table
     // the economy has the persons it had: every part is held, by the living where somebody was free
     expect(parts()).toEqual(before);
     expect(s.firm.size).toBe(firms);
@@ -100,15 +111,16 @@ describe('a world whose persons die', () => {
 });
 
 describe('the upgrade', () => {
-  it('a world of state 20 gets the days of death a new world has', () => {
+  it('a world of state 20 on its first day becomes the new world: the persons are founded anew', () => {
     const { s, w } = newWorldState();
     const old = decodeState(encodeState(s));
-    delete (old.person.cols as Record<string, unknown>).dies; old.v = 20;
+    delete (old.person.cols as Record<string, unknown>).dies; delete (old.person.cols as Record<string, unknown>).bears;
+    delete (old.family.cols as Record<string, unknown>).seat; old.v = 20;
     const up = upgradeState(decodeState(encodeState(old)), w, () => loadSetup(s.startYear));
     expect(up.v).toBe(STATE_VERSION);
     expect(hashState(up)).toBe(hashState(s));
     // on a later day the persons draw for the age they have reached: nobody is dead on the day of the upgrade
     const later = decodeState(encodeState(s)); later.day = 500; foundDeaths(later);
     for (let id = 0; id < later.person.size; id++) if (later.person.cols.dies[id] !== ALIVE) expect(later.person.cols.dies[id]).toBeGreaterThan(500);
-  });
+  }, 60_000);
 });

@@ -15,6 +15,7 @@ import { cultivate } from './systems/cultivation';
 import { bringInHarvest } from './systems/harvest';
 import { foundPersonCultures } from './systems/cultures';
 import { foundDeaths } from './systems/deaths';
+import { foundBirths } from './systems/families';
 import type { SetupState } from './setup';
 
 /** The fields of a WorldState in the order createWorldState writes them. */
@@ -150,6 +151,30 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     (s.person as { cols: unknown }).cols = fresh;
     foundDeaths(s);
     s.v = 21;
+  }
+  if (s.v === 21) { // 21 → 22: the persons marry and are born (src/sim/systems/families.ts), after England around
+    // 1300: another life table (La Poutré & Janssen 2021), a fixed number of households in every town, and other
+    // ages and couples for it. The persons of the towns are founded anew on the day the world has reached, as a new
+    // world founds them, and with them everything that hangs on who they are: their cultures, the rulers (who come
+    // into the world again as they would have since the first day), the days of death and of birth, the economies
+    // (their days and yearly figures are gone, as in the steps to 12, 14 and 15), the hamlets, the people of the
+    // places, the arable, the harvest and the land register. A world on its first day becomes the new world.
+    if (!setup) throw new Error('the upgrade to 22 needs the setup of the start year');
+    for (const [table, schema] of [[s.person, PERSON_SCHEMA], [s.family, FAMILY_SCHEMA]] as const) {
+      const cols = table.cols as Record<string, Column>, fresh = makeColumns(schema, table.alive.length) as Record<string, Column>;
+      for (const k of Object.keys(fresh)) if (k in cols) fresh[k] = cols[k]; // in the order of the schema
+      (table as { cols: unknown }).cols = fresh;
+    }
+    foundPeople(s);
+    foundPersonCultures(s, setup());
+    s.named = []; s.realm.cols.holder.fill(-1);
+    foundRulers(s, w); rulerCultures(s, w);
+    foundDeaths(s); foundBirths(s);
+    foundEconomy(s, w);
+    settleHamlets(s); countPeople(s);
+    cultivate(s, w); bringInHarvest(s, w);
+    foundLots(s, w.ground, w.dry);
+    s.v = 22;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one

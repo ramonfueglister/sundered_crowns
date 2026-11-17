@@ -2,11 +2,11 @@
 //
 // A person is computed only when something is due (Ramon, 17 November 2026: all persons, event-driven). The day of
 // death is drawn once, when the person comes into the world, from the life table the people were founded with
-// (Coale-Demeny West, src/sim/people/lifetable.ts), given the age the person has reached:
+// (La Poutré & Janssen 2021, src/sim/people/lifetable.ts), given the age the person has reached:
 //
 //   P(T > t | T > a) = l(t) / l(a),   so   l(t*) = (1 − u) · l(a)
 //
-// with l the survivorship of the person's sex and u a draw of the person's own stream. Within a year of age the
+// with l the survivorship (one table for both sexes) and u a draw of the person's own stream. Within a year of age the
 // force of mortality is constant, as the life table itself takes it. This is the next-event method of demographic
 // microsimulation (Modgen: https://dynamis.ihsn.org/guide/Report/10_Methods.html; MicSim, Zinn 2014): the waiting
 // time is drawn, and the earliest event of all persons is the next one. Death depends on age and sex only: IQ and
@@ -26,27 +26,29 @@
 //
 // A ruler dies on the day of the chronicle (src/sim/systems/rulers.ts), not here.
 //
-// Nobody is born yet, so a world in which this system runs shrinks: births, marriage and remarriage are the next
-// part of the feature and must be in before a running world gets this one.
+// Weddings and births are src/sim/systems/families.ts: a housewife who dies leaves her household vacant.
 import type { WorldState } from '../state';
 import { ALIVE } from '../state';
 import type { System } from '../schedule';
 import { MinHeap } from '../minheap';
 import { hash01 } from '../rng';
-import { survivorship, type Sex } from '../people/lifetable';
-import { ageOn, LIFE_TABLE_LEVEL } from './people';
+import { lifeTable } from '../people/lifetable';
+import { ageOn } from './people';
 import { namedPersons } from './rulers';
 import { ROLE, WORKING_AGE, K as WORK_K } from './work';
 
 /** Draws of a person's own stream (src/sim/systems/people.ts uses 0 to 21 and 100 on, work.ts 30 and 31). */
 const K = { death: 40 } as const;
 const DAYS_PER_YEAR = 365.25;
-const L: Record<Sex, Float64Array> = { f: survivorship('f', LIFE_TABLE_LEVEL), m: survivorship('m', LIFE_TABLE_LEVEL) };
+/** The key of an event on the list: the day, and the person behind the point, so the events of a day come in the
+ *  order of the persons however the list was built (a loaded state builds it anew). */
+export const eventKey = (day: number, id: number): number => day + id * 2 ** -26;
+const L = lifeTable();
 
-/** The age at death of a person of `sex` who has reached the age `age` (years), for the draw `u` in [0, 1): the age
+/** The age at death of a person who has reached the age `age` (years), for the draw `u` in [0, 1): the age
  *  at which the survivorship has fallen to (1 − u) of what it is at `age`. Nobody lives past 120. */
-export function ageAtDeath(sex: Sex, age: number, u: number): number {
-  const l = L[sex], a = Math.max(0, age), y0 = Math.min(119, Math.floor(a));
+export function ageAtDeath(age: number, u: number): number {
+  const l = L, a = Math.max(0, age), y0 = Math.min(119, Math.floor(a));
   if (a >= 120 || l[y0] <= 0) return a;
   // survivorship at the age reached, with the constant force of the year
   const within = (y: number, x: number) => (l[y + 1] > 0 ? l[y] * Math.pow(l[y + 1] / l[y], x - y) : l[y] * (1 - (x - y)));
@@ -62,8 +64,8 @@ export function ageAtDeath(sex: Sex, age: number, u: number): number {
 
 /** The day of death of the person `id` who lives on `day`: at least the next day. */
 export function drawDeath(s: WorldState, id: number, day: number): number {
-  const P = s.person.cols, sex: Sex = P.sex[id] ? 'm' : 'f';
-  const at = ageAtDeath(sex, ageOn(P.born[id], day), hash01(s.seed >>> 0, id, K.death));
+  const P = s.person.cols;
+  const at = ageAtDeath(ageOn(P.born[id], day), hash01(s.seed >>> 0, id, K.death));
   return Math.max(day + 1, P.born[id] + Math.ceil(at * DAYS_PER_YEAR));
 }
 
@@ -80,7 +82,7 @@ export function foundDeaths(s: WorldState): void {
 
 /** The list of events of a state: the days of death of its living persons, the earliest first; and the dead whose
  *  place in the economy is still theirs. Derived from the columns, so a loaded state builds it anew. */
-interface Queue { heap: MinHeap; estates: number[]; /** the persons of each place who are no rulers, living or dead */ byPlace: Map<number, number[]> }
+interface Queue { heap: MinHeap; estates: number[]; /** the persons of each place who are no rulers; the dead leave it when it is next read */ byPlace: Map<number, number[]> }
 const queues = new WeakMap<WorldState, Queue>();
 function queueOf(s: WorldState): Queue {
   let q = queues.get(s);
@@ -91,7 +93,7 @@ function queueOf(s: WorldState): Queue {
       if (!s.person.alive[id] || named.has(id)) continue;
       const place = F.place[P.family[id]], list = q.byPlace.get(place);
       if (list) list.push(id); else q.byPlace.set(place, [id]);
-      if (P.died[id] === ALIVE) { if (P.dies[id] !== ALIVE) q.heap.push(P.dies[id], id); }
+      if (P.died[id] === ALIVE) { if (P.dies[id] !== ALIVE) q.heap.push(eventKey(P.dies[id], id), id); }
       else if (P.role[id] !== ROLE.none) q.estates.push(id);
     }
     queues.set(s, q);
@@ -103,8 +105,19 @@ export function scheduleDeath(s: WorldState, id: number): void {
   const had = queues.has(s), q = queueOf(s);
   if (!had) return; // the list was built just now, with the person
   const P = s.person.cols, d = P.dies[id], place = s.family.cols.place[P.family[id]], list = q.byPlace.get(place);
-  if (d !== ALIVE) q.heap.push(d, id);
+  if (d !== ALIVE) q.heap.push(eventKey(d, id), id);
   if (list) list.push(id); else q.byPlace.set(place, [id]);
+}
+
+/** The living persons of a place who are no rulers (the list is the state's own: do not change it). */
+export function livingIn(s: WorldState, place: number): number[] {
+  const q = queueOf(s), list = q.byPlace.get(place);
+  if (!list) return [];
+  const P = s.person.cols;
+  // the dead leave the list (the estates are kept by person, not by place)
+  let k = 0; for (const id of list) if (P.died[id] === ALIVE) list[k++] = id;
+  list.length = k;
+  return list;
 }
 
 /** Who takes the part of `dead` in the economy of the town: a living person of the same place of 15 or older
@@ -137,7 +150,7 @@ function succeed(s: WorldState, q: Queue, dead: number, day: number): boolean {
 /** The person `id` dies on `day`. */
 function die(s: WorldState, q: Queue, id: number, day: number): void {
   const P = s.person.cols, F = s.family.cols, f = P.family[id];
-  P.died[id] = day;
+  P.died[id] = day; P.bears[id] = ALIVE;
   if (F.man[f] === id) F.man[f] = -1;
   if (F.woman[f] === id) F.woman[f] = -1;
   if (P.role[id] !== ROLE.none && !succeed(s, q, id, day)) q.estates.push(id);
@@ -147,8 +160,8 @@ function die(s: WorldState, q: Queue, id: number, day: number): void {
 export function deathsTo(s: WorldState, day: number): number {
   const q = queueOf(s), P = s.person.cols;
   let n = 0;
-  while (q.heap.size && q.heap.peekKey() <= day) {
-    const [due, id] = q.heap.pop();
+  while (q.heap.size && Math.floor(q.heap.peekKey()) <= day) {
+    const [key, id] = q.heap.pop(), due = Math.floor(key);
     if (!s.person.alive[id] || P.died[id] !== ALIVE || P.dies[id] !== due) continue; // an entry that no longer holds
     die(s, q, id, due); n++;
   }

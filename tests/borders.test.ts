@@ -102,9 +102,9 @@ describe('a world of 1291 saved before the borders', () => {
     expect(up.v).toBe(STATE_VERSION);
     expect(Array.from(up.place.owner)).toEqual(Array.from(s.place.owner));
     expect(up.realmText.map((t) => t.key)).toEqual(s.realmText.map((t) => t.key));
-    // the world that ran has the days of death of its first day; the saved one draws them on the day it has reached
-    // (step 21, src/sim/systems/deaths.ts), so the running one is given those for the comparison
-    foundDeaths(s);
+    // the saved one gets its persons anew on the day it has reached (step 22, src/sim/upgrade.ts), so the world that
+    // ran is given the same for the comparison
+    s.v = 21; upgradeState(s, w, () => loadSetup(1291));
     expect(hashState(up)).toBe(hashState(s));
   }, 120_000);
 });

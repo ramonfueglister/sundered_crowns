@@ -185,25 +185,20 @@ describe('the state', () => {
     const up = upgradeState(decodeState(encodeState(old)), w, () => loadSetup(1356));
     expect(up.v).toBe(STATE_VERSION);
     expect(Object.keys(up.person.cols)).toEqual(Object.keys(PERSON_SCHEMA));
-    const founded = decodeState(encodeState(s)); foundEconomy(founded, w);
-    // step 17 settles the families by the firms of the new economies and sets the people, arable and harvest anew
-    settleHamlets(founded); countPeople(founded); cultivate(founded, w); bringInHarvest(founded, w);
-    foundLots(founded, w.ground, w.dry); // step 20: the parcels of the families who live in the towns now
-    foundDeaths(founded); // step 21: the days of death, drawn for the age reached
+    // step 22 founds the persons anew on the day reached, and everything that hangs on them: as it does for the world that ran
+    const founded = decodeState(encodeState(s)); founded.v = 21; upgradeState(founded, w, () => loadSetup(1356));
     expect(hashState(up)).toBe(hashState(founded));
     const c = up.economy.cities!;
     expect(c.day).toBe(s.day); expect(c.years.length).toBe(0); expect(c.halted).toBe('');
     for (let k = 0; k < N; k++) expect(c.figures[k * FIGURES + FIGURE.periods]).toBe(0);
-    // a living man who worked works; a man who has turned 15 since the start and draws work, works now too. (The women of
-    // a city are drawn at a rate that follows its women of working age, economy feature 11: tests/economy-households.test.ts)
-    let fresh = 0;
+    // the persons are new ones (step 22), all alive, and those of them who work are of working age on the day reached
+    let working = 0;
     for (let id = 0; id < up.person.size; id++) {
-      if (up.person.cols.sex[id] !== 1 || up.person.cols.died[id] !== ALIVE) continue; // the dead work no more
-      const was = start.person.cols.role[id], is = up.person.cols.role[id], works = (r: number) => r !== ROLE.none && r !== ROLE.idle;
-      if (works(was)) expect(works(is)).toBe(true);
-      else if (works(is)) { fresh++; expect(ageOn(up.person.cols.born[id], up.day)).toBeGreaterThanOrEqual(WORKING_AGE); expect(ageOn(up.person.cols.born[id], 0)).toBeLessThan(WORKING_AGE); }
+      expect(up.person.cols.died[id]).toBe(ALIVE);
+      const r = up.person.cols.role[id];
+      if (r !== ROLE.none && r !== ROLE.idle) { working++; expect(ageOn(up.person.cols.born[id], up.day)).toBeGreaterThanOrEqual(WORKING_AGE); }
     }
-    expect(fresh).toBeGreaterThan(0);
+    expect(working).toBeGreaterThan(10_000);
     advanceDay(up, w);
     expect(up.economy.cities!.figures[FIGURE.periods]).toBe(1);
     expect(up.economy.cities!.halted).toBe('');

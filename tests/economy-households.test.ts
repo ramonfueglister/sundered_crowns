@@ -64,7 +64,7 @@ describe('a woman without a husband', () => {
         alone++;
         expect(works(x, id)).toBe(true);
       }
-      expect(alone).toBeGreaterThan(1000); // about one woman in seven
+      expect(alone).toBeGreaterThan(700); // the widows who keep a household and the women who live on their own
     });
     it(`leaves the share of the women who work at the table's 43 %, in every city of the world of ${name}`, () => {
       const by = women(x);
@@ -95,7 +95,7 @@ describe('a woman without a husband', () => {
         none++;
         if (ids.length === 1 && x.person.cols.sex[ids[0]] === 0 && adult(x, ids[0])) lone++;
       }
-      expect(families).toBeGreaterThan(6000);
+      expect(families).toBeGreaterThan(4500);
       expect(none / families).toBeLessThan(0.015); // it was every ninth family; 1.06 % in the 558 towns of 1291
       expect(lone).toBe(0); // no woman on her own is among them
     });
@@ -237,10 +237,8 @@ describe('the state', () => {
     expect(up.v).toBe(STATE_VERSION);
     expect(Object.keys(up.person.cols)).toEqual(Object.keys(PERSON_SCHEMA));
     expect(Object.keys(up.family.cols)).toEqual(Object.keys(FAMILY_SCHEMA));
-    const founded = decodeState(encodeState(s)); foundEconomy(founded, w);
-    settleHamlets(founded); countPeople(founded); cultivate(founded, w); bringInHarvest(founded, w); // step 17
-    foundLots(founded, w.ground, w.dry); // step 20: the parcels of the families who live in the towns now
-    foundDeaths(founded); // step 21: the days of death, drawn for the age reached
+    // step 22 founds the persons anew on the day reached, and everything that hangs on them: as it does for the world that ran
+    const founded = decodeState(encodeState(s)); founded.v = 21; upgradeState(founded, w, () => loadSetup(1356));
     expect(hashState(up)).toBe(hashState(founded));
     const c = up.economy.cities!;
     expect(c.day).toBe(s.day); expect(c.years.length).toBe(0); expect(c.halted).toBe('');

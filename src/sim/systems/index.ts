@@ -7,5 +7,6 @@ import { cityEconomies } from './economy';
 import { rulers } from './rulers';
 import { borders } from './borders';
 import { deaths } from './deaths';
+import { families } from './families';
 
-export const SYSTEMS: readonly System[] = [deaths, cultivation, harvest, cityEconomies, borders, rulers];
+export const SYSTEMS: readonly System[] = [deaths, families, cultivation, harvest, cityEconomies, borders, rulers];
