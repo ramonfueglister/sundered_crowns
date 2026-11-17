@@ -10,7 +10,6 @@ import { TERRAINS, RESOURCES } from '../sim/geo';
 import { ALL_CULTURES, cultureLabel, FAITHS } from '../sim/content/peoples';
 import { hectares, landLimitHa, soilOf } from '../sim/systems/cultivation';
 import { kcalPerHeadDay } from '../sim/systems/harvest';
-import { farmersOf } from '../sim/systems/hamlets';
 
 export function realmInfos(s: WorldState, rulerName: (uid: string) => string | null): RealmInfo[] {
   const count = new Int32Array(s.realm.size);
@@ -46,27 +45,37 @@ const NONE = { en: '—', de: '—' };
 
 /** The cultures and faiths of the living persons of a place, as pairs, most persons first (src/sim/systems/cultures.ts). */
 export function placePeoples(s: WorldState, place: number): { culture: I18n; faith: I18n; persons: number }[] {
+  return personsOfPlace(s, place).peoples;
+}
+
+/** The culture and faith pairs of a place's living persons, most persons first, and how many of them live in its hamlets: one pass over the persons. */
+function personsOfPlace(s: WorldState, place: number): { peoples: { culture: I18n; faith: I18n; persons: number }[]; farmers: number } {
   const P = s.person.cols, F = s.family.cols, n = new Map<number, number>();
+  let farmers = 0;
   for (let id = 0; id < s.person.size; id++) {
-    if (!s.person.alive[id] || P.died[id] !== ALIVE || F.place[P.family[id]] !== place) continue;
+    if (!s.person.alive[id] || P.died[id] !== ALIVE) continue;
+    const f = P.family[id];
+    if (F.place[f] !== place) continue;
+    if (F.hamlet[f]) farmers++;
     const k = P.culture[id] * 256 + P.faith[id];
     n.set(k, (n.get(k) ?? 0) + 1);
   }
-  return [...n].sort((a, b) => b[1] - a[1] || a[0] - b[0]).map(([k, persons]) => ({
+  const peoples = [...n].sort((a, b) => b[1] - a[1] || a[0] - b[0]).map(([k, persons]) => ({
     culture: cultureLabel(ALL_CULTURES[k >> 8] ?? 'unknown'), faith: FAITHS[k & 255]?.name ?? { en: '?', de: '?' }, persons,
   }));
+  return { peoples, farmers };
 }
 
 export function placeDetail(s: WorldState, w: World, i: number): PlaceDetail | null {
   if (!Number.isInteger(i) || i < 0 || i >= w.L) return null;
-  const peoples = placePeoples(s, i), first = peoples[0];
+  const { peoples, farmers } = personsOfPlace(s, i), first = peoples[0];
   const arable = s.place.arable[i], land = hectares(w, i);
   return {
     id: i, name: w.names[i], nameDe: w.namesDe[i], owner: s.place.owner[i], terrain: TERRAINS[w.terrain[i]], resource: RESOURCES[w.resource[i]],
     culture: first?.culture ?? NONE, faith: first?.faith ?? NONE, peoples, pop: Math.round(10 * s.place.pop[i]) / 10,
     harvest: {
       kcal: s.place.harvest[i], perHeadDay: kcalPerHeadDay(s.place.harvest[i], s.place.pop[i]),
-      landYield: Number.isNaN(w.landYield[i]) ? null : w.landYield[i], hectares: land, farmers: farmersOf(s, i),
+      landYield: Number.isNaN(w.landYield[i]) ? null : w.landYield[i], hectares: land, farmers,
       arable: {
         hectares: arable, share: land > 0 ? arable / land : 0, landYield: arable > 0 ? soilOf(w, i, arable) / arable : null,
         atLimit: s.place.pop[i] > 0 && arable >= landLimitHa(w, i),
