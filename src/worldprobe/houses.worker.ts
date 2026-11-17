@@ -3,6 +3,7 @@
 // over, not copied.
 import { Batch } from '../lookprobe/batch';
 import type { Shape } from '../lookprobe/stage';
+import { ballOf } from './ball';
 import { type Columns, pave } from './nearground';
 import { type Lot, raise } from './settle';
 
@@ -15,7 +16,7 @@ self.onmessage = (e: MessageEvent<HousesJob>) => {
     const built = new Batch();
     for (const l of lots) raise(built, l, 1);
     if (ground) pave(built, ground);
-    const houses = { pos: new Float32Array(built.pos), nor: new Float32Array(built.nor), col: new Float32Array(built.col) };
+    const pos = new Float32Array(built.pos), houses = { pos, nor: new Float32Array(built.nor), col: new Float32Array(built.col), ball: ballOf(pos) };
     (self as unknown as Worker).postMessage({ id, houses } satisfies HousesDone, [houses.pos.buffer, houses.nor.buffer, houses.col.buffer]);
   } catch (err) {
     (self as unknown as Worker).postMessage({ id, error: String(err) } satisfies HousesDone);

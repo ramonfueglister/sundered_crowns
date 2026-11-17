@@ -14,7 +14,7 @@ import { createNames } from './names';
 // the face of the realms' names (names.ts), bundled: no requests to a font service
 import '@fontsource/eb-garamond/latin-500.css';
 import '@fontsource/eb-garamond/latin-ext-500.css';
-import { type Layout, createPieces } from './pieces';
+import { type Layout, type View, createPieces } from './pieces';
 import { createRealms } from './realms';
 import type { RealmsNow } from './realms.worker';
 import { extentOf, heldIn } from './extent';
@@ -80,7 +80,7 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
   const frame = extentOf(projection), farthest = Math.min(FARTHEST, frame.east - frame.west);
   // the view: the place at the middle of the picture in the finest blocks, and how many of them lie across the picture
   let [x, z] = blockOfCell(...projection.cellOf(o.lon, o.lat)), wide = Math.min(farthest, Math.max(NEAREST, o.wide));
-  const pieces = createPieces(stage, { region: name, base, bakedSky: bakedSky(), ahead: !still, changed: () => look(), year: o.year, mean: new URLSearchParams(location.search).get('mean') === 'compare' ? 'compare' : new URLSearchParams(location.search).get('mean') === '1' });
+  const pieces = createPieces(stage, { region: name, base, bakedSky: bakedSky(), ahead: !still, changed: () => look(), workers: +(new URLSearchParams(location.search).get('workers') ?? 0) || undefined, year: o.year, mean: new URLSearchParams(location.search).get('mean') === 'compare' ? 'compare' : new URLSearchParams(location.search).get('mean') === '1' });
   const realms = createRealms(stage, { region: name, base, year: o.year, map: projection.map, cells: projection.cells, round: projection.round, rows: projection.rows, ahead: !still, changed: () => look() }), names = createNames(o.names);
   const middle = (): [number, number] => { const box = canvas.getBoundingClientRect(); return [box.left + box.width / 2, box.top + box.height / 2]; };
 
@@ -91,7 +91,7 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
     // the picture stops at the edges of the world's frame (the map's rows and columns run with the picture's sides)
     const [u0, v0] = cellOfBlock(x, z), [u, held] = heldIn(frame, u0, v0, wide, wide / aspect / squash);
     if (held !== v0 || u !== u0) [x, z] = blockOfCell(u, held);
-    const view = { x, z, wide, aspect, pixels: canvas.clientWidth, elevation };
+    const view = { x, z, wide, aspect, pixels: canvas.clientWidth, elevation, to: toward() };
     const at = pieces.look(view), missing = at.missing + realms.look(view, at), failed = pieces.failed || realms.failed;
     stage.aim(x / at.coarse - at.homeX, z / at.coarse - at.homeZ, wide / at.coarse, elevation, awayOf(wide) / at.coarse);
     stage.creases(creasesOf(wide), creaseReachOf(wide) / at.coarse); stage.soften(nearOf(wide)); laid = at;
@@ -104,9 +104,17 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
   const note = () => { if (o.moved) { const [lon, lat] = projection.placeOf(...cellOfBlock(x, z)); o.moved(lon, lat, wide); } };
 
   /** ground offset from the middle of the picture to a point of the page, in finest blocks to the right and towards the viewer */
-  const offset = (px: number, py: number): [number, number] => {
-    const box = canvas.getBoundingClientRect(), perPixel = wide / box.width;
-    return [(px - box.left - box.width / 2) * perPixel, ((py - box.top - box.height / 2) * perPixel) / Math.sin((elevationOf(wide) * Math.PI) / 180)];
+  const offset = (px: number, py: number, across = wide): [number, number] => {
+    const box = canvas.getBoundingClientRect(), perPixel = across / box.width;
+    return [(px - box.left - box.width / 2) * perPixel, ((py - box.top - box.height / 2) * perPixel) / Math.sin((elevationOf(across) * Math.PI) / 180)];
+  };
+  /** the view a zoom or a flight under way will come to rest at: the pieces of that picture are built first (pieces.ts) */
+  const toward = (): View['to'] => {
+    if (flight) return { x: flight.toX, z: flight.toZ, wide: flight.toWide, elevation: elevationOf(flight.toWide) };
+    if (Math.abs(Math.log(goal / wide)) <= 1e-3) return undefined;
+    // the ground under the point the zoom is about stays under it
+    const before = offset(...about), after = offset(...about, goal), right = before[0] - after[0], near = before[1] - after[1];
+    return { x: x + right * RIGHT[0] + near * NEAR[0], z: z + right * RIGHT[1] + near * NEAR[1], wide: goal, elevation: elevationOf(goal) };
   };
   const move = (right: number, near: number) => { x += right * RIGHT[0] + near * NEAR[0]; z += right * RIGHT[1] + near * NEAR[1]; look(); note(); };
   /** zooms so that the ground under a point of the page stays under it */

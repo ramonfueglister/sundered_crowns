@@ -54,7 +54,7 @@ const FIGURES_GONE = 0.3;
 const FIGURES_LAYER = 1;
 
 /** A mesh as flat lists: three numbers per corner for position, direction and colour. A `Batch` is one. */
-export interface Shape { pos: ArrayLike<number>; nor: ArrayLike<number>; col: ArrayLike<number> }
+export interface Shape { pos: ArrayLike<number>; nor: ArrayLike<number>; col: ArrayLike<number>; /** the ball around all its points, middle and radius, where its builder has worked it out (else the stage does, on the page's thread) */ ball?: [number, number, number, number] }
 export interface StageScene<S extends Shape = Batch> {
   ground: S; things: S;
   /** the sea, which mirrors what stands beside it */
@@ -174,7 +174,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   const geometry = (s: Shape) => {
     const g = new THREE.BufferGeometry(), list = (a: ArrayLike<number>) => new THREE.BufferAttribute(a instanceof Float32Array ? a : new Float32Array(a), 3);
     g.setAttribute('position', list(s.pos)); g.setAttribute('normal', list(s.nor)); g.setAttribute('color', list(s.col));
-    g.computeBoundingSphere();
+    if (s.ball) g.boundingSphere = new THREE.Sphere(new THREE.Vector3(s.ball[0], s.ball[1], s.ball[2]), s.ball[3]); else g.computeBoundingSphere();
     return g;
   };
 

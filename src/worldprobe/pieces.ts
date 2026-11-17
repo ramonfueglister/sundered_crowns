@@ -5,6 +5,11 @@
 // Until then the coarser piece stands in, and where that is missing too, finer pieces left from before. Pieces around
 // the picture are built ahead of need, and so are those of the step the view is about to change to. Where pieces
 // take the place of others, the new ones are dissolved into the picture while the old ones dissolve out of it.
+// While the view is in motion, the pieces of the view it will come to rest at are built first: a zoom or a flight is
+// over sooner than a piece is built, so what the pictures on the way would ask for comes too late to be seen
+// (Cesium loads the destination of a flight ahead in the same way). A piece that has arrived is put on the stage
+// in a picture of its own and drawn there once without showing, so that its lists reach the graphics card one
+// piece to a picture, not all the pieces of a step in the picture that first shows them.
 // The houses that have fine blocks and the paved ground lie in cells of their own on their piece: from near, fine.ts
 // builds them again.
 import type * as THREE from 'three/webgpu';
@@ -24,6 +29,8 @@ const AHEAD = 0.3;
 const ZOOM_AHEAD = 1.25;
 /** pieces kept on the stage beyond those the view asks for */
 const SPARE = 10;
+/** a picture every this many milliseconds is what the stage aims for: a piece that has arrived is put on it in a picture of its own */
+const PICTURE = 1000 / 60;
 /** pieces that take the place of others dissolve into the picture over this many milliseconds */
 const DISSOLVE = 300;
 /** summaries of finest pieces kept for the pieces over them (half a megabyte each) */
@@ -34,7 +41,7 @@ const HOME_REACH = 3000;
 const LEAN = 30, HOUSE_LEAN = 12;
 
 /** The view: the place at the middle of the picture in the finest blocks, how many of them lie across it, the picture's shape and width in pixels, and how far the camera looks down. */
-export interface View { x: number; z: number; wide: number; aspect: number; pixels: number; elevation: number }
+export interface View { x: number; z: number; wide: number; aspect: number; pixels: number; elevation: number; /** the view a motion under way will come to rest at */ to?: { x: number; z: number; wide: number; elevation: number } }
 /** How the stage is laid out for a view: its blocks are `coarse` finest blocks wide and counted from `home`. */
 export interface Layout { step: number; coarse: number; homeX: number; homeZ: number }
 interface Held {
@@ -51,6 +58,8 @@ interface Held {
   laid: number;
   /** the piece is dissolving into the picture (`rising`) or out of it since this time */
   fade?: { since: number; rising: boolean };
+  /** pictures in which the piece is still to be drawn without showing, so that its lists are on the graphics card before it shows */
+  warm: number;
 }
 interface Spot { key: string; step: number; px: number; pz: number }
 
@@ -67,7 +76,7 @@ export interface Pieces {
  * `ahead`: build the coarser step and the surroundings of the picture too (a tool that takes one picture does not
  * need them). `changed` is called whenever a piece has arrived.
  */
-export function createPieces(stage: Stage, o: { region: string; base: string; bakedSky: boolean; ahead: boolean; changed(): void; /** the world's start year, whose towns are built */ year?: number; /** true: the first far step as the mean of the finest step (mean.ts: exact, but it builds four finest pieces for each far piece); 'compare': as far.ts lays it out, and measured against that mean (the counts `cmp …`); else as far.ts lays it out */ mean?: boolean | 'compare' }): Pieces {
+export function createPieces(stage: Stage, o: { region: string; base: string; bakedSky: boolean; ahead: boolean; changed(): void; /** how many workers build the pieces (default: up to 4, one less than the machine's cores) */ workers?: number; /** the world's start year, whose towns are built */ year?: number; /** true: the first far step as the mean of the finest step (mean.ts: exact, but it builds four finest pieces for each far piece); 'compare': as far.ts lays it out, and measured against that mean (the counts `cmp …`); else as far.ts lays it out */ mean?: boolean | 'compare' }): Pieces {
   const held = new Map<string, Held>(), building = new Set<string>(), jobs = new Map<number, Spot>(), idle: Worker[] = [];
   const workers: Worker[] = [];
   const fine = createFine(stage, { still: !o.ahead, changed: o.changed });
@@ -81,25 +90,41 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
   const sums = new Map<string, Float32Array>();
   /** when the shares of the pieces laid in were last set */
   let mixed = 0;
+  /** pieces that have arrived and wait for their picture: one is put on the stage per picture */
+  const arrived: { spot: Spot; scene: NonNullable<PieceDone['scene']> }[] = [];
+  let admitting = false, admitted = 0;
+  const put = ({ spot, scene }: (typeof arrived)[number]) => {
+    const group = stage.add(scene);
+    group.visible = false;
+    const cells = scene.cells.map((c, k) => ({ key: `${spot.key}/${k}`, far: c.far.pos.length ? stage.more(group, c.far) : undefined, lots: c.lots, ground: c.ground, x: spot.px * PIECE - MARGIN + c.x, z: spot.pz * PIECE - MARGIN + c.z }));
+    held.set(spot.key, { group, step: spot.step, px: spot.px, pz: spot.pz, cells, dots: [0, 1], seen: looks, on: false, laid: 0, warm: o.ahead ? 1 : 0 });
+    building.delete(spot.key);
+    for (const [name, n] of Object.entries(scene.counts)) stage.probe.counts[name] = (stage.probe.counts[name] ?? 0) + n;
+  };
+  const admit = () => {
+    admitting = false;
+    // one to a picture as pictures should follow each other (where they take longer, as many as would have had their own);
+    // a tool that takes one picture has no pictures to spread them over
+    const now = performance.now(), due = o.ahead ? Math.max(1, Math.floor((now - admitted) / PICTURE)) : arrived.length;
+    admitted = now;
+    for (let k = due; k > 0 && arrived.length; k--) put(arrived.shift()!);
+    if (arrived.length) { admitting = true; requestAnimationFrame(admit); }
+    o.changed();
+  };
 
-  for (let k = Math.max(1, Math.min(4, (navigator.hardwareConcurrency || 2) - 1)); k > 0; k--) {
+  for (let k = Math.max(1, o.workers ?? Math.min(4, (navigator.hardwareConcurrency || 2) - 1)); k > 0; k--) {
     const worker = new Worker(new URL('./piece.worker.ts', import.meta.url), { type: 'module' });
     worker.onmessage = (e: MessageEvent<PieceDone>) => {
       const spot = jobs.get(e.data.id)!;
-      jobs.delete(e.data.id); building.delete(spot.key); idle.push(worker);
+      jobs.delete(e.data.id); idle.push(worker);
       if (e.data.summary) {
         sums.delete(spot.key); sums.set(spot.key, e.data.summary);
         if (sums.size > KEPT_SUMS) sums.delete(sums.keys().next().value!);
       }
+      // (a piece counts as being built until it is on the stage, so that it is not asked for again)
+      if (e.data.scene && !e.data.error) arrived.push({ spot, scene: e.data.scene }); else building.delete(spot.key);
       if (e.data.error) pieces.failed ||= e.data.error;
-      else if (e.data.scene) {
-        const group = stage.add(e.data.scene);
-        group.visible = false;
-        const cells = e.data.scene.cells.map((c, k) => ({ key: `${spot.key}/${k}`, far: c.far.pos.length ? stage.more(group, c.far) : undefined, lots: c.lots, ground: c.ground, x: spot.px * PIECE - MARGIN + c.x, z: spot.pz * PIECE - MARGIN + c.z }));
-        held.set(spot.key, { group, step: spot.step, px: spot.px, pz: spot.pz, cells, dots: [0, 1], seen: looks, on: false, laid: 0 });
-        for (const [name, n] of Object.entries(e.data.scene.counts)) stage.probe.counts[name] = (stage.probe.counts[name] ?? 0) + n;
-      }
-      o.changed();
+      if (!o.ahead) admit(); else { if (!admitting && arrived.length) { admitting = true; requestAnimationFrame(admit); } o.changed(); }
     };
     worker.onerror = (e) => { pieces.failed ||= e.message; o.changed(); };
     idle.push(worker); workers.push(worker);
@@ -135,6 +160,8 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
 
     // what the view asks for: its own step in the picture first, then the coarser step under the picture, then around it
     const wanted: (Spot & { rank: number })[] = [];
+    // first of all the picture the view will come to rest at, from its middle outwards
+    if (o.ahead && v.to) for (const p of near({ ...v, ...v.to }, stepOf(v.to.wide), 0)) wanted.push({ ...p, rank: p.far });
     for (const p of near(v, step, o.ahead ? AHEAD * v.wide : 0)) wanted.push({ ...p, rank: (p.out > 0 ? 2e9 : 1e9) + p.far });
     // a coarser piece is four times the size, so those of the picture reach far enough around it
     const coarser = step < COARSEST && (o.ahead || blend > 0) ? near(v, step + 1, 0) : [];
@@ -143,8 +170,9 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
     // the finer step, once the view comes near it: last of all
     if (o.ahead && stepOf(v.wide / ZOOM_AHEAD) < step) for (const p of near(v, step - 1, 0)) wanted.push({ ...p, rank: 3e9 + p.far });
     let missing = 0;
-    for (const w of wanted) { const h = held.get(w.key); if (h) h.seen = looks; else if ((w.step === step && w.rank < 2e9) || (!o.ahead && w.step > step)) missing++; }
-    const queue = wanted.filter((w) => !held.has(w.key) && !building.has(w.key)).sort((a, b) => b.rank - a.rank);
+    for (const w of wanted) { const h = held.get(w.key); if (h) h.seen = looks; else if ((w.step === step && w.rank >= 1e9 && w.rank < 2e9) || (!o.ahead && w.step > step)) missing++; }
+    // (a piece asked for twice is built once, as early as its first asking)
+    const asked = new Set<string>(), queue = wanted.filter((w) => !held.has(w.key) && !building.has(w.key)).sort((a, b) => a.rank - b.rank).filter((w) => !asked.has(w.key) && asked.add(w.key)).reverse();
     while (idle.length && queue.length) {
       const next = queue.pop()!, worker = idle.pop()!, id = nextId++;
       jobs.set(id, next); building.add(next.key);
@@ -178,12 +206,24 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
     for (const h of coming) { h.on = true; h.fade = o.ahead && going.some((g) => over(h, g)) ? { since: now, rising: true } : undefined; }
     for (const h of going) { h.on = false; h.fade = o.ahead && coming.some((c) => over(h, c)) ? { since: now, rising: false } : undefined; }
     }
+    const showing = new Set<Held>();
     for (const h of held.values()) {
       const share = h.fade ? Math.min(1, (now - h.fade.since) / DISSOLVE) : 1;
       if (share >= 1) h.fade = undefined;
-      h.group.visible = h.on || !!h.fade || h.laid > 0;
+      const shows = h.on || !!h.fade || h.laid > 0;
+      h.group.visible = shows || h.warm > 0;
       if (!h.group.visible) continue;
-      h.seen = looks; fading ||= !!h.fade;
+      if (shows) showing.add(h);
+      else {
+        // drawn once on none of the picture's dots, where it will lie
+        h.warm--; fading = true;
+        stage.dissolve(h.group, 0, 0);
+        const f = 2 ** (h.step - step), tall = f * reliefOf(v.wide, h.step);
+        h.group.scale.set(f, tall, f);
+        h.group.position.set((h.px * PIECE - MARGIN) * f - layout.homeX, SEA_Y * (1 - tall), (h.pz * PIECE - MARGIN) * f - layout.homeZ);
+        continue;
+      }
+      h.warm = 0; h.seen = looks; fading ||= !!h.fade;
       h.dots = [h.fade && !h.fade.rising ? share : 0, h.fade?.rising ? share : 1];
       // a piece laid in takes the first of the dots, as many as its share, and the view's own pieces under it the
       // rest (a piece that stands in for missing finer ones keeps all of its dots)
@@ -199,7 +239,7 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
     }
     // the houses of the pieces in the picture, from their fine blocks where the view is near
     const cells: HouseCell[] = [];
-    for (const h of held.values()) if (h.group.visible) for (const c of h.cells) cells.push({ key: c.key, group: h.group, far: c.far, lots: c.lots, ground: c.ground, dots: h.dots, out: beyond(v, c.x, c.z, CELL, HOUSE_LEAN), away: Math.hypot(c.x - v.x, c.z - v.z) });
+    for (const h of showing) for (const c of h.cells) cells.push({ key: c.key, group: h.group, far: c.far, lots: c.lots, ground: c.ground, dots: h.dots, out: beyond(v, c.x, c.z, CELL, HOUSE_LEAN), away: Math.hypot(c.x - v.x, c.z - v.z) });
     const houses = fine.look(v.wide, cells);
     missing += houses.missing; fading ||= houses.fading; pieces.failed ||= fine.failed;
     // pieces the view no longer asks for leave the stage, those unused the longest first

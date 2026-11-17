@@ -18,13 +18,14 @@ import { type Piece, type WorldScene, buildWorld, windowOf } from './world';
 import { type Cover, KINDS, laidOut, loadPlan, usePlan } from './far';
 import { above, lay, meanCover, summary } from './mean';
 import { N } from '../lookprobe/layout';
+import { ballOf } from './ball';
 import { loadTownPeople } from '../figures';
 import { loadInhabitants } from './towns';
 
 export interface PieceJob { id: number; piece: Piece; region: string; /** step of the map: blocks 2^step cells wide */ step: number; base: string; bakedSky: boolean; /** the world's start year, whose towns are built, whose forest stands and whose people live on the land (default 1356) */ year?: number; /** false: a far step as far.ts lays it out, not as the mean of the finer step */ mean?: boolean | 'compare'; /** for a piece of the first far step: the summaries of the four finest pieces under it that the page holds (mean.ts), in rows */ under?: (Float32Array | undefined)[] }
 export interface PieceDone { id: number; scene?: WorldScene<Shape>; /** of a piece of the finest step: what it shows, summed up for the piece of the next step over it (mean.ts) */ summary?: Float32Array; error?: string }
 
-const flat = (b: Batch): Shape => ({ pos: new Float32Array(b.pos), nor: new Float32Array(b.nor), col: new Float32Array(b.col) });
+const flat = (b: Batch): Shape => { const pos = new Float32Array(b.pos); return { pos, nor: new Float32Array(b.nor), col: new Float32Array(b.col), ball: ballOf(pos) }; };
 const nothing: Shape = { pos: new Float32Array(0), nor: new Float32Array(0), col: new Float32Array(0) };
 
 /** Builds a piece of a step; null where it is open sea. `mean`: the cover of its ground from the finer step. */
