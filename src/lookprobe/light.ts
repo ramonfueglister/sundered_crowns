@@ -6,6 +6,13 @@ import { NEAR, RIGHT, VIEW } from './layout';
 /** strengths of the far view's lights (a Lambert surface facing a light returns this share), and where they stand */
 export const RIG = { sun: 0.9, sunElevation: 48, sunTurn: 12, side: 0.78, sky: 0.36, bounce: 0.12, fill: 0.1, fillTurn: 180 + VIEW.turn, fillElevation: 20 } as const;
 
+/**
+ * The creases and corners of the far view (stage.ts draws them by three's GTAONode): how far they reach in the
+ * stage's blocks, how deep they are drawn, how far behind a point something may lie and still darken it, and the
+ * colour the deepest crease keeps.
+ */
+export const CREASES = { reach: 2.0, depth: 1.2, thickness: 4, colour: 0x44485a } as const;
+
 const rad = (deg: number) => (deg * Math.PI) / 180;
 /** a direction on the ground given by its share to the right of the picture and towards its back, raised by `elev` */
 export function towards(turn: number, elev: number): [number, number, number] {

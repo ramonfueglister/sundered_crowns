@@ -12,7 +12,7 @@ import { ao } from 'three/addons/tsl/display/GTAONode.js';
 import { hashBlur } from 'three/addons/tsl/display/hashBlur.js';
 import { FRAME_W, LAND_Y, N, NEAR, RIGHT, SEA_Y, VIEW } from './layout';
 import type { Batch } from './batch';
-import { RIG, towards } from './light';
+import { RIG, towards, CREASES } from './light';
 import { type Figures, anyFigures, figureMeshes, keepFigures, showFigures, warmFigures } from '../figures/stage';
 import { OPEN_WATER } from './terrain';
 
@@ -31,7 +31,7 @@ const LOOK = {
   side: RIG.side as number, sideColor: 0xfff0dc,
   sky: RIG.sky as number, skyColor: 0xa8c4ff, bounce: RIG.bounce as number, bounceColor: 0xffe2c0, fill: RIG.fill as number, fillColor: 0xffe0c4,
   mirror: 0.38, mirrorTint: 0x73c0cc, mirrorBlur: 0.003,
-  creaseReach: 2.0, creaseDepth: 1.2, creaseColor: 0x44485a,
+  creaseReach: CREASES.reach as number, creaseDepth: CREASES.depth as number, creaseColor: CREASES.colour as number,
   focusRange: 150, blur: 2.6,
 };
 
@@ -266,7 +266,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   const facing = scenePass.getTextureNode('normal');
   if (flag('ao', true)) {
     const creases = ao(far, facing, camera);
-    creases.radius.value = LOOK.creaseReach; reached = creases.radius; creases.thickness.value = 4; creases.scale.value = LOOK.creaseDepth; creases.samples.value = 24;
+    creases.radius.value = LOOK.creaseReach; reached = creases.radius; creases.thickness.value = CREASES.thickness; creases.scale.value = LOOK.creaseDepth; creases.samples.value = 24;
     // the raw result is speckled; the smoothing keeps to surfaces of like depth and direction
     // a crease does not turn grey: it keeps a share of bluish light, as the shadows of the reference do
     const open = convertToTexture(denoise(creases.getTextureNode(), far, facing, camera)).r, deep = new THREE.Color(LOOK.creaseColor);

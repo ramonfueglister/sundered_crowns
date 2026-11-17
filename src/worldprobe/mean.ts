@@ -12,7 +12,7 @@
 // light it (lookprobe/light.ts), and every finer block gets the mean of the dots of that picture that show it.
 import type { Batch } from '../lookprobe/batch';
 import { NEAR, RIGHT, VIEW } from '../lookprobe/layout';
-import { SUN, litness, sunlit } from '../lookprobe/light';
+import { CREASES, SUN, litness, sunlit } from '../lookprobe/light';
 import type { Cover } from './far';
 
 /** the sides of what stands out are this much darker than its top where the finer step shows no side of its own there */
@@ -81,10 +81,65 @@ function dots(U: readonly number[], V: readonly number[], W: number, H: number, 
   }
 }
 
+/** the colour the deepest crease keeps, in linear light */
+const DEEP = [16, 8, 0].map((shift) => (((CREASES.colour >> shift) & 255) / 255) ** 2.2);
+/** directions a dot's surroundings are searched in, and steps along each (the stage's pass turns three directions by chance from dot to dot and takes eight steps) */
+const SLICES = 6, STEPS = 8;
+
+/**
+ * How open every dot of the camera's picture lies, 0 … 1: the stage darkens creases and corners by three's
+ * GTAONode (Jimenez et al. 2016, "Practical real-time strategies for accurate indirect occlusion"), and this is
+ * the same reckoning on the picture's own depths: in every direction across the picture the highest thing within
+ * reach on either side bounds the sky a point sees, and the light of the sky left between the two bounds, weighted
+ * by how it falls on the face, is what the point keeps. `depth`: how near every dot's point is to the camera, in
+ * blocks; `turned`: the way its face looks.
+ */
+function creases(depth: Float32Array, turned: Float32Array, W: number, H: number): Float32Array {
+  const open = new Float32Array(W * H).fill(1), R = CREASES.reach;
+  const acos = (v: number) => Math.acos(Math.max(-1, Math.min(1, v)));
+  for (let v = 0; v < H; v++) for (let u = 0; u < W; u++) {
+    const i = u + v * W;
+    if (depth[i] === -Infinity) continue;
+    // the face's direction in the picture's own axes: to the right, upwards, towards the camera
+    const wx = turned[i * 3], wy = turned[i * 3 + 1], wz = turned[i * 3 + 2];
+    const nx = wx * ACROSS[0] + wz * ACROSS[2], ny = wx * UPWARDS[0] + wy * UPWARDS[1] + wz * UPWARDS[2], nz = wx * NEARER[0] + wy * NEARER[1] + wz * NEARER[2];
+    let sum = 0;
+    for (let d = 0; d < SLICES; d++) {
+      const angle = ((d + 0.5) / SLICES) * Math.PI, c = Math.cos(angle), s = Math.sin(angle);
+      // the slice's plane holds the line of sight and the direction (c, s); across it lies (s, -c), along it (-c, -s)
+      const across = nx * s - ny * c, px = nx - s * across, py = ny + c * across, len = Math.hypot(px, py, nz);
+      if (len < 1e-4) continue;
+      const qx = px / len, qy = py / len, qz = nz / len, nSin = -(qx * c + qy * s), nCos = Math.max(0, Math.min(1, qz)), tilt = (nSin >= 0 ? 1 : -1) * Math.acos(nCos);
+      const start = -qx * c - qy * s;
+      let far = start, near = -start;
+      for (let j = 0; j < STEPS; j++) {
+        // the stage sets its steps off by a chance between 0 and 2, here by their mean
+        const t = (j + 2) / STEPS, reach = t * t * R * DOTS;
+        for (const side of [1, -1]) {
+          const su = Math.round(u + side * c * reach), sv = Math.round(v + side * s * reach);
+          if (su < 0 || sv < 0 || su >= W || sv >= H || (su === u && sv === v)) continue;
+          const k = su + sv * W;
+          if (depth[k] === -Infinity) continue;
+          const dz = depth[k] - depth[i];
+          if (Math.abs(dz) >= CREASES.thickness) continue;
+          // a point of the face's own plane bounds nothing (the dots' grid would else count the plane a hair against itself)
+          if (nz > 0.05 && dz <= -(nx * (su - u) + ny * (sv - v)) / DOTS / nz + 0.02) continue;
+          const dist = Math.hypot((su - u) / DOTS, (sv - v) / DOTS, dz), high = dz / Math.max(dist, 1e-4), fade = Math.min(dist / R, 1) ** 2;
+          if (side === 1) far = Math.max(far, high) * (1 - fade) + far * fade; else near = Math.max(near, high) * (1 - fade) + near * fade;
+        }
+      }
+      const hPos = acos(near), hNeg = -acos(far);
+      sum += len * 0.25 * (-Math.cos(2 * hPos - tilt) + nCos + 2 * hPos * nSin - Math.cos(2 * hNeg - tilt) + nCos + 2 * hNeg * nSin);
+    }
+    open[i] = Math.max(0, Math.min(1, sum / SLICES)) ** CREASES.depth;
+  }
+  return open;
+}
+
 /**
  * What the far camera sees of every finer block: the meshes are drawn as a picture from where the camera stands
  * (from afar, so that every line of sight runs the same way), each face in its colour as brightly as the lights
- * light it, the nearer before the farther, and without the sun's light where something stands between it and the sun. Returns for every block the sum of the colours of the dots that show a
+ * light it, the nearer before the farther, and without the sun's light where something stands between it and the sun, and darkened in creases and corners as the stage darkens them. Returns for every block the sum of the colours of the dots that show a
  * point of it, and their number: first of the dots that show a face looking up, then of those that show a side
  * (eight numbers a block).
  */
@@ -121,7 +176,7 @@ export function look(a: Above): Float32Array {
   }
   const W = Math.ceil((u1 - u0) * DOTS) + 1, H = Math.ceil((v1 - v0) * DOTS) + 1;
   // of every dot of the picture: how near what it shows is, the block under it, its colour as the lights without the sun light it, and as the sun does where it reaches it
-  const depth = new Float32Array(W * H).fill(-Infinity), block = new Int32Array(W * H).fill(-1), colour = new Float32Array(W * H * 3), sunny = new Float32Array(W * H * 3), upward = new Uint8Array(W * H), spot = new Float32Array(W * H * 3);
+  const depth = new Float32Array(W * H).fill(-Infinity), block = new Int32Array(W * H).fill(-1), colour = new Float32Array(W * H * 3), sunny = new Float32Array(W * H * 3), upward = new Uint8Array(W * H), spot = new Float32Array(W * H * 3), turned = new Float32Array(W * H * 3);
   const X = [0, 0, 0], Y = [0, 0, 0], Z = [0, 0, 0];
   for (const { mesh: { pos, nor, col }, dx, dz } of a.meshes) for (let t = 0; t < pos.length; t += 9) {
     const n: [number, number, number] = [nor[t], nor[t + 1], nor[t + 2]];
@@ -141,6 +196,7 @@ export function look(a: Above): Float32Array {
       const px = s0 * X[0] + s1 * X[1] + s2 * X[2], py = s0 * Y[0] + s1 * Y[1] + s2 * Y[2], pz = s0 * Z[0] + s1 * Z[1] + s2 * Z[2];
       const x = Math.floor(px - n[0] * 0.01), z = Math.floor(pz - n[2] * 0.01);
       block[i] = x >= 0 && z >= 0 && x < a.w && z < a.d ? x + z * a.w : -1;
+      turned[i * 3] = n[0]; turned[i * 3 + 1] = n[1]; turned[i * 3 + 2] = n[2];
       colour[i * 3] = r * rest; colour[i * 3 + 1] = g * rest; colour[i * 3 + 2] = b * rest; sunny[i * 3] = r * sun; sunny[i * 3 + 1] = g * sun; sunny[i * 3 + 2] = b * sun; upward[i] = up;
       const qx = px + n[0] * BIAS, qy = py + n[1] * BIAS, qz = pz + n[2] * BIAS;
       spot[i * 3] = (qx * SUN_A[0] + qz * SUN_A[2] - a0) * SUN_DOTS; spot[i * 3 + 1] = (qx * SUN_B[0] + qy * SUN_B[1] + qz * SUN_B[2] - b0) * SUN_DOTS; spot[i * 3 + 2] = qx * SUN[0] + qy * SUN[1] + qz * SUN[2];
@@ -152,6 +208,9 @@ export function look(a: Above): Float32Array {
     if (su >= 0 && sv >= 0 && su < SW && sv < SH && sunward[at] + slope[at * 2] * (spot[i * 3] - su - 0.5) + slope[at * 2 + 1] * (spot[i * 3 + 1] - sv - 0.5) > spot[i * 3 + 2] + BIAS) continue;
     colour[i * 3] += sunny[i * 3]; colour[i * 3 + 1] += sunny[i * 3 + 1]; colour[i * 3 + 2] += sunny[i * 3 + 2];
   }
+  // creases and corners: every dot keeps as much of its light as the stage's own pass leaves it
+  const open = creases(depth, turned, W, H);
+  for (let i = 0; i < W * H; i++) if (block[i] >= 0) for (let k = 0; k < 3; k++) colour[i * 3 + k] *= DEEP[k] + (1 - DEEP[k]) * open[i];
   for (let i = 0; i < W * H; i++) if (block[i] >= 0) { const j = block[i] * 8 + (upward[i] ? 0 : 4); seen[j] += colour[i * 3]; seen[j + 1] += colour[i * 3 + 1]; seen[j + 2] += colour[i * 3 + 2]; seen[j + 3]++; }
   return seen;
 }
@@ -188,7 +247,7 @@ export function summary(a: Above): Float32Array {
  * the mean of their tops. Blocks outside the part take the nearest inside it.
  */
 export function meanCover(quarters: readonly (Float32Array | null)[], half: number, n: number, x0: number, z0: number): Cover {
-  const c: Cover = { has: new Uint8Array(n * n), rise: new Uint8Array(n * n), top: new Float32Array(n * n * 3), side: new Float32Array(n * n * 3), town: new Uint8Array(n * n), share: new Float32Array(n * n).fill(1) };
+  const c: Cover = { has: new Uint8Array(n * n), rise: new Uint8Array(n * n), top: new Float32Array(n * n * 3), side: new Float32Array(n * n * 3), town: new Uint8Array(n * n), share: new Float32Array(n * n).fill(1), whole: new Float32Array(n * n * 3) };
   /** the summed numbers of the finer blocks under a block, or null */
   const under = (x: number, z: number) => {
     const cx = Math.max(0, Math.min(2 * half - 1, x - x0)), cz = Math.max(0, Math.min(2 * half - 1, z - z0)), of = quarters[(cx >= half ? 1 : 0) + (cz >= half ? 2 : 0)];
@@ -213,6 +272,7 @@ export function meanCover(quarters: readonly (Float32Array | null)[], half: numb
     for (let k = 0; k < 3; k++) {
       c.top[j * 3 + k] = dots > 0 ? (s[k] + (1 - clear) * s[4 + k]) / dots / LIT_UP : s[8 + k] / s[11];
       c.side[j * 3 + k] = s[7] > 0 ? s[4 + k] / s[7] / LIT_SIDE : c.top[j * 3 + k] * SIDE;
+      c.whole![j * 3 + k] = s[3] + s[7] > 0 ? (s[k] + s[4 + k]) / (s[3] + s[7]) / LIT_UP : c.top[j * 3 + k];
     }
   }
   return c;
