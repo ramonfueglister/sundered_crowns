@@ -12,7 +12,7 @@ use crate::settings;
 /// facets, normals averaged, the UVs of the base mesh (at a seam the corner
 /// UVs that lie closest together).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age: f32, female: bool, hair: Rgb, scalp_file: Option<String>, sun: f32, seed: u32, flush: (f32, &str), lash_line: f32, lips: Option<(&crate::dress::Lips, f32)>) {
+pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age: f32, female: bool, hair: Rgb, scalp_file: Option<String>, sun: f32, seed: u32, flush: (f32, &str), lash_line: f32, lips: Option<(&crate::dress::Lips, f32)>, girls_image: bool) {
     let Some(rows) = crate::real::rows(&format!("{dir}/uvs.txt")) else { return };
     let uvs: Vec<Vec<[f32; 2]>> = rows.iter().map(|f| f.chunks_exact(2).map(|c| [c[0], 1.0 - c[1]]).collect()).collect();
     if s.pos.len() != idx.len() {
@@ -224,7 +224,9 @@ pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age:
         }
     }
     let a = if age < 30.0 { "young" } else if age < 55.0 { "middleage" } else { "old" };
-    let sex = if female { "female" } else { "male" };
+    // a boy before his beard wears the girls' image where the dress table says so (`DressSet::boy_skin`): the
+    // men's has the shade of a shaven beard round the mouth and coarser pores
+    let sex = if female || girls_image { "female" } else { "male" };
     s.tex = Some(crate::real::image(dir, &format!("skin_{a}_{sex}")));
     // the pores with the creases of the nearest wrinkle age below, in steps
     // of 8 years from 38 (skin_<age>_<sex>_w<E>_n); younger: pores only

@@ -1,7 +1,8 @@
 // Reads the colours of the sample's faces at their landmarks: photographs the portrait test page with England's
 // sample (tests/portrait/sample_england.json) and prints, per person and as means over the grown women and men,
-// the CIELAB colour of forehead, cheeks, nose, lips and chin, and how the lips and the eyes stand against the skin
-// beside them. To hold a face against a reference in numbers before a value is tuned by eye (docs/PORTRAITS.md).
+// the CIELAB colour of forehead, cheeks, nose, lips and chin, how the lips and the eyes stand against the skin
+// beside them, and how dark the shade beside the nose is on the far side. The men who wear no beard over lips
+// and chin are a group of their own beside all men (a beard's hair is no lip). To hold a face against a reference in numbers before a value is tuned by eye (docs/PORTRAITS.md).
 //
 //   npx vite --port 5199 &            (the game's dev server)
 //   NODE_PATH=$(npm root -g) node tools/portrait/face_colour.mjs http://localhost:5199 [query] [--all] [--brow] [--line] [--size=WxH]
@@ -60,6 +61,8 @@ const [base, query] = args.filter(a => !a.startsWith('--'));
 if (!base) throw new Error('usage: face_colour.mjs <address of the dev server> [query for the test page] [--all] [--brow] [--line] [--size=WxH]');
 // the steps of the line over the lid, in lengths of the face
 const STEPS = Array.from({ length: 81 }, (_, k) => (k - 20) * 0.005);
+// the steps of the level lines beside the nose, in lengths of the face (2.2 % each, as round 83 read them)
+const ACROSS = Array.from({ length: 13 }, (_, k) => k * 0.022);
 const sample = JSON.parse(readFileSync(fileURLToPath(new URL('../../tests/portrait/sample_england.json', import.meta.url)), 'utf8'));
 
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
@@ -73,7 +76,7 @@ if (failed) throw new Error(failed);
 
 // per person: the mean colour (linear light) of a disc round each place measured, laid on black where the picture
 // is clear (a place beside the face then reads dark, and is seen as such)
-const read = await page.evaluate(([names, STEPS]) => {
+const read = await page.evaluate(([names, STEPS, ACROSS]) => {
   const out = {};
   for (const canvas of document.querySelectorAll('canvas[id^=p]')) {
     const m = Object.fromEntries(canvas.dataset.at.split(',').map((t, k) => [names[k], t.split(':').map(Number)]));
@@ -110,14 +113,23 @@ const read = await page.evaluate(([names, STEPS]) => {
     // the line over each eye: from the upper lid over the pupil along the face's own upright (menton to sellion)
     const up = [(m.sellion[0] - m.menton[0]) / face, (m.sellion[1] - m.menton[1]) / face];
     const line = s => STEPS.map(d => colour([m[`upper lid, ${s}`][0] + up[0] * d * face, m[`upper lid, ${s}`][1] + up[1] * d * face], Math.max(1, 0.008 * face)));
+    // the level lines beside the nose: from the nose's back (at half and at 0.65 of the way from sellion to
+    // pronasale) across the face towards either cheek, at right angles to the face's upright
+    const level = s => [0.5, 0.65].map(t => {
+      const from = mid(m.sellion, m.pronasale, t), cheek = places[`cheek, ${s}`];
+      const side = Math.sign((cheek[0] - from[0]) * -up[1] + (cheek[1] - from[1]) * up[0]) || 1;
+      return ACROSS.map(d => colour([from[0] - side * up[1] * d * face, from[1] + side * up[0] * d * face], Math.max(1, 0.011 * face)));
+    });
     out[canvas.id.slice(1)] = {
       face,
+      beard: canvas.dataset.beard === '1',
       lines: { left: line('left'), right: line('right') },
+      levels: { left: level('left'), right: level('right') },
       colours: Object.fromEntries(Object.entries(places).map(([k, p]) => [k, colour(p, k.includes('lip') && !k.startsWith('above') ? Math.max(1.5, 0.12 * lipsHeight) : 0.022 * face)])),
     };
   }
   return out;
-}, [MARKS.map(m => m[0]), STEPS]);
+}, [MARKS.map(m => m[0]), STEPS, ACROSS]);
 await browser.close();
 
 function lab(rgb) {
@@ -131,6 +143,14 @@ function row(person) {
   const c = Object.fromEntries(Object.entries(person.colours).map(([k, rgb]) => [k, lab(rgb)]));
   const [lit, shaded] = c['cheek, left'][0] >= c['cheek, right'][0] ? ['left', 'right'] : ['right', 'left'];
   const cheek = c[`cheek, ${lit}`], hue = v => Math.atan2(v[2], v[1]) * 180 / Math.PI, chroma = v => Math.hypot(v[1], v[2]);
+  // beside the nose, on the shaded side (round 83's measure, there by a scratch script): on each level line the
+  // darkest place within 13 % of the face's length of the nose's back (its far flank and the skin between nose
+  // and cheek), and the lightest place of the cheek beyond it
+  const beside = person.levels[shaded].map(line => {
+    const L = line.map(rgb => lab(rgb)[0]);
+    const dark = L.reduce((a, v, k) => k >= 1 && k <= 6 && v < L[a] ? k : a, 1);
+    return { dark: L[dark], beyond: Math.max(...L.slice(dark + 1)) };
+  });
   return {
     'lit cheek L': cheek[0], 'lit cheek a*': cheek[1], 'lit cheek b*': cheek[2], 'lit cheek chroma': chroma(cheek), 'lit cheek hue': hue(cheek),
     'shaded cheek L': c[`cheek, ${shaded}`][0], 'shaded cheek a*': c[`cheek, ${shaded}`][1], 'shaded cheek b*': c[`cheek, ${shaded}`][2],
@@ -145,6 +165,8 @@ function row(person) {
     'above the lip L': c['above the lip'][0],
     'eye darker than cheek (L)': cheek[0] - c[`eye, ${lit}`][0],
     'under the eye darker than cheek (L)': cheek[0] - c[`under the eye, ${lit}`][0],
+    'beside the nose darker than cheek (L)': cheek[0] - beside.reduce((s, b) => s + b.dark, 0) / beside.length,
+    'cheek beyond the nose darker than cheek (L)': cheek[0] - beside.reduce((s, b) => s + b.beyond, 0) / beside.length,
   };
 }
 
@@ -191,5 +213,8 @@ const show = (name, list) => {
 if (all) for (const x of rows) show(`${x.p.pid}, ${x.p.female ? 'woman' : 'man'} of ${x.p.age}`, [x]);
 show('grown women (20 and older)', rows.filter(x => x.p.female && x.p.age >= 20));
 show('grown men (20 and older; a beard lies over lips and chin)', rows.filter(x => !x.p.female && x.p.age >= 20));
+// the men whose lips and chin lie free (no beard, or stubble alone: the test page says who wears one): a beard's
+// hair over the lips reads darker and less red than any lip, and the mean over all men is then not the lips'
+show('shaven men (20 and older; no beard, or stubble alone)', rows.filter(x => !x.p.female && x.p.age >= 20 && !read[x.p.pid].beard));
 show('girls of 8 to 17', rows.filter(x => x.p.female && x.p.age >= 8 && x.p.age < 20));
 show('boys of 8 to 17', rows.filter(x => !x.p.female && x.p.age >= 8 && x.p.age < 20));

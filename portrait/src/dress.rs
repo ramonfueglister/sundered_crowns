@@ -150,8 +150,12 @@ pub struct ScarLine {
 /// a sharp line where a real lip fades into the skin; a man's at a* 6.5 over his cheek the same. What the
 /// picture reads now stands in docs/PORTRAITS.md (round 103). The upper lip, which the steeper curve and a key
 /// light further round left 13.8 L (the reference's 21.0), is painted half as light again as before round 78
-/// (`upper` 1.5). The seam's factor follows so that the strip is about as light as it was. All values
-/// PLACEHOLDER, set by those measurements.
+/// (`upper` 1.5). The seam's factor follows so that the strip is about as light as it was. Round 106 read a
+/// man's lips on the men who wear no beard over them (until then the mean of all men, with a beard's hair in
+/// it): 18.0 L under the lit cheek where the emperor's are 25.8, pink. A man's keep 0.24 of the skin's colour
+/// (0.3) with a blood of 0.30, 0.05, 0.05 (0.33, 0.075, 0.074): 22.4 L under the cheek, a* 6.5 over it (7.1);
+/// darker with the blood's colour as it was lost the red (a* 3.9). All values PLACEHOLDER, set by those
+/// measurements.
 pub struct Lips {
     /// Where the red of the lips is (the file skin_lip.txt, per vertex along the lips' outline): the share of the
     /// skin's own colour that is kept,
@@ -227,6 +231,11 @@ pub struct DressSet {
     /// of its own (tools/portrait/pipeline/README.md): the fringe 46 to 52 mm over the eyes, in the forehead's
     /// upper half, ragged; the sides to the ear's lobe; lying closer to the head. By eye, PLACEHOLDER.
     pub hair_small: &'static str,
+    /// A boy younger than this wears the girls' image of the skin (0: the men's at any age). MakeHuman's image of
+    /// a young man has the shade of a shaven beard round mouth and jaw and coarser pores: on a boy of eight it was
+    /// a man's stubble, and with the forms of a grown man's face coming in from one year on (`grown`) a boy of
+    /// thirteen read as a man of thirty. 14 (round 106): where the beard's first down comes. By eye, PLACEHOLDER.
+    pub boy_skin: f32,
     /// The image of a hair's locks (the file `<hair>_locks`, tools/portrait/pipeline/hairlib.py
     /// `locks_from_wisps`) where the file has none of its own beside it: one image for the locks of every cut.
     pub lock_image: &'static str,
@@ -660,6 +669,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     hair_veiled: "",
     hair_girl: "plait01",
     hair_small: "bob08",
+    boy_skin: 14.0,
     lock_image: "hair1356_locks",
     beard_lock_image: "beard1356_locks",
     beards: [Beard::Shaven, Beard::Stubble, Beard::Short, Beard::Full, Beard::Full, Beard::Short],
@@ -673,7 +683,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     brow_paint: [0.0, 0.0],
     brow_lift: [[3.0, 3.0, 3.5], [0.0, 0.0, 0.0]],
     brow_band: [0.9, 1.0],
-    lips: [Lips { skin: 0.12, blood: [0.26, 0.032, 0.036], upper: 1.5, seam: 1.43, child: 0.6 }, Lips { skin: 0.3, blood: [0.33, 0.075, 0.074], upper: 1.5, seam: 1.0, child: 0.6 }],
+    lips: [Lips { skin: 0.12, blood: [0.26, 0.032, 0.036], upper: 1.5, seam: 1.43, child: 0.6 }, Lips { skin: 0.24, blood: [0.30, 0.05, 0.05], upper: 1.5, seam: 1.0, child: 0.6 }],
     lash_line: [0.65, 0.55],
     lash_image: "Eyelashes1356",
     hair_red: [0.45, 0.74],

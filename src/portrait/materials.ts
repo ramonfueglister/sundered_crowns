@@ -110,6 +110,10 @@ function swap(code: string, piece: string, by: string): string {
   return code.replace(piece, by);
 }
 
+/** Where the face's middle line lies on the skin's image (its second coordinate; MakeHuman's layout, the same for
+ *  every skin: the sellion is at 0.8350, the nose's tip at 0.8732 of the first). */
+const FACE_MIDDLE = 0.5168;
+
 /** Skin of a profile: light bleeds round the edge of its shadow, reddest furthest (three.js has no scattering
  *  inside skin as Godot has); and living skin is blotchy where the images of the young are nearly flat: broad
  *  patches a little redder or paler and a fine speckle in brightness, as noise over the head. */
@@ -128,11 +132,11 @@ function skinLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<Stage
   m.onBeforeCompile = shader => {
     shader.uniforms.skinTint = { value: tint };
     shader.uniforms.skinFine = { value: fine };
-    shader.vertexShader = swap(swap(shader.vertexShader, '#include <common>', '#include <common>\nvarying vec3 vSkinP;'),
-      '#include <begin_vertex>', '#include <begin_vertex>\nvSkinP = position;');
+    shader.vertexShader = swap(swap(shader.vertexShader, '#include <common>', '#include <common>\nvarying vec3 vSkinP;\nvarying vec2 vSkinUv;'),
+      '#include <begin_vertex>', '#include <begin_vertex>\nvSkinP = position;\nvSkinUv = uv;');
     let code = swap(shader.fragmentShader, '#include <lights_physical_pars_fragment>', lights);
     code = swap(code, '#include <lights_fragment_begin>', loop);
-    code = swap(code, '#include <common>', `#include <common>${NOISE}\nuniform vec3 skinTint;\nuniform float skinFine;\nfloat skinGloss = 1.0;\nfloat skinLit = 1.0;\nfloat skinOil = 1.0;`);
+    code = swap(code, '#include <common>', `#include <common>${NOISE}\nvarying vec2 vSkinUv;\nuniform vec3 skinTint;\nuniform float skinFine;\nfloat skinGloss = 1.0;\nfloat skinLit = 1.0;\nfloat skinOil = 1.0;`);
     // the skin's fine relief: no skin is a smooth surface, and a highlight on a smooth surface is one pale patch
     // with a soft edge, as on vinyl. The relief is noise over the head at two sizes (4 and 2 mm), as a height
     // whose slope leans the normal (three.js' bump mapping, with the height reckoned instead of read from an
@@ -146,6 +150,9 @@ function skinLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<Stage
   vec3 skinGrad = sign( skinDet ) * ( dFdx( skinH ) * skinR1 + dFdy( skinH ) * skinR2 );
   normal = normalize( abs( skinDet ) * normal - skinGrad );
   skinOil = 1.0 + ${f(k.oil)} * ( skinNoise( vSkinP * 9.0 ) * 0.5 + skinNoise( vSkinP * 33.0 ) * 0.5 - 0.5 ) * 2.0;
+  // the face's middle is oilier than its sides: the forehead's middle and the nose's back down to its tip, as
+  // places on the skin's image (the face's middle line and the heights of hairline, sellion and nose's tip there)
+  skinOil *= 1.0 + ${f(k.zone)} * exp( - pow( ( vSkinUv.y - ${f(FACE_MIDDLE)} ) / 0.017, 2.0 ) ) * smoothstep( 0.775, 0.805, vSkinUv.x ) * ( 1.0 - smoothstep( 0.868, 0.884, vSkinUv.x ) );
 }`);
     shader.fragmentShader = swap(code, '#include <color_fragment>', `#include <color_fragment>
 float skinA = skinNoise( vSkinP * 7.0 ) * 0.6 + skinNoise( vSkinP * 15.0 ) * 0.4 - 0.5;
