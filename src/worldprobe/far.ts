@@ -51,6 +51,8 @@ const LOT_W = 11, LOT_D = 8;
  * the step LOTS_UNTIL a lot is larger than a block; beyond it the lots are drawn twice as large with every step.
  */
 const LOTS_UNTIL = 2;
+/** every step's ground is built flatter than the step before by this much (world.ts `flatter`): a block of height stands for this many times the metres */
+const FLATTER = 2 ** 0.6;
 /** Where a point of the world (in finest blocks) lies among the lots: the lot and how far its row is set off. */
 function spotOf(fx: number, fz: number) {
   const lz = Math.floor(fz / LOT_D), shift = lz & 1 ? Math.floor(LOT_W / 2) : 0, lx = Math.floor((fx - shift) / LOT_W);
@@ -337,12 +339,30 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
   const cropOf = (lx: number, lz: number, mx: number, mz: number): [RGB, RGB] => (hash2(lx, lz, 67 + salt) < o.vines(mx, mz) ? [tinted(VINEYARD, SEEN_VINES), shade(VINE_BODY, 0.8)] : [tinted(field(pick(WHEAT, hash2(lx, lz, 68 + salt)), true), SEEN_WINTER), WHEAT_SIDE]);
   // the lots, their crops and their courses are those of the finest step (settle.ts: the same lot, the same lots
   // drawn by the same numbers), so that a field stays the field it is from step to step
+  // And a lot is a field only where the finest step finds room for one (settle.ts `lot`): all of it, with a balk's
+  // width round it, is dry ground without rock on which nothing is built, and it is level to within two blocks of
+  // the finest step. In hill country most lots are not, and the land stays grass.
+  const built = Uint8Array.from(c.has, (has, i) => (has || c.town[i] || g.wet[i] || g.mat[i] === Mat.Rock ? 1 : 0)), slack = Math.floor(2 / FLATTER ** step), rooms = new Map<number, boolean>();
+  const room = (lx: number, lz: number, shift: number) => {
+    const key = (lx + 32768) * 65536 + lz + 32768, known = rooms.get(key);
+    if (known !== undefined) return known;
+    const x0 = Math.floor(((lx * LOT_W + shift) * grown) / wider) - ox, x1 = Math.floor(((lx * LOT_W + shift + LOT_W + 1) * grown - 1) / wider) - ox, z0 = Math.floor((lz * LOT_D * grown) / wider) - oz, z1 = Math.floor(((lz * LOT_D + LOT_D + 1) * grown - 1) / wider) - oz;
+    let lo = Infinity, hi = -Infinity, fits = true;
+    for (let z = z0; z <= z1 && fits; z++) for (let x = x0; x <= x1; x++) {
+      if (!inGrid(x, z)) continue;
+      if (built[idx(x, z)]) { fits = false; break; }
+      lo = Math.min(lo, g.h[idx(x, z)]); hi = Math.max(hi, g.h[idx(x, z)]);
+    }
+    fits &&= hi - lo <= slack;
+    rooms.set(key, fits);
+    return fits;
+  };
   for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
-    if (!free(x, z) || !level(x, z)) continue;
+    if (!free(x, z)) continue;
     const { lx, lz, shift } = spotOf(((x + ox + 0.5) * wider) / grown, ((z + oz + 0.5) * wider) / grown);
     const fx = ((lx + 0.5) * LOT_W + shift) * grown, fz = (lz + 0.5) * LOT_D * grown, mx = fx / wider - ox, mz = fz / wider - oz;
     // a lot is a field here if it is one at the finest step (settle.ts draws the same number against the same share)
-    if (hash2(lx, lz, 65 + salt) > o.ploughed(mx, mz) / FIELD_GROUND) continue;
+    if (hash2(lx, lz, 65 + salt) > o.ploughed(mx, mz) / FIELD_GROUND || !room(lx, lz, shift)) continue;
     // the course of the block of fields the lot lies in, the same as at the finest step (settle.ts)
     const course = courseOf(courses(mx, mz), hash2(...blockOf(fx / grown, fz / grown), 66 + salt));
     if (course === FALLOW) { put(x, z, 0, tinted(SOIL_FALLOW, SEEN_FALLOW), SOIL_FALLOW, 4); c.share[idx(x, z)] = FALLOW_SHOWS; continue; }
