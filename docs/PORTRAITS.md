@@ -49,7 +49,7 @@ the parts the builder knows (a gown, a hood up or back, a veil, a wimple, three 
 | Hood (men): up, thrown back, or none, by chance per person; none under 14 | `hood`, `hood_from` | shares 4 : 3 : 3 invented |
 | Veil of linen for women from 20, with a wimple from 50 | `veil_from`, `wimple_from` | ages invented |
 | Hair: cut round with a fringe (men), flat under a hood, none under the veil (it hides all of it; a bun until round 69); girls from 7 and women too young for the veil a centre parting and two plaits in front of the shoulders | `hair`, `hair_receding`, `hair_bald`, `hair_curly`, `hair_hooded`, `hair_veiled`, `hair_girl` | by eye |
-| Faces: relaxed lids, a closed mouth, the eyeballs deeper in their sockets (they came through the lower lid), for women a jaw that runs in to the chin (until round 96 a shifted gene of the jaw, `jaw_women`), redder lips, more flush on cheeks and nose | `lids`, `mouth_shut`, `eye_forward`, `rest` with `lower_only`, `lips`, `flush` | by eye, against the reference |
+| Faces: relaxed lids, a closed mouth, the eyeballs deeper in their sockets (they came through the lower lid), for women a jaw that runs in to the chin (until round 96 a shifted gene of the jaw, `jaw_women`) and cheeks filled out between cheekbone and jaw (round 97), redder lips, more flush on cheeks and nose | `lids`, `mouth_shut`, `eye_forward`, `rest` with `lower_only`, `cheek_fill`, `lips`, `flush` | by eye, against the reference |
 
 **Sources.** Each row of the table names what it rests on (`sources`). All of them were read only as summaries
 (proposal of 15.11.2026), none in the original, and no value is taken from a source. Everything is PLACEHOLDER
@@ -2597,6 +2597,123 @@ be read: Farkas' depths and the 3D Facial Norms tables were not reachable); the 
 thin necks; the forehead's least breadth (102.9 mm on women, 105.5 on men) and the head's height, not held;
 the chin's breadth by eye; the wide mouth beside the chin; the flat lower lip; `head-square` and `head-oval`
 still move the skull.
+
+**A woman's cheek that keeps its breadth to the mouth: a shape of our own (round 97).** Round 96 left the
+women's cheeks lean and found no target of MakeHuman's that fills them. This round first reads again what was
+measured, then says where the cheek is lean, and fills it there.
+
+*The arcs, read again.* Round 96 said "the women's faces are leaner than the survey's women's" from the raw
+gaps (9 mm over the chin, 10 under the nose). Within each sex the picture is another. An arc as a share of
+the forehead's arc of the same heads: over the chin the survey has 1.089 on men and 1.057 on women, ours
+1.058 and 1.034; under the nose the survey 0.969 and 0.966, ours 0.944 and 0.938. By that the men's lower
+arcs are as short as the women's. And a woman's arc as a share of a man's is low on all four arcs, the
+forehead's (0.923, the survey 0.945) and the crown's (0.936, 0.967) too, where no cheek lies: that points to
+the size of the women's heads (their breadth is 0.4 standard deviations small) and to the ear's landmark,
+not to the cheeks alone. So the arcs do not single out a woman's cheeks. What does is the eye, and a line
+that can be measured.
+
+*The line.* As a picture shows a head of England, turned by 0.24, the cheek turned away from the viewer is
+an outline. `measure.rs` `far_outline` gives it every 2 mm from under the lower lid (how far the skin
+reaches towards the picture's edge), and `far_at_mouth` how far it has run in at the height of the mouth's
+line, from where it stood 10 mm under the lid. The same line was traced on the reference's woman (one
+screenshot, the skin's edge found from outside in; from her lower lid to her chin 77 pixels, taken as
+106 mm, so a pixel is 1.4 mm; how far her head is turned is not known):
+
+| mm under the lower lid | 18 | 26 | 34 | 42 | 50 | 58 | 66 | 74 | 82 |
+|---|---|---|---|---|---|---|---|---|---|
+| the reference's woman, mm from her outline's top | | 0.0 | -0.8 | -1.9 | -3.3 | -6.2 | -9.2 | -12.9 | -17.2 |
+| 24 grown women until round 96 | -0.2 | -1.4 | -3.6 | -6.6 | -9.6 | -12.3 | -15.0 | -18.0 | -21.2 |
+| the same women now | -0.2 | -0.7 | -1.2 | -2.3 | -4.0 | -6.8 | -10.7 | -15.1 | -19.3 |
+
+Hers is a bow: it keeps its breadth down to the mouth and turns in under it. Ours was a straight line from
+the cheekbone to the chin, a V, under cheekbones that stood out: that is what read as lean. On 200 grown
+women the outline lay 13.3 mm inside its top at the mouth's height, on hers about 6. (A man's lies 12.3 mm
+in, with a dent of 3.6 mm under the cheekbone's pad; men were not looked at this round.)
+
+*What MakeHuman's targets do there.* The part under the cheekbones of each, at weight 1, on those 24 women
+(the outline in mm at 26, 50 and 74 mm under the lid; then the survey's two breadths and what else moves):
+
+| target | outline at 26, 50, 74 | cheekbones | jaw's corners | else |
+|---|---|---|---|---|
+| `head-round` | +7.6, +5.4, +3.7 | +20.0 | +13.5 | the far cheek's pad +3.5 |
+| `head-oval` | +7.1, +3.0, +1.6 | +18.6 | +8.2 | the pad +3.5 |
+| `head-fat-incr` | +7.0, +11.6, +12.9 | +1.9 | +21.4 | the jaw's front at 5 mm +13.8, the pad +4.1 |
+| `head-square` | 0.0, +3.9, +9.5 | 0.0 | +13.3 | the jaw's front +10.9 |
+| `head-rectangular` | 0.0, +2.9, +7.4 | 0.0 | +7.6 | the jaw's front +10.6 |
+| `head-triangular` | +1.1, +9.4, +12.7 | +0.8 | +22.7 | the jaw's front +10.8 |
+| `head-invertedtriangular` | -0.2, -2.0, -3.5 | +3.0 | -5.0 | the jaw's front -11.5 (round 96's chin) |
+| `head-diamond` | 0.0, -2.1, -5.0 | 0.0 | -7.0 | the jaw's front -7.6 |
+| `cheek-volume-incr` | +5.3, +8.4, +1.7 | 0.0 | +5.6 | the pad +3.9, the arc under the nose +14.3 |
+| `cheek-trans-down` | +0.5, +0.2, 0.0 | 0.0 | 0.0 | |
+| `cheek-inner-incr` | 0.0, 0.0, 0.0 | 0.0 | 0.0 | the arc under the nose +3.0 |
+
+Each that fills the cheek at the mouth's height widens the cheekbones or the jaw's corners, both at the
+survey's, broadens the chin that round 96 narrowed, or lays the pad on the cheek at the nose's height that
+round 96's twelve variants showed. None is a cheek.
+
+*The shape.* `morph.rs` `cheek_fill`, after the targets: the skin between the cheekbone and the jaw moves
+out along the base head's normal, by a number of millimetres where the field is whole
+(`DressSet::cheek_fill`, women and men; England 6 and 0). The field (`CHEEK_FIELD`, `cheek_field_at`) is
+laid on MakeHuman's base head in millimetres from the chin's lowest point: in height nothing from 88 mm up
+(the lowest of the cheekbones' landmarks lies at 90), all at 52, nothing from 17 down; in depth nothing
+further back than 43 mm behind that point (the foremost of the jaw's landmarks lies 43.7 behind), all from
+28 to 6 behind, nothing from 7 in front (where the lips' red begins); and only skin whose normal points to
+the side by more than 0.2 takes part, wholly from 0.5, so that the front of the face and what lies inside
+the mouth stay. The same on both sides. Cloth, veil, wimple and hair are bound to the morphed skin and go
+with it. A small child has a third of the women's, as of the women's `rest`; a girl grows into it, a boy
+out of it (`cheek_fill_of`).
+
+Rendered on six women, two of them without the veil, beside the reference: 4 mm with the field's peak at
+54 mm and its foot at 22; 6 mm the same; 6 mm with 50 and 12; 6 mm with 52 and 17. The last was kept, by
+eye beside the reference and by its outline beside the traced one; at the size of a portrait the four are
+near each other (`runde97_varianten.png`). That field first reached from 46 mm behind the chin to 14 in
+front. The test then found that it took one of the jaw's landmarks along by a hundredth of the way and the
+lips' red by up to 0.115 of it (0.7 mm; the lips' length grew from 46.5 to 47.0 mm), and the picture showed
+a fold beside the mouth's corner. With the depths as above no landmark and nothing of the lips' red moves,
+and the fold is fainter.
+
+*Numbers,* 200 grown women and 200 grown men, before and now. The far cheek at the mouth's height, inside
+its top: women 13.3 to 8.2 mm (SD 3.8), men 12.3 as before. Its pad 0.5 mm (0.5), the dent under it 0.6
+(1.0). The arc over the chin 294.8 to 298.3 mm (the survey 303.9; -0.6 to -0.4 standard deviations), under
+the nose 267.5 to 270.7 (277.5; -0.8 to -0.5); as a share of a man's 0.902 to 0.913 (the survey 0.918) and
+0.917 to 0.928 (0.941). The breadth at the cheekbones 135.4, at the jaw's corners 110.5, the head's breadth
+144.4, the face's length 114.1, the nose's breadth 34.2, the lips' length 46.5: all as they were. The jaw's
+front 5 mm over the chin 52.7 to 53.0. Men: nothing changed. With the fill at 0 every measure equals round
+96's.
+
+What holds the amount: one traced face. The mean outline now lies within 0.7 mm of hers down to 58 mm under
+the lid and 1.5 to 2.2 mm inside hers below that. The survey holds it only as a bound (the arcs stay short
+of the survey's, a woman's share of a man's stays under the survey's). 6 mm and the field's extents are by
+eye: PLACEHOLDER.
+
+Seen (`runde97_frauen_vorher_nachher.png`, `runde97_ohne_schleier.png`): the cheek is full down to the
+mouth and the cheekbones no longer stand out over a hollow; the face reads younger and softer. All women and
+girls of the sample changed, in 1.7 to 2.9 % of the pixels by more than 8 of 255, small children in 0.5 to
+1.2 %, boys of 8 and 13 in 0.1 to 0.4 %, no man of 17 or older in any. Veils and wimples were looked at on
+each woman: no skin shows through cloth. Honest about the rest: under the mouth our cheek still runs in
+2 mm sooner than hers; a faint fold beside the mouth's corner is left on some women where the filled cheek
+meets the mouth, which does not move; the mouth still reads wide; the reference's woman has a rounder,
+shorter face than ours as a whole, which no cheek mends. Apoleia's heads are untouched: Roman bytes and
+pictures unchanged.
+
+Tests: `tests/faces.rs`, 19 now. "The cheek of a woman of England keeps its breadth to the mouth": the
+table fills women's cheeks and not men's; no landmark of the face is in the field and nothing of the lips'
+red; every vertex in it lies inside `CHEEK_FIELD` and faces sideways; the two sides are equal; a grown woman
+has all of it, a grown man none, a child of 2 a third, a girl of 13 more, a boy of 13 less; on 60 grown
+women the far cheek at the mouth's height lies between 6.0 and 9.5 mm inside its top (8.4) and over 12 with
+the fill taken off again (13.6), on 60 men over 11 (12.7); the pad is no larger, the dent under 1 mm; the
+breadths at the cheekbones and the jaw's corners, the head's breadth, the face's length, the nose's breadth
+and the lips' length are the same to a hundredth of a millimetre. `examples/face_measure.rs` prints the far
+cheek at the mouth as measure 26. cargo 26/19/6/2/2, vitest 1072.
+Pictures: `runde97_frauen_vorher_nachher.png` (six women, before above), `runde97_ohne_schleier.png` (the
+reference's woman, two of ours without the veil before and now), `runde97_varianten.png` (one woman: round
+96, the four variants, now), `runde97_referenz_umriss.png` (the traced edge on the reference),
+`runde97_stichprobe.png`.
+Still open: the amount and the field by eye on one face; a man's cheek (its dent of 3.6 mm) not looked at;
+the lower cheek 2 mm short of the trace; the fold beside the mouth; the wide mouth; the women's small heads
+and the ear's landmark behind the short arcs; the thin necks; the forehead's least breadth and the head's
+height, not held; the chin's breadth by eye; the flat lower lip; `head-square` and `head-oval` still move
+the skull.
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,

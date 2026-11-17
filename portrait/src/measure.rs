@@ -299,6 +299,34 @@ pub const CHEEK: [(&str, [f32; 2], [f32; 2]); 2] = [("the far cheek's pad", [0.0
 /// top the outline stands at most (the cheek's pad), and how far it lies inside the tightest line round it from
 /// outside at most (the dent under the pad). A pad over a dent reads as a pouch in the cheek.
 pub fn far_cheek(h: &Head, pp: &[V3], turn: f32) -> [f32; 2] {
+    let line = far_outline(h, pp, turn);
+    if line.is_empty() {
+        return [0.0; 2];
+    }
+    // the tightest line round the outline from outside: the upper hull of its points
+    let mut hull: Vec<[f32; 2]> = Vec::new();
+    for &q in &line {
+        while hull.len() >= 2 {
+            let (a, b) = (hull[hull.len() - 2], hull[hull.len() - 1]);
+            if (b[0] - a[0]) * (q[1] - a[1]) - (b[1] - a[1]) * (q[0] - a[0]) >= 0.0 {
+                hull.pop();
+            } else {
+                break;
+            }
+        }
+        hull.push(q);
+    }
+    let mut dent = 0.0f32;
+    for w in hull.windows(2) {
+        for q in line.iter().filter(|q| q[0] > w[0][0] && q[0] < w[1][0]) {
+            dent = dent.max(w[0][1] + (w[1][1] - w[0][1]) * (q[0] - w[0][0]) / (w[1][0] - w[0][0]) - q[1]);
+        }
+    }
+    [line.iter().map(|q| q[1]).fold(f32::MIN, f32::max) - line[0][1], dent]
+}
+
+/// The outline `far_cheek` reads: (mm under the lower lid, mm towards the picture's edge), every 2 mm of height.
+pub fn far_outline(h: &Head, pp: &[V3], turn: f32) -> Vec<[f32; 2]> {
     let (c, s) = (turn.cos(), turn.sin());
     let back = JAW.iter().map(|&(a, b)| pp[a][2] + pp[b][2]).sum::<f32>() / (2 * JAW.len()) as f32 + 0.12;
     let top = pp[LIDS[0].1][1];
@@ -325,29 +353,24 @@ pub fn far_cheek(h: &Head, pp: &[V3], turn: f32) -> [f32; 2] {
         }
         at += 2.0;
     }
-    if line.is_empty() {
-        return [0.0; 2];
-    }
-    // the tightest line round the outline from outside: the upper hull of its points
-    let mut hull: Vec<[f32; 2]> = Vec::new();
-    for &q in &line {
-        while hull.len() >= 2 {
-            let (a, b) = (hull[hull.len() - 2], hull[hull.len() - 1]);
-            if (b[0] - a[0]) * (q[1] - a[1]) - (b[1] - a[1]) * (q[0] - a[0]) >= 0.0 {
-                hull.pop();
-            } else {
-                break;
-            }
-        }
-        hull.push(q);
-    }
-    let mut dent = 0.0f32;
-    for w in hull.windows(2) {
-        for q in line.iter().filter(|q| q[0] > w[0][0] && q[0] < w[1][0]) {
-            dent = dent.max(w[0][1] + (w[1][1] - w[0][1]) * (q[0] - w[0][0]) / (w[1][0] - w[0][0]) - q[1]);
-        }
-    }
-    [line.iter().map(|q| q[1]).fold(f32::MIN, f32::max) - line[0][1], dent]
+    line
+}
+
+/// What `far_at_mouth` measures (no survey read for it: the zeros).
+pub const FAR_MOUTH: [(&str, [f32; 2], [f32; 2]); 1] = [("the far cheek at the mouth, inside its top", [0.0; 2], [0.0; 2])];
+
+/// How far inside its place 10 mm under the lower lid the far cheek's outline (`far_outline`) lies at the height
+/// of the line between the lips, in mm: how much a face narrows from the cheekbone to the mouth as a picture
+/// shows it. A cheek that runs straight from the cheekbone to the chin reads as lean; a full one keeps its
+/// breadth to the mouth and turns in under it. On the one woman of the reference whose outline was traced
+/// (round 97; her face scaled to ours from lid to chin, a pixel 1.4 mm) about 6 mm.
+pub fn far_at_mouth(h: &Head, pp: &[V3], turn: f32) -> f32 {
+    let line = far_outline(h, pp, turn);
+    let mouth = (pp[LIDS[0].1][1] - (pp[STOMION[0]][1] + pp[STOMION[1]][1]) / 2.0) * 100.0;
+    let at = |x: f32| {
+        line.windows(2).find(|w| w[0][0] <= x && x <= w[1][0]).map_or(f32::NAN, |w| w[0][1] + (w[1][1] - w[0][1]) * (x - w[0][0]) / (w[1][0] - w[0][0]))
+    };
+    at(10.0) - at(mouth)
 }
 
 /// An eyeball's middle and radius (the eye at positive x for 0, the other for 1).

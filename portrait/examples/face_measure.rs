@@ -13,10 +13,11 @@
 //!
 //! The survey, the lips' reference (three measures) and the landmarks: src/measure.rs. After them the outline of the
 //! cheek that is turned away from the viewer (`far_cheek`, two measures, no survey read), the survey's four arcs
-//! from ear to ear (`arcs`) and the breadth of the jaw's front 5 mm over the menton (`jaw_front`, no survey read).
+//! from ear to ear (`arcs`), the breadth of the jaw's front 5 mm over the menton (`jaw_front`, no survey read) and
+//! how far the far cheek's outline has run in at the mouth's height (`far_at_mouth`, no survey read).
 
 use sc_portrait::dna::{founder, ORIGINS};
-use sc_portrait::measure::{arcs, face, far_cheek, jaw_front, lips, marks, ARCS, CHEEK, CHEEKBONES, JAW, JAW_FRONT, LIDS, LIPS, MEASURES, MENTON, NOSE, SELLION, STAGE_TURN, SUBNASALE};
+use sc_portrait::measure::{arcs, face, far_at_mouth, far_cheek, jaw_front, lips, marks, ARCS, CHEEK, CHEEKBONES, FAR_MOUTH, JAW, JAW_FRONT, LIDS, LIPS, MEASURES, MENTON, NOSE, SELLION, STAGE_TURN, SUBNASALE};
 use sc_portrait::person::{look_of, Lived};
 use sc_portrait::{build, morph_targets, morph_test, real, Head, LODS};
 
@@ -96,7 +97,7 @@ fn main() {
     let many = args.iter().any(|a| a == "--grown");
     let made = option("--made");
     let mut grown: [Vec<Vec<f32>>; 2] = [Vec::new(), Vec::new()];
-    println!("{:>7} {:>3} {:>4} {}", "person", "sex", "age", (1..=MEASURES.len() + LIPS.len() + CHEEK.len() + ARCS.len() + JAW_FRONT.len()).map(|k| format!("{k:>6}")).collect::<String>());
+    println!("{:>7} {:>3} {:>4} {}", "person", "sex", "age", (1..=MEASURES.len() + LIPS.len() + CHEEK.len() + ARCS.len() + JAW_FRONT.len() + FAR_MOUTH.len()).map(|k| format!("{k:>6}")).collect::<String>());
     for k in 0..n {
         let r = draws(if many { 8000 } else { 7000 } + k as u64, 68);
         let genes = founder(o, |i| r[i as usize]).bytes();
@@ -129,6 +130,7 @@ fn main() {
         m.extend(far_cheek(&head, &pp, STAGE_TURN));
         m.extend(arcs(&head, &pp));
         m.push(jaw_front(&head, &pp, 5.0));
+        m.push(far_at_mouth(&head, &pp, STAGE_TURN));
         if !many {
             println!("{:>7} {:>3} {:>4} {}", 940000 + k, if female { "f" } else { "m" }, age, m.iter().map(|x| format!("{x:6.1}")).collect::<String>());
         }
@@ -140,7 +142,7 @@ fn main() {
     println!("{:>2} {:<32} {:>34} {:>34} {:>14}", "", "", "men", "women", "women / men");
     let mean = |g: &Vec<Vec<f32>>, k: usize| g.iter().map(|m| m[k]).sum::<f32>() / g.len().max(1) as f32;
     let spread = |g: &Vec<Vec<f32>>, k: usize| (g.iter().map(|m| (m[k] - mean(g, k)).powi(2)).sum::<f32>() / g.len().max(1) as f32).sqrt();
-    for (k, &(name, men, women)) in MEASURES.iter().chain(&LIPS).chain(&CHEEK).chain(&ARCS).chain(&JAW_FRONT).enumerate() {
+    for (k, &(name, men, women)) in MEASURES.iter().chain(&LIPS).chain(&CHEEK).chain(&ARCS).chain(&JAW_FRONT).chain(&FAR_MOUTH).enumerate() {
         let (a, b) = (mean(&grown[0], k), mean(&grown[1], k));
         let cell = |x: f32, sd: f32, s: [f32; 2]| if s[0] > 0.0 { format!("{x:6.1} ({sd:4.1}) {:6.1} ({:4.1}) {:+5.1}", s[0], s[1], (x - s[0]) / s[1]) } else { format!("{x:6.1} ({sd:4.1}) {:>19}", "") };
         let ratio = if men[0] > 0.0 { format!("{:5.3} {:5.3}", b / a, women[0] / men[0]) } else { format!("{:5.3}", b / a) };

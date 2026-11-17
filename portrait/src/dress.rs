@@ -431,6 +431,21 @@ pub struct DressSet {
     /// Round 96: MakeHuman's head that is broad above and narrow below as well, which `rest` gives the women:
     /// whole, it widens the cheekbones and the skull by 7 mm; its lower part is a jaw that runs in to the chin.
     pub lower_only: &'static [&'static str],
+    /// How far the cheek between the cheekbone and the jaw is filled out, women and men, in mm where the field is
+    /// whole (morph.rs `cheek_fill`, `CHEEK_FIELD`); 0 leaves a cheek as MakeHuman's targets form it. A small
+    /// child has a third of the women's, a boy grows out of it into the men's (`cheek_fill_of`).
+    /// England (round 97): a woman's cheek ran straight from the cheekbone to the chin, which reads as lean. As
+    /// a picture shows the cheek turned away (measure.rs `far_at_mouth`), its outline lay 13.3 mm inside its top
+    /// at the mouth's height on 200 grown women; on the reference's woman, traced on one screenshot, about 6
+    /// (a pixel there is 1.4 mm). None of MakeHuman's targets fills a cheek without widening the cheekbones or
+    /// the jaw's corners, both at the survey's, or laying a pad on the cheek at the nose's height (twelve
+    /// variants in round 96; what each head form does to the outline, docs/PORTRAITS.md). With 6 mm of a shape
+    /// of our own: 8.2 mm, the mean outline within 0.7 mm of the traced one down to the mouth and within 2.2 mm
+    /// below; cheekbones, jaw's corners, lips and chin as they were. Held by the survey as far as it goes: a
+    /// woman's arc from ear to ear over the chin is 0.913 of a man's (the survey 0.918; before 0.902), under
+    /// the nose 0.928 (0.941; 0.917), and both stay under the survey's own lengths. The amount is by eye on one
+    /// traced face: PLACEHOLDER. Men: none (not looked at; a man's cheek has a dent of 3.6 mm under its pad).
+    pub cheek_fill: [f32; 2],
     pub sources: &'static [Source],
 }
 
@@ -551,6 +566,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     genes: &[("lips", 0.4), ("cheek", 0.4)],
     without: &["chin/chin-jaw-drop-decr"],
     lower_only: &["head/head-diamond", "head/head-triangular", "head/head-invertedtriangular"],
+    cheek_fill: [6.0, 0.0],
     sources: &[
         Source { what: "gown (cote) of wool, pulled over the head, close at the shoulders, round neck", source: "Crowfoot, Pritchard & Staniland 1992 (London finds); Østergård 2004 (Herjolfsnes). Summaries only. Cut PLACEHOLDER." },
         Source { what: "hood with a short cape for men, worn on the head or thrown back", source: "Østergård 2004 (Herjolfsnes hoods); Newton 1980. Summaries only. Shares 4:3:3 PLACEHOLDER (unsourced)." },
@@ -641,6 +657,13 @@ impl DressSet {
     pub fn eye_out_of(&self, female: bool, yrs: f32) -> f32 {
         let k = if female { 0 } else { 1 };
         self.eye_out[k] * (1.0 - child_share(self.adult[k], yrs))
+    }
+
+    /// How far a person's cheeks are filled out (`cheek_fill`), in mm: the women's in full on a grown woman, a
+    /// third of it on a small child of either sex; a boy grows out of it into the men's (as the table's `rest`;
+    /// `grown` is `Look::grown`).
+    pub fn cheek_fill_of(&self, female: bool, grown: f32) -> f32 {
+        by_sex(self.cheek_fill[0], self.cheek_fill[1], female, grown) * (0.35 + 0.65 * grown)
     }
 
     /// The breadth of the brow's band for a person (`brow_band`), by how much of the head has its adult form.

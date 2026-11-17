@@ -298,3 +298,12 @@ draws the mouth's corners in. `measure.rs`: `TRAGION`, `CHIN`, `FOREHEAD`, `ARCS
 survey's four arcs from ear to ear) and `JAW_FRONT`, `jaw_front` (the breadth of the jaw's front at a height
 over the chin's lowest point). `examples/face_measure.rs` prints them. `tests/faces.rs`: a seventeenth and an
 eighteenth test. A head without a dress table is morphed as before: Roman bytes unchanged.
+
+Round 97: a woman's cheek filled out by a shape of our own. `morph.rs`: `CHEEK_FIELD`, `cheek_field_at`,
+`cheek_field`, `cheek_fill` (the skin between the cheekbone and the jaw moves out along the base head's
+normal, weighted by height, depth and how far the normal points to the side), called in `morph_as` after the
+targets and before `mouth_set`, only where a dress table asks for it. `dress.rs`: `DressSet::cheek_fill`
+(women, men; England 6 mm and 0) and `cheek_fill_of`. `measure.rs`: `far_outline` (what `far_cheek` read
+before, as its own function), `FAR_MOUTH`, `far_at_mouth`. `lib.rs` exports `cheek_field` and `CHEEK_FIELD`.
+`examples/face_measure.rs` prints the new measure. `tests/faces.rs`: a nineteenth test. A head without a
+dress table is morphed as before: Roman bytes unchanged.

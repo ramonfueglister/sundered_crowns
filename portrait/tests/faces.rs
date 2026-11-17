@@ -5,8 +5,8 @@
 mod common;
 
 use common::{head, person};
-use sc_portrait::measure::{arcs, arcs_from, face, far_cheek, jaw_front, lips, lower_face, marks, ARCS, CHEEKBONES, JAW, LIPS, LIP_FOOT, LIP_TOP, LOWER_FACE, MEASURES, MENTON, SELLION, SKULL, STAGE_TURN, STOMION, SUBNASALE, TRAGION};
-use sc_portrait::{build, lower_band, lower_share, morph_targets, morph_test, morph_test_mouth, mouth_field, real, Beard, Head, Look, LODS};
+use sc_portrait::measure::{arcs, arcs_from, face, far_at_mouth, far_cheek, jaw_front, lips, lower_face, marks, ARCS, CHEEKBONES, CHIN, JAW, LIPS, LIP_FOOT, LIP_TOP, LOWER_FACE, MEASURES, MENTON, SELLION, SKULL, STAGE_TURN, STOMION, SUBNASALE, TRAGION};
+use sc_portrait::{build, cheek_field, lower_band, lower_share, morph_targets, morph_test, morph_test_mouth, mouth_field, real, Beard, Head, Look, CHEEK_FIELD, LODS};
 
 #[test]
 fn the_grown_of_england_have_faces_of_human_measure() {
@@ -748,6 +748,93 @@ fn a_woman_of_england_has_a_jaw_that_runs_in_to_her_chin() {
     }
     assert!(most[0] < 1.0 && most[1] < 0.01, "the breadth over the cheekbones changes by {} mm, over the ears by {}", most[0], most[1]);
     assert!(front[1] - front[0] > 4.0, "the jaw's front 9 mm over the menton: {} mm with the target, {} without", front[0], front[1]);
+}
+
+#[test]
+fn the_cheek_of_a_woman_of_england_keeps_its_breadth_to_the_mouth() {
+    // Until round 97 a woman's cheek ran straight from the cheekbone to the chin: lean, under cheekbones that
+    // stood out. As a picture shows the cheek turned away, its outline lay 13.3 mm inside its top at the mouth's
+    // height (`far_at_mouth`, 200 grown women); on the reference's woman about 6 (one screenshot, a pixel
+    // 1.4 mm). No target of MakeHuman's fills a cheek there and leaves cheekbones and jaw at the survey's. The
+    // table's `cheek_fill` moves the skin between cheekbone and jaw out along its normal, 6 mm where the field
+    // is whole (`CHEEK_FIELD`): 8.2 mm. The amount is by eye on that one face, PLACEHOLDER; the bounds here lie
+    // between the two states.
+    let Some(h) = head() else { return };
+    let show = std::env::var("SHOW").is_ok();
+    let set = sc_portrait::dress::Dress::England1356.set().unwrap();
+    assert!(set.cheek_fill[0] > 0.0 && set.cheek_fill[1] == 0.0, "the table fills cheeks by {:?} mm", set.cheek_fill);
+    // The field: no landmark of the face is in it, nothing of the lips' red, nothing that faces the head's
+    // middle (what lies inside the mouth); it is the same on both sides, lies where `CHEEK_FIELD` says and is
+    // whole somewhere.
+    let field = cheek_field(&h);
+    let lip = real::column("real/skin_lip.txt", 0.0);
+    let pairs = |p: &[(usize, usize)]| p.iter().flat_map(|&(a, b)| [a, b]).collect::<Vec<usize>>();
+    let marks: Vec<usize> = [MENTON, SUBNASALE, SELLION, CHIN, TRAGION.0, TRAGION.1].into_iter().chain(STOMION).chain(LIP_TOP).chain(LIP_FOOT).chain(pairs(&JAW)).chain(pairs(&CHEEKBONES)).chain(pairs(&SKULL)).collect();
+    for &v in &marks {
+        assert!(field[v].0 == 0.0, "the landmark {v} goes {} of the cheek's way", field[v].0);
+    }
+    let (m, (ys, zs)) = (h.base[MENTON], CHEEK_FIELD);
+    let (mut sides, mut most, mut red) = ([0.0f32; 2], (0.0f32, 0usize), 0.0f32);
+    for (v, &(w, n)) in field.iter().enumerate() {
+        if w == 0.0 {
+            continue;
+        }
+        let b = h.base[v];
+        let (y, z) = ((b[1] - m[1]) * 100.0, (b[2] - m[2]) * 100.0);
+        assert!(y < ys[0] && y > ys[2] && z > zs[0] && z < zs[3], "vertex {v} in the field lies {y} mm over the chin and {z} mm before it");
+        assert!(n[0] * b[0].signum() > 0.2, "vertex {v} in the field faces {n:?}");
+        sides[(b[0] > 0.0) as usize] += w;
+        red = red.max(w * lip[v]);
+        if w > most.0 {
+            most = (w, v);
+        }
+    }
+    let at = h.base[most.1];
+    if show {
+        println!("the cheek's field: sums {sides:?} on the two sides, whole ({:.2}) {:.0} mm over the chin's lowest point, {:.0} mm behind it and {:.0} mm from the middle; the lips' red takes {red:.3} of it at most", most.0, (at[1] - m[1]) * 100.0, (m[2] - at[2]) * 100.0, at[0].abs() * 100.0);
+    }
+    assert!((sides[0] - sides[1]).abs() < 0.01 * sides[0] && most.0 > 0.95 && red < 0.05, "sums {sides:?}, at most {}, on the lips' red {red}", most.0);
+    // Who has how much: a grown woman all, a grown man none, a small child of either sex a third of the women's.
+    let of = |female: bool, age: f32| set.cheek_fill_of(female, person(0, female, age).grown());
+    assert!(of(true, 24.0) == set.cheek_fill[0] && of(false, 24.0) == 0.0, "grown: a woman {} mm, a man {}", of(true, 24.0), of(false, 24.0));
+    let (girl, boy) = (of(true, 2.0), of(false, 2.0));
+    assert!(girl > 0.3 * set.cheek_fill[0] && girl < 0.45 * set.cheek_fill[0] && (girl - boy).abs() < 0.05 * girl, "at 2: a girl {girl} mm, a boy {boy}");
+    assert!(of(true, 13.0) > girl && of(false, 13.0) < boy, "at 13: a girl {} mm, a boy {}", of(true, 13.0), of(false, 13.0));
+    // On people. The outline at the mouth's height, and the same heads with the fill taken off again: the
+    // breadths at the cheekbones and at the jaw's corners, the head's breadth and the lips' length are the
+    // same, the far cheek has no more of a pad.
+    let pos = |name: &str| MEASURES.iter().position(|m| m.0.starts_with(name)).unwrap();
+    let same = [pos("breadth at the cheekbones"), pos("breadth at the jaw"), pos("head breadth"), pos("face length"), pos("nose breadth")];
+    let lips_at = pos("lip length");
+    let n = 60;
+    let (mut sums, mut worst, mut lips_most) = ([0.0f32; 5], 0.0f32, 0.0f32);
+    for k in 0..n {
+        let p = person(2 * k, true, [24.0, 35.0, 50.0][k as usize % 3]);
+        let with = morph_test(&h, &p);
+        let mut without = with.clone();
+        for (q, &(w, nrm)) in without.iter_mut().zip(&field) {
+            for c in 0..3 {
+                q[c] -= nrm[c] * w * set.cheek_fill[0] / 100.0;
+            }
+        }
+        let (a, b) = (face(&h, &with), face(&h, &without));
+        for &i in &same {
+            worst = worst.max((a[i] - b[i]).abs());
+        }
+        lips_most = lips_most.max((a[lips_at] - b[lips_at]).abs());
+        let (ca, cb) = (far_cheek(&h, &with, STAGE_TURN), far_cheek(&h, &without, STAGE_TURN));
+        for (s, x) in sums.iter_mut().zip([far_at_mouth(&h, &with, STAGE_TURN), far_at_mouth(&h, &without, STAGE_TURN), ca[0], cb[0], ca[1]]) {
+            *s += x / n as f32;
+        }
+    }
+    let men = (0..n).map(|k| far_at_mouth(&h, &morph_test(&h, &person(2 * k + 1, false, [24.0, 35.0, 50.0][k as usize % 3])), STAGE_TURN)).sum::<f32>() / n as f32;
+    if show {
+        println!("{n} grown women: the far cheek's outline at the mouth's height {:.1} mm inside its top, {:.1} without the fill ({n} men {men:.1}); its pad {:.2} mm, {:.2} without; the dent under it {:.2} mm; breadths and lengths differ by {worst:.3} mm at most, the lips' length by {lips_most:.2}", sums[0], sums[1], sums[2], sums[3], sums[4]);
+    }
+    assert!(sums[0] > 6.0 && sums[0] < 9.5 && sums[1] > 12.0, "the far cheek's outline at the mouth's height: {} mm inside its top, {} without the fill", sums[0], sums[1]);
+    assert!(men > 11.0, "a man's far cheek lies {men} mm inside its top at the mouth's height");
+    assert!(sums[2] < sums[3] + 0.2 && sums[4] < 1.0, "the pad {} mm ({} without the fill), the dent {}", sums[2], sums[3], sums[4]);
+    assert!(worst < 0.01 && lips_most < 0.01, "the fill moves a breadth by {worst} mm, the lips' length by {lips_most}");
 }
 
 #[test]

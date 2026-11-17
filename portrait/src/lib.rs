@@ -25,7 +25,7 @@ mod wasm;
 pub mod wire;
 
 pub use build::{build, Portrait, LODS};
-pub use morph::{lower_band, lower_share, morph_targets, morph_test, morph_test_mouth, mouth_field, MOUTH_FIELD};
+pub use morph::{cheek_field, lower_band, lower_share, morph_targets, morph_test, morph_test_mouth, mouth_field, CHEEK_FIELD, MOUTH_FIELD};
 pub use geo::{Mat, Surface};
 pub use head::Head;
 pub use look::{default_life, Beard, Hair, Hat, Jewel, Life, Look, Mood, GENES, NG, STANDS};

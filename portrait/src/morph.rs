@@ -321,6 +321,11 @@ fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, mut list: Option<&mut Vec
             }
         }
     }
+    // the cheeks filled out between cheekbone and jaw, where a dress with a table asks for it
+    // (`DressSet::cheek_fill`, `cheek_fill_of`)
+    if let Some(mm) = p.dress.set().map(|d| d.cheek_fill_of(p.female, p.grown())).filter(|mm| *mm > 0.0) {
+        cheek_fill(h, &mut pp, mm);
+    }
     // the mouth set between nose and chin where a real one lies, where a dress with a table asks for it
     // (`DressSet::mouth_at`); after the lips are closed, which moves the line where they meet
     if let Some((d, at)) = p.dress.set().map(|d| (d, mouth_at.unwrap_or(d.mouth_at))).filter(|(_, at)| *at > 0.0) {
@@ -387,6 +392,52 @@ pub fn mouth_field(h: &Head, v: usize) -> f32 {
     }
     let wy = if q[1] > lips[0] { 1.0 - sm(lips[0], nose, q[1]) } else if q[1] < lips[1] { sm(chin, lips[1], q[1]) } else { 1.0 };
     wy * (1.0 - sm(side[0], side[1], q[0].abs())) * sm(depth[0], depth[1], q[2])
+}
+
+/// The field in which a cheek is filled out (`cheek_fill`), on MakeHuman's base head, in mm from the chin's lowest
+/// point: heights (nothing from the first up, all at the second, nothing from the third down) and depths (nothing
+/// behind the first, all between the second and the third, nothing in front of the fourth). In height from under
+/// the cheekbones' landmarks (the lowest lies 90 mm up) to over the chin, most a little over the mouth's line
+/// (which lies 45 mm up). In depth from in front of the jaw's corners (their landmarks lie 44 to 69 mm behind
+/// the chin's lowest point and stay) to behind the mouth's corners (the lips' red begins 7 mm in front of it
+/// and stays). PLACEHOLDER: the extents are by eye on the base head, between landmarks that must not move.
+pub const CHEEK_FIELD: ([f32; 3], [f32; 4]) = ([88.0, 52.0, 17.0], [-43.0, -28.0, -6.0, 7.0]);
+
+/// Base normals turned at least this far and fully this far to the side take part in `cheek_fill` (the share of
+/// the normal that points away from the head's middle): the side of the face, not its front and not what lies
+/// inside the mouth.
+const CHEEK_SIDE: [f32; 2] = [0.2, 0.5];
+
+/// How much of `cheek_fill`'s way the vertex `v` of the base head goes, whose normal on the base is `n`.
+pub fn cheek_field_at(h: &Head, v: usize, n: V3) -> f32 {
+    let (b, m, (ys, zs)) = (h.base[v], h.base[crate::measure::MENTON], CHEEK_FIELD);
+    let (y, z) = ((b[1] - m[1]) * 100.0, (b[2] - m[2]) * 100.0);
+    if y >= ys[0] || y <= ys[2] || z <= zs[0] || z >= zs[3] {
+        return 0.0;
+    }
+    let wy = if y > ys[1] { 1.0 - sm(ys[1], ys[0], y) } else { sm(ys[2], ys[1], y) };
+    wy * sm(zs[0], zs[1], z) * (1.0 - sm(zs[2], zs[3], z)) * sm(CHEEK_SIDE[0], CHEEK_SIDE[1], n[0] * b[0].signum())
+}
+
+/// The same for every vertex of the base head, with the skin's normals on the base (0 for what is not skin).
+pub fn cheek_field(h: &Head) -> Vec<(f32, V3)> {
+    let n = vnormals(&h.base, h.body_full());
+    (0..h.base.len()).map(|v| (if len(n[v]) > 0.0 { cheek_field_at(h, v, n[v]) } else { 0.0 }, n[v])).collect()
+}
+
+/// Fills out the cheeks of a morphed head: the skin between the cheekbone and the jaw moves out along the base
+/// head's normal, by `mm` where `CHEEK_FIELD` is whole. A shape of our own, since none of MakeHuman's targets
+/// fills a cheek there without widening the cheekbones or the jaw's corners or laying a pad on the cheek at the
+/// nose's height (docs/PORTRAITS.md, rounds 96 and 97). The landmarks of the cheekbones, the jaw's corners, the
+/// mouth and the chin stay where they are.
+pub(crate) fn cheek_fill(h: &Head, pp: &mut [V3], mm: f32) {
+    for (q, (w, n)) in pp.iter_mut().zip(cheek_field(h)) {
+        if w > 0.0 {
+            for c in 0..3 {
+                q[c] += n[c] * w * mm / 100.0;
+            }
+        }
+    }
 }
 
 /// Moves the mouth of a morphed head down so that the line where the lips meet lies `share` of the way from the
