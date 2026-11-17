@@ -19,11 +19,15 @@ import { type Cover, KINDS, laidOut, loadPlan, usePlan } from './far';
 import { above, lay, meanCover, summary } from './mean';
 import { N } from '../lookprobe/layout';
 import { ballOf } from './ball';
+import { bytesOf, pack, unpack } from './pack';
+import { folderOf, kept } from './store';
 import { loadTownPeople } from '../figures';
 import { loadInhabitants } from './towns';
 
-export interface PieceJob { id: number; piece: Piece; region: string; /** step of the map: blocks 2^step cells wide */ step: number; base: string; bakedSky: boolean; /** the world's start year, whose towns are built, whose forest stands and whose people live on the land (default 1356) */ year?: number; /** false: a far step as far.ts lays it out, not as the mean of the finer step */ mean?: boolean | 'compare'; /** for a piece of the first far step: the summaries of the four finest pieces under it that the page holds (mean.ts), in rows */ under?: (Float32Array | undefined)[] }
-export interface PieceDone { id: number; scene?: WorldScene<Shape>; /** of a piece of the finest step: what it shows, summed up for the piece of the next step over it (mean.ts) */ summary?: Float32Array; error?: string }
+export interface PieceJob { id: number; piece: Piece; region: string; /** step of the map: blocks 2^step cells wide */ step: number; base: string; bakedSky: boolean; /** the piece is kept on disk under this name, in the folder of this build (store.ts); `kept`: it is there, and is read, not built */ keep?: { build: string; name: string; kept: boolean }; /** the world's start year, whose towns are built, whose forest stands and whose people live on the land (default 1356) */ year?: number; /** false: a far step as far.ts lays it out, not as the mean of the finer step */ mean?: boolean | 'compare'; /** for a piece of the first far step: the summaries of the four finest pieces under it that the page holds (mean.ts), in rows */ under?: (Float32Array | undefined)[] }
+export interface PieceDone { id: number; scene?: WorldScene<Shape>; /** of a piece of the finest step: what it shows, summed up for the piece of the next step over it (mean.ts) */ summary?: Float32Array; /** the piece packed, to be kept on disk (pack.ts) */ packed?: ArrayBuffer; /** the piece was read from disk */ kept?: boolean; error?: string }
+/** what is kept of a piece */
+type Kept = Pick<PieceDone, 'scene' | 'summary'>;
 
 const flat = (b: Batch): Shape => { const pos = new Float32Array(b.pos); return { pos, nor: new Float32Array(b.nor), col: new Float32Array(b.col), ball: ballOf(pos) }; };
 const nothing: Shape = { pos: new Float32Array(0), nor: new Float32Array(0), col: new Float32Array(0) };
@@ -88,10 +92,28 @@ function compare(counts: Record<string, number>, mean: Cover, part: Piece['part'
   }
 }
 
+let folder: Promise<FileSystemDirectoryHandle | null> | undefined;
+/** The piece of a job as it is kept on disk, if it is. */
+async function read(job: PieceJob): Promise<Kept | null> {
+  if (!job.keep?.kept) return null;
+  const from = await (folder ??= folderOf(job.keep.build)), run = from && await kept(from, job.keep.name);
+  // (a file that was cut short is built again, and written again)
+  try { return run ? unpack<Kept>(run) : null; } catch { return null; }
+}
+
 self.onmessage = async (e: MessageEvent<PieceJob>) => {
-  const { id, piece, step } = e.data;
+  const { id, piece, step, keep } = e.data;
   try {
-    const began = performance.now(), mean = step === 1 && e.data.mean ? await meanOf(e.data) : null, meant = performance.now();
+    const began = performance.now(), had = await read(e.data);
+    if (had?.scene) {
+      // the counts tell what the piece took this time
+      const counts = had.scene.counts;
+      for (const name of Object.keys(counts)) if (name.startsWith('ms ') || name.startsWith('pieces ')) delete counts[name];
+      counts[`ms kept step ${step}`] = Math.round(performance.now() - began); counts[`pieces kept step ${step}`] = 1;
+      (self as unknown as Worker).postMessage({ id, ...had, kept: true } satisfies PieceDone, bytesOf(had));
+      return;
+    }
+    const mean = step === 1 && e.data.mean ? await meanOf(e.data) : null, meant = performance.now();
     const built = await build(e.data, step, piece, e.data.mean === 'compare' ? null : mean);
     if (built && mean && e.data.mean === 'compare') compare(built.counts, mean, piece.part, built.ground);
     // how long the piece took to build, and of that the finer step under it (a tool reads the sums)
@@ -101,7 +123,9 @@ self.onmessage = async (e: MessageEvent<PieceJob>) => {
     const lists = [scene.ground, scene.things, scene.water, scene.raised ?? nothing, ...scene.cells.map((c) => c.far)].flatMap((s) => [s.pos, s.nor, s.col]).concat(scene.figures ? [scene.figures.a, scene.figures.b, scene.figures.c, scene.figures.d, scene.figures.e] : []).map((a) => (a as Float32Array).buffer).filter((buf) => buf.byteLength > 0);
     // (summed before the lists are handed over)
     const sum = step === 0 && e.data.mean === true ? summed(built, piece.part) ?? undefined : undefined;
-    (self as unknown as Worker).postMessage({ id, scene, summary: sum } satisfies PieceDone, sum ? [...lists, sum.buffer as ArrayBuffer] : lists);
+    // (packed before the lists are handed over, too: a copy, which the page passes on to be zipped and written)
+    const packed = keep ? pack({ scene, summary: sum } satisfies Kept) : undefined;
+    (self as unknown as Worker).postMessage({ id, scene, summary: sum, packed } satisfies PieceDone, [...lists, ...(sum ? [sum.buffer as ArrayBuffer] : []), ...(packed ? [packed] : [])]);
   } catch (err) {
     (self as unknown as Worker).postMessage({ id, error: String(err) } satisfies PieceDone);
   }

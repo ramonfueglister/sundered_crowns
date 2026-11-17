@@ -71,6 +71,19 @@ export interface WorldView {
   dispose(): void;
 }
 
+/**
+ * The name under which the pieces are kept on disk (store.ts), or none where they are not: the build of the game, so
+ * that a new build does not read the pieces of an old one. While the game is being worked on (the dev server) its
+ * code changes without a new build, so there the pieces are kept only where the address asks for it: `?keep=<name>`
+ * (and `?keep=0` keeps nothing in a build either).
+ */
+declare const __BUILD__: string;
+function keepAs(): string | undefined {
+  const asked = new URLSearchParams(location.search).get('keep');
+  if (asked === '0') return undefined;
+  return asked ?? (import.meta.env.DEV ? undefined : __BUILD__);
+}
+
 export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
   const name = o.region ?? 'world', base = import.meta.env.BASE_URL, still = o.still ?? false;
   const stage = await createStage({ fixed: true, tall: 70, canvas: o.canvas }), canvas = stage.canvas;
@@ -80,7 +93,7 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
   const frame = extentOf(projection), farthest = Math.min(FARTHEST, frame.east - frame.west);
   // the view: the place at the middle of the picture in the finest blocks, and how many of them lie across the picture
   let [x, z] = blockOfCell(...projection.cellOf(o.lon, o.lat)), wide = Math.min(farthest, Math.max(NEAREST, o.wide));
-  const pieces = createPieces(stage, { region: name, base, bakedSky: bakedSky(), ahead: !still, changed: () => look(), workers: +(new URLSearchParams(location.search).get('workers') ?? 0) || undefined, year: o.year, mean: new URLSearchParams(location.search).get('mean') === 'compare' ? 'compare' : new URLSearchParams(location.search).get('mean') === '1' });
+  const pieces = createPieces(stage, { region: name, base, bakedSky: bakedSky(), ahead: !still, changed: () => look(), workers: +(new URLSearchParams(location.search).get('workers') ?? 0) || undefined, keep: keepAs(), year: o.year, mean: new URLSearchParams(location.search).get('mean') === 'compare' ? 'compare' : new URLSearchParams(location.search).get('mean') === '1' });
   const realms = createRealms(stage, { region: name, base, year: o.year, map: projection.map, cells: projection.cells, round: projection.round, rows: projection.rows, ahead: !still, changed: () => look() }), names = createNames(o.names);
   const middle = (): [number, number] => { const box = canvas.getBoundingClientRect(); return [box.left + box.width / 2, box.top + box.height / 2]; };
 

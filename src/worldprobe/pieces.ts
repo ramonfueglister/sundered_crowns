@@ -14,14 +14,19 @@
 // piece to a picture, not all the pieces of a step in the picture that first shows them.
 // The houses that have fine blocks and the paved ground lie in cells of their own on their piece: from near, fine.ts
 // builds them again.
+// A piece that has been built is kept on disk as well (store.ts): the next time it is asked for, in this visit or a
+// later one, it is read, in a few hundredths of a second where building it takes most of one. While the view rests
+// and all it asks for is there, the pieces of the coarser steps that a wider view from here would show are built
+// into that store, the coarsest first: a leap out to them then finds them there.
 import type * as THREE from 'three/webgpu';
 import { N, NEAR, RIGHT, SEA_Y } from '../lookprobe/layout';
 import type { Stage } from '../lookprobe/stage';
 import { type HouseCell, createFine } from './fine';
 import type { PieceDone, PieceJob } from './piece.worker';
 import { cover, keyOf } from './pyramid';
+import type { StoreAsk, StoreSays } from './store.worker';
 import { CELL } from './world';
-import { BLENDS, COARSEST, blendOf, reliefOf, stepOf } from './zoom';
+import { BLENDS, COARSEST, FARTHEST, NEAREST, blendOf, elevationOf, reliefOf, stepOf } from './zoom';
 
 /** side of a piece in blocks; each is built on a ground of N blocks, so that it knows the land around it */
 const PIECE = 200, MARGIN = (N - PIECE) / 2;
@@ -39,6 +44,14 @@ const PICTURE = 1000 / 60;
 const DISSOLVE = 300;
 /** summaries of finest pieces kept for the pieces over them (half a megabyte each) */
 const KEPT_SUMS = 96;
+/** megabytes of pieces kept on disk (3 to 4 MB each); beyond that the ones unused the longest are let go of */
+const ROOM = 1000;
+/** pieces that may wait to be written to disk at a time (10 to 30 MB each until they are zipped); one that comes on top is not kept */
+const WAITING = 6;
+/** workers that build ahead into the store while the view rests: the others stay free for what the view asks for next */
+const SPARE_WORKERS = 2;
+/** the widest view of each step: what a leap out to that step may show */
+const WIDEST = Array.from({ length: COARSEST + 1 }, (_, s) => { let w = NEAREST; while (w < FARTHEST && stepOf(w * 1.02) <= s) w *= 1.02; return Math.min(FARTHEST, w); });
 /** the stage counts its blocks from a home near the view; a new home is taken when the view has moved this far from it */
 const HOME_REACH = 3000;
 /** what stands on a block leans this many blocks into the picture; a house does by this many */
@@ -65,7 +78,7 @@ interface Held {
   /** pictures in which the piece is still to be drawn without showing, so that its lists are on the graphics card before it shows */
   warm: number;
 }
-interface Spot { key: string; step: number; px: number; pz: number }
+interface Spot { key: string; step: number; px: number; pz: number; /** built ahead into the store: it goes on the stage only if the view has come to ask for it */ spare?: boolean }
 
 export interface Pieces {
   /** Brings the stage to the view: asks for what is missing, shows what covers the picture best. Returns the layout and how many pieces of the picture are still to come. */
@@ -80,11 +93,11 @@ export interface Pieces {
  * `ahead`: build the coarser step and the surroundings of the picture too (a tool that takes one picture does not
  * need them). `changed` is called whenever a piece has arrived.
  */
-export function createPieces(stage: Stage, o: { region: string; base: string; bakedSky: boolean; ahead: boolean; changed(): void; /** how many workers build the pieces (default: up to 4, one less than the machine's cores) */ workers?: number; /** the world's start year, whose towns are built */ year?: number; /** true: the first far step as the mean of the finest step (mean.ts: exact, but it builds four finest pieces for each far piece); 'compare': as far.ts lays it out, and measured against that mean (the counts `cmp …`); else as far.ts lays it out */ mean?: boolean | 'compare' }): Pieces {
+export function createPieces(stage: Stage, o: { region: string; base: string; bakedSky: boolean; ahead: boolean; changed(): void; /** how many workers build the pieces (default: up to 4, one less than the machine's cores) */ workers?: number; /** the world's start year, whose towns are built */ year?: number; /** keeps the pieces on disk, under this name of the game's build (store.ts): pieces of another build are not read */ keep?: string; /** true: the first far step as the mean of the finest step (mean.ts: exact, but it builds four finest pieces for each far piece); 'compare': as far.ts lays it out, and measured against that mean (the counts `cmp …`); else as far.ts lays it out */ mean?: boolean | 'compare' }): Pieces {
   const held = new Map<string, Held>(), building = new Set<string>(), jobs = new Map<number, Spot>(), idle: Worker[] = [];
   const workers: Worker[] = [];
   const fine = createFine(stage, { still: !o.ahead, changed: o.changed });
-  const pieces: Pieces = { look, failed: '', dispose: () => { for (const w of workers) w.terminate(); fine.dispose(); } };
+  const pieces: Pieces = { look, failed: '', dispose: () => { for (const w of workers) w.terminate(); store?.terminate(); fine.dispose(); } };
   let nextId = 1, looks = 0, ticking = false, layout: Layout = { step: -1, coarse: 1, homeX: 0, homeZ: 0 };
   /**
    * what the pieces of the finest step show, summed up for the pieces of the next step over them (mean.ts), the
@@ -97,6 +110,27 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
   /** pieces that have arrived and wait for their picture: one is put on the stage per picture */
   const arrived: { spot: Spot; scene: NonNullable<PieceDone['scene']> }[] = [];
   let admitting = false, admitted = 0;
+  /**
+   * the pieces kept on disk, by the names of their files, once the store has told them; how many are waiting to be
+   * written; and the pieces the last look asked for
+   */
+  const kept = new Set<string>(), asked = new Set<string>();
+  let store: Worker | null = null, listed = false, waiting = 0;
+  // (the pieces a tool measures against the mean are not what the view shows)
+  if (o.keep && o.mean !== 'compare' && typeof navigator !== 'undefined' && 'storage' in navigator && 'getDirectory' in navigator.storage) {
+    store = new Worker(new URL('./store.worker.ts', import.meta.url), { type: 'module' });
+    store.onmessage = (e: MessageEvent<StoreSays>) => {
+      if (e.data.have) { for (const name of e.data.have) kept.add(name); listed = true; o.changed(); }
+      if (e.data.put) { waiting--; if (!e.data.failed) kept.add(e.data.put); }
+      for (const name of e.data.gone ?? []) kept.delete(name);
+      if (e.data.holds !== undefined) stage.probe.counts['MB kept'] = e.data.holds;
+    };
+    // (a browser that does not run the store keeps nothing: the pieces are built as before)
+    store.onerror = () => { store?.terminate(); store = null; };
+    store.postMessage({ build: o.keep, room: ROOM } satisfies StoreAsk);
+  }
+  /** the name of a piece's file: all that the piece depends on, beside the build */
+  const fileOf = (p: Spot) => `${o.region}_${o.year ?? 0}_${p.step}_${p.px}_${p.pz}_${o.bakedSky ? 1 : 0}${o.mean ? 1 : 0}`;
   const put = ({ spot, scene }: (typeof arrived)[number]) => {
     const group = stage.add(scene);
     group.visible = false;
@@ -125,8 +159,16 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
         sums.delete(spot.key); sums.set(spot.key, e.data.summary);
         if (sums.size > KEPT_SUMS) sums.delete(sums.keys().next().value!);
       }
+      if (store && e.data.kept) store.postMessage({ used: fileOf(spot) } satisfies StoreAsk);
+      if (store && e.data.packed) {
+        if (waiting < WAITING) { waiting++; store.postMessage({ put: fileOf(spot), bytes: e.data.packed } satisfies StoreAsk, [e.data.packed]); }
+        else stage.probe.counts['pieces not kept'] = (stage.probe.counts['pieces not kept'] ?? 0) + 1;
+      }
+      // a piece built ahead into the store goes on the stage only if the view has come to ask for it meanwhile
+      const spare = spot.spare && !asked.has(spot.key);
+      if (spare) for (const [name, n] of Object.entries(e.data.scene?.counts ?? {})) if (name.startsWith('ms ') || name.startsWith('pieces ')) stage.probe.counts[`${name} ahead`] = (stage.probe.counts[`${name} ahead`] ?? 0) + n;
       // (a piece counts as being built until it is on the stage, so that it is not asked for again)
-      if (e.data.scene && !e.data.error) arrived.push({ spot, scene: e.data.scene }); else building.delete(spot.key);
+      if (e.data.scene && !e.data.error && !spare) arrived.push({ spot, scene: e.data.scene }); else building.delete(spot.key);
       if (e.data.error) pieces.failed ||= e.data.error;
       if (!o.ahead) admit(); else { if (!admitting && arrived.length) { admitting = true; requestAnimationFrame(admit); } o.changed(); }
     };
@@ -184,11 +226,22 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
     let missing = 0;
     for (const w of wanted) { const h = held.get(w.key); if (h) h.seen = looks; else if ((w.step === step && w.rank >= 1e9 && w.rank < 2e9) || (!o.ahead && w.step > step)) missing++; }
     // (a piece asked for twice is built once, as early as its first asking)
-    const asked = new Set<string>(), queue = wanted.filter((w) => !held.has(w.key) && !building.has(w.key)).sort((a, b) => a.rank - b.rank).filter((w) => !asked.has(w.key) && asked.add(w.key)).reverse();
+    asked.clear();
+    for (const w of wanted) asked.add(w.key);
+    const once = new Set<string>(), queue: Spot[] = wanted.filter((w) => !held.has(w.key) && !building.has(w.key)).sort((a, b) => a.rank - b.rank).filter((w) => !once.has(w.key) && once.add(w.key)).reverse();
+    // while the view rests with all it asks for, the pieces of the coarser steps that a wider view from here would
+    // show are built into the store, the coarsest first, by some of the workers (not for a page nobody looks at)
+    const sparing = [...jobs.values()].filter((j) => j.spare).length;
+    if (store && listed && o.ahead && !v.to && !document.hidden && !queue.length && building.size === sparing && sparing < SPARE_WORKERS) {
+      const ahead: (Spot & { far: number })[] = [];
+      for (let s = COARSEST; s > step; s--) for (const p of near({ ...v, wide: WIDEST[s], elevation: elevationOf(WIDEST[s]) }, s, 0)) if (!held.has(p.key) && !building.has(p.key) && !kept.has(fileOf(p))) ahead.push({ ...p, spare: true });
+      ahead.sort((a, b) => b.step - a.step || a.far - b.far);
+      queue.push(...ahead.slice(0, SPARE_WORKERS - sparing).reverse());
+    }
     while (idle.length && queue.length) {
       const next = queue.pop()!, worker = idle.pop()!, id = nextId++;
       jobs.set(id, next); building.add(next.key);
-      worker.postMessage({ id, step: next.step, piece: { ox: next.px * PIECE - MARGIN, oz: next.pz * PIECE - MARGIN, part: { x0: MARGIN, z0: MARGIN, x1: MARGIN + PIECE, z1: MARGIN + PIECE } }, region: o.region, base: o.base, bakedSky: o.bakedSky, year: o.year, mean: o.mean, under: next.step === 1 ? [0, 1, 2, 3].map((q) => sums.get(keyOf(0, next.px * 2 + (q & 1), next.pz * 2 + (q >> 1)))) : undefined } satisfies PieceJob);
+      worker.postMessage({ id, step: next.step, keep: store ? { build: o.keep!, name: fileOf(next), kept: kept.has(fileOf(next)) } : undefined, piece: { ox: next.px * PIECE - MARGIN, oz: next.pz * PIECE - MARGIN, part: { x0: MARGIN, z0: MARGIN, x1: MARGIN + PIECE, z1: MARGIN + PIECE } }, region: o.region, base: o.base, bakedSky: o.bakedSky, year: o.year, mean: o.mean, under: next.step === 1 ? [0, 1, 2, 3].map((q) => sums.get(keyOf(0, next.px * 2 + (q & 1), next.pz * 2 + (q >> 1)))) : undefined } satisfies PieceJob);
     }
 
     // what is shown: from the coarsest pieces down, a piece gives way to the four under it once they cover their share
