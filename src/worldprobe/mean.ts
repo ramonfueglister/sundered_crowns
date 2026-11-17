@@ -112,46 +112,63 @@ export function look(a: Above): Float32Array {
   return seen;
 }
 
+/** numbers a coarser block has in a summary: of the dots that show tops (colour summed, and how many), of those that show sides, the tops' own colours summed, how many finer blocks it has, and their heights above the ground summed */
+export const SUMMED = 13;
+
 /**
- * The cover of a coarser piece's ground of `n` blocks a side from the finer step's blocks, whose first lies under
- * the coarser block (x0, z0). Each coarser block takes the four finer ones under it. It stands out of the ground as
- * high as the four do in the mean, if that is a block of its own or more. Its colours are those the camera sees of
- * the four (`look`), given so that the block's own faces, lit as they are, show them: its sides what is seen of
- * their sides, its top what is seen of their tops, and with them as much of their sides as the block's own sides
- * will not show, because the blocks in front of it stand as high (the inside of a wood shows its tops only, a
- * house on a meadow its walls). Where the camera sees none of the four, the mean of their tops. Blocks outside the
- * finer step's blocks take the nearest inside them.
+ * The finer step's blocks, four to a coarser block: what the camera sees of each four (`look`), their own tops and
+ * their heights, summed. A piece of the finer step is summed up once and kept, so that the coarser piece over it
+ * need not build it again.
  */
-export function meanCover(a: Above, n: number, x0: number, z0: number): Cover {
+export function summary(a: Above): Float32Array {
+  const w = a.w >> 1, d = a.d >> 1, seen = look(a), sum = new Float32Array(w * d * SUMMED);
+  for (let z = 0; z < d; z++) for (let x = 0; x < w; x++) for (let q = 0; q < 4; q++) {
+    const i = x * 2 + (q & 1) + (z * 2 + (q >> 1)) * a.w, j = (x + z * w) * SUMMED;
+    if (a.high[i] === -Infinity) continue;
+    for (let k = 0; k < 8; k++) sum[j + k] += seen[i * 8 + k];
+    for (let k = 0; k < 3; k++) sum[j + 8 + k] += a.top[i * 3 + k];
+    sum[j + 11]++;
+    sum[j + 12] += a.ground[i] === -Infinity ? 0 : a.high[i] - a.ground[i];
+  }
+  return sum;
+}
+
+/**
+ * The cover of a coarser piece's ground of `n` blocks a side from the summaries of the four finer pieces under its
+ * own part (each `half` coarser blocks a side, null where there is only sea), whose first block lies at (x0, z0).
+ * A coarser block stands out of the ground as high as its four finer ones do in the mean, if that is a block of
+ * its own or more. Its colours are those the camera sees of the four, given so that the block's own faces, lit as
+ * they are, show them: its sides what is seen of their sides, its top what is seen of their tops, and with them as
+ * much of their sides as the block's own sides will not show, because the blocks in front of it stand as high (the
+ * inside of a wood shows its tops only, a house on a meadow its walls). Where the camera sees none of the four,
+ * the mean of their tops. Blocks outside the part take the nearest inside it.
+ */
+export function meanCover(quarters: readonly (Float32Array | null)[], half: number, n: number, x0: number, z0: number): Cover {
   const c: Cover = { has: new Uint8Array(n * n), rise: new Uint8Array(n * n), top: new Float32Array(n * n * 3), side: new Float32Array(n * n * 3), town: new Uint8Array(n * n), share: new Float32Array(n * n).fill(1) };
-  const w = a.w >> 1, d = a.d >> 1, seen = look(a), ups = new Float32Array(n * n * 4), sides = new Float32Array(n * n * 4), tops = new Float32Array(n * n * 3);
+  /** the summed numbers of the finer blocks under a block, or null */
+  const under = (x: number, z: number) => {
+    const cx = Math.max(0, Math.min(2 * half - 1, x - x0)), cz = Math.max(0, Math.min(2 * half - 1, z - z0)), of = quarters[(cx >= half ? 1 : 0) + (cz >= half ? 2 : 0)];
+    if (!of) return null;
+    const j = ((cx % half) + (cz % half) * half) * SUMMED;
+    return of[j + 11] > 0 ? of.subarray(j, j + SUMMED) : null;
+  };
   for (let z = 0; z < n; z++) for (let x = 0; x < n; x++) {
-    const cx = Math.max(0, Math.min(w - 1, x - x0)), cz = Math.max(0, Math.min(d - 1, z - z0)), j = x + z * n;
-    let all = 0, tall = 0;
-    for (let q = 0; q < 4; q++) {
-      const i = cx * 2 + (q & 1) + (cz * 2 + (q >> 1)) * a.w;
-      if (a.high[i] === -Infinity) continue;
-      all++;
-      tall += a.ground[i] === -Infinity ? 0 : a.high[i] - a.ground[i];
-      for (let k = 0; k < 4; k++) { ups[j * 4 + k] += seen[i * 8 + k]; sides[j * 4 + k] += seen[i * 8 + 4 + k]; }
-      for (let k = 0; k < 3; k++) tops[j * 3 + k] += a.top[i * 3 + k];
-    }
-    if (!all) continue;
+    const s = under(x, z), j = x + z * n;
+    if (!s) continue;
     c.has[j] = 1;
     // as high as the four in the mean, in its own blocks (two of theirs), if that is a block or more
-    c.rise[j] = tall / all >= 2 ? Math.round(tall / all / 2) : 0;
-    for (let k = 0; k < 3; k++) tops[j * 3 + k] /= all;
+    c.rise[j] = s[12] / s[11] >= 2 ? Math.round(s[12] / s[11] / 2) : 0;
   }
   const sx = Math.sign(NEAR[0]), sz = Math.sign(NEAR[1]), riseAt = (x: number, z: number) => (x < 0 || z < 0 || x >= n || z >= n ? 0 : c.rise[x + z * n]);
   for (let z = 0; z < n; z++) for (let x = 0; x < n; x++) {
-    const j = x + z * n;
-    if (!c.has[j]) continue;
+    const s = under(x, z), j = x + z * n;
+    if (!s) continue;
     // how much of the block's two sides towards the camera stands clear of the blocks in front of them
     const rise = c.rise[j], clear = rise ? (Math.max(0, rise - riseAt(x + sx, z)) + Math.max(0, rise - riseAt(x, z + sz))) / (2 * rise) : 0;
-    const dots = ups[j * 4 + 3] + (1 - clear) * sides[j * 4 + 3];
+    const dots = s[3] + (1 - clear) * s[7];
     for (let k = 0; k < 3; k++) {
-      c.top[j * 3 + k] = dots > 0 ? (ups[j * 4 + k] + (1 - clear) * sides[j * 4 + k]) / dots / LIT_UP : tops[j * 3 + k];
-      c.side[j * 3 + k] = sides[j * 4 + 3] > 0 ? sides[j * 4 + k] / sides[j * 4 + 3] / LIT_SIDE : c.top[j * 3 + k] * SIDE;
+      c.top[j * 3 + k] = dots > 0 ? (s[k] + (1 - clear) * s[4 + k]) / dots / LIT_UP : s[8 + k] / s[11];
+      c.side[j * 3 + k] = s[7] > 0 ? s[4 + k] / s[7] / LIT_SIDE : c.top[j * 3 + k] * SIDE;
     }
   }
   return c;

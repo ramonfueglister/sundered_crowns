@@ -26,6 +26,8 @@ const ZOOM_AHEAD = 1.25;
 const SPARE = 10;
 /** pieces that take the place of others dissolve into the picture over this many milliseconds */
 const DISSOLVE = 300;
+/** summaries of finest pieces kept for the pieces over them (half a megabyte each) */
+const KEPT_SUMS = 96;
 /** the stage counts its blocks from a home near the view; a new home is taken when the view has moved this far from it */
 const HOME_REACH = 3000;
 /** what stands on a block leans this many blocks into the picture; a house does by this many */
@@ -71,6 +73,12 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
   const fine = createFine(stage, { still: !o.ahead, changed: o.changed });
   const pieces: Pieces = { look, failed: '', dispose: () => { for (const w of workers) w.terminate(); fine.dispose(); } };
   let nextId = 1, looks = 0, ticking = false, layout: Layout = { step: -1, coarse: 1, homeX: 0, homeZ: 0 };
+  /**
+   * what the pieces of the finest step show, summed up for the pieces of the next step over them (mean.ts), the
+   * last KEPT_SUMS of them: a piece of the first far step is the mean of the four finest under it, and need not
+   * build those the page has built already
+   */
+  const sums = new Map<string, Float32Array>();
   /** when the shares of the pieces laid in were last set */
   let mixed = 0;
 
@@ -79,6 +87,10 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
     worker.onmessage = (e: MessageEvent<PieceDone>) => {
       const spot = jobs.get(e.data.id)!;
       jobs.delete(e.data.id); building.delete(spot.key); idle.push(worker);
+      if (e.data.summary) {
+        sums.delete(spot.key); sums.set(spot.key, e.data.summary);
+        if (sums.size > KEPT_SUMS) sums.delete(sums.keys().next().value!);
+      }
       if (e.data.error) pieces.failed ||= e.data.error;
       else if (e.data.scene) {
         const group = stage.add(e.data.scene);
@@ -121,12 +133,13 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
       layout = { step, coarse, homeX: Math.floor(v.x / coarse / PIECE) * PIECE, homeZ: Math.floor(v.z / coarse / PIECE) * PIECE };
     looks++;
 
-    // what the view asks for: the coarser step under the picture first, then its own step in the picture, then around it
+    // what the view asks for: its own step in the picture first, then the coarser step under the picture, then around it
     const wanted: (Spot & { rank: number })[] = [];
     for (const p of near(v, step, o.ahead ? AHEAD * v.wide : 0)) wanted.push({ ...p, rank: (p.out > 0 ? 2e9 : 1e9) + p.far });
     // a coarser piece is four times the size, so those of the picture reach far enough around it
     const coarser = step < COARSEST && (o.ahead || blend > 0) ? near(v, step + 1, 0) : [];
-    for (const p of coarser) wanted.push({ ...p, rank: p.far });
+    // (after the view's own pieces in the picture: a piece of the first far step is made of the finest ones under it, mean.ts)
+    for (const p of coarser) wanted.push({ ...p, rank: 1.5e9 + p.far });
     // the finer step, once the view comes near it: last of all
     if (o.ahead && stepOf(v.wide / ZOOM_AHEAD) < step) for (const p of near(v, step - 1, 0)) wanted.push({ ...p, rank: 3e9 + p.far });
     let missing = 0;
@@ -135,7 +148,7 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
     while (idle.length && queue.length) {
       const next = queue.pop()!, worker = idle.pop()!, id = nextId++;
       jobs.set(id, next); building.add(next.key);
-      worker.postMessage({ id, step: next.step, piece: { ox: next.px * PIECE - MARGIN, oz: next.pz * PIECE - MARGIN, part: { x0: MARGIN, z0: MARGIN, x1: MARGIN + PIECE, z1: MARGIN + PIECE } }, region: o.region, base: o.base, bakedSky: o.bakedSky, year: o.year, mean: o.mean } satisfies PieceJob);
+      worker.postMessage({ id, step: next.step, piece: { ox: next.px * PIECE - MARGIN, oz: next.pz * PIECE - MARGIN, part: { x0: MARGIN, z0: MARGIN, x1: MARGIN + PIECE, z1: MARGIN + PIECE } }, region: o.region, base: o.base, bakedSky: o.bakedSky, year: o.year, mean: o.mean, under: next.step === 1 ? [0, 1, 2, 3].map((q) => sums.get(keyOf(0, next.px * 2 + (q & 1), next.pz * 2 + (q >> 1)))) : undefined } satisfies PieceJob);
     }
 
     // what is shown: from the coarsest pieces down, a piece gives way to the four under it once they cover their share

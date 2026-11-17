@@ -16,13 +16,13 @@ import { FINER_STEPS } from './land';
 import { Water, loadWindow } from './region';
 import { type Piece, type WorldScene, buildWorld, windowOf } from './world';
 import type { Cover } from './far';
-import { above, lay, meanCover } from './mean';
+import { above, lay, meanCover, summary } from './mean';
 import { N } from '../lookprobe/layout';
 import { loadTownPeople } from '../figures';
 import { loadInhabitants } from './towns';
 
-export interface PieceJob { id: number; piece: Piece; region: string; /** step of the map: blocks 2^step cells wide */ step: number; base: string; bakedSky: boolean; /** the world's start year, whose towns are built, whose forest stands and whose people live on the land (default 1356) */ year?: number; /** false: a far step as far.ts lays it out, not as the mean of the finer step */ mean?: boolean }
-export interface PieceDone { id: number; scene?: WorldScene<Shape>; error?: string }
+export interface PieceJob { id: number; piece: Piece; region: string; /** step of the map: blocks 2^step cells wide */ step: number; base: string; bakedSky: boolean; /** the world's start year, whose towns are built, whose forest stands and whose people live on the land (default 1356) */ year?: number; /** false: a far step as far.ts lays it out, not as the mean of the finer step */ mean?: boolean; /** for a piece of the first far step: the summaries of the four finest pieces under it that the page holds (mean.ts), in rows */ under?: (Float32Array | undefined)[] }
+export interface PieceDone { id: number; scene?: WorldScene<Shape>; /** of a piece of the finest step: what it shows, summed up for the piece of the next step over it (mean.ts) */ summary?: Float32Array; error?: string }
 
 const flat = (b: Batch): Shape => ({ pos: new Float32Array(b.pos), nor: new Float32Array(b.nor), col: new Float32Array(b.col) });
 const nothing: Shape = { pos: new Float32Array(0), nor: new Float32Array(0), col: new Float32Array(0) };
@@ -38,23 +38,25 @@ async function build(job: PieceJob, step: number, piece: Piece, mean: Cover | nu
   return buildWorld(region, piece, gazetteer.places, landmarks.landmarks, bakedSky, step, await loadClimate(base, region.worldW ?? region.mapW, region.worldH ?? region.mapH), await loadInhabitants(base, year), await loadModels(base), await loadForest(base, year, region.worldW ?? region.mapW, region.worldH ?? region.mapH), await loadRural(base, year, region.mapW, region.mapH), await loadArable(base, year, region.mapW, region.mapH), await loadHamletLands(base, year ?? 1356), await loadParcels(base, year ?? 1356), mean);
 }
 
+/** What a piece of the finest step shows, summed up four blocks to one of the next step (mean.ts); null where it is open sea. */
+function summed(fine: WorldScene | null, part: Piece['part']): Float32Array | null {
+  if (!fine) return null;
+  const view = above(part.x1 - part.x0, part.z1 - part.z0);
+  lay(view, fine.ground, -part.x0, -part.z0, true);
+  for (const mesh of [fine.water, fine.raised, fine.things, ...fine.cells.map((c) => c.far)]) if (mesh) lay(view, mesh, -part.x0, -part.z0);
+  return summary(view);
+}
+
 /**
- * The cover of a piece of the first far step: the four pieces of the finest step under it are built and looked at
- * from straight above (mean.ts).
+ * The cover of a piece of the first far step: from the summaries of the four pieces of the finest step under it,
+ * those the page still holds and the rest built here.
  */
 async function meanOf(job: PieceJob): Promise<Cover> {
-  const { ox, oz, part } = job.piece, side = part.x1 - part.x0, view = above(side * 2, (part.z1 - part.z0) * 2);
+  const { ox, oz, part } = job.piece, side = part.x1 - part.x0, quarters: (Float32Array | null)[] = [];
   // the finest block under the piece's first own block, and the finest pieces that hold it and the rest
   const fx = (ox + part.x0) * 2, fz = (oz + part.z0) * 2;
-  for (let q = 0; q < 4; q++) {
-    const piece: Piece = { ox: fx + (q & 1) * side - part.x0, oz: fz + (q >> 1) * side - part.z0, part };
-    const fine = await build(job, 0, piece);
-    if (!fine) continue;
-    const dx = piece.ox - fx, dz = piece.oz - fz;
-    lay(view, fine.ground, dx, dz, true);
-    for (const mesh of [fine.water, fine.raised, fine.things, ...fine.cells.map((c) => c.far)]) if (mesh) lay(view, mesh, dx, dz);
-  }
-  return meanCover(view, N, part.x0, part.z0);
+  for (let q = 0; q < 4; q++) quarters.push(job.under?.[q] ?? summed(await build(job, 0, { ox: fx + (q & 1) * side - part.x0, oz: fz + (q >> 1) * side - part.z0, part }), part));
+  return meanCover(quarters, side / 2, N, part.x0, part.z0);
 }
 
 self.onmessage = async (e: MessageEvent<PieceJob>) => {
@@ -67,7 +69,9 @@ self.onmessage = async (e: MessageEvent<PieceJob>) => {
     const scene: WorldScene<Shape> = built ? { ground: flat(built.ground), things: flat(built.things), water: flat(built.water), raised: flat(built.raised!), figures: built.figures, cells: built.cells.map((c) => ({ ...c, far: flat(c.far) })), counts: built.counts }
       : { ground: nothing, things: nothing, water: flat(buildOpenSea(piece.ox, piece.oz, piece.part)), cells: [], counts: {} };
     const lists = [scene.ground, scene.things, scene.water, scene.raised ?? nothing, ...scene.cells.map((c) => c.far)].flatMap((s) => [s.pos, s.nor, s.col]).concat(scene.figures ? [scene.figures.a, scene.figures.b, scene.figures.c, scene.figures.d, scene.figures.e] : []).map((a) => (a as Float32Array).buffer).filter((buf) => buf.byteLength > 0);
-    (self as unknown as Worker).postMessage({ id, scene } satisfies PieceDone, lists);
+    // (summed before the lists are handed over)
+    const sum = step === 0 && e.data.mean !== false ? summed(built, piece.part) ?? undefined : undefined;
+    (self as unknown as Worker).postMessage({ id, scene, summary: sum } satisfies PieceDone, sum ? [...lists, sum.buffer as ArrayBuffer] : lists);
   } catch (err) {
     (self as unknown as Worker).postMessage({ id, error: String(err) } satisfies PieceDone);
   }
