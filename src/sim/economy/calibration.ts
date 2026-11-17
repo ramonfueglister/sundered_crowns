@@ -268,14 +268,32 @@ export const activePersons = (c: EconomyCalibration): number => (c.parameters as
  *  `working` is the number of persons of the city who work (economy feature 10): the model then has exactly that
  *  many active persons (the labour force, the one person without work at the start and the owner of the bank).
  *  Without it the labour force is computed from the people as for England. */
-export function cityTable(t: CalibrationTable, people: number, working?: number): CalibrationTable {
+export function cityTable(t: CalibrationTable, people: number, working?: number, agriculture = 1): CalibrationTable {
   if (!(people > 0)) throw new Error(`a city of ${people} people`);
   const c = structuredClone(t);
   if (working !== undefined) c.inputs.labour_force = { value: working - t.inputs.unemployed.value - BANK_OWNERS, kind: 'derived', source: 'the persons of the city who work (src/sim/systems/work.ts), without the one without work at the start and the owner of the bank' };
   c.scale.value = t.scale.value * people / (t.inputs.population_thousand.value * 1e3);
   c.inputs.wool_export.value.duty_shillings_per_sack = t.cities.duty_shillings_per_sack.value;
   c.inputs.unemployment_benefit = structuredClone(t.cities.unemployment_benefit);
+  if (agriculture !== 1) withAgriculture(c, agriculture);
   return c;
+}
+
+/** The table with the value added of agriculture per person who works there `factor` times England's (economy
+ *  feature 12: the harvest of a city's place against England's, src/sim/systems/economy.ts). Industry and services
+ *  keep theirs, and the persons in each sector stay the same. So GDP changes by the value added of agriculture, and
+ *  everything the calibration derives from the value added of agriculture follows it: its output and its inputs,
+ *  hence its output per employee (the port's labour productivity `alpha_s`, times `factor`), its wages and its
+ *  capital. The value added shares of the table are those of the new GDP. */
+export function withAgriculture(c: CalibrationTable, factor: number): void {
+  if (!(Number.isFinite(factor) && factor > 0)) throw new Error(`a factor of ${factor} for agriculture`);
+  const i = c.inputs, S = c.scale.value, AGRICULTURE = 0;
+  const duty = i.wool_export.value.sacks * i.wool_export.value.duty_shillings_per_sack / SHILLINGS_PER_POUND * S;
+  const gdp = i.gdp_nominal_gbp_mn.value * 1e6 * S, va = i.value_added_share.value.map((v) => v * (gdp - duty));
+  va[AGRICULTURE] *= factor;
+  const total = sum(va);
+  i.gdp_nominal_gbp_mn = { ...i.gdp_nominal_gbp_mn, value: (total + duty) / (1e6 * S), kind: 'derived', source: `${i.gdp_nominal_gbp_mn.source}; with the value added of agriculture times ${factor}, the factor of the harvest of the city (economy feature 12)` };
+  i.value_added_share = { ...i.value_added_share, value: va.map((v) => v / total) as typeof i.value_added_share.value, kind: 'derived', source: `${i.value_added_share.source}; with the value added of agriculture times ${factor} (economy feature 12)` };
 }
 
 /** The calibration with one day as the period (economy feature 4), from the yearly one. `days` is the number of

@@ -7,7 +7,7 @@ import { foundRulers, rulerCultures } from './systems/rulers';
 import { foundBorders } from './systems/borders';
 import { type Column, makeColumns } from './ecs';
 import type { World } from './world';
-import { foundEconomy } from './systems/economy';
+import { foundEconomy, foundWithHarvest } from './systems/economy';
 import { writeHouseholds } from './systems/household';
 import { fitPlacesToCities, foundPeople } from './systems/people';
 import { countPeople, settleHamlets } from './systems/hamlets';
@@ -140,6 +140,15 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     (s.family as { cols: unknown }).cols = fresh;
     foundLots(s, w.ground, w.dry);
     s.v = 20;
+  }
+  if (s.v === 20) { // 20 → 21: the harvest of a city's place sets what its agriculture makes per person (economy
+    // feature 12). The economies are founded anew on the day the world has reached, with the factor of the harvest of
+    // their places, as feature 11 founded them anew: the days and the yearly figures of the economies are gone, and
+    // the first period is the next day of the world. Who works, the hamlets and the harvest stay as they are.
+    const e = s.economy.cities;
+    if (e) e.harvestFactor = new Float64Array(e.places.length).fill(1);
+    foundWithHarvest(s, w);
+    s.v = 21;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one

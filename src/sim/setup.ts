@@ -9,7 +9,7 @@ import { cultureIndex, faithIndex, foundPersonCultures } from './systems/culture
 import type { I18n } from './i18n';
 import { cultivate } from './systems/cultivation';
 import { bringInHarvest } from './systems/harvest';
-import { foundEconomy } from './systems/economy';
+import { foundEconomy, foundWithHarvest } from './systems/economy';
 import { foundPeople } from './systems/people';
 import { countPeople, settleHamlets } from './systems/hamlets';
 import { foundRulers } from './systems/rulers';
@@ -61,6 +61,7 @@ export function createWorldState(w: World, setup: SetupState, seed: number): Wor
   settleHamlets(s); // the families who live from agriculture, by the firms of the economy
   countPeople(s); // the people of a place are its persons (the setup's numbers are only the start of the persons)
   cultivate(s, w); bringInHarvest(s, w); // the arable and the harvest of the year before the start
+  foundWithHarvest(s, w); // the economies anew with the harvest of their places (economy feature 12)
   foundLots(s, w.ground, w.dry); // the parcels of the families who live in the towns (after the hamlets: their families have none)
   return s;
 }
