@@ -918,7 +918,7 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
                 let mut ks = 1.0 / (1.0 + 0.23 * (1.0 - grown) * garb.map_or(1.0, |d| d.kid));
                 // a dress that gives the iris in millimetres: the image has it at 27.5 degrees of the ball
                 // (eye_tex.py), this ball has it where a disc of that size meets it (1 = 10 cm)
-                if let Some(mm) = garb.map(|d| d.iris_mm).filter(|&mm| mm > 0.0) {
+                if let Some(mm) = garb.map(|d| d.iris_of(fem, p.age)).filter(|&mm| mm > 0.0) {
                     ks = 27.5_f32.to_radians() / (mm / 200.0 / ball.max(1e-6)).min(1.0).asin();
                 }
                 let old = ((p.age - 45.0) / 35.0).clamp(0.0, 1.0);

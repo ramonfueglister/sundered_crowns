@@ -6,7 +6,7 @@ mod common;
 
 use common::{head, person};
 use sc_portrait::measure::{children, children_at, CHILDREN, CHILD_AGES, EAR_RIM, GLABELLA, BACK, arcs, arcs_from, face, far_at_mouth, far_cheek, jaw_front, lips, lower_face, marks, seam, ARCS, CHEEKBONES, CHIN, JAW, LIDS, LIPS, LIP_FOOT, LIP_TOP, LOWER_FACE, MEASURES, MENTON, SELLION, SKULL, STAGE_TURN, STOMION, SUBNASALE, TRAGION, neck_at, NECK, NECK_LEAN};
-use sc_portrait::{build, cheek_field, lower_band, lower_share, morph_targets, morph_test, morph_test_mouth, morph_test_seam, morph_test_nose, morph_test_skull, morph_test_wide, face_front, mouth_field, real, seam_field, skull_field, Beard, Head, Look, CHEEK_FIELD, LIP_SEAM, LODS, neck_share, NECK_UNDER, SEAM_REACH};
+use sc_portrait::{build, cheek_field, lower_band, lower_share, morph_targets, morph_test, morph_test_measured, morph_test_measured_as, morph_test_mouth, morph_test_seam, face_front, mouth_field, real, seam_field, skull_field, Beard, Head, Look, CHEEK_FIELD, LIP_SEAM, LODS, neck_share, NECK_UNDER, SEAM_REACH};
 
 #[test]
 fn the_grown_of_england_have_faces_of_human_measure() {
@@ -16,12 +16,14 @@ fn the_grown_of_england_have_faces_of_human_measure() {
     // within half a standard deviation of its mean for either sex. Since round 95 the head's breadth over the
     // ears and its length are among them: until then a woman's head was 140.6 mm broad (1.1 standard deviations
     // under the survey's, the gene of the jaw narrowed the skull) and a man's 204.2 mm long (0.9 over).
+    // Since round 107 this is the face as it is measured: a portrait shows it drawn on top of that (broader, with
+    // larger eyes: `DressSet::style`, held by `the_grown_of_england_are_drawn_broader_than_they_are_measured`).
     let Some(h) = head() else { return };
     let mut sums = [vec![0.0; MEASURES.len()], vec![0.0; MEASURES.len()]];
     let n = 150;
     for k in 0..2 * n {
         let female = k % 2 == 0;
-        let m = face(&h, &morph_test(&h, &person(k, female, [24.0, 35.0, 50.0][(k / 2) as usize % 3])));
+        let m = face(&h, &morph_test_measured(&h, &person(k, female, [24.0, 35.0, 50.0][(k / 2) as usize % 3])));
         for (s, x) in sums[female as usize].iter_mut().zip(&m) {
             *s += x / n as f32;
         }
@@ -36,6 +38,86 @@ fn the_grown_of_england_have_faces_of_human_measure() {
         // and a woman's is the smaller, by about as much as in the survey
         let (share, real) = (sums[1][k] / sums[0][k], women[0] / men[0]);
         assert!(share < 1.0 && (share - real).abs() < 0.06, "{name}: women {share} of men, the survey {real}");
+    }
+}
+
+#[test]
+fn the_grown_of_england_are_drawn_broader_than_they_are_measured() {
+    // Round 107 set the sample beside real pictures of the reference, each face scaled to the same length from
+    // the line of the eyes to the chin. In those lengths a face of the reference is about 1.5 broad and its
+    // pupils stand 0.65 apart; ours, of human measure, 1.1 to 1.3 and 0.52 to 0.57 at the same landmarks: narrow,
+    // long faces with small eyes beside broad ones with large eyes under a high head. The reference draws its
+    // people; England's are drawn the same way on top of the face as it is measured (`DressSet::style`), and
+    // this holds how far. Women: the cheekbones 151.4 mm apart (measured 135.5), the face 105.9 mm long (114.3),
+    // the pupils 69.7 mm apart (61.5), the eye's opening 35.2 by 10.4 mm (29.6 by 8.9), the head 132.2 mm high
+    // over the ears (120.2), the mouth as broad as measured. Men: 156.4 (143.1), 114.1 (123.8), 70.7 (64.5),
+    // 36.5 by 10.0 (31.8 by 9.0), 137.8 (130.3). For its length a face is a fifth broader and its pupils stand a
+    // fifth further apart: 1.43 and 0.66 of the length from sellion to the chin on women (1.19 and 0.54), 1.37
+    // and 0.62 on men (1.16 and 0.52). (Read in millimetres on the head; the shares above are read in the
+    // picture, on the turned head, from the line of the eyes.)
+    let Some(h) = head() else { return };
+    let set = sc_portrait::dress::Dress::England1356.set().unwrap();
+    let show = std::env::var("SHOW").is_ok();
+    let n = 100;
+    let name = |k: usize| MEASURES[k].0;
+    for female in [true, false] {
+        let (mut measured, mut drawn, mut height) = (vec![0.0f32; MEASURES.len()], vec![0.0f32; MEASURES.len()], [0.0f32; 2]);
+        for k in 0..n {
+            let p = person(2 * k + !female as u32, female, [24.0, 35.0, 50.0][k as usize % 3]);
+            let (a, b) = (morph_test_measured(&h, &p), morph_test(&h, &p));
+            for (s, x) in measured.iter_mut().zip(face(&h, &a)) {
+                *s += x / n as f32;
+            }
+            for (s, x) in drawn.iter_mut().zip(face(&h, &b)) {
+                *s += x / n as f32;
+            }
+            // (the height of the head over the ears: `children`'s fifth measure)
+            height[0] += children(&h, &a)[4] / n as f32;
+            height[1] += children(&h, &b)[4] / n as f32;
+        }
+        let share: Vec<f32> = (0..MEASURES.len()).map(|k| drawn[k] / measured[k]).collect();
+        if show {
+            for k in 0..MEASURES.len() {
+                println!("{}, {}: measured {:.1} mm, drawn {:.1} mm ({:.3})", if female { "women" } else { "men" }, name(k), measured[k], drawn[k], share[k]);
+            }
+            println!("{}: the head over the ears measured {:.1} mm, drawn {:.1} mm ({:.3})", if female { "women" } else { "men" }, height[0], height[1], height[1] / height[0]);
+            println!("{}: breadth at the cheekbones in lengths of the face, measured {:.3}, drawn {:.3}; between the pupils {:.3}, {:.3}", if female { "women" } else { "men" }, measured[4] / measured[0], drawn[4] / drawn[0], measured[6] / measured[0], drawn[6] / drawn[0]);
+        }
+        let sex = if female { "women" } else { "men" };
+        let between = |k: usize, lo: f32, hi: f32| assert!(share[k] > lo && share[k] < hi, "{sex}, {}: drawn {} of measured ({} and {} mm)", name(k), share[k], drawn[k], measured[k]);
+        between(0, 0.88, 0.96); // face length
+        between(4, 1.07, 1.16); // breadth at the cheekbones
+        between(5, 1.05, 1.20); // breadth at the jaw's corners
+        between(6, 1.07, 1.18); // between the pupils
+        between(11, 1.12, 1.30); // the eye's opening, length
+        between(12, 1.05, 1.35); // the eye's opening, height
+        between(9, 0.95, 1.06); // lip length: a small mouth in the broader face
+        between(13, 1.06, 1.15); // head breadth
+        between(14, 0.99, 1.01); // head length: no deeper
+        assert!(height[1] / height[0] > 1.04 && height[1] / height[0] < 1.12, "{sex}: the head over the ears drawn {} of measured", height[1] / height[0]);
+        // what the sheets read: the face about a fifth broader for its length, the pupils as much further apart
+        let (broad, apart) = ((drawn[4] / drawn[0]) / (measured[4] / measured[0]), (drawn[6] / drawn[0]) / (measured[6] / measured[0]));
+        assert!(broad > 1.12 && broad < 1.28 && apart > 1.13 && apart < 1.30, "{sex}: for its length the face is drawn {broad} as broad, the pupils {apart} as far apart");
+    }
+    // A head that is MakeHuman's child is drawn as it is measured (its large braincase and eyes are the tables' of
+    // `skull` and `eyes_child`, by a survey of children); between eleven and its adult form it grows into the
+    // drawing; no other dress has one.
+    for k in 0..12 {
+        let female = k % 2 == 0;
+        for age in [2.0, 5.0, 8.0, 11.0] {
+            let p = person(k, female, age);
+            assert!(set.style_of(female, age) == 0.0 && morph_test(&h, &p) == morph_test_measured(&h, &p), "a child of {age} ({k}) is drawn another head");
+        }
+        let breadth = |age: f32| {
+            let p = person(k, female, age);
+            face(&h, &morph_test(&h, &p))[4] / face(&h, &morph_test_measured(&h, &p))[4]
+        };
+        let (young, grown) = (breadth(13.0), breadth(24.0));
+        assert!(young > 1.01 && young < grown - 0.01 && set.style_of(female, 13.0) > 0.2 && set.style_of(female, 13.0) < 0.8, "person {k}: at 13 the face is drawn {young} as broad, grown {grown}");
+        assert!(set.style_of(female, if female { 15.0 } else { 17.0 }) == 1.0 && set.style_of(female, 68.0) == 1.0);
+        let mut roman = person(k, female, 35.0);
+        roman.dress = sc_portrait::dress::Dress::Roman;
+        assert!(morph_test(&h, &roman) == morph_test_measured(&h, &roman), "a Roman ({k}) is drawn another head");
     }
 }
 
@@ -175,6 +257,10 @@ fn the_lips_of_england_are_as_light_against_the_skin_as_the_references() {
     // wear no beard over them (the mean over all men had a beard's hair in it): 18.5 L under the lit cheek, the
     // reference's emperor's 25.8. A man's are darker now, with less green and blue in the blood so that they keep
     // their red: 0.40 to 0.44 of the cheek's light (22.4 L under the lit cheek, a* 6.5 over it; his 7.1).
+    // Round 107: a woman's keep more of the skin's colour (0.17, before 0.12): 0.30 to 0.35 of the cheek's light,
+    // 22.1 L under the lit cheek in the picture and a* 5.0 over it (before 24.5 and 4.3; hers 22.9 and 6.2).
+    // The men's lit cheek is darker on the broader face and their lips stood 20.4 L under it: a blood with less
+    // of it (0.265, 0.030, 0.032; before 0.30, 0.05, 0.05).
     let Some(h) = head() else { return };
     let idx = &h.parts["body"][LODS - 1];
     let red = real::rows("real/skin_lip.txt").expect("the lips' red");
@@ -200,7 +286,7 @@ fn the_lips_of_england_are_as_light_against_the_skin_as_the_references() {
         if std::env::var("SHOW").is_ok() {
             println!("{} {k}: the lower lip {:.3} of the cheek's light ({} corners of the cheek)", if female { "woman" } else { "man" }, lip / cheek, near.len());
         }
-        let bounds = if female { (0.23, 0.34) } else { (0.38, 0.50) };
+        let bounds = if female { (0.27, 0.38) } else { (0.35, 0.47) };
         assert!(lip / cheek > bounds.0 && lip / cheek < bounds.1, "{} {k}: the lower lip {} of the cheek's light", if female { "woman" } else { "man" }, lip / cheek);
     }
 }
@@ -459,6 +545,8 @@ fn the_mouth_of_england_lies_between_nose_and_chin_where_a_real_one_lies() {
             let share = after[0] / after[2];
             assert!(share > set.mouth_at - 0.002 && share < 0.40, "person {k}: the upper lip takes {share} of the lower face");
             assert!(share < set.mouth_at + 0.002 || (share - before[0] / before[2]).abs() < 1e-4, "person {k}: a mouth that lay lower was moved, {share}");
+            // (the fault is the measured face's: the drawn one, round 107, has a shorter chin under the same mouth)
+            let before = lower_face(&morph_test_measured_as(&h, &p, Some(0.0), None, None, None), lean);
             was += before[0] / before[2] / n as f32;
             is += share / n as f32;
             mm[0] += after[0] / n as f32;
@@ -627,7 +715,8 @@ fn a_tape_from_ear_to_ear_of_england_is_about_as_long_as_on_real_heads() {
     let mut sums = [[0.0f32; 4]; 2];
     for k in 0..2 * n {
         let female = k % 2 == 0;
-        let m = arcs(&h, &morph_test(&h, &person(k, female, [24.0, 35.0, 50.0][(k / 2) as usize % 3])));
+        // (the face as it is measured: a portrait's is drawn broader, `DressSet::style`)
+        let m = arcs(&h, &morph_test_measured(&h, &person(k, female, [24.0, 35.0, 50.0][(k / 2) as usize % 3])));
         for (s, x) in sums[female as usize].iter_mut().zip(&m) {
             *s += x / n as f32;
         }
@@ -689,7 +778,8 @@ fn a_woman_of_england_has_a_jaw_that_runs_in_to_her_chin() {
         let p = person(k, female, [24.0, 35.0, 50.0][(k / 2) as usize % 3]);
         let weight: f32 = morph_targets(&h, &p).iter().filter(|m| m.0 == name).map(|m| m.1).sum();
         assert!(weight == if female { 1.0 } else { 0.0 }, "person {k}: {name} at {weight}");
-        let pp = morph_test(&h, &p);
+        // (the face as it is measured: the drawn one's chin is short, and 11 mm over it is another place)
+        let pp = morph_test_measured(&h, &p);
         for (s, &over) in sums[female as usize].iter_mut().zip(&heights) {
             *s += jaw_front(&h, &pp, over) / n as f32;
         }
@@ -1043,6 +1133,13 @@ fn a_child_of_england_has_a_braincase_as_large_against_its_face_as_a_real_childs
     // height over the ears stand to the grown of England as the survey's children stand to its grown; the
     // circumference, which the table was not fitted to, then does too. The face, the ears and the neck stay.
     let Some(h) = head() else { return };
+    // (All of this on the face as it is measured: the grown are drawn on top of it since round 107,
+    // `DressSet::style`, and a child's share of the grown is the survey's against the measured grown.)
+    let morph_test = |h: &Head, p: &Look| morph_test_measured(h, p);
+    let morph_test_skull = |h: &Head, p: &Look, by: [f32; 3]| morph_test_measured_as(h, p, None, Some(by), None, None);
+    let morph_test_wide = |h: &Head, p: &Look, wide: f32| morph_test_measured_as(h, p, None, None, Some(wide), None);
+    let morph_test_nose = |h: &Head, p: &Look, by: f32| morph_test_measured_as(h, p, None, None, None, Some(by));
+    let _ = (&morph_test_skull, &morph_test_wide, &morph_test_nose);
     let show = std::env::var("SHOW").is_ok();
     let set = sc_portrait::dress::Dress::England1356.set().unwrap();
     // The table: ages rising, each factor from 1 to 1.25 and no larger than at the age before, ones in its last
@@ -1228,6 +1325,13 @@ fn a_child_of_england_has_a_mouth_as_broad_against_a_grown_ones_as_a_real_childs
     // face. The table's `child_mouth` has the weight by age and sex, fitted so that the mouth's breadth stands
     // to the grown of England as the survey's children's stands to its oldest group's.
     let Some(h) = head() else { return };
+    // (All of this on the face as it is measured: the grown are drawn on top of it since round 107,
+    // `DressSet::style`, and a child's share of the grown is the survey's against the measured grown.)
+    let morph_test = |h: &Head, p: &Look| morph_test_measured(h, p);
+    let morph_test_skull = |h: &Head, p: &Look, by: [f32; 3]| morph_test_measured_as(h, p, None, Some(by), None, None);
+    let morph_test_wide = |h: &Head, p: &Look, wide: f32| morph_test_measured_as(h, p, None, None, Some(wide), None);
+    let morph_test_nose = |h: &Head, p: &Look, by: f32| morph_test_measured_as(h, p, None, None, None, Some(by));
+    let _ = (&morph_test_skull, &morph_test_wide, &morph_test_nose);
     let show = std::env::var("SHOW").is_ok();
     let set = sc_portrait::dress::Dress::England1356.set().unwrap();
     // The table: ages rising, weights of a target (under 1), nothing in its last row; nothing for the grown.
@@ -1300,6 +1404,13 @@ fn a_child_of_england_has_a_nose_as_long_against_a_grown_ones_as_a_real_childs()
     // evenly, and what the nose loses the skin between its foot and the chin gains, the lips' red left as high
     // as it is, the chin where it is.
     let Some(h) = head() else { return };
+    // (All of this on the face as it is measured: the grown are drawn on top of it since round 107,
+    // `DressSet::style`, and a child's share of the grown is the survey's against the measured grown.)
+    let morph_test = |h: &Head, p: &Look| morph_test_measured(h, p);
+    let morph_test_skull = |h: &Head, p: &Look, by: [f32; 3]| morph_test_measured_as(h, p, None, Some(by), None, None);
+    let morph_test_wide = |h: &Head, p: &Look, wide: f32| morph_test_measured_as(h, p, None, None, Some(wide), None);
+    let morph_test_nose = |h: &Head, p: &Look, by: f32| morph_test_measured_as(h, p, None, None, None, Some(by));
+    let _ = (&morph_test_skull, &morph_test_wide, &morph_test_nose);
     let show = std::env::var("SHOW").is_ok();
     let set = sc_portrait::dress::Dress::England1356.set().unwrap();
     // The table: ages rising, factors that shorten a nose and by no more than a fifth, ones in its last row; ones
@@ -1435,6 +1546,9 @@ fn the_lids_of_england_stand_to_the_pupil_as_real_lids_do() {
     // and on a head held upright the white showed over the iris. Each ball is set so that the pupil stands at
     // `DressSet::pupil` of the opening: no white over an iris, hardly any under it, more of it covered above than
     // below.
+    // Since round 107 that is the face as it is measured. The face as a portrait shows it is drawn with larger
+    // eyes that are open wider (`DressSet::style`: the lids higher, the iris larger with the opening): its
+    // pupil stands at the same share of the opening, and its lids cut its larger iris above and reach it below.
     let Some(h) = head() else { return };
     let set = sc_portrait::dress::Dress::England1356.set().unwrap();
     let iris = set.iris_mm / 2.0;
@@ -1442,12 +1556,22 @@ fn the_lids_of_england_stand_to_the_pupil_as_real_lids_do() {
         let (female, age) = (k % 2 == 0, [2.0, 5.0, 8.0, 13.0, 17.0, 24.0, 35.0, 50.0, 68.0][(k / 2) as usize % 9]);
         let p = person(k, female, age);
         let lean = sc_portrait::dress::by_sex(set.lean[0], set.lean[1], female, p.grown());
-        let [over, under] = sc_portrait::measure::lids_to_pupil(&h, &morph_test(&h, &p), set.gaze_of(1.0, lean)[1]);
+        let [over, under] = sc_portrait::measure::lids_to_pupil(&h, &morph_test_measured(&h, &p), set.gaze_of(1.0, lean)[1]);
+        let [drawn_over, drawn_under] = sc_portrait::measure::lids_to_pupil(&h, &morph_test(&h, &p), set.gaze_of(1.0, lean)[1]);
+        let drawn_iris = set.iris_of(female, age) / 2.0;
         if std::env::var("SHOW").is_ok() {
-            println!("{} of {age}: the upper lid {over:.1} mm over the pupil, the lower lid {under:.1} mm under it", if female { "woman" } else { "man" });
+            println!("{} of {age}: the upper lid {over:.1} mm over the pupil, the lower lid {under:.1} mm under it; drawn {drawn_over:.1} and {drawn_under:.1}, the iris {drawn_iris:.2} mm", if female { "woman" } else { "man" });
         }
         assert!(((under / (over + under)) - set.pupil).abs() < 0.01, "person {k}: {over} mm over, {under} mm under");
         // (an eye that is open wider than the iris is high shows a little white under it, as wide eyes do)
         assert!(over < iris - 0.5 && under < iris + 1.0 && over < under, "person {k}: {over} mm over, {under} mm under, the iris {iris} mm");
+        assert!(((drawn_under / (drawn_over + drawn_under)) - set.pupil).abs() < 0.01, "person {k}, drawn: {drawn_over} mm over, {drawn_under} mm under");
+        assert!(drawn_over < drawn_iris - 0.5 && drawn_under < drawn_iris + 1.0 && drawn_over < drawn_under, "person {k}, drawn: {drawn_over} mm over, {drawn_under} mm under, the iris {drawn_iris} mm");
+        // a child's eyes are its own (the tables of `eyes_child`); the grown's are open wider than they are measured
+        if age <= 11.0 {
+            assert!(drawn_over == over && drawn_under == under && drawn_iris == iris, "person {k} of {age} has other eyes drawn");
+        } else if age >= 17.0 {
+            assert!(drawn_over + drawn_under > over + under + 0.5 && drawn_iris == set.style.iris_mm / 2.0, "person {k} of {age}: the opening {} mm, measured {}", drawn_over + drawn_under, over + under);
+        }
     }
 }

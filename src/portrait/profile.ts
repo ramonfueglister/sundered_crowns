@@ -325,6 +325,10 @@ export const APOLEIA: StageProfile = {
  *  and the shade beside her nose 33.6 under it (30.6; 34 to 35). `skin.zone` 2.5: the nose's back 4.3 over the
  *  lit cheek (2.3; 8). The eye under a darker lid (`lid.dark` 0.3, `white` 1.75, `iris` 1.15; 0.5, 1.95,
  *  1.3): a woman's 36.8 under her cheek (30.5; 40.2), a man's 43.7 (37.4; 40.6).
+ *  Round 107: the faces set beside real pictures of the reference at the same size, and drawn as it draws them
+ *  (portrait/src/dress.rs `Style`: broad, with large eyes). In the larger opening between the lids the white
+ *  at 1.75 was a white patch beside the iris, where the reference's is a grey that hardly stands out of the
+ *  face: 1.3. The reference's brows are a dark, closed band, ours were single hairs over the skin: 1.15 (0.85).
  *  All values of this profile are PLACEHOLDER: held against one face of the reference, set by measure and by
  *  eye (docs/PORTRAITS.md). */
 export const ENGLAND_1356: StageProfile = {
@@ -342,8 +346,8 @@ export const ENGLAND_1356: StageProfile = {
   turn: -0.24, rise: 0.03, close: 1.12,
   anisotropy: 8,
   skin: { rough: 0.55, specular: 0.42, pores: 0.8, wrap: [0.2, 0.16, 0.13], finer: 1, fit: 1, blotch: 0.05, speckle: 0.10, colour: 1.0, tint: [1, 0.75, 0.77], relief: 0.0015, oil: 0.5, fuzz: 0.3, child: 0.3, zone: 2.5 },
-  eye: { corner: { from: 0.3, to: 0.8, dark: 0.35 }, lid: { from: -0.35, to: 0.05, dark: 0.3 }, tint: [0.84, 0.77, 0.64], white: 1.75, iris: 1.15, colour: 1.1, lift: 0.6, rough: 0.14, specular: 0.6, wrap: 0.5, cornea: 0.36, ring: 0.55 },
-  brow: { rough: 1, specular: 0.05, lashes: 0.6, brows: 0.85 },
+  eye: { corner: { from: 0.3, to: 0.8, dark: 0.35 }, lid: { from: -0.35, to: 0.05, dark: 0.3 }, tint: [0.84, 0.77, 0.64], white: 1.3, iris: 1.15, colour: 1.1, lift: 0.6, rough: 0.14, specular: 0.6, wrap: 0.5, cornea: 0.36, ring: 0.55 },
+  brow: { rough: 1, specular: 0.05, lashes: 0.6, brows: 1.15 },
   cap: { tone: 1.7, light: 2.6, colour: 0.7, wrap: 1, shadow: false, stubble: 0, beard: { tone: 5.5, light: 3.2, colour: 0.65, wrap: 0.3 } },
   cards: { rough: 0.72, specular: 0.2, anisotropy: 0.3 },
   sheen: { white: 0.3, whiteSharp: 120, whiteShift: 0.1, own: 0.45, ownSharp: 40, ownShift: -0.1, ragged: 0.15, strands: 1.35, light: 0.5, colour: 0.7, wrap: 1 },

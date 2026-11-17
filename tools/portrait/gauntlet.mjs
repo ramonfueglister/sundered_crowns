@@ -54,7 +54,11 @@ const checks = [
   ['woman: lit cheek b*', 25.4, women['lit cheek b*'], AB, 'round 71'],
   ['woman: lit cheek chroma', 34.2, women['lit cheek chroma'], AB, 'round 81'],
   ['woman: lit cheek hue (degrees)', 48, women['lit cheek hue'], 3, 'round 71'],
-  ['woman: far cheek against the lit', -27.7, women['shaded cheek L'] - women['lit cheek L'], AGAINST, 'round 81'],
+  // (Until round 107 held to her own, -27.7. The reference's faces differ in this more than in anything else: its
+  // emperor's far cheek is 20.9 under his lit one, and five women of its developer diaries, read in round 107 on
+  // pictures scaled to ours, have theirs half as far under as ours by the same reading. Held to the softer of
+  // the game's two faces since: at -24.5, round 106, the light was the hardest of all seven.)
+  ['woman: far cheek against the lit', -20.9, women['shaded cheek L'] - women['lit cheek L'], AGAINST, 'round 107'],
   // the shade beside the nose on the far side, the black wedge of round 83, and the cheek beyond it: read then
   // by a scratch script along the same level lines, on her picture and on ours (hers -34 to -35 and -16)
   ['woman: beside the nose against cheek', -34.5, -women['beside the nose darker than cheek (L)'], AGAINST, 'round 83'],

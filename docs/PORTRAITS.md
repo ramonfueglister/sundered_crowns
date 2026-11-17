@@ -3489,10 +3489,158 @@ without the value; `portrait/tests/faces.rs` holds a man's lips at 0.38 to 0.50 
 a boy without a dress table the men's. Apoleia's portraits are the same to the byte. Pictures:
 `runde106_vorher_nachher.png` (eight faces, round 105 above), `runde106_stichprobe.png` (the sample of 36).
 
+**The face as the reference draws it (round 107).** Ramon after round 102: still rubbish. Thirty rounds had
+measured colour and light at places of two faces, and the gauntlet of round 106 passed in every line, while a
+portrait read wrong at a glance. Since 17.11.2026 twelve real pictures of the reference are in the project's
+files (`portraits/referenz_ck3`; not in the repository, and they must not be). This round set them beside the
+sample for the first time, face by face at the same size: each scaled so that the line of its eyes and its
+chin lie at the same heights of a cell (`tools/portrait/beside.mjs`, new; it also prints a face's proportions
+in the picture).
+
+One sheet showed what no line of the gauntlet holds. In lengths from the line of the eyes to the chin a face
+of the reference is about 1.5 broad at the cheekbones and its pupils stand 0.65 apart; ours, six faces of
+round 106, 1.10 to 1.30 and 0.52 to 0.57. England's grown had heads of human measure (earlier rounds fitted
+them to surveys of real heads), and beside the reference they are narrow, long, gaunt faces with small eyes
+low under a low crown. The reference does not show people of human measure: it draws them, as a painter does,
+with a broad face, a large braincase, a short chin, large eyes set wide and a small mouth. Ramon's choice
+(17.11.2026): draw ours the same way.
+
+So the dress table has a second layer, `DressSet::style` (`portrait/src/dress.rs` `Style`): the face as it is
+drawn, over the face as it is measured. What is measured stays measured: the tests against the surveys read
+the head without the layer (`morph_test_measured`), a portrait shows the head with it. A head that is
+MakeHuman's child (up to eleven) has none of it, since a child's large braincase and eyes are in the tables of
+`skull` and `eyes_child` already; between eleven and its adult form (15 and 17) a head grows into the drawing.
+Apoleia's portraits are the same to the byte.
+
+| the layer | value (women, men) | what it does |
+|---|---|---|
+| `head-scale-horiz-incr` | +0.5, +0.5 (and -0.1 of `rest`'s narrowing taken back on women) | the whole head broader: at weight 1 each cheekbone 13.2 mm further out, each eye 5.8 |
+| `chin-height-decr`, `chin-height-incr`, `head-scale-vert-incr`, `head-fat-decr` | +0.25, +0.25; -0.3, -0.15; 0, -0.2; 0, -0.2 | a short chin under a face that is no longer: the rows of `rest` that lengthen chin and face taken back |
+| `eye-scale-incr`, `eye-trans-out` | +0.6, +0.5; +0.15, +0.05 | large eyes, set wider still than the broader head sets them |
+| `mouth-scale-horiz-incr` | -0.55, -0.3 | a small mouth: the broader head widens it |
+| `skull` | 1, 1, 1.1 | the braincase a tenth higher, over the whole height of the crown (`STYLE_REACH`) |
+| `lids` | 0.35 | the lids' heights at rest times this: eyes open wider |
+| `iris_mm` | 14.5 (11.71) | the iris grows with the opening it lies in: 0.41 of its length on women, 0.40 on men (0.40 and 0.37 before; a real one's 0.46, `iris_mm`) |
+
+What it comes to, on the head in millimetres (100 women and 100 men of 24, 35 and 50) and in the picture
+(the six faces of the first sheet, in lengths from the line of the eyes to the chin; the head is turned, so
+these are shares in the picture):
+
+| | women measured | women drawn | men measured | men drawn |
+|---|---|---|---|---|
+| breadth at the cheekbones | 135.5 mm | 151.4 | 143.1 | 156.4 |
+| face length, sellion to chin | 114.3 mm | 105.9 | 123.8 | 114.1 |
+| between the pupils | 61.5 mm | 69.7 | 64.5 | 70.7 |
+| the eye's opening | 29.6 by 8.9 mm | 35.2 by 10.4 | 31.8 by 9.0 | 36.5 by 10.0 |
+| the head over the ears | 120.2 mm | 132.2 | 130.3 | 137.8 |
+| lip length | 46.5 mm | 46.4 | 49.4 | 50.8 |
+| breadth for the face's length | 1.19 | 1.43 | 1.16 | 1.37 |
+| pupils for the face's length | 0.54 | 0.66 | 0.52 | 0.62 |
+
+| in the picture | the reference's | round 106 | now |
+|---|---|---|---|
+| breadth at the cheekbones | about 1.5 | 1.18 (1.10 to 1.30) | 1.43 (1.32 to 1.58) |
+| between the pupils | about 0.65 | 0.55 (0.52 to 0.57) | 0.67 (0.64 to 0.69) |
+| an eye's length | | 0.27 | 0.34 |
+| an eye's opening | | 0.079 | 0.099 |
+| the mouth's breadth | | 0.43 | 0.48 |
+
+The reference's two numbers were read by hand on its large faces, ours come from the landmarks. Over eleven
+grown of the sample the breadth is 1.15 to 1.53 and the pupils 0.52 to 0.71: the genes' spread stays, and a
+person with a narrow head (940007: 1.15 and 0.52) is still narrow.
+
+The stage, for the larger eyes: in the larger opening the white at 1.75 was a white patch beside the iris,
+where the reference's is a grey that hardly stands out of the face: `eye.white` 1.3. The reference's brows are
+a dark closed band, ours were single hairs over the skin: `brow.brows` 1.15 (0.85).
+
+A larger braincase under hair: over `SKULL_REACH`, the band of 4 cm a child's braincase grows over, a tenth
+more height drew the forehead's skin out by three tenths just where a fringe begins, and the skin came through
+the hair between the locks' roots as light slits (first taken for the hood's rim riding up; the picture
+without the hood showed them in the hair itself). The drawn braincase grows over the whole height of the
+crown instead (`STYLE_REACH`, 10 cm), which draws the skin out evenly.
+
+**Colour and light, read on the real pictures.** The same cells give a reading of the colours at fixed places
+(the cheeks left and right of the nose, the forehead's middle, the reddest fifth of a box round the mouth).
+Five women of the reference's developer diaries against four and five of ours, as the round leaves them (the
+last column by the gauntlet's own reading, at landmarks):
+
+| | five women of the reference (spread) | ours, now | the woman the gauntlet holds |
+|---|---|---|---|
+| lit cheek L, a\*, b\* | 61.3, 15.3, 24.3 (6.2, 1.9, 1.8) | 52.4, 21.7, 26.2 | 56.1, 22.9, 25.4 |
+| chroma, hue | 28.8, 57.9 degrees | 34.0, 50.4 | 34.2, 48 |
+| far cheek against the lit | -13.2 (4.2) | -28.6 | -27.7 |
+| cheek redder than forehead (a\*) | +1.1 (5.0) | +7.3 | +5 |
+| lips against the cheek, L and a\* (the lips' own box) | -21.2, +5.7 | -20.5, +2.2 | -22.9, +6.2 |
+| the seam's line against the cheek | -37.5 | -50.5 | |
+
+(On three women of round 106 the lips read -21.8 and +2.1, the seam -49.9: by this reading the round moved
+them hardly at all.)
+
+Two things follow. The gauntlet's numbers were not wrong: its woman is a face of the game under the game's
+hard light, and her lips' numbers agree with the five women's; the stripe of gloss on the nose's back (round
+106) is there on the reference's faces too, in the game and in the diaries. And the reference's faces differ among themselves in the
+light more than in anything else: the five women are paler, less red and far softer lit than the woman of the
+game. The round did not follow them there (Ramon called the faces of rounds 49 to 72 zombies, and a paler, evenly
+lit face risks that again), with one exception, the gauntlet's line of the far cheek: it is held to the emperor's since (-20.9,
+before to the woman's -27.7), the softer of the game's two faces. That is a line moved, said here plainly:
+on the broader face the far cheek reads -19.6 with no light changed, and against -27.7 it would fail.
+
+What was changed for the colours: a woman's `flush` 0.65 (0.7; the red patch is larger on the broader cheek);
+her lips keep 0.17 of the skin's colour (0.12); a man's blood 0.265, 0.030, 0.032 (0.30, 0.05, 0.05; his lips
+read lighter again on the broader face) and his seam's factor 1.1 (1.0; the strip keeps nine tenths of the
+skin's red). The gauntlet over the whole sample:
+
+| | the reference's | round 106 | now |
+|---|---|---|---|
+| woman: lit cheek L, a\*, b\* | 56.1, 22.9, 25.4 | 54.6, 22.0, 26.2 | 54.4, 21.3, 26.0 |
+| woman: far cheek against the lit | -20.9 (round 107; -27.7) | -24.5 | -19.6 |
+| woman: beside the nose, the cheek beyond | -34.5, -16 | -33.6, -18.3 | -33.0, -16.1 |
+| woman: cheek redder than forehead | 5 | 5.4 | 4.7 |
+| woman: nose's back | +8 | +4.3 | +4.4 |
+| woman: lower lip, and its red (a\*) | -22.9, +6.2 | -24.5, +4.3 | -22.1, +5.0 |
+| woman: upper lip, over the lip | -35.1, -4.4 | -38.5, -2.2 | -36.5, -0.7 |
+| woman: eye | -40.2 | -36.8 | -39.7 |
+| emperor: lower lip, and its red (shaven men) | -25.8, +7.1 | -22.4, +6.5 | -22.4, +6.2 |
+| emperor: eye | -40.6 | -43.7 | -39.1 |
+| lines that pass | | 19 of 19 | 19 of 19 |
+
+Tried and not kept: `head-round` 0.3 for the breadth (hamster's cheeks); `head-scale-vert-decr` 0.3 in place
+of a higher braincase (a flat crown, the eyes high in the head); `chin-height-decr` 0.4 (a notch under the
+chin); the layer on children (a girl of eight with pupils 0.81 apart and a muzzle); `eye.iris` 0.9 (hardly
+differs from 1.15, and round 103's reason for 1.15 holds); `brow.brows` 1.4 (painted on); `lights.fill.energy`
+0.2 with `skin.zone` 1.0 and `flush` 0.55, towards the five women (the gauntlet fell to 15 of 19: the cheek's
+a\* and hue, the nose's back, a man's lips); `flush` 0.45; the seam's factors 1.9 and 1.35 against the dark
+line of the mouth (nothing to see, and the strip leaves the bound of its test); a rule in `calm()` for the
+hood's rim; the drawn braincase over `SKULL_REACH`.
+
+Honest about it. The proportions of a face are the reference's now; a portrait is not. Set beside the real
+pictures: the hair has no volume and lies on the skull as a cap; the clothes are one dark gown without collar,
+colour or trim where the reference's have all three; the veil is a tight cap without folds; the faces are
+smooth and alike where the reference's have a character each (a nose, a brow's ridge, a crooked mouth). By the
+sheet's reading a woman's lips are hardly redder against her cheek than before (a\* +2.2, the five women's
++5.7: our cheek is the redder one, a\* 24.6 against 18.5), and the line of the mouth is 13 L darker than
+theirs: a dark cut. A pale line stands at the mouth's far corner (the rim light on the lower lip's ledge;
+there before). A girl of thirteen has a mouth that stands forward. No picture of the reference shows a child,
+so the children are judged against nothing. All values of the layer are PLACEHOLDER, by eye on the sheets.
+Whether the faces are good is Ramon's to say; rounds 103 to 107 are not judged yet.
+
+Tests: `portrait/tests/faces.rs` reads the surveys' tests on the measured face, and
+`the_grown_of_england_are_drawn_broader_than_they_are_measured` holds the layer (the shares of drawn to
+measured of ten measures, for its length a face 1.12 to 1.28 as broad and its pupils 1.13 to 1.30 as far
+apart; children of 2 to 11 and Romans drawn as measured; a head of 13 in between); the lids' test holds the
+drawn eye too (the pupil at the same share of the opening, the lids cutting the larger iris above); a woman's
+lips 0.27 to 0.38 of the cheek's light, a man's 0.35 to 0.47. `tests/portrait.test.ts`: the iris 11.71 mm on
+children up to eleven, 14.5 mm from seventeen, between them in between. `the_face_at_rest_names_targets_the_head_has`
+checks the layer's names and that `rest` and the layer together stay within 0 and 1. Pictures (project
+files, `portraits/`): `runde107_vergleich_ck3_nah.png`, `runde107_vergleich_ck3_frauen.png`,
+`runde107_vergleich_ck3_maenner.png` (the reference above, ours below), `runde107_vorher_nachher.png` (eight
+faces, round 106 above), `runde107_stichprobe.png` (the sample of 36).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
-reached. Cloth, hoods, veil, the fringe and the tone of the skin are close; the fine forms of the face (lids,
-nostrils, edge of the lips), stubble, children and the variety of faces and of hair are not; the thrown-back hood closes round the neck since
-round 35, but has no folds across its cloth.
+reached. Since round 107 real pictures are set beside ours (above): the face's proportions and the tone of the
+skin are close; the hair (no volume), the clothes (no collar, colour or trim), the veil (no folds), the fine
+forms of the face (lids, nostrils, edge of the lips), stubble, children and the variety of faces are not; the
+thrown-back hood closes round the neck since round 35, but has no folds across its cloth.
 
 **Genes.** The pools of the founders are still Apoleia's seven Roman-era regions (`dna.rs` `origin`). Places
 outside them fall into the nearest box, which is wrong: Mexico draws as Africa, the Volga as Graecia, Persia and

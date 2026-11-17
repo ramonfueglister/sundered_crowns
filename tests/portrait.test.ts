@@ -284,11 +284,23 @@ describe('portraits', { timeout: 20_000 }, () => {
         return 2 * radius * Math.sin(0.0765 * per[per.length >> 1]!) * 100;
       });
     };
+    // Since round 107 that is a child's, whose head is as it is measured. The grown are drawn as the reference
+    // draws its people, with larger eyes (portrait/src/dress.rs `Style`): the opening between the lids is 35 to
+    // 36 mm long where it was 30 to 32, and the iris grows with it to 14.5 mm, 0.41 of a woman's opening (0.40
+    // before; a real one's 0.46, dress.rs `iris_mm`). Between eleven and its adult form (15 and 17) a head grows into the drawing.
     for (const p of sample) {
-      // one standard deviation round the mean of real ones, for children too (a child's iris is nearly grown)
       for (const mm of irises(p)) {
-        expect(mm, `person ${p.pid}`).toBeGreaterThan(11.71 - 0.42);
-        expect(mm, `person ${p.pid}`).toBeLessThan(11.71 + 0.42);
+        if (p.age <= 11) {
+          // one standard deviation round the mean of real ones (a child's iris is nearly grown)
+          expect(mm, `person ${p.pid}`).toBeGreaterThan(11.71 - 0.42);
+          expect(mm, `person ${p.pid}`).toBeLessThan(11.71 + 0.42);
+        } else if (p.age >= 17) {
+          expect(mm, `person ${p.pid}`).toBeGreaterThan(14.5 - 0.42);
+          expect(mm, `person ${p.pid}`).toBeLessThan(14.5 + 0.42);
+        } else {
+          expect(mm, `person ${p.pid}`).toBeGreaterThan(11.71 + 0.42);
+          expect(mm, `person ${p.pid}`).toBeLessThan(14.5 - 0.42);
+        }
       }
       // Apoleia's, on the same head: 14 to 17 mm
       for (const mm of irises({ ...p, origin: 'Italia' })) expect(mm, `person ${p.pid} as a Roman`).toBeGreaterThan(13.5);
