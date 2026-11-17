@@ -5,6 +5,8 @@
 // Until then the coarser piece stands in, and where that is missing too, finer pieces left from before. Pieces around
 // the picture are built ahead of need, and so are those of the step the view is about to change to. Where pieces
 // take the place of others, the new ones are dissolved into the picture while the old ones dissolve out of it.
+// The pieces of every coarser step under the picture are kept as well, so that a leap of the zoom never shows the
+// sea's colour where there is land.
 // While the view is in motion, the pieces of the view it will come to rest at are built first: a zoom or a flight is
 // over sooner than a piece is built, so what the pictures on the way would ask for comes too late to be seen
 // (Cesium loads the destination of a flight ahead in the same way). A piece that has arrived is put on the stage
@@ -27,6 +29,8 @@ const PIECE = 200, MARGIN = (N - PIECE) / 2;
 const AHEAD = 0.3;
 /** the pieces of the next finer step are built ahead once the view is within this factor of the width at which that step takes over */
 const ZOOM_AHEAD = 1.25;
+/** before the pieces of a picture, those of this many steps coarser under it are built: 16 times the ground each, so one to four of them */
+const STAND_IN = 2;
 /** pieces kept on the stage beyond those the view asks for */
 const SPARE = 10;
 /** a picture every this many milliseconds is what the stage aims for: a piece that has arrived is put on it in a picture of its own */
@@ -160,8 +164,12 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
 
     // what the view asks for: its own step in the picture first, then the coarser step under the picture, then around it
     const wanted: (Spot & { rank: number })[] = [];
-    // first of all the picture the view will come to rest at, from its middle outwards
-    if (o.ahead && v.to) for (const p of near({ ...v, ...v.to }, stepOf(v.to.wide), 0)) wanted.push({ ...p, rank: p.far });
+    // first of all the picture the view will come to rest at, from its middle outwards; and before its own pieces the
+    // few of STAND_IN steps coarser under it: in the time one piece takes to build, that picture is covered by blocks
+    // a few times as wide, where it would else show far coarser ones or none until all of its own are there
+    const rest = o.ahead && v.to ? { ...v, ...v.to } : v, restStep = stepOf(rest.wide);
+    if (o.ahead && restStep + STAND_IN <= COARSEST) for (const p of near(rest, restStep + STAND_IN, 0)) wanted.push({ ...p, rank: -1e9 + p.far });
+    if (rest !== v) for (const p of near(rest, restStep, 0)) wanted.push({ ...p, rank: p.far });
     for (const p of near(v, step, o.ahead ? AHEAD * v.wide : 0)) wanted.push({ ...p, rank: (p.out > 0 ? 2e9 : 1e9) + p.far });
     // a coarser piece is four times the size, so those of the picture reach far enough around it
     const coarser = step < COARSEST && (o.ahead || blend > 0) ? near(v, step + 1, 0) : [];
@@ -169,6 +177,10 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
     for (const p of coarser) wanted.push({ ...p, rank: 1.5e9 + p.far });
     // the finer step, once the view comes near it: last of all
     if (o.ahead && stepOf(v.wide / ZOOM_AHEAD) < step) for (const p of near(v, step - 1, 0)) wanted.push({ ...p, rank: 3e9 + p.far });
+    // and the pieces of every coarser step under the picture, the coarsest first: they are kept, so that a view that
+    // widens at once finds the land under it there, however coarse (a piece of the coarsest step covers a picture of
+    // every step but its own)
+    if (o.ahead) for (let s = COARSEST; s > step + 1; s--) for (const p of near(v, s, 0)) wanted.push({ ...p, rank: 4e9 + (COARSEST - s) * 1e7 + p.far });
     let missing = 0;
     for (const w of wanted) { const h = held.get(w.key); if (h) h.seen = looks; else if ((w.step === step && w.rank >= 1e9 && w.rank < 2e9) || (!o.ahead && w.step > step)) missing++; }
     // (a piece asked for twice is built once, as early as its first asking)
@@ -180,7 +192,8 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
     }
 
     // what is shown: from the coarsest pieces down, a piece gives way to the four under it once they cover their share
-    const top = Math.min(COARSEST, step + 2);
+    // (from the coarsest step of all: after a leap of the zoom the pieces of the view before are all there is)
+    const top = COARSEST;
     const shown = cover(step, top, near(v, top, 0).map((p) => [p.px, p.pz] as const), (s, px, pz) => held.get(keyOf(s, px, pz)), (s, px, pz) => outside(v, s, px, pz) <= 0);
 
     // pieces that take the place of others (they lie over each other in the pyramid) dissolve in while those dissolve
