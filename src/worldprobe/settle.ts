@@ -33,6 +33,8 @@ export interface Told {
   great(kind: string, x: number, z: number, w: number, d: number, y: number, height: number, site: number): void;
   /** a walled town: its middle, half the side of its paved square, the openings of its wall or null without a wall */
   town(site: number, cx: number, cz: number, half: number, y: number, wall: readonly WallGap[] | null): void;
+  /** once all is built: whether a column of the ground is dry and no rock */
+  dry?(at: (x: number, z: number) => boolean): void;
 }
 export type Survey = (s: Site, free: (dx: number, dz: number) => boolean) => void;
 /** A monument on the ground: one building of it. */
@@ -386,5 +388,6 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     if (mine) { if (CROPS[kind]) crops(things, g, [x0 + sown / 2, mz], sown, d, CROPS[kind]!, r); count('field'); count('tilled', sown * d); if (kind >= FALLOW) count(kind === FALLOW ? 'fallow' : 'spring'); }
     claim(x0, z0, x0 + w, z0 + d);
   }
+  told?.dry?.((x, z) => inGrid(x, z) && !g.wet[idx(x, z)] && g.mat[idx(x, z)] !== Mat.Rock);
   return { used, town, field, towns, lots };
 }
