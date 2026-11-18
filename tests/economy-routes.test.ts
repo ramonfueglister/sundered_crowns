@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { loadWorld, newWorldState } from '../tools/sim/load';
 import { cityRoutes } from '../src/sim/economy/routes';
 import { cityPlaces } from '../src/sim/systems/economy';
+import { loadWays } from '../tools/sim/load';
 import { advanceDay } from '../src/sim/engine';
 
 const w = loadWorld(), t = w.cityEconomies.table;
@@ -49,6 +50,19 @@ describe('the routes between the cities', () => {
   it('are kept: the same world, places and table give the same routes at once', () => {
     expect(cityRoutes(w, cities.map((c) => c.place), t)).toBe(r);
     expect(cityRoutes(w, cities.slice(0, 5).map((c) => c.place), t).cities).toBe(5);
+  });
+  it('go over land on the ways of the year, longer than the straight line, and the same over the sea', () => {
+    const net = loadWays(1356, w.N)!;
+    expect(net.laid).toBe(1291);
+    const v = cityRoutes(w, cities.map((c) => c.place), t, net), on = (a: string, b: string) => v.days[at(a) * n + at(b)];
+    expect(cityRoutes(w, cities.map((c) => c.place), t, net)).toBe(v);
+    expect(v).not.toBe(r);
+    // Paris to Cologne goes over land: longer on the ways than on the straight line, and more labour
+    expect(on('Paris', 'Cologne')).toBeGreaterThan(days('Paris', 'Cologne'));
+    expect(v.labour[at('Paris') * n + at('Cologne')]).toBeGreaterThan(labour('Paris', 'Cologne'));
+    // Venice to Alexandria goes by sea
+    expect(on('Venice', 'Alexandria')).toBe(days('Venice', 'Alexandria'));
+    for (let c = 0; c < n; c++) for (let d = 0; d < n; d++) expect(v.days[c * n + d] >= r.days[c * n + d]).toBe(true);
   });
   it('refuse a table that does not fit', () => {
     const bad = { ...t, routes: { ...t.routes, tonnes_per_pound: { ...t.routes.tonnes_per_pound, value: [1, 1] } } };

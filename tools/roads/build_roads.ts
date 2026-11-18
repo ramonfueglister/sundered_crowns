@@ -23,6 +23,7 @@ import { fileURLToPath } from 'node:url';
 import gazetteer from '../../data/content/gazetteer.json';
 import { MinHeap } from '../../src/sim/minheap';
 import { ROAD_KINDS } from '../../src/worldprobe/roads';
+import { slopeTime } from '../../src/sim/roads';
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '../..');
 const year = Number(process.argv[2] ?? 1291);
@@ -269,18 +270,20 @@ for (const [a, list] of nbr) for (const b of list) if (!used.has(a < b ? a * n +
 const ids = new Uint16Array(gunzipSync(readFileSync(resolve(ROOT, 'public/map/ids.bin.gz'))).buffer.slice(0));
 /** the place of the map a pixel of the window lies in (-1: none, or sea) */
 const placeOf = (i: number) => { const l = ids[(Math.floor(i / w) + Y0) * W + (i % w) + X0] - 1; return l >= 0 && l < geo.L ? l : -1; };
-const between = new Map<string, { a: number; b: number; k: number; km: number; effort: number }>();
+const between = new Map<string, { a: number; b: number; k: number; km: number; effort: number; straight: number }>();
 for (const key of links) {
   const a = Math.floor(key / n), b = key % n, la = placeOf(a), lb = placeOf(b);
   if (la === lb || la < 0 || lb < 0) continue;
   const id = la < lb ? `${la},${lb}` : `${lb},${la}`, k = Math.min(kind[a], kind[b]);
-  const e = between.get(id) ?? between.set(id, { a: Math.min(la, lb), b: Math.max(la, lb), k, km: 0, effort: 0 }).get(id)!;
+  const e = between.get(id) ?? between.set(id, { a: Math.min(la, lb), b: Math.max(la, lb), k, km: 0, effort: 0, straight: 0 }).get(id)!;
   e.k = Math.max(e.k, k);
 }
 /**
- * How long the way from one place to the next is, and its effort: from the pixel of the way nearest the first
- * place's middle to the pixel nearest the second's, over the way's pixels in the two places only. Effort is km
- * weighted as the way was laid (slope, crossing rivers), without the reuse: the simulation's days come from it.
+ * How long the way from one place to the next is, its effort, and the straight line between its ends: from the pixel of the way nearest the first
+ * place's middle to the pixel nearest the second's, along the way as it was laid (the cheapest to build), over the
+ * way's pixels in the two places, or over all of them where the way leaves the two places between them. Effort is
+ * the km weighted by the time their slopes take (src/sim/roads.ts slopeTime, Tobler's hiking function): the
+ * simulation's days come from it.
  */
 {
   const near = new Map<number, number>();
@@ -291,23 +294,25 @@ for (const key of links) {
     if (best === undefined || d < Math.hypot((best % w) + X0 + 0.5 - geo.loc.x[l], Math.floor(best / w) + Y0 + 0.5 - geo.loc.y[l])) near.set(l, i);
   }
   const dirOf = (a: number, b: number) => { const dx = (b % w) - (a % w), dy = Math.floor(b / w) - Math.floor(a / w); for (let d = 0; d < 8; d++) if (DX[d] === dx && DY[d] === dy) return d; return 0; };
-  const q = new MinHeap(), dist = new Map<number, [number, number]>();
-  for (const e of between.values()) {
-    const s = near.get(e.a)!, t = near.get(e.b)!;
-    q.clear(); dist.clear(); dist.set(s, [0, 0]); q.push(0, s);
+  const q = new MinHeap(), dist = new Map<number, [number, number, number]>();
+  const measure = (e: { a: number; b: number; km: number; effort: number; straight: number }, within: boolean) => {
+    const s = near.get(e.a)!, t = near.get(e.b)!, straight = Math.hypot((s % w) - (t % w), Math.floor(s / w) - Math.floor(t / w)) * kmRow[Math.floor((s + t) / 2 / w) + Y0], far = 6 * straight + 20;
+    q.clear(); dist.clear(); dist.set(s, [0, 0, 0]); q.push(0, s);
     while (q.size) {
-      const d = q.peekKey(), u = q.popVal(), [du, ku] = dist.get(u)!;
+      const d = q.peekKey(), u = q.popVal(), [du, ku, tu] = dist.get(u)!;
       if (d > du) continue;
-      if (u === t) { e.effort = du; e.km = ku; break; }
+      if (u === t) { e.km = ku; e.effort = tu; e.straight = straight; return; }
+      if (ku > far) return;
       for (const v of nbr.get(u)!) {
         const pl = placeOf(v);
-        if (pl !== e.a && pl !== e.b) continue;
-        const dir = dirOf(u, v), c = du + stepCost(u, v, dir, Math.floor(u / w)) / REUSE, km = ku + kmRow[Math.floor(u / w) + Y0] * (dir < 4 ? 1 : Math.SQRT2);
+        if (within && pl !== e.a && pl !== e.b) continue;
+        const dir = dirOf(u, v), step = kmRow[Math.floor(u / w) + Y0] * (dir < 4 ? 1 : Math.SQRT2), c = du + stepCost(u, v, dir, Math.floor(u / w)) / REUSE;
         const had = dist.get(v);
-        if (!had || c < had[0]) { dist.set(v, [c, km]); q.push(c, v); }
+        if (!had || c < had[0]) { dist.set(v, [c, ku + step, tu + step * slopeTime((height[v] - height[u]) / (step * 1000))]); q.push(c, v); }
       }
     }
-  }
+  };
+  for (const e of between.values()) { measure(e, true); if (!(e.km > 0)) measure(e, false); }
 }
 
 const km = { all: 0, byKind: [0, 0, 0] };
@@ -316,8 +321,8 @@ console.log(`${lines.length} lines, ${Math.round(km.all)} km: ${km.byKind.map((v
 
 writeFileSync(resolve(ROOT, `public/data/roads_${year}.json`), JSON.stringify({
   year,
-  about: 'The ways of the world graphic and the simulation (tools/roads/build_roads.ts): lines in map pixels (x, y of pixel corners; a way runs through the middle of each pixel), k the kind (src/worldprobe/roads.ts ROAD_KINDS); between: the ways from place to place of the map: [a, b, k, km, effort] (indices of geo.json loc, k the best kind on the way, km its length from near the one place\'s middle to near the other\'s, effort those km weighted by slope and rivers as the way was laid).',
-  sources: ['Galin, Peytavie, Marechal and Guérin 2010, Procedural generation of roads (cheapest line with slope and water costs)', 'Galin, Peytavie, Guérin and Beneš 2011, Authoring hierarchical road networks (towns joined by importance, reuse)', 'Leopold and Maddock 1953 (river width ∝ discharge^0.5)', 'gravity model of traffic: people × people / km²'],
+  about: 'The ways of the world graphic and the simulation (tools/roads/build_roads.ts): lines in map pixels (x, y of pixel corners; a way runs through the middle of each pixel), k the kind (src/worldprobe/roads.ts ROAD_KINDS); between: the ways from place to place of the map: [a, b, k, km, effort] (indices of geo.json loc, k the best kind on the way, km its length from near the one place\'s middle to near the other\'s, effort those km weighted by the time their slopes take, Tobler 1993, src/sim/roads.ts slopeTime; straight the km of the straight line between the two ends).',
+  sources: ['Galin, Peytavie, Marechal and Guérin 2010, Procedural generation of roads (cheapest line with slope and water costs)', 'Galin, Peytavie, Guérin and Beneš 2011, Authoring hierarchical road networks (towns joined by importance, reuse)', 'Leopold and Maddock 1953 (river width ∝ discharge^0.5)', 'gravity model of traffic: people × people / km²', 'Tobler 1993, Three presentations on geographical analysis and modeling (hiking function: the time a slope takes)'],
   lines,
-  between: [...between.values()].filter((e) => e.km > 0).map((e) => [e.a, e.b, e.k, Math.round(e.km * 10) / 10, Math.round(e.effort * 10) / 10]),
+  between: [...between.values()].filter((e) => e.km > 0).map((e) => [e.a, e.b, e.k, Math.round(e.km * 10) / 10, Math.round(e.effort * 10) / 10, Math.round(e.straight * 10) / 10]),
 }));
