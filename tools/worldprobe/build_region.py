@@ -11,7 +11,8 @@ Inputs (all open, fetched into GEO_CACHE on first use):
   - the game's own 1356 layers: coast, lake and river overrides (data/history/1356), forest and cultivation (public/map/biome.png)
 Outputs in public/map/regions/<name>/: index.json (projection, list of tiles), <tx>_<ty>.bin.gz (the rasters of a tile,
 layer after layer, row by row) and <tx>_<ty>.json (the rivers that cross it, in cells of the whole map). Tiles are
-named by their place on the whole map.
+named by their place on the whole map. The river lists get the beds of their rivers (`bed`, `mid`) from
+build_overviews.py, which has the whole region at hand: run it after every cut.
 
 The whole world is too large to cut in one go, so the region `world` is cut part by part (PARTS): every part writes
 its tiles into public/map/regions/world/ and leaves those of the other parts alone. A part is worked out together
