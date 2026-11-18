@@ -169,6 +169,8 @@ export interface Stage {
   creases(share: number, reach?: number): void;
   /** Softens the light towards the near view's, by a share (0: the page's own light, 1: the light of the near view). */
   soften(share: number): void;
+  /** How much of the mirror image of what stands by the water shows (1: all; 0: none, the water mirrors the sky alone and the mirror is not drawn). */
+  mirror(share: number): void;
   /**
    * The map's paper: what is put on it (the realms' colours, realms.ts) is seen from straight above and laid onto the
    * ground of the picture where it really lies, over relief, houses and trees alike, as the map modes of EU5 lie on
@@ -257,6 +259,8 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   let water = solid;
   const tint = uniform(new THREE.Color());
   let mirrored: ReturnType<typeof reflector> | null = null;
+  /** how much of the mirror image the water shows, 1 near, 0 from afar (Stage.mirror) */
+  const mirrorShare = uniform(1);
   if (flag('mirror', true)) {
     const mirror = mirrored = reflector({ resolutionScale: 0.5 });
     mirror.target.rotateX(-Math.PI / 2);
@@ -264,8 +268,14 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     marked(mirror.target); scene.add(mirror.target);
     water = coloured();
     water.maskNode = solid.maskNode;
-    // the mirror image is tinted like the water, so a white sail shows as a pale green shape, not as a light
-    water.emissiveNode = hashBlur(mirror, float(LOOK.mirrorBlur), { repeats: float(24) }).rgb.mul(tint);
+    // the mirror image is tinted like the water, so a white sail shows as a pale green shape, not as a light.
+    // From afar what stands by the water is smaller than the mirror's blur, and the mirror shows the sky alone, which
+    // is the picture's background: there it is not drawn (a whole second picture of the scene, every picture), and
+    // the water takes the background's colour in its place (see Stage.mirror).
+    const sky = new THREE.Color(...OPEN_WATER);
+    water.emissiveNode = mix(vec3(sky.r, sky.g, sky.b), hashBlur(mirror, float(LOOK.mirrorBlur), { repeats: float(24) }).rgb, mirrorShare).mul(tint);
+    const reflecting = mirror.reflector as unknown as { updateBefore(frame: unknown): unknown }, draw = reflecting.updateBefore.bind(reflecting);
+    reflecting.updateBefore = (frame) => (mirrorShare.value > 0 ? draw(frame) : undefined);
   }
   // A mesh's rectangles on the grid of blocks come as faces (faces.ts), a row of numbers to each, and their corners
   // are made here: each of the four corners of a face's two triangles knows which of the face's four it is (one way
@@ -794,6 +804,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
       if (laid.strength.value === strength && laid.flat.value === flat && laid.seaTop.value === seaTop && laid.things.value === things && laid.calm.value === calm) return;
       laid.strength.value = strength; laid.flat.value = flat; laid.seaTop.value = seaTop; laid.things.value = things; laid.calm.value = calm; pending = Math.max(pending, 1);
     },
+    mirror(share) { if (mirrorShare.value !== share) { mirrorShare.value = share; pending = Math.max(pending, 1); } },
     creases(share, reach = 1) {
       if (creased.value !== share) { creased.value = share; pending = Math.max(pending, 1); }
       if (reached && reached.value !== LOOK.creaseReach * reach) { reached.value = LOOK.creaseReach * reach; pending = Math.max(pending, 1); }

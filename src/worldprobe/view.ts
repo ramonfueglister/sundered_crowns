@@ -21,7 +21,7 @@ import type { RealmsNow } from './realms.worker';
 import { extentOf, heldIn } from './extent';
 import { projectionOf } from './region';
 import { FINER, blockOfCell, cellOfBlock } from './land';
-import { FARTHEST, NEAREST, awayOf, creaseReachOf, creasesOf, elevationOf, nearOf, reliefOf } from './zoom';
+import { FARTHEST, NEAREST, awayOf, creaseReachOf, creasesOf, elevationOf, mirrorOf, nearOf, reliefOf } from './zoom';
 
 /** the view closes this share of the way to where the wheel sent it, and a glide loses this share of its speed, every millisecond */
 const ZOOM_EASE = 1 / 90, GLIDE_EASE = 1 / 280;
@@ -110,7 +110,7 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
     const view = { x, z, wide, aspect, pixels: canvas.clientWidth, elevation, to: toward() };
     const at = pieces.look(view), missing = at.missing + realms.look(view, at), failed = pieces.failed || realms.failed;
     stage.aim(x / at.coarse - at.homeX, z / at.coarse - at.homeZ, wide / at.coarse, elevation, awayOf(wide) / at.coarse);
-    stage.creases(creasesOf(wide), creaseReachOf(wide) / at.coarse); stage.soften(nearOf(wide)); laid = at;
+    stage.creases(creasesOf(wide), creaseReachOf(wide) / at.coarse); stage.soften(nearOf(wide)); stage.mirror(mirrorOf(wide)); laid = at;
     // a point (x, z) of the stage is the world block ((x + homeX) · coarse, (z + homeZ) · coarse), and that the cell
     // (u, v) of the whole map (land.ts `cellOfBlock`), which lies at (u / map width, v / map height) on the depth picture
     {
