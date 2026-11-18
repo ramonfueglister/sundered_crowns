@@ -140,6 +140,12 @@ export function drawLand(table: Table, bakedSky: boolean, part: Part): { ground:
   return onGrid(table.side, () => { const carried = new Batch(); return { ground: buildTerrain(g, traitsOf(table), bakedSky, part, carried), carried }; });
 }
 
+/** Draws the banks of the water in a part of a table's own columns, as the piece has them there (glide.ts asks the coarser piece for them). */
+export function drawBanks(table: Table, bakedSky: boolean, part: Part): Batch {
+  const g: Ground = { h: table.h, mat: table.mat, wet: table.wet, shore: table.shore, occ: table.occ, surf: table.surf, ox: table.ox, oz: table.oz };
+  return onGrid(table.side, () => { const banks = new Batch(); buildShore(banks, g, traitsOf(table), bakedSky, part); return banks; });
+}
+
 /** Draws the piece of a table, as its build drew it. */
 export function drawTable(table: Table, bakedSky: boolean): { ground: Batch; carried?: Batch; water: Batch; raised: Batch } {
   const g: Ground = { h: table.h, mat: table.mat, wet: table.wet, shore: table.shore, occ: table.occ, surf: table.surf, ox: table.ox, oz: table.oz };

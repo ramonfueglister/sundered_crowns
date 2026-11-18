@@ -22,8 +22,8 @@ export interface PieceDone { id: number; scene?: WorldScene<Shape>; /** of a pie
 type Kept = Pick<PieceDone, 'scene' | 'summary'>;
 
 const nothing: Shape = { pos: new Float32Array(0), nor: new Float32Array(0), col: new Float32Array(0) };
-/** from this step on a piece is ground alone, nothing stands on it as a thing of its own: such a piece can glide to the coarser step (glide.ts) */
-const GLIDES_FROM = 3;
+/** from this step on a piece has no houses of its cells and no figures, which stand as they are: such a piece can glide to the coarser step (glide.ts) */
+const GLIDES_FROM = 2;
 
 /** What a piece of the finest step shows, summed up four blocks to one of the next step (mean.ts); null where it is open sea. */
 function summed(fine: WorldScene | null, part: Piece['part']): Float32Array | null {
@@ -162,16 +162,17 @@ self.onmessage = async (e: MessageEvent<PieceJob>) => {
     if (built && mean && e.data.mean === 'compare') compare(built.counts, mean, piece.part, built.ground, built.carried);
     // how long the piece took to build, and of that the finer step under it (a tool reads the sums)
     if (built) { built.counts[`ms step ${step}`] = Math.round(performance.now() - began); built.counts[`pieces step ${step}`] = 1; if (mean) built.counts['ms mean'] = Math.round(meant - began); if (ahead) built.counts[`pieces from tables step ${step}`] = 1; }
-    // (the sea mirrors, by a material of its own, and the houses of a cell are one mesh that gives way to finer ones: both stay lists)
+    // (the sea mirrors, by a material of its own, and the houses of a cell are one mesh that gives way to finer ones: both stay lists;
+    // so do the water above the sea and the things of a piece that glides, whose every corner moves to its place in the coarser step)
     const flat = e.data.small ? small : floats, solid = e.data.small && e.data.faces ? faced : flat;
-    const scene: WorldScene<Shape> = built ? { ground: solid(built.ground), carried: built.carried && solid(built.carried), things: solid(built.things), water: flat(built.water), raised: solid(built.raised!), figures: built.figures, cells: built.cells.map((c) => ({ ...c, far: flat(c.far) })), counts: built.counts }
+    const scene: WorldScene<Shape> = built ? { ground: solid(built.ground), carried: built.carried && solid(built.carried), things: (glides ? flat : solid)(built.things), water: flat(built.water), raised: (glides ? flat : solid)(built.raised!), figures: built.figures, cells: built.cells.map((c) => ({ ...c, far: flat(c.far) })), counts: built.counts }
       : { ground: nothing, things: nothing, water: flat(buildOpenSea(piece.ox, piece.oz, piece.part)), cells: [], counts: {} };
-    // the land glides to the shape of the coarser piece over it, where that has a table: a piece that is ground alone
-    if (built && glides && own && !built.things.triangles && !built.cells.length) {
+    // the piece glides to the shape of the coarser piece over it, where that has a table
+    if (built && glides && own && !built.cells.length && !built.figures) {
       const before = performance.now(), over = await tableOver(e.data);
       if (over) { built.counts[`pieces gliding step ${step}`] = glide(scene, own, over, e.data.bakedSky) ? 1 : 0; built.counts['ms glide'] = Math.round(performance.now() - before); }
     }
-    const lists = [scene.ground, scene.carried ?? nothing, scene.things, scene.water, scene.raised ?? nothing, ...scene.cells.map((c) => c.far)].flatMap((s) => [s.pos, s.nor, s.col, ...(s.faces ? [s.faces.geo, s.faces.col, s.faces.nor, ...(s.faces.aim && s.faces.aimCol ? [s.faces.aim, s.faces.aimCol] : [])] : [])]).concat(scene.figures ? [scene.figures.a, scene.figures.b, scene.figures.c, scene.figures.d, scene.figures.e] : []).map((a) => (a as Float32Array).buffer).filter((buf) => buf.byteLength > 0);
+    const lists = [scene.ground, scene.carried ?? nothing, scene.things, scene.water, scene.raised ?? nothing, ...scene.cells.map((c) => c.far)].flatMap((s) => [s.pos, s.nor, s.col, ...(s.sink ? [s.sink] : []), ...(s.faces ? [s.faces.geo, s.faces.col, s.faces.nor, ...(s.faces.aim && s.faces.aimCol ? [s.faces.aim, s.faces.aimCol] : [])] : [])]).concat(scene.figures ? [scene.figures.a, scene.figures.b, scene.figures.c, scene.figures.d, scene.figures.e] : []).map((a) => (a as Float32Array).buffer).filter((buf) => buf.byteLength > 0);
     // (summed before the lists are handed over)
     const sum = step === 0 && e.data.mean === true ? summed(built, piece.part) ?? undefined : undefined;
     // (packed before the lists are handed over, too: a copy, which the page passes on to be zipped and written)

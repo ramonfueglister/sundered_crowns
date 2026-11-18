@@ -72,6 +72,11 @@ export interface Shape {
    * lists hold, as a mesh of its own. Not of water that mirrors, and not of what `more` adds.
    */
   faces?: Faces;
+  /**
+   * Of lists that move as the mesh glides to the shape of the next coarser step (worldprobe/glide.ts): the height each
+   * corner ends up at.
+   */
+  sink?: Float32Array;
 }
 export interface StageScene<S extends Shape = Batch> {
   ground: S; things: S;
@@ -274,6 +279,11 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   gliding.positionNode = select(axisG.lessThan(0.5), vec3(levelG, alongUG, alongVG), select(axisG.lessThan(1.5), vec3(alongUG, levelG, alongVG), vec3(alongUG, alongVG, levelG)));
   gliding.colorNode = materialColor.mul(mix(pick(tones), pick(aims), glided).toVarying());
   gliding.maskNode = solid.maskNode;
+  // Lists that move with such a glide (the banks of the water, water above the sea, what stands on the ground):
+  // each corner has the height it ends up at.
+  const sinking = coloured();
+  sinking.maskNode = solid.maskNode;
+  sinking.positionNode = vec3(positionGeometry.x, mix(positionGeometry.y, attribute('sink', 'float') as unknown as ReturnType<typeof float>, glided), positionGeometry.z);
   /** which of a face's four corners each of the six is, where its triangles turn one way and where the other */
   const CORNERS = new Float32Array(FACE_CORNERS[0].flatMap((c, k) => [c, FACE_CORNERS[1][k], 0]));
   const faceGeometry = (s: Shape) => {
@@ -300,6 +310,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     // (bytes, which the graphics card reads as shares of their largest)
     if (s.small) { g.setAttribute('normal', new THREE.BufferAttribute(s.nor as Int8Array, 4, true)); g.setAttribute('color', new THREE.BufferAttribute(s.col as Uint8Array, 4, true)); }
     else { g.setAttribute('normal', list(s.nor)); g.setAttribute('color', list(s.col)); }
+    if (s.sink) g.setAttribute('sink', new THREE.BufferAttribute(s.sink, 1));
     if (s.ball) g.boundingSphere = new THREE.Sphere(new THREE.Vector3(s.ball[0], s.ball[1], s.ball[2]), s.ball[3]); else g.computeBoundingSphere();
     return g;
   };
@@ -610,7 +621,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     if (n <= most) return [shape];
     const list: Shape[] = [], cut = <T extends ArrayLike<number>>(a: T, from: number, to: number) => (a as unknown as Float32Array).subarray(from, to) as unknown as T;
     // (each keeps the ball of the whole: it is left out of a picture only where the whole would be)
-    for (let from = 0; from < n; from += most) { const to = Math.min(n, from + most); list.push({ ...shape, pos: cut(pos, from * 9, to * 9), nor: cut(nor, from * per, to * per), col: cut(col, from * per, to * per) }); }
+    for (let from = 0; from < n; from += most) { const to = Math.min(n, from + most); list.push({ ...shape, pos: cut(pos, from * 9, to * 9), nor: cut(nor, from * per, to * per), col: cut(col, from * per, to * per), sink: shape.sink && cut(shape.sink, from * 3, to * 3) }); }
     return list;
   };
   const stage: Stage = {
@@ -621,7 +632,8 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
       group.position.set(x, 0, z);
       for (const [shape, material, casts] of [[built.ground, solid, true], [built.carried, solid, true], [built.things, solid, true], [built.water, water, false], [built.raised, solid, false]] as const) {
         if (!shape) continue;
-        for (const part of [...(shape.faces?.geo.length ? [cool(faceMesh(shape, casts))] : []), ...(shape.pos.length ? parts(shape).map((some) => cool(mesh(some, material, casts))) : [])]) {
+        for (const part of [...(shape.faces?.geo.length ? [cool(faceMesh(shape, casts))] : []), ...(shape.pos.length ? parts(shape).map((some) => cool(mesh(some, some.sink && material === solid ? sinking : material, casts))) : [])]) {
+          if (part.material === sinking) part.userData.glide = 0;
           part.userData.ground = shape === built.ground || shape === built.carried;
           if (shape === built.things || shape === built.carried) part.userData.ink = 0;
           group.add(part);

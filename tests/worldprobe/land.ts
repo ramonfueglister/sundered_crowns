@@ -8,9 +8,9 @@ export const SIDE = 96, part = { x0: 24, z0: 24, x1: 72, z1: 72 };
 /**
  * Hills with a massif of rock, a lake above the sea's level and the sea along one side; woods, fields and a town as
  * part of the ground. The land differs from column to column everywhere, also beyond the rim. `seed` makes another
- * land of the same kinds; the sea and the lake lie at the same columns of the ground in all of them.
+ * land of the same kinds; the lake lies at the same columns of the ground in all of them, the sea from row `sea` on.
  */
-export function land(ox = 4000, oz = -1200, seed = 0): { g: Ground; t: GroundTraits } {
+export function land(ox = 4000, oz = -1200, seed = 0, sea = 60): { g: Ground; t: GroundTraits } {
   const n = N * N, g: Ground = { h: new Int16Array(n), mat: new Uint8Array(n), wet: new Uint8Array(n), shore: new Uint8Array(n), occ: new Float32Array(n), surf: new Float32Array(n).fill(SEA_Y), ox, oz };
   const has = new Uint8Array(n), rise = new Uint8Array(n), share = new Float32Array(n), town = new Uint8Array(n), top = new Float32Array(n * 3), side = new Float32Array(n * 3);
   for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
@@ -18,8 +18,9 @@ export function land(ox = 4000, oz = -1200, seed = 0): { g: Ground; t: GroundTra
     g.h[i] = LAND_Y + Math.floor(high * 5);
     if (high > 0.72) { g.mat[i] = Mat.Rock; g.h[i] += 4 + Math.floor(hash2(x >> 1, z >> 1, 2 + seed) * 3); }
     // the sea along the near side, a lake two blocks over it
-    if (z > 60 + 6 * noise2(x / 7, 0, 3 + seed)) { g.wet[i] = 1; g.mat[i] = Mat.Bed; g.h[i] = 1; }
-    else if (Math.hypot(x - 40, z - 38) < 5) { g.wet[i] = 1; g.mat[i] = Mat.Bed; g.surf[i] = SEA_Y + 2; g.h[i] = LAND_Y; }
+    // (their beds differ from column to column, too)
+    if (z > sea + 6 * noise2(x / 7, 0, 3 + seed)) { g.wet[i] = 1; g.mat[i] = Mat.Bed; g.h[i] = hash2(x, z, 10 + seed) < 0.3 ? 0 : 1; }
+    else if (Math.hypot(x - 40, z - 38) < 5) { g.wet[i] = 1; g.mat[i] = Mat.Bed; g.surf[i] = SEA_Y + 2; g.h[i] = LAND_Y - (hash2(x, z, 11 + seed) < 0.3 ? 1 : 0); }
     if (g.wet[i] || g.mat[i] === Mat.Rock) continue;
     const lot = hash2(x, z, 4 + seed), wood = noise2(x / 6, z / 6, 5 + seed) > 0.55, field = !wood && noise2(x / 5, z / 5, 6 + seed) > 0.6;
     if (Math.abs(x - 58) < 3 && Math.abs(z - 34) < 3) { has[i] = 1; town[i] = 1; rise[i] = 2; share[i] = 1; top.set([0.7, 0.3 + 0.1 * lot, 0.2], i * 3); side.set([0.8, 0.75, 0.7], i * 3); }
