@@ -2868,3 +2868,81 @@ of the stalls; format 1 is read as cities without routes. The upgrade
 founds the economies anew on the day the world has reached: routes are given to cities that have not computed a
 day. **The persons' feature 2 (pull request 69) uses state versions too: the one merged later takes the next
 numbers.**
+
+## 18. A firm and its owner are one household
+
+Ramon's question of 18 November 2026 after feature 17: how are the banks below zero solved "möglichst VWL-tauglich,
+paper based"? His choice on the card of that day: "Betrieb und Inhaber ein Haushalt".
+
+### Why
+
+After 30 years with distance 5 to 6 of 29 banks stand below zero (section 17). The flow of funds of the firms shows
+where the money goes (29 cities, 30 years, with distance, seed 1358): the firms' money less their loans falls by
+5,143, a tenth of a year's output; the households hold 5,272 more; the merchants −26 in sum; the banks lose 438 of
+their equity. It happens in every city, also in Texcoco, which does not trade. Two rules of the paper cause it
+together with two values of ours:
+
+- **Unsold stock counts as profit and is paid out** (4,124 of the 5,143). The profit of the paper values the stock a
+  firm built at its price (A.27), and our owners are paid all of a profit (θ_DIV = 1).
+- **A profit is paid out, a loss stays in the firm** (A.33, A.44: `max(0, Π)`). With a day as the period a firm
+  has days with a loss, although it earns over the year.
+
+Measured per firm (same run): of 3,078 firms one loses over the last ten years; all others earn 19 to 25 % of their
+sales. No firm loses for good. The drain is a matter of single days.
+
+### The rule
+
+With the rule `owner = household` (table `cities.owner`; `paper` is the rule of the paper):
+
+1. **The profit of a firm is what it took in less what it spent on what it made**, without the change of its stock:
+   Π = Π_paper − P·ΔS. The form is Caiani and Catullo (2023), LEM Working Paper 2023/19, equations 23 to 25:
+   dividends out of the operating cash flow, without inventories. The stock stays in the firm's books in units and
+   is profit on the day it is sold. Equity (A.36) still counts the stock.
+2. **The owner bears a loss as he holds a profit.** His income from the firm is θ_DIV·(1 − τ_FIRM)·Π of either
+   sign (a profit is taxed as before, a loss is not), and the firm gets from him on the same day what he bears.
+   Firm and owner are one household: System of National Accounts 2008, chapter 4 (draft of 20 December 2007),
+   4.155 and 4.158, an unincorporated enterprise belongs to the household of its owner, who is liable without limit;
+   Liebrecht (2012), Max Planck Encyclopedia of European Private Law, on the members of medieval trade associations.
+   Caiani and Catullo pay out a positive cash flow only; that the owner bears the loss is ours.
+3. **An owner who expects a loss plans to buy nothing out of income**, not less than nothing.
+
+Code: `economy/src/clock.rs` (`firms_profits`, `households_income_firms`, `firms_deposits`,
+`households_budget_firms`), `Economy::with_owner_household`, last argument of `sce_create`, `EconomyRules.owner`.
+
+### The numbers
+
+Trial of 18 November 2026 (outputs in the project folder, wirtschaft/betriebsgeld), 29 cities, 30 years, seeds 1356
+to 1359:
+
+| | paper (seed 1358) | one household, with distance | one household, without distance |
+|---|---|---|---|
+| firms' money less loans | −5,143 | 0 to −1 | 0 |
+| households' deposits | +5,272 | −142 to −197 | −102 to −123 |
+| banks that lose equity | 6 | 0 | 0 |
+| real GDP, start = 100 | 115.5 | 114.8 to 115.3 | 115.2 to 115.4 |
+| weakest city | 111.1 | 111.1 to 112.6 | 111.4 to 113.1 |
+| merchants' money in a city, of its GDP | −0.07 to 0.19 | −0.17 to 0.14 | −0.10 to 0.11 |
+
+### Deviations and what stays open
+
+- **A third of the owners end below zero.** The owner plans his spending on the profit of the day before and cannot
+  spend less than nothing: after a good day he spends the profit, after a bad day he cannot take the loss back. The
+  one-sidedness that drained the firms now sits in the owner's budget, smaller. With distance, seed 1358: 546, 998
+  and 1,010 of 3,078 owners are below zero after 10, 20 and 30 years, nearly all of them farms, with −666, −2,086
+  and −2,643 in sum (5 % of a year's output; over the four seeds −2,600 to −3,900). It flattens: in the third
+  decade the owners of farms spend less than they earn. The worst owner owes ten years of his income; large farms
+  with uneven sales spend up to 18 % more than they earn in the first decade. Nothing ends such a debt: the model
+  has no insolvency of a household. The owner pays the bank's rate on it.
+- **Tried and dropped** (same world): the owner bears a loss only out of what he holds (the firms lose 4,250 to
+  5,075, as with the paper's rule); a firm sets a loss off against later profits before it pays out (the money stays
+  in the firms, demand falls, 21 to 22 banks lose equity); the owner plans on the mean profit of 30 days (a tenth of
+  the firms pile up stock; the cause is not found, it may be a fault of the trial). The last is the clean answer in
+  principle and stays open as a feature of its own.
+- **The merchants' money per city still spreads** (table). Its other side is now the households, not the banks.
+  Whether the spending out of savings (feature 15) bounds it over a century is not measured.
+- **The banker** is paid the bank's profit by the paper's rule as before.
+
+### State and upgrade
+
+State version 26, together with feature 17. Engine format 9: whether the rule holds. The upgrade founds the
+economies anew.

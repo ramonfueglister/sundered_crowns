@@ -124,6 +124,14 @@ impl Economy {
         self
     }
 
+    /// The same economy with firms and owners that are one household from now on (economy feature 18, [`clock`]): an
+    /// owner's income is the firm's profit without the change of its stock, and the owner bears a loss as he holds a
+    /// profit. Without it the owner is paid the profit of the paper, unsold stock included, and bears no loss.
+    pub fn with_owner_household(mut self) -> Economy {
+        self.model.ext.owner = true;
+        self
+    }
+
     /// Computes `periods` periods: the port's `run`, one step and one row of its national accounts per period. No
     /// rule of the port reads these rows. Of every new row the clock keeps the series that [`Economy::figures`]
     /// sums, for the last `window` periods ([`clock::DailyClock::accounts`]); of the port's rows only the last
@@ -410,7 +418,7 @@ pub mod abi {
 
     /// The cities of a list as [`sce_create`] takes it: for every city the 64-bit seed, then the parameters and the
     /// initial conditions of the port (JSON), each with its length in 32 bits before it; all little endian.
-    fn cities(mut list: &[u8], plan: usize, window: usize, wage: u32, prices: u32, savings: f64, crown: u32) -> Result<Cities, String> {
+    fn cities(mut list: &[u8], plan: usize, window: usize, wage: u32, prices: u32, savings: f64, crown: u32, owner: u32) -> Result<Cities, String> {
         fn take<'a>(list: &mut &'a [u8], n: usize) -> Result<&'a [u8], String> {
             if list.len() < n {
                 return Err(format!("the list of cities ends {} bytes early", n - list.len()));
@@ -432,6 +440,9 @@ pub mod abi {
         if crown > 1 {
             return Err(format!("a crown of kind {crown}: 0 buys by the paper's series, 1 with what it took in"));
         }
+        if owner > 1 {
+            return Err(format!("an owner of kind {owner}: 0 is paid the paper's profit and bears no loss, 1 is one household with the firm"));
+        }
         let mut all = Vec::new();
         while !list.is_empty() {
             let c = all.len();
@@ -443,6 +454,7 @@ pub mod abi {
             let e = if prices == 1 { e.with_demand_pull().map_err(|e| format!("city {c}: {e}"))? } else { e };
             let e = e.with_savings_spent(savings).map_err(|e| format!("city {c}: {e}"))?;
             let e = if crown == 1 { e.with_crown_spending_revenue() } else { e };
+            let e = if owner == 1 { e.with_owner_household() } else { e };
             // the cities of the game run for centuries: their past has a fixed size
             all.push(e.with_bounded_past());
         }
@@ -475,15 +487,16 @@ pub mod abi {
     /// of prices: 0 for the paper's rule of costs, 1 for the demand pull of CANVAS ([`Economy::with_demand_pull`]);
     /// and the share of the savings above their target that households spend per period, 0 for the port's rule
     /// ([`Economy::with_savings_spent`]); and the crown: 0 buys by the paper's series, 1 with what it took in
-    /// ([`Economy::with_crown_spending_revenue`]). Result: their state.
+    /// ([`Economy::with_crown_spending_revenue`]); and the owner of a firm: 0 is paid the paper's profit and bears no
+    /// loss, 1 is one household with the firm ([`Economy::with_owner_household`]). Result: their state.
     ///
     /// # Safety
     ///
     /// The pointer and the length describe memory from [`sce_alloc`] that the caller has filled.
     #[unsafe(no_mangle)]
-    pub unsafe extern "C" fn sce_create(list: *const u8, len: usize, plan: u32, window: u32, wage: u32, prices: u32, savings: f64, crown: u32) -> u32 {
+    pub unsafe extern "C" fn sce_create(list: *const u8, len: usize, plan: u32, window: u32, wage: u32, prices: u32, savings: f64, crown: u32, owner: u32) -> u32 {
         hook();
-        answer(cities(unsafe { bytes(list, len) }, plan as usize, window as usize, wage, prices, savings, crown).map(keep))
+        answer(cities(unsafe { bytes(list, len) }, plan as usize, window as usize, wage, prices, savings, crown, owner).map(keep))
     }
 
     /// The cities of a state that has not computed a period, with distance between them (economy feature 17,

@@ -10,7 +10,7 @@ fn main() {
     let dens = [a[6].parse::<f64>().unwrap(), a[7].parse::<f64>().unwrap(), 0.0];
     let read = |p: &str| std::fs::read_to_string(p).unwrap();
     let cities: Vec<Economy> = a[8..].chunks(2).enumerate().map(|(c, f)| {
-        let e = Economy::new(&read(&f[0]), &read(&f[1]), seed + c as u64, plan, window).unwrap().with_wages_in_money().with_demand_pull().unwrap().with_savings_spent(std::env::var("SAVINGS").ok().and_then(|v| v.parse::<f64>().ok()).unwrap_or(0.4) / 365.0).unwrap(); let e = if std::env::var("CROWN").as_deref() == Ok("series") { e } else { e.with_crown_spending_revenue() }; e.with_bounded_past()
+        let e = Economy::new(&read(&f[0]), &read(&f[1]), seed + c as u64, plan, window).unwrap().with_wages_in_money().with_demand_pull().unwrap().with_savings_spent(std::env::var("SAVINGS").ok().and_then(|v| v.parse::<f64>().ok()).unwrap_or(0.4) / 365.0).unwrap(); let e = if std::env::var("CROWN").as_deref() == Ok("series") { e } else { e.with_crown_spending_revenue() }; let e = if std::env::var("OWNER").as_deref() == Ok("paper") { e } else { e.with_owner_household() }; e.with_bounded_past()
     }).collect();
     let k = cities.len();
     let mut all = Cities::new(cities).unwrap();
