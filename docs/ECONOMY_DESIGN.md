@@ -2721,7 +2721,7 @@ The merchants' books balance in every year (largest check 1e-13).
 
 ### State and upgrade
 
-State version 22 (21 is main's). The format of the engine's state is 8: the clock holds the rule and the other
+State version 24. The format of the engine's state is 8: the clock holds the rule and the other
 outlays of the last day; states of formats 4 to 7 are read and keep the series. The upgrade founds the economies
 anew on the day the world has reached, as the step to 21 did: the rule changes what every city computes. **The
 persons' feature 2 (pull request 69) also uses the state versions 22 and 23: the one merged second has to take the

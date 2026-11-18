@@ -6,7 +6,6 @@ import { CITIES, SCALE, ageOn, cityPeopleByPlace, personsIn, MOTHER_AGE } from '
 import { newWorldState, loadSetup } from '../tools/sim/load';
 import { toHeads } from '../src/sim/scale';
 import { encodeState, decodeState, hashState } from '../src/sim/snapshot';
-import { advanceDay } from '../src/sim/engine';
 import { residents } from '../src/sim/systems/hamlets';
 import { ALIVE } from '../src/sim/state';
 
@@ -68,7 +67,7 @@ describe('the persons of a world founded in 1356', () => {
       if (F.woman[f] >= 0) { expect(P.family[F.woman[f]]).toBe(f); expect(P.sex[F.woman[f]]).toBe(0); }
     }
   });
-  it('have as parents the couple of their family, the mother 15 to 49 at their birth', () => {
+  it('have as parents the couple of their family, the mother 15 to 45 at their birth', () => {
     let children = 0;
     for (let i = 0; i < N; i++) {
       const m = P.mother[i];
@@ -98,14 +97,16 @@ describe('the persons of a world founded in 1356', () => {
     expect(hashState(newWorldState(1356).s)).toBe(hashState(s));
     expect(Array.from(newWorldState(1357).s.person.cols.born.slice(0, 50))).not.toEqual(Array.from(P.born.slice(0, 50)));
   });
-  it('do not change while the world runs (only their age does)', () => {
-    // the size of the state without the economy: its accounts of the last 365 days grow in the first year
-    const size = (x: typeof s) => encodeState({ ...x, economy: { cities: null } }).length;
-    const t = newWorldState().s, before = size(t);
-    const { w } = newWorldState();
-    for (let d = 0; d < 3; d++) advanceDay(t, w);
-    expect(Array.from(t.person.cols.born)).toEqual(Array.from(P.born));
-    expect(size(t)).toBe(before);
+  it('are founded as a population that does not grow: a household for every 5.8 persons, three women in ten of 40 without one', () => {
+    let seats = 0, w40 = 0, single = 0, under15 = 0;
+    for (let f = 0; f < s.family.size; f++) if (F.seat[f]) { seats++; expect(F.woman[f]).toBeGreaterThanOrEqual(0); } else { expect(F.man[f]).toBe(-1); expect(F.woman[f]).toBe(-1); }
+    expect(N / seats).toBeGreaterThan(5.6); expect(N / seats).toBeLessThan(6.0);
+    for (let i = 0; i < N; i++) {
+      const a = ageOn(P.born[i], 0); if (a < 15) under15++;
+      if (P.sex[i] === 0 && a >= 40 && a < 45) { w40++; if (F.woman[P.family[i]] !== i) single++; }
+    }
+    expect(single / w40).toBeGreaterThan(0.25); expect(single / w40).toBeLessThan(0.37);
+    expect(under15 / N).toBeGreaterThan(0.29); expect(under15 / N).toBeLessThan(0.35);
   });
 });
 

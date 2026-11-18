@@ -43,7 +43,7 @@ export const WORKING_AGE = 15;
 
 /** Draws of a person's own stream (src/sim/systems/people.ts uses 0 to 21 and 100 on): whether the person works,
  *  and the person's place in the order in which the parts are given out. */
-const K = { works: 30, order: 31 } as const;
+export const K = { works: 30, order: 31 } as const;
 
 /** The persons of a place for its economy. */
 export interface Workforce {
