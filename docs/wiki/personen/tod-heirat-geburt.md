@@ -10,7 +10,7 @@ Ramon, 17.11.2026: Alle Personen werden simuliert, und eine Person wird nur gere
 
 Vorlage ist England um 1300 nach La Poutré & Paping 2025: Die Bevölkerung wächst nicht, weil die Zahl der Haushalte fest ist. Geheiratet wird nur, wenn ein Haushalt frei wird.
 
-Nicht dazu gehören: Umzug zwischen Orten, Seuchen, Hunger, Tod im Kindbett und Haushalte, die mit der Wirtschaft mehr werden.
+Nicht dazu gehören: Umzug zwischen Orten (ein eigenes Feature: [Umzug zwischen Orten](umzug.md)), Seuchen, Hunger, Tod im Kindbett und Haushalte, die mit der Wirtschaft mehr werden.
 
 ## Im Spiel
 
@@ -63,7 +63,7 @@ Eine Person steht für hundert Menschen. Ein Ort mit 60 Personen hat nur etwa ze
 - Die Sterbetafel stützt sich auf erwachsene Grundherren. Die Werte unter 15 Jahren sind hochgerechnet.
 - Die Regeln stammen aus dem Programm zur Dissertation. Deren Kapitel III liess sich nicht öffnen.
 - Die Vorlage beschreibt das ländliche England. Sie gilt hier für alle Orte der Karte.
-- Niemand zieht um. Ein Ort kann nicht über seine Haushalte hinaus wachsen.
+- Ein Ort kann nicht über seine Haushalte hinaus wachsen. Seit dem Feature [Umzug zwischen Orten](umzug.md) ziehen Ledige zu und weg, die Zahl der Haushalte bleibt aber fest.
 
 ## Quellen
 

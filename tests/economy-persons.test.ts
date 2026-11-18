@@ -22,6 +22,9 @@ import { bringInHarvest } from '../src/sim/systems/harvest';
 
 const { s, w } = newWorldState();
 const P = s.person.cols, F = s.firm.cols, e = s.economy.cities!;
+// Nobody moves in this world (people feature 4; tests/moves.test.ts runs the moves with the economy): the upgrades
+// of the old versions below lay out the land register for persons who live where they were founded.
+P.moves.fill(ALIVE);
 const N = e.places.length;
 const placeOf = (x: WorldState, id: number) => x.family.cols.place[x.person.cols.family[id]];
 const cityOf = new Map<number, number>(Array.from(e.places, (p, k) => [p, k]));
