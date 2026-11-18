@@ -30,15 +30,15 @@ const SKY = new THREE.Color(0xcfe0f2);
  * sea is smooth, as it is seen from that far.
  */
 const WAVES: readonly { n: readonly [number, number]; slope: number; turn: number }[] = [
-  { n: [150, 105], slope: 0.05, turn: 0.3 },
-  { n: [205, 238], slope: 0.06, turn: 1.7 },
-  { n: [470, 130], slope: 0.07, turn: 4.1 },
-  { n: [330, 470], slope: 0.06, turn: 2.6 },
-  { n: [770, 170], slope: 0.07, turn: 5.3 },
-  { n: [560, 650], slope: 0.06, turn: 0.9 },
+  { n: [150, 105], slope: 0.03, turn: 0.3 },
+  { n: [205, 238], slope: 0.035, turn: 1.7 },
+  { n: [470, 130], slope: 0.04, turn: 4.1 },
+  { n: [330, 470], slope: 0.035, turn: 2.6 },
+  { n: [770, 170], slope: 0.04, turn: 5.3 },
+  { n: [560, 650], slope: 0.035, turn: 0.9 },
 ];
 /** a wave shows where it is this many of the picture's dots long or more, and fades out down to the first number */
-const SEEN_FROM: readonly [number, number] = [3, 7];
+const SEEN_FROM: readonly [number, number] = [5, 11];
 /** the waves come in patches (gusts of wind): their strength runs between these shares over two long waves */
 const PATCHY: readonly [number, number] = [0.45, 1.25];
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TSL's node types do not carry through sums and mixes
@@ -80,7 +80,7 @@ export function createSea(mirror: Nd): Sea {
     const t = share;
     // over the shelves (up to about 100 m) the water is a lighter turquoise; beyond (from about 130 m to 2000 m) it turns to the ocean's blue
     const shelf = float(1).sub(smoothstep(0.1, 0.3, t)), open = smoothstep(0.32, 0.8, t);
-    const lighter = mix(corners, corners.mul(vec3(1.05, 1.16, 1.1)), shelf.mul(0.6));
+    const lighter = mix(corners, corners.mul(vec3(1.03, 1.1, 1.06)), shelf.mul(0.4));
     // the ocean keeps the light and dark patches of the corners' colour
     const patches = clamp(dot(corners, vec3(0.2126, 0.7152, 0.0722)).div(dot(materialColor.rgb, vec3(deep.r, deep.g, deep.b).mul(vec3(0.2126, 0.7152, 0.0722))).max(1e-4)), 0.7, 1.3);
     const blue = mix(vec3(ocean.r, ocean.g, ocean.b), vec3(abyss.r, abyss.g, abyss.b), smoothstep(0.75, 0.95, t)).mul(materialColor.rgb).mul(patches);

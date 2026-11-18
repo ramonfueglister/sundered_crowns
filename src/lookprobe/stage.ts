@@ -52,7 +52,7 @@ export type Light = Pick<typeof LOOK, 'sun' | 'sunColor' | 'side' | 'sky' | 'sky
 export const NEAR_LIGHT: Light = { sun: 1.05, sunColor: 0xfff2e4, side: 0.7, sky: 0.4, skyColor: 0xc8d4f0, bounce: 0.26, fill: 0.26, mirror: 0.3, mirrorTint: 0x1898a8 }, NEAR_SHADOW = 6;
 const FAR_SHADOW = 2;
 /** how the picture's light is taken (see the curve before the map's paper below) */
-const TONE = { way: 'agx', exposure: 1.2, saturation: 1.1 };
+const TONE = { way: 'agx', exposure: 1.15, saturation: 1.3 };
 /** of the land's light and shade this share is left under the map's paper where it is fully calmed (see Stage.lay) */
 const CALM_KEPT = 0.4;
 /** how bright level, sunlit ground is drawn (luminance, linear light): the map's ink under the land's own light and shade is as bright as on the paper there */
