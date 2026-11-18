@@ -6,7 +6,7 @@
 // colours come as floats, not as bytes (worldprobe/small.ts). ?faces=0: their rectangles on the grid of blocks come as
 // triangles in those lists, not as faces (faces.ts).
 import * as THREE from 'three/webgpu';
-import { Fn, attribute, clamp, convertToTexture, dot, float, fract, getViewPosition, materialColor, max, mix, mrt, normalView, output, pass, positionGeometry, reflector, rtt, screenCoordinate, screenSize, screenUV, select, smoothstep, step, texture, uniform, userData, uv, vec2, vec3, vec4 } from 'three/tsl';
+import { Fn, attribute, clamp, convertToTexture, dot, float, fract, getViewPosition, materialColor, max, mix, mrt, normalView, output, pass, positionGeometry, reflector, rtt, screenCoordinate, screenSize, screenUV, select, smoothstep, step, texture, uniform, userData, uv, vec2, vec3, vec4, vertexColor } from 'three/tsl';
 import { MapControls } from 'three/addons/controls/MapControls.js';
 import { dof } from 'three/addons/tsl/display/DepthOfFieldNode.js';
 import { denoise } from 'three/addons/tsl/display/DenoiseNode.js';
@@ -205,11 +205,16 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   // floats, or four bytes: the share each part has of the brightest, and half that brightest, of which 254 is one.
   // A colour of three floats has a one as its fourth number by the graphics card's rule, which a colour of bytes
   // never has: so both kinds are told apart here, at the corner, and what lies between the corners is the same for
-  // both. (`?small=0`: all lists are floats, and the materials take the corners' colours as they always did.)
+  // both. (`?small=0`: all lists are floats, and a corner's colour is its three floats.)
+  // What a triangle shows between its corners is kept within what a corner can show (no corner of a piece is
+  // brighter than 1.05). Where a triangle stands almost on its edge to a camera, a bank of the water in the mirror's
+  // picture, the colour worked out between its corners runs far out of that at a dot or two, and the mirror's blur
+  // made a bright spot of each.
+  const MOST = 1.1;
   const smallLists = flag('small', true);
   const tone = attribute('color', 'vec4') as unknown as ReturnType<typeof vec4>;
-  const toned = () => materialColor.mul(tone.rgb.mul(select(tone.a.lessThan(254.5 / 255), tone.a.mul((2 * 255) / 254), float(1))).toVarying());
-  const coloured = () => { const m = new THREE.MeshLambertNodeMaterial({ vertexColors: !smallLists }); if (smallLists) m.colorNode = toned(); return m; };
+  const toned = () => materialColor.mul(tone.rgb.mul(select(tone.a.lessThan(254.5 / 255), tone.a.mul((2 * 255) / 254), float(1))).toVarying().clamp(0, MOST));
+  const coloured = () => { const m = new THREE.MeshLambertNodeMaterial(); m.colorNode = smallLists ? toned() : materialColor.mul(vertexColor().rgb.clamp(0, MOST)); return m; };
   const solid = coloured();
   // every mesh is drawn on the dots of the picture whose value lies between its two marks (see `dissolve`); the
   // pattern is interleaved gradient noise, which has no stripes or clumps
@@ -259,7 +264,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   const faced = new THREE.MeshLambertNodeMaterial();
   faced.positionNode = select(axis.lessThan(0.5), vec3(level, alongU, alongV), select(axis.lessThan(1.5), vec3(alongU, level, alongV), vec3(alongU, alongV, level)));
   // (a face's colours are always bytes: see `toned`)
-  faced.colorNode = materialColor.mul(toneOf.rgb.mul(toneOf.a.mul((2 * 255) / 254)).toVarying());
+  faced.colorNode = materialColor.mul(toneOf.rgb.mul(toneOf.a.mul((2 * 255) / 254)).toVarying().clamp(0, MOST));
   faced.maskNode = solid.maskNode;
   // Faces that glide to the shape of the next coarser step (worldprobe/glide.ts): each has the level or the span in
   // height it ends up at and the colours of its corners there, and the mesh says how far it has glided (0 … 1,
@@ -277,7 +282,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   const pick = (four: typeof tones) => { const t = select(cornerG.lessThan(0.5), four[0], select(cornerG.lessThan(1.5), four[1], select(cornerG.lessThan(2.5), four[2], four[3]))); return t.rgb.mul(t.a.mul((2 * 255) / 254)); };
   const gliding = new THREE.MeshLambertNodeMaterial();
   gliding.positionNode = select(axisG.lessThan(0.5), vec3(levelG, alongUG, alongVG), select(axisG.lessThan(1.5), vec3(alongUG, levelG, alongVG), vec3(alongUG, alongVG, levelG)));
-  gliding.colorNode = materialColor.mul(mix(pick(tones), pick(aims), glided).toVarying());
+  gliding.colorNode = materialColor.mul(mix(pick(tones), pick(aims), glided).toVarying().clamp(0, MOST));
   gliding.maskNode = solid.maskNode;
   // Lists that move with such a glide (the banks of the water, water above the sea, what stands on the ground):
   // each corner has the height it ends up at.
