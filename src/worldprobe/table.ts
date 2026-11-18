@@ -203,6 +203,9 @@ export function unpackTable(run: ArrayBuffer): Table {
   const { packed, lift, pair, pairs, share, bleach, summit, pale, ...rest } = unpack<Packed>(run), n = rest.side * rest.side;
   if (packed !== PACKED) throw new Error('table: packed another way');
   const occ = new Float32Array(n), top = new Uint16Array(n), flank = new Uint16Array(n), high = new Float32Array(n);
+  const shared = new Float32Array(share.length), bleached = new Float32Array(bleach.length);
+  for (let i = 0; i < shared.length; i++) shared[i] = share[i] / 255;
+  for (let i = 0; i < bleached.length; i++) bleached[i] = bleach[i] / BLEACH_STEPS;
   for (let i = 0; i < n; i++) {
     occ[i] = rest.h[i] + lift[i];
     if (rest.has[i]) { top[i] = pairs[pair[i] * 2]; flank[i] = pairs[pair[i] * 2 + 1]; }
@@ -211,5 +214,5 @@ export function unpackTable(run: ArrayBuffer): Table {
     const s = summit[i] / SUMMIT_STEPS;
     high[i] = pale[i] ? Math.max(s, SUMMIT * 1.001) : Math.min(s, SUMMIT * 0.999);
   }
-  return { ...rest, occ, top, flank, share: Float32Array.from(share, (v) => v / 255), bleach: Float32Array.from(bleach, (v) => v / BLEACH_STEPS), summit: high };
+  return { ...rest, occ, top, flank, share: shared, bleach: bleached, summit: high };
 }
