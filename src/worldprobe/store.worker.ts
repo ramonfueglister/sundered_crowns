@@ -1,11 +1,16 @@
 // Writes the pieces that are kept on disk (store.ts), off the page's thread and off the workers that build: zipping
-// a piece takes a tenth of a second and more. It tells the page which pieces are kept, so that only those are
-// looked for, and lets go of the ones unused the longest once they are more than the disk should hold.
+// a piece takes a tenth of a second and more of a core. So it waits with that while the workers build what the
+// picture is missing, as long as the pieces that wait are not too many to hold (measured: with the zipping at once,
+// each piece of a leap of the zoom took a tenth of a second longer to build). It tells the page which pieces are
+// kept, so that only those are looked for, and lets go of the ones unused the longest once they are more than the
+// disk should hold.
 import { folderOf, nameOf, zipped } from './store';
 
-export type StoreAsk = { build: string; /** megabytes the kept pieces may take */ room: number } | { put: string; bytes: ArrayBuffer } | { used: string };
+export type StoreAsk = { build: string; /** megabytes the kept pieces may take */ room: number } | { put: string; bytes: ArrayBuffer } | { used: string } | { /** the workers are building what the picture is missing */ busy: boolean };
 export interface StoreSays { /** the pieces kept when the store was opened */ have?: string[]; /** a piece that is now kept, or was not (`failed`) */ put?: string; failed?: boolean; /** pieces let go of to make room */ gone?: string[]; /** megabytes kept */ holds?: number }
 
+/** megabytes of pieces that may wait to be zipped while the workers are busy; what comes on top is zipped at once */
+const HELD = 300;
 /** every kept piece: its size, and when it was last written or read */
 const files = new Map<string, { size: number; used: number }>();
 let folder: FileSystemDirectoryHandle | null = null, room = 0, holds = 0;
@@ -17,14 +22,18 @@ async function open(build: string) {
     // (the pieces of other builds are of no use to this one)
     for await (const [name] of (all as Listed).entries()) if (name !== nameOf(build)) await all.removeEntry(name, { recursive: true });
   });
-  if (folder) for await (const [name, handle] of (folder as Listed).entries()) {
-    const file = await (handle as FileSystemFileHandle).getFile();
-    files.set(name, { size: file.size, used: file.lastModified }); holds += file.size;
+  const handles: [string, FileSystemHandle][] = [];
+  if (folder) for await (const entry of (folder as Listed).entries()) handles.push(entry);
+  // the page is told at once what there is: it is waiting to ask for its first pieces
+  say({ have: handles.map(([name]) => name) });
+  for (const [name, handle] of handles) {
+    const file = await (handle as FileSystemFileHandle).getFile().catch(() => null);
+    if (file) { files.set(name, { size: file.size, used: file.lastModified }); holds += file.size; }
   }
   // (never more than half of what the browser still gives the page)
   const { quota = 0, usage = 0 } = await navigator.storage.estimate().catch(() => ({ quota: 0, usage: 0 }));
   if (quota) room = Math.min(room, (quota - usage + holds) / 2);
-  say({ have: [...files.keys()] });
+  say({});
 }
 
 async function put(name: string, bytes: ArrayBuffer) {
@@ -51,14 +60,26 @@ async function put(name: string, bytes: ArrayBuffer) {
   }
 }
 
-// one after the other, in the order asked
-let last: Promise<unknown> = Promise.resolve();
+/** the pieces that wait to be zipped and written, and their bytes in all */
+const waiting: { name: string; bytes: ArrayBuffer }[] = [];
+let weight = 0, busy = false, writing = false, opened: Promise<void> = Promise.resolve();
+/** Writes what waits, one piece after the other, while the workers are not busy or too much waits. */
+async function write() {
+  if (writing) return;
+  writing = true;
+  await opened.catch(() => {});
+  while (waiting.length && (!busy || weight > HELD * 1e6)) {
+    const next = waiting.shift()!;
+    weight -= next.bytes.byteLength;
+    await put(next.name, next.bytes);
+  }
+  writing = false;
+}
+
 self.onmessage = (e: MessageEvent<StoreAsk>) => {
   const ask = e.data;
-  last = last.then(() => {
-    if ('build' in ask) { room = ask.room * 1e6; return open(ask.build); }
-    if ('put' in ask) return put(ask.put, ask.bytes);
-    const f = files.get(ask.used);
-    if (f) f.used = Date.now();
-  }).catch(() => {});
+  if ('build' in ask) { room = ask.room * 1e6; opened = open(ask.build); }
+  else if ('put' in ask) { waiting.push({ name: ask.put, bytes: ask.bytes }); weight += ask.bytes.byteLength; void write(); }
+  else if ('busy' in ask) { busy = ask.busy; void write(); }
+  else { const f = files.get(ask.used); if (f) f.used = Date.now(); }
 };

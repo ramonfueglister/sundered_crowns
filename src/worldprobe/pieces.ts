@@ -46,8 +46,10 @@ const DISSOLVE = 300;
 const KEPT_SUMS = 96;
 /** megabytes of pieces kept on disk (3 to 4 MB each); beyond that the ones unused the longest are let go of */
 const ROOM = 1000;
-/** pieces that may wait to be written to disk at a time (10 to 30 MB each until they are zipped); one that comes on top is not kept */
-const WAITING = 6;
+/** megabytes of pieces that may wait to be written to disk (10 to 30 MB each until they are zipped); one that comes on top is not kept */
+const WAITING = 600;
+/** where pictures take longer than this many milliseconds, they cannot be what holds the arrived pieces back */
+const SLOW = 250;
 /** workers that build ahead into the store while the view rests: the others stay free for what the view asks for next */
 const SPARE_WORKERS = 2;
 /** the widest view of each step: what a leap out to that step may show */
@@ -109,19 +111,21 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
   let mixed = 0;
   /** pieces that have arrived and wait for their picture: one is put on the stage per picture */
   const arrived: { spot: Spot; scene: NonNullable<PieceDone['scene']> }[] = [];
-  let admitting = false, admitted = 0;
+  let admitting = false, admitted = 0, followed = false;
   /**
    * the pieces kept on disk, by the names of their files, once the store has told them; how many are waiting to be
    * written; and the pieces the last look asked for
    */
   const kept = new Set<string>(), asked = new Set<string>();
-  let store: Worker | null = null, listed = false, waiting = 0;
+  let store: Worker | null = null, listed = false, waiting = 0, busy = false;
+  /** the bytes of the pieces sent to be written, until the store has answered */
+  const sent = new Map<string, number>();
   // (the pieces a tool measures against the mean are not what the view shows)
   if (o.keep && o.mean !== 'compare' && typeof navigator !== 'undefined' && 'storage' in navigator && 'getDirectory' in navigator.storage) {
     store = new Worker(new URL('./store.worker.ts', import.meta.url), { type: 'module' });
     store.onmessage = (e: MessageEvent<StoreSays>) => {
       if (e.data.have) { for (const name of e.data.have) kept.add(name); listed = true; o.changed(); }
-      if (e.data.put) { waiting--; if (!e.data.failed) kept.add(e.data.put); }
+      if (e.data.put) { waiting -= sent.get(e.data.put) ?? 0; sent.delete(e.data.put); if (!e.data.failed) kept.add(e.data.put); }
       for (const name of e.data.gone ?? []) kept.delete(name);
       if (e.data.holds !== undefined) stage.probe.counts['MB kept'] = e.data.holds;
     };
@@ -141,11 +145,16 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
   };
   const admit = () => {
     admitting = false;
-    // one to a picture as pictures should follow each other (where they take longer, as many as would have had their own);
-    // a tool that takes one picture has no pictures to spread them over
-    const now = performance.now(), due = o.ahead ? Math.max(1, Math.floor((now - admitted) / PICTURE)) : arrived.length;
+    // one to a picture, so that no picture has the lists of two to send to the graphics card (measured: where
+    // pieces read from disk arrived four at a time and were put on the stage together, pictures took up to 170 ms).
+    // Only a machine whose pictures take a quarter of a second and more each puts on as many as would have had a
+    // picture of their own in that time; and a tool that takes one picture has no pictures to spread them over.
+    const now = performance.now(), took = now - admitted;
+    const due = !o.ahead ? arrived.length : followed && took > SLOW ? Math.floor(took / PICTURE) : 1;
     admitted = now;
     for (let k = due; k > 0 && arrived.length; k--) put(arrived.shift()!);
+    // (the time since the last piece counts only from one picture to the next, not across a rest)
+    followed = arrived.length > 0;
     if (arrived.length) { admitting = true; requestAnimationFrame(admit); }
     o.changed();
   };
@@ -161,7 +170,8 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
       }
       if (store && e.data.kept) store.postMessage({ used: fileOf(spot) } satisfies StoreAsk);
       if (store && e.data.packed) {
-        if (waiting < WAITING) { waiting++; store.postMessage({ put: fileOf(spot), bytes: e.data.packed } satisfies StoreAsk, [e.data.packed]); }
+        const name = fileOf(spot), bytes = e.data.packed.byteLength;
+        if (waiting + bytes < WAITING * 1e6 && !sent.has(name)) { waiting += bytes; sent.set(name, bytes); store.postMessage({ put: name, bytes: e.data.packed } satisfies StoreAsk, [e.data.packed]); }
         else stage.probe.counts['pieces not kept'] = (stage.probe.counts['pieces not kept'] ?? 0) + 1;
       }
       // a piece built ahead into the store goes on the stage only if the view has come to ask for it meanwhile
@@ -241,8 +251,12 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
     while (idle.length && queue.length) {
       const next = queue.pop()!, worker = idle.pop()!, id = nextId++;
       jobs.set(id, next); building.add(next.key);
-      worker.postMessage({ id, step: next.step, keep: store ? { build: o.keep!, name: fileOf(next), kept: kept.has(fileOf(next)) } : undefined, piece: { ox: next.px * PIECE - MARGIN, oz: next.pz * PIECE - MARGIN, part: { x0: MARGIN, z0: MARGIN, x1: MARGIN + PIECE, z1: MARGIN + PIECE } }, region: o.region, base: o.base, bakedSky: o.bakedSky, year: o.year, mean: o.mean, under: next.step === 1 ? [0, 1, 2, 3].map((q) => sums.get(keyOf(0, next.px * 2 + (q & 1), next.pz * 2 + (q >> 1)))) : undefined } satisfies PieceJob);
+      worker.postMessage({ id, step: next.step, keep: store ? { build: o.keep!, name: fileOf(next), kept: !listed || kept.has(fileOf(next)) } : undefined, piece: { ox: next.px * PIECE - MARGIN, oz: next.pz * PIECE - MARGIN, part: { x0: MARGIN, z0: MARGIN, x1: MARGIN + PIECE, z1: MARGIN + PIECE } }, region: o.region, base: o.base, bakedSky: o.bakedSky, year: o.year, mean: o.mean, under: next.step === 1 ? [0, 1, 2, 3].map((q) => sums.get(keyOf(0, next.px * 2 + (q & 1), next.pz * 2 + (q >> 1)))) : undefined } satisfies PieceJob);
     }
+
+    // the store zips what it is given once the workers are through with what the picture is missing
+    const pressed = [...jobs.values()].some((j) => !j.spare) || queue.length > 0;
+    if (store && pressed !== busy) { busy = pressed; store.postMessage({ busy } satisfies StoreAsk); }
 
     // what is shown: from the coarsest pieces down, a piece gives way to the four under it once they cover their share
     // (from the coarsest step of all: after a leap of the zoom the pieces of the view before are all there is)
