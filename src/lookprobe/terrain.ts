@@ -88,7 +88,19 @@ const CARRIED_FROM = 0.5;
  */
 export function buildTerrain(g: Ground, t: GroundTraits, baked = true, part: Part = whole(), carried?: Batch): Batch {
   const ox = g.ox ?? 0, oz = g.oz ?? 0;
-  const b = new Batch(), light = (x: number, z: number, y: number) => (baked ? skyLight(skyShare(g, x, z, y)) : 1);
+  const b = new Batch();
+  // A corner of the grid is asked for its light by each of the four columns around it, at that column's height:
+  // where they are level, as most land is, the answer is the one given before (a seventh of a piece's building
+  // time went into working it out four times).
+  const side = N + 1, askedAt = baked ? new Float64Array(side * side).fill(NaN) : null, answer = baked ? new Float64Array(side * side) : null;
+  const light = (x: number, z: number, y: number) => {
+    if (!askedAt || !answer) return 1;
+    const k = z * side + x;
+    // (the sides of a column ask beside the grid's corners: those are worked out each time)
+    if (!Number.isInteger(k) || x < 0 || x > N) return skyLight(skyShare(g, x, z, y));
+    if (askedAt[k] !== y) { askedAt[k] = y; answer[k] = skyLight(skyShare(g, x, z, y)); }
+    return answer[k];
+  };
   const NB: readonly (readonly [number, number])[] = [[1, 0], [-1, 0], [0, 1], [0, -1]];
   for (let z = part.z0; z < part.z1; z++) for (let x = part.x0; x < part.x1; x++) {
     const i = idx(x, z), h = g.h[i], mat = g.mat[i], wx = x + ox, wz = z + oz;
