@@ -7,6 +7,7 @@
 // Drag moves the picture and lets it glide on, the wheel or two fingers zoom about the pointer, the arrow keys move,
 // + and - zoom. A click on the ground is told to the page as the event `world-click` (see `click` below).
 // The probe's own page (main.ts) and the game (ui/WorldView.tsx) both show the world through this.
+import * as THREE from 'three/webgpu';
 import { smooth } from '../lookprobe/batch';
 import { NEAR, RIGHT, SEA_Y } from '../lookprobe/layout';
 import { bakedSky, createStage } from '../lookprobe/stage';
@@ -88,7 +89,8 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
   const name = o.region ?? 'world', base = import.meta.env.BASE_URL, still = o.still ?? false;
   const stage = await createStage({ fixed: true, tall: 70, canvas: o.canvas }), canvas = stage.canvas;
   // the world's cells are its finest blocks, FINER to a cell of the land's data (land.ts)
-  const projection = await projectionOf(name, base, FINER);
+  // and the depth of the sea under the game map (sea.ts), read beside them; without it the sea keeps its own colours
+  const [projection, depths] = await Promise.all([projectionOf(name, base, FINER), depthsOf(base)]);
   // the world's frame in cells (they run with the picture's sides), and the widest view: the frame's whole width
   const frame = extentOf(projection), farthest = Math.min(FARTHEST, frame.east - frame.west);
   // the view: the place at the middle of the picture in the finest blocks, and how many of them lie across the picture
@@ -108,6 +110,12 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
     const at = pieces.look(view), missing = at.missing + realms.look(view, at), failed = pieces.failed || realms.failed;
     stage.aim(x / at.coarse - at.homeX, z / at.coarse - at.homeZ, wide / at.coarse, elevation, awayOf(wide) / at.coarse);
     stage.creases(creasesOf(wide), creaseReachOf(wide) / at.coarse); stage.soften(nearOf(wide)); laid = at;
+    // a point (x, z) of the stage is the world block ((x + homeX) · coarse, (z + homeZ) · coarse), and that the cell
+    // (u, v) of the whole map (land.ts `cellOfBlock`), which lies at (u / map width, v / map height) on the depth picture
+    {
+      const c = at.coarse, [mw, mh] = projection.map, hx = at.homeX * c, hz = at.homeZ * c;
+      stage.sea(depths, [RIGHT[0] * c / mw, RIGHT[1] * c / mw, (RIGHT[0] * hx + RIGHT[1] * hz) / mw, NEAR[0] * c / mh, NEAR[1] * c / mh, (NEAR[0] * hx + NEAR[1] * hz) / mh], Number.isFinite(projection.round) ? projection.round / mw : 0, c, hx, hz);
+    }
     const box = canvas.getBoundingClientRect();
     names.show(realms.names, box, (u - realms.lap) / projection.cells, held / projection.cells, (box.width / wide) * projection.cells, squash, realms.named);
     stage.busy = missing > 0 && !failed;
@@ -241,4 +249,13 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
       pieces.dispose(); realms.dispose(); names.remove(); stage.dispose();
     },
   };
+}
+
+/** The depth of the sea under the game map (public/map/depth.png, tools/worldprobe/build_depth.py); null where it cannot be read. */
+async function depthsOf(base: string): Promise<THREE.Texture | null> {
+  try {
+    const t = await new THREE.TextureLoader().loadAsync(`${base}map/depth.png`);
+    t.colorSpace = THREE.NoColorSpace; t.minFilter = THREE.LinearFilter; t.generateMipmaps = false;
+    return t;
+  } catch { return null; }
 }

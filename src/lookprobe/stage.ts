@@ -7,7 +7,7 @@
 // triangles in those lists, not as faces (faces.ts); ?free=0: the rectangles on no grid of what stands on them do.
 // ?pilots=0: the shaders of a kind of mesh are made when its first mesh is drawn, not at the start (see there).
 import * as THREE from 'three/webgpu';
-import { Fn, attribute, clamp, convertToTexture, dot, float, fract, getViewPosition, materialColor, max, mix, mrt, normalView, output, pass, positionGeometry, reflector, rtt, screenCoordinate, screenSize, screenUV, select, smoothstep, step, texture, uniform, userData, uv, vec2, vec3, vec4, vertexColor } from 'three/tsl';
+import { Fn, agxToneMapping, attribute, clamp, convertToTexture, dot, float, fract, getViewPosition, materialColor, max, mix, mrt, neutralToneMapping, normalView, output, pass, positionGeometry, reflector, rtt, saturation, screenCoordinate, screenSize, screenUV, select, smoothstep, step, texture, uniform, userData, uv, vec2, vec3, vec4, vertexColor } from 'three/tsl';
 import { MapControls } from 'three/addons/controls/MapControls.js';
 import { dof } from 'three/addons/tsl/display/DepthOfFieldNode.js';
 import { denoise } from 'three/addons/tsl/display/DenoiseNode.js';
@@ -18,6 +18,7 @@ import type { Batch } from './batch';
 import { RIG, towards, CREASES } from './light';
 import { type Figures, anyFigures, disposeFigures, figureMeshes, keepFigures, showFigures, warmFigures } from '../figures/stage';
 import { OPEN_WATER } from './terrain';
+import { type Sea, createSea } from './sea';
 import { FACE_COL, FACE_CORNERS, FACE_GEO, FACE_STEPS, FLIPPED, FREE_GEO, RISES, type Faces, type Free, faceHit, freeHit, unfaced, unfree } from './faces';
 
 const q = new URLSearchParams(location.search);
@@ -50,6 +51,8 @@ export type Light = Pick<typeof LOOK, 'sun' | 'sunColor' | 'side' | 'sky' | 'sky
  */
 export const NEAR_LIGHT: Light = { sun: 1.05, sunColor: 0xfff2e4, side: 0.7, sky: 0.4, skyColor: 0xc8d4f0, bounce: 0.26, fill: 0.26, mirror: 0.3, mirrorTint: 0x1898a8 }, NEAR_SHADOW = 6;
 const FAR_SHADOW = 2;
+/** how the picture's light is taken (see the curve before the map's paper below) */
+const TONE = { way: 'agx', exposure: 1.2, saturation: 1.1 };
 /** of the land's light and shade this share is left under the map's paper where it is fully calmed (see Stage.lay) */
 const CALM_KEPT = 0.4;
 /** how bright level, sunlit ground is drawn (luminance, linear light): the map's ink under the land's own light and shade is as bright as on the paper there */
@@ -183,6 +186,12 @@ export interface Stage {
   lay(strength: number, flat: number, seaTop: number, things?: number, calm?: number): void;
   /** Points camera and lights at a ground point, with `frameW` blocks across the picture, looking down by `elevation` degrees, from `away` times the look's own distance (the farther, the less the far side of the picture is drawn smaller than the near). */
   aim(x: number, z: number, frameW: number, elevation: number, away?: number): void;
+  /**
+   * Where the stage lies on the world, for the sea's depth and waves (sea.ts `Sea.place`): the depth picture, how a
+   * point (x, z) of the stage lies on it, after how many of its widths it comes round, how many finest blocks a block of
+   * the stage is, and the stage's (0, 0) in finest blocks.
+   */
+  sea(depths: THREE.Texture | null, toMap: readonly number[], round: number, blocks: number, homeX: number, homeZ: number): void;
   /** Asks for a new picture. */
   redraw(): void;
   /** Stops drawing and lets go of the renderer; the stage is not used after that. */
@@ -280,6 +289,15 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   const seaFaced = new THREE.MeshLambertNodeMaterial();
   seaFaced.positionNode = placed.add(vec3(0, userData('lift', 'float') as unknown as ReturnType<typeof float>, 0));
   seaFaced.colorNode = faced.colorNode; seaFaced.maskNode = solid.maskNode; seaFaced.emissiveNode = water.emissiveNode;
+  // The sea's depth and its surface (see `Stage.sea`, `?sea=0` leaves both out). Lists and faces of the sea take the
+  // same nodes, so that the sea does not change where the view passes from one step to the next.
+  let surface: Sea | null = null;
+  if (water !== solid && flag('sea', true)) {
+    surface = createSea(water.emissiveNode);
+    water.colorNode = surface.colour(water.colorNode!); seaFaced.colorNode = surface.colour(faced.colorNode!);
+    water.normalNode = seaFaced.normalNode = surface.normal;
+    water.emissiveNode = seaFaced.emissiveNode = surface.mirror;
+  }
   // A mesh's upright and level rectangles on no grid come as faces of floats (faces.ts `Free`): a corner takes the
   // very floats the builder made, the level on the face's axis and an end of each of its two spans. The face's
   // direction tells its axis, and the fourth number beside it which way its triangles turn.
@@ -531,6 +549,16 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     const other = mix(here, others.div(max(found, 1)), step(0.5, found));
     picture = mix(other, here, mine) as unknown as typeof picture;
   }
+  // The picture's light as film takes it: a curve that keeps the shadows and the middle tones and rolls the bright
+  // ones off softly instead of cutting them, with the colours of what is bright a little paler, as light is seen
+  // (`?tone=agx|neutral|none`, `?exposure=1`, `?saturation=1`). The map's paper is laid on after it: its colours
+  // stay as they are printed. What the paper takes of the land's light and shade is the light before the curve.
+  const lit = picture;
+  {
+    const way = q.get('tone') ?? TONE.way, exposure = float(Number(q.get('exposure') ?? TONE.exposure)), saturated = float(Number(q.get('saturation') ?? TONE.saturation));
+    const curved = way === 'agx' ? agxToneMapping(picture.rgb, exposure) : way === 'neutral' ? neutralToneMapping(picture.rgb, exposure) : picture.rgb.mul(exposure);
+    picture = vec4(saturation(curved, saturated), 1) as unknown as typeof picture;
+  }
   // the map's paper (see Stage.paper): drawn from straight above into a picture of its own, which the picture of the
   // scene then takes its colour from by where each of its points lies on the ground
   const paper = new THREE.Scene(), paperEye = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 4000);
@@ -548,7 +576,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     const ink = dots.rgb.div(max(dots.a, 1 / 255)), cover = dots.a.mul(laid.strength).mul(inside).mul(land).mul((inked ? mix(mix(laid.things, 1, inked.sample(screenUV).r), 1, laid.flat) : float(1)));
     // the land's light and shade, as a share of how sunlit level ground is drawn, colours the ink with it
     // (softened: the light and shade of the relief should show, the colours of woods and fields much less)
-    const light = clamp(dot(picture.rgb, vec3(0.2126, 0.7152, 0.0722)).div(LIT_GROUND).pow(0.5), 0.45, 1.25);
+    const light = clamp(dot(lit.rgb, vec3(0.2126, 0.7152, 0.0722)).div(LIT_GROUND).pow(0.5), 0.45, 1.25);
     picture = mix(picture, mix(ink.mul(mix(light, light.mul(CALM_KEPT).add(1 - CALM_KEPT), laid.calm)), ink, laid.flat), cover);
   }
   // miniature blur: sharp around the middle distance, softer towards the far and the near edge
@@ -770,6 +798,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
       if (creased.value !== share) { creased.value = share; pending = Math.max(pending, 1); }
       if (reached && reached.value !== LOOK.creaseReach * reach) { reached.value = LOOK.creaseReach * reach; pending = Math.max(pending, 1); }
     },
+    sea(depths, toMap, round, blocks, homeX, homeZ) { surface?.place(depths, toMap, round, blocks, homeX, homeZ); pending = Math.max(pending, 1); },
     redraw() { pending = Math.max(pending, 1); },
     dispose() { renderer.setAnimationLoop(null); removeEventListener('resize', resize); renderer.dispose(); },
     pick(px, py) {
