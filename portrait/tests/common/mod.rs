@@ -32,7 +32,7 @@ pub fn head() -> Option<Head> {
 
 /// A founder of the pool England draws from, as examples/sample.rs founds them (SplitMix64).
 pub fn person(k: u32, female: bool, age: f32) -> Look {
-    let r: Vec<u64> = (0..68u64)
+    let r: Vec<u64> = (0..2 * sc_portrait::NG as u64)
         .map(|i| {
             let mut z = (8000 + k as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15).wrapping_add(i.wrapping_mul(0xBF58_476D_1CE4_E5B9)).wrapping_add(1);
             z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);

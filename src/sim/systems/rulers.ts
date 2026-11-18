@@ -5,7 +5,7 @@
 // crowns). The borders do not move here.
 //
 // A ruler is a person of the person table like everybody else: the genes, the IQ and the Big Five are drawn as for
-// the founders of the cities, from the gene pool of the place the ruler lives in. The ruler lives in the capital of
+// the founders of the cities, from the gene pool of the ruler's culture. The ruler lives in the capital of
 // the realm of the first reign, in a family of their own, and has no part in the economy (role 0). Who the person is
 // in the sources stands beside the table (`WorldState.named`).
 import type { WorldState, NamedPerson } from '../state';
@@ -16,7 +16,9 @@ import type { System } from '../schedule';
 import { type Chronicle, Happening, firstEventOn } from '../content/chronicle';
 import { setRulerCulture } from './cultures';
 import { hash01 } from '../rng';
-import { founder, origin, NG } from '../people/genes';
+import { founder, NG } from '../people/genes';
+import { poolOf } from '../people/pools';
+import { ALL_CULTURES } from '../content/peoples';
 
 // a stream of draws of its own: the world's seed, the chronicle key of the person, the number of the draw
 const K = { trait: 10, genes: 100 } as const;
@@ -40,6 +42,23 @@ function indexOf(s: WorldState) {
     index.set(s, x);
   }
   return x;
+}
+
+/** The genes of a ruler: a founder of the pool of the ruler's culture (src/sim/people/pools.ts; portrait round 111),
+ *  else of the place the ruler lives in, from the ruler's own stream of draws. */
+function giveRulerGenes(s: WorldState, w: World, id: number, key: string, place: number): void {
+  const seed = s.seed >>> 0, kh = keyHash(key), P = s.person.cols;
+  const bits = (k: number) => {
+    const u = (j: number) => BigInt(Math.floor(u01(seed, kh, K.genes + 2 * k + j) * 4294967296));
+    return (u(1) << 32n) | u(0);
+  };
+  P.genes.set(founder(poolOf(ALL_CULTURES[P.culture[id]], w.lon[place], w.lat[place]), bits), id * 2 * NG);
+}
+
+/** Gives every ruler of the world their genes anew, as they would have drawn them on entering it (the upgrade of a
+ *  world whose rulers drew by the place: src/sim/upgrade.ts). */
+export function rulerGenes(s: WorldState, w: World): void {
+  for (const n of s.named ?? []) giveRulerGenes(s, w, n.person, n.key, s.family.cols.place[s.person.cols.family[n.person]]);
 }
 
 /** The person ids of the persons of history (rulers): they have no part in the economy. */
@@ -76,11 +95,7 @@ function happen(s: WorldState, w: World, c: Chronicle, e: Chronicle['events'][nu
     P.iq[id] = clampU8(100 + 15 * z(0));
     P.o[id] = clampU8(50 + 10 * z(1)); P.c[id] = clampU8(50 + 10 * z(2)); P.e[id] = clampU8(50 + 10 * z(3));
     P.a[id] = clampU8(50 + 10 * z(4)); P.n[id] = clampU8(50 + 10 * z(5));
-    const bits = (k: number) => {
-      const u = (j: number) => BigInt(Math.floor(u01(seed, kh, K.genes + 2 * k + j) * 4294967296));
-      return (u(1) << 32n) | u(0);
-    };
-    P.genes.set(founder(origin(w.lon[place], w.lat[place]), bits), id * 2 * NG);
+    giveRulerGenes(s, w, id, cp.key, place);
     const f = spawn(s.family), F = s.family.cols;
     F.place[f] = place; F.man[f] = cp.sex === 1 ? id : -1; F.woman[f] = cp.sex === 0 ? id : -1;
     F.lot[f] = NO_LOT; // a ruler holds no parcel of a town: castles and residences are not built yet

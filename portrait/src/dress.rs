@@ -13,6 +13,8 @@ pub enum Dress {
     Roman,
     /// Common people of England about 1356.
     England1356,
+    /// Common people of 1356 whose own dress is not drawn yet (`PLAIN_1356`).
+    Plain1356,
 }
 
 /// How men from `HoodRule::from` years wear the hood, by the last digit of the person's seed.
@@ -23,6 +25,27 @@ pub enum Hood {
     Up,
     /// Thrown back, lying round the neck.
     Back,
+}
+
+/// (round 111) Tightly curled hair of a dress with a table: no bundles that run from a whorl to a cut, one springy
+/// mass that stands off the skull (tools/portrait/pipeline/hair_body.py, the cuts `coil01` ...). Whoever's curl
+/// (the gene's share, 0 to 1) lies over `from` wears it in place of the table's other hair: Apoleia's rule gives
+/// every man over 0.62 the one curly cut, which on the hair of Africa south of the Sahara (the pools draw 0.89
+/// and more there) is a European's wavy bowl cut.
+pub struct Coily {
+    pub from: f32,
+    /// A man's and a boy's; a woman's and a girl's; a child's under seven.
+    pub men: &'static str,
+    pub women: &'static str,
+    pub small: &'static str,
+    /// A man's who is losing his hair (cropped close), and one's who has lost it on top.
+    pub thin: &'static str,
+    pub bald: &'static str,
+    /// The image all of them are drawn with (`fleece_tex.py`): small coils lying every way.
+    pub image: &'static str,
+    /// The cuts whose painted layer and scalp lie under them (`<name>_cap`, `<name>_scalp`): a full head's, and a
+    /// head's that is bare on top.
+    pub under: [&'static str; 2],
 }
 
 /// One statement of a dress table and where it comes from.
@@ -58,7 +81,36 @@ pub struct ScarLine {
 /// and above) the same lips read 28 L darker than a woman's lit cheek (hers 23) and 34 on a man (the emperor's
 /// 26), while the skin over the upper lip stood as hers: in round 82 more of the skin's own colour and less
 /// blood, and a blood with less red for men: 22.4 and 25.2, a* 6.1 and 8.6 over the cheek's (hers 6.2, the
-/// emperor's 7.1). All values PLACEHOLDER, set by those measurements.
+/// emperor's 7.1). Those values were read through three.js' ACES curve, which bends red, green and blue each on
+/// its own and so shows a dark red darker and redder than it is painted. Since round 103 England's picture is
+/// finished through a curve that keeps a colour's hue (src/portrait/finish.ts): the lips of round 82 read 15 L
+/// under a woman's lit cheek and less red than it (a* -1.9), a grey mauve. The red now stands in the paint: less
+/// of the skin's own colour (0.12 and 0.3, before 0.30 and 0.42) and a blood with half the green and blue for
+/// women, twice the red for men. Tried: as red as the reference's numbers ask of a woman (a* 8.8 over the
+/// cheek; skin 0.08, blood 0.30, 0.03, 0.03) read as lipstick on a farmer's wife, since the lips' red ends at
+/// a sharp line where a real lip fades into the skin; a man's at a* 6.5 over his cheek the same. What the
+/// picture reads now stands in docs/PORTRAITS.md (round 103). The upper lip, which the steeper curve and a key
+/// light further round left 13.8 L (the reference's 21.0), is painted half as light again as before round 78
+/// (`upper` 1.5). The seam's factor follows so that the strip is about as light as it was. Round 106 read a
+/// man's lips on the men who wear no beard over them (until then the mean of all men, with a beard's hair in
+/// it): 18.0 L under the lit cheek where the emperor's are 25.8, pink. A man's keep 0.24 of the skin's colour
+/// (0.3) with a blood of 0.30, 0.05, 0.05 (0.33, 0.075, 0.074): 22.4 L under the cheek, a* 6.5 over it (7.1);
+/// darker with the blood's colour as it was lost the red (a* 3.9). Round 107 set the mouths beside those of
+/// five women of the reference at the same size: by one reading (the reddest fifth of the box round the mouth
+/// against the lit cheek) theirs are 21.2 L under the cheek and a* 5.7 over it, ours were 21.8 and 2.1, as dark
+/// and a third as red, and the seam's line 12 L darker than theirs. A woman's lips keep 0.17 of the skin's
+/// colour (0.12): by the gauntlet's reading 22.1 L under the cheek and a* 5.0 over it (24.5 and 4.3; by the
+/// sheet's reading 20.5 and 2.2 after it, hardly moved: there the cheek it is held against is the redder one,
+/// a* 24.6 where theirs is 18.5, and the seam's line is still 13 L darker than theirs). On the
+/// broader faces of that round a man's lips with the blood of round 106 read lighter again; his blood is 0.265,
+/// 0.030, 0.032: 22.4 and 6.2 on the shaven (tried: 0.28, 0.046, 0.046 gave 21.3 and 5.7; 0.25, 0.036, 0.037
+/// gave 22.8 and 4.7). His seam's factor is 1.1 so that the strip keeps nine tenths of the skin's red under the
+/// darker lips (0.88 at 1.0). Round 113: the stage lights the shaded half of a face in the skin's colour, with
+/// a red fill, and on the warmer skin the lips of round 107 stood out pink; their blood has less blue (a
+/// woman's 0.27, 0.026, 0.020, a man's 0.275, 0.025, 0.019). By the gauntlet's reading a woman's are 21.5 L
+/// under her lit cheek, a* 4.7 over it and b* 4.7 under it, a shaven man's 23.0, 6.1 and 4.5 (four faces of the
+/// reference read in that round: 19.5 to 26.8 L under, a* 7.1 to 10.7 over, b* 3.2 to 5.3 under). All values
+/// PLACEHOLDER, set by those measurements.
 pub struct Lips {
     /// Where the red of the lips is (the file skin_lip.txt, per vertex along the lips' outline): the share of the
     /// skin's own colour that is kept,
@@ -71,7 +123,8 @@ pub struct Lips {
     /// mouth unless painted half as light again (1.5). Since round 78 the stage has that light (`bounce` in
     /// src/portrait/profile.ts, until round 82 its `fill`): 1.15 kept a grown woman's upper lip where the
     /// reference's is (L 20.7 against 21.0; at 1.0 it read 18.3, at 1.5 27.2). With the lips of round 82 it is
-    /// 36.7 L darker than the lit cheek (the reference's 35.1; 37.1 under the lights of round 83).
+    /// 36.7 L darker than the lit cheek (the reference's 35.1; 37.1 under the lights of round 83). 1.5 again
+    /// since round 103 (see `Lips`): L 18.6 on a grown woman.
     pub upper: f32,
     /// The seam of the lips. MakeHuman's closed mouth is a slit of a millimetre between the edges where the lips
     /// turn inward, through which one looks into the mouth; a strip from edge to edge closes it (morph.rs
@@ -80,11 +133,56 @@ pub struct Lips {
     /// lips' colour times this, and so has the upper lip's edge: above 1, because the
     /// seam lies in the lips' own shade and the stage has no light that comes through flesh, which is what makes
     /// the line of a real mouth dark red instead of black. 0 = no strip, the slit stays open. 1.3 since the lips
-    /// are lighter (round 82; 1.6 before): the strip keeps the colour it had, about the skin's own red.
+    /// are lighter (round 82; 1.6 before): the strip keeps the colour it had, about the skin's own red. 1.43 and
+    /// 1.0 (women, men) since round 103, when the lips' red went into their paint: about as light as it was.
     pub seam: f32,
     /// How much of the lips' colour a child's lips have (1 = as a grown person's), growing to all of it as the
     /// head grows up (`child_share`): at a woman's strength a girl of eight wears paint.
     pub child: f32,
+    /// (round 111) Lips of dark skin: the luminance of the person's skin colour (in linear light) from which
+    /// downward less of the blood's colour shows, and the power it falls by (real_look.rs `real_skin`): melanin
+    /// lies in the lips' skin too. 0.38 is under the darkest skin England's pool draws (0.39), so its lips stay
+    /// as they were; at the darkest skin of all (0.03) a fifth of the blood's colour is left and the lips are
+    /// the skin's own colour, a little redder. By eye, PLACEHOLDER: no measured colour of lips on dark skin read.
+    pub dark: [f32; 2],
+}
+
+/// The face as it is drawn, over the face as it is measured (round 107). Until then England's grown had heads of
+/// human measure (`rest`, held against a survey of real heads), and beside real pictures of the reference they
+/// read narrow, long and gaunt, with small eyes: scaled to the same length from the eyes' line to the chin, a face
+/// of the reference is broader by a quarter and its pupils stand further apart by as much, its eyes lie half way
+/// up the head under a high forehead, and the chin is short. The reference draws its people, as a painter does:
+/// a broad face, a large braincase, large eyes set wide, a small mouth. This is that drawing as a layer of its
+/// own, so that what is measured stays measured: the tests against the surveys read the head without it
+/// (morph.rs `morph_test_measured`), the picture shows the head with it. A head that is MakeHuman's child has
+/// none of it and grows into it as it gets its adult form (`style_of`): a child's large braincase and eyes are in
+/// the tables of `skull` and `eyes_child` already, by a survey of children. All values PLACEHOLDER, by eye on
+/// sheets that set the sample beside the reference's faces at the same size (docs/PORTRAITS.md, round 107).
+pub struct Style {
+    /// MakeHuman's targets and the weights added to those of `rest`, women's and men's; a weight under 0 takes
+    /// that much of a row of `rest` back.
+    pub face: &'static [(&'static str, f32, f32)],
+    /// The braincase larger by these factors, on top of `skull` (breadth, length, height; morph.rs `skull_grow`).
+    pub skull: [f32; 3],
+    /// The lids' three heights at rest (`lids`, not the fold) times this: eyes more open.
+    pub lids: f32,
+    /// The iris across, in millimetres, in place of `iris_mm`: larger with the larger opening it lies in.
+    pub iris_mm: f32,
+}
+
+/// (round 112) How a face follows the person's weight. MakeHuman's targets of weight move the body and the neck
+/// and leave the face as it is (measured: the arcs from ear to ear over chin and nose do not change by a tenth of
+/// a millimetre from the lightest to the heaviest body): every face was the same lean face. The fullness of a
+/// face is tanh(`spread` x how far the weight lies from its middle, 0.5): -1 the thinnest, 1 the fullest, and a
+/// child has of it what it has of its own genes (`Look::grown`).
+pub struct Fullness {
+    pub spread: f32,
+    /// MakeHuman's targets ("#": both sides), and the weight of each on the thinnest and on the fullest face.
+    pub targets: &'static [(&'static str, f32, f32)],
+    /// How much further the cheeks are filled out on the fullest face, in mm, women's and men's, on top of
+    /// `DressSet::cheek_fill` (morph.rs `cheek_fill`). MakeHuman's own target for a fuller cheek
+    /// (`cheek-volume-incr`) lays a pouch beside the mouth, as cheeks blown up.
+    pub fill: [f32; 2],
 }
 
 /// A dress: the garments (images and bound shapes under public/portrait/real), their colours, who wears what on
@@ -94,9 +192,27 @@ pub struct DressSet {
     pub key: &'static str,
     /// The origins that wear it.
     pub origins: &'static [&'static str],
-    /// The body garment of everyone.
+    /// The body garment. England's is a gown with a round neck, close at the throat: what is worn on the head
+    /// (hoods, veil, wimple) was draped over it, and under a wimple, which ends at that neckline, it is worn
+    /// as it is.
     pub gown: &'static str,
-    /// Wool colours of gown and hood.
+    /// The gown as it is cut at the neck where the neck shows: for women and girls before the wimple, for men
+    /// and boys (empty: `gown`), each drawn with `gown`'s image where it has none of its own. England's (round
+    /// 110): a woman's neckline cut wide, out onto the shoulders, and a man's opened in front in a V a hand
+    /// deep.
+    pub gown_cut: [&'static str; 2],
+    /// What is worn under those cuts and shows at the neck, women's and men's (empty: nothing): a layer of
+    /// linen that lies on the skin, the second drawn with the first's image where it has none of its own.
+    /// England's (round 110): a woman's smock, its edge a finger's breadth inside her gown's neckline, and a
+    /// man's shirt, close round the neck, in the opening of his gown. Under the wimple none is drawn: the
+    /// wimple covers the neckline.
+    pub under: [&'static str; 2],
+    /// Wool colours of gown and hood: a cloth's own colour (the stage draws wool lighter than that,
+    /// src/portrait/profile.ts `cloth`). England's until round 108 were greys with a breath of colour (four of
+    /// the six with the strongest of red, green and blue under 1.3 times the weakest): set beside the
+    /// reference's clothes they were one dark grey, chroma 7 in the picture where its clothes have 17. Since then
+    /// the same six (two undyed, a brown, a dull blue, a russet, an olive) with more colour, the dyed ones 1.5
+    /// to 2.1 times: chroma 17. PLACEHOLDER, by eye.
     pub wool: &'static [&'static str],
     /// Linen of veil and wimple.
     pub linen: &'static str,
@@ -126,12 +242,26 @@ pub struct DressSet {
     pub hair_girl: &'static str,
     /// The hair of children under seven. Apoleia's `crop01`, cropped short, begins far back on a child's large
     /// skull: half the head a bare forehead, which reads as a shaven head.
+    /// England: until round 104 the grown's `bob01`, whose fringe ends 2 cm over the eyes. A small child's face is
+    /// small under a large braincase (`skull`), and its forehead is the larger part of what a picture shows of
+    /// it: with the fringe at the brows a child of two was a small adult under a bowl. Round 105: `bob08`, a cut
+    /// of its own (tools/portrait/pipeline/README.md): the fringe 46 to 52 mm over the eyes, in the forehead's
+    /// upper half, ragged; the sides to the ear's lobe; lying closer to the head. By eye, PLACEHOLDER.
     pub hair_small: &'static str,
-    /// The image of a hair's locks (the file `<hair>_locks`, tools/portrait/pipeline/hairlib.py
-    /// `locks_from_wisps`) where the file has none of its own beside it: one image for the locks of every cut.
-    pub lock_image: &'static str,
-    /// The image of a beard's locks (the file `<beard>_locks`, tools/portrait/pipeline/beards.py), as
-    /// `lock_image` is a head's: a beard's hairs are coarser and sway more.
+    /// Tightly curled hair (`Coily`); none: the table's other hair on every head.
+    pub coily: Option<Coily>,
+    /// A boy younger than this wears the girls' image of the skin (0: the men's at any age). MakeHuman's image of
+    /// a young man has the shade of a shaven beard round mouth and jaw and coarser pores: on a boy of eight it was
+    /// a man's stubble, and with the forms of a grown man's face coming in from one year on (`grown`) a boy of
+    /// thirteen read as a man of thirty. 14 (round 106): where the beard's first down comes. By eye, PLACEHOLDER.
+    pub boy_skin: f32,
+    /// The image of a hair's body (the file `<hair>_body`, tools/portrait/pipeline/hair_body.py: a cut modelled
+    /// in Blender as layers of thick bundles, round 109) where the file has none of its own beside it: one image
+    /// for the bundles of every cut. Until round 108 a head's hair was locks (`<hair>_locks`, some 950 narrow
+    /// arched bands, drawn with an image `hair1356_locks`): a thatch on the skull beside the reference's hair.
+    pub body_image: &'static str,
+    /// The image of a beard's locks (the file `<beard>_locks`, tools/portrait/pipeline/beards.py; arched bands
+    /// of `hairlib.py` `locks_from_wisps`, frayed at both ends by this image).
     pub beard_lock_image: &'static str,
     /// The beard worn in place of each of Apoleia's (in the order of look::Beard: shaven, stubble, short, full,
     /// philosopher, chin): a dress leaves out what its time did not wear.
@@ -206,8 +336,23 @@ pub struct DressSet {
     /// 0.039 still: the reference's brow has soft edges, ours a hard one. Since round 76 the hairs are soft
     /// (`brow_image`) and the women's brow is as broad as the reference's. (The band is drawn together about its
     /// middle: its upper edge lies half a millimetre higher with 0.9 than the heights given at `brow_lift`, by
-    /// reckoning, not measured anew.)
+    /// reckoning, not measured anew.) Round 114: 1.15 for women. Set beside five faces of the reference, eye by
+    /// eye at one size, the women's brows were thin lines over the eye where theirs are a band; by round 71's
+    /// own reading ours at 0.9 was a sixth to a fifth narrower than the reference's woman's. By eye and by that
+    /// reading, PLACEHOLDER; the men's, which lie under the fringe on most, stay.
     pub brow_band: [f32; 2],
+    /// (round 112) How the gene "browT" makes a person's brows lighter or heavier, per unit of the gene as the
+    /// face shows it (`Look::shown` times `settings::FACE_GAIN`: about -0.55 on the lightest brows, 0.55 on the
+    /// heaviest): how much broader the band of the brow's hairs is (a factor on `brow_band` of 1 + this x the
+    /// gene), and how far the hairs' colour is mixed towards the skin's on a light brow (this x the gene, on the
+    /// low side alone: a thin brow is a sparse one). Up to round 111 every woman wore one brow and every man
+    /// another. PLACEHOLDER, by eye.
+    pub brow_gene: [f32; 2],
+    /// (round 114) How far the colour of everyone's brow hairs goes towards the skin's, women and men (0 = the
+    /// hair's colour at three quarters, as until then; `brow_gene` lightens a light brow further). Set beside five
+    /// faces of the reference eye by eye at one size, ours were strokes of near black over the eye, theirs a soft
+    /// band of a brown between the hair's and the skin's. By eye, PLACEHOLDER.
+    pub brow_soft: [f32; 2],
     /// Lips, women and men (real_look.rs `real_skin`).
     pub lips: [Lips; 2],
     /// The lash line, women and men: how far the lid's edge is drawn towards the lashes' colour where they grow
@@ -231,15 +376,28 @@ pub struct DressSet {
     /// with `Eyelashes`, a brow's with `eyebrow`: by the name the stage tells them from hair cards
     /// (src/portrait/materials.ts `surfaceKind`).
     pub lash_image: &'static str,
+    /// (round 114) The colour of the lashes and of the lash line: this share of the hair's colour, mixed half
+    /// and half with this dark. Apoleia's is half the hair's colour with `#140d08`, nearly black: beside the
+    /// reference the lid's rim was a black line where theirs is a dark brown (the darkest third of the eye's
+    /// opening read 53 L under the lit cheek and without colour on ours, 39 under and brown on five faces of
+    /// theirs). By eye, PLACEHOLDER.
+    pub lash_tone: (f32, &'static str),
     /// Red hair: the strength of the red gene (0..1, the mean of a person's two alleles) from which hair shows any
     /// red, and at which it shows all of it. Apoleia mixes red in from 0 on, in step with the gene: of people whose
     /// alleles come from 20 to 170 (the pool England draws from) the usual one then has orange hair.
     pub hair_red: [f32; 2],
     /// How much redder than Apoleia's the skin is over nose, cheeks, ears and chin (factor on settings::SKIN_RED),
     /// for women and for men; and the file of the real look that says where (per vertex of the head 0..1,
-    /// tools/portrait/pipeline/skin_red.py; Apoleia's is skin_red.txt).
+    /// tools/portrait/pipeline/skin_red.py; Apoleia's is skin_red.txt). The women's 0.65 since round 107 (0.7):
+    /// on the broader cheek of that round the red patch is larger, and five women of the reference are hardly
+    /// redder on the cheek than on the forehead (a* 1.1; its woman in the game 5, ours 4.7 with this value and
+    /// 5.4 before). Less was tried (0.45, 0.55): at 0.55 the lit cheek's a* (20.4) and hue (52 degrees) fall out of
+    /// the gauntlet's limits.
     pub flush: [f32; 2],
     pub flush_map: &'static str,
+    /// (round 112) How much stronger `flush` is per unit of the gene "ruddy" as the face shows it (as `brow_gene`):
+    /// a factor of 1 + this x the gene, from a pale face to a ruddy one. PLACEHOLDER, by eye.
+    pub flush_gene: f32,
     /// How a scar is drawn (`ScarLine`); None = Apoleia's raised ribbon.
     pub scar: Option<ScarLine>,
     /// Lids at rest: MakeHuman's eyes are wide open and stare. Weights of the targets eye-height1, -height2,
@@ -342,8 +500,16 @@ pub struct DressSet {
     /// 68 0.194; children of 2 and 5, who take a third of `rest`, 0.31 to 0.34. Real faces: 0.295 (women) and 0.301
     /// (men) with the lips at rest and 3.3 and 2.4 mm apart (Arnett and others 1999), 0.313 and 0.307 with the
     /// lips closed (Farkas and others 1984; src/measure.rs `LOWER_FACE`). 0.31 for both: closed lips. Everyone
-    /// grown then has this one share; real faces differ in it (no spread was read). Round 92.
+    /// grown then had this one share (round 92); real faces differ in it, and since round 112 ours do: `mouth_gene`.
     pub mouth_at: f32,
+    /// (round 112) How much higher or lower a person's mouth lies by the gene "mouthH", in the share `mouth_at`
+    /// per unit of the gene as the face shows it (as `brow_gene`): a short upper lip over a long chin, or a long
+    /// one over a short chin. Up to round 111 every grown mouth lay at the one share. Arnett's faces (`measure::
+    /// LOWER_FACE`) have upper lips of 24.4 (SD 2.5) and 21.0 (1.9) mm in lower thirds of 81.1 (4.7) and 71.1
+    /// (3.5): were the two independent, the share would spread by 0.035 and 0.031. They are not (a long face has
+    /// the longer lip), so less: with this value ours spread by about 0.02. PLACEHOLDER: the spread of the share
+    /// itself was not read anywhere.
+    pub mouth_gene: f32,
     /// How far the bust leans back, women and men (radians, about the axis from ear to ear through the head's
     /// centre). As MakeHuman forms them both sexes stand with the head bowed, alike (the line from chin to
     /// glabella 8.7 and 8.6 degrees off upright, the top forward): seen from eye level the brow hangs over the eyes
@@ -412,7 +578,33 @@ pub struct DressSet {
     /// 1.4 mm over a dent of 1.7 mm in the mean, the pad 3.4 mm at most; at 0.4 and without the women's share of
     /// it in `rest` 0.7 over 1.0 mm, 1.5 at most; men 0.9 to 0.6 mm). 0.4 is by eye, PLACEHOLDER: no measured
     /// outline of real faces read.
+    /// Round 112: the faces of England differed from each other less than real faces do (120 men and 120 women
+    /// measured as the survey measures, `measure::MEASURES` and `LIPS`: the nose stood out with a spread of 1.4 mm
+    /// where real noses have 2.7, the red of both lips 0.9 against 2.8 to 3.0, the lips' length 3.2 and 3.5
+    /// against 4.2 and 4.0). The eyes' size, the brows' height and arch, the nose's hump and tip and the mouth's
+    /// breadth show more strongly than Apoleia draws them (by the spreads, and by eye where the survey has no
+    /// measure: eyes and brows). The lips stay at 0.4, the red of them is given by `loads`.
     pub genes: &'static [(&'static str, f32)],
+    /// (round 112) The gain of a gene's lower half, where it is another than `genes` gives to both. The nose's
+    /// hump at 1.7 on both halves scooped the back of a nose whose gene lies a fifth under the middle until its
+    /// upper third lay level with the root (England's sample, a woman of 17: the back, a third of the way down,
+    /// 0.055 of the distance between the eyes' inner corners in front of the root, 0.12 in round 111; six of 36
+    /// under 0.06, before three), and the light the skin's image has on root and back, with the stage's highlight
+    /// down the back, lay on that plane as a pale band from eye to eye (as on a low root). A hooked nose
+    /// has no such plane: the upper half keeps 1.7.
+    pub genes_low: &'static [(&'static str, f32)],
+    /// (round 112) More targets for single genes of the face, on top of look.rs `FACE_MOD` (Apoleia's, which stays
+    /// as it is): the gene, the target ("#": both sides), the suffixes for low and high values, and the weight per
+    /// unit of the gene as `genes` lets it show. For Apoleia's genes: the lips' red by the heights of both lips
+    /// (its own targets make a full mouth a pout); a long nose stands further out and a short one less (the
+    /// nose's size; on the hump's gene the same target laid the scooped noses flat, `genes_low`); a long face has
+    /// a longer chin. And the targets of the genes that came with round 112 (dna.rs), each of which shows in a
+    /// dress with a table alone. Weights by the survey's spreads where it has the measure (nose, lips, head
+    /// length), else by eye, PLACEHOLDER. Tried and not kept: the face's outline by `head-round`,
+    /// `-rectangular` and `-invertedtriangular` (they move the breadths the survey's means are held to), the
+    /// lid by the lids' heights (the upper lid cleared the iris), the mouth's height by `mouth-trans` (the
+    /// builder sets the mouth's height after the genes, `mouth_gene`), the cheeks by `cheek-trans` (not seen).
+    pub loads: &'static [(&'static str, &'static str, &'static str, &'static str, f32)],
     /// Targets of MakeHuman this dress's heads take nothing of, whoever asks for them (genes, age, a mood).
     /// England (round 93): `chin-jaw-drop-decr`, which lifts the skin on the jaw's edge beside the chin into the
     /// surface (see `rest`). The gene of the chin's height asks for it on a short chin, with up to 0.27 (1.1 mm):
@@ -449,6 +641,9 @@ pub struct DressSet {
     /// the nose 0.928 (0.941; 0.917), and both stay under the survey's own lengths. The amount is by eye on one
     /// traced face: PLACEHOLDER. Men: none (not looked at; a man's cheek has a dent of 3.6 mm under its pad).
     pub cheek_fill: [f32; 2],
+    /// (round 112) How a face follows the person's weight (look.rs `phen`: the gene and what the person has had
+    /// to eat), where a dress asks for it: see `Fullness`.
+    pub fullness: Option<Fullness>,
     /// How much of what the lips' edges stand apart along the seam is closed (morph.rs `lips_meet`): 0 leaves
     /// the mouth as it is closed in its middle, 1 lays the lips on each other from corner to corner.
     /// England (round 99): 1. The mouth read as a long hard stroke, and wide for it, though it is not wide: the
@@ -530,16 +725,20 @@ pub struct DressSet {
     /// corners, which are at the survey's, by 5.7 mm per unit; under the jaw it moves no landmark.
     /// `neck-scale-depth-incr` would do for the depth too but pushes the chin forward (3.8 mm per unit).
     pub neck: &'static [(&'static str, f32, f32)],
+    /// The face as it is drawn (`Style`).
+    pub style: Style,
     pub sources: &'static [Source],
 }
 
 use Hood::{Back, None as Bare, Up};
 
-pub static ENGLAND_1356: DressSet = DressSet {
+const ENGLAND: DressSet = DressSet {
     key: "england1356",
     origins: &["England"],
     gown: "cloth_cote",
-    wool: &["#8f8371", "#6e675c", "#7a6352", "#5f6b73", "#7d554a", "#73705a"],
+    gown_cut: ["cloth_kirtle", "cloth_cote_v"],
+    under: ["cloth_smock", "cloth_shirt"],
+    wool: &["#958565", "#6e665a", "#7d5c40", "#51647c", "#84503f", "#6c6c45"],
     linen: "#e6dfcd",
     hood: [Up, Up, Up, Up, Back, Back, Back, Bare, Bare, Bare],
     hood_from: 14.0,
@@ -557,8 +756,10 @@ pub static ENGLAND_1356: DressSet = DressSet {
     hair_hooded: "bob02",
     hair_veiled: "",
     hair_girl: "plait01",
-    hair_small: "bob01",
-    lock_image: "hair1356_locks",
+    hair_small: "bob08",
+    coily: Some(Coily { from: 0.86, men: "coil01", women: "coil02", small: "coil03", thin: "coil03", bald: "coil04", image: "hair1356_fleece", under: ["bob01", "bob04"] }),
+    boy_skin: 14.0,
+    body_image: "hair1356_body",
     beard_lock_image: "beard1356_locks",
     beards: [Beard::Shaven, Beard::Stubble, Beard::Short, Beard::Full, Beard::Full, Beard::Short],
     beard_full: "beard_crop",
@@ -570,13 +771,17 @@ pub static ENGLAND_1356: DressSet = DressSet {
     brows_child: 0.6,
     brow_paint: [0.0, 0.0],
     brow_lift: [[3.0, 3.0, 3.5], [0.0, 0.0, 0.0]],
-    brow_band: [0.9, 1.0],
-    lips: [Lips { skin: 0.30, blood: [0.21, 0.078, 0.069], upper: 1.15, seam: 1.3, child: 0.6 }, Lips { skin: 0.42, blood: [0.165, 0.073, 0.074], upper: 1.15, seam: 1.3, child: 0.6 }],
+    brow_band: [1.15, 1.0],
+    brow_gene: [1.1, 0.7],
+    brow_soft: [0.3, 0.3],
+    lips: [Lips { skin: 0.17, blood: [0.27, 0.026, 0.020], upper: 1.5, seam: 1.43, child: 0.6, dark: [0.38, 0.85] }, Lips { skin: 0.24, blood: [0.275, 0.025, 0.019], upper: 1.5, seam: 1.1, child: 0.6, dark: [0.38, 0.85] }],
     lash_line: [0.65, 0.55],
     lash_image: "Eyelashes1356",
+    lash_tone: (0.6, "#3a2416"),
     hair_red: [0.45, 0.74],
-    flush: [0.7, 0.5],
+    flush: [0.65, 0.5],
     flush_map: "skin_flush.txt",
+    flush_gene: 0.9,
     scar: Some(ScarLine { half: 0.016, tone: [1.4, 1.14, 1.22] }),
     lids: [[0.15, 0.4, 0.15, 0.3], [0.1, 0.35, 0.1, 0.3]],
     adult: [15.0, 17.0],
@@ -634,6 +839,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     eye_out: [2.0, 0.0],
     pupil: 0.57,
     mouth_at: 0.31,
+    mouth_gene: 0.075,
     lean: [0.12, 0.10],
     iris_mm: 11.7,
     eyes_child: [0.6, 0.5],
@@ -645,11 +851,60 @@ pub static ENGLAND_1356: DressSet = DressSet {
     child: &[
         ("mouth/mouth-upperlip-volume-decr", 0.5, 0.5),
         ("mouth/mouth-lowerlip-volume-decr", 0.3, 0.3),
+        // (round 105) MakeHuman's child has a cheek that hangs beside the mouth and under it, a jowl: with the
+        // skin's folds an old face on a small head. Leaner cheeks, by eye, PLACEHOLDER (the mouth's corners
+        // 0.1 mm closer; nothing else of the survey's measures moves). Tried with it and dropped: `head-oval`
+        // 0.5, which narrows the jaw further and widens the braincase (a boy of two's breadth 0.914 of the
+        // grown's, the survey 0.883: `skull` is fitted to that); `head-fat-decr` and `chin-width-decr` at 0.6 (a
+        // gaunt small adult); Apoleia's child's face (`kid` 0.4 and 0.7: rounder still, with a smirk).
+        ("cheek/l-cheek-volume-decr", 0.6, 0.6),
+        ("cheek/r-cheek-volume-decr", 0.6, 0.6),
     ],
-    genes: &[("lips", 0.4), ("cheek", 0.4)],
+    genes: &[("lips", 0.4), ("cheek", 0.4), ("jaw", 0.9), ("eyeS", 1.4), ("brow", 1.8), ("browA", 1.8), ("hump", 1.7), ("tip", 1.7), ("mouthW", 1.25)],
+    genes_low: &[("hump", 1.0)],
+    loads: &[
+        ("lips", "mouth/mouth-upperlip-height", "decr", "incr", 5.0),
+        ("lips", "mouth/mouth-lowerlip-height", "decr", "incr", 3.75),
+        ("noseL", "nose/nose-scale-depth", "decr", "incr", 0.9),
+        ("headF", "chin/chin-bones", "decr", "incr", 0.5),
+        // the genes of round 112 (dna.rs)
+        ("headD", "head/head-scale-depth", "decr", "incr", 1.0),
+        ("chinW", "chin/chin-width", "decr", "incr", 1.2),
+        ("eyeT", "eyes/#-eye-corner1", "down", "up", 2.2),
+        ("eyeT", "eyes/#-eye-eyefold-angle", "down", "up", 1.6),
+        ("lid", "eyes/#-eye-eyefold", "concave", "convex", 2.0),
+        ("eyeH", "eyes/#-eye-trans", "down", "up", 1.4),
+        ("eyeP", "eyes/#-eye-push2", "in", "out", 2.2),
+        // (round 113: 0.35, before 0.9. The mood and `rest` turn the corners as well, and on top of them the gene
+        // at 0.9 gave grins and frowns that no mood asked for: a boy's corners up by 0.8 of the target)
+        ("mouthC", "mouth/mouth-angles", "down", "up", 0.35),
+        ("lipB", "mouth/mouth-upperlip-height", "incr", "decr", 3.0),
+        ("lipB", "mouth/mouth-lowerlip-height", "decr", "incr", 1.3),
+        ("mouthF", "mouth/mouth-trans", "backward", "forward", 0.8),
+        ("mouthF", "mouth/mouth-scale-depth", "decr", "incr", 0.4),
+        ("noseB", "nose/nose-width1", "decr", "incr", 2.0),
+        ("noseB", "nose/nose-compression", "compress", "uncompress", 0.8),
+        ("neckL", "neck/neck-scale-vert", "decr", "incr", 0.6),
+        ("bags", "eyes/#-eye-bag", "decr", "incr", 1.5),
+        ("folds", "mouth/mouth-laugh-lines", "out", "in", 0.6),
+        ("folds", "mouth/mouth-dimples", "out", "in", 0.4),
+    ],
     without: &["chin/chin-jaw-drop-decr"],
     lower_only: &["head/head-diamond", "head/head-triangular", "head/head-invertedtriangular"],
     cheek_fill: [6.0, 0.0],
+    fullness: Some(Fullness {
+        spread: 6.0,
+        targets: &[
+            ("head/head-fat-decr", 0.8, 0.0),
+            ("head/head-fat-incr", 0.0, 0.45),
+            ("cheek/#-cheek-volume-decr", 0.7, 0.0),
+            ("neck/neck-scale-horiz-decr", 0.7, 0.0),
+            ("neck/neck-scale-horiz-incr", 0.0, 0.7),
+            ("neck/neck-double-incr", 0.0, 0.7),
+            ("chin/chin-width-incr", 0.0, 0.4),
+        ],
+        fill: [3.0, 5.0],
+    }),
     seam_shut: 1.0,
     skull: &[
         (2.0, [1.141, 1.229, 1.191], [1.150, 1.182, 1.198]),
@@ -676,8 +931,32 @@ pub static ENGLAND_1356: DressSet = DressSet {
         (15.0, [1.0], [1.0]),
     ],
     neck: &[("neck/neck-scale-horiz-incr", 0.45, 0.0), ("neck/neck-back-scale-depth-incr", 0.7, 0.0)],
+    style: Style {
+        face: &[
+            // the whole head broader (at weight 1 each cheekbone 13.2 mm further out, each eye 5.8), and what
+            // `rest` narrows a woman's by taken back
+            ("head/head-scale-horiz-incr", 0.5, 0.5),
+            ("head/head-scale-horiz-decr", -0.1, 0.0),
+            // a short chin under a face that is no longer (the rows of `rest` that lengthen chin and face taken
+            // back; the men's lean head by less)
+            ("chin/chin-height-decr", 0.25, 0.25),
+            ("chin/chin-height-incr", -0.3, -0.15),
+            ("head/head-scale-vert-incr", 0.0, -0.2),
+            ("head/head-fat-decr", 0.0, -0.2),
+            // large eyes, set wider still than the broader head sets them
+            ("eyes/l-eye-scale-incr", 0.6, 0.5),
+            ("eyes/r-eye-scale-incr", 0.6, 0.5),
+            ("eyes/l-eye-trans-out", 0.15, 0.05),
+            ("eyes/r-eye-trans-out", 0.15, 0.05),
+            // a small mouth: the broader head widens it, and `rest` holds it at a real one's length
+            ("mouth/mouth-scale-horiz-incr", -0.55, -0.3),
+        ],
+        skull: [1.0, 1.0, 1.1],
+        lids: 0.35,
+        iris_mm: 14.5,
+    },
     sources: &[
-        Source { what: "gown (cote) of wool, pulled over the head, close at the shoulders, round neck", source: "Crowfoot, Pritchard & Staniland 1992 (London finds); Østergård 2004 (Herjolfsnes). Summaries only. Cut PLACEHOLDER." },
+        Source { what: "gown (cote) of wool, pulled over the head, close at the shoulders, round neck; linen worn under it (a shirt, a smock)", source: "Crowfoot, Pritchard & Staniland 1992 (London finds); Østergård 2004 (Herjolfsnes). Summaries only. Cut PLACEHOLDER. The cuts of round 110 (a man's neck opened in a V a hand deep, a woman's cut wide, how much linen shows) are by eye beside the reference: a wide neckline is the fashion of the 1340s to 1360s at court (Newton 1980, summary only), not sourced for a villager's wife." },
         Source { what: "hood with a short cape for men, worn on the head or thrown back", source: "Østergård 2004 (Herjolfsnes hoods); Newton 1980. Summaries only. Shares 4:3:3 PLACEHOLDER (unsourced)." },
         Source { what: "wool colours: undyed greys and browns, cheap dyes (russet, a dull blue)", source: "Statute concerning diet and apparel 1363 (russet and blanket for the poorest), read from a summary. Hex values PLACEHOLDER." },
         Source { what: "married women's hair covered by a linen veil, a wimple round the throat on older women and widows; girls in braids", source: "Newton 1980. Summary only. Ages 20 and 50 PLACEHOLDER (the simulation has no marriages yet). How the veil is worn (its rim on the forehead and on the cheeks in front of the ears, falling to the shoulders, no hair to be seen; the wimple under it, showing under the chin and round the throat): PLACEHOLDER, by eye against one veiled figure of the reference pictures (round 70)." },
@@ -701,13 +980,32 @@ pub static ENGLAND_1356: DressSet = DressSet {
     ],
 };
 
+pub static ENGLAND_1356: DressSet = ENGLAND;
+
+/// (round 111) What everybody of 1356 wears whose own dress is not drawn yet: until then the people of the rest
+/// of the world stood in Apoleia's Roman dress, under its lights and with its faces. This is England's table with
+/// what is England's own taken off: no hood, no veil and no wimple, so a man's head is bare and a woman wears
+/// her hair as England's girls do. The gown and the linen under it stay, as the plainest clothes there are.
+/// PLACEHOLDER throughout: nothing read on what the common people of any of these lands wore; it is here so that
+/// their faces, skins and hair can be judged under the same light as England's, not as a statement about their
+/// dress. A dress of their own takes its place land by land.
+pub static PLAIN_1356: DressSet = DressSet { key: "plain1356", origins: &[], hood: [Bare; 10], veil_from: 999.0, wimple_from: 999.0, ..ENGLAND };
+
 /// Every dress with a table.
-pub static SETS: [(Dress, &DressSet); 1] = [(Dress::England1356, &ENGLAND_1356)];
+pub static SETS: [(Dress, &DressSet); 2] = [(Dress::England1356, &ENGLAND_1356), (Dress::Plain1356, &PLAIN_1356)];
 
 impl Dress {
-    /// The dress of a person whose family comes from `origin`.
+    /// The dress of a person whose family comes from `origin`: the table that names it; Apoleia's Roman dress
+    /// for Apoleia's own regions (and for no origin at all); the plain dress of 1356 for everybody else.
     pub fn of(origin: &str) -> Dress {
-        SETS.iter().find(|(_, s)| s.origins.contains(&origin)).map_or(Dress::Roman, |(d, _)| *d)
+        if let Some((d, _)) = SETS.iter().find(|(_, s)| s.origins.contains(&origin)) {
+            return *d;
+        }
+        if origin.is_empty() || crate::dna::ORIGINS[..crate::dna::ROMAN].contains(&origin) {
+            Dress::Roman
+        } else {
+            Dress::Plain1356
+        }
     }
 
     /// Its table; none for the Roman dress, which lives in the code.
@@ -800,6 +1098,33 @@ impl DressSet {
         by_sex(self.cheek_fill[0], self.cheek_fill[1], female, grown) * (0.35 + 0.65 * grown)
     }
 
+    /// How much of the drawn face (`style`) a person's head has: none while it is MakeHuman's child, all of it
+    /// once it has its adult form (`child_share`).
+    pub fn style_of(&self, female: bool, yrs: f32) -> f32 {
+        1.0 - child_share(self.adult[if female { 0 } else { 1 }], yrs)
+    }
+
+    /// What the drawn face adds to the weight of one of MakeHuman's targets on a person's head (`Style::face`).
+    pub fn style_face_of(&self, name: &str, female: bool, grown: f32, yrs: f32) -> f32 {
+        self.style.face.iter().filter(|row| row.0 == name).map(|row| by_sex(row.1, row.2, female, grown)).sum::<f32>() * self.style_of(female, yrs)
+    }
+
+    /// The factors of the drawn face on a person's braincase (`Style::skull`).
+    pub fn style_skull_of(&self, female: bool, yrs: f32) -> [f32; 3] {
+        self.style.skull.map(|k| 1.0 + (k - 1.0) * self.style_of(female, yrs))
+    }
+
+    /// The factor of the drawn face on a person's lids' heights (`Style::lids`).
+    pub fn style_lids_of(&self, female: bool, yrs: f32) -> f32 {
+        1.0 + (self.style.lids - 1.0) * self.style_of(female, yrs)
+    }
+
+    /// A person's iris across, in millimetres: `iris_mm`, growing to the drawn face's (`Style::iris_mm`); 0 where
+    /// the dress gives none.
+    pub fn iris_of(&self, female: bool, yrs: f32) -> f32 {
+        if self.iris_mm > 0.0 { self.iris_mm + (self.style.iris_mm - self.iris_mm) * self.style_of(female, yrs) } else { 0.0 }
+    }
+
     /// By how much a person's braincase is larger than MakeHuman's (`skull`: breadth, length, height): between
     /// the table's ages in a straight line, before its first age that age's, from its last on that one's.
     pub fn skull_of(&self, female: bool, yrs: f32) -> [f32; 3] {
@@ -834,6 +1159,27 @@ impl DressSet {
         let young = child_share(self.adult[if female { 0 } else { 1 }], yrs);
         self.eyes_child.map(|k| 1.0 + (k - 1.0) * young)
     }
+    /// The tightly curled hair of a person whose curl is `curl` (0 to 1), if the table has it and the curl is
+    /// tight enough.
+    pub fn coily_of(&self, curl: f32) -> Option<&Coily> {
+        self.coily.as_ref().filter(|c| curl > c.from)
+    }
+
+    /// Whether `name` is one of the table's cuts of tightly curled hair.
+    pub fn is_coily(&self, name: &str) -> bool {
+        self.coily.as_ref().is_some_and(|c| [c.men, c.women, c.small, c.thin, c.bald].contains(&name))
+    }
+
+    /// The cut whose painted layer and scalp lie under the hair `name`: its own, or for tightly curled hair the
+    /// table's (`Coily::under`).
+    pub fn under_of<'a>(&'a self, name: &'a str) -> &'a str {
+        match &self.coily {
+            Some(c) if name == c.bald => c.under[1],
+            Some(c) if self.is_coily(name) => c.under[0],
+            _ => name,
+        }
+    }
+
     /// What a man wears on the head.
     /// The hair of the head of a person with this seed: one of `hair_lengths` by its share, else `hair`.
     pub fn hair_of(&self, seed: u32) -> &'static str {
@@ -847,9 +1193,32 @@ impl DressSet {
         self.hair
     }
 
-    /// How strongly the gene `i` of the face shows in this dress (`genes`).
-    pub fn gene_gain(&self, i: usize) -> f32 {
-        self.genes.iter().find(|g| g.0 == crate::look::GENES[i]).map_or(1.0, |g| g.1)
+    /// Where a person's mouth lies between nose and chin (`mouth_at`, `mouth_gene`).
+    pub fn mouth_at_of(&self, p: &crate::look::Look) -> f32 {
+        if self.mouth_at <= 0.0 {
+            return self.mouth_at;
+        }
+        self.mouth_at + self.mouth_gene * p.shown(crate::look::MOUTH_H) * crate::settings::FACE_GAIN
+    }
+
+    /// The brows of a person by the gene of their weight (`brow_gene`): the factor on the band's breadth, and how
+    /// far the hairs' colour is mixed towards the skin's.
+    pub fn brow_weight_of(&self, p: &crate::look::Look) -> [f32; 2] {
+        let x = p.shown(crate::look::BROW_T) * crate::settings::FACE_GAIN;
+        let soft = self.brow_soft[usize::from(!p.female)];
+        [(1.0 + self.brow_gene[0] * x).max(0.3), (soft + (1.0 - soft) * (-x * self.brow_gene[1]).clamp(0.0, 0.8)).min(0.8)]
+    }
+
+    /// The factor on a person's flush by the gene of it (`flush_gene`).
+    pub fn flush_of(&self, p: &crate::look::Look) -> f32 {
+        (1.0 + self.flush_gene * p.shown(crate::look::RUDDY) * crate::settings::FACE_GAIN).max(0.0)
+    }
+
+    /// How strongly the gene `i` of the face shows in this dress (`genes`; `genes_low` where the gene's value
+    /// `x` lies under the middle).
+    pub fn gene_gain(&self, i: usize, x: f32) -> f32 {
+        let of = |t: &[(&str, f32)]| t.iter().find(|g| g.0 == crate::look::GENES[i]).map(|g| g.1);
+        (if x < 0.0 { of(self.genes_low) } else { None }).or(of(self.genes)).unwrap_or(1.0)
     }
 
     /// Where one eye looks, seen from the head (yaw and pitch as `gaze`): `side` is 1 for the eye on the head's
@@ -877,6 +1246,15 @@ mod tests {
         for o in ["", "Italia", "Graecia", "Syria", "Aegyptus"] {
             assert_eq!(Dress::of(o), Dress::Roman);
         }
+        // everybody else: the plain dress of 1356, England's table without hood, veil and wimple
+        for o in ["french", "han", "yoruba", "Guinea", "China"] {
+            assert_eq!(Dress::of(o), Dress::Plain1356);
+        }
+        let plain = Dress::Plain1356.set().unwrap();
+        assert_eq!(plain.key, "plain1356");
+        assert!((0..10).all(|seed| plain.hood_of(false, 30.0, seed) == Hood::None));
+        assert!(!plain.veiled(true, 60.0));
+        assert_eq!((plain.gown, plain.hair_girl), (ENGLAND_1356.gown, ENGLAND_1356.hair_girl));
         assert!(Dress::Roman.set().is_none());
         let e = Dress::England1356.set().unwrap();
         assert_eq!(e.hood_of(true, 30.0, 0), Hood::None);

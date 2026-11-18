@@ -19,6 +19,7 @@ import { ALL_CULTURES, FAITH_INDEX } from '../content/peoples';
 import { citiesOf } from '../content/cities';
 import { SCALE } from '../scale';
 import { hash01 } from '../rng';
+import { giveGenes } from './people';
 import C1291 from '../content/communities_1291.json';
 
 export interface Community { town: string; culture: string; faith: string; people?: number; families?: number; count: string; year: number; source: string }
@@ -37,7 +38,7 @@ export const faithIndex = (f: string | null | undefined): number => FAITH_INDEX[
 export const communitiesOf = (year: number): readonly Community[] => COMMUNITIES.get(year) ?? [];
 
 /** The persons who are not rulers get the culture and faith of the setup for their place, then the counted
- *  communities. A new world does it before the borders, whose realms take theirs from their capitals; the rulers take
+ *  communities, and with their culture their genes. A new world does it before the borders, whose realms take theirs from their capitals; the rulers take
  *  theirs from the realm they enter the world in (src/sim/systems/rulers.ts). */
 export function foundPersonCultures(s: WorldState, setup: SetupState): void {
   const P = s.person.cols, F = s.family.cols, ruler = new Set(s.named.map((n) => n.person));
@@ -47,6 +48,7 @@ export function foundPersonCultures(s: WorldState, setup: SetupState): void {
     P.culture[id] = cultureIndex(setup.culture[place]); P.faith[id] = faithIndex(setup.faith[place]);
   }
   setCommunities(s);
+  giveGenes(s); // a founder's looks are those of the people they come from (src/sim/people/pools.ts)
 }
 
 /** A ruler takes the culture and faith of the realm `realm` (none known: those of the setup's unknown). */

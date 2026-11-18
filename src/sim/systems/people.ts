@@ -18,7 +18,9 @@ import { createTable, spawn } from '../ecs';
 import { hash01 } from '../rng';
 import { survival, yearsLived } from '../people/lifetable';
 import { housewives, GROOM_OLDER, GROOM_AGE_MIN, AGE_WINDOW, FERTILE_TO, WIDOW_REMARRIES_BELOW, SEX_RATIO_AT_BIRTH } from '../people/marriage';
-import { child, founder, origin, NG } from '../people/genes';
+import { child, founder, origin, NG, type Bits } from '../people/genes';
+import { poolOfCulture } from '../people/pools';
+import { ALL_CULTURES } from '../content/peoples';
 import { type City, citiesOf, hasCities } from '../content/cities';
 import { SCALE, toHeads } from '../scale';
 
@@ -136,7 +138,7 @@ export function foundPeople(s: WorldState): void {
     }
     for (const id of ids) writeTraits(P, id, (t) => z[t][id]);
   }
-  giveGenes(s);
+  // (the genes follow the cultures: `giveGenes`, called by `foundPersonCultures`)
 }
 const inherit = (t: Trait, mother: number, father: number, e: number): number => {
   const h2 = t === 'iq' ? HERITABILITY.iq : HERITABILITY.big5;
@@ -168,34 +170,40 @@ export function bearChild(s: WorldState, mother: number, father: number, day: nu
 }
 
 /** The draws of the genes of a person: a 64-bit number per draw k, from the person's own stream. */
-const geneBits = (seed: number, id: number) => (k: number) => {
-  const u = (j: number) => BigInt(Math.floor(u01(seed, id, K.genes + 2 * k + j) * 4294967296));
-  return (u(1) << 32n) | u(0);
+const geneBits = (seed: number, id: number): Bits => {
+  const u = (k: number, j: number) => Math.floor(u01(seed, id, K.genes + 2 * k + j) * 4294967296);
+  return Object.assign((k: number) => (BigInt(u(k, 1)) << 32n) | BigInt(u(k, 0)), { low: (k: number) => u(k, 0) });
 };
-/** The gene pool of each city place of a start year: the origin of the place (genes.ts, after dna.rs). */
-function poolOf(year: number, place: number): number {
-  const c = citiesOf(year).find((x) => x.place === place);
+/** The gene pool a person without known parents draws from: the pool of the person's culture (src/sim/people/
+ *  pools.ts; portrait round 111), else, for a culture that is not known, the pool of the town's place (genes.ts
+ *  `origin`, after dna.rs). */
+function poolOf(s: WorldState, id: number): number {
+  const P = s.person.cols, pool = poolOfCulture(ALL_CULTURES[P.culture[id]]);
+  if (pool !== undefined) return pool;
+  const place = s.family.cols.place[P.family[id]], c = citiesOf(s.startYear).find((x) => x.place === place);
   return c ? origin(c.lon, c.lat) : 0;
 }
 
-/** Gives every person founded on the first day their genes: those without known parents draw them from the gene pool
- *  of their city, children take them from their parents (all parents of the first day have none known themselves). */
+/** Gives every person of the towns their genes: those without known parents draw them from the gene pool of their
+ *  culture, so the cultures must be set (src/sim/systems/cultures.ts `foundPersonCultures`, which calls this);
+ *  everybody else takes them from their parents, the elder before the younger. The rulers are not touched: they
+ *  draw theirs when they enter the world (src/sim/systems/rulers.ts). In a world that has run the persons get the
+ *  genes they would have been born with (a birth draws from the child's own stream, `bearChild`). */
 export function giveGenes(s: WorldState): void {
-  const P = s.person.cols, F = s.family.cols, G = P.genes, seed = s.seed >>> 0;
+  const P = s.person.cols, G = P.genes, seed = s.seed >>> 0, ruler = new Set((s.named ?? []).map((n) => n.person));
+  const born: number[] = [];
   for (let id = 0; id < s.person.size; id++) {
-    if (P.mother[id] >= 0) continue;
-    G.set(founder(poolOf(s.startYear, F.place[P.family[id]]), geneBits(seed, id)), id * 2 * NG);
+    if (ruler.has(id)) continue;
+    if (P.mother[id] >= 0) { born.push(id); continue; }
+    G.set(founder(poolOf(s, id), geneBits(seed, id)), id * 2 * NG);
   }
-  for (let id = 0; id < s.person.size; id++) {
-    const m = P.mother[id], f = P.father[id];
-    if (m < 0) continue;
-    if (P.mother[m] >= 0 || P.mother[f] >= 0) throw new Error(`person ${id}: a parent has parents; found the elder first`);
-    const g = (x: number) => G.subarray(x * 2 * NG, (x + 1) * 2 * NG);
-    G.set(child(g(f), g(m), geneBits(seed, id)), id * 2 * NG);
-  }
+  // a parent is born before the child, so in the order of the birthdays every parent has genes before a child takes them
+  born.sort((x, y) => P.born[x] - P.born[y] || x - y);
+  const g = (x: number) => G.subarray(x * 2 * NG, (x + 1) * 2 * NG);
+  for (const id of born) G.set(child(g(P.father[id]), g(P.mother[id]), geneBits(seed, id)), id * 2 * NG);
 }
 
-/** The 68 gene bytes of a person (a view, not a copy). */
+/** The gene bytes of a person (a view, not a copy). */
 export const genesOf = (s: WorldState, id: number): Uint8Array => s.person.cols.genes.subarray(id * 2 * NG, (id + 1) * 2 * NG);
 const clampU8 = (v: number) => Math.min(255, Math.max(0, Math.round(v)));
 

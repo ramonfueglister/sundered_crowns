@@ -2,13 +2,13 @@
 // (portrait/src/wire.rs is the other side and describes the layout). All numbers little-endian.
 
 /** Genes per person; a person carries two alleles of each, one byte each (portrait/src/dna.rs). */
-export const GENES = 34;
+export const GENES = 50;
 
 /** A person as the builder takes them (the fields of Apoleia's take_person). */
 export interface PortraitPerson {
   /** Fixed per person: the seed of everything drawn by chance (beard style, tunic colour, scars). */
   pid: number;
-  /** The 68 bytes of the genes: the first allele of every gene, then the second. */
+  /** The 100 bytes of the genes: the first allele of every gene, then the second. */
   dna: ArrayLike<number>;
   female: boolean;
   /** Years. */
@@ -54,6 +54,9 @@ export interface Portrait {
   top: number; chin: number; cx: number; cz: number;
   /** Share of the picture's height the head fills. */
   fill: number;
+  /** How much of a child's skin the person has: 1 a child up to eleven, 0 the grown (the stage draws a child's skin
+   *  smoother: profile.ts `skin.child`). */
+  young: number;
   tris: number;
   /** Background of the look: inner and outer colour, sRGB 0..1. */
   bg: [[number, number, number], [number, number, number]];
@@ -90,7 +93,7 @@ export function decodePortrait(b: Uint8Array): Portrait {
   const str = (): string => { const n = v.getUint16(o, true); o += 2 + n; return text.decode(b.subarray(o - n, o)); };
   /** `n` floats, copied (the bytes are not aligned). */
   const floats = (n: number): Float32Array => { const out = new Float32Array(b.slice(o, o + 4 * n).buffer); o += 4 * n; return out; };
-  const [top, chin, cx, cz, fill] = [f32(), f32(), f32(), f32(), f32()];
+  const [top, chin, cx, cz, fill, young] = [f32(), f32(), f32(), f32(), f32(), f32()];
   const tris = u32();
   const c = floats(6);
   const look = str();
@@ -101,5 +104,5 @@ export function decodePortrait(b: Uint8Array): Portrait {
     surfaces.push({ rough, metal, double, tex, nmap, pos: floats(3 * verts), col: floats(3 * verts), uv: floats(2 * uvs), nrm: floats(3 * nrms) });
   }
   if (o !== b.length) throw new Error('the bytes of the portrait do not end where the portrait ends');
-  return { top, chin, cx, cz, fill, tris, bg: [[c[0], c[1], c[2]], [c[3], c[4], c[5]]], look, surfaces };
+  return { top, chin, cx, cz, fill, young, tris, bg: [[c[0], c[1], c[2]], [c[3], c[4], c[5]]], look, surfaces };
 }

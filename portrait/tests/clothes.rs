@@ -1,0 +1,288 @@
+//! The gown of England 1356 as it is cut at the neck, and the linen under it (round 110), as the builder puts
+//! them on a body (the real look: a file of its own, see tests/common).
+
+mod common;
+
+use common::{head, person};
+use sc_portrait::{build, Look, Portrait};
+
+type V3 = [f32; 3];
+
+/// A triangle, and whether it is of the hem's roll.
+struct Tri {
+    at: [V3; 3],
+    hem: bool,
+}
+
+/// A garment's points, each once, and whether a point is of the hem's roll alone (the roll's texture
+/// coordinates run a twentieth of the image round it); its triangles.
+struct Cloth {
+    pos: Vec<V3>,
+    hem: Vec<bool>,
+    tris: Vec<Tri>,
+}
+
+fn cloth(out: &Portrait, image: &str) -> Option<Cloth> {
+    let s = out.surfaces.iter().find(|s| s.tex.as_deref().is_some_and(|t| t.contains(image)))?;
+    assert_eq!(s.uv.len(), s.pos.len(), "{image}: texture coordinates for every corner");
+    let mut c = Cloth { pos: Vec::new(), hem: Vec::new(), tris: Vec::new() };
+    let mut seen = std::collections::HashSet::new();
+    // (the cloth's triangles first: a point the roll shares with the cloth is the cloth's)
+    for of_hem in [false, true] {
+        for t in 0..s.pos.len() / 3 {
+            let hem = (0..3).all(|k| s.uv[t * 3 + k][1].abs() <= 0.05);
+            if hem != of_hem {
+                continue;
+            }
+            let at = [s.pos[t * 3], s.pos[t * 3 + 1], s.pos[t * 3 + 2]];
+            c.tris.push(Tri { at, hem });
+            for q in at {
+                if seen.insert(q.map(f32::to_bits)) {
+                    c.pos.push(q);
+                    c.hem.push(hem);
+                }
+            }
+        }
+    }
+    Some(c)
+}
+
+fn sub(a: &V3, b: &V3) -> V3 {
+    [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
+}
+
+fn dot(a: &V3, b: &V3) -> f32 {
+    a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+}
+
+fn dist(a: &V3, b: &V3) -> f32 {
+    let d = sub(a, b);
+    dot(&d, &d).sqrt()
+}
+
+/// The point of a triangle closest to a point (Ericson, Real-Time Collision Detection, 5.1.5).
+fn closest(p: &V3, [a, b, c]: &[V3; 3]) -> V3 {
+    let (ab, ac, ap) = (sub(b, a), sub(c, a), sub(p, a));
+    let (d1, d2) = (dot(&ab, &ap), dot(&ac, &ap));
+    let at = |v: f32, w: f32| [a[0] + ab[0] * v + ac[0] * w, a[1] + ab[1] * v + ac[1] * w, a[2] + ab[2] * v + ac[2] * w];
+    if d1 <= 0.0 && d2 <= 0.0 {
+        return at(0.0, 0.0);
+    }
+    let bp = sub(p, b);
+    let (d3, d4) = (dot(&ab, &bp), dot(&ac, &bp));
+    if d3 >= 0.0 && d4 <= d3 {
+        return at(1.0, 0.0);
+    }
+    let vc = d1 * d4 - d3 * d2;
+    if vc <= 0.0 && d1 >= 0.0 && d3 <= 0.0 {
+        return at(d1 / (d1 - d3), 0.0);
+    }
+    let cp = sub(p, c);
+    let (d5, d6) = (dot(&ab, &cp), dot(&ac, &cp));
+    if d6 >= 0.0 && d5 <= d6 {
+        return at(0.0, 1.0);
+    }
+    let vb = d5 * d2 - d1 * d6;
+    if vb <= 0.0 && d2 >= 0.0 && d6 <= 0.0 {
+        return at(0.0, d2 / (d2 - d6));
+    }
+    let va = d3 * d6 - d5 * d4;
+    if va <= 0.0 && d4 - d3 >= 0.0 && d5 - d6 >= 0.0 {
+        let w = (d4 - d3) / ((d4 - d3) + (d5 - d6));
+        return at(1.0 - w, w);
+    }
+    let k = 1.0 / (va + vb + vc);
+    at(vb * k, vc * k)
+}
+
+/// The skin's triangles.
+fn skin(out: &Portrait) -> Vec<[V3; 3]> {
+    let s = out.surfaces.iter().filter(|s| s.tex.as_deref().is_some_and(|t| t.contains("skin"))).max_by_key(|s| s.pos.len()).expect("the skin");
+    s.pos.chunks_exact(3).map(|t| [t[0], t[1], t[2]]).collect()
+}
+
+fn cross(a: &V3, b: &V3) -> V3 {
+    [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+}
+
+/// How far along a ray (from `o`, along the unit vector `d`) a triangle is met (Möller and Trumbore 1997).
+fn met(o: &V3, d: &V3, [a, b, c]: &[V3; 3]) -> Option<f32> {
+    let (e1, e2) = (sub(b, a), sub(c, a));
+    let h = cross(d, &e2);
+    let det = dot(&e1, &h);
+    if det.abs() < 1e-12 {
+        return None;
+    }
+    let s = sub(o, a);
+    let u = dot(&s, &h) / det;
+    let q = cross(&s, &e1);
+    let v = dot(d, &q) / det;
+    let t = dot(&e2, &q) / det;
+    (u >= 0.0 && v >= 0.0 && u + v <= 1.0 && t > 0.0).then_some(t)
+}
+
+/// A point and a garment, seen from the skin under the point along the way to it: how far the point lies
+/// beyond the garment's cloth (negative: the garment is met behind the point). None where the way from the
+/// skin through the point does not meet the garment, and where the bust has no skin (it ends above a gown's
+/// lower end).
+fn beyond(p: &V3, skin: &[[V3; 3]], c: &Cloth) -> Option<f32> {
+    let on = skin.iter().filter(|t| dist(p, &t[0]) < 0.5).map(|t| closest(p, t)).min_by(|a, b| dist(p, a).total_cmp(&dist(p, b)))?;
+    let d = dist(p, &on);
+    if d < 1e-4 {
+        return None;
+    }
+    let way = sub(p, &on).map(|a| a / d);
+    let first = c.tris.iter().filter(|t| !t.hem && dist(p, &t.at[0]) < 0.6).filter_map(|t| met(&on, &way, &t.at)).fold(f32::MAX, f32::min);
+    (first < 0.6).then_some(d - first)
+}
+
+/// Where the front of a gown's neck begins: the middle of its hem, front to back.
+fn middle(c: &Cloth) -> f32 {
+    let z: Vec<f32> = (0..c.pos.len()).filter(|&i| c.hem[i]).map(|i| c.pos[i][2]).collect();
+    z.iter().sum::<f32>() / z.len() as f32
+}
+
+/// The highest point of a garment's cloth in the middle of the front (the builder's units, 10 cm).
+fn front(c: &Cloth, from: f32) -> f32 {
+    (0..c.pos.len()).filter(|&i| !c.hem[i] && c.pos[i][0].abs() < 0.12 && c.pos[i][2] > from).map(|i| c.pos[i][1]).fold(f32::MIN, f32::max)
+}
+
+/// The lowest point of a gown's neck: of its hem, in front.
+fn opening(c: &Cloth, from: f32) -> f32 {
+    (0..c.pos.len()).filter(|&i| c.hem[i] && c.pos[i][2] > from).map(|i| c.pos[i][1]).fold(f32::MAX, f32::min)
+}
+
+/// How broad a gown's neck is: from its hem's outermost point on one side to that on the other (centimetres).
+fn breadth(c: &Cloth) -> f32 {
+    let side = |s: f32| (0..c.pos.len()).filter(|&i| c.hem[i]).map(|i| c.pos[i][0] * s).fold(f32::MIN, f32::max);
+    10.0 * (side(1.0) + side(-1.0))
+}
+
+fn show() -> bool {
+    std::env::var("SHOW").is_ok()
+}
+
+/// People who wear a gown that is cut for the neck to show: everyone but a woman from the age of the wimple.
+fn people() -> Vec<(&'static str, Look)> {
+    let mut all = Vec::new();
+    for k in 0..4 {
+        all.push(("boy", person(2 * k + 1, false, 10.0)));
+        all.push(("man", person(2 * k + 1, false, 34.0)));
+        all.push(("old man", person(2 * k + 1, false, 66.0)));
+        all.push(("girl", person(2 * k, true, 12.0)));
+        all.push(("woman", person(2 * k, true, 30.0)));
+        all.push(("small child", person(k, k % 2 == 0, 3.0)));
+    }
+    all
+}
+
+#[test]
+fn linen_shows_in_the_neck_of_englands_gown() {
+    // Until round 110 a gown was one piece with a round neck close at the throat and nothing under it, where the
+    // reference's people wear two or three layers. Now a man's gown is opened in front in a V and a woman's is
+    // cut wide, and in the opening lies the linen worn under it: the shirt up to the throat, the smock's edge a
+    // finger's breadth inside the gown's.
+    let Some(h) = head() else { return };
+    for (who, p) in people() {
+        let out = build(&h, &p, 1);
+        let gown = cloth(&out, "/cloth_cote.").unwrap_or_else(|| panic!("{who} {}: no gown", p.seed));
+        let under = cloth(&out, "/cloth_smock.").unwrap_or_else(|| panic!("{who} {}: nothing under the gown", p.seed));
+        // (the builder holds what is worn under a gown within half a centimetre of the skin, and a roll at its
+        // edge was crushed by that: dark specks along the linen)
+        assert!(under.hem.iter().all(|h| !h), "{who} {}: the linen has a rolled hem", p.seed);
+        let shown = 10.0 * (front(&under, middle(&gown)) - opening(&gown, middle(&gown)));
+        let broad = breadth(&gown);
+        if show() {
+            println!("{who} {}: the linen reaches {shown:.1} cm over the lowest point of the gown's neck, which is {broad:.1} cm broad", p.seed);
+            continue;
+        }
+        // (measured: a smock 0.9 to 1.2 cm, a shirt 3.1 to 3.9 cm, on a small boy 2.4 cm)
+        if p.female {
+            assert!(shown > 0.5 && shown < 2.5, "{who} {}: the smock reaches {shown} cm over the gown's neck", p.seed);
+        } else {
+            assert!(shown > 1.8 && shown < 6.0, "{who} {}: the shirt reaches {shown} cm up the gown's opening", p.seed);
+        }
+    }
+}
+
+#[test]
+fn the_linen_lies_under_the_gown() {
+    // where the gown covers the linen, the linen is the nearer of the two to the skin
+    let Some(h) = head() else { return };
+    for (who, p) in people() {
+        let out = build(&h, &p, 1);
+        let (gown, under) = (cloth(&out, "/cloth_cote.").expect("the gown"), cloth(&out, "/cloth_smock.").expect("the linen"));
+        let sk = skin(&out);
+        let (mut n, mut inside) = (0, 0);
+        for q in &under.pos {
+            if let Some(over) = beyond(q, &sk, &gown) {
+                n += 1;
+                inside += (over < 0.0) as usize;
+            }
+        }
+        if show() {
+            println!("{who} {}: {n} points of the linen under the gown, {inside} of them nearer to the skin than it", p.seed);
+            continue;
+        }
+        assert!(n > 300, "{who} {}: {n} points of the linen under the gown", p.seed);
+        assert!(inside as f32 > 0.97 * n as f32, "{who} {}: {inside} of {n} points of the linen nearer to the skin than the gown", p.seed);
+    }
+}
+
+#[test]
+fn a_womans_gown_is_cut_wide_and_under_a_wimple_close() {
+    // The wimple ends at the close neckline it was draped over: over the wide one it left a ring of skin (seen
+    // in round 110). From the age of the wimple a woman wears the gown with the round neck, and nothing shows of
+    // what she wears under it.
+    let Some(h) = head() else { return };
+    for k in 0..4 {
+        let (young, old) = (build(&h, &person(2 * k, true, 30.0), 1), build(&h, &person(2 * k, true, 60.0), 1));
+        let (wide, close) = (breadth(&cloth(&young, "/cloth_cote.").expect("her gown")), breadth(&cloth(&old, "/cloth_cote.").expect("her gown")));
+        if show() {
+            println!("woman {k}: the gown's neck {wide:.1} cm broad at 30, {close:.1} cm at 60");
+        }
+        assert!(wide > close + 2.5, "woman {k}: the gown's neck {wide} cm broad at 30, {close} cm at 60");
+        assert!(cloth(&old, "/cloth_wimple.").is_some(), "woman {k}: no wimple at 60");
+        assert!(cloth(&old, "/cloth_smock.").is_none(), "woman {k}: linen under the gown under her wimple");
+    }
+}
+
+#[test]
+fn a_gown_that_is_cut_wide_lies_within_the_gown_with_the_round_neck() {
+    // Veil, wimple and hoods were draped over the gown with the round neck. A gown draped anew, with another
+    // neckline, has its folds in other places and came through the veil's ends in front of the shoulders (round
+    // 110, red specks in the linen). The cuts are held under the round gown's surface (`drape_under.py`): what
+    // lies over that one lies over them. A woman the day before the age of the wimple wears the wide cut, and
+    // on that day the round gown, on the same body: seen from the skin under a point of the wide cut, along the
+    // way to that point, the round gown is met behind the point or at it, not before it. (No man wears the
+    // round gown, so the men's cut has no such pair; it is made by the same script.)
+    let Some(h) = head() else { return };
+    let wimple_from = sc_portrait::dress::ENGLAND_1356.wimple_from;
+    for k in 0..6 {
+        let (before, after) = (build(&h, &person(2 * k, true, wimple_from - 0.01), 1), build(&h, &person(2 * k, true, wimple_from), 1));
+        let (cut, round) = (cloth(&before, "/cloth_cote.").expect("her gown"), cloth(&after, "/cloth_cote.").expect("her gown"));
+        assert!(cloth(&before, "/cloth_wimple.").is_none() && cloth(&after, "/cloth_wimple.").is_some(), "woman {k}: the wimple comes at {wimple_from}");
+        let sk = skin(&before);
+        let (mut n, mut over, mut most) = (0, 0, 0.0f32);
+        for (i, g) in cut.pos.iter().enumerate() {
+            // (the chest and the front of the shoulders, 10 cm to either side and down to 25 cm under the chin: what
+            // a veil's ends and a hood's cape lie on. Further out are the sleeves, where the skin nearest to a
+            // point is the arm's for one fold and the chest's for the next, and either gown is outside the other)
+            if cut.hem[i] || g[0].abs() > 1.0 || g[1] < before.chin - 2.5 {
+                continue;
+            }
+            if let Some(out) = beyond(g, &sk, &round) {
+                n += 1;
+                most = most.max(10.0 * out);
+                over += (out > 0.02) as usize;
+            }
+        }
+        if show() {
+            println!("woman {k}: {n} points of the wide cut where the round gown lies, {over} of them more than 2 mm outside it, by up to {most:.2} cm");
+            continue;
+        }
+        assert!(n > 2000, "woman {k}: {n} points of the wide cut where the round gown lies");
+        // (held under it: 0.01 of them, by up to 0.7 cm; draped anew and not held: 0.2 of them, by up to 2.2 cm)
+        assert!((over as f32) < 0.04 * n as f32 && most < 1.2, "woman {k}: {over} of {n} points of the wide cut outside the round gown, by up to {most} cm");
+    }
+}

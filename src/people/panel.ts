@@ -13,17 +13,15 @@ import type { PortraitPerson } from '../portrait/wire';
 import '../ui/fonts';
 import './panel.css';
 import { economyRows, householdRows } from './economy_rows';
+import { dressOf } from '../sim/people/pools';
 
-/** The dress of a culture in the portraits. Only England 1356 has its own so far (portrait/src/dress.rs); every other
- *  string falls back to Apoleia's Roman dress until the portrait thread draws more. */
-const DRESS: Record<string, string> = { english: 'England' };
 /** A portrait of a person neutral in all the portrait reads beyond the person system (portrait thread, 15 Nov 2026). */
 const NEUTRAL = { stand: 1, job: 'Bauern', health: 1000, fed: 1000 } as const;
 const BIG5 = ['Offenheit', 'Gewissenhaftigkeit', 'Extraversion', 'Verträglichkeit', 'Neurotizismus'] as const;
 /** The portrait input of a person. */
 export function portraitPerson(p: PersonDetail): PortraitPerson {
   // a ruler whose birthday no source gives is drawn as a grown person of 40 (the portrait needs an age)
-  return { pid: p.id, dna: p.genes, female: p.female, age: Math.floor(p.age ?? 40), origin: DRESS[p.culture] ?? p.culture, ...NEUTRAL };
+  return { pid: p.id, dna: p.genes, female: p.female, age: Math.floor(p.age ?? 40), origin: dressOf(p.culture), ...NEUTRAL };
 }
 
 export interface PersonPanel {
