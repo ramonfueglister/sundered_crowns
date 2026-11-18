@@ -596,7 +596,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
       // a tree stands clear of the water, of what is built and of drops of more than a step
       let fits = true;
       for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) { const j = idx(Math.floor(x) + dx, Math.floor(z) + dz); if (g.wet[j] || built.used[j] || Math.abs(g.h[j] - g.h[i]) > 1) fits = false; }
-      if (!fits || roadAt(x, z) < 0.7) continue;
+      if (!fits || roadAt(x, z) < 1.3) continue;
       // palms line the water of the desert and of the hot steppe, and stand among the trees of the rain forest
       const palms = oasis(i) && byWater(Math.floor(x), Math.floor(z), 3), lot = hash2(tx, tz, 73);
       if (palms ? lot > 0.3 : lot > (BARE.includes(here) ? 0 : STRAY_TREES) + CLOSED * wooded(x, z)) continue;
@@ -627,6 +627,8 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
         if (g.mat[i] === Mat.Rock) g.mat[i] = Mat.Grass;
         const was = cover.has[i] ? Math.min(cover.share[i], 1 - share) : 0, all = share + was;
         for (let c = 0; c < 3; c++) cover.top[i * 3 + c] = (colour[c] * share + cover.top[i * 3 + c] * was) / all;
+        // what stood on the block (woods, a field's crop) is taken off: far.ts raised the ground by it
+        if (cover.has[i] && cover.rise[i] > 0) { g.h[i] -= cover.rise[i]; g.occ[i] = g.h[i]; }
         if (!cover.has[i] || cover.rise[i] > 0) { cover.has[i] = 1; cover.rise[i] = 0; cover.side.set(colour, i * 3); if (cover.kind) cover.kind[i] = 0; }
         cover.share[i] = all;
       }
