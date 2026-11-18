@@ -20,7 +20,7 @@ nothing built before Ramon agrees. Proposal with sources (German): https://claud
 | 2 | The persons live: a list of events, death, birth, marriage | built as a draft, 17 Nov 2026 (Ramon: all persons, event-driven, demography first; then, on the proposal of part 2: the mortality of the source and marriage only into a vacant household). It founds the persons anew (state 23) |
 | 3 | A household passes to an heir by the custom of the culture | built 18 Nov 2026 (Ramon, 17 Nov: a custom for every culture; 18 Nov: only what a source that was read supports, 83 % of the persons). No new state |
 | 4 | The unmarried move to other places, and an heir comes home | built 18 Nov 2026 (Ramon, 18 Nov: the young unmarried move by the measured rates, heirs come home; work, whole families and the flight from a famine follow later, one by one). State 25 |
-| 5 | IQ and the Big Five shift the rates of death, of a far move and of who marries | built 18 Nov 2026 (Ramon, 18 Nov: «So bauen» on the proposal, with the factor 0.89 for the IQ). State 27 |
+| 5 | IQ and the Big Five shift the rates of death, of a far move and of who marries | built 18 Nov 2026 (Ramon, 18 Nov: «So bauen» on the proposal, with the factor 0.89 for the IQ). State 28 |
 
 ## Feature 1: persons of the 30 largest cities
 
@@ -545,7 +545,7 @@ are the next proposal.
 
 Code: `src/sim/people/traits.ts` (the factors, each with its source), `drawDeath` in `src/sim/systems/deaths.ts`,
 `rateOf` and `redrawMoves` in `src/sim/systems/moves.ts`, `take` in `weddingsOn` of `src/sim/systems/families.ts`.
-No new column. State 27: the upgrade draws the days of death and of the next move anew (`foundDeaths`,
+No new column. State 28: the upgrade draws the days of death and of the next move anew (`foundDeaths`,
 `redrawMoves`). Check: `npm run traits:check` (`-- 100` for 100 years); `tests/traits.test.ts`.
 
 ### The rule

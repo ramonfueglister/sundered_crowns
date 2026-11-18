@@ -6,7 +6,7 @@
 
 ## Das Feature
 
-Ramon, 17.11.2026: Alle Personen sollen schlau simuliert werden, ereignisgesteuert und mit eigenen Entscheidungen nach IQ und Big Five. Der ereignisgesteuerte Teil ist gebaut ([Tod, Heirat und Geburt](tod-heirat-geburt.md), [Erbbrauch je Kultur](erbbrauch.md), [Umzug zwischen Orten](umzug.md)). Diese Seite beschreibt den ersten Teil der Entscheidungen: Die Merkmale verschieben die Raten der Ereignisse, die es schon gibt. Ramon hat den Vorschlag am 18.11.2026 freigegeben («So bauen»), gebaut ist er als Personen-Feature 5 (Spielstand-Version 27).
+Ramon, 17.11.2026: Alle Personen sollen schlau simuliert werden, ereignisgesteuert und mit eigenen Entscheidungen nach IQ und Big Five. Der ereignisgesteuerte Teil ist gebaut ([Tod, Heirat und Geburt](tod-heirat-geburt.md), [Erbbrauch je Kultur](erbbrauch.md), [Umzug zwischen Orten](umzug.md)). Diese Seite beschreibt den ersten Teil der Entscheidungen: Die Merkmale verschieben die Raten der Ereignisse, die es schon gibt. Ramon hat den Vorschlag am 18.11.2026 freigegeben («So bauen»), gebaut ist er als Personen-Feature 5 (Spielstand-Version 28).
 
 Jede Person hat seit der Gründung einen IQ (Mittel 100, Standardabweichung 15) und die fünf Merkmale der Big Five (Mittel 50, Standardabweichung 10): Offenheit, Gewissenhaftigkeit, Extraversion, Verträglichkeit, Neurotizismus. Kinder erben sie von den Eltern. Vor diesem Feature hing nichts von ihnen ab.
 

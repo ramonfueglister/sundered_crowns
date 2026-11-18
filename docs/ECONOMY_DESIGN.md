@@ -2761,6 +2761,24 @@ both directions. Days are rounded, at least 1. Examples: Paris to Ghent 14 days 
 Venice to Alexandria 19 and 70; Baghdad to Tabriz 52 and 840; Cairo to London 65 and 420. The 756 ways of 1356 take
 70 days in the mean, 222 at most.
 
+**1a. Over land on the ways** (state version 27, the road system's first step: `src/sim/roads.ts`,
+`docs/wiki/strassen.md`). Where the start year has ways (`public/data/roads_<year>.json`, the latest year at or
+before it: 1356 goes on the ways of 1291), a land edge between two places that a way joins is its straight
+kilometres times as much as the way winds and climbs: the way's effort (its km weighted by Tobler's hiking function,
+the mean of both directions, `slopeTime`) over the straight line between its ends. A land edge without a way is its
+straight kilometres, weighted by the time the slope between the two places takes, over 3/5, the speed off a path in
+Tobler (1993). Goods take the quicker of the two (`stretchOf`). Days and labour both follow from these kilometres,
+as both follow from the time the carriers take (Ballaux and Blondé 2018: the costs of carting are fodder and labour,
+by the day). Rivers and the sea are as before. A world without ways goes on the straight line, as before. With the
+ways: Paris to Ghent 17 days and 185 days of labour a tonne; Paris to Cologne 35 days (28); Venice to Alexandria 19
+and 70 (by sea, unchanged); Baghdad to Tabriz 77 and 1,269. The ways of 1356 take 89 days in the mean (70), 268 at
+most (222). Over 30 years (four seeds each, 1356 to 1359, on the state with feature 18; straight line against ways):
+real output 114.8 to 115.3 against 114.6 to 115.6; weakest city 111.1 to 112.6 against 111.7 to 113.1; most without
+work 0.8 to 2.2 % against 1.2 to 2.4 %; carrying 0.61 to 0.64 % of output against 0.74 to 0.77 %; imports 3.0 %
+in both; the merchants' money of a city over its GDP −0.17 to +0.14 against −0.20 to +0.16. The kind of a way
+(track, road, highway) changes nothing in trade yet: the kinds follow traffic, not building and upkeep, which come
+with the next step of the road system.
+
 **2. The time.** What the merchants buy in a city for another lies at the stall there after the days of the way
 (`economy/src/trade.rs`, `Routes`). Goods on the way are the merchants' and count at cost.
 
@@ -2803,8 +2821,8 @@ carrying without rule 5: as bad as with it. The runs are in `/mnt/project-files/
 **8. Regions apart.** The regions of the world the table names (`routes.apart`: the Americas, Oceania) have ways
 among themselves only. In the net the Americas can be reached along the northern coasts, also within 300 km of a
 coast, so no limit of seamanship that the net can express keeps them apart; the trial of the first proposal cut
-Texcoco by hand. **How this is decided is asked of Ramon (card of 18 November 2026); built is the recommended
-answer, the known world as a datum of the start year.**
+Texcoco by hand. **Ramon's choice of 18 November 2026: the known world is a datum of the start year;** a discovery
+can change it later in the game.
 
 Two orders rules derailed in the trials and are not built: a stock for the days of travel that hangs on sales
 (goods on the way grew beyond the yearly output of the world), and a choice of the origin by distance alone.
@@ -2862,7 +2880,8 @@ both directions; nothing in the model lowers the prices of a city that loses mon
 
 ### State and upgrade
 
-State version 26 (people feature 4 took 25). The format of the cities' state is 2: the routes, the goods on the way (a
+State version 27: goods go over land on the ways (rule 1a); the upgrade founds the economies anew, as the step to 26
+does. State version 26 (people feature 4 took 25). The format of the cities' state is 2: the routes, the goods on the way (a
 ring as long as the longest way), the carrying ordered, and the wages and prices of the start that fix the units
 of the stalls; format 1 is read as cities without routes. The upgrade
 founds the economies anew on the day the world has reached: routes are given to cities that have not computed a

@@ -7,6 +7,7 @@ import { foodNeedCost, type CalibrationTable } from './economy/calibration';
 import type { Chronicle } from './content/chronicle';
 import type { Borders } from './content/borders';
 import type { Ground } from './content/ground';
+import type { WayNet } from './roads';
 
 export interface GeoJson {
   W: number; H: number; lon0: number; lon1: number; latN: number; latS: number; L: number; S: number;
@@ -96,6 +97,10 @@ export class World {
    *  than the building ground and nothing said of steps and buildings), null without one: then the land register
    *  lays its hamlets by the building ground, as far as that reaches */
   dry: Ground | null = null;
+  /** the ways between the places of the map in the start year (public/data/roads_<year>.json, the latest year at or
+   *  before it; src/sim/roads.ts), null without any: then goods go over land on the straight line between places.
+   *  Set by the loader (tools/sim/load.ts) */
+  ways: WayNet | null = null;
   constructor(geo: GeoJson, wj: WorldJson, land: LandJson, cultivation: CultivationJson, economy: EconomySetup) {
     this.W = geo.W; this.H = geo.H; this.L = geo.L; this.S = geo.S; this.N = geo.L + geo.S;
     this.lon0 = geo.lon0; this.lon1 = geo.lon1; this.latN = geo.latN; this.latS = geo.latS;

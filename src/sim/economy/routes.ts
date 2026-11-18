@@ -7,8 +7,16 @@
 // kilometre of river costs the mean of both directions and takes the mean of both times. The days of travel are the
 // kilometres of each kind over the kilometres a day of that kind. Regions the table names as apart have no way to
 // the regions outside them.
+//
+// Over land goods go on the ways of the year (src/sim/roads.ts, docs/wiki/strassen.md) where there are any: a stretch
+// between two places that a way joins is the straight line times as much as the way winds and climbs (its effort
+// over the straight line between its ends); a stretch without a way is the straight line, weighted by its slope, at
+// the speed off a way (Tobler 1993), and goods take the quicker of the two (`stretchOf`). Days and labour both follow
+// from these kilometres, as they follow from the time the carriers take. A world without ways goes on the straight
+// line between places, as on a level way.
 import type { World } from '../world';
 import { EDGE_RIVER, EDGE_STRAIT, EDGE_COAST, EDGE_SEA } from '../world';
+import { stretchOf, type WayNet } from '../roads';
 import type { CalibrationTable } from './calibration';
 
 /** What the engine is given (`sce_routes`): per city of origin and of destination the days of travel (0: no way)
@@ -22,7 +30,26 @@ const kind = (flag: number): number => (flag & (EDGE_SEA | EDGE_COAST | EDGE_STR
 /** The ways from one place to the places wanted: the labour of carrying a tonne (days), and the kilometres of each
  *  kind. The lists of `room` are used again for every search. */
 interface Room { labour: Float64Array; km: Float64Array; done: Uint8Array; wanted: Uint8Array; heapCost: Float64Array; heapNode: Int32Array }
-function ways(w: World, from: number, perKm: readonly number[], targets: readonly number[], room: Room): void {
+
+const LENGTHS = new WeakMap<World, Map<WayNet | null, Float32Array>>();
+/** The kilometres of every edge of the world's net as goods count them (above): the ways' efforts on land, or the
+ *  straight line off them; the straight line on rivers and water, and everywhere in a world without ways. */
+export function edgeKm(w: World, net: WayNet | null): Float32Array {
+  let kept = LENGTHS.get(w);
+  if (!kept) LENGTHS.set(w, kept = new Map());
+  const had = kept.get(net);
+  if (had) return had;
+  const len = Float32Array.from(w.adjKm);
+  if (net) for (let i = 0; i < w.adjStart.length - 1; i++) for (let e = w.adjStart[i]; e < w.adjStart[i + 1]; e++) {
+    if (kind(w.adjFlag[e]) !== LAND) continue;
+    const j = w.adj[e];
+    len[e] = w.adjKm[e] * stretchOf(net.between(i, j), w.adjKm[e], w.elev[j] - w.elev[i]);
+  }
+  kept.set(net, len);
+  return len;
+}
+
+function ways(w: World, from: number, perKm: readonly number[], targets: readonly number[], room: Room, len: Float32Array): void {
   const { labour, km, done, wanted, heapCost, heapNode } = room;
   labour.fill(Infinity); km.fill(0); done.fill(0); wanted.fill(0);
   for (const p of targets) wanted[p] = 1;
@@ -49,11 +76,11 @@ function ways(w: World, from: number, perKm: readonly number[], targets: readonl
     done[i] = 1;
     if (wanted[i]) left--;
     for (let e = w.adjStart[i]; e < w.adjStart[i + 1]; e++) {
-      const j = w.adj[e], q = kind(w.adjFlag[e]), n = c + perKm[q] * w.adjKm[e];
+      const j = w.adj[e], q = kind(w.adjFlag[e]), n = c + perKm[q] * len[e];
       if (n < labour[j]) {
         labour[j] = n;
         km[3 * j] = km[3 * i]; km[3 * j + 1] = km[3 * i + 1]; km[3 * j + 2] = km[3 * i + 2];
-        km[3 * j + q] += w.adjKm[e];
+        km[3 * j + q] += len[e];
         let k = size++;
         while (k > 0) { const p = (k - 1) >> 1; if (heapCost[p] <= n) break; heapCost[k] = heapCost[p]; heapNode[k] = heapNode[p]; k = p; }
         heapCost[k] = n; heapNode[k] = j;
@@ -64,16 +91,17 @@ function ways(w: World, from: number, perKm: readonly number[], targets: readonl
 
 const CACHE = new WeakMap<World, Map<string, CityRoutes>>();
 
-/** The routes between the cities at `places`, by the table. The same world, places and table give the same routes;
- *  they are kept, since the ways of hundreds of cities take seconds. */
-export function cityRoutes(w: World, places: ArrayLike<number>, t: CalibrationTable): CityRoutes {
+/** The routes between the cities at `places`, by the table, over land on the ways of `net` (null: the straight
+ *  line). The same world, places, table and ways give the same routes; they are kept, since the ways of hundreds of
+ *  cities take seconds. */
+export function cityRoutes(w: World, places: ArrayLike<number>, t: CalibrationTable, net: WayNet | null = null): CityRoutes {
   const r = t.routes, list = Array.from(places), n = list.length, G = t.sectors.length;
   const speed = r.km_per_day.value, cost = r.day_wages_per_tonne_km.value, weight = r.tonnes_per_pound.value, elasticity = r.stock_elasticity.value;
   for (const v of [speed.land, speed.river_down, speed.river_up, speed.sea]) if (!(v > 0)) throw new Error(`the routes of ${t.case} have a speed of ${v} km a day`);
   for (const v of [cost.land, cost.river_down, cost.river_up, cost.sea, ...weight]) if (!(v >= 0)) throw new Error(`the routes of ${t.case} have a labour or a weight of ${v}`);
   if (weight.length !== G) throw new Error(`the routes of ${t.case} have the weight of ${weight.length} products, the table has ${G} sectors`);
   if (!(elasticity >= 0)) throw new Error(`the routes of ${t.case} have an elasticity of ${elasticity}`);
-  const key = JSON.stringify([list, r]);
+  const key = JSON.stringify([list, r, net ? [net.year, net.laid, net.size] : null]);
   let kept = CACHE.get(w);
   if (!kept) CACHE.set(w, kept = new Map());
   const had = kept.get(key);
@@ -85,13 +113,13 @@ export function cityRoutes(w: World, places: ArrayLike<number>, t: CalibrationTa
   // the side of a city: the region itself when it is apart, '' for all others
   const side = list.map((p) => { const region = w.provinces[w.provOf[p]]?.region ?? ''; return apart.has(region) ? region : ''; });
   const days = new Uint32Array(n * n), labour = new Float64Array(n * n);
-  const N = w.adjStart.length - 1, edges = w.adj.length;
+  const N = w.adjStart.length - 1, edges = w.adj.length, len = edgeKm(w, net);
   // a place enters the heap once for every edge that makes its way shorter, at most
   const room: Room = { labour: new Float64Array(N), km: new Float64Array(3 * N), done: new Uint8Array(N), wanted: new Uint8Array(N), heapCost: new Float64Array(edges + 1), heapNode: new Int32Array(edges + 1) };
   for (let c = 0; c < n; c++) {
     const targets = [...new Set(list.filter((_, d) => d > c && side[d] === side[c]))];
     if (!targets.length) continue;
-    ways(w, list[c], perKm, targets, room);
+    ways(w, list[c], perKm, targets, room, len);
     for (let d = c + 1; d < n; d++) {
       const p = list[d];
       if (side[d] !== side[c] || !Number.isFinite(room.labour[p])) continue;
