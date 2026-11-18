@@ -18,6 +18,7 @@ Das Spiel wird gerade von Grund auf neu gebaut. Das Wiki wächst deshalb Feature
   - [Ohne Arbeitslosengeld](wirtschaft/ohne-arbeitslosengeld.md) *(Beschlossen)*
   - [Personen der Wirtschaft](wirtschaft/personen-der-wirtschaft.md) *(Im Spiel)*
   - [Haushalt der Familie](wirtschaft/haushalt-der-familie.md) *(Im Spiel)*
+  - [Verbrauch und Hunger](wirtschaft/verbrauch-und-hunger.md) *(Gebaut)*
 - [Personen](personen/README.md): wer als eigene Person in der Welt lebt
   - [Einwohner der Städte](personen/einwohner-der-staedte.md) *(Beschlossen)*
 - [Siedlung](siedlung/README.md): wo die Familien wohnen und wie Städte wachsen

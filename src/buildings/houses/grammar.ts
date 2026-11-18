@@ -29,12 +29,15 @@ const JAR: RGB = [0.72, 0.36, 0.2], WHITE: RGB = [0.92, 0.88, 0.8];
 const CLOTHS: readonly RGB[] = [WHITE, [0.96, 0.94, 0.9], [0.86, 0.78, 0.62], [0.62, 0.68, 0.8], [0.8, 0.42, 0.34]];
 
 /** A house of `w` × `d` blocks and `floors` storeys in a tradition, around its origin with the ground at y = 0. */
+/** The wall of a tradition's house: the first its source draws. */
+export const drawnWall = (tr: Tradition, r: Rnd): RGB => r.pick(tr.walls);
+
 export function fineHouse(w: number, d: number, floors: number, tr: Tradition, r: Rnd, o: HouseOptions = {}): Batch {
   const b = new Batch(), detail = o.detail ?? 1, front = o.front ?? 'pz', blind = new Set(o.blind ?? []);
   const W = Math.max(6, Math.round(w / V)) * V, D = Math.max(6, Math.round(d / V)) * V;
   // what the whole house decides, drawn first and in this order
   // the openings are dark and warm, as in the reference class image (not the blue-grey glass of the far view)
-  const wallC = r.pick(tr.walls), mt: Materials = { stone: tr.stone, wood: tr.wood, glass: shade(WINDOW_WARM, r.range(0.4, 0.65)) };
+  const wallC = drawnWall(tr, r), mt: Materials = { stone: tr.stone, wood: tr.wood, glass: shade(WINDOW_WARM, r.range(0.4, 0.65)) };
   // in the near view the body shows in the joint colour between the ashlar panes, from afar in the wall colour
   const bodyC = detail ? jointOf(wallC) : wallC;
   const arched = r.chance(tr.arched), jetty = detail && floors > tr.jetty.from && r.chance(tr.jetty.share) ? tr.jetty.out * V : 0;

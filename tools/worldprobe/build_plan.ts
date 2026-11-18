@@ -29,8 +29,10 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { Color } from 'three';
 import gazetteer from '../../data/content/gazetteer.json';
 import landmarks from '../../data/content/landmarks.json';
+import { shownOf, styleOf } from '../../src/buildings';
 import { N } from '../../src/lookprobe/layout';
 import { loadArable } from '../../src/worldprobe/arable';
 import { loadClimate } from '../../src/worldprobe/climate';
@@ -93,7 +95,8 @@ interface Walled { site: number; cx: number; cz: number; half: number; wall: { s
 const pieces: Record<string, { houses: number[]; greats: number[]; towns: Walled[] }> = {};
 /** per piece that was built, its own square: 1 where the ground is dry and no rock */
 const dry = new Map<string, Uint8Array>();
-const hex = (c: readonly [number, number, number]) => (Math.round(c[0] * 255) << 16) | (Math.round(c[1] * 255) << 8) | Math.round(c[2] * 255);
+/** a colour of the graphic (linear light) as 0xRRGGBB, as `rgb` of lookprobe/batch.ts reads it */
+const tone = new Color(), hex = (c: readonly [number, number, number]) => tone.setRGB(c[0], c[1], c[2]).getHex();
 const tenths = (v: number) => Math.round(v * 10);
 let done = 0, houses = 0, greats = 0, towns = 0;
 for (const key of [...wanted].sort()) {
@@ -102,7 +105,8 @@ for (const key of [...wanted].sort()) {
   const region = await loadWindow('world', w.gx0, w.gy0, w.w, w.h, base, FINER), mapW = region.worldW ?? region.mapW, mapH = region.worldH ?? region.mapH;
   const here = { houses: [] as number[], greats: [] as number[], towns: [] as Walled[] };
   if (!region.water.every((k) => k === Water.Sea)) buildWorld(region, piece, gazetteer.places, landmarks.landmarks, true, 0, await loadClimate(base, mapW, mapH), inhabitants, await loadModels(base), await loadForest(base, year, mapW, mapH), await loadRural(base, year, region.mapW, region.mapH), await loadArable(base, year, region.mapW, region.mapH), lands, await loadParcels(base, year), undefined, null, {
-    house: (l, kind, height) => { here.houses.push(l.x + piece.ox, l.z + piece.oz, l.w, l.d, l.floors, tenths(height), hex(l.wall), hex(l.roof), HOUSE_KINDS.indexOf(kind)); },
+    // the wall and the roof the house shows: a tradition's house draws its own
+    house: (l, kind, height) => { const shown = shownOf(styleOf(l.region), l.wall, l.roof, l.seed); here.houses.push(l.x + piece.ox, l.z + piece.oz, l.w, l.d, l.floors, tenths(height), hex(shown.wall), hex(shown.roof), HOUSE_KINDS.indexOf(kind)); },
     great: (kind, x, z, gw, gd, _y, height, site) => { if (!greatKinds.includes(kind)) greatKinds.push(kind); here.greats.push(greatKinds.indexOf(kind), x + piece.ox, z + piece.oz, gw, gd, tenths(height), site); },
     town: (site, cx, cz, half, _y, wall) => { here.towns.push({ site, cx: cx + piece.ox, cz: cz + piece.oz, half, wall: wall && wall.map((g) => ({ ...g })) }); },
     dry: (at) => { const bits = new Uint8Array(PIECE * PIECE); for (let z = 0; z < PIECE; z++) for (let x = 0; x < PIECE; x++) bits[z * PIECE + x] = at(x + MARGIN, z + MARGIN) ? 1 : 0; dry.set(key, bits); },

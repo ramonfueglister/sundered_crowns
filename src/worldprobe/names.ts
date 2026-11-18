@@ -11,6 +11,8 @@ const FILL = 0.84, ASPECT = 0.46;
 const SMALLEST = 11, LARGEST = 0.11;
 /** letters stand no further apart than this many times their height */
 const SPREAD_MOST = 0.9;
+/** on the page the letters are never drawn flatter than this share of their height, however low the camera looks: flatter they could not be read */
+const LIE_LEAST = 0.3;
 /** two names keep this share of their summed heights apart (between points along them) */
 const CLEAR = 0.5;
 
@@ -18,9 +20,10 @@ export interface LaidName { realm: number; name: string; /** SVG path of the cur
 
 /**
  * The names over a picture `w` × `h` pixels whose middle shows the map pixel (x, y), with `scale` pixels to a map pixel
- * across and `squash` times that down the picture. Names that would be too small, or lie outside, are left out.
+ * across and `squash` times that down the picture. Names that would be too small (below `smallest` pixels), or lie
+ * outside, are left out.
  */
-export function layoutNames(names: readonly (RealmName & { name: string })[], w: number, h: number, x: number, y: number, scale: number, squash: number): LaidName[] {
+export function layoutNames(names: readonly (RealmName & { name: string })[], w: number, h: number, x: number, y: number, scale: number, squash: number, smallest = SMALLEST): LaidName[] {
   const laid: (LaidName & { pts: [number, number][] })[] = [], at = ([px, py]: readonly [number, number]): [number, number] => [w / 2 + (px - x) * scale, h / 2 + (py - y) * scale * squash];
   for (const n of names) {
     if (!n.name) continue;
@@ -37,7 +40,7 @@ export function layoutNames(names: readonly (RealmName & { name: string })[], w:
     let size = Math.min(n.size * scale, span / (letters * ASPECT), LARGEST * h);
     // a short name in a long realm is spread out, but no further than the spread allows: then the span shrinks
     const spread = Math.min(span, letters * size * (ASPECT + SPREAD_MOST));
-    if (size < SMALLEST) continue;
+    if (size < smallest) continue;
     const lo = Math.min(a[0], b[0], c[0]) - size, hi = Math.max(a[0], b[0], c[0]) + size, top = Math.min(a[1], b[1], c[1]) - size, bottom = Math.max(a[1], b[1], c[1]) + size;
     if (hi < 0 || lo > w || bottom < 0 || top > h) continue;
     size = Math.round(size * 10) / 10;
@@ -56,8 +59,17 @@ export function layoutNames(names: readonly (RealmName & { name: string })[], w:
   return kept.map(({ pts: _, ...n }) => n);
 }
 
-/** how the names look, as measured on the EU5 reference (karte/referenz-eu5): EB Garamond medium, ink 53,46,28, no halo */
-export const NAME_STYLE = { font: "'EB Garamond',Garamond,'Palatino Linotype',serif", weight: 500, ink: '#352e1c', opacity: 1, halo: 'none' } as const;
+/**
+ * how the names look, as measured on the EU5 reference (karte/referenz-eu5): EB Garamond medium, ink 53,46,28; a breath
+ * of pale halo keeps them readable over the woods of the diorama (on the printed map it is the paper's own colour)
+ */
+/**
+ * The halo is a stroke round every letter, which a browser draws anew, letter by letter, whenever the names move:
+ * with it a picture of the moving map took more than twice as long (36 ms against under 17 for ninety names at two
+ * device pixels to one). So the names move without it, and it comes back this many ms after the view has come to rest.
+ */
+const HALO_AFTER = 200;
+export const NAME_STYLE = { font: "'EB Garamond',Garamond,'Palatino Linotype',serif", weight: 500, ink: '#352e1c', opacity: 1, halo: 'rgba(255,248,232,0.45)' } as const;
 
 /** One name as SVG: its curve and its letters spread along it from the middle. */
 export function nameSvg(n: LaidName, id: string): string {
@@ -75,18 +87,27 @@ export interface Names {
 /** The names are written into `into`, over all of it that the picture's box covers. */
 export function createNames(into: HTMLElement = document.body): Names {
   const SVG = 'http://www.w3.org/2000/svg', layer = document.createElementNS(SVG, 'svg');
-  layer.setAttribute('style', `position:fixed;overflow:hidden;pointer-events:none;font-family:${NAME_STYLE.font};font-weight:${NAME_STYLE.weight};fill:${NAME_STYLE.ink};stroke:${NAME_STYLE.halo}`);
+  layer.setAttribute('style', `position:fixed;overflow:hidden;pointer-events:none;font-family:${NAME_STYLE.font};font-weight:${NAME_STYLE.weight};fill:${NAME_STYLE.ink};stroke:${NAME_STYLE.halo};stroke-width:0.1em;stroke-linejoin:round;paint-order:stroke fill`);
   into.append(layer);
-  let last = '';
+  let last = '', rest: ReturnType<typeof setTimeout> | undefined;
   return {
-    remove() { layer.remove(); },
+    remove() { clearTimeout(rest); layer.remove(); },
     show(names, box, x, y, scale, squash, strength) {
       layer.style.display = strength > 0 ? '' : 'none';
       if (strength <= 0) return;
       layer.style.left = `${box.left}px`; layer.style.top = `${box.top}px`; layer.style.width = `${box.width}px`; layer.style.height = `${box.height}px`; layer.style.opacity = String(strength * NAME_STYLE.opacity);
-      const svg = layoutNames(names, box.width, box.height, x, y, scale, squash).map((n) => nameSvg(n, `realm-name-${n.realm}`)).join('');
+      // the names lie on the land: they are laid out on the ground as seen from straight above, and the whole of it
+      // is drawn as flat as the slanted camera sees the ground, letters and all (the lens is long, so the ground is
+      // squashed evenly down the picture)
+      const lie = Math.max(LIE_LEAST, Math.min(1, squash)), tall = box.height / lie;
+      const laid = layoutNames(names, box.width, tall, x, y, scale, squash / lie, SMALLEST / lie).map((n) => nameSvg(n, `realm-name-${n.realm}`)).join('');
+      const svg = `<g transform="translate(0 ${(box.height / 2).toFixed(1)}) scale(1 ${lie.toFixed(4)}) translate(0 ${(-tall / 2).toFixed(1)})">${laid}</g>`;
       // the names are laid out anew only when the view has changed them
-      if (svg !== last) { layer.innerHTML = svg; last = svg; }
+      if (svg !== last) {
+        layer.innerHTML = svg; last = svg;
+        layer.style.stroke = 'none'; clearTimeout(rest);
+        rest = setTimeout(() => { layer.style.stroke = NAME_STYLE.halo; }, HALO_AFTER);
+      }
     },
   };
 }

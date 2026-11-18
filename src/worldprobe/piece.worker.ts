@@ -17,7 +17,7 @@ import { Water, loadWindow } from './region';
 import { type Piece, type WorldScene, buildWorld, windowOf } from './world';
 import { type Cover, KINDS, laidOut, loadPlan, usePlan } from './far';
 import { above, lay, meanCover, summary } from './mean';
-import { N } from '../lookprobe/layout';
+import { N, onGrid } from '../lookprobe/layout';
 import { ballOf } from './ball';
 import { bytesOf, pack, unpack } from './pack';
 import { folderOf, kept } from './store';
@@ -32,17 +32,24 @@ type Kept = Pick<PieceDone, 'scene' | 'summary'>;
 const flat = (b: Batch): Shape => { const pos = new Float32Array(b.pos); return { pos, nor: new Float32Array(b.nor), col: new Float32Array(b.col), ball: ballOf(pos) }; };
 const nothing: Shape = { pos: new Float32Array(0), nor: new Float32Array(0), col: new Float32Array(0) };
 
-/** Builds a piece of a step; null where it is open sea. `mean`: the cover of its ground from the finer step. */
+/**
+ * Builds a piece of a step; null where it is open sea. `mean`: the cover of its ground from the finer step. The
+ * ground has the job's side (`grid`) wherever its size counts, and only there: nothing waits while it holds, so a
+ * job that is taken up meanwhile cannot change it.
+ */
 async function build(job: PieceJob, step: number, piece: Piece, mean: Cover | null = null): Promise<WorldScene | null> {
   const { region: name, base, bakedSky, year } = job;
   // the step's blocks are cells of the data's step `data`, or drawn finer than its finest cells (land.ts)
-  const data = Math.max(0, step - FINER_STEPS), w = windowOf(piece.ox, piece.oz);
+  const data = Math.max(0, step - FINER_STEPS), w = onGrid(job.grid, () => windowOf(piece.ox, piece.oz));
   const region = await loadWindow(data ? `${name}/z${data}` : name, w.gx0, w.gy0, w.w, w.h, base, 2 ** Math.max(0, FINER_STEPS - step));
   if (region.water.every((k) => k === Water.Sea)) return null;
   // a far step lays out its places by the plan of the finest step, where there is one (far.ts)
   if (step > 0) usePlan(await loadPlan(base, year ?? 1356));
   if (step === 0) await loadTownPeople(undefined, year); // the persons of the 30 cities walk in their towns (src/figures/people.ts)
-  return buildWorld(region, piece, gazetteer.places, landmarks.landmarks, bakedSky, step, await loadClimate(base, region.worldW ?? region.mapW, region.worldH ?? region.mapH), await loadInhabitants(base, year), await loadModels(base), await loadForest(base, year, region.worldW ?? region.mapW, region.worldH ?? region.mapH), await loadRural(base, year, region.mapW, region.mapH), await loadArable(base, year, region.mapW, region.mapH), await loadHamletLands(base, year ?? 1356), await loadParcels(base, year ?? 1356), undefined, mean);
+  const climate = await loadClimate(base, region.worldW ?? region.mapW, region.worldH ?? region.mapH), people = await loadInhabitants(base, year), models = await loadModels(base);
+  const forest = await loadForest(base, year, region.worldW ?? region.mapW, region.worldH ?? region.mapH), rural = await loadRural(base, year, region.mapW, region.mapH), arable = await loadArable(base, year, region.mapW, region.mapH);
+  const hamlets = await loadHamletLands(base, year ?? 1356), parcels = await loadParcels(base, year ?? 1356);
+  return onGrid(job.grid, () => buildWorld(region, piece, gazetteer.places, landmarks.landmarks, bakedSky, step, climate, people, models, forest, rural, arable, hamlets, parcels, undefined, mean));
 }
 
 /** What a piece of the finest step shows, summed up four blocks to one of the next step (mean.ts); null where it is open sea. */
@@ -63,7 +70,7 @@ async function meanOf(job: PieceJob): Promise<Cover> {
   // the finest block under the piece's first own block, and the finest pieces that hold it and the rest
   const fx = (ox + part.x0) * 2, fz = (oz + part.z0) * 2;
   for (let q = 0; q < 4; q++) quarters.push(job.under?.[q] ?? summed(await build(job, 0, { ox: fx + (q & 1) * side - part.x0, oz: fz + (q >> 1) * side - part.z0, part }), part));
-  return meanCover(quarters, side / 2, N, part.x0, part.z0);
+  return onGrid(job.grid, () => meanCover(quarters, side / 2, N, part.x0, part.z0));
 }
 
 /**
@@ -72,12 +79,15 @@ async function meanOf(job: PieceJob): Promise<Cover> {
  * colours of the tops and sides and the rise, of far.ts (`far`) and of the mean (`mean`), and the top as the far
  * ground is drawn (`drawn`).
  */
-function compare(counts: Record<string, number>, mean: Cover, part: Piece['part'], ground: Batch) {
+function compare(counts: Record<string, number>, mean: Cover, part: Piece['part'], ground: Batch, carried?: Batch) {
   const far = laidOut();
   if (!far?.kind) return;
+  // the side of the ground the piece was built on
+  const N = Math.round(Math.sqrt(mean.has.length));
   // the tops of the far ground as they are drawn, with the sky's light baked into them
   const drawn = above(N, N);
   lay(drawn, ground, 0, 0, true);
+  if (carried) lay(drawn, carried, 0, 0, true);
   const add = (k: string, v: number) => { counts[k] = (counts[k] ?? 0) + v; };
   for (let z = part.z0; z < part.z1; z++) for (let x = part.x0; x < part.x1; x++) {
     const i = x + z * N, kind = far.kind[i];
@@ -115,12 +125,12 @@ self.onmessage = async (e: MessageEvent<PieceJob>) => {
     }
     const mean = step === 1 && e.data.mean ? await meanOf(e.data) : null, meant = performance.now();
     const built = await build(e.data, step, piece, e.data.mean === 'compare' ? null : mean);
-    if (built && mean && e.data.mean === 'compare') compare(built.counts, mean, piece.part, built.ground);
+    if (built && mean && e.data.mean === 'compare') compare(built.counts, mean, piece.part, built.ground, built.carried);
     // how long the piece took to build, and of that the finer step under it (a tool reads the sums)
     if (built) { built.counts[`ms step ${step}`] = Math.round(performance.now() - began); built.counts[`pieces step ${step}`] = 1; if (mean) built.counts['ms mean'] = Math.round(meant - began); }
-    const scene: WorldScene<Shape> = built ? { ground: flat(built.ground), things: flat(built.things), water: flat(built.water), raised: flat(built.raised!), figures: built.figures, cells: built.cells.map((c) => ({ ...c, far: flat(c.far) })), counts: built.counts }
+    const scene: WorldScene<Shape> = built ? { ground: flat(built.ground), carried: built.carried && flat(built.carried), things: flat(built.things), water: flat(built.water), raised: flat(built.raised!), figures: built.figures, cells: built.cells.map((c) => ({ ...c, far: flat(c.far) })), counts: built.counts }
       : { ground: nothing, things: nothing, water: flat(buildOpenSea(piece.ox, piece.oz, piece.part)), cells: [], counts: {} };
-    const lists = [scene.ground, scene.things, scene.water, scene.raised ?? nothing, ...scene.cells.map((c) => c.far)].flatMap((s) => [s.pos, s.nor, s.col]).concat(scene.figures ? [scene.figures.a, scene.figures.b, scene.figures.c, scene.figures.d, scene.figures.e] : []).map((a) => (a as Float32Array).buffer).filter((buf) => buf.byteLength > 0);
+    const lists = [scene.ground, scene.carried ?? nothing, scene.things, scene.water, scene.raised ?? nothing, ...scene.cells.map((c) => c.far)].flatMap((s) => [s.pos, s.nor, s.col]).concat(scene.figures ? [scene.figures.a, scene.figures.b, scene.figures.c, scene.figures.d, scene.figures.e] : []).map((a) => (a as Float32Array).buffer).filter((buf) => buf.byteLength > 0);
     // (summed before the lists are handed over)
     const sum = step === 0 && e.data.mean === true ? summed(built, piece.part) ?? undefined : undefined;
     // (packed before the lists are handed over, too: a copy, which the page passes on to be zipped and written)

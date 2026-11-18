@@ -102,7 +102,7 @@ describe('the rulers of a world of 1291', () => {
     until(t, '1315-01-01');
     expect(personHistory(t, id)!.crowns).toEqual([]);
     expect(personHistory(t, id)!.died).toBe(dayOf('1314-11-29', 1291));
-  });
+  }, 60_000); // a world of 1291 founds its 550 economies twice (economy feature 12)
   it('is the same world from the same seed, and survives a snapshot', () => {
     expect(hashState(fresh())).toBe(hashState(fresh()));
     const t = decodeState(encodeState(s));

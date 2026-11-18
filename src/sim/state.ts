@@ -20,8 +20,9 @@ import type { Table } from './ecs';
  *  (src/sim/systems/borders.ts): places change hands on their days, realms come in with their first places. 19: every
  *  person has a culture and a faith, the counted minorities of the towns among them; a place has none of its own: it
  *  has those of its persons (src/sim/systems/cultures.ts). 20: the land register (src/sim/systems/lots.ts): every family that
- *  lives in a town has a parcel, and every family of the hamlets a farmstead in a hamlet. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
-export const STATE_VERSION = 20;
+ *  lives in a town has a parcel, and every family of the hamlets a farmstead in a hamlet. 21: households spend out of
+ *  their savings and a family has a need of food (economy feature 15); the economies are founded anew. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
+export const STATE_VERSION = 21;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
@@ -98,6 +99,10 @@ export const FAMILY_SCHEMA = {
   /** of the last day, in £ at the scale of the world: the disposable income and the spending of all its members;
    *  and their savings */
   income: 'f32', spent: 'f32', savings: 'f32',
+  /** what the food the family needs costs on that day, in £ (economy feature 15: 2,100 kcal per basket at the price
+   *  of the city's agriculture), and the part of it the family covered with what it spent, 0 to 1. `need` 0: the
+   *  family's place has no economy and `fed` says nothing */
+  need: 'f32', fed: 'f32',
   /** 1: the family lives from agriculture and lives in a hamlet outside the walls of its town (src/sim/systems/hamlets.ts) */
   hamlet: 'u8',
   /** the parcel or the farmstead the family lives on (the land register below, src/sim/systems/lots.ts), NO_LOT

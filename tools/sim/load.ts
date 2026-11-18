@@ -42,6 +42,8 @@ export interface EconomyJson {
   /** periods of the model in a year (365: one period is one day), and the lengths of the daily clock in periods */
   periods_per_year: number; clock: EconomyClock;
   wage: EconomyWage; prices: EconomyPrices;
+  /** the share of what a household holds above its target that it spends in a year (economy feature 15) */
+  savings_spent_per_year: number;
   /** the cities: the place, its name, its real people and its persons who work, and what the port is given */
   cities: { place: number; name: string; people: number; working: number; parameters: Record<string, unknown>; initial_conditions: Record<string, unknown> }[];
 }

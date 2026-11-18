@@ -300,7 +300,7 @@ describe('the economy engine (WebAssembly)', () => {
   const THREE = ['London', 'Ghent', 'Cologne'].map((name) => c.cities.find((x) => x.name === name)!);
   const setups = (seed: number, cities = THREE): CitySetup[] =>
     cities.map((x, k) => ({ parameters: JSON.stringify(x.parameters), initialConditions: JSON.stringify(x.initial_conditions), seed: seed + k }));
-  const CLOCK = c.clock, RULES: EconomyRules = { wage: c.wage, prices: c.prices }, PORT: EconomyRules = { wage: 'prices', prices: 'costs' };
+  const CLOCK = c.clock, SAVINGS = c.savings_spent_per_year / c.periods_per_year, RULES: EconomyRules = { wage: c.wage, prices: c.prices, savings: SAVINGS }, PORT: EconomyRules = { wage: 'prices', prices: 'costs', savings: 0 };
   const create = (seed: number) => engine.create(setups(seed), CLOCK, RULES);
   const city = (f: Float64Array, k: number) => f.subarray(k * FIGURES, (k + 1) * FIGURES);
 
@@ -314,10 +314,10 @@ describe('the economy engine (WebAssembly)', () => {
       // 65 days: every firm has planned three times. With a plan and a window of one period the clock is the port's.
       const ONE = { plan: 1, window: 1 };
       for (const [seed, clock, periods, rules] of [
-        [1356, CLOCK, 65, RULES], [7, CLOCK, 65, RULES], [1356, CLOCK, 65, PORT], [1356, CLOCK, 65, { wage: 'money', prices: 'costs' }], [1356, CLOCK, 65, { wage: 'prices', prices: 'demand' }],
+        [1356, CLOCK, 65, RULES], [7, CLOCK, 65, RULES], [1356, CLOCK, 65, PORT], [1356, CLOCK, 65, { wage: 'money', prices: 'costs', savings: 0 }], [1356, CLOCK, 65, { wage: 'prices', prices: 'demand', savings: 0 }], [1356, CLOCK, 65, { ...RULES, savings: 0 }],
         [1356, ONE, 10, PORT], [1356, ONE, 10, RULES],
       ] as const) {
-        const args = [String(periods), String(clock.plan), String(clock.window), rules.wage, rules.prices, ...THREE.flatMap((_, k) => [String(seed + k), files[2 * k], files[2 * k + 1]])];
+        const args = [String(periods), String(clock.plan), String(clock.window), rules.wage, rules.prices, String(rules.savings), ...THREE.flatMap((_, k) => [String(seed + k), files[2 * k], files[2 * k + 1]])];
         const native = execFileSync(join(ECONOMY_DIR, 'target/release/examples/reference'), args, { encoding: 'utf8' }).trim().split('\n');
         expect(native.length).toBe(periods + 1);
         let state = engine.create(setups(seed), clock, rules);
@@ -332,9 +332,15 @@ describe('the economy engine (WebAssembly)', () => {
     expect(Buffer.compare(engine.step(a, 3), engine.step(b, 3))).toBe(0);
     expect(Buffer.compare(a, other)).not.toBe(0);
     expect(Buffer.compare(a, engine.create(setups(1356), { plan: 31, window: 365 }, RULES))).not.toBe(0);
-    expect(RULES).toEqual({ wage: 'money', prices: 'demand' });
+    expect(RULES).toEqual({ wage: 'money', prices: 'demand', savings: 0.4 / 365 });
     expect(Buffer.compare(a, engine.create(setups(1356), CLOCK, { ...RULES, wage: 'prices' }))).not.toBe(0);
     expect(Buffer.compare(a, engine.create(setups(1356), CLOCK, { ...RULES, prices: 'costs' }))).not.toBe(0);
+    // households that spend out of their income only start from the same position and compute other days
+    const port = engine.create(setups(1356), CLOCK, { ...RULES, savings: 0 });
+    expect(Buffer.compare(a, port)).not.toBe(0);
+    expect(bits(engine.figures(port))).toBe(bits(engine.figures(a)));
+    expect(bits(engine.figures(engine.step(port, 40)))).not.toBe(bits(engine.figures(engine.step(a, 40))));
+    expect(() => engine.create(setups(1356), CLOCK, { ...RULES, savings: 2 })).toThrow('share of the savings');
     // the seed of one city changes the others too, through the merchants
     const one = setups(1356); one[2] = { ...one[2], seed: 99 };
     const f = engine.figures(engine.step(engine.create(one, CLOCK, RULES), 5)), g = engine.figures(engine.step(a, 5));
