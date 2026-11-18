@@ -24,8 +24,9 @@ import type { Table } from './ecs';
  *  their savings and a family has a need of food (economy feature 15); the economies are founded anew. 22: the persons of the towns die
  *  (src/sim/systems/deaths.ts): every person has the day of death that was drawn from the life table. 23: the persons marry and are born
  *  (src/sim/systems/families.ts), after England around 1300: the life table of La Poutré & Janssen 2021, a fixed number of
- *  households in every town, a wedding only into a vacant one; the persons are founded anew. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
-export const STATE_VERSION = 23;
+ *  households in every town, a wedding only into a vacant one; the persons are founded anew. 24: the crown of a city buys
+ *  with what it took in (economy feature 16); the economies are founded anew. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
+export const STATE_VERSION = 24;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {

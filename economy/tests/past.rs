@@ -97,11 +97,14 @@ fn an_economy_that_kept_the_whole_past_goes_over_on_any_day() {
 
 #[test]
 fn a_state_of_format_5_is_read_and_keeps_the_whole_past() {
-    // format 5 is format 7 without the two numbers of the spending out of savings at its end and without the byte
-    // before them, which says whether the past has a fixed size
+    // format 5 is format 8 without the crown's rule and outlays at its end (a byte and a number), without the two
+    // numbers of the spending out of savings before them and without the byte before those, which says whether the
+    // past has a fixed size
     let mut e = austria(6, 5, 4);
     e.step(3);
     let mut bytes = e.save();
+    let crown = bytes.split_off(bytes.len() - 9);
+    assert_eq!(crown, [&[0u8][..], &0f64.to_le_bytes()].concat());
     let tail = bytes.split_off(bytes.len() - 16);
     assert_eq!(tail, [0f64.to_le_bytes(), (-1f64).to_le_bytes()].concat());
     assert_eq!(bytes.pop(), Some(0));
