@@ -76,7 +76,9 @@ if os.environ.get('HEM', 'neck') == 'all':
     # every edge in the portrait (not the cut at the bottom)
     bed = [e for e, n in ec.items() if n == 1 and P[list(e), 1].min() > 3.6]
 else:
-    bed = [e for e, n in ec.items() if n == 1 and P[list(e), 1].min() > 5.0 and np.abs(P[list(e), 0]).max() < 1.1]
+    # (`HEMX`, `HEMY`: how far out on the shoulders and how far down the chest the neck's edge is looked for: a
+    # neckline that is cut wide or has a notch reaches further than the close one)
+    bed = [e for e, n in ec.items() if n == 1 and P[list(e), 1].min() > float(os.environ.get('HEMY', '5.0')) and np.abs(P[list(e), 0]).max() < float(os.environ.get('HEMX', '1.1'))]
 adj = defaultdict(list)
 for a_, b_ in bed:
     adj[a_].append(b_); adj[b_].append(a_)

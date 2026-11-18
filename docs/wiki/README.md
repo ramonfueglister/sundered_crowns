@@ -28,6 +28,9 @@ Das Spiel wird gerade von Grund auf neu gebaut. Das Wiki wächst deshalb Feature
   - [Tod, Heirat und Geburt](personen/tod-heirat-geburt.md) *(Gebaut)*
   - [Erbbrauch je Kultur](personen/erbbrauch.md) *(Gebaut)*
   - [Umzug zwischen Orten](personen/umzug.md) *(Gebaut)*
+  - [Merkmale verschieben die Raten](personen/merkmale-und-raten.md) *(Gebaut)*
+  - [Wer arbeiten will, sucht eine Stelle](personen/stelle-suchen.md) *(Gebaut)*
+  - [Haushalte wachsen mit der Wirtschaft](personen/haushalte-wachsen.md) *(Verworfen)*
 - [Siedlung](siedlung/README.md): wo die Familien wohnen und wie Städte wachsen
   - [Jede Familie hat eine Parzelle](siedlung/parzellen.md) *(Entwurf)*
   - [Die Höfe in den Weilern](siedlung/hoefe.md) *(Entwurf)*
@@ -41,6 +44,7 @@ Jede Seite trägt oben ihren Status:
 | **Beschlossen** | Das Design ist abgesegnet. So rechnet das Spiel oder wird es rechnen. |
 | **Im Spiel** | Beschlossen und bereits gebaut. |
 | **Entwurf** | Ein Vorschlag, der noch nicht abgesegnet ist. Er kann sich ganz oder teilweise ändern. |
+| **Verworfen** | Geprüft und nicht gebaut. Die Seite hält fest, was gemessen wurde und warum. |
 | **Abgelöst** | War im Spiel und ist durch ein späteres Feature ersetzt. Die Seite bleibt, wo das spätere Feature auf ihr aufbaut. |
 
 ## Grundsätze

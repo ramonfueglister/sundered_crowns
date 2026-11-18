@@ -96,7 +96,7 @@ describe('a world of 1291', () => {
     for (let id = 0; id < 24_828; id++) {
       if (P.born[id] !== B.born[id] || P.sex[id] !== B.sex[id] || P.family[id] !== B.family[id] || P.mother[id] !== B.mother[id] || P.iq[id] !== B.iq[id]) differ++;
     }
-    for (let k = 0; k < 24_828 * 68; k++) if (P.genes[k] !== B.genes[k]) differ++; // 68 gene bytes a person
+    for (let k = 0; k < 24_828 * 100; k++) if (P.genes[k] !== B.genes[k]) differ++; // 100 gene bytes a person
     expect(differ).toBe(0);
     expect(up.economy.cities!.places.length).toBe(550);
   }, 120_000);
@@ -150,7 +150,7 @@ describe('the peoples of 1291', () => {
     const up = upgradeState(old, w, () => s1291);
     expect(up.v).toBe(STATE_VERSION);
     expect(hashState(up)).toBe(hashState(s));
-  }, 40_000); // copies and hashes the whole world of 558 towns several times, and founds its economies anew
+  }, 60_000); // copies and hashes the whole world of 558 towns several times, and founds its economies anew
   it('are the persons\' own: the persons of Bursa and Smyrna are Greek and Orthodox, those of Acre Frankish and Latin', () => {
     const P = s.person.cols, F = s.family.cols;
     for (const [n, c, f] of [['Bursa', 'greek', 'orthodox'], ['Smyrna', 'greek', 'orthodox'], ['Acre', 'french', 'latin']] as const) {

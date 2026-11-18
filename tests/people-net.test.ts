@@ -22,7 +22,7 @@ describe('the persons of a place', () => {
   });
 });
 describe('one person in full', () => {
-  it('carries age, parents, traits and the 68 gene bytes', () => {
+  it('carries age, parents, traits and the 100 gene bytes', () => {
     const d = personDetail(s, 100, () => 'x')!;
     expect(d.genes).toEqual(Array.from(genesOf(s, 100)));
     expect(d.age).toBeCloseTo(-s.person.cols.born[100] / 365.25, 1);

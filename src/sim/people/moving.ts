@@ -22,6 +22,7 @@
 // and Cogenhoe 1618–28 lost 3.9 to 4.7 %, families and the married among them, after Laslett & Harrison 1963 in
 // Schürer 2024); "landless" is a family in which nobody owns a firm; the share of far moves is Sweden's and their
 // distances are England's; the years after 30 of a servant take the whole difference of the two counts of table 1.
+import { MOVE_FACTOR_TOP } from './traits';
 
 /** A person can leave from this age, and no longer from that one (the tables of the sources: 10 to 60). */
 export const MOVING_AGE: readonly [number, number] = [10, 60];
@@ -101,9 +102,10 @@ export function bandOf(u: number): number {
   return b;
 }
 
-/** No rate of `movesAYear` is above this: the events of every person are drawn at this rate, and one of them is a
- *  move with the share the person's rate has of it (thinning, Lewis & Shedler 1979), so a rate that changes with
+/** No rate of a person is above this: `movesAYear` stays under 0.55, and the factor of the person's traits under
+ *  MOVE_FACTOR_TOP (src/sim/people/traits.ts). The events of every person are drawn at this rate, and one of them is
+ *  a move with the share the person's rate has of it (thinning, Lewis & Shedler 1979), so a rate that changes with
  *  the family needs no new draw. */
-export const TOP_RATE = 0.55;
+export const TOP_RATE = 0.55 * MOVE_FACTOR_TOP;
 /** Years from now to the next far move a person may make, for the draw `u` in [0, 1). */
 export const yearsToNext = (u: number): number => -Math.log(1 - u) / (TOP_RATE * FAR_SHARE);

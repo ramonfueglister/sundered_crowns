@@ -4,7 +4,7 @@
 //!   cargo run --release --example genes > ../tests/portrait/genes_golden.json
 //!
 //! Every case carries the random draws it was made with (hex, 64 bits each, in the order r(0), r(1), ...), so the
-//! other side needs no hash of its own to follow: founders take 68 draws, children 34. Also the origin of some
+//! other side needs no hash of its own to follow: founders take two draws a gene, children one. Also the origin of some
 //! places (longitude, latitude).
 
 use sc_portrait::dna::{child, founder, origin, Dna, ORIGINS};
@@ -34,7 +34,7 @@ fn main() {
     let mut made = Vec::new();
     for o in 0..ORIGINS.len() as u8 {
         for n in 0..3u64 {
-            let r = draws(100 * o as u64 + n, 68);
+            let r = draws(100 * o as u64 + n, 2 * sc_portrait::NG);
             let d = founder(o, |k| r[k as usize]);
             founders.push(format!("    {{\"origin\":{o},\"draws\":[{}],\"dna\":[{}]}}", hex(&r), bytes(&d)));
             made.push(d);
@@ -43,7 +43,7 @@ fn main() {
     let mut children = Vec::new();
     for n in 0..12usize {
         let (f, m) = (made[(5 * n) % made.len()], made[(7 * n + 3) % made.len()]);
-        let r = draws(9000 + n as u64, 34);
+        let r = draws(9000 + n as u64, sc_portrait::NG);
         let d = child(&f, &m, |k| r[k as usize]);
         children.push(format!("    {{\"father\":[{}],\"mother\":[{}],\"draws\":[{}],\"dna\":[{}]}}", bytes(&f), bytes(&m), hex(&r), bytes(&d)));
     }

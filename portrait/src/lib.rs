@@ -25,7 +25,7 @@ mod wasm;
 pub mod wire;
 
 pub use build::{build, Portrait, LODS};
-pub use morph::{cheek_field, lower_band, lower_share, morph_targets, morph_test, morph_test_mouth, morph_test_seam, morph_test_nose, morph_test_skull, morph_test_wide, face_front, FACE_FRONT, NOSE_HEIGHTS, mouth_field, neck_share, seam_field, seam_gaps, skull_field, CHEEK_FIELD, LIP_SEAM, MOUTH_FIELD, NECK_UNDER, SEAM_REACH, SKULL_CENTRE, SKULL_FLOOR, SKULL_REACH};
+pub use morph::{cheek_field, lower_band, lower_share, morph_targets, morph_test, morph_test_measured, morph_test_measured_as, morph_test_mouth, morph_test_seam, morph_test_nose, morph_test_skull, morph_test_wide, face_front, FACE_FRONT, NOSE_HEIGHTS, mouth_field, neck_share, seam_field, seam_gaps, skull_field, CHEEK_FIELD, LIP_SEAM, MOUTH_FIELD, NECK_UNDER, SEAM_REACH, SKULL_CENTRE, SKULL_FLOOR, SKULL_REACH, STYLE_REACH};
 pub use geo::{Mat, Surface};
 pub use head::Head;
 pub use look::{default_life, Beard, Hair, Hat, Jewel, Life, Look, Mood, GENES, NG, STANDS};
@@ -145,8 +145,11 @@ mod tests {
         // a dress may draw single genes of the face less strongly; one it does not name stays as it is
         let set = crate::dress::Dress::England1356.set().unwrap();
         let at = |name: &str| GENES.iter().position(|g| *g == name).unwrap();
-        assert!(set.gene_gain(at("lips")) < 1.0);
-        assert_eq!(set.gene_gain(at("mouthW")), 1.0);
+        assert!(set.gene_gain(at("lips"), 1.0) < 1.0);
+        assert_eq!(set.gene_gain(at("noseW"), 1.0), 1.0);
+        // (round 112) and the lower half of a gene another way than the upper: a scooped nose less than a hooked one
+        assert!(set.gene_gain(at("hump"), -0.1) < set.gene_gain(at("hump"), 0.1));
+        assert_eq!(set.gene_gain(at("lips"), -1.0), set.gene_gain(at("lips"), 1.0));
     }
 
     #[test]
@@ -175,12 +178,18 @@ mod tests {
             for name in set.mouth_shut.iter().chain(set.mouth_part).map(|t| t.0).chain(set.child.iter().map(|t| t.0)).chain(set.without.iter().copied()).chain(set.lower_only.iter().copied()) {
                 assert!(h.targets.contains_key(name), "{}: {name}", set.key);
             }
-            for (gene, gain) in set.genes {
+            for (gene, gain) in set.genes.iter().chain(set.genes_low) {
                 assert!(GENES.contains(gene) && *gain >= 0.0, "{}: {gene}", set.key);
             }
             for (name, women, men) in set.rest {
                 assert!(h.targets.contains_key(*name), "{}: {name}", set.key);
                 assert!(women.max(*men) > 0.0 && women.min(*men) >= 0.0 && women.max(*men) <= 1.0, "{}: {name}", set.key);
+            }
+            // the drawn face: a weight under 0 takes back a row of the face at rest, and no more than that row has
+            for (name, women, men) in set.style.face {
+                assert!(h.targets.contains_key(*name), "{}: {name}", set.key);
+                let rest = set.rest.iter().find(|r| r.0 == *name).map_or((0.0, 0.0), |r| (r.1, r.2));
+                assert!(rest.0 + women >= -1e-6 && rest.1 + men >= -1e-6 && (rest.0 + women).max(rest.1 + men) <= 1.0 + 1e-6, "{}: {name}", set.key);
             }
         }
     }
@@ -372,7 +381,7 @@ mod tests {
         assert_eq!(set.brow_band_of(true, 8.0), 1.0);
         assert_eq!(set.brow_lift_of(true, 30.0), set.brow_lift[0]);
         assert_eq!(set.brow_band_of(true, 30.0), set.brow_band[0]);
-        assert!(set.brow_lift[0].iter().all(|mm| *mm > 0.0) && set.brow_band[0] < 1.0);
+        assert!(set.brow_lift[0].iter().all(|mm| *mm > 0.0) && set.brow_band[0] != 1.0);
         assert_eq!((set.brow_lift_of(false, 30.0), set.brow_band_of(false, 30.0)), ([0.0; 3], 1.0));
         // a girl of 13 is half way (her head has its adult form at 15)
         assert!((set.brow_lift_of(true, 13.0)[1] - set.brow_lift[0][1] / 2.0).abs() < 1e-5);

@@ -78,7 +78,7 @@ fn main() {
     if args.iter().any(|a| a == "--marks") {
         // a portrait's skin lists the corners of its triangles in the order of the head's own list, each with its
         // place on the skin's image: the same for everyone
-        let r = draws(7000, 68);
+        let r = draws(7000, 2 * sc_portrait::NG);
         let genes = founder(0, |i| r[i as usize]).bytes();
         let look = look_of(&genes, true, 30.0, 1, "Bauern", 1000.0, 1000.0, 940000, origin, Lived { loss_days: None, rank: Some(0.5), clothes_pct: Some(100.0) });
         let out = build(&head, &look, 1);
@@ -115,7 +115,7 @@ fn main() {
             let mut red: [Vec<f32>; 2] = [Vec::new(), Vec::new()];
             for k in 0..n {
                 for female in [false, true] {
-                    let r = draws(8000 + k as u64, 68);
+                    let r = draws(8000 + k as u64, 2 * sc_portrait::NG);
                     let genes = founder(o, |i| r[i as usize]).bytes();
                     let look = look_of(&genes, female, age, 1, "Bauern", 1000.0, 1000.0, 940000 + k, origin, Lived { loss_days: None, rank: Some(0.5), clothes_pct: Some(100.0) });
                     let by = skull.map(|by| by[female as usize]);
@@ -165,7 +165,7 @@ fn main() {
     let mut grown: [Vec<Vec<f32>>; 2] = [Vec::new(), Vec::new()];
     println!("{:>7} {:>3} {:>4} {}", "person", "sex", "age", (1..=MEASURES.len() + LIPS.len() + CHEEK.len() + ARCS.len() + JAW_FRONT.len() + FAR_MOUTH.len() + NECK.len() + SEAM.len()).map(|k| format!("{k:>6}")).collect::<String>());
     for k in 0..n {
-        let r = draws(if many { 8000 } else { 7000 } + k as u64, 68);
+        let r = draws(if many { 8000 } else { 7000 } + k as u64, 2 * sc_portrait::NG);
         let genes = founder(o, |i| r[i as usize]).bytes();
         let (female, age) = (k % 2 == 0, if many { [24.0, 35.0, 50.0][(k / 2) as usize % 3] } else if k < 28 { ages[(k / 2) as usize % ages.len()] } else { small[(k / 2) as usize % small.len()] });
         let look = look_of(&genes, female, age, 1, "Bauern", 1000.0, 1000.0, 940000 + k, origin, Lived { loss_days: None, rank: Some(0.5), clothes_pct: Some(100.0) });

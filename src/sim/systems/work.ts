@@ -57,6 +57,19 @@ export interface Workforce {
 /** The share of the women of a city who are drawn that works, so that of all `women` of working age the share
  *  `rate` is expected to work when `alone` of them work in any case: (rate · women − alone) / (women − alone), not
  *  below 0. */
+/** The participation rates of the calibration table of the world in use (`inputs.participation`), set when a World
+ *  is built (src/sim/world.ts): the persons who come of age while the world runs want work at the rates the founding
+ *  drew the workers with (people feature 6, src/sim/systems/deaths.ts). */
+export const participation = { men: NaN, women: NaN };
+
+/** Whether a person of working age wants a part in the economy, by the rule of the founding below: a man at the rate
+ *  of men, a woman without a husband always, another woman at the rate `others` of her town (`rateOfOtherWomen`).
+ *  The draw is the person's own and the same for life. */
+export function wantsWork(seed: number, id: number, man: boolean, withoutHusband: boolean, others: number): boolean {
+  if (!(participation.men >= 0)) throw new Error('no world has been built: the participation rates are not known');
+  return man ? hash01(seed, id, K.works) < participation.men : withoutHusband || hash01(seed, id, K.works) < others;
+}
+
 export const rateOfOtherWomen = (rate: number, women: number, alone: number): number =>
   women > alone ? Math.max(0, (rate * women - alone) / (women - alone)) : 0;
 

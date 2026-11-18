@@ -23,6 +23,8 @@ pub const SELLION: usize = 132;
 pub const SUBNASALE: usize = 343;
 pub const PRONASALE: usize = 297;
 pub const MENTON: usize = 747;
+/// The nose's back on the middle line, a third of the way from the root down to the tip (0.31 on the base head).
+pub const NOSE_BACK: usize = 131;
 /// The edges where the lips meet, in the middle of the mouth (the upper lip's, the lower lip's).
 pub const STOMION: [usize; 2] = [474, 493];
 /// The red of the lips on the middle line: where it begins above and ends below, each between the last vertex in
@@ -824,4 +826,11 @@ pub fn lids_to_pupil(h: &Head, pp: &[V3], pitch: f32) -> [f32; 2] {
     let (c, r) = ball(h, pp, 0);
     let pupil = c[1] + r * pitch.sin();
     [100.0 * (pp[LIDS[0].0][1] - pupil), 100.0 * (pupil - pp[LIDS[0].1][1])]
+}
+
+/// How far the nose's back, a third of the way down (`NOSE_BACK`), stands in front of the nose's root, over the
+/// distance between the eyes' inner corners: about 0.2 on
+/// a straight nose, near 0 on one scooped until root and back lie in one plane (round 112, `DressSet::genes_low`).
+pub fn nose_rise(pp: &[V3]) -> f32 {
+    (pp[NOSE_BACK][2] - pp[SELLION][2]) / (pp[EYE_CORNERS[0][0]][0] - pp[EYE_CORNERS[1][0]][0]).abs().max(1e-6)
 }
