@@ -45,6 +45,12 @@ export interface Table {
   tint: Uint8Array; tints: number[];
   /** the colour of overgrown steps (GroundTraits.slope) */
   slope?: RGB;
+  /**
+   * What stands on the piece, where it is no more than one mesh (no houses of a cell, no people): the landmarks, the
+   * bridges and the ribbons of the nearest far step, which only it shows. Unlike the rest of a table these are drawn
+   * triangles, colours and all, so a change of how they look needs the tables of that step built again.
+   */
+  things?: { pos: Float32Array; nor: Float32Array; col: Float32Array };
   /** blocks to the edge of the nearest way's band at the corners of the columns ((side + 1)², roads.ts `roadOn`), where ways run over the ground; off the piece's own and its rim as far as where no way is near */
   road?: Float32Array;
 }
@@ -61,6 +67,10 @@ export interface TablesIndex {
   steps: number[]; land: Record<string, number[]>; sea: Record<string, number[]>;
   /** the files the tables were built from, each with a stamp of its content */
   inputs: Record<string, string>;
+}
+/** A table with what stands on its piece (`Table.things`), where anything does. */
+export function withThings(table: Table, things: { pos: ArrayLike<number>; nor: ArrayLike<number>; col: ArrayLike<number>; triangles: number }): Table {
+  return things.triangles ? { ...table, things: { pos: Float32Array.from(things.pos), nor: Float32Array.from(things.nor), col: Float32Array.from(things.col) } } : table;
 }
 export const keyOfTable = (step: number, px: number, pz: number) => `${step}:${px},${pz}`;
 

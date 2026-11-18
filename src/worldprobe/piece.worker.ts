@@ -122,8 +122,10 @@ async function tableOf(job: PieceJob): Promise<{ scene: WorldScene | null; table
   if (!tables.land.has(key)) return null;
   const table = await tableAt(tables.dir, job.step, tables.px, tables.pz);
   if (!table || table.ox !== job.piece.ox || table.oz !== job.piece.oz) return null;
-  const drawn = drawTable(table, job.bakedSky);
-  return { table, scene: { ...drawn, things: new Batch(), cells: [], counts: { triangles: drawn.ground.triangles + (drawn.carried?.triangles ?? 0) + drawn.water.triangles + drawn.raised.triangles } } };
+  // (what stands on the piece was drawn with the sky's share baked in, as the tables are built: without it the piece is built)
+  if (table.things && !job.bakedSky) return null;
+  const drawn = drawTable(table, job.bakedSky), things = table.things ? Batch.of(table.things.pos, table.things.nor, table.things.col) : new Batch();
+  return { table, scene: { ...drawn, things, cells: [], counts: { triangles: drawn.ground.triangles + (drawn.carried?.triangles ?? 0) + drawn.water.triangles + drawn.raised.triangles + things.triangles } } };
 }
 /** The table of the piece of the next coarser step over a job's piece, where one was built ahead. */
 async function tableOver(job: PieceJob): Promise<Table | null> {

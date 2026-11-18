@@ -124,6 +124,15 @@ export class Batch {
     this.quadAt(x1, y0, z0, x0, y0, z0, x0, y1, z0, x1, y1, z0, lo, lo, color, color, 0, 0, -1);
   }
 
+  /** A batch of the lists of another, as they were taken from it (pos, nor and col, three numbers to a corner each). */
+  static of(pos: ArrayLike<number>, nor: ArrayLike<number>, col: ArrayLike<number>): Batch {
+    const b = new Batch();
+    b.room(pos.length, col.length);
+    b.p.set(pos); b.n.set(nor); b.c.set(col);
+    b.filled = pos.length; b.tinted = col.length;
+    return b;
+  }
+
   /** Adds another batch, moved by `m` (rotation, one scale for all axes, translation). */
   append(o: Batch, m: THREE.Matrix4) {
     const e = m.elements, p = o.pos, n = o.nor, tints = o.col, k = 1 / Math.hypot(e[0], e[1], e[2]);

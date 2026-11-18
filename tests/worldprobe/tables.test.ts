@@ -6,7 +6,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildPiece } from '../../src/worldprobe/build';
-import { type TablesIndex, keepTables, keyOfTable, packTable, tabled } from '../../src/worldprobe/table';
+import { type TablesIndex, keepTables, keyOfTable, packTable, tabled, withThings } from '../../src/worldprobe/table';
 
 const YEAR = 1291, DIR = `public/map/tables/world_${YEAR}`, AGAIN = `build the tables again: npx tsx tools/worldprobe/build_tables.ts ${YEAR}`;
 const index = JSON.parse(readFileSync(`${DIR}/index.json`, 'utf8')) as TablesIndex;
@@ -43,16 +43,16 @@ describe('the kept tables of the far pieces', () => {
     });
     afterAll(() => { globalThis.fetch = fetched; keepTables(false); });
 
-    // Paris lies in these: a piece of the finest of the kept steps, the one of the next step over it and the one of
-    // the coarsest step over both. What changes the land's shape or cover in the code (world.ts, far.ts) changes
-    // these too.
-    it.each([[3, 38, -16], [4, 19, -8], [7, 2, -1]])('step %i piece %i,%i is what the build gives now', async (step, px, pz) => {
+    // Paris lies in these: a piece of the finest of the kept steps (with the landmarks, bridges and ribbons that stand
+    // on it), the one of the next step over it and the one of the coarsest step over all. What changes the land's
+    // shape or cover in the code (world.ts, far.ts), or how what stands on step 2 is drawn, changes these too.
+    it.each([[2, 76, -32], [3, 38, -16], [4, 19, -8], [7, 2, -1]])('step %i piece %i,%i is what the build gives now', async (step, px, pz) => {
       const margin = (index.side - index.piece) / 2, piece = { ox: px * index.piece - margin, oz: pz * index.piece - margin, part: { x0: margin, z0: margin, x1: margin + index.piece, z1: margin + index.piece } };
       keepTables(true);
       const built = await buildPiece({ region: index.region, base: '/', bakedSky: true, year: YEAR, grid: index.side }, step, piece), table = tabled();
       keepTables(false);
       expect(built && table, 'a piece of land with a table').toBeTruthy();
-      const now = new Uint8Array(packTable(table!)), kept = new Uint8Array(gunzipSync(readFileSync(`${DIR}/${step}/${px}_${pz}.bin.gz`)));
+      const now = new Uint8Array(packTable(withThings(table!, built!.things))), kept = new Uint8Array(gunzipSync(readFileSync(`${DIR}/${step}/${px}_${pz}.bin.gz`)));
       expect(now.length === kept.length && now.every((v, k) => v === kept[k]), AGAIN).toBe(true);
     }, 60000);
   });

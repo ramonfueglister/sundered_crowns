@@ -2,7 +2,7 @@
 // graphic draws those pieces without building them (src/worldprobe/table.ts; the worker reads them,
 // src/worldprobe/piece.worker.ts).
 //
-// Every piece of the steps 3 to 7 that reaches into the world's frame is built once as the worker builds it
+// Every piece of the steps 2 to 7 that reaches into the world's frame is built once as the worker builds it
 // (src/worldprobe/build.ts), and the table of its columns is kept: <step>/<px>_<pz>.bin.gz. index.json lists the
 // pieces that have a table and those that are open sea, and holds a stamp of every file the tables were built from.
 //
@@ -25,12 +25,12 @@ import { buildPiece } from '../../src/worldprobe/build';
 import { extentOf } from '../../src/worldprobe/extent';
 import { FINER, blockOfCell, cellOfBlock } from '../../src/worldprobe/land';
 import { projectionOf } from '../../src/worldprobe/region';
-import { type TablesIndex, keepTables, packTable, tabled } from '../../src/worldprobe/table';
+import { type TablesIndex, keepTables, packTable, tabled, withThings } from '../../src/worldprobe/table';
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '../..');
 const year = Number(process.argv[2] ?? 1291), base = '/', name = 'world';
 /** the pieces of the world graphic and the ground a far piece is built on: 200 blocks a side with 32 round them (src/worldprobe/pieces.ts PIECE, NARROW) */
-const PIECE = 200, MARGIN = 32, SIDE = PIECE + 2 * MARGIN, STEPS = [3, 4, 5, 6, 7];
+const PIECE = 200, MARGIN = 32, SIDE = PIECE + 2 * MARGIN, STEPS = [2, 3, 4, 5, 6, 7];
 const checking = process.argv[3] === 'check', steps = !checking && process.argv[3] ? process.argv[3].split(',').map(Number) : STEPS;
 const dir = resolve(ROOT, `public/map/tables/${name}_${year}`);
 /** the files of public/ the tables were built from, each with a stamp of its content */
@@ -72,8 +72,9 @@ async function tableOf(w: { step: number; px: number; pz: number }): Promise<Buf
   keepTables(false);
   if (!built) return 'sea';
   if (!table) return 'no table';
-  if (built.things.triangles || built.cells.length || built.figures) return `things on it (${built.things.triangles} triangles, ${built.cells.length} cells)`;
-  return gzipSync(new Uint8Array(packTable(table)), { level: 9 });
+  // (what stands on a piece is kept with its table where it is one mesh: the landmarks, bridges and ribbons of step 2; houses of a cell and people are not)
+  if (built.cells.length || built.figures) return `houses or people on it (${built.cells.length} cells)`;
+  return gzipSync(new Uint8Array(packTable(withThings(table, built.things))), { level: 9 });
 }
 const fileOf = (w: { step: number; px: number; pz: number }) => resolve(dir, `${w.step}`, `${w.px}_${w.pz}.bin.gz`);
 
