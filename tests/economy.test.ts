@@ -501,7 +501,9 @@ describe('the economies of the cities in the world', () => {
     for (let k = 0; k < N; k++) expect(e.figures[k * FIGURES + FIGURE.periods]).toBe(0);
     expect(Array.from(e.places)).toEqual(CITIES.map((x) => x.place));
     const setups = CITIES.map((x) => ({ parameters: JSON.stringify(x.calibration.parameters), initialConditions: JSON.stringify(x.calibration.initial_conditions), seed: citySeed(s.seed, x.place) }));
-    const routes = cityRoutes(w, CITIES.map((x) => x.place), c.table);
+    // over land on the ways of the start year (the latest before 1356: those of 1291)
+    expect(w.ways?.laid).toBe(1291);
+    const routes = cityRoutes(w, CITIES.map((x) => x.place), c.table, w.ways);
     expect(Buffer.compare(e.model, w.economyEngine.routes(w.economyEngine.create(setups, c.clock, c.rules), routes))).toBe(0);
     expect(hashState(newWorldState(1357).s)).not.toBe(hashState(s));
   });
@@ -563,9 +565,12 @@ describe('the economies of the cities in the world', () => {
     const f = at[365].figures, all = Array.from({ length: N }, (_, c) => f[c * FIGURES + FIGURE.exports] / f[c * FIGURES + FIGURE.realGdp]), share = all.filter((_, c) => !APART.has(c));
     const people = CITIES.map((c) => c.people), largest = people.indexOf(Math.max(...people));
     expect(run.w.names[CITIES[largest].place]).toBe('Cairo');
-    // measured 1.405 since firm and owner are one household (economy feature 18), below 1.4 before
-    expect(Math.max(...share) / Math.min(...share)).toBeLessThan(1.45);
-    expect(all[largest]).toBeGreaterThan(0.75 * Math.max(...share));
+    // measured 1.405 since firm and owner are one household (economy feature 18), below 1.4 before; 1.556 since goods
+    // go over land on the ways (state version 27): the cities far from the sea and off the ways sell less
+    expect(Math.max(...share) / Math.min(...share)).toBeLessThan(1.6);
+    // with the ways the ports sell the most (Venice 3.95 % of output) and the cities inland the least (Sarai 2.54 %);
+    // Cairo sells 2.80 %, 0.71 of Venice
+    expect(all[largest]).toBeGreaterThan(0.65 * Math.max(...share));
   });
   it('give for many days at once what the same days give one by one', () => {
     const { s, w } = newWorldState();

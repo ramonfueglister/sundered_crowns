@@ -1,5 +1,5 @@
 // Node helpers: load the baked map and the start setup (tests, tools, the world server).
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { World, type LandJson, type CultivationJson } from '../../src/sim/world';
@@ -12,6 +12,7 @@ import { compileBorders, type Borders } from '../../src/sim/content/borders';
 import { compileGround, type Ground } from '../../src/sim/content/ground';
 import { cityPeopleByPlace } from '../../src/sim/systems/people';
 import { toHeads } from '../../src/sim/scale';
+import { WayNet, waysOf, type RoadsFile } from '../../src/sim/roads';
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '../..');
 export const dataPath = (name: string): string => resolve(ROOT, 'public/data', name);
@@ -82,14 +83,23 @@ export function loadDry(year: number): Ground | null {
   const f = dataPath(`dry_${year}.json`);
   return existsSync(f) ? compileGround(JSON.parse(readFileSync(f, 'utf8'))) : null;
 }
-/** The world with the chronicles of rulers and of borders, the building ground of the towns of `year` and the dry
- *  ground round them. */
+/** The ways between the places of the map in a start year: those of the latest public/data/roads_<year>.json at or
+ *  before it (a way stays until it is let go); null when there is none. */
+export function loadWays(year: number, places: number): WayNet | null {
+  const laid = readdirSync(resolve(ROOT, 'public/data')).map((f) => /^roads_(\d+)\.json$/.exec(f)).filter((m) => m !== null).map((m) => Number(m![1])).filter((y) => y <= year).sort((a, b) => b - a)[0];
+  if (laid === undefined) return null;
+  const f = read(`roads_${laid}.json`) as RoadsFile;
+  return new WayNet(waysOf(f.between), places, year, laid);
+}
+/** The world with the chronicles of rulers and of borders, the building ground of the towns of `year`, the dry
+ *  ground round them and the ways of the year. */
 export function loadWorldFor(year: number): World {
   const w = loadWorld();
   if (w.chronicle?.year !== year) w.chronicle = loadChronicle(year);
   if (w.borders?.year !== year) w.borders = loadBorders(year);
   if (w.ground?.year !== year) w.ground = loadGround(year);
   if (w.dry?.year !== year) w.dry = loadDry(year);
+  if (w.ways?.year !== year) w.ways = loadWays(year, w.N);
   return w;
 }
 /** The people of every place of the map in heads (1:100), as the setup of `year` spreads them, no place smaller than

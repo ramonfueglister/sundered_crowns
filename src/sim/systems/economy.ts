@@ -107,7 +107,7 @@ export function foundEconomy(s: WorldState, w: World): void {
   });
   firm0[cities.length] = s.firm.size;
   const places = cities.map((x) => x.place);
-  const model = w.economyEngine.routes(w.economyEngine.create(setups, c.clock, c.rules), cityRoutes(w, places, c.table));
+  const model = w.economyEngine.routes(w.economyEngine.create(setups, c.clock, c.rules), cityRoutes(w, places, c.table, w.ways));
   s.economy = { cities: { day: s.day, model, figures: w.economyEngine.figures(model), years: new Float64Array(0), halted: '', places: Int32Array.from(cities, (x) => x.place), firm0 } };
   writeAgents(s, w);
 }
