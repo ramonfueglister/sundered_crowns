@@ -4133,6 +4133,89 @@ without bytes 34 to 49 of each half). Pictures (project files, `portraits/`):
 `runde112_vorher_nachher_frauen.png`, `runde112_vorher_nachher_maenner.png` (the same 18 women at 24 and 18 men
 at 30, round 111 above and now below), `runde112_nah.png` (twelve of the sample larger, before and now).
 
+**The face's light without painted light (round 113).** Ramon, 18 November 2026: on with the rounds until it
+is done. Set beside the reference first (`beside.mjs`, six pairs, and twelve of the sample at twice the size):
+at a glance every face of ours had a pale, mottled patch on the bridge of the nose and a white blob on its tip,
+a pale greyish band from the nose's root under the eyes, and a shaded half that was grey where the
+reference's is the skin's own colour, darker. Three causes, each seen alone on a sheet before it was changed:
+
+- **The stripe of gloss down the nose** (`skin.zone`, rounds 106 to 112) is gone. It was there to pass one
+  line of the gauntlet, read off one face of the reference; round 112 raised it from 2.5 to 7 to keep the line
+  when the noses began to differ, and so painted the patch on every nose. That was this procedure's own
+  mistake: a number held, a picture spoilt. What the reference has there was read on five faces this round
+  (below).
+- **The skin's image without the photographs' light** for every head of a dress with a table
+  (`real_look.rs` `real_skin`; round 111 drew only heads with a flat nose root with it). MakeHuman's skins are
+  made from photographs and carry their light: light on the nose's root and back and in lines under the eyes,
+  shade beside the root. Under the stage's own light, which comes from another side, that was the band. The
+  vertex paint that divided a head between the two images (`skin_paint.txt`, `root_flat`,
+  `settings::ROOT_FLAT`) is gone with it; the file is no longer shipped (0.25 MB less to load).
+- **The light a shadow lets through comes out of the skin red** (`skin.bleed`, `materials.ts` `hidden`). The
+  key light's shadow is drawn at 0.7 and the rim light's at 0.5; what they let through stands for light that
+  went through the nose or came off the cheek. In the lamp's own colour (the rim light is blue) it lay on the
+  shaded half as a grey film. It takes the colour 1, 0.5, 0.35 now; the highlight takes none of it, as since
+  round 94.
+
+With these the stage was set anew by measure (the sixteen grown people each time, `face_colour.mjs`): the fill
+is a red light (`#ff9a6a` at 0.2; nearly white at 0.14 before: 0.057 of the key's lightness, before 0.069), the
+ground of the sky a warmer brown (`#a0653f`), the wrap round a shadow's edge redder (0.3, 0.16, 0.10; 0.2,
+0.16, 0.13), the skin keeps 0.88 of its colour (1.0: with a red fill the lit cheek's chroma rose past the
+reference's), the pores' normal map is at 0.4 (0.8: at the atlas's 110 by 150 texels for a face it mottled the
+highlights). The lips' blood has less blue (a woman's 0.27, 0.026, 0.020, a man's 0.275, 0.025, 0.019): on
+the warmer skin the lips of round 107 stood out pink.
+
+Read on the reference this round (faces A, B, C, E of `ck3_06` and N of `ck3_10`, places as `beside.mjs` has
+them; scratch readings, the pictures are not in the repository):
+
+| | A (woman) | B (man) | C (woman) | N (woman) | ours before | ours now |
+|---|---|---|---|---|---|---|
+| shaded cheek's chroma less the lit cheek's | -1.9 | -1.8 | -0.2 | +0.2 | women -9.6, men -15.3 | women -2.9, men -4.3 |
+| lower lip against the lit cheek, L | -26.8 | -22.9 | -19.5 | -24.5 | | women -21.5, shaven men -23.0 |
+| lower lip against the lit cheek, a* | +8.8 | +7.1 | +10.7 | +10.2 | | +4.7, +6.1 |
+| lower lip against the lit cheek, b* | -5.3 | -4.0 | -3.2 | -3.7 | | -4.7, -4.5 |
+
+Their shaded cheek is 9 to 21 L under the lit one and 5 to 9 degrees redder in hue; their lit cheek has a* 15
+to 19 and b* 24 to 28 (hue 55 to 59 degrees), less red than the ruler designer's woman the gauntlet holds the
+lit cheek to (a* 22.9, hue 48). Across the nose, at 60 % of the way from its root to its tip, all five have a
+narrow streak of light, about a thirtieth of the face wide, over the lit cheek by 11.0 (A), 9.0 (B), 6.7 (C),
+5.8 (E) and 1.3 (N), with skin 2 to 6 under the cheek on either side: the gloss of the light from behind on
+the nose's far flank. It is not on the face's middle line (the gauntlet's disc there reads from 12 under to
+11 over on the five).
+
+**The gauntlet**: 20 of 21. Two lines are new, the shaded cheek's chroma against the lit cheek's for women
+(the reference's -0.6, three faces) and men (-1.8, one face), with a limit of 2.7 (two readings of 2, as 4 L
+stand to 3): ours -2.9 and -4.3, both narrowly inside. The line "woman: nose's back against cheek" **fails**
+(1.1 where it asks 8 with a limit of 4) and is left failing: it passed since round 106 by the stripe, which
+was not what the reference has. Ours have no streak on the nose's flank. Tried for it and dropped: a narrow
+band of stronger gloss along the ridge (at 2 to 6 times: wet patches), and the rim light moved 60,
+75 and 90 degrees round to the side (the streak comes, and with it a grey-lilac shaded half). The other
+eighteen lines pass as before; nearest their limits are a woman's skin over the lip (0.7 under the cheek,
+the reference's 4.4, limit 4), her far cheek (17.8 under, 20.9) and the shade beside her nose (31.6, 34.5).
+
+Also in this round: the gene of the mouth's corners at 0.35 (0.9). On top of the moods and of `rest` it gave
+grins and frowns no mood asked for (a boy's corners up by 0.8 of MakeHuman's target).
+
+Tried and not kept: a stage with a warm fill twice as strong (`#ffc8a0` at 0.3) and the rim's shadow full,
+without `bleed` (six lines lost: the far cheek too light, the lit one too coloured); the fullness's thin side at 0.5 and 0.3 (`head-fat-
+decr`, `cheek-volume-decr`) against the creases on the far cheek of thin young faces (the creases stayed, the
+test of round 112 that a thin face has a lean jaw did not).
+
+Honest about it. This round removes errors of the light; it adds nothing the reference has and ours lack.
+Beside the reference (`runde113_neben_ck3.png`) ours are still smooth as wax where theirs have pores,
+freckles and marks; the lower face is broad down to the mouth where theirs runs in to the chin; the eyes
+stand wide open; brows are thin lines; clothes have no trim. The creases on the far cheek of a thin boy of 13
+are the head's form (they go with the weight's gene at 200 of 255, not with the shadow's map, the net or the
+relief) and are open. The lit cheek is held to one face's red, and five others are less red. `bleed`, the
+fill's colour and the wrap are by measure against four faces and by eye: PLACEHOLDER. Children are measured
+(`face_colour.mjs` prints them) and held to nothing.
+
+Tests: `tests/portrait.test.ts` (the light a shadow lets through, per colour; the lights held by their
+lightness, since the fill is coloured; every head of England's and of the world's sample drawn with the flat
+image; one program for the skin), `portrait/tests/world.rs` (the flat image for every head of a dress with a
+table, not for Apoleia's). Pictures (project files, `portraits/`): `runde113_vorher_nachher_frauen.png`,
+`runde113_vorher_nachher_maenner.png` (the sample's eight grown women and eight grown men, round 112 above
+and now below), `runde113_nah.png` (four larger), `runde113_neben_ck3.png` (six beside the reference).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
@@ -4140,7 +4223,9 @@ is a body of thick bundles as theirs is, evener and duller than theirs; since ro
 the neck and linen shows under it, without the bands, trims and fastenings theirs have; the veil (no folds),
 the fine forms of the face (lids, nostrils, edge of the lips), stubble and
 children are not; since round 112 the faces differ from each other as real ones do in what the survey
-measures, by eye in the rest, and wear one hair and one brow each still; the thrown-back hood closes round the neck since round 35, but
+measures, by eye in the rest, and wear one hair and one brow each still; since round 113 the face is lit by the
+stage alone (no light painted into the skin, a shaded half in the skin's colour), and still lacks the
+reference's streak of gloss on the nose's flank; the thrown-back hood closes round the neck since round 35, but
 has no folds across its cloth. Since round 111 the people of every part of the world can be drawn, in a plain
 dress that is no people's own, and without a picture of the reference to hold them against.
 

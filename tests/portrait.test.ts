@@ -601,10 +601,11 @@ describe('portraits', { timeout: 20_000 }, () => {
       if (worn.some(t => t.includes('_flat.'))) flat++;
       darkest = Math.min(darkest, portraitSkinTone(out.surfaces)!);
     }
-    // the 16 founders of the two pools south of the Sahara and some of the Horn's; the heads with a flat nose
-    // root, drawn with the skin's image that has no light painted there; and skins far darker than any of England's
+    // the 16 founders of the two pools south of the Sahara and some of the Horn's; every head drawn with the
+    // skin's image that has no light painted into it (round 113; round 111 only the heads with a flat nose
+    // root); and skins far darker than any of England's
     expect(fleece).toBeGreaterThanOrEqual(16); expect(fleece).toBeLessThan(40);
-    expect(flat).toBeGreaterThanOrEqual(10); expect(flat).toBeLessThan(60);
+    expect(flat).toBe(world.length);
     expect(darkest).toBeLessThan(0.12);
   }, 120_000);
   it('a dark skin has a warm, weaker highlight and little of the down\'s sheen; a skin of England\'s is drawn as it was', () => {
@@ -625,24 +626,16 @@ describe('portraits', { timeout: 20_000 }, () => {
     for (const p of sample) {
       const out = b.build(p);
       expect(portraitSkinTone(out.surfaces)!, `person ${p.pid}`).toBeGreaterThan(0.30);
-      // and none of England's sample wears tightly curled hair. The flat image is drawn for the one of the 36 whose
-      // nose's root lies lowest (round 112, in which a short nose became a small one: a boy of 13 with the shortest
-      // nose of the sample, the root 0.238 of the distance between the eyes' inner corners in front of them; the
-      // image changes from 0.24 down, settings.rs ROOT_FLAT)
+      // and none of England's sample wears tightly curled hair. Every head is drawn with the skin's image that has
+      // no light painted into it (round 113: the stage lights the face, and the light of the photographs the
+      // images are made from stood under it as a pale band from the nose's root under the eyes; round 111 drew
+      // only a head with a flat nose root with it)
       expect(out.surfaces.some(s => s.tex.includes('_fleece.')), `person ${p.pid}`).toBe(false);
-      expect(out.surfaces.some(s => s.tex.includes('_flat.')), `person ${p.pid}`).toBe(p.pid === 940017);
+      expect(out.surfaces.some(s => s.tex.includes('_flat.')), `person ${p.pid}`).toBe(true);
     }
-    // the flat image is drawn without the stronger highlight down the nose's back
-    const compiled = (tex: string): string => {
-      const m = surfaceMaterials(of(tex), null, null, ENGLAND_1356, 0.5)[0]!;
-      const shader = { uniforms: {}, vertexShader: ShaderLib.physical.vertexShader, fragmentShader: ShaderLib.physical.fragmentShader };
-      m.onBeforeCompile(shader as never, null as never);
-      return `${m.customProgramCacheKey()}\n${shader.fragmentShader}`;
-    };
-    const [as, flat] = [compiled('real/skin_young_female.webp'), compiled('real/skin_young_female_flat.webp')];
-    expect(as.split('\n')[0]).not.toBe(flat.split('\n')[0]);
-    expect(as).toContain(`skinOil *= 1.0 + ${ENGLAND_1356.skin!.zone.toFixed(1)}`);
-    expect(flat).toContain('skinOil *= 1.0 + 0.0');
+    // one program for the skin of a stage, whichever of its images a head is drawn with
+    const key = (tex: string) => surfaceMaterials(of(tex), null, null, ENGLAND_1356, 0.5)[0]!.customProgramCacheKey();
+    expect(key('real/skin_young_female.webp')).toBe(key('real/skin_old_male_flat.webp'));
   });
   it('a plait is solid hair: drawn with the solid surfaces, in the stage\'s shadows', () => {
     // Until round 86 a plait was hair cards: blended over what is behind them, throwing no shadow, and with a
@@ -761,41 +754,36 @@ describe('portraits', { timeout: 20_000 }, () => {
     expect(fine(1)[1]).toBeCloseTo(k.child);
     expect(fine(0.5)[1]).toBeCloseTo((1 + k.child) / 2);
   });
-  it('the skin of England shines along the nose\'s back, where a face is oily', () => {
-    // (round 106) one gloss over the whole face left the nose's back as dull as the cheek: 2.3 L lighter than a
-    // woman's lit cheek where the reference's is 8 lighter, and a nose without a ridge at the panel's size. The
-    // oil's film is `skin.zone` times thicker in a stripe along the face's middle line from the nose's root to
-    // its tip (places of the skin's image, the same for everyone); elsewhere, and without the value, as it was.
-    // (round 112) 7, from 2.5: noses differ more since, and a narrow or a small one carries less of the stripe (a
-    // woman's nose's back 2.9 L over her lit cheek at 2.5, 4.8 at 7). The stripe is the broad one of round 106:
-    // seen on six men at 7, a little more light on the nose's tip and no drawn line down its back
+  it('the light a shadow on England\'s skin lets through comes out of the skin red', () => {
+    // (round 113) The key light's shadow is drawn at 0.7 and the rim light's at 0.5 (`shadow.strength`,
+    // `rimShadow`): what a shadow lets through stands for light that went through the nose or came off the cheek.
+    // In the lamp's own colour it lay on the shaded half of a face as a grey film (the rim light is blue): the
+    // shaded cheek of the sample's women had a chroma 9.6 under the lit cheek's, the men's 15.3, where four faces
+    // of the reference keep it within 2. It takes the colour `skin.bleed` now, and the highlight none of it.
+    // The stronger gloss in a stripe down the nose's back (`skin.zone`, rounds 106 to 112) is gone: it was held
+    // to one face's reading and lay on every nose as a pale patch
     const k = ENGLAND_1356.skin!;
-    expect(k.zone).toBeGreaterThan(1.5);
-    expect(k.zone).toBeLessThanOrEqual(8);
-    const skin = { rough: 0.5, metal: 0, double: false, tex: 'real/skin_young_female.webp', nmap: '', pos: new Float32Array(9), col: new Float32Array(9).fill(0.3), uv: new Float32Array(6), nrm: new Float32Array(9) };
+    expect(k.bleed[0]).toBe(1);
+    expect(k.bleed[1]).toBeLessThan(0.7); expect(k.bleed[1]).toBeGreaterThan(k.bleed[2]);
+    expect(k.bleed[2]).toBeGreaterThan(0.1);
+    expect('zone' in k).toBe(false);
+    const skin = { rough: 0.5, metal: 0, double: false, tex: 'real/skin_young_female_flat.webp', nmap: '', pos: new Float32Array(9), col: new Float32Array(9).fill(0.3), uv: new Float32Array(6), nrm: new Float32Array(9) };
     const drawn = (profile: typeof ENGLAND_1356) => {
       const m = surfaceMaterials(skin, null, null, profile, 0.3)[0]!;
       const shader = { uniforms: {} as Record<string, { value: number }>, vertexShader: ShaderLib.physical.vertexShader, fragmentShader: ShaderLib.physical.fragmentShader };
       m.onBeforeCompile(shader as never, null as never);
       return shader;
     };
-    const stripe = (zone: number) => `skinOil *= 1.0 + ${zone.toFixed(3)} * exp( - pow( ( vSkinUv.y - 0.517 ) /`;
+    const through = (c: readonly number[]) => `mix( vec3( ${c.map(v => v.toFixed(3)).join(', ')} ), vec3( 1.0 ), skinSeen )`;
     const shader = drawn(ENGLAND_1356);
-    expect(shader.vertexShader).toContain('vSkinUv = uv;');
-    expect(shader.fragmentShader).toContain(stripe(k.zone));
-    // the stripe runs from the forehead's middle down the nose's back and fades out over the nose's tip, before
-    // the lips (places on the skin's image, tools/portrait/face_colour.mjs: sellion 0.8350, the nose's tip
-    // 0.8732, the lips' top 0.8961)
-    const reach = /smoothstep\( ([\d.]+), ([\d.]+), vSkinUv\.x \) \* \( 1\.0 - smoothstep\( ([\d.]+), ([\d.]+), vSkinUv\.x \) \)/.exec(shader.fragmentShader)!.slice(1).map(Number);
-    const [from, full, fading, to] = reach as [number, number, number, number];
-    expect(from).toBeGreaterThan(0.76);
-    expect(full).toBeLessThan(0.8350);
-    expect(fading).toBeGreaterThan(0.8350 + 0.6 * (0.8732 - 0.8350));
-    expect(fading).toBeLessThan(0.8732);
-    expect(to).toBeGreaterThan(0.8732);
-    expect(to).toBeLessThan(0.8961);
-    // a profile without the value draws the film as one
-    expect(drawn({ ...ENGLAND_1356, skin: { ...k, zone: 0 } }).fragmentShader).toContain(stripe(0));
+    expect(shader.fragmentShader).toContain(through(k.bleed));
+    // where the lamp is seen in full the light is the lamp's, and the highlight is the lamp's share alone
+    expect(shader.fragmentShader).toContain('directLight.color *= skinShare;');
+    expect(shader.fragmentShader).toContain('skinGloss = skinSeen / max( skinShare, vec3( 1e-4 ) );');
+    expect(shader.fragmentShader).not.toContain('vSkinUv');
+    expect(shader.vertexShader).not.toContain('vSkinUv');
+    // a profile with a white bleed lets the lamp's own colour through, as until round 112
+    expect(drawn({ ...ENGLAND_1356, skin: { ...k, bleed: [1, 1, 1] } }).fragmentShader).toContain(through([1, 1, 1]));
   });
   it('England\'s stage lights a face from above and from the side it is turned away from', () => {
     // a face lit level and from the side it is turned to has no shaded half and no shade under brow, nose and
@@ -867,14 +855,23 @@ describe('portraits', { timeout: 20_000 }, () => {
     // its own, and round 106 held the stage against the reference's numbers line by line (tools/portrait/
     // gauntlet.mjs): with the fill above 0.13 of the key a woman's far cheek was 22.1 L under the lit one and the
     // shade beside her nose 30.6 (the reference's 27.7 and 34 to 35), a face without a shaded half; at 0.078 of
-    // the key they are 24.4 and 33.6. The fill is still a light, and the stronger of the two
-    expect(fill.energy).toBeGreaterThan(0.06 * key.energy);
-    expect(fill.energy).toBeLessThan(0.11 * key.energy);
-    expect(fill.energy).toBeGreaterThan(bounce.energy);
+    // the key they are 24.4 and 33.6. The fill is still a light, and the stronger of the two.
+    // (Round 113) The fill has the colour of light that comes off skin and cloth (a red: its green 0.32 and its
+    // blue 0.14 of its red), so that the shaded half of a face keeps the skin's colour; a light of that colour is
+    // 0.45 as light as a white one of its energy. The lights are held by how light they are: until then the
+    // fill, nearly white, was 0.069 of the key by that (0.078 by energy; the limits 0.06 and 0.11 by energy
+    // are 0.053 and 0.097 by lightness), now 0.057
+    const channel = (hex: string, k: number): number => { const v = parseInt(hex.slice(1 + 2 * k, 3 + 2 * k), 16) / 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+    const light = (l: { colour: string; energy: number }): number => l.energy * (0.2126 * channel(l.colour, 0) + 0.7152 * channel(l.colour, 1) + 0.0722 * channel(l.colour, 2));
+    expect(light(fill)).toBeGreaterThan(0.053 * light(key));
+    expect(light(fill)).toBeLessThan(0.097 * light(key));
+    expect(light(fill)).toBeGreaterThan(light(bounce));
+    expect(channel(fill.colour, 1)).toBeLessThan(0.5 * channel(fill.colour, 0));
+    expect(channel(fill.colour, 2)).toBeLessThan(channel(fill.colour, 1));
     // each of the two is a light, and both together far weaker than the key: the face keeps its shaded half
-    for (const l of [fill, bounce]) expect(l.energy).toBeGreaterThan(0.05 * key.energy);
-    expect(fill.energy + bounce.energy).toBeGreaterThan(0.11 * key.energy);
-    expect(fill.energy + bounce.energy).toBeLessThan(0.18 * key.energy);
+    for (const l of [fill, bounce]) expect(light(l)).toBeGreaterThan(0.044 * light(key));
+    expect(light(fill) + light(bounce)).toBeGreaterThan(0.097 * light(key));
+    expect(light(fill) + light(bounce)).toBeLessThan(0.159 * light(key));
     expect(ENGLAND_1356.sky.energy).toBeLessThan(0.15 * key.energy);
     // Apoleia's stage is as it was
     expect(APOLEIA.lights.key.from).toEqual([-3.5, 4.5, 5.0]);
@@ -956,32 +953,42 @@ describe('portraits', { timeout: 20_000 }, () => {
     // the loop over the lights is the skin's own, every light begins as a lamp that is seen, and each light's
     // highlight is taken by what the loop found
     expect(skin).not.toContain('#include <lights_fragment_begin>');
-    expect(skin).toContain('getDirectionalLightInfo( directionalLight, directLight ); skinGloss = 1.0;');
-    expect(skin).toContain('directLight.color *= skinLit;');
+    expect(skin).toContain('getDirectionalLightInfo( directionalLight, directLight ); skinGloss = vec3( 1.0 );');
+    expect(skin).toContain('directLight.color *= skinShare;');
     expect(skin).toContain('reflectedLight.directSpecular += irradiance * specularBRDF * material.multiScatteringCompensation * skinGloss * skinOil;');
     expect(skin.indexOf('* skinGloss * skinOil;')).toBeLessThan(skin.indexOf('void main()'));
-    // the shader's own arithmetic, run here: of a lamp of which the share `seen` is seen through a shadow of
-    // some strength, the light keeps what the shadow lets through and the highlight only the share seen
-    const line = /skinGloss = (saturate\(.*\));/.exec(skin)![1]!;
-    const gloss = new Function('saturate', 'max', 'skinLit', 'directionalLightShadow', `return ${line};`) as
-      (saturate: (x: number) => number, max: (a: number, b: number) => number, lit: number, shadow: { shadowIntensity: number }) => number;
+    // the shader's own arithmetic, run here for one colour at a time: of a lamp of which the share `seen` is seen
+    // through a shadow of some strength, the light keeps what the shadow lets through, in the colour of light
+    // that has been in skin (`skin.bleed`, round 113), and the highlight only the share seen, in the lamp's own
+    const seenLine = /float skinSeen = (saturate\(.*\));/.exec(skin)![1]!, shareLine = /vec3 skinShare = (.*);/.exec(skin)![1]!;
+    expect(skin).toContain('skinGloss = skinSeen / max( skinShare, vec3( 1e-4 ) );');
+    const bleed = ENGLAND_1356.skin!.bleed;
+    expect(shareLine).toContain(`vec3( ${bleed.map(v => v.toFixed(3)).join(', ')} )`);
     const saturate = (x: number): number => Math.min(1, Math.max(0, x));
-    const shown = (seen: number, strength: number): [number, number] => {
+    const mix = (a: number, b: number, t: number): number => a + (b - a) * t;
+    const shown = (seen: number, strength: number, c: number): [number, number] => {
       const lit = 1 - strength * (1 - seen);
-      return [lit, lit * gloss(saturate, Math.max, lit, { shadowIntensity: strength })];
+      const share = shareLine.replace(/vec3\( [\d.]+, [\d.]+, [\d.]+ \)/, String(bleed[c])).replace(/vec3\( 1\.0 \)/g, '1.0');
+      const run = new Function('saturate', 'max', 'mix', 'skinLit', 'directionalLightShadow', `const skinSeen = ${seenLine}; const skinShare = ${share}; return [skinShare, skinShare * ( skinSeen / max( skinShare, 1e-4 ) )];`) as
+        (saturate: (x: number) => number, max: (a: number, b: number) => number, mix: (a: number, b: number, t: number) => number, lit: number, shadow: { shadowIntensity: number }) => [number, number];
+      return run(saturate, Math.max, mix, lit, { shadowIntensity: strength });
     };
     for (const strength of [ENGLAND_1356.rimShadow, ENGLAND_1356.shadow.strength, 1, 0.05]) {
       for (const seen of [0, 0.25, 0.5, 1]) {
-        const [light, highlight] = shown(seen, strength);
-        expect(light, `light, ${seen} seen through ${strength}`).toBeCloseTo(1 - strength + strength * seen, 6);
-        expect(highlight, `highlight, ${seen} seen through ${strength}`).toBeCloseTo(seen, 3);
+        for (const c of [0, 1, 2]) {
+          const [light, highlight] = shown(seen, strength, c);
+          expect(light, `light, ${seen} seen through ${strength}`).toBeCloseTo(strength * seen + (1 - strength) * (bleed[c]! + (1 - bleed[c]!) * seen), 6);
+          expect(highlight, `highlight, ${seen} seen through ${strength}`).toBeCloseTo(seen, 3);
+        }
       }
     }
-    // half of the rim light still comes through the head as light (round 83), none of it as a highlight
-    expect(shown(0, ENGLAND_1356.rimShadow)[0]).toBeGreaterThan(0.3);
-    expect(shown(0, ENGLAND_1356.rimShadow)[1]).toBe(0);
-    // a light that throws no shadow (the fill, what chest and ground throw back) keeps its highlight
-    expect(gloss(saturate, Math.max, 1, { shadowIntensity: 0 })).toBe(1);
+    // half of the rim light's red still comes through the head as light (round 83), less of its green and blue,
+    // and none of it as a highlight
+    expect(shown(0, ENGLAND_1356.rimShadow, 0)[0]).toBeGreaterThan(0.3);
+    expect(shown(0, ENGLAND_1356.rimShadow, 2)[0]).toBeLessThan(0.6 * shown(0, ENGLAND_1356.rimShadow, 0)[0]);
+    expect(shown(0, ENGLAND_1356.rimShadow, 0)[1]).toBe(0);
+    // a light that throws no shadow (the fill, what chest and ground throw back) keeps its colour and its highlight
+    for (const c of [0, 1, 2]) expect(shown(1, 0, c)).toEqual([1, 1]);
     // hair, beards and cloth are lit as they were, and so is Apoleia's skin (three.js' own loop)
     expect(compiled(of('real/bob01_cap.webp', true))).not.toContain('skinGloss');
     expect(compiled(of('real/plait01_rope.webp', false))).not.toContain('skinGloss');

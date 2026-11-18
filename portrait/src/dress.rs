@@ -105,7 +105,12 @@ pub struct ScarLine {
 /// broader faces of that round a man's lips with the blood of round 106 read lighter again; his blood is 0.265,
 /// 0.030, 0.032: 22.4 and 6.2 on the shaven (tried: 0.28, 0.046, 0.046 gave 21.3 and 5.7; 0.25, 0.036, 0.037
 /// gave 22.8 and 4.7). His seam's factor is 1.1 so that the strip keeps nine tenths of the skin's red under the
-/// darker lips (0.88 at 1.0). All values PLACEHOLDER, set by those measurements.
+/// darker lips (0.88 at 1.0). Round 113: the stage lights the shaded half of a face in the skin's colour, with
+/// a red fill, and on the warmer skin the lips of round 107 stood out pink; their blood has less blue (a
+/// woman's 0.27, 0.026, 0.020, a man's 0.275, 0.025, 0.019). By the gauntlet's reading a woman's are 21.5 L
+/// under her lit cheek, a* 4.7 over it and b* 4.7 under it, a shaven man's 23.0, 6.1 and 4.5 (four faces of the
+/// reference read in that round: 19.5 to 26.8 L under, a* 7.1 to 10.7 over, b* 3.2 to 5.3 under). All values
+/// PLACEHOLDER, set by those measurements.
 pub struct Lips {
     /// Where the red of the lips is (the file skin_lip.txt, per vertex along the lips' outline): the share of the
     /// skin's own colour that is kept,
@@ -571,8 +576,8 @@ pub struct DressSet {
     /// upper third lay level with the root (England's sample, a woman of 17: the back, a third of the way down,
     /// 0.055 of the distance between the eyes' inner corners in front of the root, 0.12 in round 111; six of 36
     /// under 0.06, before three), and the light the skin's image has on root and back, with the stage's highlight
-    /// down the back, lay on that plane as a pale band from eye to eye (as on a low root: real_look.rs
-    /// `root_flat`). A hooked nose has no such plane: the upper half keeps 1.7.
+    /// down the back, lay on that plane as a pale band from eye to eye (as on a low root). A hooked nose
+    /// has no such plane: the upper half keeps 1.7.
     pub genes_low: &'static [(&'static str, f32)],
     /// (round 112) More targets for single genes of the face, on top of look.rs `FACE_MOD` (Apoleia's, which stays
     /// as it is): the gene, the target ("#": both sides), the suffixes for low and high values, and the weight per
@@ -754,7 +759,7 @@ const ENGLAND: DressSet = DressSet {
     brow_lift: [[3.0, 3.0, 3.5], [0.0, 0.0, 0.0]],
     brow_band: [0.9, 1.0],
     brow_gene: [1.1, 0.7],
-    lips: [Lips { skin: 0.17, blood: [0.26, 0.032, 0.036], upper: 1.5, seam: 1.43, child: 0.6, dark: [0.38, 0.85] }, Lips { skin: 0.24, blood: [0.265, 0.030, 0.032], upper: 1.5, seam: 1.1, child: 0.6, dark: [0.38, 0.85] }],
+    lips: [Lips { skin: 0.17, blood: [0.27, 0.026, 0.020], upper: 1.5, seam: 1.43, child: 0.6, dark: [0.38, 0.85] }, Lips { skin: 0.24, blood: [0.275, 0.025, 0.019], upper: 1.5, seam: 1.1, child: 0.6, dark: [0.38, 0.85] }],
     lash_line: [0.65, 0.55],
     lash_image: "Eyelashes1356",
     hair_red: [0.45, 0.74],
@@ -854,7 +859,9 @@ const ENGLAND: DressSet = DressSet {
         ("lid", "eyes/#-eye-eyefold", "concave", "convex", 2.0),
         ("eyeH", "eyes/#-eye-trans", "down", "up", 1.4),
         ("eyeP", "eyes/#-eye-push2", "in", "out", 2.2),
-        ("mouthC", "mouth/mouth-angles", "down", "up", 0.9),
+        // (round 113: 0.35, before 0.9. The mood and `rest` turn the corners as well, and on top of them the gene
+        // at 0.9 gave grins and frowns that no mood asked for: a boy's corners up by 0.8 of the target)
+        ("mouthC", "mouth/mouth-angles", "down", "up", 0.35),
         ("lipB", "mouth/mouth-upperlip-height", "incr", "decr", 3.0),
         ("lipB", "mouth/mouth-lowerlip-height", "decr", "incr", 1.3),
         ("mouthF", "mouth/mouth-trans", "backward", "forward", 0.8),

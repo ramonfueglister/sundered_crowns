@@ -97,27 +97,24 @@ fn tightly_curled_hair_is_a_mass_of_its_own() {
 }
 
 #[test]
-fn a_flat_nose_root_is_drawn_without_the_light_painted_into_the_skins_image() {
+fn every_head_of_a_dress_with_a_table_is_drawn_without_the_light_painted_into_the_skins_image() {
     let Some(h) = head() else { return };
-    // MakeHuman's images of the skin have the light of a nose that stands out painted round its root: a head
-    // whose root is flat takes the image without it. About half of east Asia's founders do (round 112: the gene
-    // of the nose's bridge shows more, and a founder of China with a high bridge keeps the image with the light),
-    // none of England's sample
-    let mut flat = 0;
-    for pool in ["China", "Siberia"] {
-        for k in 0..40 {
-            flat += usize::from(has(&build(&h, &of(pool, k, k % 2 == 0, 30.0), 2), "_flat."));
+    // MakeHuman's images of the skin have the light of the photographs they are made from painted round the
+    // nose's root. Round 111 took the image without it for a head whose root is flat; since round 113 every head
+    // of a dress with a table takes it, since the stage lights the face (on every face the painted light stood
+    // as a pale band from the nose's root under the eyes). Apoleia's dress keeps the image as it is
+    for pool in ["China", "Siberia", "Guinea"] {
+        for k in 0..12 {
+            assert!(has(&build(&h, &of(pool, k, k % 2 == 0, 30.0), 2), "_flat."), "{pool} {k}");
         }
     }
-    if show() {
-        println!("of 80 founders of China and Siberia {flat} are drawn with the flat image");
-    }
-    assert!(flat >= 32, "of 80 founders of China and Siberia only {flat} are drawn with the flat image");
     for k in 0..36 {
-        for age in [3.0, 9.0, 30.0] {
-            assert!(!has(&build(&h, &person(k, k % 2 == 0, age), 2), "_flat."), "England {k} of {age}");
+        for age in [3.0, 9.0, 30.0, 60.0] {
+            assert!(has(&build(&h, &person(k, k % 2 == 0, age), 2), "_flat."), "England {k} of {age}");
         }
     }
+    let roman = Look { dress: Dress::Roman, ..person(1, true, 30.0) };
+    assert!(!has(&build(&h, &roman, 2), "_flat."), "Apoleia's dress");
 }
 
 #[test]

@@ -22,10 +22,3 @@ pub const SKIN_AO: f32 = 0.7;
 
 /// Strength of the redness of nose, cheeks, ears and chin (skin_red.txt).
 pub const SKIN_RED: f32 = 0.6;
-
-/// (round 111) From which nose root on the skin's image has its painted light taken back, and where all of it
-/// (real_look.rs `root_flat`): how far the root stands in front of the eyes' inner corners, over the distance
-/// between the corners. England's sample has 0.24 to 0.63 (round 112, in which noses differ more; 0.26 to 0.57
-/// before it: one of the 36, a boy with a small nose, is drawn with the flat image), MakeHuman's east Asian head
-/// 0.14, a head half of it 0.26. By eye, PLACEHOLDER.
-pub const ROOT_FLAT: [f32; 2] = [0.30, 0.18];

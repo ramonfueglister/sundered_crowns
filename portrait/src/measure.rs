@@ -829,7 +829,7 @@ pub fn lids_to_pupil(h: &Head, pp: &[V3], pitch: f32) -> [f32; 2] {
 }
 
 /// How far the nose's back, a third of the way down (`NOSE_BACK`), stands in front of the nose's root, over the
-/// distance between the eyes' inner corners (the measure of real_look.rs `root_flat`, taken twice): about 0.2 on
+/// distance between the eyes' inner corners: about 0.2 on
 /// a straight nose, near 0 on one scooped until root and back lie in one plane (round 112, `DressSet::genes_low`).
 pub fn nose_rise(pp: &[V3]) -> f32 {
     (pp[NOSE_BACK][2] - pp[SELLION][2]) / (pp[EYE_CORNERS[0][0]][0] - pp[EYE_CORNERS[1][0]][0]).abs().max(1e-6)

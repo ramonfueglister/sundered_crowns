@@ -2,15 +2,17 @@
 # 111). MakeHuman's skins are painted from photographs of one kind of face: a shade lies beside the nose's root and
 # down its sides, the nose's back is light, as light falls on a nose that stands well in front of the eyes. On a head
 # whose nose root is low (MakeHuman's east Asian head, a small child) that painted shade lies on a plane that is in
-# the light: a pale stripe with a dark wedge on either side. The builder takes the paint back where a head's nose
-# root is low (real_look.rs `real_skin`), by these values.
+# the light: a pale stripe with a dark wedge on either side. Round 111's builder took the paint back by these values
+# where a head's nose root is low; since round 113 it reads only the images written with FLAT (below), for every
+# head, and the file of values is a by-product.
 # Per vertex of head.bin (Head.used order) and per image (young, middleage, old; female, male, in that order): the
 # image's luminance in linear light, smoothed over SIGMA pixels of 512, over the middle luminance of the skin
 # round that middle; 1 outside the middle of the face (further than REACH from the nose's root) and where a vertex has no place
 # on the image.
 # With FLAT=<folder> it also writes each image with that paint taken out, as skin_<age>_<sex>_flat.webp: lines of
 # light run from the nose's root under the eyes, finer than the head's vertices lie, which a vertex's colour cannot
-# take back. The builder draws a head whose nose root is flat with that image.
+# take back. The builder draws every head of a dress with a table with that image (real_look.rs `real_skin`): on
+# every face the painted light stood under the stage's as a pale band from the nose's root under the eyes.
 # usage: python3 -I skin_paint.py base.obj <folder of skin_<age>_<sex>.webp> out.txt     (SIGMA=1.5 REACH=0.42 LIDS=0.17 FLAT= FLAT_K=0.9)
 import os
 import sys

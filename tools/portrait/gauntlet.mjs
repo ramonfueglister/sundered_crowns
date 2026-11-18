@@ -10,7 +10,8 @@
 // `query` goes to the test page as it is (set=exposure:0.4 to try a value of the stage profile). --strict ends
 // with an error when a check fails. The limits are what two faces side by side at the panel's size may differ by
 // before the eye sees it at a glance: 3 L of a place's lightness, 2 of its a* and b*, 4 where one place stands
-// against another (two readings). They are by judgement, not from a source: PLACEHOLDER.
+// against another (two readings; a chroma against another's by the same share, 2.7). They are by judgement, not
+// from a source: PLACEHOLDER.
 //
 // What it does not hold: forms (portrait/tests/faces.rs holds them against a survey of real heads), hair, cloth,
 // children (the reference's faces read are a woman's and an emperor's), and whether a picture is good. A face
@@ -44,7 +45,8 @@ const of = start => {
 };
 const women = of('grown women'), men = of('grown men'), shaven = of('shaven men');
 
-const L = 3, AB = 2, AGAINST = 4;
+const L = 3, AB = 2, AGAINST = 4, AB_AGAINST = AB * AGAINST / L;
+const chroma = (g, place) => Math.hypot(g[`${place} a*`], g[`${place} b*`]);
 /** The checks: what is held, the reference's value, ours, the limit, and the round of docs/PORTRAITS.md that read
  *  the reference's value. A value "against the lit cheek" is that place's L less the lit cheek's. */
 const checks = [
@@ -64,12 +66,25 @@ const checks = [
   ['woman: beside the nose against cheek', -34.5, -women['beside the nose darker than cheek (L)'], AGAINST, 'round 83'],
   ['woman: cheek beyond the nose', -16, -women['cheek beyond the nose darker than cheek (L)'], AGAINST, 'round 83'],
   ['woman: cheek redder than forehead', 5, women['cheek redder than forehead (a*)'], AB, 'round 71'],
+  // (Round 113) This line FAILS, and is left to: the 8 is one face's, read on the face's middle line. Five faces
+  // read in round 113 (three of the developer diaries' large women, two men) have a narrow streak of light on the
+  // nose, a thirtieth of the face wide, 1.3 to 11.0 over the lit cheek (mean 6.8), with skin 2 to 6 under the
+  // cheek on either side of it: the gloss of the light from behind on the nose's far flank, and where it lies
+  // across the nose differs from face to face (on the middle line itself they read from 12 under to 11 over).
+  // Rounds 106 to 112 passed the line by a stronger gloss in a broad stripe down every nose's back (`skin.zone`),
+  // which lay on the noses as a pale patch and is gone. Ours have no such streak yet: open.
   ['woman: nose\'s back against cheek', 8, women['nose\'s back L'] - women['lit cheek L'], AGAINST, 'round 71'],
   ['woman: lower lip against cheek', -22.9, -women['lower lip darker than cheek (L)'], AGAINST, 'round 82'],
   ['woman: lower lip redder (a*)', 6.2, women['lower lip redder than cheek (a*)'], AB, 'round 82'],
   ['woman: upper lip against cheek', -35.1, women['upper lip L'] - women['lit cheek L'], AGAINST, 'round 82'],
   ['woman: over the lip against cheek', -4.4, women['above the lip L'] - women['lit cheek L'], AGAINST, 'round 82'],
   ['woman: eye against cheek', -40.2, -women['eye darker than cheek (L)'], AGAINST, 'round 83'],
+  // (Round 113) The shaded cheek keeps the lit cheek's colour: on three large women of the developer diaries its
+  // chroma is 1.9 and 0.2 under and 0.2 over the lit cheek's (at 9 to 21 L under it, 5 to 9 degrees redder), on
+  // one man 1.8 under. Ours had a grey shaded half: 9.6 under on the women, 15.3 on the men, until the light a
+  // shadow lets through took the colour of light that has been in skin (`skin.bleed`).
+  ['woman: far cheek chroma against lit', -0.6, chroma(women, 'shaded cheek') - women['lit cheek chroma'], AB_AGAINST, 'round 113'],
+  ['man: far cheek chroma against lit', -1.8, chroma(men, 'shaded cheek') - men['lit cheek chroma'], AB_AGAINST, 'round 113'],
   // the reference's emperor (a small face, read five times enlarged). His picture is another scene with another
   // light than the woman's: his lit cheek is at L 65.5 where hers is at 56.1, his far cheek 20.9 under it where
   // hers is 27.7. One stage lights both of ours, and it is held to hers: of his face only what stands against
@@ -89,7 +104,7 @@ for (const [name, reference, ours, limit, round] of checks) {
   if (!Number.isFinite(ours)) throw new Error(`gauntlet: "${name}" is not in what face_colour.mjs printed`);
   const off = ours - reference, pass = Math.abs(off) <= limit + 1e-9;
   if (!pass) failed++;
-  console.log(`${name.padEnd(38)}${reference.toFixed(1).padStart(10)}${ours.toFixed(1).padStart(8)}${f(off).padStart(8)}${limit.toFixed(0).padStart(7)}  ${pass ? 'PASS' : 'FAIL'}  (${round})`);
+  console.log(`${name.padEnd(38)}${reference.toFixed(1).padStart(10)}${ours.toFixed(1).padStart(8)}${f(off).padStart(8)}${(Number.isInteger(limit) ? limit.toFixed(0) : limit.toFixed(1)).padStart(7)}  ${pass ? 'PASS' : 'FAIL'}  (${round})`);
 }
 console.log(`\n${checks.length - failed} of ${checks.length} pass.`);
 if (strict && failed) process.exit(1);

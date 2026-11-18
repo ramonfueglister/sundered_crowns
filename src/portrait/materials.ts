@@ -91,12 +91,19 @@ const DIR_SHADOW = 'directLight.color *= ( directLight.visible && receiveShadow 
  *  the lamp is hidden. The highlight takes the shadow whole (`skinLit` is three.js' shadow, 1 = lit; in the
  *  soft edge of a shadow the highlight fades with the share of the lamp still seen). Until round 94 the rim
  *  light's highlight came through the head at half strength: a pale grey patch between the nose and the far
- *  eye, on skin the lamp would skim, where a highlight is at its strongest. */
-function hidden(): string {
-  return swap(swap(ShaderChunk.lights_fragment_begin, DIR_LIGHT, `${DIR_LIGHT} skinGloss = 1.0;`),
+ *  eye, on skin the lamp would skim, where a highlight is at its strongest.
+ *  (Round 113) The light let through is light that has been in skin (through the nose, off the cheek), and comes
+ *  out of it red: it has the colour `bleed` (profile.ts `skin.bleed`). In the lamp's own colour it lay on the
+ *  shaded side of a face as a grey film, the rim light's blue over warm skin. */
+function hidden(bleed: readonly [number, number, number]): string {
+  return swap(swap(ShaderChunk.lights_fragment_begin, DIR_LIGHT, `${DIR_LIGHT} skinGloss = vec3( 1.0 );`),
     DIR_SHADOW, `skinLit = ${DIR_SHADOW.slice('directLight.color *= '.length)}
-		directLight.color *= skinLit;
-		skinGloss = saturate( 1.0 - ( 1.0 - skinLit ) / max( directionalLightShadow.shadowIntensity, 1e-4 ) ) / max( skinLit, 1e-4 );`);
+		{
+			float skinSeen = saturate( 1.0 - ( 1.0 - skinLit ) / max( directionalLightShadow.shadowIntensity, 1e-4 ) );
+			vec3 skinShare = directionalLightShadow.shadowIntensity * skinSeen + ( 1.0 - directionalLightShadow.shadowIntensity ) * mix( vec3( ${bleed.map(f).join(', ')} ), vec3( 1.0 ), skinSeen );
+			directLight.color *= skinShare;
+			skinGloss = skinSeen / max( skinShare, vec3( 1e-4 ) );
+		}`);
 }
 const NOISE = `
 varying vec3 vSkinP;
@@ -111,14 +118,11 @@ function swap(code: string, piece: string, by: string): string {
   return code.replace(piece, by);
 }
 
-/** Where the face's middle line lies on the skin's image (its second coordinate; MakeHuman's layout, the same for
- *  every skin: the sellion is at 0.8350, the nose's tip at 0.8732 of the first). */
-const FACE_MIDDLE = 0.5168;
 
 /** Skin of a profile: light bleeds round the edge of its shadow, reddest furthest (three.js has no scattering
  *  inside skin as Godot has); and living skin is blotchy where the images of the young are nearly flat: broad
  *  patches a little redder or paler and a fine speckle in brightness, as noise over the head. */
-function skinLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageProfile['skin']>, tone: number, young = 0, flat = false): void {
+function skinLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageProfile['skin']>, tone: number, young = 0): void {
   // a child's skin has less of the fine structure the images and the noise give a grown person's (`skin.child`)
   const fine = 1 + (k.child - 1) * Math.min(1, Math.max(0, young));
   m.roughness = k.rough; m.ior = ior(k.specular); m.normalScale.set(k.pores * fine, k.pores * fine);
@@ -133,7 +137,7 @@ function skinLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<Stage
   const gleam = fu * fu * (3 - 2 * fu);
   m.specularIntensity = 0.5 + 0.5 * gleam;
   m.specularColor.setRGB(1, 0.72 + 0.28 * gleam, 0.55 + 0.45 * gleam);
-  const lights = wrapped(`vec3( ${k.wrap.map(f).join(', ')} )`, true), loop = hidden();
+  const lights = wrapped(`vec3( ${k.wrap.map(f).join(', ')} )`, true), loop = hidden(k.bleed);
   // the tint by the person's skin as a whole (none on dark skin, all of it on light skin), the same over the whole
   // head: taken point by point (until round 54) everything painted darker on light skin lost its red and turned
   // olive, the shadow of a beard most of all, where in living skin the darker places are the redder ones
@@ -142,11 +146,11 @@ function skinLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<Stage
   m.onBeforeCompile = shader => {
     shader.uniforms.skinTint = { value: tint };
     shader.uniforms.skinFine = { value: fine };
-    shader.vertexShader = swap(swap(shader.vertexShader, '#include <common>', '#include <common>\nvarying vec3 vSkinP;\nvarying vec2 vSkinUv;'),
-      '#include <begin_vertex>', '#include <begin_vertex>\nvSkinP = position;\nvSkinUv = uv;');
+    shader.vertexShader = swap(swap(shader.vertexShader, '#include <common>', '#include <common>\nvarying vec3 vSkinP;'),
+      '#include <begin_vertex>', '#include <begin_vertex>\nvSkinP = position;');
     let code = swap(shader.fragmentShader, '#include <lights_physical_pars_fragment>', lights);
     code = swap(code, '#include <lights_fragment_begin>', loop);
-    code = swap(code, '#include <common>', `#include <common>${NOISE}\nvarying vec2 vSkinUv;\nuniform vec3 skinTint;\nuniform float skinFine;\nfloat skinGloss = 1.0;\nfloat skinLit = 1.0;\nfloat skinOil = 1.0;`);
+    code = swap(code, '#include <common>', `#include <common>${NOISE}\nuniform vec3 skinTint;\nuniform float skinFine;\nvec3 skinGloss = vec3( 1.0 );\nfloat skinLit = 1.0;\nfloat skinOil = 1.0;`);
     // the skin's fine relief: no skin is a smooth surface, and a highlight on a smooth surface is one pale patch
     // with a soft edge, as on vinyl. The relief is noise over the head at two sizes (4 and 2 mm), as a height
     // whose slope leans the normal (three.js' bump mapping, with the height reckoned instead of read from an
@@ -160,9 +164,6 @@ function skinLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<Stage
   vec3 skinGrad = sign( skinDet ) * ( dFdx( skinH ) * skinR1 + dFdy( skinH ) * skinR2 );
   normal = normalize( abs( skinDet ) * normal - skinGrad );
   skinOil = 1.0 + ${f(k.oil)} * ( skinNoise( vSkinP * 9.0 ) * 0.5 + skinNoise( vSkinP * 33.0 ) * 0.5 - 0.5 ) * 2.0;
-  // the face's middle is oilier than its sides: the forehead's middle and the nose's back down to its tip, as
-  // places on the skin's image (the face's middle line and the heights of hairline, sellion and nose's tip there)
-  skinOil *= 1.0 + ${f(flat ? 0 : k.zone)} * exp( - pow( ( vSkinUv.y - ${f(FACE_MIDDLE)} ) / 0.017, 2.0 ) ) * smoothstep( 0.775, 0.805, vSkinUv.x ) * ( 1.0 - smoothstep( 0.868, 0.884, vSkinUv.x ) );
 }`);
     shader.fragmentShader = swap(code, '#include <color_fragment>', `#include <color_fragment>
 float skinA = skinNoise( vSkinP * 7.0 ) * 0.6 + skinNoise( vSkinP * 15.0 ) * 0.4 - 0.5;
@@ -171,7 +172,7 @@ diffuseColor.rgb *= vec3( 1.0, 1.0 - ${f(k.blotch * 0.9)} * skinFine * skinA, 1.
 float skinGrey = dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) );
 diffuseColor.rgb = mix( vec3( skinGrey ), diffuseColor.rgb, ${f(k.colour)} ) * skinTint;`);
   };
-  m.customProgramCacheKey = () => `portrait-skin-${p.key}${flat ? '-flat' : ''}`;
+  m.customProgramCacheKey = () => `portrait-skin-${p.key}`;
 }
 
 /** The painted layer of short hairs of a profile (under the cards, and the beards): lighter, and lit round its
@@ -334,11 +335,7 @@ export function surfaceMaterials(s: PortraitSurface, map: Texture | null, normal
   });
   switch (kind) {
     case 'plain': break;
-    // (round 111) a head whose nose root is flat is drawn with the image that has no light painted there (`_flat`,
-    // real_look.rs `real_skin`), and without the stronger highlight down the nose's back (`skin.zone`): on a nose
-    // that stands out that is a thin line along its ridge, on a flat root a pale patch between the eyes, broken
-    // up by the patches of the skin's oil
-    case 'skin': if (p.skin) skinLook(m, p, p.skin, tone ?? skinTone(s.col), young, !!s.tex?.includes('_flat')); break;
+    case 'skin': if (p.skin) skinLook(m, p, p.skin, tone ?? skinTone(s.col), young); break;
     case 'cloth':
       m.side = DoubleSide; m.roughness = 0.95; m.ior = ior(0.15);
       if (p.cloth) m.color.setScalar(/_veil|_wimple|_smock/.test(s.tex) ? p.cloth.linen : p.cloth.wool);

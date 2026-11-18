@@ -45,9 +45,10 @@ export interface StageProfile {
    *  of its triangles is split in four to draw it as the smooth surface its net stands for, after `fit` rounds
    *  of moving the net so that this surface keeps to the builder's corners (subdivide.ts; 0 = the net as built).
    *  `child`: how much of the pores, the relief, the blotches and the speckle a child's skin has (1 = a grown
-   *  person's; in full on a child up to eleven, `Portrait.young`). `zone`: how much stronger the highlight is on
-   *  the forehead's middle and the nose's back than on the rest of the face (0 = no stronger, 1 = twice). */
-  skin: null | { rough: number; specular: number; pores: number; wrap: readonly [number, number, number]; finer: number; fit: number; blotch: number; speckle: number; colour: number; tint: readonly [number, number, number]; relief: number; oil: number; fuzz: number; child: number; zone: number };
+   *  person's; in full on a child up to eleven, `Portrait.young`). `bleed`: the colour of the light a shadow on skin lets
+   *  through (where a light's shadow is not at full strength, `shadow.strength`, `rimShadow`), as a factor on
+   *  the lamp's colour: light that has been in skin comes out of it red (materials.ts `hidden`). */
+  skin: null | { rough: number; specular: number; pores: number; wrap: readonly [number, number, number]; finer: number; fit: number; blotch: number; speckle: number; colour: number; tint: readonly [number, number, number]; relief: number; oil: number; fuzz: number; child: number; bleed: readonly [number, number, number] };
   /** The eyeball: null as it is. Else the upper lid's shadow (darkening to `dark` between these heights of the
    *  ball's normal), the shade in the corners of the eye (darkening to `dark` between these distances to the side
    *  of the gaze), a tint, how much lighter the white of the eye and how much darker the iris are drawn than the
@@ -355,22 +356,34 @@ export const APOLEIA: StageProfile = {
  *  hardly more, and of the sample's eight grown women five have a short nose: their nose's back stood 2.9 over
  *  the lit cheek (4.4 in round 111; the reference's 8). At 5 it is 4.0, at 7 4.8: nearer to the reference than
  *  any round before, and on the pictures a little more light on bridge and tip (seen on England's sample and on
- *  eight faces of other pools, dark ones among them). */
+ *  eight faces of other pools, dark ones among them).
+ *  Round 113: that was a mistake. Beside the reference at twice the size the stripe was a pale, mottled patch on
+ *  every nose's bridge and a white blob on its tip, there to pass a line read off one face; `skin.zone` is gone
+ *  (what the reference has is a narrow streak on the nose's far flank, the rim light's gloss: read on five
+ *  faces, docs/PORTRAITS.md, and not drawn yet). The shaded half of a face was grey, the rim light's blue let
+ *  through its shadow: its chroma 9.6 under the lit cheek's on the women and 15.3 on the men, where four faces
+ *  of the reference keep it within 2. The light a shadow lets through takes the colour of light that has been in
+ *  skin (`skin.bleed` 1, 0.5, 0.35), the fill is a red light (`ff9a6a` at 0.2; `efe4da` at 0.14), the sky's
+ *  ground warmer (`a0653f`; `8a6f5c`), the wrap redder (0.3, 0.16, 0.10; 0.2, 0.16, 0.13), and the skin keeps
+ *  0.88 of its colour (the lit cheek's chroma went past the reference's with the red fill): 2.9 and 4.3 under
+ *  now, the women's far cheek 17.8 L under the lit one. `pores` 0.4 (0.8): the pores' image has 110 by 150
+ *  texels for a face and mottled the highlights. The skin's image is the one without the photographs' light
+ *  for every head (portrait/src/real_look.rs). */
 export const ENGLAND_1356: StageProfile = {
   key: 'england1356',
   lights: {
     key: { from: [4.58, 4.0, 3.06], colour: '#fff0de', energy: 1.8 },
     rim: { from: [-3.55, 2.5, -4.25], colour: '#bcd0ff', energy: 1.5 },
-    fill: { from: [-4.0, -1.0, 4.0], colour: '#efe4da', energy: 0.14 },
+    fill: { from: [-4.0, -1.0, 4.0], colour: '#ff9a6a', energy: 0.2 },
     bounce: { from: [0.0, -3.0, 5.0], colour: '#efe4da', energy: 0.1 },
   },
-  sky: { top: '#e6ecff', ground: '#8a6f5c', energy: 0.12 },
+  sky: { top: '#e6ecff', ground: '#a0653f', energy: 0.12 },
   rimShadow: 0.5,
   shadow: { map: 1024, strength: 0.7, radius: 2, spread: 10, lights: 8 },
   exposure: 0.35,
   turn: -0.24, rise: 0.03, close: 1.12,
   anisotropy: 8,
-  skin: { rough: 0.55, specular: 0.42, pores: 0.8, wrap: [0.2, 0.16, 0.13], finer: 1, fit: 1, blotch: 0.05, speckle: 0.10, colour: 1.0, tint: [1, 0.75, 0.77], relief: 0.0015, oil: 0.5, fuzz: 0.3, child: 0.3, zone: 7 },
+  skin: { rough: 0.55, specular: 0.42, pores: 0.4, wrap: [0.3, 0.16, 0.10], finer: 1, fit: 1, blotch: 0.05, speckle: 0.10, colour: 0.88, tint: [1, 0.75, 0.77], relief: 0.0015, oil: 0.5, fuzz: 0.3, child: 0.3, bleed: [1, 0.5, 0.35] },
   eye: { corner: { from: 0.3, to: 0.8, dark: 0.35 }, lid: { from: -0.35, to: 0.05, dark: 0.3 }, tint: [0.84, 0.77, 0.64], white: 1.3, iris: 1.15, colour: 1.1, lift: 0.6, rough: 0.14, specular: 0.6, wrap: 0.5, cornea: 0.36, ring: 0.55 },
   brow: { rough: 1, specular: 0.05, lashes: 0.6, brows: 1.15 },
   cap: { tone: 1.7, light: 2.6, colour: 0.7, wrap: 1, shadow: false, stubble: 0, beard: { tone: 5.5, light: 3.2, colour: 0.65, wrap: 0.3 } },

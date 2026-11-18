@@ -97,22 +97,15 @@ pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age:
     // the blood's colour shows (`through`), and what it loses of it the lips keep of the skin's own colour
     let through = lips.map_or(1.0, |(l, _)| (tone / l.dark[0]).min(1.0).powf(l.dark[1]));
     let lip_k = (lip_k.0 + (1.0 - lip_k.0) * (1.0 - through), mul(lip_k.1, through), lip_k.2, lip_k.3);
-    // (round 111) the skin's image is painted for a nose that stands well in front of the eyes: light on the
-    // nose's root and back, as the photographs it is made from were lit (a fifth lighter than the cheeks on the
-    // men's). On a head whose nose root is low (MakeHuman's east Asian head) that light lies on a plane between
-    // the eyes: a pale stripe across the nose, grey beside the skin round it. Where the root stands less far in
-    // front of the eyes' inner corners than `settings::ROOT_FLAT` says, the image's light is taken back by the
-    // vertex's colour (skin_paint.txt: per vertex and image how much lighter than the face the image is there;
-    // tools/portrait/pipeline/skin_paint.py). Only a dress with a table asks for it
-    let paint = lips.and_then(|_| crate::real::rows(&format!("{dir}/skin_paint.txt")));
-    let paint_col = 2 * (if age < 30.0 { 0 } else if age < 55.0 { 1 } else { 2 }) + usize::from(!(female || girls_image));
-    let paint_k = if paint.is_some() { root_flat(pp) } else { 0.0 };
-    // lines of light run from the nose's root under the eyes in the image, finer than the head's vertices lie: from
-    // half of that on the head is drawn with the image that has the paint round the nose's root taken out
-    // (`_flat`, skin_paint.py), and its vertices' colours stay as they are
-    let flat_image = Some(crate::real::image(dir, &format!("skin_{}_{}_flat", if age < 30.0 { "young" } else if age < 55.0 { "middleage" } else { "old" }, if female || girls_image { "female" } else { "male" })))
-        .filter(|f| paint_k >= 0.5 && crate::real::has(f));
-    let paint_k = if flat_image.is_some() { 0.0 } else { paint_k };
+    // (round 111) the skin's image is painted from photographs, with their light in it: light on the nose's root
+    // and back and in lines from the root under the eyes, a shade beside the root (a fifth lighter than the cheeks
+    // on the men's). `skin_paint.py` writes each image once more with that light taken out (`_flat`). Round 111
+    // drew only a head whose nose root is low with it, on which the painted light lay as a pale stripe on a plane
+    // between the eyes. (Round 113) Every head of a dress with a table is drawn with it: the stage lights the face,
+    // and a second light painted under it, from another side, stood on every face as a pale, greyish band from
+    // the nose's root under the eyes, most on the side the key light falls on
+    let flat_image = lips.map(|_| crate::real::image(dir, &format!("skin_{}_{}_flat", if age < 30.0 { "young" } else if age < 55.0 { "middleage" } else { "old" }, if female || girls_image { "female" } else { "male" })))
+        .filter(|f| crate::real::has(f));
     // real look: blood under thin skin, nose, cheeks, ears and chin a little
     // redder (skin_red.txt, 0..1 per vertex, or the file a dress names); haemoglobin takes green and
     // blue away (after Jimenez et al., 2010, not verified online). Strength
@@ -157,9 +150,6 @@ pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age:
             if let Some(&m) = scalp.get(v) {
                 // (only darker: under grey or white hair the scalp stays skin)
                 c = mix(c, [c[0].min(hl[0]), c[1].min(hl[1]), c[2].min(hl[2])], 0.8 * m);
-            }
-            if let Some(&r) = paint.as_ref().and_then(|p| p.get(v)).and_then(|r| r.get(paint_col)) {
-                c = mul(c, 1.0 / (1.0 + (r - 1.0) * paint_k));
             }
             if let Some(&[on_lip, upper]) = lip.get(v).map(|r| &r[..]) {
                 c = mix(c, mul(add(mul(c, lip_k.0), lip_k.1), 1.0 + (lip_k.2 - 1.0) * upper), on_lip * lip_k.3);
@@ -263,20 +253,6 @@ pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age:
         .filter(|&e| e as f32 <= wage)
         .map(|e| crate::real::image(dir, &format!("skin_{a}_{sex}_w{e}_n")))
         .find(|f| crate::real::has(f));
-}
-
-/// How low the nose's root of a morphed head is, 0 (it stands in front of the eyes as on the heads the skin's image
-/// is painted for) to 1 (flat between the eyes): how far the root stands in front of the eyes' inner corners, over
-/// the distance between those corners, against `settings::ROOT_FLAT`.
-pub(crate) fn root_flat(pp: &[V3]) -> f32 {
-    let (root, l, r) = (crate::measure::SELLION, crate::morph::EYE_CORNERS[0][0], crate::morph::EYE_CORNERS[1][0]);
-    if pp.len() <= root.max(l).max(r) {
-        return 0.0;
-    }
-    let ratio = (pp[root][2] - 0.5 * (pp[l][2] + pp[r][2])) / (pp[l][0] - pp[r][0]).abs().max(1e-6);
-    let [from, to] = settings::ROOT_FLAT;
-    let t = ((from - ratio) / (from - to)).clamp(0.0, 1.0);
-    t * t * (3.0 - 2.0 * t)
 }
 
 /// Real look: which hairstyle (Blender cards) a person wears, when
