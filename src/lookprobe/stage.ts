@@ -16,7 +16,7 @@ import { hashBlur } from 'three/addons/tsl/display/hashBlur.js';
 import { FRAME_W, LAND_Y, N, NEAR, RIGHT, SEA_Y, VIEW } from './layout';
 import type { Batch } from './batch';
 import { RIG, towards, CREASES } from './light';
-import { type Figures, anyFigures, figureMeshes, keepFigures, showFigures, warmFigures } from '../figures/stage';
+import { type Figures, anyFigures, disposeFigures, figureMeshes, keepFigures, showFigures, warmFigures } from '../figures/stage';
 import { OPEN_WATER } from './terrain';
 import { FACE_COL, FACE_CORNERS, FACE_GEO, FACE_STEPS, FLIPPED, FREE_GEO, RISES, type Faces, type Free, faceHit, freeHit, unfaced, unfree } from './faces';
 
@@ -739,7 +739,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     remove(group) {
       scene.remove(group);
       // the figures' kit is shared by every piece: only their own mesh is let go (figures/stage.ts)
-      for (const mesh of group.children) if (mesh.userData.figures === 'near') (mesh as THREE.InstancedMesh).dispose(); else if (!mesh.userData.figures) gone(mesh as THREE.Mesh);
+      for (const mesh of group.children) if (mesh.userData.figures === 'near') disposeFigures(mesh); else if (!mesh.userData.figures) gone(mesh as THREE.Mesh);
       pending = Math.max(pending, 1);
     },
     more(group, things) { const part = cool(things.free?.geo.length && !things.pos.length ? freeMesh(things, true) : mesh(things, solid, true)); part.userData.ink = 0; group.add(part); pending = Math.max(pending, 3); return part; },
