@@ -193,10 +193,13 @@ fn the_genes_of_round_112_show_in_the_dress_of_england_and_not_in_apoleias() {
         };
         let (high, low) = (share(&with(&p, "mouthH", 60.0)), share(&with(&p, "mouthH", 196.0)));
         assert!(low - high > 0.04 && low - high < 0.12, "person {k}: the upper lip takes {high} and {low} of the lower face");
-        // the brows' weight: the band broader, and a light brow's hairs nearer the skin's colour
+        // the brows' weight: the band broader, and a light brow's hairs nearer the skin's colour. Every brow of
+        // England is drawn that much nearer to it to begin with (`brow_soft`, round 114: single dark hairs on
+        // light skin read as strokes of a pen beside the reference's soft brown brows)
+        let soft = set.brow_soft[usize::from(!female)];
         let (light, heavy) = (set.brow_weight_of(&with(&p, "browT", 60.0)), set.brow_weight_of(&with(&p, "browT", 196.0)));
-        assert!(light[0] < 0.7 && heavy[0] > 1.3 && light[1] > 0.2 && heavy[1] == 0.0, "person {k}: the brows {light:?} and {heavy:?}");
-        assert_eq!(set.brow_weight_of(&with(&p, "browT", 128.0)), [1.0, 0.0]);
+        assert!(light[0] < 0.7 && heavy[0] > 1.3 && light[1] > soft + 0.2 && heavy[1] == soft, "person {k}: the brows {light:?} and {heavy:?}");
+        assert_eq!(set.brow_weight_of(&with(&p, "browT", 128.0)), [1.0, soft]);
         // the cheeks' blood: the skin of a ruddy face is redder against its green than a pale one's
         let (pale, ruddy) = (set.flush_of(&with(&p, "ruddy", 60.0)), set.flush_of(&with(&p, "ruddy", 196.0)));
         assert!(pale < 0.7 && ruddy > 1.3 && set.flush_of(&with(&p, "ruddy", 128.0)) == 1.0, "person {k}: the flush {pale} and {ruddy}");

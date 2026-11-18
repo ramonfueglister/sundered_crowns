@@ -12,7 +12,7 @@ use crate::settings;
 /// facets, normals averaged, the UVs of the base mesh (at a seam the corner
 /// UVs that lie closest together).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age: f32, female: bool, hair: Rgb, scalp_file: Option<String>, sun: f32, seed: u32, flush: (f32, &str), lash_line: f32, lips: Option<(&crate::dress::Lips, f32)>, girls_image: bool, tone: f32) {
+pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age: f32, female: bool, hair: Rgb, scalp_file: Option<String>, sun: f32, seed: u32, flush: (f32, &str), lash_line: f32, lash_tone: (f32, &str), lips: Option<(&crate::dress::Lips, f32)>, girls_image: bool, tone: f32) {
     let Some(rows) = crate::real::rows(&format!("{dir}/uvs.txt")) else { return };
     let uvs: Vec<Vec<[f32; 2]>> = rows.iter().map(|f| f.chunks_exact(2).map(|c| [c[0], 1.0 - c[1]]).collect()).collect();
     if s.pos.len() != idx.len() {
@@ -80,9 +80,9 @@ pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age:
     // real look: the lash line. Where the lashes grow the lid's edge is dark with their roots (skin_lash.txt, 0..1
     // per vertex; tools/portrait/pipeline/skin_lash.py); the lashes' cards themselves point at the viewer there
     // and show only further out. Only a dress with a table asks for it (`lash_line`); the colour is the lashes'
-    // (build.rs), and only ever darker than the skin (white lashes leave the lid as it is)
+    // (build.rs, `DressSet::lash_tone`), and only ever darker than the skin (white lashes leave the lid as it is)
     let lash: Vec<f32> = if lash_line > 0.0 { crate::real::column(&format!("{dir}/skin_lash.txt"), 0.0) } else { Vec::new() };
-    let lash_c = mix(mul(linear(hair), 0.5), linear(hex("#140d08")), 0.5);
+    let lash_c = mix(mul(linear(hair), lash_tone.0), linear(hex(lash_tone.1)), 0.5);
     // real look: the lips. Where the red of the lips is (skin_lip.txt, per vertex how much lip, 0..1, and how
     // much of that upper lip; tools/portrait/pipeline/skin_lip.py) a share of the skin's own colour is kept and
     // the colour of the blood under it added: lips are skin without its horn layer, so they go with the skin's

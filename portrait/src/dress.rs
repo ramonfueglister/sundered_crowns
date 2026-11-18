@@ -336,7 +336,10 @@ pub struct DressSet {
     /// 0.039 still: the reference's brow has soft edges, ours a hard one. Since round 76 the hairs are soft
     /// (`brow_image`) and the women's brow is as broad as the reference's. (The band is drawn together about its
     /// middle: its upper edge lies half a millimetre higher with 0.9 than the heights given at `brow_lift`, by
-    /// reckoning, not measured anew.)
+    /// reckoning, not measured anew.) Round 114: 1.15 for women. Set beside five faces of the reference, eye by
+    /// eye at one size, the women's brows were thin lines over the eye where theirs are a band; by round 71's
+    /// own reading ours at 0.9 was a sixth to a fifth narrower than the reference's woman's. By eye and by that
+    /// reading, PLACEHOLDER; the men's, which lie under the fringe on most, stay.
     pub brow_band: [f32; 2],
     /// (round 112) How the gene "browT" makes a person's brows lighter or heavier, per unit of the gene as the
     /// face shows it (`Look::shown` times `settings::FACE_GAIN`: about -0.55 on the lightest brows, 0.55 on the
@@ -345,6 +348,11 @@ pub struct DressSet {
     /// low side alone: a thin brow is a sparse one). Up to round 111 every woman wore one brow and every man
     /// another. PLACEHOLDER, by eye.
     pub brow_gene: [f32; 2],
+    /// (round 114) How far the colour of everyone's brow hairs goes towards the skin's, women and men (0 = the
+    /// hair's colour at three quarters, as until then; `brow_gene` lightens a light brow further). Set beside five
+    /// faces of the reference eye by eye at one size, ours were strokes of near black over the eye, theirs a soft
+    /// band of a brown between the hair's and the skin's. By eye, PLACEHOLDER.
+    pub brow_soft: [f32; 2],
     /// Lips, women and men (real_look.rs `real_skin`).
     pub lips: [Lips; 2],
     /// The lash line, women and men: how far the lid's edge is drawn towards the lashes' colour where they grow
@@ -368,6 +376,12 @@ pub struct DressSet {
     /// with `Eyelashes`, a brow's with `eyebrow`: by the name the stage tells them from hair cards
     /// (src/portrait/materials.ts `surfaceKind`).
     pub lash_image: &'static str,
+    /// (round 114) The colour of the lashes and of the lash line: this share of the hair's colour, mixed half
+    /// and half with this dark. Apoleia's is half the hair's colour with `#140d08`, nearly black: beside the
+    /// reference the lid's rim was a black line where theirs is a dark brown (the darkest third of the eye's
+    /// opening read 53 L under the lit cheek and without colour on ours, 39 under and brown on five faces of
+    /// theirs). By eye, PLACEHOLDER.
+    pub lash_tone: (f32, &'static str),
     /// Red hair: the strength of the red gene (0..1, the mean of a person's two alleles) from which hair shows any
     /// red, and at which it shows all of it. Apoleia mixes red in from 0 on, in step with the gene: of people whose
     /// alleles come from 20 to 170 (the pool England draws from) the usual one then has orange hair.
@@ -757,11 +771,13 @@ const ENGLAND: DressSet = DressSet {
     brows_child: 0.6,
     brow_paint: [0.0, 0.0],
     brow_lift: [[3.0, 3.0, 3.5], [0.0, 0.0, 0.0]],
-    brow_band: [0.9, 1.0],
+    brow_band: [1.15, 1.0],
     brow_gene: [1.1, 0.7],
+    brow_soft: [0.3, 0.3],
     lips: [Lips { skin: 0.17, blood: [0.27, 0.026, 0.020], upper: 1.5, seam: 1.43, child: 0.6, dark: [0.38, 0.85] }, Lips { skin: 0.24, blood: [0.275, 0.025, 0.019], upper: 1.5, seam: 1.1, child: 0.6, dark: [0.38, 0.85] }],
     lash_line: [0.65, 0.55],
     lash_image: "Eyelashes1356",
+    lash_tone: (0.6, "#3a2416"),
     hair_red: [0.45, 0.74],
     flush: [0.65, 0.5],
     flush_map: "skin_flush.txt",
@@ -1189,7 +1205,8 @@ impl DressSet {
     /// far the hairs' colour is mixed towards the skin's.
     pub fn brow_weight_of(&self, p: &crate::look::Look) -> [f32; 2] {
         let x = p.shown(crate::look::BROW_T) * crate::settings::FACE_GAIN;
-        [(1.0 + self.brow_gene[0] * x).max(0.3), (-x * self.brow_gene[1]).clamp(0.0, 0.8)]
+        let soft = self.brow_soft[usize::from(!p.female)];
+        [(1.0 + self.brow_gene[0] * x).max(0.3), (soft + (1.0 - soft) * (-x * self.brow_gene[1]).clamp(0.0, 0.8)).min(0.8)]
     }
 
     /// The factor on a person's flush by the gene of it (`flush_gene`).

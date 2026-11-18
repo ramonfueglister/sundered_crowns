@@ -339,10 +339,12 @@ fn brow_moved(h: &Head, p: &Look) -> Vec<([f32; 3], f32)> {
 }
 
 #[test]
-fn a_woman_of_england_wears_her_brows_higher_and_narrower_than_makehuman_draws_them() {
+fn a_woman_of_england_wears_her_brows_higher_than_makehuman_draws_them() {
     // MakeHuman's brow lies on the rim of the eye's socket, its upper edge 17 mm above the line through the eyes'
     // inner corners over the pupil; a young woman's lies at 19.8 mm (Matros, Garcia & Yaremchuk 2009). Low and
-    // broad over the eye it made the women read as men, and as glowering (until round 69).
+    // broad over the eye it made the women read as men, and as glowering (until round 69). From round 71 to 113
+    // the band was drawn together as well (0.9, 0.7 before); since round 114 it is a little broader than
+    // MakeHuman's (1.15): beside five faces of the reference the women's brows were thin lines.
     let Some(h) = head() else { return };
     let set = sc_portrait::dress::Dress::England1356.set().unwrap();
     // (round 112: a person's brows are lighter or heavier by a gene of their own, `DressSet::brow_gene`, which
@@ -364,8 +366,9 @@ fn a_woman_of_england_wears_her_brows_higher_and_narrower_than_makehuman_draws_t
         let (least, most) = (set.brow_lift[0].iter().copied().fold(f32::MAX, f32::min), set.brow_lift[0].iter().copied().fold(0.0, f32::max));
         assert!(up > least - 0.3 && up < most + 0.3, "woman {k}: up by {up} mm");
         let side = moved.iter().map(|(d, _)| d[0].abs()).fold(0.0, f32::max);
-        assert!(side < 1.0 && moved.iter().all(|(d, _)| d[1] > 0.0), "woman {k}: sideways by {side} mm");
-        // the band is narrower: its upper corners go up less than its lower ones, by the band's own breadth
+        assert!(side < 1.5 && moved.iter().all(|(d, _)| d[1] > 0.0), "woman {k}: sideways by {side} mm");
+        // the band has another breadth than MakeHuman's: its upper corners go up by another length than its lower
+        // ones, by the band's own breadth
         let (mut high, mut low) = (f32::MIN, f32::MAX);
         for (d, _) in &moved {
             high = high.max(d[1]);

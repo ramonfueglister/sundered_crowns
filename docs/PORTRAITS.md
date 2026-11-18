@@ -4216,6 +4216,70 @@ table, not for Apoleia's). Pictures (project files, `portraits/`): `runde113_vor
 `runde113_vorher_nachher_maenner.png` (the sample's eight grown women and eight grown men, round 112 above
 and now below), `runde113_nah.png` (four larger), `runde113_neben_ck3.png` (six beside the reference).
 
+**Round 114: the skin's colour, brows and eyes held to five faces instead of one** (2026-11-18). Round 113
+had found the lit cheek held to one face's red. This round reads five large faces of the developer diaries
+(A, B, C, E of `ck3_06`, N of `ck3_10`; three women, two men) wherever the gauntlet reads the ruler designer's
+woman, and sets ours beside them eye by eye at one size.
+
+| lit cheek | A | B | C | E | N | mean of the five | the ruler designer's woman | ours before | ours now |
+|---|---|---|---|---|---|---|---|---|---|
+| L | 58.5 | 59.7 | 57.9 | 56.1 | 69.5 | 60.3 | 56.1 | 55.1 | 58.8 |
+| a* | 15.4 | 14.8 | 14.9 | 17.0 | 18.8 | 16.2 | 22.9 | 23.5 | 17.1 |
+| b* | 25.0 | 25.4 | 23.6 | 26.4 | 27.7 | 25.6 | 25.4 | 26.2 | 26.2 |
+
+(Over four placements of the disc on the cheek the mean stays within L 57 to 62, a* 15.1 to 18.2, b* 25.1 to
+25.6.) Her cheek is the reddest of the six by 4 a*; held to her, ours were salmon beside every other face of
+the reference. **The skin**: the tint takes less green (`skin.tint` 1, 0.87, 0.77; 1, 0.75, 0.77), the skin
+keeps 0.7 of its colour (0.88), the picture is a little lighter (`exposure` 0.38; 0.35). Grown women's lit
+cheek now 58.8, 17.1, 26.2 (hue 56.9, chroma 31.3; the five's 57.7 and 30.3), the men's 59.7, 16.1, 25.9. Nine
+settings of tint, colour and exposure were measured on the sixteen grown people; this is the sixth.
+
+**The brows**: on the five they are a soft band of a brown between the hair's and the skin's, a woman's about
+as heavy as a man's; ours were strokes of near black, a woman's a thin line. `DressSet::brow_soft` (0.3 for
+women and men: how far every brow's hairs go towards the skin's colour, on top of the weight's gene),
+`brow_band` 1.15 for women (0.9), `lash_tone` (the lashes and the line of their roots a dark brown mixed
+into the hair's colour, where they were the hair's at half), `brow.brows` 0.95 (1.15).
+
+**The eyes**: our lashes lay on the upper lid as a band of dark stripes (the cards seen from in front:
+`brow.lashes` 0.3; 0.6), the iris had a hard dark rim (`eye.ring` 0.35; 0.55), the white was a cooler grey
+(the tint 0.84, 0.73, 0.57; the upper lid's shade 0.4). By measure that is a small step: the white of the lit
+eye a* 7.5, b* 14.8 at 15 L under the cheek (before 7.4, 13.0; the five's 11.2, 18.7 at 12 under, and they
+differ among themselves from 27 under to 2 over). What stays: a black line round the eye's opening, drawn out
+past its outer corner, and a pupil as a black dot in a light iris with a large glint, where theirs have a
+soft dark lid and an iris that is dark as a whole. The darkest third of a box round the pupil is 52 L under
+the cheek at a* 1 on ours and 22 to 49 under at a* 3 to 16 on theirs. Not the lashes, not the lid's shade,
+not the iris' own darkness and not cast shadow (each taken away in turn: 50 to 52 under).
+
+**The gauntlet**: 20 of 22. The five lines of the lit cheek's colour are held to the five's mean (L 60.3, a*
+16.2, b* 25.6, chroma 30.3, hue 57.7), the men's chroma to the two men's (30.5), "cheek redder than
+forehead" to 2.5 (two of the five show a forehead in the cheek's light: 0.9 to 4.0 by where one reads; her
+own 5). One line is new and **fails**: "man: far cheek against the lit", the reference's -16.9 (the emperor
+-20.9, B -11.6, E -18.3), ours -31.9, with our women's at -19.0 on the same stage. The cause is not found
+(not the key's cast shadow, `shadow.strength` 0.6: -30.2; not the fill at 0.32 and 0.45: -28.8 and -26.0,
+with everything redder; not the tone curve's toe). The nose's line fails as in round 113 (1.2; 8).
+
+Tried and not kept: a softer toe of the tone curve (`finish.curve.black` 1.25 and 1.0: the darks of the eye
+3 and 8 L lighter, the gauntlet's eye line lost at 1.0, nothing else moves, since the curve runs on a
+colour's strongest part and the skin's red lies above the toe even in the shade); a darker iris (0.85 with
+less colour: black holes and grey whites, as before round 103); a warm colour for the shade in the skin's
+folds (no difference to see or to measure); the brows' band at 1.35 for women and 1.3 for men (a man's brow
+moved by 1.3 mm, a woman's sideways; beside the five's eyes 1.15 and 1.0 were enough).
+
+Honest about it. The before and after differ at a glance in the skin's colour and in the brows, and hardly
+in the eyes. And colour was not what stood between these faces and the reference's: drawn without veil and
+clothes (the test page's `without=cloth_`), the women's heads are pears, as broad at the mouth as at the
+cheekbones over a narrow neck and under a small skull. In lengths from the line of the eyes to the chin, a
+face of the reference is about 1.4 broad at the eyes, 1.0 at the mouth and 0.7 between mouth and chin (read
+by hand on A); ours 1.4, 1.4 and 1.2 (940020). Round 107 drew the faces broader by what the reference's
+cheekbones measure and left the jaw as broad; that is the next round's. All values of this round are by
+measure against five faces and by eye: PLACEHOLDER.
+
+Tests: `portrait/tests/variety.rs` (every brow nearer the skin's colour by `brow_soft`),
+`portrait/tests/faces.rs` (a woman's brows higher than MakeHuman draws them; no longer narrower),
+`tests/portrait.test.ts` as before. Pictures (project files, `portraits/`):
+`runde114_vorher_nachher_frauen.png`, `runde114_vorher_nachher_maenner.png` (round 113 above, now below),
+`runde114_augen_neben_ck3.png` (the lit eye of five: the reference, round 113, now).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair

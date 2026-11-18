@@ -14,7 +14,7 @@
 // from a source: PLACEHOLDER.
 //
 // What it does not hold: forms (portrait/tests/faces.rs holds them against a survey of real heads), hair, cloth,
-// children (the reference's faces read are a woman's and an emperor's), and whether a picture is good. A face
+// children (the reference's faces read are grown), and whether a picture is good. A face
 // can pass every line and be dead; a line that fails says where to look first.
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -50,12 +50,16 @@ const chroma = (g, place) => Math.hypot(g[`${place} a*`], g[`${place} b*`]);
 /** The checks: what is held, the reference's value, ours, the limit, and the round of docs/PORTRAITS.md that read
  *  the reference's value. A value "against the lit cheek" is that place's L less the lit cheek's. */
 const checks = [
-  // the reference's woman (the ruler designer's, the one face large enough to read)
-  ['woman: lit cheek L', 56.1, women['lit cheek L'], L, 'round 81'],
-  ['woman: lit cheek a*', 22.9, women['lit cheek a*'], AB, 'round 71'],
-  ['woman: lit cheek b*', 25.4, women['lit cheek b*'], AB, 'round 71'],
-  ['woman: lit cheek chroma', 34.2, women['lit cheek chroma'], AB, 'round 81'],
-  ['woman: lit cheek hue (degrees)', 48, women['lit cheek hue'], 3, 'round 71'],
+  // The lit cheek's colour: until round 114 the ruler designer's woman's (L 56.1, a* 22.9, b* 25.4, chroma 34.2,
+  // hue 48), "the one face large enough to read". Round 114 read five large faces of the developer diaries at the
+  // same place (three women, two men: L 56 to 70, a* 14.8 to 18.8, b* 23.6 to 27.7; over four placements of the
+  // place the mean stays within L 57 to 62, a* 15.1 to 18.2, b* 25.1 to 25.6): hers is the reddest of the six by
+  // 4 a*, and held to her ours were salmon beside every other. Held to the five's mean since.
+  ['lit cheek L', 60.3, women['lit cheek L'], L, 'round 114'],
+  ['lit cheek a*', 16.2, women['lit cheek a*'], AB, 'round 114'],
+  ['lit cheek b*', 25.6, women['lit cheek b*'], AB, 'round 114'],
+  ['lit cheek chroma', 30.3, women['lit cheek chroma'], AB, 'round 114'],
+  ['lit cheek hue (degrees)', 57.7, women['lit cheek hue'], 3, 'round 114'],
   // (Until round 107 held to her own, -27.7. The reference's faces differ in this more than in anything else: its
   // emperor's far cheek is 20.9 under his lit one, and five women of its developer diaries, read in round 107 on
   // pictures scaled to ours, have theirs half as far under as ours by the same reading. Held to the softer of
@@ -65,7 +69,9 @@ const checks = [
   // by a scratch script along the same level lines, on her picture and on ours (hers -34 to -35 and -16)
   ['woman: beside the nose against cheek', -34.5, -women['beside the nose darker than cheek (L)'], AGAINST, 'round 83'],
   ['woman: cheek beyond the nose', -16, -women['cheek beyond the nose darker than cheek (L)'], AGAINST, 'round 83'],
-  ['woman: cheek redder than forehead', 5, women['cheek redder than forehead (a*)'], AB, 'round 71'],
+  // (her own: 5. Two of round 114's five faces show a forehead in the same light as the cheek: 0.9 to 4.0 by
+  // where on the forehead one reads)
+  ['woman: cheek redder than forehead', 2.5, women['cheek redder than forehead (a*)'], AB, 'round 114'],
   // (Round 113) This line FAILS, and is left to: the 8 is one face's, read on the face's middle line. Five faces
   // read in round 113 (three of the developer diaries' large women, two men) have a narrow streak of light on the
   // nose, a thirtieth of the face wide, 1.3 to 11.0 over the lit cheek (mean 6.8), with skin 2 to 6 under the
@@ -85,13 +91,19 @@ const checks = [
   // shadow lets through took the colour of light that has been in skin (`skin.bleed`).
   ['woman: far cheek chroma against lit', -0.6, chroma(women, 'shaded cheek') - women['lit cheek chroma'], AB_AGAINST, 'round 113'],
   ['man: far cheek chroma against lit', -1.8, chroma(men, 'shaded cheek') - men['lit cheek chroma'], AB_AGAINST, 'round 113'],
+  // (Round 114) This line FAILS, and says where to look: the far cheek of the reference's men is 20.9 (the
+  // emperor), 11.6 and 18.3 (two men of the developer diaries) under the lit one; ours 31, with the women's at 19
+  // on the same stage. Not the key's cast shadow, not the fill, not the tone curve's toe (tried in rounds 113
+  // and 114). The cause is not found: open.
+  ['man: far cheek against the lit', -16.9, men['shaded cheek L'] - men['lit cheek L'], AGAINST, 'round 114'],
   // the reference's emperor (a small face, read five times enlarged). His picture is another scene with another
   // light than the woman's: his lit cheek is at L 65.5 where hers is at 56.1, his far cheek 20.9 under it where
   // hers is 27.7. One stage lights both of ours, and it is held to hers: of his face only what stands against
   // his own cheek is held, and his skin's colour. His lips are held against those of our men who wear no beard
   // over them (stubble aside): a beard's hair over the lip reads darker and less red than any lip, and until
   // round 106 the mean over all men passed by that, with lips 7 L too light on the men one sees them on.
-  ['emperor: lit cheek chroma', 33.7, men['lit cheek chroma'], AB, 'round 73'],
+  // (his skin's chroma until round 114: 33.7. The two men of round 114's five faces: 29.7 and 31.3)
+  ['man: lit cheek chroma', 30.5, men['lit cheek chroma'], AB, 'round 114'],
   ['emperor: lower lip against cheek', -25.8, -shaven['lower lip darker than cheek (L)'], AGAINST, 'round 82'],
   ['emperor: lower lip redder (a*)', 7.1, shaven['lower lip redder than cheek (a*)'], AB, 'round 82'],
   ['emperor: eye against cheek', -40.6, -men['eye darker than cheek (L)'], AGAINST, 'round 83'],

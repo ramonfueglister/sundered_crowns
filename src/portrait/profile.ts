@@ -368,7 +368,23 @@ export const APOLEIA: StageProfile = {
  *  0.88 of its colour (the lit cheek's chroma went past the reference's with the red fill): 2.9 and 4.3 under
  *  now, the women's far cheek 17.8 L under the lit one. `pores` 0.4 (0.8): the pores' image has 110 by 150
  *  texels for a face and mottled the highlights. The skin's image is the one without the photographs' light
- *  for every head (portrait/src/real_look.rs). */
+ *  for every head (portrait/src/real_look.rs).
+ *  Round 114: the skin was salmon. Its colour had been held to one face of the reference since round 71 (the
+ *  ruler designer's woman: lit cheek a* 22.9, hue 48); five large faces of the developer diaries read at the same
+ *  place have L 60.3, a* 16.2, b* 25.6 in the mean (hue 57.7, chroma 30.3), and hers is the reddest of the six.
+ *  Ours stood at 55.1, 23.5, 26.2. The tint takes less green (0.87; 0.75), the skin keeps 0.7 of its colour
+ *  (0.88) and the picture is a little lighter (exposure 0.38; 0.35): 58.8, 17.1, 26.2 (hue 56.9, chroma 31.3),
+ *  the men's 59.7, 16.1, 25.9. The eyes, set beside the five's eye by eye at one size: our lashes lay on the
+ *  upper lid as a band of dark stripes (`brow.lashes` 0.3; 0.6), the iris had a hard dark rim (`eye.ring` 0.35;
+ *  0.55), the brows were strokes of near black (`brow.brows` 0.95; 1.15, with the builder's `brow_soft`), and
+ *  the white was a cooler grey than theirs (theirs a* 11, b* 19 at 12 L under the cheek; ours a* 7.4, b* 13.0
+ *  at 15 under: the tint 0.84, 0.73, 0.57; 0.84, 0.77, 0.64, and the upper lid's shade lighter, 0.4; 0.3. Now
+ *  a* 7.5, b* 14.8: a small step). What the eye still has and theirs do not: a black line round its opening
+ *  and a pupil as a black dot in a light iris (the darkest third of a box round the pupil 52 L under the cheek
+ *  at a* 1; theirs 22 to 49 under at a* 3 to 16). Tried and dropped: a darker iris (black holes, as before
+ *  round 103), a softer toe of the tone curve (`finish.curve.black` 1.0: the eye's darks 8 L lighter, but the
+ *  eye as a whole leaves the reference's by 4 and nothing else moves: the skin's red lies above the toe), a
+ *  warm colour for the shade in the skin's folds (nothing to see). */
 export const ENGLAND_1356: StageProfile = {
   key: 'england1356',
   lights: {
@@ -380,12 +396,12 @@ export const ENGLAND_1356: StageProfile = {
   sky: { top: '#e6ecff', ground: '#a0653f', energy: 0.12 },
   rimShadow: 0.5,
   shadow: { map: 1024, strength: 0.7, radius: 2, spread: 10, lights: 8 },
-  exposure: 0.35,
+  exposure: 0.38,
   turn: -0.24, rise: 0.03, close: 1.12,
   anisotropy: 8,
-  skin: { rough: 0.55, specular: 0.42, pores: 0.4, wrap: [0.3, 0.16, 0.10], finer: 1, fit: 1, blotch: 0.05, speckle: 0.10, colour: 0.88, tint: [1, 0.75, 0.77], relief: 0.0015, oil: 0.5, fuzz: 0.3, child: 0.3, bleed: [1, 0.5, 0.35] },
-  eye: { corner: { from: 0.3, to: 0.8, dark: 0.35 }, lid: { from: -0.35, to: 0.05, dark: 0.3 }, tint: [0.84, 0.77, 0.64], white: 1.3, iris: 1.15, colour: 1.1, lift: 0.6, rough: 0.14, specular: 0.6, wrap: 0.5, cornea: 0.36, ring: 0.55 },
-  brow: { rough: 1, specular: 0.05, lashes: 0.6, brows: 1.15 },
+  skin: { rough: 0.55, specular: 0.42, pores: 0.4, wrap: [0.3, 0.16, 0.10], finer: 1, fit: 1, blotch: 0.05, speckle: 0.10, colour: 0.7, tint: [1, 0.87, 0.77], relief: 0.0015, oil: 0.5, fuzz: 0.3, child: 0.3, bleed: [1, 0.5, 0.35] },
+  eye: { corner: { from: 0.3, to: 0.8, dark: 0.35 }, lid: { from: -0.35, to: 0.05, dark: 0.4 }, tint: [0.84, 0.73, 0.57], white: 1.3, iris: 1.15, colour: 1.1, lift: 0.6, rough: 0.14, specular: 0.6, wrap: 0.5, cornea: 0.36, ring: 0.35 },
+  brow: { rough: 1, specular: 0.05, lashes: 0.3, brows: 0.95 },
   cap: { tone: 1.7, light: 2.6, colour: 0.7, wrap: 1, shadow: false, stubble: 0, beard: { tone: 5.5, light: 3.2, colour: 0.65, wrap: 0.3 } },
   cloth: { wool: 2.6, linen: 1 },
   cards: { rough: 0.72, specular: 0.2, anisotropy: 0.3 },

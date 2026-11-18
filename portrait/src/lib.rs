@@ -381,7 +381,7 @@ mod tests {
         assert_eq!(set.brow_band_of(true, 8.0), 1.0);
         assert_eq!(set.brow_lift_of(true, 30.0), set.brow_lift[0]);
         assert_eq!(set.brow_band_of(true, 30.0), set.brow_band[0]);
-        assert!(set.brow_lift[0].iter().all(|mm| *mm > 0.0) && set.brow_band[0] < 1.0);
+        assert!(set.brow_lift[0].iter().all(|mm| *mm > 0.0) && set.brow_band[0] != 1.0);
         assert_eq!((set.brow_lift_of(false, 30.0), set.brow_band_of(false, 30.0)), ([0.0; 3], 1.0));
         // a girl of 13 is half way (her head has its adult form at 15)
         assert!((set.brow_lift_of(true, 13.0)[1] - set.brow_lift[0][1] / 2.0).abs() < 1e-5);
