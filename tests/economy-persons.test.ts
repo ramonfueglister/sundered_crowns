@@ -22,6 +22,9 @@ import { bringInHarvest } from '../src/sim/systems/harvest';
 
 const { s, w } = newWorldState();
 const P = s.person.cols, F = s.firm.cols, e = s.economy.cities!;
+// Nobody moves in this world (people feature 4; tests/moves.test.ts runs the moves with the economy): the upgrades
+// of the old versions below lay out the land register for persons who live where they were founded.
+P.moves.fill(ALIVE);
 const N = e.places.length;
 const placeOf = (x: WorldState, id: number) => x.family.cols.place[x.person.cols.family[id]];
 const cityOf = new Map<number, number>(Array.from(e.places, (p, k) => [p, k]));
@@ -147,7 +150,8 @@ describe('what the engine computes', () => {
         // the savings of the persons are the deposits of the households (the components hold 32 bits)
         const deposits = figure(s, k, FIGURE.depositsHouseholds);
         expect(Math.abs(sum(P.savings, everybody) - deposits)).toBeLessThan(1e-5 * Math.abs(deposits));
-        for (const id of everybody) expect(P.spent[id]).toBeGreaterThanOrEqual(0);
+        // what a person spent is the port's budget less what was left of it: 0 up to the rounding of that difference
+        for (const id of everybody) expect(P.spent[id]).toBeGreaterThanOrEqual(-1e-15);
       }
       for (let f = 0; f < s.firm.size; f++) {
         expect(F.employees[f]).toBe(staff[f]);

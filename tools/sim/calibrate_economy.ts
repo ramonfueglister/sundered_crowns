@@ -32,7 +32,7 @@ export function cityCalibrations(t?: CalibrationTable): { place: number; name: s
 /** The file as it is written: one key per line at the top, one city per line. */
 export function calibrationJson(t: CalibrationTable = readTable()): string {
   const cities = cityCalibrations(t), c = cities[0].calibration;
-  return `{\n "case": ${JSON.stringify(`${t.case} at the size of each city`)},\n "table": "data/economy/england_1356.json",\n "year": ${c.year},\n "world": ${JSON.stringify(REFERENCE)},\n "scale": ${t.scale.value},\n "periods_per_year": ${c.periods_per_year},\n "clock": ${JSON.stringify(c.clock)},\n "wage": ${JSON.stringify(t.cities.wage.value)},\n "prices": ${JSON.stringify(t.cities.prices.value)},\n "savings_spent_per_year": ${t.cities.savings_spent_per_year.value},\n "crown": ${JSON.stringify(t.cities.crown.value)},\n "cities": [\n`
+  return `{\n "case": ${JSON.stringify(`${t.case} at the size of each city`)},\n "table": "data/economy/england_1356.json",\n "year": ${c.year},\n "world": ${JSON.stringify(REFERENCE)},\n "scale": ${t.scale.value},\n "periods_per_year": ${c.periods_per_year},\n "clock": ${JSON.stringify(c.clock)},\n "wage": ${JSON.stringify(t.cities.wage.value)},\n "prices": ${JSON.stringify(t.cities.prices.value)},\n "savings_spent_per_year": ${t.cities.savings_spent_per_year.value},\n "crown": ${JSON.stringify(t.cities.crown.value)},\n "owner": ${JSON.stringify(t.cities.owner.value)},\n "cities": [\n`
     + cities.map((x) => `  ${JSON.stringify({ place: x.place, name: x.name, people: x.people, working: x.working.length, parameters: x.calibration.parameters, initial_conditions: x.calibration.initial_conditions })}`).join(',\n')
     + '\n ]\n}\n';
 }
@@ -53,5 +53,6 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   console.log(t.cities.prices.value === 'demand' ? 'a planning firm changes its supply or its price by the gap between demand and supply (CANVAS)' : 'a planning firm sets supply and price by the rule of the paper');
   console.log(t.cities.savings_spent_per_year.value === 0 ? 'a household spends out of its income only, as in the port' : `a household spends ${t.cities.savings_spent_per_year.value} of what it holds above its target in a year`);
   console.log(t.cities.crown.value === 'revenue' ? 'the crown of a city buys with what it took in the day before' : 'the purchases of the crown follow their own series, as in the paper');
+  console.log(`goods travel ${t.routes.km_per_day.value.land} km a day by land and ${t.routes.km_per_day.value.sea} by sea; ${t.routes.apart.value.join(', ') || 'no region'} apart from the others`);
   console.log(t.cities.unemployment_benefit.value === 0 ? 'a person without work is paid nothing' : `a person without work is paid ${t.cities.unemployment_benefit.value} of the last wage after tax`);
 }

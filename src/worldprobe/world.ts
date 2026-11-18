@@ -2,7 +2,7 @@
 // on the probe's grid, with rock, meadow and woods chosen from the real heights and the forest of the world's start
 // year (forest.ts; the forest cover of 1356 for a year without one).
 // On it stand the towns and villages (see settle.ts) and the fields the simulation has cultivated (arable.ts). North is at the top of the picture. No roads yet.
-import { Batch, hash2, noise2, rgb, seeded, smooth } from '../lookprobe/batch';
+import { Batch, hash2, noise2, rgb, seeded, shade, smooth } from '../lookprobe/batch';
 import { ACACIA, CYPRESS, JUNGLE, LEAVES, PALM, acacia, cypress, palm, tree } from '../lookprobe/blocks';
 import { type Ground, type GroundTraits, LAND_Y, Mat, N, SEA_Y, SUMMIT, idx, inGrid, measureShore, occlude, rockPillar } from '../lookprobe/layout';
 import type { Shape, StageScene } from '../lookprobe/stage';
@@ -21,7 +21,9 @@ import { type Cover, type Woods, coverLand, lotFill } from './far';
 import { unshade } from './mean';
 import { FARMS, FIELD_GROUND, LOT_BLOCKS, LOT_FILL, type Lot, type Monument, PEOPLE_PER_PERSON, type Settled, type Site, type Survey, type Told, farmsFor, firstHalf, raise, settle } from './settle';
 import { type Columns, columnsOf } from './nearground';
-import { MONUMENTS, m, modelOf, styleOf } from '../buildings';
+import { MONUMENTS, bridge, m, modelOf, styleOf } from '../buildings';
+import { ROAD_KINDS, type Road, relaxPoints, roadsIn, wayOnGround } from './roads';
+import { Matrix4 } from 'three';
 
 /**
  * The world is laid out in blocks: one block of the finest step is a part of a cell of the game map's data (FINER
@@ -86,6 +88,20 @@ const TREE_PITCH = 2.4;
 const STANDS: ReadonlySet<number> = new Set([1, 2, 3, 5, 6, 7, 8, 9]);
 /** of the places for a tree, this share carries one on the open land (single trees), and this much more inside a wood: the woods stand closed, the land between them is clear */
 const STRAY_TREES = 0.01, CLOSED = 0.88;
+/** the ground takes the colour of a path up to about this many blocks from its line (lookprobe/terrain.ts topColor): a way's band edge is put there */
+const ROAD_SHOWS = 1.65;
+/** from afar a way's band is at least this many blocks to each side of its line, by kind (track, road, highway) */
+const FAR_HALF = [0.35, 0.45, 0.55];
+/** from afar the cover of a block is taken off where its middle lies within this many blocks of a way's band (inside it when negative) */
+const FAR_CLEAR = 0.2;
+/** blocks to a way where none is near (finite, so that the corners can be blended) */
+const FAR_FROM_ROADS = 1e4;
+/** the surface of a way at the finest step lies this far over the averaged ground, and its verges reach this far down; its colours by kind (track, road, highway): beaten earth, the busier ways paler with gravel */
+const RIBBON_LIFT = 0.08, RIBBON_SKIRT = 1.5, RIBBON = [rgb(0x9c7f52), rgb(0xae9266), rgb(0xbca278)] as const;
+/** a way's height is the ground's under its line averaged over this many blocks before and after */
+const ROAD_EVEN = 6;
+/** the path a way finds over the columns is relaxed over this many blocks (roads.ts relaxPoints), so that it bends instead of stepping by 45 degrees */
+const WAY_SIGMA = 4;
 /** km to a degree of longitude at the equator */
 const KM_PER_DEGREE = 111.32;
 /** the ids of the hamlets, above those of the gazetteer's places: 256 to a town */
@@ -142,9 +158,10 @@ export function terrace(level: Int16Array, mat: Uint8Array) {
  * world: its towns, their hamlets before the walls, and the fields round them. With `parcels` (lots.ts) the houses of
  * a town stand on the parcels of its families. `survey` is asked for the building ground of every town (settle.ts);
  * then nothing is drawn. With `mean` the ground of a coarser step is covered by what the finer step shows there
- * (mean.ts) instead of what far.ts lays out.
+ * (mean.ts) instead of what far.ts lays out. `roads`: the ways of the world's start year (roads.ts), drawn on the
+ * ground.
  */
-export function buildWorld(region: Region, piece: Piece, places: readonly Place[], landmarks: readonly Landmark[], bakedSky = true, step = 0, climate: Climate | null = null, inhabitants: ReadonlyMap<number, number> = new Map(), models: ReadonlyMap<string, Batch> = new Map(), forest: Forest | null = null, rural: Rural | null = null, arable: Arable | null = null, hamlets: HamletLands | null = null, parcels: TownParcels | null = null, survey?: Survey, mean: Cover | null = null, told?: Told): WorldScene {
+export function buildWorld(region: Region, piece: Piece, places: readonly Place[], landmarks: readonly Landmark[], bakedSky = true, step = 0, climate: Climate | null = null, inhabitants: ReadonlyMap<number, number> = new Map(), models: ReadonlyMap<string, Batch> = new Map(), forest: Forest | null = null, rural: Rural | null = null, arable: Arable | null = null, hamlets: HamletLands | null = null, parcels: TownParcels | null = null, survey?: Survey, mean: Cover | null = null, told?: Told, roads: readonly Road[] | null = null): WorldScene {
   // a block's width in cells of the data: the rules of the land were made for those cells
   const cell = 2 ** (step - FINER_STEPS), flatter = cell ** 0.6, valleyFrom = Math.min(250, VALLEY_FROM + 32 * Math.max(0, step - FINER_STEPS)), rockFoot = Math.max(1, Math.round(FOOT / Math.sqrt(cell)));
   const { ox, oz, part } = piece, c0x = region.x0 * region.cells, c0y = region.y0 * region.cells;
@@ -324,9 +341,106 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   // the sea bed falls away from the coast, as in the probe
   for (let i = 0; i < N * N; i++) { if (kind[i] === Water.Sea) g.h[i] = Math.max(0, 2 - Math.floor(g.shore[i] / 4)); g.occ[i] = g.wet[i] ? g.surf[i] : g.h[i]; }
 
+  // the ways: lines on the ground (roads.ts). At the finest step a band of beaten earth `half` blocks to each side of
+  // the line, which the ground's colour takes (terrain.ts `road`), with a bridge where it crosses a river; from afar
+  // the same band, never narrower than FAR_HALF blocks, with the woods taken off it.
+  const ways: { k: number; pts: [number, number][]; ys?: Float64Array }[] = [];
+  if (roads) {
+    const px0 = region.x0, py0 = region.y0, pw = region.w / region.cells, ph = region.h / region.cells;
+    for (const r of roadsIn(roads, px0 - 1, py0 - 1, px0 + pw + 1, py0 + ph + 1)) {
+      if (step > ROAD_KINDS[r.k].until) continue;
+      const pts: [number, number][] = [];
+      for (let k = 0; k < r.p.length; k += 2) pts.push(toGround((r.p[k] - px0) * region.cells, (r.p[k + 1] - py0) * region.cells));
+      ways.push({ k: r.k, pts });
+    }
+  }
+  // at the finest step each way finds its path over the columns between pins of its line (roads.ts wayOnGround)
+  if (step === 0 && ways.length) {
+    const water = Uint8Array.from(g.wet, (w, i) => (w ? (kind[i] === Water.Land ? 1 : 2) : 0)), rocky = (i: number) => g.mat[i] === Mat.Rock;
+    for (const way of ways) way.pts = relaxPoints(wayOnGround(way.pts, ox, oz, N, g.h, rocky, water), WAY_SIGMA, 1);
+  }
+  /**
+   * Blocks to the edge of the nearest way's band (negative inside it) at the corners of the columns, at the finest
+   * step, and the height the way has there. A way runs smoothly over the land: its height is that of the ground
+   * under its line, averaged over ROAD_EVEN blocks before and after, so that it climbs a hill as a ramp and is cut
+   * into the rock of the mountains as a ledge.
+   */
+  const roadEdge = ways.length && !(step === 1 && mean) ? new Float32Array((N + 1) * (N + 1)).fill(FAR_FROM_ROADS) : null, roadY = roadEdge ? new Float32Array((N + 1) * (N + 1)) : null;
+  if (roadEdge && roadY) for (const way of ways) {
+    const { k, pts } = way;
+    // from afar a way is never narrower than FAR_HALF, so that its line can be followed
+    const half = step === 0 ? ROAD_KINDS[k].half : Math.max(ROAD_KINDS[k].half / 2 ** step, FAR_HALF[k]), reach = half + 3;
+    // the ground under the line, and the length along it
+    const at = new Float64Array(pts.length), along = new Float64Array(pts.length), known = new Uint8Array(pts.length);
+    pts.forEach(([x, z], q) => {
+      if (q) along[q] = along[q - 1] + Math.hypot(x - pts[q - 1][0], z - pts[q - 1][1]);
+      const cx = Math.floor(x), cz = Math.floor(z);
+      if (inGrid(cx, cz) && !g.wet[idx(cx, cz)]) { at[q] = g.h[idx(cx, cz)]; known[q] = 1; }
+    });
+    const even = new Float64Array(pts.length);
+    for (let q = 0, lo = 0, hi = 0, sum = 0, n = 0; q < pts.length; q++) {
+      while (hi < pts.length && along[hi] - along[q] <= ROAD_EVEN) { if (known[hi]) { sum += at[hi]; n++; } hi++; }
+      while (along[q] - along[lo] > ROAD_EVEN) { if (known[lo]) { sum -= at[lo]; n--; } lo++; }
+      even[q] = n ? sum / n : at[q];
+    }
+    way.ys = even;
+    for (let s = 0; s + 1 < pts.length; s++) {
+      const [ax, az] = pts[s], [bx, bz] = pts[s + 1], dx = bx - ax, dz = bz - az, len2 = dx * dx + dz * dz || 1e-9;
+      const x0 = Math.max(0, Math.floor(Math.min(ax, bx) - reach)), x1 = Math.min(N, Math.ceil(Math.max(ax, bx) + reach));
+      const z0 = Math.max(0, Math.floor(Math.min(az, bz) - reach)), z1 = Math.min(N, Math.ceil(Math.max(az, bz) + reach));
+      for (let z = z0; z <= z1; z++) for (let x = x0; x <= x1; x++) {
+        const t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / len2)), d = Math.hypot(x - ax - t * dx, z - az - t * dz) - half, i = z * (N + 1) + x;
+        if (d < roadEdge[i]) { roadEdge[i] = d; roadY[i] = even[s] + (even[s + 1] - even[s]) * t; }
+      }
+    }
+  }
+  /** blocks to the edge of the nearest way at a ground point (bilinear between the corners) */
+  const roadAt = (x: number, z: number) => {
+    if (!roadEdge) return Infinity;
+    const fx = Math.max(0, Math.min(N - 1e-6, x)), fz = Math.max(0, Math.min(N - 1e-6, z)), x0 = Math.floor(fx), z0 = Math.floor(fz), u = fx - x0, v = fz - z0, i = z0 * (N + 1) + x0;
+    return (roadEdge[i] * (1 - u) + roadEdge[i + 1] * u) * (1 - v) + (roadEdge[i + N + 1] * (1 - u) + roadEdge[i + N + 2] * u) * v;
+  };
+  // a way over the rock is cut into it: the columns under its band are meadow, at the heights of the rock
+  if (roadEdge && roadY) for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
+    const i = idx(x, z), c = z * (N + 1) + x;
+    if (g.wet[i] || roadAt(x + 0.5, z + 0.5) >= 0) continue;
+    if (g.mat[i] === Mat.Rock) g.mat[i] = Mat.Grass;
+    if (step > 0) continue;
+    // the column takes the way's height: the mean of its corners that lie on the way
+    let sum = 0, n = 0;
+    for (const j of [c, c + 1, c + N + 1, c + N + 2]) if (roadEdge[j] < 0.5) { sum += roadY[j]; n++; }
+    // just under the way's surface (the band below lies on it as a smooth ramp)
+    if (n) g.h[i] = g.occ[i] = Math.floor(sum / n + RIBBON_LIFT);
+  }
+  const bridges: { x: number; z: number; y: number; span: number; turn: number; width: number }[] = [];
+  if (step === 0) for (const { k, pts } of ways) {
+    // where the line runs over a river (not a lake or the sea), a stone bridge from the last dry point to the next
+    let dry: [number, number, number] | null = null, over: [number, number, number] | null = null;
+    for (let s = 0; s + 1 < pts.length; s++) {
+      const [ax, az] = pts[s], [bx, bz] = pts[s + 1], len = Math.hypot(bx - ax, bz - az);
+      for (let t = 0; t < len; t += 0.25) {
+        const x = ax + ((bx - ax) * t) / len, z = az + ((bz - az) * t) / len, cx = Math.floor(x), cz = Math.floor(z);
+        if (!inGrid(cx, cz)) { dry = over = null; continue; }
+        const i = idx(cx, cz);
+        if (g.wet[i]) {
+          // a lake or the sea ends the crossing: the way waits for a ferry there
+          if (kind[i] !== Water.Land) { over = null; dry = null; continue; }
+          if (!over && dry) over = dry;
+          continue;
+        }
+        if (over) {
+          const span = Math.hypot(x - over[0], z - over[1]);
+          if (span < 14) bridges.push({ x: (x + over[0]) / 2, z: (z + over[1]) / 2, y: Math.min(over[2], g.h[i]), span, turn: Math.atan2(-(z - over[1]), x - over[0]), width: 2 * ROAD_KINDS[k].half + 0.6 });
+          over = null;
+        }
+        dry = [x, z, g.h[i]];
+      }
+    }
+  }
+
   // towns, villages and fields: the places that fall on the ground, and the share of the land under the plough.
   // Vineyards are a quarter of the fields of the warm low country and thin out to none by 52° north (a rule of thumb).
-  const things = new Batch(), counts: Record<string, number> = { tree: 0 }, sites: Site[] = [], monuments: Monument[] = [], all: Site[] = [];
+  const things = new Batch(), counts: Record<string, number> = { tree: 0, ways: ways.length }, sites: Site[] = [], monuments: Monument[] = [], all: Site[] = [];
   const onGround = (p: readonly [number, number]) => p[0] >= 2 && p[1] >= 2 && p[0] < N - 2 && p[1] < N - 2;
   /** the fields of the towns: the ground within `r` blocks of a town's middle */
   const fields: { x: number; z: number; r: number }[] = [];
@@ -497,7 +611,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
       // a tree stands clear of the water, of what is built and of drops of more than a step
       let fits = true;
       for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) { const j = idx(Math.floor(x) + dx, Math.floor(z) + dz); if (g.wet[j] || built.used[j] || Math.abs(g.h[j] - g.h[i]) > 1) fits = false; }
-      if (!fits) continue;
+      if (!fits || roadAt(x, z) < 1.3) continue;
       // palms line the water of the desert and of the hot steppe, and stand among the trees of the rain forest
       const palms = oasis(i) && byWater(Math.floor(x), Math.floor(z), 3), lot = hash2(tx, tz, 73);
       if (palms ? lot > 0.3 : lot > (BARE.includes(here) ? 0 : STRAY_TREES) + CLOSED * wooded(x, z)) continue;
@@ -511,8 +625,43 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     }
   }
 
+  // the bridges of the ways
+  const turned = new Matrix4();
+  for (const b of bridges) if (own(Math.floor(b.x), Math.floor(b.z))) { things.append(bridge(b.span, b.width), turned.makeRotationY(b.turn).setPosition(b.x, b.y, b.z)); counts.bridge = (counts.bridge ?? 0) + 1; }
+  // at the finest step the way is a smooth band laid over the columns, not a colour of their tops: its surface follows
+  // its relaxed line and its averaged height, with verges down to the ground on both sides, so that it neither steps
+  // in plan nor in height
+  if (step === 0) for (const { k, pts, ys } of ways) {
+    if (!ys || pts.length < 2) continue;
+    const half = ROAD_KINDS[k].half, top = RIBBON[k], verge = shade(top, 0.8);
+    const across = (q: number): [number, number] => {
+      const a = pts[Math.max(0, q - 1)], b = pts[Math.min(pts.length - 1, q + 1)], dx = b[0] - a[0], dz = b[1] - a[1], len = Math.hypot(dx, dz) || 1;
+      return [(-dz / len) * half, (dx / len) * half];
+    };
+    for (let q = 0; q + 1 < pts.length; q++) {
+      const [ax, az] = pts[q], [bx, bz] = pts[q + 1];
+      if (!own(Math.floor((ax + bx) / 2), Math.floor((az + bz) / 2)) || !inGrid(Math.floor(ax), Math.floor(az)) || !inGrid(Math.floor(bx), Math.floor(bz))) continue;
+      if (g.wet[idx(Math.floor(ax), Math.floor(az))] || g.wet[idx(Math.floor(bx), Math.floor(bz))]) continue;
+      const [ux, uz] = across(q), [vx, vz] = across(q + 1), ya = ys[q] + RIBBON_LIFT, yb = ys[q + 1] + RIBBON_LIFT;
+      const grain = (x: number, z: number) => shade(top, 0.94 + 0.12 * hash2(Math.round(x * 2), Math.round(z * 2), 31));
+      things.quad([ax + ux, ya, az + uz], [bx + vx, yb, bz + vz], [bx - vx, yb, bz - vz], [ax - ux, ya, az - uz], [grain(ax + ux, az + uz), grain(bx + vx, bz + vz), grain(bx - vx, bz - vz), grain(ax - ux, az - uz)], [0, 1, 0]);
+      for (const side of [1, -1]) {
+        const out: [number, number, number] = [ux * side, 0, uz * side];
+        things.quad([ax + ux * side, ya, az + uz * side], [bx + vx * side, yb, bz + vz * side], [bx + vx * side, yb - RIBBON_SKIRT, bz + vz * side], [ax + ux * side, ya - RIBBON_SKIRT, az + uz * side], verge, out);
+      }
+      counts.ribbon = (counts.ribbon ?? 0) + 1;
+    }
+  }
+  // from afar what stands on a way's blocks (woods, crops) is taken off, so that the ground shows the way's band
+  // (terrain.ts colours it from the corners, a soft line rather than a row of blocks); far.ts raised the ground by it
+  if (cover && roadEdge && step > 0) for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
+    const i = idx(x, z);
+    if (!cover.has[i] || g.wet[i] || cover.town[i] || roadAt(x + 0.5, z + 0.5) >= FAR_CLEAR) continue;
+    if (cover.rise[i] > 0) { g.h[i] -= cover.rise[i]; g.occ[i] = g.h[i]; cover.rise[i] = 0; }
+    cover.has[i] = 0;
+  }
   const traits: GroundTraits = {
-    city: (x, z) => at((settled ?? cover!).town, x, z) === 1, plaza: () => Infinity, road: () => Infinity,
+    city: (x, z) => at((settled ?? cover!).town, x, z) === 1, plaza: () => Infinity, road: (x, z) => roadAt(x, z) + ROAD_SHOWS,
     crop: (x, z) => (settled ? ([null, 'wheat', 'vine', 'fallow', 'oats'] as const)[at(settled.field, x, z)] : null),
     cover: cover && ((x, z) => { const i = idx(x, z); return cover.has[i] ? { top: [cover.top[i * 3], cover.top[i * 3 + 1], cover.top[i * 3 + 2]], side: [cover.side[i * 3], cover.side[i * 3 + 1], cover.side[i * 3 + 2]], rise: cover.rise[i], share: cover.share[i], stands: !cover.kind || STANDS.has(cover.kind[i]) } : null; }),
     // the low country is sun-bleached, the mountain meadows are green

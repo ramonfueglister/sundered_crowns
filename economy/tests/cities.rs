@@ -377,7 +377,9 @@ fn broken_bytes_are_refused() {
     let mut other = bytes.clone();
     other[4] = 9;
     assert!(refused(&other).contains("format 9"));
-    assert!(refused(&bytes[..bytes.len() - 1]).contains("does not fit the rest of the state"));
+    // the last byte says whether there are routes; the list before it is one byte short without the last two
+    assert!(refused(&bytes[..bytes.len() - 1]).contains("ends at byte"));
+    assert!(refused(&bytes[..bytes.len() - 2]).contains("does not fit the rest of the state"));
     assert!(refused(&bytes[..bytes.len() / 2]).contains("ends at byte"));
     let mut longer = bytes.clone();
     longer.push(0);
