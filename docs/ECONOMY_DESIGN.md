@@ -2935,9 +2935,15 @@ to 1359:
   has no insolvency of a household. The owner pays the bank's rate on it.
 - **Tried and dropped** (same world): the owner bears a loss only out of what he holds (the firms lose 4,250 to
   5,075, as with the paper's rule); a firm sets a loss off against later profits before it pays out (the money stays
-  in the firms, demand falls, 21 to 22 banks lose equity); the owner plans on the mean profit of 30 days (a tenth of
-  the firms pile up stock; the cause is not found, it may be a fault of the trial). The last is the clean answer in
-  principle and stays open as a feature of its own.
+  in the firms, demand falls, 21 to 22 banks lose equity); the owner plans on the mean profit of 30 days. The last was
+  measured a second time (seed 1358, outputs in wirtschaft/betriebsgeld/geldmenge): it is no fault of the trial.
+  Households spend what they earn (ψ + ψ_H = 1), so a small leak leaves goods unsold (the crown, which spends the
+  revenue of the day before, holds 439 after 30 years in that run; that this is the leak is a reading, not measured). The owners' overspending of this feature,
+  about 0.17 % of GDP a year, happens to fill that gap: all goods are sold and prices stay within 0.96 to 1.04 of
+  their sector. With the mean profit 0.9 % of the goods stay unsold, the price level falls to 0.97, single firms
+  stand between 0.4 and 1.5 of their sector's price, and the owners owe 4,948 instead of 2,643; real output is the
+  same (52,096 against 51,729 after 30 years). Dropped. Net money stays at 11,000 in both while output grows by
+  15 %; with the paper's rule it grows to 14,946 through the firms' loans.
 - **The merchants' money per city still spreads** (table). Its other side is now the households, not the banks.
   Whether the spending out of savings (feature 15) bounds it over a century is not measured.
 - **The banker** is paid the bank's profit by the paper's rule as before.

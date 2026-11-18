@@ -38,7 +38,7 @@ Es gibt keine neue Anzeige. Die Wirtschaften der Städte werden beim Aufspielen 
 ## Abweichungen
 
 - **Ein Drittel der Inhaber steht im Minus.** Der Inhaber plant mit dem Gewinn von gestern. Nach einem guten Tag gibt er ihn aus, nach einem schlechten kann er nicht weniger als nichts ausgeben. Nach 30 Jahren sind rund 1'000 Inhaber im Minus, fast alles Höfe, zusammen mit 2'600 bis 3'900 (rund 5 % einer Jahresleistung). Es flacht ab. Einzelne schulden zehn Jahreseinkommen. Das Modell kennt keinen Konkurs von Haushalten.
-- Drei andere Regeln wurden gemessen und verworfen: Haftung nur mit dem Guthaben, Verlustvortrag im Betrieb, Planen mit dem mittleren Gewinn von 30 Tagen. Die letzte bleibt als eigenes Feature offen.
+- Drei andere Regeln wurden gemessen und verworfen: Haftung nur mit dem Guthaben, Verlustvortrag im Betrieb, Planen mit dem mittleren Gewinn von 30 Tagen. Beim Planen mit dem mittleren Gewinn bleiben 0,9 % der Ware unverkauft, das Preisniveau sinkt auf 0,97 und die Inhaber schulden mehr (4'948 statt 2'643): Die Mehrausgaben der Inhaber füllen heute eine kleine Lücke in der Nachfrage.
 
 ## Quellen
 
