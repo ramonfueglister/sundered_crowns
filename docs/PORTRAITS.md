@@ -20,7 +20,7 @@ one, changes nothing: same people in, same pictures out, measured.
 | Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; no set: Apoleia's Roman dress |
 | Stage profile | `src/portrait/profile.ts` | Light and materials per set of dress; Apoleia's portraits keep Apoleia's |
 | Pipeline | `tools/portrait/pipeline/` | Blender scripts that wrote the draped clothes and hair (not part of the build) |
-| Files of the real look | `public/portrait/` (39 MB) | The head (1.1 MB), data files (12.7 MB since round 109, 12.9 since round 105, 10.4 before round 104: the hair's bodies, the beard's locks, draped clothes, skin shading), images (24.3 MB: skin by age and sex, wrinkle maps, hair, cloth, eyes) |
+| Files of the real look | `public/portrait/` (39 MB) | The head (1.1 MB), data files (13.1 MB since round 110, 12.7 since round 109, 12.9 since round 105, 10.4 before round 104: the hair's bodies, the beard's locks, draped clothes, skin shading), images (24.5 MB: skin by age and sex, wrinkle maps, hair, cloth, eyes) |
 | Stage | `src/portrait/` (three.js) | Lights, frames and draws one portrait; materials per kind of surface |
 | Finish | `src/portrait/finish.ts` | For a profile that asks for it (England's, round 103): the picture is drawn in linear light at twice the size and brought to the screen by a tone curve that keeps a colour's hue, on a backdrop of its own; Apoleia's portraits keep three.js' ACES curve |
 | Test page | `portrait-test.html` | The twelve test people; `?origin=England` puts them into the dress of 1356, `?female=1&age=17` and `?gene=27:135,28:95` set sex, age and genes of all of them, `?only=930000,930003` draws these alone, `?turn=-1.25` shows every head from the side, `?without=_cap.` leaves out the surfaces whose image name contains the text, `?sample=england` draws England's own sample of 36 people (`tests/portrait/sample_england.json`) in place of the twelve, `?set=exposure:0.5,skin.tint.1:0.75,sky.top:ffe9d6` sets values of the stage's profile by their path (a number, or a colour as six hex digits) |
@@ -46,7 +46,7 @@ the parts the builder knows (a gown, a hood up or back, a veil, a wimple, three 
 
 | What | In the table | State |
 |---|---|---|
-| Gown (cote) with a round neck, long sleeves | `gown`, six wool colours | cut and colours by eye |
+| Gown (cote) with long sleeves: a round neck under a wimple; since round 110 opened in a V for men and boys and cut wide for women and girls, with linen under it that shows at the neck (a shirt, a smock) | `gown`, `gown_cut`, `under`, six wool colours | cuts and colours by eye |
 | Hood (men): up, thrown back, or none, by chance per person; none under 14 | `hood`, `hood_from` | shares 4 : 3 : 3 invented |
 | Veil of linen for women from 20, with a wimple from 50 | `veil_from`, `wimple_from` | ages invented |
 | Hair: cut round with a fringe (men), flat under a hood, none under the veil (it hides all of it; a bun until round 69); girls from 7 and women too young for the veil a centre parting and two plaits in front of the shoulders | `hair`, `hair_receding`, `hair_bald`, `hair_curly`, `hair_hooded`, `hair_veiled`, `hair_girl` | by eye |
@@ -3799,11 +3799,105 @@ no locks, drawn solid and on both sides). Pictures (project files, `portraits/`)
 `runde109_vergleich_ck3_frauen.png`, `runde109_vergleich_ck3_maenner.png`, `runde109_vorher_nachher.png`
 (eight people, round 108 above), `runde109_stichprobe.png` (the sample of 36).
 
+**Clothes of two layers, cut at the neck (round 110).** Beside the reference's people (the same sheets): a
+gown of ours was one piece with a round neck close at the throat and nothing under it, cut from a cloth that,
+drawn 2.6 times lighter since round 108, read as sackcloth. Theirs wear two or three layers: a gown opened in
+front in a V with a shirt in it, a gown cut wide with the edge of what is under it showing, and cloth with a
+fine, even surface.
+
+The build:
+
+- **The wool's image.** `fabric_tex.py` has the nap, the relief's depth and the mottling as switches. Gown and
+  hoods are drawn with 160 threads across the image (88 before), more of the nap over the weave (0.75, before
+  0.45), a flatter relief (1.0, before 1.5) and less than half the mottling (0.025, before 0.06): a fulled
+  cloth, where the old one showed every thread and had blotches that read as stains on a hood.
+- **Linen under the gown.** A woman wears a smock and a man a shirt (`DressSet::under`): a yoke from the neck
+  to the chest, laid 3 mm off the skin and not draped, because all that shows of it is its edge in the gown's
+  neck. The builder has a layer for it (`Layer::Under` in `real_look.rs`): held between 1.5 and 4.5 mm off
+  the skin, where a gown lies 7 mm and more off it. Both are drawn with one image (`cloth_smock`, a linen of
+  176 threads) in the dress's linen colour; the stage draws an image named `_smock` as linen.
+- **The gown's cuts** (`DressSet::gown_cut`, drawn with the gown's image). Men and boys: the neck opened in
+  front in a V, 5 cm deep and 6 cm broad at its top on the base body, the shirt in it up to the throat. Women and girls: the
+  neck cut wide, out onto the shoulders, the smock's edge a finger's breadth inside it. `tunic_sim.py` takes
+  the neck as a line (`NECKLINE`, `neckline.py`: how far out on the shoulders, how high in front, behind and
+  on the shoulder, and a notch in front) and cuts it out of the mesh: finer once more near the line, the
+  faces above it out, the edge's points moved onto the line.
+- **Under a wimple the round gown.** The wimple ends at the neckline it was draped over, and over the wide
+  cut it left a ring of bare skin. A woman from the age of the wimple wears the gown as it was, and no linen
+  is drawn under it: the wimple covers the neckline.
+- **Held under the round gown** (`drape_under.py`). Hoods, veil and wimple were draped over the round gown. A
+  gown draped anew has its folds in other places, and the cuts came through the veil's ends in front of the
+  shoulders as red and yellow specks in the linen. Every point of a cut that stands further off the body
+  than the round gown does at that place is set back onto the round gown (a quarter of the points, by up to
+  6.5 cm): a cut is its own drape round its neck, where it lies closer, and the round gown's elsewhere.
+
+| | round 109 | now |
+|---|---|---|
+| layers at the neck | one | two (under a wimple one, as before; a hood covers both) |
+| a man's gown at the neck | round, close at the throat | a V, the shirt 3.1 to 3.9 cm up it (2.4 cm on a boy of three) |
+| a woman's gown at the neck, from side to side | 12.7 to 14.9 cm | 17.6 to 19.2 cm (13.2 cm on a girl of three), the smock 0.9 to 1.2 cm over its edge in front; under a wimple as before |
+| the linen under the gown, of the points the gown covers | | 0.98 to 1.0 nearer to the skin than the gown |
+| the wide cut against the round gown on the same body (chest and shoulders), points more than 2 mm outside it | | 0.01, by up to 0.7 cm (draped anew and not held: 0.2, by up to 2.2 cm) |
+| threads across the wool's image | 88 | 160 |
+| files | | `cloth_cote_v`, `cloth_kirtle` (0.15 and 0.16 MB), `cloth_shirt`, `cloth_smock` (0.08 MB each), the image `cloth_smock` (0.6 MB with its relief) |
+
+The stage's values are as they were. The gauntlet stands as round 109 left it, each of its 19 lines to the
+tenth, and so does every other line `face_colour.mjs` reads off the faces (160 lines, none changed).
+
+Tried and not kept, each seen in a picture:
+
+- A wide neck with a notch, draped with its edge free: the gown slid off one shoulder in the simulation.
+  The edge is pinned and laid close to the body.
+- The neck as the mesh's faces leave it when those above the line are taken out: a zigzag with gaps, the
+  smock showing through as white specks. The edge's points are moved onto the line.
+- A shirt whose edge stood a finger's breadth over the gown's all round: a clergyman's collar. And a smock
+  cut as low as the kirtle in front: hidden there. The lines lie 1 to 1.6 cm apart.
+- A man's opening as a slit 2.8 cm broad and 5.5 cm deep: with the hem's roll round it a tab of linen
+  hanging under the chin, and a bib on a small child. The V.
+- The necklines cut out of the round gown's own drape, so that everything worn over it still fits: nothing
+  came through, but the edge stood off the body as the round gown's cloth does there, a V floating in front
+  of the chest. Draped anew with the edge pinned, then held under the round gown.
+- A rolled hem on the linen: the builder's hold on that layer crushed the roll into dark specks along the
+  linen's edge. The linen has none; its edge is the cloth's.
+- A switch named `SHELL` for laying a garment on the skin: the shell that runs the script has a variable of
+  that name. `ONSKIN`.
+
+Found while writing the tests, not changed: which of two garments lies over the other cannot be read from
+their normals (where a veil folds they point every way, and by them a sixth of the round gown lay outside
+the veil in round 109's state, which shows nothing of the kind). Read along the way from the skin through a
+point, the round gown under an old woman's veil lies further off the skin than the veil at an eighth of the
+points both cover, by up to 1.5 cm: on top of the shoulders and behind them, where the gown's folds stand
+2 to 3 cm off the body. That is round 109's state as well, and no picture from the front shows it; a
+portrait seen from behind would.
+
+Honest about it. Every number of the cuts is by eye beside the reference (PLACEHOLDER). The dress table's
+sources name a gown pulled over the head and linen worn under it; that a villager's gown was opened in a V a
+hand deep, and that his wife's was cut wide at the neck (the fashion of the 1340s to 1360s at court, as the
+summaries of Newton 1980 have it), is not sourced. Beside the reference the clothes now have their layers
+and still not their make: no band or trim along the neck and none of another colour, no lacing in the V
+(its lower end is round, the roll of the hem), no belt, brooch or necklace; the shirt is a flat piece
+without a fold or a drawstring; the cloth is one even weave without a pattern. A man in a hood shows none
+of the change (the hood covers the neck), and neither does a woman under a wimple. The veil is still a
+tight cap without folds, and the faces are as round 109 left them.
+
+Tests: `portrait/tests/clothes.rs` (new: linen shows in the gown's neck, a shirt 1.8 to 6 cm up a man's
+opening and a smock 0.5 to 2.5 cm over a woman's edge, and has no rolled hem; the linen lies nearer to the
+skin than the gown where the gown covers it; a woman's gown is broader at the neck before the wimple than
+under it, and under it no linen is drawn; the wide cut lies within the round gown on the same body, a woman
+the day before the age of the wimple against the same woman on that day: no man wears the round gown, so the
+men's cut has no such pair), `tests/portrait.test.ts` (the garments the sample wears are six images, the
+smock's drawn as linen; the test of the hood's hem on the throat reads the gown's neckline beside the V).
+Pictures (project files, `portraits/`): `runde110_vergleich_ck3_kleider.png` (six people without a hood, the
+reference above), `runde110_vergleich_ck3_nah.png`, `runde110_vergleich_ck3_frauen.png`,
+`runde110_vergleich_ck3_maenner.png`, `runde110_vorher_nachher.png` (eight people, round 109 above),
+`runde110_stichprobe.png` (the sample of 36).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
-is a body of thick bundles as theirs is, evener and duller than theirs; the clothes' cut (one layer, no
-collar or trim), the veil (no folds), the fine forms of the face (lids, nostrils, edge of the lips), stubble,
+is a body of thick bundles as theirs is, evener and duller than theirs; since round 110 a gown is cut at
+the neck and linen shows under it, without the bands, trims and fastenings theirs have; the veil (no folds),
+the fine forms of the face (lids, nostrils, edge of the lips), stubble,
 children and the variety of faces are not; the thrown-back hood closes round the neck since round 35, but
 has no folds across its cloth.
 

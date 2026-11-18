@@ -143,8 +143,21 @@ pub struct DressSet {
     pub key: &'static str,
     /// The origins that wear it.
     pub origins: &'static [&'static str],
-    /// The body garment of everyone.
+    /// The body garment. England's is a gown with a round neck, close at the throat: what is worn on the head
+    /// (hoods, veil, wimple) was draped over it, and under a wimple, which ends at that neckline, it is worn
+    /// as it is.
     pub gown: &'static str,
+    /// The gown as it is cut at the neck where the neck shows: for women and girls before the wimple, for men
+    /// and boys (empty: `gown`), each drawn with `gown`'s image where it has none of its own. England's (round
+    /// 110): a woman's neckline cut wide, out onto the shoulders, and a man's opened in front in a V a hand
+    /// deep.
+    pub gown_cut: [&'static str; 2],
+    /// What is worn under those cuts and shows at the neck, women's and men's (empty: nothing): a layer of
+    /// linen that lies on the skin, the second drawn with the first's image where it has none of its own.
+    /// England's (round 110): a woman's smock, its edge a finger's breadth inside her gown's neckline, and a
+    /// man's shirt, close round the neck, in the opening of his gown. Under the wimple none is drawn: the
+    /// wimple covers the neckline.
+    pub under: [&'static str; 2],
     /// Wool colours of gown and hood: a cloth's own colour (the stage draws wool lighter than that,
     /// src/portrait/profile.ts `cloth`). England's until round 108 were greys with a breath of colour (four of
     /// the six with the strongest of red, green and blue under 1.3 times the weakest): set beside the
@@ -611,6 +624,8 @@ pub static ENGLAND_1356: DressSet = DressSet {
     key: "england1356",
     origins: &["England"],
     gown: "cloth_cote",
+    gown_cut: ["cloth_kirtle", "cloth_cote_v"],
+    under: ["cloth_smock", "cloth_shirt"],
     wool: &["#958565", "#6e665a", "#7d5c40", "#51647c", "#84503f", "#6c6c45"],
     linen: "#e6dfcd",
     hood: [Up, Up, Up, Up, Back, Back, Back, Bare, Bare, Bare],
@@ -782,7 +797,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
         iris_mm: 14.5,
     },
     sources: &[
-        Source { what: "gown (cote) of wool, pulled over the head, close at the shoulders, round neck", source: "Crowfoot, Pritchard & Staniland 1992 (London finds); Østergård 2004 (Herjolfsnes). Summaries only. Cut PLACEHOLDER." },
+        Source { what: "gown (cote) of wool, pulled over the head, close at the shoulders, round neck; linen worn under it (a shirt, a smock)", source: "Crowfoot, Pritchard & Staniland 1992 (London finds); Østergård 2004 (Herjolfsnes). Summaries only. Cut PLACEHOLDER. The cuts of round 110 (a man's neck opened in a V a hand deep, a woman's cut wide, how much linen shows) are by eye beside the reference: a wide neckline is the fashion of the 1340s to 1360s at court (Newton 1980, summary only), not sourced for a villager's wife." },
         Source { what: "hood with a short cape for men, worn on the head or thrown back", source: "Østergård 2004 (Herjolfsnes hoods); Newton 1980. Summaries only. Shares 4:3:3 PLACEHOLDER (unsourced)." },
         Source { what: "wool colours: undyed greys and browns, cheap dyes (russet, a dull blue)", source: "Statute concerning diet and apparel 1363 (russet and blanket for the poorest), read from a summary. Hex values PLACEHOLDER." },
         Source { what: "married women's hair covered by a linen veil, a wimple round the throat on older women and widows; girls in braids", source: "Newton 1980. Summary only. Ages 20 and 50 PLACEHOLDER (the simulation has no marriages yet). How the veil is worn (its rim on the forehead and on the cheeks in front of the ears, falling to the shoulders, no hair to be seen; the wimple under it, showing under the chin and round the throat): PLACEHOLDER, by eye against one veiled figure of the reference pictures (round 70)." },

@@ -1500,6 +1500,9 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
         }
         k
     };
+    // which cut of a dress's gown: a woman's or a man's, and whether a wimple covers its neck
+    let cut = if fem { 0 } else { 1 };
+    let wimpled = garb.is_some_and(|t| fem && p.age >= t.wimple_from);
     let real_tunic = if real.is_some() && !swaddled {
         crate::real::folder().and_then(|d| {
             let col = |v: V3| {
@@ -1508,13 +1511,30 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
                 }
                 cloth_col(tc, v)
             };
-            mh_cloth(&d, garb.map_or("cloth_tunic", |t| t.gown), &x.pp, &h.base, &col, Some(&cell), if garb.is_some() { Layer::Gown } else { Layer::Bound })
+            // (a dress with a table cuts the gown's neck by who wears it; the cuts are of the gown's cloth)
+            let (name, image) = match garb {
+                Some(t) if !t.gown_cut[cut].is_empty() && !wimpled => (t.gown_cut[cut], t.gown),
+                Some(t) => (t.gown, ""),
+                None => ("cloth_tunic", ""),
+            };
+            mh_cloth_as(&d, name, image, &x.pp, &h.base, &col, Some(&cell), if garb.is_some() { Layer::Gown } else { Layer::Bound })
         })
     } else {
         None
     };
     let had_tunic = real_tunic.is_some();
     if let Some(s) = real_tunic {
+        // what is worn under the gown and shows at its neck: a woman's smock, a man's shirt, of the dress's linen
+        if let Some(t) = garb {
+            // (nothing under a wimple: it covers the gown's neckline and what would show in it)
+            let (name, image) = if wimpled { ("", "") } else { (t.under[cut], if cut == 0 { "" } else { t.under[0] }) };
+            if !name.is_empty() {
+                let linen = hex(t.linen);
+                if let Some(u) = crate::real::folder().and_then(|d| mh_cloth_as(&d, name, image, &x.pp, &h.base, &|_| linen, None, Layer::Under)) {
+                    out.push(u);
+                }
+            }
+        }
         out.push(s);
     }
     // the hood of a dress with a table, on the head or thrown back, in another of its wools

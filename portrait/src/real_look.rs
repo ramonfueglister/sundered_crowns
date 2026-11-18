@@ -357,6 +357,7 @@ fn calm(refs: &[([usize; 3], [f32; 3], [f32; 3])], tris: &[([usize; 3], [[f32; 2
             let on: V3 = std::array::from_fn(|q| w[0] * a[q] + w[1] * b[q] + w[2] * c[q]);
             let d = dot(sub(v, on), n);
             let [lo, hi] = match layer {
+                Layer::Under => CLOTH_OFF_UNDER,
                 Layer::Gown => CLOTH_OFF_GOWN,
                 _ if rest[i][1] < CLOTH_NECK_Y => CLOTH_OFF_OVER,
                 _ => CLOTH_OFF_HEAD,
@@ -364,6 +365,9 @@ fn calm(refs: &[([usize; 3], [f32; 3], [f32; 3])], tris: &[([usize; 3], [[f32; 2
             let want = (o[0] * k).min(hi).max(lo);
             if want > 0.0 && d < want {
                 madd(v, n, want - d)
+            } else if layer == Layer::Under && d > hi {
+                // what is worn under the gown stays under it: no further off the skin than the gown's least
+                madd(v, n, hi - d)
             } else {
                 v
             }
@@ -376,7 +380,9 @@ fn calm(refs: &[([usize; 3], [f32; 3], [f32; 3])], tris: &[([usize; 3], [[f32; 2
 pub(crate) enum Layer {
     /// Each vertex with its own body triangle, as Apoleia binds its garments.
     Bound,
-    /// Calmed (see mh_cloth), next to the body.
+    /// Calmed, on the skin under the gown (a shirt, a smock: round 110).
+    Under,
+    /// Calmed (see mh_cloth), over what is worn next to the body.
     Gown,
     /// Calmed, lying over the gown.
     Over,
@@ -388,12 +394,22 @@ const CLOTH_CALM: usize = 24;
 /// the gown; what lies over the gown below the neck; the same on the head. Below the least the body's finer bumps
 /// poke through, above the most the cloth crumples again. PLACEHOLDER, by eye.
 const CLOTH_OFF_GOWN: [f32; 2] = [0.07, 0.09];
+/// The same for what is worn under the gown: it lies on the skin, and nowhere as far off it as the gown's least.
+/// Such a garment has no rolled hem (this hold would crush one). PLACEHOLDER, by eye.
+const CLOTH_OFF_UNDER: [f32; 2] = [0.015, 0.045];
 const CLOTH_OFF_OVER: [f32; 2] = [0.13, 0.17];
 const CLOTH_OFF_HEAD: [f32; 2] = [0.0, 0.05];
 /// Below this height (base units) a garment over the gown lies on the gown, above it on the head.
 const CLOTH_NECK_Y: f32 = 5.9;
 
 pub(crate) fn mh_cloth(dir: &str, name: &str, pp: &[V3], base: &[V3], color: &dyn Fn(V3) -> Rgb, cells: Option<&dyn Fn(V3) -> [f32; 2]>, layer: Layer) -> Option<Surface> {
+    mh_cloth_as(dir, name, "", pp, base, color, cells, layer)
+}
+
+/// `mh_cloth` for a garment that may have no image of its own beside it: it is drawn with `image`'s then (a second
+/// cut of one cloth: a woman's gown with the men's image, a shirt with the smock's).
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn mh_cloth_as(dir: &str, name: &str, image: &str, pp: &[V3], base: &[V3], color: &dyn Fn(V3) -> Rgb, cells: Option<&dyn Fn(V3) -> [f32; 2]>, layer: Layer) -> Option<Surface> {
     let rows = crate::real::rows(&format!("{dir}/{name}.txt"))?;
     let mut it = rows.iter();
     let head = it.next()?;
@@ -445,7 +461,8 @@ pub(crate) fn mh_cloth(dir: &str, name: &str, pp: &[V3], base: &[V3], color: &dy
         }
     }
     let mut s = Surface::new(mat2(0.95));
-    s.tex = Some(crate::real::image(dir, name));
+    let own = crate::real::image(dir, name);
+    s.tex = Some(if image.is_empty() || crate::real::has(&own) { own } else { crate::real::image(dir, image) });
     // shade in the folds per vertex (name_ao.txt), if there is one
     let ao: Vec<f32> = crate::real::column(&format!("{dir}/{name}_ao.txt"), 1.0);
     // a corner: position, uv, normal, cell coordinates, fold shade

@@ -326,7 +326,7 @@ export function surfaceMaterials(s: PortraitSurface, map: Texture | null, normal
     case 'skin': if (p.skin) skinLook(m, p, p.skin, tone ?? skinTone(s.col), young); break;
     case 'cloth':
       m.side = DoubleSide; m.roughness = 0.95; m.ior = ior(0.15);
-      if (p.cloth) m.color.setScalar(/_veil|_wimple/.test(s.tex) ? p.cloth.linen : p.cloth.wool);
+      if (p.cloth) m.color.setScalar(/_veil|_wimple|_smock/.test(s.tex) ? p.cloth.linen : p.cloth.wool);
       break;
     case 'cap': blended(m); m.roughness = 0.85; m.ior = ior(0.15); m.side = DoubleSide; if (p.cap) capLook(m, p, p.cap, s.tex); break;
     case 'eyeball': m.roughness = 0.08; m.ior = ior(0.6); if (p.eye) eyeLook(m, p, p.eye); break;

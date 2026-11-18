@@ -432,8 +432,13 @@ describe('portraits', { timeout: 20_000 }, () => {
         const cloth = surfaces.find(s => s.tex.includes(`/${name}.`));
         if (!cloth || !gown || !skin) continue;
         worn[name]++;
+        // (the neckline beside the middle: since round 110 a man's gown is opened in the middle in a V, which
+        // ends 3 cm to either side)
         let neckline = -Infinity;
-        for (let v = 0; v < gown.pos.length / 3; v++) if (Math.abs(gown.pos[v * 3]!) < 0.15 && gown.pos[v * 3 + 2]! > 0.5) neckline = Math.max(neckline, gown.pos[v * 3 + 1]!);
+        for (let v = 0; v < gown.pos.length / 3; v++) {
+          const x = Math.abs(gown.pos[v * 3]!);
+          if (x > 0.3 && x < 0.45 && gown.pos[v * 3 + 2]! > 0.5) neckline = Math.max(neckline, gown.pos[v * 3 + 1]!);
+        }
         let on = 0;
         for (let v = 0; v < cloth.pos.length / 3; v++) {
           const [x, y, z] = [cloth.pos[v * 3]!, cloth.pos[v * 3 + 1]!, cloth.pos[v * 3 + 2]!];
@@ -839,13 +844,15 @@ describe('portraits', { timeout: 20_000 }, () => {
     const of = (tex: string) => ({ rough: 0.9, metal: 0, double: true, tex, nmap: '', pos: new Float32Array(9), col: new Float32Array(9).fill(0.2), uv: new Float32Array(6), nrm: new Float32Array(9) });
     const light = (tex: string, p = ENGLAND_1356): number => surfaceMaterials(of(tex), null, null, p)[0]!.color.r;
     for (const wool of ['real/cloth_cote.webp', 'real/cloth_hood_up.webp', 'real/cloth_hood_down.webp']) expect(light(wool), wool).toBe(k.wool);
-    for (const linen of ['real/cloth_veil_linen.webp', 'real/cloth_wimple.webp']) expect(light(linen), linen).toBe(k.linen);
+    for (const linen of ['real/cloth_veil_linen.webp', 'real/cloth_wimple.webp', 'real/cloth_smock.webp']) expect(light(linen), linen).toBe(k.linen);
     expect(light('real/cloth_tunic.webp', APOLEIA)).toBe(1);
     // the garments England's sample wears are those: the stage tells wool from linen by an image's name
     const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
     const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
     const worn = new Set(sample.flatMap(p => b.build(p).surfaces.filter(s => surfaceKind(s) === 'cloth').map(s => s.tex)));
-    expect([...worn].sort()).toEqual(['cloth_cote', 'cloth_hood_down', 'cloth_hood_up', 'cloth_veil_linen', 'cloth_wimple'].map(n => `real/${n}.webp`));
+    // (since round 110 with the linen under the gown, a smock's and a shirt's, drawn with one image; the gown's
+    // cuts are drawn with the gown's)
+    expect([...worn].sort()).toEqual(['cloth_cote', 'cloth_hood_down', 'cloth_hood_up', 'cloth_smock', 'cloth_veil_linen', 'cloth_wimple'].map(n => `real/${n}.webp`));
     // what the factor is for: a wool of the builder under the light a chest gets lies deep in the curve's toe,
     // where a value is drawn darker than it is; lifted, it comes out at more than three times its lightness
     const y = (x: number): number => toneCurve(x, ENGLAND_1356.finish!.curve);

@@ -76,10 +76,10 @@ export interface StageProfile {
   cap: null | { tone: number; light: number; colour: number; wrap: number; shadow: boolean; stubble: number;
     beard: { tone: number; light: number; colour: number; wrap: number } };
   /** Cloth: null draws it with the colours the builder gives it. Else how many times lighter wool is drawn
-   *  (`wool`: gown and hood) and linen (`linen`: a cloth whose image is named `_veil` or `_wimple`). The builder's
-   *  wools are a cloth's own colour, a quarter as light as skin; under a light set for the face, and through a
-   *  tone curve that draws the darks together, a gown of them is a black shape under the head. As `cap.light`
-   *  is for hair. */
+   *  (`wool`: gown and hood) and linen (`linen`: a cloth whose image is named `_veil`, `_wimple` or `_smock`).
+   *  The builder's wools are a cloth's own colour, a quarter as light as skin; under a light set for the face,
+   *  and through a tone curve that draws the darks together, a gown of them is a black shape under the head.
+   *  As `cap.light` is for hair. */
   cloth: null | { wool: number; linen: number };
   /** Hair cards, the round strands of a plait and the locks of a head's hair: roughness, "specular", anisotropy
    *  of the glint. */
@@ -345,6 +345,9 @@ export const APOLEIA: StageProfile = {
  *  in place of 950 narrow locks. The stage draws it as it drew the locks (materials.ts, kind 'rope'), and no
  *  value of this profile changed: where the body is dark between its bundles is baked into its corners' colour
  *  by the builder, not a matter of a light.
+ *  Round 110: the gown is cut at the neck (a man's opened in a V, a woman's wide) and linen is worn under it
+ *  and shows there (a shirt, a smock: one image, `cloth_smock`, which the stage draws as linen). No value of
+ *  this profile changed.
  *  All values of this profile are PLACEHOLDER: held against one face of the reference, set by measure and by
  *  eye (docs/PORTRAITS.md). */
 export const ENGLAND_1356: StageProfile = {

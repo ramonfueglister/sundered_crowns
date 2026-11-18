@@ -246,6 +246,14 @@
    "bytes": 16632
   },
   {
+   "name": "cloth_cote_v.txt.zst",
+   "bytes": 133285
+  },
+  {
+   "name": "cloth_cote_v_ao.txt",
+   "bytes": 18894
+  },
+  {
    "name": "cloth_hood_down.txt.zst",
    "bytes": 89673
   },
@@ -262,12 +270,36 @@
    "bytes": 35310
   },
   {
+   "name": "cloth_kirtle.txt.zst",
+   "bytes": 137613
+  },
+  {
+   "name": "cloth_kirtle_ao.txt",
+   "bytes": 19428
+  },
+  {
    "name": "cloth_palla.txt.zst",
    "bytes": 122777
   },
   {
    "name": "cloth_palla_ao.txt",
    "bytes": 19020
+  },
+  {
+   "name": "cloth_shirt.txt.zst",
+   "bytes": 65521
+  },
+  {
+   "name": "cloth_shirt_ao.txt",
+   "bytes": 8958
+  },
+  {
+   "name": "cloth_smock.txt.zst",
+   "bytes": 74235
+  },
+  {
+   "name": "cloth_smock_ao.txt",
+   "bytes": 10128
   },
   {
    "name": "cloth_toga.txt.zst",
@@ -486,6 +518,8 @@
   "cloth_hood_up_n.webp",
   "cloth_palla.webp",
   "cloth_palla_n.webp",
+  "cloth_smock.webp",
+  "cloth_smock_n.webp",
   "cloth_toga.webp",
   "cloth_toga_n.webp",
   "cloth_tunic.webp",
