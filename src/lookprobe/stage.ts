@@ -6,7 +6,7 @@
 // colours come as floats, not as bytes (worldprobe/small.ts). ?faces=0: their rectangles on the grid of blocks come as
 // triangles in those lists, not as faces (faces.ts).
 import * as THREE from 'three/webgpu';
-import { attribute, clamp, convertToTexture, dot, float, fract, getViewPosition, materialColor, max, mix, mrt, normalView, output, pass, positionGeometry, reflector, rtt, screenCoordinate, screenSize, screenUV, select, smoothstep, step, texture, uniform, userData, uv, vec2, vec3, vec4 } from 'three/tsl';
+import { Fn, attribute, clamp, convertToTexture, dot, float, fract, getViewPosition, materialColor, max, mix, mrt, normalView, output, pass, positionGeometry, reflector, rtt, screenCoordinate, screenSize, screenUV, select, smoothstep, step, texture, uniform, userData, uv, vec2, vec3, vec4 } from 'three/tsl';
 import { MapControls } from 'three/addons/controls/MapControls.js';
 import { dof } from 'three/addons/tsl/display/DepthOfFieldNode.js';
 import { denoise } from 'three/addons/tsl/display/DenoiseNode.js';
@@ -17,7 +17,7 @@ import type { Batch } from './batch';
 import { RIG, towards, CREASES } from './light';
 import { type Figures, anyFigures, figureMeshes, keepFigures, showFigures, warmFigures } from '../figures/stage';
 import { OPEN_WATER } from './terrain';
-import { FACE_COL, FACE_CORNERS, FACE_GEO, FACE_STEPS, FLIPPED, type Faces, faceHit, unfaced } from './faces';
+import { FACE_COL, FACE_CORNERS, FACE_GEO, FACE_STEPS, FLIPPED, RISES, type Faces, faceHit, unfaced } from './faces';
 
 const q = new URLSearchParams(location.search);
 const flag = (k: string, fallback: boolean) => (q.has(k) ? q.get(k) !== '0' : fallback);
@@ -138,6 +138,11 @@ export interface Stage {
    * of the picture's dots, has all its lists sent to the graphics card in that picture.
    */
   whole(group: THREE.Group, on: boolean): void;
+  /**
+   * How far the meshes of a group that glide to the shape of the next coarser step have come, 0 … 1: at 1 each of
+   * their faces lies and looks as that step has it there (worldprobe/glide.ts).
+   */
+  glide(group: THREE.Group, share: number): void;
   /** How many pictures the stage has drawn. */
   pictures(): number;
   /** Puts a thing of the page's own making on the stage, or takes it off again (the page lets go of what it is made of). */
@@ -213,7 +218,13 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   /** everything on the stage carries its two marks, all the dots unless it is dissolved */
   const marked = (thing: THREE.Object3D) => thing.traverse((part) => { part.userData.dots ??= new THREE.Vector2(0, 1); part.userData.ink ??= 1; });
   // whether a mesh is ground to the map's paper (1) or stands on the ground (0, see Stage.lay)
-  const inkOf = userData('ink', 'float') as unknown as ReturnType<typeof float>;
+  // (a mesh that glides to the shape of the coarser step tells for each face what it ends up as, and is that by the
+  // share it has glided: see `gliding`)
+  const glided = userData('glide', 'float') as unknown as ReturnType<typeof float>;
+  const inkOf = Fn((builder: { geometry: THREE.BufferGeometry }) => {
+    const own = userData('ink', 'float') as unknown as ReturnType<typeof float>;
+    return builder.geometry.hasAttribute('aim') ? mix(own, (attribute('normal', 'vec4') as unknown as ReturnType<typeof vec4>).w, glided) : own;
+  })() as unknown as ReturnType<typeof float>;
   // water: a soft mirror image of piers, hulls and houses is laid over the water colour
   let water = solid;
   const tint = uniform(new THREE.Color());
@@ -245,6 +256,24 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   // (a face's colours are always bytes: see `toned`)
   faced.colorNode = materialColor.mul(toneOf.rgb.mul(toneOf.a.mul((2 * 255) / 254)).toVarying());
   faced.maskNode = solid.maskNode;
+  // Faces that glide to the shape of the next coarser step (worldprobe/glide.ts): each has the level or the span in
+  // height it ends up at and the colours of its corners there, and the mesh says how far it has glided (0 … 1,
+  // `Stage.glide`). A level face moves to its level there. An upright face's two ends in height move each to its own;
+  // where they would pass each other the face has no height, since by then the column it faced stands above its own.
+  const aimed = attribute('aim', 'vec2') as unknown as ReturnType<typeof vec2>;
+  const rises = kind.greaterThanEqual(RISES), kindG = kind.sub(select(rises, float(RISES), float(0))), flippedG = kindG.greaterThanEqual(FLIPPED), axisG = kindG.sub(select(flippedG, float(FLIPPED), float(0)));
+  const cornerG = select(flippedG, positionGeometry.y, positionGeometry.x), upright = axisG.lessThan(0.5).or(axisG.greaterThan(1.5)), alongX = axisG.lessThan(0.5);
+  const u0 = whole(lie.z), u1 = whole(lie.w), v0 = whole(reach.x), v1 = whole(reach.y), from0 = select(alongX, u0, v0), from1 = select(alongX, u1, v1);
+  const end0 = mix(from0, whole(aimed.x), glided), way = select(rises, float(1), select(from1.lessThan(from0), float(-1), float(1))), end1 = end0.add(way.mul(max(way.mul(mix(from1, whole(aimed.y), glided).sub(end0)), 0)));
+  const levelG = select(upright, whole(lie.y), mix(whole(lie.y), whole(aimed.x), glided)).div(FACE_STEPS);
+  const second = cornerG.greaterThan(0.5).and(cornerG.lessThan(2.5)), third = cornerG.greaterThan(1.5);
+  const alongUG = select(second, select(alongX, end1, u1), select(alongX, end0, u0)).div(FACE_STEPS), alongVG = select(third, select(axisG.greaterThan(1.5), end1, v1), select(axisG.greaterThan(1.5), end0, v0)).div(FACE_STEPS);
+  const aims = [0, 1, 2, 3].map((k) => attribute(`aimTone${k}`, 'vec4') as unknown as ReturnType<typeof vec4>);
+  const pick = (four: typeof tones) => { const t = select(cornerG.lessThan(0.5), four[0], select(cornerG.lessThan(1.5), four[1], select(cornerG.lessThan(2.5), four[2], four[3]))); return t.rgb.mul(t.a.mul((2 * 255) / 254)); };
+  const gliding = new THREE.MeshLambertNodeMaterial();
+  gliding.positionNode = select(axisG.lessThan(0.5), vec3(levelG, alongUG, alongVG), select(axisG.lessThan(1.5), vec3(alongUG, levelG, alongVG), vec3(alongUG, alongVG, levelG)));
+  gliding.colorNode = materialColor.mul(mix(pick(tones), pick(aims), glided).toVarying());
+  gliding.maskNode = solid.maskNode;
   /** which of a face's four corners each of the six is, where its triangles turn one way and where the other */
   const CORNERS = new Float32Array(FACE_CORNERS[0].flatMap((c, k) => [c, FACE_CORNERS[1][k], 0]));
   const faceGeometry = (s: Shape) => {
@@ -255,6 +284,11 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     g.setAttribute('lie', new THREE.InterleavedBufferAttribute(lies, 4, 0, true)); g.setAttribute('reach', new THREE.InterleavedBufferAttribute(lies, 2, 4, true));
     for (let k = 0; k < 4; k++) g.setAttribute(`tone${k}`, new THREE.InterleavedBufferAttribute(colours, 4, k * 4, true));
     g.setAttribute('normal', new THREE.InstancedBufferAttribute(f.nor, 4, true));
+    if (f.aim && f.aimCol) {
+      const ends = new THREE.InstancedInterleavedBuffer(f.aimCol, FACE_COL);
+      g.setAttribute('aim', new THREE.InstancedBufferAttribute(f.aim, 2, true));
+      for (let k = 0; k < 4; k++) g.setAttribute(`aimTone${k}`, new THREE.InterleavedBufferAttribute(ends, 4, k * 4, true));
+    }
     g.instanceCount = f.geo.length / FACE_GEO;
     if (s.ball) g.boundingSphere = new THREE.Sphere(new THREE.Vector3(s.ball[0], s.ball[1], s.ball[2]), s.ball[3]);
     else g.boundingSphere = new THREE.Box3().setFromArray(unfaced(f).pos).getBoundingSphere(new THREE.Sphere());
@@ -493,8 +527,8 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   };
   /** The faces of a shape as a mesh: one drawing of the six corners for every face. */
   const faceMesh = (shape: Shape, casts: boolean) => {
-    const made = new THREE.Mesh(faceGeometry(shape), faced), f = shape.faces!;
-    made.castShadow = casts; made.receiveShadow = true; made.userData.dots = new THREE.Vector2(0, 1); made.userData.ink = 1;
+    const f = shape.faces!, made = new THREE.Mesh(faceGeometry(shape), f.aim && f.aimCol ? gliding : faced);
+    made.castShadow = casts; made.receiveShadow = true; made.userData.dots = new THREE.Vector2(0, 1); made.userData.ink = 1; made.userData.glide = 0;
     // (a ray finds the faces by their rows: the mesh's own corners are not where they are drawn)
     made.raycast = (ray, hits) => {
       const own = ray.ray.clone().applyMatrix4(new THREE.Matrix4().copy(made.matrixWorld).invert()), t = faceHit(f, own.origin.toArray(), own.direction.toArray());
@@ -553,7 +587,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     for (const made of cold) {
       const bytes = weight(made.geometry);
       if (sending.length && bytes > room) break;
-      const standIn = new THREE.Mesh(made.geometry, made.material === faced ? faced : solid);
+      const standIn = new THREE.Mesh(made.geometry, made.material === faced || made.material === gliding ? made.material : solid);
       // (all that the material reads of a mesh, as its own mesh has it)
       standIn.userData = { ...made.userData, ground: false, dots: new THREE.Vector2(0, 0) };
       // (it lies on the layer the water's mirror does not draw, and casts no shadow: one pass sends the lists)
@@ -619,6 +653,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
       pending = Math.max(pending, 1);
     },
     whole(group, on) { for (const part of group.children) if (!part.userData.figures) part.frustumCulled = !on; pending = Math.max(pending, 1); },
+    glide(group, share) { for (const part of group.children) if (part.userData.glide !== undefined && part.userData.glide !== share) { part.userData.glide = share; pending = Math.max(pending, 1); } },
     pictures: () => pictures,
     put(thing) { marked(thing); scene.add(thing); pending = Math.max(pending, 1); },
     take(thing) { scene.remove(thing); pending = Math.max(pending, 1); },

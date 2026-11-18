@@ -131,6 +131,15 @@ function traitsOf(table: Table): GroundTraits {
   };
 }
 
+/**
+ * Draws the land of a part of a table's own columns, without water and banks: what the piece shows there on its
+ * columns' tops and sides (glide.ts asks the coarser piece for it).
+ */
+export function drawLand(table: Table, bakedSky: boolean, part: Part): { ground: Batch; carried: Batch } {
+  const g: Ground = { h: table.h, mat: table.mat, wet: table.wet, shore: table.shore, occ: table.occ, surf: table.surf, ox: table.ox, oz: table.oz };
+  return onGrid(table.side, () => { const carried = new Batch(); return { ground: buildTerrain(g, traitsOf(table), bakedSky, part, carried), carried }; });
+}
+
 /** Draws the piece of a table, as its build drew it. */
 export function drawTable(table: Table, bakedSky: boolean): { ground: Batch; carried?: Batch; water: Batch; raised: Batch } {
   const g: Ground = { h: table.h, mat: table.mat, wet: table.wet, shore: table.shore, occ: table.occ, surf: table.surf, ox: table.ox, oz: table.oz };

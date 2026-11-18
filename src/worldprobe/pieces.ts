@@ -65,6 +65,20 @@ const WAITING = 600;
 const SPARE_WORKERS = 2;
 /** the widest view of each step: what a leap out to that step may show */
 const WIDEST = Array.from({ length: COARSEST + 1 }, (_, s) => { let w = NEAREST; while (w < FARTHEST && stepOf(w * 1.02) <= s) w *= 1.02; return Math.min(FARTHEST, w); });
+/** the width at which each step gives way to the next coarser one */
+const BORDER = Array.from({ length: COARSEST }, (_, s) => { let low = NEAREST, high = FARTHEST * 2; for (let k = 0; k < 60; k++) { const mid = Math.sqrt(low * high); if (stepOf(mid) > s) high = mid; else low = mid; } return high; });
+/**
+ * The land of a far step glides to the shape of the next coarser step over the last stretch before their border,
+ * from the border's width divided by this (glide.ts): so the border changes nothing on the land. A view at rest in
+ * that stretch shows its one step, part of the way.
+ */
+const GLIDE = 1.6;
+/** How far a piece of a step has glided to the shape of the coarser step in a view this wide, 0 … 1. */
+export function glideOf(wide: number, step: number): number {
+  if (step >= COARSEST) return 0;
+  const t = Math.max(0, Math.min(1, 1 - Math.log(BORDER[step] / wide) / Math.log(GLIDE)));
+  return t * t * (3 - 2 * t);
+}
 /** the stage counts its blocks from a home near the view; a new home is taken when the view has moved this far from it */
 const HOME_REACH = 3000;
 /** what stands on a block leans this many blocks into the picture; a house does by this many */
@@ -110,7 +124,7 @@ export interface Pieces {
  * `ahead`: build the coarser step and the surroundings of the picture too (a tool that takes one picture does not
  * need them). `changed` is called whenever a piece has arrived.
  */
-export function createPieces(stage: Stage, o: { region: string; base: string; bakedSky: boolean; ahead: boolean; changed(): void; /** how many workers build the pieces (default: up to 4, one less than the machine's cores) */ workers?: number; /** the world's start year, whose towns are built */ year?: number; /** blocks of land around a piece of the far steps, for measuring (default NARROW; 100 is the wide margin of the finest step) */ margin?: number; /** keeps the pieces on disk, under this name of the game's build (store.ts): pieces of another build are not read */ keep?: string; /** the pieces' directions and colours as bytes, 20 bytes to a corner (small.ts), not as floats of 36 */ small?: boolean; /** and their rectangles on the grid of blocks as faces, 32 bytes to a rectangle (lookprobe/faces.ts) */ faces?: boolean; /** false: every piece is built from the map's data, also where its table was built ahead (table.ts) */ tables?: boolean; /** true: the first far step as the mean of the finest step (mean.ts: exact, but it builds four finest pieces for each far piece); 'compare': as far.ts lays it out, and measured against that mean (the counts `cmp …`); else as far.ts lays it out */ mean?: boolean | 'compare' }): Pieces {
+export function createPieces(stage: Stage, o: { region: string; base: string; bakedSky: boolean; ahead: boolean; changed(): void; /** how many workers build the pieces (default: up to 4, one less than the machine's cores) */ workers?: number; /** the world's start year, whose towns are built */ year?: number; /** blocks of land around a piece of the far steps, for measuring (default NARROW; 100 is the wide margin of the finest step) */ margin?: number; /** keeps the pieces on disk, under this name of the game's build (store.ts): pieces of another build are not read */ keep?: string; /** the pieces' directions and colours as bytes, 20 bytes to a corner (small.ts), not as floats of 36 */ small?: boolean; /** and their rectangles on the grid of blocks as faces, 32 bytes to a rectangle (lookprobe/faces.ts) */ faces?: boolean; /** false: every piece is built from the map's data, also where its table was built ahead (table.ts) */ tables?: boolean; /** false: the far steps change at their borders as they are, their land does not glide to the coarser step's shape (glide.ts) */ glide?: boolean; /** true: the first far step as the mean of the finest step (mean.ts: exact, but it builds four finest pieces for each far piece); 'compare': as far.ts lays it out, and measured against that mean (the counts `cmp …`); else as far.ts lays it out */ mean?: boolean | 'compare' }): Pieces {
   const held = new Map<string, Held>(), building = new Set<string>(), jobs = new Map<number, Spot>(), idle: Worker[] = [];
   const workers: Worker[] = [];
   const fine = createFine(stage, { still: !o.ahead, changed: o.changed, small: o.small });
@@ -151,7 +165,7 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
     store.postMessage({ build: o.keep, room: ROOM } satisfies StoreAsk);
   }
   /** the name of a piece's file: all that the piece depends on, beside the build */
-  const fileOf = (p: Spot) => `${o.region}_${o.year ?? 0}_${p.step}_${p.px}_${p.pz}_${o.bakedSky ? 1 : 0}${o.mean ? 1 : 0}_${marginOf(p.step)}${o.small ? (o.faces ? '_f' : '_s') : ''}${o.tables === false ? '_b' : ''}`;
+  const fileOf = (p: Spot) => `${o.region}_${o.year ?? 0}_${p.step}_${p.px}_${p.pz}_${o.bakedSky ? 1 : 0}${o.mean ? 1 : 0}_${marginOf(p.step)}${o.small ? (o.faces ? '_f' : '_s') : ''}${o.tables === false ? '_b' : ''}${o.glide === false || !o.small || !o.faces ? '' : '_g'}`;
   const put = ({ spot, scene }: (typeof arrived)[number]) => {
     const group = stage.add(scene);
     group.visible = false;
@@ -289,7 +303,7 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
     while (idle.length && queue.length) {
       const next = queue.pop()!, worker = idle.pop()!, id = nextId++, margin = marginOf(next.step);
       jobs.set(id, next); building.add(next.key);
-      worker.postMessage({ id, step: next.step, small: o.small, faces: o.faces, tables: o.tables, grid: margin === MARGIN ? undefined : PIECE + 2 * margin, keep: store ? { build: o.keep!, name: fileOf(next), kept: !listed || kept.has(fileOf(next)) } : undefined, piece: { ox: next.px * PIECE - margin, oz: next.pz * PIECE - margin, part: { x0: margin, z0: margin, x1: margin + PIECE, z1: margin + PIECE } }, region: o.region, base: o.base, bakedSky: o.bakedSky, year: o.year, mean: o.mean, under: next.step === 1 ? [0, 1, 2, 3].map((q) => sums.get(keyOf(0, next.px * 2 + (q & 1), next.pz * 2 + (q >> 1)))) : undefined } satisfies PieceJob);
+      worker.postMessage({ id, step: next.step, small: o.small, faces: o.faces, tables: o.tables, glide: o.glide !== false, grid: margin === MARGIN ? undefined : PIECE + 2 * margin, keep: store ? { build: o.keep!, name: fileOf(next), kept: !listed || kept.has(fileOf(next)) } : undefined, piece: { ox: next.px * PIECE - margin, oz: next.pz * PIECE - margin, part: { x0: margin, z0: margin, x1: margin + PIECE, z1: margin + PIECE } }, region: o.region, base: o.base, bakedSky: o.bakedSky, year: o.year, mean: o.mean, under: next.step === 1 ? [0, 1, 2, 3].map((q) => sums.get(keyOf(0, next.px * 2 + (q & 1), next.pz * 2 + (q >> 1)))) : undefined } satisfies PieceJob);
     }
 
     // the store zips what it has written once the workers are through with what the picture is missing
@@ -358,6 +372,8 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
         continue;
       }
       h.seen = looks; fading ||= !!h.fade;
+      // (a piece glides by the view's width alone: one that stands in for finer ones has not begun, one that the coarser step is taking the place of has arrived)
+      stage.glide(h.group, glideOf(v.wide, h.step));
       h.dots = [h.fade && !h.fade.rising ? share : 0, h.fade?.rising ? share : 1];
       // a piece laid in takes the first of the dots, as many as its share, and the view's own pieces under it the
       // rest (a piece that stands in for missing finer ones keeps all of its dots)
