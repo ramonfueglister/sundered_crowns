@@ -79,6 +79,19 @@ export function glideOf(wide: number, step: number): number {
   const t = Math.max(0, Math.min(1, 1 - Math.log(BORDER[step] / wide) / Math.log(GLIDE)));
   return t * t * (3 - 2 * t);
 }
+/** a piece that took the place of a coarser one comes from that step's shape to its own over this many milliseconds, once it has dissolved into the picture */
+const SETTLE = 600;
+/**
+ * How far a piece has glided that took the place of a coarser one `since` milliseconds ago, when it was `by` short
+ * of that step's shape: it begins as the coarser step has the land, stays so while it dissolves into the picture,
+ * and then comes to `share`, which is what a view of its width asks for. Undefined once it is there.
+ */
+export function settleOf(share: number, by: number, since: number): number | undefined {
+  const t = (since - DISSOLVE) / SETTLE;
+  if (t >= 1) return undefined;
+  const u = Math.max(0, t);
+  return Math.min(1, share + by * (1 - u * u * (3 - 2 * u)));
+}
 /** the stage counts its blocks from a home near the view; a new home is taken when the view has moved this far from it */
 const HOME_REACH = 3000;
 /** what stands on a block leans this many blocks into the picture; a house does by this many */
@@ -102,6 +115,14 @@ interface Held {
   laid: number;
   /** the piece is dissolving into the picture (`rising`) or out of it since this time */
   fade?: { since: number; rising: boolean };
+  /** the piece glides to the shape of the next coarser step (glide.ts) */
+  glides: boolean;
+  /**
+   * the piece took the place of a coarser one that stood in for it, at this time and `by` short of that step's
+   * shape: it shows first as that step has the land and comes to its own shape from there (`settleOf`), so that the
+   * land grows finer where it stood and does not change at once
+   */
+  settle?: { since: number; by: number };
   /**
    * the piece is still to be drawn once without showing, so that its lists are on the graphics card before it
    * shows: -1 until a look puts it into the picture to come, then the number of pictures the stage had drawn by
@@ -170,7 +191,7 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
     const group = stage.add(scene);
     group.visible = false;
     const cells = scene.cells.map((c, k) => ({ key: `${spot.key}/${k}`, far: c.far.pos.length ? stage.more(group, c.far) : undefined, lots: c.lots, ground: c.ground, x: spot.px * PIECE - marginOf(spot.step) + c.x, z: spot.pz * PIECE - marginOf(spot.step) + c.z }));
-    const h: Held = { group, step: spot.step, px: spot.px, pz: spot.pz, cells, dots: [0, 1], seen: looks, on: false, laid: 0, warm: o.ahead && !stage.staged ? -1 : undefined };
+    const h: Held = { group, step: spot.step, px: spot.px, pz: spot.pz, cells, dots: [0, 1], seen: looks, on: false, laid: 0, glides: !!scene.ground.faces?.aim, warm: o.ahead && !stage.staged ? -1 : undefined };
     if (stage.staged) sending.push({ spot, h }); else { held.set(spot.key, h); building.delete(spot.key); }
     for (const [name, n] of Object.entries(scene.counts)) stage.probe.counts[name] = (stage.probe.counts[name] ?? 0) + n;
   };
@@ -335,7 +356,14 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
     if (seamless) for (const h of [...coming, ...going]) { h.on = shown.has(h); h.fade = undefined; }
     else {
     const over = (a: Held, b: Held) => { const [fine, wide] = a.step <= b.step ? [a, b] : [b, a], k = 2 ** (wide.step - fine.step); return Math.floor(fine.px / k) === wide.px && Math.floor(fine.pz / k) === wide.pz; };
-    for (const h of coming) { h.on = true; h.fade = o.ahead && going.some((g) => over(h, g)) ? { since: now, rising: true } : undefined; }
+    for (const h of coming) {
+      const stood = o.ahead ? going.filter((g) => over(h, g)) : [];
+      h.on = true; h.fade = stood.length ? { since: now, rising: true } : undefined;
+      // (where the view has just crossed the border the piece is at that step's shape as it is, and nothing is to settle)
+      const short = h.glides && stood.some((g) => g.step > h.step) ? 1 - glideOf(v.wide, h.step) : 0;
+      h.settle = short > 0.02 ? { since: now, by: short } : undefined;
+      if (h.settle) stage.probe.counts['pieces settled'] = (stage.probe.counts['pieces settled'] ?? 0) + 1;
+    }
     for (const h of going) { h.on = false; h.fade = o.ahead && coming.some((c) => over(h, c)) ? { since: now, rising: false } : undefined; }
     }
     // A piece that has not been shown yet is drawn once on none of the picture's dots, so that its lists are on
@@ -372,8 +400,11 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
         continue;
       }
       h.seen = looks; fading ||= !!h.fade;
-      // (a piece glides by the view's width alone: one that stands in for finer ones has not begun, one that the coarser step is taking the place of has arrived)
-      stage.glide(h.group, glideOf(v.wide, h.step));
+      // (a piece glides by the view's width: one that stands in for finer ones has not begun, one that the coarser
+      // step is taking the place of has arrived; and one that came late for a coarser one comes from that one's shape)
+      const settled = h.settle && settleOf(glideOf(v.wide, h.step), h.settle.by, now - h.settle.since);
+      if (settled === undefined) h.settle = undefined; else fading = true;
+      stage.glide(h.group, settled ?? glideOf(v.wide, h.step));
       h.dots = [h.fade && !h.fade.rising ? share : 0, h.fade?.rising ? share : 1];
       // a piece laid in takes the first of the dots, as many as its share, and the view's own pieces under it the
       // rest (a piece that stands in for missing finer ones keeps all of its dots)
