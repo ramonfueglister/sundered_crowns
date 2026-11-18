@@ -392,12 +392,12 @@ export function glide(shapes: { ground: Shape; carried?: Shape; things?: Shape; 
     if (where.x1 > where.x0) {
       const g: Ground = { h: fine.h, mat: fine.mat, wet, shore: fine.shore, occ: fine.occ, surf, ox: fine.ox, oz: fine.oz };
       for (const [shape, high] of [[shapes.water, false], [raised, true]] as const) {
-        const all = onGrid(n, () => buildWater(g, high, where)), picked = new Batch();
-        for (let o = 0; o < all.pos.length; o += 9) {
-          if (all.nor[o + 1] !== 1) continue;
-          const i = Math.floor((all.pos[o + 2] + all.pos[o + 5] + all.pos[o + 8]) / 3) * n + Math.floor((all.pos[o] + all.pos[o + 3] + all.pos[o + 6]) / 3);
+        const all = onGrid(n, () => buildWater(g, high, where)), { pos: at, nor: turned, col: tints } = all, picked = { pos: [] as number[], nor: [] as number[], col: [] as number[] };
+        for (let o = 0; o < at.length; o += 9) {
+          if (turned[o + 1] !== 1) continue;
+          const i = Math.floor((at[o + 2] + at[o + 5] + at[o + 8]) / 3) * n + Math.floor((at[o] + at[o + 3] + at[o + 6]) / 3);
           if (way[i] !== SINKS) continue;
-          for (let k = 0; k < 9; k++) { picked.pos.push(all.pos[o + k]); picked.nor.push(all.nor[o + k]); picked.col.push(all.col[o + k]); }
+          for (let k = 0; k < 9; k++) { picked.pos.push(at[o + k]); picked.nor.push(turned[o + k]); picked.col.push(tints[o + k]); }
         }
         if (!picked.pos.length) continue;
         const sheets = small(picked);

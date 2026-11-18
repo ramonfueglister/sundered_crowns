@@ -25,10 +25,10 @@ export const BRIGHTEST = 2;
 
 /** The lists of a mesh with small numbers for direction and colour (see above). */
 export function small(b: { pos: ArrayLike<number>; nor: ArrayLike<number>; col: ArrayLike<number> }): Shape {
-  const pos = new Float32Array(b.pos), n = pos.length / 3, nor = new Int8Array(n * 4), col = new Uint8Array(n * 4);
+  const pos = new Float32Array(b.pos), n = pos.length / 3, nor = new Int8Array(n * 4), col = new Uint8Array(n * 4), turned = b.nor, tints = b.col;
   for (let v = 0, i = 0, o = 0; v < n; v++, i += 3, o += 4) {
-    nor[o] = Math.round(b.nor[i] * 127); nor[o + 1] = Math.round(b.nor[i + 1] * 127); nor[o + 2] = Math.round(b.nor[i + 2] * 127);
-    const r = Math.max(0, b.col[i]), g = Math.max(0, b.col[i + 1]), l = Math.max(0, b.col[i + 2]);
+    nor[o] = Math.round(turned[i] * 127); nor[o + 1] = Math.round(turned[i + 1] * 127); nor[o + 2] = Math.round(turned[i + 2] * 127);
+    const r = Math.max(0, tints[i]), g = Math.max(0, tints[i + 1]), l = Math.max(0, tints[i + 2]);
     // the brightest part, rounded up so that the shares stay under one
     const most = Math.min(254, Math.ceil((Math.max(r, g, l) / BRIGHTEST) * 254)), k = most ? (255 * 254) / (most * BRIGHTEST) : 0;
     col[o] = Math.min(255, Math.round(r * k)); col[o + 1] = Math.min(255, Math.round(g * k)); col[o + 2] = Math.min(255, Math.round(l * k)); col[o + 3] = most;

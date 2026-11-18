@@ -20,19 +20,44 @@ export const WATER_SHALLOW = rgb(0x349aa4), WATER_DEEP = rgb(0x2b818c), FALLS = 
 /** Share of the sky seen from a point: eight directions, the steepest blocker in each. This is light step 2 of the plan. */
 const DIRS: readonly (readonly [number, number])[] = [[1, 0], [0.707, 0.707], [0, 1], [-0.707, 0.707], [-1, 0], [-0.707, -0.707], [0, -1], [0.707, -0.707]];
 const REACH = [0.75, 1.6, 2.8, 4.5, 7, 10.5];
+/** the columns a corner of the grid looks at, as steps from it: the reaches of each direction, two numbers each */
+const LOOKS = Int32Array.from(DIRS.flatMap(([dx, dz]) => REACH.flatMap((r) => [Math.floor(dx * r), Math.floor(dz * r)])));
 export function skyShare(g: Ground, x: number, z: number, y: number): number {
+  // (the numbers are those of the plain rule: what does not stand above the point has a rise of nought or less and
+  // is never the steepest, so it is not divided; a direction with nothing above takes nothing, so no root is drawn;
+  // and from a corner of the grid the columns looked at are the same steps away wherever it lies. A sixth of what
+  // a worker takes for a far piece went into this.)
+  const occ = g.occ, dirs = DIRS.length, reaches = REACH.length;
   let blocked = 0;
-  for (const [dx, dz] of DIRS) {
+  if (Number.isInteger(x) && Number.isInteger(z)) {
+    for (let d = 0, o = 0; d < dirs; d++) {
+      let steepest = 0;
+      for (let k = 0; k < reaches; k++, o += 2) {
+        const sx = x + LOOKS[o], sz = z + LOOKS[o + 1];
+        if (sx < 0 || sz < 0 || sx >= N || sz >= N) continue;
+        const over = occ[sz * N + sx] - y;
+        if (over <= 0) continue;
+        const rise = over / REACH[k];
+        if (rise > steepest) steepest = rise;
+      }
+      if (steepest > 0) blocked += steepest / Math.sqrt(1 + steepest * steepest);
+    }
+    return 1 - blocked / dirs;
+  }
+  for (let d = 0; d < dirs; d++) {
+    const dx = DIRS[d][0], dz = DIRS[d][1];
     let steepest = 0;
-    for (const r of REACH) {
-      const sx = Math.floor(x + dx * r), sz = Math.floor(z + dz * r);
+    for (let k = 0; k < reaches; k++) {
+      const r = REACH[k], sx = Math.floor(x + dx * r), sz = Math.floor(z + dz * r);
       if (sx < 0 || sz < 0 || sx >= N || sz >= N) continue;
-      const rise = (g.occ[idx(sx, sz)] - y) / r;
+      const over = occ[sz * N + sx] - y;
+      if (over <= 0) continue;
+      const rise = over / r;
       if (rise > steepest) steepest = rise;
     }
-    blocked += steepest / Math.sqrt(1 + steepest * steepest);
+    if (steepest > 0) blocked += steepest / Math.sqrt(1 + steepest * steepest);
   }
-  return 1 - blocked / DIRS.length;
+  return 1 - blocked / dirs;
 }
 /** Brightness factor from the sky share: open ground stays at 1, deep corners fall to about a half. */
 export const skyLight = (share: number) => 0.42 + 0.58 * Math.min(1, share * 1.08);
@@ -89,6 +114,8 @@ const CARRIED_FROM = 0.5;
 export function buildTerrain(g: Ground, t: GroundTraits, baked = true, part: Part = whole(), carried?: Batch): Batch {
   const ox = g.ox ?? 0, oz = g.oz ?? 0;
   const b = new Batch();
+  // (a top to each column and, on land that is not level, about as much again in sides)
+  b.reserve((part.x1 - part.x0) * (part.z1 - part.z0) * 4);
   // A corner of the grid is asked for its light by each of the four columns around it, at that column's height:
   // where they are level, as most land is, the answer is the one given before (a seventh of a piece's building
   // time went into working it out four times).

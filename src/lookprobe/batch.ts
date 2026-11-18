@@ -12,12 +12,41 @@ export const shade = (c: RGB, m: number): RGB => [c[0] * m, c[1] * m, c[2] * m];
 export const smooth = (a: number, b: number, v: number) => { const t = Math.max(0, Math.min(1, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
 export const mix = (a: RGB, b: RGB, t: number): RGB => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 
-export class Batch {
-  readonly pos: number[] = [];
-  readonly nor: number[] = [];
-  readonly col: number[] = [];
+/** no numbers yet */
+const NONE = new Float64Array(0);
 
-  get triangles() { return this.pos.length / 9; }
+export class Batch {
+  // The lists grow as runs of doubles side by side, not as arrays of numbers: a piece of the world is millions of
+  // corners, and adding nine numbers to an array took four times as long as working them out (a fifth of what a
+  // worker takes for a far piece). The numbers are the same doubles as before; `pos`, `nor` and `col` show what is
+  // filled, as it stands when they are asked for: a list taken before more is added does not grow with the batch.
+  private p = NONE; private n = NONE; private c = NONE;
+  /** numbers filled, of `p` and `n`, and of `c` */
+  private filled = 0; private tinted = 0;
+  private shownP = NONE; private shownN = NONE; private shownC = NONE;
+
+  get pos(): Float64Array { return this.shownP.length === this.filled ? this.shownP : (this.shownP = this.p.subarray(0, this.filled)); }
+  get nor(): Float64Array { return this.shownN.length === this.filled ? this.shownN : (this.shownN = this.n.subarray(0, this.filled)); }
+  get col(): Float64Array { return this.shownC.length === this.tinted ? this.shownC : (this.shownC = this.c.subarray(0, this.tinted)); }
+
+  get triangles() { return this.filled / 9; }
+
+  /** room for `more` numbers of places and directions, and `tints` of colours */
+  private room(more: number, tints: number) {
+    if (this.filled + more > this.p.length) {
+      const size = Math.max(144, this.p.length * 2, this.filled + more), p = new Float64Array(size), n = new Float64Array(size);
+      p.set(this.p.subarray(0, this.filled)); n.set(this.n.subarray(0, this.filled));
+      this.p = p; this.n = n; this.shownP = this.shownN = NONE;
+    }
+    if (this.tinted + tints > this.c.length) {
+      const c = new Float64Array(Math.max(144, this.c.length * 2, this.tinted + tints));
+      c.set(this.c.subarray(0, this.tinted));
+      this.c = c; this.shownC = NONE;
+    }
+  }
+
+  /** Makes room for this many triangles at once, where a builder knows about how many are to come: a batch that grows on its own is copied each time it doubles. */
+  reserve(triangles: number) { this.room(triangles * 9 - this.filled, triangles * 9 - this.tinted); }
 
   /** One triangle. If `facing` is given, the corners are reordered so that the normal points that way. */
   tri(a: V3, b: V3, c: V3, ca: RGB, cb: RGB = ca, cc: RGB = ca, facing?: V3) {
@@ -30,9 +59,12 @@ export class Batch {
     if (facing && nx * facing[0] + ny * facing[1] + nz * facing[2] < 0) {
       [b, c] = [c, b]; [cb, cc] = [cc, cb]; nx = -nx; ny = -ny; nz = -nz;
     }
-    this.pos.push(a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1], c[2]);
-    this.nor.push(nx, ny, nz, nx, ny, nz, nx, ny, nz);
-    this.col.push(ca[0], ca[1], ca[2], cb[0], cb[1], cb[2], cc[0], cc[1], cc[2]);
+    this.room(9, 9);
+    const i = this.filled, j = this.tinted, p = this.p, n = this.n, t = this.c;
+    p[i] = a[0]; p[i + 1] = a[1]; p[i + 2] = a[2]; p[i + 3] = b[0]; p[i + 4] = b[1]; p[i + 5] = b[2]; p[i + 6] = c[0]; p[i + 7] = c[1]; p[i + 8] = c[2];
+    n[i] = nx; n[i + 1] = ny; n[i + 2] = nz; n[i + 3] = nx; n[i + 4] = ny; n[i + 5] = nz; n[i + 6] = nx; n[i + 7] = ny; n[i + 8] = nz;
+    t[j] = ca[0]; t[j + 1] = ca[1]; t[j + 2] = ca[2]; t[j + 3] = cb[0]; t[j + 4] = cb[1]; t[j + 5] = cb[2]; t[j + 6] = cc[0]; t[j + 7] = cc[1]; t[j + 8] = cc[2];
+    this.filled = i + 9; this.tinted = j + 9;
   }
 
   /** A planar quad a → b → c → d (around its edge), one colour or one per corner. */
@@ -67,14 +99,17 @@ export class Batch {
 
   /** Adds another batch, moved by `m` (rotation, one scale for all axes, translation). */
   append(o: Batch, m: THREE.Matrix4) {
-    const e = m.elements, p = o.pos, n = o.nor, k = 1 / Math.hypot(e[0], e[1], e[2]);
+    const e = m.elements, p = o.pos, n = o.nor, tints = o.col, k = 1 / Math.hypot(e[0], e[1], e[2]);
+    this.room(p.length, tints.length);
+    const pos = this.p, nor = this.n, at = this.filled;
     for (let i = 0; i < p.length; i += 3) {
       const x = p[i], y = p[i + 1], z = p[i + 2];
-      this.pos.push(e[0] * x + e[4] * y + e[8] * z + e[12], e[1] * x + e[5] * y + e[9] * z + e[13], e[2] * x + e[6] * y + e[10] * z + e[14]);
+      pos[at + i] = e[0] * x + e[4] * y + e[8] * z + e[12]; pos[at + i + 1] = e[1] * x + e[5] * y + e[9] * z + e[13]; pos[at + i + 2] = e[2] * x + e[6] * y + e[10] * z + e[14];
       const a = n[i], b = n[i + 1], c = n[i + 2];
-      this.nor.push((e[0] * a + e[4] * b + e[8] * c) * k, (e[1] * a + e[5] * b + e[9] * c) * k, (e[2] * a + e[6] * b + e[10] * c) * k);
+      nor[at + i] = (e[0] * a + e[4] * b + e[8] * c) * k; nor[at + i + 1] = (e[1] * a + e[5] * b + e[9] * c) * k; nor[at + i + 2] = (e[2] * a + e[6] * b + e[10] * c) * k;
     }
-    for (let i = 0; i < o.col.length; i++) this.col.push(o.col[i]);
+    this.c.set(tints, this.tinted);
+    this.filled += p.length; this.tinted += tints.length;
   }
 
   toGeometry(): THREE.BufferGeometry {
