@@ -113,15 +113,20 @@ const seedOf = (a: number, b: number, salt: number) => Math.floor(hash2(a, b, sa
 export function terrace(level: Int16Array, mat: Uint8Array) {
   const pass = (from: Int16Array, up: boolean) => {
     const to = new Int16Array(from);
-    for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
-      if (mat[idx(x, z)] !== Mat.Grass) continue;
-      let v = from[idx(x, z)];
-      for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) {
-        if (!inGrid(x + dx, z + dz) || mat[idx(x + dx, z + dz)] !== Mat.Grass) continue;
-        const o = from[idx(x + dx, z + dz)];
+    // (the neighbours by their places in the lists, in the order of rows and columns: the walk over the eight of them
+    // through `inGrid` and `idx` was a twentieth of what a worker takes for a piece of the nearest step)
+    const n = N;
+    for (let z = 0; z < n; z++) for (let x = 0; x < n; x++) {
+      const i = z * n + x;
+      if (mat[i] !== Mat.Grass) continue;
+      let v = from[i];
+      const x0 = x > 0 ? -1 : 0, x1 = x + 1 < n ? 1 : 0;
+      for (let dz = z > 0 ? -1 : 0, z1 = z + 1 < n ? 1 : 0; dz <= z1; dz++) for (let j = i + dz * n + x0, end = i + dz * n + x1; j <= end; j++) {
+        if (mat[j] !== Mat.Grass) continue;
+        const o = from[j];
         if (up ? o > v : o < v) v = o;
       }
-      to[idx(x, z)] = v;
+      to[i] = v;
     }
     return to;
   };
@@ -208,16 +213,15 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   }
   for (let step = 1; ring.length; step++) {
     const next: number[] = [];
-    for (const i of ring) {
-      const x = i % N, z = (i - x) / N;
-      for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) if (inGrid(x + dx, z + dz) && away[idx(x + dx, z + dz)] < 0) { away[idx(x + dx, z + dz)] = step; next.push(idx(x + dx, z + dz)); }
+    // (a column's neighbours by their places in the lists, in the order of rows and columns)
+    for (let k = 0; k < ring.length; k++) {
+      const i = ring[k], x = i % N, z = (i - x) / N, x0 = x > 0 ? -1 : 0, x1 = x + 1 < N ? 1 : 0;
+      for (let dz = z > 0 ? -1 : 0, z1 = z + 1 < N ? 1 : 0; dz <= z1; dz++) for (let j = i + dz * N + x0, end = i + dz * N + x1; j <= end; j++) if (away[j] < 0) { away[j] = step; next.push(j); }
     }
-    for (const j of next) {
-      const x = j % N, z = (j - x) / N;
+    for (let k = 0; k < next.length; k++) {
+      const j = next[k], x = j % N, z = (j - x) / N, x0 = x > 0 ? -1 : 0, x1 = x + 1 < N ? 1 : 0;
       let from = -1;
-      for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) {
-        if (!inGrid(x + dx, z + dz)) continue;
-        const i = idx(x + dx, z + dz);
+      for (let dz = z > 0 ? -1 : 0, z1 = z + 1 < N ? 1 : 0; dz <= z1; dz++) for (let i = j + dz * N + x0, end = j + dz * N + x1; i <= end; i++) {
         if (away[i] === step - 1 && (from < 0 || rise[i] < rise[from] || (rise[i] === rise[from] && foot[i] < foot[from]))) from = i;
       }
       rise[j] = Math.max(rise[j], rise[from]); foot[j] = foot[from];
@@ -312,9 +316,15 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     }
   }
   // a river is one water: where two of its columns touch only at a corner, the lower of the two columns between them is water too
-  for (let z = 0; z + 1 < N; z++) for (let x = 0; x + 1 < N; x++) for (const [a, c, p, q] of [[idx(x, z), idx(x + 1, z + 1), idx(x + 1, z), idx(x, z + 1)], [idx(x + 1, z), idx(x, z + 1), idx(x, z), idx(x + 1, z + 1)]]) {
-    if (river[a] < 0 || river[c] < 0 || river[p] >= 0 || river[q] >= 0 || kind[p] !== Water.Land || kind[q] !== Water.Land) continue;
+  // (the two diagonals of every square of four columns, one after the other, without a list of the four made for each)
+  const joined = (a: number, c: number, p: number, q: number) => {
+    if (river[a] < 0 || river[c] < 0 || river[p] >= 0 || river[q] >= 0 || kind[p] !== Water.Land || kind[q] !== Water.Land) return;
     river[level[p] <= level[q] ? p : q] = Math.max(river[a], river[c]);
+  };
+  for (let z = 0; z + 1 < N; z++) for (let x = 0; x + 1 < N; x++) {
+    const i = z * N + x;
+    joined(i, i + N + 1, i + 1, i + N);
+    joined(i + 1, i + N, i, i + N + 1);
   }
   for (let i = 0; i < N * N; i++) {
     const wet = kind[i] !== Water.Land || river[i] >= 0, lv = river[i] >= 0 ? river[i] : level[i];
@@ -325,11 +335,11 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   // no dry column lies below the water beside it
   for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
     const i = idx(x, z); if (g.wet[i]) continue;
-    for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
-      if (!inGrid(x + dx, z + dz)) continue;
-      const j = idx(x + dx, z + dz);
-      if (g.wet[j] && g.h[i] < LAND_Y + level[j]) g.h[i] = LAND_Y + level[j];
-    }
+    // (east, west, south, north, as before, each by its place in the lists)
+    if (x + 1 < N && g.wet[i + 1] && g.h[i] < LAND_Y + level[i + 1]) g.h[i] = LAND_Y + level[i + 1];
+    if (x > 0 && g.wet[i - 1] && g.h[i] < LAND_Y + level[i - 1]) g.h[i] = LAND_Y + level[i - 1];
+    if (z + 1 < N && g.wet[i + N] && g.h[i] < LAND_Y + level[i + N]) g.h[i] = LAND_Y + level[i + N];
+    if (z > 0 && g.wet[i - N] && g.h[i] < LAND_Y + level[i - N]) g.h[i] = LAND_Y + level[i - N];
   }
   measureShore(g);
   // the sea bed falls away from the coast, as in the probe
@@ -427,7 +437,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   /** how far the single woods of the year's forest and the fields lying together show at this step: no longer where a block is nearly as large as a wood */
   const woodsShow = smooth(WOOD * 0.8, WOOD * 0.4, cell);
   /** where in its landscape, a wood's width to each side, a column is one for woods and not for fields: on the heights, not on the valley floors */
-  const lean = (forest || arable) && woodsShow > 0 ? leanOf(metres, Uint8Array.from(kind, (k) => (k === Water.Land ? 1 : 0)), N, Math.max(1, Math.round(WOOD / cell))) : null;
+  const lean = (forest || arable) && woodsShow > 0 ? leanOf(metres, kind.map((k) => (k === Water.Land ? 1 : 0)), N, Math.max(1, Math.round(WOOD / cell))) : null;
   /** the share of the land under trees at a ground point by the forest of the world's year; null where it has none */
   const forestOf = (x: number, z: number) => { if (!forest) return null; const [cx, cy] = toCell(x, z); return forestAt(forest, region.x0 + cx / region.cells, region.y0 + cy / region.cells); };
   /**
