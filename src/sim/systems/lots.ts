@@ -16,11 +16,13 @@
 // moves while the world runs, so no parcel is laid out, split or left. A ruler has no ground (castles and residences
 // are not built yet).
 import type { WorldState } from '../state';
-import { LOT_SCHEMA, LOT_KIND, NO_LOT, HAMLET_SCHEMA, NO_HAMLET } from '../state';
+import { LOT_SCHEMA, LOT_KIND, NO_LOT, HAMLET_SCHEMA, NO_HAMLET, STREET_SCHEMA, STREET_KIND } from '../state';
 import { createTable, spawn } from '../ecs';
 import { citiesOf } from '../content/cities';
 import { SCALE } from '../scale';
-import { townGround, parcelSize, layParcels, FRONT, type Parcel, type ParcelSize } from '../settlement/rule';
+import { townGround, parcelSize, footprint, FRONT, type Parcel, type ParcelSize } from '../settlement/rule';
+import { layTown, type Street, type Town, type Tuning } from '../settlement/streets';
+import { waysOf } from '../content/town_ways';
 import { FARM, HAMLET_GAP, HAMLET_OFF, METRES_PER_BLOCK, hamletBox, hamletRing, hamletSizes, hamletSpots, layFarms } from '../settlement/hamlets';
 import type { Ground } from '../content/ground';
 
@@ -51,14 +53,19 @@ export function townFamilies(s: WorldState): { families: number[]; persons: numb
  *  (src/worldprobe/settle.ts sets a house 3 to 5 blocks deep at the street side, as wide as the parcel). */
 export const HOUSE_DEEP = 5;
 
-/** The strip of a parcel its house stands on: as wide as the parcel and HOUSE_DEEP blocks deep at its street, as
- *  blocks [x0, z0, x1, z1) of `m` metres from the centre of the town. The edges round to blocks as the world graphic
- *  rounds them. */
+/** The strip of a parcel its house stands on: as wide as the parcel and HOUSE_DEEP blocks deep at its street (on
+ *  the side `front`), as blocks [x0, z0, x1, z1) of `m` metres from the centre of the town. The edges round to blocks
+ *  as the world graphic rounds them. */
 function houseStrip(m: number, p: Parcel, size: ParcelSize): [number, number, number, number] {
-  const a0 = Math.round((p.x - size.w / 2) / m), a1 = Math.max(a0 + 2, Math.round((p.x + size.w / 2) / m));
-  const b0 = Math.round((p.z - size.d / 2) / m), b1 = Math.max(b0 + 2, Math.round((p.z + size.d / 2) / m));
-  const deep = Math.min(b1 - b0, HOUSE_DEEP), b = p.front === FRONT.north ? b0 : b1 - deep;
-  return [a0, b, a1, b + deep];
+  const f = footprint(p, size);
+  const a0 = Math.round((p.x - f.w / 2) / m), a1 = Math.max(a0 + 2, Math.round((p.x + f.w / 2) / m));
+  const b0 = Math.round((p.z - f.d / 2) / m), b1 = Math.max(b0 + 2, Math.round((p.z + f.d / 2) / m));
+  if (p.front === FRONT.north || p.front === FRONT.south) {
+    const deep = Math.min(b1 - b0, HOUSE_DEEP), b = p.front === FRONT.north ? b0 : b1 - deep;
+    return [a0, b, a1, b + deep];
+  }
+  const deep = Math.min(a1 - a0, HOUSE_DEEP), a = p.front === FRONT.west ? a0 : a1 - deep;
+  return [a, b0, a + deep, b1];
 }
 
 /** Whether the house of a parcel can stand: every block of its strip (houseStrip) is building ground. */
@@ -107,6 +114,81 @@ export interface LotsFound {
   rough: number;
   /** hamlets that found no spot clear of their town and of the other hamlets near their own: they lie farther off */
   crowded: number;
+  /** the streets, the market and what the network of each town looks like (settlement feature 3), by its site */
+  streets: Map<number, { streets: Street[]; market: { x: number; z: number; half: number }; nodes: { ends: number; bends: number; tees: number; crosses: number }; blocks: number[] }>;
+}
+
+/**
+ * The streets, the market and the parcels of a town of `count` families with parcels of `size` (settlement feature
+ * 3, src/sim/settlement/streets.ts), written into the table of streets; the parcels are returned for the register.
+ * With the building ground of the start year a parcel and a street lie only where a house can stand; a town whose
+ * surveyed ground does not hold all its families is laid out without regard to the ground (PLACEHOLDER, as in
+ * feature 1), and counted in `found.tight`.
+ */
+function layStreets(s: WorldState, site: number, count: number, size: ParcelSize, g: Ground | null, found: LotsFound, tune?: Tuning): Town {
+  const ways = waysOf(s.startYear, site), seed = (s.seed ^ Math.imul(site + 1, 0x9e3779b1)) >>> 0;
+  // the plan of the town is laid in steps of `u` metres, about one, so that a parcel is a whole number of steps wide
+  // and deep and keeps its exact ground (feature 1)
+  const W = Math.max(1, Math.round(size.w)), u = size.w / W, cells = { w: W, d: Math.max(1, Math.round(size.d / u)) };
+  let town: Town | null = null;
+  if (g?.has(site)) {
+    const m = g.metresPerBlock, r = g.reach(site), n = 2 * r + 1, known = new Uint8Array(n * n);
+    // each block of the ground asked once, for the many steps of the plan on it and every try
+    const block = (bx: number, bz: number) => {
+      if (bx < -r || bx > r || bz < -r || bz > r) return false;
+      const i = (bz + r) * n + bx + r;
+      if (!known[i]) known[i] = g.free(site, bx, bz) ? 1 : 2;
+      return known[i] === 1;
+    };
+    town = layTown(count, cells, ways, seed, {
+      free: (x, z) => block(Math.round((x * u) / m), Math.round((z * u) / m)),
+      stands: (p) => houseGround(g, site, { x: p.x * u, z: p.z * u, front: p.front }, size),
+      reach: (g.reach(site) * m) / u,
+    }, tune);
+    if (town.parcels.length < count) { town = null; found.tight.push(site); }
+  }
+  town ??= layTown(count, cells, ways, seed, undefined, tune);
+  if (town.parcels.length < count) throw new Error(`the streets of town ${site} hold ${town.parcels.length} of its ${count} families`);
+  // into metres
+  const at = (v: number) => v * u;
+  town = {
+    ...town,
+    parcels: town.parcels.map((p) => ({ x: at(p.x), z: at(p.z), front: p.front })),
+    streets: town.streets.map((q) => ({ x0: at(q.x0), z0: at(q.z0), x1: at(q.x1), z1: at(q.z1), kind: q.kind })),
+    market: { x: at(town.market.x), z: at(town.market.z), half: at(town.market.half) },
+    blocks: town.blocks.map((a) => a * u * u),
+    width: at(town.width),
+  };
+  const S = s.street.cols;
+  const put = (x0: number, z0: number, x1: number, z1: number, kind: number, wide: number) => {
+    const id = spawn(s.street);
+    S.site[id] = site; S.x0[id] = x0; S.z0[id] = z0; S.x1[id] = x1; S.z1[id] = z1; S.kind[id] = kind; S.width[id] = wide;
+  };
+  const mk = town.market;
+  put(mk.x - mk.half, mk.z - mk.half, mk.x + mk.half, mk.z + mk.half, STREET_KIND.market, 0);
+  for (const q of town.streets) put(q.x0, q.z0, q.x1, q.z1, q.kind, town.width);
+  found.streets.set(site, town);
+  return town;
+}
+
+/**
+ * Lays the towns of a running world out anew along their streets (the upgrade 29 → 30): each town keeps its parcels,
+ * their families and their size; the parcels move to the streets that grow to them, the lowest id
+ * the first, as a new world lays them. The hamlets stay where they are.
+ */
+export function relayTowns(s: WorldState, ground?: Ground | null): LotsFound {
+  const L = s.lot.cols, found: LotsFound = { tight: [], rough: 0, crowded: 0, streets: new Map() };
+  const g = ground && ground.year === s.startYear ? ground : null;
+  s.street = createTable(STREET_SCHEMA, 16384);
+  const bySite = new Map<number, number[]>();
+  for (let i = 0; i < s.lot.size; i++) if (s.lot.alive[i] && L.kind[i] === LOT_KIND.parcel) { const a = bySite.get(L.site[i]); if (a) a.push(i); else bySite.set(L.site[i], [i]); }
+  // in the order the towns were founded (their first parcel), so that the streets lie in the register as a new world lays them
+  for (const [site, rows] of [...bySite].sort((a, b) => a[1][0] - b[1][0])) {
+    const size = { w: L.w[rows[0]], d: L.d[rows[0]] };
+    const town = layStreets(s, site, rows.length, size, g, found);
+    rows.forEach((id, k) => { const p = town.parcels[k]; L.x[id] = p.x; L.z[id] = p.z; L.w[id] = size.w; L.d[id] = size.d; L.front[id] = p.front; });
+  }
+  return found;
 }
 
 /**
@@ -126,10 +208,10 @@ export interface LotsFound {
  * carries the most. The ground of a hamlet is the dry ground round the town (`dry`: no water, no rock; the world
  * graphic levels the ground of a hamlet, so steps do not count there), and without it the building ground.
  */
-export function foundLots(s: WorldState, ground?: Ground | null, dry?: Ground | null): LotsFound {
-  const lot = createTable(LOT_SCHEMA, 32768), L = lot.cols, F = s.family.cols, found: LotsFound = { tight: [], rough: 0, crowded: 0 };
+export function foundLots(s: WorldState, ground?: Ground | null, dry?: Ground | null, tune?: Tuning): LotsFound {
+  const lot = createTable(LOT_SCHEMA, 32768), L = lot.cols, F = s.family.cols, found: LotsFound = { tight: [], rough: 0, crowded: 0, streets: new Map() };
   const hamlets = createTable(HAMLET_SCHEMA, 4096), H = hamlets.cols;
-  s.lot = lot; s.hamlets = hamlets;
+  s.lot = lot; s.hamlets = hamlets; s.street = createTable(STREET_SCHEMA, 16384);
   F.lot.fill(NO_LOT);
   const g = ground && ground.year === s.startYear ? ground : null;
   const wide = dry && dry.year === s.startYear ? dry : null;
@@ -141,20 +223,18 @@ export function foundLots(s: WorldState, ground?: Ground | null, dry?: Ground | 
     let half = 0;
     const built = new Map<number, Box[]>(); // the parcels of the town by the cells of CELL metres they touch
     if (families.length) {
-      const size = parcelSize(townGround(persons, city.site), families.length);
-      let parcels: Parcel[] | null = null;
-      if (g?.has(city.site)) {
-        parcels = layParcels(families.length, size, (x, z, front) => houseGround(g, city.site, { x, z, front }, size), g.reach(city.site) * g.metresPerBlock);
-        if (parcels.length < families.length) { parcels = null; found.tight.push(city.site); }
-      }
-      parcels ??= layParcels(families.length, size);
+      const exact = parcelSize(townGround(persons, city.site), families.length);
+      const size = exact;
+      const town = layStreets(s, city.site, families.length, size, g, found, tune);
+      const parcels: Parcel[] = town.parcels;
       families.forEach((f, i) => {
         const id = spawn(lot), p = parcels![i];
         L.kind[id] = LOT_KIND.parcel; L.place[id] = city.place; L.site[id] = city.site; L.hamlet[id] = NO_HAMLET;
         L.x[id] = p.x; L.z[id] = p.z; L.w[id] = size.w; L.d[id] = size.d; L.front[id] = p.front;
         F.lot[f] = id;
-        half = Math.max(half, Math.abs(p.x) + size.w / 2, Math.abs(p.z) + size.d / 2);
-        const b: Box = { x: p.x, z: p.z, w: size.w, d: size.d };
+        const fp = footprint(p, size);
+        half = Math.max(half, Math.abs(p.x) + fp.w / 2, Math.abs(p.z) + fp.d / 2);
+        const b: Box = { x: p.x, z: p.z, w: fp.w, d: fp.d };
         for (let cz = Math.floor((b.z - b.d / 2) / CELL); cz <= Math.floor((b.z + b.d / 2) / CELL); cz++) for (let cx = Math.floor((b.x - b.w / 2) / CELL); cx <= Math.floor((b.x + b.w / 2) / CELL); cx++) {
           const key = cz * 4096 + cx, list = built.get(key);
           if (list) list.push(b); else built.set(key, [b]);

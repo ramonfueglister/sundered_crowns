@@ -14,7 +14,8 @@ import { LOT_KIND, type WorldState } from '../../src/sim/state';
 const r1 = (v: number) => Math.round(v * 10) / 10;
 
 /** The file's content for a world: per town its site, the size of its parcels (all of a town are alike), and per
- *  parcel the middle, the street side and the persons living on it; then its hamlets: the middle of each (`east`,
+ *  parcel the middle, the street side and the persons living on it; its streets (`street` metres wide), each
+ *  [x0, z0, x1, z1, kind] (STREET_KIND: the market is the square from corner to corner); then its hamlets: the middle of each (`east`,
  *  `south` of the town's centre), the size of its farmsteads and per farmstead the middle (east and south of the
  *  hamlet's middle), the side of the lane and the persons. All in metres at the scale of the houses (a block of the
  *  world graphic is 2 m), to a decimetre. */
@@ -25,7 +26,8 @@ export function lotsFile(s: WorldState) {
       const rows = t.id.map((_, i) => i).filter(keep);
       return { w: rows.length ? r1(t.w[rows[0]]) : 0, d: rows.length ? r1(t.d[rows[0]]) : 0, x: rows.map((i) => r1(t.x[i] - x0)), z: rows.map((i) => r1(t.z[i] - z0)), front: rows.map((i) => t.front[i]), persons: rows.map((i) => t.persons[i]) };
     };
-    return { site: t.site, ...of((i) => t.kind[i] === LOT_KIND.parcel), hamlets: t.hamlets.id.map((h, k) => ({ east: r1(t.hamlets.x[k]), south: r1(t.hamlets.z[k]), ...of((i) => t.hamlet[i] === h, t.hamlets.x[k], t.hamlets.z[k]) })) };
+    const q = t.streets, streets = q.kind.map((k, i) => [r1(q.x0[i]), r1(q.z0[i]), r1(q.x1[i]), r1(q.z1[i]), k]);
+    return { site: t.site, ...of((i) => t.kind[i] === LOT_KIND.parcel), street: q.width.find((v) => v > 0) ? r1(q.width.find((v) => v > 0)!) : 0, streets, hamlets: t.hamlets.id.map((h, k) => ({ east: r1(t.hamlets.x[k]), south: r1(t.hamlets.z[k]), ...of((i) => t.hamlet[i] === h, t.hamlets.x[k], t.hamlets.z[k]) })) };
   });
   return { year: s.startYear, source: 'a new world of the year: src/sim/systems/lots.ts (tools/sim/write_lots.ts)', towns };
 }
