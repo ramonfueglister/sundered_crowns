@@ -3,9 +3,10 @@
 // Address options: ?webgl=1 (WebGL 2 instead of WebGPU), ?w=1672&h=941 (fixed picture size), ?blur=1 (miniature blur,
 // which the reference does not have), ?shadows=0, ?mirror=0 (no mirror image on the water), ?sky=0 (without the baked sky share: light step 1 only),
 // ?ao=0 (without the darkening of creases and corners; ?aoscale, ?aosamples, ?aosmooth: see there). ?small=0: the pieces' directions and
-// colours come as floats, not as bytes (worldprobe/small.ts).
+// colours come as floats, not as bytes (worldprobe/small.ts). ?faces=0: their rectangles on the grid of blocks come as
+// triangles in those lists, not as faces (faces.ts).
 import * as THREE from 'three/webgpu';
-import { attribute, clamp, convertToTexture, dot, float, fract, getViewPosition, materialColor, max, mix, mrt, normalView, output, pass, reflector, rtt, screenCoordinate, screenSize, screenUV, select, smoothstep, step, texture, uniform, userData, uv, vec2, vec3, vec4 } from 'three/tsl';
+import { attribute, clamp, convertToTexture, dot, float, fract, getViewPosition, materialColor, max, mix, mrt, normalView, output, pass, positionGeometry, reflector, rtt, screenCoordinate, screenSize, screenUV, select, smoothstep, step, texture, uniform, userData, uv, vec2, vec3, vec4 } from 'three/tsl';
 import { MapControls } from 'three/addons/controls/MapControls.js';
 import { dof } from 'three/addons/tsl/display/DepthOfFieldNode.js';
 import { denoise } from 'three/addons/tsl/display/DenoiseNode.js';
@@ -16,6 +17,7 @@ import type { Batch } from './batch';
 import { RIG, towards, CREASES } from './light';
 import { type Figures, anyFigures, figureMeshes, keepFigures, showFigures, warmFigures } from '../figures/stage';
 import { OPEN_WATER } from './terrain';
+import { FACE_COL, FACE_CORNERS, FACE_GEO, FACE_STEPS, FLIPPED, type Faces, faceHit, unfaced } from './faces';
 
 const q = new URLSearchParams(location.search);
 const flag = (k: string, fallback: boolean) => (q.has(k) ? q.get(k) !== '0' : fallback);
@@ -65,6 +67,11 @@ export interface Shape {
   /** the ball around all its points, middle and radius, where its builder has worked it out (else the stage does, on the page's thread) */
   ball?: [number, number, number, number];
   small?: boolean;
+  /**
+   * its rectangles on the grid of blocks, taken out of the lists (faces.ts): the stage draws them beside what the
+   * lists hold, as a mesh of its own. Not of water that mirrors, and not of what `more` adds.
+   */
+  faces?: Faces;
 }
 export interface StageScene<S extends Shape = Batch> {
   ground: S; things: S;
@@ -221,6 +228,38 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     // the mirror image is tinted like the water, so a white sail shows as a pale green shape, not as a light
     water.emissiveNode = hashBlur(mirror, float(LOOK.mirrorBlur), { repeats: float(24) }).rgb.mul(tint);
   }
+  // A mesh's rectangles on the grid of blocks come as faces (faces.ts), a row of numbers to each, and their corners
+  // are made here: each of the six corners of a face's two triangles knows which of the face's four it is (one way
+  // round and the other), and takes its place and its colour from the face's row by that. The numbers of 16 bits
+  // reach the shader as shares of 32767 and are whole again before they are used, so a corner lies where the
+  // builder put it, to the last bit.
+  const lie = attribute('lie', 'vec4') as unknown as ReturnType<typeof vec4>, reach = attribute('reach', 'vec2') as unknown as ReturnType<typeof vec2>;
+  const whole = (n: typeof lie.x) => n.mul(32767).add(0.5).floor();
+  const kind = whole(lie.x), flipped = kind.greaterThanEqual(FLIPPED), axis = kind.sub(select(flipped, float(FLIPPED), float(0)));
+  const corner = select(flipped, positionGeometry.y, positionGeometry.x);
+  const level = whole(lie.y).div(FACE_STEPS), alongU = whole(select(corner.greaterThan(0.5).and(corner.lessThan(2.5)), lie.w, lie.z)).div(FACE_STEPS), alongV = whole(select(corner.greaterThan(1.5), reach.y, reach.x)).div(FACE_STEPS);
+  const tones = [0, 1, 2, 3].map((k) => attribute(`tone${k}`, 'vec4') as unknown as ReturnType<typeof vec4>);
+  const toneOf = select(corner.lessThan(0.5), tones[0], select(corner.lessThan(1.5), tones[1], select(corner.lessThan(2.5), tones[2], tones[3])));
+  const faced = new THREE.MeshLambertNodeMaterial();
+  faced.positionNode = select(axis.lessThan(0.5), vec3(level, alongU, alongV), select(axis.lessThan(1.5), vec3(alongU, level, alongV), vec3(alongU, alongV, level)));
+  // (a face's colours are always bytes: see `toned`)
+  faced.colorNode = materialColor.mul(toneOf.rgb.mul(toneOf.a.mul((2 * 255) / 254)).toVarying());
+  faced.maskNode = solid.maskNode;
+  /** which of a face's four corners each of the six is, where its triangles turn one way and where the other */
+  const CORNERS = new Float32Array(FACE_CORNERS[0].flatMap((c, k) => [c, FACE_CORNERS[1][k], 0]));
+  const faceGeometry = (s: Shape) => {
+    const f = s.faces!, g = new THREE.InstancedBufferGeometry();
+    // (the six corners are the same for every mesh, but each has a list of its own: a mesh that goes takes its lists with it)
+    g.setAttribute('position', new THREE.BufferAttribute(CORNERS, 3));
+    const lies = new THREE.InstancedInterleavedBuffer(f.geo, FACE_GEO), colours = new THREE.InstancedInterleavedBuffer(f.col, FACE_COL);
+    g.setAttribute('lie', new THREE.InterleavedBufferAttribute(lies, 4, 0, true)); g.setAttribute('reach', new THREE.InterleavedBufferAttribute(lies, 2, 4, true));
+    for (let k = 0; k < 4; k++) g.setAttribute(`tone${k}`, new THREE.InterleavedBufferAttribute(colours, 4, k * 4, true));
+    g.setAttribute('normal', new THREE.InstancedBufferAttribute(f.nor, 4, true));
+    g.instanceCount = f.geo.length / FACE_GEO;
+    if (s.ball) g.boundingSphere = new THREE.Sphere(new THREE.Vector3(s.ball[0], s.ball[1], s.ball[2]), s.ball[3]);
+    else g.boundingSphere = new THREE.Box3().setFromArray(unfaced(f).pos).getBoundingSphere(new THREE.Sphere());
+    return g;
+  };
   const geometry = (s: Shape) => {
     const g = new THREE.BufferGeometry(), list = (a: ArrayLike<number>) => new THREE.BufferAttribute(a instanceof Float32Array ? a : new Float32Array(a), 3);
     g.setAttribute('position', list(s.pos));
@@ -452,6 +491,19 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     made.castShadow = casts; made.receiveShadow = true; made.userData.dots = new THREE.Vector2(0, 1); made.userData.ink = 1;
     return made;
   };
+  /** The faces of a shape as a mesh: one drawing of the six corners for every face. */
+  const faceMesh = (shape: Shape, casts: boolean) => {
+    const made = new THREE.Mesh(faceGeometry(shape), faced), f = shape.faces!;
+    made.castShadow = casts; made.receiveShadow = true; made.userData.dots = new THREE.Vector2(0, 1); made.userData.ink = 1;
+    // (a ray finds the faces by their rows: the mesh's own corners are not where they are drawn)
+    made.raycast = (ray, hits) => {
+      const own = ray.ray.clone().applyMatrix4(new THREE.Matrix4().copy(made.matrixWorld).invert()), t = faceHit(f, own.origin.toArray(), own.direction.toArray());
+      if (t === null) return;
+      const point = own.at(t, new THREE.Vector3()).applyMatrix4(made.matrixWorld), distance = ray.ray.origin.distanceTo(point);
+      if (distance >= ray.near && distance <= ray.far) hits.push({ distance, point, object: made });
+    };
+    return made;
+  };
   // The renderer keeps a record of every mesh it has drawn, and each record hangs on the material, which all pieces
   // share and which is never let go: only the mesh's own 'dispose' takes the record, and with it the mesh and its
   // numbers, out of the renderer. Letting go of the geometry alone leaves them held for good.
@@ -486,7 +538,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     (pilotSmall.userData.dots as THREE.Vector2).set(0, 0); pilotSmall.frustumCulled = false; pilotSmall.layers.set(FIGURES_LAYER);
     scene.add(pilotSmall);
   }
-  const weight = (g: THREE.BufferGeometry) => { let bytes = 0; for (const name in g.attributes) bytes += (g.attributes[name].array as Float32Array).byteLength; return Math.max(SEND_LEAST, bytes); };
+  const weight = (g: THREE.BufferGeometry) => { const lists = new Set<Float32Array>(); for (const name in g.attributes) lists.add(g.attributes[name].array as Float32Array); let bytes = 0; for (const list of lists) bytes += list.byteLength; return Math.max(SEND_LEAST, bytes); };
   const cool = <M extends THREE.Mesh>(made: M): M => { if (staged && !fixedW) { cold.add(made); waiting += weight(made.geometry); } return made; };
   const warm = (made: THREE.Mesh) => { if (cold.delete(made)) waiting -= weight(made.geometry); };
   /** Puts the stand-ins of the next meshes into the picture about to be drawn. */
@@ -501,7 +553,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     for (const made of cold) {
       const bytes = weight(made.geometry);
       if (sending.length && bytes > room) break;
-      const standIn = new THREE.Mesh(made.geometry, solid);
+      const standIn = new THREE.Mesh(made.geometry, made.material === faced ? faced : solid);
       // (all that the material reads of a mesh, as its own mesh has it)
       standIn.userData = { ...made.userData, ground: false, dots: new THREE.Vector2(0, 0) };
       // (it lies on the layer the water's mirror does not draw, and casts no shadow: one pass sends the lists)
@@ -534,9 +586,8 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
       const group = new THREE.Group();
       group.position.set(x, 0, z);
       for (const [shape, material, casts] of [[built.ground, solid, true], [built.carried, solid, true], [built.things, solid, true], [built.water, water, false], [built.raised, solid, false]] as const) {
-        if (!shape || !shape.pos.length) continue;
-        for (const some of parts(shape)) {
-          const part = cool(mesh(some, material, casts));
+        if (!shape) continue;
+        for (const part of [...(shape.faces?.geo.length ? [cool(faceMesh(shape, casts))] : []), ...(shape.pos.length ? parts(shape).map((some) => cool(mesh(some, material, casts))) : [])]) {
           part.userData.ground = shape === built.ground || shape === built.carried;
           if (shape === built.things || shape === built.carried) part.userData.ink = 0;
           group.add(part);

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { cornerOf, small } from '../../src/worldprobe/small';
+import { Batch } from '../../src/lookprobe/batch';
+import { FACE_GEO, faceHit, unfaced } from '../../src/lookprobe/faces';
+import { cornerOf, faced, small } from '../../src/worldprobe/small';
 
 /** a list of corners: places within a piece of the world, directions of length one, colours up to `bright` */
 function corners(n: number, bright: number) {
@@ -45,5 +47,81 @@ describe('small', () => {
     expect([s.col[3], s.col[7], s.col[11]]).toEqual([254, 254, 0]);
     expect(cornerOf(s, 1).col).toEqual([2, 2, 2]);
     expect(cornerOf(s, 2).col).toEqual([0, 0, 0]);
+  });
+});
+
+/** the triangles of small lists, each as a word of its three corners in their order, sorted */
+function triangles(...lists: { pos: ArrayLike<number>; nor: ArrayLike<number>; col: ArrayLike<number> }[]): string[] {
+  const words: string[] = [];
+  for (const s of lists) for (let t = 0; t < s.pos.length / 9; t++) words.push([...Array.from(s.pos).slice(t * 9, t * 9 + 9), '|', ...Array.from(s.nor).slice(t * 12, t * 12 + 12), '|', ...Array.from(s.col).slice(t * 12, t * 12 + 12)].join(' '));
+  return words.sort();
+}
+
+describe('faced', () => {
+  /** blocks and steps as the ground and the woods are made of, and what is not on the grid */
+  const mixed = () => {
+    const b = new Batch();
+    // blocks on the grid, with darker feet and a top of their own
+    b.box(100, 3, 100, 101, 5, 101, [0.4, 0.5, 0.2], { top: [0.5, 0.6, 0.3], foot: 0.7, bottom: true, away: [0.2, 0.3, 0.3] });
+    b.box(101.5, 3, 100, 102, 4.25, 100.5, [0.6, 0.6, 0.6], { foot: 0.8 });
+    // a level top with a colour to each corner, turned both ways round and split along either diagonal
+    const four = [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6], [0.7, 0.8, 0.9], [1.2, 1.1, 1.0]] as const;
+    b.quad([110, 6, 110], [110, 6, 111], [111, 6, 111], [111, 6, 110], four, [0, 1, 0]);
+    b.quad([110, 6, 111], [111, 6, 111], [111, 6, 110], [110, 6, 110], four, [0, 1, 0]);
+    b.quad([110, 6, 110], [111, 6, 110], [111, 6, 111], [110, 6, 111], four, [0, 1, 0]);
+    b.quad([111, 2, 110], [110, 2, 110], [110, 2, 111], [111, 2, 111], four, [0, -1, 0]);
+    b.quad([112, 3, 110], [112, 3, 111], [112, 5, 111], [112, 5, 110], four, [-1, 0, 0]);
+    b.quad([112, 3, 112], [113, 3, 112], [113, 5, 112], [112, 5, 112], four, [0, 0, -1]);
+    return b;
+  };
+  /** what must stay in the lists: the sea's level, a slope, a single triangle, a quad off the grid, one whose halves differ in colour */
+  const loose = (b: Batch) => {
+    b.quad([120, 2.7, 120], [120, 2.7, 121], [121, 2.7, 121], [121, 2.7, 120], [0.1, 0.3, 0.5], [0, 1, 0]);
+    b.quad([122, 3, 120], [122, 3, 121], [123, 4, 121], [123, 4, 120], [0.3, 0.3, 0.3], [0, 1, 0]);
+    b.tri([124, 3, 120], [124, 3, 121], [125, 3, 121], [0.3, 0.3, 0.3], undefined, undefined, [0, 1, 0]);
+    b.quad([126, 3, 120], [126, 3, 121.001], [127, 3, 121.001], [127, 3, 120], [0.3, 0.3, 0.3], [0, 1, 0]);
+    b.tri([128, 3, 120], [128, 3, 121], [129, 3, 121], [0.3, 0.3, 0.3], undefined, undefined, [0, 1, 0]);
+    b.tri([128, 3, 120], [129, 3, 121], [129, 3, 120], [0.5, 0.3, 0.3], undefined, undefined, [0, 1, 0]);
+    // (and a level one too far from the mesh's beginning for numbers of 16 bits)
+    b.quad([600, 3, 120], [600, 3, 121], [601, 3, 121], [601, 3, 120], [0.3, 0.3, 0.3], [0, 1, 0]);
+  };
+
+  it('takes every rectangle on the grid out of the lists and leaves the rest', () => {
+    const b = mixed(), rects = b.triangles / 2;
+    loose(b);
+    const all = b.triangles, f = faced(b);
+    expect(f.faces!.geo.length / FACE_GEO).toBe(rects);
+    expect(f.pos.length / 9).toBe(all - rects * 2);
+    expect(f.small).toBe(true);
+    // (32 bytes to a face)
+    expect(f.faces!.geo.byteLength + f.faces!.col.byteLength + f.faces!.nor.byteLength).toBe(rects * 32);
+  });
+
+  it('gives back the very triangles of the lists: places, directions and colours, corner by corner', () => {
+    const b = mixed();
+    loose(b);
+    const f = faced(b);
+    expect(triangles(f, unfaced(f.faces!))).toEqual(triangles(small(b)));
+    expect(f.ball).toEqual(small(b).ball);
+  });
+
+  it('leaves lists without a rectangle as they are', () => {
+    const b = new Batch();
+    loose(b);
+    const f = faced(b);
+    expect(f.faces).toBeUndefined();
+    expect(triangles(f)).toEqual(triangles(small(b)));
+  });
+
+  it('lets a ray find the first face it meets from the front', () => {
+    const f = faced(mixed()).faces!;
+    // straight down onto the first block's top, and onto the top with four colours over the face that looks down
+    expect(faceHit(f, [100.5, 50, 100.5], [0, -1, 0])).toBeCloseTo(45, 9);
+    expect(faceHit(f, [110.5, 50, 110.5], [0, -1, 0])).toBeCloseTo(44, 9);
+    // from below, the face that looks down; past all of them, none
+    expect(faceHit(f, [110.5, 0, 110.5], [0, 1, 0])).toBeCloseTo(2, 9);
+    expect(faceHit(f, [105, 50, 105], [0, -1, 0])).toBeNull();
+    // level, onto the side of the first block that looks along -x
+    expect(faceHit(f, [90, 3.5, 100.25], [1, 0, 0])).toBeCloseTo(10, 9);
   });
 });
