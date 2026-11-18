@@ -119,12 +119,13 @@ describe('portraits', { timeout: 20_000 }, () => {
       expect(worn.some(t => t.includes('/plait01_cap.')), `person ${p.pid}: plaits before the veil`).toBe(plaited);
       // the plaits themselves are round strands, a surface of their own (round 86)
       expect(worn.some(t => t.includes('/plait01_rope.')), `person ${p.pid}: the plaits' strands`).toBe(plaited);
-      // hair is locks (a man's and a boy's since round 87, a girl's head above her plaits since round 88): one
-      // surface of arched bands, seen from both sides, drawn with the one image of England's locks, over the
-      // painted layer of the cut. No cards of England's hair are left
-      const locks = english.surfaces.filter(s => s.tex.includes('/hair1356_locks.'));
-      expect(locks.length, `person ${p.pid}: locks where there is hair`).toBe(worn.some(t => /\/(bob0\d|plait01)_cap\./.test(t)) ? 1 : 0);
-      expect(locks.every(s => s.double && surfaceKind(s) === 'rope'), `person ${p.pid}: locks are open bands of solid hair`).toBe(true);
+      // hair is a body (round 109; locks from round 87, cards before): one surface of thick bundles, arched
+      // bands seen from both sides, drawn with the one image of England's bundles, over the painted layer of
+      // the cut. No cards and no locks of England's head hair are left
+      const body = english.surfaces.filter(s => s.tex.includes('/hair1356_body.'));
+      expect(body.length, `person ${p.pid}: a body where there is hair`).toBe(worn.some(t => /\/(bob0\d|plait01)_cap\./.test(t)) ? 1 : 0);
+      expect(body.every(s => s.double && surfaceKind(s) === 'rope'), `person ${p.pid}: bundles are open bands of solid hair`).toBe(true);
+      expect(worn.some(t => t.includes('/hair1356_locks.')), `person ${p.pid}: no locks of England's head hair`).toBe(false);
       expect(worn.some(t => /\/bob0\d_cap\./.test(t)) && p.female, `person ${p.pid}: a woman wears no man's cut`).toBe(false);
       expect(worn.some(t => /\/(bob0\d|plait01)\./.test(t)), `person ${p.pid}: no cards of England's hair`).toBe(false);
       // everyone wears the brows that sit level on these heads (the finer ones tried for women sit slanted: a
@@ -238,9 +239,9 @@ describe('portraits', { timeout: 20_000 }, () => {
       const [m, ...more] = surfaceMaterials(lock, null, null, ENGLAND_1356);
       expect(more.length).toBe(0);
       expect([m!.transparent, m!.depthWrite, m!.side, m!.alphaTest]).toEqual([false, true, DoubleSide, LOCK_OPAQUE]);
-      // the beard's locks are not the head's: an image of their own (coarser hairs that sway more), and a
-      // surface of their own beside the head's locks where the man has hair
-      expect(lock.tex.includes('/hair1356_locks.')).toBe(false);
+      // the beard's locks are not the head's hair: an image of their own (coarser hairs that sway more, frayed
+      // ends), and a surface of their own beside the head's bundles where the man has hair
+      expect(lock.tex.includes('/hair1356_body.')).toBe(false);
       expect(lock.pos.length / 9).toBeGreaterThan(8000);
     }
     // four of the sample's men wear the full beard (940011, 940013, 940021, 940027)
@@ -597,13 +598,18 @@ describe('portraits', { timeout: 20_000 }, () => {
   });
   it('a lock of hair is solid, open below, and frayed where its image is empty', () => {
     // Until round 87 the hair of a man's head was cards: thin sheets blended over each other, lit as one smooth
-    // dome (a card's direction was the one from the head's centre), throwing no shadow on the forehead. Now it
-    // is locks: arched bands, each lit by its own form, in the stage's shadows as a plait's strands are. A band
+    // dome (a card's direction was the one from the head's centre), throwing no shadow on the forehead. Then it
+    // was locks, as a full beard still is: arched bands, each lit by its own form, in the stage's shadows as a
+    // plait's strands are. A band
     // is open below, so it is drawn from both sides; its hairs end one after the other, so the image is empty
     // between them there, and where the image is empty nothing is drawn and nothing throws a shadow
     const of = (tex: string, double: boolean) => ({ rough: 0.6, metal: 0, double, tex, nmap: '', pos: new Float32Array(9), col: new Float32Array(9).fill(0.5), uv: new Float32Array(6), nrm: new Float32Array(9) });
-    const locks = of('real/hair1356_locks.webp', true), plait = of('real/plait01_rope.webp', false);
+    const locks = of('real/beard1356_locks.webp', true), plait = of('real/plait01_rope.webp', false);
     expect(surfaceKind(locks)).toBe('rope');
+    // the bundles of a head's hair (round 109) are drawn by the same rule: solid, from both sides
+    const bundles = of('real/hair1356_body.webp', true);
+    expect([surfaceKind(bundles), drawOrder(bundles)]).toEqual(['rope', 0]);
+    expect(surfaceMaterials(bundles, null, null, ENGLAND_1356).map(m => [m.transparent, m.side, m.alphaTest])).toEqual([[false, DoubleSide, LOCK_OPAQUE]]);
     expect(drawOrder(locks)).toBe(0);
     const [lock, ...more] = surfaceMaterials(locks, null, null, ENGLAND_1356);
     expect(more.length).toBe(0);

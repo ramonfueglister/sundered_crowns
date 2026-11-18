@@ -118,96 +118,96 @@
    "bytes": 42006
   },
   {
-   "name": "bob01_cap.txt",
-   "bytes": 63593
+   "name": "bob01_body.txt.zst",
+   "bytes": 662412
   },
   {
-   "name": "bob01_locks.txt.zst",
-   "bytes": 678178
+   "name": "bob01_cap.txt",
+   "bytes": 63593
   },
   {
    "name": "bob01_scalp.txt",
    "bytes": 42006
   },
   {
-   "name": "bob02_cap.txt",
-   "bytes": 63593
+   "name": "bob02_body.txt.zst",
+   "bytes": 654815
   },
   {
-   "name": "bob02_locks.txt.zst",
-   "bytes": 741129
+   "name": "bob02_cap.txt",
+   "bytes": 63593
   },
   {
    "name": "bob02_scalp.txt",
    "bytes": 42006
   },
   {
-   "name": "bob03_cap.txt",
-   "bytes": 58840
+   "name": "bob03_body.txt.zst",
+   "bytes": 638978
   },
   {
-   "name": "bob03_locks.txt.zst",
-   "bytes": 698265
+   "name": "bob03_cap.txt",
+   "bytes": 58840
   },
   {
    "name": "bob03_scalp.txt",
    "bytes": 42006
   },
   {
-   "name": "bob04_cap.txt",
-   "bytes": 51997
+   "name": "bob04_body.txt.zst",
+   "bytes": 345391
   },
   {
-   "name": "bob04_locks.txt.zst",
-   "bytes": 686027
+   "name": "bob04_cap.txt",
+   "bytes": 51997
   },
   {
    "name": "bob04_scalp.txt",
    "bytes": 42006
   },
   {
-   "name": "bob05_cap.txt",
-   "bytes": 63593
+   "name": "bob05_body.txt.zst",
+   "bytes": 940995
   },
   {
-   "name": "bob05_locks.txt.zst",
-   "bytes": 763327
+   "name": "bob05_cap.txt",
+   "bytes": 63593
   },
   {
    "name": "bob05_scalp.txt",
    "bytes": 42006
   },
   {
-   "name": "bob06_cap.txt",
-   "bytes": 63593
+   "name": "bob06_body.txt.zst",
+   "bytes": 620196
   },
   {
-   "name": "bob06_locks.txt.zst",
-   "bytes": 619118
+   "name": "bob06_cap.txt",
+   "bytes": 63593
   },
   {
    "name": "bob06_scalp.txt",
    "bytes": 42006
   },
   {
-   "name": "bob07_cap.txt",
-   "bytes": 63593
+   "name": "bob07_body.txt.zst",
+   "bytes": 669773
   },
   {
-   "name": "bob07_locks.txt.zst",
-   "bytes": 727484
+   "name": "bob07_cap.txt",
+   "bytes": 63593
   },
   {
    "name": "bob07_scalp.txt",
    "bytes": 42006
   },
   {
-   "name": "bob08_cap.txt",
-   "bytes": 63593
+   "name": "bob08_body.txt.zst",
+   "bytes": 626880
   },
   {
-   "name": "bob08_locks.txt.zst",
-   "bytes": 607379
+   "name": "bob08_cap.txt",
+   "bytes": 63593
   },
   {
    "name": "bob08_scalp.txt",
@@ -338,12 +338,12 @@
    "bytes": 20765
   },
   {
-   "name": "plait01_cap.txt",
-   "bytes": 67945
+   "name": "plait01_body.txt.zst",
+   "bytes": 712412
   },
   {
-   "name": "plait01_locks.txt.zst",
-   "bytes": 594119
+   "name": "plait01_cap.txt",
+   "bytes": 67945
   },
   {
    "name": "plait01_rope.txt.zst",
@@ -506,8 +506,8 @@
   "eyeball.webp",
   "eyebrow001.webp",
   "eyebrow1356.webp",
-  "hair1356_locks.webp",
-  "hair1356_locks_n.webp",
+  "hair1356_body.webp",
+  "hair1356_body_n.webp",
   "plait01_cap.webp",
   "plait01_cap_n.webp",
   "plait01_rope.webp",

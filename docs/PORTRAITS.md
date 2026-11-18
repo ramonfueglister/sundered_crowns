@@ -20,7 +20,7 @@ one, changes nothing: same people in, same pictures out, measured.
 | Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; no set: Apoleia's Roman dress |
 | Stage profile | `src/portrait/profile.ts` | Light and materials per set of dress; Apoleia's portraits keep Apoleia's |
 | Pipeline | `tools/portrait/pipeline/` | Blender scripts that wrote the draped clothes and hair (not part of the build) |
-| Files of the real look | `public/portrait/` (39 MB) | The head (1.1 MB), data files (12.9 MB since round 105, 10.4 before round 104: hair and beard locks, draped clothes, skin shading), images (24.3 MB: skin by age and sex, wrinkle maps, hair, cloth, eyes) |
+| Files of the real look | `public/portrait/` (39 MB) | The head (1.1 MB), data files (12.7 MB since round 109, 12.9 since round 105, 10.4 before round 104: the hair's bodies, the beard's locks, draped clothes, skin shading), images (24.3 MB: skin by age and sex, wrinkle maps, hair, cloth, eyes) |
 | Stage | `src/portrait/` (three.js) | Lights, frames and draws one portrait; materials per kind of surface |
 | Finish | `src/portrait/finish.ts` | For a profile that asks for it (England's, round 103): the picture is drawn in linear light at twice the size and brought to the screen by a tone curve that keeps a colour's hue, on a backdrop of its own; Apoleia's portraits keep three.js' ACES curve |
 | Test page | `portrait-test.html` | The twelve test people; `?origin=England` puts them into the dress of 1356, `?female=1&age=17` and `?gene=27:135,28:95` set sex, age and genes of all of them, `?only=930000,930003` draws these alone, `?turn=-1.25` shows every head from the side, `?without=_cap.` leaves out the surfaces whose image name contains the text, `?sample=england` draws England's own sample of 36 people (`tests/portrait/sample_england.json`) in place of the twelve, `?set=exposure:0.5,skin.tint.1:0.75,sky.top:ffe9d6` sets values of the stage's profile by their path (a number, or a colour as six hex digits) |
@@ -3698,12 +3698,114 @@ layer shows, but it lies on the skull inside the hairline and the locks hide all
 reading is a matter of the hair's build, a body with relief and bundles at its rim, not of a value. Rounds 50
 to 104 went from broad cards to broad locks to narrow locks within one build and did not reach it.
 
+**Hair as a body of bundles (round 109).** Ramon's choice from the paragraph above (18 November 2026): build
+the hair anew, modelled in Blender. Blender runs as a module of Python (`bpy` 5.3 from pip) where the other
+scripts of the pipeline run, without a screen; no machine of his is needed for it.
+
+The build (`tools/portrait/pipeline/hair_body.py`; a cut is a table in it):
+
+- A shell over the skull, 8.5 mm over the skin and dark (0.75 of the hair's colour): what shows between two
+  bundles is hair in the shade, neither skin nor a painted layer.
+- On it three layers of bundles. A bundle is an arched band of seven corners across: a ridge with two flanks.
+  It is traced from its end, on the line the hair is cut at, back against the hair's flow towards the whorl,
+  so that it runs in one piece from the crown to the fringe. 52 bundles round the head lie lowest (12 to
+  18 cm long, beginning under the others), 34 over them begin near the whorl, and 16 single strands of 5 to
+  9 mm lie on top.
+- The rim is shared out into rooms with no gap between them. A bundle is 1.6 times as broad as its room (the
+  upper layer's 1.25), so neighbours lie over each other, and its place is off the even one by up to a
+  quarter (a third) of a room: broad and narrow bundles side by side, and none missing.
+- A bundle ends cut at a slant, 3 to 9 mm long, up to 1.2 degrees over or under the cut's line. The fringe is
+  the bundles' ends.
+- The hair is combed: one field over the whole head swings neighbours to the same side (3 mm, over 16 cm),
+  and the bundles of a side lean one way together towards their ends.
+- A corner's shade is its bundle's tone (0.95, 1.0 and 1.1 by layer), darker at the root, times how open its
+  place is: baked in Blender on the corners (ambient occlusion with Cycles, rays of 1.5 cm, the head as a body
+  in the way, 0.4 at the darkest). The file carries it as a tenth number for each point, and the builder
+  (`real_look.rs` `mh_rope`) draws the hair's colour times it: in full on dark hair, less on light hair (the
+  shade to the power of 1 less 0.7 times the root of the colour's luminance).
+- A girl's hair (`plait01`) has no shell and lies on the painted layer of her style: bundles from the parting,
+  from the hairline and under both are traced forward along the style's flow to the place below the ear where
+  the plait begins.
+
+| cut | what it changes of the bowl cut |
+|---|---|
+| `bob01` | the bowl cut: the fringe at -12.5 degrees, sides and back at -43 (the ear's lower end) |
+| `bob06`, `bob07` | sides and back at -31 (over the ear), at -51 (the jaw) |
+| `bob02` (under a hood) | 0.22 as high, its bundles 0.6 as round |
+| `bob03` (gone back at the temples) | the fringe's line rises by 22 degrees at 34 degrees to either side |
+| `bob04` (a bare top) | a horseshoe below the bare top's edge, 0.25 as high |
+| `bob05` (a head with curls) | every bundle swings 4 mm to the side and 3 mm off the head, a wave 6.5 cm long, neighbours in step |
+| `bob08` (a small child) | the fringe at 2 degrees, sides and back at -38, 0.75 as high |
+
+| | round 108 (locks) | now (a body) |
+|---|---|---|
+| pieces of a bowl cut | some 800 to 1100 locks (a girl's hair 738) | 103 (a bare top 79, a girl's hair 172) |
+| triangles | 34 896 to 44 712 | 46 440 to 50 400 (25 648; 53 376) |
+| a piece's breadth | 1 to 2 cm | 1.5 to 1.8 cm where it is broad (2.5 cm; 2.0 cm) |
+| a piece's length, the median | a lock: some centimetres from its strands' roots on | 14 to 16 cm (10 cm; 12 cm) |
+| the hair's top over the crown's skin | | 1.8 to 2.0 cm on boys and men, 1.2 to 1.4 cm on small children, 0.5 cm under a hood, 0.6 to 0.7 cm on girls |
+| the darkest tenth of the hair against the lightest | one tone | 0.38 to 0.46 (white hair 0.60) |
+| the fringe over the eyes, of the way from eyes to chin | | 0.18 to 0.21 (24 to 28 mm) on boys and men, 0.52 to 0.61 (48 to 54 mm) on small children |
+| bundles over each other in the fringe | | 2 to 3 in the median, 1 to 2 at its thinnest tenth |
+
+On the stage nothing changed but a name: `materials.ts` draws an image named `_body.` as it drew the locks
+(kind 'rope': solid, both sides), with one image for every cut (`hair1356_body`, `bundle_tex.py`: 520 hairs
+over a bundle's whole breadth, lighter along the ridge, parted by three dark lines, repeated along the
+bundle). The dress table names it (`DressSet::body_image`, in place of `lock_image`). The locks of the head
+(`<name>_locks`, `hair1356_locks`) are no longer in the repository; the beard's are. The test page says which
+images a picture wears (`data-images`): the sample's people wear seven cuts, and a sheet of the first cut
+alone showed the old hair on half of them.
+
+The gauntlet stands as round 108 left it, each of its 19 lines to the tenth (none of them reads hair). What
+`face_colour.mjs` reads beside them: the forehead of the boys of 8 to 17 is L 39.3 (41.5), under a fringe that
+throws a shade now, and the grown men's 44.5 (43.8).
+
+Tried and not kept, each seen in a picture:
+
+- Bundles that swing by 2 to 6 mm over a few centimetres each: tentacles. A bundle swings in one bow as long
+  as itself, and with its neighbours.
+- Flanks half as light as the ridge with an arch of 0.3: a head of noodles. 0.72 and 0.16 to 0.2.
+- Ends that come to a point in the bundle's middle, 2 cm long: petals, and with the upper layer fangs over
+  the forehead. The slanted cut, and short.
+- Breadths drawn by chance for each bundle: gaps, which read as dark notches and as partings. The rooms.
+- Single strands that begin in view: a hairpin on top of every head. They begin near the whorl.
+- One row of random numbers for every cut: all heads with the same strand in the same place.
+- The full shade on white hair, baked with rays of 2.5 cm over a shell at 0.6: stone with black joints. The
+  power above, rays of 1.5 cm, the shell at 0.75.
+- A shell wound inwards (the first one): its shade was baked on its inner side, and 0.76 of the hair's
+  surface faced away from the head; 0.98 to 0.99 now, held by a test.
+- The bare top's horseshoe 0.4 as high: wings beside the head. Curls out of step with their neighbours: worms.
+- A small child's fringe with ends a degree further up and down: gnawed, bare places in it.
+- The hair gone back at the temples with its line rising by 34 degrees, up to the hairline: a notch cut
+  out of the fringe. 22.
+
+Honest about it. Every number of the cuts' tables is by eye beside the reference's bowl cuts (PLACEHOLDER),
+none from a source; what a cut of 1356 looked like is as the dress table's sources say (round 29), not more.
+Beside the reference the hair is now of its kind, and still not its hair: theirs has stronger light on the
+ridges and more difference between one bundle and the next, ours is even, as if pleated; our bowl lies lower
+and longer at the sides; a girl's bundles begin with small dark specks at the parting seen from the side;
+the forelock of the hair gone back ends ragged, with bare places between its teeth (the test allows it for
+this cut alone); curls are waves, not curls. The shade is baked on the base head: on a head of another form
+it goes with the points, and what the hood or a neighbour's head shades is not in it.
+
+Tests: `portrait/tests/hair_body.rs` (new: a head wears one body of 40 to 260 pieces, the median piece longer
+than 5 cm, more than 0.85 of its surface facing away from the head, dark and light in it; it lies on heads of
+every age and size, flat under a hood; a girl's is parted, comes no further down her face than a fifth of
+the head's height and ends below the ear; the image lies along every bundle at one scale and the fringe is two bundles
+deep), `portrait/tests/locks.rs` (the beard's two tests stay, the head's four went with the locks),
+`portrait/tests/plait.rs`, `tests/portrait.test.ts` (one surface with the body's image where there is hair,
+no locks, drawn solid and on both sides). Pictures (project files, `portraits/`):
+`runde109_vergleich_ck3_haare.png` (six heads with hair, the reference above), `runde109_vergleich_ck3_nah.png`,
+`runde109_vergleich_ck3_frauen.png`, `runde109_vergleich_ck3_maenner.png`, `runde109_vorher_nachher.png`
+(eight people, round 108 above), `runde109_stichprobe.png` (the sample of 36).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
-skin and, since round 108, how light and how coloured the clothes are, are close; the hair (no volume, a
-fringe cut from paper), the clothes' cut (one layer, no collar or trim), the veil (no folds), the fine forms
-of the face (lids, nostrils, edge of the lips), stubble, children and the variety of faces are not; the
-thrown-back hood closes round the neck since round 35, but has no folds across its cloth.
+skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
+is a body of thick bundles as theirs is, evener and duller than theirs; the clothes' cut (one layer, no
+collar or trim), the veil (no folds), the fine forms of the face (lids, nostrils, edge of the lips), stubble,
+children and the variety of faces are not; the thrown-back hood closes round the neck since round 35, but
+has no folds across its cloth.
 
 **Genes.** The pools of the founders are still Apoleia's seven Roman-era regions (`dna.rs` `origin`). Places
 outside them fall into the nearest box, which is wrong: Mexico draws as Africa, the Volga as Graecia, Persia and

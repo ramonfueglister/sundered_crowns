@@ -569,7 +569,8 @@ fn bound<'a>(rows: &'a [Vec<f32>], pp: &[V3], base: &[V3]) -> Option<(Vec<V3>, &
 const ROPE_EVEN: usize = 300;
 
 /// Real look: hair that is solid (`name`.txt, `hairlib.py` `write_tubes`): the round strands of a plait, each a
-/// closed tube, and the locks of a head's hair, each an arched band that is open below (`locks_from_wisps`).
+/// closed tube; the locks of a beard, each an arched band that is open below (`locks_from_wisps`); and the body
+/// of a head's hair (round 109, `hair_body.py`: layers of thick bundles, each such a band, over a shell).
 /// The surface's direction is read from the triangles (a corner's is the mean of its triangles', weighted by
 /// their size), so that a strand is lit round: bright on the side towards a light, dark on the other. As hair
 /// cards (`mh_hair2`: the direction from the head's centre to the card) a plait was one face turned away from
@@ -581,9 +582,9 @@ const ROPE_EVEN: usize = 300;
 /// is laid, 23). So a plait keeps the form it was laid in, and goes with the body by the way its points are
 /// carried, evened out along the plait (tests/plait.rs).
 ///
-/// `image`: the image of the surface where the file has none of its own beside it (all hair of a dress set's
-/// locks is drawn with one image, `DressSet::lock_image`). `color`: the hair's colour at a place (a head's hair
-/// has one; a beard greys first at the chin).
+/// `image`: the image of the surface where the file has none of its own beside it (the bundles of every cut of
+/// a dress set are drawn with one image, `DressSet::body_image`). `color`: the hair's colour at a place (a head's
+/// hair has one; a beard greys first at the chin).
 pub(crate) fn mh_rope(dir: &str, name: &str, image: &str, pp: &[V3], base: &[V3], color: &dyn Fn(V3) -> Rgb) -> Option<Surface> {
     let rows = crate::real::rows(&format!("{dir}/{name}.txt"))?;
     let (carried, tris) = bound(&rows, pp, base)?;
@@ -642,7 +643,15 @@ pub(crate) fn mh_rope(dir: &str, name: &str, image: &str, pp: &[V3], base: &[V3]
         for k in 0..3 {
             let i = f[k] as usize;
             s.pos.push(vs[i]);
-            s.col.push(linear(color(vs[i])));
+            // (a point may say how light it is against the hair's colour, the tenth number of its row: a hair
+            // body's bundles are each of a tone, and darker where they come up from under the others)
+            // Light hair is less dark in its own shade than dark hair is: light goes through it and comes back
+            // out of it. The shade's power falls with the colour's lightness (PLACEHOLDER by eye: white hair
+            // with the full shade was stone with black joints)
+            let c = linear(color(vs[i]));
+            let shade = rows[1 + i].get(9).copied().unwrap_or(1.0);
+            let shade = if shade < 1.0 { shade.max(0.0).powf(1.0 - 0.7 * (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]).clamp(0.0, 1.0).sqrt()) } else { shade };
+            s.col.push(c.map(|c| c * shade));
             s.uv.push([f[3 + 2 * k], 1.0 - f[4 + 2 * k]]);
             s.nrm.push(nn[i]);
         }

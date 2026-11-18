@@ -999,10 +999,11 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
         if let Some(sf) = mh_hair2(dir, name, &x.pp, &h.base, hc, &|_| hair, hangs, (thin, p.seed ^ 0x3c6e_f372)) {
             out.push(sf);
         }
-        // hair that is solid, each kind in a file of its own beside the cards: a style's locks (England's
-        // `bob01_locks`, `plait01_locks`: no cards any more), drawn with the dress set's image of locks, and the
-        // round strands of its plaits (England's `plait01_rope`), drawn with their own
-        if let Some(sf) = mh_rope(dir, &format!("{name}_locks"), garb.map_or("", |d| d.lock_image), &x.pp, &h.base, &|_| hair) {
+        // hair that is solid, each kind in a file of its own beside the cards: a cut's body (England's
+        // `bob01_body`, `plait01_body`: modelled in Blender as layers of thick bundles, round 109; no cards and
+        // no locks any more), drawn with the dress set's image of a bundle, and the round strands of its plaits
+        // (England's `plait01_rope`), drawn with their own
+        if let Some(sf) = mh_rope(dir, &format!("{name}_body"), garb.map_or("", |d| d.body_image), &x.pp, &h.base, &|_| hair) {
             out.push(sf);
         }
         if let Some(sf) = mh_rope(dir, &format!("{name}_rope"), "", &x.pp, &h.base, &|_| hair) {

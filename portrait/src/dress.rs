@@ -191,11 +191,13 @@ pub struct DressSet {
     /// a man's stubble, and with the forms of a grown man's face coming in from one year on (`grown`) a boy of
     /// thirteen read as a man of thirty. 14 (round 106): where the beard's first down comes. By eye, PLACEHOLDER.
     pub boy_skin: f32,
-    /// The image of a hair's locks (the file `<hair>_locks`, tools/portrait/pipeline/hairlib.py
-    /// `locks_from_wisps`) where the file has none of its own beside it: one image for the locks of every cut.
-    pub lock_image: &'static str,
-    /// The image of a beard's locks (the file `<beard>_locks`, tools/portrait/pipeline/beards.py), as
-    /// `lock_image` is a head's: a beard's hairs are coarser and sway more.
+    /// The image of a hair's body (the file `<hair>_body`, tools/portrait/pipeline/hair_body.py: a cut modelled
+    /// in Blender as layers of thick bundles, round 109) where the file has none of its own beside it: one image
+    /// for the bundles of every cut. Until round 108 a head's hair was locks (`<hair>_locks`, some 950 narrow
+    /// arched bands, drawn with an image `hair1356_locks`): a thatch on the skull beside the reference's hair.
+    pub body_image: &'static str,
+    /// The image of a beard's locks (the file `<beard>_locks`, tools/portrait/pipeline/beards.py; arched bands
+    /// of `hairlib.py` `locks_from_wisps`, frayed at both ends by this image).
     pub beard_lock_image: &'static str,
     /// The beard worn in place of each of Apoleia's (in the order of look::Beard: shaven, stubble, short, full,
     /// philosopher, chin): a dress leaves out what its time did not wear.
@@ -629,7 +631,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     hair_girl: "plait01",
     hair_small: "bob08",
     boy_skin: 14.0,
-    lock_image: "hair1356_locks",
+    body_image: "hair1356_body",
     beard_lock_image: "beard1356_locks",
     beards: [Beard::Shaven, Beard::Stubble, Beard::Short, Beard::Full, Beard::Full, Beard::Short],
     beard_full: "beard_crop",

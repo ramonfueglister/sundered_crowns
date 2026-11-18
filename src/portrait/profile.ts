@@ -341,6 +341,10 @@ export const APOLEIA: StageProfile = {
  *  builder's wools are a quarter as light as skin, and under the curve's straight part a value is drawn darker
  *  than it is. `cloth.wool` 2.6, as `cap.light` for hair: L 25, and with the stronger wools of that round
  *  (portrait/src/dress.rs `wool`) a chroma of 17. Linen is light enough as it is (1).
+ *  Round 109: the hair of a head is a body of thick bundles, modelled (tools/portrait/pipeline/hair_body.py),
+ *  in place of 950 narrow locks. The stage draws it as it drew the locks (materials.ts, kind 'rope'), and no
+ *  value of this profile changed: where the body is dark between its bundles is baked into its corners' colour
+ *  by the builder, not a matter of a light.
  *  All values of this profile are PLACEHOLDER: held against one face of the reference, set by measure and by
  *  eye (docs/PORTRAITS.md). */
 export const ENGLAND_1356: StageProfile = {
