@@ -18,6 +18,7 @@ nothing built before Ramon agrees. Proposal with sources (German): https://claud
 | 1 | Persons of the 30 largest cities in 1356 | agreed by Ramon 15 Nov 2026 and built; in the running world once the world server is redeployed |
 | 1b | 1291: persons in every town of the world graphic inside the world frame (558 towns, ~102,000 persons; state 15) | agreed by Ramon 16 Nov 2026 (world of towns); tools/history/1291/towns.py writes src/sim/content/cities_1291.json |
 | 2 | The persons live: a list of events, death, birth, marriage | built as a draft, 17 Nov 2026 (Ramon: all persons, event-driven, demography first; then, on the proposal of part 2: the mortality of the source and marriage only into a vacant household). It founds the persons anew (state 23) |
+| 3 | A household passes to an heir by the custom of the culture | built 18 Nov 2026 (Ramon, 17 Nov: a custom for every culture; 18 Nov: only what a source that was read supports, 83 % of the persons). No new state |
 
 ## Feature 1: persons of the 30 largest cities
 
@@ -178,6 +179,9 @@ has died is vacant.
    and its house (parcel or farmstead). Without a bride or a groom the household stays vacant for the month.
 2. A widow under 45 who keeps a household takes a husband in the same way.
 
+Nobody marries a brother, a sister, a parent or a child (added with feature 3; before it 4 % of the weddings of a
+run of 100 years were between siblings, who are the nearest in age in a small town).
+
 **Births.** A wife with a living husband bears at the rate f(a) / 2.75 a year, f(a) = 1 − exp(4.6 · ((a − 15)/30 − 1)),
 nothing from 45 on (33 months between births at her most fertile). The day of her next birth is drawn when she
 marries and after every birth (`person.bears`), at the earliest nine months later, with the rate after that as much
@@ -195,6 +199,8 @@ inheritance of IQ, Big Five and genes of feature 1, the culture and faith of the
 | A widow under 45 marries again | | assumption: the program has no widows, the paper counts 10 % of the housewives as widows |
 
 ### Measured (`npm run families:check`, world of 1291, seed 1291, deaths, weddings and births over 100 years)
+
+As measured before feature 3; with the heirs and without the weddings between siblings the figures are in feature 3.
 
 | Figure | Founding | Year 50 | Year 100 | La Poutré & Paping 2025 |
 |---|---|---|---|---|
@@ -267,3 +273,122 @@ Ramon, 17 November 2026: clear the source first. The source has the answer above
 - La Poutré, H., Paping, R. (2025): English familial demography c. 1300: a reconstruction. Social Science History 49(2), 533–557. Full text: https://pure.rug.nl/ws/portalfiles/portal/1511914604/english-familial-demography-c-1300-a-reconstruction_1_.pdf
 - La Poutré, H. (2023): English population 1086–1377: a modelling approach. Thesis, Groningen. Program code of the simulation: https://pure.rug.nl/ws/portalfiles/portal/663712445/simulation_64294d0e31b65.txt
 - La Poutré, H., Janssen, F. (2021): A two-parameter hazard function to describe age patterns of mortality in ancient Northwestern Europe. Genus 77(1):12. https://link.springer.com/10.1186/s41118-021-00122-w
+
+## Feature 3: a household passes to an heir (the custom of the culture)
+
+Ramon, 17 November 2026: who takes over a household is to follow the custom of the culture, not English custom
+everywhere; 18 November, on the proposal: only the cultures a source that was read speaks for get a custom, the
+others keep the rule of feature 2 until a source is there. The proposal with all that was read and what could not
+be opened (German): https://claude.ai/artifact/CSHcS21ac1gcX31d12bMFV, section «Vorschlag: Erbbrauch je Kultur».
+
+Code: `src/sim/people/inheritance.ts` (the customs, the cultures of each with the source, `heirOf`), the rule in
+`weddingsOn` of `src/sim/systems/families.ts`. No new state: the children of a house are found from the columns
+`person.mother`, `person.father` and `person.family`. Check: `npm run families:check`; `tests/inheritance.test.ts`.
+
+### The rule
+
+When the housewife of a household has died (the household is vacant), on the first day of the month and before the
+weddings of feature 2:
+
+1. The children of the house are the living persons of the town whose mother or father was of the family, wherever
+   they live now. The custom is that of their father's culture, for a Muslim father that of the faith (of the mother
+   where no father is known).
+2. The custom names the heir among the children who are free: grown (a son of 18 or older, a daughter of 16 to 44)
+   and not at the head of a household. Where the child it names first is not free, the next one stands in.
+3. An heir who is a son takes a bride of the town by the curve of feature 2; an heiress takes a groom of the town
+   nearest to her age + 3, within ten years. The couple is a new family with the seat and the house (parcel or
+   farmstead). The widower and the other children stay a family and stay in the house.
+4. Where the custom names nobody, the culture has no custom, or the heir finds no spouse that month, the weddings of
+   feature 2 follow as they are: the widower marries again, or a couple of the town takes the household.
+
+A household is never divided, because the number of households of a town is fixed (La Poutré & Paping 2025). Where
+the sources divide the land among several children, the custom only decides which one of them takes the household.
+The firm and the savings of the dead go as in feature 2 (to the family first).
+
+| Custom | Who takes the household | Without a living son |
+|---|---|---|
+| eldest son | the eldest son | the eldest daughter |
+| youngest son | the sons share, the house stays undivided with the youngest son | the estate falls to the lord: a couple of the town |
+| sons | one of the sons by lot; a daughter is paid off with her dowry | one of the daughters by lot |
+| children | one of the children by lot | (a daughter, by the same lot) |
+| sons double | one of the children by lot, a son with twice a daughter's chance | (a daughter, by the same lot) |
+
+### The cultures (persons of the founding of 1291 with its 314 rulers; grade 1: a law or a study of the 13th or 14th century read; grade 2: read, but later, or from Todd's map)
+
+| Who | Persons | Custom | Grade | Read |
+|---|---|---|---|---|
+| Muslims of every culture | 26,260 | sons double | 1 | Qur'an 4:11: a son twice a daughter's share, the parents a sixth each, a bequest a third at most. The law of property (house, garden). Farmland was the treasury's and the peasants held its use (Abbas Hamid 2002); who took that over around 1300 was not found; later the sons (Cuno 1999 for the 1840s, al-Marakeby 2023 for the Ottoman time) |
+| Lombard, Tuscan, Venetian, Ligurian | 11,098 | sons | 1 | Statutes of Turin 1360: a married daughter with brothers can claim nothing; "common in all Italian city-states" (Gravela 2018); without sons the daughters succeed. Venice shared the mother's goods among sons and daughters alike |
+| English | 4,183 | eldest son | 1 | Common law; Gates 1996; Smith 1986 |
+| Catalan | 1,557 | eldest son | 1 | To i Figueras: one heir, preferably the firstborn, among the peasants of the masos from the 11th century, general from the later 12th; around 1200 a large part of the families still shared alike. Ferrer Alòs 2005: the eldest son, else the eldest daughter |
+| Novgorodian, Russian, Ruthenian | 1,362 | youngest son | 1 | Expanded Russkaya Pravda (early 13th century, Kaiser 1992): arts. 90, 92, 95, 100. Art. 90 (a peasant's estate escheats to the prince) does not name the sons; read here as the case without sons, since arts. 92 and 100 let sons inherit |
+| Danish, Swedish, Norwegian | 621 | sons double | 1 | Tveit 2020: a daughter half a brother's lot in the Danish provincial laws, in Norway (1274) and most Swedish laws from the later 13th century. Ancestral land did not go to women (not built) |
+| German cultures (seven) | 13,139 | eldest son | 2 | Todd's map (Duranton et al. 2008): house and land to the son who stays; Huning & Wahl 2021: the heir "usually the oldest but sometimes the youngest". Against it: 31 % of the municipalities of Baden-Württemberg divided |
+| Occitan, Basque, Aragonese, Galician, Scottish | 6,142 | eldest son | 2 | Lamaison 1988 (notaries, 1980); Fauve-Chamoux (Basque country, Pyrenees); Todd's map. Against it: the statutes of Provence, sons in equal shares |
+| French, Picard, Burgundian, Breton | 16,466 | children | 2 | Lamaison 1988; the custom of Brittany of 1539 (Fauve-Chamoux); Todd's map. Yver 1966 could not be opened |
+| Castilian | 3,181 | children | 2 | Visigothic law (To i Figueras); Leyes de Toro 1505 (Bartolomé Bartolomé 2009). The Fuero Real of 1255 was not read |
+| Czech | 1,099 | youngest son | 2 | Velková 2023: Bohemia 1691–1787, the youngest son in 73 % of cases |
+| No custom (the rule of feature 2) | 17,248 | | | Flemish, Hollandic, Greek, Portuguese; Roman, Neapolitan, Sicilian, Sardinian, Hungarian; Polish and the other Slavs; Nubian, West African with the old faiths, Baltic, Georgian, Armenian, Jewish: nothing was read that states their rule |
+
+### Measured (`npm run families:check`, world of 1291, seed 1291, 100 years)
+
+| Figure | Founding | Year 50 | Year 100 | Feature 2 alone, year 100 |
+|---|---|---|---|---|
+| Persons | 102,042 | 96,122 | 97,223 | 97,823 |
+| Households (vacant) | 17,702 (0) | 17,702 (38) | 17,702 (67) | 17,702 (46) |
+| Persons per household | 5.76 | 5.43 | 5.49 | 5.53 |
+| Widows among the housewives | 14 % | 15 % | 15 % | 14 % |
+| Women of 40 to 44 without a household | 30 % | 25 % | 27 % | 27 % |
+| Deaths / births / weddings in the year | | 2,874 / 2,813 / 858 | 2,704 / 2,728 / 877 | 2,832 / 2,834 / 907 |
+
+Mean age of the brides 24.0. In the years 41 to 100, 37,347 households passed to a new couple, 41 % of them to an
+heir of the house (10,315 sons, 4,846 daughters). By the custom of the house (a house with a living child):
+
+| Custom | Households passed on | A child of the house took it | Sons / daughters |
+|---|---|---|---|
+| eldest son | 8,117 | 52 % | 3,556 / 676 |
+| youngest son | 802 | 47 % | 362 / 17 |
+| sons | 3,743 | 48 % | 1,526 / 272 |
+| children | 6,346 | 60 % | 1,914 / 1,868 |
+| sons double | 8,746 | 59 % | 2,961 / 2,200 |
+| none | 5,916 | 6 % (by the chance of the town's weddings) | 185 / 173 |
+| no living child | 3,677 | | |
+
+Places founded with under 60 persons: −9.6 % after 100 years (10 of 58 below half, one empty; feature 2 alone −4.1 %
+and 9): without the weddings between siblings a very small town finds fewer couples.
+
+The probe before the build (each custom for the whole world, heirs' weddings before the others): 44 % of the
+households to an heir where sons inherit, 53 % where all children do, the world within 2 % of feature 2. A
+household that waits for an heir under age: 78 to 81 % to heirs, but 1,200 to 1,700 households vacant and 89,345
+(eldest son) or 93,144 persons (children) after 100 years. So nothing waits.
+
+### Limits
+
+- A household is never divided: no smaller holdings, no growth of the number of households by partition.
+- One custom for a culture: none from village to village, for town against country, for the free against the
+  unfree. Occitan stands for one heir although Provence shared among the sons.
+- An heir under age loses the household to a couple of the town; a guardian is not built.
+- Islamic farmland is treated as property.
+- The widow keeps the household everywhere as in feature 2 (the English free bench). Read but not built: in the Rus
+  a widow has a portion and may stay in the house (arts. 93, 102), in Scandinavia the common property is divided
+  and the ancestral land is not (Tveit 2020).
+- No dowry, no payment to the lord at a death, no share of the savings by custom.
+- Assumptions without a source: the ages from which an heir is grown; that the next child stands in for one who is
+  not free; that an heiress of 45 or older does not take the household.
+
+### Sources
+
+- Duranton, G., Rodríguez-Pose, A., Sandall, R. (2008): Family types and the persistence of regional disparities in Europe. SERC Discussion Paper 9. https://eprints.lse.ac.uk/33152/1/sercdp0009.pdf
+- Huning, T. R., Wahl, F. (2021): The origins of agricultural inheritance traditions. Journal of Comparative Economics, 660–674. https://eprints.whiterose.ac.uk/183709/1/origins_complete_jce.pdf
+- Fauve-Chamoux, A.: Inheritance and Property. Encyclopedia of Children and Childhood in History and Society. https://www.encyclopedia.com/children/encyclopedias-almanacs-transcripts-and-maps/inheritance-and-property
+- Lamaison, P. (1988): La diversité des modes de transmission: une géographie tenace. Études rurales 110–112, 119–175 (abstract).
+- Gravela, M. (2018): Against the tide. Female property and political shift in late medieval Turin. Mélanges de l'École française de Rome, Moyen Âge 130-1, 151–165.
+- To i Figueras, L.: Els hereus i el dret de primogenitura. Enciclopèdia.cat. https://www.enciclopedia.cat/historia.-politica-societat-i-cultura-dels-paisos-catalans/els-hereus-i-el-dret-de-primogenitura
+- Ferrer Alòs, L. (2005): When there was no male heir: the pubilla. Continuity and Change 20(1), 27–52 (abstract).
+- Bartolomé Bartolomé, J. M. (2009): Disposiciones hereditarias … el ejemplo leonés (1700–1850). Norba 22, 159–176.
+- Tveit, M. (2020): Backwards inheritance in medieval Scandinavian law. In: Nordic Inheritance Law Through the Ages, Brill, 71–91. https://core.ac.uk/download/388989464.pdf
+- Kaiser, D. H. (1992): The Laws of Rus', 20–34 (Expanded Pravda). https://web.grinnell.edu/individuals/kaiser/exrp.html
+- Velková, A. (2023): Historická demografie 47(1), 1–27.
+- Abbas Hamid, R. (2002): Why study ownership? In: Hanna, N. (ed.), Money, Land and Trade. Cuno, K. M. (1999) and Frantz-Murphy, G. (1999): Proceedings of the British Academy 96. al-Marakeby, M. (2023): Could women own agricultural land? Die Welt des Islams (abstract).
+- England: see the proposal (Mapping the Medieval Countryside, King's College London 2014; Gates 1996; Smith 1986).
+

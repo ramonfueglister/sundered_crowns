@@ -5,7 +5,7 @@ import { loadSetup, loadWorld } from './load';
 import { createWorldState } from '../../src/sim/setup';
 import { ageOn } from '../../src/sim/systems/people';
 import { deathsTo, settleEstates } from '../../src/sim/systems/deaths';
-import { birthsTo, weddingsOn } from '../../src/sim/systems/families';
+import { birthsTo, weddingsOn, type Passed } from '../../src/sim/systems/families';
 import { yearsLeft, survival } from '../../src/sim/people/lifetable';
 import { ROLE } from '../../src/sim/systems/work';
 import { ALIVE } from '../../src/sim/state';
@@ -33,17 +33,19 @@ const line = (y: number, c: ReturnType<typeof census>, d: number, b: number, m: 
 const c0 = census(0); for (const [p, n] of c0.byPlace) size0.set(p, n);
 line(0, c0, 0, 0, 0);
 const t0 = Date.now(); let brideSum = 0, brides = 0;
+const passed: Passed = { passed: 0, sons: 0, daughters: 0 };
 for (let y = 1; y <= YEARS; y++) {
   let d = 0, b = 0, m = 0;
   for (let mo = 1; mo <= 12; mo++) {
     const day = Math.round((y - 1 + mo / 12) * 365.25);
     d += deathsTo(s, day); b += birthsTo(s, day);
     const wives = new Set<number>(); for (let f = 0; f < s.family.size; f++) if (F.seat[f] && F.woman[f] >= 0) wives.add(F.woman[f]);
-    m += weddingsOn(s, day); settleEstates(s, day);
+    m += weddingsOn(s, day, y > 40 ? passed : undefined); settleEstates(s, day);
     for (let f = 0; f < s.family.size; f++) if (F.seat[f] && F.woman[f] >= 0 && !wives.has(F.woman[f])) { brideSum += ageOn(P.born[F.woman[f]], day); brides++; }
   }
   if (y <= 3 || y % 10 === 0) line(y, census(Math.round(y * 365.25)), d, b, m);
 }
+if (passed.passed) console.log(`years 41 to ${YEARS}: ${passed.passed} households passed to a new couple, ${(100 * (passed.sons + passed.daughters) / passed.passed).toFixed(0)} % to an heir of the house (${passed.sons} sons, ${passed.daughters} daughters)`);
 console.log(`${YEARS} years in ${Date.now() - t0} ms; mean age of the brides ${(brideSum / brides).toFixed(1)}; ${s.person.size} person rows, ${s.family.size} family rows`);
 // the towns by their size at the founding: how they have changed
 const end = census(Math.round(YEARS * 365.25));
