@@ -8,5 +8,7 @@ Die Personen von Sundered Crowns: wer als eigene Figur in der Welt lebt und nach
 - [Tod, Heirat und Geburt](tod-heirat-geburt.md) *(Gebaut)*: die Personen sterben, heiraten in freie Haushalte und bekommen Kinder
 - [Erbbrauch je Kultur](erbbrauch.md) *(Gebaut)*: wer einen Haushalt übernimmt, nach dem Brauch der Kultur
 - [Umzug zwischen Orten](umzug.md) *(Gebaut)*: junge Ledige ziehen in andere Orte, der Erbe kehrt heim
+- [Merkmale verschieben die Raten](merkmale-und-raten.md) *(Entwurf)*: IQ und Big Five wirken auf Tod, weiten Umzug und Heirat
+- [Haushalte wachsen mit der Wirtschaft](haushalte-wachsen.md) *(Verworfen)*: geprüft und nicht gebaut, die Zahl der Haushalte bleibt fest
 - [Personen der Wirtschaft](../wirtschaft/personen-der-wirtschaft.md) *(Im Spiel)*: Arbeit, Lohn und Erspartes jeder Person der Städte
 - [Haushalt der Familie](../wirtschaft/haushalt-der-familie.md) *(Im Spiel)*: die Familie als Kasse, Verbrauch jeder Person nach Körben

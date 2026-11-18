@@ -75,12 +75,12 @@ Eine Person steht für hundert Menschen. Die Raten gelten je Person, die Anteile
 ## Grenzen
 
 - Arbeit ist kein Motiv. Ein Zuzüger arbeitet erst, wenn am neuen Ort ein Platz frei wird. Dafür muss die Wirtschaft zuerst einen Arbeiter den Ort wechseln lassen.
-- Ganze Familien ziehen nicht um (Dribe 2002: 3,3 % im Jahr). Das braucht Haushalte, die mit der Wirtschaft mehr werden können.
+- Ganze Familien ziehen nicht um (Dribe 2002: 3,3 % im Jahr). Das braucht Haushalte, die an einem Ort neu entstehen können. Geprüft und vorerst verworfen: [Haushalte wachsen mit der Wirtschaft](haushalte-wachsen.md).
 - Hunger wirkt nur als Armut: Kinder aus Familien ohne Firma gehen öfter. Für die Flucht vor einer Hungersnot wurde keine Zahl gefunden.
 - Die Raten aus Schweden 1829 bis 1867 gelten für jede Zeit und jeden Ort. Geprüft ist nur ihre Summe, an zwei englischen Dörfern des 17. Jahrhunderts.
 - Das Ziel wird nach Land gezogen, nicht nach Grösse oder Anziehung einer Stadt. Kleine Orte gewinnen deshalb, grosse verlieren leicht. In den englischen Quellen ging ein Drittel in eine Stadt (Bailey 2022).
 - Wer weiter als rund 115 km von jeder anderen Stadt lebt, zieht nie um. Das betrifft 54 der 550 Orte mit 13,5 % der Personen.
-- IQ und Persönlichkeit zählen noch nicht. Die Zahlen liegen bereit (Jokela 2009).
+- IQ und Persönlichkeit zählen noch nicht. Der Vorschlag dazu: [Merkmale verschieben die Raten](merkmale-und-raten.md).
 
 ## Quellen
 
