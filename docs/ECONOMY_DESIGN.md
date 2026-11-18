@@ -2923,6 +2923,20 @@ to 1359:
 | weakest city | 111.1 | 111.1 to 112.6 | 111.4 to 113.1 |
 | merchants' money in a city, of its GDP | −0.07 to 0.19 | −0.17 to 0.14 | −0.10 to 0.11 |
 
+Over 100 years (seeds 1356 and 1358, with distance, outputs in wirtschaft/betriebsgeld/hundert):
+
+| after years | 10 | 30 | 50 | 75 | 100 |
+|---|---|---|---|---|---|
+| real GDP, start = 100 | 113.8 to 114.0 | 114.8 to 115.3 | 114.7 to 115.4 | 114.5 to 115.2 | 114.8 to 115.3 |
+| weakest city | 110.3 to 110.6 | 111.1 to 111.3 | 110.3 to 110.7 | 110.7 to 111.4 | 110.6 to 112.2 |
+| price level | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
+| banks' equity (start 551), banks below zero | 551, 0 | 551, 0 | 551, 0 | 551, 0 | 551, 0 |
+| firms' loans | 0 | 0 | 0 | 0 to 1 | 2 to 24 |
+| the crowns' money | 14 to 17 | 179 to 232 | 357 to 515 | 580 to 874 | 833 to 1,178 |
+| merchants' money in a city, of its GDP | −0.07 to 0.05 | −0.17 to 0.13 | −0.22 to 0.20 | −0.26 to 0.26 | −0.32 to 0.37 |
+
+Nobody is without work after the tenth year. The owners' debts were not read out in these two runs.
+
 ### Deviations and what stays open
 
 - **A third of the owners end below zero.** The owner plans his spending on the profit of the day before and cannot
@@ -2944,8 +2958,11 @@ to 1359:
   stand between 0.4 and 1.5 of their sector's price, and the owners owe 4,948 instead of 2,643; real output is the
   same (52,096 against 51,729 after 30 years). Dropped. Net money stays at 11,000 in both while output grows by
   15 %; with the paper's rule it grows to 14,946 through the firms' loans.
-- **The merchants' money per city still spreads** (table). Its other side is now the households, not the banks.
-  Whether the spending out of savings (feature 15) bounds it over a century is not measured.
+- **The merchants' money per city still spreads**, in a straight line over 100 years (table): to a third of a
+  city's GDP on either side. Its other side is now the households, not the banks; the spending out of savings
+  (feature 15) does not bound it. Output and work do not suffer in 100 years.
+- **The crowns pile up money**: 2 % of a year's output after 100 years, out of the households' deposits (8,816 at
+  the start, 7,704 to 8,028 after 100 years).
 - **The banker** is paid the bank's profit by the paper's rule as before.
 
 ### State and upgrade
