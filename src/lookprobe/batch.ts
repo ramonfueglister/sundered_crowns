@@ -53,7 +53,8 @@ export class Batch {
     const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2];
     const vx = c[0] - a[0], vy = c[1] - a[1], vz = c[2] - a[2];
     let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
-    const len = Math.hypot(nx, ny, nz);
+    // (along an axis the length is the one number that is not nought, as the root of the squares gives it too)
+    const len = nx === 0 ? (ny === 0 ? Math.abs(nz) : nz === 0 ? Math.abs(ny) : Math.hypot(nx, ny, nz)) : ny === 0 && nz === 0 ? Math.abs(nx) : Math.hypot(nx, ny, nz);
     if (len < 1e-9) return;
     nx /= len; ny /= len; nz /= len;
     if (facing && nx * facing[0] + ny * facing[1] + nz * facing[2] < 0) {
