@@ -4,7 +4,7 @@
 // which the reference does not have), ?shadows=0, ?mirror=0 (no mirror image on the water), ?sky=0 (without the baked sky share: light step 1 only),
 // ?ao=0 (without the darkening of creases and corners; ?aoscale, ?aosamples, ?aosmooth: see there). ?small=0: the pieces' directions and
 // colours come as floats, not as bytes (worldprobe/small.ts). ?faces=0: their rectangles on the grid of blocks come as
-// triangles in those lists, not as faces (faces.ts).
+// triangles in those lists, not as faces (faces.ts); ?free=0: the rectangles on no grid of what stands on them do.
 import * as THREE from 'three/webgpu';
 import { Fn, attribute, clamp, convertToTexture, dot, float, fract, getViewPosition, materialColor, max, mix, mrt, normalView, output, pass, positionGeometry, reflector, rtt, screenCoordinate, screenSize, screenUV, select, smoothstep, step, texture, uniform, userData, uv, vec2, vec3, vec4, vertexColor } from 'three/tsl';
 import { MapControls } from 'three/addons/controls/MapControls.js';
@@ -17,7 +17,7 @@ import type { Batch } from './batch';
 import { RIG, towards, CREASES } from './light';
 import { type Figures, anyFigures, figureMeshes, keepFigures, showFigures, warmFigures } from '../figures/stage';
 import { OPEN_WATER } from './terrain';
-import { FACE_COL, FACE_CORNERS, FACE_GEO, FACE_STEPS, FLIPPED, RISES, type Faces, faceHit, unfaced } from './faces';
+import { FACE_COL, FACE_CORNERS, FACE_GEO, FACE_STEPS, FLIPPED, FREE_GEO, RISES, type Faces, type Free, faceHit, freeHit, unfaced, unfree } from './faces';
 
 const q = new URLSearchParams(location.search);
 const flag = (k: string, fallback: boolean) => (q.has(k) ? q.get(k) !== '0' : fallback);
@@ -77,6 +77,8 @@ export interface Shape {
    * lists hold, as a mesh of its own. Not of what `more` adds.
    */
   faces?: Faces;
+  /** its upright and level rectangles on no grid, taken out of the lists likewise (faces.ts `Free`) */
+  free?: Free;
   /**
    * Of lists that move as the mesh glides to the shape of the next coarser step (worldprobe/glide.ts): the height each
    * corner ends up at.
@@ -276,6 +278,17 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   const seaFaced = new THREE.MeshLambertNodeMaterial();
   seaFaced.positionNode = placed.add(vec3(0, userData('lift', 'float') as unknown as ReturnType<typeof float>, 0));
   seaFaced.colorNode = faced.colorNode; seaFaced.maskNode = solid.maskNode; seaFaced.emissiveNode = water.emissiveNode;
+  // A mesh's upright and level rectangles on no grid come as faces of floats (faces.ts `Free`): a corner takes the
+  // very floats the builder made, the level on the face's axis and an end of each of its two spans. The face's
+  // direction tells its axis, and the fourth number beside it which way its triangles turn.
+  const levelF = attribute('freeLevel', 'float') as unknown as ReturnType<typeof float>, spans = attribute('freeSpans', 'vec4') as unknown as ReturnType<typeof vec4>, towards4 = attribute('normal', 'vec4') as unknown as ReturnType<typeof vec4>;
+  const cornerF = select(towards4.w.greaterThan(0.004), positionGeometry.y, positionGeometry.x);
+  const alongUF = select(cornerF.greaterThan(0.5).and(cornerF.lessThan(2.5)), spans.y, spans.x), alongVF = select(cornerF.greaterThan(1.5), spans.w, spans.z);
+  const toneF = select(cornerF.lessThan(0.5), tones[0], select(cornerF.lessThan(1.5), tones[1], select(cornerF.lessThan(2.5), tones[2], tones[3])));
+  const freed = new THREE.MeshLambertNodeMaterial();
+  freed.positionNode = select(towards4.x.abs().greaterThan(0.5), vec3(levelF, alongUF, alongVF), select(towards4.y.abs().greaterThan(0.5), vec3(alongUF, levelF, alongVF), vec3(alongUF, alongVF, levelF)));
+  freed.colorNode = materialColor.mul(toneF.rgb.mul(toneF.a.mul((2 * 255) / 254)).toVarying().clamp(0, MOST));
+  freed.maskNode = solid.maskNode;
   // Faces that glide to the shape of the next coarser step (worldprobe/glide.ts): each has the level or the span in
   // height it ends up at and the colours of its corners there, and the mesh says how far it has glided (0 … 1,
   // `Stage.glide`). A level face moves to its level there. An upright face's two ends in height move each to its own;
@@ -322,6 +335,20 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     g.instanceCount = f.geo.length / FACE_GEO;
     if (s.ball) g.boundingSphere = new THREE.Sphere(new THREE.Vector3(s.ball[0], s.ball[1], s.ball[2]), s.ball[3]);
     else g.boundingSphere = new THREE.Box3().setFromArray(unfaced(f).pos).getBoundingSphere(new THREE.Sphere());
+    return g;
+  };
+  /** The faces on no grid of a shape likewise: a row of five floats, of colours and of its direction to each. */
+  const freeGeometry = (s: Shape) => {
+    const f = s.free!, g = new THREE.InstancedBufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(CORNERS, 3));
+    g.setIndex(new THREE.BufferAttribute(TRIANGLES, 1));
+    const lies = new THREE.InstancedInterleavedBuffer(f.geo, FREE_GEO), colours = new THREE.InstancedInterleavedBuffer(f.col, FACE_COL);
+    g.setAttribute('freeLevel', new THREE.InterleavedBufferAttribute(lies, 1, 0)); g.setAttribute('freeSpans', new THREE.InterleavedBufferAttribute(lies, 4, 1));
+    for (let k = 0; k < 4; k++) g.setAttribute(`tone${k}`, new THREE.InterleavedBufferAttribute(colours, 4, k * 4, true));
+    g.setAttribute('normal', new THREE.InstancedBufferAttribute(f.nor, 4, true));
+    g.instanceCount = f.geo.length / FREE_GEO;
+    if (s.ball) g.boundingSphere = new THREE.Sphere(new THREE.Vector3(s.ball[0], s.ball[1], s.ball[2]), s.ball[3]);
+    else g.boundingSphere = new THREE.Box3().setFromArray(unfree(f).pos).getBoundingSphere(new THREE.Sphere());
     return g;
   };
   const geometry = (s: Shape) => {
@@ -569,6 +596,18 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     };
     return made;
   };
+  /** The faces on no grid of a shape as a mesh, drawn as the faces on the grid are. */
+  const freeMesh = (shape: Shape, casts: boolean) => {
+    const f = shape.free!, made = new THREE.Mesh(freeGeometry(shape), freed);
+    made.castShadow = casts; made.receiveShadow = true; made.userData.dots = new THREE.Vector2(0, 1); made.userData.ink = 1;
+    made.raycast = (ray, hits) => {
+      const own = ray.ray.clone().applyMatrix4(new THREE.Matrix4().copy(made.matrixWorld).invert()), t = freeHit(f, own.origin.toArray(), own.direction.toArray());
+      if (t === null) return;
+      const point = own.at(t, new THREE.Vector3()).applyMatrix4(made.matrixWorld), distance = ray.ray.origin.distanceTo(point);
+      if (distance >= ray.near && distance <= ray.far) hits.push({ distance, point, object: made });
+    };
+    return made;
+  };
   // The renderer keeps a record of every mesh it has drawn, and each record hangs on the material, which all pieces
   // share and which is never let go: only the mesh's own 'dispose' takes the record, and with it the mesh and its
   // numbers, out of the renderer. Letting go of the geometry alone leaves them held for good.
@@ -618,7 +657,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     for (const made of cold) {
       const bytes = weight(made.geometry);
       if (sending.length && bytes > room) break;
-      const standIn = new THREE.Mesh(made.geometry, made.material === seaFaced ? faced : made.material === faced || made.material === gliding ? made.material : solid);
+      const standIn = new THREE.Mesh(made.geometry, made.material === seaFaced ? faced : made.material === faced || made.material === gliding || made.material === freed ? made.material : solid);
       // (all that the material reads of a mesh, as its own mesh has it)
       standIn.userData = { ...made.userData, ground: false, dots: new THREE.Vector2(0, 0) };
       // (it lies on the layer the water's mirror does not draw, and casts no shadow: one pass sends the lists)
@@ -652,7 +691,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
       group.position.set(x, 0, z);
       for (const [shape, material, casts] of [[built.ground, solid, true], [built.carried, solid, true], [built.things, solid, true], [built.water, water, false], [built.raised, solid, false]] as const) {
         if (!shape) continue;
-        for (const part of [...(shape.faces?.geo.length ? [cool(faceMesh(shape, casts, shape === built.water))] : []), ...(shape.pos.length ? parts(shape).map((some) => cool(mesh(some, some.sink && material === solid ? sinking : material, casts))) : [])]) {
+        for (const part of [...(shape.faces?.geo.length ? [cool(faceMesh(shape, casts, shape === built.water))] : []), ...(shape.free?.geo.length ? [cool(freeMesh(shape, casts))] : []), ...(shape.pos.length ? parts(shape).map((some) => cool(mesh(some, some.sink && material === solid ? sinking : material, casts))) : [])]) {
           if (part.material === sinking) part.userData.glide = 0;
           part.userData.ground = shape === built.ground || shape === built.carried;
           if (shape === built.things || shape === built.carried) part.userData.ink = 0;

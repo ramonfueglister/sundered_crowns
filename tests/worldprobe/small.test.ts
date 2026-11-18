@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Batch } from '../../src/lookprobe/batch';
-import { FACE_GEO, faceHit, unfaced } from '../../src/lookprobe/faces';
+import { FACE_GEO, FREE_GEO, faceHit, freeHit, unfaced, unfree } from '../../src/lookprobe/faces';
 import { cornerOf, faced, small } from '../../src/worldprobe/small';
 
 /** a list of corners: places within a piece of the world, directions of length one, colours up to `bright` */
@@ -129,6 +129,49 @@ describe('faced', () => {
     expect(faceHit(f.faces!, [105.5, 10, 105.5], [0, -1, 0])).toBeCloseTo(10 - SEA, 9);
     // and a mesh without a lift says nothing of one
     expect(faced(mixed()).faces!.lift).toBeUndefined();
+  });
+
+  it('takes the upright and level rectangles on no grid as faces of floats where asked, and gives back the very triangles', () => {
+    const b = mixed(), rects = b.triangles / 2;
+    loose(b);
+    // a house as the builder's floats put it, with darker feet, a top of its own and a shaded side; and a top with a colour to each corner, turned both ways
+    b.box(130.07, 3.3, 130.13, 130.56, 4.11, 130.9, [0.4, 0.5, 0.2], { top: [0.5, 0.6, 0.3], foot: 0.7, bottom: true, away: [0.2, 0.3, 0.3] });
+    const four = [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6], [0.7, 0.8, 0.9], [1.2, 1.1, 1.0]] as const;
+    b.quad([140.1, 6.2, 140.3], [140.1, 6.2, 141.7], [141.9, 6.2, 141.7], [141.9, 6.2, 140.3], four, [0, 1, 0]);
+    b.quad([140.1, 6.2, 141.7], [141.9, 6.2, 141.7], [141.9, 6.2, 140.3], [140.1, 6.2, 140.3], four, [0, 1, 0]);
+    b.quad([141.9, 2.2, 140.3], [140.1, 2.2, 140.3], [140.1, 2.2, 141.7], [141.9, 2.2, 141.7], four, [0, -1, 0]);
+    const all = b.triangles, f = faced(b, 0, true);
+    // the rectangles on the grid are faces as before; of what was left the sea's sheet, the quad off the grid, the one too far and the new ones are faces of floats
+    expect(f.faces!.geo.length / FACE_GEO).toBe(rects);
+    expect(f.free!.geo.length / FREE_GEO).toBe(3 + 6 + 3);
+    // (40 bytes to such a face)
+    expect(f.free!.geo.byteLength + f.free!.col.byteLength + f.free!.nor.byteLength).toBe(12 * 40);
+    // the slope, the single triangle and the two whose halves differ stay
+    expect(f.pos.length / 9).toBe(all - (rects + 12) * 2);
+    expect(f.pos.length / 9).toBe(5);
+    expect(triangles(f, unfaced(f.faces!), unfree(f.free!))).toEqual(triangles(small(b)));
+    expect(f.ball).toEqual(small(b).ball);
+    // not asked, they stay in the lists
+    expect(faced(b).free).toBeUndefined();
+    // a mesh of nothing but such rectangles has no lists left, and one without any has no such faces
+    const house = new Batch();
+    house.box(0.07, 3.3, 0.13, 0.56, 4.11, 0.9, [0.4, 0.5, 0.2]);
+    const h = faced(house, 0, true);
+    expect(h.pos.length).toBe(0);
+    expect(h.faces).toBeUndefined();
+    expect(triangles(unfree(h.free!))).toEqual(triangles(small(house)));
+    expect(faced(mixed(), 0, true).free).toBeUndefined();
+  });
+
+  it('lets a ray find the first face on no grid it meets from the front', () => {
+    const b = new Batch();
+    b.box(130.07, 3.3, 130.13, 130.56, 4.11, 130.9, [0.4, 0.5, 0.2], { bottom: true });
+    const f = faced(b, 0, true).free!;
+    // straight down onto the top, from below onto the bottom, level onto the side that looks along -x; beside it, none
+    expect(freeHit(f, [130.3, 50, 130.5], [0, -1, 0])).toBeCloseTo(50 - 4.11, 5);
+    expect(freeHit(f, [130.3, 0, 130.5], [0, 1, 0])).toBeCloseTo(3.3, 5);
+    expect(freeHit(f, [120, 3.5, 130.5], [1, 0, 0])).toBeCloseTo(10.07, 4);
+    expect(freeHit(f, [130.6, 50, 130.5], [0, -1, 0])).toBeNull();
   });
 
   it('lets a ray find the first face it meets from the front', () => {
