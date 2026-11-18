@@ -8,7 +8,17 @@
 import { maybeGunzip } from '../render/assets';
 
 export const Water = { Land: 0, Sea: 1, Lake: 2 } as const;
-export interface River { name: string; rank: number; /** cell coordinates of the window */ pts: [number, number][] }
+export interface River {
+  name: string; rank: number;
+  /** cell coordinates of the window */
+  pts: [number, number][];
+  /**
+   * The river's bed, settled for the whole river (tools/worldprobe/beds.py): the height of its water at every point
+   * of `pts`, in metres. Between two points it runs straight, or through the heights of `mid`: [the first point's
+   * index, heights between the two points at even distances].
+   */
+  bed?: number[]; mid?: number[][];
+}
 export interface Region {
   w: number; h: number;
   /** the window on the game map: its first map pixel, cells per map pixel, and the map's size and projection */

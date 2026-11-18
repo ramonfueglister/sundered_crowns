@@ -19,6 +19,7 @@ nothing built before Ramon agrees. Proposal with sources (German): https://claud
 | 1b | 1291: persons in every town of the world graphic inside the world frame (558 towns, ~102,000 persons; state 15) | agreed by Ramon 16 Nov 2026 (world of towns); tools/history/1291/towns.py writes src/sim/content/cities_1291.json |
 | 2 | The persons live: a list of events, death, birth, marriage | built as a draft, 17 Nov 2026 (Ramon: all persons, event-driven, demography first; then, on the proposal of part 2: the mortality of the source and marriage only into a vacant household). It founds the persons anew (state 23) |
 | 3 | A household passes to an heir by the custom of the culture | built 18 Nov 2026 (Ramon, 17 Nov: a custom for every culture; 18 Nov: only what a source that was read supports, 83 % of the persons). No new state |
+| 4 | The unmarried move to other places, and an heir comes home | built 18 Nov 2026 (Ramon, 18 Nov: the young unmarried move by the measured rates, heirs come home; work, whole families and the flight from a famine follow later, one by one). State 25 |
 
 ## Feature 1: persons of the 30 largest cities
 
@@ -284,6 +285,8 @@ be opened (German): https://claude.ai/artifact/CSHcS21ac1gcX31d12bMFV, section �
 Code: `src/sim/people/inheritance.ts` (the customs, the cultures of each with the source, `heirOf`), the rule in
 `weddingsOn` of `src/sim/systems/families.ts`. No new state: the children of a house are found from the columns
 `person.mother`, `person.father` and `person.family`. Check: `npm run families:check`; `tests/inheritance.test.ts`.
+Since feature 4 a child of the house who lives in another place and has not married there stands in the line too,
+and comes home for the house.
 
 ### The rule
 
@@ -392,3 +395,141 @@ household that waits for an heir under age: 78 to 81 % to heirs, but 1,200 to 1,
 - Abbas Hamid, R. (2002): Why study ownership? In: Hanna, N. (ed.), Money, Land and Trade. Cuno, K. M. (1999) and Frantz-Murphy, G. (1999): Proceedings of the British Academy 96. al-Marakeby, M. (2023): Could women own agricultural land? Die Welt des Islams (abstract).
 - England: see the proposal (Mapping the Medieval Countryside, King's College London 2014; Gates 1996; Smith 1986).
 
+## Feature 4: the unmarried move to other places, and an heir comes home
+
+Ramon, 17 November 2026: the next feature is moving between places. He rejected a first proposal (the unmarried
+move only to fill a vacant household: neither economic nor historical; the motives are work, hunger and family). On
+18 November, on the second proposal, he chose: the young unmarried move by the measured rates and heirs come home;
+work as a motive, whole families and the flight from a famine follow later, each on its own. The proposal with all
+that was read (German): https://claude.ai/artifact/CSHcS21ac1gcX31d12bMFV, section «Vorschlag: Umzug zwischen Orten
+(zweiter Anlauf)».
+
+Code: `src/sim/people/moving.ts` (the rates, the distances, each with its table of the source),
+`src/sim/systems/moves.ts` (the day of the next move, where a move ends, the move), `changeFamily` in
+`src/sim/systems/deaths.ts` (the part in the economy goes to a successor), the heir who comes home in `weddingsOn`
+of `src/sim/systems/families.ts`. Two columns of the persons (state 25): `person.home`, the place a person comes
+from (−1 for a ruler), and `person.moves`, the day of the next move the person may make. Check:
+`npm run families:check` (`-- 100 stay` for the same world without moves); `tests/moves.test.ts`.
+
+### The rule
+
+A place of the world is a town with its land, and no two towns lie nearer than 16 km (median to the nearest: 46 km).
+The many short moves of the sources happen inside a place and are not computed. Only the far part is.
+
+1. **Who.** A person of 10 to 59 who is neither the man nor the woman of a family: not married, and not the widower
+   at the head of what is left of a household.
+2. **How often.** Who lives in the place he or she comes from leaves it at the rate of a child who leaves the home
+   of the parents, to the age of 29 (Dribe 2002), by age, sex and the standing of the family: a family in which
+   somebody owns a firm stands for Dribe's freeholders and crown tenants, a family without for his landless. A dead
+   father raises the rate, for a girl under 17 a dead mother too. Who lives elsewhere changes places as a servant
+   changes the master, from 15 on (Dribe & Lundh 2002).
+3. **How far.** 9 % of these changes go further than 16 km (Dribe & Lundh 2002, table 3). For one of them a band
+   of distance is drawn: 16 to 32 km, 32 to 64 km or 64 to 115 km, as 5 : 4 : 2 (Raven 2024, table 2).
+4. **Where to.** A piece of land that far away along the land of the map (over a strait, not over the sea) is
+   drawn, each piece of the band with its area over its distance, as if the direction were drawn. The person goes
+   to the town that lies nearest to that piece along the land. Where that is the person's own town, or the band
+   holds no land, the move stays inside the place and nothing happens.
+5. **Where the person lives.** With a parent, a brother or a sister who lives there, else as a servant in one of
+   the households of the place. The person belongs to the purse of that family and marries as the unmarried of
+   the place do.
+6. **The part in the economy.** A part in the economy of the old place goes to a successor there, as on a death
+   (the engine computes a fixed list of persons for every town). Where nobody is free to take it, the person stays.
+   In the new place the person has no part until one falls free.
+7. **An heir comes home.** A child of a vacant house who lives in another place and has not married there stands
+   in the line of feature 3 with the others. Where the custom names him or her and a spouse is found in the town of
+   the house, the heir comes home on that day and takes the house.
+
+It runs as the deaths and the births do (the next-event method): for every person the day of the next far move the
+person may make is drawn at a rate that no person exceeds (0.55 changes a year × 9 %), and on that day the person
+moves with the share that his or her own rate on that day has of it (thinning, Lewis & Shedler 1979). So the rate
+follows the age, the death of the father and the standing of the family without a new draw.
+
+### Parameters
+
+| Parameter | Value | Source |
+|---|---|---|
+| Leaves home a year, sons of 10 to 16 | 2.4 % (family with a firm) / 8.2 % (without) | Dribe 2002, table 3: 407 events in 6,190 person-years, split by the shares and relative risks of the standings (semi-landless 18 %, ×4.64; landless 44 %, ×3.43; tenants of nobles 17 %, ×1.07) |
+| daughters of 10 to 16 | 1.0 % / 8.3 % | table 4: 382 in 6,348; 17 %, ×9.17; 48 %, ×8.46; 17 %, ×1.81 |
+| sons of 17 to 29 | 9.1 % / 13.1 % | table 3: 327 in 2,874; 15 %, ×1.45; 35 %, ×1.43; 19 %, ×1.15 |
+| daughters of 17 to 29 | 8.8 % / 18.1 % | table 4: 505 in 3,313; 18 %, ×2.49; 42 %, ×2.06; 16 %, ×1.11 |
+| Father dead | sons 17 to 29 ×1.28, daughters ×1.32, daughters 10 to 16 ×1.55 | Dribe 2002, tables 3 and 4, model I |
+| Mother dead | daughters 10 to 16 ×1.47 | the same (elsewhere the tables show no clear effect: ×1) |
+| Changes of place of who lives elsewhere | men 0.52 a year to 29, 0.41 after; women 0.53 and 0.27 | Dribe & Lundh 2002, table 1: 7.8 (men) and 8.0 (women) changes between 15 and 30, 20.0 and 16.0 between 10 and 60 |
+| Share that goes further than 16 km | 9 % | Dribe & Lundh 2002, table 3: 9.1 % of the men's and 8.1 % of the women's changes with a known destination |
+| Distances | 16–32 km 5/11, 32–64 km 4/11, 64–115 km 2/11 | Raven 2024, table 2: of the 11 serfs of Great Waltham and High Easter (1289–1361) who went further than ten miles, 5 at 10 to 19, 4 at 20 to 39, 2 beyond (the furthest about 70 miles) |
+| Ages | 10 to 59; a child at home to 29; a servant from 15 | the ages of the tables |
+
+### Measured (`npm run families:check`, world of 1291, seed 1291, deaths, moves, weddings and births over 100 years; one run)
+
+| Figure | Year 50 | Year 100 | Without moves, year 100 |
+|---|---|---|---|
+| Persons | 96,340 | 97,067 | 97,223 |
+| Households (vacant) | 17,702 (33) | 17,702 (43) | 17,702 (67) |
+| Persons per household | 5.44 | 5.48 | 5.49 |
+| Widows among the housewives | 15 % | 14 % | 15 % |
+| Women of 40 to 44 without a household | 25 % | 26 % | 27 % |
+| Deaths / births / weddings in the year | 2,826 / 2,701 / 843 | 2,694 / 2,760 / 879 | 2,704 / 2,728 / 877 |
+| Households that passed to an heir (years 41 to 100) | | 40 % | 41 % |
+
+- 132 persons a year go to another place, 0.14 % of the persons: 106 from the place they come from, 25 from a
+  place they had moved to. 51 % are women, 77 % are 15 to 29, the mean age is 21.3; 6 % go to kin.
+- 326 far moves a year are drawn. 40 % of them end in another town, 58 % stay inside the place (the land that far
+  away belongs to the person's own town), 1.3 % are held by a part in the economy that nobody can take.
+- 11 heirs a year come home for the house (653 in the years 41 to 100).
+- After 100 years, 4.7 % of the persons of 20 to 59 live in another place than they come from. Ireland 1841, before
+  the famine: 5 % lived outside the county of their birth (Ó Gráda 2018).
+- At the end 29,394 persons can leave home (10.8 % of them a year do, near or far) and 1,375 live elsewhere and
+  can move on (0.43 changes a year). All changes of place the rates stand for, near and far: 3.9 % of the persons a
+  year; over the border of a parish (57 % of the changes, Dribe & Lundh 2002, table 3): 2.2 %. Clayworth 1676–88
+  and Cogenhoe 1618–28: 3.9 to 4.7 % of the inhabitants left in a year (Laslett & Harrison 1963, after Schürer
+  2024), families and the married among them, who do not move here.
+- The towns by their size at the founding, persons after 100 years against the founding (without moves in
+  brackets): under 60 persons +2.1 % (−9.6 %), 6 of 58 below half (10); 60 to 100: +1.2 % (−1.4 %), 1 of 197 below
+  half (5); 100 to 200: −3.3 % (−2.5 %); 200 to 500: −6.1 % (−4.2 %); 500 and more: −8.7 % (−8.3 %).
+- The map: 40 % of the far moves end in another town (16–32 km: 21 %, 32–64 km: 49 %, 64–115 km: 69 %, weighted by
+  the persons). Nobody can leave 54 of the 550 towns, with 13.5 % of the persons: every piece of land within 115 km
+  of them is their own (the nearest town is across the sea, or 173 km away or more).
+- The full world with the economy, two years: no city halts; 200 persons live away from where they come from, 13 of
+  them have taken a part in the economy of the new place.
+
+### What differs from the proposal
+
+- The proposal counted 243 movers a year (0.26 % of the persons), 135 of them servants. The probe behind it moved a
+  person again in the same month when the new place came later in its list. The rule as it is written gives 132 a
+  year (0.14 %), 25 of them servants. The other figures of the probe hold: the persons of the world, the share who
+  live away (4.7 % against 4.9 %), the heirs who come home (11 a year against 10).
+- The sum over the border of a parish is 2.2 %, not 3.4 %: the 3.4 % of the proposal held the whole families at
+  Dribe's rates, who are not built.
+- Sons of 10 to 16 of a family without a firm: 8.2 % a year (the proposal rounded to 8.3 %). Women who live
+  elsewhere change places 0.27 times a year after 30 (table 1 of Dribe & Lundh; the proposal wrote 0.41 for both).
+- The distance runs along the land of the map and not as the crow flies, so nobody walks over the sea.
+- The widower at the head of what is left of a household does not move (he would leave his children behind).
+
+### Limits
+
+- Motives that are not built (Ramon, 18 November 2026: each later, on its own): work (a newcomer has a part in the
+  economy only when one falls free; a move for a wage needs a worker who can change the town in the engine), whole
+  families (Dribe 2002: 3.3 % a year; they need households that can grow), the flight from a famine (no number was
+  found). Poverty moves through the standing of the family only.
+- The rates are Sweden's of 1829 to 1867 for every time and place; only their sum was checked, against two English
+  villages of the 17th century. The share of far moves is Sweden's, their distances are England's.
+- "Landless" is a family in which nobody owns a firm (54 % of the households; 52 % in Dribe's parishes).
+- The destination is drawn by land, not by the size or the pull of a town. So the small towns gain and the large
+  ones lose a little; in the sources a third of the destinations were towns (Bailey 2022, table 5).
+- A town further than about 115 km from every other loses and gains nobody (54 of 550).
+- The short moves inside a place are not seen; a servant does not change the household inside a place.
+- IQ and the Big Five do not move anybody yet (Jokela 2009 has the numbers: step B of the overview).
+- Assumptions without a source: that the direction is drawn; the household of a servant (any of the place); that a
+  person with a part nobody can take stays; that only an heir who has not married comes home; that the years after
+  30 of a servant take the whole difference of the two counts of table 1.
+
+### Sources
+
+- Dribe, M. (2002): Dealing with Economic Stress Through Migration: Lessons from Nineteenth Century Rural Sweden. Lund Papers in Economic History 79 (printed in the European Review of Economic History 7, 2003).
+- Dribe, M., Lundh, C. (2002): People on the Move: Determinants of Servant Migration in Nineteenth Century Sweden. Lund Papers in Economic History 80.
+- Raven, M. (2024): Continuity and Change 39, 101–125 (Great Waltham and High Easter, Essex, 1289–1361).
+- Bailey, M. (2022): Servile migration and gender in late-medieval England. Past & Present 261(1), 47–85 (read as the manuscript in the archive of the University of East Anglia).
+- Schürer, K. (2024): Stuck in the mud! Campop blog (Laslett & Harrison 1963 on Clayworth and Cogenhoe).
+- Ó Gráda, C. (2018): UCD Working Paper 18/21.
+- Lewis, P. A. W., Shedler, G. S. (1979): Simulation of nonhomogeneous Poisson processes by thinning. Naval Research Logistics Quarterly 26(3), 403–413.
+- Not readable: Rogers & Castro 1981 (the age profile of migration), Poos 1986 and 1991 (Essex).

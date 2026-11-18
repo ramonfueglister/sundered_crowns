@@ -7,6 +7,7 @@ Das Spiel wird gerade von Grund auf neu gebaut. Das Wiki wächst deshalb Feature
 ## Inhalt
 
 - [Die Welt](welt.md): Karte, Massstab, die dauerhafte Welt und die KI-Reiche
+  - [Strassen](strassen.md) *(Gebaut)*
 - [Wirtschaft](wirtschaft/README.md): Übersicht über alle Wirtschafts-Features
   - [Getreideernte pro Ort](wirtschaft/getreideernte.md) *(Im Spiel)*
   - [Bestellte Fläche](wirtschaft/bestellte-flaeche.md) *(Beschlossen)*
@@ -20,10 +21,13 @@ Das Spiel wird gerade von Grund auf neu gebaut. Das Wiki wächst deshalb Feature
   - [Haushalt der Familie](wirtschaft/haushalt-der-familie.md) *(Im Spiel)*
   - [Verbrauch und Hunger](wirtschaft/verbrauch-und-hunger.md) *(Gebaut)*
   - [Die Krone gibt aus, was sie einnimmt](wirtschaft/krone-gibt-einnahmen-aus.md) *(Gebaut)*
+  - [Entfernung im Handel](wirtschaft/entfernung-im-handel.md) *(Gebaut)*
+  - [Betrieb und Inhaber sind ein Haushalt](wirtschaft/betrieb-und-inhaber.md) *(Gebaut)*
 - [Personen](personen/README.md): wer als eigene Person in der Welt lebt
   - [Einwohner der Städte](personen/einwohner-der-staedte.md) *(Beschlossen)*
   - [Tod, Heirat und Geburt](personen/tod-heirat-geburt.md) *(Gebaut)*
   - [Erbbrauch je Kultur](personen/erbbrauch.md) *(Gebaut)*
+  - [Umzug zwischen Orten](personen/umzug.md) *(Gebaut)*
 - [Siedlung](siedlung/README.md): wo die Familien wohnen und wie Städte wachsen
   - [Jede Familie hat eine Parzelle](siedlung/parzellen.md) *(Entwurf)*
   - [Die Höfe in den Weilern](siedlung/hoefe.md) *(Entwurf)*

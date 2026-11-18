@@ -7,6 +7,7 @@ import { foodNeedCost, type CalibrationTable } from './economy/calibration';
 import type { Chronicle } from './content/chronicle';
 import type { Borders } from './content/borders';
 import type { Ground } from './content/ground';
+import type { WayNet } from './roads';
 
 export interface GeoJson {
   W: number; H: number; lon0: number; lon1: number; latN: number; latS: number; L: number; S: number;
@@ -96,6 +97,10 @@ export class World {
    *  than the building ground and nothing said of steps and buildings), null without one: then the land register
    *  lays its hamlets by the building ground, as far as that reaches */
   dry: Ground | null = null;
+  /** the ways between the places of the map in the start year (public/data/roads_<year>.json, the latest year at or
+   *  before it; src/sim/roads.ts), null without any: then goods go over land on the straight line between places.
+   *  Set by the loader (tools/sim/load.ts) */
+  ways: WayNet | null = null;
   constructor(geo: GeoJson, wj: WorldJson, land: LandJson, cultivation: CultivationJson, economy: EconomySetup) {
     this.W = geo.W; this.H = geo.H; this.L = geo.L; this.S = geo.S; this.N = geo.L + geo.S;
     this.lon0 = geo.lon0; this.lon1 = geo.lon1; this.latN = geo.latN; this.latS = geo.latS;
@@ -134,9 +139,11 @@ export class World {
     if (prices !== 'costs' && prices !== 'demand') throw new Error(`the economy of ${t.case} sets prices in the way "${prices}", the engine knows 'costs' and 'demand'`);
     const crown = t.cities.crown.value;
     if (crown !== 'series' && crown !== 'revenue') throw new Error(`the crown of ${t.case} buys in the way "${crown}", the engine knows 'series' and 'revenue'`);
+    const owner = t.cities.owner.value;
+    if (owner !== 'paper' && owner !== 'household') throw new Error(`the owners of ${t.case} hold their firms in the way "${owner}", the engine knows 'paper' and 'household'`);
     const spent = t.cities.savings_spent_per_year.value;
     if (!(spent >= 0 && spent <= clock.window)) throw new Error(`the households of ${t.case} spend ${spent} of their savings above the target in a year`);
-    this.cityEconomies = { year: t.year, scale: t.scale.value, clock, rules: { wage, prices, savings: spent / clock.window, crown }, foodNeed: foodNeedCost(t), table: t };
+    this.cityEconomies = { year: t.year, scale: t.scale.value, clock, rules: { wage, prices, savings: spent / clock.window, crown, owner }, foodNeed: foodNeedCost(t), table: t };
     this.names = new Array(N);
     for (let i = 0; i < N; i++) this.names[i] = (i < L ? wj.name[i] : geo.loc.name[i]) || `#${i}`;
     this.names = refineNames(this.names, this.lon, this.lat, L); // unnamed districts get names from their neighbours

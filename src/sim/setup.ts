@@ -17,6 +17,7 @@ import { foundBorders } from './systems/borders';
 import { foundLots } from './systems/lots';
 import { foundDeaths } from './systems/deaths';
 import { foundBirths } from './systems/families';
+import { foundMoves } from './systems/moves';
 import { toHeads } from './scale';
 
 export interface SetupRealm {
@@ -61,6 +62,7 @@ export function createWorldState(w: World, setup: SetupState, seed: number): Wor
   foundRulers(s, w); // before the economy, which leaves them out (src/sim/systems/work.ts) but keeps their purse
   foundDeaths(s); // the day of death of every person of the towns (src/sim/systems/deaths.ts)
   foundBirths(s); // the day of the next birth of every wife (src/sim/systems/families.ts)
+  foundMoves(s); // where every person comes from, and the day of the next move (src/sim/systems/moves.ts)
   foundEconomy(s, w);
   settleHamlets(s); // the families who live from agriculture, by the firms of the economy
   countPeople(s); // the people of a place are its persons (the setup's numbers are only the start of the persons)

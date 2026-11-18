@@ -5,7 +5,7 @@
 // that are not there yet. The realms lie on the game map only; round the globe they come again with it, and between
 // its laps the map goes on as land and water.
 import * as THREE from 'three/webgpu';
-import { texture } from 'three/tsl';
+import { userData, type vec4 } from 'three/tsl';
 import { LAND_Y, SEA_Y } from '../lookprobe/layout';
 import type { Stage } from '../lookprobe/stage';
 import { blockOfCell, cellOfBlock } from './land';
@@ -64,8 +64,15 @@ export interface RealmsMap {
  */
 export function createRealms(stage: Stage, o: { region: string; base: string; year?: number; map: readonly [number, number]; cells: number; round: number; rows?: number; ahead: boolean; changed(): void }): RealmsMap {
   const held = new Map<string, Held>(), asked = new Map<number, Asked>(), busy = new Set<string>();
-  const realms: RealmsMap = { look, names: [], lap: 0, failed: '', mode: 'far', named: 0, set, choose, placeAt, dispose: () => worker.terminate() };
+  const realms: RealmsMap = { look, names: [], lap: 0, failed: '', mode: 'far', named: 0, set, choose, placeAt, dispose: () => { worker.terminate(); paint.dispose(); } };
   let nextId = 1, looks = 0, named = false, age = 0, chosen = -1;
+
+  // One material for every tile: a tile's picture is its mesh's (`userData.picture`), so that all tiles are drawn
+  // by one shader. With a material of its own per tile three built a shader for every tile that came, on the
+  // page's thread (47 while the page loaded about Paris at 1500 blocks across, some 3 ms each).
+  const dots = userData('picture', 'texture') as unknown as ReturnType<typeof vec4>, paint = new THREE.MeshBasicNodeMaterial({ depthTest: false, depthWrite: false, transparent: true });
+  // the picture holds colour times cover, and the cover, in linear light, so that its dots blend cleanly
+  paint.colorNode = dots.rgb.div(dots.a.max(1 / 255)); paint.opacityNode = dots.a;
 
   /** the tile as a square on the ground, in finest blocks from its north-west corner */
   const square = (level: number) => {
@@ -97,12 +104,10 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ye
     } else if (what.age === age) {
       const h: Held = { level: what.level, x: what.x, y: what.y, seen: looks };
       if (e.data.tile) {
-        // the picture holds colour times cover, and the cover, in linear light, so that its dots blend cleanly
         h.picture = new THREE.DataTexture(new Uint8Array(e.data.tile.buffer), TILE, TILE, THREE.RGBAFormat);
         h.picture.magFilter = THREE.LinearFilter; h.picture.minFilter = THREE.LinearMipmapLinearFilter; h.picture.generateMipmaps = true; h.picture.anisotropy = 4; h.picture.needsUpdate = true;
-        const dots = texture(h.picture), material = new THREE.MeshBasicNodeMaterial({ depthTest: false, depthWrite: false, transparent: true });
-        material.colorNode = dots.rgb.div(dots.a.max(1 / 255)); material.opacityNode = dots.a;
-        h.mesh = new THREE.Mesh(square(what.level), material);
+        h.mesh = new THREE.Mesh(square(what.level), paint);
+        h.mesh.userData.picture = h.picture;
         h.mesh.frustumCulled = false; h.mesh.visible = false;
         stage.paper.add(h.mesh); stage.redraw();
       }
@@ -116,7 +121,7 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ye
   worker.onerror = (e) => { realms.failed ||= e.message; o.changed(); };
   const drop = (h: Held) => {
     if (!h.mesh) return;
-    stage.paper.remove(h.mesh); stage.redraw(); (h.mesh.material as THREE.Material).dispose(); h.mesh.geometry.dispose(); h.picture!.dispose();
+    stage.paper.remove(h.mesh); stage.redraw(); h.mesh.geometry.dispose(); h.picture!.dispose();
   };
 
   function set(now: RealmsNow) {

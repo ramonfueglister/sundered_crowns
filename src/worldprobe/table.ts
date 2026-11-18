@@ -11,12 +11,13 @@
 //
 // What a table does not hold is how the land looks: the colours of grass, rock and shore, their grain and the light
 // are worked out when it is drawn (lookprobe/terrain.ts, shore.ts). A change of the look needs no new tables; a
-// change of the land's shape or cover does (world.ts, far.ts and the map's data).
+// change of the land's shape, its cover or its ways does (world.ts, far.ts, roads.ts and the map's data).
 import { Batch, type RGB } from '../lookprobe/batch';
 import { type Ground, type GroundTraits, Mat, N, SUMMIT, idx, onGrid } from '../lookprobe/layout';
 import { buildShore } from '../lookprobe/shore';
 import { type Part, buildTerrain, buildWater } from '../lookprobe/terrain';
 import { pack, unpack } from './pack';
+import { FAR_FROM_ROADS, ROAD_SHOWS, roadOn } from './roads';
 
 /**
  * The columns round a piece's own that its picture depends on: the sky's share is taken up to 10.5 columns from a
@@ -44,6 +45,8 @@ export interface Table {
   tint: Uint8Array; tints: number[];
   /** the colour of overgrown steps (GroundTraits.slope) */
   slope?: RGB;
+  /** blocks to the edge of the nearest way's band at the corners of the columns ((side + 1)², roads.ts `roadOn`), where ways run over the ground; off the piece's own and its rim as far as where no way is near */
+  road?: Float32Array;
 }
 
 /**
@@ -71,15 +74,15 @@ export const tabled = (): Table | null => last;
  * Draws a ground: its land, with what it carries as a mesh of its own where `covered`, the sea and the water above
  * it, and the banks of the water.
  */
-export function drawGround(g: Ground, t: GroundTraits, bakedSky: boolean, part: Part, covered: boolean): { ground: Batch; carried?: Batch; water: Batch; raised: Batch } {
-  if (wanted) last = tableOf(g, t, part);
+export function drawGround(g: Ground, t: GroundTraits, bakedSky: boolean, part: Part, covered: boolean, roads: Float32Array | null = null): { ground: Batch; carried?: Batch; water: Batch; raised: Batch } {
+  if (wanted) last = tableOf(g, t, part, roads);
   const carried = covered ? new Batch() : undefined, ground = buildTerrain(g, t, bakedSky, part, carried), water = buildWater(g, false, part), raised = buildWater(g, true, part);
   buildShore(ground, g, t, bakedSky, part);
   return { ground, carried, water, raised };
 }
 
-/** The table of a ground of a far step: its columns as the ground's traits tell them, the piece's own and RIM round them. */
-export function tableOf(g: Ground, t: GroundTraits, part: Part): Table {
+/** The table of a ground of a far step: its columns as the ground's traits tell them, the piece's own and RIM round them; `roads`: the ways' edges at the corners, as the traits were given them. */
+export function tableOf(g: Ground, t: GroundTraits, part: Part, roads: Float32Array | null = null): Table {
   const n = N * N, colours: number[] = [], known = new Map<string, number>(), tints: number[] = [], tinted = new Map<string, number>();
   const table: Table = {
     side: N, ox: g.ox ?? 0, oz: g.oz ?? 0, part: { ...part },
@@ -112,6 +115,11 @@ export function tableOf(g: Ground, t: GroundTraits, part: Part): Table {
     table.top[i] = colourOf(cover.top); table.flank[i] = colourOf(cover.side);
   }
   table.colours = new Float32Array(colours);
+  if (roads) {
+    const road = new Float32Array((N + 1) * (N + 1)).fill(FAR_FROM_ROADS);
+    for (let z = Math.max(0, part.z0 - RIM); z <= Math.min(N, part.z1 + RIM); z++) for (let x = Math.max(0, part.x0 - RIM); x <= Math.min(N, part.x1 + RIM); x++) road[z * (N + 1) + x] = roads[z * (N + 1) + x];
+    table.road = road;
+  }
   return table;
 }
 
@@ -134,7 +142,7 @@ class TableTraits implements GroundTraits {
   private colour(k: number): RGB { const colours = this.table.colours; return [colours[k * 3], colours[k * 3 + 1], colours[k * 3 + 2]]; }
   city(x: number, z: number) { return this.table.town[this.cell(x, z)] === 1; }
   plaza() { return Infinity; }
-  road() { return Infinity; }
+  road(x: number, z: number) { const road = this.table.road; return road ? roadOn(road, x, z) + ROAD_SHOWS : Infinity; }
   crop() { return null; }
   bleach(x: number, z: number) { return this.table.bleach[this.cell(x, z)]; }
   summit(x: number, z: number) { return this.table.summit[this.cell(x, z)]; }

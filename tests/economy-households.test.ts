@@ -23,6 +23,7 @@ import { countPeople, settleHamlets } from '../src/sim/systems/hamlets';
 import { foundLots } from '../src/sim/systems/lots';
 import { cultivate } from '../src/sim/systems/cultivation';
 import { bringInHarvest } from '../src/sim/systems/harvest';
+import { foundMoves } from '../src/sim/systems/moves';
 
 const { s, w } = newWorldState();
 const start = decodeState(encodeState(s)); // the world on the day it is founded
@@ -313,11 +314,11 @@ describe('the state', () => {
     expect(up.economy.cities!.halted).toBe('');
     expect(up.family.cols.fed.some((v) => v === 1)).toBe(true);
   }, 60_000);
-  it('of a world from before feature 16 is founded anew by the upgrade, with a crown that buys with what it took in', () => {
+  it('of a world from before features 16 and 17 is founded anew by the upgrade, with a crown that buys with what it took in and with distance between the cities', () => {
     const old = decodeState(encodeState(s)) as any; old.v = 23;
     const up = upgradeState(decodeState(encodeState(old)), w, () => loadSetup(1356));
     expect(up.v).toBe(STATE_VERSION);
-    const founded = decodeState(encodeState(s)); foundEconomy(founded, w);
+    const founded = decodeState(encodeState(s)); foundEconomy(founded, w); foundMoves(founded); // (the step to 25 draws the days of the moves on the day reached)
     expect(hashState(up)).toBe(hashState(founded));
     const c = up.economy.cities!;
     expect(c.day).toBe(s.day); expect(c.years.length).toBe(0);

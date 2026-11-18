@@ -1,9 +1,9 @@
 // A far piece is built on a narrow ground (pieces.ts NARROW) to save the work on land it does not show. What it shows
 // must not depend on that: the pieces beside it are built on grounds of their own, and each draws the sides of its
-// border columns down to what its own ground says of the neighbour's. A river's level is the lowest floor it has
-// passed, so it depends on where its walk begins; the walk goes on beyond a narrow ground over what the wide one
-// holds (world.ts `Piece.beyond`, build.ts). Without that, this piece of the Alps has its river a block lower on the
-// narrow ground than on the wide one, and the river steps at the border to the next piece.
+// border columns down to what its own ground says of the neighbour's. A river's level once was the lowest floor it
+// had passed on the ground, so it depended on where the ground began: this piece of the Alps had its river a block
+// lower on the narrow ground than on the wide one, and the river stepped at the border to the next piece. Now the
+// river's bed is settled for the whole river in the data (tools/worldprobe/beds.py, world.ts), and this holds it.
 import { existsSync, readFileSync } from 'node:fs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { GRID } from '../../src/lookprobe/layout';

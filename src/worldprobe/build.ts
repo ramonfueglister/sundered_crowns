@@ -11,6 +11,7 @@ import { loadForest } from './forest';
 import { loadHamletLands } from './hamlets';
 import { FINER_STEPS } from './land';
 import { loadParcels } from './lots';
+import { loadRoads } from './roads';
 import { loadModels } from './models';
 import { Water, loadWindow } from './region';
 import { loadRural } from './rural';
@@ -28,10 +29,9 @@ export interface From { region: string; base: string; bakedSky: boolean; /** the
 export async function buildPiece(from: From, step: number, piece: Piece, mean: Cover | null = null): Promise<WorldScene | null> {
   const { region: name, base, bakedSky, year } = from;
   // the step's blocks are cells of the data's step `data`, or drawn finer than its finest cells (land.ts)
-  // On a ground narrower than the usual one the rivers are still walked over all the usual one would hold, so that
-  // they lie as high as on it (world.ts): the window of the map reaches that far
-  const beyond = Math.max(0, (GRID - (from.grid ?? GRID)) / 2);
-  const data = Math.max(0, step - FINER_STEPS), w = onGrid(from.grid, () => windowOf(piece.ox, piece.oz, beyond)), own = onGrid(from.grid, () => windowOf(piece.ox, piece.oz));
+  // (a river's level is settled for the whole river in the data, so a ground narrower than the usual one needs no
+  // more of the map than it covers: world.ts)
+  const data = Math.max(0, step - FINER_STEPS), w = onGrid(from.grid, () => windowOf(piece.ox, piece.oz)), own = w;
   const region = await loadWindow(data ? `${name}/z${data}` : name, w.gx0, w.gy0, w.w, w.h, base, 2 ** Math.max(0, FINER_STEPS - step));
   // open sea is a piece whose own ground holds nothing else, whatever lies beyond it
   let land = false;
@@ -42,6 +42,6 @@ export async function buildPiece(from: From, step: number, piece: Piece, mean: C
   if (step === 0) await loadTownPeople(undefined, year); // the persons of the 30 cities walk in their towns (src/figures/people.ts)
   const climate = await loadClimate(base, region.worldW ?? region.mapW, region.worldH ?? region.mapH), people = await loadInhabitants(base, year), models = await loadModels(base);
   const forest = await loadForest(base, year, region.worldW ?? region.mapW, region.worldH ?? region.mapH), rural = await loadRural(base, year, region.mapW, region.mapH), arable = await loadArable(base, year, region.mapW, region.mapH);
-  const hamlets = await loadHamletLands(base, year ?? 1356), parcels = await loadParcels(base, year ?? 1356);
-  return onGrid(from.grid, () => buildWorld(region, { ...piece, beyond }, gazetteer.places, landmarks.landmarks, bakedSky, step, climate, people, models, forest, rural, arable, hamlets, parcels, undefined, mean));
+  const hamlets = await loadHamletLands(base, year ?? 1356), parcels = await loadParcels(base, year ?? 1356), roads = await loadRoads(base, year ?? 1356);
+  return onGrid(from.grid, () => buildWorld(region, piece, gazetteer.places, landmarks.landmarks, bakedSky, step, climate, people, models, forest, rural, arable, hamlets, parcels, undefined, mean, undefined, roads));
 }
