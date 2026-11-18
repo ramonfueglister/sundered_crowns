@@ -28,8 +28,9 @@ import type { Table } from './ecs';
  *  with what it took in (economy feature 16); the economies are founded anew. 25: the unmarried move to other places and
  *  an heir comes home (src/sim/systems/moves.ts): every person has the place they come from and the day of the next move.
  *  26: there is distance between the cities (economy feature 17) and a firm and its owner are one household (economy
- *  feature 18); the economies are founded anew. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
-export const STATE_VERSION = 26;
+ *  feature 18); the economies are founded anew. 27: IQ and the Big Five shift the rates of death, of a far move and of
+ *  who is taken at a wedding (people feature 5, src/sim/people/traits.ts); deaths and moves are drawn anew. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
+export const STATE_VERSION = 27;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {

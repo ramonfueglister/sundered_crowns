@@ -318,7 +318,7 @@ describe('the state', () => {
     const old = decodeState(encodeState(s)) as any; old.v = 23;
     const up = upgradeState(decodeState(encodeState(old)), w, () => loadSetup(1356));
     expect(up.v).toBe(STATE_VERSION);
-    const founded = decodeState(encodeState(s)); foundEconomy(founded, w); foundMoves(founded); // (the step to 25 draws the days of the moves on the day reached)
+    const founded = decodeState(encodeState(s)); foundEconomy(founded, w); foundDeaths(founded); foundMoves(founded); // (the steps to 25 and 27 draw the days of the moves and of death on the day reached)
     expect(hashState(up)).toBe(hashState(founded));
     const c = up.economy.cities!;
     expect(c.day).toBe(s.day); expect(c.years.length).toBe(0);

@@ -38,6 +38,7 @@ import { hash01 } from '../rng';
 import { lifeTable } from '../people/lifetable';
 import { ageOn } from './people';
 import { namedPersons } from './rulers';
+import { TRAITS_FROM_AGE, deathFactor } from '../people/traits';
 import { ROLE, WORKING_AGE, K as WORK_K } from './work';
 
 /** Draws of a person's own stream (src/sim/systems/people.ts uses 0 to 21 and 100 on, work.ts 30 and 31). */
@@ -65,10 +66,18 @@ export function ageAtDeath(age: number, u: number): number {
   return Math.min(120, x0 + Math.max(0, ratio));
 }
 
+/** The share of those of the age `a` who reach the whole age `b`, by the life table. */
+const survives = (a: number, b: number): number => { const y = Math.floor(a), within = L[y + 1] > 0 ? L[y] * Math.pow(L[y + 1] / L[y], a - y) : L[y]; return within > 0 ? L[b] / within : 0; };
 /** The day of death of the person `id` who lives on `day`: at least the next day. */
 export function drawDeath(s: WorldState, id: number, day: number): number {
   const P = s.person.cols;
-  const at = ageAtDeath(ageOn(P.born[id], day), hash01(s.seed >>> 0, id, K.death));
+  const age = ageOn(P.born[id], day), u = hash01(s.seed >>> 0, id, K.death);
+  // the force of death from TRAITS_FROM_AGE on times the factor of the person's traits (people feature 5): the
+  // survivorship from there on is that of the life table to the power of the factor
+  const k = deathFactor(P, id), left = 1 - u;
+  let at: number;
+  if (age >= TRAITS_FROM_AGE) at = ageAtDeath(age, 1 - Math.pow(left, 1 / k));
+  else { const grown = survives(age, TRAITS_FROM_AGE); at = left > grown ? ageAtDeath(age, u) : ageAtDeath(TRAITS_FROM_AGE, 1 - Math.pow(left / grown, 1 / k)); }
   return Math.max(day + 1, P.born[id] + Math.ceil(at * DAYS_PER_YEAR));
 }
 

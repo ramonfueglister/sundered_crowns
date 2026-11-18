@@ -38,6 +38,7 @@ import { ageOn } from './people';
 import { changeFamily, eventKey, livingIn } from './deaths';
 import { namedPersons } from './rulers';
 import { ROLE } from './work';
+import { moveFactor } from '../people/traits';
 import { BANDS, MOVING_AGE, TOP_RATE, bandOf, movesAYear, yearsToNext } from '../people/moving';
 
 const DAYS_PER_YEAR = 365.25;
@@ -95,6 +96,18 @@ export function foundMoves(s: WorldState): void {
   }
   queues.delete(s);
   reaches.delete(s);
+}
+
+/** Draws the day of the next move of every living person anew, on the day the world has reached; where a person
+ *  comes from stays. For a world whose rates have changed (src/sim/upgrade.ts). */
+export function redrawMoves(s: WorldState): void {
+  const P = s.person.cols, named = namedPersons(s);
+  for (let id = 0; id < s.person.size; id++) {
+    P.moves[id] = ALIVE;
+    if (!s.person.alive[id] || named.has(id) || P.family[id] < 0) continue;
+    if (P.died[id] === ALIVE && P.dies[id] !== ALIVE) P.moves[id] = nextMove(s, id, s.day);
+  }
+  queues.delete(s);
 }
 
 /** Draws the first move of a person who has come into the world on `day` (src/sim/systems/families.ts). */
@@ -206,7 +219,8 @@ export function rateOf(s: WorldState, id: number, day: number): number {
     for (const o of livingIn(s, place)) if (P.family[o] === f && P.role[o] === ROLE.owner) { landed = true; break; }
   }
   const dead = (x: number) => x >= 0 && P.died[x] !== ALIVE;
-  return movesAYear({ age, man: P.sex[id] === 1, home, landed, fatherDead: dead(P.father[id]), motherDead: dead(P.mother[id]) });
+  // times the factor of the person's openness and agreeableness (people feature 5, src/sim/people/traits.ts)
+  return movesAYear({ age, man: P.sex[id] === 1, home, landed, fatherDead: dead(P.father[id]), motherDead: dead(P.mother[id]) }) * moveFactor(P, id);
 }
 
 /** The person `id`, whose day has come, moves or stays. */

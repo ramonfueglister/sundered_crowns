@@ -49,6 +49,7 @@ import { spawn } from '../ecs';
 import { ageOn, bearChild } from './people';
 import { changeFamily, drawDeath, eventKey, livingIn, scheduleDeath } from './deaths';
 import { scheduleMove } from './moves';
+import { weddingWeight } from '../people/traits';
 import { brideAge, yearsToBirth, AGE_WINDOW, BRIDE_YEARS, FERTILE_TO, GROOM_AGE_MIN, GROOM_OLDER, WIDOW_REMARRIES_BELOW } from '../people/marriage';
 import { customOf, heirOf, CUSTOM, type Child } from '../people/inheritance';
 
@@ -120,6 +121,8 @@ export function birthsTo(s: WorldState, day: number): number {
 /** The weddings of a month. Returns the number of weddings; `tally` counts the households that passed on. */
 export function weddingsOn(s: WorldState, day: number, tally?: Passed): number {
   const P = s.person.cols, F = s.family.cols, seed = s.seed >>> 0, q = queueOf(s);
+  /** the stream of the persons' draws at a wedding, apart from their own (people.ts, work.ts, deaths.ts, births) */
+  const lots = (seed ^ 0x5bd1e995) >>> 0;
   // the vacant households and the widows who may marry again, by place
   const vacant = new Map<number, number[]>(), widows = new Map<number, number[]>();
   const add = (m: Map<number, number[]>, place: number, f: number) => { const l = m.get(place); if (l) l.push(f); else m.set(place, [f]); };
@@ -158,8 +161,20 @@ export function weddingsOn(s: WorldState, day: number, tally?: Passed): number {
     const people = livingIn(s, place);
     const men = people.filter((id) => P.sex[id] === 1 && age(id) >= GROOM_AGE_MIN && !(F.man[P.family[id]] === id && F.woman[P.family[id]] >= 0));
     const women = people.filter((id) => P.sex[id] === 0 && F.woman[P.family[id]] !== id && age(id) >= BRIDE_YEARS[0] && age(id) < BRIDE_YEARS[1] + 1);
-    /** The nearest in age to `target` within `window` who is not kin of `spouse`, taken off the list; −1 where there is none. */
+    /** One of the list who is not kin of `spouse`, taken off the list; −1 where there is none: drawn among those
+     *  within the bride's window of the age `target`, else the nearest in age within `window`. */
     const take = (list: number[], target: number, window: number, spouse = -1): number => {
+      // among those within the bride's window of the age, drawn by the weight of their traits (people feature 5):
+      // the greatest of weight plus a Gumbel draw is a draw in proportion to the weights
+      let pick = -1, key = -Infinity;
+      for (let k = 0; k < list.length; k++) {
+        if (spouse >= 0 && kin(list[k], spouse)) continue;
+        if (Math.abs(age(list[k]) - target) >= AGE_WINDOW.bride) continue;
+        const g = weddingWeight(P, list[k], P.sex[list[k]] === 1) - Math.log(-Math.log(hash01(lots, list[k], day)));
+        if (g > key || (g === key && list[k] < list[pick])) { key = g; pick = k; }
+      }
+      if (pick >= 0) { const id = list[pick]; list[pick] = list[list.length - 1]; list.pop(); return id; }
+      // nobody that near in age: the nearest within the window, as before
       let best = -1, bestD = window;
       for (let k = 0; k < list.length; k++) {
         if (spouse >= 0 && kin(list[k], spouse)) continue;

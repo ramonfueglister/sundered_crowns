@@ -80,7 +80,7 @@ Eine Person steht für hundert Menschen. Die Raten gelten je Person, die Anteile
 - Die Raten aus Schweden 1829 bis 1867 gelten für jede Zeit und jeden Ort. Geprüft ist nur ihre Summe, an zwei englischen Dörfern des 17. Jahrhunderts.
 - Das Ziel wird nach Land gezogen, nicht nach Grösse oder Anziehung einer Stadt. Kleine Orte gewinnen deshalb, grosse verlieren leicht. In den englischen Quellen ging ein Drittel in eine Stadt (Bailey 2022).
 - Wer weiter als rund 115 km von jeder anderen Stadt lebt, zieht nie um. Das betrifft 54 der 550 Orte mit 13,5 % der Personen.
-- IQ und Persönlichkeit zählen noch nicht. Der Vorschlag dazu: [Merkmale verschieben die Raten](merkmale-und-raten.md).
+- Offenheit und Verträglichkeit verschieben die Rate des weiten Umzugs seit dem Feature [Merkmale verschieben die Raten](merkmale-und-raten.md). Die Messwerte dieser Seite stammen aus der Zeit davor.
 
 ## Quellen
 

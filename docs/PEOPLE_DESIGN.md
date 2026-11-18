@@ -20,6 +20,7 @@ nothing built before Ramon agrees. Proposal with sources (German): https://claud
 | 2 | The persons live: a list of events, death, birth, marriage | built as a draft, 17 Nov 2026 (Ramon: all persons, event-driven, demography first; then, on the proposal of part 2: the mortality of the source and marriage only into a vacant household). It founds the persons anew (state 23) |
 | 3 | A household passes to an heir by the custom of the culture | built 18 Nov 2026 (Ramon, 17 Nov: a custom for every culture; 18 Nov: only what a source that was read supports, 83 % of the persons). No new state |
 | 4 | The unmarried move to other places, and an heir comes home | built 18 Nov 2026 (Ramon, 18 Nov: the young unmarried move by the measured rates, heirs come home; work, whole families and the flight from a famine follow later, one by one). State 25 |
+| 5 | IQ and the Big Five shift the rates of death, of a far move and of who marries | built 18 Nov 2026 (Ramon, 18 Nov: «So bauen» on the proposal, with the factor 0.89 for the IQ). State 27 |
 
 ## Feature 1: persons of the 30 largest cities
 
@@ -533,3 +534,85 @@ follows the age, the death of the father and the standing of the family without 
 - Ó Gráda, C. (2018): UCD Working Paper 18/21.
 - Lewis, P. A. W., Shedler, G. S. (1979): Simulation of nonhomogeneous Poisson processes by thinning. Naval Research Logistics Quarterly 26(3), 403–413.
 - Not readable: Rogers & Castro 1981 (the age profile of migration), Poos 1986 and 1991 (Essex).
+
+## Feature 5: the traits shift the rates
+
+Ramon, 17 November 2026: all persons are to be simulated smartly, event-driven and with decisions of their own by
+IQ and the Big Five. On 18 November he chose «So bauen» on the proposal (German):
+https://claude.ai/artifact/CSHcS21ac1gcX31d12bMFV, section «Vorschlag: Merkmale verschieben die Raten». It is the
+first step: the traits shift the rates of the events that exist. Needs, satisfaction and the choice among offers
+are the next proposal.
+
+Code: `src/sim/people/traits.ts` (the factors, each with its source), `drawDeath` in `src/sim/systems/deaths.ts`,
+`rateOf` and `redrawMoves` in `src/sim/systems/moves.ts`, `take` in `weddingsOn` of `src/sim/systems/families.ts`.
+No new column. State 27: the upgrade draws the days of death and of the next move anew (`foundDeaths`,
+`redrawMoves`). Check: `npm run traits:check` (`-- 100` for 100 years); `tests/traits.test.ts`.
+
+### The rule
+
+The rate of a person = the rate × exp(Σ b · z) / exp(Σ b² / 2). z is a trait in standard deviations from the mean
+(IQ: 100 and 15; the Big Five: 50 and 10), b the natural logarithm of the factor of the source for one standard
+deviation. The divisor is the mean of the factor over independent normal traits, so the mean rate stays. This is
+the form in which the studies estimate (proportional hazards, logistic regression).
+
+1. **Death, from 15.** The day of death is drawn once, as before. From the age of 15 the survival curve of the
+   life table is raised to the power of the person's factor (conscientiousness and IQ). Below 15 the table holds
+   as it is; a child who would die before 15 dies on the same day as without the rule.
+2. **Far move.** The rate of feature 4 times the factor (openness and agreeableness), capped at 4. The rate that
+   no person exceeds (thinning) is 0.55 × 4 changes a year × 9 %.
+3. **Wedding.** As many weddings as before (only into a vacant household). Among the unmarried of the town within
+   2.5 years of the age that is looked for, one is drawn by weight (Gumbel-max: the largest of weight − ln(−ln u)),
+   the weight being 1.45 (men) or 1.05 (women) × (b_e · z_e + b_o · z_o). Where nobody is in that window, the
+   nearest in age is taken as before.
+4. **No effect** on births in marriage, the remarriage of widows, deaths under 15, and from every trait not named.
+
+### Parameters
+
+| Event | Trait | Factor for one standard deviation | Source |
+|---|---|---|---|
+| Death from 15 | conscientiousness | 0.88 | Jokela et al. 2013: hazard ratio 0.88 (0.82–0.94), adjusted for the other four traits, sex, age; 76,150 adults, 3,947 deaths |
+| Death from 15 | IQ | 0.89 | Calvin et al. 2011: 24 % lower risk (0.76); education takes 54 % of it; used: 1 − 0.24 × 0.46 (our own arithmetic, the world has no school) |
+| Far move | openness | 1.29 | Jokela 2009, table 2: move to another state, odds ratio with all covariates |
+| Far move | agreeableness | 0.88 | the same |
+| Ever marrying, men | extraversion 1.53, openness 0.79 | | Jokela et al. 2011, table 2 |
+| Ever marrying, women | extraversion 1.22, openness 0.76 | | the same |
+
+Our own settings without a source: the IQ factor less the part of education; traits count from 15; how the
+spouse is drawn (window of 2.5 years, the weights 1.45 and 1.05, set so that the odds ratios of the source come
+out); a move between states of the USA stands for the far move; an odds ratio is used as a factor of the rate; the
+cap of 4 on the factor of a move.
+
+### Measured (`npm run traits:check -- 100`, world of 1291, seed 1291, 100 years; one run)
+
+Slopes estimated as the studies do: death by Cox over year and age, moves from the means of the movers, marriage
+by logistic regression over the persons of 35 to 59.
+
+| Slope for one standard deviation | Source | With the rule | Without |
+|---|---|---|---|
+| Death, conscientiousness | 0.88 | 0.89 | 1.00 |
+| Death, IQ | 0.89 | 0.90 | 1.00 |
+| Death, extraversion (no effect) | 1.00 | 1.00 | 1.00 |
+| Far move, openness | 1.29 | 1.32 | 1.00 |
+| Far move, agreeableness | 0.88 | 0.85 | 0.99 |
+| Ever married, men, extraversion | 1.53 | 1.55 | 1.00 |
+| Ever married, men, openness | 0.79 | 0.77 | 0.99 |
+| Ever married, women, extraversion | 1.22 | 1.19 | 0.97 |
+| Ever married, women, openness | 0.76 | 0.79 | 1.02 |
+
+- Persons after 100 years 97,071 (without the rule 97,067), households 17,702 (40 vacant), mean age at death of
+  those who reached 15: 49.7 (49.5), far moves a year 135 (132), ever married at 35 to 59: men 82 %, women 74 %
+  (83 %, 74 %).
+- The traits drift, because they are inherited and the extraverted marry more: the newborn of the last ten years
+  lie at extraversion +0.07 standard deviations, openness −0.06, IQ +0.05 (0.7 points), conscientiousness +0.01.
+  Without the rule no trait moves by more than 0.01.
+
+### Limits
+
+- All studies are of rich countries of the 20th and 21st century. That the relations held in 1291 is not shown.
+- Marriage is the weakest source: Jokela et al. 2011 measured the traits after marriage and births.
+- Calvin et al. 2011 was read as an abstract only. Jokela 2009 is one study (3,760 persons, 359 moved between
+  states).
+- The traits are drawn independently; in the studies they correlate slightly (the factors are mutually adjusted).
+- One run; the differences in persons and moves are not tested against chance.
+
+Sources with what was read of each: `docs/wiki/personen/merkmale-und-raten.md`.

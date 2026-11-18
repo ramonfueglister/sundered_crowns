@@ -16,7 +16,7 @@ import { bringInHarvest } from './systems/harvest';
 import { foundPersonCultures } from './systems/cultures';
 import { foundDeaths } from './systems/deaths';
 import { foundBirths } from './systems/families';
-import { foundMoves } from './systems/moves';
+import { foundMoves, redrawMoves } from './systems/moves';
 import type { SetupState } from './setup';
 
 /** The fields of a WorldState in the order createWorldState writes them. */
@@ -211,6 +211,13 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     // the steps before. The persons stay who they are.
     foundEconomy(s, w);
     s.v = 26;
+  }
+  if (s.v === 26) { // 26 → 27: IQ and the Big Five shift the rates (people feature 5, src/sim/people/traits.ts). The
+    // day of death of every living person is drawn anew from the age reached, with the factor of the person's traits,
+    // and the day of the next move at the new top rate, as a new world draws them on that day. Who has moved keeps
+    // the place they come from; the next births stay.
+    foundDeaths(s); redrawMoves(s);
+    s.v = 27;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one
