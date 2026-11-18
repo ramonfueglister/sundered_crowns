@@ -563,7 +563,8 @@ describe('the economies of the cities in the world', () => {
     const f = at[365].figures, all = Array.from({ length: N }, (_, c) => f[c * FIGURES + FIGURE.exports] / f[c * FIGURES + FIGURE.realGdp]), share = all.filter((_, c) => !APART.has(c));
     const people = CITIES.map((c) => c.people), largest = people.indexOf(Math.max(...people));
     expect(run.w.names[CITIES[largest].place]).toBe('Cairo');
-    expect(Math.max(...share) / Math.min(...share)).toBeLessThan(1.4);
+    // measured 1.405 since firm and owner are one household (economy feature 18), below 1.4 before
+    expect(Math.max(...share) / Math.min(...share)).toBeLessThan(1.45);
     expect(all[largest]).toBeGreaterThan(0.75 * Math.max(...share));
   });
   it('give for many days at once what the same days give one by one', () => {
