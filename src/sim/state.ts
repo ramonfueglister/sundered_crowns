@@ -29,9 +29,11 @@ import type { Table } from './ecs';
  *  an heir comes home (src/sim/systems/moves.ts): every person has the place they come from and the day of the next move.
  *  26: there is distance between the cities (economy feature 17) and a firm and its owner are one household (economy
  *  feature 18); the economies are founded anew. 27: goods go over land on the ways of the world (src/sim/roads.ts):
- *  the routes between the cities follow the ways and go slower off them; the economies are founded anew. Snapshots
- *  from 11 on are brought up to date by src/sim/upgrade.ts. */
-export const STATE_VERSION = 27;
+ *  the routes between the cities follow the ways and go slower off them; the economies are founded anew. 28: IQ and
+ *  the Big Five shift the rates of death, of a far move and of who is taken at a wedding (people feature 5,
+ *  src/sim/people/traits.ts); deaths and moves are drawn anew. Snapshots from 11 on are brought up to date by
+ *  src/sim/upgrade.ts. */
+export const STATE_VERSION = 28;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {

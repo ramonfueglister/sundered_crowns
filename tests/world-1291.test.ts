@@ -150,7 +150,7 @@ describe('the peoples of 1291', () => {
     const up = upgradeState(old, w, () => s1291);
     expect(up.v).toBe(STATE_VERSION);
     expect(hashState(up)).toBe(hashState(s));
-  }, 40_000); // copies and hashes the whole world of 558 towns several times, and founds its economies anew
+  }, 60_000); // copies and hashes the whole world of 558 towns several times, and founds its economies anew
   it('are the persons\' own: the persons of Bursa and Smyrna are Greek and Orthodox, those of Acre Frankish and Latin', () => {
     const P = s.person.cols, F = s.family.cols;
     for (const [n, c, f] of [['Bursa', 'greek', 'orthodox'], ['Smyrna', 'greek', 'orthodox'], ['Acre', 'french', 'latin']] as const) {

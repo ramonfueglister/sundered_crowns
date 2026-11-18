@@ -26,7 +26,7 @@ Der erste Teil ist die Kindersterblichkeit, der zweite ein Grundrisiko, das ab 1
 
 **Haushalte.** Jeder Ort hat so viele Haushalte wie bei der Gründung. An der Spitze steht die Hausfrau. Stirbt sie, ist der Haushalt frei.
 
-**Heirat**, am ersten Tag jedes Monats: Jeder freie Haushalt sucht eine Braut. Ihr Alter wird aus der Kurve von Coale und McNeil gezogen, genommen wird die ledige Frau des Ortes, die diesem Alter am nächsten ist. Ihr Mann ist der ledige Mann des Ortes ab 18, der ihrem Alter plus 3 Jahre am nächsten ist. Eine Witwe unter 45 heiratet wieder. Wer den Haushalt übernimmt, regelt der [Erbbrauch](erbbrauch.md).
+**Heirat**, am ersten Tag jedes Monats: Jeder freie Haushalt sucht eine Braut. Ihr Alter wird aus der Kurve von Coale und McNeil gezogen, genommen wird die ledige Frau des Ortes, die diesem Alter am nächsten ist. Ihr Mann ist der ledige Mann des Ortes ab 18, der ihrem Alter plus 3 Jahre am nächsten ist. Eine Witwe unter 45 heiratet wieder. Wer den Haushalt übernimmt, regelt der [Erbbrauch](erbbrauch.md). Seit dem Feature [Merkmale verschieben die Raten](merkmale-und-raten.md) wird unter den Ledigen, die höchstens 2,5 Jahre vom gesuchten Alter entfernt sind, nach Extraversion und Offenheit gelost, und Gewissenhaftigkeit und IQ verschieben ab 15 den Todestag.
 
 **Geburt.** Eine Ehefrau mit lebendem Mann bekommt bis 45 Kinder, im fruchtbarsten Alter alle 33 Monate, mit dem Alter seltener: f(a) = 1 − exp(4,6 · ((a − 15)/30 − 1)). Ein Kind erbt IQ, Persönlichkeit und Gene der Eltern und Kultur und Glauben der Mutter.
 
