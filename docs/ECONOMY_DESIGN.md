@@ -2803,8 +2803,8 @@ carrying without rule 5: as bad as with it. The runs are in `/mnt/project-files/
 **8. Regions apart.** The regions of the world the table names (`routes.apart`: the Americas, Oceania) have ways
 among themselves only. In the net the Americas can be reached along the northern coasts, also within 300 km of a
 coast, so no limit of seamanship that the net can express keeps them apart; the trial of the first proposal cut
-Texcoco by hand. **How this is decided is asked of Ramon (card of 18 November 2026); built is the recommended
-answer, the known world as a datum of the start year.**
+Texcoco by hand. **Ramon's choice of 18 November 2026: the known world is a datum of the start year;** a discovery
+can change it later in the game.
 
 Two orders rules derailed in the trials and are not built: a stock for the days of travel that hangs on sales
 (goods on the way grew beyond the yearly output of the world), and a choice of the origin by distance alone.
