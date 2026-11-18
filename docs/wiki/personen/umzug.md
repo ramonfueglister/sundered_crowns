@@ -81,6 +81,7 @@ Eine Person steht für hundert Menschen. Die Raten gelten je Person, die Anteile
 - Das Ziel wird nach Land gezogen, nicht nach Grösse oder Anziehung einer Stadt. Kleine Orte gewinnen deshalb, grosse verlieren leicht. In den englischen Quellen ging ein Drittel in eine Stadt (Bailey 2022).
 - Wer weiter als rund 115 km von jeder anderen Stadt lebt, zieht nie um. Das betrifft 54 der 550 Orte mit 13,5 % der Personen.
 - Offenheit und Verträglichkeit verschieben die Rate des weiten Umzugs seit dem Feature [Merkmale verschieben die Raten](merkmale-und-raten.md). Die Messwerte dieser Seite stammen aus der Zeit davor.
+- Seit dem Feature [Wer arbeiten will, sucht eine Stelle](stelle-suchen.md) ziehen Ledige zusätzlich auf freie Stellen in anderen Orten. Damit leben 19 % statt 4,7 % der Erwachsenen nicht am Herkunftsort.
 
 ## Quellen
 

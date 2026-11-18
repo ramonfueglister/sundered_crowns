@@ -9,7 +9,7 @@ import { createWorldState } from '../../src/sim/setup';
 import { ageOn } from '../../src/sim/systems/people';
 import { deathsTo, settleEstates } from '../../src/sim/systems/deaths';
 import { birthsTo, weddingsOn } from '../../src/sim/systems/families';
-import { movesTo, noMoves } from '../../src/sim/systems/moves';
+import { movesTo, offersOn, noMoves } from '../../src/sim/systems/moves';
 import { ALIVE } from '../../src/sim/state';
 const YEARS = Number(process.argv[2] ?? 100);
 const w = loadWorld(), s = createWorldState(w, loadSetup(1291), 1291), P = s.person.cols, F = s.family.cols;
@@ -36,7 +36,7 @@ for (let y = 1; y <= YEARS; y++) {
     for (let i = 0; i < placeOf.length && i < s.person.size; i++) { if (placeOf[i] < 0 || !living(i)) continue; const a = ageOn(P.born[i], day); if (a < 10 || a >= 60) continue;
       const f = P.family[i]; if (F.man[f] === i || F.woman[f] === i) continue; mv.pn++; mv.po += z('o', i); mv.pa += z('a', i); mv.pe += z('e', i);
       if (F.place[f] !== placeOf[i]) { mv.n++; mv.o += z('o', i); mv.a += z('a', i); mv.e += z('e', i); } }
-    birthsTo(s, day); weddingsOn(s, day); settleEstates(s, day); mark(); snap();
+    birthsTo(s, day); weddingsOn(s, day); settleEstates(s, day); offersOn(s, w, day, moved); mark(); snap();
   }
   for (const i of risk) { if (P.died[i] === ALIVE || P.died[i] > day1) continue; const a = Math.floor(ageOn(P.born[i], day0)), x = S.get(a)!; if (x.n < 2) continue;
     cox.c.U += z('c', i) - x.c / x.n; cox.c.I += x.cc / x.n - (x.c / x.n) ** 2; cox.iq.U += z('iq', i) - x.q / x.n; cox.iq.I += x.qq / x.n - (x.q / x.n) ** 2; cox.e.U += z('e', i) - x.e / x.n; cox.e.I += x.ee / x.n - (x.e / x.n) ** 2;

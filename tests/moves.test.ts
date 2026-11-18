@@ -207,7 +207,7 @@ describe('the moves and the economy', () => {
       away++; if (P.role[id] !== ROLE.none) withPart++;
       expect(P.moves[id]).toBeGreaterThan(1); // the next day is drawn
     }
-    expect(away).toBeGreaterThan(300);
+    expect(away).toBeGreaterThan(100); // who holds a part leaves only where somebody who wants one takes it (people feature 6)
     expect(withPart).toBeLessThan(away / 2); // a newcomer has a part only where one fell free
     const now = parts();
     for (const [place, n] of parts0) expect(now.get(place)).toBe(n);

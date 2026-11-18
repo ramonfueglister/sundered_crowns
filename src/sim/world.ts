@@ -1,4 +1,5 @@
 // Static world data (geography). Built once from the baked map files; identical in browser and world server.
+import { participation } from './systems/work';
 import { deName } from './content/names_de';
 import { refineNames } from './content/placenames';
 import { TERRAINS, RESOURCE_INDEX } from './geo';
@@ -143,6 +144,7 @@ export class World {
     if (owner !== 'paper' && owner !== 'household') throw new Error(`the owners of ${t.case} hold their firms in the way "${owner}", the engine knows 'paper' and 'household'`);
     const spent = t.cities.savings_spent_per_year.value;
     if (!(spent >= 0 && spent <= clock.window)) throw new Error(`the households of ${t.case} spend ${spent} of their savings above the target in a year`);
+    participation.men = t.inputs.participation.value.men; participation.women = t.inputs.participation.value.women;
     this.cityEconomies = { year: t.year, scale: t.scale.value, clock, rules: { wage, prices, savings: spent / clock.window, crown, owner }, foodNeed: foodNeedCost(t), table: t };
     this.names = new Array(N);
     for (let i = 0; i < N; i++) this.names[i] = (i < L ? wj.name[i] : geo.loc.name[i]) || `#${i}`;

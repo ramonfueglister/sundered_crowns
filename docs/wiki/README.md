@@ -29,6 +29,7 @@ Das Spiel wird gerade von Grund auf neu gebaut. Das Wiki wächst deshalb Feature
   - [Erbbrauch je Kultur](personen/erbbrauch.md) *(Gebaut)*
   - [Umzug zwischen Orten](personen/umzug.md) *(Gebaut)*
   - [Merkmale verschieben die Raten](personen/merkmale-und-raten.md) *(Gebaut)*
+  - [Wer arbeiten will, sucht eine Stelle](personen/stelle-suchen.md) *(Gebaut)*
   - [Haushalte wachsen mit der Wirtschaft](personen/haushalte-wachsen.md) *(Verworfen)*
 - [Siedlung](siedlung/README.md): wo die Familien wohnen und wie Städte wachsen
   - [Jede Familie hat eine Parzelle](siedlung/parzellen.md) *(Entwurf)*

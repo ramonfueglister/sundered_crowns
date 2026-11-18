@@ -21,6 +21,7 @@ nothing built before Ramon agrees. Proposal with sources (German): https://claud
 | 3 | A household passes to an heir by the custom of the culture | built 18 Nov 2026 (Ramon, 17 Nov: a custom for every culture; 18 Nov: only what a source that was read supports, 83 % of the persons). No new state |
 | 4 | The unmarried move to other places, and an heir comes home | built 18 Nov 2026 (Ramon, 18 Nov: the young unmarried move by the measured rates, heirs come home; work, whole families and the flight from a famine follow later, one by one). State 25 |
 | 5 | IQ and the Big Five shift the rates of death, of a far move and of who marries | built 18 Nov 2026 (Ramon, 18 Nov: «So bauen» on the proposal, with the factor 0.89 for the IQ). State 28 |
+| 6 | Who wants work looks for a part in the economy, in the own town and within 115 km | built 18 Nov 2026 (Ramon, 18 Nov: «weiter» on the proposal, read as «So bauen»). No new state |
 
 ## Feature 1: persons of the 30 largest cities
 
@@ -616,3 +617,90 @@ by logistic regression over the persons of 35 to 59.
 - One run; the differences in persons and moves are not tested against chance.
 
 Sources with what was read of each: `docs/wiki/personen/merkmale-und-raten.md`.
+
+## Feature 6: who wants work looks for a part
+
+Ramon, 18 November 2026: «weiter» on the proposal (German): https://claude.ai/artifact/CSHcS21ac1gcX31d12bMFV,
+section «Vorschlag: Wer arbeiten will, sucht eine Stelle». Step 4 of the overview (need, satisfaction, choice among
+offers), limited to what the world offers a person today: wages are no signal (4.9 to 6.4 baskets a day in every
+town, and a successor takes the wage of the predecessor), no firm can be founded (the engine computes a fixed list of
+parts for every town), but parts wait where a town has nobody to take them.
+
+Code: `wantsWork` and `participation` in `src/sim/systems/work.ts`, `seekersIn`, `successor`, `estatesOf`,
+`takeEstate` in `src/sim/systems/deaths.ts`, `offersOn` in `src/sim/systems/moves.ts` (the system `moves`, on the
+first day of a month). No new column and no new state: a saved world goes on by the new rule. Check:
+`npm run families:check` (last line); `tests/work-offers.test.ts`.
+
+### What was wrong before
+
+At the founding 97 % of the men and 43 % of the women of 20 to 59 hold a part (the participation rates of the
+calibration table, Broadberry, Campbell and van Leeuwen 2013). The succession of feature 2 took any adult of the town
+without a part. After 25 years 79 % of the men and 74 % of the women held one, after 100 years 79 % and 78 %: the
+difference of the source was gone. 615 parts (1.2 %) waited for a successor, nearly all in small towns.
+
+### The rule
+
+1. **Need.** A person of 15 or older wants a part by the rule of the founding (`src/sim/systems/work.ts`): a man at
+   the rate of men (0.971), a woman without a husband always (Horrell, Humphries and Weisdorf 2022), another woman at
+   the rate that makes the women of her town work at the rate of women (0.430) on that day. The draw is the person's
+   own and the same for life.
+2. **Satisfaction.** Who wants a part and has one does nothing. Who wants one and has none looks (the form of the
+   consumat of Jager and Janssen 1999: the satisfied repeat, the dissatisfied deliberate; no threshold of the paper
+   is used, see the limits).
+3. **Offers in the town.** A part that falls free (a death, a move) goes to a person of the town who looks: first of
+   the family of the predecessor, then a child, then anybody, as before.
+4. **Offers from other towns.** On the first day of a month a part that still waits is offered to the persons who
+   look in the towns that have land within 115 km (the bands of feature 4) and who can move: 15 to 59, neither the
+   man nor the woman of a family.
+5. **Choice.** One of them is drawn (Gumbel-max) with the weight: share of the band of distance (5 : 4 : 2, Raven
+   2024) over the persons of that band, times the person's factor of a far move (openness 1.29, agreeableness 0.88,
+   Jokela 2009; feature 5). The person moves, lives there as a newcomer of feature 4 does (with kin, else as a servant
+   of a household) and takes the part.
+
+The moves by the measured rates (feature 4) stay beside it.
+
+### Measured (`npm run families:check`, world of 1291, seed 1291, 100 years, without the economy; one run)
+
+| After 100 years | Before | With the rule |
+|---|---|---|
+| Parts that wait | 615 (1.2 %) | 896 (1.8 %) in 88 towns |
+| Persons who want a part and have none | not defined | 1,785 |
+| Men of 20 to 59 with a part | 79 % | 94.9 % |
+| Women of 20 to 59 with a part | 78 % | 54.1 % |
+| Moves to another town a year | 135 | 434: 121 by the rates, 313 onto a part |
+| Persons of 20 to 59 who live away from where they come from | 4.7 % | 19.0 % |
+| Persons | 97,071 | 97,119 |
+| Households (vacant) | 17,702 (40) | 17,702 (17) |
+| Households that passed to an heir (years 41 to 100) | 40 % | 35 % |
+
+- Who moves onto a part or by the rates: 36 % women, 91 % of 15 to 29, mean age 18.1.
+- Heirs who come home for the house: 1,209 in the years 41 to 100 (653 before), because more children live away.
+- Towns by their size at the founding, persons after 100 years: under 60 −5.9 % (before +2.1 %), 60 to 100 −1.5 %,
+  100 to 200 −2.3 %, 200 to 500 −4.7 %, 500 and more −8.6 % (before −8.7 %).
+- The slopes of feature 5 hold with the rule (`npm run traits:check -- 100`): death 0.885 and 0.897, ever married
+  men 1.55 and 0.80, women 1.21 and 0.76.
+- Two years with the full economy (world of 1291): no town halts, a state saved on day 400 goes on the same. In
+  the first years many parts are taken from other towns, because at the founding nobody who wants a part is without
+  one: 453 persons hold a part in another town than they come from after one year, 858 after two.
+- Tried and too weak: only to direct the far moves of feature 4 to a town where a part waits (11 moves a year,
+  2,707 parts still wait).
+
+### Limits
+
+- **More people live away than a source shows.** 19 % of the persons of 20 to 59 live in another town than they come
+  from (4.7 % before; Ireland 1841: 5 % outside the county of birth, Ó Gráda 2018). The rates of Dribe and Lundh give
+  326 far moves a year in this world; with the rule 434 persons a year reach another town.
+- **Our own settings without a source:** that the news of a free part reaches 115 km, that it is taken at once, the
+  month, the order of succession in the town.
+- **The women's share stays above the table** (54 % against 43 %): a widow always wants a part, and a woman who took
+  one before her wedding keeps it.
+- **Consumat gives the form, no number.** The thresholds of Jager and Janssen 1999 are settings of their experiments.
+  Read to page 19.
+- **Wages and traits do not decide who gets which part.** Strenze 2007 (IQ and occupational status, ρ 0.43) was read
+  only through a summary of its tables; Zhao and Seibert 2006 compare founders with managers.
+- **Fewer moves by the rates.** Who holds a part leaves only where somebody who wants one takes it; before, any
+  adult of the town could. The moves of feature 4 fall from 135 to 121 a year, and more in the first years.
+- **A part that waits still pays.** The money of a dead person whose part nobody has taken stays with the family
+  (`src/sim/systems/household.ts`), as before; nobody does the work.
+- 896 parts wait and 1,785 persons look at the end: they are out of each other's reach, or the persons are married
+  (whole families do not move).

@@ -147,10 +147,15 @@ describe('the purse of a family', () => {
   });
   it('has the income, the spending and the savings of all its members', () => {
     let withIncome = 0;
-    m.forEach((ids, f) => {
+    // the money of a dead person whose part nobody has taken yet stays with the family (src/sim/systems/household.ts);
+    // such parts are common in the first weeks, when nobody who wants a part is without one (people feature 6)
+    const all: number[][] = Array.from({ length: s.family.size }, () => []);
+    for (let id = 0; id < s.person.size; id++) if (s.person.alive[id]) all[P.family[id]].push(id);
+    m.forEach((_, f) => {
+      const ids = all[f];
       const sum = (v: ArrayLike<number>) => Math.fround(ids.reduce((a, id) => a + v[id], 0));
       expect(F.income[f]).toBe(sum(P.income)); expect(F.spent[f]).toBe(sum(P.spent)); expect(F.savings[f]).toBe(sum(P.savings));
-      if (F.income[f] > 0) { withIncome++; expect(F.working[f]).toBeGreaterThan(0); }
+      if (m[f].some((id) => P.income[id] > 0)) { withIncome++; expect(F.working[f]).toBeGreaterThan(0); }
     });
     expect(withIncome).toBeGreaterThan(0.95 * m.filter((ids) => ids.length).length);
   });

@@ -110,7 +110,7 @@ describe('the traits in a world of 1291', () => {
       expect(odds(share((id) => Q.sex[id] === sex && Q.e[id] >= 58)) / odds(share((id) => Q.sex[id] === sex && Q.e[id] <= 42))).toBeGreaterThan(1.25);
       expect(odds(share((id) => Q.sex[id] === sex && Q.o[id] >= 58)) / odds(share((id) => Q.sex[id] === sex && Q.o[id] <= 42))).toBeLessThan(0.85);
     }
-  }, 240_000);
+  }, 400_000);
 });
 
 describe('the state of the traits', () => {

@@ -35,7 +35,7 @@ import type { System } from '../schedule';
 import { MinHeap } from '../minheap';
 import { hash01 } from '../rng';
 import { ageOn } from './people';
-import { changeFamily, eventKey, livingIn } from './deaths';
+import { changeFamily, estatesOf, eventKey, livingIn, seekersIn, takeEstate } from './deaths';
 import { namedPersons } from './rulers';
 import { ROLE } from './work';
 import { moveFactor } from '../people/traits';
@@ -44,7 +44,7 @@ import { BANDS, MOVING_AGE, TOP_RATE, bandOf, movesAYear, yearsToNext } from '..
 const DAYS_PER_YEAR = 365.25;
 /** The draws of a move come from a stream of their own: by the person and the day the draw is made on. */
 const draw = (s: WorldState, id: number, day: number, k: number): number => hash01((s.seed ^ 0x6d6f7665) >>> 0, id, 8 * day + k);
-const K = { accept: 0, band: 1, land: 2, host: 3, next: 4 } as const;
+const K = { accept: 0, band: 1, land: 2, host: 3, next: 4, offer: 5 } as const;
 
 /** What the moves of a run of days did, for the checks. */
 export interface Moved {
@@ -58,8 +58,10 @@ export interface Moved {
   held: number;
   /** the ages of those who went to another place, summed, and how many of them were 15 to 29 */
   ages: number; prime: number;
+  /** persons who went to another place to take a part in its economy that waited there (people feature 6) */
+  work: number;
 }
-export const noMoves = (): Moved => ({ home: 0, service: 0, women: 0, kin: 0, near: 0, held: 0, ages: 0, prime: 0 });
+export const noMoves = (): Moved => ({ home: 0, service: 0, women: 0, kin: 0, near: 0, held: 0, ages: 0, prime: 0, work: 0 });
 
 /** The day of the next far move the person `id` may make, drawn on `from`: not before the age of 10, ALIVE where
  *  it would fall after the age of 60. */
@@ -123,6 +125,8 @@ interface Reach {
   /** the town (a place with a household) nearest to every place of the map along the land, −1 where none is reached */
   town: Int32Array;
   bands: Map<number, { to: Int32Array; cum: Float64Array }[]>;
+  /** the other towns that have land in each band of distance around a town */
+  towns: Map<number, number[][]>;
 }
 const reaches = new WeakMap<WorldState, Reach>();
 /** The ways a person walks: from land to land, and over a strait. */
@@ -146,7 +150,7 @@ function reachOf(s: WorldState, w: World): Reach {
       if (nd < dist[b] || (nd === dist[b] && town[a] < town[b])) { dist[b] = nd; town[b] = town[a]; heap.push(nd, b); }
     }
   }
-  r = { town, bands: new Map() };
+  r = { town, bands: new Map(), towns: new Map() };
   reaches.set(s, r);
   return r;
 }
@@ -257,9 +261,58 @@ export function movesTo(s: WorldState, w: World, day: number, tally?: Moved): nu
   return n;
 }
 
+/** The other towns that have land in each band of distance around `place`, in the order of their numbers. */
+function townsAround(r: Reach, w: World, place: number): number[][] {
+  let t = r.towns.get(place);
+  if (!t) { t = bandsOf(r, w, place).map((b) => [...new Set(b.to)].filter((x) => x >= 0 && x !== place).sort((a, c) => a - c)); r.towns.set(place, t); }
+  return t;
+}
+
+/** On the first day of a month: a part in the economy of a town that has found nobody there (an estate of
+ *  src/sim/systems/deaths.ts) is offered to the persons of the towns within reach who want a part, have none and can
+ *  move: 15 to 59, neither the man nor the woman of a family (people feature 6). One of them is drawn, each with the
+ *  share of the band of distance (BANDS) over the persons of that band, times the person's factor of a far move
+ *  (src/sim/people/traits.ts); that person moves to the town, lives there as a newcomer does, and takes the part.
+ *  Returns how many parts were taken. */
+export function offersOn(s: WorldState, w: World, day: number, tally?: Moved): number {
+  const estates = estatesOf(s);
+  if (!estates.length) return 0;
+  const P = s.person.cols, F = s.family.cols, r = reachOf(s, w);
+  const free = new Map<number, number[]>(); // per town, this month: who could take a part elsewhere
+  const freeIn = (town: number): number[] => {
+    let l = free.get(town);
+    if (!l) { l = seekersIn(s, town, day).filter((id) => { const f = P.family[id]; return ageOn(P.born[id], day) < MOVING_AGE[1] && F.man[f] !== id && F.woman[f] !== id; }); free.set(town, l); }
+    return l;
+  };
+  let n = 0;
+  for (const { dead, place } of estates) {
+    let best = -1, bestKey = -Infinity, bestTown = -1;
+    townsAround(r, w, place).forEach((towns, b) => {
+      let count = 0;
+      for (const t of towns) count += freeIn(t).length;
+      if (!count) return;
+      const share = Math.log(BANDS[b][2] / count);
+      for (const t of towns) for (const id of freeIn(t)) {
+        const key = share + Math.log(moveFactor(P, id)) - Math.log(-Math.log(draw(s, id, day, K.offer)));
+        if (key > bestKey || (key === bestKey && id < best)) { bestKey = key; best = id; bestTown = t; }
+      }
+    });
+    if (best < 0) continue;
+    const host = hostOf(s, best, place, draw(s, best, day, K.host));
+    if (host.family < 0 || !changeFamily(s, best, host.family, day)) continue;
+    takeEstate(s, dead, best);
+    const l = free.get(bestTown)!; l.splice(l.indexOf(best), 1);
+    n++;
+    if (tally) { tally.work++; if (P.sex[best] !== 1) tally.women++; if (host.kin) tally.kin++; const age = ageOn(P.born[best], day); tally.ages += age; if (age >= 15 && age < 30) tally.prime++; }
+  }
+  return n;
+}
+
 /** Every day the moves that are due. After the deaths of the day and before the weddings, so a newcomer can marry
- *  in the month of the move; and before the economy, which then computes the day with the successors. */
+ *  in the month of the move; and before the economy, which then computes the day with the successors. On the first
+ *  day of a month, after the estates have looked in their own towns (the deaths run before), the parts that still
+ *  wait are offered to the towns around. */
 export const moves: System = {
   id: 'moves',
-  run(s, w, t) { movesTo(s, w, t.day); },
+  run(s, w, t) { movesTo(s, w, t.day); if (t.newMonth) offersOn(s, w, t.day); },
 };
