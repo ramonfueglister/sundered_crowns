@@ -2862,7 +2862,7 @@ both directions; nothing in the model lowers the prices of a city that loses mon
 
 ### State and upgrade
 
-State version 25. The format of the cities' state is 2: the routes, the goods on the way (a
+State version 26 (people feature 4 took 25). The format of the cities' state is 2: the routes, the goods on the way (a
 ring as long as the longest way), the carrying ordered, and the wages and prices of the start that fix the units
 of the stalls; format 1 is read as cities without routes. The upgrade
 founds the economies anew on the day the world has reached: routes are given to cities that have not computed a

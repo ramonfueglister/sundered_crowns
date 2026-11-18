@@ -20,7 +20,7 @@ Noch nichts Eigenes zu sehen. Man merkt es an den Familien: Der Sohn oder die To
 
 Am ersten Tag jedes Monats, vor den übrigen Hochzeiten, für jeden Haushalt ohne Hausfrau:
 
-1. **Kinder des Hauses** sind die lebenden Personen des Ortes, deren Mutter oder Vater zur Familie gehörte, egal wo sie heute wohnen.
+1. **Kinder des Hauses** sind die lebenden Personen des Ortes, deren Mutter oder Vater zur Familie gehörte, egal wo sie heute wohnen. Dazu kommen ledige Kinder, die in einen anderen Ort gezogen sind (siehe [Umzug zwischen Orten](umzug.md)): Sie kehren heim, wenn der Brauch sie nennt.
 2. **Der Brauch** ist der Brauch der Kultur des Vaters. Ist der Vater Muslim, gilt das Recht des Glaubens.
 3. **Der Erbe** ist das Kind, das der Brauch nennt und das frei ist: erwachsen (Sohn ab 18, Tochter von 16 bis 44) und ohne eigenen Haushalt. Ist das erstgenannte Kind nicht frei, rückt das nächste nach.
 4. **Die Heirat.** Ein Sohn bekommt eine Braut aus dem Ort nach der bisherigen Alterskurve. Eine Tochter bekommt einen Mann aus dem Ort, der ihrem Alter plus 3 Jahre am nächsten ist. Das Paar übernimmt Sitz, Haus und Grundstück.

@@ -26,6 +26,9 @@
 //
 // A ruler dies on the day of the chronicle (src/sim/systems/rulers.ts), not here.
 //
+// A person who moves to another place (people feature 4, src/sim/systems/moves.ts) leaves the part to a successor
+// in the same way, and the list of the persons of a place kept here follows the move (`changeFamily`).
+//
 // Weddings and births are src/sim/systems/families.ts: a housewife who dies leaves her household vacant.
 import type { WorldState } from '../state';
 import { ALIVE } from '../state';
@@ -147,6 +150,23 @@ function succeed(s: WorldState, q: Queue, dead: number, day: number): boolean {
   return true;
 }
 
+/** A living person goes to live in `family` (people feature 4, src/sim/systems/moves.ts). Where that family is of
+ *  another place, the person's part in the economy of the old place goes to a successor there, as on a death: the
+ *  engine's list of the town stays whole. False, and nothing changes, where the person has a part that nobody of
+ *  the old place is free to take. */
+export function changeFamily(s: WorldState, id: number, family: number, day: number): boolean {
+  const q = queueOf(s), P = s.person.cols, F = s.family.cols, old = P.family[id], from = F.place[old], to = F.place[family];
+  if (from !== to && P.role[id] !== ROLE.none && !succeed(s, q, id, day)) return false;
+  if (F.man[old] === id) F.man[old] = -1;
+  P.family[id] = family;
+  if (from === to) return true;
+  const l = q.byPlace.get(from);
+  if (l) { const k = l.indexOf(id); if (k >= 0) { l[k] = l[l.length - 1]; l.pop(); } }
+  const t = q.byPlace.get(to);
+  if (t) t.push(id); else q.byPlace.set(to, [id]);
+  return true;
+}
+
 /** The person `id` dies on `day`. */
 function die(s: WorldState, q: Queue, id: number, day: number): void {
   const P = s.person.cols, F = s.family.cols, f = P.family[id];
@@ -172,6 +192,7 @@ export function deathsTo(s: WorldState, day: number): number {
 export function settleEstates(s: WorldState, day: number): void {
   const q = queueOf(s), P = s.person.cols;
   if (!q.estates.length) return;
+  q.estates.sort((a, b) => a - b); // in the order of the persons, as a loaded state lists them
   q.estates = q.estates.filter((id) => P.role[id] !== ROLE.none && !succeed(s, q, id, day));
 }
 

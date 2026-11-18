@@ -16,6 +16,7 @@ import { bringInHarvest } from './systems/harvest';
 import { foundPersonCultures } from './systems/cultures';
 import { foundDeaths } from './systems/deaths';
 import { foundBirths } from './systems/families';
+import { foundMoves } from './systems/moves';
 import type { SetupState } from './setup';
 
 /** The fields of a WorldState in the order createWorldState writes them. */
@@ -194,11 +195,22 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     foundEconomy(s, w);
     s.v = 24;
   }
-  if (s.v === 24) { // 24 → 25: there is distance between the cities (economy feature 17): goods travel for days and
-    // carrying costs labour. Routes are given to cities that have not computed a day, so the economies are founded
-    // anew on the day the world has reached, as in the steps before. The persons stay who they are.
-    foundEconomy(s, w);
+  if (s.v === 24) { // 24 → 25: the unmarried move to other places and an heir comes home (src/sim/systems/moves.ts).
+    // The persons get the place they come from and the day of their next move, as a new world gives them on the day
+    // the world has reached: nobody has moved, so everybody comes from the place the person lives in. Nothing else
+    // changes.
+    const cols = s.person.cols as Record<string, Column>, fresh = makeColumns(PERSON_SCHEMA, s.person.alive.length) as Record<string, Column>;
+    for (const k of Object.keys(fresh)) if (k in cols) fresh[k] = cols[k]; // in the order of the schema
+    (s.person as { cols: unknown }).cols = fresh;
+    foundMoves(s);
     s.v = 25;
+  }
+  if (s.v === 25) { // 25 → 26: there is distance between the cities (economy feature 17): goods travel for days and
+    // carrying costs labour; and a firm and its owner are one household (economy feature 18). Routes are given to
+    // cities that have not computed a day, so the economies are founded anew on the day the world has reached, as in
+    // the steps before. The persons stay who they are.
+    foundEconomy(s, w);
+    s.v = 26;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one

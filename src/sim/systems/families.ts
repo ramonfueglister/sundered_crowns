@@ -26,13 +26,18 @@
 // groom of the town; the couple is a new family with the seat and the house, and the widower and the other children
 // stay in the house. Where the custom names nobody, or the heir finds no spouse that month, step 1 follows as it is.
 //
+// A child of the house who lives in another place (people feature 4, src/sim/systems/moves.ts) and has not married
+// there stands in the line with the others. Where the custom names him or her and a spouse is found in the town of
+// the house, the heir comes home on that day and takes the house; a part in the economy of the other place goes to
+// a successor there, and where nobody can take it the heir stays away and step 1 follows.
+//
 // A wife with a living husband bears a child every 33 months, less often as she nears 45. The day of her next birth
 // is drawn when she marries and after every birth (`person.bears`; the next-event method, as the deaths), and it is
 // void when her husband dies. A child gets its day of death at once.
 //
 // Assumptions without a source: the search windows, the youngest groom, that a widow under 45 marries again (the
 // program has neither men nor widows), nine months between births at the least, that brides and grooms are of
-// the town itself (nobody moves between towns yet), the ages from which an heir is grown, that the next child
+// the town of the house, the ages from which an heir is grown, that the next child
 // stands in for one who is not free, and that nothing waits for an heir under age (a guardian is not built: in a
 // probe the waiting left 1,200 to 1,700 households vacant and the world 5 to 9 % smaller after 100 years).
 import type { WorldState } from '../state';
@@ -42,7 +47,8 @@ import { MinHeap } from '../minheap';
 import { hash01 } from '../rng';
 import { spawn } from '../ecs';
 import { ageOn, bearChild } from './people';
-import { drawDeath, eventKey, livingIn, scheduleDeath } from './deaths';
+import { changeFamily, drawDeath, eventKey, livingIn, scheduleDeath } from './deaths';
+import { scheduleMove } from './moves';
 import { brideAge, yearsToBirth, AGE_WINDOW, BRIDE_YEARS, FERTILE_TO, GROOM_AGE_MIN, GROOM_OLDER, WIDOW_REMARRIES_BELOW } from '../people/marriage';
 import { customOf, heirOf, CUSTOM, type Child } from '../people/inheritance';
 
@@ -51,7 +57,7 @@ import { customOf, heirOf, CUSTOM, type Child } from '../people/inheritance';
  *  negative of the day the lot among the heirs. */
 const K = { birth: 50 } as const;
 /** What the weddings of a month did with the vacant households, for the checks. */
-export interface Passed { /** households that went to a new couple */ passed: number; /** of them to an heir who is a son */ sons: number; /** to an heiress */ daughters: number }
+export interface Passed { /** households that went to a new couple */ passed: number; /** of them to an heir who is a son */ sons: number; /** to an heiress */ daughters: number; /** heirs who came home from another place for it */ home?: number }
 const DAYS_PER_YEAR = 365.25;
 
 /** The births that are due, the earliest first: a heap over `person.bears`, built when a state is first seen. */
@@ -103,7 +109,7 @@ export function birthsTo(s: WorldState, day: number): number {
     P.bears[mother] = ALIVE;
     if (father < 0) continue; // her husband has died
     const id = bearChild(s, mother, father, due);
-    P.dies[id] = drawDeath(s, id, due); scheduleDeath(s, id);
+    P.dies[id] = drawDeath(s, id, due); scheduleDeath(s, id); scheduleMove(s, id, due);
     q.borne.set(mother, (q.borne.get(mother) ?? 0) + 1);
     expect(s, q, mother, due);
     n++;
@@ -124,6 +130,25 @@ export function weddingsOn(s: WorldState, day: number, tally?: Passed): number {
   }
   let n = 0;
   const age = (id: number) => ageOn(P.born[id], day);
+  // the children of the vacant houses who live in another place and are neither man nor woman of a family there
+  const awayKids = new Map<number, number[]>(), away = new Set<number>();
+  if (vacant.size) {
+    const vac = new Set<number>(); for (const l of vacant.values()) for (const f of l) vac.add(f);
+    for (let id = 0; id < s.person.size; id++) {
+      if (!s.person.alive[id] || P.died[id] !== ALIVE) continue;
+      const m = P.mother[id], fa = P.father[id], own = P.family[id];
+      const hf = m >= 0 && vac.has(P.family[m]) ? P.family[m] : fa >= 0 && vac.has(P.family[fa]) ? P.family[fa] : -1;
+      if (hf < 0 || F.place[own] === F.place[hf] || F.man[own] === id || F.woman[own] === id) continue;
+      const l = awayKids.get(hf); if (l) l.push(id); else awayKids.set(hf, [id]);
+      away.add(id);
+    }
+  }
+  /** The heir `h` who lives away comes home into the house `f`. False where the part in the economy holds the heir. */
+  const comeHome = (h: number, f: number): boolean => {
+    if (!changeFamily(s, h, f, day)) return false;
+    away.delete(h); if (tally) tally.home = (tally.home ?? 0) + 1;
+    return true;
+  };
   /** Brother and sister (one parent in common is enough), or parent and child. */
   const kin = (a: number, b: number) => (P.mother[a] >= 0 && P.mother[a] === P.mother[b]) || (P.father[a] >= 0 && P.father[a] === P.father[b]) ||
     P.mother[a] === b || P.father[a] === b || P.mother[b] === a || P.father[b] === a;
@@ -164,6 +189,7 @@ export function weddingsOn(s: WorldState, day: number, tally?: Passed): number {
         const l = (m >= 0 ? houses.get(P.family[m]) : undefined) ?? (fa >= 0 ? houses.get(P.family[fa]) : undefined);
         if (l) l.push(id);
       }
+      for (const [f, l] of houses) { const a = awayKids.get(f); if (a) l.push(...a); }
       for (const l of houses.values()) l.sort((a, b) => P.born[a] - P.born[b] || a - b);
     }
     /** The heir of the vacant household `f` by the custom of the children's father (their mother, where he is not known). */
@@ -180,14 +206,17 @@ export function weddingsOn(s: WorldState, day: number, tally?: Passed): number {
     for (const f of vacant.get(place) ?? []) {
       if (F.woman[f] >= 0) continue; // filled this month by the widower's wedding
       const h = heir(f);
-      if (h >= 0 && P.sex[h] === 1 && drop(men, h)) { // the heir takes a bride
+      const gone = h >= 0 && away.has(h); // the heir lives in another place
+      if (h >= 0 && P.sex[h] === 1 && (gone || drop(men, h))) { // the heir takes a bride
         const bride = take(women, brideAge(hash01(seed, f, day)), AGE_WINDOW.bride, h);
-        if (bride >= 0) { found(f, h, bride); if (tally) tally.sons++; expect(s, q, bride, day); n++; continue; }
-        men.push(h);
-      } else if (h >= 0 && P.sex[h] === 0 && drop(women, h)) { // the heiress takes a groom
+        if (bride >= 0 && (!gone || comeHome(h, f))) { found(f, h, bride); if (tally) tally.sons++; expect(s, q, bride, day); n++; continue; }
+        if (bride >= 0) women.push(bride);
+        if (!gone) men.push(h);
+      } else if (h >= 0 && P.sex[h] === 0 && (gone || drop(women, h))) { // the heiress takes a groom
         const groom = take(men, age(h) + GROOM_OLDER, AGE_WINDOW.groom, h);
-        if (groom >= 0) { found(f, groom, h); if (tally) tally.daughters++; expect(s, q, h, day); n++; continue; }
-        women.push(h);
+        if (groom >= 0 && (!gone || comeHome(h, f))) { found(f, groom, h); if (tally) tally.daughters++; expect(s, q, h, day); n++; continue; }
+        if (groom >= 0) men.push(groom);
+        if (!gone) women.push(h);
       }
       const bride = take(women, brideAge(hash01(seed, f, day)), AGE_WINDOW.bride);
       if (bride < 0) continue;
