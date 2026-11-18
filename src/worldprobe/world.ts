@@ -2,7 +2,7 @@
 // on the probe's grid, with rock, meadow and woods chosen from the real heights and the forest of the world's start
 // year (forest.ts; the forest cover of 1356 for a year without one).
 // On it stand the towns and villages (see settle.ts) and the fields the simulation has cultivated (arable.ts). North is at the top of the picture. No roads yet.
-import { Batch, hash2, noise2, rgb, seeded, smooth } from '../lookprobe/batch';
+import { Batch, hash2, noise2, rgb, seeded, shade, smooth } from '../lookprobe/batch';
 import { ACACIA, CYPRESS, JUNGLE, LEAVES, PALM, acacia, cypress, palm, tree } from '../lookprobe/blocks';
 import { type Ground, type GroundTraits, LAND_Y, Mat, N, SEA_Y, SUMMIT, idx, inGrid, measureShore, occlude, rockPillar } from '../lookprobe/layout';
 import type { Shape, StageScene } from '../lookprobe/stage';
@@ -22,7 +22,7 @@ import { unshade } from './mean';
 import { FARMS, FIELD_GROUND, LOT_BLOCKS, LOT_FILL, type Lot, type Monument, PEOPLE_PER_PERSON, type Settled, type Site, type Survey, type Told, farmsFor, firstHalf, raise, settle } from './settle';
 import { type Columns, columnsOf } from './nearground';
 import { MONUMENTS, bridge, m, modelOf, styleOf } from '../buildings';
-import { ROAD_KINDS, type Road, roadsIn, smoothPoints, wayOnGround } from './roads';
+import { ROAD_KINDS, type Road, relaxPoints, roadsIn, wayOnGround } from './roads';
 import { Matrix4 } from 'three';
 
 /**
@@ -90,12 +90,18 @@ const STANDS: ReadonlySet<number> = new Set([1, 2, 3, 5, 6, 7, 8, 9]);
 const STRAY_TREES = 0.01, CLOSED = 0.88;
 /** the ground takes the colour of a path up to about this many blocks from its line (lookprobe/terrain.ts topColor): a way's band edge is put there */
 const ROAD_SHOWS = 1.65;
-/** from afar a way colours the blocks it runs through by its width as a share of the block, this many times that for its verges, and never less than ROAD_LEAST */
-const ROAD_SEEN = 2.5, ROAD_LEAST = 0.85;
+/** from afar a way's band is at least this many blocks to each side of its line, by kind (track, road, highway) */
+const FAR_HALF = [0.35, 0.45, 0.55];
+/** from afar the cover of a block is taken off where its middle lies within this many blocks of a way's band (inside it when negative) */
+const FAR_CLEAR = 0.2;
 /** blocks to a way where none is near (finite, so that the corners can be blended) */
 const FAR_FROM_ROADS = 1e4;
+/** the surface of a way at the finest step lies this far over the averaged ground, and its verges reach this far down; its colours by kind (track, road, highway): beaten earth, the busier ways paler with gravel */
+const RIBBON_LIFT = 0.08, RIBBON_SKIRT = 1.5, RIBBON = [rgb(0x9c7f52), rgb(0xae9266), rgb(0xbca278)] as const;
 /** a way's height is the ground's under its line averaged over this many blocks before and after */
 const ROAD_EVEN = 6;
+/** the path a way finds over the columns is relaxed over this many blocks (roads.ts relaxPoints), so that it bends instead of stepping by 45 degrees */
+const WAY_SIGMA = 4;
 /** km to a degree of longitude at the equator */
 const KM_PER_DEGREE = 111.32;
 /** the ids of the hamlets, above those of the gazetteer's places: 256 to a town */
@@ -333,8 +339,8 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
 
   // the ways: lines on the ground (roads.ts). At the finest step a band of beaten earth `half` blocks to each side of
   // the line, which the ground's colour takes (terrain.ts `road`), with a bridge where it crosses a river; from afar
-  // the blocks a way runs through take its colour as far as it covers them, as the narrow rivers do.
-  const ways: { k: number; pts: [number, number][] }[] = [];
+  // the same band, never narrower than FAR_HALF blocks, with the woods taken off it.
+  const ways: { k: number; pts: [number, number][]; ys?: Float64Array }[] = [];
   if (roads) {
     const px0 = region.x0, py0 = region.y0, pw = region.w / region.cells, ph = region.h / region.cells;
     for (const r of roadsIn(roads, px0 - 1, py0 - 1, px0 + pw + 1, py0 + ph + 1)) {
@@ -347,7 +353,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   // at the finest step each way finds its path over the columns between pins of its line (roads.ts wayOnGround)
   if (step === 0 && ways.length) {
     const water = Uint8Array.from(g.wet, (w, i) => (w ? (kind[i] === Water.Land ? 1 : 2) : 0)), rocky = (i: number) => g.mat[i] === Mat.Rock;
-    for (const way of ways) way.pts = smoothPoints(wayOnGround(way.pts, ox, oz, N, g.h, rocky, water), 2);
+    for (const way of ways) way.pts = relaxPoints(wayOnGround(way.pts, ox, oz, N, g.h, rocky, water), WAY_SIGMA, 1);
   }
   /**
    * Blocks to the edge of the nearest way's band (negative inside it) at the corners of the columns, at the finest
@@ -355,9 +361,11 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
    * under its line, averaged over ROAD_EVEN blocks before and after, so that it climbs a hill as a ramp and is cut
    * into the rock of the mountains as a ledge.
    */
-  const roadEdge = step === 0 && ways.length ? new Float32Array((N + 1) * (N + 1)).fill(FAR_FROM_ROADS) : null, roadY = roadEdge ? new Float32Array((N + 1) * (N + 1)) : null;
-  if (roadEdge && roadY) for (const { k, pts } of ways) {
-    const half = ROAD_KINDS[k].half, reach = half + 3;
+  const roadEdge = ways.length && !(step === 1 && mean) ? new Float32Array((N + 1) * (N + 1)).fill(FAR_FROM_ROADS) : null, roadY = roadEdge ? new Float32Array((N + 1) * (N + 1)) : null;
+  if (roadEdge && roadY) for (const way of ways) {
+    const { k, pts } = way;
+    // from afar a way is never narrower than FAR_HALF, so that its line can be followed
+    const half = step === 0 ? ROAD_KINDS[k].half : Math.max(ROAD_KINDS[k].half / 2 ** step, FAR_HALF[k]), reach = half + 3;
     // the ground under the line, and the length along it
     const at = new Float64Array(pts.length), along = new Float64Array(pts.length), known = new Uint8Array(pts.length);
     pts.forEach(([x, z], q) => {
@@ -371,6 +379,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
       while (along[q] - along[lo] > ROAD_EVEN) { if (known[lo]) { sum -= at[lo]; n--; } lo++; }
       even[q] = n ? sum / n : at[q];
     }
+    way.ys = even;
     for (let s = 0; s + 1 < pts.length; s++) {
       const [ax, az] = pts[s], [bx, bz] = pts[s + 1], dx = bx - ax, dz = bz - az, len2 = dx * dx + dz * dz || 1e-9;
       const x0 = Math.max(0, Math.floor(Math.min(ax, bx) - reach)), x1 = Math.min(N, Math.ceil(Math.max(ax, bx) + reach));
@@ -392,10 +401,12 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     const i = idx(x, z), c = z * (N + 1) + x;
     if (g.wet[i] || roadAt(x + 0.5, z + 0.5) >= 0) continue;
     if (g.mat[i] === Mat.Rock) g.mat[i] = Mat.Grass;
+    if (step > 0) continue;
     // the column takes the way's height: the mean of its corners that lie on the way
     let sum = 0, n = 0;
     for (const j of [c, c + 1, c + N + 1, c + N + 2]) if (roadEdge[j] < 0.5) { sum += roadY[j]; n++; }
-    if (n) g.h[i] = g.occ[i] = Math.round(sum / n);
+    // just under the way's surface (the band below lies on it as a smooth ramp)
+    if (n) g.h[i] = g.occ[i] = Math.floor(sum / n + RIBBON_LIFT);
   }
   const bridges: { x: number; z: number; y: number; span: number; turn: number; width: number }[] = [];
   if (step === 0) for (const { k, pts } of ways) {
@@ -613,26 +624,37 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   // the bridges of the ways
   const turned = new Matrix4();
   for (const b of bridges) if (own(Math.floor(b.x), Math.floor(b.z))) { things.append(bridge(b.span, b.width), turned.makeRotationY(b.turn).setPosition(b.x, b.y, b.z)); counts.bridge = (counts.bridge ?? 0) + 1; }
-  // from afar the ways colour the blocks they run through; the first far step drawn as the mean of the finest has them already
-  if (cover && !(step === 1 && mean)) for (const { k, pts } of ways) {
-    const { half, colour } = ROAD_KINDS[k], share = Math.min(1, Math.max(ROAD_LEAST, ((2 * half) / 2 ** step) * ROAD_SEEN)), done = new Set<number>();
-    for (let s = 0; s + 1 < pts.length; s++) {
-      const [ax, az] = pts[s], [bx, bz] = pts[s + 1], len = Math.hypot(bx - ax, bz - az);
-      for (let t = 0; t <= len; t += 0.5) {
-        const x = Math.floor(ax + ((bx - ax) * t) / Math.max(len, 1e-6)), z = Math.floor(az + ((bz - az) * t) / Math.max(len, 1e-6));
-        if (!inGrid(x, z)) continue;
-        const i = idx(x, z);
-        if (done.has(i) || g.wet[i] || cover.town[i]) continue;
-        done.add(i);
-        if (g.mat[i] === Mat.Rock) g.mat[i] = Mat.Grass;
-        const was = cover.has[i] ? Math.min(cover.share[i], 1 - share) : 0, all = share + was;
-        for (let c = 0; c < 3; c++) cover.top[i * 3 + c] = (colour[c] * share + cover.top[i * 3 + c] * was) / all;
-        // what stood on the block (woods, a field's crop) is taken off: far.ts raised the ground by it
-        if (cover.has[i] && cover.rise[i] > 0) { g.h[i] -= cover.rise[i]; g.occ[i] = g.h[i]; }
-        if (!cover.has[i] || cover.rise[i] > 0) { cover.has[i] = 1; cover.rise[i] = 0; cover.side.set(colour, i * 3); if (cover.kind) cover.kind[i] = 0; }
-        cover.share[i] = all;
+  // at the finest step the way is a smooth band laid over the columns, not a colour of their tops: its surface follows
+  // its relaxed line and its averaged height, with verges down to the ground on both sides, so that it neither steps
+  // in plan nor in height
+  if (step === 0) for (const { k, pts, ys } of ways) {
+    if (!ys || pts.length < 2) continue;
+    const half = ROAD_KINDS[k].half, top = RIBBON[k], verge = shade(top, 0.8);
+    const across = (q: number): [number, number] => {
+      const a = pts[Math.max(0, q - 1)], b = pts[Math.min(pts.length - 1, q + 1)], dx = b[0] - a[0], dz = b[1] - a[1], len = Math.hypot(dx, dz) || 1;
+      return [(-dz / len) * half, (dx / len) * half];
+    };
+    for (let q = 0; q + 1 < pts.length; q++) {
+      const [ax, az] = pts[q], [bx, bz] = pts[q + 1];
+      if (!own(Math.floor((ax + bx) / 2), Math.floor((az + bz) / 2)) || !inGrid(Math.floor(ax), Math.floor(az)) || !inGrid(Math.floor(bx), Math.floor(bz))) continue;
+      if (g.wet[idx(Math.floor(ax), Math.floor(az))] || g.wet[idx(Math.floor(bx), Math.floor(bz))]) continue;
+      const [ux, uz] = across(q), [vx, vz] = across(q + 1), ya = ys[q] + RIBBON_LIFT, yb = ys[q + 1] + RIBBON_LIFT;
+      const grain = (x: number, z: number) => shade(top, 0.94 + 0.12 * hash2(Math.round(x * 2), Math.round(z * 2), 31));
+      things.quad([ax + ux, ya, az + uz], [bx + vx, yb, bz + vz], [bx - vx, yb, bz - vz], [ax - ux, ya, az - uz], [grain(ax + ux, az + uz), grain(bx + vx, bz + vz), grain(bx - vx, bz - vz), grain(ax - ux, az - uz)], [0, 1, 0]);
+      for (const side of [1, -1]) {
+        const out: [number, number, number] = [ux * side, 0, uz * side];
+        things.quad([ax + ux * side, ya, az + uz * side], [bx + vx * side, yb, bz + vz * side], [bx + vx * side, yb - RIBBON_SKIRT, bz + vz * side], [ax + ux * side, ya - RIBBON_SKIRT, az + uz * side], verge, out);
       }
+      counts.ribbon = (counts.ribbon ?? 0) + 1;
     }
+  }
+  // from afar what stands on a way's blocks (woods, crops) is taken off, so that the ground shows the way's band
+  // (terrain.ts colours it from the corners, a soft line rather than a row of blocks); far.ts raised the ground by it
+  if (cover && roadEdge && step > 0) for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
+    const i = idx(x, z);
+    if (!cover.has[i] || g.wet[i] || cover.town[i] || roadAt(x + 0.5, z + 0.5) >= FAR_CLEAR) continue;
+    if (cover.rise[i] > 0) { g.h[i] -= cover.rise[i]; g.occ[i] = g.h[i]; cover.rise[i] = 0; }
+    cover.has[i] = 0;
   }
   const traits: GroundTraits = {
     city: (x, z) => at((settled ?? cover!).town, x, z) === 1, plaza: () => Infinity, road: (x, z) => roadAt(x, z) + ROAD_SHOWS,

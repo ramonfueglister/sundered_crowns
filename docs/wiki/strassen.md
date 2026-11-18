@@ -12,15 +12,15 @@ Noch nicht dabei: die Römerstrassen und die Gough-Karte als Quelle (die Daten s
 
 ## Im Spiel
 
-- **Nah:** ein Band aus gestampfter Erde, das dem Gelände folgt. In den Bergen sucht jeder Weg seinen Pfad durchs Tal und ist als Absatz in den Fels geschnitten. Wälder sind entlang des Wegs offen, über Flüsse führen steinerne Brücken.
-- **Fern:** die Wege färben die Blöcke, durch die sie laufen. Pfade verschwinden zuerst, Hauptstrassen bleiben am längsten.
+- **Nah:** ein glattes Band aus gestampfter Erde, das in Kurven dem Gelände folgt, ohne Treppen im Grundriss und in der Höhe. In den Bergen sucht jeder Weg seinen Pfad durchs Tal und ist als Absatz in den Fels geschnitten. Wälder sind entlang des Wegs offen, über Flüsse führen steinerne Brücken.
+- **Fern:** die Wege färben den Boden als weiche Linie, die Wälder sind von ihnen genommen. Pfade verschwinden zuerst, Hauptstrassen bleiben am längsten.
 
 ## Das Modell
 
 1. **Kosten eines Schritts** über die Karte (ein Kartenpixel, in Mitteleuropa etwa 2 km): seine Länge mal 1 + (Steigung / 5 %)², höchstens das Zwölffache. Ein Fluss kostet beim Überqueren so viel wie ein Umweg vom Hundertfachen seiner Breite. Die Breite folgt aus der hydraulischen Geometrie: Breite ≈ 1,1 m · √(Einzugsgebiet in km²). Wo schon ein Weg liegt, kostet ein Schritt 55 %.
 2. **Netz.** Jede Stadt wird mit ihren sechs nächsten Nachbarn und mit allen Städten des Gabriel-Graphen verbunden (zwei Städte, zwischen denen keine dritte liegt). Die Paare werden in der Reihenfolge ihrer Bedeutung gelegt, Einwohner mal Einwohner durch Entfernung², jedes auf dem günstigsten Weg.
 3. **Verkehr und Art.** Auf dem fertigen Netz schickt jedes Paar von Städten Einwohner × Einwohner / Kosten² über seinen günstigsten Weg. Die 15 % der Weglänge mit dem meisten Verkehr sind Hauptstrassen, die nächsten 40 % Landstrassen, der Rest Pfade. So trägt der Weg über den Gotthard den Verkehr zwischen der Lombardei und Schwaben und wird Hauptstrasse, obwohl er zwei kleine Orte verbindet.
-4. **Nah.** Der Weg wird alle 24 Blöcke an seine Linie geheftet und sucht dazwischen den günstigsten Pfad über die Säulen: Länge, dazu 3 × (gekletterte Blöcke)², 2,5 mehr im Fels, 6 für eine Brücke. Seine Höhe ist die des Bodens unter ihm, gemittelt über 6 Blöcke.
+4. **Nah.** Der Weg wird alle 24 Blöcke an seine Linie geheftet und sucht dazwischen den günstigsten Pfad über die Säulen: Länge, dazu 3 × (gekletterte Blöcke)², 2,5 mehr im Fels, 6 für eine Brücke. Der Pfad wird danach entspannt (jeder Punkt geht zum gaussisch gewichteten Mittel seiner Nachbarn, σ = 4 Blöcke), so dass er sich biegt statt in Schritten von 45 Grad zu laufen. Seine Höhe ist die des Bodens unter ihm, gemittelt über 6 Blöcke. Gezeichnet wird er als eigene Fläche über den Säulen, mit Böschungen zum Boden hin; die Säulen unter ihm liegen knapp darunter.
 5. **Reisezeit.** Tage = Mühe / Tagesleistung. Tagesleistungen aus ORBIS: Ochsenkarren 12 km, schwer beladenes Maultier 20, Fussgänger 30, Reiter 56, schneller Wagen der Post 67. Auf einem Pfad gehen Waren mit Saumtieren statt mit Karren. Im Winter schaffen Pfade 60 %, Landstrassen 70 % und Hauptstrassen 80 % der Sommerleistung.
 
 ## Daten und Parameter
@@ -56,4 +56,3 @@ Ein Weg wird in der nahen Ansicht 1 bis 2 Blöcke breit gezeichnet, also über 1
 - Leopold und Maddock (1953): The hydraulic geometry of stream channels and some physiographic implications. USGS Professional Paper 252.
 - Scheidel, Meeks und Weiland (2012): ORBIS, The Stanford Geospatial Network Model of the Roman World.
 - Bogart, Rosevear und Shaw-Taylor (2026): A better ride. Explorations in Economic History.
-- Chaikin (1974): An algorithm for high speed curve generation. Computer Graphics and Image Processing 3.

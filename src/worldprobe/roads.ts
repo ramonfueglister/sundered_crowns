@@ -1,19 +1,18 @@
 // The ways of the world (public/data/roads_<year>.json, tools/roads/build_roads.ts): lines over the map from town to
 // town and from every place near them to the nearest way. world.ts draws them on the ground: at the finest step as a
-// band of beaten earth, from afar as a line of blocks coloured by how much of them the way covers, the busier ways
-// longer than the tracks.
-import { type RGB, rgb } from '../lookprobe/batch';
+// band of beaten earth, from afar as the same band drawn at least so wide that it can be followed, the busier
+// ways longer than the tracks.
 import { MinHeap } from '../sim/minheap';
 
 /**
  * The kinds of way. `half`: half the width drawn at the finest step, in finest blocks (some 130 m in middle Europe: a
  * way is drawn some ten times as wide as it was, as the rivers and the houses are; a diorama). `until`: the coarsest step
- * of the world graphic that still shows it (steps 0 … 7). `colour`: linear RGB of its surface.
+ * of the world graphic that still shows it (steps 0 … 7).
  */
-export const ROAD_KINDS: readonly { name: string; half: number; until: number; colour: RGB }[] = [
-  { name: 'track', half: 0.55, until: 2, colour: rgb(0x7d6847) },
-  { name: 'road', half: 0.8, until: 4, colour: rgb(0x8c7149) },
-  { name: 'highway', half: 1.05, until: 6, colour: rgb(0x9a7d52) },
+export const ROAD_KINDS: readonly { name: string; half: number; until: number }[] = [
+  { name: 'track', half: 0.55, until: 2 },
+  { name: 'road', half: 0.8, until: 4 },
+  { name: 'highway', half: 1.05, until: 6 },
 ];
 
 /** the file */
@@ -22,34 +21,43 @@ export interface RoadsJson { year: number; lines: { k: number; p: number[] }[]; 
 export interface Road { k: number; p: Float32Array; x0: number; y0: number; x1: number; y1: number }
 
 /**
- * The lines run from pixel middle to pixel middle; drawn as they are they zigzag. Each is smoothed by corner cutting
- * (Chaikin 1974), three rounds, its ends kept, and so becomes a curve that winds as the land does.
+ * A line relaxed into a curve: laid out at points `every` apart along its length, and each point moved to the
+ * Gaussian-weighted mean of the points about it (`sigma` along the line, in the line's units). The window is cut to
+ * the same length on both sides, so the ends stay where they are and two lines that meet still meet. A way laid
+ * over a grid of pixels or blocks runs in steps of 45 degrees; relaxed it bends as a road does.
  */
-export function smoothLine(p: readonly number[]): Float32Array {
-  let pts: number[] = [];
-  for (let i = 0; i < p.length; i += 2) pts.push(p[i] + 0.5, p[i + 1] + 0.5);
-  for (let round = 0; round < 3 && pts.length >= 6; round++) {
-    const out = [pts[0], pts[1]];
-    for (let i = 0; i + 3 < pts.length; i += 2) {
-      const ax = pts[i], ay = pts[i + 1], bx = pts[i + 2], by = pts[i + 3];
-      out.push(0.75 * ax + 0.25 * bx, 0.75 * ay + 0.25 * by, 0.25 * ax + 0.75 * bx, 0.25 * ay + 0.75 * by);
-    }
-    out.push(pts[pts.length - 2], pts[pts.length - 1]);
-    pts = out;
+export function relaxPoints(pts: readonly (readonly [number, number])[], sigma: number, every: number): [number, number][] {
+  if (pts.length < 3) return pts.map(([x, z]): [number, number] => [x, z]);
+  // even points along the line
+  const xs: number[] = [pts[0][0]], zs: number[] = [pts[0][1]];
+  let carry = 0;
+  for (let k = 0; k + 1 < pts.length; k++) {
+    const [ax, az] = pts[k], [bx, bz] = pts[k + 1], len = Math.hypot(bx - ax, bz - az);
+    let t = every - carry;
+    for (; t < len; t += every) { xs.push(ax + ((bx - ax) * t) / len); zs.push(az + ((bz - az) * t) / len); }
+    carry = len - (t - every);
   }
-  return Float32Array.from(pts);
+  const [lx, lz] = pts[pts.length - 1];
+  if (Math.hypot(lx - xs[xs.length - 1], lz - zs[zs.length - 1]) > every * 0.25) { xs.push(lx); zs.push(lz); } else { xs[xs.length - 1] = lx; zs[zs.length - 1] = lz; }
+  const n = xs.length, reach = Math.ceil((3 * sigma) / every), w = Array.from({ length: reach + 1 }, (_, k) => Math.exp(-0.5 * ((k * every) / sigma) ** 2));
+  const out: [number, number][] = [];
+  for (let i = 0; i < n; i++) {
+    const r = Math.min(reach, i, n - 1 - i);
+    let sx = 0, sz = 0, sw = 0;
+    for (let k = -r; k <= r; k++) { const wk = w[Math.abs(k)]; sx += xs[i + k] * wk; sz += zs[i + k] * wk; sw += wk; }
+    out.push([sx / sw, sz / sw]);
+  }
+  return out;
 }
 
-/** Corner cutting (Chaikin 1974) of points, `rounds` times, the ends kept. */
-export function smoothPoints(pts: readonly (readonly [number, number])[], rounds: number): [number, number][] {
-  let p = pts.map(([x, z]): [number, number] => [x, z]);
-  for (let r = 0; r < rounds && p.length >= 3; r++) {
-    const out: [number, number][] = [p[0]];
-    for (let i = 0; i + 1 < p.length; i++) out.push([0.75 * p[i][0] + 0.25 * p[i + 1][0], 0.75 * p[i][1] + 0.25 * p[i + 1][1]], [0.25 * p[i][0] + 0.75 * p[i + 1][0], 0.25 * p[i][1] + 0.75 * p[i + 1][1]]);
-    out.push(p[p.length - 1]);
-    p = out;
-  }
-  return p;
+/** a line of the map is relaxed over this many pixels (some 3 km in middle Europe), at points this far apart */
+export const LINE_SIGMA = 1.5, LINE_EVERY = 0.5;
+
+/** The line of a way in the middles of its map pixels, relaxed into a curve (`relaxPoints`). */
+export function smoothLine(p: readonly number[]): Float32Array {
+  const pts: [number, number][] = [];
+  for (let i = 0; i < p.length; i += 2) pts.push([p[i] + 0.5, p[i + 1] + 0.5]);
+  return Float32Array.from(relaxPoints(pts, LINE_SIGMA, LINE_EVERY).flat());
 }
 
 export const roadsOf = (j: RoadsJson): Road[] => j.lines.map((l) => {
