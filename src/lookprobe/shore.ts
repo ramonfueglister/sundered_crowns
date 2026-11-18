@@ -20,8 +20,6 @@ const SHORE_LOW = 0.6;
 const SHORE_THIN = 1.2, SHORE_BEND = 0.18;
 export const SAND = rgb(0xdcc790);
 
-const M = 2 * N, L = M + 1;
-
 /**
  * The share of land round every point of a lattice of half columns (corners, middles of edges, middles of columns),
  * less the level: over nought where the bank lies. Paved ground is no land here, a quay stays straight. Null where
@@ -31,6 +29,7 @@ export function shoreField(g: Ground): Float32Array | null {
   let any = false;
   for (let i = 0; i < N * N && !any; i++) any = g.wet[i] === 1;
   if (!any) return null;
+  const M = 2 * N, L = M + 1;
   const land = (x: number, z: number) => { const i = idx(Math.max(0, Math.min(N - 1, x)), Math.max(0, Math.min(N - 1, z))); return !g.wet[i] && g.mat[i] !== Mat.Paved ? 1 : 0; };
   // the bell curve, in half columns
   const reach = Math.ceil(6 * SHORE_BLUR), bell: number[] = [];
@@ -72,7 +71,7 @@ export function shoreField(g: Ground): Float32Array | null {
 
 /** The banks of the water of a ground (see the head of the file), added to the ground's mesh `b`. */
 export function buildShore(b: Batch, g: Ground, t: GroundTraits, baked = true, part: Part = { x0: 0, z0: 0, x1: N, z1: N }) {
-  const f = shoreField(g);
+  const f = shoreField(g), L = 2 * N + 1;
   if (!f) return;
   const ox = g.ox ?? 0, oz = g.oz ?? 0, UP: V3 = [0, 1, 0];
   /** the lowest land that touches a lattice point (or lies a column from it), and whether it is rock */
