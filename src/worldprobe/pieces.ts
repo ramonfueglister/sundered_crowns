@@ -30,6 +30,14 @@ import { BLENDS, COARSEST, FARTHEST, NEAREST, blendOf, elevationOf, reliefOf, st
 
 /** side of a piece in blocks; each is built on a ground of N blocks, so that it knows the land around it */
 const PIECE = 200, MARGIN = (N - PIECE) / 2;
+/**
+ * From this step on a piece is built on a smaller ground, with NARROW blocks of land around it: a town of the finest
+ * step is laid out from its middle and needs the wide margin, and the first far step is the mean of the finest. From
+ * there on the land a piece shows depends on no more than 17 to 28 blocks around it (the sky's share, the shore, the
+ * smoothing of rock, the mean of the forest; measured by building pieces at every margin and comparing all their
+ * triangles), and a ground of 264 blocks has 2.3 times fewer of them to work out than one of 400.
+ */
+const NARROW_FROM = 2, NARROW = 32;
 /** pieces are built ahead of need this far around the picture, as a share of its width */
 const AHEAD = 0.3;
 /** the pieces of the next finer step are built ahead once the view is within this factor of the width at which that step takes over */
@@ -95,12 +103,14 @@ export interface Pieces {
  * `ahead`: build the coarser step and the surroundings of the picture too (a tool that takes one picture does not
  * need them). `changed` is called whenever a piece has arrived.
  */
-export function createPieces(stage: Stage, o: { region: string; base: string; bakedSky: boolean; ahead: boolean; changed(): void; /** how many workers build the pieces (default: up to 4, one less than the machine's cores) */ workers?: number; /** the world's start year, whose towns are built */ year?: number; /** keeps the pieces on disk, under this name of the game's build (store.ts): pieces of another build are not read */ keep?: string; /** true: the first far step as the mean of the finest step (mean.ts: exact, but it builds four finest pieces for each far piece); 'compare': as far.ts lays it out, and measured against that mean (the counts `cmp …`); else as far.ts lays it out */ mean?: boolean | 'compare' }): Pieces {
+export function createPieces(stage: Stage, o: { region: string; base: string; bakedSky: boolean; ahead: boolean; changed(): void; /** how many workers build the pieces (default: up to 4, one less than the machine's cores) */ workers?: number; /** the world's start year, whose towns are built */ year?: number; /** blocks of land around a piece of the far steps, for measuring (default NARROW; 100 is the wide margin of the finest step) */ margin?: number; /** keeps the pieces on disk, under this name of the game's build (store.ts): pieces of another build are not read */ keep?: string; /** true: the first far step as the mean of the finest step (mean.ts: exact, but it builds four finest pieces for each far piece); 'compare': as far.ts lays it out, and measured against that mean (the counts `cmp …`); else as far.ts lays it out */ mean?: boolean | 'compare' }): Pieces {
   const held = new Map<string, Held>(), building = new Set<string>(), jobs = new Map<number, Spot>(), idle: Worker[] = [];
   const workers: Worker[] = [];
   const fine = createFine(stage, { still: !o.ahead, changed: o.changed });
   const pieces: Pieces = { look, failed: '', dispose: () => { for (const w of workers) w.terminate(); store?.terminate(); fine.dispose(); } };
   let nextId = 1, looks = 0, ticking = false, layout: Layout = { step: -1, coarse: 1, homeX: 0, homeZ: 0 };
+  /** blocks of land around a piece of a step on the ground it is built on */
+  const marginOf = (step: number) => (step >= NARROW_FROM ? Math.min(MARGIN, o.margin ?? NARROW) : MARGIN);
   /**
    * what the pieces of the finest step show, summed up for the pieces of the next step over them (mean.ts), the
    * last KEPT_SUMS of them: a piece of the first far step is the mean of the four finest under it, and need not
@@ -134,11 +144,11 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
     store.postMessage({ build: o.keep, room: ROOM } satisfies StoreAsk);
   }
   /** the name of a piece's file: all that the piece depends on, beside the build */
-  const fileOf = (p: Spot) => `${o.region}_${o.year ?? 0}_${p.step}_${p.px}_${p.pz}_${o.bakedSky ? 1 : 0}${o.mean ? 1 : 0}`;
+  const fileOf = (p: Spot) => `${o.region}_${o.year ?? 0}_${p.step}_${p.px}_${p.pz}_${o.bakedSky ? 1 : 0}${o.mean ? 1 : 0}_${marginOf(p.step)}`;
   const put = ({ spot, scene }: (typeof arrived)[number]) => {
     const group = stage.add(scene);
     group.visible = false;
-    const cells = scene.cells.map((c, k) => ({ key: `${spot.key}/${k}`, far: c.far.pos.length ? stage.more(group, c.far) : undefined, lots: c.lots, ground: c.ground, x: spot.px * PIECE - MARGIN + c.x, z: spot.pz * PIECE - MARGIN + c.z }));
+    const cells = scene.cells.map((c, k) => ({ key: `${spot.key}/${k}`, far: c.far.pos.length ? stage.more(group, c.far) : undefined, lots: c.lots, ground: c.ground, x: spot.px * PIECE - marginOf(spot.step) + c.x, z: spot.pz * PIECE - marginOf(spot.step) + c.z }));
     held.set(spot.key, { group, step: spot.step, px: spot.px, pz: spot.pz, cells, dots: [0, 1], seen: looks, on: false, laid: 0, warm: o.ahead ? 1 : 0 });
     building.delete(spot.key);
     for (const [name, n] of Object.entries(scene.counts)) stage.probe.counts[name] = (stage.probe.counts[name] ?? 0) + n;
@@ -249,9 +259,9 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
       queue.push(...ahead.slice(0, SPARE_WORKERS - sparing).reverse());
     }
     while (idle.length && queue.length) {
-      const next = queue.pop()!, worker = idle.pop()!, id = nextId++;
+      const next = queue.pop()!, worker = idle.pop()!, id = nextId++, margin = marginOf(next.step);
       jobs.set(id, next); building.add(next.key);
-      worker.postMessage({ id, step: next.step, keep: store ? { build: o.keep!, name: fileOf(next), kept: !listed || kept.has(fileOf(next)) } : undefined, piece: { ox: next.px * PIECE - MARGIN, oz: next.pz * PIECE - MARGIN, part: { x0: MARGIN, z0: MARGIN, x1: MARGIN + PIECE, z1: MARGIN + PIECE } }, region: o.region, base: o.base, bakedSky: o.bakedSky, year: o.year, mean: o.mean, under: next.step === 1 ? [0, 1, 2, 3].map((q) => sums.get(keyOf(0, next.px * 2 + (q & 1), next.pz * 2 + (q >> 1)))) : undefined } satisfies PieceJob);
+      worker.postMessage({ id, step: next.step, grid: margin === MARGIN ? undefined : PIECE + 2 * margin, keep: store ? { build: o.keep!, name: fileOf(next), kept: !listed || kept.has(fileOf(next)) } : undefined, piece: { ox: next.px * PIECE - margin, oz: next.pz * PIECE - margin, part: { x0: margin, z0: margin, x1: margin + PIECE, z1: margin + PIECE } }, region: o.region, base: o.base, bakedSky: o.bakedSky, year: o.year, mean: o.mean, under: next.step === 1 ? [0, 1, 2, 3].map((q) => sums.get(keyOf(0, next.px * 2 + (q & 1), next.pz * 2 + (q >> 1)))) : undefined } satisfies PieceJob);
     }
 
     // the store zips what it is given once the workers are through with what the picture is missing
@@ -300,7 +310,7 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
         stage.dissolve(h.group, 0, 0);
         const f = 2 ** (h.step - step), tall = f * reliefOf(v.wide, h.step);
         h.group.scale.set(f, tall, f);
-        h.group.position.set((h.px * PIECE - MARGIN) * f - layout.homeX, SEA_Y * (1 - tall), (h.pz * PIECE - MARGIN) * f - layout.homeZ);
+        h.group.position.set((h.px * PIECE - marginOf(h.step)) * f - layout.homeX, SEA_Y * (1 - tall), (h.pz * PIECE - marginOf(h.step)) * f - layout.homeZ);
         continue;
       }
       h.warm = 0; h.seen = looks; fading ||= !!h.fade;
@@ -315,7 +325,7 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
       // a piece of another step is scaled to the stage's blocks; all sink towards the sea's level as the view widens
       const f = 2 ** (h.step - step), tall = f * reliefOf(v.wide, h.step);
       h.group.scale.set(f, tall, f);
-      h.group.position.set((h.px * PIECE - MARGIN) * f - layout.homeX, SEA_Y * (1 - tall), (h.pz * PIECE - MARGIN) * f - layout.homeZ);
+      h.group.position.set((h.px * PIECE - marginOf(h.step)) * f - layout.homeX, SEA_Y * (1 - tall), (h.pz * PIECE - marginOf(h.step)) * f - layout.homeZ);
     }
     // the houses of the pieces in the picture, from their fine blocks where the view is near
     const cells: HouseCell[] = [];
