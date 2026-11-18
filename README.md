@@ -24,7 +24,8 @@ npm run dev        # the client at http://localhost:5173 (a browser with WebGPU)
 - `src/net/`: the wire protocol, the views the server sends, and the browser's connection.
 - `src/render/`: the WebGPU map.
 - `src/ui/`: the Preact interface.
-- `economy/`: the economy engine, a Rust shell around the port of BeforeIT.jl, built to WebAssembly
+- `economy/`: the economy engine, a Rust shell around the port of BeforeIT.jl (`economy/vendor/port-beforeit`, kept in
+  the repository since its own repository is gone), built to WebAssembly
   (`npm run economy:build`; needs the Rust toolchain). `data/economy/` holds its calibration table.
 - `server/`: the world server (`world.ts` core, `main.ts` WebSocket transport, `auth.ts`, `store.ts` for Supabase).
 - `supabase/migrations/`: accounts, worlds and seats with Row Level Security.

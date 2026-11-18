@@ -2,12 +2,13 @@
 #   docker build -f server/Dockerfile -t sundered-crowns-world .
 #   docker run -p 8787:8787 -v $PWD/world-data:/data --env-file .env sundered-crowns-world
 # ---- economy: the economy engine as one WebAssembly file (economy/: a shell around the port of BeforeIT.jl, which
-# economy/Cargo.toml pins to one commit; the compiler is the one of economy/rust-toolchain.toml)
+# lies in economy/vendor; the compiler is the one of economy/rust-toolchain.toml)
 FROM rust:1.88.0-slim AS economy
 WORKDIR /economy
 RUN rustup target add wasm32-unknown-unknown
 COPY economy/Cargo.toml economy/Cargo.lock economy/rust-toolchain.toml ./
 COPY economy/src ./src
+COPY economy/vendor ./vendor
 RUN cargo build --release --locked --lib --target wasm32-unknown-unknown
 
 # ---- build: bundle server + simulation into one ES module
