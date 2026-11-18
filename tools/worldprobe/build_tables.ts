@@ -2,7 +2,7 @@
 // graphic draws those pieces without building them (src/worldprobe/table.ts; the worker reads them,
 // src/worldprobe/piece.worker.ts).
 //
-// Every piece of the steps 4 to 7 that reaches into the world's frame is built once as the worker builds it
+// Every piece of the steps 3 to 7 that reaches into the world's frame is built once as the worker builds it
 // (src/worldprobe/build.ts), and the table of its columns is kept: <step>/<px>_<pz>.bin.gz. index.json lists the
 // pieces that have a table and those that are open sea, and holds a stamp of every file the tables were built from.
 //
@@ -30,7 +30,7 @@ import { type TablesIndex, keepTables, packTable, tabled } from '../../src/world
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '../..');
 const year = Number(process.argv[2] ?? 1291), base = '/', name = 'world';
 /** the pieces of the world graphic and the ground a far piece is built on: 200 blocks a side with 32 round them (src/worldprobe/pieces.ts PIECE, NARROW) */
-const PIECE = 200, MARGIN = 32, SIDE = PIECE + 2 * MARGIN, STEPS = [4, 5, 6, 7];
+const PIECE = 200, MARGIN = 32, SIDE = PIECE + 2 * MARGIN, STEPS = [3, 4, 5, 6, 7];
 const checking = process.argv[3] === 'check', steps = !checking && process.argv[3] ? process.argv[3].split(',').map(Number) : STEPS;
 const dir = resolve(ROOT, `public/map/tables/${name}_${year}`);
 /** the files of public/ the tables were built from, each with a stamp of its content */

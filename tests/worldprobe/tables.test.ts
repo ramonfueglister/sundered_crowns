@@ -43,9 +43,10 @@ describe('the kept tables of the far pieces', () => {
     });
     afterAll(() => { globalThis.fetch = fetched; keepTables(false); });
 
-    // Paris lies in these: a piece of the finest of the kept steps and the one of the coarsest step over it. What
-    // changes the land's shape or cover in the code (world.ts, far.ts) changes these too.
-    it.each([[4, 19, -8], [7, 2, -1]])('step %i piece %i,%i is what the build gives now', async (step, px, pz) => {
+    // Paris lies in these: a piece of the finest of the kept steps, the one of the next step over it and the one of
+    // the coarsest step over both. What changes the land's shape or cover in the code (world.ts, far.ts) changes
+    // these too.
+    it.each([[3, 38, -16], [4, 19, -8], [7, 2, -1]])('step %i piece %i,%i is what the build gives now', async (step, px, pz) => {
       const margin = (index.side - index.piece) / 2, piece = { ox: px * index.piece - margin, oz: pz * index.piece - margin, part: { x0: margin, z0: margin, x1: margin + index.piece, z1: margin + index.piece } };
       keepTables(true);
       const built = await buildPiece({ region: index.region, base: '/', bakedSky: true, year: YEAR, grid: index.side }, step, piece), table = tabled();
