@@ -7,7 +7,8 @@ import { newWorldState, loadSetup } from '../tools/sim/load';
 import { advanceDay } from '../src/sim/engine';
 import { FIGURE, FIGURES } from '../src/sim/economy/engine';
 import { ROLE, WORKING_AGE, rateOfOtherWomen, workforce } from '../src/sim/systems/work';
-import { BASKET_AGE, basketsOf, writeHouseholds } from '../src/sim/systems/household';
+import { BASKET_AGE, FOOD_SECTOR, basketsOf, foodPrices, writeHouseholds } from '../src/sim/systems/household';
+import { calibrateEconomy, foodNeedCost } from '../src/sim/economy/calibration';
 import { foundEconomy } from '../src/sim/systems/economy';
 import { ageOn } from '../src/sim/systems/people';
 import { hash01 } from '../src/sim/rng';
@@ -202,16 +203,61 @@ describe('the purse of a family', () => {
     expect(Buffer.from(model).equals(Buffer.from(s.economy.cities!.model))).toBe(true);
     // and writing it again changes nothing
     const hash = hashState(s);
-    writeHouseholds(s);
+    writeHouseholds(s, w);
     expect(hashState(s)).toBe(hash);
   });
   it('is 0 in a world without economies', () => {
     const none = decodeState(encodeState(s)); none.economy = { cities: null };
-    writeHouseholds(none);
-    for (const k of ['persons', 'working', 'baskets', 'income', 'spent', 'savings'] as const) expect(none.family.cols[k].every((v) => v === 0)).toBe(true);
+    writeHouseholds(none, w);
+    for (const k of ['persons', 'working', 'baskets', 'income', 'spent', 'savings', 'need', 'fed'] as const) expect(none.family.cols[k].every((v) => v === 0)).toBe(true);
     expect(none.person.cols.consumed.every((v) => v === 0)).toBe(true);
     expect(personDetail(none, 0, () => 'x')!.household).toBeNull();
     expect(householdRows(personDetail(none, 0, () => 'x')!)).toEqual([]);
+  });
+});
+
+describe('the need of food (economy feature 15)', () => {
+  const F = s.family.cols, e = s.economy.cities!, t = w.cityEconomies.table;
+  const city = new Map<number, number>(Array.from(e.places, (p, k) => [p, k]));
+  it('costs what the table says: the food England buys per head, at 2,100 of its 2,042 kilocalories', () => {
+    const a = calibrateEconomy(t).accounts as { households: number[]; people: number };
+    expect(t.cities.food_need_kcal.value).toBe(2100); expect(t.inputs.food_kcal_per_head.value).toBe(2042);
+    near(w.cityEconomies.foodNeed, foodNeedCost(t));
+    near(foodNeedCost(t), a.households[0] / a.people / 365 * 2100 / 2042);
+    // about a third of a penny a day for a basket
+    expect(foodNeedCost(t) * 240).toBeGreaterThan(0.34); expect(foodNeedCost(t) * 240).toBeLessThan(0.42);
+    expect(pence(foodNeedCost(t))).toBe('0,4 d');
+  });
+  it('follows the price of the agriculture of the city: the mean price of its farms by what they made', () => {
+    const price = foodPrices(s), X = s.firm.cols;
+    expect(price.length).toBe(e.places.length);
+    for (let k = 0; k < price.length; k++) {
+      let made = 0, value = 0;
+      for (let f = e.firm0[k]; f < e.firm0[k + 1]; f++) if (X.sector[f] === FOOD_SECTOR) { made += X.output[f]; value += X.output[f] * X.price[f]; }
+      expect(made).toBeGreaterThan(0);
+      near(price[k], value / made);
+      expect(price[k]).toBeGreaterThan(0.8); expect(price[k]).toBeLessThan(1.25); // 20 days after a start at 1
+    }
+    expect(Array.from(foodPrices(start)).every((v) => Math.abs(v - 1) < 1e-6)).toBe(true);
+  });
+  it('is the baskets of the family at that cost, and the family is fed by the part of it that it spent', () => {
+    const price = foodPrices(s);
+    let families = 0, short = 0, full = 0;
+    for (let f = 0; f < s.family.size; f++) {
+      const k = city.get(F.place[f]);
+      if (k === undefined || F.baskets[f] === 0) { expect(F.need[f]).toBe(0); expect(F.fed[f]).toBe(0); continue; }
+      families++;
+      near(F.need[f], F.baskets[f] * w.cityEconomies.foodNeed * price[k]);
+      near(F.fed[f] + 1, Math.min(1, F.spent[f] / F.need[f]) + 1);
+      if (F.fed[f] < 1) short++; else full++;
+    }
+    expect(families).toBeGreaterThan(6000);
+    // most families cover their need; some do not: those nobody of whom works, and the poorest
+    expect(full / families).toBeGreaterThan(0.75);
+    expect(short).toBeGreaterThan(0);
+    const nobody = Array.from({ length: s.family.size }, (_, f) => f).filter((f) => city.has(F.place[f]) && F.baskets[f] > 0 && F.spent[f] === 0);
+    expect(nobody.length).toBeGreaterThan(0);
+    for (const f of nobody) expect(F.fed[f]).toBe(0);
   });
 });
 
@@ -249,6 +295,21 @@ describe('the state', () => {
     expect(up.economy.cities!.halted).toBe('');
     expect(up.family.cols.income.some((v) => v > 0)).toBe(true);
   }, 60_000);
+  it('of a world from before feature 15 gets the need by the upgrade: the economies are founded anew with households that spend out of savings', () => {
+    const old = decodeState(encodeState(s)) as any;
+    delete old.family.cols.need; delete old.family.cols.fed; old.v = 20;
+    const up = upgradeState(decodeState(encodeState(old)), w, () => loadSetup(1356));
+    expect(up.v).toBe(STATE_VERSION);
+    expect(Object.keys(up.family.cols)).toEqual(Object.keys(FAMILY_SCHEMA));
+    const founded = decodeState(encodeState(s)); foundEconomy(founded, w);
+    expect(hashState(up)).toBe(hashState(founded));
+    const c = up.economy.cities!;
+    expect(c.day).toBe(s.day); expect(c.years.length).toBe(0);
+    for (let k = 0; k < c.places.length; k++) expect(c.figures[k * FIGURES + FIGURE.periods]).toBe(0);
+    advanceDay(up, w); advanceDay(up, w);
+    expect(up.economy.cities!.halted).toBe('');
+    expect(up.family.cols.fed.some((v) => v === 1)).toBe(true);
+  }, 60_000);
 });
 
 describe('a household', () => {
@@ -256,7 +317,7 @@ describe('a household', () => {
   const child = Array.from({ length: s.person.size }, (_, id) => id).find((id) => ageOn(P.born[id], s.day) < 15 && F.working[P.family[id]] > 0)!;
   it('is given by the server with every person of the family', () => {
     const f = P.family[child], h = personHousehold(s, child)!;
-    expect(h).toEqual({ persons: F.persons[f], working: F.working[f], baskets: F.baskets[f], income: F.income[f], spent: F.spent[f], savings: F.savings[f], consumed: P.consumed[child] });
+    expect(h).toEqual({ persons: F.persons[f], working: F.working[f], baskets: F.baskets[f], income: F.income[f], spent: F.spent[f], savings: F.savings[f], consumed: P.consumed[child], need: F.need[f], fed: F.fed[f] });
     expect(h.persons).toBeGreaterThan(1); expect(h.income).toBeGreaterThan(0); expect(h.consumed).toBeGreaterThan(0);
     expect(personDetail(s, child, () => 'x')!.household).toEqual(h);
     expect(personDetail(s, child, () => 'x')!.economy).toMatchObject({ role: 'none', income: 0, spent: 0 });
@@ -264,12 +325,13 @@ describe('a household', () => {
     expect(personHousehold(s, F.man[f])).toMatchObject({ persons: h.persons, income: h.income, spent: h.spent, savings: h.savings });
     near(personHousehold(s, F.man[f])!.consumed, 2 * h.consumed);
   });
-  it('is shown in the panel: persons, those who work, income, spending, the person\'s own consumption and the savings', () => {
+  it('is shown in the panel: persons, those who work, income, spending, the person\'s own consumption, the savings, and the need of food with the part covered', () => {
     const d = personDetail(s, child, () => 'x')!, h = d.household!;
     expect(householdRows(d)).toEqual([
       ['Personen', String(h.persons)], ['davon erwerbstätig', String(h.working)],
       ['Einkommen am Tag', pence(h.income)], ['Ausgaben am Tag', pence(h.spent)],
       ['Eigener Verbrauch am Tag', pence(h.consumed)], ['Erspartes', lsd(h.savings)],
+      ['Nahrungsbedarf am Tag', pence(h.need)], ['davon gedeckt', `${Math.round(100 * h.fed)} %`],
     ]);
   });
 });

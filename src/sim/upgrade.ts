@@ -94,7 +94,7 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     }
     if (!hadDied) s.person.cols.died.fill(ALIVE);
     if (!hadHolder) s.realm.cols.holder.fill(-1);
-    if (!s.named) { s.named = []; foundRulers(s, w); writeHouseholds(s); } // their families count in the purses, as in a new world
+    if (!s.named) { s.named = []; foundRulers(s, w); writeHouseholds(s, w); } // their families count in the purses, as in a new world
     s.v = 16;
   }
   if (s.v === 16) { // 16 → 17: the families who live from agriculture live in hamlets outside the walls of their town,
@@ -140,6 +140,17 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     (s.family as { cols: unknown }).cols = fresh;
     foundLots(s, w.ground, w.dry);
     s.v = 20;
+  }
+  if (s.v === 20) { // 20 → 21: households spend out of their savings, and a family has a need of food (economy
+    // feature 15). The families get the two columns of the need. The rule of the households changes what every city
+    // computes, so the economies are founded anew on the day the world has reached, as in the steps to 12 and 14:
+    // their days and yearly figures are gone, and the first period is the next day of the world. Nobody has been
+    // born or has died.
+    const cols = s.family.cols as Record<string, Column>, fresh = makeColumns(FAMILY_SCHEMA, s.family.alive.length) as Record<string, Column>;
+    for (const k of Object.keys(fresh)) if (k in cols) fresh[k] = cols[k]; // in the order of the schema
+    (s.family as { cols: unknown }).cols = fresh;
+    foundEconomy(s, w);
+    s.v = 21;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one

@@ -105,6 +105,17 @@ impl Economy {
         Ok(self)
     }
 
+    /// The same economy with households that spend out of their savings from now on (economy feature 15, [`clock`]):
+    /// per period the share `share` of what a household holds above its target, the deposits the calibration gives
+    /// the households relative to their budgets. 0 is the rule of the port.
+    pub fn with_savings_spent(mut self, share: f64) -> Result<Economy, String> {
+        if !(0.0..=1.0).contains(&share) {
+            return Err(format!("a share of {share} of the savings spent per period: between 0 and 1"));
+        }
+        self.model.ext.savings = share;
+        Ok(self)
+    }
+
     /// Computes `periods` periods: the port's `run`, one step and one row of its national accounts per period. No
     /// rule of the port reads these rows. Of every new row the clock keeps the series that [`Economy::figures`]
     /// sums, for the last `window` periods ([`clock::DailyClock::accounts`]); of the port's rows only the last
@@ -391,7 +402,7 @@ pub mod abi {
 
     /// The cities of a list as [`sce_create`] takes it: for every city the 64-bit seed, then the parameters and the
     /// initial conditions of the port (JSON), each with its length in 32 bits before it; all little endian.
-    fn cities(mut list: &[u8], plan: usize, window: usize, wage: u32, prices: u32) -> Result<Cities, String> {
+    fn cities(mut list: &[u8], plan: usize, window: usize, wage: u32, prices: u32, savings: f64) -> Result<Cities, String> {
         fn take<'a>(list: &mut &'a [u8], n: usize) -> Result<&'a [u8], String> {
             if list.len() < n {
                 return Err(format!("the list of cities ends {} bytes early", n - list.len()));
@@ -419,6 +430,7 @@ pub mod abi {
             let e = Economy::new(p, ic, seed, plan, window).map_err(|e| format!("city {c}: {e}"))?;
             let e = if wage == 1 { e.with_wages_in_money() } else { e };
             let e = if prices == 1 { e.with_demand_pull().map_err(|e| format!("city {c}: {e}"))? } else { e };
+            let e = e.with_savings_spent(savings).map_err(|e| format!("city {c}: {e}"))?;
             // the cities of the game run for centuries: their past has a fixed size
             all.push(e.with_bounded_past());
         }
@@ -448,16 +460,17 @@ pub mod abi {
     /// port's parameters and initial conditions as JSON, each with its length in 32 bits before it) and the two
     /// lengths of the daily clock ([`Economy::new`], [`Cities::new`]) and the kind of wages: 0 for the port's wage
     /// that follows the consumer prices, 1 for the wage in money ([`Economy::with_wages_in_money`]); and the kind
-    /// of prices: 0 for the paper's rule of costs, 1 for the demand pull of CANVAS ([`Economy::with_demand_pull`]).
-    /// Result: their state.
+    /// of prices: 0 for the paper's rule of costs, 1 for the demand pull of CANVAS ([`Economy::with_demand_pull`]);
+    /// and the share of the savings above their target that households spend per period, 0 for the port's rule
+    /// ([`Economy::with_savings_spent`]). Result: their state.
     ///
     /// # Safety
     ///
     /// The pointer and the length describe memory from [`sce_alloc`] that the caller has filled.
     #[unsafe(no_mangle)]
-    pub unsafe extern "C" fn sce_create(list: *const u8, len: usize, plan: u32, window: u32, wage: u32, prices: u32) -> u32 {
+    pub unsafe extern "C" fn sce_create(list: *const u8, len: usize, plan: u32, window: u32, wage: u32, prices: u32, savings: f64) -> u32 {
         hook();
-        answer(cities(unsafe { bytes(list, len) }, plan as usize, window as usize, wage, prices).map(keep))
+        answer(cities(unsafe { bytes(list, len) }, plan as usize, window as usize, wage, prices, savings).map(keep))
     }
 
     /// Computes `periods` periods from a state. Result: the state after them.

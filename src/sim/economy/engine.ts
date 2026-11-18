@@ -55,7 +55,9 @@ export type EconomyWage = 'prices' | 'money';
  *  CANVAS (supply or price changes by the gap between the demand it met and the supply it had planned). */
 export type EconomyPrices = 'costs' | 'demand';
 /** The rules of the cities that the calibration chooses. */
-export interface EconomyRules { wage: EconomyWage; prices: EconomyPrices }
+/** `savings`: the share of what a household holds above its target that it spends per period (economy feature 15,
+ *  economy/src/clock.rs); 0 is the port's rule, a household that spends out of its income only. */
+export interface EconomyRules { wage: EconomyWage; prices: EconomyPrices; savings: number }
 
 /** What the engine is given for a city: the port's parameters and initial conditions (JSON text) and the seed of
  *  the city's random numbers. */
@@ -84,7 +86,7 @@ export interface EconomyEngine {
 interface Exports {
   memory: WebAssembly.Memory;
   sce_alloc(len: number): number; sce_free(ptr: number, len: number): void;
-  sce_create(list: number, len: number, plan: number, window: number, wage: number, prices: number): number;
+  sce_create(list: number, len: number, plan: number, window: number, wage: number, prices: number, savings: number): number;
   sce_step(state: number, len: number, periods: number): number;
   sce_figures(state: number, len: number): number;
   sce_checks(state: number, len: number): number;
@@ -141,11 +143,12 @@ export function wasmEconomyEngine(wasm: Uint8Array): EconomyEngine {
   }
 
   return {
-    create(cities, clock, { wage, prices }) {
+    create(cities, clock, { wage, prices, savings }) {
       for (const n of [clock.plan, clock.window]) if (!Number.isInteger(n) || n < 1 || n > 0xffff) throw new Error(`${n} is not a length of the economy's clock`);
       if (wage !== 'prices' && wage !== 'money') throw new Error(`${wage} is not a way to pay wages: 'prices' or 'money'`);
       if (prices !== 'costs' && prices !== 'demand') throw new Error(`${prices} is not a way to set prices: 'costs' or 'demand'`);
-      return call([list(cities)], (e, a) => e.sce_create(a[0], a[1], clock.plan, clock.window, wage === 'money' ? 1 : 0, prices === 'demand' ? 1 : 0));
+      if (!(savings >= 0 && savings <= 1)) throw new Error(`${savings} is not a share of the savings spent per period`);
+      return call([list(cities)], (e, a) => e.sce_create(a[0], a[1], clock.plan, clock.window, wage === 'money' ? 1 : 0, prices === 'demand' ? 1 : 0, savings));
     },
     step(state, periods) {
       if (!Number.isInteger(periods) || periods < 0) throw new Error(`${periods} is not a number of periods`);
