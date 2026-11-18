@@ -48,33 +48,60 @@ export class Batch {
   /** Makes room for this many triangles at once, where a builder knows about how many are to come: a batch that grows on its own is copied each time it doubles. */
   reserve(triangles: number) { this.room(triangles * 9 - this.filled, triangles * 9 - this.tinted); }
 
-  /** One triangle. If `facing` is given, the corners are reordered so that the normal points that way. */
+  /** A triangle a → b → c; with `facing`, it is turned to face that way. */
   tri(a: V3, b: V3, c: V3, ca: RGB, cb: RGB = ca, cc: RGB = ca, facing?: V3) {
-    const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2];
-    const vx = c[0] - a[0], vy = c[1] - a[1], vz = c[2] - a[2];
+    if (facing) this.triAt(a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1], c[2], ca, cb, cc, facing[0], facing[1], facing[2]);
+    else this.triAt(a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1], c[2], ca, cb, cc);
+  }
+
+  /**
+   * `tri` with its corners and its facing as numbers (a facing of noughts turns nothing, as none does). The builders
+   * of the ground use this and `quadAt`: a corner handed over as a list of three numbers costs the list, and more
+   * than that where corners on whole numbers and corners on fractions pass through the same place, for the engine
+   * keeps the two as lists of different kinds and repacks the one into the other, corner by corner (with the next
+   * note a tenth of what a worker takes for a far piece). The colours stay lists: they should all hold fractions,
+   * so a colour of whole numbers is best kept as one constant, not written out where it is used.
+   */
+  triAt(ax: number, ay: number, az: number, bx: number, by: number, bz: number, cx: number, cy: number, cz: number, ca: RGB, cb: RGB = ca, cc: RGB = ca, fx = 0, fy = 0, fz = 0) {
+    const ux = bx - ax, uy = by - ay, uz = bz - az;
+    const vx = cx - ax, vy = cy - ay, vz = cz - az;
     let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
     // (along an axis the length is the one number that is not nought, as the root of the squares gives it too)
     const len = nx === 0 ? (ny === 0 ? Math.abs(nz) : nz === 0 ? Math.abs(ny) : Math.hypot(nx, ny, nz)) : ny === 0 && nz === 0 ? Math.abs(nx) : Math.hypot(nx, ny, nz);
     if (len < 1e-9) return;
     nx /= len; ny /= len; nz /= len;
-    if (facing && nx * facing[0] + ny * facing[1] + nz * facing[2] < 0) {
-      [b, c] = [c, b]; [cb, cc] = [cc, cb]; nx = -nx; ny = -ny; nz = -nz;
-    }
     this.room(9, 9);
     const i = this.filled, j = this.tinted, p = this.p, n = this.n, t = this.c;
-    p[i] = a[0]; p[i + 1] = a[1]; p[i + 2] = a[2]; p[i + 3] = b[0]; p[i + 4] = b[1]; p[i + 5] = b[2]; p[i + 6] = c[0]; p[i + 7] = c[1]; p[i + 8] = c[2];
+    p[i] = ax; p[i + 1] = ay; p[i + 2] = az;
+    t[j] = ca[0]; t[j + 1] = ca[1]; t[j + 2] = ca[2];
+    if (nx * fx + ny * fy + nz * fz < 0) {
+      // turned over: b and c change places, and their colours with them
+      nx = -nx; ny = -ny; nz = -nz;
+      p[i + 3] = cx; p[i + 4] = cy; p[i + 5] = cz; p[i + 6] = bx; p[i + 7] = by; p[i + 8] = bz;
+      t[j + 3] = cc[0]; t[j + 4] = cc[1]; t[j + 5] = cc[2]; t[j + 6] = cb[0]; t[j + 7] = cb[1]; t[j + 8] = cb[2];
+    } else {
+      p[i + 3] = bx; p[i + 4] = by; p[i + 5] = bz; p[i + 6] = cx; p[i + 7] = cy; p[i + 8] = cz;
+      t[j + 3] = cb[0]; t[j + 4] = cb[1]; t[j + 5] = cb[2]; t[j + 6] = cc[0]; t[j + 7] = cc[1]; t[j + 8] = cc[2];
+    }
     n[i] = nx; n[i + 1] = ny; n[i + 2] = nz; n[i + 3] = nx; n[i + 4] = ny; n[i + 5] = nz; n[i + 6] = nx; n[i + 7] = ny; n[i + 8] = nz;
-    t[j] = ca[0]; t[j + 1] = ca[1]; t[j + 2] = ca[2]; t[j + 3] = cb[0]; t[j + 4] = cb[1]; t[j + 5] = cb[2]; t[j + 6] = cc[0]; t[j + 7] = cc[1]; t[j + 8] = cc[2];
     this.filled = i + 9; this.tinted = j + 9;
   }
 
   /** A planar quad a → b → c → d (around its edge), one colour or one per corner. */
   quad(a: V3, b: V3, c: V3, d: V3, color: RGB | readonly [RGB, RGB, RGB, RGB], facing?: V3) {
-    const per = typeof color[0] !== 'number';
+    // (asked by the count first: a look into a list of numbers at the place where lists of colours are looked into as
+    // well makes the engine repack every list of numbers that comes by into one of boxed numbers)
+    const per = color.length === 4 && typeof color[0] !== 'number';
     const ca = per ? (color as readonly RGB[])[0] : color as RGB, cb = per ? (color as readonly RGB[])[1] : ca;
     const cc = per ? (color as readonly RGB[])[2] : ca, cd = per ? (color as readonly RGB[])[3] : ca;
-    this.tri(a, b, c, ca, cb, cc, facing);
-    this.tri(a, c, d, ca, cc, cd, facing);
+    if (facing) this.quadAt(a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1], c[2], d[0], d[1], d[2], ca, cb, cc, cd, facing[0], facing[1], facing[2]);
+    else this.quadAt(a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1], c[2], d[0], d[1], d[2], ca, cb, cc, cd);
+  }
+
+  /** `quad` with its corners and its facing as numbers and a colour to each corner (see `triAt`). */
+  quadAt(ax: number, ay: number, az: number, bx: number, by: number, bz: number, cx: number, cy: number, cz: number, dx: number, dy: number, dz: number, ca: RGB, cb: RGB, cc: RGB, cd: RGB, fx = 0, fy = 0, fz = 0) {
+    this.triAt(ax, ay, az, bx, by, bz, cx, cy, cz, ca, cb, cc, fx, fy, fz);
+    this.triAt(ax, ay, az, cx, cy, cz, dx, dy, dz, ca, cc, cd, fx, fy, fz);
   }
 
   /** A fan around `centre` through `rim` (closed shapes: repeat the first rim point at the end). */
@@ -88,14 +115,13 @@ export class Batch {
    * the sun (-x and +z), for things whose shaded side has its own hue, such as foliage.
    */
   box(x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, color: RGB, o: { top?: RGB; foot?: number; bottom?: boolean; away?: RGB } = {}) {
-    const lo = shade(color, o.foot ?? 1), side: readonly [RGB, RGB, RGB, RGB] = [lo, lo, color, color];
-    const dark = o.away ?? color, darkLo = shade(dark, o.foot ?? 1), far: readonly [RGB, RGB, RGB, RGB] = [darkLo, darkLo, dark, dark];
-    this.quad([x0, y1, z0], [x0, y1, z1], [x1, y1, z1], [x1, y1, z0], o.top ?? color, [0, 1, 0]);
-    if (o.bottom) this.quad([x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1], lo, [0, -1, 0]);
-    this.quad([x1, y0, z0], [x1, y0, z1], [x1, y1, z1], [x1, y1, z0], side, [1, 0, 0]);
-    this.quad([x0, y0, z1], [x0, y0, z0], [x0, y1, z0], [x0, y1, z1], far, [-1, 0, 0]);
-    this.quad([x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1], far, [0, 0, 1]);
-    this.quad([x1, y0, z0], [x0, y0, z0], [x0, y1, z0], [x1, y1, z0], side, [0, 0, -1]);
+    const lo = shade(color, o.foot ?? 1), dark = o.away ?? color, darkLo = shade(dark, o.foot ?? 1), top = o.top ?? color;
+    this.quadAt(x0, y1, z0, x0, y1, z1, x1, y1, z1, x1, y1, z0, top, top, top, top, 0, 1, 0);
+    if (o.bottom) this.quadAt(x0, y0, z0, x1, y0, z0, x1, y0, z1, x0, y0, z1, lo, lo, lo, lo, 0, -1, 0);
+    this.quadAt(x1, y0, z0, x1, y0, z1, x1, y1, z1, x1, y1, z0, lo, lo, color, color, 1, 0, 0);
+    this.quadAt(x0, y0, z1, x0, y0, z0, x0, y1, z0, x0, y1, z1, darkLo, darkLo, dark, dark, -1, 0, 0);
+    this.quadAt(x0, y0, z1, x1, y0, z1, x1, y1, z1, x0, y1, z1, darkLo, darkLo, dark, dark, 0, 0, 1);
+    this.quadAt(x1, y0, z0, x0, y0, z0, x0, y1, z0, x1, y1, z0, lo, lo, color, color, 0, 0, -1);
   }
 
   /** Adds another batch, moved by `m` (rotation, one scale for all axes, translation). */
