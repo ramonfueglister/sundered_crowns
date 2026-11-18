@@ -1,0 +1,59 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>upload bench</title>
+<canvas id="c" width="640" height="360"></canvas>
+<pre id="o"></pre>
+<script type="module">
+// What it costs the page's thread to hand vertex lists to the graphics card: by the number of lists and by their
+// megabytes, as three does it (a buffer mapped at creation, filled, unmapped) and with queue.writeBuffer.
+// Open in Chrome with WebGPU; the result is printed and left in window.__bench (JSON).
+const out = (s) => { document.getElementById('o').textContent += s + '\n'; };
+const adapter = await navigator.gpu.requestAdapter({ powerPreference: 'high-performance' });
+const device = await adapter.requestDevice();
+const canvas = document.getElementById('c'), ctx = canvas.getContext('webgpu'), format = navigator.gpu.getPreferredCanvasFormat();
+ctx.configure({ device, format });
+const frame = () => new Promise((r) => requestAnimationFrame(r));
+// (a picture is drawn every frame, so that the browser's frame clock runs as in the game)
+const draw = () => { const enc = device.createCommandEncoder(), pass = enc.beginRenderPass({ colorAttachments: [{ view: ctx.getCurrentTexture().createView(), loadOp: 'clear', storeOp: 'store', clearValue: { r: 0.1, g: 0.2, b: 0.3, a: 1 } }] }); pass.end(); device.queue.submit([enc.finish()]); };
+const usage = GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST;
+const methods = {
+  mapped(src) { const b = device.createBuffer({ size: src.byteLength, usage, mappedAtCreation: true }); new src.constructor(b.getMappedRange()).set(src); b.unmap(); return b; },
+  write(src) { const b = device.createBuffer({ size: src.byteLength, usage }); device.queue.writeBuffer(b, 0, src); return b; },
+};
+const median = (a) => [...a].sort((x, y) => x - y)[a.length >> 1];
+const configs = [[450, 0.033], [150, 0.1], [150, 0.02], [48, 0.3], [15, 1], [3, 5], [1, 15], [1, 4], [12, 0.33], [48, 0.0833]];
+const rows = [];
+for (const kind of ['float32', 'uint8']) for (const [n, mb] of configs) {
+  const bytes = Math.round((mb * 1e6) / 12) * 12, src = kind === 'float32' ? new Float32Array(bytes / 4) : new Uint8Array(bytes);
+  for (let i = 0; i < src.length; i++) src[i] = (i * 31) % 251;
+  for (const [name, make] of Object.entries(methods)) {
+    const sync = [], done = [], frames = [];
+    for (let run = 0; run < 7; run++) {
+      await frame(); draw(); await frame(); draw();
+      const t0 = performance.now(), made = [];
+      for (let k = 0; k < n; k++) made.push(make(src));
+      const t1 = performance.now();
+      draw();
+      // the frame that follows the upload: how long until the next one comes
+      const f0 = performance.now(); await frame(); const f1 = performance.now();
+      await device.queue.onSubmittedWorkDone();
+      const t2 = performance.now();
+      for (const b of made) b.destroy();
+      if (run >= 2) { sync.push(t1 - t0); done.push(t2 - t0); frames.push(f1 - f0); }
+    }
+    const row = { kind, lists: n, 'MB each': mb, 'MB in all': +(n * bytes / 1e6).toFixed(1), method: name, 'page ms': +median(sync).toFixed(2), 'ms per list': +(median(sync) / n).toFixed(3), 'ms per MB': +(median(sync) / (n * bytes / 1e6)).toFixed(3), 'until done ms': +median(done).toFixed(1), 'next frame ms': +median(frames).toFixed(1) };
+    rows.push(row); out(JSON.stringify(row));
+  }
+}
+// a least-squares fit of the page's time: a per list + b per MB, for each method (float32 rows)
+for (const name of Object.keys(methods)) {
+  const r = rows.filter((x) => x.method === name && x.kind === 'float32');
+  let s11 = 0, s12 = 0, s22 = 0, y1 = 0, y2 = 0;
+  for (const x of r) { const a = x.lists, b = x['MB in all'], y = x['page ms']; s11 += a * a; s12 += a * b; s22 += b * b; y1 += a * y; y2 += b * y; }
+  const det = s11 * s22 - s12 * s12, perList = (y1 * s22 - y2 * s12) / det, perMB = (s11 * y2 - s12 * y1) / det;
+  const fit = { method: name, 'fit ms per list': +perList.toFixed(3), 'fit ms per MB': +perMB.toFixed(3) };
+  rows.push(fit); out(JSON.stringify(fit));
+}
+window.__bench = rows;
+out('done');
+</script>

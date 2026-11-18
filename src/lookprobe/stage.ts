@@ -2,8 +2,8 @@
 // it and shown with the camera of Ramon's reference image.
 // Address options: ?webgl=1 (WebGL 2 instead of WebGPU), ?w=1672&h=941 (fixed picture size), ?blur=1 (miniature blur,
 // which the reference does not have), ?shadows=0, ?mirror=0 (no mirror image on the water), ?sky=0 (without the baked sky share: light step 1 only),
-// ?ao=0 (without the darkening of creases and corners; ?aoscale, ?aosamples, ?aosmooth: see there). ?small=1: the pieces' directions and
-// colours come as bytes (worldprobe/small.ts).
+// ?ao=0 (without the darkening of creases and corners; ?aoscale, ?aosamples, ?aosmooth: see there). ?small=0: the pieces' directions and
+// colours come as floats, not as bytes (worldprobe/small.ts).
 import * as THREE from 'three/webgpu';
 import { attribute, clamp, convertToTexture, dot, float, fract, getViewPosition, materialColor, max, mix, mrt, normalView, output, pass, reflector, rtt, screenCoordinate, screenSize, screenUV, select, smoothstep, step, texture, uniform, userData, uv, vec2, vec3, vec4 } from 'three/tsl';
 import { MapControls } from 'three/addons/controls/MapControls.js';
@@ -106,9 +106,15 @@ export interface Stage {
   more(group: THREE.Group, things: Shape): THREE.Mesh;
   drop(mesh: THREE.Mesh): void;
   /**
-   * Whether the lists of a group's meshes, or of one mesh, are on the graphics card. The stage sends them there a few
-   * to a picture, before they are shown; a mesh shown before that sends its lists in the picture that first draws
-   * it, however long that picture then takes.
+   * `?send=1`: the stage sends the lists of new meshes to the graphics card itself, a few to a picture, before they
+   * are shown (`sent`, `room`). Off by default: measured on a Mac it took the single pictures of over 100 ms away
+   * but left the zoom at 60 pictures a second where it had 120, and made a cold start and a leap in half a second
+   * longer (the stand-ins are meshes of their own to the renderer, which sets each up as it does the mesh itself).
+   */
+  staged: boolean;
+  /**
+   * Whether the lists of a group's meshes, or of one mesh, are on the graphics card (always, unless `staged`). A
+   * mesh shown before that sends its lists in the picture that first draws it, however long that picture then takes.
    */
   sent(thing: THREE.Group | THREE.Mesh): boolean;
   /** Whether the next picture could send more lists than are waiting to be sent: then the next meshes may as well be put on the stage now. */
@@ -171,12 +177,12 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   const scene = new THREE.Scene();
   let pending = 3;
   scene.background = new THREE.Color(...OPEN_WATER);
-  // `?small=1`: the pieces come with directions and colours as bytes (worldprobe/small.ts). A corner's colour is
-  // then three floats, or four bytes: the share each part has of the brightest, and half that brightest, of which
-  // 254 is one. A colour of three floats has a one as its fourth number by the graphics card's rule, which a
-  // colour of bytes never has: so both kinds are told apart here, at the corner, and what lies between the corners
-  // is the same for both. (Without the switch the materials take the corners' colours as they always did.)
-  const smallLists = flag('small', false);
+  // The pieces come with directions and colours as bytes (worldprobe/small.ts). A corner's colour is then three
+  // floats, or four bytes: the share each part has of the brightest, and half that brightest, of which 254 is one.
+  // A colour of three floats has a one as its fourth number by the graphics card's rule, which a colour of bytes
+  // never has: so both kinds are told apart here, at the corner, and what lies between the corners is the same for
+  // both. (`?small=0`: all lists are floats, and the materials take the corners' colours as they always did.)
+  const smallLists = flag('small', true);
   const tone = attribute('color', 'vec4') as unknown as ReturnType<typeof vec4>;
   const toned = () => materialColor.mul(tone.rgb.mul(select(tone.a.lessThan(254.5 / 255), tone.a.mul((2 * 255) / 254), float(1))).toVarying());
   const coloured = () => { const m = new THREE.MeshLambertNodeMaterial({ vertexColors: !smallLists }); if (smallLists) m.colorNode = toned(); return m; };
@@ -451,6 +457,8 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   // which it can without a jolt; while it rests, where a longer picture does not show, SEND_RESTING. A machine whose
   // pictures take SLOW ms and more each sends as much as would have gone in that time. A picture of fixed size is a
   // tool's still, drawn once when the scene is whole: there the lists go as they are drawn.
+  // All this only with `?send=1` (see Stage.staged for what it measured).
+  const staged = flag('send', false);
   const SEND_MOVING = 4e6, SEND_RESTING = 16e6, SEND_LEAST = 0.25e6, SLOW = 250, RESTS_AFTER = 300;
   /** the meshes whose lists are still to be sent, in the order they were made; the stand-ins of this picture, and whose they are */
   const cold = new Set<THREE.Mesh>(), standIns = new THREE.Group();
@@ -460,17 +468,19 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   scene.add(standIns);
   // (one mesh of their kind is always there, on none of the dots: so what the renderer makes for the kind is made
   // in the first picture, and is not let go and made again between the stand-ins of two pictures)
-  const pilot = mesh({ pos: [0, 0, 0, 0, 0, 1, 1, 0, 0], nor: [0, 1, 0, 0, 1, 0, 0, 1, 0], col: [0, 0, 0, 0, 0, 0, 0, 0, 0] }, solid, false);
-  (pilot.userData.dots as THREE.Vector2).set(0, 0); pilot.frustumCulled = false; pilot.layers.set(FIGURES_LAYER);
-  scene.add(pilot);
+  if (staged) {
+    const pilot = mesh({ pos: [0, 0, 0, 0, 0, 1, 1, 0, 0], nor: [0, 1, 0, 0, 1, 0, 0, 1, 0], col: [0, 0, 0, 0, 0, 0, 0, 0, 0] }, solid, false);
+    (pilot.userData.dots as THREE.Vector2).set(0, 0); pilot.frustumCulled = false; pilot.layers.set(FIGURES_LAYER);
+    scene.add(pilot);
+  }
   // (and one of small lists, whose pipeline is another)
-  if (smallLists) {
+  if (staged && smallLists) {
     const pilotSmall = mesh({ pos: new Float32Array(9), nor: new Int8Array(12), col: new Uint8Array(12), small: true }, solid, false);
     (pilotSmall.userData.dots as THREE.Vector2).set(0, 0); pilotSmall.frustumCulled = false; pilotSmall.layers.set(FIGURES_LAYER);
     scene.add(pilotSmall);
   }
   const weight = (g: THREE.BufferGeometry) => { let bytes = 0; for (const name in g.attributes) bytes += (g.attributes[name].array as Float32Array).byteLength; return Math.max(SEND_LEAST, bytes); };
-  const cool = <M extends THREE.Mesh>(made: M): M => { if (!fixedW) { cold.add(made); waiting += weight(made.geometry); } return made; };
+  const cool = <M extends THREE.Mesh>(made: M): M => { if (staged && !fixedW) { cold.add(made); waiting += weight(made.geometry); } return made; };
   const warm = (made: THREE.Mesh) => { if (cold.delete(made)) waiting -= weight(made.geometry); };
   /** Puts the stand-ins of the next meshes into the picture about to be drawn. */
   const send = () => {
@@ -502,7 +512,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   /** A shape as meshes of no more than 4 MB of lists each, the share of one picture while the view moves; they share its lists. */
   const parts = (shape: Shape): Shape[] => {
     const { pos, nor, col } = shape, n = pos.length / 9, per = shape.small ? 12 : 9;
-    if (!ArrayBuffer.isView(pos) || !ArrayBuffer.isView(nor) || !ArrayBuffer.isView(col)) return [shape];
+    if (!staged || !ArrayBuffer.isView(pos) || !ArrayBuffer.isView(nor) || !ArrayBuffer.isView(col)) return [shape];
     const most = Math.floor(SEND_MOVING / ((pos.byteLength + nor.byteLength + col.byteLength) / Math.max(1, n)));
     if (n <= most) return [shape];
     const list: Shape[] = [], cut = <T extends ArrayLike<number>>(a: T, from: number, to: number) => (a as unknown as Float32Array).subarray(from, to) as unknown as T;
@@ -511,7 +521,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     return list;
   };
   const stage: Stage = {
-    canvas, aim, soften, busy: true,
+    canvas, aim, soften, busy: true, staged,
     probe: { ready: false, counts: {}, backend: flag('webgl', false) ? 'webgl2' : 'webgpu' },
     add(built, x = 0, z = 0) {
       const group = new THREE.Group();

@@ -11,8 +11,12 @@ import { RAW, folderOf, nameOf, zipped } from './store';
 export type StoreAsk = { build: string; /** megabytes the kept pieces may take */ room: number } | { put: string; bytes: ArrayBuffer } | { used: string } | { /** the workers are building what the picture is missing */ busy: boolean };
 export interface StoreSays { /** the pieces kept when the store was opened */ have?: string[]; /** a piece that is now kept, or was not (`failed`) */ put?: string; failed?: boolean; /** pieces let go of to make room */ gone?: string[]; /** megabytes kept */ holds?: number }
 
-/** megabytes of unzipped pieces that may lie on disk (10 to 30 MB each, zipped 3 to 4); what comes on top is zipped at once */
-const UNZIPPED = 300;
+/**
+ * megabytes of unzipped pieces that may lie on disk (6 to 20 MB each, zipped 1 to 3); what comes on top is zipped at
+ * once. A first picture of a town is some 25 pieces: with 300 MB, and the pieces still 21 MB each, 14 of them were
+ * on disk when a page was closed at once (measured on a Mac), the rest still being zipped.
+ */
+const UNZIPPED = 600;
 /** every kept piece: the size of its file, whether that is still unzipped, and when it was last written or read */
 const files = new Map<string, { size: number; raw: boolean; used: number }>();
 /** what the kept pieces take, an unzipped one counted as the quarter it will be zipped (so that it does not push older pieces out for the moment it lies there); and the bytes of the unzipped ones as they are */
