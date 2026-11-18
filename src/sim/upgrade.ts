@@ -17,6 +17,7 @@ import { bringInHarvest } from './systems/harvest';
 import { foundPersonCultures } from './systems/cultures';
 import { foundDeaths } from './systems/deaths';
 import { foundBirths } from './systems/families';
+import { foundMoves } from './systems/moves';
 import type { SetupState } from './setup';
 
 /** The fields of a WorldState in the order createWorldState writes them. */
@@ -31,10 +32,10 @@ export const OLDEST_STATE_VERSION = 11;
 /** `setup`: the setup of the world's start year (public/data/setup_<year>.json), read only by the steps that need it. */
 export function upgradeState(s: WorldState, w: World, setup?: () => SetupState): WorldState {
   if (s.v < OLDEST_STATE_VERSION) throw new Error(`state version ${s.v} is older than ${OLDEST_STATE_VERSION}, the oldest this build upgrades`);
-  // (portrait round 112) A person carries 50 genes where there were 34 up to version 24, so a snapshot from before
+  // (portrait round 112) A person carries 50 genes where there were 34 up to version 25, so a snapshot from before
   // has the column laid out for 68 bytes a person. It is laid out for 100 before a step founds persons or gives
-  // genes (they write 100); the step to 25 fills it for everybody.
-  if (s.v < 25 && s.person.cols.genes.length !== s.person.alive.length * 2 * NG) {
+  // genes (they write 100); the step to 26 fills it for everybody.
+  if (s.v < 26 && s.person.cols.genes.length !== s.person.alive.length * 2 * NG) {
     (s.person.cols as Record<string, Column>).genes = new Uint8Array(s.person.alive.length * 2 * NG);
   }
   if (s.v === 11) { // 11 → 12: the persons of the cities' economies are the persons of the cities, and every firm
@@ -201,7 +202,17 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     foundEconomy(s, w);
     s.v = 24;
   }
-  if (s.v === 24) { // 24 → 25: a founder draws the genes from the pool of the culture, not of the place (portrait
+  if (s.v === 24) { // 24 → 25: the unmarried move to other places and an heir comes home (src/sim/systems/moves.ts).
+    // The persons get the place they come from and the day of their next move, as a new world gives them on the day
+    // the world has reached: nobody has moved, so everybody comes from the place the person lives in. Nothing else
+    // changes.
+    const cols = s.person.cols as Record<string, Column>, fresh = makeColumns(PERSON_SCHEMA, s.person.alive.length) as Record<string, Column>;
+    for (const k of Object.keys(fresh)) if (k in cols) fresh[k] = cols[k]; // in the order of the schema
+    (s.person as { cols: unknown }).cols = fresh;
+    foundMoves(s);
+    s.v = 25;
+  }
+  if (s.v === 25) { // 25 → 26: a founder draws the genes from the pool of the culture, not of the place (portrait
     // round 111, src/sim/people/pools.ts: the people of Beijing drew from the Greek pool). Every person gets the genes
     // they would have in a world founded now: the rulers and the founders of the towns from their culture's pool, out
     // of the same draws as before, and everybody born since from their parents, the elder first, out of the draws of
@@ -210,7 +221,7 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     // the column was laid out for them above. The first 34 genes of everybody come out of the same draws as with
     // 34.)
     rulerGenes(s, w); giveGenes(s);
-    s.v = 25;
+    s.v = 26;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one

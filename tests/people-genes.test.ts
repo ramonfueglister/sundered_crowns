@@ -77,7 +77,7 @@ describe('the genes of the persons of a world founded in 1356', () => {
   it('come anew by the upgrade from 24, whose founders drew by the place: as in a world founded now', () => {
     const { s: old, w } = newWorldState();
     const before = hashState(old);
-    // (a world of version 24 carries 34 genes a person, 68 bytes: the step lays the column out for 50)
+    // (a world up to version 25 carries 34 genes a person, 68 bytes: the upgrade lays the column out for 50)
     old.v = 24; (old.person.cols as { genes: Uint8Array }).genes = new Uint8Array(old.person.alive.length * 68).fill(7);
     expect(hashState(old)).not.toBe(before);
     const up = upgradeState(old, w);

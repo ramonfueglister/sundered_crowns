@@ -1,6 +1,6 @@
 // The genes of the persons: what the portraits draw a face from. A port of portrait/src/dna.rs (Apoleia's Werkstatt,
 // brought over unchanged by the portrait thread): every person carries 50 genes of two alleles, one byte each, 100 bytes
-// in all (34 and 68 up to state version 24: the last 16 came with portrait round 112); a founder draws them from the gene pool of the place they live in, a child takes one allele of each gene from
+// in all (34 and 68 up to state version 25: the last 16 came with portrait round 112); a founder draws them from the gene pool of the place they live in, a child takes one allele of each gene from
 // either parent, moved by a small mutation. The genes are a design choice (the morph targets and colours of the
 // MakeHuman base mesh), not a model of human genetics: no dominance, no linkage, independent genes (dna.rs says so).
 //

@@ -96,7 +96,7 @@ export function foundPeople(s: WorldState): void {
       const a = y + u01(seed, id, K.ageInYear);
       P.sex[id] = u01(seed, id, K.sex) < st.pMale ? 1 : 0;
       P.born[id] = day - Math.ceil(a * DAYS_PER_YEAR);
-      P.mother[id] = -1; P.father[id] = -1; P.family[id] = -1; P.died[id] = ALIVE; P.dies[id] = ALIVE; P.bears[id] = ALIVE;
+      P.mother[id] = -1; P.father[id] = -1; P.family[id] = -1; P.died[id] = ALIVE; P.dies[id] = ALIVE; P.bears[id] = ALIVE; P.home[id] = -1; P.moves[id] = ALIVE;
       age.set(id, ageOn(P.born[id], day));
     }
     // 2. the households: a woman is a housewife with the share of her age in a population that does not grow
@@ -158,6 +158,7 @@ export function bearChild(s: WorldState, mother: number, father: number, day: nu
   P.sex[id] = u01(seed, id, K.sex) < SEX_RATIO_AT_BIRTH / (1 + SEX_RATIO_AT_BIRTH) ? 1 : 0;
   P.born[id] = day; P.mother[id] = mother; P.father[id] = father; P.family[id] = P.family[mother];
   P.firm[id] = -1; P.died[id] = ALIVE; P.dies[id] = ALIVE; P.bears[id] = ALIVE;
+  P.home[id] = s.family.cols.place[P.family[mother]]; P.moves[id] = ALIVE; // the first move is for the caller too (src/sim/systems/moves.ts)
   P.culture[id] = P.culture[mother]; P.faith[id] = P.faith[mother];
   const zOf = (t: Trait, x: number) => (t === 'iq' ? (P.iq[x] - 100) / 15 : (P[t][x] - 50) / 10);
   const zs = {} as Record<Trait, number>;

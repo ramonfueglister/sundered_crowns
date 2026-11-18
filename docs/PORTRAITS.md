@@ -3919,8 +3919,9 @@ The build:
   come from, not with the ground they stand on: a Genoese of Caffa and a Kipchak of Caffa. Only a person whose
   culture is not known still draws by the place. In the simulation the founders' genes are given once their
   cultures are (`giveGenes` after `foundPersonCultures`), and a ruler's by their culture too (`rulers.ts`).
-  That changes the genes of nearly every person of a world: state version 25, with a step that gives a saved
-  world of version 24 the genes a new one has.
+  That changes the genes of nearly every person of a world: state version 26 (25 when the round was written;
+  the people's moving took 25 first), with a step that gives a saved world of an older version the genes a new
+  one has.
 - **The plain dress of 1356** (`Dress::Plain1356`, `dress.rs`). A culture without a table of its own wears
   England's without hood, veil and wimple, bare-headed, and stands under England's light (`plain1356` in
   `profile.ts`); only an origin that names one of Apoleia's seven regions, or none, is still drawn Roman. The
@@ -4044,7 +4045,7 @@ The build:
   same bytes as before.
 - **In the game** (`src/sim/people/genes.ts`, `state.ts`, `upgrade.ts`, `src/portrait/wire.ts`). A person has
   100 bytes of genes (68). The first 34 genes of every person come out of the same draws as before, so a world
-  founded anew has the faces it had, with the sixteen more. The column is part of state version 25 (round 111's
+  founded anew has the faces it had, with the sixteen more. The column is part of state version 26 (round 111's
   step, not yet merged); a saved game older than that has its column laid out anew before any step of the
   upgrade writes into it. Reading the lower half of a draw as a plain number where no more of it is used, a
   world is founded as fast as before (a test that founds one twice: 0.81 s, 1.42 with the genes added, 0.79 now).
