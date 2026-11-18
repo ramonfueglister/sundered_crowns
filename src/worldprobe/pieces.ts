@@ -10,8 +10,9 @@
 // While the view is in motion, the pieces of the view it will come to rest at are built first: a zoom or a flight is
 // over sooner than a piece is built, so what the pictures on the way would ask for comes too late to be seen
 // (Cesium loads the destination of a flight ahead in the same way). A piece that has arrived is put on the stage
-// in a picture of its own and drawn there once without showing, so that its lists reach the graphics card one
-// piece to a picture, not all the pieces of a step in the picture that first shows them. (With `?send=1` the stage
+// in a picture of its own and, once it lies in the picture or in the one the view comes to rest at, drawn there
+// once without showing, so that its lists reach the graphics card one piece to a picture, not all the pieces of a
+// step in the picture that first shows them. (With `?send=1` the stage
 // sends the lists itself, a few megabytes to a picture, and a piece joins the pieces the view can show once they
 // are sent: stage.ts `staged`, which says why that is not the rule.)
 // The houses that have fine blocks and the paved ground lie in cells of their own on their piece: from near, fine.ts
@@ -87,8 +88,12 @@ interface Held {
   laid: number;
   /** the piece is dissolving into the picture (`rising`) or out of it since this time */
   fade?: { since: number; rising: boolean };
-  /** pictures in which the piece is still to be drawn without showing, so that its lists are on the graphics card before it shows */
-  warm: number;
+  /**
+   * the piece is still to be drawn once without showing, so that its lists are on the graphics card before it
+   * shows: -1 until a look puts it into the picture to come, then the number of pictures the stage had drawn by
+   * then, and none once the stage has drawn that picture
+   */
+  warm?: number;
 }
 interface Spot { key: string; step: number; px: number; pz: number; /** built ahead into the store: it goes on the stage only if the view has come to ask for it */ spare?: boolean }
 
@@ -151,7 +156,7 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
     const group = stage.add(scene);
     group.visible = false;
     const cells = scene.cells.map((c, k) => ({ key: `${spot.key}/${k}`, far: c.far.pos.length ? stage.more(group, c.far) : undefined, lots: c.lots, ground: c.ground, x: spot.px * PIECE - marginOf(spot.step) + c.x, z: spot.pz * PIECE - marginOf(spot.step) + c.z }));
-    const h: Held = { group, step: spot.step, px: spot.px, pz: spot.pz, cells, dots: [0, 1], seen: looks, on: false, laid: 0, warm: o.ahead && !stage.staged ? 1 : 0 };
+    const h: Held = { group, step: spot.step, px: spot.px, pz: spot.pz, cells, dots: [0, 1], seen: looks, on: false, laid: 0, warm: o.ahead && !stage.staged ? -1 : undefined };
     if (stage.staged) sending.push({ spot, h }); else { held.set(spot.key, h); building.delete(spot.key); }
     for (const [name, n] of Object.entries(scene.counts)) stage.probe.counts[name] = (stage.probe.counts[name] ?? 0) + n;
   };
@@ -319,24 +324,40 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
     for (const h of coming) { h.on = true; h.fade = o.ahead && going.some((g) => over(h, g)) ? { since: now, rising: true } : undefined; }
     for (const h of going) { h.on = false; h.fade = o.ahead && coming.some((c) => over(h, c)) ? { since: now, rising: false } : undefined; }
     }
+    // A piece that has not been shown yet is drawn once on none of the picture's dots, so that its lists are on
+    // the graphics card before it shows: one piece to a picture, and only a piece that lies in the picture or in the
+    // one the view will come to rest at (a piece around the picture waits until the view comes to it: sent at once,
+    // twice the megabytes went to the card in a zoom and back, half of them never to be seen). It stays so until
+    // the stage has drawn a picture: a look is not a picture, pieces arrive and the view moves between two
+    // pictures, and each brings a look. (Where the look after hid the piece again, it was never drawn, and all the
+    // pieces of a step sent their lists in the picture that first showed them: measured on a Mac, 26 to 78 lists
+    // and 100 to 170 ms in one picture, wherever pieces came fast, as they do from disk.)
+    let warming = false, queued = false;
+    for (const h of held.values()) if (h.warm !== undefined && h.warm >= 0) { if (stage.pictures() > h.warm) { h.warm = undefined; stage.whole(h.group, false); } else warming = true; }
+    for (const h of held.values()) {
+      if (h.warm !== -1 || h.on || h.fade || h.laid > 0 || (outside(v, h.step, h.px, h.pz) > 0 && outside(rest, h.step, h.px, h.pz) > 0)) continue;
+      if (warming) { queued = true; break; }
+      // (drawn whether it lies in the picture or not: the picture the view comes to rest at may reach beyond this one)
+      h.warm = stage.pictures(); stage.whole(h.group, true); warming = true;
+    }
     const showing = new Set<Held>();
     for (const h of held.values()) {
       const share = h.fade ? Math.min(1, (now - h.fade.since) / DISSOLVE) : 1;
       if (share >= 1) h.fade = undefined;
       const shows = h.on || !!h.fade || h.laid > 0;
-      h.group.visible = shows || h.warm > 0;
+      if (shows && h.warm !== undefined) { h.warm = undefined; stage.whole(h.group, false); }
+      h.group.visible = shows || (h.warm ?? -1) >= 0;
       if (!h.group.visible) continue;
       if (shows) showing.add(h);
       else {
-        // drawn once on none of the picture's dots, where it will lie
-        h.warm--; fading = true;
+        // drawn on none of the picture's dots, where it will lie
         stage.dissolve(h.group, 0, 0);
         const f = 2 ** (h.step - step), tall = f * reliefOf(v.wide, h.step);
         h.group.scale.set(f, tall, f);
         h.group.position.set((h.px * PIECE - marginOf(h.step)) * f - layout.homeX, SEA_Y * (1 - tall), (h.pz * PIECE - marginOf(h.step)) * f - layout.homeZ);
         continue;
       }
-      h.warm = 0; h.seen = looks; fading ||= !!h.fade;
+      h.seen = looks; fading ||= !!h.fade;
       h.dots = [h.fade && !h.fade.rising ? share : 0, h.fade?.rising ? share : 1];
       // a piece laid in takes the first of the dots, as many as its share, and the view's own pieces under it the
       // rest (a piece that stands in for missing finer ones keeps all of its dots)
@@ -350,6 +371,8 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
       h.group.scale.set(f, tall, f);
       h.group.position.set((h.px * PIECE - marginOf(h.step)) * f - layout.homeX, SEA_Y * (1 - tall), (h.pz * PIECE - marginOf(h.step)) * f - layout.homeZ);
     }
+    // (the pictures go on while pieces are drawn so, or wait for it)
+    fading ||= warming || queued;
     // the houses of the pieces in the picture, from their fine blocks where the view is near
     const cells: HouseCell[] = [];
     for (const h of showing) for (const c of h.cells) cells.push({ key: c.key, group: h.group, far: c.far, lots: c.lots, ground: c.ground, dots: h.dots, out: beyond(v, c.x, c.z, CELL, HOUSE_LEAN), away: Math.hypot(c.x - v.x, c.z - v.z) });

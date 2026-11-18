@@ -126,6 +126,13 @@ export interface Stage {
    * each made whole from its own dots and mixed by the share, so that they blend and no pattern of dots shows.
    */
   dissolve(thing: THREE.Group | THREE.Mesh, from: number, until: number): void;
+  /**
+   * `on`: the meshes of a group are drawn whether they lie in the picture or not. A group that is drawn so, on none
+   * of the picture's dots, has all its lists sent to the graphics card in that picture.
+   */
+  whole(group: THREE.Group, on: boolean): void;
+  /** How many pictures the stage has drawn. */
+  pictures(): number;
   /** Puts a thing of the page's own making on the stage, or takes it off again (the page lets go of what it is made of). */
   put(thing: THREE.Object3D): void;
   take(thing: THREE.Object3D): void;
@@ -560,6 +567,8 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
       }
       pending = Math.max(pending, 1);
     },
+    whole(group, on) { for (const part of group.children) if (!part.userData.figures) part.frustumCulled = !on; pending = Math.max(pending, 1); },
+    pictures: () => pictures,
     put(thing) { marked(thing); scene.add(thing); pending = Math.max(pending, 1); },
     take(thing) { scene.remove(thing); pending = Math.max(pending, 1); },
     paper,
@@ -601,7 +610,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
       c['gpu passes'] = k;
     });
   };
-  let drawn = 0, since = performance.now();
+  let drawn = 0, since = performance.now(), pictures = 0;
   renderer.setAnimationLoop(() => {
     // a picture of fixed size is taken by a tool, which waits for the finished scene: nothing is drawn before
     // walking figures keep the picture moving; a picture of fixed size is a still, so that a tool's picture comes
@@ -609,10 +618,12 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     if (pending <= 0 || (fixedW && stage.busy)) return;
     if (cold.size) send(); else sentAt = 0;
     if (laid.strength.value > 0) { aimPaper(); renderer.setRenderTarget(paperPicture); renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.render(paper, paperEye); renderer.setRenderTarget(null); }
-    const began = timed ? performance.now() : 0;
+    const began = timed ? performance.now() : 0, had = renderer.info.memory.attributesSize;
     pipeline.render();
     if (sending.length) haveSent();
-    drawn++;
+    drawn++; pictures++;
+    // what the picture sent to the graphics card in lists (a tool sets `MB sent most` to 0 and reads the most a picture has sent since)
+    { const c = stage.probe.counts, sent = (renderer.info.memory.attributesSize - had) / 1e6; c.pictures = pictures; c['MB sent'] = sent; c['MB sent sum'] = (c['MB sent sum'] ?? 0) + sent; c['MB sent most'] = Math.max(c['MB sent most'] ?? 0, sent); if (sent > 0) c['pictures sending'] = (c['pictures sending'] ?? 0) + 1; }
     if (timed) clock(performance.now() - began);
     if (performance.now() - since >= 1000) { stage.probe.fps = Math.round((drawn * 1000) / (performance.now() - since)); drawn = 0; since = performance.now(); }
     if (--pending === 0 && !stage.busy) stage.probe.ready = true;

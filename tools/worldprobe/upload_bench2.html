@@ -1,0 +1,111 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>upload bench 2</title>
+<canvas id="c" width="640" height="360"></canvas>
+<pre id="o"></pre>
+<script type="module">
+// What it costs the page's thread to hand a piece's lists to the graphics card, as it is in the game: the lists come
+// from a worker and are used once, and the buffers stay (upload_bench.html took the same list again and again and let
+// go of each buffer, so that source and target were memory in use: 0.06 ms a megabyte, where the game's profile says
+// ten times that). Three ways: a buffer mapped at creation (as three does it), queue.writeBuffer, and a ring of
+// staging buffers that are mapped again and again and copied from on the card. Each with lists straight from the
+// worker (`cold`) and with lists the page has read once before (`read`); and, for the first way, with each buffer
+// let go of before the next (`recycled`). A piece is 8 MB: one mesh of three lists, or fifty meshes.
+// Open in Chrome with WebGPU; the result is printed and left in window.__bench (JSON).
+const out = (s) => { document.getElementById('o').textContent += s + '\n'; };
+const adapter = await navigator.gpu.requestAdapter({ powerPreference: 'high-performance' });
+const device = await adapter.requestDevice();
+const canvas = document.getElementById('c'), ctx = canvas.getContext('webgpu'), format = navigator.gpu.getPreferredCanvasFormat();
+ctx.configure({ device, format });
+const frame = () => new Promise((r) => requestAnimationFrame(r));
+const draw = () => { const enc = device.createCommandEncoder(), pass = enc.beginRenderPass({ colorAttachments: [{ view: ctx.getCurrentTexture().createView(), loadOp: 'clear', storeOp: 'store', clearValue: { r: 0.1, g: 0.2, b: 0.3, a: 1 } }] }); pass.end(); device.queue.submit([enc.finish()]); };
+const worker = new Worker(URL.createObjectURL(new Blob([`
+  let seed = 1;
+  onmessage = (e) => {
+    const lists = [], hand = [];
+    for (let m = 0; m < e.data.meshes; m++) {
+      const n = e.data.corners, pos = new Float32Array(n * 3), nor = new Int8Array(n * 4), col = new Uint8Array(n * 4);
+      for (let i = 0; i < pos.length; i++) { seed = (seed * 16807) % 2147483647; pos[i] = seed / 1e7; }
+      for (let i = 0; i < nor.length; i++) { nor[i] = (i * 31 + seed) % 127; col[i] = (i * 17 + seed) % 251; }
+      lists.push(pos, nor, col); hand.push(pos.buffer, nor.buffer, col.buffer);
+    }
+    postMessage(lists, hand);
+  };`], { type: 'text/javascript' })));
+const piece = (meshes, corners) => new Promise((r) => { worker.onmessage = (e) => r(e.data); worker.postMessage({ meshes, corners }); });
+const usage = GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST, T = () => performance.now();
+let kept = [];
+// the ring: staging buffers of CHUNK bytes, mapped while they wait
+const CHUNK = 4 << 20, ring = [];
+const staging = async () => { const s = device.createBuffer({ size: CHUNK, usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC, mappedAtCreation: true }); return s; };
+for (let k = 0; k < 6; k++) ring.push(await staging());
+// (each is written through once, so that its memory is in use before anything is timed)
+for (const s of ring) new Uint8Array(s.getMappedRange()).fill(1);
+const methods = {
+  mapped(lists, t) {
+    for (const a of lists) {
+      const t0 = T(), b = device.createBuffer({ size: a.byteLength, usage, mappedAtCreation: true }), t1 = T(), m = b.getMappedRange(), t2 = T();
+      new a.constructor(m).set(a);
+      const t3 = T(); b.unmap(); const t4 = T();
+      t.create += t1 - t0; t.range += t2 - t1; t.copy += t3 - t2; t.unmap += t4 - t3; kept.push(b);
+    }
+  },
+  write(lists, t) {
+    for (const a of lists) {
+      const t0 = T(), b = device.createBuffer({ size: a.byteLength, usage }), t1 = T();
+      device.queue.writeBuffer(b, 0, a);
+      const t2 = T();
+      t.create += t1 - t0; t.copy += t2 - t1; kept.push(b);
+    }
+  },
+  ring(lists, t) {
+    const enc = device.createCommandEncoder(), used = [];
+    let s = null, at = CHUNK, view = null;
+    for (const a of lists) {
+      const t0 = T(), b = device.createBuffer({ size: a.byteLength, usage }), t1 = T(), bytes = new Uint8Array(a.buffer, a.byteOffset, a.byteLength);
+      t.create += t1 - t0; kept.push(b);
+      for (let from = 0; from < bytes.length;) {
+        if (at === CHUNK) { const r0 = T(); s = ring.pop(); if (!s) throw new Error('the ring is empty'); used.push(s); view = new Uint8Array(s.getMappedRange()); at = 0; t.range += T() - r0; }
+        const n = Math.min(bytes.length - from, CHUNK - at), c0 = T();
+        view.set(bytes.subarray(from, from + n), at);
+        t.copy += T() - c0;
+        enc.copyBufferToBuffer(s, at, b, from, n);
+        from += n; at += n;
+      }
+    }
+    const u0 = T();
+    for (const u of used) u.unmap();
+    device.queue.submit([enc.finish()]);
+    t.unmap += T() - u0;
+    return used;
+  },
+};
+const median = (a) => [...a].sort((x, y) => x - y)[a.length >> 1];
+const rows = [];
+for (const [shape, meshes, corners] of [['1 mesh', 1, 400000], ['50 meshes', 50, 8000]]) {
+  for (const [name, source, recycled] of [['mapped', 'cold', false], ['mapped', 'read', false], ['mapped', 'read', true], ['write', 'cold', false], ['write', 'read', false], ['ring', 'cold', false], ['ring', 'read', false]]) {
+    const page = [], next = [], parts = { create: [], range: [], copy: [], unmap: [] };
+    let mb = 0;
+    for (let run = 0; run < 14; run++) {
+      const lists = await piece(meshes, corners);
+      mb = lists.reduce((s, a) => s + a.byteLength, 0) / 1e6;
+      // (read once: the lists are in the page's memory and its caches before they are sent)
+      if (source === 'read') { let sum = 0; for (const a of lists) for (let i = 0; i < a.length; i += 16) sum += a[i]; if (Number.isNaN(sum)) throw new Error('nan'); }
+      await frame(); draw(); await frame(); draw();
+      const t = { create: 0, range: 0, copy: 0, unmap: 0 }, t0 = T(), used = methods[name](lists, t), t1 = T();
+      draw();
+      const f0 = T(); await frame(); const f1 = T();
+      if (used) { await Promise.all(used.map((s) => s.mapAsync(GPUMapMode.WRITE))); ring.push(...used); }
+      if (recycled) { await device.queue.onSubmittedWorkDone(); for (const b of kept) b.destroy(); kept = []; }
+      if (run >= 2) { page.push(t1 - t0); next.push(f1 - f0); for (const k in parts) parts[k].push(t[k]); }
+    }
+    await device.queue.onSubmittedWorkDone();
+    for (const b of kept) b.destroy();
+    kept = [];
+    await frame(); await frame();
+    const row = { piece: shape, MB: +mb.toFixed(1), method: name, lists: source, buffers: recycled ? 'recycled' : 'kept', 'page ms': +median(page).toFixed(2), 'ms per MB': +(median(page) / mb).toFixed(3), 'most ms': +Math.max(...page).toFixed(2), 'create ms': +median(parts.create).toFixed(2), 'range ms': +median(parts.range).toFixed(2), 'copy ms': +median(parts.copy).toFixed(2), 'unmap ms': +median(parts.unmap).toFixed(2), 'next frame ms': +median(next).toFixed(1) };
+    rows.push(row); out(JSON.stringify(row));
+  }
+}
+window.__bench = rows;
+out('done');
+</script>
