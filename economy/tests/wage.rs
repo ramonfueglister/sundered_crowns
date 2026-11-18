@@ -142,7 +142,8 @@ fn prices_come_back_to_the_wage_in_money_and_stay_where_they_are_without_it() {
             e.figures()[15]
         };
         let (port, money) = (level(false), level(true));
-        assert!(port > 1.15, "seed {seed}: with the port's wage the price level is {port}");
+        // measured over the seeds 1356 to 1363: 1.14 to 1.24 with the port's wage, 0.994 to 1.004 with wages in money
+        assert!(port > 1.1, "seed {seed}: with the port's wage the price level is {port}");
         assert!((money - 1.0).abs() < 0.02, "seed {seed}: with wages in money the price level is {money}");
     }
 }

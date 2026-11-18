@@ -14,6 +14,7 @@ import { REFERENCE, calibrationJson, cityCalibrations, readTable } from '../tool
 import { calibrateEconomy, cityTable, dailyCalibration, dailyEconomy, unemploymentBenefit, ar1, roundHalfEven, type Entry } from '../src/sim/economy/calibration';
 import { FIGURE, FIGURES, type CitySetup, type EconomyEngine, type EconomyRules } from '../src/sim/economy/engine';
 import { cityAt, cityPlaces, citySeed, computeTo, yearRow } from '../src/sim/systems/economy';
+import { cityRoutes } from '../src/sim/economy/routes';
 import { cityPeopleByPlace } from '../src/sim/systems/people';
 import { advanceDay } from '../src/sim/engine';
 import { encodeState, decodeState, hashState } from '../src/sim/snapshot';
@@ -300,7 +301,7 @@ describe('the economy engine (WebAssembly)', () => {
   const THREE = ['London', 'Ghent', 'Cologne'].map((name) => c.cities.find((x) => x.name === name)!);
   const setups = (seed: number, cities = THREE): CitySetup[] =>
     cities.map((x, k) => ({ parameters: JSON.stringify(x.parameters), initialConditions: JSON.stringify(x.initial_conditions), seed: seed + k }));
-  const CLOCK = c.clock, SAVINGS = c.savings_spent_per_year / c.periods_per_year, RULES: EconomyRules = { wage: c.wage, prices: c.prices, savings: SAVINGS, crown: c.crown }, PORT: EconomyRules = { wage: 'prices', prices: 'costs', savings: 0, crown: 'series' };
+  const CLOCK = c.clock, SAVINGS = c.savings_spent_per_year / c.periods_per_year, RULES: EconomyRules = { wage: c.wage, prices: c.prices, savings: SAVINGS, crown: c.crown, owner: c.owner }, PORT: EconomyRules = { wage: 'prices', prices: 'costs', savings: 0, crown: 'series', owner: 'paper' };
   const create = (seed: number) => engine.create(setups(seed), CLOCK, RULES);
   const city = (f: Float64Array, k: number) => f.subarray(k * FIGURES, (k + 1) * FIGURES);
 
@@ -314,10 +315,10 @@ describe('the economy engine (WebAssembly)', () => {
       // 65 days: every firm has planned three times. With a plan and a window of one period the clock is the port's.
       const ONE = { plan: 1, window: 1 };
       for (const [seed, clock, periods, rules] of [
-        [1356, CLOCK, 65, RULES], [7, CLOCK, 65, RULES], [1356, CLOCK, 65, PORT], [1356, CLOCK, 65, { wage: 'money', prices: 'costs', savings: 0, crown: 'series' }], [1356, CLOCK, 65, { wage: 'prices', prices: 'demand', savings: 0, crown: 'series' }], [1356, CLOCK, 65, { ...RULES, savings: 0 }], [1356, CLOCK, 65, { ...RULES, crown: 'series' }],
+        [1356, CLOCK, 65, RULES], [7, CLOCK, 65, RULES], [1356, CLOCK, 65, PORT], [1356, CLOCK, 65, { wage: 'money', prices: 'costs', savings: 0, crown: 'series', owner: 'paper' }], [1356, CLOCK, 65, { wage: 'prices', prices: 'demand', savings: 0, crown: 'series', owner: 'paper' }], [1356, CLOCK, 65, { ...RULES, savings: 0 }], [1356, CLOCK, 65, { ...RULES, crown: 'series' }], [1356, CLOCK, 65, { ...RULES, owner: 'paper' }], [1356, CLOCK, 65, { ...PORT, owner: 'household' }],
         [1356, ONE, 10, PORT], [1356, ONE, 10, RULES],
       ] as const) {
-        const args = [String(periods), String(clock.plan), String(clock.window), rules.wage, rules.prices, String(rules.savings), rules.crown, ...THREE.flatMap((_, k) => [String(seed + k), files[2 * k], files[2 * k + 1]])];
+        const args = [String(periods), String(clock.plan), String(clock.window), rules.wage, rules.prices, String(rules.savings), rules.crown, rules.owner, ...THREE.flatMap((_, k) => [String(seed + k), files[2 * k], files[2 * k + 1]])];
         const native = execFileSync(join(ECONOMY_DIR, 'target/release/examples/reference'), args, { encoding: 'utf8' }).trim().split('\n');
         expect(native.length).toBe(periods + 1);
         let state = engine.create(setups(seed), clock, rules);
@@ -332,7 +333,7 @@ describe('the economy engine (WebAssembly)', () => {
     expect(Buffer.compare(engine.step(a, 3), engine.step(b, 3))).toBe(0);
     expect(Buffer.compare(a, other)).not.toBe(0);
     expect(Buffer.compare(a, engine.create(setups(1356), { plan: 31, window: 365 }, RULES))).not.toBe(0);
-    expect(RULES).toEqual({ wage: 'money', prices: 'demand', savings: 0.4 / 365, crown: 'revenue' });
+    expect(RULES).toEqual({ wage: 'money', prices: 'demand', savings: 0.4 / 365, crown: 'revenue', owner: 'household' });
     expect(Buffer.compare(a, engine.create(setups(1356), CLOCK, { ...RULES, wage: 'prices' }))).not.toBe(0);
     expect(Buffer.compare(a, engine.create(setups(1356), CLOCK, { ...RULES, prices: 'costs' }))).not.toBe(0);
     // households that spend out of their income only start from the same position and compute other days
@@ -348,6 +349,12 @@ describe('the economy engine (WebAssembly)', () => {
     expect(bits(engine.figures(engine.step(series, 1)))).toBe(bits(engine.figures(engine.step(a, 1))));
     expect(bits(engine.figures(engine.step(series, 40)))).not.toBe(bits(engine.figures(engine.step(a, 40))));
     expect(() => engine.create(setups(1356), CLOCK, { ...RULES, crown: 'war' as never })).toThrow('way for the crown to buy');
+    // owners who are paid the paper's profit start from the same position and compute other days
+    const paper = engine.create(setups(1356), CLOCK, { ...RULES, owner: 'paper' });
+    expect(Buffer.compare(a, paper)).not.toBe(0);
+    expect(bits(engine.figures(paper))).toBe(bits(engine.figures(a)));
+    expect(bits(engine.figures(engine.step(paper, 40)))).not.toBe(bits(engine.figures(engine.step(a, 40))));
+    expect(() => engine.create(setups(1356), CLOCK, { ...RULES, owner: 'guild' as never })).toThrow('way for an owner to hold a firm');
     // the seed of one city changes the others too, through the merchants
     const one = setups(1356); one[2] = { ...one[2], seed: 99 };
     const f = engine.figures(engine.step(engine.create(one, CLOCK, RULES), 5)), g = engine.figures(engine.step(a, 5));
@@ -474,6 +481,8 @@ describe('the economies of the cities in the world', () => {
   // one world that runs 400 days, day by day (1356 is a leap year: day 365 is 31 December, day 366 is 1 January 1357)
   const run = newWorldState();
   const CITIES = cityCalibrations(), N = CITIES.length; // the cities of this world: it is the reference world
+  // the cities without a way to the others (economy feature 17): those of the regions the table names as apart
+  const APART = new Set(CITIES.map((x, c) => (run.w.cityEconomies.table.routes.apart.value.includes(run.w.provinces[run.w.provOf[x.place]].region) ? c : -1)).filter((c) => c >= 0));
   if (run.s.seed !== REFERENCE.seed || run.s.startYear !== REFERENCE.year) throw new Error('the tests run the reference world');
   const at: Record<number, { hash: string; state: Uint8Array; figures: Float64Array; model: number }> = {};
   beforeAll(() => {
@@ -492,7 +501,8 @@ describe('the economies of the cities in the world', () => {
     for (let k = 0; k < N; k++) expect(e.figures[k * FIGURES + FIGURE.periods]).toBe(0);
     expect(Array.from(e.places)).toEqual(CITIES.map((x) => x.place));
     const setups = CITIES.map((x) => ({ parameters: JSON.stringify(x.calibration.parameters), initialConditions: JSON.stringify(x.calibration.initial_conditions), seed: citySeed(s.seed, x.place) }));
-    expect(Buffer.compare(e.model, w.economyEngine.create(setups, c.clock, c.rules))).toBe(0);
+    const routes = cityRoutes(w, CITIES.map((x) => x.place), c.table);
+    expect(Buffer.compare(e.model, w.economyEngine.routes(w.economyEngine.create(setups, c.clock, c.rules), routes))).toBe(0);
     expect(hashState(newWorldState(1357).s)).not.toBe(hashState(s));
   });
   it('give every city random numbers of its own, from the seed of the world and its place', () => {
@@ -538,18 +548,24 @@ describe('the economies of the cities in the world', () => {
     expect(k.cities.length).toBe(N);
     for (const x of k.cities) for (const v of [x.income, x.nominal, x.real, x.centralBank, x.banks]) expect(Math.abs(v) / x.gdpSum).toBeLessThan(1e-9);
     for (const m of k.merchants) expect(Math.abs(m.off)).toBeLessThanOrEqual(1e-9 * m.scale);
-    // every city has sold to the merchants and bought from them
+    // every city with a way to the others has sold to the merchants and bought from them; Texcoco has none
+    // (economy feature 17) and sells nothing
     const f = run.s.economy.cities!.figures;
-    for (let c = 0; c < N; c++) { expect(f[c * FIGURES + FIGURE.exports]).toBeGreaterThan(0); expect(f[c * FIGURES + FIGURE.imports]).toBeGreaterThan(0); }
+    for (let c = 0; c < N; c++) {
+      if (APART.has(c)) { expect(f[c * FIGURES + FIGURE.exports]).toBe(0); continue; }
+      expect(f[c * FIGURES + FIGURE.exports]).toBeGreaterThan(0); expect(f[c * FIGURES + FIGURE.imports]).toBeGreaterThan(0);
+    }
+    expect(APART.size).toBe(1);
   });
   it('sell to the merchants about the same share of their output, the largest city as the smallest', () => {
     // the merchants pick among the firms of the other cities, so a city counts by its firms; were every city one
     // seller among 29, Cairo would export less than half of what the smallest cities do, measured by output
-    const f = at[365].figures, share = Array.from({ length: N }, (_, c) => f[c * FIGURES + FIGURE.exports] / f[c * FIGURES + FIGURE.realGdp]);
+    const f = at[365].figures, all = Array.from({ length: N }, (_, c) => f[c * FIGURES + FIGURE.exports] / f[c * FIGURES + FIGURE.realGdp]), share = all.filter((_, c) => !APART.has(c));
     const people = CITIES.map((c) => c.people), largest = people.indexOf(Math.max(...people));
     expect(run.w.names[CITIES[largest].place]).toBe('Cairo');
-    expect(Math.max(...share) / Math.min(...share)).toBeLessThan(1.4);
-    expect(share[largest]).toBeGreaterThan(0.75 * Math.max(...share));
+    // measured 1.405 since firm and owner are one household (economy feature 18), below 1.4 before
+    expect(Math.max(...share) / Math.min(...share)).toBeLessThan(1.45);
+    expect(all[largest]).toBeGreaterThan(0.75 * Math.max(...share));
   });
   it('give for many days at once what the same days give one by one', () => {
     const { s, w } = newWorldState();

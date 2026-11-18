@@ -35,6 +35,7 @@ fn main() {
             let e = Economy::new(&read(&f[0]), &read(&f[1]), seed + c as u64, PLAN, WINDOW).expect("economy");
             let e = e.with_wages_in_money().with_demand_pull().expect("demand pull").with_savings_spent(savings / WINDOW as f64).expect("savings");
             let e = if revenue { e.with_crown_spending_revenue() } else { e };
+            let e = if std::env::var("OWNER").as_deref() == Ok("paper") { e } else { e.with_owner_household() };
             e.with_bounded_past()
         })
         .collect();

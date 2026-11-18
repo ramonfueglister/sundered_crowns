@@ -26,8 +26,10 @@ import type { Table } from './ecs';
  *  (src/sim/systems/families.ts), after England around 1300: the life table of La Poutré & Janssen 2021, a fixed number of
  *  households in every town, a wedding only into a vacant one; the persons are founded anew. 24: the crown of a city buys
  *  with what it took in (economy feature 16); the economies are founded anew. 25: the unmarried move to other places and
- *  an heir comes home (src/sim/systems/moves.ts): every person has the place they come from and the day of the next move. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
-export const STATE_VERSION = 25;
+ *  an heir comes home (src/sim/systems/moves.ts): every person has the place they come from and the day of the next move.
+ *  26: there is distance between the cities (economy feature 17) and a firm and its owner are one household (economy
+ *  feature 18); the economies are founded anew. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
+export const STATE_VERSION = 26;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {

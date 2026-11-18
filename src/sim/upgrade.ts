@@ -205,6 +205,13 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     foundMoves(s);
     s.v = 25;
   }
+  if (s.v === 25) { // 25 → 26: there is distance between the cities (economy feature 17): goods travel for days and
+    // carrying costs labour; and a firm and its owner are one household (economy feature 18). Routes are given to
+    // cities that have not computed a day, so the economies are founded anew on the day the world has reached, as in
+    // the steps before. The persons stay who they are.
+    foundEconomy(s, w);
+    s.v = 26;
+  }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one
   const o = s as unknown as Record<string, unknown>;

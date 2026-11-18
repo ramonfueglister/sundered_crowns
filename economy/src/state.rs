@@ -19,21 +19,23 @@ use beforeit::{
 use crate::Economy;
 use crate::clock::DailyClock;
 use crate::past::{Past, Phase, Series};
-use crate::trade::{Cities, Merchants};
+use crate::trade::{Cities, Merchants, Routes};
 
 const TAG: &[u8; 4] = b"SCEC";
 /// The tag of cities with their merchants ([`save_cities`]).
 const TAG_CITIES: &[u8; 4] = b"SCET";
-/// Version of the byte format of cities with their merchants.
-pub const FORMAT_CITIES: u32 = 1;
+/// Version of the byte format of cities with their merchants. 2: the routes between the cities (economy feature
+/// 17); format 1 is still read, as cities without routes.
+pub const FORMAT_CITIES: u32 = 2;
 /// Version of the byte format. A change to the pinned port that changes its state needs a new number and a step in
 /// the world's upgrade chain (src/sim/upgrade.ts). 2: the fields of the daily clock. 3: the wages in money.
 /// 4: the demand pull. 5: of the national accounts the clock keeps the series that the key figures sum, the port
 /// keeps its last row. 6: the clock can keep the past in a fixed size ([`crate::past`]). 7: the spending out of
-/// savings (economy feature 15). 8: the crown that buys with what it took in (economy feature 16). States of formats
-/// 4 to 7 are still read and become format 8 when they are saved ([`load`]); formats 4 and 5 keep the whole past, as
-/// they had it, none before 7 spends out of savings, and none before 8 has a crown that buys with its revenue.
-pub const FORMAT: u32 = 8;
+/// savings (economy feature 15). 8: the crown that buys with what it took in (economy feature 16). 9: firm and
+/// owner as one household (economy feature 18). States of formats 4 to 8 are still read and become format 9 when they
+/// are saved ([`load`]); formats 4 and 5 keep the whole past, as they had it, none before 7 spends out of savings,
+/// none before 8 has a crown that buys with its revenue, and none before 9 has owners who bear losses.
+pub const FORMAT: u32 = 9;
 const NONE: u32 = u32::MAX;
 /// The length of the last state of cities written ([`save_cities`]): how much room the next one is given at once.
 /// It changes no byte of a state.
@@ -658,7 +660,7 @@ fn get_data(i: &mut In) -> Res<Data> {
 
 fn put_clock(o: &mut Out, c: &DailyClock) {
     // `trade` is set for the length of a period only (src/trade.rs): a saved economy has none
-    let DailyClock { plan, window, demand, periods, start, accounts, wage, real_wage, demand_pull, savings, norm, crown_revenue, crown_outlays, past, trade: _ } = c;
+    let DailyClock { plan, window, demand, periods, start, accounts, wage, real_wage, demand_pull, savings, norm, crown_revenue, crown_outlays, owner, borne: _, past, trade: _ } = c;
     o.n(*plan);
     o.n(*window);
     o.f64s(demand);
@@ -699,6 +701,7 @@ fn put_clock(o: &mut Out, c: &DailyClock) {
     o.f64(*norm);
     o.bool(*crown_revenue);
     o.f64(*crown_outlays);
+    o.bool(*owner);
 }
 
 fn get_series(i: &mut In, window: usize) -> Res<Series> {
@@ -754,7 +757,8 @@ fn get_clock(i: &mut In, format: u32) -> Res<DailyClock> {
     }
     // formats before 8 know the paper's series of the crown's purchases only
     let (crown_revenue, crown_outlays) = if format >= 8 { (i.bool()?, i.f64()?) } else { (false, 0.0) };
-    Ok(DailyClock { plan, window, demand, periods, start, accounts, wage, real_wage, demand_pull, savings, norm, crown_revenue, crown_outlays, past, trade: None })
+    let owner = format >= 9 && i.bool()?;
+    Ok(DailyClock { plan, window, demand, periods, start, accounts, wage, real_wage, demand_pull, savings, norm, crown_revenue, crown_outlays, owner, borne: Vec::new(), past, trade: None })
 }
 
 /// The model and its random number generator as bytes. The same model always gives the same bytes.
@@ -829,7 +833,7 @@ pub fn load(bytes: &[u8]) -> Result<(AbstractModel<DailyClock>, Xoshiro), String
 /// bytes.
 pub fn save_cities(all: &Cities) -> Vec<u8> {
     let Cities { cities, merchants } = all;
-    let Merchants { stock, value, orders, share, bought, sold, start, start_stock } = merchants;
+    let Merchants { stock, value, orders, share, bought, sold, start, start_stock, routes } = merchants;
     // the bytes are written into one list that is as long as the state of the call before, with a little room: the
     // state of a world is tens of megabytes, and a list that grows by doubling would hold it twice over
     let hint = SIZE.load(Ordering::Relaxed);
@@ -857,6 +861,26 @@ pub fn save_cities(all: &Cities) -> Vec<u8> {
     }
     o.f64(*start);
     o.f64s(start_stock);
+    o.bool(routes.is_some());
+    // the length of the ring follows from the days
+    if let Some(Routes { days, labour, weight, elasticity, horizon: _, on_way, on_way_cost, carrying, period, paid, wage0, price0 }) = routes {
+        for row in days {
+            o.n(row.len());
+            for d in row {
+                o.n(*d);
+            }
+        }
+        o.f64ss(labour);
+        o.f64s(weight);
+        o.f64(*elasticity);
+        o.f64s(on_way);
+        o.f64s(on_way_cost);
+        o.f64ss(carrying);
+        o.n(*period);
+        o.f64(*paid);
+        o.f64s(wage0);
+        o.f64ss(price0);
+    }
     SIZE.store(o.0.len(), Ordering::Relaxed);
     o.0
 }
@@ -868,8 +892,8 @@ pub fn load_cities(bytes: &[u8]) -> Result<Cities, String> {
         return Err("these bytes are not the state of cities".into());
     }
     let format = i.u32()?;
-    if format != FORMAT_CITIES {
-        return Err(format!("state format {format} of cities, this engine reads format {FORMAT_CITIES}"));
+    if !(1..=FORMAT_CITIES).contains(&format) {
+        return Err(format!("state format {format} of cities, this engine reads formats 1 to {FORMAT_CITIES}"));
     }
     let n = i.len(4)?;
     let mut cities = Vec::with_capacity(n);
@@ -880,7 +904,20 @@ pub fn load_cities(bytes: &[u8]) -> Result<Cities, String> {
     let (stock, value) = (i.f64ss()?, i.f64ss()?);
     let orders = (0..i.len(4)?).map(|_| i.f64ss()).collect::<Res<Vec<_>>>()?;
     let (share, bought, sold) = (i.f64s()?, i.f64s()?, i.f64s()?);
-    let merchants = Merchants { stock, value, orders, share, bought, sold, start: i.f64()?, start_stock: i.f64s()? };
+    let (start, start_stock) = (i.f64()?, i.f64s()?);
+    // format 1 knows no routes
+    let routes = if format >= 2 && i.bool()? {
+        let mut days = Vec::with_capacity(n);
+        for _ in 0..n {
+            let len = i.len(4)?;
+            days.push((0..len).map(|_| i.n()).collect::<Res<Vec<_>>>()?);
+        }
+        let horizon = Routes::longest(&days);
+        Some(Routes { days, horizon, labour: i.f64ss()?, weight: i.f64s()?, elasticity: i.f64()?, on_way: i.f64s()?, on_way_cost: i.f64s()?, carrying: i.f64ss()?, period: i.n()?, paid: i.f64()?, wage0: i.f64s()?, price0: i.f64ss()? })
+    } else {
+        None
+    };
+    let merchants = Merchants { stock, value, orders, share, bought, sold, start, start_stock, routes };
     if i.at != bytes.len() {
         return Err(format!("{} bytes are left over after the state", bytes.len() - i.at));
     }
@@ -895,7 +932,20 @@ pub fn load_cities(bytes: &[u8]) -> Result<Cities, String> {
         && m.orders.len() == n
         && m.orders.iter().all(|o| per_city(o, G))
         && m.share.len() == n
-        && [&m.bought, &m.sold, &m.start_stock].iter().all(|v| v.len() == G);
+        && [&m.bought, &m.sold, &m.start_stock].iter().all(|v| v.len() == G)
+        && m.routes.as_ref().is_none_or(|r| {
+            r.days.len() == n
+                && r.days.iter().all(|d| d.len() == n)
+                && per_city(&r.labour, n)
+                && r.weight.len() == G
+                && per_city(&r.carrying, n)
+                && r.on_way.len() == r.horizon * n * G
+                && r.on_way_cost.len() == r.on_way.len()
+                && r.wage0.len() == n
+                && r.price0.len() == n
+                && r.price0.iter().all(|p| p.len() == G)
+                && r.elasticity.is_finite()
+        });
     if !fits {
         return Err(format!("the books of the merchants do not fit {n} cities with {G} products"));
     }
