@@ -52,7 +52,7 @@ const DISSOLVE = 300;
 const KEPT_SUMS = 96;
 /** megabytes of pieces kept on disk (3 to 4 MB each); beyond that the ones unused the longest are let go of */
 const ROOM = 1000;
-/** megabytes of pieces that may wait to be written to disk (10 to 30 MB each until they are zipped); one that comes on top is not kept */
+/** megabytes of pieces that may wait to be written to disk (10 to 30 MB each; they are written as they come and zipped later); one that comes on top is not kept */
 const WAITING = 600;
 /** workers that build ahead into the store while the view rests: the others stay free for what the view asks for next */
 const SPARE_WORKERS = 2;
@@ -263,7 +263,7 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
       worker.postMessage({ id, step: next.step, grid: margin === MARGIN ? undefined : PIECE + 2 * margin, keep: store ? { build: o.keep!, name: fileOf(next), kept: !listed || kept.has(fileOf(next)) } : undefined, piece: { ox: next.px * PIECE - margin, oz: next.pz * PIECE - margin, part: { x0: margin, z0: margin, x1: margin + PIECE, z1: margin + PIECE } }, region: o.region, base: o.base, bakedSky: o.bakedSky, year: o.year, mean: o.mean, under: next.step === 1 ? [0, 1, 2, 3].map((q) => sums.get(keyOf(0, next.px * 2 + (q & 1), next.pz * 2 + (q >> 1)))) : undefined } satisfies PieceJob);
     }
 
-    // the store zips what it is given once the workers are through with what the picture is missing
+    // the store zips what it has written once the workers are through with what the picture is missing
     const pressed = [...jobs.values()].some((j) => !j.spare) || queue.length > 0;
     if (store && pressed !== busy) { busy = pressed; store.postMessage({ busy } satisfies StoreAsk); }
 

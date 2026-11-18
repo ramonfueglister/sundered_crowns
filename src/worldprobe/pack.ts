@@ -35,7 +35,12 @@ export function unpack<T>(run: ArrayBuffer): T {
   if (mark !== MARK) throw new Error('unpack: not a packed run');
   const first = even(8 + length);
   return JSON.parse(new TextDecoder().decode(new Uint8Array(run, 8, length)), (_key, v: unknown) => {
-    if (v && typeof v === 'object' && '$list' in v) { const [kind, at, n] = v.$list as [Kind, number, number]; return new KINDS[kind](run.slice(first + at, first + at + n * KINDS[kind].BYTES_PER_ELEMENT)); }
+    if (v && typeof v === 'object' && '$list' in v) {
+      const [kind, at, n] = v.$list as [Kind, number, number], end = first + at + n * KINDS[kind].BYTES_PER_ELEMENT;
+      // (a file that was cut short while it was written)
+      if (end > run.byteLength) throw new Error('unpack: the run is cut short');
+      return new KINDS[kind](run.slice(first + at, end));
+    }
     if (v && typeof v === 'object' && '$number' in v) return Number(v.$number);
     return v;
   }) as T;

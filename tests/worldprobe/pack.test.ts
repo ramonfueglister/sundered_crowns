@@ -30,4 +30,9 @@ describe('pack', () => {
   it('does not read a run that is not a packed piece', () => {
     expect(() => unpack(new ArrayBuffer(64))).toThrow();
   });
+
+  it('does not read a run that was cut short', () => {
+    const run = pack(piece());
+    for (const length of [0, 4, 16, run.byteLength >> 1, run.byteLength - 8]) expect(() => unpack(run.slice(0, length))).toThrow();
+  });
 });
