@@ -35,12 +35,17 @@ import { BLENDS, COARSEST, FARTHEST, NEAREST, blendOf, elevationOf, reliefOf, st
 const PIECE = 200, MARGIN = (N - PIECE) / 2;
 /**
  * From this step on a piece is built on a smaller ground, with NARROW blocks of land around it: a town of the finest
- * step is laid out from its middle and needs the wide margin, and the first far step is the mean of the finest. From
- * there on the land a piece shows depends on no more than 17 to 28 blocks around it (the sky's share, the shore, the
- * smoothing of rock, the mean of the forest; measured by building pieces at every margin and comparing all their
- * triangles), and a ground of 264 blocks has 2.3 times fewer of them to work out than one of 400.
+ * step is laid out from its middle and needs the wide margin. From the first far step on the land a piece shows
+ * depends on no more than 17 to 28 blocks around it (the sky's share, the shore, the smoothing of rock, the mean of
+ * the forest), and a ground of 264 blocks has 2.3 times fewer of them to work out than one of 400. Only a river's
+ * level depends on more, on where its walk begins: that walk still covers what the wide ground holds (build.ts,
+ * world.ts `Piece.beyond`). Measured by building pieces on both grounds and comparing all their triangles: of 56
+ * pieces of step 1 at 14 places (Paris, Alps, coasts, Nile, Norway, desert) 52 are the same triangle for triangle,
+ * and four in Norway's wide massifs differ in the colour of 1 to 40 rock faces by at most 0.03; the columns at 48
+ * borders between pieces are the same on both sides. Where step 1 is the mean of the finest step (`mean`), it
+ * keeps the wide ground.
  */
-const NARROW_FROM = 2, NARROW = 32;
+const NARROW_FROM = 1, NARROW = 32;
 /** pieces are built ahead of need this far around the picture, as a share of its width */
 const AHEAD = 0.3;
 /** the pieces of the next finer step are built ahead once the view is within this factor of the width at which that step takes over */
@@ -152,7 +157,7 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
   const pieces: Pieces = { look, failed: '', dispose: () => { for (const w of workers) w.terminate(); store?.terminate(); fine.dispose(); } };
   let nextId = 1, looks = 0, ticking = false, layout: Layout = { step: -1, coarse: 1, homeX: 0, homeZ: 0 };
   /** blocks of land around a piece of a step on the ground it is built on */
-  const marginOf = (step: number) => (step >= NARROW_FROM ? Math.min(MARGIN, o.margin ?? NARROW) : MARGIN);
+  const marginOf = (step: number) => (step >= (o.mean ? NARROW_FROM + 1 : NARROW_FROM) ? Math.min(MARGIN, o.margin ?? NARROW) : MARGIN);
   /**
    * what the pieces of the finest step show, summed up for the pieces of the next step over them (mean.ts), the
    * last KEPT_SUMS of them: a piece of the first far step is the mean of the four finest under it, and need not

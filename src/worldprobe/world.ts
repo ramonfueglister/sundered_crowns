@@ -31,17 +31,17 @@ import { MONUMENTS, m, modelOf, styleOf } from '../buildings';
  * on a column depends only on the world around it, never on where the ground begins, so that grounds laid side by side
  * fit together.
  */
-export interface Piece { ox: number; oz: number; part: Part }
+export interface Piece { ox: number; oz: number; part: Part; /** the rivers are walked this many blocks beyond the ground on every side too (see the rivers in `buildWorld`); the region must cover them: `windowOf(ox, oz, beyond)`. Default 0 */ beyond?: number }
 /** the houses that have fine blocks are kept in cells of this many blocks a side */
 export const CELL = 25;
 /** A cell of a town: its middle on the ground, its houses as the far view shows them and their lots, and the columns of its paved ground. */
 export interface Cell<S extends Shape = Batch> { x: number; z: number; far: S; lots: Lot[]; ground?: Columns }
 /** A piece of the world for the stage, with the cells of its towns. */
 export interface WorldScene<S extends Shape = Batch> extends StageScene<S> { cells: Cell<S>[] }
-/** The window of whole-map cells that the ground starting at world block (ox, oz) needs. */
-export function windowOf(ox: number, oz: number): { gx0: number; gy0: number; w: number; h: number } {
-  const us: number[] = [], vs: number[] = [];
-  for (const [x, z] of [[0, 0], [N, 0], [0, N], [N, N]]) { const [u, v] = cellOfBlock(ox + x, oz + z); us.push(u); vs.push(v); }
+/** The window of whole-map cells that the ground starting at world block (ox, oz) needs, and `beyond` blocks more on every side. */
+export function windowOf(ox: number, oz: number, beyond = 0): { gx0: number; gy0: number; w: number; h: number } {
+  const us: number[] = [], vs: number[] = [], lo = -beyond, hi = N + beyond;
+  for (const [x, z] of [[lo, lo], [hi, lo], [lo, hi], [hi, hi]]) { const [u, v] = cellOfBlock(ox + x, oz + z); us.push(u); vs.push(v); }
   const gx0 = Math.floor(Math.min(...us)) - 2, gy0 = Math.floor(Math.min(...vs)) - 2;
   return { gx0, gy0, w: Math.ceil(Math.max(...us)) + 3 - gx0, h: Math.ceil(Math.max(...vs)) + 3 - gy0 };
 }
@@ -129,7 +129,7 @@ export function terrace(level: Int16Array, mat: Uint8Array) {
 }
 
 /**
- * `region` must cover `windowOf(piece.ox, piece.oz)` in the blocks of `step`: at step s a block is 2^s finest blocks
+ * `region` must cover `windowOf(piece.ox, piece.oz, piece.beyond)` in the blocks of `step`: at step s a block is 2^s finest blocks
  * wide, and so 2^(s − FINER_STEPS) cells of the land's data (see tools/worldprobe/build_overviews.py; the steps finer
  * than the data are drawn from its finest cells, region.ts). The land is drawn the same way at every step: the valleys
  * are those of rivers 4^z times the size on the data's step z, and the heights are flattened by 2^0.6 for every
@@ -178,7 +178,9 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
       land[i] = climateAt(climate, region.x0 + (cx + (noise2(wx / 9, wz / 9, 61) - 0.5) * fray) / region.cells, region.y0 + (cy + (noise2(wx / 9, wz / 9, 62) - 0.5) * fray) / region.cells);
     }
   }
-  const levelOf = (m: number, i: number) => { const treeLine = TREE_LINE + shift[i]; return (Math.max(0, (Math.min(m, treeLine) - PLAIN) / METRES_PER_BLOCK) + Math.max(0, m - treeLine) / METRES_PER_BLOCK_HIGH) / flatter; };
+  /** blocks above the plain of a height in metres, where the lines of the climate are shifted by `by` */
+  const levelBy = (m: number, by: number) => { const treeLine = TREE_LINE + by; return (Math.max(0, (Math.min(m, treeLine) - PLAIN) / METRES_PER_BLOCK) + Math.max(0, m - treeLine) / METRES_PER_BLOCK_HIGH) / flatter; };
+  const levelOf = (m: number, i: number) => levelBy(m, shift[i]);
   /** a field averaged over a square of blocks reaching `reach` to each side */
   const averaged = (field: Float32Array, reach: number) => {
     const out = new Float32Array(N * N);
@@ -252,7 +254,16 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   }
   terrace(level, g.mat);
 
-  // rivers: each line is walked from its high end, never rising again, and cut one block into the valley floor
+  // rivers: each line is walked from its high end, never rising again, and cut one block into the valley floor. A
+  // river's level is thus the lowest floor it has passed, and depends on where the walk begins: the walk goes on
+  // `piece.beyond` blocks off the ground, so that a piece built on a narrow ground gives a river the level a wide
+  // ground gives it, and the pieces beside it. Off the ground a column's floor is read from the region as on it.
+  const beyond = piece.beyond ?? 0, walked = (x: number, z: number) => x >= -beyond && z >= -beyond && x < N + beyond && z < N + beyond;
+  const floorOf = (x: number, z: number) => {
+    if (inGrid(x, z)) return Math.round(levelOf(metres[idx(x, z)], idx(x, z)));
+    const [cx, cy] = toCell(x + 0.5, z + 0.5);
+    return Math.round(levelBy(Math.fround(sample(region, region.shaped, cx, cy)), Math.fround(lineShift(Math.fround(latOf(region, cy))))));
+  };
   const river = new Int16Array(N * N).fill(-1), stream = new Float32Array(N * N);
   for (const r of region.rivers) {
     const wide = (2 * (r.rank <= 6 ? RIVER_HALF : BROOK_HALF)) / cell;
@@ -275,10 +286,10 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
       const a = toGround(...r.pts[k]), b = toGround(...r.pts[k + 1]), len = Math.hypot(b[0] - a[0], b[1] - a[1]);
       for (let t = 0; t < len; t += 0.5) {
         const x = a[0] + ((b[0] - a[0]) * t) / len, z = a[1] + ((b[1] - a[1]) * t) / len;
-        if (!inGrid(Math.floor(x), Math.floor(z))) continue;
+        if (!walked(Math.floor(x), Math.floor(z))) continue;
         // the valley floor: the lowest ground within a block of the line, which is drawn more coarsely than the heights
         let floor = Infinity;
-        for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) if (inGrid(Math.floor(x) + dx, Math.floor(z) + dz)) floor = Math.min(floor, Math.round(levelOf(metresAt(x + dx, z + dz), cellAt(x + dx, z + dz))));
+        for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) if (walked(Math.floor(x) + dx, Math.floor(z) + dz)) floor = Math.min(floor, floorOf(Math.floor(x) + dx, Math.floor(z) + dz));
         steps.push([x, z, floor]);
       }
     }
