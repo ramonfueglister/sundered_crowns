@@ -1,9 +1,9 @@
 // Which house the settlement code builds on a lot: the fine-block house of a tradition where the region has one, at
 // the detail the zoom asks for; otherwise the house or town house of the region's style, as before.
-import type { Batch, RGB, Rnd } from '../../lookprobe/batch';
+import { type Batch, type RGB, type Rnd, seeded } from '../../lookprobe/batch';
 import type { Side } from '../core/wall';
 import type { Style } from '../traditions/regions';
-import { fineHouse } from './grammar';
+import { drawnWall, fineHouse } from './grammar';
 import { house, townHouse } from './house';
 import { FLOOR, VOXEL, m } from './style';
 
@@ -27,4 +27,13 @@ export function houseOf(style: Style, w: number, d: number, floors: number, wall
   const tr = style.tradition, height = heightOf(style, w, d, floors);
   if (tr) return { model: fineHouse(w, d, floors, tr, r, { detail, front }), height };
   return { model: Math.max(w, d) >= m(11.4) && r.chance(0.7) ? townHouse(w, d, floors, wallC, roofC, r, style.house) : house(w, d, floors, wallC, roofC, r, style.house), height };
+}
+
+/**
+ * The wall and the roof a house shows, for those who draw it from afar without building it (the plan of the far
+ * steps): a tradition's own, the wall its house draws from the source `seed`; else the colours drawn from the style.
+ */
+export function shownOf(style: Style, wallC: RGB, roofC: RGB, seed: number): { wall: RGB; roof: RGB } {
+  const tr = style.tradition;
+  return tr ? { wall: drawnWall(tr, seeded(seed)), roof: tr.roof } : { wall: wallC, roof: roofC };
 }

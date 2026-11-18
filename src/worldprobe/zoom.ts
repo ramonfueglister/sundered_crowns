@@ -32,14 +32,19 @@ export const PAPER_COARSEST = 6 + FINER_STEPS;
  * The rules of the land's look are reckoned in cells of the land's data, of which FINER finest blocks make one
  * (land.ts). The camera looks down as in the reference from near, and straight down where the realms begin to show.
  */
-const TILT_FROM = 500 * FINER, TILT_UNTIL = 5500 * FINER, STRAIGHT_DOWN = 89.5;
+/**
+ * The camera keeps the angle of the middle distance, and the relief its strength, for as long as the land is seen as
+ * a land: it rises and the land sinks only over the last stretch before the realms' map (which begins once the camera
+ * looks straight down, REALMS_FROM).
+ */
+const TILT_FROM = 5100 * FINER, TILT_UNTIL = 9000 * FINER, STRAIGHT_DOWN = 89.5;
 /** the relief keeps its strength up to here and is all but flat where the camera looks straight down */
-const RELIEF_FROM = 500 * FINER, RELIEF_LEAST = 0.06;
+const RELIEF_FROM = 5100 * FINER, RELIEF_LEAST = 0.06;
 /**
  * the realms colour the flat world from here, fully from there: a short way, well after the world lies flat, so that
  * the map comes in one move of the wheel and the world is not seen half under it for long
  */
-const REALMS_FROM = 7500 * FINER, REALMS_FULL = 8750 * FINER;
+const REALMS_FROM = 9100 * FINER, REALMS_FULL = 10500 * FINER;
 /** blocks across the picture at the middle of a step: there its heights are drawn as they were built */
 const MIDDLE = STEP_FROM * Math.SQRT2;
 /** a step's blocks stand for heights flattened by this power of their width (see buildWorld) */
@@ -59,7 +64,10 @@ export const elevationOf = (wide: number) => VIEW.elevation + (NEAR_ELEVATION - 
  * different things at the same place (single houses and trees against blocks of town and wood), and laid over each
  * other in a resting view they made a milky double picture where the finer step alone is sharp (seen in Chrome on a
  * Mac at 360 and at 1000 blocks across, 16 November 2026). The steps take each other's place in a short dissolve at
- * the border instead (pieces.ts). To be switched on again once a coarser step is the mean of the finer one.
+ * the border instead (pieces.ts). Tried again on 17 November 2026, with the far steps showing what the finest step
+ * shows (far.ts): the colours of two steps now agree, but their blocks do not lie on each other, so a resting view
+ * between two steps is still a grainy, soft picture with every town drawn twice (1000 and 2000 blocks across at
+ * Paris). It stays off; with the steps this close in colour the short dissolve at the border is hardly seen.
  */
 export const BLENDS: boolean = false;
 const BLEND = 1.6;
@@ -95,16 +103,30 @@ export const realmsOf = (wide: number) => over(REALMS_FROM, REALMS_FULL, wide);
  */
 const POLITICAL_NEAR = 0.75, NAMES_FROM = 900 * FINER, NAMES_FULL = 2200 * FINER;
 /**
+ * of that, this share lies on what stands on the ground: houses, trees and fields keep their own colours where the
+ * world is seen from near, and take more of the realm's where its name is written, so that a realm reads as one land
+ */
+const THINGS_NEAR = 0.3, THINGS_FAR = 0.6;
+/**
+ * from afar woods, fields and towns are blocks of the ground, many and small: there the colour lies more strongly on
+ * the land (POLITICAL_FAR) and the land's light and shade are evened out under it (`calm`), so that a realm is one
+ * calm colour with the woods and the relief as a soft shade in it, not a speckled dark carpet
+ */
+const POLITICAL_FAR = 0.9, CALM_FROM = DETAIL_UNTIL, CALM_FULL = 6 * DETAIL_UNTIL;
+/**
  * How the realms' map lies on a view: `strength` how much it covers the land, `flat` how much it is a printed map
- * (the land's light hidden, the sea painted too), `names` how strongly the realms' names are written; all 0 … 1.
+ * (the land's light hidden, the sea painted too), `names` how strongly the realms' names are written, `things` how
+ * much of it lies on what stands on the ground, as a share of what lies on the ground, `calm` how far the land's
+ * light and shade are evened out under it; all 0 … 1.
  * The political map mode lays it on the land at every distance, the terrain mode nowhere; `far` (the world probe's
  * own page and the tools that take pictures of it) only where the world lies flat, as the 2D map.
  */
-export function paperOf(wide: number, mode: 'political' | 'terrain' | 'far'): { strength: number; flat: number; names: number } {
+export function paperOf(wide: number, mode: 'political' | 'terrain' | 'far'): { strength: number; flat: number; names: number; things: number; calm: number } {
   const flat = realmsOf(wide);
-  if (mode === 'terrain') return { strength: 0, flat: 0, names: 0 };
-  if (mode === 'far') return { strength: flat, flat, names: flat };
-  return { strength: POLITICAL_NEAR + (1 - POLITICAL_NEAR) * flat, flat, names: Math.max(flat, over(NAMES_FROM, NAMES_FULL, wide)) };
+  if (mode === 'terrain') return { strength: 0, flat: 0, names: 0, things: 1, calm: 0 };
+  if (mode === 'far') return { strength: flat, flat, names: flat, things: 1, calm: 0 };
+  const names = Math.max(flat, over(NAMES_FROM, NAMES_FULL, wide)), calm = over(CALM_FROM, CALM_FULL, wide), near = POLITICAL_NEAR + (POLITICAL_FAR - POLITICAL_NEAR) * calm;
+  return { strength: near + (1 - near) * flat, flat, names, things: THINGS_NEAR + (THINGS_FAR - THINGS_NEAR) * Math.max(names, calm), calm };
 }
 /** Whether a view shows the realms rather than the land: there a click means the place, nearer it means what stands on the ground. */
 export const realmsShown = (wide: number) => realmsOf(wide) >= 0.5;

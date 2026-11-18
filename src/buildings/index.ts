@@ -13,7 +13,7 @@
 // its random source, so every piece of the world builds the same building.
 export { FLOOR, type HouseStyle, METRES_PER_BLOCK, VOXEL, m, m2, vox } from './houses/style';
 export { type HouseOptions, fineHouse } from './houses/grammar';
-export { type Chosen, heightOf, houseOf } from './houses/choose';
+export { type Chosen, heightOf, houseOf, shownOf } from './houses/choose';
 export { type Side, type Wall, pane, wallOf } from './core/wall';
 export { awning, bollard, cloth, crate, jar, jetty, paving, stairs } from './houses/clutter';
 export { type Column, type ColumnAt, type GroundCell, DEEP, LAGOON, PLAIN_QUAY, RIPPLE, fineGround, waterColourAt, waterFlecks } from './ground';

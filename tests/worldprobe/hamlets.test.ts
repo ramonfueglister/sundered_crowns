@@ -101,6 +101,14 @@ describe('the houses of a town with a land register', () => {
     expect(townWall(40, 40, [{ side: 'nz', from: -20, to: -12 }]).triangles).toBeLessThan(whole);
     expect(townWall(40, 40, [{ side: 'nz', from: -3, to: 3 }]).triangles).toBeGreaterThan(whole);
   });
+  it('crosses a river with a water gate, and leaves a harbour open', () => {
+    const top = (gaps: Parameters<typeof townWall>[2]) => { const b = townWall(60, 60, gaps); let n = 0; for (let t = 0; t < b.pos.length; t += 9) if (b.pos[t + 2] < -29 && Math.abs(b.pos[t]) < 1 && b.pos[t + 1] > 1.5) n++; return n; };
+    // over the middle of a river six wide the wall goes on, on two arches with a post between them
+    expect(top([{ side: 'nz', from: -3, to: 3 }])).toBeGreaterThan(0);
+    expect(townWall(60, 60, [{ side: 'nz', from: -3, to: 3 }]).triangles).toBeGreaterThan(townWall(60, 60, [{ side: 'nz', from: -1, to: 1 }]).triangles);
+    // water twenty wide is no river: the wall stays open
+    expect(top([{ side: 'nz', from: -10, to: 10 }])).toBe(0);
+  });
   it('tells what it builds: every house, its great buildings, its wall', () => {
     const c = N / 2, counts: Record<string, number> = {}, houses: string[] = [], greats: string[] = [], walled: (readonly unknown[] | null)[] = [];
     const town: Site = { id: 5, at: [c + 0.5, c + 0.5], size: 4, pop: 60000, region: '', style: styleOf('') };
