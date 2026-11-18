@@ -4,9 +4,24 @@
 // cells here. One ground block is one unit.
 import { fbm2, hash2, noise2, smooth } from './batch';
 
-/** side of the square ground grid */
-export const N = 400;
-const C = N / 2;
+/** side of the square ground grid, as a rule */
+export const GRID = 400;
+/**
+ * Side of the square ground grid of the build that runs. It is GRID unless a build is run on a smaller ground
+ * (`onGrid`): a piece of the world that needs less of the land round it than a ground of GRID blocks holds.
+ */
+export let N = GRID;
+/**
+ * Runs `build` on a ground of `side` blocks (GRID where none is given) and gives back what it returns. The side holds
+ * only while `build` runs, so `build` must not wait for anything: what it needs is loaded before.
+ */
+export function onGrid<T>(side: number | undefined, build: () => T): T {
+  const before = N;
+  N = side ?? GRID;
+  try { return build(); } finally { N = before; }
+}
+/** the middle of the probe scene's ground, which is always GRID blocks wide */
+const C = GRID / 2;
 /**
  * The camera of the reference image, measured from the directions of its building edges (they run 18.5° down and 16.5°
  * up to the right): it looks down by 18.7°, and the ground's x axis lies 46.7° from the picture's horizontal.

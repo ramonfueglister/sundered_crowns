@@ -17,27 +17,34 @@ import { Water, loadWindow } from './region';
 import { type Piece, type WorldScene, buildWorld, windowOf } from './world';
 import { type Cover, KINDS, laidOut, loadPlan, usePlan } from './far';
 import { above, lay, meanCover, summary } from './mean';
-import { N } from '../lookprobe/layout';
+import { N, onGrid } from '../lookprobe/layout';
 import { loadTownPeople } from '../figures';
 import { loadInhabitants } from './towns';
 
-export interface PieceJob { id: number; piece: Piece; region: string; /** step of the map: blocks 2^step cells wide */ step: number; base: string; bakedSky: boolean; /** the world's start year, whose towns are built, whose forest stands and whose people live on the land (default 1356) */ year?: number; /** false: a far step as far.ts lays it out, not as the mean of the finer step */ mean?: boolean | 'compare'; /** for a piece of the first far step: the summaries of the four finest pieces under it that the page holds (mean.ts), in rows */ under?: (Float32Array | undefined)[] }
+export interface PieceJob { id: number; piece: Piece; region: string; /** step of the map: blocks 2^step cells wide */ step: number; base: string; bakedSky: boolean; /** the world's start year, whose towns are built, whose forest stands and whose people live on the land (default 1356) */ year?: number; /** false: a far step as far.ts lays it out, not as the mean of the finer step */ mean?: boolean | 'compare'; /** for a piece of the first far step: the summaries of the four finest pieces under it that the page holds (mean.ts), in rows */ under?: (Float32Array | undefined)[]; /** side of the ground the piece is built on, where it is not the usual one (layout.ts: GRID); the piece's ox, oz and part are given on that ground */ grid?: number }
 export interface PieceDone { id: number; scene?: WorldScene<Shape>; /** of a piece of the finest step: what it shows, summed up for the piece of the next step over it (mean.ts) */ summary?: Float32Array; error?: string }
 
 const flat = (b: Batch): Shape => ({ pos: new Float32Array(b.pos), nor: new Float32Array(b.nor), col: new Float32Array(b.col) });
 const nothing: Shape = { pos: new Float32Array(0), nor: new Float32Array(0), col: new Float32Array(0) };
 
-/** Builds a piece of a step; null where it is open sea. `mean`: the cover of its ground from the finer step. */
+/**
+ * Builds a piece of a step; null where it is open sea. `mean`: the cover of its ground from the finer step. The
+ * ground has the job's side (`grid`) wherever its size counts, and only there: nothing waits while it holds, so a
+ * job that is taken up meanwhile cannot change it.
+ */
 async function build(job: PieceJob, step: number, piece: Piece, mean: Cover | null = null): Promise<WorldScene | null> {
   const { region: name, base, bakedSky, year } = job;
   // the step's blocks are cells of the data's step `data`, or drawn finer than its finest cells (land.ts)
-  const data = Math.max(0, step - FINER_STEPS), w = windowOf(piece.ox, piece.oz);
+  const data = Math.max(0, step - FINER_STEPS), w = onGrid(job.grid, () => windowOf(piece.ox, piece.oz));
   const region = await loadWindow(data ? `${name}/z${data}` : name, w.gx0, w.gy0, w.w, w.h, base, 2 ** Math.max(0, FINER_STEPS - step));
   if (region.water.every((k) => k === Water.Sea)) return null;
   // a far step lays out its places by the plan of the finest step, where there is one (far.ts)
   if (step > 0) usePlan(await loadPlan(base, year ?? 1356));
   if (step === 0) await loadTownPeople(undefined, year); // the persons of the 30 cities walk in their towns (src/figures/people.ts)
-  return buildWorld(region, piece, gazetteer.places, landmarks.landmarks, bakedSky, step, await loadClimate(base, region.worldW ?? region.mapW, region.worldH ?? region.mapH), await loadInhabitants(base, year), await loadModels(base), await loadForest(base, year, region.worldW ?? region.mapW, region.worldH ?? region.mapH), await loadRural(base, year, region.mapW, region.mapH), await loadArable(base, year, region.mapW, region.mapH), await loadHamletLands(base, year ?? 1356), await loadParcels(base, year ?? 1356), undefined, mean);
+  const climate = await loadClimate(base, region.worldW ?? region.mapW, region.worldH ?? region.mapH), people = await loadInhabitants(base, year), models = await loadModels(base);
+  const forest = await loadForest(base, year, region.worldW ?? region.mapW, region.worldH ?? region.mapH), rural = await loadRural(base, year, region.mapW, region.mapH), arable = await loadArable(base, year, region.mapW, region.mapH);
+  const hamlets = await loadHamletLands(base, year ?? 1356), parcels = await loadParcels(base, year ?? 1356);
+  return onGrid(job.grid, () => buildWorld(region, piece, gazetteer.places, landmarks.landmarks, bakedSky, step, climate, people, models, forest, rural, arable, hamlets, parcels, undefined, mean));
 }
 
 /** What a piece of the finest step shows, summed up four blocks to one of the next step (mean.ts); null where it is open sea. */
@@ -58,7 +65,7 @@ async function meanOf(job: PieceJob): Promise<Cover> {
   // the finest block under the piece's first own block, and the finest pieces that hold it and the rest
   const fx = (ox + part.x0) * 2, fz = (oz + part.z0) * 2;
   for (let q = 0; q < 4; q++) quarters.push(job.under?.[q] ?? summed(await build(job, 0, { ox: fx + (q & 1) * side - part.x0, oz: fz + (q >> 1) * side - part.z0, part }), part));
-  return meanCover(quarters, side / 2, N, part.x0, part.z0);
+  return onGrid(job.grid, () => meanCover(quarters, side / 2, N, part.x0, part.z0));
 }
 
 /**
@@ -70,6 +77,8 @@ async function meanOf(job: PieceJob): Promise<Cover> {
 function compare(counts: Record<string, number>, mean: Cover, part: Piece['part'], ground: Batch, carried?: Batch) {
   const far = laidOut();
   if (!far?.kind) return;
+  // the side of the ground the piece was built on
+  const N = Math.round(Math.sqrt(mean.has.length));
   // the tops of the far ground as they are drawn, with the sky's light baked into them
   const drawn = above(N, N);
   lay(drawn, ground, 0, 0, true);

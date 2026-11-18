@@ -75,7 +75,7 @@ export function topColor(t: GroundTraits, x: number, z: number, mat: number, wx 
 
 /** A rectangle of columns of the ground: x0 ≤ x < x1, z0 ≤ z < z1. */
 export interface Part { x0: number; z0: number; x1: number; z1: number }
-const WHOLE: Part = { x0: 0, z0: 0, x1: N, z1: N };
+const whole = (): Part => ({ x0: 0, z0: 0, x1: N, z1: N });
 
 /** a column is what it carries, and not ground, from this share of cover on (GroundTraits.cover) */
 const CARRIED_FROM = 0.5;
@@ -86,7 +86,7 @@ const CARRIED_FROM = 0.5;
  * far step, `cover`) are put there instead of into the ground: a mesh of its own, which the stage treats as what
  * stands on the ground (Stage.lay).
  */
-export function buildTerrain(g: Ground, t: GroundTraits, baked = true, part: Part = WHOLE, carried?: Batch): Batch {
+export function buildTerrain(g: Ground, t: GroundTraits, baked = true, part: Part = whole(), carried?: Batch): Batch {
   const ox = g.ox ?? 0, oz = g.oz ?? 0;
   const b = new Batch(), light = (x: number, z: number, y: number) => (baked ? skyLight(skyShare(g, x, z, y)) : 1);
   const NB: readonly (readonly [number, number])[] = [[1, 0], [-1, 0], [0, 1], [0, -1]];
@@ -167,7 +167,7 @@ export function buildTerrain(g: Ground, t: GroundTraits, baked = true, part: Par
 export const OPEN_WATER = WATER_DEEP;
 
 /** The water as level sheets. `raised` picks the water above sea level (lakes, rivers) instead of the sea. */
-export function buildWater(g: Ground, raised = false, part: Part = WHOLE): Batch {
+export function buildWater(g: Ground, raised = false, part: Part = whole()): Batch {
   const b = new Batch(), ox = g.ox ?? 0, oz = g.oz ?? 0;
   const depthAt = (cx: number, cz: number) => {
     let sum = 0, n = 0;

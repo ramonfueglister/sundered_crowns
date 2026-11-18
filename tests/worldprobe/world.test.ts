@@ -3,7 +3,7 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { Batch } from '../../src/lookprobe/batch';
 import { LEAVES } from '../../src/lookprobe/blocks';
-import { type Ground, LAND_Y, Mat, N, SEA_Y } from '../../src/lookprobe/layout';
+import { GRID, type Ground, LAND_Y, Mat, N, SEA_Y, onGrid } from '../../src/lookprobe/layout';
 import { heightOf, styleOf } from '../../src/buildings';
 import { coverLand, usePlan } from '../../src/worldprobe/far';
 import { type Region, Water, cellOf, loadWindow, projectionOf, refine } from '../../src/worldprobe/region';
@@ -148,6 +148,22 @@ describe('the land from farther away', () => {
         const i = z * N + x + 200, j = z * N + x;
         covered += b.has[j];
         expect([a.has[i], a.rise[i], a.town[i], a.share[i], a.top[i * 3], a.top[i * 3 + 1], a.top[i * 3 + 2]], `step ${step} at ${x + 200}, ${z}`).toEqual([b.has[j], b.rise[j], b.town[j], b.share[j], b.top[j * 3], b.top[j * 3 + 1], b.top[j * 3 + 2]]);
+      }
+      expect(covered).toBeGreaterThan(500);
+    }
+  }, 60000);
+
+  it('is the same on a smaller ground, 32 blocks round the part that is compared', () => {
+    const SIDE = 264, EDGE = (GRID - SIDE) / 2;
+    for (const step of [2, 3, 5]) {
+      const a = laid(0, step), b = onGrid(SIDE, () => { expect(N).toBe(SIDE); return laid(EDGE, step); });
+      expect(N).toBe(GRID);
+      expect(b.has.length).toBe(SIDE * SIDE);
+      let covered = 0;
+      for (let z = 32; z < SIDE - 32; z++) for (let x = 32; x < SIDE - 32; x++) {
+        const i = z * GRID + x + EDGE, j = z * SIDE + x;
+        covered += b.has[j];
+        expect([a.has[i], a.rise[i], a.town[i], a.share[i], a.kind![i], a.top[i * 3], a.top[i * 3 + 1], a.top[i * 3 + 2]], `step ${step} at ${x + EDGE}, ${z}`).toEqual([b.has[j], b.rise[j], b.town[j], b.share[j], b.kind![j], b.top[j * 3], b.top[j * 3 + 1], b.top[j * 3 + 2]]);
       }
       expect(covered).toBeGreaterThan(500);
     }
