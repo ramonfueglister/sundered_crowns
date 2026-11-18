@@ -120,7 +120,8 @@ export interface Stage {
   remove(group: THREE.Group): void;
   /**
    * Adds more things to a group on the stage, as a mesh of its own that is shown, hidden and dissolved by itself;
-   * `drop` takes it off again.
+   * `drop` takes it off again. The things as lists, or as faces of floats alone (faces.ts `Free`, with no lists
+   * beside them).
    */
   more(group: THREE.Group, things: Shape): THREE.Mesh;
   drop(mesh: THREE.Mesh): void;
@@ -710,7 +711,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
       for (const mesh of group.children) if (mesh.userData.figures === 'near') (mesh as THREE.InstancedMesh).dispose(); else if (!mesh.userData.figures) gone(mesh as THREE.Mesh);
       pending = Math.max(pending, 1);
     },
-    more(group, things) { const part = cool(mesh(things, solid, true)); part.userData.ink = 0; group.add(part); pending = Math.max(pending, 3); return part; },
+    more(group, things) { const part = cool(things.free?.geo.length && !things.pos.length ? freeMesh(things, true) : mesh(things, solid, true)); part.userData.ink = 0; group.add(part); pending = Math.max(pending, 3); return part; },
     drop(part) { part.removeFromParent(); gone(part); pending = Math.max(pending, 1); },
     sent(thing) { return (thing as THREE.Mesh).isMesh ? !cold.has(thing as THREE.Mesh) : !thing.children.some((part) => cold.has(part as THREE.Mesh)); },
     room() { return waiting < share; },

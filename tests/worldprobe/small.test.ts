@@ -161,6 +161,12 @@ describe('faced', () => {
     expect(h.faces).toBeUndefined();
     expect(triangles(unfree(h.free!))).toEqual(triangles(small(house)));
     expect(faced(mixed(), 0, true).free).toBeUndefined();
+    // asked for all of them, those on the grid are faces of floats as well: one kind of face, and the very triangles
+    const one = faced(b, 0, 'all');
+    expect(one.faces).toBeUndefined();
+    expect(one.free!.geo.length / FREE_GEO).toBe(rects + 12);
+    expect(one.pos.length / 9).toBe(5);
+    expect(triangles(one, unfree(one.free!))).toEqual(triangles(small(b)));
   });
 
   it('lets a ray find the first face on no grid it meets from the front', () => {

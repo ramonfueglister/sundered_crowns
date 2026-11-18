@@ -5,6 +5,7 @@
 // ground, which lies over the whole blocks (nearground.ts). Only what the picture shows is built this way: a house
 // of fine blocks takes many times the triangles of a far one. What the view leaves behind is let go again.
 import type * as THREE from 'three/webgpu';
+import { FREE_GEO } from '../lookprobe/faces';
 import type { Stage } from '../lookprobe/stage';
 import type { HousesDone, HousesJob } from './houses.worker';
 import type { Columns } from './nearground';
@@ -22,7 +23,7 @@ const DISSOLVE = 300;
  * ground, and how far it lies outside the picture and from its middle.
  */
 export interface HouseCell { key: string; group: THREE.Group; dots: readonly [number, number]; far?: THREE.Mesh; lots: Lot[]; ground?: Columns; out: number; away: number }
-interface State { cell: HouseCell; fine?: THREE.Mesh; asked: boolean; /** the share of the cell that shows its fine houses */ share: number }
+interface State { cell: HouseCell; fine?: THREE.Mesh; /** the triangles of its fine houses */ triangles?: number; asked: boolean; /** the share of the cell that shows its fine houses */ share: number }
 
 export interface Fine {
   /** Brings the houses of the cells on the stage to the view. Returns how many cells of the picture still wait for their fine houses, and whether some are dissolving. */
@@ -33,7 +34,7 @@ export interface Fine {
 }
 
 /** `still`: a tool takes one picture, in which nothing dissolves. `changed` is called whenever houses have arrived. */
-export function createFine(stage: Stage, o: { still: boolean; changed(): void; /** the houses' lists as small numbers (small.ts) */ small?: boolean }): Fine {
+export function createFine(stage: Stage, o: { still: boolean; changed(): void; /** the houses' lists as small numbers (small.ts) */ small?: boolean; /** and their rectangles as faces of floats (lookprobe/faces.ts `Free`) */ free?: boolean }): Fine {
   const states = new Map<string, State>(), jobs = new Map<number, string>(), idle: Worker[] = [], workers: Worker[] = [];
   const fine: Fine = { look, failed: '', dispose: () => { for (const w of workers) w.terminate(); } };
   let nextId = 1, last = 0;
@@ -47,7 +48,8 @@ export function createFine(stage: Stage, o: { still: boolean; changed(): void; /
       // the cell may have left the stage while its houses were built
       else if (s && e.data.houses) {
         s.fine = stage.more(s.cell.group, e.data.houses); s.fine.visible = false;
-        stage.probe.counts['fine triangles'] = (stage.probe.counts['fine triangles'] ?? 0) + s.fine.geometry.getAttribute('position').count / 3;
+        s.triangles = e.data.houses.pos.length / 9 + ((e.data.houses.free?.geo.length ?? 0) / FREE_GEO) * 2;
+        stage.probe.counts['fine triangles'] = (stage.probe.counts['fine triangles'] ?? 0) + s.triangles;
       }
       if (s) s.asked = false;
       o.changed();
@@ -57,7 +59,7 @@ export function createFine(stage: Stage, o: { still: boolean; changed(): void; /
   }
   const letGo = (s: State) => {
     if (!s.fine) return;
-    stage.probe.counts['fine triangles'] -= s.fine.geometry.getAttribute('position').count / 3;
+    stage.probe.counts['fine triangles'] -= s.triangles ?? 0;
     stage.drop(s.fine); s.fine = undefined; s.share = 0;
   };
 
@@ -87,7 +89,7 @@ export function createFine(stage: Stage, o: { still: boolean; changed(): void; /
     while (idle.length && queue.length) {
       const s = queue.pop()!, id = nextId++;
       s.asked = true; jobs.set(id, s.cell.key);
-      idle.pop()!.postMessage({ id, lots: s.cell.lots, ground: s.cell.ground, small: o.small } satisfies HousesJob);
+      idle.pop()!.postMessage({ id, lots: s.cell.lots, ground: s.cell.ground, small: o.small, free: o.free } satisfies HousesJob);
     }
     return { missing, fading };
   }
