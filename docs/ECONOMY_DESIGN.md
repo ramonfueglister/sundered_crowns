@@ -2796,21 +2796,30 @@ Two orders rules derailed in the trials and are not built: a stock for the days 
 ### The numbers
 
 All 29 cities of 1356 over 30 years with the routes of the world (`economy/examples/distance.rs`, results in
-`/mnt/project-files/wirtschaft/entfernung/gebaut/`), seeds 1356 to 1359, on the state with features 15 and 16:
+`/mnt/project-files/wirtschaft/entfernung/pr73/`), seeds 1356 to 1359, on the state with features 15 and 16 and
+with the cities as they are since the persons marry and are born (households of 5.8 persons). Without distance one
+seed was computed on this state (1356, `economy/examples/longrun.rs`):
 
-| After 30 years | Without distance (section 16) | With distance |
+| After 30 years | Without distance (seed 1356) | With distance (four seeds) |
 |---|---|---|
-| Real output of all cities (start 100) | 115.3 to 115.5 | 113.6 to 114.0 |
-| Weakest city (start 100) | 112.5 to 113.0 | 103.3 to 110.7 (Niani three times, Prague once) |
-| Highest share without work in the 30 years | | 3.5 to 5.4 % |
-| Equity of all banks (start 551) | 458 to 551 | 206 to 551 |
-| Banks with negative equity | 0 to 2 | 0 to 2 |
-| Imports over output | | 2.4 to 2.5 % |
+| Real output of all cities (start 100) | 115.6 | 112.8 to 114.0 |
+| Weakest city (start 100) | 111.8 | 99.3 to 112.2 (Cologne, Cairo, Isfahan, Fez) |
+| Highest share without work in the 30 years | | 2.6 to 7.4 % |
+| Equity of all banks (start 551) | 482 | 334 to 551 |
+| Banks with negative equity | 2 | 0 to 2 |
+| Imports over output | | 2.5 % |
 | Carrying over output | 0 | about 1 % |
-| Merchants' money of a city over its GDP | −0.07 to +0.13 | −0.14 to +0.26 |
+| Merchants' money of a city over its GDP | −0.06 to +0.11 | −0.14 to +0.18 |
 
 The books of the merchants and of every city balance in every year (largest check 1e-13). Texcoco, which trades
-with nobody, stands at 115 after 30 years. Distance costs about 1.5 points of output in 30 years.
+with nobody, stands at 114 to 116 after 30 years. Distance costs about 2 points of output in 30 years.
+
+**One city that does not recover.** With seed 1358 Cologne loses 3 % of its output in the first three years and
+stays there for the 30 years (99.3), with 4 to 6 % of its persons without work at the end of every year. In the
+three other seeds no city ends below 104. It is shown, not tuned away; the cause is not found.
+
+Before the persons were founded anew (people feature 2) the same four seeds gave 113.6 to 114.0, a weakest city of
+103.3 to 110.7 and at most 5.4 % without work.
 
 ### Deviations and what stays open
 

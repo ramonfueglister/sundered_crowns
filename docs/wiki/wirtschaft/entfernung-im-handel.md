@@ -51,17 +51,19 @@ Gegenprobe: Das Verhältnis Wagen zu Fluss abwärts zu See ist im Edikt von 301 
 
 ## Zahlen aus dem Spiel
 
-Alle 29 Städte zusammen nach 30 Jahren (jeder Tag gerechnet, vier Welten):
+Alle 29 Städte zusammen nach 30 Jahren (jeder Tag gerechnet; mit Entfernung vier Welten, ohne eine):
 
 | | Ohne Entfernung | Mit Entfernung |
 |---|---|---|
-| Produktion (Start = 100) | 115,3 bis 115,5 | 113,6 bis 114,0 |
-| Schwächste Stadt (Start = 100) | 112,5 bis 113,0 | 103,3 bis 110,7 |
-| Banken im Minus (von 29) | 0 bis 2 | 0 bis 2 |
+| Produktion (Start = 100) | 115,6 | 112,8 bis 114,0 |
+| Schwächste Stadt (Start = 100) | 111,8 | 99,3 bis 112,2 |
+| Banken im Minus (von 29) | 2 | 0 bis 2 |
 | Fracht, Anteil an der Produktion | 0 | rund 1 % |
-| Importe, Anteil an der Produktion | | 2,4 bis 2,5 % |
+| Importe, Anteil an der Produktion | | 2,5 % |
 
 Die Bücher der Händler und der Städte gehen in jedem Jahr auf.
+
+In einer der vier Welten erholt sich eine Stadt nicht: Köln verliert in den ersten drei Jahren 3 % seiner Produktion und bleibt 30 Jahre dort, mit 4 bis 6 % Menschen ohne Arbeit. Die Ursache ist nicht gefunden.
 
 ## Grenzen
 
