@@ -269,7 +269,9 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   }
   terrace(level, g.mat);
 
-  // rivers: each line is walked from its high end, never rising again, and cut one block into the valley floor
+  // rivers: a river's water lies at its bed, which is settled beforehand for the whole river (tools/worldprobe/beds.py):
+  // in its valley floor, never rising on its way down. So a river's level depends on the river alone and not on
+  // where the ground begins, and the pieces of the world meet at one level.
   const river = new Int16Array(N * N).fill(-1), stream = new Float32Array(N * N);
   for (const r of region.rivers) {
     const wide = (2 * (r.rank <= 6 ? RIVER_HALF : BROOK_HALF)) / cell;
@@ -287,29 +289,31 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
       continue;
     }
     // a river is as wide as at the finest step, and never narrower than a block
-    const half = Math.max(0.6, wide / 2), steps: [number, number, number][] = [];
+    const half = Math.max(0.6, wide / 2), between = new Map((r.mid ?? []).map((m) => [m[0], m]));
     for (let k = 0; k + 1 < r.pts.length; k++) {
       const a = toGround(...r.pts[k]), b = toGround(...r.pts[k + 1]), len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      // the bed between the two points: straight from one to the other, or through the heights given between them
+      const mid = between.get(k), parts = mid ? mid.length : 1;
+      const bedAt = (j: number) => (j <= 0 ? r.bed![k] : j >= parts ? r.bed![k + 1] : mid![j]);
       for (let t = 0; t < len; t += 0.5) {
         const x = a[0] + ((b[0] - a[0]) * t) / len, z = a[1] + ((b[1] - a[1]) * t) / len;
         if (!inGrid(Math.floor(x), Math.floor(z))) continue;
-        // the valley floor: the lowest ground within a block of the line, which is drawn more coarsely than the heights
-        let floor = Infinity;
-        for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) if (inGrid(Math.floor(x) + dx, Math.floor(z) + dz)) floor = Math.min(floor, Math.round(levelOf(metresAt(x + dx, z + dz), cellAt(x + dx, z + dz))));
-        steps.push([x, z, floor]);
-      }
-    }
-    if (steps.length < 2) continue;
-    if (steps[0][2] < steps[steps.length - 1][2]) steps.reverse();
-    let low = Infinity;
-    for (const [x, z, floor] of steps) {
-      low = Math.min(low, floor);
-      for (let cz = Math.floor(z - half - 1); cz <= z + half + 1; cz++) for (let cx = Math.floor(x - half - 1); cx <= x + half + 1; cx++) {
-        if (!inGrid(cx, cz) || kind[idx(cx, cz)] !== Water.Land) continue;
-        const i = idx(cx, cz), d = Math.hypot(cx + 0.5 - x, cz + 0.5 - z);
-        if (d <= half) river[i] = river[i] < 0 ? low : Math.min(river[i], low);
-        // the banks: no ground beside the water stands more than a step above it
-        else if (d <= half + 1 && level[i] > low + 1) { level[i] = low + 1; g.mat[i] = Mat.Grass; }
+        let low = Infinity;
+        if (r.bed) {
+          const f = (t / len) * parts, j = Math.min(parts - 1, Math.floor(f));
+          low = Math.round(levelOf(bedAt(j) + (bedAt(j + 1) - bedAt(j)) * (f - j), cellAt(x, z)));
+        } else {
+          // a river without a bed (a region cut for a trial, before its overviews are built) lies on its valley floor:
+          // the lowest ground within a block of the line, which is drawn more coarsely than the heights
+          for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) if (inGrid(Math.floor(x) + dx, Math.floor(z) + dz)) low = Math.min(low, Math.round(levelOf(metresAt(x + dx, z + dz), cellAt(x + dx, z + dz))));
+        }
+        for (let cz = Math.floor(z - half - 1); cz <= z + half + 1; cz++) for (let cx = Math.floor(x - half - 1); cx <= x + half + 1; cx++) {
+          if (!inGrid(cx, cz) || kind[idx(cx, cz)] !== Water.Land) continue;
+          const i = idx(cx, cz), d = Math.hypot(cx + 0.5 - x, cz + 0.5 - z);
+          if (d <= half) river[i] = river[i] < 0 ? low : Math.min(river[i], low);
+          // the banks: no ground beside the water stands more than a step above it
+          else if (d <= half + 1 && level[i] > low + 1) { level[i] = low + 1; g.mat[i] = Mat.Grass; }
+        }
       }
     }
   }
