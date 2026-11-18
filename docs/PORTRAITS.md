@@ -4382,6 +4382,95 @@ Tests: `tests/portrait.test.ts` as before (the key's size within 6 to 20 degrees
 disc). Pictures (project files, `portraits/`): `runde116_vorher_nachher_frauen.png`,
 `runde116_vorher_nachher_maenner.png` (round 115 above, now below).
 
+**Round 117: the jaw's hard edge, and round 115 held against the pictures** (2026-11-18). The reference's
+pictures are at hand again (twelve screenshots, fetched from Ramon's computer into the project's files under
+`portraits/referenz_ck3`; not in the repository). The first sheet of rounds 115 and 116 beside them
+(`tools/portrait/beside.mjs`) showed what stood out most: a grown woman's face ended in a block of a chin with
+a hard, level edge under it, over hollow cheeks, as a mask set on a neck; the reference's women have an oval
+face whose jaw goes over into the neck in a soft shade.
+
+**What the edge is.** Not the light: with the cast shadows off (`set=shadow.strength:0`) the edge stands as
+before; with the key lower (25 and 18 degrees up) it stands and two lines of the gauntlet are lost. It is the
+form, and two things of it:
+
+- *A fold in MakeHuman's mesh along the jaw's lower edge.* On 40 grown women's measured heads the skin there
+  bends by 8.8 degrees from facet to facet in the mean and by 37 degrees at the sharpest place (the mean of
+  each head's sharpest; tests/faces.rs prints it): a crease, which any light draws as a line.
+- *Round 115's narrowing.* It drew the jaw's sides in by 0.3 from 2.5 cm beside the middle on and left the
+  chin's own breadth: a chin 5 cm broad under sides that run in to it is a block. And it was held to three
+  numbers read once by hand (1.4, 1.0, 0.7). Read again with a ruler laid over two faces of the reference (A
+  and C of `beside.mjs`; to the chin's lowest point, which lies under the mark `beside.mjs` has for the chin):
+
+| | at the eyes | at the mouth | half way from mouth to chin | the far cheek at the mouth, inside its top |
+|---|---|---|---|---|
+| the reference's woman A (ruler) | 1.41 | 1.14 | 0.9 | 13 mm |
+| the reference's woman C (ruler) | 1.16 | 1.08 | 0.83 | 5 mm |
+| women, rounds 115 and 116 | 1.40 | 1.06 | 0.83 | 17.3 mm |
+| women now | 1.39 | 1.13 | 0.85 | 12.3 mm |
+| men, rounds 115 and 116 | 1.31 | 1.05 | 0.90 | 15.5 mm |
+| men now | 1.30 | 1.04 | 0.89 | 15.6 mm |
+
+  Round 115 had gone past the reference at the mouth and had hollowed the cheek turned away from the camera
+  to 17 mm, where round 97 had filled it to 8 and the reference has 5 to 13.
+
+**What is changed** (the drawn face only, `Style` in the dress table; `portrait/src/morph.rs`):
+
+- `jaw_narrow` works at the jaw's sides only: it fades out from 3.5 cm in front of the ears' depth and is gone
+  at 7.5 cm, where the cheek beside the mouth lies (`JAW_NARROW`'s fourth pair). The side turned to the camera
+  comes in, the cheek turned away keeps its fullness. `Style::jaw` for women 0.2 (0.3), for men 0.15 as before.
+- `chin_round` (`Style::chin`, women 0.3, men none): the chin's end is drawn in towards the middle, from the
+  line of the mouth (none) down to the chin's lowest point (all), from 3 mm beside the middle on, so that the
+  middle stays and no beak comes of it.
+- `jaw_soften` (`Style::edge`, women 0.5, men 0.4, at every age): the skin within 1.2 cm of the jaw's lower
+  edge (fading out to 3 cm), from the chin to the jaw's corners, goes that share of the way to the middle of
+  its neighbours, eight times over. The fold becomes a round: 5.0 degrees from facet to facet in the mean, 18 at
+  the sharpest. What lines the mouth lies in that band too, behind the chin, and is left out by where its
+  facets face; the chin's lowest point is held (the face's length and the mouth's place are measured from it).
+  A child has it as the grown have: the fold is the mesh's, not an age's. On twelve children of 2 to 11 it moves
+  the skin by under 8 mm at the sharpest of the fold (the test's limit; 6 mm was seen).
+
+Tried and not kept, all against the edge: the cheeks' fill off (nothing to see); `head-invertedtriangular`
+off the drawn face (the edge stays); a broader neck by a shape of our own, 15 and 20 in 100 (a swelling
+under the jaw); round 115's narrowing reaching back to the ears (a pinched face); more light from below
+(`bounce` 0.35, the sky 0.25: a little softer, the edge stays); the women's head leant further forward (0.24:
+worse); MakeHuman's `neck-double-incr` 1.0 with `neck-trans-forward` 1.0 (the edge is gone and a double chin
+is there; at 0.4 and 1.5 the neck's tendons stand out; forward alone leaves the edge); a thin face's targets
+at less than half (`head-fat-decr` 0.3 for 0.8, the cheeks' volume 0.2 for 0.7: next to nothing to see, left
+as round 112 set them). Of this round's own: `Style::chin` 0.45 over `jaw` 0.15 is a heart with a pointed
+chin; `Style::edge` 0.8 takes a lean woman's jaw line away altogether, her neck goes on from her cheeks.
+`chin-jaw-drop-decr` (the dent of round 93) and `chin-width-decr` (dropped in an earlier round) were not
+tried again.
+
+**The gauntlet**: 19 of 22, one fewer. "woman: beside the nose against cheek" stood 3.8 off with a limit of
+4 and stands 4.1 off: the lit cheek is 0.3 L darker (58.4, before 58.7; why was not looked at, a fuller cheek
+turned a little further from the key is a guess), and every line read against it moved by that. "man: far cheek against the
+lit" is -25.8 (-24.3), further from the reference's: with the men's soft edge off it is -25.8 as well, with
+round 115's narrowing and the soft edge -26.3 (and the women's line 4.0 off, within its limit by nothing). The nose's back 1.2 (0.9). No
+limit and no reading of the reference was touched.
+
+Honest about it. This round takes back part of round 115 (the women's breadth at the mouth, 1.13, is where
+the reference's is, and round 115's "1.0" was a misreading of mine by hand) and keeps its direction. The
+ruler readings are by eye on a picture where the jaw of the side turned to the camera goes over into a neck
+of the same colour: 0.05 either way; the two women differ from each other by more than ours do from either.
+On C the pupils lie about 15 pixels over the line `beside.mjs` has for her eyes; not changed here, so she
+stands a little small on the sheets. What a sheet shows: the block and its edge are gone on every grown
+woman, the faces are ovals, the jaw is a soft shade as the reference's; the men's jaws are softer and
+otherwise as they were; the girls of 13 keep hollow cheeks with a line from the ear to the chin (a thin
+face's targets, not this round's), most on 940004. A fold is smoothed, not understood: why MakeHuman's
+targets leave a crease of 37 degrees there (which of them) was not looked for. What stands out next beside
+the reference: the eyes (wide open, the whites bright, a stare), the skin (smooth as wax, theirs has
+blotches and pores at this size), the gloss on the nose's flank (the gauntlet's line), a man's far cheek.
+All four values (`jaw`, `chin`, `edge`, the bands) are by eye and by two faces: PLACEHOLDER.
+
+Tests: `portrait/tests/faces.rs`: new `the_drawn_chin_is_round_and_the_jaws_edge_soft` (the fields leave
+mouth, cheekbones and ears, the chin's lowest point stays, the fold is under 0.8 of its mean and 0.7 of its
+sharpest, lips and nose do not move, a child has the soft edge and no round chin);
+`the_drawn_lower_face_runs_in_to_the_chin` (the field is whole at the jaw's corners and none at the chin's
+end now); the far cheek at the mouth 9 to 15 mm inside its top (round 115: 13 to 19); a child's drawn head
+is its measured one with the soft edge and nothing else. Pictures (project files, `portraits/`):
+`runde117_vorher_nachher_frauen.png`, `runde117_vorher_nachher_maenner.png` (round 116 above, now below),
+`runde117_neben_referenz.png` (the reference above, ours below).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
@@ -4391,7 +4480,8 @@ the fine forms of the face (lids, nostrils, edge of the lips), stubble and
 children are not; since round 112 the faces differ from each other as real ones do in what the survey
 measures, by eye in the rest, and wear one hair and one brow each still; since round 113 the face is lit by the
 stage alone (no light painted into the skin, a shaded half in the skin's colour), since round 115 the lower
-face runs in to the chin (part of the way), and it still lacks the
+face runs in to the chin, since round 117 as far as the reference's does, with a round chin and a jaw whose
+edge is a soft shade, and it still lacks the
 reference's streak of gloss on the nose's flank; the thrown-back hood closes round the neck since round 35, but
 has no folds across its cloth. Since round 111 the people of every part of the world can be drawn, in a plain
 dress that is no people's own, and without a picture of the reference to hold them against.

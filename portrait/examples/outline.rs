@@ -2,6 +2,10 @@
 //! line of the eyes, at the mouth and half way from the mouth to the chin, in lengths from the line of the eyes to
 //! the chin, for the people of a sample (`tests/portrait/sample_england.json` unless `--sample` names another).
 //! Round 114 read the same three on a face of the reference by hand: about 1.4, 1.0 and 0.7; ours 1.4, 1.4, 1.2.
+//! Round 117 read them again with a ruler laid over two faces of the reference (A and C of tools/portrait/
+//! beside.mjs; the chin's lowest point, not the mark of the chin): 1.41, 1.14, 0.9 and 1.16, 1.08, 0.83, and the
+//! far cheek at the mouth 13 and 5 mm inside its top. `--chin` prints the breadth near the chin's end instead,
+//! `--what a,b` what targets of MakeHuman move, `--targets` their names.
 //!
 //!   cargo run --release --example outline -- ../public/portrait [--sample <json>] [--try name=w,name=w]
 //!
@@ -60,6 +64,29 @@ fn main() {
         if name.ends_with(".webp") || name.ends_with(".png") { real::name(&name) } else { real::put(&name, std::fs::read(&path).unwrap()) }
     }
     real::set_real(Some("real".to_string()));
+    if args.iter().any(|a| a == "--targets") {
+        let mut names: Vec<&String> = head.targets.keys().collect();
+        names.sort();
+        for n in names { println!("{n}"); }
+        return;
+    }
+    if let Some(names) = option("--what") {
+        // what a target does at weight 1: how far it moves the jaw's corners, the chin's lowest point and the
+        // vertex it moves most, in mm (x out from the middle, y up, z forward)
+        for name in names.split(',') {
+            let t = head.targets.get(name).unwrap_or_else(|| panic!("no target {name}"));
+            let at = |v: usize| -> [f32; 3] {
+                t.ids.iter().position(|&i| i as usize == v).map_or([0.0; 3], |j| [0, 1, 2].map(|c| t.d[j][c] as f32 * sc_portrait::head::DELTA_SCALE * 100.0))
+            };
+            let (a, b) = (at(JAW[0].0), at(MENTON));
+            let most = (0..t.ids.len()).max_by(|&i, &j| { let l = |k: usize| (0..3).map(|c| (t.d[k][c] as f32).powi(2)).sum::<f32>(); l(i).partial_cmp(&l(j)).unwrap() }).unwrap();
+            let (m, q) = (at(t.ids[most] as usize), head.base[t.ids[most] as usize]);
+            println!("{name:<32} jaw's corner {:5.1} {:5.1} {:5.1}   chin {:5.1} {:5.1} {:5.1}   most {:5.1} {:5.1} {:5.1} at ({:.2} {:.2} {:.2}), {} vertices", a[0], a[1], a[2], b[0], b[1], b[2], m[0], m[1], m[2], q[0], q[1], q[2], t.ids.len());
+        }
+        println!("base: jaw's corner {:?}, chin {:?}", head.base[JAW[0].0], head.base[MENTON]);
+        println!("base: tragion {:?}, jaw {:?}, the lips' line {:?}, cheekbones {:?}", head.base[sc_portrait::measure::TRAGION.0], JAW.map(|j| head.base[j.0]), head.base[STOMION[0]], sc_portrait::measure::CHEEKBONES.map(|j| head.base[j.0]));
+        return;
+    }
     let tries: Vec<(String, f32)> = option("--try").map_or(Vec::new(), |s| {
         s.split(',').map(|t| { let (n, w) = t.split_once('=').expect("name=weight"); (n.to_string(), w.parse().expect("a weight")) }).collect()
     });
@@ -69,6 +96,7 @@ fn main() {
         let at = line.find(&format!("\"{key}\":")).unwrap_or_else(|| panic!("no {key}")) + key.len() + 3;
         line[at..].split(|c: char| c == ',' || c == '}').next().unwrap().trim().parse().unwrap()
     };
+    let mut far = [0.0f32; 2];
     let mut sums = [[0.0f32; 3]; 2];
     let mut count = [0u32; 2];
     for line in text.lines().filter(|l| l.contains("\"pid\"")) {
@@ -88,16 +116,24 @@ fn main() {
                 }
             }
         }
+        if args.iter().any(|a| a == "--chin") && age >= 17.0 {
+            // the breadth of the chin's end, in mm, at these heights above the chin's lowest point
+            let chin = pp[MENTON][1];
+            let w: Vec<String> = [0.02f32, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4].iter().map(|d| { let (lo, hi) = across(&head, &pp, chin + d, STAGE_TURN); format!("{:5.1}", (hi - lo) * 100.0) }).collect();
+            println!("{pid} {}  chin's end: {}", if female { "w" } else { "m" }, w.join(" "));
+            continue;
+        }
         let s = shares(&head, &pp);
         println!("{pid} {} {age:>4}  {:.2} {:.2} {:.2}", if female { "w" } else { "m" }, s[0], s[1], s[2]);
         if age >= 17.0 {
             let x = (!female) as usize;
             for i in 0..3 { sums[x][i] += s[i]; }
+            far[x] += sc_portrait::measure::far_at_mouth(&head, &pp, STAGE_TURN);
             count[x] += 1;
         }
     }
     for (x, who) in ["grown women", "grown men"].iter().enumerate() {
         let m = sums[x].map(|v| v / count[x] as f32);
-        println!("{who:<12} eyes {:.2}  mouth {:.2}  under the mouth {:.2}   (the reference's woman A: 1.4, 1.0, 0.7)", m[0], m[1], m[2]);
+        println!("{who:<12} eyes {:.2}  mouth {:.2}  under the mouth {:.2}   (the reference's women A and C: 1.41, 1.14, 0.9 and 1.16, 1.08, 0.83)   the far cheek at the mouth {:.1} mm inside its top (theirs 13 and 5)", m[0], m[1], m[2], far[x] / count[x] as f32);
     }
 }
