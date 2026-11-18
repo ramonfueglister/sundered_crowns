@@ -136,7 +136,9 @@ export interface Stage {
 export async function createStage(o: StageOptions = {}): Promise<Stage> {
   const canvas = o.canvas ?? document.querySelector('canvas')!;
   const fixedW = Number(q.get('w')) || 0, fixedH = Number(q.get('h')) || 0;
-  const renderer = new THREE.WebGPURenderer({ canvas, antialias: true, forceWebGL: flag('webgl', false) });
+  // `?gpu=1`: the graphics card's own time for each pass of a picture is measured (the counts `gpu …`), for the tools
+  const timed = flag('gpu', false);
+  const renderer = new THREE.WebGPURenderer({ canvas, antialias: true, forceWebGL: flag('webgl', false), trackTimestamp: timed });
   renderer.toneMapping = THREE.NoToneMapping;
   renderer.shadowMap.enabled = flag('shadows', true);
   renderer.shadowMap.type = THREE.PCFShadowMap;
@@ -456,6 +458,25 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     },
   };
   (window as unknown as { __probe: Stage['probe'] }).__probe = stage.probe;
+  /**
+   * What a picture took, for the tools: the page's own time to hand it over (`draw ms`), and the graphics card's time
+   * for it, in all (`gpu ms`) and pass by pass in the order they are drawn (`gpu pass 0` …); each also summed over
+   * the pictures (`… sum`, with `gpu pictures` and `draw pictures`), so that a tool can take means between two reads.
+   */
+  const clock = (draw: number) => {
+    const c = stage.probe.counts, add = (name: string, v: number) => { c[name] = v; c[`${name} sum`] = (c[`${name} sum`] ?? 0) + v; };
+    add('draw ms', draw); c['draw pictures'] = (c['draw pictures'] ?? 0) + 1;
+    void renderer.resolveTimestampsAsync('render').then((all) => {
+      const pool = (renderer.backend as unknown as { timestampQueryPool?: { render?: { timestamps: Map<string, number>; frames: number[] } } }).timestampQueryPool?.render;
+      if (all === undefined || !pool) return;
+      add('gpu ms', all); c['gpu pictures'] = (c['gpu pictures'] ?? 0) + 1;
+      // the passes of the last picture that was measured, as they followed each other
+      const last = `:f${pool.frames[pool.frames.length - 1]}`;
+      let k = 0;
+      for (const [uid, ms] of pool.timestamps) if (uid.endsWith(last)) add(`gpu pass ${k++}`, ms);
+      c['gpu passes'] = k;
+    });
+  };
   let drawn = 0, since = performance.now();
   renderer.setAnimationLoop(() => {
     // a picture of fixed size is taken by a tool, which waits for the finished scene: nothing is drawn before
@@ -463,8 +484,10 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     if (!fixedW && anyFigures()) pending = Math.max(pending, 1);
     if (pending <= 0 || (fixedW && stage.busy)) return;
     if (laid.strength.value > 0) { aimPaper(); renderer.setRenderTarget(paperPicture); renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.render(paper, paperEye); renderer.setRenderTarget(null); }
+    const began = timed ? performance.now() : 0;
     pipeline.render();
     drawn++;
+    if (timed) clock(performance.now() - began);
     if (performance.now() - since >= 1000) { stage.probe.fps = Math.round((drawn * 1000) / (performance.now() - since)); drawn = 0; since = performance.now(); }
     if (--pending === 0 && !stage.busy) stage.probe.ready = true;
   });
