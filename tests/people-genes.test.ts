@@ -56,7 +56,7 @@ describe('the pool of a culture', () => {
 });
 
 describe('the genes of the persons of a world founded in 1356', () => {
-  it('are 68 bytes for every person', () => {
+  it('are 100 bytes for every person', () => {
     expect(P.genes.length).toBeGreaterThanOrEqual(N * 2 * NG);
     expect(genesOf(s, N - 1).length).toBe(2 * NG);
   });
@@ -77,7 +77,8 @@ describe('the genes of the persons of a world founded in 1356', () => {
   it('come anew by the upgrade from 24, whose founders drew by the place: as in a world founded now', () => {
     const { s: old, w } = newWorldState();
     const before = hashState(old);
-    old.v = 24; old.person.cols.genes.fill(7, 0, old.person.size * 2 * NG);
+    // (a world of version 24 carries 34 genes a person, 68 bytes: the step lays the column out for 50)
+    old.v = 24; (old.person.cols as { genes: Uint8Array }).genes = new Uint8Array(old.person.alive.length * 68).fill(7);
     expect(hashState(old)).not.toBe(before);
     const up = upgradeState(old, w);
     expect(up.v).toBe(STATE_VERSION);
@@ -99,16 +100,17 @@ describe('the genes of the persons of a world founded in 1356', () => {
     }
   });
   it('of children come one allele from the father and one from the mother, moved by at most 15', () => {
-    let n = 0;
+    let n = 0, far = 0; // counted, not one expect per allele: 100 alleles a child since portrait round 112
+    const near = (x: number, a: number, b: number) => Math.abs(x - a) <= 15 || Math.abs(x - b) <= 15;
     for (let id = 0; id < N; id++) {
       if (P.mother[id] < 0) continue;
       const c = genesOf(s, id), f = genesOf(s, P.father[id]), m = genesOf(s, P.mother[id]); n++;
       for (let i = 0; i < NG; i++) {
-        const near = (x: number, a: number, b: number) => Math.abs(x - a) <= 15 || Math.abs(x - b) <= 15;
-        expect(near(c[i], f[i], f[i + NG])).toBe(true);
-        expect(near(c[i + NG], m[i], m[i + NG])).toBe(true);
+        if (!near(c[i], f[i], f[i + NG])) far++;
+        if (!near(c[i + NG], m[i], m[i + NG])) far++;
       }
     }
+    expect(far).toBe(0);
     expect(n).toBeGreaterThan(5000);
   });
   it('make siblings look alike: their skin is far closer than that of two strangers of the same city', () => {
@@ -126,7 +128,7 @@ describe('the genes of the persons of a world founded in 1356', () => {
     expect(sib / ns).toBeLessThan(0.75 * (str / nt));
   });
   it('are the same for the same seed', () => {
-    expect(Array.from(newWorldState(1356).s.person.cols.genes.slice(0, 680))).toEqual(Array.from(P.genes.slice(0, 680)));
+    expect(Array.from(newWorldState(1356).s.person.cols.genes.slice(0, 1000))).toEqual(Array.from(P.genes.slice(0, 1000)));
   });
 });
 

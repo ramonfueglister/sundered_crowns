@@ -345,6 +345,13 @@ fn a_woman_of_england_wears_her_brows_higher_and_narrower_than_makehuman_draws_t
     // broad over the eye it made the women read as men, and as glowering (until round 69).
     let Some(h) = head() else { return };
     let set = sc_portrait::dress::Dress::England1356.set().unwrap();
+    // (round 112: a person's brows are lighter or heavier by a gene of their own, `DressSet::brow_gene`, which
+    // draws the band together or apart; here the gene is at its middle, the brow the table's)
+    let person = |k: u32, female: bool, age: f32| {
+        let mut p = person(k, female, age);
+        p.genes[sc_portrait::look::BROW_T] = 128.0;
+        p
+    };
     for k in 0..6 {
         // a man's brow, and a child's, lie where MakeHuman's card lies: which also says that the lean is taken out
         for p in [person(2 * k + 1, false, 35.0), person(2 * k, true, 8.0)] {
@@ -409,11 +416,15 @@ fn a_scar_of_england_is_a_pale_line_in_the_skin() {
         // on the skin: no corner further from a corner of the skin than the skin's triangles are long (on cheek
         // and forehead up to 2 cm)
         let (mut dark, mut light) = (f32::MAX, 0f32);
-        for (q, c) in scar.pos.iter().zip(&scar.col) {
+        for ((q, c), uv) in scar.pos.iter().zip(&scar.col).zip(&scar.uv) {
             let near = (0..idx.len()).min_by(|&a, &b| dist(q, &skin.pos[a]).total_cmp(&dist(q, &skin.pos[b]))).unwrap();
             assert!(dist(q, &skin.pos[near]) < 0.2, "person {k}: a corner {} off the skin", dist(q, &skin.pos[near]));
-            // against the skin beside it: as light at its edges, lighter along its middle, nowhere dark
-            let against = grey(c) / grey(&skin.col[near]);
+            // against the skin beside it: as light at its edges, lighter along its middle, nowhere dark. The skin
+            // beside it is the corner next to it in the image they share (next to it in space a scar by the eye
+            // has a corner of the lid's dark edge, which lies elsewhere in the image)
+            let d2 = |a: &[f32; 2], b: &[f32; 2]| (a[0] - b[0]).powi(2) + (a[1] - b[1]).powi(2);
+            let beside = (0..idx.len()).min_by(|&a, &b| d2(uv, &skin.uv[a]).total_cmp(&d2(uv, &skin.uv[b]))).unwrap();
+            let against = grey(c) / grey(&skin.col[beside]);
             dark = dark.min(against);
             light = light.max(against);
         }
@@ -536,15 +547,18 @@ fn the_mouth_of_england_lies_between_nose_and_chin_where_a_real_one_lies() {
     for female in [true, false] {
         let lean = set.lean[if female { 0 } else { 1 }];
         let (n, mut was, mut is, mut mm) = (60, 0.0, 0.0, [0.0; 2]);
+        let mut own: Vec<f32> = Vec::new();
         for k in 0..n {
             let p = person(2 * k + !female as u32, female, [24.0, 35.0, 50.0, 68.0][k as usize % 4]);
             let (before, after) = (lower_face(&morph_test_mouth(&h, &p, 0.0), lean), lower_face(&morph_test(&h, &p), lean));
             // nose's foot and chin stay: the height between them is what it was
             assert!((before[2] - after[2]).abs() < 0.01, "person {k}: from the nose's foot to the chin {} mm, before {}", after[2], before[2]);
             // and everyone grown has the mouth at the table's share, or lower where it lay lower
-            let share = after[0] / after[2];
-            assert!(share > set.mouth_at - 0.002 && share < 0.40, "person {k}: the upper lip takes {share} of the lower face");
-            assert!(share < set.mouth_at + 0.002 || (share - before[0] / before[2]).abs() < 1e-4, "person {k}: a mouth that lay lower was moved, {share}");
+            // (round 112: the share is the person's own, the table's moved by the gene of the mouth's height)
+            let (share, at) = (after[0] / after[2], set.mouth_at_of(&p));
+            own.push(at);
+            assert!(share > at - 0.002 && share < 0.40, "person {k}: the upper lip takes {share} of the lower face, the person's share is {at}");
+            assert!(share < at + 0.002 || (share - before[0] / before[2]).abs() < 1e-4, "person {k}: a mouth that lay lower was moved, {share}");
             // (the fault is the measured face's: the drawn one, round 107, has a shorter chin under the same mouth)
             let before = lower_face(&morph_test_measured_as(&h, &p, Some(0.0), None, None, None), lean);
             was += before[0] / before[2] / n as f32;
@@ -558,6 +572,13 @@ fn the_mouth_of_england_lies_between_nose_and_chin_where_a_real_one_lies() {
         // the head without the table's share has the fault (women 0.22, men 0.27)
         assert!(was < if female { 0.24 } else { 0.285 }, "{}: {was} without the table's share", if female { "women" } else { "men" });
         assert!(is > lo && is < hi + 0.005, "{}: {is}, real faces {lo} to {hi}", if female { "women" } else { "men" });
+        // the persons' own shares lie round the table's and spread by about 0.02 (`DressSet::mouth_gene`)
+        let mean = own.iter().sum::<f32>() / n as f32;
+        let sd = (own.iter().map(|x| (x - mean).powi(2)).sum::<f32>() / (n - 1) as f32).sqrt();
+        if show {
+            println!("{}: the persons' own shares {mean:.3} ({sd:.3})", if female { "women" } else { "men" });
+        }
+        assert!((mean - set.mouth_at).abs() < 0.008 && sd > 0.012 && sd < 0.03, "the persons' own shares: {mean} ({sd})");
     }
     // small children, whose mouths lie low enough as MakeHuman has them, keep theirs: in the mean of 40 the share
     // moves by less than 0.01
@@ -1094,7 +1115,8 @@ fn the_lips_of_england_lie_on_each_other_from_corner_to_corner() {
         most = most.max(a);
         least_without = least_without.min(b);
         assert!(a < 0.5, "{} of {age} ({k}): the lips' edges {a} mm apart at the most", if female { "a woman" } else { "a man" });
-        assert!(b > if age >= 17.0 { 1.6 } else { 1.0 }, "{} of {age} ({k}): without the table's value the slit is {b} mm", if female { "a woman" } else { "a man" });
+        // (round 112: lips differ more from person to person; the narrowest slit of a child is 0.99 mm, a girl's of two)
+        assert!(b > if age >= 17.0 { 1.6 } else { 0.9 }, "{} of {age} ({k}): without the table's value the slit is {b} mm", if female { "a woman" } else { "a man" });
         // only heights change, by no more than the slit; the middle between the lips keeps its height
         for v in 0..with.len() {
             assert!(with[v][0] == without[v][0] && with[v][2] == without[v][2], "{k}: the vertex {v} moves sideways or in depth");
@@ -1234,7 +1256,9 @@ fn a_child_of_england_has_a_braincase_as_large_against_its_face_as_a_real_childs
                     if field[v] == 0.0 {
                         assert!(with[v] == without[v], "{who} ({k}): the vertex {v} moves");
                     } else {
-                        assert!(with[v][0].abs() >= without[v][0].abs() && with[v][1] >= without[v][1], "{who} ({k}): the vertex {v} moves inwards or down");
+                        // (a vertex at the field's floor that lies under the ear's height moves down with its
+                        // share of next to nothing: a ten-thousandth of a millimetre is let pass)
+                        assert!(with[v][0].abs() >= without[v][0].abs() && with[v][1] >= without[v][1] - 1e-6, "{who} ({k}): the vertex {v} moves inwards or down");
                         way = way.max(dist(&with[v], &without[v]));
                     }
                 }

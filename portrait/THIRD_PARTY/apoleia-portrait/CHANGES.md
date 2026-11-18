@@ -22,7 +22,10 @@ work with three.js.
 
 Held against Apoleia: `examples/reference.rs`, run on Apoleia's own crate and on this one on the same machine, gave
 the same bytes for all twelve test people (tests/portrait/people.txt), real look on. tests/portrait/golden.json is
-Apoleia's output; tests/portrait.test.ts holds the WebAssembly build against it.
+Apoleia's output; tests/portrait.test.ts holds the WebAssembly build against it. (Since portrait round 112 a person
+has 50 genes, 100 bytes. The twelve test people carry the sixteen new genes at their middle, 128, after Apoleia's 34
+in each half; Apoleia's dress reads none of them and the portraits are the same bytes. Apoleia's own crate takes
+people.txt without bytes 34 to 49 and 84 to 99 of the genes.)
 
 Environment variables removed (none of them was set in Apoleia's game, only in its test renders): the folders and
 switches of the real look's parts (`APOLEIA_REAL`, `APOLEIA_MH_DIR`, `APOLEIA_MH_AUTO`, `APOLEIA_MH_BEARD`,

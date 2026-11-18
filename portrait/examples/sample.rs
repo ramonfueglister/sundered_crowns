@@ -62,7 +62,7 @@ fn world(n: u32) {
     for (w, (pool, culture)) in WORLD.iter().enumerate() {
         let o = ORIGINS.iter().position(|k| k == pool).unwrap_or_else(|| panic!("no pool {pool}")) as u8;
         for k in 0..n {
-            let r = draws(8000 + 100 * w as u64 + k as u64, 68);
+            let r = draws(8000 + 100 * w as u64 + k as u64, 2 * sc_portrait::NG);
             let d = founder(o, |i| r[i as usize]);
             let dna = d.bytes().iter().map(|b| b.to_string()).collect::<Vec<_>>().join(",");
             let female = k % 2 == 0;
@@ -95,7 +95,7 @@ fn main() {
     let (ages, small) = ([8.0, 13.0, 17.0, 24.0, 35.0, 50.0, 68.0], [2.0, 5.0]);
     let people: Vec<String> = (0..n)
         .map(|k| {
-            let r = draws(7000 + k as u64, 68);
+            let r = draws(7000 + k as u64, 2 * sc_portrait::NG);
             let d = founder(o, |i| r[i as usize]);
             let dna = d.bytes().iter().map(|b| b.to_string()).collect::<Vec<_>>().join(",");
             let (female, age) = (k % 2 == 0, if k < 28 { ages[(k / 2) as usize % ages.len()] } else { small[(k / 2) as usize % small.len()] });

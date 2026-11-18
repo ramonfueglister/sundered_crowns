@@ -1,7 +1,7 @@
 //! Looks (Ramon, 30.10.2026: CK3-like portraits, drawn first in the browser
 //! Portrait-Werkstatt, https://claude.ai/artifact/JebbURXz29FK155RntzXLL):
-//! every person carries 34 genes of two alleles, one byte each, 68 bytes in
-//! all; what shows is the mean of the two. A child takes one allele of each
+//! every person carries 50 genes of two alleles, one byte each, 100 bytes in
+//! all (34 and 68 up to round 111); what shows is the mean of the two. A child takes one allele of each
 //! gene from either parent, plus a small mutation, as in the Werkstatt. The
 //! face is drawn from them by apoleia-portrait (sim/portrait); the
 //! simulation does nothing else with them.
@@ -11,7 +11,9 @@
 //! of human genetics: no dominance, no linkage, independent genes.
 
 /// Genes per person.
-pub const NG: usize = 34;
+pub const NG: usize = 50;
+/// How many of them are Apoleia's (the first: a founder's and a child's draws for them are as they were).
+pub const NG_APOLEIA: usize = 34;
 
 /// The genes in their byte order; the builder reads them in the same
 /// order (look.rs; a test checks that both lists agree).
@@ -25,6 +27,14 @@ pub const GENES: [&str; NG] = [
     "skin", "hairL", "hairR", "eye",
     // dispositions
     "curl", "bald", "grey", "beardG",
+    // (round 112) more of the face, for a dress with a table (dress.rs `DressSet::loads`, `brow_gene`,
+    // `flush_gene`; Apoleia's dress draws nothing from them): what Apoleia's 21 genes of the face move together or
+    // not at all. The head's depth; the chin from pointed to broad; the eyes' tilt, the fold of the
+    // upper lid, how high the eyes lie and how deep; how high the mouth lies, its corners, which lip is the fuller
+    // and how far the mouth stands forward; the nose's bridge from narrow to broad; the neck's length; the bags
+    // under the eyes; the folds from the nose's wings to the mouth's corners; how heavy the brows are; and
+    // how much blood shows in the cheeks. All drawn around the middle, in every pool.
+    "headD", "chinW", "eyeT", "lid", "eyeH", "eyeP", "mouthH", "mouthC", "lipB", "mouthF", "noseB", "neckL", "bags", "folds", "browT", "ruddy",
 ];
 
 /// Two alleles per gene.
@@ -35,7 +45,7 @@ pub struct Dna {
 }
 
 impl Dna {
-    /// The 68 bytes, first allele then second.
+    /// The bytes, first allele then second.
     pub fn bytes(&self) -> [u8; 2 * NG] {
         let mut out = [0; 2 * NG];
         out[..NG].copy_from_slice(&self.a);

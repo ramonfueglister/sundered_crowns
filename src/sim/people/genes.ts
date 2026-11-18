@@ -1,6 +1,6 @@
 // The genes of the persons: what the portraits draw a face from. A port of portrait/src/dna.rs (Apoleia's Werkstatt,
-// brought over unchanged by the portrait thread): every person carries 34 genes of two alleles, one byte each, 68 bytes
-// in all; a founder draws them from the gene pool of the place they live in, a child takes one allele of each gene from
+// brought over unchanged by the portrait thread): every person carries 50 genes of two alleles, one byte each, 100 bytes
+// in all (34 and 68 up to state version 24: the last 16 came with portrait round 112); a founder draws them from the gene pool of the place they live in, a child takes one allele of each gene from
 // either parent, moved by a small mutation. The genes are a design choice (the morph targets and colours of the
 // MakeHuman base mesh), not a model of human genetics: no dominance, no linkage, independent genes (dna.rs says so).
 //
@@ -8,13 +8,18 @@
 // the same bytes for the same bits (tests/people-genes.test.ts holds them to the Rust golden vectors).
 
 /** Genes per person, and their order (dna.rs GENES; the portrait builder reads them in this order). */
-export const NG = 34;
+export const NG = 50;
 export const GENES = [
   'headW', 'headH', 'headF', 'fore', 'jaw', 'chin', 'chinH', 'cheek', 'noseL', 'noseW', 'hump', 'tip', 'eyeS', 'eyeD', 'brow',
   'browA', 'ear', 'earF', 'mouthW', 'lips', 'neck',
   'weight', 'muscle', 'typA', 'typB', 'typC',
   'skin', 'hairL', 'hairR', 'eye',
   'curl', 'bald', 'grey', 'beardG',
+  // (portrait round 112) more of the face, for the dress of 1356: the head's depth, the chin's breadth, the eyes'
+  // tilt, lid, height and depth, the mouth's height, corners, fuller lip and how far it stands forward, the nose's
+  // bridge, the neck's length, the bags under the eyes, the folds beside the mouth, the brows' weight and the cheeks' blood.
+  // All drawn around the middle, in every pool (dna.rs GENES)
+  'headD', 'chinW', 'eyeT', 'lid', 'eyeH', 'eyeP', 'mouthH', 'mouthC', 'lipB', 'mouthF', 'noseB', 'neckL', 'bags', 'folds', 'browT', 'ruddy',
 ] as const;
 
 /** The gene pools of the founders (dna.rs ORIGINS). The first seven are the regions of Apoleia's Werkstatt (a
@@ -82,14 +87,17 @@ export function origin(lon: number, lat: number): Origin {
   return Origin.Graecia;
 }
 
-/** Random bits of a draw: a 64-bit number (BigInt, as dna.rs takes u64). */
-export type Bits = (k: number) => bigint;
+/** Random bits of a draw: a 64-bit number (BigInt, as dna.rs takes u64). `low`, where the source of the bits has
+ *  it: the lower 32 bits of the same draw as a plain number, for the draws that read no more than those (most of
+ *  a founder's: 100 draws since portrait round 112, and a BigInt for each was most of the time they took). */
+export type Bits = ((k: number) => bigint) & { low?: (k: number) => number };
 const byte = (h: bigint, n: number) => Number((h >> BigInt(8 * n)) & 0xffn);
 const clamp = (v: number) => Math.min(255, Math.max(0, v));
 
-/** 128 with a spread of about 34: the sum of four random bytes, centred and scaled (dna.rs around_middle). */
-function aroundMiddle(h: bigint): number {
-  const sum = byte(h, 0) + byte(h, 1) + byte(h, 2) + byte(h, 3);
+/** 128 with a spread of about 34: the sum of four random bytes, centred and scaled (dna.rs around_middle), from
+ *  the lower 32 bits of a draw. */
+function aroundMiddle(lo: number): number {
+  const sum = (lo & 255) + ((lo >>> 8) & 255) + ((lo >>> 16) & 255) + (lo >>> 24);
   return clamp(128 + Math.trunc(((sum - 510) * 48 * 122) / (255 * 100)));
 }
 
@@ -99,17 +107,17 @@ function mutation(h: bigint): number {
   return x >= 0 ? Math.trunc((x + 255) / 510) : Math.trunc((x - 255) / 510);
 }
 
-/** A founder from a gene pool: 68 bytes, first allele of every gene then the second (one draw per allele). */
+/** A founder from a gene pool: two bytes a gene, first allele of every gene then the second (one draw per allele). */
 export function founder(pool: Origin, r: Bits): Uint8Array {
   const ranges = RANGES[Math.min(pool, RANGES.length - 1)], shifts = FACE_SHIFT[Math.min(pool, FACE_SHIFT.length - 1)];
-  const d = new Uint8Array(2 * NG);
+  const d = new Uint8Array(2 * NG), low = r.low ?? ((k: number) => Number(BigInt.asUintN(32, r(k))));
   GENES.forEach((name, i) => {
+    const range = ranges.find((g) => g[0] === name), shift = range ? 0 : shifts.find((g) => g[0] === name)?.[1] ?? 0;
     for (let k = 0; k < 2; k++) {
-      const h = r(2 * i + k), range = ranges.find((g) => g[0] === name);
       let v: number;
-      if (range) v = range[1] + Number(h % BigInt(range[2] - range[1] + 1));
-      else if (name === 'bald' || name === 'grey') v = byte(h, 0);
-      else v = clamp(aroundMiddle(h) + (shifts.find((g) => g[0] === name)?.[1] ?? 0));
+      if (range) v = range[1] + Number(r(2 * i + k) % BigInt(range[2] - range[1] + 1));
+      else if (name === 'bald' || name === 'grey') v = low(2 * i + k) & 255;
+      else v = clamp(aroundMiddle(low(2 * i + k)) + shift);
       d[i + k * NG] = v;
     }
   });

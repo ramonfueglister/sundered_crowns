@@ -165,6 +165,21 @@ pub struct Style {
     pub iris_mm: f32,
 }
 
+/// (round 112) How a face follows the person's weight. MakeHuman's targets of weight move the body and the neck
+/// and leave the face as it is (measured: the arcs from ear to ear over chin and nose do not change by a tenth of
+/// a millimetre from the lightest to the heaviest body): every face was the same lean face. The fullness of a
+/// face is tanh(`spread` x how far the weight lies from its middle, 0.5): -1 the thinnest, 1 the fullest, and a
+/// child has of it what it has of its own genes (`Look::grown`).
+pub struct Fullness {
+    pub spread: f32,
+    /// MakeHuman's targets ("#": both sides), and the weight of each on the thinnest and on the fullest face.
+    pub targets: &'static [(&'static str, f32, f32)],
+    /// How much further the cheeks are filled out on the fullest face, in mm, women's and men's, on top of
+    /// `DressSet::cheek_fill` (morph.rs `cheek_fill`). MakeHuman's own target for a fuller cheek
+    /// (`cheek-volume-incr`) lays a pouch beside the mouth, as cheeks blown up.
+    pub fill: [f32; 2],
+}
+
 /// A dress: the garments (images and bound shapes under public/portrait/real), their colours, who wears what on
 /// the head, the hair, and how the faces are read.
 pub struct DressSet {
@@ -318,6 +333,13 @@ pub struct DressSet {
     /// middle: its upper edge lies half a millimetre higher with 0.9 than the heights given at `brow_lift`, by
     /// reckoning, not measured anew.)
     pub brow_band: [f32; 2],
+    /// (round 112) How the gene "browT" makes a person's brows lighter or heavier, per unit of the gene as the
+    /// face shows it (`Look::shown` times `settings::FACE_GAIN`: about -0.55 on the lightest brows, 0.55 on the
+    /// heaviest): how much broader the band of the brow's hairs is (a factor on `brow_band` of 1 + this x the
+    /// gene), and how far the hairs' colour is mixed towards the skin's on a light brow (this x the gene, on the
+    /// low side alone: a thin brow is a sparse one). Up to round 111 every woman wore one brow and every man
+    /// another. PLACEHOLDER, by eye.
+    pub brow_gene: [f32; 2],
     /// Lips, women and men (real_look.rs `real_skin`).
     pub lips: [Lips; 2],
     /// The lash line, women and men: how far the lid's edge is drawn towards the lashes' colour where they grow
@@ -354,6 +376,9 @@ pub struct DressSet {
     /// the gauntlet's limits.
     pub flush: [f32; 2],
     pub flush_map: &'static str,
+    /// (round 112) How much stronger `flush` is per unit of the gene "ruddy" as the face shows it (as `brow_gene`):
+    /// a factor of 1 + this x the gene, from a pale face to a ruddy one. PLACEHOLDER, by eye.
+    pub flush_gene: f32,
     /// How a scar is drawn (`ScarLine`); None = Apoleia's raised ribbon.
     pub scar: Option<ScarLine>,
     /// Lids at rest: MakeHuman's eyes are wide open and stare. Weights of the targets eye-height1, -height2,
@@ -456,8 +481,16 @@ pub struct DressSet {
     /// 68 0.194; children of 2 and 5, who take a third of `rest`, 0.31 to 0.34. Real faces: 0.295 (women) and 0.301
     /// (men) with the lips at rest and 3.3 and 2.4 mm apart (Arnett and others 1999), 0.313 and 0.307 with the
     /// lips closed (Farkas and others 1984; src/measure.rs `LOWER_FACE`). 0.31 for both: closed lips. Everyone
-    /// grown then has this one share; real faces differ in it (no spread was read). Round 92.
+    /// grown then had this one share (round 92); real faces differ in it, and since round 112 ours do: `mouth_gene`.
     pub mouth_at: f32,
+    /// (round 112) How much higher or lower a person's mouth lies by the gene "mouthH", in the share `mouth_at`
+    /// per unit of the gene as the face shows it (as `brow_gene`): a short upper lip over a long chin, or a long
+    /// one over a short chin. Up to round 111 every grown mouth lay at the one share. Arnett's faces (`measure::
+    /// LOWER_FACE`) have upper lips of 24.4 (SD 2.5) and 21.0 (1.9) mm in lower thirds of 81.1 (4.7) and 71.1
+    /// (3.5): were the two independent, the share would spread by 0.035 and 0.031. They are not (a long face has
+    /// the longer lip), so less: with this value ours spread by about 0.02. PLACEHOLDER: the spread of the share
+    /// itself was not read anywhere.
+    pub mouth_gene: f32,
     /// How far the bust leans back, women and men (radians, about the axis from ear to ear through the head's
     /// centre). As MakeHuman forms them both sexes stand with the head bowed, alike (the line from chin to
     /// glabella 8.7 and 8.6 degrees off upright, the top forward): seen from eye level the brow hangs over the eyes
@@ -526,7 +559,33 @@ pub struct DressSet {
     /// 1.4 mm over a dent of 1.7 mm in the mean, the pad 3.4 mm at most; at 0.4 and without the women's share of
     /// it in `rest` 0.7 over 1.0 mm, 1.5 at most; men 0.9 to 0.6 mm). 0.4 is by eye, PLACEHOLDER: no measured
     /// outline of real faces read.
+    /// Round 112: the faces of England differed from each other less than real faces do (120 men and 120 women
+    /// measured as the survey measures, `measure::MEASURES` and `LIPS`: the nose stood out with a spread of 1.4 mm
+    /// where real noses have 2.7, the red of both lips 0.9 against 2.8 to 3.0, the lips' length 3.2 and 3.5
+    /// against 4.2 and 4.0). The eyes' size, the brows' height and arch, the nose's hump and tip and the mouth's
+    /// breadth show more strongly than Apoleia draws them (by the spreads, and by eye where the survey has no
+    /// measure: eyes and brows). The lips stay at 0.4, the red of them is given by `loads`.
     pub genes: &'static [(&'static str, f32)],
+    /// (round 112) The gain of a gene's lower half, where it is another than `genes` gives to both. The nose's
+    /// hump at 1.7 on both halves scooped the back of a nose whose gene lies a fifth under the middle until its
+    /// upper third lay level with the root (England's sample, a woman of 17: the back, a third of the way down,
+    /// 0.055 of the distance between the eyes' inner corners in front of the root, 0.12 in round 111; six of 36
+    /// under 0.06, before three), and the light the skin's image has on root and back, with the stage's highlight
+    /// down the back, lay on that plane as a pale band from eye to eye (as on a low root: real_look.rs
+    /// `root_flat`). A hooked nose has no such plane: the upper half keeps 1.7.
+    pub genes_low: &'static [(&'static str, f32)],
+    /// (round 112) More targets for single genes of the face, on top of look.rs `FACE_MOD` (Apoleia's, which stays
+    /// as it is): the gene, the target ("#": both sides), the suffixes for low and high values, and the weight per
+    /// unit of the gene as `genes` lets it show. For Apoleia's genes: the lips' red by the heights of both lips
+    /// (its own targets make a full mouth a pout); a long nose stands further out and a short one less (the
+    /// nose's size; on the hump's gene the same target laid the scooped noses flat, `genes_low`); a long face has
+    /// a longer chin. And the targets of the genes that came with round 112 (dna.rs), each of which shows in a
+    /// dress with a table alone. Weights by the survey's spreads where it has the measure (nose, lips, head
+    /// length), else by eye, PLACEHOLDER. Tried and not kept: the face's outline by `head-round`,
+    /// `-rectangular` and `-invertedtriangular` (they move the breadths the survey's means are held to), the
+    /// lid by the lids' heights (the upper lid cleared the iris), the mouth's height by `mouth-trans` (the
+    /// builder sets the mouth's height after the genes, `mouth_gene`), the cheeks by `cheek-trans` (not seen).
+    pub loads: &'static [(&'static str, &'static str, &'static str, &'static str, f32)],
     /// Targets of MakeHuman this dress's heads take nothing of, whoever asks for them (genes, age, a mood).
     /// England (round 93): `chin-jaw-drop-decr`, which lifts the skin on the jaw's edge beside the chin into the
     /// surface (see `rest`). The gene of the chin's height asks for it on a short chin, with up to 0.27 (1.1 mm):
@@ -563,6 +622,9 @@ pub struct DressSet {
     /// the nose 0.928 (0.941; 0.917), and both stay under the survey's own lengths. The amount is by eye on one
     /// traced face: PLACEHOLDER. Men: none (not looked at; a man's cheek has a dent of 3.6 mm under its pad).
     pub cheek_fill: [f32; 2],
+    /// (round 112) How a face follows the person's weight (look.rs `phen`: the gene and what the person has had
+    /// to eat), where a dress asks for it: see `Fullness`.
+    pub fullness: Option<Fullness>,
     /// How much of what the lips' edges stand apart along the seam is closed (morph.rs `lips_meet`): 0 leaves
     /// the mouth as it is closed in its middle, 1 lays the lips on each other from corner to corner.
     /// England (round 99): 1. The mouth read as a long hard stroke, and wide for it, though it is not wide: the
@@ -691,12 +753,14 @@ const ENGLAND: DressSet = DressSet {
     brow_paint: [0.0, 0.0],
     brow_lift: [[3.0, 3.0, 3.5], [0.0, 0.0, 0.0]],
     brow_band: [0.9, 1.0],
+    brow_gene: [1.1, 0.7],
     lips: [Lips { skin: 0.17, blood: [0.26, 0.032, 0.036], upper: 1.5, seam: 1.43, child: 0.6, dark: [0.38, 0.85] }, Lips { skin: 0.24, blood: [0.265, 0.030, 0.032], upper: 1.5, seam: 1.1, child: 0.6, dark: [0.38, 0.85] }],
     lash_line: [0.65, 0.55],
     lash_image: "Eyelashes1356",
     hair_red: [0.45, 0.74],
     flush: [0.65, 0.5],
     flush_map: "skin_flush.txt",
+    flush_gene: 0.9,
     scar: Some(ScarLine { half: 0.016, tone: [1.4, 1.14, 1.22] }),
     lids: [[0.15, 0.4, 0.15, 0.3], [0.1, 0.35, 0.1, 0.3]],
     adult: [15.0, 17.0],
@@ -754,6 +818,7 @@ const ENGLAND: DressSet = DressSet {
     eye_out: [2.0, 0.0],
     pupil: 0.57,
     mouth_at: 0.31,
+    mouth_gene: 0.075,
     lean: [0.12, 0.10],
     iris_mm: 11.7,
     eyes_child: [0.6, 0.5],
@@ -774,10 +839,49 @@ const ENGLAND: DressSet = DressSet {
         ("cheek/l-cheek-volume-decr", 0.6, 0.6),
         ("cheek/r-cheek-volume-decr", 0.6, 0.6),
     ],
-    genes: &[("lips", 0.4), ("cheek", 0.4)],
+    genes: &[("lips", 0.4), ("cheek", 0.4), ("jaw", 0.9), ("eyeS", 1.4), ("brow", 1.8), ("browA", 1.8), ("hump", 1.7), ("tip", 1.7), ("mouthW", 1.25)],
+    genes_low: &[("hump", 1.0)],
+    loads: &[
+        ("lips", "mouth/mouth-upperlip-height", "decr", "incr", 5.0),
+        ("lips", "mouth/mouth-lowerlip-height", "decr", "incr", 3.75),
+        ("noseL", "nose/nose-scale-depth", "decr", "incr", 0.9),
+        ("headF", "chin/chin-bones", "decr", "incr", 0.5),
+        // the genes of round 112 (dna.rs)
+        ("headD", "head/head-scale-depth", "decr", "incr", 1.0),
+        ("chinW", "chin/chin-width", "decr", "incr", 1.2),
+        ("eyeT", "eyes/#-eye-corner1", "down", "up", 2.2),
+        ("eyeT", "eyes/#-eye-eyefold-angle", "down", "up", 1.6),
+        ("lid", "eyes/#-eye-eyefold", "concave", "convex", 2.0),
+        ("eyeH", "eyes/#-eye-trans", "down", "up", 1.4),
+        ("eyeP", "eyes/#-eye-push2", "in", "out", 2.2),
+        ("mouthC", "mouth/mouth-angles", "down", "up", 0.9),
+        ("lipB", "mouth/mouth-upperlip-height", "incr", "decr", 3.0),
+        ("lipB", "mouth/mouth-lowerlip-height", "decr", "incr", 1.3),
+        ("mouthF", "mouth/mouth-trans", "backward", "forward", 0.8),
+        ("mouthF", "mouth/mouth-scale-depth", "decr", "incr", 0.4),
+        ("noseB", "nose/nose-width1", "decr", "incr", 2.0),
+        ("noseB", "nose/nose-compression", "compress", "uncompress", 0.8),
+        ("neckL", "neck/neck-scale-vert", "decr", "incr", 0.6),
+        ("bags", "eyes/#-eye-bag", "decr", "incr", 1.5),
+        ("folds", "mouth/mouth-laugh-lines", "out", "in", 0.6),
+        ("folds", "mouth/mouth-dimples", "out", "in", 0.4),
+    ],
     without: &["chin/chin-jaw-drop-decr"],
     lower_only: &["head/head-diamond", "head/head-triangular", "head/head-invertedtriangular"],
     cheek_fill: [6.0, 0.0],
+    fullness: Some(Fullness {
+        spread: 6.0,
+        targets: &[
+            ("head/head-fat-decr", 0.8, 0.0),
+            ("head/head-fat-incr", 0.0, 0.45),
+            ("cheek/#-cheek-volume-decr", 0.7, 0.0),
+            ("neck/neck-scale-horiz-decr", 0.7, 0.0),
+            ("neck/neck-scale-horiz-incr", 0.0, 0.7),
+            ("neck/neck-double-incr", 0.0, 0.7),
+            ("chin/chin-width-incr", 0.0, 0.4),
+        ],
+        fill: [3.0, 5.0],
+    }),
     seam_shut: 1.0,
     skull: &[
         (2.0, [1.141, 1.229, 1.191], [1.150, 1.182, 1.198]),
@@ -1066,9 +1170,31 @@ impl DressSet {
         self.hair
     }
 
-    /// How strongly the gene `i` of the face shows in this dress (`genes`).
-    pub fn gene_gain(&self, i: usize) -> f32 {
-        self.genes.iter().find(|g| g.0 == crate::look::GENES[i]).map_or(1.0, |g| g.1)
+    /// Where a person's mouth lies between nose and chin (`mouth_at`, `mouth_gene`).
+    pub fn mouth_at_of(&self, p: &crate::look::Look) -> f32 {
+        if self.mouth_at <= 0.0 {
+            return self.mouth_at;
+        }
+        self.mouth_at + self.mouth_gene * p.shown(crate::look::MOUTH_H) * crate::settings::FACE_GAIN
+    }
+
+    /// The brows of a person by the gene of their weight (`brow_gene`): the factor on the band's breadth, and how
+    /// far the hairs' colour is mixed towards the skin's.
+    pub fn brow_weight_of(&self, p: &crate::look::Look) -> [f32; 2] {
+        let x = p.shown(crate::look::BROW_T) * crate::settings::FACE_GAIN;
+        [(1.0 + self.brow_gene[0] * x).max(0.3), (-x * self.brow_gene[1]).clamp(0.0, 0.8)]
+    }
+
+    /// The factor on a person's flush by the gene of it (`flush_gene`).
+    pub fn flush_of(&self, p: &crate::look::Look) -> f32 {
+        (1.0 + self.flush_gene * p.shown(crate::look::RUDDY) * crate::settings::FACE_GAIN).max(0.0)
+    }
+
+    /// How strongly the gene `i` of the face shows in this dress (`genes`; `genes_low` where the gene's value
+    /// `x` lies under the middle).
+    pub fn gene_gain(&self, i: usize, x: f32) -> f32 {
+        let of = |t: &[(&str, f32)]| t.iter().find(|g| g.0 == crate::look::GENES[i]).map(|g| g.1);
+        (if x < 0.0 { of(self.genes_low) } else { None }).or(of(self.genes)).unwrap_or(1.0)
     }
 
     /// Where one eye looks, seen from the head (yaw and pitch as `gaze`): `side` is 1 for the eye on the head's

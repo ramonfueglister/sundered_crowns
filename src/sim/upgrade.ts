@@ -10,6 +10,7 @@ import type { World } from './world';
 import { foundEconomy } from './systems/economy';
 import { writeHouseholds } from './systems/household';
 import { fitPlacesToCities, foundPeople, giveGenes } from './systems/people';
+import { NG } from './people/genes';
 import { countPeople, settleHamlets } from './systems/hamlets';
 import { cultivate } from './systems/cultivation';
 import { bringInHarvest } from './systems/harvest';
@@ -30,6 +31,12 @@ export const OLDEST_STATE_VERSION = 11;
 /** `setup`: the setup of the world's start year (public/data/setup_<year>.json), read only by the steps that need it. */
 export function upgradeState(s: WorldState, w: World, setup?: () => SetupState): WorldState {
   if (s.v < OLDEST_STATE_VERSION) throw new Error(`state version ${s.v} is older than ${OLDEST_STATE_VERSION}, the oldest this build upgrades`);
+  // (portrait round 112) A person carries 50 genes where there were 34 up to version 24, so a snapshot from before
+  // has the column laid out for 68 bytes a person. It is laid out for 100 before a step founds persons or gives
+  // genes (they write 100); the step to 25 fills it for everybody.
+  if (s.v < 25 && s.person.cols.genes.length !== s.person.alive.length * 2 * NG) {
+    (s.person.cols as Record<string, Column>).genes = new Uint8Array(s.person.alive.length * 2 * NG);
+  }
   if (s.v === 11) { // 11 → 12: the persons of the cities' economies are the persons of the cities, and every firm
     // is an entity (economy feature 10). The persons get their components of the economy, and the economies are
     // founded anew on the day the world has reached, each city from its starting position and with as many active
@@ -199,6 +206,9 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     // they would have in a world founded now: the rulers and the founders of the towns from their culture's pool, out
     // of the same draws as before, and everybody born since from their parents, the elder first, out of the draws of
     // their birth. Nothing else reads the genes: who the persons are, and all they have done, stays.
+    // (Portrait round 112, in the same version: a person carries 50 genes where there were 34, more of the face;
+    // the column was laid out for them above. The first 34 genes of everybody come out of the same draws as with
+    // 34.)
     rulerGenes(s, w); giveGenes(s);
     s.v = 25;
   }

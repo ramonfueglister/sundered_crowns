@@ -26,7 +26,8 @@ import type { Table } from './ecs';
  *  (src/sim/systems/families.ts), after England around 1300: the life table of La Poutré & Janssen 2021, a fixed number of
  *  households in every town, a wedding only into a vacant one; the persons are founded anew. 24: the crown of a city buys
  *  with what it took in (economy feature 16); the economies are founded anew. 25: a founder draws the genes from the pool
- *  of the culture, not of the place (src/sim/people/pools.ts; portrait round 111); every person's genes are given anew. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
+ *  of the culture, not of the place (src/sim/people/pools.ts; portrait round 111), and a person carries 50 genes where
+ *  there were 34 (round 112: more of the face); every person's genes are given anew. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
 export const STATE_VERSION = 25;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
@@ -65,9 +66,10 @@ export const PERSON_SCHEMA = {
   iq: 'u8',
   /** the Big Five as T-scores (mean 50, standard deviation 10): openness, conscientiousness, extraversion, agreeableness, neuroticism */
   o: 'u8', c: 'u8', e: 'u8', a: 'u8', n: 'u8',
-  /** the genes the portraits draw the face from: 34 genes of two alleles, 68 bytes a person, the first allele of
-   *  every gene then the second (src/sim/people/genes.ts, after Apoleia's portrait/src/dna.rs) */
-  genes: ['u8', 68],
+  /** the genes the portraits draw the face from: 50 genes of two alleles, 100 bytes a person (34 and 68 up to
+   *  version 24), the first allele of every gene then the second (src/sim/people/genes.ts, after Apoleia's
+   *  portrait/src/dna.rs) */
+  genes: ['u8', 100],
   /** the part of the person in the economy of the city (ROLE in src/sim/systems/work.ts; 0: none), and the person's
    *  position in the engine's list of that part (economy feature 10) */
   role: 'u8', agent: 'i32',

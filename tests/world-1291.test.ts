@@ -96,7 +96,7 @@ describe('a world of 1291', () => {
     for (let id = 0; id < 24_828; id++) {
       if (P.born[id] !== B.born[id] || P.sex[id] !== B.sex[id] || P.family[id] !== B.family[id] || P.mother[id] !== B.mother[id] || P.iq[id] !== B.iq[id]) differ++;
     }
-    for (let k = 0; k < 24_828 * 68; k++) if (P.genes[k] !== B.genes[k]) differ++; // 68 gene bytes a person
+    for (let k = 0; k < 24_828 * 100; k++) if (P.genes[k] !== B.genes[k]) differ++; // 100 gene bytes a person
     expect(differ).toBe(0);
     expect(up.economy.cities!.places.length).toBe(550);
   }, 120_000);

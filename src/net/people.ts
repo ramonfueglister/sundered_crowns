@@ -63,7 +63,7 @@ export interface PersonDetail {
   iq: number;
   /** the Big Five as T-scores: openness, conscientiousness, extraversion, agreeableness, neuroticism */
   big5: [number, number, number, number, number];
-  /** 68 bytes: the first allele of each of the 34 genes, then the second (src/sim/people/genes.ts) */
+  /** 100 bytes: the first allele of each of the 50 genes, then the second (src/sim/people/genes.ts) */
   genes: number[];
   /** null in a world without economies of the cities */
   economy: PersonEconomy | null;

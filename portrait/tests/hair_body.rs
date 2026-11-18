@@ -301,12 +301,15 @@ fn hair_that_is_cut_runs_to_the_cut_and_wears_the_image_along_its_length() {
             }
         }
         deep.sort();
-        let (median, tenth) = (deep[deep.len() / 2], deep[deep.len() / 10]);
+        // (a fringe's teeth leave places bare at its edge: on the man of 24 eight of the 84 places up to round 111
+        // and nine since round 112, whose brows stand out more or less and carry the fringe's lowest end a
+        // millimetre with them. So the thinnest eighth is read, not the thinnest tenth)
+        let (median, eighth) = (deep[deep.len() / 2], deep[deep.len() / 8]);
         if show() {
-            println!("{who}: the fringe is {median} bundles deep in the median, {tenth} at its thinnest tenth");
+            println!("{who}: the fringe is {median} bundles deep in the median, {eighth} at its thinnest eighth, {} of {} places bare", deep.iter().filter(|n| **n == 0).count(), deep.len());
         }
         // (the forelock of the hair gone back ends ragged, its line rising to either side: its teeth leave places bare)
         let least = if fringed < 0.3 { 0 } else { 1 };
-        assert!(median >= 2 && tenth >= least, "{who}: the fringe is {median} bundles deep in the median and {tenth} at its thinnest tenth");
+        assert!(median >= 2 && eighth >= least, "{who}: the fringe is {median} bundles deep in the median and {eighth} at its thinnest eighth");
     }
 }

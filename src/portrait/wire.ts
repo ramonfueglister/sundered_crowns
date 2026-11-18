@@ -2,13 +2,13 @@
 // (portrait/src/wire.rs is the other side and describes the layout). All numbers little-endian.
 
 /** Genes per person; a person carries two alleles of each, one byte each (portrait/src/dna.rs). */
-export const GENES = 34;
+export const GENES = 50;
 
 /** A person as the builder takes them (the fields of Apoleia's take_person). */
 export interface PortraitPerson {
   /** Fixed per person: the seed of everything drawn by chance (beard style, tunic colour, scars). */
   pid: number;
-  /** The 68 bytes of the genes: the first allele of every gene, then the second. */
+  /** The 100 bytes of the genes: the first allele of every gene, then the second. */
   dna: ArrayLike<number>;
   female: boolean;
   /** Years. */

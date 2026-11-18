@@ -5,7 +5,8 @@
 mod common;
 
 use common::{head, person};
-use sc_portrait::{build, Beard, Portrait, Surface};
+use sc_portrait::measure::lips;
+use sc_portrait::{build, morph_test, Beard, Portrait, Surface};
 
 type V3 = [f32; 3];
 
@@ -107,8 +108,9 @@ fn a_full_beard_closes_round_the_mouth_and_keeps_to_the_jaw() {
         let (skin, crown) = skin(&out);
         let height = crown - out.chin;
         // the band the locks leave free at the middle of the face: the widest gap between the heights of their
-        // corners there, from under the nose to the chin. It is the mouth: no less than the lips are high, and
-        // not much more
+        // corners there, from under the nose to the chin. It is the mouth, as high as this man's lips are (round
+        // 112: the red of the lips is 10 to 19 mm high from man to man): the hairs of the moustache and under the
+        // lower lip hang over the red's edges, and no ring of skin lies bare round it
         let mut ys: Vec<f32> = beard.pos.iter().filter(|q| (q[0] - out.cx).abs() < 0.012 * height * 10.0 / 2.3 && q[1] > out.chin + 0.05 * height && q[1] < out.chin + 0.4 * height && q[2] > out.cz).map(|q| q[1]).collect();
         ys.sort_by(|a, b| a.partial_cmp(b).unwrap());
         let free = ys.windows(2).map(|w| w[1] - w[0]).fold(0f32, f32::max) / height;
@@ -122,9 +124,16 @@ fn a_full_beard_closes_round_the_mouth_and_keeps_to_the_jaw() {
         if std::env::var("SHOW").is_ok() {
             println!("{who}: the mouth's free band {free:.3} of the head's height, the beard's hindmost corner in front of the ear {ear:.3} and near the neckline {neck:.3} of the head's depth, {} triangles", beard.pos.len() / 3);
         }
-        // measured: 0.039 to 0.051 free (round 90's files 0.102 to 0.120: a ring of 6 to 8 mm round the lips)
-        if !(free > 0.03 && free < 0.085) {
-            bad.push(format!("{who}: the locks leave {free} of the head's height free at the mouth"));
+        // measured: 0.028 to 0.053 of the head's height free, 0.63 to 0.80 of what the red of the two lips is
+        // high (round 90's files 0.102 to 0.120 of the head's height on lips of 13 mm: a ring of 6 to 8 mm round
+        // the lips, twice the lips' height)
+        let red = lips(&morph_test(&h, &p))[2];
+        let of_lips = free * height * 100.0 / red;
+        if std::env::var("SHOW").is_ok() {
+            println!("{who}: the red of the lips {red:.1} mm high, the free band {of_lips:.2} of it");
+        }
+        if !(of_lips > 0.55 && of_lips < 1.3) {
+            bad.push(format!("{who}: the locks leave {free} of the head's height free at the mouth, {of_lips} of what the lips' red is high ({red} mm)"));
         }
         // measured: near the neckline 0.001 in front of to 0.019 behind the edge in front of the ear (round 90's
         // files 0.075 to 0.100 behind it: a bib)

@@ -349,7 +349,13 @@ export const APOLEIA: StageProfile = {
  *  and shows there (a shirt, a smock: one image, `cloth_smock`, which the stage draws as linen). No value of
  *  this profile changed.
  *  All values of this profile are PLACEHOLDER: held against one face of the reference, set by measure and by
- *  eye (docs/PORTRAITS.md). */
+ *  eye (docs/PORTRAITS.md).
+ *  Round 112: `skin.zone` 7 (2.5). The faces differ more, the noses among them: narrow and broad in the bridge,
+ *  small and large. A narrow or a small nose carries less of the highlight down its back, a broad or a large one
+ *  hardly more, and of the sample's eight grown women five have a short nose: their nose's back stood 2.9 over
+ *  the lit cheek (4.4 in round 111; the reference's 8). At 5 it is 4.0, at 7 4.8: nearer to the reference than
+ *  any round before, and on the pictures a little more light on bridge and tip (seen on England's sample and on
+ *  eight faces of other pools, dark ones among them). */
 export const ENGLAND_1356: StageProfile = {
   key: 'england1356',
   lights: {
@@ -364,7 +370,7 @@ export const ENGLAND_1356: StageProfile = {
   exposure: 0.35,
   turn: -0.24, rise: 0.03, close: 1.12,
   anisotropy: 8,
-  skin: { rough: 0.55, specular: 0.42, pores: 0.8, wrap: [0.2, 0.16, 0.13], finer: 1, fit: 1, blotch: 0.05, speckle: 0.10, colour: 1.0, tint: [1, 0.75, 0.77], relief: 0.0015, oil: 0.5, fuzz: 0.3, child: 0.3, zone: 2.5 },
+  skin: { rough: 0.55, specular: 0.42, pores: 0.8, wrap: [0.2, 0.16, 0.13], finer: 1, fit: 1, blotch: 0.05, speckle: 0.10, colour: 1.0, tint: [1, 0.75, 0.77], relief: 0.0015, oil: 0.5, fuzz: 0.3, child: 0.3, zone: 7 },
   eye: { corner: { from: 0.3, to: 0.8, dark: 0.35 }, lid: { from: -0.35, to: 0.05, dark: 0.3 }, tint: [0.84, 0.77, 0.64], white: 1.3, iris: 1.15, colour: 1.1, lift: 0.6, rough: 0.14, specular: 0.6, wrap: 0.5, cornea: 0.36, ring: 0.55 },
   brow: { rough: 1, specular: 0.05, lashes: 0.6, brows: 1.15 },
   cap: { tone: 1.7, light: 2.6, colour: 0.7, wrap: 1, shadow: false, stubble: 0, beard: { tone: 5.5, light: 3.2, colour: 0.65, wrap: 0.3 } },

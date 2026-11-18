@@ -95,8 +95,8 @@ describe('portraits', { timeout: 20_000 }, () => {
   });
 
   it('a person goes through the bytes unharmed, and a broken portrait is refused', () => {
-    expect(encodePerson(people[0], 1).length).toBe(32 + 68 + 4 + Buffer.byteLength(people[0].job) + Buffer.byteLength(people[0].origin));
-    expect(() => encodePerson({ ...people[0], dna: [1, 2, 3] }, 1)).toThrow(/68 bytes/);
+    expect(encodePerson(people[0], 1).length).toBe(32 + 100 + 4 + Buffer.byteLength(people[0].job) + Buffer.byteLength(people[0].origin));
+    expect(() => encodePerson({ ...people[0], dna: [1, 2, 3] }, 1)).toThrow(/100 bytes/);
     expect(() => decodePortrait(new Uint8Array(40))).toThrow();
   });
 
@@ -625,8 +625,12 @@ describe('portraits', { timeout: 20_000 }, () => {
     for (const p of sample) {
       const out = b.build(p);
       expect(portraitSkinTone(out.surfaces)!, `person ${p.pid}`).toBeGreaterThan(0.30);
-      // and none of England's sample is drawn with the flat image or wears tightly curled hair
-      expect(out.surfaces.some(s => s.tex.includes('_flat.') || s.tex.includes('_fleece.')), `person ${p.pid}`).toBe(false);
+      // and none of England's sample wears tightly curled hair. The flat image is drawn for the one of the 36 whose
+      // nose's root lies lowest (round 112, in which a short nose became a small one: a boy of 13 with the shortest
+      // nose of the sample, the root 0.238 of the distance between the eyes' inner corners in front of them; the
+      // image changes from 0.24 down, settings.rs ROOT_FLAT)
+      expect(out.surfaces.some(s => s.tex.includes('_fleece.')), `person ${p.pid}`).toBe(false);
+      expect(out.surfaces.some(s => s.tex.includes('_flat.')), `person ${p.pid}`).toBe(p.pid === 940017);
     }
     // the flat image is drawn without the stronger highlight down the nose's back
     const compiled = (tex: string): string => {
@@ -762,9 +766,12 @@ describe('portraits', { timeout: 20_000 }, () => {
     // woman's lit cheek where the reference's is 8 lighter, and a nose without a ridge at the panel's size. The
     // oil's film is `skin.zone` times thicker in a stripe along the face's middle line from the nose's root to
     // its tip (places of the skin's image, the same for everyone); elsewhere, and without the value, as it was.
+    // (round 112) 7, from 2.5: noses differ more since, and a narrow or a small one carries less of the stripe (a
+    // woman's nose's back 2.9 L over her lit cheek at 2.5, 4.8 at 7). The stripe is the broad one of round 106:
+    // seen on six men at 7, a little more light on the nose's tip and no drawn line down its back
     const k = ENGLAND_1356.skin!;
     expect(k.zone).toBeGreaterThan(1.5);
-    expect(k.zone).toBeLessThan(3.5);
+    expect(k.zone).toBeLessThanOrEqual(8);
     const skin = { rough: 0.5, metal: 0, double: false, tex: 'real/skin_young_female.webp', nmap: '', pos: new Float32Array(9), col: new Float32Array(9).fill(0.3), uv: new Float32Array(6), nrm: new Float32Array(9) };
     const drawn = (profile: typeof ENGLAND_1356) => {
       const m = surfaceMaterials(skin, null, null, profile, 0.3)[0]!;

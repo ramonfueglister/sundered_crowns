@@ -390,7 +390,7 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
             // the scalp under the hair this person wears (name_scalp.txt beside it), if bare-headed
             let bare = !matches!(p.hat_style(), Hat::Cap | Hat::Pileus | Hat::Petasos) && !(long_hair && p.hair_style() == Hair::Veil);
             let sf = if bare { mh_pick(p, long_hair).map(|(d, n)| format!("{d}/{}_scalp.txt", garb.map_or(n.as_str(), |g| g.under_of(&n)))).filter(|f| crate::real::exists(f)) } else { None };
-            real_skin(&mut s, &h.parts["body"][lod], &x.pp, dir, p.age, fem, hair, sf, lf.sun, p.seed, garb.map_or((1.0, "skin_red.txt"), |d| (d.flush[if fem { 0 } else { 1 }], d.flush_map)), garb.map_or(0.0, |d| d.lash_line[if fem { 0 } else { 1 }] * d.eyes_of(fem, p.age)[1]), garb.map(|d| d.lips_of(fem, p.age)), garb.is_some_and(|d| !fem && p.age < d.boy_skin), { let l = linear(skin); 0.2126 * l[0] + 0.7152 * l[1] + 0.0722 * l[2] });
+            real_skin(&mut s, &h.parts["body"][lod], &x.pp, dir, p.age, fem, hair, sf, lf.sun, p.seed, garb.map_or((1.0, "skin_red.txt"), |d| (d.flush[if fem { 0 } else { 1 }] * d.flush_of(p), d.flush_map)), garb.map_or(0.0, |d| d.lash_line[if fem { 0 } else { 1 }] * d.eyes_of(fem, p.age)[1]), garb.map(|d| d.lips_of(fem, p.age)), garb.is_some_and(|d| !fem && p.age < d.boy_skin), { let l = linear(skin); 0.2126 * l[0] + 0.7152 * l[1] + 0.0722 * l[2] });
         }
         out.push(s);
     }
@@ -1113,8 +1113,10 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
             // a dress may have the brow grow higher on the forehead than MakeHuman's, which lies on the rim of the
             // eye's socket: along the skin, by where along the eye a hair stands
             let lift = garb.map(|d| d.brow_lift_of(fem, p.age)).filter(|l| *l != [0.0; 3]);
-            let band = garb.map_or(1.0, |d| d.brow_band_of(fem, p.age));
-            for (name, col) in [(brow, cmix(cmul(bc, 0.75), skin, young)), ("Eyelashes01", cmix(cmul(bc, 0.5), hex("#140d08"), 0.5))] {
+            // (round 112) and a person's own brows are lighter or heavier (`DressSet::brow_gene`)
+            let weight = garb.map_or([1.0, 0.0], |d| d.brow_weight_of(p));
+            let band = garb.map_or(1.0, |d| d.brow_band_of(fem, p.age)) * weight[0];
+            for (name, col) in [(brow, cmix(cmix(cmul(bc, 0.75), skin, young), skin, weight[1])), ("Eyelashes01", cmix(cmul(bc, 0.5), hex("#140d08"), 0.5))] {
                 if let Some(mut sf) = mh_hair(dir, name, &x.pp, &h.base, hc, col) {
                     // a dress may draw another image on the brow's cards and on the lashes' (`DressSet::brow_image`,
                     // `lash_image`)

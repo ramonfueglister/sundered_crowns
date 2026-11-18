@@ -14,7 +14,7 @@ use sc_portrait::{build, Look, Portrait};
 /// no dress of its own.
 fn of(pool: &str, k: u32, female: bool, age: f32) -> Look {
     let o = ORIGINS.iter().position(|p| *p == pool).unwrap_or_else(|| panic!("no pool {pool}"));
-    let r: Vec<u64> = (0..68u64)
+    let r: Vec<u64> = (0..2 * sc_portrait::NG as u64)
         .map(|i| {
             let mut z = (8000 + 100 * o as u64 + k as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15).wrapping_add(i.wrapping_mul(0xBF58_476D_1CE4_E5B9)).wrapping_add(1);
             z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
@@ -100,17 +100,19 @@ fn tightly_curled_hair_is_a_mass_of_its_own() {
 fn a_flat_nose_root_is_drawn_without_the_light_painted_into_the_skins_image() {
     let Some(h) = head() else { return };
     // MakeHuman's images of the skin have the light of a nose that stands out painted round its root: a head
-    // whose root is flat takes the image without it. More than half of east Asia's founders do, none of England's
+    // whose root is flat takes the image without it. About half of east Asia's founders do (round 112: the gene
+    // of the nose's bridge shows more, and a founder of China with a high bridge keeps the image with the light),
+    // none of England's sample
     let mut flat = 0;
     for pool in ["China", "Siberia"] {
-        for k in 0..8 {
+        for k in 0..40 {
             flat += usize::from(has(&build(&h, &of(pool, k, k % 2 == 0, 30.0), 2), "_flat."));
         }
     }
     if show() {
-        println!("of 16 founders of China and Siberia {flat} are drawn with the flat image");
+        println!("of 80 founders of China and Siberia {flat} are drawn with the flat image");
     }
-    assert!(flat > 8, "of 16 founders of China and Siberia only {flat} are drawn with the flat image");
+    assert!(flat >= 32, "of 80 founders of China and Siberia only {flat} are drawn with the flat image");
     for k in 0..36 {
         for age in [3.0, 9.0, 30.0] {
             assert!(!has(&build(&h, &person(k, k % 2 == 0, age), 2), "_flat."), "England {k} of {age}");

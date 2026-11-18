@@ -145,8 +145,11 @@ mod tests {
         // a dress may draw single genes of the face less strongly; one it does not name stays as it is
         let set = crate::dress::Dress::England1356.set().unwrap();
         let at = |name: &str| GENES.iter().position(|g| *g == name).unwrap();
-        assert!(set.gene_gain(at("lips")) < 1.0);
-        assert_eq!(set.gene_gain(at("mouthW")), 1.0);
+        assert!(set.gene_gain(at("lips"), 1.0) < 1.0);
+        assert_eq!(set.gene_gain(at("noseW"), 1.0), 1.0);
+        // (round 112) and the lower half of a gene another way than the upper: a scooped nose less than a hooked one
+        assert!(set.gene_gain(at("hump"), -0.1) < set.gene_gain(at("hump"), 0.1));
+        assert_eq!(set.gene_gain(at("lips"), -1.0), set.gene_gain(at("lips"), 1.0));
     }
 
     #[test]
@@ -175,7 +178,7 @@ mod tests {
             for name in set.mouth_shut.iter().chain(set.mouth_part).map(|t| t.0).chain(set.child.iter().map(|t| t.0)).chain(set.without.iter().copied()).chain(set.lower_only.iter().copied()) {
                 assert!(h.targets.contains_key(name), "{}: {name}", set.key);
             }
-            for (gene, gain) in set.genes {
+            for (gene, gain) in set.genes.iter().chain(set.genes_low) {
                 assert!(GENES.contains(gene) && *gain >= 0.0, "{}: {gene}", set.key);
             }
             for (name, women, men) in set.rest {

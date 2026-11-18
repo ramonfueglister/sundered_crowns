@@ -15,8 +15,8 @@ one, changes nothing: same people in, same pictures out, measured.
 
 | Part | Where | What it does |
 |---|---|---|
-| Builder | `portrait/` (Rust, WebAssembly) | From a person (68 bytes of genes, sex, age, estate, occupation, origin, food, mourning, wealth, worn clothes) to the triangles of head and shoulders: MakeHuman's head morphed by the genes, skin, eyes, hair, beard, clothes, headwear, jewellery |
-| Genes | `portrait/src/dna.rs` | 34 genes of two alleles, one byte each; a child takes one allele of each gene from either parent, plus a small mutation; founders draw from one of 23 pools (round 111), which one is the culture's (`src/sim/people/pools.ts`) |
+| Builder | `portrait/` (Rust, WebAssembly) | From a person (100 bytes of genes, sex, age, estate, occupation, origin, food, mourning, wealth, worn clothes) to the triangles of head and shoulders: MakeHuman's head morphed by the genes, skin, eyes, hair, beard, clothes, headwear, jewellery |
+| Genes | `portrait/src/dna.rs` | 50 genes of two alleles, one byte each (Apoleia's 34, and 16 since round 112 that a dress with a table shows); a child takes one allele of each gene from either parent, plus a small mutation; founders draw from one of 23 pools (round 111), which one is the culture's (`src/sim/people/pools.ts`) |
 | Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; a culture without a set wears the plain dress of 1356 (round 111), one of Apoleia's seven regions Apoleia's Roman dress |
 | Stage profile | `src/portrait/profile.ts` | Light and materials per set of dress; Apoleia's portraits keep Apoleia's |
 | Pipeline | `tools/portrait/pipeline/` | Blender scripts that wrote the draped clothes and hair (not part of the build) |
@@ -4007,13 +4007,139 @@ founders of a world draw from it; a world of version 24 upgraded has a new world
 23 pools), `tests/rulers.test.ts` (rulers draw by their culture). Pictures (project files, `portraits/`):
 `runde111_welt.png` (four adults of each of the 22 pools), `runde111_zwoelf.png` (twelve of them larger).
 
+**Faces that differ from each other (round 112).** Ramon, 18 November 2026, with round 111's ask: more
+variety in the faces. Measured first, as the survey measures real faces (120 men and 120 women of England's
+pool, `measure.rs`): the breadths of face, jaw, nose and head and the face's length spread as real ones do
+(Apoleia's genes were fitted to them in rounds 88 to 92), and the rest hardly did. The nose stood out with a
+spread of 1.4 mm where real noses have 2.7, the red of both lips 0.9 against 2.8 to 3.0, the neck 10 against 20
+to 28, the head's length 4.5 and 5.2 against 7.4 and 7.2. MakeHuman's targets of weight move the body and leave
+the face as it is (the arcs from ear to ear over chin and nose did not change by a tenth of a millimetre from the
+lightest to the heaviest body): every face was the same lean face. And what a face is told by beside its
+measures (how the eyes are set and cut, the brows, the mouth's corners, the complexion) had no gene at all:
+every woman wore one brow, every mouth lay at one height, every cheek had one flush.
+
+The build:
+
+- **A face as full as its owner is heavy** (`dress.rs` `Fullness`, `morph.rs` `fullness`). The weight as it
+  shows (the gene, and the food of the last years, `Look::phen`) fills or thins the face: MakeHuman's
+  `head-fat`, a hollow under the cheekbone on the thin, the cheek filled out on the full (the builder's own
+  `cheek_fill`: MakeHuman's `cheek-volume-incr` lays a pouch beside the mouth), neck, double chin and a broader
+  chin. A woman of 24 from the lightest gene to the heaviest: neck 305, 326, 355 mm round, jaw 124, 130, 140 mm,
+  the far cheek's outline runs in by 7.6, 0.3 and -5.3 mm; hungry (food 0.1) her neck is 294. The skull's
+  measures do not move, a child has of it what it has of its genes, Apoleia's dress nothing.
+- **Apoleia's genes shown as far as real faces differ** (`DressSet::genes`, `genes_low`, `loads`). Eyes' size
+  1.4, brows' height and arch 1.8, the nose's hump and tip 1.7, the mouth's breadth 1.25 of Apoleia's strength;
+  the lips' red by the heights of both lips (Apoleia's own targets make a full mouth a pout, they stay at 0.4);
+  a long nose stands further out and a short one less (the nose's size); a long face has a longer chin.
+- **Sixteen genes more** (`dna.rs` `GENES`, 34 to 49; `NG` 50). `headD` the head's depth, `chinW` a narrow or a
+  broad chin, `eyeT` eyes that slant down or up, `lid` a deep or a full upper lid, `eyeH` eyes set low or high,
+  `eyeP` deep-set or prominent, `mouthH` a short or a long upper lip, `mouthC` the mouth's corners down or up,
+  `lipB` which of the lips is the fuller, `mouthF` a mouth that lies back or stands forward, `noseB` a narrow
+  or a broad bridge, `neckL` a short or a long neck, `bags` under the eyes, `folds` from the nose to the mouth's
+  corners, `browT` thin or heavy brows, `ruddy` a pale or a ruddy face. Each is inherited as the others (one
+  allele from either parent), drawn round the middle in every pool, and shown by a dress with a table alone:
+  fourteen by targets of MakeHuman (`loads`), the mouth's height by the share the builder sets the mouth to
+  (`mouth_gene`), the brows by the band of their hairs and how far its colour goes towards the skin's
+  (`brow_gene`), the complexion by the flush (`flush_gene`). Apoleia's portraits read the first 34 and are the
+  same bytes as before.
+- **In the game** (`src/sim/people/genes.ts`, `state.ts`, `upgrade.ts`, `src/portrait/wire.ts`). A person has
+  100 bytes of genes (68). The first 34 genes of every person come out of the same draws as before, so a world
+  founded anew has the faces it had, with the sixteen more. The column is part of state version 25 (round 111's
+  step, not yet merged); a saved game older than that has its column laid out anew before any step of the
+  upgrade writes into it. Reading the lower half of a draw as a plain number where no more of it is used, a
+  world is founded as fast as before (a test that founds one twice: 0.81 s, 1.42 with the genes added, 0.79 now).
+- **The stage** (`profile.ts`): `skin.zone` 7 (2.5), see the gauntlet below.
+
+Spreads (standard deviation, mm; 120 men and 120 women of 24, 35 and 50, the face as it is measured):
+
+| | men, round 111 | men now | real | women, round 111 | women now | real |
+|---|---|---|---|---|---|---|
+| nose protrusion | 1.4 | 2.8 | 2.7 | 1.4 | 2.7 | 2.7 |
+| the red of both lips | 0.9 | 2.3 | 3.0 | 0.9 | 2.4 | 2.8 |
+| the upper lip's red | | 1.4 | 2.2 | | 1.6 | 2.4 |
+| the lower lip's red | | 1.9 | 2.7 | | 1.9 | 2.8 |
+| lip length | 3.2 | 3.6 | 4.2 | 3.5 | 4.0 | 4.0 |
+| head length | 4.5 | 5.9 | 7.4 | 5.2 | 6.5 | 7.2 |
+| neck, round | 10.6 | 19.5 | 27.7 | 9.4 | 15.5 | 19.6 |
+| breadth at the jaw's corners | 8.4 | 8.7 | 10.4 | 8.2 | 9.5 | 8.9 |
+| face length | | 6.8 | 7.0 | | 6.8 | 6.1 |
+| breadth at the cheekbones | | 6.9 | 6.9 | | 6.6 | 6.5 |
+| nose breadth | | 4.2 | 4.1 | | 4.3 | 3.9 |
+| between the pupils | | 4.0 | 3.6 | | 3.7 | 3.5 |
+
+(Real: Zhuang & Bradtmiller 2005 for the face and the head, the lips and the neck from the sources named at
+`measure.rs` `LIPS` and `NECK_LEAN`; where no number stands for round 111 the measure was at the survey's
+before and is within a tenth of where it was.) The means stay within the survey test of round 88. A gene of
+the new sixteen moves the skin, between a low and a high value on one woman, by 10.5 mm (head's depth), 8.3
+(chin), 7.7 and 7.9 (the lips, the mouth forward), 6.3 (lid), 5.5 (eyes' height), 4.8 (eyes' depth), 4.3 and 4.1
+(mouth's height and corners), 3.2 (slant), 3.0 (bridge), 2.6 (bags), 1.7 (folds), 27 (the neck's length, at the
+shoulders).
+
+**The gauntlet** lost a line on the way and has it again: 19 of 19. "Woman: nose's back against cheek" stood at
+4.4 L (the reference's 8, limit 4) and fell to 3.5, then to 2.9. Read per woman and per gene (`face_colour.mjs
+--all`, with single genes set to the middle on the test page): a narrow bridge carries less of the stage's
+highlight (the woman with the narrowest lost 2.9 L, the broadest gained 0.1), a small nose less than a large
+one, and a thin face has a lighter lit cheek (3.8 L on one girl) where a full one has a darker by less; of the
+sample's eight grown women five have a short nose. The line is the mean of eight faces, and it passed by 0.4.
+The highlight down the nose's back is 7 times the film's strength now (2.5): 4.0 at 5, 4.8 at 7, nearer to
+the reference than any round before, and on the pictures a little more light on bridge and tip (seen on
+England's sample and on eight faces of other pools). The other eighteen lines moved by 1.1 at most (a shaven
+man's lower lip against his cheek, a woman's far cheek by 1.0), each within its limit.
+
+Found on the way, in the pictures: with the hump's gene at 1.7 on both of its halves a scooped nose had its
+back's upper third in one plane with the root, and the light the skin's image has there, with the stage's
+highlight, lay as a pale band from eye to eye (six of England's 36 with the back less than 0.06 of the
+distance between the eyes' inner corners in front of the root, the least 0.007; round 111 three and 0.038).
+The gene's lower half keeps Apoleia's strength (`genes_low`), and the nose's depth, which had gone by the hump
+as well and laid the scooped noses flat, goes by the nose's length: now three under 0.06 and 0.045 the least,
+and the nose's protrusion spreads as real ones (1.05 and 0.98 of the survey's; 0.86 with the depth on the
+hump). One of England's 36, a boy of 13 with the shortest nose, has a root low enough for the flat image of
+round 111 (0.238; the image changes at 0.24).
+
+Tried and not kept: the face's outline by MakeHuman's `head-round`, `-rectangular` and `-invertedtriangular`
+(they move the breadths the means are held to: the cheekbones' mean by 2.4 mm, the head's breadth to 1.25 and
+1.36 of the survey's spread; a gene of the chin's breadth instead); the lid by the lids' heights (the upper
+lid cleared the iris: a stare); the mouth's height by `mouth-trans` (the builder sets the mouth's height after
+the genes, the share's mean went to 0.320 where real faces have 0.295 to 0.313); the bridge by `nose-width3`
+with full compression (men's nose breadth 39.0 in the mean); the cheeks by `cheek-trans` (not seen in a
+picture; the bags under the eyes instead); the mouth's corners at 1.4 (a grimace), the mouth forward at 1.5
+(a muzzle), the neck's length at 1.0, the folds at 1.0, the flush at 1.2: each seen on a sheet of one face
+with the gene low and high and taken back.
+
+Honest about it. The weights of the sixteen genes, of the fullness and of the brows are by eye (PLACEHOLDER)
+wherever the survey has no measure: eyes, lids, brows, the mouth's corners, bags, folds, complexion; no
+source for how far real faces differ in these was read. Every pool draws the sixteen round the same middle:
+peoples do not differ in them. The lips' red is at two thirds of the real spread for each lip and the
+arcs under nose and chin at 0.55 to 0.6 of theirs. What a sheet still shows as alike: every woman of one age
+wears the same hair and every man one of three cuts, the men's brows lie under the fringe, the brow has one
+shape, and there are no freckles, moles or marks (they need a layer on the skin's image, not a gene of the
+head's form). Some draws are extreme: full lips with the fuller upper lip still read as a pout. A pale stripe
+from the nose's root under the far eye, the image's painted light, shows on faces with wide-set eyes as it
+did before this round, and where eyes are set high or deep a little more. The gauntlet's nose line is a
+mean of eight women and moved by a single woman's bridge: it holds the stage on these eight, not on a nose.
+`tests/world_server.test.ts` (not this round's) needs 4.5 to 5.1 s of its limit of 5 on the machine these
+rounds are built on, before the round as after it.
+
+Tests: `portrait/tests/variety.rs` (new: the spreads beside the survey's; a face as full as its owner is heavy,
+and not in Apoleia's dress; each of the sixteen genes shows in England's dress and not in Apoleia's; a scooped
+nose keeps a back that rises from its root), `portrait/tests/faces.rs` (the mouth's share spreads round the
+table's; the brows' test with the gene at its middle), `portrait/tests/world.rs`, `locks.rs`, `hair_body.rs`
+(bounds that held one face's values, now read on more), `tests/people-genes.test.ts` (100 bytes; a saved game
+with 68 is laid out anew), `tests/rulers.test.ts`, `tests/world-1291.test.ts`, `tests/portrait.test.ts` (the
+wire; England's sample: one flat image, the highlight's strength). Golden vectors of the genes anew (`genes_golden.json`),
+Apoleia's twelve with the sixteen at the middle (`people.json`, `people.txt`: Apoleia's own crate reads them
+without bytes 34 to 49 of each half). Pictures (project files, `portraits/`):
+`runde112_vorher_nachher_frauen.png`, `runde112_vorher_nachher_maenner.png` (the same 18 women at 24 and 18 men
+at 30, round 111 above and now below), `runde112_nah.png` (twelve of the sample larger, before and now).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
 is a body of thick bundles as theirs is, evener and duller than theirs; since round 110 a gown is cut at
 the neck and linen shows under it, without the bands, trims and fastenings theirs have; the veil (no folds),
-the fine forms of the face (lids, nostrils, edge of the lips), stubble,
-children and the variety of faces are not; the thrown-back hood closes round the neck since round 35, but
+the fine forms of the face (lids, nostrils, edge of the lips), stubble and
+children are not; since round 112 the faces differ from each other as real ones do in what the survey
+measures, by eye in the rest, and wear one hair and one brow each still; the thrown-back hood closes round the neck since round 35, but
 has no folds across its cloth. Since round 111 the people of every part of the world can be drawn, in a plain
 dress that is no people's own, and without a picture of the reference to hold them against.
 
@@ -4021,7 +4147,9 @@ dress that is no people's own, and without a picture of the reference to hold th
 (`src/sim/people/pools.ts`); only a person whose culture is not known still falls into the box of the place
 (`dna.rs` `origin`, Apoleia's seven Roman-era regions, wrong outside them). The sixteen new pools and the map
 of cultures are by common description, without a source read (PLACEHOLDER), and have no shift of the face's
-measures. Sets of dress beyond England's need sources and Ramon's choice.
+measures. Since round 112 a person has 50 genes: Apoleia's 34, which Apoleia's portraits read, and 16 of the
+face that a dress with a table shows; every pool draws those round the same middle. Sets of dress beyond
+England's need sources and Ramon's choice.
 
 ## Measured against Apoleia
 

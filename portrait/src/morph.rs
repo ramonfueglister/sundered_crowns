@@ -240,6 +240,11 @@ pub(crate) fn nose_set(h: &Head, pp: &mut [V3], by: f32) {
     }
 }
 
+/// How full a person's face is, from -1 (the thinnest) to 1 (`crate::dress::Fullness`).
+fn fullness(p: &Look, f: &crate::dress::Fullness) -> f32 {
+    ((p.phen(WEIGHT) - 0.5) * f.spread).tanh() * (0.35 + 0.65 * p.grown())
+}
+
 pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
     morph_as(h, p, None, None, None, None, None, None, true)
 }
@@ -334,22 +339,27 @@ fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, s
     let modules = crate::real::folder().is_some();
     if modules {
         let gain = settings::FACE_GAIN;
-        let gr = p.grown();
         // outliers softened: c·tanh(x/c) leaves a gene one spread from the
         // middle nearly as it is (-9 %) and pulls the far ends in (2 spreads
-        // -27 %, 3 spreads -43 %) (Ramon 31.10. "etwas zurücknehmen"; c PLACEHOLDER)
-        let soft = settings::FACE_SOFT;
+        // -27 %, 3 spreads -43 %) (Ramon 31.10. "etwas zurücknehmen"; c PLACEHOLDER): `Look::shown`
         // the genes' parts summed per target first (several genes pull on the
         // same target), then each sum softened above `lim`: MakeHuman's
         // targets are made for 0..1, far past that they turn into caricature
         // (lim·tanh(v/lim), lim 1 PLACEHOLDER: 0.3 -3 %, 0.85 -19 %, 1.4 -> 0.89)
         let lim = settings::FACE_LIM;
         let mut sums: Vec<(&str, &str, &str, f32)> = Vec::new();
-        for (k, loads) in FACE_MOD.iter().enumerate() {
-            let xl = (p.g(k) - 128.0) / 127.0;
-            let xl = if soft > 0.0 { soft * (xl / soft).tanh() } else { xl };
-            let x = xl * (0.35 + 0.65 * gr) * gain * p.dress.set().map_or(1.0, |d| d.gene_gain(k));
-            for &(n, lo, hi, w) in loads.iter() {
+        // (round 112) Apoleia's genes of the face with their own loads, and every gene with the targets a dress
+        // with a table gives it (`DressSet::loads`): more targets for Apoleia's genes, and the targets of the
+        // genes that came after them (dna.rs)
+        let table = p.dress.set().map_or(&[][..], |d| d.loads);
+        for k in 0..NG {
+            let loads = FACE_MOD.get(k).copied().unwrap_or(&[]);
+            let more = table.iter().filter(|l| l.0 == GENES[k]).map(|l| (l.1, l.2, l.3, l.4));
+            if loads.is_empty() && !table.iter().any(|l| l.0 == GENES[k]) {
+                continue;
+            }
+            let x = p.shown(k) * gain * p.dress.set().map_or(1.0, |d| d.gene_gain(k, p.shown(k)));
+            for (n, lo, hi, w) in loads.iter().copied().chain(more) {
                 let v = if !n.is_empty() && lo.is_empty() { (x * w).max(0.0) } else { x * w };
                 match sums.iter_mut().find(|e| e.0 == n && e.1 == lo && e.2 == hi) {
                     Some(e) => e.3 += v,
@@ -500,6 +510,19 @@ fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, s
         add("forehead/forehead-temple-decr", hung * 1.4);
         add("neck/neck-scale-horiz-decr", hung * 0.5);
     }
+    // (round 112) the face's fullness follows the weight (`DressSet::fullness`)
+    if let Some(f) = p.dress.set().and_then(|d| d.fullness.as_ref()) {
+        let full = fullness(p, f);
+        for &(n, thin, fat) in f.targets {
+            let w = if full < 0.0 { -full * thin } else { full * fat };
+            if n.contains('#') {
+                add(&n.replace('#', "l"), w);
+                add(&n.replace('#', "r"), w);
+            } else {
+                add(n, w);
+            }
+        }
+    }
     // illness and mourning (sleepless, weeping) give eye bags
     if l.ill + l.mourn > 0.0 {
         for sd in ["l", "r"] {
@@ -558,12 +581,14 @@ fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, s
     }
     // the cheeks filled out between cheekbone and jaw, where a dress with a table asks for it
     // (`DressSet::cheek_fill`, `cheek_fill_of`)
-    if let Some(mm) = p.dress.set().map(|d| d.cheek_fill_of(p.female, p.grown())).filter(|mm| *mm > 0.0) {
+    // (round 112) and further on a full face (`Fullness::fill`)
+    let full = p.dress.set().and_then(|d| d.fullness.as_ref()).map_or(0.0, |f| crate::dress::by_sex(f.fill[0], f.fill[1], p.female, p.grown()) * fullness(p, f).max(0.0));
+    if let Some(mm) = p.dress.set().map(|d| d.cheek_fill_of(p.female, p.grown()) + full).filter(|mm| *mm > 0.0) {
         cheek_fill(h, &mut pp, mm);
     }
     // the mouth set between nose and chin where a real one lies, where a dress with a table asks for it
     // (`DressSet::mouth_at`); after the lips are closed, which moves the line where they meet
-    if let Some((d, at)) = p.dress.set().map(|d| (d, mouth_at.unwrap_or(d.mouth_at))).filter(|(_, at)| *at > 0.0) {
+    if let Some((d, at)) = p.dress.set().map(|d| (d, mouth_at.unwrap_or(d.mouth_at_of(p)))).filter(|(_, at)| *at > 0.0) {
         mouth_set(h, &mut pp, at, crate::dress::by_sex(d.lean[0], d.lean[1], p.female, p.grown()));
     }
     // the eyes brought forward with their lids, where a dress with a table asks for it (`DressSet::eye_out`)

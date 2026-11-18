@@ -18,7 +18,7 @@ import { createTable, spawn } from '../ecs';
 import { hash01 } from '../rng';
 import { survival, yearsLived } from '../people/lifetable';
 import { housewives, GROOM_OLDER, GROOM_AGE_MIN, AGE_WINDOW, FERTILE_TO, WIDOW_REMARRIES_BELOW, SEX_RATIO_AT_BIRTH } from '../people/marriage';
-import { child, founder, origin, NG } from '../people/genes';
+import { child, founder, origin, NG, type Bits } from '../people/genes';
 import { poolOfCulture } from '../people/pools';
 import { ALL_CULTURES } from '../content/peoples';
 import { type City, citiesOf, hasCities } from '../content/cities';
@@ -169,9 +169,9 @@ export function bearChild(s: WorldState, mother: number, father: number, day: nu
 }
 
 /** The draws of the genes of a person: a 64-bit number per draw k, from the person's own stream. */
-const geneBits = (seed: number, id: number) => (k: number) => {
-  const u = (j: number) => BigInt(Math.floor(u01(seed, id, K.genes + 2 * k + j) * 4294967296));
-  return (u(1) << 32n) | u(0);
+const geneBits = (seed: number, id: number): Bits => {
+  const u = (k: number, j: number) => Math.floor(u01(seed, id, K.genes + 2 * k + j) * 4294967296);
+  return Object.assign((k: number) => (BigInt(u(k, 1)) << 32n) | BigInt(u(k, 0)), { low: (k: number) => u(k, 0) });
 };
 /** The gene pool a person without known parents draws from: the pool of the person's culture (src/sim/people/
  *  pools.ts; portrait round 111), else, for a culture that is not known, the pool of the town's place (genes.ts
@@ -202,7 +202,7 @@ export function giveGenes(s: WorldState): void {
   for (const id of born) G.set(child(g(P.father[id]), g(P.mother[id]), geneBits(seed, id)), id * 2 * NG);
 }
 
-/** The 68 gene bytes of a person (a view, not a copy). */
+/** The gene bytes of a person (a view, not a copy). */
 export const genesOf = (s: WorldState, id: number): Uint8Array => s.person.cols.genes.subarray(id * 2 * NG, (id + 1) * 2 * NG);
 const clampU8 = (v: number) => Math.min(255, Math.max(0, Math.round(v)));
 
