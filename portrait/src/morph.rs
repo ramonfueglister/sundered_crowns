@@ -6,44 +6,57 @@ use crate::head::{Head, DELTA_SCALE};
 use crate::look::*;
 use crate::settings;
 
-/// The morphed head and shoulders, for measuring faces (examples/face_measure.rs).
+/// The morphed head and shoulders as a portrait shows them, for tests and tools.
 pub fn morph_test(h: &Head, p: &Look) -> Vec<V3> {
     morph(h, p).0
+}
+
+/// The morphed head and shoulders without the drawing of a dress with a table (`DressSet::style`): the face as it
+/// is measured, which the tests against the surveys of real heads read (examples/face_measure.rs).
+pub fn morph_test_measured(h: &Head, p: &Look) -> Vec<V3> {
+    morph_as(h, p, None, None, None, None, None, None, false).0
+}
+
+/// `morph_test_measured` with another value than the dress table's where one is given: the mouth's place
+/// (`morph_test_mouth`), the braincase's factors (`morph_test_skull`), the weight of a wider mouth
+/// (`morph_test_wide`), the factor on the nose's length (`morph_test_nose`).
+pub fn morph_test_measured_as(h: &Head, p: &Look, mouth_at: Option<f32>, skull: Option<[f32; 3]>, wide: Option<f32>, nose: Option<f32>) -> Vec<V3> {
+    morph_as(h, p, mouth_at, None, skull, wide, nose, None, false).0
 }
 
 /// `morph_test` with the mouth at another share of the way from nose to chin than the dress table's
 /// (`DressSet::mouth_at`; 0: where the morph targets leave it), for tests that hold the table's value against the
 /// head without it.
 pub fn morph_test_mouth(h: &Head, p: &Look, mouth_at: f32) -> Vec<V3> {
-    morph_as(h, p, Some(mouth_at), None, None, None, None, None).0
+    morph_as(h, p, Some(mouth_at), None, None, None, None, None, true).0
 }
 
 /// `morph_test` with another share of the lips' slit closed along the seam than the dress table's
 /// (`DressSet::seam_shut`; 0: the mouth as it is closed in its middle alone), for tests that hold the table's
 /// value against the head without it.
 pub fn morph_test_seam(h: &Head, p: &Look, seam_shut: f32) -> Vec<V3> {
-    morph_as(h, p, None, Some(seam_shut), None, None, None, None).0
+    morph_as(h, p, None, Some(seam_shut), None, None, None, None, true).0
 }
 
 /// `morph_test` with the braincase larger by other factors than the dress table's (`DressSet::skull`: breadth,
 /// length, height; ones: the head as MakeHuman's targets leave it), for tests and for the tool that finds the
 /// table's values (examples/face_measure.rs `--children --skull`).
 pub fn morph_test_skull(h: &Head, p: &Look, by: [f32; 3]) -> Vec<V3> {
-    morph_as(h, p, None, None, Some(by), None, None, None).0
+    morph_as(h, p, None, None, Some(by), None, None, None, true).0
 }
 
 /// `morph_test` with another weight for a wider mouth than the dress table's (`DressSet::child_mouth`; 0: the
 /// mouth as MakeHuman's child and the rest of the table leave it), for tests and for the tool that finds the
 /// table's values (examples/face_measure.rs `--children --mouth`).
 pub fn morph_test_wide(h: &Head, p: &Look, wide: f32) -> Vec<V3> {
-    morph_as(h, p, None, None, None, Some(wide), None, None).0
+    morph_as(h, p, None, None, None, Some(wide), None, None, true).0
 }
 
 /// `morph_test` with another factor on the nose's length than the dress table's (`DressSet::child_nose`; 1: the
 /// nose as MakeHuman's targets leave it), for tests and for the tool that finds the table's values
 /// (examples/face_measure.rs `--children --nose`).
 pub fn morph_test_nose(h: &Head, p: &Look, by: f32) -> Vec<V3> {
-    morph_as(h, p, None, None, None, None, Some(by), None).0
+    morph_as(h, p, None, None, None, None, Some(by), None, true).0
 }
 
 /// The targets of MakeHuman a person's head is made of and the weight of each, in the order they are added (a target
@@ -51,7 +64,7 @@ pub fn morph_test_nose(h: &Head, p: &Look, by: f32) -> Vec<V3> {
 /// tools that ask what gives a face its form (examples/face_measure.rs `--made`).
 pub fn morph_targets(h: &Head, p: &Look) -> Vec<(String, f32)> {
     let mut list = Vec::new();
-    morph_as(h, p, None, None, None, None, None, Some(&mut list));
+    morph_as(h, p, None, None, None, None, None, Some(&mut list), true);
     list
 }
 
@@ -110,6 +123,11 @@ pub const SKULL_CENTRE: f32 = 0.30;
 /// How much of the braincase each vertex of the base head is (`skull_grow`): 0 on the face, on the ears and on
 /// the neck (at and under the floor of `SKULL_FLOOR`), 1 from `SKULL_REACH` over it.
 pub fn skull_field(h: &Head) -> Vec<f32> {
+    skull_field_over(h, SKULL_REACH)
+}
+
+/// `skull_field` with another band over the floor than `SKULL_REACH` (the drawn face's: `STYLE_REACH`).
+fn skull_field_over(h: &Head, reach: f32) -> Vec<f32> {
     use crate::measure::{GLABELLA, TRAGION};
     let b = &h.base;
     let (ty, tz, g) = ((b[TRAGION.0][1] + b[TRAGION.1][1]) / 2.0, (b[TRAGION.0][2] + b[TRAGION.1][2]) / 2.0, b[GLABELLA]);
@@ -119,19 +137,31 @@ pub fn skull_field(h: &Head) -> Vec<f32> {
     b.iter()
         .map(|q| {
             let floor = if q[2] >= turn { level(q[2]) } else { level(turn) + (nape - level(turn)) * c01((turn - q[2]) / (turn - back)) };
-            sm(0.0, SKULL_REACH, q[1] - floor)
+            sm(0.0, reach, q[1] - floor)
         })
         .collect()
 }
+
+/// How far over the braincase's floor a vertex takes the drawn face's larger braincase in full
+/// (`Style::skull`), in units: the whole height of the crown over the floor, so that the skin is drawn out
+/// evenly from the forehead to the crown. Over `SKULL_REACH`, which a child's braincase grows over, a tenth more
+/// height drew the forehead's skin out by three tenths in a band of 4 cm, where a fringe begins: the skin came
+/// through the hair between the locks' roots (round 107). PLACEHOLDER, by eye.
+pub const STYLE_REACH: f32 = 1.0;
 
 /// The braincase made larger by the factors `by` (its breadth, its length, its height), each vertex by its share
 /// of `skull_field`: sideways from the middle, backwards and forwards from the upright `SKULL_CENTRE` behind the
 /// person's glabella, upwards from the height of the person's tragion. What lies at or under the field's floor
 /// does not move: the face, the ears, the neck.
 pub(crate) fn skull_grow(h: &Head, pp: &mut [V3], by: [f32; 3]) {
+    skull_grow_over(h, pp, by, SKULL_REACH)
+}
+
+/// `skull_grow` over another band above the floor (`skull_field_over`).
+pub(crate) fn skull_grow_over(h: &Head, pp: &mut [V3], by: [f32; 3], reach: f32) {
     use crate::measure::{GLABELLA, TRAGION};
     let (ty, cz) = ((pp[TRAGION.0][1] + pp[TRAGION.1][1]) / 2.0, pp[GLABELLA][2] - SKULL_CENTRE);
-    for (v, w) in skull_field(h).into_iter().enumerate().take(pp.len()) {
+    for (v, w) in skull_field_over(h, reach).into_iter().enumerate().take(pp.len()) {
         if w > 0.0 {
             pp[v][0] *= 1.0 + w * (by[0] - 1.0);
             pp[v][2] = cz + (pp[v][2] - cz) * (1.0 + w * (by[1] - 1.0));
@@ -210,12 +240,19 @@ pub(crate) fn nose_set(h: &Head, pp: &mut [V3], by: f32) {
     }
 }
 
+/// How full a person's face is, from -1 (the thinnest) to 1 (`crate::dress::Fullness`).
+fn fullness(p: &Look, f: &crate::dress::Fullness) -> f32 {
+    ((p.phen(WEIGHT) - 0.5) * f.spread).tanh() * (0.35 + 0.65 * p.grown())
+}
+
 pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
-    morph_as(h, p, None, None, None, None, None, None)
+    morph_as(h, p, None, None, None, None, None, None, true)
 }
 
 #[allow(clippy::too_many_arguments)]
-fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, skull: Option<[f32; 3]>, wide: Option<f32>, nose: Option<f32>, mut list: Option<&mut Vec<(String, f32)>>) -> (Vec<V3>, usize) {
+/// (`drawn`: with the drawing of a dress with a table, `DressSet::style`, as a portrait shows the head; without
+/// it the face as it is measured)
+fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, skull: Option<[f32; 3]>, wide: Option<f32>, nose: Option<f32>, mut list: Option<&mut Vec<(String, f32)>>, drawn: bool) -> (Vec<V3>, usize) {
     let mut pp = h.base.clone();
     let mut used = 0;
     // targets a dress with a table takes nothing of (`DressSet::without`)
@@ -302,22 +339,27 @@ fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, s
     let modules = crate::real::folder().is_some();
     if modules {
         let gain = settings::FACE_GAIN;
-        let gr = p.grown();
         // outliers softened: c·tanh(x/c) leaves a gene one spread from the
         // middle nearly as it is (-9 %) and pulls the far ends in (2 spreads
-        // -27 %, 3 spreads -43 %) (Ramon 31.10. "etwas zurücknehmen"; c PLACEHOLDER)
-        let soft = settings::FACE_SOFT;
+        // -27 %, 3 spreads -43 %) (Ramon 31.10. "etwas zurücknehmen"; c PLACEHOLDER): `Look::shown`
         // the genes' parts summed per target first (several genes pull on the
         // same target), then each sum softened above `lim`: MakeHuman's
         // targets are made for 0..1, far past that they turn into caricature
         // (lim·tanh(v/lim), lim 1 PLACEHOLDER: 0.3 -3 %, 0.85 -19 %, 1.4 -> 0.89)
         let lim = settings::FACE_LIM;
         let mut sums: Vec<(&str, &str, &str, f32)> = Vec::new();
-        for (k, loads) in FACE_MOD.iter().enumerate() {
-            let xl = (p.g(k) - 128.0) / 127.0;
-            let xl = if soft > 0.0 { soft * (xl / soft).tanh() } else { xl };
-            let x = xl * (0.35 + 0.65 * gr) * gain * p.dress.set().map_or(1.0, |d| d.gene_gain(k));
-            for &(n, lo, hi, w) in loads.iter() {
+        // (round 112) Apoleia's genes of the face with their own loads, and every gene with the targets a dress
+        // with a table gives it (`DressSet::loads`): more targets for Apoleia's genes, and the targets of the
+        // genes that came after them (dna.rs)
+        let table = p.dress.set().map_or(&[][..], |d| d.loads);
+        for k in 0..NG {
+            let loads = FACE_MOD.get(k).copied().unwrap_or(&[]);
+            let more = table.iter().filter(|l| l.0 == GENES[k]).map(|l| (l.1, l.2, l.3, l.4));
+            if loads.is_empty() && !table.iter().any(|l| l.0 == GENES[k]) {
+                continue;
+            }
+            let x = p.shown(k) * gain * p.dress.set().map_or(1.0, |d| d.gene_gain(k, p.shown(k)));
+            for (n, lo, hi, w) in loads.iter().copied().chain(more) {
                 let v = if !n.is_empty() && lo.is_empty() { (x * w).max(0.0) } else { x * w };
                 match sums.iter_mut().find(|e| e.0 == n && e.1 == lo && e.2 == hi) {
                     Some(e) => e.3 += v,
@@ -426,13 +468,22 @@ fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, s
         for sd in ["l", "r"] {
             for (k, t) in ["height1-decr", "height2-decr", "height3-decr", "eyefold-down"].iter().enumerate() {
                 // (a child's lids stand higher: the three heights, not the fold)
-                let child = if k < 3 { d.eyes_of(p.female, p.age)[0] } else { 1.0 };
+                // (and the drawn face's stand higher still, `Style::lids`)
+                let child = if k < 3 { d.eyes_of(p.female, p.age)[0] * if drawn { d.style_lids_of(p.female, p.age) } else { 1.0 } } else { 1.0 };
                 add(&format!("eyes/{sd}-eye-{t}"), crate::dress::by_sex(d.lids[0][k], d.lids[1][k], p.female, p.grown()) * child);
             }
         }
         let child = 0.35 + 0.65 * p.grown();
+        // the face at rest, and on it the face as it is drawn (`DressSet::style`): added to a row of `rest`, or
+        // a row of its own
+        let more = |n: &str| if drawn { d.style_face_of(n, p.female, p.grown(), p.age) } else { 0.0 };
         for &(n, women, men) in d.rest {
-            add(n, crate::dress::by_sex(women, men, p.female, p.grown()) * child);
+            add(n, crate::dress::by_sex(women, men, p.female, p.grown()) * child + more(n));
+        }
+        for (k, row) in d.style.face.iter().enumerate() {
+            if !d.rest.iter().any(|r| r.0 == row.0) && !d.style.face[..k].iter().any(|r| r.0 == row.0) {
+                add(row.0, more(row.0));
+            }
         }
         let young = crate::dress::child_share(d.adult[if p.female { 0 } else { 1 }], p.age);
         for &(n, girls, boys) in d.child {
@@ -458,6 +509,19 @@ fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, s
         }
         add("forehead/forehead-temple-decr", hung * 1.4);
         add("neck/neck-scale-horiz-decr", hung * 0.5);
+    }
+    // (round 112) the face's fullness follows the weight (`DressSet::fullness`)
+    if let Some(f) = p.dress.set().and_then(|d| d.fullness.as_ref()) {
+        let full = fullness(p, f);
+        for &(n, thin, fat) in f.targets {
+            let w = if full < 0.0 { -full * thin } else { full * fat };
+            if n.contains('#') {
+                add(&n.replace('#', "l"), w);
+                add(&n.replace('#', "r"), w);
+            } else {
+                add(n, w);
+            }
+        }
     }
     // illness and mourning (sleepless, weeping) give eye bags
     if l.ill + l.mourn > 0.0 {
@@ -517,12 +581,14 @@ fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, s
     }
     // the cheeks filled out between cheekbone and jaw, where a dress with a table asks for it
     // (`DressSet::cheek_fill`, `cheek_fill_of`)
-    if let Some(mm) = p.dress.set().map(|d| d.cheek_fill_of(p.female, p.grown())).filter(|mm| *mm > 0.0) {
+    // (round 112) and further on a full face (`Fullness::fill`)
+    let full = p.dress.set().and_then(|d| d.fullness.as_ref()).map_or(0.0, |f| crate::dress::by_sex(f.fill[0], f.fill[1], p.female, p.grown()) * fullness(p, f).max(0.0));
+    if let Some(mm) = p.dress.set().map(|d| d.cheek_fill_of(p.female, p.grown()) + full).filter(|mm| *mm > 0.0) {
         cheek_fill(h, &mut pp, mm);
     }
     // the mouth set between nose and chin where a real one lies, where a dress with a table asks for it
     // (`DressSet::mouth_at`); after the lips are closed, which moves the line where they meet
-    if let Some((d, at)) = p.dress.set().map(|d| (d, mouth_at.unwrap_or(d.mouth_at))).filter(|(_, at)| *at > 0.0) {
+    if let Some((d, at)) = p.dress.set().map(|d| (d, mouth_at.unwrap_or(d.mouth_at_of(p)))).filter(|(_, at)| *at > 0.0) {
         mouth_set(h, &mut pp, at, crate::dress::by_sex(d.lean[0], d.lean[1], p.female, p.grown()));
     }
     // the eyes brought forward with their lids, where a dress with a table asks for it (`DressSet::eye_out`)
@@ -543,6 +609,10 @@ fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, s
     // (`DressSet::skull`); the face and the ears stay
     if let Some(by) = p.dress.set().map(|d| skull.unwrap_or(d.skull_of(p.female, p.age))).filter(|by| by.iter().any(|k| *k != 1.0)) {
         skull_grow(h, &mut pp, by);
+    }
+    // and the drawn face's braincase larger on top of that (`Style::skull`), over the whole height of the crown
+    if let Some(by) = p.dress.set().filter(|_| drawn).map(|d| d.style_skull_of(p.female, p.age)).filter(|by| by.iter().any(|k| *k != 1.0)) {
+        skull_grow_over(h, &mut pp, by, STYLE_REACH);
     }
     // arms down from the A pose, softly weighted around the shoulder joint
     for sg in [1.0f32, -1.0] {

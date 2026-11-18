@@ -2,9 +2,12 @@
 // it and shown with the camera of Ramon's reference image.
 // Address options: ?webgl=1 (WebGL 2 instead of WebGPU), ?w=1672&h=941 (fixed picture size), ?blur=1 (miniature blur,
 // which the reference does not have), ?shadows=0, ?mirror=0 (no mirror image on the water), ?sky=0 (without the baked sky share: light step 1 only),
-// ?ao=0 (without the darkening of creases and corners).
+// ?ao=0 (without the darkening of creases and corners; ?aoscale, ?aosamples, ?aosmooth: see there). ?small=0: the pieces' directions and
+// colours come as floats, not as bytes (worldprobe/small.ts). ?faces=0: their rectangles on the grid of blocks come as
+// triangles in those lists, not as faces (faces.ts); ?free=0: the rectangles on no grid of what stands on them do.
+// ?pilots=0: the shaders of a kind of mesh are made when its first mesh is drawn, not at the start (see there).
 import * as THREE from 'three/webgpu';
-import { clamp, convertToTexture, dot, float, fract, getViewPosition, max, mix, mrt, normalView, output, pass, reflector, screenCoordinate, screenSize, screenUV, select, smoothstep, step, texture, uniform, userData, vec2, vec3, vec4 } from 'three/tsl';
+import { Fn, agxToneMapping, attribute, clamp, convertToTexture, dot, float, fract, getViewPosition, materialColor, max, mix, mrt, neutralToneMapping, normalView, output, pass, positionGeometry, reflector, rtt, saturation, screenCoordinate, screenSize, screenUV, select, smoothstep, step, texture, uniform, userData, uv, vec2, vec3, vec4, vertexColor } from 'three/tsl';
 import { MapControls } from 'three/addons/controls/MapControls.js';
 import { dof } from 'three/addons/tsl/display/DepthOfFieldNode.js';
 import { denoise } from 'three/addons/tsl/display/DenoiseNode.js';
@@ -13,11 +16,16 @@ import { hashBlur } from 'three/addons/tsl/display/hashBlur.js';
 import { FRAME_W, LAND_Y, N, NEAR, RIGHT, SEA_Y, VIEW } from './layout';
 import type { Batch } from './batch';
 import { RIG, towards, CREASES } from './light';
-import { type Figures, anyFigures, figureMeshes, keepFigures, showFigures, warmFigures } from '../figures/stage';
+import { type Figures, anyFigures, disposeFigures, figureMeshes, keepFigures, showFigures, warmFigures } from '../figures/stage';
 import { OPEN_WATER } from './terrain';
+import { type Sea, createSea } from './sea';
+import { FACE_COL, FACE_CORNERS, FACE_GEO, FACE_STEPS, FLIPPED, FREE_GEO, RISES, type Faces, type Free, faceHit, freeHit, unfaced, unfree } from './faces';
 
 const q = new URLSearchParams(location.search);
 const flag = (k: string, fallback: boolean) => (q.has(k) ? q.get(k) !== '0' : fallback);
+const number = (k: string, fallback: number) => (q.has(k) && Number.isFinite(+q.get(k)!) ? +q.get(k)! : fallback);
+/** the creases of a dot of the smaller picture count for a dot of the picture whose surface lies within this many blocks of its point */
+const UPSAMPLE_REACH = 0.25;
 
 /**
  * The look in numbers. Light strengths are shares of the brightness of sunlit level ground (= 1), in linear light.
@@ -43,17 +51,44 @@ export type Light = Pick<typeof LOOK, 'sun' | 'sunColor' | 'side' | 'sky' | 'sky
  */
 export const NEAR_LIGHT: Light = { sun: 1.05, sunColor: 0xfff2e4, side: 0.7, sky: 0.4, skyColor: 0xc8d4f0, bounce: 0.26, fill: 0.26, mirror: 0.3, mirrorTint: 0x1898a8 }, NEAR_SHADOW = 6;
 const FAR_SHADOW = 2;
+/** how the picture's light is taken (see the curve before the map's paper below) */
+const TONE = { way: 'agx', exposure: 1.15, saturation: 1.3 };
 /** of the land's light and shade this share is left under the map's paper where it is fully calmed (see Stage.lay) */
 const CALM_KEPT = 0.4;
 /** how bright level, sunlit ground is drawn (luminance, linear light): the map's ink under the land's own light and shade is as bright as on the paper there */
 const LIT_GROUND = 0.32;
 /** the figures of a piece are gone when another layer has taken this share of its dots (see `dissolve`) */
 const FIGURES_GONE = 0.3;
-/** the layer the figures are drawn on: the picture's camera sees it, the water mirror's does not */
+/**
+ * the layer of what the water's mirror does not draw, while the picture's camera sees it: the figures, and the sea
+ * itself (three hides the material of the mesh that asks for the mirror's picture while it draws that, and no more:
+ * the sea has two, its faces' and its lists', and a mesh of the other that is drawn there asks for a mirror image
+ * of the mirror's own camera, which leaves the mirror black)
+ */
 const FIGURES_LAYER = 1;
 
-/** A mesh as flat lists: three numbers per corner for position, direction and colour. A `Batch` is one. */
-export interface Shape { pos: ArrayLike<number>; nor: ArrayLike<number>; col: ArrayLike<number> }
+/**
+ * A mesh as flat lists: three numbers per corner for position, direction and colour. A `Batch` is one. Or, where
+ * `small`, direction and colour as four bytes per corner each (worldprobe/small.ts): 20 bytes to a corner, not 36.
+ */
+export interface Shape {
+  pos: ArrayLike<number>; nor: ArrayLike<number>; col: ArrayLike<number>;
+  /** the ball around all its points, middle and radius, where its builder has worked it out (else the stage does, on the page's thread) */
+  ball?: [number, number, number, number];
+  small?: boolean;
+  /**
+   * its rectangles on the grid of blocks, taken out of the lists (faces.ts): the stage draws them beside what the
+   * lists hold, as a mesh of its own. Not of what `more` adds.
+   */
+  faces?: Faces;
+  /** its upright and level rectangles on no grid, taken out of the lists likewise (faces.ts `Free`) */
+  free?: Free;
+  /**
+   * Of lists that move as the mesh glides to the shape of the next coarser step (worldprobe/glide.ts): the height each
+   * corner ends up at.
+   */
+  sink?: Float32Array;
+}
 export interface StageScene<S extends Shape = Batch> {
   ground: S; things: S;
   /** the sea, which mirrors what stands beside it */
@@ -89,10 +124,25 @@ export interface Stage {
   remove(group: THREE.Group): void;
   /**
    * Adds more things to a group on the stage, as a mesh of its own that is shown, hidden and dissolved by itself;
-   * `drop` takes it off again.
+   * `drop` takes it off again. The things as lists, or as faces of floats alone (faces.ts `Free`, with no lists
+   * beside them).
    */
   more(group: THREE.Group, things: Shape): THREE.Mesh;
   drop(mesh: THREE.Mesh): void;
+  /**
+   * `?send=1`: the stage sends the lists of new meshes to the graphics card itself, a few to a picture, before they
+   * are shown (`sent`, `room`). Off by default: measured on a Mac it took the single pictures of over 100 ms away
+   * but left the zoom at 60 pictures a second where it had 120, and made a cold start and a leap in half a second
+   * longer (the stand-ins are meshes of their own to the renderer, which sets each up as it does the mesh itself).
+   */
+  staged: boolean;
+  /**
+   * Whether the lists of a group's meshes, or of one mesh, are on the graphics card (always, unless `staged`). A
+   * mesh shown before that sends its lists in the picture that first draws it, however long that picture then takes.
+   */
+  sent(thing: THREE.Group | THREE.Mesh): boolean;
+  /** Whether the next picture could send more lists than are waiting to be sent: then the next meshes may as well be put on the stage now. */
+  room(): boolean;
   /**
    * Draws a group, or one mesh of it, on a share of the picture's dots only, to dissolve it into the picture or out of it: of a fine
    * pattern that gives every dot a value from 0 to 1, those from `from` up to `until` (0 and 1: all of the group).
@@ -100,6 +150,18 @@ export interface Stage {
    * each made whole from its own dots and mixed by the share, so that they blend and no pattern of dots shows.
    */
   dissolve(thing: THREE.Group | THREE.Mesh, from: number, until: number): void;
+  /**
+   * `on`: the meshes of a group are drawn whether they lie in the picture or not. A group that is drawn so, on none
+   * of the picture's dots, has all its lists sent to the graphics card in that picture.
+   */
+  whole(group: THREE.Group, on: boolean): void;
+  /**
+   * How far the meshes of a group that glide to the shape of the next coarser step have come, 0 … 1: at 1 each of
+   * their faces lies and looks as that step has it there (worldprobe/glide.ts).
+   */
+  glide(group: THREE.Group, share: number): void;
+  /** How many pictures the stage has drawn. */
+  pictures(): number;
   /** Puts a thing of the page's own making on the stage, or takes it off again (the page lets go of what it is made of). */
   put(thing: THREE.Object3D): void;
   take(thing: THREE.Object3D): void;
@@ -124,6 +186,12 @@ export interface Stage {
   lay(strength: number, flat: number, seaTop: number, things?: number, calm?: number): void;
   /** Points camera and lights at a ground point, with `frameW` blocks across the picture, looking down by `elevation` degrees, from `away` times the look's own distance (the farther, the less the far side of the picture is drawn smaller than the near). */
   aim(x: number, z: number, frameW: number, elevation: number, away?: number): void;
+  /**
+   * Where the stage lies on the world, for the sea's depth and waves (sea.ts `Sea.place`): the depth picture, how a
+   * point (x, z) of the stage lies on it, after how many of its widths it comes round, how many finest blocks a block of
+   * the stage is, and the stage's (0, 0) in finest blocks.
+   */
+  sea(depths: THREE.Texture | null, toMap: readonly number[], round: number, blocks: number, homeX: number, homeZ: number): void;
   /** Asks for a new picture. */
   redraw(): void;
   /** Stops drawing and lets go of the renderer; the stage is not used after that. */
@@ -140,7 +208,9 @@ export interface Stage {
 export async function createStage(o: StageOptions = {}): Promise<Stage> {
   const canvas = o.canvas ?? document.querySelector('canvas')!;
   const fixedW = Number(q.get('w')) || 0, fixedH = Number(q.get('h')) || 0;
-  const renderer = new THREE.WebGPURenderer({ canvas, antialias: true, forceWebGL: flag('webgl', false) });
+  // `?gpu=1`: the graphics card's own time for each pass of a picture is measured (the counts `gpu …`), for the tools
+  const timed = flag('gpu', false);
+  const renderer = new THREE.WebGPURenderer({ canvas, antialias: true, forceWebGL: flag('webgl', false), trackTimestamp: timed });
   renderer.toneMapping = THREE.NoToneMapping;
   renderer.shadowMap.enabled = flag('shadows', true);
   renderer.shadowMap.type = THREE.PCFShadowMap;
@@ -149,7 +219,21 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   const scene = new THREE.Scene();
   let pending = 3;
   scene.background = new THREE.Color(...OPEN_WATER);
-  const solid = new THREE.MeshLambertNodeMaterial({ vertexColors: true });
+  // The pieces come with directions and colours as bytes (worldprobe/small.ts). A corner's colour is then three
+  // floats, or four bytes: the share each part has of the brightest, and half that brightest, of which 254 is one.
+  // A colour of three floats has a one as its fourth number by the graphics card's rule, which a colour of bytes
+  // never has: so both kinds are told apart here, at the corner, and what lies between the corners is the same for
+  // both. (`?small=0`: all lists are floats, and a corner's colour is its three floats.)
+  // What a triangle shows between its corners is kept within what a corner can show (no corner of a piece is
+  // brighter than 1.05). Where a triangle stands almost on its edge to a camera, a bank of the water in the mirror's
+  // picture, the colour worked out between its corners runs far out of that at a dot or two, and the mirror's blur
+  // made a bright spot of each.
+  const MOST = 1.1;
+  const smallLists = flag('small', true);
+  const tone = attribute('color', 'vec4') as unknown as ReturnType<typeof vec4>;
+  const toned = () => materialColor.mul(tone.rgb.mul(select(tone.a.lessThan(254.5 / 255), tone.a.mul((2 * 255) / 254), float(1))).toVarying().clamp(0, MOST));
+  const coloured = () => { const m = new THREE.MeshLambertNodeMaterial(); m.colorNode = smallLists ? toned() : materialColor.mul(vertexColor().rgb.clamp(0, MOST)); return m; };
+  const solid = coloured();
   // every mesh is drawn on the dots of the picture whose value lies between its two marks (see `dissolve`); the
   // pattern is interleaved gradient noise, which has no stripes or clumps
   const dots = fract(fract(dot(screenCoordinate.xy, vec2(0.06711056, 0.00583715))).mul(52.9829189)), marks = userData('dots', 'vec2') as unknown as ReturnType<typeof vec2>;
@@ -162,7 +246,13 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   /** everything on the stage carries its two marks, all the dots unless it is dissolved */
   const marked = (thing: THREE.Object3D) => thing.traverse((part) => { part.userData.dots ??= new THREE.Vector2(0, 1); part.userData.ink ??= 1; });
   // whether a mesh is ground to the map's paper (1) or stands on the ground (0, see Stage.lay)
-  const inkOf = userData('ink', 'float') as unknown as ReturnType<typeof float>;
+  // (a mesh that glides to the shape of the coarser step tells for each face what it ends up as, and is that by the
+  // share it has glided: see `gliding`)
+  const glided = userData('glide', 'float') as unknown as ReturnType<typeof float>;
+  const inkOf = Fn((builder: { geometry: THREE.BufferGeometry }) => {
+    const own = userData('ink', 'float') as unknown as ReturnType<typeof float>;
+    return builder.geometry.hasAttribute('aim') ? mix(own, (attribute('normal', 'vec4') as unknown as ReturnType<typeof vec4>).w, glided) : own;
+  })() as unknown as ReturnType<typeof float>;
   // water: a soft mirror image of piers, hulls and houses is laid over the water colour
   let water = solid;
   const tint = uniform(new THREE.Color());
@@ -172,15 +262,123 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     mirror.target.rotateX(-Math.PI / 2);
     mirror.target.position.y = SEA_Y;
     marked(mirror.target); scene.add(mirror.target);
-    water = new THREE.MeshLambertNodeMaterial({ vertexColors: true });
+    water = coloured();
     water.maskNode = solid.maskNode;
     // the mirror image is tinted like the water, so a white sail shows as a pale green shape, not as a light
     water.emissiveNode = hashBlur(mirror, float(LOOK.mirrorBlur), { repeats: float(24) }).rgb.mul(tint);
   }
+  // A mesh's rectangles on the grid of blocks come as faces (faces.ts), a row of numbers to each, and their corners
+  // are made here: each of the four corners of a face's two triangles knows which of the face's four it is (one way
+  // round and the other), and takes its place and its colour from the face's row by that. The numbers of 16 bits
+  // reach the shader as shares of 32767 and are whole again before they are used, so a corner lies where the
+  // builder put it, to the last bit.
+  const lie = attribute('lie', 'vec4') as unknown as ReturnType<typeof vec4>, reach = attribute('reach', 'vec2') as unknown as ReturnType<typeof vec2>;
+  const whole = (n: typeof lie.x) => n.mul(32767).add(0.5).floor();
+  const kind = whole(lie.x), flipped = kind.greaterThanEqual(FLIPPED), axis = kind.sub(select(flipped, float(FLIPPED), float(0)));
+  const corner = select(flipped, positionGeometry.y, positionGeometry.x);
+  const level = whole(lie.y).div(FACE_STEPS), alongU = whole(select(corner.greaterThan(0.5).and(corner.lessThan(2.5)), lie.w, lie.z)).div(FACE_STEPS), alongV = whole(select(corner.greaterThan(1.5), reach.y, reach.x)).div(FACE_STEPS);
+  const tones = [0, 1, 2, 3].map((k) => attribute(`tone${k}`, 'vec4') as unknown as ReturnType<typeof vec4>);
+  const toneOf = select(corner.lessThan(0.5), tones[0], select(corner.lessThan(1.5), tones[1], select(corner.lessThan(2.5), tones[2], tones[3])));
+  const faced = new THREE.MeshLambertNodeMaterial(), placed = select(axis.lessThan(0.5), vec3(level, alongU, alongV), select(axis.lessThan(1.5), vec3(alongU, level, alongV), vec3(alongU, alongV, level)));
+  faced.positionNode = placed;
+  // (a face's colours are always bytes: see `toned`)
+  faced.colorNode = materialColor.mul(toneOf.rgb.mul(toneOf.a.mul((2 * 255) / 254)).toVarying().clamp(0, MOST));
+  faced.maskNode = solid.maskNode;
+  // The sea's faces: its level is on no 64th of a block, so the mesh says how far above their numbers its faces lie
+  // (faces.ts `lift`); and they mirror as the sea's lists do.
+  const seaFaced = new THREE.MeshLambertNodeMaterial();
+  seaFaced.positionNode = placed.add(vec3(0, userData('lift', 'float') as unknown as ReturnType<typeof float>, 0));
+  seaFaced.colorNode = faced.colorNode; seaFaced.maskNode = solid.maskNode; seaFaced.emissiveNode = water.emissiveNode;
+  // The sea's depth and its surface (see `Stage.sea`, `?sea=0` leaves both out). Lists and faces of the sea take the
+  // same nodes, so that the sea does not change where the view passes from one step to the next.
+  let surface: Sea | null = null;
+  if (water !== solid && flag('sea', true)) {
+    surface = createSea(water.emissiveNode);
+    water.colorNode = surface.colour(water.colorNode!); seaFaced.colorNode = surface.colour(faced.colorNode!);
+    water.normalNode = seaFaced.normalNode = surface.normal;
+    water.emissiveNode = seaFaced.emissiveNode = surface.mirror;
+  }
+  // A mesh's upright and level rectangles on no grid come as faces of floats (faces.ts `Free`): a corner takes the
+  // very floats the builder made, the level on the face's axis and an end of each of its two spans. The face's
+  // direction tells its axis, and the fourth number beside it which way its triangles turn.
+  const levelF = attribute('freeLevel', 'float') as unknown as ReturnType<typeof float>, spans = attribute('freeSpans', 'vec4') as unknown as ReturnType<typeof vec4>, towards4 = attribute('normal', 'vec4') as unknown as ReturnType<typeof vec4>;
+  const cornerF = select(towards4.w.greaterThan(0.004), positionGeometry.y, positionGeometry.x);
+  const alongUF = select(cornerF.greaterThan(0.5).and(cornerF.lessThan(2.5)), spans.y, spans.x), alongVF = select(cornerF.greaterThan(1.5), spans.w, spans.z);
+  const toneF = select(cornerF.lessThan(0.5), tones[0], select(cornerF.lessThan(1.5), tones[1], select(cornerF.lessThan(2.5), tones[2], tones[3])));
+  const freed = new THREE.MeshLambertNodeMaterial();
+  freed.positionNode = select(towards4.x.abs().greaterThan(0.5), vec3(levelF, alongUF, alongVF), select(towards4.y.abs().greaterThan(0.5), vec3(alongUF, levelF, alongVF), vec3(alongUF, alongVF, levelF)));
+  freed.colorNode = materialColor.mul(toneF.rgb.mul(toneF.a.mul((2 * 255) / 254)).toVarying().clamp(0, MOST));
+  freed.maskNode = solid.maskNode;
+  // Faces that glide to the shape of the next coarser step (worldprobe/glide.ts): each has the level or the span in
+  // height it ends up at and the colours of its corners there, and the mesh says how far it has glided (0 … 1,
+  // `Stage.glide`). A level face moves to its level there. An upright face's two ends in height move each to its own;
+  // where they would pass each other the face has no height, since by then the column it faced stands above its own.
+  const aimed = attribute('aim', 'vec2') as unknown as ReturnType<typeof vec2>;
+  const rises = kind.greaterThanEqual(RISES), kindG = kind.sub(select(rises, float(RISES), float(0))), flippedG = kindG.greaterThanEqual(FLIPPED), axisG = kindG.sub(select(flippedG, float(FLIPPED), float(0)));
+  const cornerG = select(flippedG, positionGeometry.y, positionGeometry.x), upright = axisG.lessThan(0.5).or(axisG.greaterThan(1.5)), alongX = axisG.lessThan(0.5);
+  const u0 = whole(lie.z), u1 = whole(lie.w), v0 = whole(reach.x), v1 = whole(reach.y), from0 = select(alongX, u0, v0), from1 = select(alongX, u1, v1);
+  const end0 = mix(from0, whole(aimed.x), glided), way = select(rises, float(1), select(from1.lessThan(from0), float(-1), float(1))), end1 = end0.add(way.mul(max(way.mul(mix(from1, whole(aimed.y), glided).sub(end0)), 0)));
+  const levelG = select(upright, whole(lie.y), mix(whole(lie.y), whole(aimed.x), glided)).div(FACE_STEPS);
+  const second = cornerG.greaterThan(0.5).and(cornerG.lessThan(2.5)), third = cornerG.greaterThan(1.5);
+  const alongUG = select(second, select(alongX, end1, u1), select(alongX, end0, u0)).div(FACE_STEPS), alongVG = select(third, select(axisG.greaterThan(1.5), end1, v1), select(axisG.greaterThan(1.5), end0, v0)).div(FACE_STEPS);
+  const aims = [0, 1, 2, 3].map((k) => attribute(`aimTone${k}`, 'vec4') as unknown as ReturnType<typeof vec4>);
+  const pick = (four: typeof tones) => { const t = select(cornerG.lessThan(0.5), four[0], select(cornerG.lessThan(1.5), four[1], select(cornerG.lessThan(2.5), four[2], four[3]))); return t.rgb.mul(t.a.mul((2 * 255) / 254)); };
+  const gliding = new THREE.MeshLambertNodeMaterial();
+  gliding.positionNode = select(axisG.lessThan(0.5), vec3(levelG, alongUG, alongVG), select(axisG.lessThan(1.5), vec3(alongUG, levelG, alongVG), vec3(alongUG, alongVG, levelG)));
+  gliding.colorNode = materialColor.mul(mix(pick(tones), pick(aims), glided).toVarying().clamp(0, MOST));
+  gliding.maskNode = solid.maskNode;
+  // Lists that move with such a glide (the banks of the water, water above the sea, what stands on the ground):
+  // each corner has the height it ends up at.
+  const sinking = coloured();
+  sinking.maskNode = solid.maskNode;
+  sinking.positionNode = vec3(positionGeometry.x, mix(positionGeometry.y, attribute('sink', 'float') as unknown as ReturnType<typeof float>, glided), positionGeometry.z);
+  /**
+   * A face's four corners, each worked out once: which of the face's four each of the mesh's is, where its triangles
+   * turn one way and where the other (faces.ts FACE_CORNERS, whose six are these four, the first and the third
+   * twice); and the two triangles of them.
+   */
+  const CORNERS = new Float32Array([0, 1, 2, 5].flatMap((k) => [FACE_CORNERS[0][k], FACE_CORNERS[1][k], 0])), TRIANGLES = new Uint16Array([0, 1, 2, 0, 2, 3]);
+  const faceGeometry = (s: Shape) => {
+    const f = s.faces!, g = new THREE.InstancedBufferGeometry();
+    // (the four corners are the same for every mesh, but each has a list of its own: a mesh that goes takes its lists with it)
+    g.setAttribute('position', new THREE.BufferAttribute(CORNERS, 3));
+    g.setIndex(new THREE.BufferAttribute(TRIANGLES, 1));
+    const lies = new THREE.InstancedInterleavedBuffer(f.geo, FACE_GEO), colours = new THREE.InstancedInterleavedBuffer(f.col, FACE_COL);
+    g.setAttribute('lie', new THREE.InterleavedBufferAttribute(lies, 4, 0, true)); g.setAttribute('reach', new THREE.InterleavedBufferAttribute(lies, 2, 4, true));
+    for (let k = 0; k < 4; k++) g.setAttribute(`tone${k}`, new THREE.InterleavedBufferAttribute(colours, 4, k * 4, true));
+    g.setAttribute('normal', new THREE.InstancedBufferAttribute(f.nor, 4, true));
+    if (f.aim && f.aimCol) {
+      const ends = new THREE.InstancedInterleavedBuffer(f.aimCol, FACE_COL);
+      g.setAttribute('aim', new THREE.InstancedBufferAttribute(f.aim, 2, true));
+      for (let k = 0; k < 4; k++) g.setAttribute(`aimTone${k}`, new THREE.InterleavedBufferAttribute(ends, 4, k * 4, true));
+    }
+    g.instanceCount = f.geo.length / FACE_GEO;
+    if (s.ball) g.boundingSphere = new THREE.Sphere(new THREE.Vector3(s.ball[0], s.ball[1], s.ball[2]), s.ball[3]);
+    else g.boundingSphere = new THREE.Box3().setFromArray(unfaced(f).pos).getBoundingSphere(new THREE.Sphere());
+    return g;
+  };
+  /** The faces on no grid of a shape likewise: a row of five floats, of colours and of its direction to each. */
+  const freeGeometry = (s: Shape) => {
+    const f = s.free!, g = new THREE.InstancedBufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(CORNERS, 3));
+    g.setIndex(new THREE.BufferAttribute(TRIANGLES, 1));
+    const lies = new THREE.InstancedInterleavedBuffer(f.geo, FREE_GEO), colours = new THREE.InstancedInterleavedBuffer(f.col, FACE_COL);
+    g.setAttribute('freeLevel', new THREE.InterleavedBufferAttribute(lies, 1, 0)); g.setAttribute('freeSpans', new THREE.InterleavedBufferAttribute(lies, 4, 1));
+    for (let k = 0; k < 4; k++) g.setAttribute(`tone${k}`, new THREE.InterleavedBufferAttribute(colours, 4, k * 4, true));
+    g.setAttribute('normal', new THREE.InstancedBufferAttribute(f.nor, 4, true));
+    g.instanceCount = f.geo.length / FREE_GEO;
+    if (s.ball) g.boundingSphere = new THREE.Sphere(new THREE.Vector3(s.ball[0], s.ball[1], s.ball[2]), s.ball[3]);
+    else g.boundingSphere = new THREE.Box3().setFromArray(unfree(f).pos).getBoundingSphere(new THREE.Sphere());
+    return g;
+  };
   const geometry = (s: Shape) => {
     const g = new THREE.BufferGeometry(), list = (a: ArrayLike<number>) => new THREE.BufferAttribute(a instanceof Float32Array ? a : new Float32Array(a), 3);
-    g.setAttribute('position', list(s.pos)); g.setAttribute('normal', list(s.nor)); g.setAttribute('color', list(s.col));
-    g.computeBoundingSphere();
+    g.setAttribute('position', list(s.pos));
+    // (bytes, which the graphics card reads as shares of their largest)
+    if (s.small) { g.setAttribute('normal', new THREE.BufferAttribute(s.nor as Int8Array, 4, true)); g.setAttribute('color', new THREE.BufferAttribute(s.col as Uint8Array, 4, true)); }
+    else { g.setAttribute('normal', list(s.nor)); g.setAttribute('color', list(s.col)); }
+    if (s.sink) g.setAttribute('sink', new THREE.BufferAttribute(s.sink, 1));
+    if (s.ball) g.boundingSphere = new THREE.Sphere(new THREE.Vector3(s.ball[0], s.ball[1], s.ball[2]), s.ball[3]); else g.computeBoundingSphere();
     return g;
   };
 
@@ -210,7 +408,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     sky.color.copy(colour('skyColor')); sky.groundColor.set(L.bounceColor).multiplyScalar(at('bounce') / at('sky')); sky.intensity = at('sky') * Math.PI;
     // the mirror image is laid over what the water keeps of its own colour
     tint.value.copy(colour('mirrorTint')).multiplyScalar(at('mirror'));
-    if (water !== solid) water.color.setRGB(1 - tint.value.r, 1 - tint.value.g, 1 - tint.value.b);
+    if (water !== solid) { water.color.setRGB(1 - tint.value.r, 1 - tint.value.g, 1 - tint.value.b); seaFaced.color.copy(water.color); }
     pending = Math.max(pending, 1);
   };
 
@@ -276,11 +474,59 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   scenePass.setMRT(mrt(inks ? { output, normal: vec4(normalView, shareCode), ink: vec4(inkOf, 0, 0, 1) } : { output, normal: vec4(normalView, shareCode) }));
   const facing = scenePass.getTextureNode('normal'), inked = inks ? scenePass.getTextureNode('ink') : null;
   if (flag('ao', true)) {
-    const creases = ao(far, facing, camera);
-    creases.radius.value = LOOK.creaseReach; reached = creases.radius; creases.thickness.value = CREASES.thickness; creases.scale.value = LOOK.creaseDepth; creases.samples.value = 24;
+    // The creases are worked out and smoothed on every other dot of the picture each way, a quarter of the work
+    // (Jimenez et al. 2016 work them out at half resolution too), and laid over the picture by depth. The depths and
+    // directions of those dots are copied into smaller pictures of their own first: so each of them is worked out
+    // at a point the picture really shows, as dark as at every dot, and from depths that lie closer together in memory.
+    // For measuring: ?aoscale=1 (at every dot, as before), ?aosamples=24, ?aosmooth=0 (not smoothed).
+    const scale = number('aoscale', 0.5), small = scale < 1, parts: { updateBefore?(frame: unknown): unknown }[] = [];
+    /** half a dot of the picture, and the dots of the smaller pictures, each way */
+    const half = uniform(new THREE.Vector2()), fewer = uniform(new THREE.Vector2());
+    const sized = () => { const dots = renderer.getDrawingBufferSize(new THREE.Vector2()); half.value.set(0.5 / dots.x, 0.5 / dots.y); fewer.value.set(Math.floor(dots.x * scale), Math.floor(dots.y * scale)); };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the pass's own pictures or smaller copies of them
+    let depths: any = far, faces: any = facing;
+    if (small) {
+      // the dot a smaller picture's dot stands for: the one whose middle lies half a dot before its own middle
+      const from = uv().sub(half);
+      const copy = (of: Parameters<typeof rtt>[0], type: THREE.TextureDataType) => {
+        const made = rtt(of, null, null, { resolutionScale: scale, type });
+        made.renderTarget!.texture.minFilter = made.renderTarget!.texture.magFilter = THREE.NearestFilter;
+        parts.push(made);
+        return made;
+      };
+      depths = copy(vec4(far.sample(from).r, 0, 0, 1), THREE.FloatType); faces = copy(facing.sample(from), THREE.HalfFloatType);
+    }
+    const creases = ao(depths, faces, camera);
+    if (small) { const size = creases.setSize.bind(creases); creases.setSize = (w, h) => size(Math.floor(w * scale), Math.floor(h * scale)); }
+    creases.radius.value = LOOK.creaseReach; reached = creases.radius; creases.thickness.value = CREASES.thickness; creases.scale.value = LOOK.creaseDepth; creases.samples.value = number('aosamples', 24);
     // the raw result is speckled; the smoothing keeps to surfaces of like depth and direction
+    const raw = creases.getTextureNode(), smoother = denoise(raw, depths, faces, camera);
+    // (as far across the picture as at every dot)
+    smoother.radius.value *= scale;
+    const smooth = flag('aosmooth', true) ? rtt(smoother, null, null, { resolutionScale: scale }) : raw;
+    // nothing of this is drawn while the creases do not show (see Stage.creases): from afar the picture has none
+    for (const part of [...parts, creases, smooth] as typeof parts) {
+      const draw = part.updateBefore?.bind(part);
+      if (draw) part.updateBefore = (frame) => { sized(); return creased.value > 0 ? draw(frame) : undefined; };
+    }
+    let open = smooth.sample(screenUV).r as ReturnType<typeof float>;
+    if (small) {
+      // a dot of the picture takes the creases of the four dots around it in the smaller picture, each by how near
+      // it is and by how near its point lies to the surface the dot shows: so that the darkness under an eave
+      // does not spill over the edge of the roof in front of it
+      const lensInverse = uniform(camera.projectionMatrixInverse), at = screenUV.add(half).mul(fewer).sub(0.5), corner = at.floor(), part = at.sub(corner);
+      const here = getViewPosition(screenUV, far.sample(screenUV).r, lensInverse), faced = facing.sample(screenUV).rgb.normalize();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- sums of nodes: every `add` is a node type of its own
+      let sum: any = float(0), weight: any = float(0);
+      for (const [i, j] of [[0, 0], [1, 0], [0, 1], [1, 1]] as const) {
+        const its = corner.add(vec2(i + 0.5, j + 0.5)).div(fewer), there = getViewPosition(its.sub(half), depths.sample(its).r, lensInverse);
+        const near = (i ? part.x : part.x.oneMinus()).mul(j ? part.y : part.y.oneMinus()), w = near.mul(max(dot(here.sub(there), faced).abs().div(UPSAMPLE_REACH).oneMinus(), 0)).add(1e-4);
+        sum = sum.add(smooth.sample(its).r.mul(w)); weight = weight.add(w);
+      }
+      open = sum.div(weight);
+    }
     // a crease does not turn grey: it keeps a share of bluish light, as the shadows of the reference do
-    const open = convertToTexture(denoise(creases.getTextureNode(), far, facing, camera)).r, deep = new THREE.Color(LOOK.creaseColor);
+    const deep = new THREE.Color(LOOK.creaseColor);
     picture = colour.mul(mix(vec3(1, 1, 1), mix(vec3(deep.r, deep.g, deep.b), vec3(1, 1, 1), open), creased));
   }
   // things that share the picture's dots (see Stage.dissolve): at every dot the thing drawn there is taken as it is,
@@ -303,6 +549,16 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     const other = mix(here, others.div(max(found, 1)), step(0.5, found));
     picture = mix(other, here, mine) as unknown as typeof picture;
   }
+  // The picture's light as film takes it: a curve that keeps the shadows and the middle tones and rolls the bright
+  // ones off softly instead of cutting them, with the colours of what is bright a little paler, as light is seen
+  // (`?tone=agx|neutral|none`, `?exposure=1`, `?saturation=1`). The map's paper is laid on after it: its colours
+  // stay as they are printed. What the paper takes of the land's light and shade is the light before the curve.
+  const lit = picture;
+  {
+    const way = q.get('tone') ?? TONE.way, exposure = float(Number(q.get('exposure') ?? TONE.exposure)), saturated = float(Number(q.get('saturation') ?? TONE.saturation));
+    const curved = way === 'agx' ? agxToneMapping(picture.rgb, exposure) : way === 'neutral' ? neutralToneMapping(picture.rgb, exposure) : picture.rgb.mul(exposure);
+    picture = vec4(saturation(curved, saturated), 1) as unknown as typeof picture;
+  }
   // the map's paper (see Stage.paper): drawn from straight above into a picture of its own, which the picture of the
   // scene then takes its colour from by where each of its points lies on the ground
   const paper = new THREE.Scene(), paperEye = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 4000);
@@ -320,7 +576,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     const ink = dots.rgb.div(max(dots.a, 1 / 255)), cover = dots.a.mul(laid.strength).mul(inside).mul(land).mul((inked ? mix(mix(laid.things, 1, inked.sample(screenUV).r), 1, laid.flat) : float(1)));
     // the land's light and shade, as a share of how sunlit level ground is drawn, colours the ink with it
     // (softened: the light and shade of the relief should show, the colours of woods and fields much less)
-    const light = clamp(dot(picture.rgb, vec3(0.2126, 0.7152, 0.0722)).div(LIT_GROUND).pow(0.5), 0.45, 1.25);
+    const light = clamp(dot(lit.rgb, vec3(0.2126, 0.7152, 0.0722)).div(LIT_GROUND).pow(0.5), 0.45, 1.25);
     picture = mix(picture, mix(ink.mul(mix(light, light.mul(CALM_KEPT).add(1 - CALM_KEPT), laid.calm)), ink, laid.flat), cover);
   }
   // miniature blur: sharp around the middle distance, softer towards the far and the near edge
@@ -357,18 +613,151 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     made.castShadow = casts; made.receiveShadow = true; made.userData.dots = new THREE.Vector2(0, 1); made.userData.ink = 1;
     return made;
   };
+  /** The faces of a shape as a mesh: one drawing of the four corners and their two triangles for every face. */
+  const faceMesh = (shape: Shape, casts: boolean, sea = false) => {
+    const f = shape.faces!, made = new THREE.Mesh(faceGeometry(shape), sea ? seaFaced : f.aim && f.aimCol ? gliding : faced);
+    made.castShadow = casts; made.receiveShadow = true; made.userData.dots = new THREE.Vector2(0, 1); made.userData.ink = 1; made.userData.glide = 0; made.userData.lift = f.lift ?? 0;
+    // (a ray finds the faces by their rows: the mesh's own corners are not where they are drawn)
+    made.raycast = (ray, hits) => {
+      const own = ray.ray.clone().applyMatrix4(new THREE.Matrix4().copy(made.matrixWorld).invert()), t = faceHit(f, own.origin.toArray(), own.direction.toArray());
+      if (t === null) return;
+      const point = own.at(t, new THREE.Vector3()).applyMatrix4(made.matrixWorld), distance = ray.ray.origin.distanceTo(point);
+      if (distance >= ray.near && distance <= ray.far) hits.push({ distance, point, object: made });
+    };
+    return made;
+  };
+  /** The faces on no grid of a shape as a mesh, drawn as the faces on the grid are. */
+  const freeMesh = (shape: Shape, casts: boolean) => {
+    const f = shape.free!, made = new THREE.Mesh(freeGeometry(shape), freed);
+    made.castShadow = casts; made.receiveShadow = true; made.userData.dots = new THREE.Vector2(0, 1); made.userData.ink = 1;
+    made.raycast = (ray, hits) => {
+      const own = ray.ray.clone().applyMatrix4(new THREE.Matrix4().copy(made.matrixWorld).invert()), t = freeHit(f, own.origin.toArray(), own.direction.toArray());
+      if (t === null) return;
+      const point = own.at(t, new THREE.Vector3()).applyMatrix4(made.matrixWorld), distance = ray.ray.origin.distanceTo(point);
+      if (distance >= ray.near && distance <= ray.far) hits.push({ distance, point, object: made });
+    };
+    return made;
+  };
+  // What the renderer makes for a kind of mesh (the shader of its material for its kind of lists, once for the
+  // picture's pass, once for the shadows' and once for the mirror's) it makes on the page's thread in the picture
+  // that first draws one, and lets go again when the last mesh of the kind leaves the stage (three's NodeManager
+  // counts who uses it). The pieces of the far steps, of the near steps and of the sea are of different kinds: a zoom
+  // across the border between two steps would have the next kind's shaders made in the middle of its motion, and
+  // made again on every way back. So one mesh of each kind the pieces come as is always on the stage, of no size and
+  // on none of the picture's dots: what the kinds take is made in the first pictures, while the world is still
+  // loading, and kept. The sea's are drawn in the first pictures only: a mesh of the sea in the picture has the
+  // mirror's picture drawn, which a view of the land alone goes without; what was made for them stays as long as
+  // they are on the stage, drawn or not. ?pilots=0: without all of them. The counts `shaders built` and `ms shaders`
+  // tell how many were made and how long that took the page's thread.
+  renderer.debug.onNodeBuilderCreated = (builder: unknown) => {
+    const made = builder as { build(): unknown }, build = made.build.bind(made);
+    made.build = () => { const began = performance.now(), c = stage.probe.counts; try { return build(); } finally { c['shaders built'] = (c['shaders built'] ?? 0) + 1; c['ms shaders'] = Math.round(((c['ms shaders'] ?? 0) + performance.now() - began) * 10) / 10; } };
+  };
+  /** the sea's, while they are still drawn */
+  let seaPilots: THREE.Mesh[] = [];
+  if (flag('pilots', true) && smallLists) {
+    const lists = (sink = false): Shape => ({ pos: new Float32Array(9), nor: new Int8Array(12), col: new Uint8Array(12), small: true, ball: [0, 0, 0, 0], ...(sink ? { sink: new Float32Array(3) } : {}) });
+    const none: Shape = { pos: new Float32Array(0), nor: new Int8Array(0), col: new Uint8Array(0), small: true, ball: [0, 0, 0, 0] };
+    const face = (aimed = false): Shape => ({ ...none, faces: { geo: new Int16Array(FACE_GEO), col: new Uint8Array(FACE_COL), nor: new Int8Array(4), ...(aimed ? { aim: new Int16Array(2), aimCol: new Uint8Array(FACE_COL) } : {}) } });
+    const sea = [...(water !== solid ? [mesh(lists(), water, false)] : []), faceMesh(face(), false, true)];
+    for (const pilot of [mesh(lists(), solid, true), mesh(lists(true), sinking, true), faceMesh(face(), true), faceMesh(face(true), true), freeMesh({ ...none, free: { geo: new Float32Array(FREE_GEO), col: new Uint8Array(FACE_COL), nor: new Int8Array(4) } }, true), ...sea]) {
+      (pilot.userData.dots as THREE.Vector2).set(0, 0); pilot.userData.glide = 0; pilot.frustumCulled = false;
+      // (the sea's lie where the sea's meshes lie: on the layer the mirror does not draw)
+      if (sea.includes(pilot)) pilot.layers.set(FIGURES_LAYER);
+      scene.add(pilot);
+    }
+    seaPilots = sea;
+  }
+  // The renderer keeps a record of every mesh it has drawn, and each record hangs on the material, which all pieces
+  // share and which is never let go: only the mesh's own 'dispose' takes the record, and with it the mesh and its
+  // numbers, out of the renderer. Letting go of the geometry alone leaves them held for good.
+  const gone = (made: THREE.Mesh) => { warm(made); made.dispatchEvent({ type: 'dispose' } as never); made.geometry.dispose(); };
+  // A mesh's lists go to the graphics card in the picture that first draws it, and that takes the page's thread a
+  // millisecond or two for every megabyte and more for every list (measured on a Mac: the 49 meshes of one piece
+  // of a town 77 ms; 27 meshes that came into the picture together, one picture of 247 ms). So the lists are sent
+  // before their mesh is shown, a few to a picture: by stand-ins that share them, are drawn on none of the picture's
+  // dots and are not left out for lying outside the picture. While the view moves a picture takes SEND_MOVING bytes,
+  // which it can without a jolt; while it rests, where a longer picture does not show, SEND_RESTING. A machine whose
+  // pictures take SLOW ms and more each sends as much as would have gone in that time. A picture of fixed size is a
+  // tool's still, drawn once when the scene is whole: there the lists go as they are drawn.
+  // All this only with `?send=1` (see Stage.staged for what it measured).
+  const staged = flag('send', false);
+  const SEND_MOVING = 4e6, SEND_RESTING = 16e6, SEND_LEAST = 0.25e6, SLOW = 250, RESTS_AFTER = 300;
+  /** the meshes whose lists are still to be sent, in the order they were made; the stand-ins of this picture, and whose they are */
+  const cold = new Set<THREE.Mesh>(), standIns = new THREE.Group();
+  /** the bytes of their lists in all, and what the last picture that sent some could take */
+  let sending: THREE.Mesh[] = [], sentAt = 0, movedAt = 0, waiting = 0, share = SEND_RESTING;
+  const eye = new Float64Array(32);
+  scene.add(standIns);
+  // (one mesh of their kind is always there, on none of the dots: so what the renderer makes for the kind is made
+  // in the first picture, and is not let go and made again between the stand-ins of two pictures)
+  if (staged) {
+    const pilot = mesh({ pos: [0, 0, 0, 0, 0, 1, 1, 0, 0], nor: [0, 1, 0, 0, 1, 0, 0, 1, 0], col: [0, 0, 0, 0, 0, 0, 0, 0, 0] }, solid, false);
+    (pilot.userData.dots as THREE.Vector2).set(0, 0); pilot.frustumCulled = false; pilot.layers.set(FIGURES_LAYER);
+    scene.add(pilot);
+  }
+  // (and one of small lists, whose pipeline is another)
+  if (staged && smallLists) {
+    const pilotSmall = mesh({ pos: new Float32Array(9), nor: new Int8Array(12), col: new Uint8Array(12), small: true }, solid, false);
+    (pilotSmall.userData.dots as THREE.Vector2).set(0, 0); pilotSmall.frustumCulled = false; pilotSmall.layers.set(FIGURES_LAYER);
+    scene.add(pilotSmall);
+  }
+  const weight = (g: THREE.BufferGeometry) => { const lists = new Set<Float32Array>(); for (const name in g.attributes) lists.add(g.attributes[name].array as Float32Array); let bytes = 0; for (const list of lists) bytes += list.byteLength; return Math.max(SEND_LEAST, bytes); };
+  const cool = <M extends THREE.Mesh>(made: M): M => { if (staged && !fixedW) { cold.add(made); waiting += weight(made.geometry); } return made; };
+  const warm = (made: THREE.Mesh) => { if (cold.delete(made)) waiting -= weight(made.geometry); };
+  /** Puts the stand-ins of the next meshes into the picture about to be drawn. */
+  const send = () => {
+    const now = performance.now();
+    // (the view moves while the camera's place or lens changes, and for a moment after: a zoom comes in ticks)
+    const lens = [...camera.matrixWorld.elements, ...camera.projectionMatrix.elements];
+    if (lens.some((v, k) => v !== eye[k])) { eye.set(lens); movedAt = now; }
+    // (the time since the last picture counts only from one sending picture to the next, not across a rest)
+    const since = sentAt ? now - sentAt : 0;
+    let room = (share = (now - movedAt < RESTS_AFTER ? SEND_MOVING : SEND_RESTING) * (since > SLOW ? since / (1000 / 60) : 1));
+    for (const made of cold) {
+      const bytes = weight(made.geometry);
+      if (sending.length && bytes > room) break;
+      const standIn = new THREE.Mesh(made.geometry, made.material === seaFaced ? faced : made.material === faced || made.material === gliding || made.material === freed ? made.material : solid);
+      // (all that the material reads of a mesh, as its own mesh has it)
+      standIn.userData = { ...made.userData, ground: false, dots: new THREE.Vector2(0, 0) };
+      // (it lies on the layer the water's mirror does not draw, and casts no shadow: one pass sends the lists)
+      standIn.frustumCulled = false; standIn.receiveShadow = true; standIn.layers.set(FIGURES_LAYER);
+      standIns.add(standIn); sending.push(made); room -= bytes;
+    }
+    sentAt = sending.length ? now : 0;
+  };
+  /** After the picture: its stand-ins have done their work. */
+  const haveSent = () => {
+    for (const standIn of [...standIns.children]) { standIns.remove(standIn); standIn.dispatchEvent({ type: 'dispose' } as never); }
+    for (const made of sending) warm(made);
+    sending = [];
+  };
+  /** A shape as meshes of no more than 4 MB of lists each, the share of one picture while the view moves; they share its lists. */
+  const parts = (shape: Shape): Shape[] => {
+    const { pos, nor, col } = shape, n = pos.length / 9, per = shape.small ? 12 : 9;
+    if (!staged || !ArrayBuffer.isView(pos) || !ArrayBuffer.isView(nor) || !ArrayBuffer.isView(col)) return [shape];
+    const most = Math.floor(SEND_MOVING / ((pos.byteLength + nor.byteLength + col.byteLength) / Math.max(1, n)));
+    if (n <= most) return [shape];
+    const list: Shape[] = [], cut = <T extends ArrayLike<number>>(a: T, from: number, to: number) => (a as unknown as Float32Array).subarray(from, to) as unknown as T;
+    // (each keeps the ball of the whole: it is left out of a picture only where the whole would be)
+    for (let from = 0; from < n; from += most) { const to = Math.min(n, from + most); list.push({ ...shape, pos: cut(pos, from * 9, to * 9), nor: cut(nor, from * per, to * per), col: cut(col, from * per, to * per), sink: shape.sink && cut(shape.sink, from * 3, to * 3) }); }
+    return list;
+  };
   const stage: Stage = {
-    canvas, aim, soften, busy: true,
+    canvas, aim, soften, busy: true, staged,
     probe: { ready: false, counts: {}, backend: flag('webgl', false) ? 'webgl2' : 'webgpu' },
     add(built, x = 0, z = 0) {
       const group = new THREE.Group();
       group.position.set(x, 0, z);
       for (const [shape, material, casts] of [[built.ground, solid, true], [built.carried, solid, true], [built.things, solid, true], [built.water, water, false], [built.raised, solid, false]] as const) {
-        if (!shape || !shape.pos.length) continue;
-        const part = mesh(shape, material, casts);
-        part.userData.ground = shape === built.ground || shape === built.carried;
-        if (shape === built.things || shape === built.carried) part.userData.ink = 0;
-        group.add(part);
+        if (!shape) continue;
+        for (const part of [...(shape.faces?.geo.length ? [cool(faceMesh(shape, casts, shape === built.water))] : []), ...(shape.free?.geo.length ? [cool(freeMesh(shape, casts))] : []), ...(shape.pos.length ? parts(shape).map((some) => cool(mesh(some, some.sink && material === solid ? sinking : material, casts))) : [])]) {
+          if (part.material === sinking) part.userData.glide = 0;
+          part.userData.ground = shape === built.ground || shape === built.carried;
+          if (shape === built.things || shape === built.carried) part.userData.ink = 0;
+          if (shape === built.water) part.layers.set(FIGURES_LAYER);
+          group.add(part);
+        }
       }
       if (built.figures?.count) { const f = figureMeshes(built.figures); f.near.layers.set(FIGURES_LAYER); f.far.layers.set(FIGURES_LAYER); group.add(f.near, f.far); marked(group); showFigures(frameW); }
       scene.add(group);
@@ -378,11 +767,13 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     remove(group) {
       scene.remove(group);
       // the figures' kit is shared by every piece: only their own mesh is let go (figures/stage.ts)
-      for (const mesh of group.children) if (mesh.userData.figures === 'near') (mesh as THREE.InstancedMesh).dispose(); else if (!mesh.userData.figures) (mesh as THREE.Mesh).geometry.dispose();
+      for (const mesh of group.children) if (mesh.userData.figures === 'near') disposeFigures(mesh); else if (!mesh.userData.figures) gone(mesh as THREE.Mesh);
       pending = Math.max(pending, 1);
     },
-    more(group, things) { const part = mesh(things, solid, true); part.userData.ink = 0; group.add(part); pending = Math.max(pending, 3); return part; },
-    drop(part) { part.removeFromParent(); part.geometry.dispose(); pending = Math.max(pending, 1); },
+    more(group, things) { const part = cool(things.free?.geo.length && !things.pos.length ? freeMesh(things, true) : mesh(things, solid, true)); part.userData.ink = 0; group.add(part); pending = Math.max(pending, 3); return part; },
+    drop(part) { part.removeFromParent(); gone(part); pending = Math.max(pending, 1); },
+    sent(thing) { return (thing as THREE.Mesh).isMesh ? !cold.has(thing as THREE.Mesh) : !thing.children.some((part) => cold.has(part as THREE.Mesh)); },
+    room() { return waiting < share; },
     dissolve(thing, from, until) {
       // the figures are too small to dissolve dot by dot: they come and go one by one instead, and are all gone
       // well before the other layer has taken a third of the dots, so that it is not seen through them
@@ -393,6 +784,9 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
       }
       pending = Math.max(pending, 1);
     },
+    whole(group, on) { for (const part of group.children) if (!part.userData.figures) part.frustumCulled = !on; pending = Math.max(pending, 1); },
+    glide(group, share) { for (const part of group.children) if (part.userData.glide !== undefined && part.userData.glide !== share) { part.userData.glide = share; pending = Math.max(pending, 1); } },
+    pictures: () => pictures,
     put(thing) { marked(thing); scene.add(thing); pending = Math.max(pending, 1); },
     take(thing) { scene.remove(thing); pending = Math.max(pending, 1); },
     paper,
@@ -404,6 +798,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
       if (creased.value !== share) { creased.value = share; pending = Math.max(pending, 1); }
       if (reached && reached.value !== LOOK.creaseReach * reach) { reached.value = LOOK.creaseReach * reach; pending = Math.max(pending, 1); }
     },
+    sea(depths, toMap, round, blocks, homeX, homeZ) { surface?.place(depths, toMap, round, blocks, homeX, homeZ); pending = Math.max(pending, 1); },
     redraw() { pending = Math.max(pending, 1); },
     dispose() { renderer.setAnimationLoop(null); removeEventListener('resize', resize); renderer.dispose(); },
     pick(px, py) {
@@ -415,15 +810,41 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     },
   };
   (window as unknown as { __probe: Stage['probe'] }).__probe = stage.probe;
-  let drawn = 0, since = performance.now();
+  /**
+   * What a picture took, for the tools: the page's own time to hand it over (`draw ms`), and the graphics card's time
+   * for it, in all (`gpu ms`) and pass by pass in the order they are drawn (`gpu pass 0` …); each also summed over
+   * the pictures (`… sum`, with `gpu pictures` and `draw pictures`), so that a tool can take means between two reads.
+   */
+  const clock = (draw: number) => {
+    const c = stage.probe.counts, add = (name: string, v: number) => { c[name] = v; c[`${name} sum`] = (c[`${name} sum`] ?? 0) + v; };
+    add('draw ms', draw); c['draw pictures'] = (c['draw pictures'] ?? 0) + 1;
+    void renderer.resolveTimestampsAsync('render').then((all) => {
+      const pool = (renderer.backend as unknown as { timestampQueryPool?: { render?: { timestamps: Map<string, number>; frames: number[] } } }).timestampQueryPool?.render;
+      if (all === undefined || !pool) return;
+      add('gpu ms', all); c['gpu pictures'] = (c['gpu pictures'] ?? 0) + 1;
+      // the passes of the last picture that was measured, as they followed each other
+      const last = `:f${pool.frames[pool.frames.length - 1]}`;
+      let k = 0;
+      for (const [uid, ms] of pool.timestamps) if (uid.endsWith(last)) add(`gpu pass ${k++}`, ms);
+      c['gpu passes'] = k;
+    });
+  };
+  let drawn = 0, since = performance.now(), pictures = 0;
   renderer.setAnimationLoop(() => {
     // a picture of fixed size is taken by a tool, which waits for the finished scene: nothing is drawn before
     // walking figures keep the picture moving; a picture of fixed size is a still, so that a tool's picture comes
-    if (!fixedW && anyFigures()) pending = Math.max(pending, 1);
+    if (!fixedW && (anyFigures() || cold.size)) pending = Math.max(pending, 1);
     if (pending <= 0 || (fixedW && stage.busy)) return;
+    if (cold.size) send(); else sentAt = 0;
     if (laid.strength.value > 0) { aimPaper(); renderer.setRenderTarget(paperPicture); renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.render(paper, paperEye); renderer.setRenderTarget(null); }
+    const began = timed ? performance.now() : 0, had = renderer.info.memory.attributesSize;
     pipeline.render();
-    drawn++;
+    if (sending.length) haveSent();
+    drawn++; pictures++;
+    if (seaPilots.length && pictures >= 2) { for (const pilot of seaPilots) pilot.visible = false; seaPilots = []; }
+    // what the picture sent to the graphics card in lists (a tool sets `MB sent most` to 0 and reads the most a picture has sent since)
+    { const c = stage.probe.counts, sent = (renderer.info.memory.attributesSize - had) / 1e6; c.pictures = pictures; c['MB sent'] = sent; c['MB sent sum'] = (c['MB sent sum'] ?? 0) + sent; c['MB sent most'] = Math.max(c['MB sent most'] ?? 0, sent); if (sent > 0) c['pictures sending'] = (c['pictures sending'] ?? 0) + 1; }
+    if (timed) clock(performance.now() - began);
     if (performance.now() - since >= 1000) { stage.probe.fps = Math.round((drawn * 1000) / (performance.now() - since)); drawn = 0; since = performance.now(); }
     if (--pending === 0 && !stage.busy) stage.probe.ready = true;
   });

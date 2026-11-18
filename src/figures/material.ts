@@ -99,19 +99,20 @@ function material(): THREE.MeshLambertNodeMaterial {
 
 const kits = { near: buildKit(NEAR_PARTS), far: buildKit(FAR_PARTS) };
 const shapes = new Map<'near' | 'far', Record<'position' | 'normal' | 'info', THREE.BufferAttribute>>();
-/** the kit's shape, held once, with the numbers of a piece's figures beside it */
-function geometry(which: 'near' | 'far', numbers: THREE.InstancedInterleavedBuffer) {
+/** the kit's shape, held once, with the numbers of a piece's figures beside it: one figure per instance */
+function geometry(which: 'near' | 'far', numbers: THREE.InstancedInterleavedBuffer, count: number) {
   let shape = shapes.get(which);
   if (!shape) {
     const k = kits[which];
     shape = { position: new THREE.BufferAttribute(k.pos, 3), normal: new THREE.BufferAttribute(k.nor, 3), info: new THREE.BufferAttribute(k.info, 4) };
     shapes.set(which, shape);
   }
-  const g = new THREE.BufferGeometry();
+  const g = new THREE.InstancedBufferGeometry();
+  g.instanceCount = count;
   for (const [name, list] of Object.entries(shape)) g.setAttribute(name, list);
-  // The five numbers per figure go to the graphics card as ONE interleaved vertex buffer: with three of the kit and
-  // the instance matrix, five separate ones made nine, and WebGPU allows only eight by default (maxVertexBuffers),
-  // so the pipeline failed and no figure was drawn on a real WebGPU device (Chrome on a Mac, 15 November 2026).
+  // The five numbers per figure go to the graphics card as ONE interleaved vertex buffer: five separate ones with the
+  // three of the kit made more than WebGPU's eight by default (maxVertexBuffers), so the pipeline failed and no
+  // figure was drawn on a real WebGPU device (Chrome on a Mac, 15 November 2026).
   NUMBERS.forEach((name, k) => g.setAttribute(name, new THREE.InterleavedBufferAttribute(numbers, 4, k * 4)));
   return g;
 }
@@ -122,14 +123,24 @@ let shared: THREE.MeshLambertNodeMaterial | undefined;
 /** triangles of one figure, near and far */
 export const TRIANGLES = { near: kits.near.triangles, far: kits.far.triangles };
 
-/** The two meshes of a piece's figures, near and far; the caller shows one of them (see detail.ts). */
-export function figureMeshes(f: Figures): { near: THREE.InstancedMesh; far: THREE.InstancedMesh } {
+/**
+ * The two meshes of a piece's figures, near and far; the caller shows one of them (see stage.ts) by the number of
+ * instances of its geometry, and lets them go with a 'dispose' event on the mesh.
+ *
+ * Plain meshes on a geometry of instances, not `THREE.InstancedMesh`: the material places the figures by itself,
+ * so the instance matrices were never used, and with them the renderer could not share the shader between pieces.
+ * Its rule (three 0.187, nodes/accessors/Instance.js `canReferenceInstanceData`): a mesh of instances shares a
+ * shader only while its geometry's attributes and the matrix buffer together are at most eight; the figures have
+ * eight attributes, so every piece's figures built their own, four shaders (picture and shadow pass, near and far
+ * kit) in the picture in which the piece arrived, in the middle of a zoom (cloud, WebGPU, 18 November 2026).
+ */
+export function figureMeshes(f: Figures): { near: THREE.Mesh<THREE.InstancedBufferGeometry>; far: THREE.Mesh<THREE.InstancedBufferGeometry> } {
   const m = (shared ??= material()), numbers = new THREE.InstancedInterleavedBuffer(interleave([f.a, f.b, f.c, f.d, f.e], f.count), 20);
   const make = (which: 'near' | 'far') => {
-    const mesh = new THREE.InstancedMesh(geometry(which, numbers), m, f.count);
-    mesh.addEventListener('dispose', () => letGo(mesh.geometry));
-    // the figures are placed by the material, not by the instance matrices (left as they are, unit), so the mesh
-    // cannot know its own bounds: it is never culled, and a piece leaves the stage as a whole
+    const mesh = new THREE.Mesh(geometry(which, numbers, f.count), m);
+    mesh.addEventListener('dispose' as never, () => letGo(mesh.geometry));
+    // the figures are placed by the material, so the mesh cannot know its own bounds: it is never culled, and a
+    // piece leaves the stage as a whole
     mesh.frustumCulled = false;
     mesh.castShadow = true; mesh.receiveShadow = true;
     mesh.userData.figures = which;

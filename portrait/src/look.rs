@@ -5,12 +5,13 @@
 
 use crate::geo::{c01, chain, cmix, hex, sm, Rgb, Rng};
 
-pub const NG: usize = 34;
-/// The genes in byte order, as apoleia_sim::dna::GENES.
+pub const NG: usize = 50;
+/// The genes in byte order, as apoleia_sim::dna::GENES (the last 16: round 112, dna.rs).
 pub const GENES: [&str; NG] = [
     "headW", "headH", "headF", "fore", "jaw", "chin", "chinH", "cheek", "noseL", "noseW", "hump", "tip", "eyeS", "eyeD", "brow",
     "browA", "ear", "earF", "mouthW", "lips", "neck", "weight", "muscle", "typA", "typB", "typC", "skin", "hairL", "hairR", "eye",
     "curl", "bald", "grey", "beardG",
+    "headD", "chinW", "eyeT", "lid", "eyeH", "eyeP", "mouthH", "mouthC", "lipB", "mouthF", "noseB", "neckL", "bags", "folds", "browT", "ruddy",
 ];
 pub const FACE_GENES: usize = 21;
 pub const WEIGHT: usize = 21;
@@ -26,6 +27,9 @@ pub const CURL: usize = 30;
 pub const BALD: usize = 31;
 pub const GREY: usize = 32;
 pub const BEARD_G: usize = 33;
+pub const MOUTH_H: usize = 40;
+pub const BROW_T: usize = 48;
+pub const RUDDY: usize = 49;
 
 /// The face genes' morph targets: none for the head shape (oval or
 /// square), one name with "#" for both sides, or several names; then the
@@ -264,6 +268,14 @@ impl Look {
     pub fn face(&self, i: usize) -> f32 {
         let g = self.grown();
         (self.g(i) - 128.0) / 127.0 * (0.35 + 0.65 * g) + KID[i] * (1.0 - g) * self.dress.set().map_or(1.0, |d| d.kid)
+    }
+
+    /// A gene of the face as it shows before its gain, from about -0.35 (low) to 0.35 (high): its ends softened
+    /// (`settings::FACE_SOFT`: c·tanh(x/c) leaves a gene one spread from the middle nearly as it is and pulls the
+    /// far ends in), and a child shows a third of it, growing into the rest (`grown`).
+    pub fn shown(&self, i: usize) -> f32 {
+        let (x, soft) = ((self.g(i) - 128.0) / 127.0, crate::settings::FACE_SOFT);
+        (if soft > 0.0 { soft * (x / soft).tanh() } else { x }) * (0.35 + 0.65 * self.grown())
     }
 
     /// The gene as it shows: muscles grow with work, weight with food.

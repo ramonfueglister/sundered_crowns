@@ -3,6 +3,7 @@
 // band of beaten earth, from afar as the same band drawn at least so wide that it can be followed, the busier
 // ways longer than the tracks.
 import { MinHeap } from '../sim/minheap';
+import { N } from '../lookprobe/layout';
 
 /**
  * The kinds of way. `half`: half the width drawn at the finest step, in finest blocks (some 130 m in middle Europe: a
@@ -159,4 +160,14 @@ function cheapestOnGround(ax: number, az: number, bx: number, bz: number, x0: nu
   const path: [number, number][] = [];
   for (let k = e; k >= 0; k = from[k]) path.push([(k % w) + x0 + 0.5, Math.floor(k / w) + z0 + 0.5]);
   return path.reverse();
+}
+
+/** blocks to a way where none is near (finite, so that the corners can be blended) */
+export const FAR_FROM_ROADS = 1e4;
+/** the ground takes the colour of a path up to about this many blocks from its line (lookprobe/terrain.ts topColor): a way's band edge is put there */
+export const ROAD_SHOWS = 1.65;
+/** Blocks to the edge of the nearest way's band at a ground point: bilinear between the corners of the columns, `edge` ((N + 1)² corners) as world.ts `buildWorld` lays it out. */
+export function roadOn(edge: Float32Array, x: number, z: number): number {
+  const fx = Math.max(0, Math.min(N - 1e-6, x)), fz = Math.max(0, Math.min(N - 1e-6, z)), x0 = Math.floor(fx), z0 = Math.floor(fz), u = fx - x0, v = fz - z0, i = z0 * (N + 1) + x0;
+  return (edge[i] * (1 - u) + edge[i + 1] * u) * (1 - v) + (edge[i + N + 1] * (1 - u) + edge[i + N + 2] * u) * v;
 }

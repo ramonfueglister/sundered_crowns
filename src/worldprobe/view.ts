@@ -7,6 +7,7 @@
 // Drag moves the picture and lets it glide on, the wheel or two fingers zoom about the pointer, the arrow keys move,
 // + and - zoom. A click on the ground is told to the page as the event `world-click` (see `click` below).
 // The probe's own page (main.ts) and the game (ui/WorldView.tsx) both show the world through this.
+import * as THREE from 'three/webgpu';
 import { smooth } from '../lookprobe/batch';
 import { NEAR, RIGHT, SEA_Y } from '../lookprobe/layout';
 import { bakedSky, createStage } from '../lookprobe/stage';
@@ -14,7 +15,7 @@ import { createNames } from './names';
 // the face of the realms' names (names.ts), bundled: no requests to a font service
 import '@fontsource/eb-garamond/latin-500.css';
 import '@fontsource/eb-garamond/latin-ext-500.css';
-import { type Layout, createPieces } from './pieces';
+import { type Layout, type View, createPieces } from './pieces';
 import { createRealms } from './realms';
 import type { RealmsNow } from './realms.worker';
 import { extentOf, heldIn } from './extent';
@@ -71,16 +72,30 @@ export interface WorldView {
   dispose(): void;
 }
 
+/**
+ * The name under which the pieces are kept on disk (store.ts), or none where they are not: the build of the game, so
+ * that a new build does not read the pieces of an old one. While the game is being worked on (the dev server) its
+ * code changes without a new build, so there the pieces are kept only where the address asks for it: `?keep=<name>`
+ * (and `?keep=0` keeps nothing in a build either).
+ */
+declare const __BUILD__: string;
+function keepAs(): string | undefined {
+  const asked = new URLSearchParams(location.search).get('keep');
+  if (asked === '0') return undefined;
+  return asked ?? (import.meta.env.DEV ? undefined : __BUILD__);
+}
+
 export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
   const name = o.region ?? 'world', base = import.meta.env.BASE_URL, still = o.still ?? false;
   const stage = await createStage({ fixed: true, tall: 70, canvas: o.canvas }), canvas = stage.canvas;
   // the world's cells are its finest blocks, FINER to a cell of the land's data (land.ts)
-  const projection = await projectionOf(name, base, FINER);
+  // and the depth of the sea under the game map (sea.ts), read beside them; without it the sea keeps its own colours
+  const [projection, depths] = await Promise.all([projectionOf(name, base, FINER), depthsOf(base)]);
   // the world's frame in cells (they run with the picture's sides), and the widest view: the frame's whole width
   const frame = extentOf(projection), farthest = Math.min(FARTHEST, frame.east - frame.west);
   // the view: the place at the middle of the picture in the finest blocks, and how many of them lie across the picture
   let [x, z] = blockOfCell(...projection.cellOf(o.lon, o.lat)), wide = Math.min(farthest, Math.max(NEAREST, o.wide));
-  const pieces = createPieces(stage, { region: name, base, bakedSky: bakedSky(), ahead: !still, changed: () => look(), year: o.year, mean: new URLSearchParams(location.search).get('mean') === 'compare' ? 'compare' : new URLSearchParams(location.search).get('mean') === '1' });
+  const pieces = createPieces(stage, { region: name, base, bakedSky: bakedSky(), ahead: !still, changed: () => look(), workers: +(new URLSearchParams(location.search).get('workers') ?? 0) || undefined, keep: keepAs(), small: new URLSearchParams(location.search).get('small') !== '0', faces: new URLSearchParams(location.search).get('faces') !== '0', free: new URLSearchParams(location.search).get('free') !== '0', tables: new URLSearchParams(location.search).get('tables') !== '0', glide: new URLSearchParams(location.search).get('glide') !== '0', margin: +(new URLSearchParams(location.search).get('margin') ?? 0) || undefined, year: o.year, mean: new URLSearchParams(location.search).get('mean') === 'compare' ? 'compare' : new URLSearchParams(location.search).get('mean') === '1' });
   const realms = createRealms(stage, { region: name, base, year: o.year, map: projection.map, cells: projection.cells, round: projection.round, rows: projection.rows, ahead: !still, changed: () => look() }), names = createNames(o.names);
   const middle = (): [number, number] => { const box = canvas.getBoundingClientRect(); return [box.left + box.width / 2, box.top + box.height / 2]; };
 
@@ -91,10 +106,16 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
     // the picture stops at the edges of the world's frame (the map's rows and columns run with the picture's sides)
     const [u0, v0] = cellOfBlock(x, z), [u, held] = heldIn(frame, u0, v0, wide, wide / aspect / squash);
     if (held !== v0 || u !== u0) [x, z] = blockOfCell(u, held);
-    const view = { x, z, wide, aspect, pixels: canvas.clientWidth, elevation };
+    const view = { x, z, wide, aspect, pixels: canvas.clientWidth, elevation, to: toward() };
     const at = pieces.look(view), missing = at.missing + realms.look(view, at), failed = pieces.failed || realms.failed;
     stage.aim(x / at.coarse - at.homeX, z / at.coarse - at.homeZ, wide / at.coarse, elevation, awayOf(wide) / at.coarse);
     stage.creases(creasesOf(wide), creaseReachOf(wide) / at.coarse); stage.soften(nearOf(wide)); laid = at;
+    // a point (x, z) of the stage is the world block ((x + homeX) · coarse, (z + homeZ) · coarse), and that the cell
+    // (u, v) of the whole map (land.ts `cellOfBlock`), which lies at (u / map width, v / map height) on the depth picture
+    {
+      const c = at.coarse, [mw, mh] = projection.map, hx = at.homeX * c, hz = at.homeZ * c;
+      stage.sea(depths, [RIGHT[0] * c / mw, RIGHT[1] * c / mw, (RIGHT[0] * hx + RIGHT[1] * hz) / mw, NEAR[0] * c / mh, NEAR[1] * c / mh, (NEAR[0] * hx + NEAR[1] * hz) / mh], Number.isFinite(projection.round) ? projection.round / mw : 0, c, hx, hz);
+    }
     const box = canvas.getBoundingClientRect();
     names.show(realms.names, box, (u - realms.lap) / projection.cells, held / projection.cells, (box.width / wide) * projection.cells, squash, realms.named);
     stage.busy = missing > 0 && !failed;
@@ -104,9 +125,17 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
   const note = () => { if (o.moved) { const [lon, lat] = projection.placeOf(...cellOfBlock(x, z)); o.moved(lon, lat, wide); } };
 
   /** ground offset from the middle of the picture to a point of the page, in finest blocks to the right and towards the viewer */
-  const offset = (px: number, py: number): [number, number] => {
-    const box = canvas.getBoundingClientRect(), perPixel = wide / box.width;
-    return [(px - box.left - box.width / 2) * perPixel, ((py - box.top - box.height / 2) * perPixel) / Math.sin((elevationOf(wide) * Math.PI) / 180)];
+  const offset = (px: number, py: number, across = wide): [number, number] => {
+    const box = canvas.getBoundingClientRect(), perPixel = across / box.width;
+    return [(px - box.left - box.width / 2) * perPixel, ((py - box.top - box.height / 2) * perPixel) / Math.sin((elevationOf(across) * Math.PI) / 180)];
+  };
+  /** the view a zoom or a flight under way will come to rest at: the pieces of that picture are built first (pieces.ts) */
+  const toward = (): View['to'] => {
+    if (flight) return { x: flight.toX, z: flight.toZ, wide: flight.toWide, elevation: elevationOf(flight.toWide) };
+    if (Math.abs(Math.log(goal / wide)) <= 1e-3) return undefined;
+    // the ground under the point the zoom is about stays under it
+    const before = offset(...about), after = offset(...about, goal), right = before[0] - after[0], near = before[1] - after[1];
+    return { x: x + right * RIGHT[0] + near * NEAR[0], z: z + right * RIGHT[1] + near * NEAR[1], wide: goal, elevation: elevationOf(goal) };
   };
   const move = (right: number, near: number) => { x += right * RIGHT[0] + near * NEAR[0]; z += right * RIGHT[1] + near * NEAR[1]; look(); note(); };
   /** zooms so that the ground under a point of the page stays under it */
@@ -220,4 +249,13 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
       pieces.dispose(); realms.dispose(); names.remove(); stage.dispose();
     },
   };
+}
+
+/** The depth of the sea under the game map (public/map/depth.png, tools/worldprobe/build_depth.py); null where it cannot be read. */
+async function depthsOf(base: string): Promise<THREE.Texture | null> {
+  try {
+    const t = await new THREE.TextureLoader().loadAsync(`${base}map/depth.png`);
+    t.colorSpace = THREE.NoColorSpace; t.minFilter = THREE.LinearFilter; t.generateMipmaps = false;
+    return t;
+  } catch { return null; }
 }

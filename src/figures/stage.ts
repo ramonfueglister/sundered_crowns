@@ -14,7 +14,8 @@ export type { Figures } from './crowd';
  */
 export const NEAR_UNTIL = 260;
 
-interface Pair { near: THREE.InstancedMesh; far: THREE.InstancedMesh; f: Figures; /** the share of the figures that is drawn */ kept: number }
+type Kit = THREE.Mesh<THREE.InstancedBufferGeometry>;
+interface Pair { near: Kit; far: Kit; f: Figures; /** the share of the figures that is drawn */ kept: number }
 const shown = new Set<Pair>(), pairOf = new WeakMap<THREE.Object3D, Pair>();
 let near = true;
 /**
@@ -23,15 +24,18 @@ let near = true;
  * instead, the far kits of all pieces were set up in the one frame of the change: 60 to 80 ms, Chrome on a Mac,
  * 16 November 2026).
  */
-const draw = (p: Pair) => { const n = Math.round(p.f.count * p.kept); p.near.count = near ? n : 0; p.far.count = near ? 0 : n; };
+const draw = (p: Pair) => { const n = Math.round(p.f.count * p.kept); p.near.geometry.instanceCount = near ? n : 0; p.far.geometry.instanceCount = near ? 0 : n; };
 
-/** Makes the two meshes of a piece's figures and keeps them until the stage disposes of them. */
+/** Tells a mesh of figures that it leaves the stage: the renderer and the mesh's own listeners let go of what they hold. */
+export const disposeFigures = (mesh: THREE.Object3D) => mesh.dispatchEvent({ type: 'dispose' } as never);
+
+/** Makes the two meshes of a piece's figures and keeps them until the stage disposes of the near one (`disposeFigures`). */
 export function figureMeshes(f: Figures) {
   const pair: Pair = { ...build(f), f, kept: 1 };
   pairOf.set(pair.near, pair); pairOf.set(pair.far, pair);
   draw(pair);
   shown.add(pair);
-  pair.near.addEventListener('dispose', () => { shown.delete(pair); pair.far.dispose(); });
+  pair.near.addEventListener('dispose' as never, () => { shown.delete(pair); disposeFigures(pair.far); });
   return pair;
 }
 

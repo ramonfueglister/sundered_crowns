@@ -3,12 +3,16 @@
 # face, linen finer and smoother. Grey around 0.85: the garment's dye comes
 # from the vertex colours.
 # usage: python3 -I fabric_tex.py out.png out_n.png wool|linen [threads per tile]
+import os
 import sys
 import numpy as np
 from PIL import Image, ImageFilter
 out, out_n, kind = sys.argv[1:4]
 N = int(sys.argv[4]) if len(sys.argv) > 4 else (32 if kind == 'wool' else 48)
 S = 1024
+# wool: how much of the weave the nap hides (`NAP`), how deep the weave's relief is (`DEPTH`), how strongly the
+# cloth is mottled, lighter and darker over 1 to 5 cm (`MOTT`)
+NAP, DEPTH, MOTT = (float(os.environ.get(k, d)) for k, d in (('NAP', '0.45'), ('DEPTH', '1.5'), ('MOTT', '0.06')))
 rng = np.random.default_rng(7 if kind == 'wool' else 9)
 v, u = np.meshgrid(np.arange(S) / S, np.arange(S) / S, indexing='ij')
 iu, iv = np.floor(u * N).astype(int), np.floor(v * N).astype(int)
@@ -29,9 +33,9 @@ if kind == 'wool':
     hb = h.copy()
     for _ in range(6):   # a blur that wraps round the tile
         hb = (hb + np.roll(hb, 1, 0) + np.roll(hb, -1, 0) + np.roll(hb, 1, 1) + np.roll(hb, -1, 1)) / 5
-    h = 0.55 * h + 0.45 * hb
+    h = (1 - NAP) * h + NAP * hb
     h = h + noise(2, 0.10) + noise(8, 0.05)
-    depth, mott, CON = 1.5, 0.06, 0.035
+    depth, mott, CON = DEPTH, MOTT, 0.035
 else:
     h = h + noise(2, 0.04)
     depth, mott, CON = 1.1, 0.035, 0.03

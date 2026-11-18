@@ -118,87 +118,99 @@
    "bytes": 42006
   },
   {
-   "name": "bob01_cap.txt",
-   "bytes": 63593
+   "name": "bob01_body.txt.zst",
+   "bytes": 662412
   },
   {
-   "name": "bob01_locks.txt.zst",
-   "bytes": 468523
+   "name": "bob01_cap.txt",
+   "bytes": 63593
   },
   {
    "name": "bob01_scalp.txt",
    "bytes": 42006
   },
   {
-   "name": "bob02_cap.txt",
-   "bytes": 63593
+   "name": "bob02_body.txt.zst",
+   "bytes": 654815
   },
   {
-   "name": "bob02_locks.txt.zst",
-   "bytes": 437562
+   "name": "bob02_cap.txt",
+   "bytes": 63593
   },
   {
    "name": "bob02_scalp.txt",
    "bytes": 42006
   },
   {
-   "name": "bob03_cap.txt",
-   "bytes": 58840
+   "name": "bob03_body.txt.zst",
+   "bytes": 638978
   },
   {
-   "name": "bob03_locks.txt.zst",
-   "bytes": 480511
+   "name": "bob03_cap.txt",
+   "bytes": 58840
   },
   {
    "name": "bob03_scalp.txt",
    "bytes": 42006
   },
   {
-   "name": "bob04_cap.txt",
-   "bytes": 51997
+   "name": "bob04_body.txt.zst",
+   "bytes": 345391
   },
   {
-   "name": "bob04_locks.txt.zst",
-   "bytes": 402825
+   "name": "bob04_cap.txt",
+   "bytes": 51997
   },
   {
    "name": "bob04_scalp.txt",
    "bytes": 42006
   },
   {
-   "name": "bob05_cap.txt",
-   "bytes": 63593
+   "name": "bob05_body.txt.zst",
+   "bytes": 940995
   },
   {
-   "name": "bob05_locks.txt.zst",
-   "bytes": 591416
+   "name": "bob05_cap.txt",
+   "bytes": 63593
   },
   {
    "name": "bob05_scalp.txt",
    "bytes": 42006
   },
   {
-   "name": "bob06_cap.txt",
-   "bytes": 63593
+   "name": "bob06_body.txt.zst",
+   "bytes": 620196
   },
   {
-   "name": "bob06_locks.txt.zst",
-   "bytes": 415604
+   "name": "bob06_cap.txt",
+   "bytes": 63593
   },
   {
    "name": "bob06_scalp.txt",
    "bytes": 42006
   },
   {
+   "name": "bob07_body.txt.zst",
+   "bytes": 669773
+  },
+  {
    "name": "bob07_cap.txt",
    "bytes": 63593
   },
   {
-   "name": "bob07_locks.txt.zst",
-   "bytes": 492525
+   "name": "bob07_scalp.txt",
+   "bytes": 42006
   },
   {
-   "name": "bob07_scalp.txt",
+   "name": "bob08_body.txt.zst",
+   "bytes": 626880
+  },
+  {
+   "name": "bob08_cap.txt",
+   "bytes": 63593
+  },
+  {
+   "name": "bob08_scalp.txt",
    "bytes": 42006
   },
   {
@@ -234,6 +246,14 @@
    "bytes": 16632
   },
   {
+   "name": "cloth_cote_v.txt.zst",
+   "bytes": 133285
+  },
+  {
+   "name": "cloth_cote_v_ao.txt",
+   "bytes": 18894
+  },
+  {
    "name": "cloth_hood_down.txt.zst",
    "bytes": 89673
   },
@@ -250,12 +270,36 @@
    "bytes": 35310
   },
   {
+   "name": "cloth_kirtle.txt.zst",
+   "bytes": 137613
+  },
+  {
+   "name": "cloth_kirtle_ao.txt",
+   "bytes": 19428
+  },
+  {
    "name": "cloth_palla.txt.zst",
    "bytes": 122777
   },
   {
    "name": "cloth_palla_ao.txt",
    "bytes": 19020
+  },
+  {
+   "name": "cloth_shirt.txt.zst",
+   "bytes": 65521
+  },
+  {
+   "name": "cloth_shirt_ao.txt",
+   "bytes": 8958
+  },
+  {
+   "name": "cloth_smock.txt.zst",
+   "bytes": 74235
+  },
+  {
+   "name": "cloth_smock_ao.txt",
+   "bytes": 10128
   },
   {
    "name": "cloth_toga.txt.zst",
@@ -298,6 +342,22 @@
    "bytes": 25140
   },
   {
+   "name": "coil01_body.txt.zst",
+   "bytes": 426784
+  },
+  {
+   "name": "coil02_body.txt.zst",
+   "bytes": 426085
+  },
+  {
+   "name": "coil03_body.txt.zst",
+   "bytes": 437416
+  },
+  {
+   "name": "coil04_body.txt.zst",
+   "bytes": 326006
+  },
+  {
    "name": "crop01.txt",
    "bytes": 4
   },
@@ -326,12 +386,12 @@
    "bytes": 20765
   },
   {
-   "name": "plait01_cap.txt",
-   "bytes": 67945
+   "name": "plait01_body.txt.zst",
+   "bytes": 712412
   },
   {
-   "name": "plait01_locks.txt.zst",
-   "bytes": 391434
+   "name": "plait01_cap.txt",
+   "bytes": 67945
   },
   {
    "name": "plait01_rope.txt.zst",
@@ -456,6 +516,8 @@
   "bob06_cap_n.webp",
   "bob07_cap.webp",
   "bob07_cap_n.webp",
+  "bob08_cap.webp",
+  "bob08_cap_n.webp",
   "braid01.webp",
   "braid01_cap.webp",
   "braid01_cap_n.webp",
@@ -472,6 +534,8 @@
   "cloth_hood_up_n.webp",
   "cloth_palla.webp",
   "cloth_palla_n.webp",
+  "cloth_smock.webp",
+  "cloth_smock_n.webp",
   "cloth_toga.webp",
   "cloth_toga_n.webp",
   "cloth_tunic.webp",
@@ -492,8 +556,10 @@
   "eyeball.webp",
   "eyebrow001.webp",
   "eyebrow1356.webp",
-  "hair1356_locks.webp",
-  "hair1356_locks_n.webp",
+  "hair1356_body.webp",
+  "hair1356_body_n.webp",
+  "hair1356_fleece.webp",
+  "hair1356_fleece_n.webp",
   "plait01_cap.webp",
   "plait01_cap_n.webp",
   "plait01_rope.webp",
@@ -510,18 +576,21 @@
   "sidepart01_cap_n.webp",
   "sidepart01_n.webp",
   "skin_middleage_female.webp",
+  "skin_middleage_female_flat.webp",
   "skin_middleage_female_n.webp",
   "skin_middleage_female_w38_n.webp",
   "skin_middleage_female_w46_n.webp",
   "skin_middleage_female_w54_n.webp",
   "skin_middleage_female_w62_n.webp",
   "skin_middleage_male.webp",
+  "skin_middleage_male_flat.webp",
   "skin_middleage_male_n.webp",
   "skin_middleage_male_w38_n.webp",
   "skin_middleage_male_w46_n.webp",
   "skin_middleage_male_w54_n.webp",
   "skin_middleage_male_w62_n.webp",
   "skin_old_female.webp",
+  "skin_old_female_flat.webp",
   "skin_old_female_n.webp",
   "skin_old_female_w46_n.webp",
   "skin_old_female_w54_n.webp",
@@ -530,6 +599,7 @@
   "skin_old_female_w78_n.webp",
   "skin_old_female_w86_n.webp",
   "skin_old_male.webp",
+  "skin_old_male_flat.webp",
   "skin_old_male_n.webp",
   "skin_old_male_w46_n.webp",
   "skin_old_male_w54_n.webp",
@@ -538,8 +608,10 @@
   "skin_old_male_w78_n.webp",
   "skin_old_male_w86_n.webp",
   "skin_young_female.webp",
+  "skin_young_female_flat.webp",
   "skin_young_female_n.webp",
   "skin_young_male.webp",
+  "skin_young_male_flat.webp",
   "skin_young_male_n.webp"
  ]
 }

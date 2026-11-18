@@ -4,9 +4,9 @@
 import { loadSetup, loadWorld } from './load';
 import { createWorldState } from '../../src/sim/setup';
 import { ageOn } from '../../src/sim/systems/people';
-import { deathsTo, settleEstates } from '../../src/sim/systems/deaths';
+import { deathsTo, settleEstates, estatesOf, seekersIn } from '../../src/sim/systems/deaths';
 import { birthsTo, weddingsOn, type Passed } from '../../src/sim/systems/families';
-import { movesTo, noMoves, rateOf } from '../../src/sim/systems/moves';
+import { movesTo, offersOn, noMoves, rateOf } from '../../src/sim/systems/moves';
 import { yearsLeft, survival } from '../../src/sim/people/lifetable';
 import { ROLE } from '../../src/sim/systems/work';
 import { ALIVE } from '../../src/sim/state';
@@ -42,7 +42,7 @@ for (let y = 1; y <= YEARS; y++) {
     const day = Math.round((y - 1 + mo / 12) * 365.25);
     d += deathsTo(s, day); if (!STAY) due += movesTo(s, w, day, moved); b += birthsTo(s, day);
     const wives = new Set<number>(); for (let f = 0; f < s.family.size; f++) if (F.seat[f] && F.woman[f] >= 0) wives.add(F.woman[f]);
-    m += weddingsOn(s, day, y > 40 ? passed : undefined); settleEstates(s, day);
+    m += weddingsOn(s, day, y > 40 ? passed : undefined); settleEstates(s, day); if (!STAY) offersOn(s, w, day, moved);
     for (let f = 0; f < s.family.size; f++) if (F.seat[f] && F.woman[f] >= 0 && !wives.has(F.woman[f])) { brideSum += ageOn(P.born[F.woman[f]], day); brides++; }
   }
   const c = census(Math.round(y * 365.25)); personYears += c.n;
@@ -51,10 +51,10 @@ for (let y = 1; y <= YEARS; y++) {
 if (passed.passed) console.log(`years 41 to ${YEARS}: ${passed.passed} households passed to a new couple, ${(100 * (passed.sons + passed.daughters) / passed.passed).toFixed(0)} % to an heir of the house (${passed.sons} sons, ${passed.daughters} daughters)`);
 console.log(`${YEARS} years in ${Date.now() - t0} ms; mean age of the brides ${(brideSum / brides).toFixed(1)}; ${s.person.size} person rows, ${s.family.size} family rows`);
 if (!STAY) {
-  const far = moved.home + moved.service, drawn = far + moved.near + moved.held;
-  console.log(`moves: ${(far / YEARS).toFixed(0)} persons a year to another place (${(moved.home / YEARS).toFixed(0)} from home, ${(moved.service / YEARS).toFixed(0)} from a place they had moved to), ` +
+  const far = moved.home + moved.service + moved.work, drawn = moved.home + moved.service + moved.near + moved.held;
+  console.log(`moves: ${(far / YEARS).toFixed(0)} persons a year to another place (${(moved.home / YEARS).toFixed(0)} from home, ${(moved.service / YEARS).toFixed(0)} from a place they had moved to, ${(moved.work / YEARS).toFixed(0)} onto a part that waited), ` +
     `${(100 * far / personYears).toFixed(2)} % of the persons a year; women ${(100 * moved.women / far).toFixed(0)} %, of 15 to 29 ${(100 * moved.prime / far).toFixed(0)} %, to kin ${(100 * moved.kin / far).toFixed(0)} %, mean age ${(moved.ages / far).toFixed(1)}`);
-  console.log(`far moves drawn: ${drawn} (${due} days had come), ${(100 * far / drawn).toFixed(0)} % reached another place, ${(100 * moved.near / drawn).toFixed(0)} % stayed inside the place, ${moved.held} held`);
+  console.log(`far moves drawn: ${drawn} (${due} days had come), ${(100 * (moved.home + moved.service) / drawn).toFixed(0)} % reached another place, ${(100 * moved.near / drawn).toFixed(0)} % stayed inside the place, ${moved.held} held`);
   // the changes of place of all kinds, near and far, that the rates of the living stand for at the end
   let adults = 0, awayAdults = 0, living = 0, atHome = 0, rateHome = 0, inService = 0, rateService = 0;
   const day = Math.round(YEARS * 365.25);
@@ -76,4 +76,21 @@ for (const [lo, hi] of [[0, 60], [60, 100], [100, 200], [200, 500], [500, 1e9]])
   let a = 0, b = 0, k = 0, gone = 0, min = Infinity, max = 0;
   for (const [p, n] of size0) { if (n < lo || n >= hi) continue; const e = end.byPlace.get(p) ?? 0; a += n; b += e; k++; if (e < n / 2) gone++; min = Math.min(min, e / n); max = Math.max(max, e / n); }
   console.log(`places founded with ${lo} to ${hi === 1e9 ? '…' : hi} persons: ${k}, ${a} persons then, ${b} now (${(100 * b / a - 100).toFixed(1)} %), smallest ratio ${min.toFixed(2)}, largest ${max.toFixed(2)}, ${gone} below half`);
+}
+// the parts in the economy (people feature 6): how many wait for a successor, who wants one and has none, and the
+// shares of the men and of the women of 20 to 59 who hold one (the table of the founding: 97.1 % and 43.0 %)
+{
+  const day = Math.round(YEARS * 365.25), places = new Set<number>(); let parts = 0, men = 0, menPart = 0, women = 0, womenPart = 0, seekers = 0;
+  for (let i = 0; i < s.person.size; i++) {
+    if (!s.person.alive[i] || P.dies[i] === ALIVE) continue;
+    if (P.role[i] !== ROLE.none) parts++;
+    if (P.died[i] !== ALIVE) continue;
+    places.add(F.place[P.family[i]]);
+    const a = ageOn(P.born[i], day); if (a < 20 || a >= 60) continue;
+    if (P.sex[i] === 1) { men++; if (P.role[i] !== ROLE.none) menPart++; } else { women++; if (P.role[i] !== ROLE.none) womenPart++; }
+  }
+  for (const p of places) seekers += seekersIn(s, p, day).length;
+  const waiting = estatesOf(s);
+  console.log(`parts in the economy: ${parts}, of them ${waiting.length} wait for a successor in ${new Set(waiting.map((e) => e.place)).size} towns; ${seekers} persons want a part and have none; ` +
+    `with a part at 20 to 59: men ${(100 * menPart / men).toFixed(1)} %, women ${(100 * womenPart / women).toFixed(1)} %`);
 }

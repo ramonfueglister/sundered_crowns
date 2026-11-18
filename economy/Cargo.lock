@@ -5,7 +5,6 @@ version = 4
 [[package]]
 name = "beforeit"
 version = "0.1.0"
-source = "git+https://github.com/ramonfueglister/port-beforeit?rev=729153175fa6ca86f67ee62aa2f8fbabec136217#729153175fa6ca86f67ee62aa2f8fbabec136217"
 dependencies = [
  "libm",
  "serde_json",

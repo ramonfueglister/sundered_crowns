@@ -29,9 +29,13 @@ import type { Table } from './ecs';
  *  an heir comes home (src/sim/systems/moves.ts): every person has the place they come from and the day of the next move.
  *  26: there is distance between the cities (economy feature 17) and a firm and its owner are one household (economy
  *  feature 18); the economies are founded anew. 27: goods go over land on the ways of the world (src/sim/roads.ts):
- *  the routes between the cities follow the ways and go slower off them; the economies are founded anew. Snapshots
- *  from 11 on are brought up to date by src/sim/upgrade.ts. */
-export const STATE_VERSION = 27;
+ *  the routes between the cities follow the ways and go slower off them; the economies are founded anew. 28: IQ and
+ *  the Big Five shift the rates of death, of a far move and of who is taken at a wedding (people feature 5,
+ *  src/sim/people/traits.ts); deaths and moves are drawn anew. 29: a founder draws the genes from the pool of the
+ *  culture, not of the place (src/sim/people/pools.ts; portrait round 111), and a person carries 50 genes where there
+ *  were 34 (round 112: more of the face); every person's genes are given anew. Snapshots from 11 on are brought up
+ *  to date by src/sim/upgrade.ts. */
+export const STATE_VERSION = 29;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
@@ -69,9 +73,10 @@ export const PERSON_SCHEMA = {
   iq: 'u8',
   /** the Big Five as T-scores (mean 50, standard deviation 10): openness, conscientiousness, extraversion, agreeableness, neuroticism */
   o: 'u8', c: 'u8', e: 'u8', a: 'u8', n: 'u8',
-  /** the genes the portraits draw the face from: 34 genes of two alleles, 68 bytes a person, the first allele of
-   *  every gene then the second (src/sim/people/genes.ts, after Apoleia's portrait/src/dna.rs) */
-  genes: ['u8', 68],
+  /** the genes the portraits draw the face from: 50 genes of two alleles, 100 bytes a person (34 and 68 up to
+   *  version 28), the first allele of every gene then the second (src/sim/people/genes.ts, after Apoleia's
+   *  portrait/src/dna.rs) */
+  genes: ['u8', 100],
   /** the part of the person in the economy of the city (ROLE in src/sim/systems/work.ts; 0: none), and the person's
    *  position in the engine's list of that part (economy feature 10) */
   role: 'u8', agent: 'i32',

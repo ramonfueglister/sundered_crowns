@@ -54,6 +54,20 @@ describe('the chronicle of rulers', () => {
 
 describe('the rulers of a world of 1291', () => {
   const s = fresh();
+  it('draw their genes from the pool of their culture, and get them again by the upgrade from 24', () => {
+    // (portrait round 111, src/sim/people/pools.ts) the skin's two alleles: Gallia's 0 to 80 for the English and the
+    // French king, Germania's 0 to 60 for the ruler of Bohemia
+    const skin = (name: string) => { const id = s.named.find((n) => n.name === name)!.person; return [s.person.cols.genes[id * 100 + 26], s.person.cols.genes[id * 100 + 50 + 26]]; };
+    for (const v of [...skin('Edward I'), ...skin('Philip IV')]) expect(v).toBeLessThanOrEqual(80);
+    for (const v of skin('A ruler without a known birth')) expect(v).toBeLessThanOrEqual(60);
+    const old = fresh(), before = hashState(old);
+    expect(before).toBe(hashState(s));
+    old.v = 24; old.person.cols.genes.fill(7, 0, old.person.size * 100);
+    expect(hashState(old)).not.toBe(before);
+    const up = upgradeState(old, w, () => loadSetup(1291));
+    expect(up.v).toBe(STATE_VERSION);
+    expect(hashState(up)).toBe(before);
+  }, 120_000);
   it('gives every realm of the chronicle its holder of 1 January 1291 and nobody to the others', () => {
     expect(s.v).toBe(STATE_VERSION);
     expect(holderName(s, 'england')).toBe('Edward I');

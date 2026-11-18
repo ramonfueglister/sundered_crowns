@@ -50,9 +50,13 @@ function lonOf(m: Frame, x: number): number {
   const xm = mod(x, m.worldW), lon = xm < m.mapW ? m.lon0 + (xm / m.mapW) * (m.lon1 - m.lon0) : m.lon1 + ((xm - m.mapW) / (m.worldW - m.mapW)) * (360 - m.lon1 + m.lon0);
   return mod(lon + 180, 360) - 180;
 }
+// the map's north edge on the Mercator scale and its height there, kept from the last asking: a builder asks for
+// every column of a piece, and working the two out anew each time was three quarters of what the asking cost
+let keptN = NaN, keptS = NaN, north = 0, height = 0;
 /** Latitude in degrees of a row of cells of the window (a cell coordinate of the window). */
 export function latOf(r: Region, cy: number): number {
-  const y = merc(r.latN) - ((r.y0 + cy / r.cells) / r.mapH) * (merc(r.latN) - merc(r.latS));
+  if (r.latN !== keptN || r.latS !== keptS) { keptN = r.latN; keptS = r.latS; north = merc(r.latN); height = merc(r.latN) - merc(r.latS); }
+  const y = north - ((r.y0 + cy / r.cells) / r.mapH) * height;
   return (Math.atan(Math.sinh(y)) * 180) / Math.PI;
 }
 
@@ -133,13 +137,21 @@ export function refine(data: Region, finer: number, x0: number, y0: number, w: n
     shaped: new Int16Array(n), drainage: new Uint8Array(n), water: new Uint8Array(n), forest: new Uint8Array(n), crops: new Uint8Array(n),
     rivers: data.rivers.map((v) => ({ ...v, pts: v.pts.map(([px, py]): [number, number] => [px * finer - x0, py * finer - y0]) })),
   };
-  const sea = Uint8Array.from(data.water, (k) => (k === Water.Sea ? 1 : 0)), lake = Uint8Array.from(data.water, (k) => (k === Water.Lake ? 1 : 0));
+  const sea = new Uint8Array(data.water.length), lake = new Uint8Array(data.water.length);
+  for (let k = 0; k < sea.length; k++) { if (data.water[k] === Water.Sea) sea[k] = 1; else if (data.water[k] === Water.Lake) lake[k] = 1; }
+  const { shaped, forest, crops } = data, dw = data.w;
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
     // the new cell's middle in cells of the data
     const cx = (x0 + x + 0.5) / finer, cy = (y0 + y + 0.5) / finer, i = y * w + x;
-    r.shaped[i] = Math.round(sample(data, data.shaped, cx, cy)); r.forest[i] = Math.round(sample(data, data.forest, cx, cy)); r.crops[i] = Math.round(sample(data, data.crops, cx, cy));
+    // `sample` of the five layers at this point, its four cells and their weights worked out once for all five (the
+    // sums are `sample`'s own, term for term)
+    const sx = Math.max(0, Math.min(dw - 1.001, cx - 0.5)), sy = Math.max(0, Math.min(data.h - 1.001, cy - 0.5));
+    const xi = Math.floor(sx), yi = Math.floor(sy), fx = sx - xi, fy = sy - yi, gx = 1 - fx, gy = 1 - fy, a = yi * dw + xi, b = a + dw;
+    r.shaped[i] = Math.round((shaped[a] * gx + shaped[a + 1] * fx) * gy + (shaped[b] * gx + shaped[b + 1] * fx) * fy);
+    r.forest[i] = Math.round((forest[a] * gx + forest[a + 1] * fx) * gy + (forest[b] * gx + forest[b + 1] * fx) * fy);
+    r.crops[i] = Math.round((crops[a] * gx + crops[a + 1] * fx) * gy + (crops[b] * gx + crops[b + 1] * fx) * fy);
     r.drainage[i] = data.drainage[cell(Math.floor(cx), Math.floor(cy))];
-    const wet = sample(data, sea, cx, cy), still = sample(data, lake, cx, cy);
+    const wet = (sea[a] * gx + sea[a + 1] * fx) * gy + (sea[b] * gx + sea[b + 1] * fx) * fy, still = (lake[a] * gx + lake[a + 1] * fx) * gy + (lake[b] * gx + lake[b + 1] * fx) * fy;
     r.water[i] = wet + still <= 0.5 ? Water.Land : wet >= still ? Water.Sea : Water.Lake;
     if (r.water[i] !== Water.Lake) continue;
     // a lake lies level: at the height of the nearest of its cells of the data

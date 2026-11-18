@@ -7,6 +7,8 @@ import sys, math
 import bpy, bmesh
 import numpy as np
 import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import neckline
 WIDE = float(os.environ.get('WIDE', '0.25')); BEND = float(os.environ.get('BEND', '5.0')); LOOSE = float(os.environ.get('LOOSE', '0.3'))
 SFL = float(os.environ.get('SFLARE', '0.06')); NECK = float(os.environ.get('NECK', '0.0')); NDIP = float(os.environ.get('NDIP', '0.12'))
 base, outp = sys.argv[-3], sys.argv[-2]
@@ -32,7 +34,10 @@ def neck_ok(c):
     return y < (5.5 + NECK + (5.9 - 5.5) * min(1, t * 1.6)) - NDIP * max(0, 1 - abs(x) / 0.6) * (1 if front else 0)
 
 # the cloth from MakeHuman's tights helper (even mesh, no nipples or navel)
-cl = [f for f in faces['helper-tights'] if all(neck_ok(V[i]) and V[i][1] > 1.75 and abs(V[i][0]) < 2.25 for i in f)]
+# (`NECKLINE`: a neckline cut wide, `neckline.py`; it is cut out of the finer mesh below, so that its edge is the
+# line and not the helper's faces. `YMIN`: the garment's lower end, for one that is a yoke alone)
+YMIN = float(os.environ.get('YMIN', '1.75'))
+cl = [f for f in faces['helper-tights'] if all((V[i][1] <= 6.3 if neckline.WIDE else neck_ok(V[i])) and V[i][1] > YMIN and abs(V[i][0]) < 2.25 for i in f)]
 bpy.ops.wm.read_factory_settings(use_empty=True)
 sc = bpy.context.scene
 
@@ -73,6 +78,8 @@ me = to.data
 # twice as fine
 bm = bmesh.new(); bm.from_mesh(me)
 bmesh.ops.subdivide_edges(bm, edges=bm.edges[:], cuts=1, use_grid_fill=True, smooth=0.5)
+if neckline.WIDE:
+    neckline.cut(bm)
 bmesh.ops.triangulate(bm, faces=bm.faces[:])
 # the cloth does not remember the body's details (nipples, collarbones)
 for _ in range(8):
@@ -124,8 +131,38 @@ me = to.data
 me.update()
 n = np.zeros((len(me.vertices), 3)); me.vertices.foreach_get('normal', n.ravel())
 P = np.zeros((len(me.vertices), 3)); me.vertices.foreach_get('co', P.ravel())
+# `ONSKIN=distance`: no drape. What is worn under a gown and shows at its neck alone (a shirt, a smock) lies on the
+# body: the smoothed shell this far off the skin, written as it is
+if os.environ.get('ONSKIN'):
+    P = P + n * float(os.environ['ONSKIN']) * S
+    with open(outp, 'w') as fo:
+        for v in P:
+            fo.write('v %.5f %.5f %.5f\n' % (v[0] / S, v[2] / S, -v[1] / S))
+        for p in me.polygons:
+            fo.write('f ' + ' '.join(str(i + 1) for i in p.vertices) + '\n')
+    print('on the skin: verts', len(P), 'faces', len(me.polygons))
+    sys.exit(0)
 y = P[:, 2] / S
 off = (0.07 + LOOSE * np.clip((5.6 - y) / 1.2, 0, 1)) * S
+# A neckline cut wide is held where it is cut (its edge is pinned below): left to the drape, a gown with a wide
+# opening and a notch slid off one shoulder. Its edge lies close on the body, and the cloth comes off it over four
+# rings of the mesh.
+neck_edge = np.zeros(len(P), bool)
+if neckline.WIDE:
+    from collections import Counter
+    ec = Counter(tuple(sorted((p.vertices[k], p.vertices[(k + 1) % len(p.vertices)]))) for p in me.polygons for k in range(len(p.vertices)))
+    near_ = {}
+    for a_, b_ in ec:
+        near_.setdefault(a_, set()).add(b_); near_.setdefault(b_, set()).add(a_)
+    ring = {i: 0 for e, c in ec.items() if c == 1 for i in e if y[i] > 4.9 and abs(P[i, 0] / S) < neckline.WIDE[0] + 0.3}
+    front_ = set(ring)
+    for r in range(1, 5):
+        front_ = {j for i in front_ for j in near_[i]} - set(ring)
+        ring.update({j: r for j in front_})
+    for i, r in ring.items():
+        off[i] = 0.07 * S + (off[i] - 0.07 * S) * (r / 5.0) ** 2
+        neck_edge[i] = r == 0
+    print('neck edge pinned:', int(neck_edge.sum()), 'points')
 P0 = P.copy()
 P = P + n * off[:, None]
 # wider than the body below the chest (a tunic is cut wide): sideways outwards
@@ -143,7 +180,7 @@ kb.data.foreach_set('co', belt.ravel())
 kb.value = 0.0; kb.keyframe_insert('value', frame=1)
 kb.value = 1.0; kb.keyframe_insert('value', frame=25)
 vg = to.vertex_groups.new(name='pin')
-vg.add([int(i) for i in np.where(bot)[0]], 1.0, 'REPLACE')
+vg.add([int(i) for i in np.where(bot | neck_edge)[0]], 1.0, 'REPLACE')
 cm = to.modifiers.new('cloth', 'CLOTH')
 s = cm.settings
 s.vertex_group_mass = 'pin'

@@ -36,6 +36,11 @@ pub struct Portrait {
     /// Share of the picture's height the head fills: 0.53, more for a
     /// small child, whose short body would otherwise end inside the picture.
     pub fill: f32,
+    /// How much of a child's skin the person has: 1 for as long as the head is MakeHuman's child (up to eleven), 0
+    /// from where it has its adult form on (`dress::child_share`), 0 in a look without a dress table. The stage
+    /// draws a child's skin with less of the grown's pores, relief, blotches and speckle (src/portrait/profile.ts
+    /// `skin.child`): the skin's images and the stage's noise are a grown person's.
+    pub young: f32,
     pub tris: usize,
     /// Morph targets in use.
     pub targets: usize,
@@ -384,8 +389,8 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
             }
             // the scalp under the hair this person wears (name_scalp.txt beside it), if bare-headed
             let bare = !matches!(p.hat_style(), Hat::Cap | Hat::Pileus | Hat::Petasos) && !(long_hair && p.hair_style() == Hair::Veil);
-            let sf = if bare { mh_pick(p, long_hair).map(|(d, n)| format!("{d}/{n}_scalp.txt")).filter(|f| crate::real::exists(f)) } else { None };
-            real_skin(&mut s, &h.parts["body"][lod], &x.pp, dir, p.age, fem, hair, sf, lf.sun, p.seed, garb.map_or((1.0, "skin_red.txt"), |d| (d.flush[if fem { 0 } else { 1 }], d.flush_map)), garb.map_or(0.0, |d| d.lash_line[if fem { 0 } else { 1 }] * d.eyes_of(fem, p.age)[1]), garb.map(|d| d.lips_of(fem, p.age)));
+            let sf = if bare { mh_pick(p, long_hair).map(|(d, n)| format!("{d}/{}_scalp.txt", garb.map_or(n.as_str(), |g| g.under_of(&n)))).filter(|f| crate::real::exists(f)) } else { None };
+            real_skin(&mut s, &h.parts["body"][lod], &x.pp, dir, p.age, fem, hair, sf, lf.sun, p.seed, garb.map_or((1.0, "skin_red.txt"), |d| (d.flush[if fem { 0 } else { 1 }] * d.flush_of(p), d.flush_map)), garb.map_or(0.0, |d| d.lash_line[if fem { 0 } else { 1 }] * d.eyes_of(fem, p.age)[1]), garb.map_or((0.5, "#140d08"), |d| d.lash_tone), garb.map(|d| d.lips_of(fem, p.age)), garb.is_some_and(|d| !fem && p.age < d.boy_skin), { let l = linear(skin); 0.2126 * l[0] + 0.7152 * l[1] + 0.0722 * l[2] });
         }
         out.push(s);
     }
@@ -913,7 +918,7 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
                 let mut ks = 1.0 / (1.0 + 0.23 * (1.0 - grown) * garb.map_or(1.0, |d| d.kid));
                 // a dress that gives the iris in millimetres: the image has it at 27.5 degrees of the ball
                 // (eye_tex.py), this ball has it where a disc of that size meets it (1 = 10 cm)
-                if let Some(mm) = garb.map(|d| d.iris_mm).filter(|&mm| mm > 0.0) {
+                if let Some(mm) = garb.map(|d| d.iris_of(fem, p.age)).filter(|&mm| mm > 0.0) {
                     ks = 27.5_f32.to_radians() / (mm / 200.0 / ball.max(1e-6)).min(1.0).asin();
                 }
                 let old = ((p.age - 45.0) / 35.0).clamp(0.0, 1.0);
@@ -994,10 +999,13 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
         if let Some(sf) = mh_hair2(dir, name, &x.pp, &h.base, hc, &|_| hair, hangs, (thin, p.seed ^ 0x3c6e_f372)) {
             out.push(sf);
         }
-        // hair that is solid, each kind in a file of its own beside the cards: a style's locks (England's
-        // `bob01_locks`, `plait01_locks`: no cards any more), drawn with the dress set's image of locks, and the
-        // round strands of its plaits (England's `plait01_rope`), drawn with their own
-        if let Some(sf) = mh_rope(dir, &format!("{name}_locks"), garb.map_or("", |d| d.lock_image), &x.pp, &h.base, &|_| hair) {
+        // hair that is solid, each kind in a file of its own beside the cards: a cut's body (England's
+        // `bob01_body`, `plait01_body`: modelled in Blender as layers of thick bundles, round 109; no cards and
+        // no locks any more), drawn with the dress set's image of a bundle, and the round strands of its plaits
+        // (England's `plait01_rope`), drawn with their own
+        // (tightly curled hair, round 111: one mass, drawn with the image of its coils)
+        let body_image = garb.map_or("", |d| d.coily.as_ref().filter(|_| d.is_coily(name)).map_or(d.body_image, |c| c.image));
+        if let Some(sf) = mh_rope(dir, &format!("{name}_body"), body_image, &x.pp, &h.base, &|_| hair) {
             out.push(sf);
         }
         if let Some(sf) = mh_rope(dir, &format!("{name}_rope"), "", &x.pp, &h.base, &|_| hair) {
@@ -1007,7 +1015,7 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
         // (grey and white fuzz is see-through: the cap fades towards the skin as
         // the hair greys, else its soft edge lays a pale band over the forehead)
         let cap_c = cmix(hair, skin, (0.7 * thin).max(0.75 * beard_grey));
-        if let Some(sf) = mh_hair(dir, &format!("{name}_cap"), &x.pp, &h.base, hc, cap_c) {
+        if let Some(sf) = mh_hair(dir, &format!("{}_cap", garb.map_or(name.as_str(), |g| g.under_of(name))), &x.pp, &h.base, hc, cap_c) {
             out.push(sf);
         }
     }
@@ -1105,8 +1113,11 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
             // a dress may have the brow grow higher on the forehead than MakeHuman's, which lies on the rim of the
             // eye's socket: along the skin, by where along the eye a hair stands
             let lift = garb.map(|d| d.brow_lift_of(fem, p.age)).filter(|l| *l != [0.0; 3]);
-            let band = garb.map_or(1.0, |d| d.brow_band_of(fem, p.age));
-            for (name, col) in [(brow, cmix(cmul(bc, 0.75), skin, young)), ("Eyelashes01", cmix(cmul(bc, 0.5), hex("#140d08"), 0.5))] {
+            // (round 112) and a person's own brows are lighter or heavier (`DressSet::brow_gene`)
+            let weight = garb.map_or([1.0, 0.0], |d| d.brow_weight_of(p));
+            let band = garb.map_or(1.0, |d| d.brow_band_of(fem, p.age)) * weight[0];
+            let lash_tone = garb.map_or((0.5, "#140d08"), |d| d.lash_tone);
+            for (name, col) in [(brow, cmix(cmix(cmul(bc, 0.75), skin, young), skin, weight[1])), ("Eyelashes01", cmix(cmul(bc, lash_tone.0), hex(lash_tone.1), 0.5))] {
                 if let Some(mut sf) = mh_hair(dir, name, &x.pp, &h.base, hc, col) {
                     // a dress may draw another image on the brow's cards and on the lashes' (`DressSet::brow_image`,
                     // `lash_image`)
@@ -1494,6 +1505,9 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
         }
         k
     };
+    // which cut of a dress's gown: a woman's or a man's, and whether a wimple covers its neck
+    let cut = if fem { 0 } else { 1 };
+    let wimpled = garb.is_some_and(|t| fem && p.age >= t.wimple_from);
     let real_tunic = if real.is_some() && !swaddled {
         crate::real::folder().and_then(|d| {
             let col = |v: V3| {
@@ -1502,13 +1516,30 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
                 }
                 cloth_col(tc, v)
             };
-            mh_cloth(&d, garb.map_or("cloth_tunic", |t| t.gown), &x.pp, &h.base, &col, Some(&cell), if garb.is_some() { Layer::Gown } else { Layer::Bound })
+            // (a dress with a table cuts the gown's neck by who wears it; the cuts are of the gown's cloth)
+            let (name, image) = match garb {
+                Some(t) if !t.gown_cut[cut].is_empty() && !wimpled => (t.gown_cut[cut], t.gown),
+                Some(t) => (t.gown, ""),
+                None => ("cloth_tunic", ""),
+            };
+            mh_cloth_as(&d, name, image, &x.pp, &h.base, &col, Some(&cell), if garb.is_some() { Layer::Gown } else { Layer::Bound })
         })
     } else {
         None
     };
     let had_tunic = real_tunic.is_some();
     if let Some(s) = real_tunic {
+        // what is worn under the gown and shows at its neck: a woman's smock, a man's shirt, of the dress's linen
+        if let Some(t) = garb {
+            // (nothing under a wimple: it covers the gown's neckline and what would show in it)
+            let (name, image) = if wimpled { ("", "") } else { (t.under[cut], if cut == 0 { "" } else { t.under[0] }) };
+            if !name.is_empty() {
+                let linen = hex(t.linen);
+                if let Some(u) = crate::real::folder().and_then(|d| mh_cloth_as(&d, name, image, &x.pp, &h.base, &|_| linen, None, Layer::Under)) {
+                    out.push(u);
+                }
+            }
+        }
         out.push(s);
     }
     // the hood of a dress with a table, on the head or thrown back, in another of its wools
@@ -1953,7 +1984,8 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
     let top = (y1 + 0.12).max(hat_top + 0.06);
     let low = body_full.iter().filter(|&&v| h.base[v as usize][0].abs() < 1.0).map(|&v| x.pp[v as usize][1]).fold(f32::MAX, f32::min);
     let fill = (0.86 * (top - y0).max(0.8) / (top - low - 0.1)).max(0.53);
-    Portrait { surfaces: merged, top, chin: y0, cx: hx / hn.max(1) as f32, cz: hz / hn.max(1) as f32, fill, tris, targets }
+    let young = garb.map_or(0.0, |d| crate::dress::child_share(d.adult[if fem { 0 } else { 1 }], p.age));
+    Portrait { surfaces: merged, top, chin: y0, cx: hx / hn.max(1) as f32, cz: hz / hn.max(1) as f32, fill, young, tris, targets }
 }
 
 /// Leans surfaces back by `a` radians about the axis from ear to ear at height `cy` and depth `cz`: what lies above

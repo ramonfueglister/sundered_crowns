@@ -12,7 +12,7 @@ use crate::settings;
 /// facets, normals averaged, the UVs of the base mesh (at a seam the corner
 /// UVs that lie closest together).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age: f32, female: bool, hair: Rgb, scalp_file: Option<String>, sun: f32, seed: u32, flush: (f32, &str), lash_line: f32, lips: Option<(&crate::dress::Lips, f32)>) {
+pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age: f32, female: bool, hair: Rgb, scalp_file: Option<String>, sun: f32, seed: u32, flush: (f32, &str), lash_line: f32, lash_tone: (f32, &str), lips: Option<(&crate::dress::Lips, f32)>, girls_image: bool, tone: f32) {
     let Some(rows) = crate::real::rows(&format!("{dir}/uvs.txt")) else { return };
     let uvs: Vec<Vec<[f32; 2]>> = rows.iter().map(|f| f.chunks_exact(2).map(|c| [c[0], 1.0 - c[1]]).collect()).collect();
     if s.pos.len() != idx.len() {
@@ -80,9 +80,9 @@ pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age:
     // real look: the lash line. Where the lashes grow the lid's edge is dark with their roots (skin_lash.txt, 0..1
     // per vertex; tools/portrait/pipeline/skin_lash.py); the lashes' cards themselves point at the viewer there
     // and show only further out. Only a dress with a table asks for it (`lash_line`); the colour is the lashes'
-    // (build.rs), and only ever darker than the skin (white lashes leave the lid as it is)
+    // (build.rs, `DressSet::lash_tone`), and only ever darker than the skin (white lashes leave the lid as it is)
     let lash: Vec<f32> = if lash_line > 0.0 { crate::real::column(&format!("{dir}/skin_lash.txt"), 0.0) } else { Vec::new() };
-    let lash_c = mix(mul(linear(hair), 0.5), linear(hex("#140d08")), 0.5);
+    let lash_c = mix(mul(linear(hair), lash_tone.0), linear(hex(lash_tone.1)), 0.5);
     // real look: the lips. Where the red of the lips is (skin_lip.txt, per vertex how much lip, 0..1, and how
     // much of that upper lip; tools/portrait/pipeline/skin_lip.py) a share of the skin's own colour is kept and
     // the colour of the blood under it added: lips are skin without its horn layer, so they go with the skin's
@@ -91,6 +91,21 @@ pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age:
     let lip = lips.and_then(|_| crate::real::rows(&format!("{dir}/skin_lip.txt")));
     let lip: &[Vec<f32>] = lip.as_ref().map_or(&[], |l| &l[..]);
     let lip_k = lips.map_or((1.0, [0.0; 3], 1.0, 1.0), |(l, share)| (l.skin, l.blood, l.upper, share));
+    // (round 111) the lips of dark skin: melanin lies in the lips' skin too and hides the blood under it, as it
+    // does in the skin around them (the stage's tint, materials.ts `skinLook`). One red for every skin stood on
+    // dark skin as a salmon mouth, painted on. From `Lips::dark`'s luminance of the person's skin downward less of
+    // the blood's colour shows (`through`), and what it loses of it the lips keep of the skin's own colour
+    let through = lips.map_or(1.0, |(l, _)| (tone / l.dark[0]).min(1.0).powf(l.dark[1]));
+    let lip_k = (lip_k.0 + (1.0 - lip_k.0) * (1.0 - through), mul(lip_k.1, through), lip_k.2, lip_k.3);
+    // (round 111) the skin's image is painted from photographs, with their light in it: light on the nose's root
+    // and back and in lines from the root under the eyes, a shade beside the root (a fifth lighter than the cheeks
+    // on the men's). `skin_paint.py` writes each image once more with that light taken out (`_flat`). Round 111
+    // drew only a head whose nose root is low with it, on which the painted light lay as a pale stripe on a plane
+    // between the eyes. (Round 113) Every head of a dress with a table is drawn with it: the stage lights the face,
+    // and a second light painted under it, from another side, stood on every face as a pale, greyish band from
+    // the nose's root under the eyes, most on the side the key light falls on
+    let flat_image = lips.map(|_| crate::real::image(dir, &format!("skin_{}_{}_flat", if age < 30.0 { "young" } else if age < 55.0 { "middleage" } else { "old" }, if female || girls_image { "female" } else { "male" })))
+        .filter(|f| crate::real::has(f));
     // real look: blood under thin skin, nose, cheeks, ears and chin a little
     // redder (skin_red.txt, 0..1 per vertex, or the file a dress names); haemoglobin takes green and
     // blue away (after Jimenez et al., 2010, not verified online). Strength
@@ -224,8 +239,13 @@ pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age:
         }
     }
     let a = if age < 30.0 { "young" } else if age < 55.0 { "middleage" } else { "old" };
-    let sex = if female { "female" } else { "male" };
-    s.tex = Some(crate::real::image(dir, &format!("skin_{a}_{sex}")));
+    // a boy before his beard wears the girls' image where the dress table says so (`DressSet::boy_skin`): the
+    // men's has the shade of a shaven beard round the mouth and coarser pores
+    let sex = if female || girls_image { "female" } else { "male" };
+    s.tex = Some(match flat_image {
+        Some(f) => f,
+        None => crate::real::image(dir, &format!("skin_{a}_{sex}")),
+    });
     // the pores with the creases of the nearest wrinkle age below, in steps
     // of 8 years from 38 (skin_<age>_<sex>_w<E>_n); younger: pores only
     s.nmap = (0..7)
@@ -241,7 +261,24 @@ pub(crate) fn mh_pick(p: &Look, long_hair: bool) -> Option<(String, String)> {
     // the style from the person's genes, age, sex and stand
     {
         let r = Rng::new(p.seed ^ 0x2545_f491).next();
-        let name = if p.age < 7.0 {
+        let bald = if p.female { 0.0 } else { c01((p.age - 22.0) / 38.0) * p.u(BALD) * 1.7 };
+        let coily = p.dress.set().and_then(|d| d.coily_of(p.u(CURL)));
+        let name = if let Some(c) = coily.filter(|_| !(long_hair && p.age >= 7.0 && p.hair_style() == Hair::Veil)) {
+            // (round 111) tightly curled hair: one mass, by sex, age and how much of it is left (under a veil that
+            // hides all hair there is none, as below; under a hood on the head it is the cut that lies closest)
+            let hooded = p.dress.set().is_some_and(|d| d.hood_of(p.female, p.age, p.seed) == crate::dress::Hood::Up);
+            if p.age < 7.0 {
+                c.small
+            } else if long_hair {
+                c.women
+            } else if bald > 0.75 && !hooded {
+                c.bald
+            } else if bald > 0.4 || hooded {
+                c.thin
+            } else {
+                c.men
+            }
+        } else if p.age < 7.0 {
             // small children: short loose hair
             p.dress.set().map_or("crop01", |d| d.hair_small)
         } else if long_hair {
@@ -255,7 +292,6 @@ pub(crate) fn mh_pick(p: &Look, long_hair: bool) -> Option<(String, String)> {
                 _ => "bun01",
             }
         } else {
-            let bald = if p.female { 0.0 } else { c01((p.age - 22.0) / 38.0) * p.u(BALD) * 1.7 };
             // a dress with a table has its own hair for a head that loses it (under the hood on the head the
             // hair lies flat, and a bare top has no cards that could come through the hood)
             let bare = p.dress.set().filter(|d| d.hood_of(p.female, p.age, p.seed) != crate::dress::Hood::Up);
@@ -355,6 +391,7 @@ fn calm(refs: &[([usize; 3], [f32; 3], [f32; 3])], tris: &[([usize; 3], [[f32; 2
             let on: V3 = std::array::from_fn(|q| w[0] * a[q] + w[1] * b[q] + w[2] * c[q]);
             let d = dot(sub(v, on), n);
             let [lo, hi] = match layer {
+                Layer::Under => CLOTH_OFF_UNDER,
                 Layer::Gown => CLOTH_OFF_GOWN,
                 _ if rest[i][1] < CLOTH_NECK_Y => CLOTH_OFF_OVER,
                 _ => CLOTH_OFF_HEAD,
@@ -362,6 +399,9 @@ fn calm(refs: &[([usize; 3], [f32; 3], [f32; 3])], tris: &[([usize; 3], [[f32; 2
             let want = (o[0] * k).min(hi).max(lo);
             if want > 0.0 && d < want {
                 madd(v, n, want - d)
+            } else if layer == Layer::Under && d > hi {
+                // what is worn under the gown stays under it: no further off the skin than the gown's least
+                madd(v, n, hi - d)
             } else {
                 v
             }
@@ -374,7 +414,9 @@ fn calm(refs: &[([usize; 3], [f32; 3], [f32; 3])], tris: &[([usize; 3], [[f32; 2
 pub(crate) enum Layer {
     /// Each vertex with its own body triangle, as Apoleia binds its garments.
     Bound,
-    /// Calmed (see mh_cloth), next to the body.
+    /// Calmed, on the skin under the gown (a shirt, a smock: round 110).
+    Under,
+    /// Calmed (see mh_cloth), over what is worn next to the body.
     Gown,
     /// Calmed, lying over the gown.
     Over,
@@ -386,12 +428,22 @@ const CLOTH_CALM: usize = 24;
 /// the gown; what lies over the gown below the neck; the same on the head. Below the least the body's finer bumps
 /// poke through, above the most the cloth crumples again. PLACEHOLDER, by eye.
 const CLOTH_OFF_GOWN: [f32; 2] = [0.07, 0.09];
+/// The same for what is worn under the gown: it lies on the skin, and nowhere as far off it as the gown's least.
+/// Such a garment has no rolled hem (this hold would crush one). PLACEHOLDER, by eye.
+const CLOTH_OFF_UNDER: [f32; 2] = [0.015, 0.045];
 const CLOTH_OFF_OVER: [f32; 2] = [0.13, 0.17];
 const CLOTH_OFF_HEAD: [f32; 2] = [0.0, 0.05];
 /// Below this height (base units) a garment over the gown lies on the gown, above it on the head.
 const CLOTH_NECK_Y: f32 = 5.9;
 
 pub(crate) fn mh_cloth(dir: &str, name: &str, pp: &[V3], base: &[V3], color: &dyn Fn(V3) -> Rgb, cells: Option<&dyn Fn(V3) -> [f32; 2]>, layer: Layer) -> Option<Surface> {
+    mh_cloth_as(dir, name, "", pp, base, color, cells, layer)
+}
+
+/// `mh_cloth` for a garment that may have no image of its own beside it: it is drawn with `image`'s then (a second
+/// cut of one cloth: a woman's gown with the men's image, a shirt with the smock's).
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn mh_cloth_as(dir: &str, name: &str, image: &str, pp: &[V3], base: &[V3], color: &dyn Fn(V3) -> Rgb, cells: Option<&dyn Fn(V3) -> [f32; 2]>, layer: Layer) -> Option<Surface> {
     let rows = crate::real::rows(&format!("{dir}/{name}.txt"))?;
     let mut it = rows.iter();
     let head = it.next()?;
@@ -443,7 +495,8 @@ pub(crate) fn mh_cloth(dir: &str, name: &str, pp: &[V3], base: &[V3], color: &dy
         }
     }
     let mut s = Surface::new(mat2(0.95));
-    s.tex = Some(crate::real::image(dir, name));
+    let own = crate::real::image(dir, name);
+    s.tex = Some(if image.is_empty() || crate::real::has(&own) { own } else { crate::real::image(dir, image) });
     // shade in the folds per vertex (name_ao.txt), if there is one
     let ao: Vec<f32> = crate::real::column(&format!("{dir}/{name}_ao.txt"), 1.0);
     // a corner: position, uv, normal, cell coordinates, fold shade
@@ -567,7 +620,8 @@ fn bound<'a>(rows: &'a [Vec<f32>], pp: &[V3], base: &[V3]) -> Option<(Vec<V3>, &
 const ROPE_EVEN: usize = 300;
 
 /// Real look: hair that is solid (`name`.txt, `hairlib.py` `write_tubes`): the round strands of a plait, each a
-/// closed tube, and the locks of a head's hair, each an arched band that is open below (`locks_from_wisps`).
+/// closed tube; the locks of a beard, each an arched band that is open below (`locks_from_wisps`); and the body
+/// of a head's hair (round 109, `hair_body.py`: layers of thick bundles, each such a band, over a shell).
 /// The surface's direction is read from the triangles (a corner's is the mean of its triangles', weighted by
 /// their size), so that a strand is lit round: bright on the side towards a light, dark on the other. As hair
 /// cards (`mh_hair2`: the direction from the head's centre to the card) a plait was one face turned away from
@@ -579,9 +633,9 @@ const ROPE_EVEN: usize = 300;
 /// is laid, 23). So a plait keeps the form it was laid in, and goes with the body by the way its points are
 /// carried, evened out along the plait (tests/plait.rs).
 ///
-/// `image`: the image of the surface where the file has none of its own beside it (all hair of a dress set's
-/// locks is drawn with one image, `DressSet::lock_image`). `color`: the hair's colour at a place (a head's hair
-/// has one; a beard greys first at the chin).
+/// `image`: the image of the surface where the file has none of its own beside it (the bundles of every cut of
+/// a dress set are drawn with one image, `DressSet::body_image`). `color`: the hair's colour at a place (a head's
+/// hair has one; a beard greys first at the chin).
 pub(crate) fn mh_rope(dir: &str, name: &str, image: &str, pp: &[V3], base: &[V3], color: &dyn Fn(V3) -> Rgb) -> Option<Surface> {
     let rows = crate::real::rows(&format!("{dir}/{name}.txt"))?;
     let (carried, tris) = bound(&rows, pp, base)?;
@@ -640,7 +694,15 @@ pub(crate) fn mh_rope(dir: &str, name: &str, image: &str, pp: &[V3], base: &[V3]
         for k in 0..3 {
             let i = f[k] as usize;
             s.pos.push(vs[i]);
-            s.col.push(linear(color(vs[i])));
+            // (a point may say how light it is against the hair's colour, the tenth number of its row: a hair
+            // body's bundles are each of a tone, and darker where they come up from under the others)
+            // Light hair is less dark in its own shade than dark hair is: light goes through it and comes back
+            // out of it. The shade's power falls with the colour's lightness (PLACEHOLDER by eye: white hair
+            // with the full shade was stone with black joints)
+            let c = linear(color(vs[i]));
+            let shade = rows[1 + i].get(9).copied().unwrap_or(1.0);
+            let shade = if shade < 1.0 { shade.max(0.0).powf(1.0 - 0.7 * (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]).clamp(0.0, 1.0).sqrt()) } else { shade };
+            s.col.push(c.map(|c| c * shade));
             s.uv.push([f[3 + 2 * k], 1.0 - f[4 + 2 * k]]);
             s.nrm.push(nn[i]);
         }
