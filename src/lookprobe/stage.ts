@@ -5,6 +5,7 @@
 // ?ao=0 (without the darkening of creases and corners; ?aoscale, ?aosamples, ?aosmooth: see there). ?small=0: the pieces' directions and
 // colours come as floats, not as bytes (worldprobe/small.ts). ?faces=0: their rectangles on the grid of blocks come as
 // triangles in those lists, not as faces (faces.ts); ?free=0: the rectangles on no grid of what stands on them do.
+// ?pilots=0: the shaders of a kind of mesh are made when its first mesh is drawn, not at the start (see there).
 import * as THREE from 'three/webgpu';
 import { Fn, attribute, clamp, convertToTexture, dot, float, fract, getViewPosition, materialColor, max, mix, mrt, normalView, output, pass, positionGeometry, reflector, rtt, screenCoordinate, screenSize, screenUV, select, smoothstep, step, texture, uniform, userData, uv, vec2, vec3, vec4, vertexColor } from 'three/tsl';
 import { MapControls } from 'three/addons/controls/MapControls.js';
@@ -609,6 +610,36 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     };
     return made;
   };
+  // What the renderer makes for a kind of mesh (the shader of its material for its kind of lists, once for the
+  // picture's pass, once for the shadows' and once for the mirror's) it makes on the page's thread in the picture
+  // that first draws one, and lets go again when the last mesh of the kind leaves the stage (three's NodeManager
+  // counts who uses it). The pieces of the far steps, of the near steps and of the sea are of different kinds: a zoom
+  // across the border between two steps would have the next kind's shaders made in the middle of its motion, and
+  // made again on every way back. So one mesh of each kind the pieces come as is always on the stage, of no size and
+  // on none of the picture's dots: what the kinds take is made in the first pictures, while the world is still
+  // loading, and kept. The sea's are drawn in the first pictures only: a mesh of the sea in the picture has the
+  // mirror's picture drawn, which a view of the land alone goes without; what was made for them stays as long as
+  // they are on the stage, drawn or not. ?pilots=0: without all of them. The counts `shaders built` and `ms shaders`
+  // tell how many were made and how long that took the page's thread.
+  renderer.debug.onNodeBuilderCreated = (builder: unknown) => {
+    const made = builder as { build(): unknown }, build = made.build.bind(made);
+    made.build = () => { const began = performance.now(), c = stage.probe.counts; try { return build(); } finally { c['shaders built'] = (c['shaders built'] ?? 0) + 1; c['ms shaders'] = Math.round(((c['ms shaders'] ?? 0) + performance.now() - began) * 10) / 10; } };
+  };
+  /** the sea's, while they are still drawn */
+  let seaPilots: THREE.Mesh[] = [];
+  if (flag('pilots', true) && smallLists) {
+    const lists = (sink = false): Shape => ({ pos: new Float32Array(9), nor: new Int8Array(12), col: new Uint8Array(12), small: true, ball: [0, 0, 0, 0], ...(sink ? { sink: new Float32Array(3) } : {}) });
+    const none: Shape = { pos: new Float32Array(0), nor: new Int8Array(0), col: new Uint8Array(0), small: true, ball: [0, 0, 0, 0] };
+    const face = (aimed = false): Shape => ({ ...none, faces: { geo: new Int16Array(FACE_GEO), col: new Uint8Array(FACE_COL), nor: new Int8Array(4), ...(aimed ? { aim: new Int16Array(2), aimCol: new Uint8Array(FACE_COL) } : {}) } });
+    const sea = [...(water !== solid ? [mesh(lists(), water, false)] : []), faceMesh(face(), false, true)];
+    for (const pilot of [mesh(lists(), solid, true), mesh(lists(true), sinking, true), faceMesh(face(), true), faceMesh(face(true), true), freeMesh({ ...none, free: { geo: new Float32Array(FREE_GEO), col: new Uint8Array(FACE_COL), nor: new Int8Array(4) } }, true), ...sea]) {
+      (pilot.userData.dots as THREE.Vector2).set(0, 0); pilot.userData.glide = 0; pilot.frustumCulled = false;
+      // (the sea's lie where the sea's meshes lie: on the layer the mirror does not draw)
+      if (sea.includes(pilot)) pilot.layers.set(FIGURES_LAYER);
+      scene.add(pilot);
+    }
+    seaPilots = sea;
+  }
   // The renderer keeps a record of every mesh it has drawn, and each record hangs on the material, which all pieces
   // share and which is never let go: only the mesh's own 'dispose' takes the record, and with it the mesh and its
   // numbers, out of the renderer. Letting go of the geometry alone leaves them held for good.
@@ -781,6 +812,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     pipeline.render();
     if (sending.length) haveSent();
     drawn++; pictures++;
+    if (seaPilots.length && pictures >= 2) { for (const pilot of seaPilots) pilot.visible = false; seaPilots = []; }
     // what the picture sent to the graphics card in lists (a tool sets `MB sent most` to 0 and reads the most a picture has sent since)
     { const c = stage.probe.counts, sent = (renderer.info.memory.attributesSize - had) / 1e6; c.pictures = pictures; c['MB sent'] = sent; c['MB sent sum'] = (c['MB sent sum'] ?? 0) + sent; c['MB sent most'] = Math.max(c['MB sent most'] ?? 0, sent); if (sent > 0) c['pictures sending'] = (c['pictures sending'] ?? 0) + 1; }
     if (timed) clock(performance.now() - began);
