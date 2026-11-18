@@ -63,6 +63,12 @@ const ROOM = 1000;
 const WAITING = 600;
 /** workers that build ahead into the store while the view rests: the others stay free for what the view asks for next */
 const SPARE_WORKERS = 2;
+/**
+ * while the view rests, the pieces of the next finer step under the middle of the picture are built into the store
+ * as well, down to this step: a zoom in finds them there and reads them, which takes a fraction of building them
+ * (the two finest steps take seconds a piece, and are left to the zoom itself)
+ */
+const FINER_FROM = 2;
 /** the widest view of each step: what a leap out to that step may show */
 const WIDEST = Array.from({ length: COARSEST + 1 }, (_, s) => { let w = NEAREST; while (w < FARTHEST && stepOf(w * 1.02) <= s) w *= 1.02; return Math.min(FARTHEST, w); });
 /** the width at which each step gives way to the next coarser one */
@@ -313,11 +319,14 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
     for (const w of wanted) asked.add(w.key);
     const once = new Set<string>(), queue: Spot[] = wanted.filter((w) => !held.has(w.key) && !building.has(w.key)).sort((a, b) => a.rank - b.rank).filter((w) => !once.has(w.key) && once.add(w.key)).reverse();
     // while the view rests with all it asks for, the pieces of the coarser steps that a wider view from here would
-    // show are built into the store, the coarsest first, by some of the workers (not for a page nobody looks at)
+    // show are built into the store, the coarsest first, by some of the workers (not for a page nobody looks at);
+    // and after them those of the next finer step that a zoom in about the middle of the picture would come to
+    // first, from the middle outwards
     const sparing = [...jobs.values()].filter((j) => j.spare).length;
     if (store && listed && o.ahead && !v.to && !document.hidden && !queue.length && building.size === sparing && sparing < SPARE_WORKERS) {
-      const ahead: (Spot & { far: number })[] = [];
-      for (let s = COARSEST; s > step; s--) for (const p of near({ ...v, wide: WIDEST[s], elevation: elevationOf(WIDEST[s]) }, s, 0)) if (!held.has(p.key) && !building.has(p.key) && !kept.has(fileOf(p))) ahead.push({ ...p, spare: true });
+      const ahead: (Spot & { far: number })[] = [], lacks = (p: Spot) => !held.has(p.key) && !building.has(p.key) && !kept.has(fileOf(p)) && !sent.has(fileOf(p));
+      for (let s = COARSEST; s > step; s--) for (const p of near({ ...v, wide: WIDEST[s], elevation: elevationOf(WIDEST[s]) }, s, 0)) if (lacks(p)) ahead.push({ ...p, spare: true });
+      if (!ahead.length && step > FINER_FROM) { const wide = Math.min(v.wide, WIDEST[step - 1]); for (const p of near({ ...v, wide, elevation: elevationOf(wide) }, step - 1, 0)) if (lacks(p)) ahead.push({ ...p, spare: true }); }
       ahead.sort((a, b) => b.step - a.step || a.far - b.far);
       queue.push(...ahead.slice(0, SPARE_WORKERS - sparing).reverse());
     }
