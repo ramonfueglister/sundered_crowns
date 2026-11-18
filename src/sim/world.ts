@@ -132,9 +132,11 @@ export class World {
     if (!(Number.isInteger(clock.plan) && clock.plan >= 1 && Number.isInteger(clock.window) && clock.window > 1)) throw new Error(`the economy of ${t.case} has a year of ${clock.window} days and a plan every ${clock.plan} days`);
     if (wage !== 'prices' && wage !== 'money') throw new Error(`the economy of ${t.case} pays wages in the way "${wage}", the engine knows 'prices' and 'money'`);
     if (prices !== 'costs' && prices !== 'demand') throw new Error(`the economy of ${t.case} sets prices in the way "${prices}", the engine knows 'costs' and 'demand'`);
+    const crown = t.cities.crown.value;
+    if (crown !== 'series' && crown !== 'revenue') throw new Error(`the crown of ${t.case} buys in the way "${crown}", the engine knows 'series' and 'revenue'`);
     const spent = t.cities.savings_spent_per_year.value;
     if (!(spent >= 0 && spent <= clock.window)) throw new Error(`the households of ${t.case} spend ${spent} of their savings above the target in a year`);
-    this.cityEconomies = { year: t.year, scale: t.scale.value, clock, rules: { wage, prices, savings: spent / clock.window }, foodNeed: foodNeedCost(t), table: t };
+    this.cityEconomies = { year: t.year, scale: t.scale.value, clock, rules: { wage, prices, savings: spent / clock.window, crown }, foodNeed: foodNeedCost(t), table: t };
     this.names = new Array(N);
     for (let i = 0; i < N; i++) this.names[i] = (i < L ? wj.name[i] : geo.loc.name[i]) || `#${i}`;
     this.names = refineNames(this.names, this.lon, this.lat, L); // unnamed districts get names from their neighbours

@@ -44,6 +44,8 @@ export interface EconomyJson {
   wage: EconomyWage; prices: EconomyPrices;
   /** the share of what a household holds above its target that it spends in a year (economy feature 15) */
   savings_spent_per_year: number;
+  /** what the crown of a city buys with (economy feature 16) */
+  crown: 'series' | 'revenue';
   /** the cities: the place, its name, its real people and its persons who work, and what the port is given */
   cities: { place: number; name: string; people: number; working: number; parameters: Record<string, unknown>; initial_conditions: Record<string, unknown> }[];
 }

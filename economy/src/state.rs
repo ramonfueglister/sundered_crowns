@@ -30,9 +30,10 @@ pub const FORMAT_CITIES: u32 = 1;
 /// the world's upgrade chain (src/sim/upgrade.ts). 2: the fields of the daily clock. 3: the wages in money.
 /// 4: the demand pull. 5: of the national accounts the clock keeps the series that the key figures sum, the port
 /// keeps its last row. 6: the clock can keep the past in a fixed size ([`crate::past`]). 7: the spending out of
-/// savings (economy feature 15). States of formats 4 to 6 are still read and become format 7 when they are saved
-/// ([`load`]); formats 4 and 5 keep the whole past, as they had it, and none of them spends out of savings.
-pub const FORMAT: u32 = 7;
+/// savings (economy feature 15). 8: the crown that buys with what it took in (economy feature 16). States of formats
+/// 4 to 7 are still read and become format 8 when they are saved ([`load`]); formats 4 and 5 keep the whole past, as
+/// they had it, none before 7 spends out of savings, and none before 8 has a crown that buys with its revenue.
+pub const FORMAT: u32 = 8;
 const NONE: u32 = u32::MAX;
 /// The length of the last state of cities written ([`save_cities`]): how much room the next one is given at once.
 /// It changes no byte of a state.
@@ -657,7 +658,7 @@ fn get_data(i: &mut In) -> Res<Data> {
 
 fn put_clock(o: &mut Out, c: &DailyClock) {
     // `trade` is set for the length of a period only (src/trade.rs): a saved economy has none
-    let DailyClock { plan, window, demand, periods, start, accounts, wage, real_wage, demand_pull, savings, norm, past, trade: _ } = c;
+    let DailyClock { plan, window, demand, periods, start, accounts, wage, real_wage, demand_pull, savings, norm, crown_revenue, crown_outlays, past, trade: _ } = c;
     o.n(*plan);
     o.n(*window);
     o.f64s(demand);
@@ -696,6 +697,8 @@ fn put_clock(o: &mut Out, c: &DailyClock) {
     }
     o.f64(*savings);
     o.f64(*norm);
+    o.bool(*crown_revenue);
+    o.f64(*crown_outlays);
 }
 
 fn get_series(i: &mut In, window: usize) -> Res<Series> {
@@ -749,7 +752,9 @@ fn get_clock(i: &mut In, format: u32) -> Res<DailyClock> {
     if !(0.0..=1.0).contains(&savings) {
         return Err(format!("a clock with a share of {savings} of the savings spent per period"));
     }
-    Ok(DailyClock { plan, window, demand, periods, start, accounts, wage, real_wage, demand_pull, savings, norm, past, trade: None })
+    // formats before 8 know the paper's series of the crown's purchases only
+    let (crown_revenue, crown_outlays) = if format >= 8 { (i.bool()?, i.f64()?) } else { (false, 0.0) };
+    Ok(DailyClock { plan, window, demand, periods, start, accounts, wage, real_wage, demand_pull, savings, norm, crown_revenue, crown_outlays, past, trade: None })
 }
 
 /// The model and its random number generator as bytes. The same model always gives the same bytes.
