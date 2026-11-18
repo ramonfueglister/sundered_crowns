@@ -22,7 +22,7 @@ import { unshade } from './mean';
 import { FARMS, FIELD_GROUND, LOT_BLOCKS, LOT_FILL, type Lot, type Monument, PEOPLE_PER_PERSON, type Settled, type Site, type Survey, type Told, farmsFor, firstHalf, raise, settle } from './settle';
 import { type Columns, columnsOf } from './nearground';
 import { MONUMENTS, bridge, m, modelOf, styleOf } from '../buildings';
-import { ROAD_KINDS, type Road, roadsIn } from './roads';
+import { ROAD_KINDS, type Road, roadsIn, smoothPoints, wayOnGround } from './roads';
 import { Matrix4 } from 'three';
 
 /**
@@ -343,6 +343,11 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
       for (let k = 0; k < r.p.length; k += 2) pts.push(toGround((r.p[k] - px0) * region.cells, (r.p[k + 1] - py0) * region.cells));
       ways.push({ k: r.k, pts });
     }
+  }
+  // at the finest step each way finds its path over the columns between pins of its line (roads.ts wayOnGround)
+  if (step === 0 && ways.length) {
+    const water = Uint8Array.from(g.wet, (w, i) => (w ? (kind[i] === Water.Land ? 1 : 2) : 0)), rocky = (i: number) => g.mat[i] === Mat.Rock;
+    for (const way of ways) way.pts = smoothPoints(wayOnGround(way.pts, ox, oz, N, g.h, rocky, water), 2);
   }
   /**
    * Blocks to the edge of the nearest way's band (negative inside it) at the corners of the columns, at the finest
