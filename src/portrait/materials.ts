@@ -17,8 +17,9 @@ import type { PortraitSurface } from './wire';
  *  their image's name alone (`eyebrow...`, `Eyelashes...`): an image of them under another name is drawn as a
  *  hair card. The round strands of a plait (`..._rope`), the locks of a beard (`..._locks`) and the bundles of a
  *  head's hair (`..._body`, round 109) are hair that is solid: no card, nothing shows through but where the image
- *  is empty (a lock's frayed ends). */
-export type SurfaceKind = 'plain' | 'cloth' | 'cap' | 'eyeball' | 'brow' | 'cards' | 'rope' | 'skin';
+ *  is empty (a lock's frayed ends). Tightly curled hair (`..._fleece`, round 111) is solid too, and has no strands
+ *  that run anywhere: no bands of sheen along them. */
+export type SurfaceKind = 'plain' | 'cloth' | 'cap' | 'eyeball' | 'brow' | 'cards' | 'rope' | 'fleece' | 'skin';
 
 export function surfaceKind(s: PortraitSurface): SurfaceKind {
   const path = s.tex;
@@ -26,6 +27,7 @@ export function surfaceKind(s: PortraitSurface): SurfaceKind {
   if (path.includes('/cloth_')) return 'cloth';
   if (path.includes('_cap.')) return 'cap';
   if (path.includes('_rope.') || path.includes('_locks.') || path.includes('_body.')) return 'rope';
+  if (path.includes('_fleece.')) return 'fleece';
   if (path.includes('/eyeball')) return 'eyeball';
   if ((s.double && path.includes('/eye')) || path.includes('/Eye')) return 'brow';
   if (s.double) return 'cards';
@@ -35,7 +37,7 @@ export function surfaceKind(s: PortraitSurface): SurfaceKind {
 /** The order in which the blended surfaces are drawn over the solid ones: the painted cap first, the hair cards
  *  over it, brows and lashes last. */
 export function drawOrder(s: PortraitSurface): number {
-  return { plain: 0, skin: 0, eyeball: 0, cloth: 0, rope: 0, cap: 1, cards: 2, brow: 3 }[surfaceKind(s)];
+  return { plain: 0, skin: 0, eyeball: 0, cloth: 0, rope: 0, fleece: 0, cap: 1, cards: 2, brow: 3 }[surfaceKind(s)];
 }
 
 /** The normal map of a surface: the one it names (skin with age wrinkles), else the one beside its image (name_n). */
@@ -116,12 +118,21 @@ const FACE_MIDDLE = 0.5168;
 /** Skin of a profile: light bleeds round the edge of its shadow, reddest furthest (three.js has no scattering
  *  inside skin as Godot has); and living skin is blotchy where the images of the young are nearly flat: broad
  *  patches a little redder or paler and a fine speckle in brightness, as noise over the head. */
-function skinLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageProfile['skin']>, tone: number, young = 0): void {
+function skinLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageProfile['skin']>, tone: number, young = 0, flat = false): void {
   // a child's skin has less of the fine structure the images and the noise give a grown person's (`skin.child`)
   const fine = 1 + (k.child - 1) * Math.min(1, Math.max(0, young));
   m.roughness = k.rough; m.ior = ior(k.specular); m.normalScale.set(k.pores * fine, k.pores * fine);
   // the down on skin: light that skims it is thrown back towards whoever looks along it (three.js' sheen)
-  if (k.fuzz > 0) { m.sheen = k.fuzz; m.sheenRoughness = 0.6; m.sheenColor.setRGB(1, 0.86, 0.78); }
+  // (round 111) on dark skin the down is dark too, and a pale sheen over it is ash on the face: a fifth of it is left
+  // on the darkest skin, all of it from a tone of 0.30 (England's lightest and darkest people lie over that)
+  const fu = Math.min(1, Math.max(0, (tone - 0.05) / (0.30 - 0.05))), down = 0.2 + 0.8 * fu * fu * (3 - 2 * fu);
+  if (k.fuzz > 0) { m.sheen = k.fuzz * down; m.sheenRoughness = 0.6; m.sheenColor.setRGB(1, 0.86, 0.78); }
+  // (round 111) and the skin's highlight: the same white gleam that is lost in the light of a pale cheek lies as a
+  // grey film on a dark one (the flank of the nose and the cheek beside it, in the key light). On dark skin half of
+  // it, in a warm colour; all of it and white from the same tone on as the down
+  const gleam = fu * fu * (3 - 2 * fu);
+  m.specularIntensity = 0.5 + 0.5 * gleam;
+  m.specularColor.setRGB(1, 0.72 + 0.28 * gleam, 0.55 + 0.45 * gleam);
   const lights = wrapped(`vec3( ${k.wrap.map(f).join(', ')} )`, true), loop = hidden();
   // the tint by the person's skin as a whole (none on dark skin, all of it on light skin), the same over the whole
   // head: taken point by point (until round 54) everything painted darker on light skin lost its red and turned
@@ -151,7 +162,7 @@ function skinLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<Stage
   skinOil = 1.0 + ${f(k.oil)} * ( skinNoise( vSkinP * 9.0 ) * 0.5 + skinNoise( vSkinP * 33.0 ) * 0.5 - 0.5 ) * 2.0;
   // the face's middle is oilier than its sides: the forehead's middle and the nose's back down to its tip, as
   // places on the skin's image (the face's middle line and the heights of hairline, sellion and nose's tip there)
-  skinOil *= 1.0 + ${f(k.zone)} * exp( - pow( ( vSkinUv.y - ${f(FACE_MIDDLE)} ) / 0.017, 2.0 ) ) * smoothstep( 0.775, 0.805, vSkinUv.x ) * ( 1.0 - smoothstep( 0.868, 0.884, vSkinUv.x ) );
+  skinOil *= 1.0 + ${f(flat ? 0 : k.zone)} * exp( - pow( ( vSkinUv.y - ${f(FACE_MIDDLE)} ) / 0.017, 2.0 ) ) * smoothstep( 0.775, 0.805, vSkinUv.x ) * ( 1.0 - smoothstep( 0.868, 0.884, vSkinUv.x ) );
 }`);
     shader.fragmentShader = swap(code, '#include <color_fragment>', `#include <color_fragment>
 float skinA = skinNoise( vSkinP * 7.0 ) * 0.6 + skinNoise( vSkinP * 15.0 ) * 0.4 - 0.5;
@@ -160,7 +171,7 @@ diffuseColor.rgb *= vec3( 1.0, 1.0 - ${f(k.blotch * 0.9)} * skinFine * skinA, 1.
 float skinGrey = dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) );
 diffuseColor.rgb = mix( vec3( skinGrey ), diffuseColor.rgb, ${f(k.colour)} ) * skinTint;`);
   };
-  m.customProgramCacheKey = () => `portrait-skin-${p.key}`;
+  m.customProgramCacheKey = () => `portrait-skin-${p.key}${flat ? '-flat' : ''}`;
 }
 
 /** The painted layer of short hairs of a profile (under the cards, and the beards): lighter, and lit round its
@@ -323,7 +334,11 @@ export function surfaceMaterials(s: PortraitSurface, map: Texture | null, normal
   });
   switch (kind) {
     case 'plain': break;
-    case 'skin': if (p.skin) skinLook(m, p, p.skin, tone ?? skinTone(s.col), young); break;
+    // (round 111) a head whose nose root is flat is drawn with the image that has no light painted there (`_flat`,
+    // real_look.rs `real_skin`), and without the stronger highlight down the nose's back (`skin.zone`): on a nose
+    // that stands out that is a thin line along its ridge, on a flat root a pale patch between the eyes, broken
+    // up by the patches of the skin's oil
+    case 'skin': if (p.skin) skinLook(m, p, p.skin, tone ?? skinTone(s.col), young, !!s.tex?.includes('_flat')); break;
     case 'cloth':
       m.side = DoubleSide; m.roughness = 0.95; m.ior = ior(0.15);
       if (p.cloth) m.color.setScalar(/_veil|_wimple|_smock/.test(s.tex) ? p.cloth.linen : p.cloth.wool);
@@ -347,6 +362,13 @@ export function surfaceMaterials(s: PortraitSurface, map: Texture | null, normal
       m.roughness = p.cards.rough; m.ior = ior(p.cards.specular); m.anisotropy = p.cards.anisotropy;
       m.alphaTest = LOCK_OPAQUE;
       if (p.sheen) hairLook(m, p, p.sheen, true);
+      break;
+    // tightly curled hair: a matte mass. Each hair turns every way within a few millimetres, so no highlight runs
+    // along it; what light it throws back is scattered, and light that skims its edge comes through the coils there
+    // (three.js' sheen, in the hair's own colour, lightened)
+    case 'fleece':
+      m.side = DoubleSide; m.roughness = 1; m.ior = ior(0.12); m.normalScale.set(2.5, 2.5);
+      m.sheen = 0.25; m.sheenRoughness = 0.8; m.sheenColor.setRGB(0.3, 0.24, 0.2);
       break;
     case 'cards': {
       m.side = DoubleSide; m.roughness = p.cards.rough; m.ior = ior(p.cards.specular); m.anisotropy = p.cards.anisotropy;

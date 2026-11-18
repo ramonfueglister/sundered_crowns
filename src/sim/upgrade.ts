@@ -3,13 +3,13 @@
 import type { WorldState } from './state';
 import { STATE_VERSION, PERSON_SCHEMA, FAMILY_SCHEMA, REALM_SCHEMA, ALIVE } from './state';
 import { foundLots } from './systems/lots';
-import { foundRulers, rulerCultures } from './systems/rulers';
+import { foundRulers, rulerCultures, rulerGenes } from './systems/rulers';
 import { foundBorders } from './systems/borders';
 import { type Column, makeColumns } from './ecs';
 import type { World } from './world';
 import { foundEconomy } from './systems/economy';
 import { writeHouseholds } from './systems/household';
-import { fitPlacesToCities, foundPeople } from './systems/people';
+import { fitPlacesToCities, foundPeople, giveGenes } from './systems/people';
 import { countPeople, settleHamlets } from './systems/hamlets';
 import { cultivate } from './systems/cultivation';
 import { bringInHarvest } from './systems/harvest';
@@ -193,6 +193,14 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     // stay who they are.
     foundEconomy(s, w);
     s.v = 24;
+  }
+  if (s.v === 24) { // 24 → 25: a founder draws the genes from the pool of the culture, not of the place (portrait
+    // round 111, src/sim/people/pools.ts: the people of Beijing drew from the Greek pool). Every person gets the genes
+    // they would have in a world founded now: the rulers and the founders of the towns from their culture's pool, out
+    // of the same draws as before, and everybody born since from their parents, the elder first, out of the draws of
+    // their birth. Nothing else reads the genes: who the persons are, and all they have done, stays.
+    rulerGenes(s, w); giveGenes(s);
+    s.v = 25;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one

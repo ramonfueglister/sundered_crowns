@@ -100,7 +100,7 @@ describe('portraits', { timeout: 20_000 }, () => {
     expect(() => decodePortrait(new Uint8Array(40))).toThrow();
   });
 
-  it('people of England wear the dress of 1356, everyone else Apoleia\'s', () => {
+  it('people of England wear the dress of 1356, Apoleia\'s own people Apoleia\'s', () => {
     const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
     const list = portraitManifest(), images = new Set(list.images.map(n => `${list.folder}/${n}`));
     for (const p of people) {
@@ -568,6 +568,77 @@ describe('portraits', { timeout: 20_000 }, () => {
     expect(compiled('real/bob01_cap.webp', true)).toContain('wrapBy');
     // Apoleia's eye is left as it is
     expect(APOLEIA.eye).toBeNull();
+  });
+  it('the people of the world wear the plain dress of 1356 under England\'s light', () => {
+    // (round 111) founders of every pool of genes the game's cultures draw from (tests/portrait/sample_world.json,
+    // portrait/examples/sample.rs), given to the builder under their culture's name as the game gives them: a
+    // culture without a dress of its own wears the plain one, England's table without hood, veil and wimple, and
+    // stands under England's light. Until then all of them stood in Apoleia's Roman dress on Apoleia's stage
+    const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
+    const world: PortraitPerson[] = JSON.parse(readFileSync(here('sample_world.json'), 'utf8'));
+    expect(world.length).toBe(22 * 8);
+    const list = portraitManifest(), images = new Set(list.images.map(n => `${list.folder}/${n}`));
+    const plain = profileOf('plain1356/x');
+    expect(plain.key).toBe('plain1356');
+    expect([plain.skin, plain.lights, plain.finish, plain.sheen]).toEqual([ENGLAND_1356.skin, ENGLAND_1356.lights, ENGLAND_1356.finish, ENGLAND_1356.sheen]);
+    let fleece = 0, flat = 0, darkest = 1;
+    for (const p of world) {
+      const out = b.build(p), worn = out.surfaces.map(s => s.tex);
+      expect(out.look.startsWith('plain1356/'), `person ${p.pid}`).toBe(true);
+      for (const t of worn) if (t) expect(images.has(t), `${t} is in the repository`).toBe(true);
+      expect(worn.some(t => /\/cloth_(hood|veil|wimple)/.test(t)), `person ${p.pid}: a bare head`).toBe(false);
+      expect(worn.some(t => /\/cloth_(cote|kirtle)/.test(t)), `person ${p.pid}: a gown`).toBe(true);
+      // tightly curled hair is one matte mass: solid, no bundles beside it and none of the strands' sheen
+      const coils = out.surfaces.filter(s => s.tex.includes('/hair1356_fleece.'));
+      if (coils.length) {
+        fleece++;
+        expect(worn.some(t => t.includes('/hair1356_body.') || t.includes('_rope.')), `person ${p.pid}: no bundles and no plaits beside it`).toBe(false);
+        expect([surfaceKind(coils[0]!), drawOrder(coils[0]!)]).toEqual(['fleece', 0]);
+        const m = surfaceMaterials(coils[0]!, null, null, plain);
+        expect(m.length).toBe(1);
+        expect([m[0]!.transparent, m[0]!.depthWrite, m[0]!.roughness, m[0]!.anisotropy]).toEqual([false, true, 1, 0]);
+      }
+      if (worn.some(t => t.includes('_flat.'))) flat++;
+      darkest = Math.min(darkest, portraitSkinTone(out.surfaces)!);
+    }
+    // the 16 founders of the two pools south of the Sahara and some of the Horn's; the heads with a flat nose
+    // root, drawn with the skin's image that has no light painted there; and skins far darker than any of England's
+    expect(fleece).toBeGreaterThanOrEqual(16); expect(fleece).toBeLessThan(40);
+    expect(flat).toBeGreaterThanOrEqual(10); expect(flat).toBeLessThan(60);
+    expect(darkest).toBeLessThan(0.12);
+  }, 120_000);
+  it('a dark skin has a warm, weaker highlight and little of the down\'s sheen; a skin of England\'s is drawn as it was', () => {
+    // (round 111) the white gleam that is lost in the light of a pale cheek lies as a grey film on a dark one, and
+    // the pale sheen of the down as ash. Both go by the person's tone, in full from 0.30 on: England's sample
+    // lies at 0.46 to 0.66, the world's goes down to 0.07
+    const of = (tex: string) => ({ rough: 0.6, metal: 0, double: false, tex, nmap: '', pos: new Float32Array(9), col: new Float32Array(9).fill(0.5), uv: new Float32Array(6), nrm: new Float32Array(9) });
+    const skin = of('real/skin_young_female.webp');
+    expect(surfaceKind(skin)).toBe('skin');
+    const look = (tone: number) => { const m = surfaceMaterials(skin, null, null, ENGLAND_1356, tone)[0]!; return [m.specularIntensity, m.specularColor.r, m.specularColor.g, m.specularColor.b, m.sheen]; };
+    for (const tone of [0.30, 0.46, 0.66]) expect(look(tone)).toEqual([1, 1, 1, 1, ENGLAND_1356.skin!.fuzz]);
+    const dark = look(0.07);
+    expect(dark[0]).toBeLessThan(0.55); expect(dark[0]).toBeGreaterThanOrEqual(0.5);
+    expect(dark[1]).toBe(1); expect(dark[2]).toBeLessThan(0.8); expect(dark[3]).toBeLessThan(0.62);
+    expect(dark[4]).toBeLessThan(0.3 * ENGLAND_1356.skin!.fuzz);
+    const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
+    const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
+    for (const p of sample) {
+      const out = b.build(p);
+      expect(portraitSkinTone(out.surfaces)!, `person ${p.pid}`).toBeGreaterThan(0.30);
+      // and none of England's sample is drawn with the flat image or wears tightly curled hair
+      expect(out.surfaces.some(s => s.tex.includes('_flat.') || s.tex.includes('_fleece.')), `person ${p.pid}`).toBe(false);
+    }
+    // the flat image is drawn without the stronger highlight down the nose's back
+    const compiled = (tex: string): string => {
+      const m = surfaceMaterials(of(tex), null, null, ENGLAND_1356, 0.5)[0]!;
+      const shader = { uniforms: {}, vertexShader: ShaderLib.physical.vertexShader, fragmentShader: ShaderLib.physical.fragmentShader };
+      m.onBeforeCompile(shader as never, null as never);
+      return `${m.customProgramCacheKey()}\n${shader.fragmentShader}`;
+    };
+    const [as, flat] = [compiled('real/skin_young_female.webp'), compiled('real/skin_young_female_flat.webp')];
+    expect(as.split('\n')[0]).not.toBe(flat.split('\n')[0]);
+    expect(as).toContain(`skinOil *= 1.0 + ${ENGLAND_1356.skin!.zone.toFixed(1)}`);
+    expect(flat).toContain('skinOil *= 1.0 + 0.0');
   });
   it('a plait is solid hair: drawn with the solid surfaces, in the stage\'s shadows', () => {
     // Until round 86 a plait was hair cards: blended over what is behind them, throwing no shadow, and with a

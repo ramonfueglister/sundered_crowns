@@ -12,7 +12,7 @@ use crate::settings;
 /// facets, normals averaged, the UVs of the base mesh (at a seam the corner
 /// UVs that lie closest together).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age: f32, female: bool, hair: Rgb, scalp_file: Option<String>, sun: f32, seed: u32, flush: (f32, &str), lash_line: f32, lips: Option<(&crate::dress::Lips, f32)>, girls_image: bool) {
+pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age: f32, female: bool, hair: Rgb, scalp_file: Option<String>, sun: f32, seed: u32, flush: (f32, &str), lash_line: f32, lips: Option<(&crate::dress::Lips, f32)>, girls_image: bool, tone: f32) {
     let Some(rows) = crate::real::rows(&format!("{dir}/uvs.txt")) else { return };
     let uvs: Vec<Vec<[f32; 2]>> = rows.iter().map(|f| f.chunks_exact(2).map(|c| [c[0], 1.0 - c[1]]).collect()).collect();
     if s.pos.len() != idx.len() {
@@ -91,6 +91,28 @@ pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age:
     let lip = lips.and_then(|_| crate::real::rows(&format!("{dir}/skin_lip.txt")));
     let lip: &[Vec<f32>] = lip.as_ref().map_or(&[], |l| &l[..]);
     let lip_k = lips.map_or((1.0, [0.0; 3], 1.0, 1.0), |(l, share)| (l.skin, l.blood, l.upper, share));
+    // (round 111) the lips of dark skin: melanin lies in the lips' skin too and hides the blood under it, as it
+    // does in the skin around them (the stage's tint, materials.ts `skinLook`). One red for every skin stood on
+    // dark skin as a salmon mouth, painted on. From `Lips::dark`'s luminance of the person's skin downward less of
+    // the blood's colour shows (`through`), and what it loses of it the lips keep of the skin's own colour
+    let through = lips.map_or(1.0, |(l, _)| (tone / l.dark[0]).min(1.0).powf(l.dark[1]));
+    let lip_k = (lip_k.0 + (1.0 - lip_k.0) * (1.0 - through), mul(lip_k.1, through), lip_k.2, lip_k.3);
+    // (round 111) the skin's image is painted for a nose that stands well in front of the eyes: light on the
+    // nose's root and back, as the photographs it is made from were lit (a fifth lighter than the cheeks on the
+    // men's). On a head whose nose root is low (MakeHuman's east Asian head) that light lies on a plane between
+    // the eyes: a pale stripe across the nose, grey beside the skin round it. Where the root stands less far in
+    // front of the eyes' inner corners than `settings::ROOT_FLAT` says, the image's light is taken back by the
+    // vertex's colour (skin_paint.txt: per vertex and image how much lighter than the face the image is there;
+    // tools/portrait/pipeline/skin_paint.py). Only a dress with a table asks for it
+    let paint = lips.and_then(|_| crate::real::rows(&format!("{dir}/skin_paint.txt")));
+    let paint_col = 2 * (if age < 30.0 { 0 } else if age < 55.0 { 1 } else { 2 }) + usize::from(!(female || girls_image));
+    let paint_k = if paint.is_some() { root_flat(pp) } else { 0.0 };
+    // lines of light run from the nose's root under the eyes in the image, finer than the head's vertices lie: from
+    // half of that on the head is drawn with the image that has the paint round the nose's root taken out
+    // (`_flat`, skin_paint.py), and its vertices' colours stay as they are
+    let flat_image = Some(crate::real::image(dir, &format!("skin_{}_{}_flat", if age < 30.0 { "young" } else if age < 55.0 { "middleage" } else { "old" }, if female || girls_image { "female" } else { "male" })))
+        .filter(|f| paint_k >= 0.5 && crate::real::has(f));
+    let paint_k = if flat_image.is_some() { 0.0 } else { paint_k };
     // real look: blood under thin skin, nose, cheeks, ears and chin a little
     // redder (skin_red.txt, 0..1 per vertex, or the file a dress names); haemoglobin takes green and
     // blue away (after Jimenez et al., 2010, not verified online). Strength
@@ -135,6 +157,9 @@ pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age:
             if let Some(&m) = scalp.get(v) {
                 // (only darker: under grey or white hair the scalp stays skin)
                 c = mix(c, [c[0].min(hl[0]), c[1].min(hl[1]), c[2].min(hl[2])], 0.8 * m);
+            }
+            if let Some(&r) = paint.as_ref().and_then(|p| p.get(v)).and_then(|r| r.get(paint_col)) {
+                c = mul(c, 1.0 / (1.0 + (r - 1.0) * paint_k));
             }
             if let Some(&[on_lip, upper]) = lip.get(v).map(|r| &r[..]) {
                 c = mix(c, mul(add(mul(c, lip_k.0), lip_k.1), 1.0 + (lip_k.2 - 1.0) * upper), on_lip * lip_k.3);
@@ -227,7 +252,10 @@ pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age:
     // a boy before his beard wears the girls' image where the dress table says so (`DressSet::boy_skin`): the
     // men's has the shade of a shaven beard round the mouth and coarser pores
     let sex = if female || girls_image { "female" } else { "male" };
-    s.tex = Some(crate::real::image(dir, &format!("skin_{a}_{sex}")));
+    s.tex = Some(match flat_image {
+        Some(f) => f,
+        None => crate::real::image(dir, &format!("skin_{a}_{sex}")),
+    });
     // the pores with the creases of the nearest wrinkle age below, in steps
     // of 8 years from 38 (skin_<age>_<sex>_w<E>_n); younger: pores only
     s.nmap = (0..7)
@@ -237,13 +265,44 @@ pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age:
         .find(|f| crate::real::has(f));
 }
 
+/// How low the nose's root of a morphed head is, 0 (it stands in front of the eyes as on the heads the skin's image
+/// is painted for) to 1 (flat between the eyes): how far the root stands in front of the eyes' inner corners, over
+/// the distance between those corners, against `settings::ROOT_FLAT`.
+pub(crate) fn root_flat(pp: &[V3]) -> f32 {
+    let (root, l, r) = (crate::measure::SELLION, crate::morph::EYE_CORNERS[0][0], crate::morph::EYE_CORNERS[1][0]);
+    if pp.len() <= root.max(l).max(r) {
+        return 0.0;
+    }
+    let ratio = (pp[root][2] - 0.5 * (pp[l][2] + pp[r][2])) / (pp[l][0] - pp[r][0]).abs().max(1e-6);
+    let [from, to] = settings::ROOT_FLAT;
+    let t = ((from - ratio) / (from - to)).clamp(0.0, 1.0);
+    t * t * (3.0 - 2.0 * t)
+}
+
 /// Real look: which hairstyle (Blender cards) a person wears, when
 pub(crate) fn mh_pick(p: &Look, long_hair: bool) -> Option<(String, String)> {
     let dir = crate::real::folder()?;
     // the style from the person's genes, age, sex and stand
     {
         let r = Rng::new(p.seed ^ 0x2545_f491).next();
-        let name = if p.age < 7.0 {
+        let bald = if p.female { 0.0 } else { c01((p.age - 22.0) / 38.0) * p.u(BALD) * 1.7 };
+        let coily = p.dress.set().and_then(|d| d.coily_of(p.u(CURL)));
+        let name = if let Some(c) = coily.filter(|_| !(long_hair && p.age >= 7.0 && p.hair_style() == Hair::Veil)) {
+            // (round 111) tightly curled hair: one mass, by sex, age and how much of it is left (under a veil that
+            // hides all hair there is none, as below; under a hood on the head it is the cut that lies closest)
+            let hooded = p.dress.set().is_some_and(|d| d.hood_of(p.female, p.age, p.seed) == crate::dress::Hood::Up);
+            if p.age < 7.0 {
+                c.small
+            } else if long_hair {
+                c.women
+            } else if bald > 0.75 && !hooded {
+                c.bald
+            } else if bald > 0.4 || hooded {
+                c.thin
+            } else {
+                c.men
+            }
+        } else if p.age < 7.0 {
             // small children: short loose hair
             p.dress.set().map_or("crop01", |d| d.hair_small)
         } else if long_hair {
@@ -257,7 +316,6 @@ pub(crate) fn mh_pick(p: &Look, long_hair: bool) -> Option<(String, String)> {
                 _ => "bun01",
             }
         } else {
-            let bald = if p.female { 0.0 } else { c01((p.age - 22.0) / 38.0) * p.u(BALD) * 1.7 };
             // a dress with a table has its own hair for a head that loses it (under the hood on the head the
             // hair lies flat, and a bare top has no cards that could come through the hood)
             let bare = p.dress.set().filter(|d| d.hood_of(p.female, p.age, p.seed) != crate::dress::Hood::Up);

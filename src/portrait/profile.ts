@@ -381,7 +381,10 @@ export const ENGLAND_1356: StageProfile = {
   },
 };
 
-const PROFILES = [ENGLAND_1356];
+/** The plain dress of 1356 (portrait/src/dress.rs `PLAIN_1356`: everybody whose own dress is not drawn yet) stands
+ *  under England's light, so that the faces of the world are judged as England's are. */
+const PLAIN_1356: StageProfile = { ...ENGLAND_1356, key: 'plain1356' };
+const PROFILES = [ENGLAND_1356, PLAIN_1356];
 
 /** The profile of a portrait, from the name of its look: the set of dress in front of the slash, else Apoleia's. */
 export function profileOf(look: string): StageProfile {

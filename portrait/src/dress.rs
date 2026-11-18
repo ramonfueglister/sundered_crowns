@@ -13,6 +13,8 @@ pub enum Dress {
     Roman,
     /// Common people of England about 1356.
     England1356,
+    /// Common people of 1356 whose own dress is not drawn yet (`PLAIN_1356`).
+    Plain1356,
 }
 
 /// How men from `HoodRule::from` years wear the hood, by the last digit of the person's seed.
@@ -23,6 +25,27 @@ pub enum Hood {
     Up,
     /// Thrown back, lying round the neck.
     Back,
+}
+
+/// (round 111) Tightly curled hair of a dress with a table: no bundles that run from a whorl to a cut, one springy
+/// mass that stands off the skull (tools/portrait/pipeline/hair_body.py, the cuts `coil01` ...). Whoever's curl
+/// (the gene's share, 0 to 1) lies over `from` wears it in place of the table's other hair: Apoleia's rule gives
+/// every man over 0.62 the one curly cut, which on the hair of Africa south of the Sahara (the pools draw 0.89
+/// and more there) is a European's wavy bowl cut.
+pub struct Coily {
+    pub from: f32,
+    /// A man's and a boy's; a woman's and a girl's; a child's under seven.
+    pub men: &'static str,
+    pub women: &'static str,
+    pub small: &'static str,
+    /// A man's who is losing his hair (cropped close), and one's who has lost it on top.
+    pub thin: &'static str,
+    pub bald: &'static str,
+    /// The image all of them are drawn with (`fleece_tex.py`): small coils lying every way.
+    pub image: &'static str,
+    /// The cuts whose painted layer and scalp lie under them (`<name>_cap`, `<name>_scalp`): a full head's, and a
+    /// head's that is bare on top.
+    pub under: [&'static str; 2],
 }
 
 /// One statement of a dress table and where it comes from.
@@ -111,6 +134,12 @@ pub struct Lips {
     /// How much of the lips' colour a child's lips have (1 = as a grown person's), growing to all of it as the
     /// head grows up (`child_share`): at a woman's strength a girl of eight wears paint.
     pub child: f32,
+    /// (round 111) Lips of dark skin: the luminance of the person's skin colour (in linear light) from which
+    /// downward less of the blood's colour shows, and the power it falls by (real_look.rs `real_skin`): melanin
+    /// lies in the lips' skin too. 0.38 is under the darkest skin England's pool draws (0.39), so its lips stay
+    /// as they were; at the darkest skin of all (0.03) a fifth of the blood's colour is left and the lips are
+    /// the skin's own colour, a little redder. By eye, PLACEHOLDER: no measured colour of lips on dark skin read.
+    pub dark: [f32; 2],
 }
 
 /// The face as it is drawn, over the face as it is measured (round 107). Until then England's grown had heads of
@@ -199,6 +228,8 @@ pub struct DressSet {
     /// of its own (tools/portrait/pipeline/README.md): the fringe 46 to 52 mm over the eyes, in the forehead's
     /// upper half, ragged; the sides to the ear's lobe; lying closer to the head. By eye, PLACEHOLDER.
     pub hair_small: &'static str,
+    /// Tightly curled hair (`Coily`); none: the table's other hair on every head.
+    pub coily: Option<Coily>,
     /// A boy younger than this wears the girls' image of the skin (0: the men's at any age). MakeHuman's image of
     /// a young man has the shade of a shaven beard round mouth and jaw and coarser pores: on a boy of eight it was
     /// a man's stubble, and with the forms of a grown man's face coming in from one year on (`grown`) a boy of
@@ -620,7 +651,7 @@ pub struct DressSet {
 
 use Hood::{Back, None as Bare, Up};
 
-pub static ENGLAND_1356: DressSet = DressSet {
+const ENGLAND: DressSet = DressSet {
     key: "england1356",
     origins: &["England"],
     gown: "cloth_cote",
@@ -645,6 +676,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     hair_veiled: "",
     hair_girl: "plait01",
     hair_small: "bob08",
+    coily: Some(Coily { from: 0.86, men: "coil01", women: "coil02", small: "coil03", thin: "coil03", bald: "coil04", image: "hair1356_fleece", under: ["bob01", "bob04"] }),
     boy_skin: 14.0,
     body_image: "hair1356_body",
     beard_lock_image: "beard1356_locks",
@@ -659,7 +691,7 @@ pub static ENGLAND_1356: DressSet = DressSet {
     brow_paint: [0.0, 0.0],
     brow_lift: [[3.0, 3.0, 3.5], [0.0, 0.0, 0.0]],
     brow_band: [0.9, 1.0],
-    lips: [Lips { skin: 0.17, blood: [0.26, 0.032, 0.036], upper: 1.5, seam: 1.43, child: 0.6 }, Lips { skin: 0.24, blood: [0.265, 0.030, 0.032], upper: 1.5, seam: 1.1, child: 0.6 }],
+    lips: [Lips { skin: 0.17, blood: [0.26, 0.032, 0.036], upper: 1.5, seam: 1.43, child: 0.6, dark: [0.38, 0.85] }, Lips { skin: 0.24, blood: [0.265, 0.030, 0.032], upper: 1.5, seam: 1.1, child: 0.6, dark: [0.38, 0.85] }],
     lash_line: [0.65, 0.55],
     lash_image: "Eyelashes1356",
     hair_red: [0.45, 0.74],
@@ -821,13 +853,32 @@ pub static ENGLAND_1356: DressSet = DressSet {
     ],
 };
 
+pub static ENGLAND_1356: DressSet = ENGLAND;
+
+/// (round 111) What everybody of 1356 wears whose own dress is not drawn yet: until then the people of the rest
+/// of the world stood in Apoleia's Roman dress, under its lights and with its faces. This is England's table with
+/// what is England's own taken off: no hood, no veil and no wimple, so a man's head is bare and a woman wears
+/// her hair as England's girls do. The gown and the linen under it stay, as the plainest clothes there are.
+/// PLACEHOLDER throughout: nothing read on what the common people of any of these lands wore; it is here so that
+/// their faces, skins and hair can be judged under the same light as England's, not as a statement about their
+/// dress. A dress of their own takes its place land by land.
+pub static PLAIN_1356: DressSet = DressSet { key: "plain1356", origins: &[], hood: [Bare; 10], veil_from: 999.0, wimple_from: 999.0, ..ENGLAND };
+
 /// Every dress with a table.
-pub static SETS: [(Dress, &DressSet); 1] = [(Dress::England1356, &ENGLAND_1356)];
+pub static SETS: [(Dress, &DressSet); 2] = [(Dress::England1356, &ENGLAND_1356), (Dress::Plain1356, &PLAIN_1356)];
 
 impl Dress {
-    /// The dress of a person whose family comes from `origin`.
+    /// The dress of a person whose family comes from `origin`: the table that names it; Apoleia's Roman dress
+    /// for Apoleia's own regions (and for no origin at all); the plain dress of 1356 for everybody else.
     pub fn of(origin: &str) -> Dress {
-        SETS.iter().find(|(_, s)| s.origins.contains(&origin)).map_or(Dress::Roman, |(d, _)| *d)
+        if let Some((d, _)) = SETS.iter().find(|(_, s)| s.origins.contains(&origin)) {
+            return *d;
+        }
+        if origin.is_empty() || crate::dna::ORIGINS[..crate::dna::ROMAN].contains(&origin) {
+            Dress::Roman
+        } else {
+            Dress::Plain1356
+        }
     }
 
     /// Its table; none for the Roman dress, which lives in the code.
@@ -981,6 +1032,27 @@ impl DressSet {
         let young = child_share(self.adult[if female { 0 } else { 1 }], yrs);
         self.eyes_child.map(|k| 1.0 + (k - 1.0) * young)
     }
+    /// The tightly curled hair of a person whose curl is `curl` (0 to 1), if the table has it and the curl is
+    /// tight enough.
+    pub fn coily_of(&self, curl: f32) -> Option<&Coily> {
+        self.coily.as_ref().filter(|c| curl > c.from)
+    }
+
+    /// Whether `name` is one of the table's cuts of tightly curled hair.
+    pub fn is_coily(&self, name: &str) -> bool {
+        self.coily.as_ref().is_some_and(|c| [c.men, c.women, c.small, c.thin, c.bald].contains(&name))
+    }
+
+    /// The cut whose painted layer and scalp lie under the hair `name`: its own, or for tightly curled hair the
+    /// table's (`Coily::under`).
+    pub fn under_of<'a>(&'a self, name: &'a str) -> &'a str {
+        match &self.coily {
+            Some(c) if name == c.bald => c.under[1],
+            Some(c) if self.is_coily(name) => c.under[0],
+            _ => name,
+        }
+    }
+
     /// What a man wears on the head.
     /// The hair of the head of a person with this seed: one of `hair_lengths` by its share, else `hair`.
     pub fn hair_of(&self, seed: u32) -> &'static str {
@@ -1024,6 +1096,15 @@ mod tests {
         for o in ["", "Italia", "Graecia", "Syria", "Aegyptus"] {
             assert_eq!(Dress::of(o), Dress::Roman);
         }
+        // everybody else: the plain dress of 1356, England's table without hood, veil and wimple
+        for o in ["french", "han", "yoruba", "Guinea", "China"] {
+            assert_eq!(Dress::of(o), Dress::Plain1356);
+        }
+        let plain = Dress::Plain1356.set().unwrap();
+        assert_eq!(plain.key, "plain1356");
+        assert!((0..10).all(|seed| plain.hood_of(false, 30.0, seed) == Hood::None));
+        assert!(!plain.veiled(true, 60.0));
+        assert_eq!((plain.gown, plain.hair_girl), (ENGLAND_1356.gown, ENGLAND_1356.hair_girl));
         assert!(Dress::Roman.set().is_none());
         let e = Dress::England1356.set().unwrap();
         assert_eq!(e.hood_of(true, 30.0, 0), Hood::None);

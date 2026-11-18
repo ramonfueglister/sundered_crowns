@@ -13,8 +13,10 @@
 // (tools/portrait/face_colour.mjs).
 // ?sample=england draws founders of the pool England's people come from instead of the twelve test people
 // (tests/portrait/sample_england.json, written by portrait/examples/sample.rs): women and men of 8 to 68.
+// ?sample=world draws founders of every pool of genes the game's cultures draw from (tests/portrait/sample_world.json).
 import people from '../../tests/portrait/people.json';
 import england from '../../tests/portrait/sample_england.json';
+import world from '../../tests/portrait/sample_world.json';
 import { loadPortraitAssets } from './assets';
 import { profileOf } from './profile';
 import { PortraitStage } from './stage';
@@ -50,7 +52,7 @@ async function main(): Promise<void> {
   const genes = (q.get('gene') ?? '').split(',').filter(Boolean).map(t => t.split(':').map(Number));
   const only = (q.get('only') ?? '').split(',').filter(Boolean).map(Number);
   const at = (q.get('at') ?? '').split(',').filter(Boolean).map(t => t.split(':').map(Number));
-  for (const given of (q.get('sample') === 'england' ? england : people) as PortraitPerson[]) {
+  for (const given of (q.get('sample') === 'england' ? england : q.get('sample') === 'world' ? world : people) as PortraitPerson[]) {
     if (only.length && !only.includes(given.pid)) continue;
     const person: PortraitPerson = {
       ...given,

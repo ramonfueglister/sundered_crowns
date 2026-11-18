@@ -389,8 +389,8 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
             }
             // the scalp under the hair this person wears (name_scalp.txt beside it), if bare-headed
             let bare = !matches!(p.hat_style(), Hat::Cap | Hat::Pileus | Hat::Petasos) && !(long_hair && p.hair_style() == Hair::Veil);
-            let sf = if bare { mh_pick(p, long_hair).map(|(d, n)| format!("{d}/{n}_scalp.txt")).filter(|f| crate::real::exists(f)) } else { None };
-            real_skin(&mut s, &h.parts["body"][lod], &x.pp, dir, p.age, fem, hair, sf, lf.sun, p.seed, garb.map_or((1.0, "skin_red.txt"), |d| (d.flush[if fem { 0 } else { 1 }], d.flush_map)), garb.map_or(0.0, |d| d.lash_line[if fem { 0 } else { 1 }] * d.eyes_of(fem, p.age)[1]), garb.map(|d| d.lips_of(fem, p.age)), garb.is_some_and(|d| !fem && p.age < d.boy_skin));
+            let sf = if bare { mh_pick(p, long_hair).map(|(d, n)| format!("{d}/{}_scalp.txt", garb.map_or(n.as_str(), |g| g.under_of(&n)))).filter(|f| crate::real::exists(f)) } else { None };
+            real_skin(&mut s, &h.parts["body"][lod], &x.pp, dir, p.age, fem, hair, sf, lf.sun, p.seed, garb.map_or((1.0, "skin_red.txt"), |d| (d.flush[if fem { 0 } else { 1 }], d.flush_map)), garb.map_or(0.0, |d| d.lash_line[if fem { 0 } else { 1 }] * d.eyes_of(fem, p.age)[1]), garb.map(|d| d.lips_of(fem, p.age)), garb.is_some_and(|d| !fem && p.age < d.boy_skin), { let l = linear(skin); 0.2126 * l[0] + 0.7152 * l[1] + 0.0722 * l[2] });
         }
         out.push(s);
     }
@@ -1003,7 +1003,9 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
         // `bob01_body`, `plait01_body`: modelled in Blender as layers of thick bundles, round 109; no cards and
         // no locks any more), drawn with the dress set's image of a bundle, and the round strands of its plaits
         // (England's `plait01_rope`), drawn with their own
-        if let Some(sf) = mh_rope(dir, &format!("{name}_body"), garb.map_or("", |d| d.body_image), &x.pp, &h.base, &|_| hair) {
+        // (tightly curled hair, round 111: one mass, drawn with the image of its coils)
+        let body_image = garb.map_or("", |d| d.coily.as_ref().filter(|_| d.is_coily(name)).map_or(d.body_image, |c| c.image));
+        if let Some(sf) = mh_rope(dir, &format!("{name}_body"), body_image, &x.pp, &h.base, &|_| hair) {
             out.push(sf);
         }
         if let Some(sf) = mh_rope(dir, &format!("{name}_rope"), "", &x.pp, &h.base, &|_| hair) {
@@ -1013,7 +1015,7 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
         // (grey and white fuzz is see-through: the cap fades towards the skin as
         // the hair greys, else its soft edge lays a pale band over the forehead)
         let cap_c = cmix(hair, skin, (0.7 * thin).max(0.75 * beard_grey));
-        if let Some(sf) = mh_hair(dir, &format!("{name}_cap"), &x.pp, &h.base, hc, cap_c) {
+        if let Some(sf) = mh_hair(dir, &format!("{}_cap", garb.map_or(name.as_str(), |g| g.under_of(name))), &x.pp, &h.base, hc, cap_c) {
             out.push(sf);
         }
     }

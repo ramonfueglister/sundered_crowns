@@ -90,6 +90,24 @@ PARTED = dict(
     ],
 )
 CUTS['plait01'] = PARTED
+# Tightly curled hair (round 111): no bundles and no strands that run anywhere. Each hair is a coil of a few
+# millimetres, and a head of them is one springy mass that stands off the skull the same height all round, its
+# surface small tufts side by side, its edge the hairline itself. `h`: how high the mass stands over the skin;
+# `edge`: its height at the hairline as a share of that, and over how many degrees inside the line it comes to its
+# full height; `ragged`: by how many degrees the mass ends inside or outside the line, and the size of that
+# unevenness (units): no hairline is drawn with a compass; `tufts`: sizes of the tufts and how high each size
+# stands (two sizes, one on the other); `bare`: a horseshoe round a bare top (`bare`'s line); `grid`:
+# degrees between the rays from the whorl, and the rings along a ray; `line`: the hairline (parted hair's);
+# `shade`: its tone. All PLACEHOLDER by eye: no picture of the reference shows such hair (its pictures here are of
+# Europeans), and nothing was read on how it was worn in 1356.
+COILY = dict(
+    coily=True, over=(8, 6, 35, 30), lift=1.0, round=1.0, line=PARTED['line'],
+    h=0.16, edge=(0.03, 10.0), ragged=(1.6, 0.05), tufts=((0.06, 0.02), (0.028, 0.011)), grid=(2.0, 72), shade=0.92,
+)
+CUTS['coil01'] = COILY                                  # a man's: a thumb's breadth high
+CUTS['coil02'] = dict(COILY, h=0.36, edge=(0.03, 12.0), tufts=((0.08, 0.03), (0.035, 0.014)))  # a woman's: fuller
+CUTS['coil03'] = dict(COILY, h=0.07, edge=(0.05, 6.0), tufts=((0.05, 0.012), (0.025, 0.007)))   # a small child's, and a head that loses its hair: close
+CUTS['coil04'] = dict(COILY, h=0.09, edge=(0.05, 6.0), tufts=((0.05, 0.012), (0.025, 0.007)), bare=True)   # a horseshoe round a bare top
 C = CUTS[cut]
 LIFT, ROUND = C['lift'], C['round']
 SEED = sum(map(ord, cut))          # each cut with random numbers of its own: no two cuts wear the same bundles
@@ -405,8 +423,100 @@ def shell():
     return np.array(verts), uvs, tris, S['shade']
 
 
+def lattice(P, seed):
+    """Smooth noise over space, 0 to 1: random values at the corners of a grid of unit cubes, blended between."""
+    i = np.floor(P).astype(np.int64)
+    f = P - i
+    f = f * f * (3 - 2 * f)
+    out_ = 0.0
+    for dx in (0, 1):
+        for dy in (0, 1):
+            for dz in (0, 1):
+                x, y, z = i[..., 0] + dx, i[..., 1] + dy, i[..., 2] + dz
+                hsh = (x * 73856093) ^ (y * 19349663) ^ (z * 83492791) ^ (seed * 2654435761)
+                hsh = (hsh ^ (hsh >> 13)) * 1274126177
+                r = ((hsh ^ (hsh >> 16)) & 0xffff) / 65535.0
+                out_ = out_ + r * np.where(dx, f[..., 0], 1 - f[..., 0]) * np.where(dy, f[..., 1], 1 - f[..., 1]) * np.where(dz, f[..., 2], 1 - f[..., 2])
+    return out_
+
+
+def fleece():
+    """Tightly curled hair: one mass over the skull from the whorl to the hairline, as rays from the whorl (no
+    ray's end is seen from the front), its surface tufts. As `shell` gives its own: points, their places in the
+    image, triangles, tone."""
+    line = np.array(C['line'], float)
+    step, rings = C['grid']
+    phi = np.radians(np.arange(0, 360, step))
+    e1 = unit(np.cross(W, np.array([1.0, 0, 0])))
+    e2 = np.cross(W, e1)
+    ray = np.cos(phi)[:, None] * e1 + np.sin(phi)[:, None] * e2
+
+    def at(a):
+        return np.cos(a)[..., None] * W + np.sin(a)[..., None] * ray
+
+    # how far along each ray the hairline lies
+    a = np.radians(np.arange(1.0, 175.0, 0.25))
+    D = at(a[:, None] * np.ones(len(phi))[None, :])
+    th, el = ang(D)
+    inside = el > np.interp(np.abs(th), line[:, 0], line[:, 1])
+    far = a[np.argmax(~inside, axis=0)]
+    # (evened out round the whorl: a ray's end is not a corner of the line's table)
+    for _ in range(2):
+        far = 0.25 * np.roll(far, 1) + 0.5 * far + 0.25 * np.roll(far, -1)
+    # (and uneven at the size of a tuft)
+    rag, size = C['ragged']
+    far = far + np.radians(rag) * (2 * lattice(OVER.at(at(far), 0 * far) / size, SEED + 7) - 1)
+    t = np.linspace(0, 1, rings + 1)[1:]
+    d = at(t[:, None] * far[None, :])
+    rim_ = d[-1]
+    # how far inside the hairline a point is, in degrees (to the line's nearest point)
+    near = np.degrees(np.arccos(np.clip(np.einsum('ijk,lk->ijl', d, rim_), -1, 1))).min(-1)
+    grow = smooth(near / C['edge'][1])
+    if C.get('bare'):
+        # a horseshoe: nothing above its upper edge, and coming up from the skin below it
+        th_, el_ = ang(d)
+        top = smooth((bare(th_) - el_) / 9.0)
+        grow = grow * top
+    h = LIFT * C['h'] * (C['edge'][0] + (1 - C['edge'][0]) * grow)
+    P0 = OVER.at(d, h)
+    for k, (size, high) in enumerate(C['tufts']):
+        h = h + LIFT * high * (2 * lattice(P0 / size + 31.7 * k, SEED + k) - 1) * (0.25 + 0.75 * grow)
+    # its edge goes into the skin: a mass that ended a hair's breadth over the skin would end in a line of light
+    P = OVER.at(d, np.where(grow < 0.02, -0.012, np.maximum(h, 0.003)))
+    n = len(phi)
+    verts = [OVER.at(W, np.array(LIFT * C['h']))] + list(P.reshape(-1, 3))
+    uvs = [(0.0, 0.0)] + [(float(ph) * 0.95, float(tt * fa) * 0.95) for tt in t for ph, fa in zip(phi, far)]
+    tris = [(0, 1 + (j + 1) % n, 1 + j) for j in range(n)]
+    for i in range(rings - 1):
+        for j in range(n):
+            q0, q1, q2, q3 = 1 + i * n + j, 1 + i * n + (j + 1) % n, 1 + (i + 1) * n + j, 1 + (i + 1) * n + (j + 1) % n
+            tris += [(q0, q1, q2), (q1, q3, q2)]
+    if C.get('bare'):
+        # (no triangle on the bare top)
+        on = np.concatenate([[0.0], top.reshape(-1)]) > 0.0
+        tris = [t_ for t_ in tris if on[list(t_)].any()]
+    V = np.array(verts)
+    # counter-clockwise seen from outside (the builder reads the surface's direction from the triangles)
+    q = np.array(tris[len(tris) // 2])
+    if np.dot(np.cross(V[q[1]] - V[q[0]], V[q[2]] - V[q[0]]), V[q[0]] - hc) < 0:
+        tris = [(t_[0], t_[2], t_[1]) for t_ in tris]
+    # a triangle's places in the image: the seam where the rays have come round once is a jump of the image there
+    tuv = []
+    for t_ in tris:
+        uv = [list(uvs[i]) for i in t_]
+        us = [u for u, _ in uv]
+        if max(us) - min(us) > np.pi * 0.95:
+            uv = [[u + (2 * np.pi * 0.95 if u < np.pi * 0.95 else 0), v] for u, v in uv]
+        tuv.append(tuple(tuple(x) for x in uv))
+    return V, tuv, tris, C['shade']
+
+
 verts, anchors, shades, tris, tri_uv = [], [], [], [], []
-for L in C['layers']:
+if C.get('coily'):
+    sv, stuv, stris, sshade = fleece()
+    verts, anchors, shades = list(sv), list(sv), [sshade] * len(sv)
+    tris, tri_uv = list(stris), list(stuv)
+for L in C.get('layers', []):
     for rings, uv, anc, shade in (parted if C.get('parted') else bundles)(L, np.random.default_rng(L['seed'] + 100 * SEED)):
         n, m = rings.shape[:2]
         o = len(verts)
@@ -419,7 +529,7 @@ for L in C['layers']:
                 ua, ub, uc, ud = uv[s, j], uv[s, j + 1], uv[s + 1, j], uv[s + 1, j + 1]
                 tris.append((a, b_, c_)); tri_uv.append((tuple(ua), tuple(ub), tuple(uc)))
                 tris.append((b_, d_, c_)); tri_uv.append((tuple(ub), tuple(ud), tuple(uc)))
-if not C.get('parted'):
+if not C.get('parted') and not C.get('coily'):
     sv, suv, stris, sshade = shell()
     o = len(verts)
     verts += list(sv)

@@ -16,14 +16,14 @@ one, changes nothing: same people in, same pictures out, measured.
 | Part | Where | What it does |
 |---|---|---|
 | Builder | `portrait/` (Rust, WebAssembly) | From a person (68 bytes of genes, sex, age, estate, occupation, origin, food, mourning, wealth, worn clothes) to the triangles of head and shoulders: MakeHuman's head morphed by the genes, skin, eyes, hair, beard, clothes, headwear, jewellery |
-| Genes | `portrait/src/dna.rs` | 34 genes of two alleles, one byte each; a child takes one allele of each gene from either parent, plus a small mutation |
-| Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; no set: Apoleia's Roman dress |
+| Genes | `portrait/src/dna.rs` | 34 genes of two alleles, one byte each; a child takes one allele of each gene from either parent, plus a small mutation; founders draw from one of 23 pools (round 111), which one is the culture's (`src/sim/people/pools.ts`) |
+| Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; a culture without a set wears the plain dress of 1356 (round 111), one of Apoleia's seven regions Apoleia's Roman dress |
 | Stage profile | `src/portrait/profile.ts` | Light and materials per set of dress; Apoleia's portraits keep Apoleia's |
 | Pipeline | `tools/portrait/pipeline/` | Blender scripts that wrote the draped clothes and hair (not part of the build) |
-| Files of the real look | `public/portrait/` (39 MB) | The head (1.1 MB), data files (13.1 MB since round 110, 12.7 since round 109, 12.9 since round 105, 10.4 before round 104: the hair's bodies, the beard's locks, draped clothes, skin shading), images (24.5 MB: skin by age and sex, wrinkle maps, hair, cloth, eyes) |
+| Files of the real look | `public/portrait/` (41.5 MB) | The head (1.1 MB), data files (15.0 MB since round 111, 13.1 since round 110, 12.7 since round 109, 12.9 since round 105, 10.4 before round 104: the hair's bodies, the beard's locks, draped clothes, skin shading), images (24.8 MB: skin by age and sex, wrinkle maps, hair, cloth, eyes) |
 | Stage | `src/portrait/` (three.js) | Lights, frames and draws one portrait; materials per kind of surface |
 | Finish | `src/portrait/finish.ts` | For a profile that asks for it (England's, round 103): the picture is drawn in linear light at twice the size and brought to the screen by a tone curve that keeps a colour's hue, on a backdrop of its own; Apoleia's portraits keep three.js' ACES curve |
-| Test page | `portrait-test.html` | The twelve test people; `?origin=England` puts them into the dress of 1356, `?female=1&age=17` and `?gene=27:135,28:95` set sex, age and genes of all of them, `?only=930000,930003` draws these alone, `?turn=-1.25` shows every head from the side, `?without=_cap.` leaves out the surfaces whose image name contains the text, `?sample=england` draws England's own sample of 36 people (`tests/portrait/sample_england.json`) in place of the twelve, `?set=exposure:0.5,skin.tint.1:0.75,sky.top:ffe9d6` sets values of the stage's profile by their path (a number, or a colour as six hex digits) |
+| Test page | `portrait-test.html` | The twelve test people; `?origin=England` puts them into the dress of 1356, `?female=1&age=17` and `?gene=27:135,28:95` set sex, age and genes of all of them, `?only=930000,930003` draws these alone, `?turn=-1.25` shows every head from the side, `?without=_cap.` leaves out the surfaces whose image name contains the text, `?sample=england` draws England's own sample of 36 people (`tests/portrait/sample_england.json`) in place of the twelve, `?sample=world` eight founders of each of 22 pools of genes (`tests/portrait/sample_world.json`, 176 people), `?set=exposure:0.5,skin.tint.1:0.75,sky.top:ffe9d6` sets values of the stage's profile by their path (a number, or a colour as six hex digits) |
 
 `npm run portrait:build` builds the WebAssembly file and the list of files into `public/portrait/` (both are in the
 repository, because the site is built where there is no Rust).
@@ -3892,6 +3892,121 @@ reference above), `runde110_vergleich_ck3_nah.png`, `runde110_vergleich_ck3_frau
 `runde110_vergleich_ck3_maenner.png`, `runde110_vorher_nachher.png` (eight people, round 109 above),
 `runde110_stichprobe.png` (the sample of 36).
 
+**Every people of the world (round 111).** Ramon, 18 November 2026: Apoleia's generator could make every
+people, ours must be able to as well; and the faces need more variety (that is round 112's). What Apoleia had,
+read in its repository: nothing the builder here had lost. The genes that make a people are three shares of
+MakeHuman's base heads (`typA`, `typB`, `typC`: its African, its east Asian and its European one), the skin's
+tone, the hair's two pigments, the eyes' colour and the hair's curl, and the builder draws whatever they say.
+What Apoleia founded people from were seven pools of the Roman world, and so did the game: a founder drew
+from the pool whose box the place fell into (Beijing from Graecia's, Delhi from Syria's, Mexico from Africa's),
+everyone but the English stood in Roman dress under Apoleia's light, and the look of rounds 103 to 110 (the
+light, the lips, the down, the hair's bodies) had been tuned on pale faces alone. A first sheet of founders
+with the genes set by hand showed where it broke: a grey film on dark skin, salmon lips painted onto it, a
+ridge of light painted round a nose root that is not there on a flat east Asian face, and tightly curled hair
+drawn as bundles of straight strands.
+
+The build:
+
+- **Pools of genes** (`dna.rs` `ORIGINS`, `RANGES`; the same table in `src/sim/people/genes.ts`, held to it by
+  golden vectors). Apoleia's seven stay as they were, byte for byte; sixteen follow them: Maghreb, Arabia,
+  Iran, Horn, Guinea, Kalahari, Steppe, Siberia, China, Tibet, Hindustan, Deccan, Indochina, Oceania,
+  Australia, America. A pool is the ranges its founders' alleles are drawn from evenly: skin, hair, eyes, curl
+  and the three base heads, and for east Asia, Siberia, the steppe and the Americas a thinner beard and fewer
+  bald heads.
+- **A culture draws from a pool** (`src/sim/people/pools.ts`): each of the game's 35 culture groups has one, and
+  27 cultures are named on their own (the Arabs outside the peninsula, the Horn, the Khoisan, Madagascar, the
+  Turks of Anatolia, the Jurchen, Ceylon, Polynesia). A person's looks go with the people they
+  come from, not with the ground they stand on: a Genoese of Caffa and a Kipchak of Caffa. Only a person whose
+  culture is not known still draws by the place. In the simulation the founders' genes are given once their
+  cultures are (`giveGenes` after `foundPersonCultures`), and a ruler's by their culture too (`rulers.ts`).
+  That changes the genes of nearly every person of a world: state version 25, with a step that gives a saved
+  world of version 24 the genes a new one has.
+- **The plain dress of 1356** (`Dress::Plain1356`, `dress.rs`). A culture without a table of its own wears
+  England's without hood, veil and wimple, bare-headed, and stands under England's light (`plain1356` in
+  `profile.ts`); only an origin that names one of Apoleia's seven regions, or none, is still drawn Roman. The
+  panel gives the cultures of the Latin west (British, Gallic, the Low Lands, German, Norse, Italian, Iberian
+  without al-Andalus) England's dress until their own is drawn (`dressOf`).
+- **Lips of dark skin** (`Lips::dark`). Melanin lies in the lips' skin too and hides the blood under it. From a
+  luminance of the person's skin of 0.38 downward (linear light; the darkest of England's pool is 0.39) less of
+  the blood's colour shows, to the power 0.85, and what the lips lose of it they keep of the skin's own colour.
+- **Down and highlight by the skin's tone** (`materials.ts` `skinLook`). The pale sheen of the down lay on dark
+  skin as ash, and the white highlight that is lost in the light of a pale cheek as a grey film. Both go by
+  the person's tone (`portraitSkinTone`), in full from 0.30 on: from there down to 0.05 the down's sheen falls
+  to a fifth and the highlight to half its strength and a warm colour.
+- **A flat nose root** (`real_look.rs` `root_flat`, `settings::ROOT_FLAT`). MakeHuman's images of the skin have
+  the light of a nose that stands out painted round its root. `skin_paint.py` reads per vertex how much lighter
+  than the face the image is there (`skin_paint.txt`) and writes each image once more with that light taken
+  out (`_flat`). A head whose root stands less than 0.30 of the distance between the eyes' inner corners in
+  front of them has the painted light taken back by its vertices' colours, a head more than half way to 0.18
+  is drawn with the flat image, and without the stage's stronger highlight down the nose's back.
+- **Tightly curled hair** (`DressSet::coily`, cuts `coil01` to `coil04`). From a curl of 0.86 on the hair is
+  no bundles of strands but one mass: `hair_body.py` grows it from the hairline as a body of its own (higher
+  the further inside the line, tufts of 6 and 2.8 mm over it, a ragged edge sunk into the skin), a man's
+  (1.6 cm), a woman's (3.6 cm), a child's and a thinning head's (0.7 cm) and an old man's horseshoe. Its image
+  is small coils lying every way over one another (`fleece_tex.py`), and the stage draws it matt: roughness 1,
+  no bands of sheen along strands, a little light through the coils at the edge.
+- **A sample of the world** (`cargo run --release --example sample -- world 8`,
+  `tests/portrait/sample_world.json`, `?sample=world`): eight founders of each of 22 pools (Apoleia's Africa is
+  no culture's), given under a culture's name as the game gives them.
+
+| | round 110 | now |
+|---|---|---|
+| pools of genes | 7, by the place's box | 23, by the person's culture (the place for a culture not known) |
+| culture groups with a pool | | 35 of 35 (the culture `unknown` draws by the place), 27 cultures named on their own |
+| dress of a culture without a table | Roman, on Apoleia's stage | the plain dress of 1356, under England's light |
+| cultures in England's dress in the game | English | the seven groups of the Latin west |
+| skin tone of a sample (`portraitSkinTone`) | England's 0.46 to 0.66 | England's as it was; the world's 0.07 to 0.60 |
+| the lower lip's red against the skin beside it (red over green, lip over skin), six founders of Guinea | 2.01 to 2.22 (as on the same people with a pale skin) | 1.33 to 1.41 |
+| drawn with the flat image | | 10 of 16 founders of China and Siberia, 17 of the world's 176, none of England's 36 (at 3, 9 and 30 years as well) |
+| tightly curled hair as a mass | | 23 of the world's 176 (every founder of Guinea and Kalahari, some of the Horn), none of England's |
+| files | | `coil01` to `coil04` (0.43, 0.43, 0.44 and 0.33 MB; 12,961 corners and 25,740 triangles each, the horseshoe 13,409 corners), `skin_paint.txt` (0.25 MB), `hair1356_fleece` (0.17 MB with its relief), six `_flat` images (0.1 MB together) |
+
+England's sample: the gauntlet stands as round 110 left it, each of its 19 lines to the tenth. Of the other
+141 lines `face_colour.mjs` reads off the faces, eight moved by 0.1 (the forehead and the nose's back of men
+and boys). The rule of the nose root is everyone's: seven of England's 36 (men and boys, no woman) have a
+root just under 0.30 and a little of the painted light taken back, by up to 0.025 of a vertex's colour on an
+old man and under 0.01 on the others. The other 29 are built with the positions and colours of round 110
+(the two builders side by side). Lips, down and highlight begin below every skin of England's pool.
+
+Tried and not kept, each seen in a picture:
+
+- MakeHuman's east Asian head in full: a caricature (the eyes slits, the face a disc). A founder has at most
+  some four fifths of it (`typB` against the other two).
+- The lips' rule with a power of 0.6: still a salmon mouth on the darkest skins.
+- The grey film looked for in the down, the skin's oil and the nose's zone, each switched off on the test
+  page: none of them. The highlight's strength took it away (`set=skin.specular:0.15`), so the highlight goes
+  by the tone.
+- The flat root by the vertices' colours alone: lines of light run from the nose's root under the eyes in
+  the image, finer than the head's vertices lie, and stayed. Hence the image of its own from half way on.
+- Tightly curled hair as the bundles' body with a curled image: strands still ran from the crown down. As a
+  mass with tufts of 8.5 mm: a cap of clay lumps. With a smooth hairline: a beret. With the bundles' sheen at
+  half: grey. With the horseshoe's edge cut where the hair ends: chipped.
+
+Honest about it. **Every number of the pools and every line of the culture map is by common description
+(PLACEHOLDER)**: the skin after the map in Jablonski & Chaplin 2000 from memory (the paper could not be
+reached from here), no craniometric shift for any new pool (Howells' tables could not be reached either), so
+within a pool the faces differ as England's do and between pools by MakeHuman's three heads alone. A pool is
+one mix for many peoples (all of Africa south of the Sahel but the Horn and the Khoisan draw from one; China's
+stands for Korea and Japan), and a culture draws from one pool where real peoples are mixed. MakeHuman has no
+head for Australia, Oceania or the Americas: they are mixes of its three. None of the reference's pictures
+we have shows a character from outside Europe, so this round was judged by eye without a reference beside
+it, and the gauntlet does not read a dark face. The plain dress is no people's
+dress: a Yoruba, a Han and a Nahua wear an English gown, the women plaits and the men a bowl cut, and none a
+headdress. Seen on the sheets and not mended: an extreme draw of the face's genes gives a ballooned lower
+face (the Swedish woman of the sample: round 112's); the hair's shadow on the temple is jagged (as since round
+109); ear lobes show under the plaits on east Asian heads; grey hair in a tightly curled mass is speckled; a
+woman's tightly curled hair still reads a little as a cap.
+
+Tests: `portrait/tests/world.rs` (new: every pool founds people in the plain dress, bare-headed and with a
+gown; tightly curled hair is a mass of its own south of the Sahara and nobody's elsewhere; a flat nose root
+is drawn with the flat image; lips show less blood through dark skin), `portrait/src/dress.rs` (which origin
+finds which dress), `tests/portrait.test.ts` (the world's 176 people under England's light: images in the
+repository, bare heads, the hair's kind and material, the counts above; the highlight and the down by tone,
+and England's sample above the tone where they begin), `tests/people-genes.test.ts` (the pool of a culture;
+founders of a world draw from it; a world of version 24 upgraded has a new world's genes; golden vectors for
+23 pools), `tests/rulers.test.ts` (rulers draw by their culture). Pictures (project files, `portraits/`):
+`runde111_welt.png` (four adults of each of the 22 pools), `runde111_zwoelf.png` (twelve of them larger).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
@@ -3899,11 +4014,14 @@ is a body of thick bundles as theirs is, evener and duller than theirs; since ro
 the neck and linen shows under it, without the bands, trims and fastenings theirs have; the veil (no folds),
 the fine forms of the face (lids, nostrils, edge of the lips), stubble,
 children and the variety of faces are not; the thrown-back hood closes round the neck since round 35, but
-has no folds across its cloth.
+has no folds across its cloth. Since round 111 the people of every part of the world can be drawn, in a plain
+dress that is no people's own, and without a picture of the reference to hold them against.
 
-**Genes.** The pools of the founders are still Apoleia's seven Roman-era regions (`dna.rs` `origin`). Places
-outside them fall into the nearest box, which is wrong: Mexico draws as Africa, the Volga as Graecia, Persia and
-Baghdad as Syria. New pools and new sets of dress need sources and Ramon's choice.
+**Genes.** Since round 111 there are 23 pools and a founder draws from the pool of their culture
+(`src/sim/people/pools.ts`); only a person whose culture is not known still falls into the box of the place
+(`dna.rs` `origin`, Apoleia's seven Roman-era regions, wrong outside them). The sixteen new pools and the map
+of cultures are by common description, without a source read (PLACEHOLDER), and have no shift of the face's
+measures. Sets of dress beyond England's need sources and Ramon's choice.
 
 ## Measured against Apoleia
 
@@ -3940,15 +4058,15 @@ Baghdad as Syria. New pools and new sets of dress need sources and Ramon's choic
 
 ## What is still Apoleia and has to go (next steps, each needs Ramon's yes where it is a choice)
 
-- Roman clothes, hats and hairstyles (`build.rs`, `look.rs`) for every origin but England; the seven Roman origins and their ranges without
+- Roman clothes, hats and hairstyles (`build.rs`, `look.rs`) for the seven Roman origins (every other origin wears England's dress or the plain one since round 111); the seven Roman origins and their ranges without
   source (`dna.rs`: only Germania and Aegyptus rest on Howells' skull measurements, the rest is marked
   PLACEHOLDER); the German job names of Apoleia's simulation (`person.rs`).
 - `build()` in `portrait/src/build.rs` is still one function of 1,640 lines whose parts share some hundred local
   values (the free functions around it are split off into `morph.rs`, `hair.rs`, `real_look.rs`). It is to be cut
   up together with the new clothes and headwear, which replace about half of it.
 - Cultures, clothes and hairstyles as data instead of code, so that a new culture needs data only.
-- Loading: the 12.9 MB of data files are loaded together on the first portrait (the nine files of hair alone are
-  6.1 MB, and a head wears one of them); not measured on a slow line.
+- Loading: the 15.0 MB of data files are loaded together on the first portrait (the thirteen files of hair alone are
+  7.5 MB, and a head wears one of them); not measured on a slow line.
 - Speed: a portrait of the real look has 44,000 to 119,000 triangles and takes 40 to 160 ms to build in WebAssembly
   (cloud machine). Drawing was only timed on the software driver (0.3 to 1.6 s), which says nothing about a real
   graphics card.

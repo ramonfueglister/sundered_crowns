@@ -342,6 +342,22 @@
    "bytes": 25140
   },
   {
+   "name": "coil01_body.txt.zst",
+   "bytes": 426784
+  },
+  {
+   "name": "coil02_body.txt.zst",
+   "bytes": 426085
+  },
+  {
+   "name": "coil03_body.txt.zst",
+   "bytes": 437416
+  },
+  {
+   "name": "coil04_body.txt.zst",
+   "bytes": 326006
+  },
+  {
    "name": "crop01.txt",
    "bytes": 4
   },
@@ -436,6 +452,10 @@
   {
    "name": "skin_lip.txt",
    "bytes": 63009
+  },
+  {
+   "name": "skin_paint.txt",
+   "bytes": 252036
   },
   {
    "name": "skin_red.txt",
@@ -542,6 +562,8 @@
   "eyebrow1356.webp",
   "hair1356_body.webp",
   "hair1356_body_n.webp",
+  "hair1356_fleece.webp",
+  "hair1356_fleece_n.webp",
   "plait01_cap.webp",
   "plait01_cap_n.webp",
   "plait01_rope.webp",
@@ -558,18 +580,21 @@
   "sidepart01_cap_n.webp",
   "sidepart01_n.webp",
   "skin_middleage_female.webp",
+  "skin_middleage_female_flat.webp",
   "skin_middleage_female_n.webp",
   "skin_middleage_female_w38_n.webp",
   "skin_middleage_female_w46_n.webp",
   "skin_middleage_female_w54_n.webp",
   "skin_middleage_female_w62_n.webp",
   "skin_middleage_male.webp",
+  "skin_middleage_male_flat.webp",
   "skin_middleage_male_n.webp",
   "skin_middleage_male_w38_n.webp",
   "skin_middleage_male_w46_n.webp",
   "skin_middleage_male_w54_n.webp",
   "skin_middleage_male_w62_n.webp",
   "skin_old_female.webp",
+  "skin_old_female_flat.webp",
   "skin_old_female_n.webp",
   "skin_old_female_w46_n.webp",
   "skin_old_female_w54_n.webp",
@@ -578,6 +603,7 @@
   "skin_old_female_w78_n.webp",
   "skin_old_female_w86_n.webp",
   "skin_old_male.webp",
+  "skin_old_male_flat.webp",
   "skin_old_male_n.webp",
   "skin_old_male_w46_n.webp",
   "skin_old_male_w54_n.webp",
@@ -586,8 +612,10 @@
   "skin_old_male_w78_n.webp",
   "skin_old_male_w86_n.webp",
   "skin_young_female.webp",
+  "skin_young_female_flat.webp",
   "skin_young_female_n.webp",
   "skin_young_male.webp",
+  "skin_young_male_flat.webp",
   "skin_young_male_n.webp"
  ]
 }
