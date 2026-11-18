@@ -25,7 +25,7 @@ mod wasm;
 pub mod wire;
 
 pub use build::{build, Portrait, LODS};
-pub use morph::{cheek_field, lower_band, lower_share, morph_targets, morph_test, morph_test_measured, morph_test_measured_as, morph_test_mouth, morph_test_seam, morph_test_nose, morph_test_skull, morph_test_wide, face_front, FACE_FRONT, NOSE_HEIGHTS, mouth_field, neck_share, seam_field, seam_gaps, skull_field, CHEEK_FIELD, LIP_SEAM, MOUTH_FIELD, NECK_UNDER, SEAM_REACH, SKULL_CENTRE, SKULL_FLOOR, SKULL_REACH, STYLE_REACH};
+pub use morph::{cheek_field, jaw_field, JAW_NARROW, lower_band, lower_share, morph_targets, morph_test, morph_test_measured, morph_test_measured_as, morph_test_mouth, morph_test_seam, morph_test_nose, morph_test_skull, morph_test_wide, face_front, FACE_FRONT, NOSE_HEIGHTS, mouth_field, neck_share, seam_field, seam_gaps, skull_field, CHEEK_FIELD, LIP_SEAM, MOUTH_FIELD, NECK_UNDER, SEAM_REACH, SKULL_CENTRE, SKULL_FLOOR, SKULL_REACH, STYLE_REACH};
 pub use geo::{Mat, Surface};
 pub use head::Head;
 pub use look::{default_life, Beard, Hair, Hat, Jewel, Life, Look, Mood, GENES, NG, STANDS};

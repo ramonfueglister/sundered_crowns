@@ -87,7 +87,9 @@ fn the_grown_of_england_are_drawn_broader_than_they_are_measured() {
         let between = |k: usize, lo: f32, hi: f32| assert!(share[k] > lo && share[k] < hi, "{sex}, {}: drawn {} of measured ({} and {} mm)", name(k), share[k], drawn[k], measured[k]);
         between(0, 0.88, 0.96); // face length
         between(4, 1.07, 1.16); // breadth at the cheekbones
-        between(5, 1.05, 1.20); // breadth at the jaw's corners
+        // breadth at the jaw's corners: a woman's lower face runs in to the chin as the reference draws it (round
+        // 115, `Style::jaw`), a man's by half as much
+        if female { between(5, 0.98, 1.10) } else { between(5, 1.03, 1.20) }
         between(6, 1.07, 1.18); // between the pupils
         between(11, 1.12, 1.30); // the eye's opening, length
         between(12, 1.05, 1.35); // the eye's opening, height
@@ -954,7 +956,9 @@ fn the_cheek_of_a_woman_of_england_keeps_its_breadth_to_the_mouth() {
     if show {
         println!("{n} grown women: the far cheek's outline at the mouth's height {:.1} mm inside its top, {:.1} without the fill ({n} men {men:.1}); its pad {:.2} mm, {:.2} without; the dent under it {:.2} mm; breadths and lengths differ by {worst:.3} mm at most, the lips' length by {lips_most:.2}", sums[0], sums[1], sums[2], sums[3], sums[4]);
     }
-    assert!(sums[0] > 6.0 && sums[0] < 9.5 && sums[1] > 12.0, "the far cheek's outline at the mouth's height: {} mm inside its top, {} without the fill", sums[0], sums[1]);
+    // (round 115: the drawn lower face runs in to the chin, `Style::jaw`, about as far as on the reference's woman
+    // A of round 114; the woman traced in round 97 had about 6 mm. The fill still keeps 5 mm of the breadth.)
+    assert!(sums[0] > 13.0 && sums[0] < 19.0 && sums[1] > sums[0] + 4.0, "the far cheek's outline at the mouth's height: {} mm inside its top, {} without the fill", sums[0], sums[1]);
     assert!(men > 11.0, "a man's far cheek lies {men} mm inside its top at the mouth's height");
     assert!(sums[2] < sums[3] + 0.2 && sums[4] < 1.0, "the pad {} mm ({} without the fill), the dent {}", sums[2], sums[3], sums[4]);
     assert!(worst < 0.01 && lips_most < 0.01, "the fill moves a breadth by {worst} mm, the lips' length by {lips_most}");
@@ -1601,4 +1605,69 @@ fn the_lids_of_england_stand_to_the_pupil_as_real_lids_do() {
             assert!(drawn_over + drawn_under > over + under + 0.5 && drawn_iris == set.style.iris_mm / 2.0, "person {k} of {age}: the opening {} mm, measured {}", drawn_over + drawn_under, over + under);
         }
     }
+}
+
+/// Round 115: the drawn lower face runs in to the chin (`Style::jaw`, morph.rs `jaw_narrow`). Its field leaves the
+/// cheekbones, the ears and the face's middle (nose, the lips' middle, the chin's front) where they are; a grown
+/// woman's outline is narrower at the mouth and under it than at the eyes by what the sheets read, and a small
+/// child's head has none of it.
+#[test]
+fn the_drawn_lower_face_runs_in_to_the_chin() {
+    let Some(h) = head() else { return };
+    let field = sc_portrait::jaw_field(&h);
+    for &(a, b) in &CHEEKBONES {
+        // (the band begins at the lowest of them on the base head: under a hundredth, a tenth of a millimetre)
+        assert!(field[a] < 0.01 && field[b] < 0.01, "the field moves a cheekbone's landmark: {} {}", field[a], field[b]);
+    }
+    assert!(field[TRAGION.0] < 1e-6 && field[TRAGION.1] < 1e-6, "the field moves an ear");
+    assert!(field[MENTON] > 0.9, "the field at the chin's lowest point: {}", field[MENTON]);
+    // across the face at the mouth's height, 15 mm in front of the jaw's corners and further forward (as
+    // examples/outline.rs reads the picture, here straight from in front)
+    let across = |pp: &[[f32; 3]], y: f32| {
+        let back = JAW.iter().map(|&(a, b)| pp[a][2] + pp[b][2]).sum::<f32>() / (2 * JAW.len()) as f32 + 0.15;
+        let (mut lo, mut hi) = (f32::MAX, f32::MIN);
+        for t in h.body_full().chunks_exact(3) {
+            for k in 0..3 {
+                let (p, q) = (pp[t[k] as usize], pp[t[(k + 1) % 3] as usize]);
+                if (p[1] - y) * (q[1] - y) < 0.0 {
+                    let f = (y - p[1]) / (q[1] - p[1]);
+                    if p[2] + f * (q[2] - p[2]) > back {
+                        let x = p[0] + f * (q[0] - p[0]);
+                        lo = lo.min(x);
+                        hi = hi.max(x);
+                    }
+                }
+            }
+        }
+        (hi - lo) * 100.0
+    };
+    let n = 40;
+    let (mut drawn, mut plain, mut lips_moved, mut nose_moved) = (0.0f32, 0.0f32, 0.0f32, 0.0f32);
+    for k in 0..n {
+        let p = person(2 * k, true, [24.0, 35.0, 50.0][k as usize % 3]);
+        let with = morph_test(&h, &p);
+        // the same head with the narrowing taken off again
+        let k_jaw = p.dress.set().unwrap().style_jaw_of(true, p.grown(), p.age);
+        assert!(k_jaw > 0.0, "a grown woman of England has no narrowing");
+        let side = sc_portrait::JAW_NARROW.2;
+        let mut without = with.clone();
+        for (v, q) in without.iter_mut().enumerate() {
+            let t = ((h.base[v][0].abs() - side[0]) / (side[1] - side[0])).clamp(0.0, 1.0);
+            q[0] /= 1.0 - k_jaw * field[v] * t * t * (3.0 - 2.0 * t);
+        }
+        let mouth = |pp: &[[f32; 3]]| (pp[STOMION[0]][1] + pp[STOMION[1]][1]) / 2.0;
+        drawn += across(&with, mouth(&with)) / n as f32;
+        plain += across(&without, mouth(&without)) / n as f32;
+        let (a, b) = (face(&h, &with), face(&h, &without));
+        let pos = |name: &str| MEASURES.iter().position(|m| m.0.starts_with(name)).unwrap();
+        lips_moved = lips_moved.max((a[pos("lip length")] - b[pos("lip length")]).abs());
+        nose_moved = nose_moved.max((a[pos("nose breadth")] - b[pos("nose breadth")]).abs());
+    }
+    if std::env::var("SHOW").is_ok() {
+        println!("{n} grown women: across the face at the mouth {drawn:.1} mm, {plain:.1} without the narrowing; the lips' length moves by {lips_moved:.2} mm, the nose's breadth by {nose_moved:.2}");
+    }
+    assert!(drawn < plain - 8.0 && drawn > plain - 22.0, "across the face at the mouth: {drawn} mm, {plain} without the narrowing");
+    assert!(lips_moved < 1.5 && nose_moved < 0.01, "the narrowing moves the lips' length by {lips_moved} mm, the nose's breadth by {nose_moved}");
+    let child = person(1, true, 5.0);
+    assert!(child.dress.set().unwrap().style_jaw_of(true, child.grown(), child.age) == 0.0, "a child of five has the narrowing");
 }

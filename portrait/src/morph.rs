@@ -170,6 +170,42 @@ pub(crate) fn skull_grow_over(h: &Head, pp: &mut [V3], by: [f32; 3], reach: f32)
     }
 }
 
+/// Where `jaw_narrow` works on MakeHuman's base head, in units (1 unit = 10 cm): from the tragion's depth this far
+/// forward nothing of it, from this far all of it (the ears and the neck's sides stay); and over how far under the
+/// chin's lowest point it fades out, from a little over it (the neck stays, and the skin under the jaw is drawn
+/// out over a hand's breadth, not folded at the jaw's edge); and from how far beside the middle it sets in and is whole
+/// (the mouth, whose corners lie about 0.23 out, and the chin's front keep their breadth: the outline moves).
+/// PLACEHOLDER: by eye.
+pub const JAW_NARROW: ([f32; 2], [f32; 2], [f32; 2]) = ([0.02, 0.22], [0.1, 0.9], [0.25, 0.45]);
+
+/// How much of `jaw_narrow` each vertex of the base head takes: 0 at and over the cheekbones' lowest landmark,
+/// rising to 1 at the chin's lowest point, fading out under it, and only in front of the ears.
+pub fn jaw_field(h: &Head) -> Vec<f32> {
+    use crate::measure::{CHEEKBONES, MENTON, TRAGION};
+    let b = &h.base;
+    let (top, chin) = (b[CHEEKBONES[2].0][1], b[MENTON][1]);
+    let tz = (b[TRAGION.0][2] + b[TRAGION.1][2]) / 2.0;
+    let (front, under, _) = JAW_NARROW;
+    b.iter()
+        .map(|q| {
+            let down = sm(0.0, 1.0, (top - q[1]) / (top - chin));
+            let neck = 1.0 - sm(under[0], under[1], chin - q[1]);
+            down * neck * sm(front[0], front[1], q[2] - tz)
+        })
+        .collect()
+}
+
+/// The lower face drawn narrower towards the chin (`Style::jaw`): each vertex towards the middle by `k` times its
+/// share of `jaw_field`, as far as it stands out beside the middle on the base head (`JAW_NARROW`).
+pub(crate) fn jaw_narrow(h: &Head, pp: &mut [V3], k: f32) {
+    let side = JAW_NARROW.2;
+    for (v, w) in jaw_field(h).into_iter().enumerate().take(pp.len()) {
+        if w > 0.0 {
+            pp[v][0] *= 1.0 - k * w * sm(side[0], side[1], h.base[v][0].abs());
+        }
+    }
+}
+
 /// Where the face's front begins on MakeHuman's base head (`face_front`), in units before tragion (1 unit =
 /// 10 cm): nothing of it up to the first (the ear, the neck's front, the back of the jaw's corner), all of it
 /// from the second (the nose, the mouth, the chin, the cheeks' front). PLACEHOLDER: by anatomy and by eye.
@@ -613,6 +649,10 @@ fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, s
     // and the drawn face's braincase larger on top of that (`Style::skull`), over the whole height of the crown
     if let Some(by) = p.dress.set().filter(|_| drawn).map(|d| d.style_skull_of(p.female, p.age)).filter(|by| by.iter().any(|k| *k != 1.0)) {
         skull_grow_over(h, &mut pp, by, STYLE_REACH);
+    }
+    // and the drawn face's lower face narrower towards the chin (`Style::jaw`)
+    if let Some(k) = p.dress.set().filter(|_| drawn).map(|d| d.style_jaw_of(p.female, p.grown(), p.age)).filter(|k| *k != 0.0) {
+        jaw_narrow(h, &mut pp, k);
     }
     // arms down from the A pose, softly weighted around the shoulder joint
     for sg in [1.0f32, -1.0] {

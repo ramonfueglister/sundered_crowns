@@ -4280,6 +4280,59 @@ Tests: `portrait/tests/variety.rs` (every brow nearer the skin's colour by `brow
 `runde114_vorher_nachher_frauen.png`, `runde114_vorher_nachher_maenner.png` (round 113 above, now below),
 `runde114_augen_neben_ck3.png` (the lit eye of five: the reference, round 113, now).
 
+**Round 115: a lower face that runs in to the chin** (2026-11-18). Round 114 ended on it: without veil and
+clothes the women's heads are pears, as broad at the mouth as at the cheekbones. The reference's pictures are
+not at hand in this round (they lay in the files of the project before this one; asked for), so it is held
+to the three numbers round 114 read by hand on face A: in lengths from the line of the eyes to the chin a face
+is about 1.4 broad at the eyes, 1.0 at the mouth and 0.7 between mouth and chin.
+
+**A measure for it**: `portrait/examples/outline.rs` reads the same three off the drawn head of every person
+of a sample, turned as the stage turns it (the skin that stands furthest left and right at a height, the ears
+left out). England's sample before this round, grown women and men (the eight of each):
+
+| | at the eyes | at the mouth | half way from mouth to chin |
+|---|---|---|---|
+| the reference's woman A (by hand, round 114) | 1.4 | 1.0 | 0.7 |
+| women before | 1.40 | 1.21 | 1.04 |
+| women now | 1.40 | 1.06 | 0.83 |
+| men before | 1.31 | 1.13 | 1.01 |
+| men now | 1.31 | 1.05 | 0.90 |
+
+(Round 114's 1.4, 1.4, 1.2 was the heaviest woman, 940020; she is 1.54, 1.35, 1.15 now, before 1.54, 1.50,
+1.40.)
+
+**What does it**: `Style::jaw` in the dress table (0.3 for women, 0.15 for men; a child has none and grows
+into it as into the rest of the drawn face) and `jaw_narrow` in `morph.rs`: every vertex of the face's front
+is drawn towards the middle by that share times its place between the cheekbones (none) and the chin (all),
+fading out down the neck over 9 cm and towards the ears, and only from 2.5 cm beside the middle on, so that
+nose, lips and the chin's front keep their breadth and the outline moves. Across the face at the mouth a
+grown woman's head is 105.6 mm, 123.0 without it; the lips' length and the nose's breadth do not move.
+
+Tried and not kept: MakeHuman's own head forms for it. `head-invertedtriangular` and `head-diamond` at 1.2
+each (taken below the cheekbones only, as the jaw's gene takes them) reach the same numbers (1.39, 1.07,
+0.82) and fold the skin beside the chin into a crease from the mouth's corner down, at 2.4 of the first
+alone into a cut; `head-fat-decr` and the cheeks' volume take the cheeks' fullness, which round 97 gave them.
+
+**The gauntlet**: 20 of 22, the same two lines failing as in round 114 (the nose's back 0.9, 8; a man's far
+cheek -32.3, -16.9). No line moved by more than 0.4.
+
+Honest about it. The numbers are a third to half of the way from ours to face A's, on purpose: at 0.4 for
+women the mean reaches 1.01 and 0.76, and the lean women (940006, 940018: 0.95 and 0.87 at the mouth already)
+get a chin like a wedge. One face read by hand is a thin base, and it was a young, lean one. What a sheet
+shows: the two heavy women (940010, 940020) have lost the sack under the cheeks and read as round faces; on
+the lean ones little changes; the men hardly differ at a glance (their beards and hoods hide the jaw, and
+0.15 is small). What is as it was: the hard edge where the jaw meets the neck on the lit side, the creases
+beside the mouth of the old, eyes, brows, skin. `Style::jaw`, the band and the 2.5 cm are by eye and by three
+numbers of one face: PLACEHOLDER.
+
+Tests: `portrait/tests/faces.rs` (`the_drawn_lower_face_runs_in_to_the_chin`: the field leaves cheekbones,
+ears and the face's middle, a grown woman's face is 8 to 22 mm narrower at the mouth, a child has none; the
+drawn jaw's corners of women held at 0.98 to 1.10 of the measured, before 1.05 to 1.20; the far cheek at the
+mouth 13 to 19 mm inside its top, before 6 to 9.5, which had been fitted to the one outline of round 97).
+Pictures (project files, `portraits/`): `runde115_vorher_nachher_frauen.png`,
+`runde115_vorher_nachher_frauen_ohne_kleider.png`, `runde115_vorher_nachher_maenner.png` (round 114 above,
+now below).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
@@ -4288,7 +4341,8 @@ the neck and linen shows under it, without the bands, trims and fastenings their
 the fine forms of the face (lids, nostrils, edge of the lips), stubble and
 children are not; since round 112 the faces differ from each other as real ones do in what the survey
 measures, by eye in the rest, and wear one hair and one brow each still; since round 113 the face is lit by the
-stage alone (no light painted into the skin, a shaded half in the skin's colour), and still lacks the
+stage alone (no light painted into the skin, a shaded half in the skin's colour), since round 115 the lower
+face runs in to the chin (part of the way), and it still lacks the
 reference's streak of gloss on the nose's flank; the thrown-back hood closes round the neck since round 35, but
 has no folds across its cloth. Since round 111 the people of every part of the world can be drawn, in a plain
 dress that is no people's own, and without a picture of the reference to hold them against.

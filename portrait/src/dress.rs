@@ -168,6 +168,11 @@ pub struct Style {
     pub lids: f32,
     /// The iris across, in millimetres, in place of `iris_mm`: larger with the larger opening it lies in.
     pub iris_mm: f32,
+    /// (round 115) How much narrower the lower face is drawn at the chin, women's and men's: every vertex of the
+    /// face's front between the cheekbones and the chin drawn towards the middle by this share times its place in
+    /// the band (none at the cheekbones, all of it at the chin, morph.rs `jaw_narrow`). The broader head of
+    /// `face` widens the jaw as much as the cheekbones, and beside the reference the faces were pears.
+    pub jaw: [f32; 2],
 }
 
 /// (round 112) How a face follows the person's weight. MakeHuman's targets of weight move the body and the neck
@@ -954,6 +959,7 @@ const ENGLAND: DressSet = DressSet {
         skull: [1.0, 1.0, 1.1],
         lids: 0.35,
         iris_mm: 14.5,
+        jaw: [0.3, 0.15],
     },
     sources: &[
         Source { what: "gown (cote) of wool, pulled over the head, close at the shoulders, round neck; linen worn under it (a shirt, a smock)", source: "Crowfoot, Pritchard & Staniland 1992 (London finds); Østergård 2004 (Herjolfsnes). Summaries only. Cut PLACEHOLDER. The cuts of round 110 (a man's neck opened in a V a hand deep, a woman's cut wide, how much linen shows) are by eye beside the reference: a wide neckline is the fashion of the 1340s to 1360s at court (Newton 1980, summary only), not sourced for a villager's wife." },
@@ -1115,6 +1121,11 @@ impl DressSet {
     }
 
     /// The factor of the drawn face on a person's lids' heights (`Style::lids`).
+    /// How much narrower the lower face is drawn at the chin (`Style::jaw`), as much of it as the head has.
+    pub fn style_jaw_of(&self, female: bool, grown: f32, yrs: f32) -> f32 {
+        by_sex(self.style.jaw[0], self.style.jaw[1], female, grown) * self.style_of(female, yrs)
+    }
+
     pub fn style_lids_of(&self, female: bool, yrs: f32) -> f32 {
         1.0 + (self.style.lids - 1.0) * self.style_of(female, yrs)
     }
