@@ -15,6 +15,8 @@ import { countPeople, settleHamlets } from './systems/hamlets';
 import { foundRulers } from './systems/rulers';
 import { foundBorders } from './systems/borders';
 import { foundLots } from './systems/lots';
+import { foundDeaths } from './systems/deaths';
+import { foundBirths } from './systems/families';
 import { toHeads } from './scale';
 
 export interface SetupRealm {
@@ -57,6 +59,8 @@ export function createWorldState(w: World, setup: SetupState, seed: number): Wor
   // realms the borders bring in take theirs from their capitals
   foundBorders(s, w); // the borders of the day the world starts on (src/sim/systems/borders.ts), before the rulers' seats
   foundRulers(s, w); // before the economy, which leaves them out (src/sim/systems/work.ts) but keeps their purse
+  foundDeaths(s); // the day of death of every person of the towns (src/sim/systems/deaths.ts)
+  foundBirths(s); // the day of the next birth of every wife (src/sim/systems/families.ts)
   foundEconomy(s, w);
   settleHamlets(s); // the families who live from agriculture, by the firms of the economy
   countPeople(s); // the people of a place are its persons (the setup's numbers are only the start of the persons)

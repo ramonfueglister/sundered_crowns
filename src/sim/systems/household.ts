@@ -34,6 +34,7 @@
 // from agriculture are not the same number. Nothing reads `fed` yet; what hunger does to a person belongs to the
 // persons of the world (docs/PEOPLE_DESIGN.md).
 import type { WorldState } from '../state';
+import { ALIVE } from '../state';
 import type { World } from '../world';
 import { ROLE } from './work';
 import { ageOn } from './people';
@@ -74,9 +75,13 @@ export function writeHouseholds(s: WorldState, w: World): void {
   for (let id = 0; id < s.person.size; id++) {
     if (!s.person.alive[id]) continue;
     const f = P.family[id], role = P.role[id];
-    own[id] = basketsOf(ageOn(P.born[id], e.day));
-    F.persons[f]++; baskets[f] += own[id];
-    if (role === ROLE.worker || role === ROLE.owner || role === ROLE.banker) F.working[f]++;
+    // the dead are no members; the money of a dead person whose part nobody has taken yet (src/sim/systems/deaths.ts)
+    // stays with the family
+    if (P.died[id] === ALIVE) {
+      own[id] = basketsOf(ageOn(P.born[id], e.day));
+      F.persons[f]++; baskets[f] += own[id];
+      if (role === ROLE.worker || role === ROLE.owner || role === ROLE.banker) F.working[f]++;
+    }
     income[f] += P.income[id]; spent[f] += P.spent[id]; savings[f] += P.savings[id];
   }
   const price = foodPrices(s), city = new Map<number, number>(Array.from(e.places, (p, k) => [p, k])), cost = w.cityEconomies.foodNeed;
@@ -88,7 +93,7 @@ export function writeHouseholds(s: WorldState, w: World): void {
     F.need[f] = need; F.fed[f] = Math.min(1, Math.max(0, spent[f]) / need);
   }
   for (let id = 0; id < s.person.size; id++) {
-    if (!s.person.alive[id]) continue;
+    if (!s.person.alive[id] || P.died[id] !== ALIVE) continue;
     const f = P.family[id];
     P.consumed[id] = (spent[f] * own[id]) / baskets[f];
   }

@@ -1,6 +1,7 @@
 // The borders (src/sim/systems/borders.ts): the chronicle of borders of 1291 (public/data/borders_1291.json, built by
 // tools/history/borders/build.py) played on a world of 1291. The checks are dates of history the map must show.
 import { describe, it, expect } from 'vitest';
+import { foundDeaths } from '../src/sim/systems/deaths';
 import { readFileSync } from 'node:fs';
 import { loadWorldFor, loadSetup, dataPath } from '../tools/sim/load';
 import { createWorldState } from '../src/sim/setup';
@@ -102,7 +103,9 @@ describe('a world of 1291 saved before the borders', () => {
     expect(up.v).toBe(STATE_VERSION);
     expect(Array.from(up.place.owner)).toEqual(Array.from(s.place.owner));
     expect(up.realmText.map((t) => t.key)).toEqual(s.realmText.map((t) => t.key));
-    foundEconomy(s, w); // step 21 founds the economies anew on the day the world has reached
+    // the saved one gets its persons anew on the day it has reached (step 23, src/sim/upgrade.ts), so the world that
+    // ran is given the same for the comparison
+    s.v = 22; upgradeState(s, w, () => loadSetup(1291));
     expect(hashState(up)).toBe(hashState(s));
   }, 120_000);
 });

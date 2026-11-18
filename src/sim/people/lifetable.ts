@@ -80,3 +80,46 @@ export function personYears(sex: Sex, level: number): Float64Array {
 export function lifeExpectancy(sex: Sex, level: number): number {
   return personYears(sex, level).reduce((s, v) => s + v, 0);
 }
+
+// --- The life table of England around 1300 (people feature 2, part 2; docs/PEOPLE_DESIGN.md) ---
+// La Poutré & Janssen 2021, "A two-parameter hazard function to describe age patterns of mortality in ancient
+// Northwestern Europe", Genus 77(1):12, equations 3 and 11, with the two values fitted to the English tenants-in-chief
+// born before 1276 (their table 2), which are also the defaults of the simulation of La Poutré 2023 (English
+// population 1086–1377, thesis Groningen; program code, Unit2) and of La Poutré & Paping 2025:
+//
+//   μ(x) = (x + 1.5)^(−ω) + e^θ · [1 + e^(x−16) / (1 + e^(x−16))] + e^(β(x−100)) / (1 + e^(β(x−100)))
+//   ω = 119.3·β − 1.01·θ − 14.5, at least 2.7
+//
+// One table for both sexes. The data have no deaths below 15: the mortality of children is what the formula gives.
+export const LPJ = { beta: 0.064, theta: -6.3 } as const;
+const OMEGA = Math.max(2.7, 119.3 * LPJ.beta - 1.01 * LPJ.theta - 14.5);
+/** The cumulative hazard up to the age x (years), the integral of μ. */
+function cumulativeHazard(x: number): number {
+  const L = (a: number) => Math.pow(a + 1.5, 1 - OMEGA) / (1 - OMEGA) + Math.exp(LPJ.theta) * (a + Math.log(1 + Math.exp(a - 16)))
+    + Math.log(1 + Math.exp(LPJ.beta * (a - 100))) / LPJ.beta;
+  return L(x) - L(0);
+}
+/** The share of the newborn who reach the age x (years, not only whole ones). */
+export const survival = (x: number): number => (x >= 120 ? 0 : Math.exp(-cumulativeHazard(Math.max(0, x))));
+/** Survivorship l(a) at whole years a = 0 … 120 (l(0) = 1, nobody lives past 120). */
+export function lifeTable(): Float64Array {
+  const l = new Float64Array(121);
+  for (let a = 0; a < 120; a++) l[a] = survival(a);
+  return l;
+}
+/** Person-years lived in each year of age, the integral of the survival over [a, a + 1) (Simpson, 20 steps). */
+export function yearsLived(): Float64Array {
+  const L = new Float64Array(120), n = 20;
+  for (let a = 0; a < 120; a++) {
+    let sum = survival(a) + survival(a + 1 - 1e-12);
+    for (let k = 1; k < n; k++) sum += (k % 2 ? 4 : 2) * survival(a + k / n);
+    L[a] = sum / (3 * n);
+  }
+  return L;
+}
+/** Years of life left at the age a. */
+export function yearsLeft(a: number): number {
+  const L = yearsLived(); let sum = 0;
+  for (let x = a; x < 120; x++) sum += L[x];
+  return sum / survival(a);
+}

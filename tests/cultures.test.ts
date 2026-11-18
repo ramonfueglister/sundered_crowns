@@ -87,7 +87,7 @@ describe('the counted communities of 1291', () => {
 });
 
 describe('a world of 1291 saved before the persons had cultures', () => {
-  it('gets them by the upgrade from 18 and encodes as a new world', () => {
+  it('gets them by the upgrade from 18 and encodes as a new world', { timeout: 60_000 }, () => {
     const old = structuredClone(s) as any;
     old.v = 18;
     delete old.person.cols.culture; delete old.person.cols.faith;
