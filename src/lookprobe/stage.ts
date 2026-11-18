@@ -55,7 +55,12 @@ const CALM_KEPT = 0.4;
 const LIT_GROUND = 0.32;
 /** the figures of a piece are gone when another layer has taken this share of its dots (see `dissolve`) */
 const FIGURES_GONE = 0.3;
-/** the layer the figures are drawn on: the picture's camera sees it, the water mirror's does not */
+/**
+ * the layer of what the water's mirror does not draw, while the picture's camera sees it: the figures, and the sea
+ * itself (three hides the material of the mesh that asks for the mirror's picture while it draws that, and no more:
+ * the sea has two, its faces' and its lists', and a mesh of the other that is drawn there asks for a mirror image
+ * of the mirror's own camera, which leaves the mirror black)
+ */
 const FIGURES_LAYER = 1;
 
 /**
@@ -69,7 +74,7 @@ export interface Shape {
   small?: boolean;
   /**
    * its rectangles on the grid of blocks, taken out of the lists (faces.ts): the stage draws them beside what the
-   * lists hold, as a mesh of its own. Not of water that mirrors, and not of what `more` adds.
+   * lists hold, as a mesh of its own. Not of what `more` adds.
    */
   faces?: Faces;
   /**
@@ -250,7 +255,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     water.emissiveNode = hashBlur(mirror, float(LOOK.mirrorBlur), { repeats: float(24) }).rgb.mul(tint);
   }
   // A mesh's rectangles on the grid of blocks come as faces (faces.ts), a row of numbers to each, and their corners
-  // are made here: each of the six corners of a face's two triangles knows which of the face's four it is (one way
+  // are made here: each of the four corners of a face's two triangles knows which of the face's four it is (one way
   // round and the other), and takes its place and its colour from the face's row by that. The numbers of 16 bits
   // reach the shader as shares of 32767 and are whole again before they are used, so a corner lies where the
   // builder put it, to the last bit.
@@ -261,11 +266,16 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   const level = whole(lie.y).div(FACE_STEPS), alongU = whole(select(corner.greaterThan(0.5).and(corner.lessThan(2.5)), lie.w, lie.z)).div(FACE_STEPS), alongV = whole(select(corner.greaterThan(1.5), reach.y, reach.x)).div(FACE_STEPS);
   const tones = [0, 1, 2, 3].map((k) => attribute(`tone${k}`, 'vec4') as unknown as ReturnType<typeof vec4>);
   const toneOf = select(corner.lessThan(0.5), tones[0], select(corner.lessThan(1.5), tones[1], select(corner.lessThan(2.5), tones[2], tones[3])));
-  const faced = new THREE.MeshLambertNodeMaterial();
-  faced.positionNode = select(axis.lessThan(0.5), vec3(level, alongU, alongV), select(axis.lessThan(1.5), vec3(alongU, level, alongV), vec3(alongU, alongV, level)));
+  const faced = new THREE.MeshLambertNodeMaterial(), placed = select(axis.lessThan(0.5), vec3(level, alongU, alongV), select(axis.lessThan(1.5), vec3(alongU, level, alongV), vec3(alongU, alongV, level)));
+  faced.positionNode = placed;
   // (a face's colours are always bytes: see `toned`)
   faced.colorNode = materialColor.mul(toneOf.rgb.mul(toneOf.a.mul((2 * 255) / 254)).toVarying().clamp(0, MOST));
   faced.maskNode = solid.maskNode;
+  // The sea's faces: its level is on no 64th of a block, so the mesh says how far above their numbers its faces lie
+  // (faces.ts `lift`); and they mirror as the sea's lists do.
+  const seaFaced = new THREE.MeshLambertNodeMaterial();
+  seaFaced.positionNode = placed.add(vec3(0, userData('lift', 'float') as unknown as ReturnType<typeof float>, 0));
+  seaFaced.colorNode = faced.colorNode; seaFaced.maskNode = solid.maskNode; seaFaced.emissiveNode = water.emissiveNode;
   // Faces that glide to the shape of the next coarser step (worldprobe/glide.ts): each has the level or the span in
   // height it ends up at and the colours of its corners there, and the mesh says how far it has glided (0 … 1,
   // `Stage.glide`). A level face moves to its level there. An upright face's two ends in height move each to its own;
@@ -289,12 +299,17 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   const sinking = coloured();
   sinking.maskNode = solid.maskNode;
   sinking.positionNode = vec3(positionGeometry.x, mix(positionGeometry.y, attribute('sink', 'float') as unknown as ReturnType<typeof float>, glided), positionGeometry.z);
-  /** which of a face's four corners each of the six is, where its triangles turn one way and where the other */
-  const CORNERS = new Float32Array(FACE_CORNERS[0].flatMap((c, k) => [c, FACE_CORNERS[1][k], 0]));
+  /**
+   * A face's four corners, each worked out once: which of the face's four each of the mesh's is, where its triangles
+   * turn one way and where the other (faces.ts FACE_CORNERS, whose six are these four, the first and the third
+   * twice); and the two triangles of them.
+   */
+  const CORNERS = new Float32Array([0, 1, 2, 5].flatMap((k) => [FACE_CORNERS[0][k], FACE_CORNERS[1][k], 0])), TRIANGLES = new Uint16Array([0, 1, 2, 0, 2, 3]);
   const faceGeometry = (s: Shape) => {
     const f = s.faces!, g = new THREE.InstancedBufferGeometry();
-    // (the six corners are the same for every mesh, but each has a list of its own: a mesh that goes takes its lists with it)
+    // (the four corners are the same for every mesh, but each has a list of its own: a mesh that goes takes its lists with it)
     g.setAttribute('position', new THREE.BufferAttribute(CORNERS, 3));
+    g.setIndex(new THREE.BufferAttribute(TRIANGLES, 1));
     const lies = new THREE.InstancedInterleavedBuffer(f.geo, FACE_GEO), colours = new THREE.InstancedInterleavedBuffer(f.col, FACE_COL);
     g.setAttribute('lie', new THREE.InterleavedBufferAttribute(lies, 4, 0, true)); g.setAttribute('reach', new THREE.InterleavedBufferAttribute(lies, 2, 4, true));
     for (let k = 0; k < 4; k++) g.setAttribute(`tone${k}`, new THREE.InterleavedBufferAttribute(colours, 4, k * 4, true));
@@ -346,7 +361,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     sky.color.copy(colour('skyColor')); sky.groundColor.set(L.bounceColor).multiplyScalar(at('bounce') / at('sky')); sky.intensity = at('sky') * Math.PI;
     // the mirror image is laid over what the water keeps of its own colour
     tint.value.copy(colour('mirrorTint')).multiplyScalar(at('mirror'));
-    if (water !== solid) water.color.setRGB(1 - tint.value.r, 1 - tint.value.g, 1 - tint.value.b);
+    if (water !== solid) { water.color.setRGB(1 - tint.value.r, 1 - tint.value.g, 1 - tint.value.b); seaFaced.color.copy(water.color); }
     pending = Math.max(pending, 1);
   };
 
@@ -541,10 +556,10 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     made.castShadow = casts; made.receiveShadow = true; made.userData.dots = new THREE.Vector2(0, 1); made.userData.ink = 1;
     return made;
   };
-  /** The faces of a shape as a mesh: one drawing of the six corners for every face. */
-  const faceMesh = (shape: Shape, casts: boolean) => {
-    const f = shape.faces!, made = new THREE.Mesh(faceGeometry(shape), f.aim && f.aimCol ? gliding : faced);
-    made.castShadow = casts; made.receiveShadow = true; made.userData.dots = new THREE.Vector2(0, 1); made.userData.ink = 1; made.userData.glide = 0;
+  /** The faces of a shape as a mesh: one drawing of the four corners and their two triangles for every face. */
+  const faceMesh = (shape: Shape, casts: boolean, sea = false) => {
+    const f = shape.faces!, made = new THREE.Mesh(faceGeometry(shape), sea ? seaFaced : f.aim && f.aimCol ? gliding : faced);
+    made.castShadow = casts; made.receiveShadow = true; made.userData.dots = new THREE.Vector2(0, 1); made.userData.ink = 1; made.userData.glide = 0; made.userData.lift = f.lift ?? 0;
     // (a ray finds the faces by their rows: the mesh's own corners are not where they are drawn)
     made.raycast = (ray, hits) => {
       const own = ray.ray.clone().applyMatrix4(new THREE.Matrix4().copy(made.matrixWorld).invert()), t = faceHit(f, own.origin.toArray(), own.direction.toArray());
@@ -603,7 +618,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     for (const made of cold) {
       const bytes = weight(made.geometry);
       if (sending.length && bytes > room) break;
-      const standIn = new THREE.Mesh(made.geometry, made.material === faced || made.material === gliding ? made.material : solid);
+      const standIn = new THREE.Mesh(made.geometry, made.material === seaFaced ? faced : made.material === faced || made.material === gliding ? made.material : solid);
       // (all that the material reads of a mesh, as its own mesh has it)
       standIn.userData = { ...made.userData, ground: false, dots: new THREE.Vector2(0, 0) };
       // (it lies on the layer the water's mirror does not draw, and casts no shadow: one pass sends the lists)
@@ -637,10 +652,11 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
       group.position.set(x, 0, z);
       for (const [shape, material, casts] of [[built.ground, solid, true], [built.carried, solid, true], [built.things, solid, true], [built.water, water, false], [built.raised, solid, false]] as const) {
         if (!shape) continue;
-        for (const part of [...(shape.faces?.geo.length ? [cool(faceMesh(shape, casts))] : []), ...(shape.pos.length ? parts(shape).map((some) => cool(mesh(some, some.sink && material === solid ? sinking : material, casts))) : [])]) {
+        for (const part of [...(shape.faces?.geo.length ? [cool(faceMesh(shape, casts, shape === built.water))] : []), ...(shape.pos.length ? parts(shape).map((some) => cool(mesh(some, some.sink && material === solid ? sinking : material, casts))) : [])]) {
           if (part.material === sinking) part.userData.glide = 0;
           part.userData.ground = shape === built.ground || shape === built.carried;
           if (shape === built.things || shape === built.carried) part.userData.ink = 0;
+          if (shape === built.water) part.layers.set(FIGURES_LAYER);
           group.add(part);
         }
       }

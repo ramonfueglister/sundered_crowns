@@ -4,7 +4,8 @@
 import { Batch } from '../lookprobe/batch';
 import type { Shape } from '../lookprobe/stage';
 import { buildOpenSea } from '../lookprobe/terrain';
-import { GRID, N, onGrid } from '../lookprobe/layout';
+import { FACE_STEPS } from '../lookprobe/faces';
+import { GRID, N, SEA_Y, onGrid } from '../lookprobe/layout';
 import { maybeGunzip } from '../render/assets';
 import { buildPiece } from './build';
 import { type Cover, KINDS, laidOut } from './far';
@@ -24,6 +25,8 @@ type Kept = Pick<PieceDone, 'scene' | 'summary'>;
 const nothing: Shape = { pos: new Float32Array(0), nor: new Float32Array(0), col: new Float32Array(0) };
 /** from this step on a piece has no houses of its cells and no figures, which stand as they are: such a piece can glide to the coarser step (glide.ts) */
 const GLIDES_FROM = 2;
+/** the sea's level above the 64th of a block under it */
+const SEA_LIFT = SEA_Y - Math.floor(SEA_Y * FACE_STEPS) / FACE_STEPS;
 
 /** What a piece of the finest step shows, summed up four blocks to one of the next step (mean.ts); null where it is open sea. */
 function summed(fine: WorldScene | null, part: Piece['part']): Float32Array | null {
@@ -162,11 +165,12 @@ self.onmessage = async (e: MessageEvent<PieceJob>) => {
     if (built && mean && e.data.mean === 'compare') compare(built.counts, mean, piece.part, built.ground, built.carried);
     // how long the piece took to build, and of that the finer step under it (a tool reads the sums)
     if (built) { built.counts[`ms step ${step}`] = Math.round(performance.now() - began); built.counts[`pieces step ${step}`] = 1; if (mean) built.counts['ms mean'] = Math.round(meant - began); if (ahead) built.counts[`pieces from tables step ${step}`] = 1; }
-    // (the sea mirrors, by a material of its own, and the houses of a cell are one mesh that gives way to finer ones: both stay lists;
-    // so do the water above the sea and the things of a piece that glides, whose every corner moves to its place in the coarser step)
-    const flat = e.data.small ? small : floats, solid = e.data.small && e.data.faces ? faced : flat;
-    const scene: WorldScene<Shape> = built ? { ground: solid(built.ground), carried: built.carried && solid(built.carried), things: (glides ? flat : solid)(built.things), water: flat(built.water), raised: (glides ? flat : solid)(built.raised!), figures: built.figures, cells: built.cells.map((c) => ({ ...c, far: flat(c.far) })), counts: built.counts }
-      : { ground: nothing, things: nothing, water: flat(buildOpenSea(piece.ox, piece.oz, piece.part)), cells: [], counts: {} };
+    // (the houses of a cell are one mesh that gives way to finer ones: they stay lists; so do the water above the sea
+    // and the things of a piece that glides, whose every corner moves to its place in the coarser step. The sea's
+    // level is on no 64th of a block: its faces lie on a grid of their own)
+    const flat = e.data.small ? small : floats, solid = e.data.small && e.data.faces ? faced : flat, sea = e.data.small && e.data.faces ? (b: Batch) => faced(b, SEA_LIFT) : flat;
+    const scene: WorldScene<Shape> = built ? { ground: solid(built.ground), carried: built.carried && solid(built.carried), things: (glides ? flat : solid)(built.things), water: sea(built.water), raised: (glides ? flat : solid)(built.raised!), figures: built.figures, cells: built.cells.map((c) => ({ ...c, far: flat(c.far) })), counts: built.counts }
+      : { ground: nothing, things: nothing, water: sea(buildOpenSea(piece.ox, piece.oz, piece.part)), cells: [], counts: {} };
     // the piece glides to the shape of the coarser piece over it, where that has a table
     if (built && glides && own && !built.cells.length && !built.figures) {
       const before = performance.now(), over = await tableOver(e.data);

@@ -25,7 +25,8 @@ function pair(over = OVER): { fine: Table; parent: Table } {
   });
 }
 function piece(over = OVER) {
-  const { fine, parent } = pair(over), drawn = drawTable(fine, true), ground = faced(drawn.ground), carried = faced(drawn.carried!), water = small(drawn.water), raised = faced(drawn.raised);
+  // (the meshes as the worker hands them over: the sea as faces on a grid lifted to its level, the water above it as lists)
+  const { fine, parent } = pair(over), drawn = drawTable(fine, true), ground = faced(drawn.ground), carried = faced(drawn.carried!), water = faced(drawn.water, SEA_Y - Math.floor(SEA_Y * S) / S), raised = small(drawn.raised);
   const before = { faces: ground.faces!.geo.length / FACE_GEO, geo: ground.faces!.geo.slice(), col: ground.faces!.col.slice(), banks: ground.pos.length / 9, water: water.pos.length / 9, raised: raised.pos.length / 9 };
   const columns = glide({ ground, carried, water, raised }, fine, parent, true);
   return { fine, parent, shapes: { ground, carried, water, raised }, ground: ground.faces!, carried: carried.faces!, before, columns };
@@ -316,11 +317,11 @@ describe('the glide of a far piece to the coarser one over it', () => {
       }
       const f = shape.faces;
       if (f) for (let k = 0; k < f.geo.length / FACE_GEO; k++) for (const share of [0, 1]) {
-        const g = k * FACE_GEO, axis = f.geo[g] % FLIPPED, [end0, end1] = glided(f, k, share);
+        const g = k * FACE_GEO, axis = f.geo[g] % FLIPPED, [end0, end1] = glided(f, k, share), lift = f.lift ?? 0;
         for (const a of [0, 1]) for (const b of [0, 1]) {
-          if (axis === 1) lies(f.geo[g + 2 + a] / S, end0 / S, f.geo[g + 4 + b] / S);
-          else if (axis === 0) lies(f.geo[g + 1] / S, (a ? end1 : end0) / S, f.geo[g + 4 + b] / S);
-          else lies(f.geo[g + 2 + a] / S, (b ? end1 : end0) / S, f.geo[g + 1] / S);
+          if (axis === 1) lies(f.geo[g + 2 + a] / S, end0 / S + lift, f.geo[g + 4 + b] / S);
+          else if (axis === 0) lies(f.geo[g + 1] / S, (a ? end1 : end0) / S + lift, f.geo[g + 4 + b] / S);
+          else lies(f.geo[g + 2 + a] / S, (b ? end1 : end0) / S + lift, f.geo[g + 1] / S);
         }
       }
       expect(out, name).toBeLessThanOrEqual(1e-3);

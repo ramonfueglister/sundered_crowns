@@ -37,9 +37,11 @@ export function small(b: { pos: ArrayLike<number>; nor: ArrayLike<number>; col: 
 
 /**
  * The lists of a mesh with small numbers, and of those its rectangles on the grid as faces (see above): pairs of
- * triangles that follow each other, as `Batch.quad` makes them. What is left stays in the lists.
+ * triangles that follow each other, as `Batch.quad` makes them. What is left stays in the lists. `lift`: the grid
+ * lies this many blocks higher, for a mesh whose heights are on no 64th of a block (the sea: its faces then tell the
+ * stage to draw them that much higher).
  */
-export function faced(b: { pos: ArrayLike<number>; nor: ArrayLike<number>; col: ArrayLike<number> }): Shape {
+export function faced(b: { pos: ArrayLike<number>; nor: ArrayLike<number>; col: ArrayLike<number> }, lift = 0): Shape {
   const all = small(b), pos = all.pos as Float32Array, nor = all.nor as Int8Array, col = all.col as Uint8Array, tris = pos.length / 9;
   const geo = new Int16Array(Math.floor(tris / 2) * FACE_GEO), tones = new Uint8Array(Math.floor(tris / 2) * FACE_COL), turned = new Int8Array(Math.floor(tris / 2) * 4);
   /** the triangles that stay, by their first corner */
@@ -64,7 +66,13 @@ export function faced(b: { pos: ArrayLike<number>; nor: ArrayLike<number>; col: 
       if (same(i + 2, j + 1)) { bb = i + 1; c = i + 2; d = j + 2; } else if (same(i + 1, j + 2)) { bb = j + 1; c = j + 2; d = i + 2; } else break face;
       // all four on the grid of 64ths, on one level across the axis
       const u = axis === 0 ? 1 : 0, v = axis === 2 ? 1 : 2, four = [a, bb, c, d];
-      for (let k = 0; k < 4; k++) for (let m = 0; m < 3; m++) { const w = pos[four[k] * 3 + m] * FACE_STEPS; if (!Number.isInteger(w) || Math.abs(w) > 32767) break face; q[k * 3 + m] = w; }
+      for (let k = 0; k < 4; k++) for (let m = 0; m < 3; m++) {
+        let w = pos[four[k] * 3 + m] * FACE_STEPS;
+        // (a height on the lifted grid: the lift is no float of 32 bits, so the height is whole but for the last bits)
+        if (lift && m === 1) { w -= lift * FACE_STEPS; if (Math.abs(w - Math.round(w)) < 1e-3) w = Math.round(w); }
+        if (!Number.isInteger(w) || Math.abs(w) > 32767) break face;
+        q[k * 3 + m] = w;
+      }
       if (q[3 + axis] !== q[axis] || q[6 + axis] !== q[axis] || q[9 + axis] !== q[axis]) break face;
       // a rectangle along the two other axes: b lies along u from a, or along v
       const ua = q[u], va = q[v], ub = q[3 + u], vb = q[3 + v], uc = q[6 + u], vc = q[6 + v], ud = q[9 + u], vd = q[9 + v];
@@ -85,7 +93,7 @@ export function faced(b: { pos: ArrayLike<number>; nor: ArrayLike<number>; col: 
   const n = left.length * 3, rest: Shape = { pos: new Float32Array(n * 3), nor: new Int8Array(n * 4), col: new Uint8Array(n * 4), ball: all.ball, small: true };
   left.forEach((i, k) => { (rest.pos as Float32Array).set(pos.subarray(i * 3, i * 3 + 9), k * 9); (rest.nor as Int8Array).set(nor.subarray(i * 4, i * 4 + 12), k * 12); (rest.col as Uint8Array).set(col.subarray(i * 4, i * 4 + 12), k * 12); });
   // (lists of their own, as long as the faces are many: they are handed over and kept on disk)
-  rest.faces = { geo: geo.slice(0, faces * FACE_GEO), col: tones.slice(0, faces * FACE_COL), nor: turned.slice(0, faces * 4) };
+  rest.faces = { geo: geo.slice(0, faces * FACE_GEO), col: tones.slice(0, faces * FACE_COL), nor: turned.slice(0, faces * 4), ...(lift ? { lift } : {}) };
   return rest;
 }
 

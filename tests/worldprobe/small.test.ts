@@ -113,6 +113,24 @@ describe('faced', () => {
     expect(triangles(f)).toEqual(triangles(small(b)));
   });
 
+  it('takes the sea as faces on a grid lifted to its level, and gives back its very triangles', () => {
+    // the sea's level is on no 64th of a block: its faces lie this far above the 64th under it
+    const SEA = 2.7, lift = SEA - Math.floor(SEA * 64) / 64, b = new Batch();
+    for (let z = 100; z < 110; z++) for (let x = 100; x < 110; x++) b.quad([x, SEA, z], [x, SEA, z + 1], [x + 1, SEA, z + 1], [x + 1, SEA, z], [[0.1, 0.3, 0.5], [0.1, 0.32, 0.5], [0.12, 0.3, 0.5], [0.1, 0.3, 0.52]], [0, 1, 0]);
+    // (and one sheet that is on that grid without the lift: it is none of the sea's and stays a list)
+    b.quad([120, 3, 120], [120, 3, 121], [121, 3, 121], [121, 3, 120], [0.3, 0.3, 0.3], [0, 1, 0]);
+    expect(faced(b).faces!.geo.length / FACE_GEO).toBe(1);
+    const f = faced(b, lift);
+    expect(f.faces!.geo.length / FACE_GEO).toBe(100);
+    expect(f.faces!.lift).toBe(lift);
+    expect(f.pos.length / 9).toBe(2);
+    expect(triangles(f, unfaced(f.faces!))).toEqual(triangles(small(b)));
+    // a ray finds the sea where it lies, not where its numbers put it
+    expect(faceHit(f.faces!, [105.5, 10, 105.5], [0, -1, 0])).toBeCloseTo(10 - SEA, 9);
+    // and a mesh without a lift says nothing of one
+    expect(faced(mixed()).faces!.lift).toBeUndefined();
+  });
+
   it('lets a ray find the first face it meets from the front', () => {
     const f = faced(mixed()).faces!;
     // straight down onto the first block's top, and onto the top with four colours over the face that looks down
