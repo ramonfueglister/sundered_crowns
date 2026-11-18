@@ -29,9 +29,10 @@ pub const FORMAT_CITIES: u32 = 1;
 /// Version of the byte format. A change to the pinned port that changes its state needs a new number and a step in
 /// the world's upgrade chain (src/sim/upgrade.ts). 2: the fields of the daily clock. 3: the wages in money.
 /// 4: the demand pull. 5: of the national accounts the clock keeps the series that the key figures sum, the port
-/// keeps its last row. 6: the clock can keep the past in a fixed size ([`crate::past`]). States of formats 4 and 5
-/// are still read and become format 6 when they are saved ([`load`]); they keep the whole past, as they had it.
-pub const FORMAT: u32 = 6;
+/// keeps its last row. 6: the clock can keep the past in a fixed size ([`crate::past`]). 7: the spending out of
+/// savings (economy feature 15). States of formats 4 to 6 are still read and become format 7 when they are saved
+/// ([`load`]); formats 4 and 5 keep the whole past, as they had it, and none of them spends out of savings.
+pub const FORMAT: u32 = 7;
 const NONE: u32 = u32::MAX;
 /// The length of the last state of cities written ([`save_cities`]): how much room the next one is given at once.
 /// It changes no byte of a state.
@@ -656,7 +657,7 @@ fn get_data(i: &mut In) -> Res<Data> {
 
 fn put_clock(o: &mut Out, c: &DailyClock) {
     // `trade` is set for the length of a period only (src/trade.rs): a saved economy has none
-    let DailyClock { plan, window, demand, periods, start, accounts, wage, real_wage, demand_pull, past, trade: _ } = c;
+    let DailyClock { plan, window, demand, periods, start, accounts, wage, real_wage, demand_pull, savings, norm, past, trade: _ } = c;
     o.n(*plan);
     o.n(*window);
     o.f64s(demand);
@@ -693,6 +694,8 @@ fn put_clock(o: &mut Out, c: &DailyClock) {
             }
         }
     }
+    o.f64(*savings);
+    o.f64(*norm);
 }
 
 fn get_series(i: &mut In, window: usize) -> Res<Series> {
@@ -741,7 +744,12 @@ fn get_clock(i: &mut In, format: u32) -> Res<DailyClock> {
     }
     // formats before 6 keep the whole past in the port's lists
     let past = if format >= 6 && i.bool()? { Some(Past { periods: i.n()?, Y: get_series(i, window)?, pi: get_series(i, window)? }) } else { None };
-    Ok(DailyClock { plan, window, demand, periods, start, accounts, wage, real_wage, demand_pull, past, trade: None })
+    // formats before 7 know no spending out of savings
+    let (savings, norm) = if format >= 7 { (i.f64()?, i.f64()?) } else { (0.0, -1.0) };
+    if !(0.0..=1.0).contains(&savings) {
+        return Err(format!("a clock with a share of {savings} of the savings spent per period"));
+    }
+    Ok(DailyClock { plan, window, demand, periods, start, accounts, wage, real_wage, demand_pull, savings, norm, past, trade: None })
 }
 
 /// The model and its random number generator as bytes. The same model always gives the same bytes.

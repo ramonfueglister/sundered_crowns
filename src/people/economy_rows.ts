@@ -31,7 +31,8 @@ export function economyRows(p: PersonDetail): [string, string][] {
 
 /** The rows of the panel about the household of the person's family (economy feature 11): [label, value]. The
  *  family is the purse: its income and spending are those of all its members, and the person consumes a share of
- *  the spending by baskets. */
+ *  the spending by baskets. Since feature 15 also what the food the family needs costs a day, and the part of it
+ *  the family covered (not shown for a family of a place without an economy). */
 export function householdRows(p: PersonDetail): [string, string][] {
   const h = p.household;
   if (!h) return [];
@@ -39,5 +40,6 @@ export function householdRows(p: PersonDetail): [string, string][] {
     ['Personen', String(h.persons)], ['davon erwerbstätig', String(h.working)],
     ['Einkommen am Tag', pence(h.income)], ['Ausgaben am Tag', pence(h.spent)],
     ['Eigener Verbrauch am Tag', pence(h.consumed)], ['Erspartes', lsd(h.savings)],
+    ...(h.need > 0 ? [['Nahrungsbedarf am Tag', pence(h.need)], ['davon gedeckt', `${Math.round(100 * h.fed)} %`]] as [string, string][] : []),
   ];
 }

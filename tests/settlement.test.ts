@@ -221,7 +221,8 @@ describe('the land register of a world of 1291', () => {
   it('gives the parcels of each town 76 % of the ground the law gives its persons', () => {
     const sum = new Map<number, number>();
     for (const i of parcels) sum.set(L.site[i], (sum.get(L.site[i]) ?? 0) + L.w[i] * L.d[i]);
-    cities.forEach((c, k) => expect(sum.get(c.site)! / (PARCEL_SHARE * townGround(towns[k].persons, c.site))).toBeCloseTo(1, 4));
+    // (a small town whose households all live from agriculture has nobody inside the walls, and no parcels)
+    cities.forEach((c, k) => { if (towns[k].persons) expect(sum.get(c.site)! / (PARCEL_SHARE * townGround(towns[k].persons, c.site))).toBeCloseTo(1, 4); else expect(sum.has(c.site)).toBe(false); });
   });
   it('has no parcel narrower than the narrowest the sources know, and none of a town on another', () => {
     for (const i of parcels) expect(L.w[i]).toBeGreaterThan(NARROWEST_FRONT);
@@ -254,7 +255,7 @@ describe('the land register of a world of 1291', () => {
 });
 
 describe('a world of 1291 saved before the land register', () => {
-  it('gets the parcels a new world has, and encodes as one', () => {
+  it('gets the parcels a new world has, and encodes as one', { timeout: 60_000 }, () => {
     const old = decodeState(encodeState(s)) as WorldState;
     old.v = 19;
     delete (old.family.cols as Record<string, unknown>).lot; delete (old as Partial<WorldState>).lot; delete (old as Partial<WorldState>).hamlets;

@@ -33,6 +33,11 @@ export interface CalibrationTable {
     /** how the firms of a city plan supply and price (economy feature 8): 'demand' is the demand pull of CANVAS,
      *  'costs' the rule of the paper */
     prices: Entry<'demand' | 'costs'>;
+    /** the share of what a household holds above its target that it spends in a year (economy feature 15);
+     *  0: a household spends out of its income only, as in the port */
+    savings_spent_per_year: Entry<number>;
+    /** the kilocalories a basket needs per day (economy feature 15): an adult is one basket, a child half of one */
+    food_need_kcal: Entry<number>;
   };
   sectors: string[];
   inputs: {
@@ -68,6 +73,8 @@ export interface CalibrationTable {
     bank_equity_of_coin: Entry<number>;
     rest_of_the_world: Entry<{ output: number; inflation: number }>;
     behaviour: Entry<{ theta: number; zeta: number; zeta_LTV: number; zeta_b: number; omega: number }>;
+    /** the kilocalories per head and day behind what the households buy from agriculture (economy feature 15) */
+    food_kcal_per_head: Entry<number>;
   };
   history: {
     first_year: number;
@@ -250,6 +257,16 @@ export function calibrateEconomy(t: CalibrationTable): EconomyCalibration {
     gdpCheck: sum(households) + sum(crown) + sum(investment) + building + X + duty - sum(imports) - gdp,
   };
   return { case: t.case, year: t.year, scale: S, periods_per_year: 1, clock: { plan: 1, window: 1 }, parameters, initial_conditions, accounts };
+}
+
+/** What the food a basket needs costs per day at the prices of the start, in £ (economy feature 15,
+ *  src/sim/systems/household.ts). The table says what its households buy from agriculture in a year and how many
+ *  kilocalories per head and day that is (`food_kcal_per_head`); a basket needs `food_need_kcal` of them. The scale
+ *  drops out: the amount is per person. */
+export function foodNeedCost(t: CalibrationTable): number {
+  const a = calibrateEconomy(t).accounts as { households: number[]; people: number };
+  const perHeadAndDay = a.households[0] / a.people / t.clock.days_per_year.value;
+  return perHeadAndDay * t.cities.food_need_kcal.value / t.inputs.food_kcal_per_head.value;
 }
 
 /** The owners of the bank among the active persons of the model: the port has one bank (`n_banks`), and the

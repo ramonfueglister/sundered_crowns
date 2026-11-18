@@ -20,8 +20,12 @@ import type { Table } from './ecs';
  *  (src/sim/systems/borders.ts): places change hands on their days, realms come in with their first places. 19: every
  *  person has a culture and a faith, the counted minorities of the towns among them; a place has none of its own: it
  *  has those of its persons (src/sim/systems/cultures.ts). 20: the land register (src/sim/systems/lots.ts): every family that
- *  lives in a town has a parcel, and every family of the hamlets a farmstead in a hamlet. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
-export const STATE_VERSION = 20;
+ *  lives in a town has a parcel, and every family of the hamlets a farmstead in a hamlet. 21: households spend out of
+ *  their savings and a family has a need of food (economy feature 15); the economies are founded anew. 22: the persons of the towns die
+ *  (src/sim/systems/deaths.ts): every person has the day of death that was drawn from the life table. 23: the persons marry and are born
+ *  (src/sim/systems/families.ts), after England around 1300: the life table of La Poutré & Janssen 2021, a fixed number of
+ *  households in every town, a wedding only into a vacant one; the persons are founded anew. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
+export const STATE_VERSION = 23;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
@@ -81,6 +85,11 @@ export const PERSON_SCHEMA = {
   /** the culture and the faith of the person (indices of ALL_CULTURES and FAITHS, src/sim/content/peoples.ts;
    *  src/sim/systems/cultures.ts) */
   culture: 'u16', faith: 'u8',
+  /** the day the person will die, drawn from the life table when the person comes into the world
+   *  (src/sim/systems/deaths.ts); ALIVE for a ruler, who dies on the day of the chronicle */
+  dies: 'i32',
+  /** the day a wife bears her next child (src/sim/systems/families.ts), ALIVE while none is due */
+  bears: 'i32',
 } as const;
 /** `died` of a living person. */
 export const ALIVE = 0x7fffffff;
@@ -98,11 +107,19 @@ export const FAMILY_SCHEMA = {
   /** of the last day, in £ at the scale of the world: the disposable income and the spending of all its members;
    *  and their savings */
   income: 'f32', spent: 'f32', savings: 'f32',
+  /** what the food the family needs costs on that day, in £ (economy feature 15: 2,100 kcal per basket at the price
+   *  of the city's agriculture), and the part of it the family covered with what it spent, 0 to 1. `need` 0: the
+   *  family's place has no economy and `fed` says nothing */
+  need: 'f32', fed: 'f32',
   /** 1: the family lives from agriculture and lives in a hamlet outside the walls of its town (src/sim/systems/hamlets.ts) */
   hamlet: 'u8',
   /** the parcel or the farmstead the family lives on (the land register below, src/sim/systems/lots.ts), NO_LOT
    *  when it has none. Several families may share one; at the founding each has its own */
   lot: 'i32',
+  /** 1: the family is a household of its town, with the woman at its head as its housewife. The towns have a fixed
+   *  number of them; a household whose housewife has died is vacant until a wedding fills it or takes its seat
+   *  (src/sim/systems/families.ts) */
+  seat: 'u8',
 } as const;
 export type FamilySchema = typeof FAMILY_SCHEMA;
 /** `lot` of a family without a parcel. */

@@ -7,7 +7,7 @@ import { ACACIA, CYPRESS, JUNGLE, LEAVES, PALM, acacia, cypress, palm, tree } fr
 import { type Ground, type GroundTraits, LAND_Y, Mat, N, SEA_Y, SUMMIT, idx, inGrid, measureShore, occlude, rockPillar } from '../lookprobe/layout';
 import type { Shape, StageScene } from '../lookprobe/stage';
 import { crowd } from '../figures';
-import { type Part, buildTerrain, buildWater } from '../lookprobe/terrain';
+import { type Part, WATER_SHALLOW, buildTerrain, buildWater } from '../lookprobe/terrain';
 import { buildShore } from '../lookprobe/shore';
 import { type Climate, FIELDS_KNOWN, KIND, Land, WOODS_KNOWN, climateAt, snowLineAt, treeLineAt } from './climate';
 import { type Arable, arableAt } from './arable';
@@ -71,8 +71,19 @@ const SLOPE = rgb(0x86983c);
  * 300 m, more than most were, so that they show from the low camera; never less than a block
  */
 const RIVER_HALF = 0.5, BROOK_HALF = 0.3;
+/**
+ * From afar a block is wider than a river. A river narrower than STREAM_BELOW blocks is then no row of water blocks
+ * (which made a brook many times its width, until the next step dropped it at once) but colours the blocks it runs
+ * through: by its width as a share of the block, STREAM_SEEN times that for the banks that show with it, and never
+ * less than STREAM_LEAST, so that its line can be followed. The greatest rivers of a step stay water: by the data's
+ * step (1 is the first coarser than the land's cells) those of at most this rank, the rivers that are still there
+ * two steps farther out (tools/worldprobe/build_overviews.py RANK).
+ */
+const STREAM_BELOW = 0.4, STREAM_SEEN = 1.5, STREAM_LEAST = 0.35, STREAM_RANK: Record<number, number> = { 1: 8, 2: 6, 3: 5, 4: 4, 5: 3, 6: 2, 7: 2 };
 /** trees stand on a world grid of this pitch, each moved a little off its point */
 const TREE_PITCH = 2.4;
+/** what far.ts lays on a column (far.ts KINDS) that stands on the ground: houses, walls, great buildings, crops and woods; fallow soil is the ground's own */
+const STANDS: ReadonlySet<number> = new Set([1, 2, 3, 5, 6, 7, 8, 9]);
 /** of the places for a tree, this share carries one on the open land (single trees), and this much more inside a wood: the woods stand closed, the land between them is clear */
 const STRAY_TREES = 0.01, CLOSED = 0.88;
 /** km to a degree of longitude at the equator */
@@ -242,10 +253,24 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   terrace(level, g.mat);
 
   // rivers: each line is walked from its high end, never rising again, and cut one block into the valley floor
-  const river = new Int16Array(N * N).fill(-1);
+  const river = new Int16Array(N * N).fill(-1), stream = new Float32Array(N * N);
   for (const r of region.rivers) {
+    const wide = (2 * (r.rank <= 6 ? RIVER_HALF : BROOK_HALF)) / cell;
+    // a river much narrower than a block, and not one of the step's great ones, is no water of its own: it colours
+    // the blocks it runs through as far as it covers them (below, on the cover), and cuts no valley
+    if (wide < STREAM_BELOW && r.rank > (STREAM_RANK[step - FINER_STEPS] ?? 0)) {
+      const share = Math.min(1, Math.max(STREAM_LEAST, wide * STREAM_SEEN));
+      for (let k = 0; k + 1 < r.pts.length; k++) {
+        const a = toGround(...r.pts[k]), b = toGround(...r.pts[k + 1]), len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+        for (let t = 0; t <= len; t += 0.5) {
+          const x = Math.floor(a[0] + ((b[0] - a[0]) * t) / Math.max(len, 1e-6)), z = Math.floor(a[1] + ((b[1] - a[1]) * t) / Math.max(len, 1e-6));
+          if (inGrid(x, z) && kind[idx(x, z)] === Water.Land) stream[idx(x, z)] = Math.max(stream[idx(x, z)], share);
+        }
+      }
+      continue;
+    }
     // a river is as wide as at the finest step, and never narrower than a block
-    const half = Math.max(0.6, (r.rank <= 6 ? RIVER_HALF : BROOK_HALF) / cell), steps: [number, number, number][] = [];
+    const half = Math.max(0.6, wide / 2), steps: [number, number, number][] = [];
     for (let k = 0; k + 1 < r.pts.length; k++) {
       const a = toGround(...r.pts[k]), b = toGround(...r.pts[k + 1]), len = Math.hypot(b[0] - a[0], b[1] - a[1]);
       for (let t = 0; t < len; t += 0.5) {
@@ -424,18 +449,30 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   }
   else if (step > 0) {
     // from farther away the towns, the fields and the woods are part of the ground
-    cover = coverLand(g, step, things, sites, { ploughed, laid: arable !== null || hamlets !== null, courses, vines, farm: (x, z) => farm(x, z).style.house, farms, own, woods: (x, z): Woods | null => {
+    cover = coverLand(g, step, things, sites, { ploughed, laid: arable !== null || hamlets !== null, courses, vines, farm: (x, z) => farm(x, z).style.house, farms, own, clear: (x, z) => stream[idx(x, z)] > 0, woods: (x, z): Woods | null => {
       const i = idx(x, z), here = land[i] & KIND;
       if (metres[i] > woodsEnd[i]) return null;
       if (oasis(i)) return byWater(x, z, Math.max(1, Math.round(0.75 / cell))) ? { share: 0.8, crowns: PALM, tall: true } : null;
-      const known = forestOf(x + 0.5, z + 0.5), share = wooded(x + 0.5, z + 0.5, known), laid = known !== null;
+      // from the third far step on a block shows as much woods as lie on all of it, not on its middle alone: the mean of its quarters
+      const known = forestOf(x + 0.5, z + 0.5), laid = known !== null, share = laid && step > FINER_STEPS && woodsShow > 0 ? (wooded(x + 0.25, z + 0.25) + wooded(x + 0.75, z + 0.25) + wooded(x + 0.25, z + 0.75) + wooded(x + 0.75, z + 0.75)) / 4 : wooded(x + 0.5, z + 0.5, known);
       // without woods a lone tree still stands here and there, as at the finest step, but not on bare land
       if (!share && BARE.includes(here)) return null;
       if (here === Land.Rainforest) return { share, crowns: JUNGLE, tall: true, laid };
       if (here === Land.Savanna) return { share, crowns: ACACIA, tall: false, laid };
       return hash2(x + ox, z + oz, 76) < conifers(i) ? { share, crowns: CYPRESS, tall: true, laid, conifers: conifers(i) } : { share, crowns: LEAVES, tall: false, laid, conifers: conifers(i) };
     } });
-  } else {
+  }
+  // the rivers narrower than a block lie on what covers the ground: the blocks they run through take the water's colour
+  // (no woods stand on them: a stream shows as a line through a wood, as a river does)
+  if (cover) for (let i = 0; i < N * N; i++) {
+    const wet = stream[i];
+    if (!wet || g.wet[i] || g.mat[i] === Mat.Rock || cover.town[i]) continue;
+    const was = cover.has[i] ? cover.share[i] * (1 - wet) : 0, all = wet + was;
+    for (let k = 0; k < 3; k++) cover.top[i * 3 + k] = (WATER_SHALLOW[k] * wet + cover.top[i * 3 + k] * was) / all;
+    if (!cover.has[i]) { cover.has[i] = 1; cover.rise[i] = 0; cover.side.set(WATER_SHALLOW, i * 3); }
+    cover.share[i] = all;
+  }
+  if (step === 0) {
     // the monuments that stood in 1356 and have a model
     landmarks.forEach((l, id) => {
       const here = toGround(...cellOf(region, l.lon, l.lat));
@@ -473,7 +510,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   const traits: GroundTraits = {
     city: (x, z) => at((settled ?? cover!).town, x, z) === 1, plaza: () => Infinity, road: () => Infinity,
     crop: (x, z) => (settled ? ([null, 'wheat', 'vine', 'fallow', 'oats'] as const)[at(settled.field, x, z)] : null),
-    cover: cover && ((x, z) => { const i = idx(x, z); return cover.has[i] ? { top: [cover.top[i * 3], cover.top[i * 3 + 1], cover.top[i * 3 + 2]], side: [cover.side[i * 3], cover.side[i * 3 + 1], cover.side[i * 3 + 2]], rise: cover.rise[i], share: cover.share[i] } : null; }),
+    cover: cover && ((x, z) => { const i = idx(x, z); return cover.has[i] ? { top: [cover.top[i * 3], cover.top[i * 3 + 1], cover.top[i * 3 + 2]], side: [cover.side[i * 3], cover.side[i * 3 + 1], cover.side[i * 3 + 2]], rise: cover.rise[i], share: cover.share[i], stands: !cover.kind || STANDS.has(cover.kind[i]) } : null; }),
     // the low country is sun-bleached, the mountain meadows are green
     bleach: (x, z) => smooth(900, 200, metresAt(x, z)),
     tint: (x, z) => TINT[at(land, x, z) & KIND] ?? null,
@@ -481,7 +518,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     slope: SLOPE,
     summit: (x, z) => { const [px, pz] = rockPillar(x + ox, z + oz); return (pillar(x, z)[0] / at(snow, x, z)) * SUMMIT + (hash2(Math.floor(px / 2), Math.floor(pz / 2), 9) - 0.5) * 0.04; },
   };
-  const ground = buildTerrain(g, traits, bakedSky, part), water = buildWater(g, false, part), raised = buildWater(g, true, part);
+  const carried = cover ? new Batch() : undefined, ground = buildTerrain(g, traits, bakedSky, part, carried), water = buildWater(g, false, part), raised = buildWater(g, true, part);
   buildShore(ground, g, traits, bakedSky, part);
   // the houses that have fine blocks and the paved ground stand in cells of their own (the part is whole cells), so
   // that the near view can build them again cell by cell
@@ -498,9 +535,9 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     for (const l of lots) raise(far, l, 0);
     cells.push({ x: x0 + CELL / 2, z: z0 + CELL / 2, far, lots, ground });
   }
-  counts.triangles = ground.triangles + water.triangles + raised.triangles + things.triangles + cells.reduce((n, c) => n + c.far.triangles, 0);
+  counts.triangles = ground.triangles + (carried?.triangles ?? 0) + water.triangles + raised.triangles + things.triangles + cells.reduce((n, c) => n + c.far.triangles, 0);
   // the people of the towns, villages and fields; on the coarser steps a block is wider than a person is tall
   const figures = settled ? crowd(g, settled, own) : undefined;
   if (figures) counts.figures = figures.count;
-  return { ground, things, water, raised, figures, cells, counts };
+  return { ground, carried, things, water, raised, figures, cells, counts };
 }

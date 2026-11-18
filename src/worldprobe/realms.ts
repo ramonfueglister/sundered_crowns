@@ -21,6 +21,10 @@ const TILE = 512;
 const AHEAD = 0.3;
 /** the realms are fetched and painted from when the view is within this factor of the width at which they show */
 const SOON = 2;
+/** how much wider than its middle the far side of the picture is, and how far beyond its far edge the ground is seen, as shares of its half width and depth */
+const FAR_SIDE = 1.2, FAR_END = 1.1;
+/** the rank of the coarser levels under the picture: after the picture's own tiles (1e9 and their distance), before those around it (2e9) */
+const UNDER = 1.5e9;
 /** tiles kept beyond those the view asks for, and how many the worker is given at once */
 const SPARE = 16, AT_ONCE = 4;
 
@@ -131,14 +135,15 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ye
   }
 
   function look(v: View, at: Layout): number {
-    const [u, cv] = cellOfBlock(v.x, v.z), halfW = v.wide / 2, halfD = v.wide / v.aspect / Math.sin((v.elevation * Math.PI) / 180) / 2;
+    // (the far side of a slanted picture is wider than its middle, and what stands tall is seen beyond its far edge: the tiles reach that far)
+    const [u, cv] = cellOfBlock(v.x, v.z), halfW = (v.wide / 2) * FAR_SIDE, halfD = (v.wide / v.aspect / Math.sin((v.elevation * Math.PI) / 180) / 2) * FAR_END;
     const level = paperLevelOf(v.wide, v.pixels), lies = paperOf(v.wide, realms.mode), soon = paperOf(v.wide * SOON, realms.mode).strength > 0;
     // the lap of the globe whose game map lies nearest the picture
     realms.lap = Number.isFinite(o.round) ? Math.round((u - o.map[0] / 2) / o.round) * o.round : 0;
     const cu = u - realms.lap;
     looks++;
     // the land's own light shows through the colours until the world lies flat; there the sea is part of the map
-    stage.lay(lies.strength, lies.flat, SEA_Y + 0.3 * (LAND_Y - SEA_Y) * reliefOf(v.wide, at.step));
+    stage.lay(lies.strength, lies.flat, SEA_Y + 0.3 * (LAND_Y - SEA_Y) * reliefOf(v.wide, at.step), lies.things, lies.calm);
     realms.named = lies.names;
     /** how far a tile lies outside the picture, in finest cells (0: it reaches into it); the map's cells run with the picture's sides */
     const outside = (l: number, x: number, y: number) => { const side = TILE * 2 ** l; return Math.max(0, Math.abs((x + 0.5) * side - cu) - halfW - side / 2, Math.abs((y + 0.5) * side - cv) - halfD - side / 2); };
@@ -155,12 +160,23 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ye
     };
 
     // what the view asks for once the realms are near: the coarser level under the picture first, then its own level
-    // in the picture, then around it
+    // in the picture, then every coarser level under the picture, the coarsest first (a tile or two each, and the
+    // whole map lies in the coarsest: so wherever the view goes next and however far it zooms out at once, the land
+    // it comes to lies under the realms' colours from the first picture on, coarsely until its own tiles are
+    // painted; without them it showed its own colours there for a moment), then around the picture
     const wanted: Want[] = [], want = (l: number, t: { x: number; y: number }, rank: number) => wanted.push({ key: keyOf(l, t.x, t.y), level: l, x: t.x, y: t.y, rank, age });
     if (soon) {
       if (o.ahead && level < PAPER_COARSEST) for (const t of near(level + 1, 0)) want(level + 1, t, t.far);
       for (const t of near(level, o.ahead ? AHEAD * v.wide : 0)) want(level, t, (t.out > 0 ? 2e9 : 1e9) + t.far);
+      if (o.ahead) for (let l = level + 2; l <= PAPER_COARSEST; l++) for (const t of near(l, 0)) want(l, t, UNDER - l);
       if (!named) { named = true; ask({ kind: 'names' }, 'names'); }
+    }
+    // for measuring (`__probe.counts`): the most tiles of a picture that lay under no painted tile of any level, so
+    // that the land showed there without the realms' colours
+    if (lies.strength > 0) {
+      let bare = 0;
+      for (const t of near(level, 0)) { let l = level, x = t.x, y = t.y; while (l <= PAPER_COARSEST && !held.has(keyOf(l, x, y))) { l++; x >>= 1; y >>= 1; } if (l > PAPER_COARSEST) bare++; }
+      stage.probe.counts['paper bare most'] = Math.max(stage.probe.counts['paper bare most'] ?? 0, bare);
     }
     let missing = 0;
     for (const w of wanted) { const h = held.get(w.key); if (h) h.seen = looks; else if (lies.strength > 0 && w.level === level && w.rank < 2e9) missing++; }

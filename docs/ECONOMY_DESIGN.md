@@ -39,6 +39,10 @@ players and the AI of realms without a player act through the same commands.
 | 9 | The cities pay no unemployment benefit | agreed by Ramon 16 Nov 2026 ("Arbeitslosengeld entfernen", 12:53 UTC): the benefit of feature 6 is taken out of the cities, with tests and numbers from the game. Built; in the running world since 16 Nov 2026, with feature 5 |
 | 10 | The persons of the cities' economies are the persons of the cities | direction given by Ramon 16 Nov 2026 ("das wollen wir mit ecs", 14:18 UTC), variant A agreed by him the same day ("A: Grösse aus den ECS-Personen", 15:57 UTC): the economies take their head count from the persons of the world, with tests and numbers from the game; nothing goes live. Built; in the running world since 16 Nov 2026 ("mergen und weiter", 17:36 UTC, and his release of the world server, 17:41 UTC) |
 | 11 | The family is the purse, and a woman without a husband works | chosen by Ramon 16 Nov 2026 as the next feature ("Haushalt der Familie", 17:50 UTC), variant B agreed by him the same day ("B: Kasse, Frauen ohne Mann arbeiten", 18:01 UTC): the family as purse, and women without a husband work, so the economies are founded anew. Built, with tests and numbers from the game; in the running world since 16 Nov 2026 ("mergen und live", 18:22 UTC, and his release of the world server, 18:45 UTC) |
+| 12 | The harvest feeds the cities: a city buys the food its harvest lacks | chosen by Ramon 17 Nov 2026 as the next feature ("Ernte speist die Städte", 15:49 UTC), variant A ("A, Ägypten vorerst wie England", 15:54 UTC); after the first build failed, the trade in food ("Getreide über die Händler kaufen", 16:03 UTC) and the rule as proposed ("Ja, so bauen", 16:16 UTC). Built, with tests and numbers from the game; not yet in the running world **Taken back 17 Nov 2026** (Ramon, "C: Feature 12 zurücknehmen", 17:38 UTC): the cities' trade does not add up together (section 14) |
+| 13 | The merchants' money (examined, nothing built) | chosen by Ramon 17 Nov 2026 as the next feature ("Händlerguthaben abbauen"), with "möglichst papernah" and "kein delulu"; after the reading and the measurement he left the decision to Claude ("du entscheidest selbständig", 17:19 UTC): the finding is recorded, no rule is built (section 13) |
+| 14 | The check of the model, and feature 12 taken back | asked by Ramon 17 Nov 2026 ("zuerst das modell jetzt sauber prüfen abschliessen ob alles aufgeht"); feature 12 taken back by his choice the same day; next by his order: distance in trade, then consumption and hunger (section 14) |
+| 15 | Households spend out of their savings, and a family has a need of food | order changed by Ramon 17 Nov 2026 ("Verbrauch und Hunger zuerst", 19:27 UTC) after the slump of remote cities in the trials of the distance was traced to the households' consumption; he asked for "einfach möglichst genau nach beforeit" (20:02 UTC) and chose "BeforeIT plus Erspartes" (20:06 UTC): the market stays the port's, only the budget gets the spending out of savings, need and hunger are a booking of the family purse. Built, with tests and numbers from the game; not yet in the running world (section 15) |
 
 ## 1. Grain harvest per place
 
@@ -2199,3 +2203,422 @@ of the family. Pictures in the project files (wirtschaft/staedte/befunde/feature
   It would double the engine's persons, need rules of our own beside the port and a new founding, and because the
   model's consumption is linear in income with one ψ for all, the cities' figures would stay the same (reasoned
   from the code, not measured). And the modified OECD scale (1.0 / 0.5 / 0.3): it compares households of today.
+
+## 12. The harvest feeds the cities: a city buys the food its harvest lacks
+
+> **Taken back on 17 Nov 2026.** The code of this feature is no longer in the game (state version 20 again). The
+> section stays as the record of what was built and measured. Why it was taken back: section 14.
+
+Status: built; not yet in the running world. Ramon chose the feature on 17 November 2026 ("Ernte speist die Städte",
+15:49 UTC) and variant A of the proposal (Claude Doc "Feature 12: Ernte speist die Städte",
+https://claude.ai/artifact/8GGxSGubnLXmtTqh9HrUng): the factor of the harvest of a city's own place, Egypt for the
+time being as England ("A, Ägypten vorerst wie England", 15:54 UTC). The way proposed there, the port's productivity
+shock on agriculture alone, did not hold (below), and neither did the factor in the calibration alone; he chose that
+a city with a weak harvest buys its food from the merchants ("Getreide über die Händler kaufen", 16:03 UTC) and agreed
+the rule as proposed ("Ja, so bauen", 16:16 UTC). Player wiki: docs/wiki/wirtschaft/getreide-ueber-die-haendler.md.
+
+### What it is
+
+Every city is founded with the factor of its harvest (`harvestFactors`, src/sim/systems/economy.ts):
+
+    f_c = (Y_c / L_c) / (Y_E / L_E)
+
+Y_c is the harvest of the city's place (feature 1, with the arable of feature 2), L_c the persons of its hamlets, who
+live from agriculture; Y_E / L_E is the harvest per farmer of England in 1300–09, the case the harvest is calibrated
+on (1,678 kcal per farmer and day). London has 1.04, Ghent 1.04.
+
+The value added of the city's agriculture per person who works there is England's times f_c; industry and services
+keep theirs, and the persons of every sector stay as they are (`withAgriculture`, src/sim/economy/calibration.ts). So
+everything the port's calibration derives from the value added of agriculture follows it: output and inputs, the
+output per employee (the port's labour productivity `alpha_s`, times f_c exactly), the wage and the capital.
+
+The households of the city buy as much of the goods of agriculture as England's at the same scale. What the city's
+agriculture lacks for that, d, the merchants bring (`tradeFood`):
+
+    d = H_agr(England) − H_agr(what is left);  M_agr += d;  X_g += d · H_g / (H_ind + H_serv);  H_g −= the same
+
+The city pays with as much more exports of industry and services, taken from what its households buy of those, in
+proportion. A city with a surplus (d < 0) exports goods of agriculture, and its households get as much more of
+industry and services from imports. Trade is balanced at the start, GDP does not change by it, and every other use
+of every good stays as it is: supply equals use. The mixes of exports and imports of the city (`c_E_g`, `c_I_g`)
+follow; the rules of the merchants (section 5) do not change.
+
+Assumptions, not sources: that every person eats as much as a person in England in 1356; that food is paid for with
+industry and services in proportion to what the households buy of them; and that the cities of Egypt, and places
+whose harvest is 0 because the index of the soil knows rain-fed farming only (Mecca, Aden, Timbuktu and others in
+the world of 1291), keep England's agriculture (f = 1). Egypt is the region of the province of the place (`egypt`),
+because the list of the cities of 1291 often names no country.
+
+### What did not hold
+
+1. The proposal: the port's ProductivityShock on the firms of agriculture alone, at the founding. The wage stays
+   England's while the output per employee falls, so the cost of a unit rises by 1 / f; the cost push of the clock
+   divides by `alpha_bar_i`. In all eight worlds of `npm run economy:check 5 8` Venice (f = 0.21) reached a negative
+   price within 4 to 7 months and the economies stopped.
+2. The factor in the calibration alone, without trade: in England's table every other use of the goods of agriculture
+   is fixed in pounds (inputs to industry and services, wool exports, the crown, investment), so the whole change
+   lands on what the households eat: a quarter of England's at f = 0.5, nothing below 0.35 (the calibration stops:
+   Venice, Genoa, Paris), two and a half times at 1.86.
+
+### Founding and state
+
+A city's factor needs the harvest, the harvest needs the hamlets, and who lives in a hamlet follows from the firms of
+agriculture (src/sim/systems/hamlets.ts). So a world founds its economies, settles the hamlets, counts the people and
+brings in the harvest as before, and then founds the economies anew with the factors (`foundWithHarvest`). The factor
+changes no count of persons, so who works where, the hamlets and the harvest come out the same (tested: a fixed point).
+The factor is set when the economies are founded; it is not set again each year, because the harvest of a place does
+not change while nobody is born or dies.
+
+State version 21: the economies carry `harvestFactor`. The upgrade founds the economies anew with the factors on the
+day the world has reached, as the upgrade of feature 11 did: the days and the yearly figures of the economies are
+gone, and the first period is the next day of the world. A world of 1291 now founds its 550 economies twice when it
+is created (about ten seconds on the machine of the tests).
+
+### Tests
+
+`tests/economy-harvest.test.ts` (new): the factor is the harvest per farmer against England's and is what a new world
+was founded with; London and Ghent lie near 1, Egypt is 1, also in the world of 1291 where its rows name no country;
+a city founded at 0.21, 0.5 and 1.86 has the value added, the output per employee and the wage of agriculture times
+the factor and the other sectors as England, households that buy England's food, balanced trade and balanced
+accounts; at 1 it is England's city number for number; down to 0.05 it can be founded, 0 and less are refused; the
+trade in food by hand in both directions; a new world is a fixed point of `foundWithHarvest`; the cities compute 40
+days with the books balanced; a world of version 20 gets the factor by the upgrade.
+
+Changed: `tests/economy.test.ts` (a city's GDP is England's share times the value added with the factor; the test of
+the merchants' shares compares the cities whose factor is within 10 % of 1; London's GDP), the upgrade tests of
+features 10 and 11 (step 21), `tests/rulers.test.ts` (a timeout of 60 s: the world of 1291 founds its economies twice).
+`public/data/economy_cities.json` is written anew with the factors. Engine (`economy/tests`): London of the reference
+world changed, so the measured bounds were measured again over twelve seeds: `agents.rs` (the wage paid off the wage
+in money up to 0.22 % on a day, bound 0.3 %), `demand_pull.rs` (the seeds with the slump of the paper's rule are now
+1357, 1358, 1363, 1365, 1367; with the demand pull up to 4.5 % without work in the first six years, none after; without
+the wage in money the level leaves by a quarter in ten of twelve seeds), `benefit.rs` (four cities whose factor is
+near 1, Cairo, Ghent, Alexandria and London, in place of Paris and Venice, which now buy their food).
+
+### In the game
+
+`npm run economy:check 30 4` and `npm run economy:check 5 8` (worlds of 1356, seeds 1356 on, every day computed).
+Outputs in the project files (wirtschaft/feature12/feature12_check_30_4.txt and feature12_check_5_8.txt).
+
+| All cities together, year 30 (4 worlds) | Feature 11 | Now | Range of the worlds now |
+|---|---|---|---|
+| Real output (start = 100) | 116.3 | 113.4 | 113.1 to 113.7 |
+| Price level of output (start = 100) | 95.2 | 88.9 | 88.4 to 89.2 |
+| Exports, share of output | 2.65 % | 16.89 % | 16.45 % to 17.62 % |
+| Without work, mean of all cities and days of the 30 years | 0.07 % | 0.26 % | 0.17 % to 0.38 % |
+| Without work, the worst city on its worst day | 3.2 % | 12.8 % | 10.2 % to 17.0 % |
+| City with the lowest output (its start = 100) | 111.8 | 82.5 | 64.3 to 93.9 |
+| City with the highest output | 117.5 | 117.6 | 117.6 to 117.6 |
+
+| City (world 1356) | Factor | Output in year 30 | Price level | Exports | Imports |
+|---|---|---|---|---|---|
+| London | 1.04 | 117.6 | 98.5 | 12.2 % | 4.1 % |
+| Texcoco | 1.86 | 115.3 | 93.6 | 29.8 % | 26.7 % |
+| Milan | 0.59 | 113.1 | 86.4 | 15.3 % | 22.8 % |
+| Damascus | 0.38 | 111.1 | 64.4 | 20.7 % | 36.9 % |
+| Genoa | 0.25 | 105.8 | 67.8 | 36.1 % | 48.2 % |
+| Baghdad | 0.37 | 105.2 | 72.5 | 25.7 % | 37.5 % |
+| Paris | 0.35 | 102.4 | 77.3 | 28.1 % | 38.6 % |
+| Venice | 0.21 | 93.9 | 65.9 | 38.0 % | 51.3 % |
+
+Year 5 (8 worlds): all cities 108.2 (feature 11: 108.2), Venice 83.0, the weakest city 75.4 (58.2 to 83.3). The books
+are off by at most 5e-11 of the amount they are judged by. A world of 1291 (550 cities, factors 0.16 to 2.60, mean
+1.42) computes a year without stopping: all cities 99.7, the weakest 67.
+
+### Limits
+
+- A city that buys more than it sells pays with money that leaves it: it lies as the merchants' deposits at the
+  city's central bank (the port's `D_RoW`). No rule of the model reads it, and it grows without bound: Venice 7 years
+  of its GDP after 20 years, Paris 4.4; in cities with a surplus it is negative. Trade does not come back into
+  balance, because the merchants order by the fixed import shares of the cities. Where the money comes from, and
+  why no rule was built against it, is section 13.
+- The cities of 1356 together want more food than the others sell: most have a factor below 1. In the world of 1291
+  it is the other way round (mean 1.42).
+- The factor is set when the economies are founded and not again: no good or bad years (a candidate for a feature of
+  its own: yearly yields).
+- Everyone eats as much as an Englishman of 1356, in Cairo as in Paris; nobody starves when the food is dear.
+- Egypt and the places without a rain-fed harvest are England by assumption, until a source for irrigated land is
+  read.
+- The harvest of the city's own place only: Paris, Venice and Genoa have little arable in their place and no
+  hinterland (variant B of the proposal, not chosen).
+- The kilocalories of the harvest and the pounds of the port are linked by a ratio only: the value of the output of
+  agriculture per farmer is taken to rise as its kilocalories do.
+
+## 13. The merchants' money: examined, nothing built
+
+> The numbers of this section were measured with feature 12 in the game. Section 14 shows that the growth of the
+> merchants' money came from feature 12 itself; without it the stocks stay near their start.
+
+Feature 12 left a limit: the merchants' deposits in a city that buys more than it sells (`D_RoW`) grow without
+bound. Ramon chose to work them down, as near to the papers as possible. No rule was built, because no paper that
+was read gives one that fits what was measured. This section records what was read and measured, so that the
+question is not asked again from the start.
+
+### What was measured
+
+One world of 1356 (seed 1356), 29 cities, 20 years, at the scale 1:100, in pounds (the figures of every city and
+year: `/mnt/project-files/wirtschaft/feature13/bilanz_20_jahre.txt` in the project files, with the trial program).
+
+| City, year 20 | Merchants' deposits | Households' deposits (start) | Firms' deposits | Equity of the bank (start) | GDP a year |
+|---|---|---|---|---|---|
+| Paris (buys more) | +9302 | 8756 (792) | −2366 | −13326 (50) | 2300 |
+| Venice (buys more) | +3111 | 2790 (309) | −821 | −4711 (19) | 549 |
+| Cairo (sells more) | −12898 | 12354 (1204) | 297 | 75 (75) | 7162 |
+
+- The counterpart of the merchants' money is the city's bank, not its households. In a city that buys more, prices
+  fall (Paris 79, Venice 83), the wage in money stays (feature 7), the firms lose and become insolvent. By the
+  port's rule (A.38 to A.40, A.67) the firm is replaced and its bank writes off the debt. The bank's equity falls
+  without bound (Paris: minus 5.8 years of GDP), and it is overdrawn at the central bank. No rule of the port stops
+  a bank with negative equity; the capital requirement only stops new loans, not overdrafts.
+- The households' deposits grow about tenfold in all 29 cities, in Cairo as in Paris: they spend a fixed share of
+  their income (A.46) and save the rest for ever.
+- The port's own wage (a real wage times the price level) is no way out: with the demand pull of feature 8 the
+  cities compute no finite numbers by year 5.
+
+### What was read
+
+Read through a fetching tool that returns the text; quotations are from that text. What was not read is said.
+
+- Godley (1999), "Open Economy Macroeconomics Using Models of Closed Systems", Levy WP 281. Model 1, a fixed rate
+  settled in gold: "no mechanism which corrects an emergent deficit in the balance of payments" but the fall of
+  output; "there is simply a drop in reserves which continues until they run out". "No vestige of the
+  'price-specie-flow' mechanism survives, even when all foreign balances are settled in gold."
+- Godley & Lavoie (2003), "Two-Country Stock-Flow-Consistent Macroeconomics Using a Closed Model Within a Dollar
+  Exchange Regime", CERF WP 10. Imports in logs, eq. (20), with a price and an output term; no values given. At a
+  fixed rate "there is no corrective mechanism in operation"; when gold runs out "the government is forced to act".
+- Godley & Lavoie (2007), Monetary Economics, ch. 6, Model REG (two regions, one money): not the book, but two
+  reproductions with all equations and values (the R packages sfcr and godley). IM = μ·Y, V = V₋₁ + YD − C,
+  C = α1·YD + α2·V₋₁ with α1 = 0.7, α2 = 0.3, μ = 0.15. Here the households of the region that buys more lose
+  wealth and spend less. In our cities they do not lose wealth (see above), so this rule would not close the gap.
+- Caiani & Catullo (2023), LEM WP 2023/19, a currency union: purchases are paid from deposit to deposit, wages
+  follow unemployment (eqs. 1, 15), no rule for the trade balance. Appendix and values not read; Caiani, Catullo &
+  Gallegati (2018) was not freely readable.
+- Poledna et al. (2023), main text only (the appendix was not reachable; the rules are known from the port's code):
+  credit is bound by the capital ratio; nothing on a bank with negative equity or a limit of the central bank's
+  advances.
+- Hommes et al. (2022), CANVAS, Bank of Canada SWP 2022-51, up to section 3.7: "When bank capital and leverage
+  requirements are not met, no lending can take place", and nothing else follows; interest on deposits "generate[s]
+  no wealth effects on consumption" (footnote 8); the wage (eq. 21) answers neither unemployment nor prices; the
+  rest of the world is closed "via the accounting identity" (eq. 57).
+- Wiese et al. (2024), arXiv 2409.18760, and Jaraiz & Pinacho (2024), arXiv 2409.04876: no rule for deposits of
+  the rest of the world or for the trade balance.
+
+### Why nothing was built
+
+The family of models the cities stand on has no rule at any of the three places where the gap could close (the
+bank, the wage, the households' wealth): it was built to forecast a few years, not thirty. The rules found
+elsewhere either miss the counterpart that was measured (consumption out of wealth) or have no values that were
+read (a wage that follows unemployment; a price term of imports). A rule of our own would have closed the books
+with numbers nobody measured.
+
+### Candidates, each needing a source first
+
+- A wage that follows unemployment, as in Caiani, Catullo & Gallegati (2018): it meets the cause, the firms that
+  lose because the wage does not fall. Needs the paper with its equation and values.
+- A limit for a bank without equity (no overdraft for its firms): an extension of the rule of CANVAS, and ours.
+- A stock of coin for every city that can run out, as the gold of Godley & Lavoie: needs a source for the coin of
+  the cities around 1356.
+
+## 14. The check of the model, and feature 12 taken back
+
+Ramon asked on 17 Nov 2026 to check the model cleanly before anything else is built: does everything add up?
+The books do. The economy with feature 12 did not, and feature 12 was taken back.
+
+### What adds up
+
+| Check | Result |
+|---|---|
+| Tests of the game (with feature 12) | 1150 of 1150 pass (40 files) |
+| Tests of the engine (`economy/`) | 62 of 62 pass |
+| Identities of every city and the merchants' books, 30 years, 4 worlds (with feature 12) | off by at most 9.1e-10 of the amount they are judged by |
+| Sum of the merchants' deposits over all cities, 20 years | stays at 6 to 7 pounds: what one city loses another gains |
+
+### What did not add up: the cities' trade together
+
+Feature 12 calibrated every city balanced on its own (exports = imports). Summed over the 29 cities of 1356, pounds
+a year at the scale 1:100, at the start:
+
+| | Agriculture | Industry | Services |
+|---|---|---|---|
+| Exports the cities expect | 2669 | 3601 | 2637 |
+| Imports the cities expect | 6522 | 1738 | 646 |
+
+3853 pounds of food a year are missing (about 9.5 % of the GDP of all cities), and as much industry and services
+finds no buyer: most cities have a factor below 1, each pays for food with industry and services, and nobody buys
+those and sells food. Section 12 named this as a limit; its weight was misjudged. Before feature 12 the trade by
+product did not match either (agriculture: exports 1317, imports 443), at a tenth of the size.
+
+What follows from it, one world of 1356, 20 years (`/mnt/project-files/wirtschaft/feature13/` in the project files:
+`bilanz_20_jahre.txt` with feature 12, `bilanz_20_jahre_vor_feature12.txt` without):
+
+| After 20 years | Without feature 12 | With feature 12 |
+|---|---|---|
+| Merchants' deposits of a city, in years of GDP | −0.12 to +0.07 | −1.80 to +7.22 |
+| Households' deposits, in years of GDP (start 0.2) | 0.18 to 0.66 | 0.76 to 7.06 |
+| Lowest equity of a bank, in years of GDP | −0.20 | −11.97 |
+| Cities whose bank has negative equity | 20 of 29 | 19 of 29 |
+| Lowest price level of a city (start 1) | 0.90 | 0.64 |
+| Real output of all cities (start 100) | 115.9 | 111.2 |
+
+Without feature 12 the stocks stay near their start. With it they run away. The growth of the merchants' money
+(section 13) was therefore a fault of the construction of feature 12, not a missing rule of the papers.
+
+### What stays open without feature 12
+
+- 20 of 29 banks have negative equity after 20 years, though little (at most 0.2 years of GDP): firms fail, the
+  bank writes off, and no rule of the port stops a bank with negative equity (section 13, what was read).
+- The trade by product does not match at the start (England's exports of wool and cloth in every city).
+
+### What was decided
+
+Ramon chose to take feature 12 back (the other ways: food from the countryside around the cities, or a factor
+normed to the world). The code, the state (version 20), the calibrations (`public/data/economy_cities.json`) and
+the tests are those before feature 12. The trade in food is to be built anew with consumption and hunger: the
+food that is missing is the question hunger answers.
+
+**For every later calibration:** check the position of all cities together, product by product, not only each
+city on its own.
+
+By Ramon's order the next features are the distance in trade, then consumption and hunger; no yearly yields.
+
+## 15. Households spend out of their savings, and a family has a need of food
+
+### Why
+
+The trials of the distance in trade (17 November 2026, outside the game; the proposal
+https://claude.ai/artifact/9Gt22ijoL8Xdqx4cfLM7NV holds them) showed remote cities falling into a slump within 30
+years (Sarai: output 69 of 100, 21 % without work). The cause is not the distance. It is in the model as the game
+runs it, and shows without any distance, only later (29 cities, world of 1356, sums over all cities and all days of
+a year, `economy/examples/longrun.rs`):
+
+| Year | Firms' deposits | Households' deposits | Banks' equity | Consumption wanted | got | Stock built | Losses | Written off by banks |
+|---|---|---|---|---|---|---|---|---|
+| 1 | 2045 | 8949 | 551 | 40858 | 40725 | 159 | 0 | 0 |
+| 10 | 1679 | 10406 | 551 | 45400 | 44912 | 381 | 202 | 0 |
+| 20 | −2082 | 20233 | −2398 | 45786 | 44564 | 723 | 666 | 794 |
+| 30 | −5540 | 32879 | −13972 | 45675 | 44502 | 727 | 767 | 1345 |
+
+Two things work together:
+
+1. Households do not get everything they want to buy (2.6 % is missing in year 30). What they did not spend stays in
+   their deposits for ever, because the budget follows the income only: C = ψ · Y (A.46), and in the calibration
+   ψ + ψ_H = 1. The interest on deposits is 0 (`r_bar`), so no interest is behind it (a first guess that was wrong).
+   Poledna et al. say so themselves: no wealth effects on consumption. Their model is run for 12 quarters, the game
+   for centuries of days.
+2. Firms count unsold goods as profit (`firms_profits` of the port: sales plus the change of the stock at the
+   price) and pay the whole profit out (θ_DIV = 1 in our calibration, where the whole surplus is the income of the
+   owners), while losses stay in the firm. So their deposits drain, they overdraw, become insolvent, and the bank
+   writes off (A.38 to A.40). From year 15 on banks have negative equity.
+
+This feature answers the first. The second stays open (below).
+
+### What was read
+
+- Godley, W., Lavoie, M. (2007). Monetary Economics. Model SIM, equation 3.7: C = α1 · YD + α2 · H₋₁, households
+  consume out of their disposable income and out of the wealth of the period before; with equation 3.9 (wealth grows by
+  what is not consumed) this is a target for wealth relative to income, (1 − α1) / α2. Parameters 0.6 and 0.4. **Read
+  in the recomputation of MacroStat** (https://macrostat.readthedocs.io/en/stable/models/GL06/GL06SIM.html and its
+  pages of equations and parameters), not in the book; the pages do not name the length of a period.
+- Allen, R. C. (2013). The High Wage Economy and the Industrial Revolution: A Restatement. Oxford Discussion Papers
+  in Economic and Social History 115. https://www.nuff.ox.ac.uk/Economics/History/Paper115/allen115.pdf Table 2
+  (p. 16): the "respectability" and the "bare bones subsistence" basket per person and year, note: "each basket
+  provides 2100 calories per day"; on the older basis the baskets held 1,940 calories (p. 4).
+- Broadberry et al. (2010), table 19 (p. 56), read again: kilocalories per head and day, animal products and arable
+  crops net of seed, losses and fodder: 1300/09 139 + 1,242 = 1,381; 1310/19 1,334; 1380/89 242 + 1,801 = 2,042;
+  1420/29 1,760. **The table has no row between 1310/19 and 1380/89.** The same paper sets about 1,500 kcal as what
+  agriculture had to give and cites 2,000 kcal as an average intake (Livi-Bacci 1991; p. 29).
+- Blanz, A. (2023). Climate-related Agricultural Productivity Losses through a Poverty Lens. arXiv 2310.16490.
+  A household must cover a subsistence level of food F before anything else (utility of Stone 1954 and Geary 1950,
+  cited there, not read); demand (equations 5 and 6): c = φ(y − pF), f = (1 − φ) y / p + φF. First half read word for
+  word. The paper has no rule for a household whose spending is below pF.
+- Not used as evidence: Ivanova, Kancs, Thissen (2019, arXiv 1912.07115) use the same form for all goods; the
+  appendix with the equation could not be read.
+
+### The rule
+
+**1. The budget (the engine, `economy/src/clock.rs`).** Through the port's own hooks for the budgets of the four
+kinds of households (`households_budget_*`), nothing else of the port is touched:
+
+C = ψ · Y + s · (D − n · ψ · Y), never below 0
+
+D are the household's deposits, n the deposits of all households of the city over their budgets in the first period
+that is computed (so the households together start at their target and the starting position stays where it was),
+s the share of the gap spent per period. The table gives s per year (`cities.savings_spent_per_year` = 0.4, the α2
+of Godley and Lavoie, taken per year: an assumption), the engine gets s / 365. With s = 0 the engine computes bit
+for bit as before (economy/tests/savings.rs). The market of the port is unchanged: every household still splits what
+it buys by the fixed shares b_HH_g (`src/markets.rs` of the port).
+
+**2. The need (the world, `src/sim/systems/household.ts`).** A basket needs 2,100 kcal a day
+(`cities.food_need_kcal`). What they cost follows from the model: the households of the table buy from
+agriculture per head and day what stands for 2,042 kcal (`inputs.food_kcal_per_head`), so the need of a basket
+costs that amount times 2,100 / 2,042 at the prices of the start (`foodNeedCost`: 0.37 d a day), and on a later
+day times the price of the city's agriculture (the mean price of its farms, weighted by what they made).
+
+**3. Fed.** A family covers its need first (Stone-Geary), so the part of its need it covered on the last day is
+fed = min(1, spent / need). The family has the columns `need` (£ a day) and `fed` (0 to 1); `need` 0 means the place
+has no economy. The panel of a person shows both ("Nahrungsbedarf am Tag", "davon gedeckt"). Nothing reads `fed`
+yet: what hunger does to a person belongs to the persons of the world (docs/PEOPLE_DESIGN.md).
+
+### The numbers
+
+All cities together over 30 years (29 cities of 1356, `economy/examples/longrun.rs`, results in
+`/mnt/project-files/wirtschaft/verbrauch_hunger/`):
+
+| After 30 years | Port's budget (seed 1356) | With the spending out of savings (seeds 1356, 1357, 1358) |
+|---|---|---|
+| Real output of all cities (start 100) | 115.9 | 116.1, 115.8, 116.1 |
+| Weakest city (start 100) | 112.0 | 113.5, 113.4, 110.8 |
+| Households' deposits (start 8,949) | 32,879 | 14,578, 13,457, 14,341 |
+| Firms' deposits (start 2,045) | −5,540 | −113, −2,173, −770 |
+| Equity of all banks (start 551) | −13,972 | −731, −2,348, −816 |
+| Banks with negative equity | 26 of 29 | 10, 17, 12 |
+| Written off by the banks in year 30 | 1,345 | 71, 126, 56 |
+| Consumption got over wanted, year 30 | 97.4 % | 96.1 %, 97.3 %, 96.4 % |
+| Merchants' money of a city over its GDP | −0.16 to +0.09 | −0.13 to +0.15, −0.08 to +0.11, −0.34 to +0.23 |
+
+The merchants' books balance in every year (largest check 1e-13).
+
+The need in the game (`fed`, on the day named):
+
+| | World of 1356, day 60 | day 730 | World of 1291, day 60 | day 365 |
+|---|---|---|---|---|
+| Persons in families of the cities | 25,722 | 25,722 | 102,217 | 102,223 |
+| fed = 1 | 92.2 % | 92.0 % | 92.1 % | 91.8 % |
+| fed 0.75 to 1 | 4.0 % | 4.2 % | 3.5 % | 3.8 % |
+| fed 0.5 to 0.75 | 2.3 % | 2.4 % | 1.8 % | 1.8 % |
+| fed above 0, below 0.5 | 0.7 % | 0.6 % | 0.6 % | 0.7 % |
+| fed = 0 | 0.9 % | 0.8 % | 2.0 % | 1.9 % |
+| Of the persons below 1: the family holds savings of more than 30 days of its need | 88 % | 89 % | 74 % | 75 % |
+
+With the fixed share of the port for every family (35.5 % of what it spends is agriculture) 69 % of the persons
+would lie below the need (measured before the build, world of 1356, day 60).
+
+### Deviations and what stays open
+
+- **Short of food with coin in the chest.** About 8 % of the persons live in families that spend less than their
+  need, and three quarters or more of them hold savings of more than a month of that need. These are large families
+  on one low wage. By the rule they spend ψ of their income and 0.4 / 365 a day of what they hold above the target,
+  whatever they need. A budget that covers the need first would be a rule inside the engine that the papers read do
+  not give for this model; it is not built. Whoever reads `fed` must know this.
+- **fed = 0** are the families nobody of whom has a part in the economy (economy feature 11: 53 families in the
+  world of 1356): they have neither income nor deposits in the engine.
+- **The day.** `fed` is of the last day, and on a single day a household may not find all goods.
+- **2,042 kcal is the decade 1380/89**, not the 1350s: the table has no nearer row.
+- **Agriculture is not food only** (wool), and bread and ale are partly industry.
+- **0.4 a year** is a textbook value, read as per year by us.
+- **The booking and the market differ.** The engine sells agriculture by fixed shares; the family is booked as
+  covering its need first. The two are not the same number.
+- **Firms pay out profits on unsold goods** (the second cause above): unchanged. Banks still end with negative
+  equity, at a tenth to a sixth of the amount.
+- **Households want more than they get**: the gap grows to 3 to 4 % of what they want.
+- **No famine years.** Without yearly yields and without distance, hunger comes from the lack of work and from
+  prices only.
+
+### State and upgrade
+
+State version 21 (20 is main's). The format of the engine's state is 7: the clock holds the share and the target;
+states of formats 4 to 6 are read and spend nothing out of savings. The upgrade gives the families the two columns
+and founds the economies anew on the day the world has reached, as the steps to 12 and 14 did: the rule changes
+what every city computes. **The persons' feature 2 (pull request 69) also uses the state versions 21 and 22: the one
+merged second has to take the next numbers.**
+
+Next by Ramon's order: the distance in trade.
