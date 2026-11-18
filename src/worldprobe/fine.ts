@@ -71,10 +71,11 @@ export function createFine(stage: Stage, o: { still: boolean; changed(): void })
       states.set(cell.key, s); seen.add(cell.key); s.cell = cell;
       if (near && cell.out <= AHEAD && !s.fine) { if (!s.asked) queue.push(s); if (cell.out <= 0) missing++; }
       // the fine houses come in where the view is near, go out where it is not, and are let go once out of sight
-      const goal = near && s.fine && cell.out <= KEPT ? 1 : 0;
+      // (they wait until the stage has sent their lists to the graphics card: stage.ts `sent`)
+      const there = !!s.fine && stage.sent(s.fine), goal = near && there && cell.out <= KEPT ? 1 : 0;
       if (s.share !== goal) s.share = cell.out > 0 ? goal : goal ? Math.min(1, s.share + step) : Math.max(0, s.share - step);
-      if (!goal && s.share === 0) letGo(s);
-      fading ||= s.share > 0 && s.share < 1;
+      if (!goal && s.share === 0 && (there || !near)) letGo(s);
+      fading ||= (s.share > 0 && s.share < 1) || (near && !!s.fine && !there);
       // the two take each other's place dot by dot, within the dots their piece is drawn on
       const [from, until] = cell.dots, mid = from + (until - from) * s.share;
       if (cell.far) { cell.far.visible = s.share < 1; stage.dissolve(cell.far, mid, until); }
