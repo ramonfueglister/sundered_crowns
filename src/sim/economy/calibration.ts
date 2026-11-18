@@ -39,8 +39,24 @@ export interface CalibrationTable {
     /** what the crown of a city buys with (economy feature 16): 'series' by the random series of the paper,
      *  'revenue' with what it took in the period before */
     crown: Entry<'series' | 'revenue'>;
+    /** who gets what a firm earns (economy feature 18): 'paper' the owner is paid the paper's profit and bears no
+     *  loss, 'household' firm and owner are one household */
+    owner: Entry<'paper' | 'household'>;
     /** the kilocalories a basket needs per day (economy feature 15): an adult is one basket, a child half of one */
     food_need_kcal: Entry<number>;
+  };
+  /** the routes between the cities (economy feature 17, src/sim/economy/routes.ts) */
+  routes: {
+    /** how far goods travel in a day by land, down and up a river, and by sea */
+    km_per_day: Entry<{ land: number; river_down: number; river_up: number; sea: number }>;
+    /** the days of labour that carry a tonne one kilometre */
+    day_wages_per_tonne_km: Entry<{ land: number; river_down: number; river_up: number; sea: number }>;
+    /** the tonnes of a real unit (a pound of the start year) of each sector's product */
+    tonnes_per_pound: Entry<number[]>;
+    /** by how much the stock the merchants keep falls with the price at the stall against the city's own price */
+    stock_elasticity: Entry<number>;
+    /** the regions of the world (geo.json) that have no way to the regions outside them in this year */
+    apart: Entry<string[]>;
   };
   sectors: string[];
   inputs: {

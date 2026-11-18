@@ -101,6 +101,13 @@ pub struct DailyClock {
     /// Without it the purchases follow the series of the paper (A.55, A.56), whatever the crown takes in.
     pub crown_revenue: bool,
     pub crown_outlays: f64,
+    /// whether a firm and its owner are one household (economy feature 18): the owner's income of a period is the
+    /// firm's profit without the change of its stock, of either sign. Without it the owner gets the profit of the
+    /// paper (A.27), unsold stock at its price included, and bears no loss (A.33, A.44).
+    pub owner: bool,
+    /// what the owner of every firm bore of its loss in the period that is being computed. Not part of the saved
+    /// state: it is set and read within one period.
+    pub borne: Vec<f64>,
     /// the past in a fixed size ([`crate::past`]); `None`: the expectations are estimated on the port's lists of
     /// every period since the start, bit for bit as the port does
     pub past: Option<Past>,
@@ -115,7 +122,7 @@ impl DailyClock {
         if plan == 0 || window == 0 {
             return Err(format!("a plan every {plan} periods and windows of {window} periods: both need at least one period"));
         }
-        Ok(DailyClock { plan, window, demand: vec![0.0; firms], periods: vec![0; firms], start: [f64::NAN; 2], accounts: Vec::new(), wage: Vec::new(), real_wage: Vec::new(), demand_pull: false, savings: 0.0, norm: -1.0, crown_revenue: false, crown_outlays: 0.0, past: None, trade: None })
+        Ok(DailyClock { plan, window, demand: vec![0.0; firms], periods: vec![0; firms], start: [f64::NAN; 2], accounts: Vec::new(), wage: Vec::new(), real_wage: Vec::new(), demand_pull: false, savings: 0.0, norm: -1.0, crown_revenue: false, crown_outlays: 0.0, owner: false, borne: Vec::new(), past: None, trade: None })
     }
 
     /// Whether firm `i` plans in period `t` (counted from 1). Every firm plans in the first period; after that
@@ -303,6 +310,19 @@ impl Extension for DailyClock {
         d
     }
 
+    /// The port's profit of a firm (A.27); with [`DailyClock::owner`] without the stock it built or sold from,
+    /// valued at its price: what the firm took in less what it spent on what it made (economy feature 18; Caiani and
+    /// Catullo 2023, eq. 23). The stock stays in the firm's books in units; it is profit on the day it is sold.
+    fn firms_profits(m: &mut AbstractModel<Self>) -> Vec<f64> {
+        let mut pi = base::firms_profits(m);
+        if m.ext.owner {
+            for i in 0..pi.len() {
+                pi[i] -= m.firms.P_i[i] * m.firms.DS_i[i];
+            }
+        }
+        pi
+    }
+
     /// The port's `gov_expenditure` (A.55, A.56); with [`DailyClock::crown_revenue`] the crown's budget is what it
     /// took in the period before, less its other outlays of that period, and never below 0 (economy feature 16). The
     /// series of the port is computed and its random number drawn all the same, so that every other draw of the
@@ -353,9 +373,44 @@ impl Extension for DailyClock {
         spend_savings(&mut c, &m.w_inact.D_h, m.ext.savings, n, m.prop.tau_VAT);
         (c, i)
     }
+    /// The port's income of an owner (A.33, A.44), which holds the share of a profit and nothing of a loss; with
+    /// [`DailyClock::owner`] the owner bears the same share of a loss: firm and owner are one household with
+    /// unlimited liability (economy feature 18; SNA 2008, 4.155 and 4.158).
+    fn households_income_firms(m: &mut AbstractModel<Self>, expected: bool) -> Vec<f64> {
+        let mut y = base::households_income_firms(m, expected);
+        if m.ext.owner {
+            let k = m.prop.theta_DIV * (1.0 - m.prop.tau_FIRM);
+            let pi = if expected { &m.firms.Pi_e_i } else { &m.firms.Pi_i };
+            // the owner bears the loss in full, as he holds the profit in full
+            let borne: Vec<f64> = pi.iter().map(|pi| -k * pi.min(0.0)).collect();
+            for i in 0..y.len() {
+                y[i] -= borne[i];
+            }
+            if !expected {
+                m.ext.borne = borne;
+            }
+        }
+        y
+    }
+    /// The port's deposits of a firm; with [`DailyClock::owner`] the firm gets from its owner what the owner bears
+    /// of a loss, the other side of [`Extension::households_income_firms`].
+    fn firms_deposits(m: &mut AbstractModel<Self>) -> Vec<f64> {
+        let mut d = base::firms_deposits(m);
+        if m.ext.owner {
+            let borne = std::mem::take(&mut m.ext.borne);
+            for i in 0..d.len() {
+                d[i] += borne[i];
+            }
+        }
+        d
+    }
     fn households_budget_firms(m: &mut AbstractModel<Self>) -> (Vec<f64>, Vec<f64>) {
         let n = norm(m);
-        let (mut c, i) = base::households_budget_firms(m);
+        let (mut c, mut i) = base::households_budget_firms(m);
+        // an owner who expects a loss plans to buy nothing out of income, not less than nothing
+        if m.ext.owner {
+            c.iter_mut().chain(i.iter_mut()).for_each(|x| *x = x.max(0.0));
+        }
         spend_savings(&mut c, &m.firms.D_h, m.ext.savings, n, m.prop.tau_VAT);
         (c, i)
     }

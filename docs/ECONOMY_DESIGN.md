@@ -44,6 +44,7 @@ players and the AI of realms without a player act through the same commands.
 | 14 | The check of the model, and feature 12 taken back | asked by Ramon 17 Nov 2026 ("zuerst das modell jetzt sauber prüfen abschliessen ob alles aufgeht"); feature 12 taken back by his choice the same day; next by his order: distance in trade, then consumption and hunger (section 14) |
 | 15 | Households spend out of their savings, and a family has a need of food | order changed by Ramon 17 Nov 2026 ("Verbrauch und Hunger zuerst", 19:27 UTC) after the slump of remote cities in the trials of the distance was traced to the households' consumption; he asked for "einfach möglichst genau nach beforeit" (20:02 UTC) and chose "BeforeIT plus Erspartes" (20:06 UTC): the market stays the port's, only the budget gets the spending out of savings, need and hunger are a booking of the family purse. Built, with tests and numbers from the game; not yet in the running world (section 15) |
 | 16 | The crown of a city buys with what it took in | after feature 15 the distance in trade was tried again and one city still sank steadily; Ramon chose to clear that first ("Erst den Geldabfluss klären", 17 Nov 2026, 20:45 UTC). The money lay with the crown of the city, whose purchases follow a random series of their own. He chose "Krone gibt aus, was sie einnimmt" (18 Nov 2026, 02:36 UTC). Built, with tests and numbers; not yet in the running world (section 16) |
+| 17 | Distance in trade: goods travel for days, and carrying costs labour | proposed 17 Nov 2026 (https://claude.ai/artifact/9Gt22ijoL8Xdqx4cfLM7NV), variant B agreed by Ramon ("ok"); held back until the money drain was cleared (features 15 and 16); built after his choice of 18 Nov 2026 ("Krone gibt aus, was sie einnimmt": then the distance). How the Americas stay apart in 1356 is asked of him (card of 18 Nov 2026). Built, with tests and numbers; not yet in the running world (section 17) |
 
 ## 1. Grain harvest per place
 
@@ -2727,4 +2728,263 @@ anew on the day the world has reached, as the step to 21 did: the rule changes w
 persons' feature 2 (pull request 69) also uses the state versions 22 and 23: the one merged second has to take the
 next numbers.**
 
-Next by Ramon's order: the distance in trade.
+## 17. Distance in trade: goods travel for days, and carrying costs labour
+
+### The thought
+
+Until now every city lay one day from every other and carrying cost nothing. Ramon wants a system that holds over
+the centuries, not freight rates of one year. Freight is time times what a day costs: whoever moves goods needs
+people and animals for as many days as the way takes. What a day costs the model says itself, in every city and
+every year: the wage. Fixed are only technical quantities (how far a cart or a ship gets in a day, how much labour
+a tonne-kilometre takes), and they change when the technique changes.
+
+Read for it (notes in `/mnt/project-files/wirtschaft/entfernung/quellen_notizen.md`): in the Price Edict of 301 sea
+freight follows the days of travel (Scheidel, Meeks and Weiland 2012, ORBIS v1.0; Scheidel 2013); the costs of
+carting in Brabant 1450 to 1650 are fodder (76 %) and labour (24 %) (Ballaux and Blondé 2018). The ratio wagon to
+river downstream to sea is 46 : 4.5 : 1 in the Edict of 301 and 44 to 47 : 4.7 : 1 for England in 1680
+(Alvarez-Palau et al. 2024): two sources 1,400 years apart with nearly the same ratio.
+
+### The rule
+
+**1. The way** (`src/sim/economy/routes.ts`). Between two cities the way over the net of the world's places
+(27,024 places; every edge is land, river, or water: sea, coast, strait) on which carrying a tonne takes the least
+labour. The result per pair: days of travel and days of labour a tonne.
+
+| | km a day | days of labour a tonne-kilometre |
+|---|---|---|
+| Land (ox cart) | 12 | 1.39 |
+| River (mean of both directions) | 65 down, 15 up | 0.14 down, 0.27 up |
+| Sea | 126 | 0.03 |
+
+The net does not know which way a river flows, so a kilometre of river takes the mean time and the mean labour of
+both directions. Days are rounded, at least 1. Examples: Paris to Ghent 14 days and 137 days of labour a tonne;
+Venice to Alexandria 19 and 70; Baghdad to Tabriz 52 and 840; Cairo to London 65 and 420. The 756 ways of 1356 take
+70 days in the mean, 222 at most.
+
+**1a. Over land on the ways** (state version 27, the road system's first step: `src/sim/roads.ts`,
+`docs/wiki/strassen.md`). Where the start year has ways (`public/data/roads_<year>.json`, the latest year at or
+before it: 1356 goes on the ways of 1291), a land edge between two places that a way joins is its straight
+kilometres times as much as the way winds and climbs: the way's effort (its km weighted by Tobler's hiking function,
+the mean of both directions, `slopeTime`) over the straight line between its ends. A land edge without a way is its
+straight kilometres, weighted by the time the slope between the two places takes, over 3/5, the speed off a path in
+Tobler (1993). Goods take the quicker of the two (`stretchOf`). Days and labour both follow from these kilometres,
+as both follow from the time the carriers take (Ballaux and Blondé 2018: the costs of carting are fodder and labour,
+by the day). Rivers and the sea are as before. A world without ways goes on the straight line, as before. With the
+ways: Paris to Ghent 17 days and 185 days of labour a tonne; Paris to Cologne 35 days (28); Venice to Alexandria 19
+and 70 (by sea, unchanged); Baghdad to Tabriz 77 and 1,269. The ways of 1356 take 89 days in the mean (70), 268 at
+most (222). Over 30 years (four seeds each, 1356 to 1359, on the state with feature 18; straight line against ways):
+real output 114.8 to 115.3 against 114.6 to 115.6; weakest city 111.1 to 112.6 against 111.7 to 113.1; most without
+work 0.8 to 2.2 % against 1.2 to 2.4 %; carrying 0.61 to 0.64 % of output against 0.74 to 0.77 %; imports 3.0 %
+in both; the merchants' money of a city over its GDP −0.17 to +0.14 against −0.20 to +0.16. The kind of a way
+(track, road, highway) changes nothing in trade yet: the kinds follow traffic, not building and upkeep, which come
+with the next step of the road system.
+
+**2. The time.** What the merchants buy in a city for another lies at the stall there after the days of the way
+(`economy/src/trade.rs`, `Routes`). Goods on the way are the merchants' and count at cost.
+
+**3. Carrying.** A real unit of a product (a pound of the start year) weighs so many tonnes (the table's
+`tonnes_per_pound`), and carrying it takes the labour of the way times that weight. The merchants buy this labour
+as services in the city of origin on the day they buy the goods, at the price services have there, and lay it on
+the cost of the goods. So carrying is income of the people of the city of origin, no money leaves the circulation,
+and the price at the stall is purchase plus carrying. For the choice of the origin the merchants reckon a day of
+labour at the mean wage of the city of origin.
+
+**4. The choice of the origin** stays the rule of feature 5 (the port's weights of a buyer), with the price of a
+city's firms plus carrying. Near cities trade more with each other without a rule that says so.
+
+**5. The stock to keep.** stock to keep = share · output · (price at the stall / price of the city's own
+firms)^(−ε), ε = 2. Without it a remote city imports as much as a near one whatever the goods cost there: in the
+first trial its deficit grew by 1 to 1.6 % of its GDP a year and it sank (Sarai to 77 in 20 years). The merchants
+also order ahead: the stall needs what it sells while an order travels, and goods on the way count as stock.
+
+**6. The start.** The merchants have on the way to every stall what it sells in a day, for every day an order
+travels: the position of merchants who ordered day by day before the first day too. Without that the first order
+is for all those days at once; in the world of 1291 it bought 22 small cities empty on the first day (their crown
+found no goods, and the port's accounts gave no number).
+
+**7. The units of the stalls.** A real unit at a stall is what cost one unit of money at the start, carrying
+included. The calibration's price of an imported good is its price at the stall (the import share of the table is
+a share of value where the goods are sold), and "real" is at the prices of the starting position everywhere in the
+model. So a unit bought in the city of origin lies at the stall as 1 + carrying / price units, with the wage and
+the price of the origin at the start (`Routes::unit`), and the stalls begin at the calibration's price. When
+wages, prices or the origins change afterwards, the price at the stall moves, and rule 5 answers. The choice of
+the origin (rule 4) still compares purchase plus carrying a unit of the origin.
+
+Without this rule (the first build, 18 November 2026) the start was a position of trade without cost. The first
+goods to arrive were dearer than the calibration's by their carrying (a third on Cologne's ways), firms that buy
+them raised their prices, the price level of the cities rose by 1 % against wages in money, and the cities lost
+work in the first years: output of all cities 112.8 to 114.0 after 30 years instead of 115.6, up to 7.4 % without
+work, and Cologne (seed 1358) stayed at 99 with 4 to 6 % without work for the 30 years. Counter-runs with that
+seed, ten years: ways with days only, without carrying: no city above 2 % without work after the first year;
+carrying without rule 5: as bad as with it. The runs are in `/mnt/project-files/wirtschaft/entfernung/pr73/`.
+
+**8. Regions apart.** The regions of the world the table names (`routes.apart`: the Americas, Oceania) have ways
+among themselves only. In the net the Americas can be reached along the northern coasts, also within 300 km of a
+coast, so no limit of seamanship that the net can express keeps them apart; the trial of the first proposal cut
+Texcoco by hand. **Ramon's choice of 18 November 2026: the known world is a datum of the start year;** a discovery
+can change it later in the game.
+
+Two orders rules derailed in the trials and are not built: a stock for the days of travel that hangs on sales
+(goods on the way grew beyond the yearly output of the world), and a choice of the origin by distance alone.
+
+### The numbers
+
+All 29 cities of 1356 over 30 years with the routes of the world (`economy/examples/distance.rs`, results in
+`/mnt/project-files/wirtschaft/entfernung/pr73/einheiten/`), seeds 1356 to 1359, on the state with features 15 and
+16 and with the cities as they are since the persons marry and are born (households of 5.8 persons). Without
+distance one seed was computed on this state (1356, `economy/examples/longrun.rs`):
+
+| After 30 years | Without distance (seed 1356) | With distance (four seeds) |
+|---|---|---|
+| Real output of all cities (start 100) | 115.6 | 115.0 to 115.5 |
+| Weakest city (start 100) | 111.8 | 111.1 to 112.8 (Isfahan, Paris, Damascus, Tabriz) |
+| Highest share without work in the 30 years | | 2.2 to 3.2 %; nobody from the tenth year on |
+| Price level of the cities' firms (start 1) | | 0.996 to 0.999 |
+| Equity of all banks (start 551) | 482 | 113 to 360 |
+| Banks with negative equity | 2 | 5 to 6 |
+| Imports over output | | 3.0 % |
+| Carrying over output | 0 | 0.7 % |
+| Merchants' money of a city over its GDP | −0.06 to +0.11 | −0.10 to +0.22 |
+
+The books of the merchants and of every city balance in every year (largest check 1e-13). Cologne stands at 114
+to 117 in the four seeds.
+
+**More banks below zero.** The banks that end below zero do so after the twentieth year, in cities that buy more
+from the merchants than they sell to them year after year (seed 1358: Sarai, Tabriz, Baghdad, Niani; the
+merchants hold 5 to 19 % of such a city's GDP in money there), and in two cities by the households' hoard alone
+(Texcoco, which does not trade, and Cologne). The money the merchants hold in a city is missing with its firms,
+which borrow. This is the drift of the merchants' money of section 16, made lasting by ways that are not alike in
+both directions; nothing in the model lowers the prices of a city that loses money. It is shown, not closed.
+
+### Deviations and what stays open
+
+- **The weight of the goods is set, not sourced**: 0.25 tonnes a pound of agricultural goods, 0.02 a pound of
+  industrial goods, services nothing.
+- **ε = 2 is set, not sourced.** It is the value the merchants' choice of a seller already uses for prices.
+- **Roman values.** Speeds and labour are of the Roman world. That they hold in 1356 rests on the technique and on
+  the cross-check with England in 1680, not on a medieval source. The Roman mile at 1.48 km is not from a source
+  read. The speed at sea is the mean of whole summer routes, not the speed of a ship; there are no seasons.
+- **Rivers have no direction** in the net.
+- **Carrying is services**, bought in the city of origin only; nobody along the way earns from it, and there are no
+  tolls.
+- **The merchants' money drifts apart** between the cities, wider than without distance (section 16), and banks of
+  cities that lose money end below zero after twenty years (above). No rule read closes it.
+- **The units of the stalls are fixed at the start** (rule 7). They are a reading of the calibration, not a
+  measured quantity: the table has one import share for all cities, whatever their ways.
+- **The ways of the 550 cities of 1291 take about six seconds** when the economies are founded; they are kept per
+  world.
+- **Texcoco alone.** A city without ways keeps the stock the merchants had there at the start until it is sold and
+  then has no imports.
+- **A person's spending can be −1e-18** on a day (the port's budget less what was left of it, rounded); the family's
+  `fed` is cut at 0.
+
+### State and upgrade
+
+State version 27: goods go over land on the ways (rule 1a); the upgrade founds the economies anew, as the step to 26
+does. State version 26 (people feature 4 took 25). The format of the cities' state is 2: the routes, the goods on the way (a
+ring as long as the longest way), the carrying ordered, and the wages and prices of the start that fix the units
+of the stalls; format 1 is read as cities without routes. The upgrade
+founds the economies anew on the day the world has reached: routes are given to cities that have not computed a
+day. **The persons' feature 2 (pull request 69) uses state versions too: the one merged later takes the next
+numbers.**
+
+## 18. A firm and its owner are one household
+
+Ramon's question of 18 November 2026 after feature 17: how are the banks below zero solved "möglichst VWL-tauglich,
+paper based"? His choice on the card of that day: "Betrieb und Inhaber ein Haushalt".
+
+### Why
+
+After 30 years with distance 5 to 6 of 29 banks stand below zero (section 17). The flow of funds of the firms shows
+where the money goes (29 cities, 30 years, with distance, seed 1358): the firms' money less their loans falls by
+5,143, a tenth of a year's output; the households hold 5,272 more; the merchants −26 in sum; the banks lose 438 of
+their equity. It happens in every city, also in Texcoco, which does not trade. Two rules of the paper cause it
+together with two values of ours:
+
+- **Unsold stock counts as profit and is paid out** (4,124 of the 5,143). The profit of the paper values the stock a
+  firm built at its price (A.27), and our owners are paid all of a profit (θ_DIV = 1).
+- **A profit is paid out, a loss stays in the firm** (A.33, A.44: `max(0, Π)`). With a day as the period a firm
+  has days with a loss, although it earns over the year.
+
+Measured per firm (same run): of 3,078 firms one loses over the last ten years; all others earn 19 to 25 % of their
+sales. No firm loses for good. The drain is a matter of single days.
+
+### The rule
+
+With the rule `owner = household` (table `cities.owner`; `paper` is the rule of the paper):
+
+1. **The profit of a firm is what it took in less what it spent on what it made**, without the change of its stock:
+   Π = Π_paper − P·ΔS. The form is Caiani and Catullo (2023), LEM Working Paper 2023/19, equations 23 to 25:
+   dividends out of the operating cash flow, without inventories. The stock stays in the firm's books in units and
+   is profit on the day it is sold. Equity (A.36) still counts the stock.
+2. **The owner bears a loss as he holds a profit.** His income from the firm is θ_DIV·(1 − τ_FIRM)·Π of either
+   sign (a profit is taxed as before, a loss is not), and the firm gets from him on the same day what he bears.
+   Firm and owner are one household: System of National Accounts 2008, chapter 4 (draft of 20 December 2007),
+   4.155 and 4.158, an unincorporated enterprise belongs to the household of its owner, who is liable without limit;
+   Liebrecht (2012), Max Planck Encyclopedia of European Private Law, on the members of medieval trade associations.
+   Caiani and Catullo pay out a positive cash flow only; that the owner bears the loss is ours.
+3. **An owner who expects a loss plans to buy nothing out of income**, not less than nothing.
+
+Code: `economy/src/clock.rs` (`firms_profits`, `households_income_firms`, `firms_deposits`,
+`households_budget_firms`), `Economy::with_owner_household`, last argument of `sce_create`, `EconomyRules.owner`.
+
+### The numbers
+
+Trial of 18 November 2026 (outputs in the project folder, wirtschaft/betriebsgeld), 29 cities, 30 years, seeds 1356
+to 1359:
+
+| | paper (seed 1358) | one household, with distance | one household, without distance |
+|---|---|---|---|
+| firms' money less loans | −5,143 | 0 to −1 | 0 |
+| households' deposits | +5,272 | −142 to −197 | −102 to −123 |
+| banks that lose equity | 6 | 0 | 0 |
+| real GDP, start = 100 | 115.5 | 114.8 to 115.3 | 115.2 to 115.4 |
+| weakest city | 111.1 | 111.1 to 112.6 | 111.4 to 113.1 |
+| merchants' money in a city, of its GDP | −0.07 to 0.19 | −0.17 to 0.14 | −0.10 to 0.11 |
+
+Over 100 years (seeds 1356 and 1358, with distance, outputs in wirtschaft/betriebsgeld/hundert):
+
+| after years | 10 | 30 | 50 | 75 | 100 |
+|---|---|---|---|---|---|
+| real GDP, start = 100 | 113.8 to 114.0 | 114.8 to 115.3 | 114.7 to 115.4 | 114.5 to 115.2 | 114.8 to 115.3 |
+| weakest city | 110.3 to 110.6 | 111.1 to 111.3 | 110.3 to 110.7 | 110.7 to 111.4 | 110.6 to 112.2 |
+| price level | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
+| banks' equity (start 551), banks below zero | 551, 0 | 551, 0 | 551, 0 | 551, 0 | 551, 0 |
+| firms' loans | 0 | 0 | 0 | 0 to 1 | 2 to 24 |
+| the crowns' money | 14 to 17 | 179 to 232 | 357 to 515 | 580 to 874 | 833 to 1,178 |
+| merchants' money in a city, of its GDP | −0.07 to 0.05 | −0.17 to 0.13 | −0.22 to 0.20 | −0.26 to 0.26 | −0.32 to 0.37 |
+
+Nobody is without work after the tenth year. The owners' debts were not read out in these two runs.
+
+### Deviations and what stays open
+
+- **A third of the owners end below zero.** The owner plans his spending on the profit of the day before and cannot
+  spend less than nothing: after a good day he spends the profit, after a bad day he cannot take the loss back. The
+  one-sidedness that drained the firms now sits in the owner's budget, smaller. With distance, seed 1358: 546, 998
+  and 1,010 of 3,078 owners are below zero after 10, 20 and 30 years, nearly all of them farms, with −666, −2,086
+  and −2,643 in sum (5 % of a year's output; over the four seeds −2,600 to −3,900). It flattens: in the third
+  decade the owners of farms spend less than they earn. The worst owner owes ten years of his income; large farms
+  with uneven sales spend up to 18 % more than they earn in the first decade. Nothing ends such a debt: the model
+  has no insolvency of a household. The owner pays the bank's rate on it.
+- **Tried and dropped** (same world): the owner bears a loss only out of what he holds (the firms lose 4,250 to
+  5,075, as with the paper's rule); a firm sets a loss off against later profits before it pays out (the money stays
+  in the firms, demand falls, 21 to 22 banks lose equity); the owner plans on the mean profit of 30 days. The last was
+  measured a second time (seed 1358, outputs in wirtschaft/betriebsgeld/geldmenge): it is no fault of the trial.
+  Households spend what they earn (ψ + ψ_H = 1), so a small leak leaves goods unsold (the crown, which spends the
+  revenue of the day before, holds 439 after 30 years in that run; that this is the leak is a reading, not measured). The owners' overspending of this feature,
+  about 0.17 % of GDP a year, happens to fill that gap: all goods are sold and prices stay within 0.96 to 1.04 of
+  their sector. With the mean profit 0.9 % of the goods stay unsold, the price level falls to 0.97, single firms
+  stand between 0.4 and 1.5 of their sector's price, and the owners owe 4,948 instead of 2,643; real output is the
+  same (52,096 against 51,729 after 30 years). Dropped. Net money stays at 11,000 in both while output grows by
+  15 %; with the paper's rule it grows to 14,946 through the firms' loans.
+- **The merchants' money per city still spreads**, in a straight line over 100 years (table): to a third of a
+  city's GDP on either side. Its other side is now the households, not the banks; the spending out of savings
+  (feature 15) does not bound it. Output and work do not suffer in 100 years.
+- **The crowns pile up money**: 2 % of a year's output after 100 years, out of the households' deposits (8,816 at
+  the start, 7,704 to 8,028 after 100 years).
+- **The banker** is paid the bank's profit by the paper's rule as before.
+
+### State and upgrade
+
+State version 26, together with feature 17. Engine format 9: whether the rule holds. The upgrade founds the
+economies anew.

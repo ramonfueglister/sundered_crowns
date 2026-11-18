@@ -6,22 +6,22 @@
 //! a fixed size (src/past.rs), as the engine founds them for the game. `savings` is the share of what a household
 //! holds above its target that it spends per period (feature 15), 0 for the port's rule. With `revenue` the crown buys
 //! with what it took in (feature 16), with `series` by the series of the paper.
-//! usage: reference <periods> <plan> <window> <prices|money> <costs|demand> <savings> <series|revenue> (<seed> <parameters.json> <initial_conditions.json>)…
+//! usage: reference <periods> <plan> <window> <prices|money> <costs|demand> <savings> <series|revenue> <paper|household> (<seed> <parameters.json> <initial_conditions.json>)…
 use sc_economy::Economy;
 use sc_economy::trade::Cities;
 
 fn main() {
     let a: Vec<String> = std::env::args().collect();
-    if a.len() < 14 || (a.len() - 8) % 3 != 0 || !["series", "revenue"].contains(&a[7].as_str()) || !["prices", "money"].contains(&a[4].as_str()) || !["costs", "demand"].contains(&a[5].as_str()) {
-        eprintln!("usage: reference <periods> <plan> <window> <prices|money> <costs|demand> <savings> <series|revenue> (<seed> <parameters.json> <initial_conditions.json>)…");
+    if a.len() < 15 || (a.len() - 9) % 3 != 0 || !["series", "revenue"].contains(&a[7].as_str()) || !["paper", "household"].contains(&a[8].as_str()) || !["prices", "money"].contains(&a[4].as_str()) || !["costs", "demand"].contains(&a[5].as_str()) {
+        eprintln!("usage: reference <periods> <plan> <window> <prices|money> <costs|demand> <savings> <series|revenue> <paper|household> (<seed> <parameters.json> <initial_conditions.json>)…");
         std::process::exit(2);
     }
     let read = |p: &str| std::fs::read_to_string(p).unwrap_or_else(|e| panic!("{p}: {e}"));
     let (plan, window) = (a[2].parse().expect("plan"), a[3].parse().expect("window"));
     let (money, pull) = (a[4] == "money", a[5] == "demand");
     let savings: f64 = a[6].parse().expect("savings");
-    let revenue = a[7] == "revenue";
-    let cities = a[8..]
+    let (revenue, owner) = (a[7] == "revenue", a[8] == "household");
+    let cities = a[9..]
         .chunks(3)
         .map(|c| {
             let e = Economy::new(&read(&c[1]), &read(&c[2]), c[0].parse().expect("seed"), plan, window).expect("economy");
@@ -30,6 +30,7 @@ fn main() {
             // as the engine founds the cities of the game (src/lib.rs)
             let e = e.with_savings_spent(savings).expect("savings");
             let e = if revenue { e.with_crown_spending_revenue() } else { e };
+            let e = if owner { e.with_owner_household() } else { e };
             e.with_bounded_past()
         })
         .collect();
