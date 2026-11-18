@@ -3,6 +3,8 @@
 // (src/sim/systems/household.ts), the state, the upgrade, and what the server and the panel say of a household.
 import { namedPersons } from '../src/sim/systems/rulers';
 import { describe, it, expect } from 'vitest';
+import { ALIVE } from '../src/sim/state';
+import { foundDeaths } from '../src/sim/systems/deaths';
 import { newWorldState, loadSetup } from '../tools/sim/load';
 import { advanceDay } from '../src/sim/engine';
 import { FIGURE, FIGURES } from '../src/sim/economy/engine';
@@ -33,7 +35,7 @@ const near = (a: number, b: number) => expect(Math.abs(a - b)).toBeLessThanOrEqu
 /** The persons of each family of the cities (the rulers, src/sim/systems/rulers.ts, have no part in the economy). */
 function members(x: WorldState): number[][] {
   const out: number[][] = Array.from({ length: x.family.size }, () => []), named = namedPersons(x);
-  for (let id = 0; id < x.person.size; id++) if (x.person.alive[id] && !named.has(id)) out[x.person.cols.family[id]].push(id);
+  for (let id = 0; id < x.person.size; id++) if (x.person.alive[id] && x.person.cols.died[id] === ALIVE && !named.has(id)) out[x.person.cols.family[id]].push(id); // the living: the dead are no members (src/sim/systems/deaths.ts)
   return out;
 }
 /** A woman without a husband: at the head of a family without a man at its head, or on her own. */
@@ -63,7 +65,7 @@ describe('a woman without a husband', () => {
         alone++;
         expect(works(x, id)).toBe(true);
       }
-      expect(alone).toBeGreaterThan(1000); // about one woman in seven
+      expect(alone).toBeGreaterThan(700); // the widows who keep a household and the women who live on their own
     });
     it(`leaves the share of the women who work at the table's 43 %, in every city of the world of ${name}`, () => {
       const by = women(x);
@@ -94,7 +96,7 @@ describe('a woman without a husband', () => {
         none++;
         if (ids.length === 1 && x.person.cols.sex[ids[0]] === 0 && adult(x, ids[0])) lone++;
       }
-      expect(families).toBeGreaterThan(6000);
+      expect(families).toBeGreaterThan(4500);
       expect(none / families).toBeLessThan(0.015); // it was every ninth family; 1.06 % in the 558 towns of 1291
       expect(lone).toBe(0); // no woman on her own is among them
     });
@@ -138,7 +140,8 @@ describe('the purse of a family', () => {
       expect(F.baskets[f]).toBe(adults + 0.5 * (ids.length - adults));
       persons += ids.length; baskets += F.baskets[f];
     });
-    expect(persons).toBe(s.person.size);
+    let alive = 0; for (let id = 0; id < s.person.size; id++) if (P.died[id] === ALIVE) alive++;
+    expect(persons).toBe(alive);
     expect(baskets).toBeGreaterThan(0.8 * persons); expect(baskets).toBeLessThan(0.9 * persons); // a third are children
   });
   it('has the income, the spending and the savings of all its members', () => {
@@ -251,7 +254,7 @@ describe('the need of food (economy feature 15)', () => {
       near(F.fed[f] + 1, Math.min(1, F.spent[f] / F.need[f]) + 1);
       if (F.fed[f] < 1) short++; else full++;
     }
-    expect(families).toBeGreaterThan(6000);
+    expect(families).toBeGreaterThan(4500);
     // most families cover their need; some do not: those nobody of whom works, and the poorest
     expect(full / families).toBeGreaterThan(0.75);
     expect(short).toBeGreaterThan(0);
@@ -280,9 +283,8 @@ describe('the state', () => {
     expect(up.v).toBe(STATE_VERSION);
     expect(Object.keys(up.person.cols)).toEqual(Object.keys(PERSON_SCHEMA));
     expect(Object.keys(up.family.cols)).toEqual(Object.keys(FAMILY_SCHEMA));
-    const founded = decodeState(encodeState(s)); foundEconomy(founded, w);
-    settleHamlets(founded); countPeople(founded); cultivate(founded, w); bringInHarvest(founded, w); // step 17
-    foundLots(founded, w.ground, w.dry); // step 20: the parcels of the families who live in the towns now
+    // step 23 founds the persons anew on the day reached, and everything that hangs on them: as it does for the world that ran
+    const founded = decodeState(encodeState(s)); founded.v = 22; upgradeState(founded, w, () => loadSetup(1356));
     expect(hashState(up)).toBe(hashState(founded));
     const c = up.economy.cities!;
     expect(c.day).toBe(s.day); expect(c.years.length).toBe(0); expect(c.halted).toBe('');
@@ -301,7 +303,8 @@ describe('the state', () => {
     const up = upgradeState(decodeState(encodeState(old)), w, () => loadSetup(1356));
     expect(up.v).toBe(STATE_VERSION);
     expect(Object.keys(up.family.cols)).toEqual(Object.keys(FAMILY_SCHEMA));
-    const founded = decodeState(encodeState(s)); foundEconomy(founded, w);
+    // step 23 then founds the persons anew, and the economies with them: as it does for the world that ran
+    const founded = decodeState(encodeState(s)); founded.v = 22; upgradeState(founded, w, () => loadSetup(1356));
     expect(hashState(up)).toBe(hashState(founded));
     const c = up.economy.cities!;
     expect(c.day).toBe(s.day); expect(c.years.length).toBe(0);
@@ -309,6 +312,17 @@ describe('the state', () => {
     advanceDay(up, w); advanceDay(up, w);
     expect(up.economy.cities!.halted).toBe('');
     expect(up.family.cols.fed.some((v) => v === 1)).toBe(true);
+  }, 60_000);
+  it('of a world from before feature 16 is founded anew by the upgrade, with a crown that buys with what it took in', () => {
+    const old = decodeState(encodeState(s)) as any; old.v = 23;
+    const up = upgradeState(decodeState(encodeState(old)), w, () => loadSetup(1356));
+    expect(up.v).toBe(STATE_VERSION);
+    const founded = decodeState(encodeState(s)); foundEconomy(founded, w);
+    expect(hashState(up)).toBe(hashState(founded));
+    const c = up.economy.cities!;
+    expect(c.day).toBe(s.day); expect(c.years.length).toBe(0);
+    advanceDay(up, w); advanceDay(up, w);
+    expect(up.economy.cities!.halted).toBe('');
   }, 60_000);
 });
 

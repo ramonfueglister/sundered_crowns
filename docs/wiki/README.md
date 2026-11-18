@@ -19,8 +19,11 @@ Das Spiel wird gerade von Grund auf neu gebaut. Das Wiki wächst deshalb Feature
   - [Personen der Wirtschaft](wirtschaft/personen-der-wirtschaft.md) *(Im Spiel)*
   - [Haushalt der Familie](wirtschaft/haushalt-der-familie.md) *(Im Spiel)*
   - [Verbrauch und Hunger](wirtschaft/verbrauch-und-hunger.md) *(Gebaut)*
+  - [Die Krone gibt aus, was sie einnimmt](wirtschaft/krone-gibt-einnahmen-aus.md) *(Gebaut)*
 - [Personen](personen/README.md): wer als eigene Person in der Welt lebt
   - [Einwohner der Städte](personen/einwohner-der-staedte.md) *(Beschlossen)*
+  - [Tod, Heirat und Geburt](personen/tod-heirat-geburt.md) *(Gebaut)*
+  - [Erbbrauch je Kultur](personen/erbbrauch.md) *(Gebaut)*
 - [Siedlung](siedlung/README.md): wo die Familien wohnen und wie Städte wachsen
   - [Jede Familie hat eine Parzelle](siedlung/parzellen.md) *(Entwurf)*
   - [Die Höfe in den Weilern](siedlung/hoefe.md) *(Entwurf)*

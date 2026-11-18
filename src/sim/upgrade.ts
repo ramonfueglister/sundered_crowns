@@ -14,6 +14,8 @@ import { countPeople, settleHamlets } from './systems/hamlets';
 import { cultivate } from './systems/cultivation';
 import { bringInHarvest } from './systems/harvest';
 import { foundPersonCultures } from './systems/cultures';
+import { foundDeaths } from './systems/deaths';
+import { foundBirths } from './systems/families';
 import type { SetupState } from './setup';
 
 /** The fields of a WorldState in the order createWorldState writes them. */
@@ -151,6 +153,46 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     (s.family as { cols: unknown }).cols = fresh;
     foundEconomy(s, w);
     s.v = 21;
+  }
+  if (s.v === 21) { // 21 → 22: the persons of the towns die (src/sim/systems/deaths.ts). Every living person gets the
+    // day of death, drawn from the life table for the age the person has on the day the world has reached: nobody
+    // has died since the first day, so the persons are who they were. A ruler keeps the day of the chronicle.
+    const cols = s.person.cols as Record<string, Column>, fresh = makeColumns(PERSON_SCHEMA, s.person.alive.length) as Record<string, Column>;
+    for (const k of Object.keys(fresh)) if (k in cols) fresh[k] = cols[k]; // in the order of the schema
+    (s.person as { cols: unknown }).cols = fresh;
+    foundDeaths(s);
+    s.v = 22;
+  }
+  if (s.v === 22) { // 22 → 23: the persons marry and are born (src/sim/systems/families.ts), after England around
+    // 1300: another life table (La Poutré & Janssen 2021), a fixed number of households in every town, and other
+    // ages and couples for it. The persons of the towns are founded anew on the day the world has reached, as a new
+    // world founds them, and with them everything that hangs on who they are: their cultures, the rulers (who come
+    // into the world again as they would have since the first day), the days of death and of birth, the economies
+    // (their days and yearly figures are gone, as in the steps to 12, 14 and 15), the hamlets, the people of the
+    // places, the arable, the harvest and the land register. A world on its first day becomes the new world.
+    if (!setup) throw new Error('the upgrade to 23 needs the setup of the start year');
+    for (const [table, schema] of [[s.person, PERSON_SCHEMA], [s.family, FAMILY_SCHEMA]] as const) {
+      const cols = table.cols as Record<string, Column>, fresh = makeColumns(schema, table.alive.length) as Record<string, Column>;
+      for (const k of Object.keys(fresh)) if (k in cols) fresh[k] = cols[k]; // in the order of the schema
+      (table as { cols: unknown }).cols = fresh;
+    }
+    foundPeople(s);
+    foundPersonCultures(s, setup());
+    s.named = []; s.realm.cols.holder.fill(-1);
+    foundRulers(s, w); rulerCultures(s, w);
+    foundDeaths(s); foundBirths(s);
+    foundEconomy(s, w);
+    settleHamlets(s); countPeople(s);
+    cultivate(s, w); bringInHarvest(s, w);
+    foundLots(s, w.ground, w.dry);
+    s.v = 23;
+  }
+  if (s.v === 23) { // 23 → 24: the crown of a city buys with what it took in (economy feature 16). The rule changes
+    // what every city computes, so the economies are founded anew on the day the world has reached, as in the step
+    // to 21: their days and yearly figures are gone, and the first period is the next day of the world. The persons
+    // stay who they are.
+    foundEconomy(s, w);
+    s.v = 24;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one

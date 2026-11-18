@@ -17,6 +17,8 @@ nothing built before Ramon agrees. Proposal with sources (German): https://claud
 |---|---|---|
 | 1 | Persons of the 30 largest cities in 1356 | agreed by Ramon 15 Nov 2026 and built; in the running world once the world server is redeployed |
 | 1b | 1291: persons in every town of the world graphic inside the world frame (558 towns, ~102,000 persons; state 15) | agreed by Ramon 16 Nov 2026 (world of towns); tools/history/1291/towns.py writes src/sim/content/cities_1291.json |
+| 2 | The persons live: a list of events, death, birth, marriage | built as a draft, 17 Nov 2026 (Ramon: all persons, event-driven, demography first; then, on the proposal of part 2: the mortality of the source and marriage only into a vacant household). It founds the persons anew (state 23) |
+| 3 | A household passes to an heir by the custom of the culture | built 18 Nov 2026 (Ramon, 17 Nov: a custom for every culture; 18 Nov: only what a source that was read supports, 83 % of the persons). No new state |
 
 ## Feature 1: persons of the 30 largest cities
 
@@ -45,12 +47,15 @@ All randomness comes from a stream of its own, `hash01(seed, person id, draw)`, 
    at most 60 years away), the 30 largest inside the map, each in the nearest land place (Sarai corrected to our place
    Sarai: the data set puts it near Tambov). Persons = people / 100, rounded. Places smaller than their cities grow to
    them (+385,000 people in 17 places, 0.26 % of the world).
-2. **Age and sex.** Stationary population of Coale-Demeny West level 3 (e0 women 25.00, men 22.85 in our
-   implementation): the age density is l(a). 105 boys per 100 girls at birth.
-3. **Families.** Personal age at first marriage ~ N(24, 4) for women, N(27, 4) for men, at least 15. Women of
-   marrying age, oldest first, take the unmarried man of marrying age nearest to their age + 3. Everybody below their
-   marriage age joins a wife of the same city who was 15–49 at their birth (uniform among those), with her husband as
-   father. Whoever is left is a family of their own.
+2. **Age and sex.** Stationary population of the life table of England around 1300 (La Poutré & Janssen 2021, one
+   table for both sexes; feature 2): the age density is l(a). 105 boys per 100 girls at birth.
+3. **Households.** A woman is a housewife with the share of her age in a population that does not grow: the
+   households by the age of the wife as the program of La Poutré 2023 builds them at its start (RR[a] = (1 − q[a]) ·
+   RR[a − 1] + the curve of the brides), over the women of that age, with 5.8 persons a household. Her husband is the
+   free man of 18 or older nearest to her age + 3, within ten years; a housewife of 45 or older is a widow with the
+   chance that a man three years older has died since she was 45. Everybody else joins a housewife of the same city
+   who was 15–45 at their birth (uniform among those), as her and her husband's child (in a widow's household
+   without known parents). Whoever is left is a family of their own, without a household.
 4. **IQ and Big Five.** Persons without known parents: z ~ N(0, 1) for each of the six, independently. Children:
    z = h²·(z_mother + z_father)/2 + ε, ε ~ N(0, 1 − h⁴/2) (infinitesimal model), h² = 0.66 for IQ, 0.40 for each
    Big Five trait. IQ = 100 + 15z, T = 50 + 10z, rounded.
@@ -60,12 +65,13 @@ All randomness comes from a stream of its own, `hash01(seed, person id, draw)`, 
 | Parameter | Value | Source |
 |---|---|---|
 | City sizes | 30 cities, 2,572,165 people | Reba, Reitsma & Seto 2016, Scientific Data 3:160034, chandlerV2.csv (CC BY 4.0), after Chandler 1987 |
-| Life table | Coale-Demeny West level 3 | Coale & Demeny 1983 tables, method and coefficients as in demogR `cdmltw` (Oeppen 2018 corrections); level from Bailey & Rigby 2012 (e0 20–25 in the Middle Ages) and Ohlin 1966 (about 25, nobility c. 1300) |
+| Life table | μ(x) of La Poutré & Janssen 2021 with β = 0.064, θ = −6.3 (e0 35.1) | Genus 77(1):12, eq. 3 and 11, fitted to the English tenants-in-chief born before 1276; the defaults of the program of La Poutré 2023. Until 17 Nov 2026: Coale-Demeny West level 3 (e0 25), which stays in `lifetable.ts` for the probes |
 | Growth | 0 (stationary) | assumption |
 | Sex ratio at birth | 1.05 | assumption |
-| Mean age at first marriage | women 24, men 27 | La Poutré & Paping 2025, Social Science History, England c. 1300 (abstract) |
-| Spread of marriage age | sd 4 years, minimum 15 | assumption |
-| Mother's age at birth | 15–49 | assumption (the usual reproductive span) |
+| Age of the brides | curve of Coale and McNeil, mean 24, none before 15.5 | La Poutré & Paping 2025; program of La Poutré 2023 |
+| Husband | 3 years older, at least 18 | men marry at about 27 (La Poutré & Paping 2025); the youngest is an assumption |
+| Persons per household | 5.8 | La Poutré & Paping 2025 |
+| Mother's age at birth | 15–45 | program of La Poutré 2023 (no births from 45 on) |
 | Heritability IQ | 0.66 | Haworth et al. 2010, Molecular Psychiatry 15:1112–1120, young adults |
 | Heritability Big Five | 0.40 | Vukasović & Bratko 2015, meta-analysis of 62 effects, over 100,000 persons |
 | Inheritance | infinitesimal model | Barton, Etheridge & Véber 2017, Theoretical Population Biology 118:50–73 |
@@ -75,25 +81,27 @@ All randomness comes from a stream of its own, `hash01(seed, person id, draw)`, 
 | Figure | Model | History |
 |---|---|---|
 | Persons | 25,722 | 2,572,165 / 100 |
-| Married women of 14 and over | 60.9 % | about 60 %, poll tax 1377 (Briggs 2024, CAMPOP) |
-| Persons per family | 3.92 (4.52 with a couple) | households c. 1300: 5.8 (La Poutré & Paping 2025; whether servants count is not read) |
-| Under 15 / 60 and over | 34.1 % / 6.0 % | (follows from the life table) |
-| IQ mean / sd / slope on midparent | 100.07 / 15.02 / 0.662 | 100 / 15 / 0.66 |
-| Big Five mean / sd / slope | 50.0 / 10.0 / 0.397–0.406 | 50 / 10 / 0.40 |
+| Women of 14 and over with a husband | 43.4 % | about 60 % married, poll tax 1377 (Briggs 2024, CAMPOP): after the plague; around 1300 about 30 % of the women of 40 had never married (La Poutré & Paping 2025) |
+| Persons per family | 5.19 (5.51 with a couple) | households c. 1300: 5.8 (La Poutré & Paping 2025) |
+| Under 15 / 60 and over | 32.0 % / 4.8 % | (follows from the life table; the paper: at most a third under 14) |
+| IQ mean / sd / slope on midparent | 100.05 / 15.03 / 0.661 | 100 / 15 / 0.66 |
+| Big Five mean / sd / slope | 50.0 / 10.0 / 0.40 | 50 / 10 / 0.40 |
 
-Not tuned: the married share was not calibrated. The family is smaller than the household of c. 1300 because servants,
-lodgers and three-generation households are not modelled.
+Not tuned. A family is smaller than a household because the persons who found no household to live in are families
+of their own.
 
 ### Limits
 
 - The six traits are independent; in reality they correlate (IQ and openness ρ = .20, Anglim et al. 2022; the Big Five
   intercorrelations of van der Linden et al. 2010 are paywalled and not read). Shared environment and assortative
   mating are left out.
-- The medieval life tables themselves (Hatcher 1986, Harvey 1993, Razi 1980) were not opened. The plague of 1348 is
-  not in the age structure. Towns probably had a higher mortality than the country; one table serves both.
-- English marriage ages for all 30 cities, also Cairo, Fez, Tabriz or Damascus, where people married earlier.
+- The life table is fitted to adult lords: it has no data below 15, the mortality of children is what its formula
+  gives (16 % in the first year, 70 % reach 15). Bailey & Rigby 2012 give a life expectancy of 20 to 25 for the
+  Middle Ages, the table 35. The plague of 1348 is not in the age structure. Towns probably had a higher mortality
+  than the country, and the paper is about rural England; one table serves both.
+- English marriage ages and households for all cities, also Cairo, Fez, Tabriz or Damascus, where people married earlier.
 - Chandler's figures are estimates (Certainty 1–3 per city); Mali and Trabzon are 3.
-- No servants, no three-generation households; no estate, culture, genes or names per person yet.
+- No servants: an unmarried adult lives in the household of the parents or alone; no estate, culture, genes or names per person yet.
 - Upgraded worlds: places grow to their cities at once; arable and harvest follow on the next 1 January.
 
 ### Sources
@@ -107,3 +115,280 @@ lodgers and three-generation households are not modelled.
 - Briggs, C. (2024): Marriage in the Middle Ages. CAMPOP blog. https://www.campop.geog.cam.ac.uk/blog/2024/07/25/marriage-in-the-middle-ages/
 - Anglim, J. et al. (2022): Personality and intelligence: a meta-analysis. Psychological Bulletin 148, 301–336.
 - demogR, `cdmltw`: https://raw.githubusercontent.com/hanase/demogR/master/R/cdmltw.R
+
+## Feature 2: the persons live (the list of events, death, marriage, birth)
+
+Ramon, 17 November 2026: all persons are to be simulated, a person is computed only when something is due
+(event-driven), and what a person does is to depend on IQ, the Big Five and the town; demography comes first. The
+research behind it (agent papers of 2025/26, Dwarf Fortress, Songs of Syx and other games, day planners such as
+MATSim, demographic microsimulation, personality and life outcomes) and the order of the steps are in the proposals
+(German): https://claude.ai/artifact/HvQdfFSJ1Mb35L4vZXRbQf and https://claude.ai/artifact/CSHcS21ac1gcX31d12bMFV.
+
+Ramon also decided that day: there are only the persons of the simulation, in the ECS and on the map, so nobody
+comes in from outside; and a world that shrinks as a whole is wrong for 1291. After the proposal of part 2 he chose
+the mortality of the source (La Poutré & Janssen 2021) with marriage only into a vacant household (La Poutré &
+Paping 2025).
+
+Code: `src/sim/systems/deaths.ts`, `src/sim/systems/families.ts`, the rules and their numbers in
+`src/sim/people/marriage.ts` and `src/sim/people/lifetable.ts`; the columns `person.dies`, `person.bears` and
+`family.seat` (state 23). Check: `npm run families:check`.
+
+### Death
+
+The day of death is drawn once, when a person comes into the world (at the founding for everybody), from the life
+table of feature 1 (La Poutré & Janssen 2021), given the age reached: l(t*) = (1 − u) · l(a), with l the
+survivorship and u a draw of the person's own stream (`hash01(seed, id, 40)`). Within a year of
+age the force of mortality is taken as constant. This is the next-event method of demographic
+microsimulation (Modgen/DYNAMIS-POP, MicSim): a waiting time is drawn instead of a daily throw, and the earliest
+event is the next. Death depends on age only; IQ and the Big Five do not move it yet (step 3 of the plan).
+
+The list of events is a heap over the column `person.dies`, built when a state is first seen: it is no state of its
+own, so a snapshot stays its arrays. The system `deaths` runs before the economy every day and lets everybody die
+whose day has come: about 8 persons a day in the world of 1291. The events of a day come in the order of the
+persons, however the list was built.
+
+A death writes `person.died`, and the family loses its head if the dead person was one. A ruler dies on the day of
+the chronicle as before.
+
+**Succession in the economy (assumption, no source).** The engine computes a fixed list of persons for every town
+and cannot add or remove one. A dead person's part (worker, owner of a firm, owner of the bank, the person who does
+not work) goes to a living person of the town of 15 or older who has none: first of the dead person's family, then
+a child, then anybody of the town, in the order of `work.ts`; with the place in the engine's list go the employer,
+the firm and the money. Where nobody is free the part stays with the dead (an estate) and is looked at again on the
+first day of each month. So the number of persons in a town's economy does not change with the town.
+
+### Marriage and birth
+
+**The source.** La Poutré & Paping 2025 reconstruct England around 1300 as a population that does not grow because
+the number of households is fixed: a wedding needs a vacant household. Read: the paper in full, the program of the
+simulation (La Poutré 2023, thesis Groningen, program code) and La Poutré & Janssen 2021. Not read: chapter III,
+section 8.6 and appendix B of the thesis (the file opens only to page 44 here), so the rules are those of the
+program, not of the thesis' prose.
+
+**Households.** A family with a seat (`family.seat`) is a household of its town, and the woman at its head is its
+housewife. The number of seats of a town is that of its founding and does not change. A household whose housewife
+has died is vacant.
+
+**Weddings**, on the first day of every month, in every town:
+
+1. Each vacant household looks for a bride: an age is drawn from the curve of Coale and McNeil (mean 24, none before
+   15.5: w(x) = exp(−0.174/k · z − exp(−0.288/k · z)), z = x − 15.5 − 6.06k, k = (24 − 15.5)/11.36), and the bride is
+   the woman of the town without a household whose age is nearest, within 2.5 years. Her groom is the man of the
+   town without a wife, 18 or older, nearest to her age + 3, within ten years. Where he is the widower of a vacant
+   household she becomes its housewife; else the couple is a new family that takes the seat of the vacant household
+   and its house (parcel or farmstead). Without a bride or a groom the household stays vacant for the month.
+2. A widow under 45 who keeps a household takes a husband in the same way.
+
+Nobody marries a brother, a sister, a parent or a child (added with feature 3; before it 4 % of the weddings of a
+run of 100 years were between siblings, who are the nearest in age in a small town).
+
+**Births.** A wife with a living husband bears at the rate f(a) / 2.75 a year, f(a) = 1 − exp(4.6 · ((a − 15)/30 − 1)),
+nothing from 45 on (33 months between births at her most fertile). The day of her next birth is drawn when she
+marries and after every birth (`person.bears`), at the earliest nine months later, with the rate after that as much
+higher; it is void when her husband dies. A child is born into the family of the mother with the sex ratio, the
+inheritance of IQ, Big Five and genes of feature 1, the culture and faith of the mother, and its day of death.
+
+| Parameter | Value | Source |
+|---|---|---|
+| Mortality | β 0.064, θ −6.3, ω 2.7 | La Poutré & Janssen 2021, table 2 and eq. 11; program defaults |
+| Number of households | fixed | La Poutré & Paping 2025 (no growth 1290–1315) |
+| Brides | Coale-McNeil, mean 24, minimum 15.5 | La Poutré & Paping 2025; program |
+| Husband older by | 3 years | men marry at about 27 (La Poutré & Paping 2025) |
+| Birth interval, fertility by age, last birth before 45 | 2.75 years, f(a), 45 | program (BpY = 0.33 = (1 − 10 % widows)/2.75; FertilityThreshold) |
+| Search windows, youngest groom 18, nine months between births | | assumptions, no source |
+| A widow under 45 marries again | | assumption: the program has no widows, the paper counts 10 % of the housewives as widows |
+
+### Measured (`npm run families:check`, world of 1291, seed 1291, deaths, weddings and births over 100 years)
+
+As measured before feature 3; with the heirs and without the weddings between siblings the figures are in feature 3.
+
+| Figure | Founding | Year 50 | Year 100 | La Poutré & Paping 2025 |
+|---|---|---|---|---|
+| Persons | 102,042 | 97,050 | 97,823 | no growth |
+| Households (vacant) | 17,702 (0) | 17,702 (51) | 17,702 (46) | fixed |
+| Persons per household | 5.76 | 5.48 | 5.53 | 5.8 |
+| Under 15 | 32 % | 32 % | 32 % | at most a third under 14 |
+| Widows among the housewives | 14 % | 15 % | 14 % | 10 % |
+| Women of 40 to 44 without a household | 30 % | 26 % | 27 % | about 30 % never married at 40 |
+| Deaths / births / weddings in the year | | 2,770 / 2,771 / 862 | 2,832 / 2,834 / 907 | |
+
+Mean age of the brides 23.8 (the paper: 24). The world settles at 5.5 persons a household, 4 % below its founding,
+and stays there. By size of the place at the founding, after 100 years: under 60 persons −4.1 % (9 of 58 places
+below half, one empty), 60 to 100 −1.3 %, 100 to 200 −1.2 %, 200 to 500 −4.0 %, 500 and more −8.0 %. Parts of the
+economy held by the dead: 0 in the first years, about 600 to 750 of 49,745 from year 50 on.
+100 years of deaths, weddings and births take 25 s; the persons' table has 378,000 rows then (the dead stay).
+
+The rule alone, in a closed population of 20,000 single persons over 500 years (`tools/sim/positions_probe.ts`):
+with the mortality of the source 5.4 persons a household and 25 % never married at 40 where widows stay alone, 6.15
+and 34 % where widows under 45 marry again, growth 0.00 % a year in both; with Coale-Demeny West level 3 the rule
+is stable too, at 4.0 persons a household and almost nobody unmarried.
+
+### The first probe: marriage by age alone (not built)
+
+Before the paper was read in full: without households, everybody marries at an age of their own.
+
+A closed population of 20,000 persons run for 300 years with the marriage rule of the founding (growth of the last
+200 years; `tools/sim/closed_population_probe.ts`). Fertility is the natural schedule
+of Coale and Trussell, r(a) = M · n(a) (n = 0.460, 0.431, 0.395, 0.322, 0.167, 0.024 for 20–24 … 45–49; single
+years 15–19: 0.325, 0.375, 0.421, 0.460, 0.475).
+
+| West level (e0 women) | Marriage age f / m | M | Remarriage | Growth a year | Married of women 15–49 |
+|---|---|---|---|---|---|
+| 3 (25.0) | 24 / 27 | 1.0 | no | −0.65 % | 46 % |
+| 3 (25.0) | 24 / 27 | 1.0 | yes | −0.06 % | 65 % |
+| 3 (25.0) | 24 / 27 | 0.9 | yes | −0.27 % | 63 % |
+| 3 (25.0) | 24 / 27 | 0.75 | yes | −0.66 % | 66 % |
+| 3 (25.0) | 24 / 27, 10 % never marry | 1.0 | yes | −0.33 % | 59 % |
+| 3 (25.0) | 20 / 23 | 0.75 | yes | +0.03 % | 77 % |
+| 3 (25.0) | 18 / 21 | 0.75 | yes | +0.38 % | 84 % |
+| 5 (30.0) | 24 / 27 | 0.75 | yes | −0.07 % | 68 % |
+| 7 (35.0) | 24 / 27 | 0.75 | yes | +0.46 % | 68 % |
+| 7 (35.0) | 24 / 27 | 0.75 | no | −0.14 % | 57 % |
+
+Nothing is stable without remarriage. M = 0.75 is our arithmetic from the English family reconstitutions of
+1540–1850 (total marital fertility 6.7 to 6.8 against 9.0 of the standard; Alter, Newton & Oeppen 2020); no value
+for 1300 was found. La Poutré & Paping 2025 give men 25 years of life left at marriage at 27: level 3 gives 25.3.
+Ramon, 17 November 2026: clear the source first. The source has the answer above: a fixed number of households.
+
+### Limits
+
+- One life table for everybody; no plague, no famine, no death in childbed. IQ and the Big Five move nothing yet.
+- Nobody moves between towns: brides and grooms are of the town itself, so a small town can die out (one of 550 in
+  100 years) and none can grow past its households. The number of households does not follow the land or the
+  economy yet (the program has a rule for it: growth of the households = λ − κ · population).
+- A child conceived before its father died is not born. No twins, no births outside marriage.
+- The dead keep their rows; the tables grow by about 2,800 persons and 650 families a year in the world of 1291.
+- Who works is not drawn anew: the shares of men and women who work drift with the successions, and a woman who
+  loses her husband does not start to work (economy feature 11 drew that at the founding).
+- A family keeps its ground and its hamlet whoever of it works now; the farmers of a place (the harvest) are
+  counted from the families that were settled at the founding.
+- Orphans stay a family without a head.
+
+### Sources
+
+- Modgen / DYNAMIS-POP, methods: https://dynamis.ihsn.org/guide/Report/10_Methods.html
+- Zinn, S. (2024): MicSim (slides, IMA 2024). https://ima-2024.wifo.ac.at/_downloads/034811e70c6ee9068b5214e504efaab3/zinn.pdf
+- Coale, A. J., Trussell, T. J. (1974): Model fertility schedules. Population Index 40(2), 185–258 (values read in https://journal.ipb.ac.id/index.php/jmap/article/download/20244/13979 and https://journals.utm.my/jurnalteknologi/article/download/457/447/454).
+- Alter, G., Newton, G., Oeppen, J. (2020), on the Cambridge Group reconstitutions. https://pmc.ncbi.nlm.nih.gov/articles/PMC10923557
+- La Poutré, H., Paping, R. (2025): English familial demography c. 1300: a reconstruction. Social Science History 49(2), 533–557. Full text: https://pure.rug.nl/ws/portalfiles/portal/1511914604/english-familial-demography-c-1300-a-reconstruction_1_.pdf
+- La Poutré, H. (2023): English population 1086–1377: a modelling approach. Thesis, Groningen. Program code of the simulation: https://pure.rug.nl/ws/portalfiles/portal/663712445/simulation_64294d0e31b65.txt
+- La Poutré, H., Janssen, F. (2021): A two-parameter hazard function to describe age patterns of mortality in ancient Northwestern Europe. Genus 77(1):12. https://link.springer.com/10.1186/s41118-021-00122-w
+
+## Feature 3: a household passes to an heir (the custom of the culture)
+
+Ramon, 17 November 2026: who takes over a household is to follow the custom of the culture, not English custom
+everywhere; 18 November, on the proposal: only the cultures a source that was read speaks for get a custom, the
+others keep the rule of feature 2 until a source is there. The proposal with all that was read and what could not
+be opened (German): https://claude.ai/artifact/CSHcS21ac1gcX31d12bMFV, section «Vorschlag: Erbbrauch je Kultur».
+
+Code: `src/sim/people/inheritance.ts` (the customs, the cultures of each with the source, `heirOf`), the rule in
+`weddingsOn` of `src/sim/systems/families.ts`. No new state: the children of a house are found from the columns
+`person.mother`, `person.father` and `person.family`. Check: `npm run families:check`; `tests/inheritance.test.ts`.
+
+### The rule
+
+When the housewife of a household has died (the household is vacant), on the first day of the month and before the
+weddings of feature 2:
+
+1. The children of the house are the living persons of the town whose mother or father was of the family, wherever
+   they live now. The custom is that of their father's culture, for a Muslim father that of the faith (of the mother
+   where no father is known).
+2. The custom names the heir among the children who are free: grown (a son of 18 or older, a daughter of 16 to 44)
+   and not at the head of a household. Where the child it names first is not free, the next one stands in.
+3. An heir who is a son takes a bride of the town by the curve of feature 2; an heiress takes a groom of the town
+   nearest to her age + 3, within ten years. The couple is a new family with the seat and the house (parcel or
+   farmstead). The widower and the other children stay a family and stay in the house.
+4. Where the custom names nobody, the culture has no custom, or the heir finds no spouse that month, the weddings of
+   feature 2 follow as they are: the widower marries again, or a couple of the town takes the household.
+
+A household is never divided, because the number of households of a town is fixed (La Poutré & Paping 2025). Where
+the sources divide the land among several children, the custom only decides which one of them takes the household.
+The firm and the savings of the dead go as in feature 2 (to the family first).
+
+| Custom | Who takes the household | Without a living son |
+|---|---|---|
+| eldest son | the eldest son | the eldest daughter |
+| youngest son | the sons share, the house stays undivided with the youngest son | the estate falls to the lord: a couple of the town |
+| sons | one of the sons by lot; a daughter is paid off with her dowry | one of the daughters by lot |
+| children | one of the children by lot | (a daughter, by the same lot) |
+| sons double | one of the children by lot, a son with twice a daughter's chance | (a daughter, by the same lot) |
+
+### The cultures (persons of the founding of 1291 with its 314 rulers; grade 1: a law or a study of the 13th or 14th century read; grade 2: read, but later, or from Todd's map)
+
+| Who | Persons | Custom | Grade | Read |
+|---|---|---|---|---|
+| Muslims of every culture | 26,260 | sons double | 1 | Qur'an 4:11: a son twice a daughter's share, the parents a sixth each, a bequest a third at most. The law of property (house, garden). Farmland was the treasury's and the peasants held its use (Abbas Hamid 2002); who took that over around 1300 was not found; later the sons (Cuno 1999 for the 1840s, al-Marakeby 2023 for the Ottoman time) |
+| Lombard, Tuscan, Venetian, Ligurian | 11,098 | sons | 1 | Statutes of Turin 1360: a married daughter with brothers can claim nothing; "common in all Italian city-states" (Gravela 2018); without sons the daughters succeed. Venice shared the mother's goods among sons and daughters alike |
+| English | 4,183 | eldest son | 1 | Common law; Gates 1996; Smith 1986 |
+| Catalan | 1,557 | eldest son | 1 | To i Figueras: one heir, preferably the firstborn, among the peasants of the masos from the 11th century, general from the later 12th; around 1200 a large part of the families still shared alike. Ferrer Alòs 2005: the eldest son, else the eldest daughter |
+| Novgorodian, Russian, Ruthenian | 1,362 | youngest son | 1 | Expanded Russkaya Pravda (early 13th century, Kaiser 1992): arts. 90, 92, 95, 100. Art. 90 (a peasant's estate escheats to the prince) does not name the sons; read here as the case without sons, since arts. 92 and 100 let sons inherit |
+| Danish, Swedish, Norwegian | 621 | sons double | 1 | Tveit 2020: a daughter half a brother's lot in the Danish provincial laws, in Norway (1274) and most Swedish laws from the later 13th century. Ancestral land did not go to women (not built) |
+| German cultures (seven) | 13,139 | eldest son | 2 | Todd's map (Duranton et al. 2008): house and land to the son who stays; Huning & Wahl 2021: the heir "usually the oldest but sometimes the youngest". Against it: 31 % of the municipalities of Baden-Württemberg divided |
+| Occitan, Basque, Aragonese, Galician, Scottish | 6,142 | eldest son | 2 | Lamaison 1988 (notaries, 1980); Fauve-Chamoux (Basque country, Pyrenees); Todd's map. Against it: the statutes of Provence, sons in equal shares |
+| French, Picard, Burgundian, Breton | 16,466 | children | 2 | Lamaison 1988; the custom of Brittany of 1539 (Fauve-Chamoux); Todd's map. Yver 1966 could not be opened |
+| Castilian | 3,181 | children | 2 | Visigothic law (To i Figueras); Leyes de Toro 1505 (Bartolomé Bartolomé 2009). The Fuero Real of 1255 was not read |
+| Czech | 1,099 | youngest son | 2 | Velková 2023: Bohemia 1691–1787, the youngest son in 73 % of cases |
+| No custom (the rule of feature 2) | 17,248 | | | Flemish, Hollandic, Greek, Portuguese; Roman, Neapolitan, Sicilian, Sardinian, Hungarian; Polish and the other Slavs; Nubian, West African with the old faiths, Baltic, Georgian, Armenian, Jewish: nothing was read that states their rule |
+
+### Measured (`npm run families:check`, world of 1291, seed 1291, 100 years)
+
+| Figure | Founding | Year 50 | Year 100 | Feature 2 alone, year 100 |
+|---|---|---|---|---|
+| Persons | 102,042 | 96,122 | 97,223 | 97,823 |
+| Households (vacant) | 17,702 (0) | 17,702 (38) | 17,702 (67) | 17,702 (46) |
+| Persons per household | 5.76 | 5.43 | 5.49 | 5.53 |
+| Widows among the housewives | 14 % | 15 % | 15 % | 14 % |
+| Women of 40 to 44 without a household | 30 % | 25 % | 27 % | 27 % |
+| Deaths / births / weddings in the year | | 2,874 / 2,813 / 858 | 2,704 / 2,728 / 877 | 2,832 / 2,834 / 907 |
+
+Mean age of the brides 24.0. In the years 41 to 100, 37,347 households passed to a new couple, 41 % of them to an
+heir of the house (10,315 sons, 4,846 daughters). By the custom of the house (a house with a living child):
+
+| Custom | Households passed on | A child of the house took it | Sons / daughters |
+|---|---|---|---|
+| eldest son | 8,117 | 52 % | 3,556 / 676 |
+| youngest son | 802 | 47 % | 362 / 17 |
+| sons | 3,743 | 48 % | 1,526 / 272 |
+| children | 6,346 | 60 % | 1,914 / 1,868 |
+| sons double | 8,746 | 59 % | 2,961 / 2,200 |
+| none | 5,916 | 6 % (by the chance of the town's weddings) | 185 / 173 |
+| no living child | 3,677 | | |
+
+Places founded with under 60 persons: −9.6 % after 100 years (10 of 58 below half, one empty; feature 2 alone −4.1 %
+and 9): without the weddings between siblings a very small town finds fewer couples.
+
+The probe before the build (each custom for the whole world, heirs' weddings before the others): 44 % of the
+households to an heir where sons inherit, 53 % where all children do, the world within 2 % of feature 2. A
+household that waits for an heir under age: 78 to 81 % to heirs, but 1,200 to 1,700 households vacant and 89,345
+(eldest son) or 93,144 persons (children) after 100 years. So nothing waits.
+
+### Limits
+
+- A household is never divided: no smaller holdings, no growth of the number of households by partition.
+- One custom for a culture: none from village to village, for town against country, for the free against the
+  unfree. Occitan stands for one heir although Provence shared among the sons.
+- An heir under age loses the household to a couple of the town; a guardian is not built.
+- Islamic farmland is treated as property.
+- The widow keeps the household everywhere as in feature 2 (the English free bench). Read but not built: in the Rus
+  a widow has a portion and may stay in the house (arts. 93, 102), in Scandinavia the common property is divided
+  and the ancestral land is not (Tveit 2020).
+- No dowry, no payment to the lord at a death, no share of the savings by custom.
+- Assumptions without a source: the ages from which an heir is grown; that the next child stands in for one who is
+  not free; that an heiress of 45 or older does not take the household.
+
+### Sources
+
+- Duranton, G., Rodríguez-Pose, A., Sandall, R. (2008): Family types and the persistence of regional disparities in Europe. SERC Discussion Paper 9. https://eprints.lse.ac.uk/33152/1/sercdp0009.pdf
+- Huning, T. R., Wahl, F. (2021): The origins of agricultural inheritance traditions. Journal of Comparative Economics, 660–674. https://eprints.whiterose.ac.uk/183709/1/origins_complete_jce.pdf
+- Fauve-Chamoux, A.: Inheritance and Property. Encyclopedia of Children and Childhood in History and Society. https://www.encyclopedia.com/children/encyclopedias-almanacs-transcripts-and-maps/inheritance-and-property
+- Lamaison, P. (1988): La diversité des modes de transmission: une géographie tenace. Études rurales 110–112, 119–175 (abstract).
+- Gravela, M. (2018): Against the tide. Female property and political shift in late medieval Turin. Mélanges de l'École française de Rome, Moyen Âge 130-1, 151–165.
+- To i Figueras, L.: Els hereus i el dret de primogenitura. Enciclopèdia.cat. https://www.enciclopedia.cat/historia.-politica-societat-i-cultura-dels-paisos-catalans/els-hereus-i-el-dret-de-primogenitura
+- Ferrer Alòs, L. (2005): When there was no male heir: the pubilla. Continuity and Change 20(1), 27–52 (abstract).
+- Bartolomé Bartolomé, J. M. (2009): Disposiciones hereditarias … el ejemplo leonés (1700–1850). Norba 22, 159–176.
+- Tveit, M. (2020): Backwards inheritance in medieval Scandinavian law. In: Nordic Inheritance Law Through the Ages, Brill, 71–91. https://core.ac.uk/download/388989464.pdf
+- Kaiser, D. H. (1992): The Laws of Rus', 20–34 (Expanded Pravda). https://web.grinnell.edu/individuals/kaiser/exrp.html
+- Velková, A. (2023): Historická demografie 47(1), 1–27.
+- Abbas Hamid, R. (2002): Why study ownership? In: Hanna, N. (ed.), Money, Land and Trade. Cuno, K. M. (1999) and Frantz-Murphy, G. (1999): Proceedings of the British Academy 96. al-Marakeby, M. (2023): Could women own agricultural land? Die Welt des Islams (abstract).
+- England: see the proposal (Mapping the Medieval Countryside, King's College London 2014; Gates 1996; Smith 1986).
+

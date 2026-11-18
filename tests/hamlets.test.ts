@@ -93,7 +93,7 @@ describe('the hamlets for the world graphic (public/data/hamlets_1291.json)', ()
 });
 
 describe('a world of 1291 saved before the hamlets', () => {
-  it('gets them by the upgrade from 16 and encodes as a new world', () => {
+  it('gets them by the upgrade from 16 and encodes as a new world', { timeout: 60_000 }, () => {
     const old = structuredClone(s);
     old.v = 16;
     delete (old.family.cols as Record<string, unknown>).hamlet;

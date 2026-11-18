@@ -36,6 +36,9 @@ export interface CalibrationTable {
     /** the share of what a household holds above its target that it spends in a year (economy feature 15);
      *  0: a household spends out of its income only, as in the port */
     savings_spent_per_year: Entry<number>;
+    /** what the crown of a city buys with (economy feature 16): 'series' by the random series of the paper,
+     *  'revenue' with what it took in the period before */
+    crown: Entry<'series' | 'revenue'>;
     /** the kilocalories a basket needs per day (economy feature 15): an adult is one basket, a child half of one */
     food_need_kcal: Entry<number>;
   };
