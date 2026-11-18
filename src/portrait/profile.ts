@@ -384,7 +384,15 @@ export const APOLEIA: StageProfile = {
  *  at a* 1; theirs 22 to 49 under at a* 3 to 16). Tried and dropped: a darker iris (black holes, as before
  *  round 103), a softer toe of the tone curve (`finish.curve.black` 1.0: the eye's darks 8 L lighter, but the
  *  eye as a whole leaves the reference's by 4 and nothing else moves: the skin's red lies above the toe), a
- *  warm colour for the shade in the skin's folds (nothing to see). */
+ *  warm colour for the shade in the skin's folds (nothing to see).
+ *  Round 116: the key light is twice as large (`shadow.spread` 20; 10). What round 114 left open as "cause not
+ *  found" is the key's cast shadow after all: a man's nose stands out further and is broader than a woman's, and
+ *  its shadow, hard at the edge, reached the place on the far cheek that is read (with no shadow at all the men's
+ *  far cheek is 19.9 L under the lit one, with it 32.3; the women's 11.5 and 19.9). Under the larger light the
+ *  shadow's edge is soft there: the men's 24.3 (the reference's 16.9), the women's 19.0 as before, the shade
+ *  beside a woman's nose 30.7 (33.2; the reference's 34.5). At 24 and more that shade leaves the reference's by
+ *  more than 4; a key more from the front (50 and 45 degrees off the face instead of 56) lights the women's far
+ *  cheek as much as the men's and loses two lines. */
 export const ENGLAND_1356: StageProfile = {
   key: 'england1356',
   lights: {
@@ -395,7 +403,7 @@ export const ENGLAND_1356: StageProfile = {
   },
   sky: { top: '#e6ecff', ground: '#a0653f', energy: 0.12 },
   rimShadow: 0.5,
-  shadow: { map: 1024, strength: 0.7, radius: 2, spread: 10, lights: 8 },
+  shadow: { map: 1024, strength: 0.7, radius: 2, spread: 20, lights: 8 },
   exposure: 0.38,
   turn: -0.24, rise: 0.03, close: 1.12,
   anisotropy: 8,

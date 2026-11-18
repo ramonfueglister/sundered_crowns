@@ -93,8 +93,10 @@ const checks = [
   ['man: far cheek chroma against lit', -1.8, chroma(men, 'shaded cheek') - men['lit cheek chroma'], AB_AGAINST, 'round 113'],
   // (Round 114) This line FAILS, and says where to look: the far cheek of the reference's men is 20.9 (the
   // emperor), 11.6 and 18.3 (two men of the developer diaries) under the lit one; ours 31, with the women's at 19
-  // on the same stage. Not the key's cast shadow, not the fill, not the tone curve's toe (tried in rounds 113
-  // and 114). The cause is not found: open.
+  // on the same stage. Round 116 found the cause: the cast shadow of a man's larger nose lies on the place that
+  // is read (without any shadow ours are 19.9 under; round 114 had tried the shadow at 0.6 for 0.7 and seen
+  // too little move). With the key light twice as large the line stands at 24.3 and still FAILS: the rest is
+  // the nose's size, which is held to a survey of real heads, or how the reference lights its men.
   ['man: far cheek against the lit', -16.9, men['shaded cheek L'] - men['lit cheek L'], AGAINST, 'round 114'],
   // the reference's emperor (a small face, read five times enlarged). His picture is another scene with another
   // light than the woman's: his lit cheek is at L 65.5 where hers is at 56.1, his far cheek 20.9 under it where

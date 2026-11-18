@@ -4333,6 +4333,55 @@ Pictures (project files, `portraits/`): `runde115_vorher_nachher_frauen.png`,
 `runde115_vorher_nachher_frauen_ohne_kleider.png`, `runde115_vorher_nachher_maenner.png` (round 114 above,
 now below).
 
+**Round 116: why a man's far cheek is dark, and a larger key light** (2026-11-18). The gauntlet's line "man:
+far cheek against the lit" has failed since round 114 added it (-31.9, the reference's -16.9, our women's
+-19.0 on the same stage), with "cause not found". Found in this round, by taking one thing away at a time and
+reading the eight grown men again:
+
+| | lit cheek L | far cheek L | far under lit |
+|---|---|---|---|
+| men as they were | 59.8 | 27.5 | -32.3 |
+| without beards, without the painted stubble, without hair, without clothes (each alone) | 59.7 | 27.0 to 27.5 | -32 |
+| cheeks filled out by 4 mm as the women's are | 59.8 | 27.6 | -32.2 |
+| the same men drawn as women | 58.0 | 36.4 | -21.6 |
+| the women drawn as men | 59.5 | 28.9 | -30.6 |
+| without the key light | 18.8 | 13.2 | (women 17.5, 13.8: skin and fill are the same) |
+| **without any cast shadow** (`shadow.strength` 0) | 59.8 | 39.9 | **-19.9** (women -11.5) |
+| a man's nose no further out than a woman's (`nose-scale-depth-incr` 0 for 0.55) | 59.8 | 31.7 | -28.1 |
+
+So it is the head's form under the key's cast shadow: a man's nose stands out further and is broader, and its
+shadow, hard at its edge, reaches the place that is read (the mean of the eye's outer corner, the mouth's
+corner and the nose's wing; drawn into the picture, the circle lies in the dark wedge beside a man's nose and
+at its edge on a woman). Round 114 had tried the shadow at 0.6 for 0.7, seen 1.7 L move and ruled it out.
+
+**What is changed**: the key light is twice as large (`shadow.spread` 20 degrees; 10), so the edge of the
+nose's shadow is soft where the place lies. Men's far cheek -24.3 (-32.3), women's -19.0 as before, the
+shade beside a woman's nose -30.7 (-33.2; the reference's -34.5, within the limit by 0.2). The hard line a
+fringe threw across a man's forehead is soft as well.
+
+Tried and not kept: the key further to the front (50 and 45 degrees off the face for 56: the men's -28.1
+and -23.3, but the women's far cheek -13.6 and -10.2 and two lines lost; both sexes move together, the gap
+between them stays); the key higher (45 degrees for 36: four lines lost); `spread` 24 and 35 (-23.2 and
+-20.3, the shade beside a woman's nose -29.2 and -24.1, lost); a larger light with a darker shadow
+(`strength` 0.8 with 20 and 26: no better); a man's nose less far out (it is held to the survey's
+protrusion, `portrait/tests/faces.rs`).
+
+**The gauntlet**: 20 of 22. The men's far cheek still **fails**, at 7.4 off where it was 15.4; the nose's
+back as before (0.9; 8).
+
+Honest about it. Half of the gap is closed and the line is still red. What is left is either the nose (a
+man's is of human measure by the survey; whether the reference's men have smaller ones was not measured, the
+pictures are not at hand) or how the reference lights its men (the three men read were three scenes: -20.9,
+-11.6, -18.3). Before and after differ little at a glance: softer shade beside the men's noses and under
+fringes and hoods, the women all but the same. The key is drawn as eight lights on a disc now twice
+as wide; no steps were seen in the shadows at the panel's size or at 448 x 560, on the software driver only.
+`spread` 20 is the upper end of what `tests/portrait.test.ts` takes for a window or a shaded lamp:
+PLACEHOLDER.
+
+Tests: `tests/portrait.test.ts` as before (the key's size within 6 to 20 degrees, its lights spread over the
+disc). Pictures (project files, `portraits/`): `runde116_vorher_nachher_frauen.png`,
+`runde116_vorher_nachher_maenner.png` (round 115 above, now below).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
