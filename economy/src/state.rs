@@ -860,7 +860,7 @@ pub fn save_cities(all: &Cities) -> Vec<u8> {
     o.f64s(start_stock);
     o.bool(routes.is_some());
     // the length of the ring follows from the days
-    if let Some(Routes { days, labour, weight, elasticity, horizon: _, on_way, on_way_cost, carrying, period, paid }) = routes {
+    if let Some(Routes { days, labour, weight, elasticity, horizon: _, on_way, on_way_cost, carrying, period, paid, wage0, price0 }) = routes {
         for row in days {
             o.n(row.len());
             for d in row {
@@ -875,6 +875,8 @@ pub fn save_cities(all: &Cities) -> Vec<u8> {
         o.f64ss(carrying);
         o.n(*period);
         o.f64(*paid);
+        o.f64s(wage0);
+        o.f64ss(price0);
     }
     SIZE.store(o.0.len(), Ordering::Relaxed);
     o.0
@@ -908,7 +910,7 @@ pub fn load_cities(bytes: &[u8]) -> Result<Cities, String> {
             days.push((0..len).map(|_| i.n()).collect::<Res<Vec<_>>>()?);
         }
         let horizon = Routes::longest(&days);
-        Some(Routes { days, horizon, labour: i.f64ss()?, weight: i.f64s()?, elasticity: i.f64()?, on_way: i.f64s()?, on_way_cost: i.f64s()?, carrying: i.f64ss()?, period: i.n()?, paid: i.f64()? })
+        Some(Routes { days, horizon, labour: i.f64ss()?, weight: i.f64s()?, elasticity: i.f64()?, on_way: i.f64s()?, on_way_cost: i.f64s()?, carrying: i.f64ss()?, period: i.n()?, paid: i.f64()?, wage0: i.f64s()?, price0: i.f64ss()? })
     } else {
         None
     };
@@ -936,6 +938,9 @@ pub fn load_cities(bytes: &[u8]) -> Result<Cities, String> {
                 && per_city(&r.carrying, n)
                 && r.on_way.len() == r.horizon * n * G
                 && r.on_way_cost.len() == r.on_way.len()
+                && r.wage0.len() == n
+                && r.price0.len() == n
+                && r.price0.iter().all(|p| p.len() == G)
                 && r.elasticity.is_finite()
         });
     if !fits {

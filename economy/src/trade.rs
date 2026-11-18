@@ -38,6 +38,13 @@
 //! - Two cities without a way between them (0 days) do not trade.
 //! - At the start the merchants have on the way to every stall what it sells in a day, for every day an order
 //!   travels: the position of merchants who have ordered day by day before the first day too.
+//! - A real unit at a stall is what cost one unit of money at the start, carrying included: the calibration's
+//!   price of an imported good is its price at the stall, and "real" is at the prices of the starting position
+//!   everywhere in the model. So a unit bought in the city of origin lies at the stall as `1 + carrying / price`
+//!   units ([`Routes::unit`], with the wage and the price of the origin at the start), and the stall begins at
+//!   the calibration's price. When wages, prices or the origins change afterwards, the price at the stall moves.
+//!   Without that, the starting position would be one of trade without cost, and the first goods to arrive
+//!   would raise every price that has imports in it.
 //!
 //! The port does not record exports product by product,
 //! so what the merchants bought counts as bought in the mix they ordered (the port's own reading of `c_E_g`).
@@ -87,7 +94,8 @@ pub struct Merchants {
     pub orders: Vec<Vec<Vec<f64>>>,
     /// per city: the stock to keep, as a share of the city's real output of a period
     pub share: Vec<f64>,
-    /// per product: all goods ever bought and all goods ever sold, in real units
+    /// per product: all goods ever bought and all goods ever sold, in real units (with routes: in the units of the
+    /// stalls the goods were bought for)
     pub bought: Vec<f64>,
     pub sold: Vec<f64>,
     /// the worth and, per product, the stock at the start
@@ -124,9 +132,19 @@ pub struct Routes {
     /// periods settled, and all that was ever paid for carrying
     pub period: usize,
     pub paid: f64,
+    /// per city: the mean wage in money of a day at the start; per city and product: the price at the start. They
+    /// fix the units of the stalls ([`Routes::unit`]).
+    pub wage0: Vec<f64>,
+    pub price0: Vec<Vec<f64>>,
 }
 
 impl Routes {
+    /// The real units at the stall of city `d` that one real unit of product `g` bought in city `c` makes: 1 plus
+    /// what carrying it cost at the start over its price at the start.
+    pub fn unit(&self, c: usize, d: usize, g: usize) -> f64 {
+        if self.price0[c][g] > 0.0 { 1.0 + self.labour[c][d] * self.weight[g] * self.wage0[c] / self.price0[c][g] } else { 1.0 }
+    }
+
     /// The days of the longest way of `days`, at least 1.
     pub fn longest(days: &[Vec<usize>]) -> usize {
         days.iter().flatten().copied().max().unwrap_or(0).max(1)
@@ -258,13 +276,15 @@ impl Cities {
         }
         let horizon = Routes::longest(&days);
         let on_way = vec![0.0; horizon * n * G];
-        let mut rt = Routes { days, labour, weight, elasticity, horizon, on_way_cost: on_way.clone(), on_way, carrying: vec![vec![0.0; n]; n], period: 0, paid: 0.0 };
+        let mut rt = Routes { days, labour, weight, elasticity, horizon, on_way_cost: on_way.clone(), on_way, carrying: vec![vec![0.0; n]; n], period: 0, paid: 0.0, wage0: Vec::new(), price0: Vec::new() };
         // The starting position: the merchants have ordered every day before the first as they do from now on, so
         // what a stall sells in a day is on the way to it for every day an order travels, from each city of origin
         // in its part of the order, at the price the stall's goods have. Without that the first order would be
         // for all those days at once, and small cities would be bought empty on the first day.
         let m = &mut self.merchants;
         let wages: Vec<f64> = self.cities.iter().map(wage).collect();
+        rt.wage0 = wages.clone();
+        rt.price0 = self.cities.iter().map(|e| e.model.agg.P_bar_g[..G].to_vec()).collect();
         for d in 0..n {
             let keep = m.share[d] * output(&self.cities[d]);
             for g in 0..G {
@@ -388,8 +408,10 @@ impl Merchants {
                 for g in 0..self.bought.len() {
                     let part = self.orders[c][d][g] / ordered;
                     let on = if asked_sum > 0.0 { asked[g] / asked_sum } else if lines > 0.0 { self.orders[c][d][g] / lines } else { 0.0 };
-                    let (got, paid) = (part * goods, part * cost + on * carry_cost);
-                    self.bought[g] += part * goods;
+                    // in the units of the stall it is for
+                    let got = part * goods * self.routes.as_ref().map_or(1.0, |rt| rt.unit(c, d, g));
+                    let paid = part * cost + on * carry_cost;
+                    self.bought[g] += got;
                     match &mut self.routes {
                         Some(rt) if rt.days[c][d] > 1 => {
                             let at = rt.slot(period + rt.days[c][d] - 1, d, g);
@@ -450,10 +472,12 @@ impl Merchants {
                 let missing = target * (1.0 + lead * sells) - (1.0 - sells) * self.stock[d][g] - on_way;
                 if missing > 0.0 {
                     for (c, w) in parts.into_iter().enumerate() {
-                        self.orders[c][d][g] = w * missing;
+                        // what is missing at the stall, in the units of the city of origin
+                        let order = w * missing / self.routes.as_ref().map_or(1.0, |rt| rt.unit(c, d, g));
+                        self.orders[c][d][g] = order;
                         if let Some(rt) = &mut self.routes {
                             let price = cities[c].model.agg.P_bar_g[G - 1];
-                            if w > 0.0 && price > 0.0 { rt.carrying[c][d] += w * missing * carry[c] / price; }
+                            if w > 0.0 && price > 0.0 { rt.carrying[c][d] += order * carry[c] / price; }
                         }
                     }
                 }

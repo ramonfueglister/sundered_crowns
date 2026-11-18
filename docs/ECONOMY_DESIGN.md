@@ -2784,7 +2784,23 @@ travels: the position of merchants who ordered day by day before the first day t
 is for all those days at once; in the world of 1291 it bought 22 small cities empty on the first day (their crown
 found no goods, and the port's accounts gave no number).
 
-**7. Regions apart.** The regions of the world the table names (`routes.apart`: the Americas, Oceania) have ways
+**7. The units of the stalls.** A real unit at a stall is what cost one unit of money at the start, carrying
+included. The calibration's price of an imported good is its price at the stall (the import share of the table is
+a share of value where the goods are sold), and "real" is at the prices of the starting position everywhere in the
+model. So a unit bought in the city of origin lies at the stall as 1 + carrying / price units, with the wage and
+the price of the origin at the start (`Routes::unit`), and the stalls begin at the calibration's price. When
+wages, prices or the origins change afterwards, the price at the stall moves, and rule 5 answers. The choice of
+the origin (rule 4) still compares purchase plus carrying a unit of the origin.
+
+Without this rule (the first build, 18 November 2026) the start was a position of trade without cost. The first
+goods to arrive were dearer than the calibration's by their carrying (a third on Cologne's ways), firms that buy
+them raised their prices, the price level of the cities rose by 1 % against wages in money, and the cities lost
+work in the first years: output of all cities 112.8 to 114.0 after 30 years instead of 115.6, up to 7.4 % without
+work, and Cologne (seed 1358) stayed at 99 with 4 to 6 % without work for the 30 years. Counter-runs with that
+seed, ten years: ways with days only, without carrying: no city above 2 % without work after the first year;
+carrying without rule 5: as bad as with it. The runs are in `/mnt/project-files/wirtschaft/entfernung/pr73/`.
+
+**8. Regions apart.** The regions of the world the table names (`routes.apart`: the Americas, Oceania) have ways
 among themselves only. In the net the Americas can be reached along the northern coasts, also within 300 km of a
 coast, so no limit of seamanship that the net can express keeps them apart; the trial of the first proposal cut
 Texcoco by hand. **How this is decided is asked of Ramon (card of 18 November 2026); built is the recommended
@@ -2796,30 +2812,31 @@ Two orders rules derailed in the trials and are not built: a stock for the days 
 ### The numbers
 
 All 29 cities of 1356 over 30 years with the routes of the world (`economy/examples/distance.rs`, results in
-`/mnt/project-files/wirtschaft/entfernung/pr73/`), seeds 1356 to 1359, on the state with features 15 and 16 and
-with the cities as they are since the persons marry and are born (households of 5.8 persons). Without distance one
-seed was computed on this state (1356, `economy/examples/longrun.rs`):
+`/mnt/project-files/wirtschaft/entfernung/pr73/einheiten/`), seeds 1356 to 1359, on the state with features 15 and
+16 and with the cities as they are since the persons marry and are born (households of 5.8 persons). Without
+distance one seed was computed on this state (1356, `economy/examples/longrun.rs`):
 
 | After 30 years | Without distance (seed 1356) | With distance (four seeds) |
 |---|---|---|
-| Real output of all cities (start 100) | 115.6 | 112.8 to 114.0 |
-| Weakest city (start 100) | 111.8 | 99.3 to 112.2 (Cologne, Cairo, Isfahan, Fez) |
-| Highest share without work in the 30 years | | 2.6 to 7.4 % |
-| Equity of all banks (start 551) | 482 | 334 to 551 |
-| Banks with negative equity | 2 | 0 to 2 |
-| Imports over output | | 2.5 % |
-| Carrying over output | 0 | about 1 % |
-| Merchants' money of a city over its GDP | −0.06 to +0.11 | −0.14 to +0.18 |
+| Real output of all cities (start 100) | 115.6 | 115.0 to 115.5 |
+| Weakest city (start 100) | 111.8 | 111.1 to 112.8 (Isfahan, Paris, Damascus, Tabriz) |
+| Highest share without work in the 30 years | | 2.2 to 3.2 %; nobody from the tenth year on |
+| Price level of the cities' firms (start 1) | | 0.996 to 0.999 |
+| Equity of all banks (start 551) | 482 | 113 to 360 |
+| Banks with negative equity | 2 | 5 to 6 |
+| Imports over output | | 3.0 % |
+| Carrying over output | 0 | 0.7 % |
+| Merchants' money of a city over its GDP | −0.06 to +0.11 | −0.10 to +0.22 |
 
-The books of the merchants and of every city balance in every year (largest check 1e-13). Texcoco, which trades
-with nobody, stands at 114 to 116 after 30 years. Distance costs about 2 points of output in 30 years.
+The books of the merchants and of every city balance in every year (largest check 1e-13). Cologne stands at 114
+to 117 in the four seeds.
 
-**One city that does not recover.** With seed 1358 Cologne loses 3 % of its output in the first three years and
-stays there for the 30 years (99.3), with 4 to 6 % of its persons without work at the end of every year. In the
-three other seeds no city ends below 104. It is shown, not tuned away; the cause is not found.
-
-Before the persons were founded anew (people feature 2) the same four seeds gave 113.6 to 114.0, a weakest city of
-103.3 to 110.7 and at most 5.4 % without work.
+**More banks below zero.** The banks that end below zero do so after the twentieth year, in cities that buy more
+from the merchants than they sell to them year after year (seed 1358: Sarai, Tabriz, Baghdad, Niani; the
+merchants hold 5 to 19 % of such a city's GDP in money there), and in two cities by the households' hoard alone
+(Texcoco, which does not trade, and Cologne). The money the merchants hold in a city is missing with its firms,
+which borrow. This is the drift of the merchants' money of section 16, made lasting by ways that are not alike in
+both directions; nothing in the model lowers the prices of a city that loses money. It is shown, not closed.
 
 ### Deviations and what stays open
 
@@ -2832,8 +2849,10 @@ Before the persons were founded anew (people feature 2) the same four seeds gave
 - **Rivers have no direction** in the net.
 - **Carrying is services**, bought in the city of origin only; nobody along the way earns from it, and there are no
   tolls.
-- **The merchants' money drifts apart** between the cities, as before and somewhat wider (section 16). No rule
-  read closes it.
+- **The merchants' money drifts apart** between the cities, wider than without distance (section 16), and banks of
+  cities that lose money end below zero after twenty years (above). No rule read closes it.
+- **The units of the stalls are fixed at the start** (rule 7). They are a reading of the calibration, not a
+  measured quantity: the table has one import share for all cities, whatever their ways.
 - **The ways of the 550 cities of 1291 take about six seconds** when the economies are founded; they are kept per
   world.
 - **Texcoco alone.** A city without ways keeps the stock the merchants had there at the start until it is sold and
@@ -2844,7 +2863,8 @@ Before the persons were founded anew (people feature 2) the same four seeds gave
 ### State and upgrade
 
 State version 25. The format of the cities' state is 2: the routes, the goods on the way (a
-ring as long as the longest way) and the carrying ordered; format 1 is read as cities without routes. The upgrade
+ring as long as the longest way), the carrying ordered, and the wages and prices of the start that fix the units
+of the stalls; format 1 is read as cities without routes. The upgrade
 founds the economies anew on the day the world has reached: routes are given to cities that have not computed a
 day. **The persons' feature 2 (pull request 69) uses state versions too: the one merged later takes the next
 numbers.**

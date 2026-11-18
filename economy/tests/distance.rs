@@ -120,20 +120,55 @@ fn carrying_is_bought_as_services_in_the_city_of_origin_and_laid_on_the_goods() 
     assert_books(&dear, "day 10 with carrying");
     let (r, f) = (dear.merchants.routes.as_ref().unwrap(), free.merchants.routes.as_ref().unwrap());
     assert!(r.paid > 0.0 && f.paid == 0.0);
-    // the goods cost more at the stall than without carrying, product by product where the stall holds any
-    let price = |a: &Cities, c: usize, g: usize| a.merchants.value[c][g] / a.merchants.stock[c][g];
-    let mut dearer = 0;
+    // a unit at the stall is what cost 1 at the start, carrying included: a unit bought makes more than one there
     for c in 0..3 {
         for g in 0..G {
-            if dear.merchants.stock[c][g] > 0.0 && free.merchants.stock[c][g] > 0.0 && price(&dear, c, g) > price(&free, c, g) {
-                dearer += 1;
-            }
+            let unit = r.unit(c, (c + 1) % 3, g);
+            assert_eq!(unit, 1.0 + 1e-3 * r.wage0[c] / r.price0[c][g]);
+            assert!(unit > 1.0 && f.unit(c, (c + 1) % 3, g) == 1.0);
         }
     }
-    assert!(dearer > G, "{dearer} stalls of {} are dearer", 3 * G);
     // the cities sold more services to the merchants than without carrying: the last product of the orders
     let exports = |a: &Cities| a.cities.iter().map(|e| e.model.rotw.C_l).sum::<f64>();
     assert!(exports(&dear) > 0.0 && exports(&free) > 0.0);
+}
+
+#[test]
+fn carrying_that_costs_more_than_at_the_start_makes_the_stall_dearer() {
+    // the same cities, but in one the wages of the start were half of what they are: carrying has doubled since
+    let (mut same, mut risen) = (routes(cities(&[1, 2, 3]), 1, 2e-2, 0.0), routes(cities(&[1, 2, 3]), 1, 2e-2, 0.0));
+    risen.merchants.routes.as_mut().unwrap().wage0.iter_mut().for_each(|w| *w /= 2.0);
+    let G = same.merchants.bought.len();
+    same.step(1);
+    risen.step(1);
+    assert_books(&same, "day 1");
+    let price = |a: &Cities, c: usize, g: usize| a.merchants.value[c][g] / a.merchants.stock[c][g];
+    let mut stalls = 0;
+    for c in 0..3 {
+        for g in 0..G {
+            // the last product is the services that carry, bought with the goods but not carried themselves
+            if g + 1 < G && same.merchants.stock[c][g] > 0.0 && risen.merchants.stock[c][g] > 0.0 {
+                assert!(price(&risen, c, g) > price(&same, c, g), "stall {c}, product {g}");
+                stalls += 1;
+            }
+        }
+    }
+    assert!(stalls > 0);
+    // and while carrying costs what it cost at the start, the stalls stay at the price they have without carrying,
+    // though carrying is paid (here a tenth and more of the goods)
+    let mut free = routes(cities(&[1, 2, 3]), 1, 0.0, 0.0);
+    free.step(1);
+    let (r, goods) = (same.merchants.routes.as_ref().unwrap(), same.cities.iter().map(|e| e.model.rotw.C_l).sum::<f64>());
+    assert!(r.paid / goods > 0.1, "carrying is {} of what the merchants spent", r.paid / goods);
+    let mut worst: f64 = 0.0;
+    for c in 0..3 {
+        for g in 0..G - 1 {
+            if same.merchants.stock[c][g] > 0.0 && free.merchants.stock[c][g] > 0.0 {
+                worst = worst.max((price(&same, c, g) / price(&free, c, g) - 1.0).abs());
+            }
+        }
+    }
+    assert!(worst < 0.02, "a stall is {worst} off the price without carrying");
 }
 
 #[test]
