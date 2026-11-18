@@ -101,6 +101,14 @@ export function buildTerrain(g: Ground, t: GroundTraits, baked = true, part: Par
     if (askedAt[k] !== y) { askedAt[k] = y; answer[k] = skyLight(skyShare(g, x, z, y)); }
     return answer[k];
   };
+  // So with the colour of the ground at a corner of the grid: the four columns around it ask for it, and where they
+  // are of one kind of ground the answer is the same (a ninth of a near piece's building time went into it).
+  const groundAt: RGB[] = new Array(side * side), kindAt = new Int8Array(side * side).fill(-1);
+  const ground = (cx: number, cz: number, mat: number): RGB => {
+    const k = cz * side + cx;
+    if (kindAt[k] !== mat) { kindAt[k] = mat; groundAt[k] = topColor(t, cx, cz, mat, cx + ox, cz + oz); }
+    return groundAt[k];
+  };
   const NB: readonly (readonly [number, number])[] = [[1, 0], [-1, 0], [0, 1], [0, -1]];
   for (let z = part.z0; z < part.z1; z++) for (let x = part.x0; x < part.x1; x++) {
     const i = idx(x, z), h = g.h[i], mat = g.mat[i], wx = x + ox, wz = z + oz;
@@ -119,7 +127,7 @@ export function buildTerrain(g: Ground, t: GroundTraits, baked = true, part: Par
     const corner = (cx: number, cz: number): RGB => {
       const l = light(cx, cz, h + 0.02);
       if (cover && !(cover.share! < 1)) return [cover.top[0] * grain * l ** 1.5, cover.top[1] * grain * l, cover.top[2] * grain * l ** 0.3];
-      const smoothBase = rockTop ?? topColor(t, cx, cz, mat, cx + ox, cz + oz), own = patch ? mix(smoothBase, patch[0], patch[1]) : smoothBase, base = cover ? mix(own, cover.top, cover.share!) : own;
+      const smoothBase = rockTop ?? ground(cx, cz, mat), own = patch ? mix(smoothBase, patch[0], patch[1]) : smoothBase, base = cover ? mix(own, cover.top, cover.share!) : own;
       // under trees and between houses the grass gives way to dull, dark soil
       const c = mat === Mat.Grass ? mix(base, SHADED_SOIL, Math.min(1, (1 - l) * 1.3)) : base;
       return [c[0] * grain * l ** 1.5, c[1] * grain * l, c[2] * grain * l ** 0.3];
@@ -190,10 +198,14 @@ export function buildWater(g: Ground, raised = false, part: Part = whole()): Bat
     }
     return n ? sum / n : 14;
   };
+  // (a corner of the grid is asked for by the four columns of water around it: its colour is worked out once)
+  const shades: RGB[] = new Array((N + 1) * (N + 1));
   const corner = (cx: number, cz: number): RGB => {
+    const at = cz * (N + 1) + cx, known = shades[at];
+    if (known) return known;
     const k = smooth(0.4, 8, depthAt(cx, cz) + (noise2((cx + ox) / 5, (cz + oz) / 5, 41) - 0.5) * 2);
     // the open water is calm: broad, soft patches a little lighter or darker, no strokes
-    return shade(mix(WATER_SHALLOW, WATER_DEEP, k), 0.91 + 0.14 * fbm2((cx + ox) / 14, (cz + oz) / 14, 43) + 0.05 * hash2(cx + ox, cz + oz, 44));
+    return (shades[at] = shade(mix(WATER_SHALLOW, WATER_DEEP, k), 0.91 + 0.14 * fbm2((cx + ox) / 14, (cz + oz) / 14, 43) + 0.05 * hash2(cx + ox, cz + oz, 44)));
   };
   for (let z = part.z0; z < part.z1; z++) for (let x = part.x0; x < part.x1; x++) {
     const i = idx(x, z), y = g.surf[i];

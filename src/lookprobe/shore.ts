@@ -22,12 +22,14 @@ export const SAND = rgb(0xdcc790);
 
 /**
  * The share of land round every point of a lattice of half columns (corners, middles of edges, middles of columns),
- * less the level: over nought where the bank lies. Paved ground is no land here, a quay stays straight. Null where
- * the ground has no water.
+ * less the level: over nought where the bank lies. Paved ground is no land here, a quay stays straight. It holds the
+ * points of the columns of `part` (all of the ground where none is given) and nothing of the rest. Null where the
+ * part has no water.
  */
-export function shoreField(g: Ground): Float32Array | null {
+export function shoreField(g: Ground, part: Part = { x0: 0, z0: 0, x1: N, z1: N }): Float32Array | null {
+  // only the water of `part` is given banks: where it has none, there is nothing to tell
   let any = false;
-  for (let i = 0; i < N * N && !any; i++) any = g.wet[i] === 1;
+  for (let z = part.z0; z < part.z1 && !any; z++) for (let x = part.x0; x < part.x1; x++) if (g.wet[idx(x, z)] === 1) { any = true; break; }
   if (!any) return null;
   const M = 2 * N, L = M + 1;
   const land = (x: number, z: number) => { const i = idx(Math.max(0, Math.min(N - 1, x)), Math.max(0, Math.min(N - 1, z))); return !g.wet[i] && g.mat[i] !== Mat.Paved ? 1 : 0; };
@@ -35,28 +37,35 @@ export function shoreField(g: Ground): Float32Array | null {
   const reach = Math.ceil(6 * SHORE_BLUR), bell: number[] = [];
   let sum = 0;
   for (let k = -reach; k <= reach; k++) { const w = Math.exp(-(k * k) / (8 * SHORE_BLUR * SHORE_BLUR)); bell.push(w); sum += w; }
+  // The field is worked out at the lattice points the part's columns read (i0 … i1, j0 … j1) and no further: on a
+  // ground of 400 blocks that holds a piece of 200, three quarters of it were worked out for nothing (a tenth of a
+  // near piece's building time, a fifth of what the glide draws of the coarser piece). The numbers are the same.
+  const i0 = 2 * part.x0, i1 = 2 * part.x1, j0 = 2 * part.z0, j1 = 2 * part.z1;
+  const hx0 = Math.max(0, i0 - 1), hx1 = Math.min(M - 1, i1), hz0 = Math.max(0, j0 - 1), hz1 = Math.min(M - 1, j1);
   const along = new Float32Array(M * M), both = new Float32Array(M * M);
-  for (let z = 0; z < M; z++) for (let x = 0; x < M; x++) {
+  for (let z = Math.max(0, hz0 - reach); z <= Math.min(M - 1, hz1 + reach); z++) for (let x = hx0; x <= hx1; x++) {
     let v = 0;
     for (let k = -reach; k <= reach; k++) v += bell[k + reach] * land((x + k) >> 1, z >> 1);
     along[z * M + x] = v / sum;
   }
-  for (let z = 0; z < M; z++) for (let x = 0; x < M; x++) {
+  for (let z = hz0; z <= hz1; z++) for (let x = hx0; x <= hx1; x++) {
     let v = 0;
     for (let k = -reach; k <= reach; k++) v += bell[k + reach] * along[Math.max(0, Math.min(M - 1, z + k)) * M + x];
     both[z * M + x] = v / sum;
   }
   const f = new Float32Array(L * L), half = (x: number, z: number) => both[Math.max(0, Math.min(M - 1, z)) * M + Math.max(0, Math.min(M - 1, x))];
-  for (let j = 0; j < L; j++) for (let i = 0; i < L; i++) f[j * L + i] = (half(i - 1, j - 1) + half(i, j - 1) + half(i - 1, j) + half(i, j)) / 4 - SHORE_LEVEL;
+  for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) f[j * L + i] = (half(i - 1, j - 1) + half(i, j - 1) + half(i - 1, j) + half(i, j)) / 4 - SHORE_LEVEL;
   // narrow water (a river, a sound) must not be closed by its banks: the columns in its middle, which have no water
-  // beside them that lies farther from the land, keep their middles open, and the edges between them
+  // beside them that lies farther from the land, keep their middles open, and the edges between them. Whether a
+  // column is such a middle is told by the water up to three columns from it: SEEN columns round the part are looked at.
+  const SEEN = 6, x0 = Math.max(0, part.x0 - SEEN), x1 = Math.min(N, part.x1 + SEEN), z0 = Math.max(0, part.z0 - SEEN), z1 = Math.min(N, part.z1 + SEEN);
   const wet = (x: number, z: number) => x >= 0 && z >= 0 && x < N && z < N && g.wet[idx(x, z)] === 1;
   const NB = [[1, 0], [-1, 0], [0, 1], [0, -1]] as const, from = new Uint8Array(N * N).fill(3);
-  for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) if (wet(x, z) && NB.some(([dx, dz]) => x + dx >= 0 && z + dz >= 0 && x + dx < N && z + dz < N && !wet(x + dx, z + dz))) from[idx(x, z)] = 1;
-  for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) if (wet(x, z) && from[idx(x, z)] === 3 && NB.some(([dx, dz]) => wet(x + dx, z + dz) && from[idx(x + dx, z + dz)] === 1)) from[idx(x, z)] = 2;
+  for (let z = z0; z < z1; z++) for (let x = x0; x < x1; x++) if (wet(x, z) && NB.some(([dx, dz]) => x + dx >= 0 && z + dz >= 0 && x + dx < N && z + dz < N && !wet(x + dx, z + dz))) from[idx(x, z)] = 1;
+  for (let z = z0; z < z1; z++) for (let x = x0; x < x1; x++) if (wet(x, z) && from[idx(x, z)] === 3 && NB.some(([dx, dz]) => wet(x + dx, z + dz) && from[idx(x + dx, z + dz)] === 1)) from[idx(x, z)] = 2;
   const middle = (x: number, z: number) => wet(x, z) && from[idx(x, z)] < 3 && !NB.some(([dx, dz]) => wet(x + dx, z + dz) && from[idx(x + dx, z + dz)] > from[idx(x, z)]);
   const open = (i: number, j: number, by = SHORE_THIN) => { f[j * L + i] = Math.min(f[j * L + i], -by); };
-  for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
+  for (let z = Math.max(0, part.z0 - 2); z < Math.min(N, part.z1 + 2); z++) for (let x = Math.max(0, part.x0 - 2); x < Math.min(N, part.x1 + 2); x++) {
     if (!middle(x, z)) continue;
     const e = middle(x + 1, z), w = middle(x - 1, z), s = middle(x, z + 1), n = middle(x, z - 1);
     // where the water turns a corner its middle lies off the column's middle: that one is only just kept open
@@ -71,7 +80,7 @@ export function shoreField(g: Ground): Float32Array | null {
 
 /** The banks of the water of a ground (see the head of the file), added to the ground's mesh `b`. */
 export function buildShore(b: Batch, g: Ground, t: GroundTraits, baked = true, part: Part = { x0: 0, z0: 0, x1: N, z1: N }) {
-  const f = shoreField(g), L = 2 * N + 1;
+  const f = shoreField(g, part), L = 2 * N + 1;
   if (!f) return;
   const ox = g.ox ?? 0, oz = g.oz ?? 0, UP: V3 = [0, 1, 0];
   /** the lowest land that touches a lattice point (or lies a column from it), and whether it is rock */
