@@ -7,8 +7,7 @@ import { ACACIA, CYPRESS, JUNGLE, LEAVES, PALM, acacia, cypress, palm, tree } fr
 import { type Ground, type GroundTraits, LAND_Y, Mat, N, SEA_Y, SUMMIT, idx, inGrid, measureShore, occlude, rockPillar } from '../lookprobe/layout';
 import type { Shape, StageScene } from '../lookprobe/stage';
 import { crowd } from '../figures';
-import { type Part, WATER_SHALLOW, buildTerrain, buildWater } from '../lookprobe/terrain';
-import { buildShore } from '../lookprobe/shore';
+import { type Part, WATER_SHALLOW } from '../lookprobe/terrain';
 import { type Climate, FIELDS_KNOWN, KIND, Land, WOODS_KNOWN, climateAt, snowLineAt, treeLineAt } from './climate';
 import { type Arable, arableAt } from './arable';
 import { type Forest, WOOD, conifersAt, forestAt, leanOf, stand, tilth } from './forest';
@@ -18,6 +17,7 @@ import { HAMLET_TURN, type HamletLands, hamletAt, hamletsOf } from './hamlets';
 import { BARE, FINER, FINER_STEPS, SNOW_LINE, TINT, TREE_LINE, WOODS, blockOfCell, cellOfBlock, lineShift, paleFrom, rockAt, woodsUntil } from './land';
 import { type Region, Water, cellOf, latOf, sample, waterAt } from './region';
 import { type Cover, type Woods, coverLand, lotFill } from './far';
+import { drawGround } from './table';
 import { unshade } from './mean';
 import { FARMS, FIELD_GROUND, LOT_BLOCKS, LOT_FILL, type Lot, type Monument, PEOPLE_PER_PERSON, type Settled, type Site, type Survey, type Told, farmsFor, firstHalf, raise, settle } from './settle';
 import { type Columns, columnsOf } from './nearground';
@@ -518,8 +518,8 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     slope: SLOPE,
     summit: (x, z) => { const [px, pz] = rockPillar(x + ox, z + oz); return (pillar(x, z)[0] / at(snow, x, z)) * SUMMIT + (hash2(Math.floor(px / 2), Math.floor(pz / 2), 9) - 0.5) * 0.04; },
   };
-  const carried = cover ? new Batch() : undefined, ground = buildTerrain(g, traits, bakedSky, part, carried), water = buildWater(g, false, part), raised = buildWater(g, true, part);
-  buildShore(ground, g, traits, bakedSky, part);
+  // (drawn by table.ts, which can keep the table of the columns: a far piece is drawn again from that alone)
+  const { ground, carried, water, raised } = drawGround(g, traits, bakedSky, part, !!cover);
   // the houses that have fine blocks and the paved ground stand in cells of their own (the part is whole cells), so
   // that the near view can build them again cell by cell
   const cells: Cell[] = [], across = Math.ceil((part.x1 - part.x0) / CELL), down = Math.ceil((part.z1 - part.z0) / CELL), byCell = new Map<number, Lot[]>();

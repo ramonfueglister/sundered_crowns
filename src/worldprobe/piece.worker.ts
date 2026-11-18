@@ -1,55 +1,26 @@
 // Builds pieces of the world off the page's own thread: one message asks for a piece, the answer carries its meshes
-// as flat lists that are handed over, not copied.
-import gazetteer from '../../data/content/gazetteer.json';
-import landmarks from '../../data/content/landmarks.json';
-import type { Batch } from '../lookprobe/batch';
+// as flat lists that are handed over, not copied. A piece of a coarse step whose table was built ahead is drawn from
+// that (table.ts), which takes a third of the time and none of the map's data.
+import { Batch } from '../lookprobe/batch';
 import type { Shape } from '../lookprobe/stage';
 import { buildOpenSea } from '../lookprobe/terrain';
-import { loadClimate } from './climate';
-import { loadForest } from './forest';
-import { loadRural } from './rural';
-import { loadArable } from './arable';
-import { loadHamletLands } from './hamlets';
-import { loadParcels } from './lots';
-import { loadModels } from './models';
-import { FINER_STEPS } from './land';
-import { Water, loadWindow } from './region';
-import { type Piece, type WorldScene, buildWorld, windowOf } from './world';
-import { type Cover, KINDS, laidOut, loadPlan, usePlan } from './far';
+import { GRID, N, onGrid } from '../lookprobe/layout';
+import { maybeGunzip } from '../render/assets';
+import { buildPiece } from './build';
+import { type Cover, KINDS, laidOut } from './far';
 import { above, lay, meanCover, summary } from './mean';
-import { N, onGrid } from '../lookprobe/layout';
 import { faced, flat as floats, small } from './small';
 import { bytesOf, pack, unpack } from './pack';
 import { folderOf, kept } from './store';
-import { loadTownPeople } from '../figures';
-import { loadInhabitants } from './towns';
+import { type TablesIndex, drawTable, keyOfTable, unpackTable } from './table';
+import type { Piece, WorldScene } from './world';
 
-export interface PieceJob { id: number; piece: Piece; region: string; /** step of the map: blocks 2^step cells wide */ step: number; base: string; bakedSky: boolean; /** the piece is kept on disk under this name, in the folder of this build (store.ts); `kept`: it is there, or may be (the store has not yet said what it holds), and is read if so, not built */ keep?: { build: string; name: string; kept: boolean }; /** the world's start year, whose towns are built, whose forest stands and whose people live on the land (default 1356) */ year?: number; /** false: a far step as far.ts lays it out, not as the mean of the finer step */ mean?: boolean | 'compare'; /** for a piece of the first far step: the summaries of the four finest pieces under it that the page holds (mean.ts), in rows */ under?: (Float32Array | undefined)[]; /** side of the ground the piece is built on, where it is not the usual one (layout.ts: GRID); the piece's ox, oz and part are given on that ground */ grid?: number; /** the piece's lists as small numbers (small.ts), not as floats */ small?: boolean; /** and of those the rectangles on the grid of blocks as faces (lookprobe/faces.ts) */ faces?: boolean }
+export interface PieceJob { id: number; piece: Piece; region: string; /** step of the map: blocks 2^step cells wide */ step: number; base: string; bakedSky: boolean; /** the piece is kept on disk under this name, in the folder of this build (store.ts); `kept`: it is there, or may be (the store has not yet said what it holds), and is read if so, not built */ keep?: { build: string; name: string; kept: boolean }; /** the world's start year, whose towns are built, whose forest stands and whose people live on the land (default 1356) */ year?: number; /** false: a far step as far.ts lays it out, not as the mean of the finer step */ mean?: boolean | 'compare'; /** for a piece of the first far step: the summaries of the four finest pieces under it that the page holds (mean.ts), in rows */ under?: (Float32Array | undefined)[]; /** side of the ground the piece is built on, where it is not the usual one (layout.ts: GRID); the piece's ox, oz and part are given on that ground */ grid?: number; /** the piece's lists as small numbers (small.ts), not as floats */ small?: boolean; /** and of those the rectangles on the grid of blocks as faces (lookprobe/faces.ts) */ faces?: boolean; /** false: the piece is built even where its table was built ahead (table.ts) */ tables?: boolean }
 export interface PieceDone { id: number; scene?: WorldScene<Shape>; /** of a piece of the finest step: what it shows, summed up for the piece of the next step over it (mean.ts) */ summary?: Float32Array; /** the piece packed, to be kept on disk (pack.ts) */ packed?: ArrayBuffer; /** the piece was read from disk */ kept?: boolean; error?: string }
 /** what is kept of a piece */
 type Kept = Pick<PieceDone, 'scene' | 'summary'>;
 
 const nothing: Shape = { pos: new Float32Array(0), nor: new Float32Array(0), col: new Float32Array(0) };
-
-/**
- * Builds a piece of a step; null where it is open sea. `mean`: the cover of its ground from the finer step. The
- * ground has the job's side (`grid`) wherever its size counts, and only there: nothing waits while it holds, so a
- * job that is taken up meanwhile cannot change it.
- */
-async function build(job: PieceJob, step: number, piece: Piece, mean: Cover | null = null): Promise<WorldScene | null> {
-  const { region: name, base, bakedSky, year } = job;
-  // the step's blocks are cells of the data's step `data`, or drawn finer than its finest cells (land.ts)
-  const data = Math.max(0, step - FINER_STEPS), w = onGrid(job.grid, () => windowOf(piece.ox, piece.oz));
-  const region = await loadWindow(data ? `${name}/z${data}` : name, w.gx0, w.gy0, w.w, w.h, base, 2 ** Math.max(0, FINER_STEPS - step));
-  if (region.water.every((k) => k === Water.Sea)) return null;
-  // a far step lays out its places by the plan of the finest step, where there is one (far.ts)
-  if (step > 0) usePlan(await loadPlan(base, year ?? 1356));
-  if (step === 0) await loadTownPeople(undefined, year); // the persons of the 30 cities walk in their towns (src/figures/people.ts)
-  const climate = await loadClimate(base, region.worldW ?? region.mapW, region.worldH ?? region.mapH), people = await loadInhabitants(base, year), models = await loadModels(base);
-  const forest = await loadForest(base, year, region.worldW ?? region.mapW, region.worldH ?? region.mapH), rural = await loadRural(base, year, region.mapW, region.mapH), arable = await loadArable(base, year, region.mapW, region.mapH);
-  const hamlets = await loadHamletLands(base, year ?? 1356), parcels = await loadParcels(base, year ?? 1356);
-  return onGrid(job.grid, () => buildWorld(region, piece, gazetteer.places, landmarks.landmarks, bakedSky, step, climate, people, models, forest, rural, arable, hamlets, parcels, undefined, mean));
-}
 
 /** What a piece of the finest step shows, summed up four blocks to one of the next step (mean.ts); null where it is open sea. */
 function summed(fine: WorldScene | null, part: Piece['part']): Float32Array | null {
@@ -68,7 +39,7 @@ async function meanOf(job: PieceJob): Promise<Cover> {
   const { ox, oz, part } = job.piece, side = part.x1 - part.x0, quarters: (Float32Array | null)[] = [];
   // the finest block under the piece's first own block, and the finest pieces that hold it and the rest
   const fx = (ox + part.x0) * 2, fz = (oz + part.z0) * 2;
-  for (let q = 0; q < 4; q++) quarters.push(job.under?.[q] ?? summed(await build(job, 0, { ox: fx + (q & 1) * side - part.x0, oz: fz + (q >> 1) * side - part.z0, part }), part));
+  for (let q = 0; q < 4; q++) quarters.push(job.under?.[q] ?? summed(await buildPiece(job, 0, { ox: fx + (q & 1) * side - part.x0, oz: fz + (q >> 1) * side - part.z0, part }), part));
   return onGrid(job.grid, () => meanCover(quarters, side / 2, N, part.x0, part.z0));
 }
 
@@ -101,6 +72,38 @@ function compare(counts: Record<string, number>, mean: Cover, part: Piece['part'
   }
 }
 
+/** the tables built ahead, by where they lie: which pieces have one and which are open sea; null where there are none */
+const indexes = new Map<string, Promise<{ index: TablesIndex; land: Set<string>; sea: Set<string> } | null>>();
+/**
+ * The piece of a job drawn from its table, where one was built ahead for it (`scene` null: it is open sea); null
+ * where the piece is to be built.
+ */
+async function tableOf(job: PieceJob): Promise<{ scene: WorldScene | null } | null> {
+  if (job.tables === false || job.mean) return null;
+  const { part, ox, oz } = job.piece, wide = part.x1 - part.x0, dir = `${job.base}map/tables/${job.region}_${job.year ?? 1356}/`;
+  if (!indexes.has(dir)) indexes.set(dir, fetch(`${dir}index.json`).then(async (r) => {
+    if (!r.ok || !(r.headers.get('content-type') ?? '').includes('json')) return null;
+    const index = await r.json() as TablesIndex, keys = (of: Record<string, number[]>) => new Set(Object.entries(of).flatMap(([step, at]) => Array.from({ length: at.length / 2 }, (_, k) => keyOfTable(+step, at[k * 2], at[k * 2 + 1]))));
+    return { index, land: keys(index.land), sea: keys(index.sea) };
+  }).catch(() => null));
+  const tables = await indexes.get(dir)!;
+  // (only a piece laid out as the tables were: the same side of ground, with its own columns at the same place)
+  if (!tables || tables.index.side !== (job.grid ?? GRID) || tables.index.piece !== wide || part.x0 !== part.z0 || part.x0 * 2 + wide !== tables.index.side) return null;
+  const px = (ox + part.x0) / wide, pz = (oz + part.z0) / wide, key = keyOfTable(job.step, px, pz);
+  if (tables.sea.has(key)) return { scene: null };
+  if (!tables.land.has(key)) return null;
+  try {
+    const r = await fetch(`${dir}${job.step}/${px}_${pz}.bin.gz`);
+    if (!r.ok) return null;
+    const raw = await maybeGunzip(new Uint8Array(await r.arrayBuffer())), table = unpackTable((raw.byteOffset || raw.byteLength !== raw.buffer.byteLength ? raw.slice() : raw).buffer as ArrayBuffer);
+    if (table.ox !== ox || table.oz !== oz) return null;
+    const drawn = drawTable(table, job.bakedSky);
+    return { scene: { ...drawn, things: new Batch(), cells: [], counts: { triangles: drawn.ground.triangles + (drawn.carried?.triangles ?? 0) + drawn.water.triangles + drawn.raised.triangles } } };
+  }
+  // (a table that cannot be read is no table: the piece is built)
+  catch { return null; }
+}
+
 let folder: Promise<FileSystemDirectoryHandle | null> | undefined;
 /** The piece of a job as it is kept on disk, if it is. */
 async function read(job: PieceJob): Promise<Kept | null> {
@@ -123,10 +126,11 @@ self.onmessage = async (e: MessageEvent<PieceJob>) => {
       return;
     }
     const mean = step === 1 && e.data.mean ? await meanOf(e.data) : null, meant = performance.now();
-    const built = await build(e.data, step, piece, e.data.mean === 'compare' ? null : mean);
+    // drawn from its table where that was built ahead, built from the map's data where not
+    const ahead = await tableOf(e.data), built = ahead ? ahead.scene : await buildPiece(e.data, step, piece, e.data.mean === 'compare' ? null : mean);
     if (built && mean && e.data.mean === 'compare') compare(built.counts, mean, piece.part, built.ground, built.carried);
     // how long the piece took to build, and of that the finer step under it (a tool reads the sums)
-    if (built) { built.counts[`ms step ${step}`] = Math.round(performance.now() - began); built.counts[`pieces step ${step}`] = 1; if (mean) built.counts['ms mean'] = Math.round(meant - began); }
+    if (built) { built.counts[`ms step ${step}`] = Math.round(performance.now() - began); built.counts[`pieces step ${step}`] = 1; if (mean) built.counts['ms mean'] = Math.round(meant - began); if (ahead) built.counts[`pieces from tables step ${step}`] = 1; }
     // (the sea mirrors, by a material of its own, and the houses of a cell are one mesh that gives way to finer ones: both stay lists)
     const flat = e.data.small ? small : floats, solid = e.data.small && e.data.faces ? faced : flat;
     const scene: WorldScene<Shape> = built ? { ground: solid(built.ground), carried: built.carried && solid(built.carried), things: solid(built.things), water: flat(built.water), raised: solid(built.raised!), figures: built.figures, cells: built.cells.map((c) => ({ ...c, far: flat(c.far) })), counts: built.counts }
