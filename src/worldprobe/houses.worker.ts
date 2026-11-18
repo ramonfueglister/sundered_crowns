@@ -3,11 +3,11 @@
 // over, not copied.
 import { Batch } from '../lookprobe/batch';
 import type { Shape } from '../lookprobe/stage';
-import { ballOf } from './ball';
+import { flat, small } from './small';
 import { type Columns, pave } from './nearground';
 import { type Lot, raise } from './settle';
 
-export interface HousesJob { id: number; lots: Lot[]; ground?: Columns }
+export interface HousesJob { id: number; lots: Lot[]; ground?: Columns; /** the houses' lists as small numbers (small.ts), not as floats */ small?: boolean }
 export interface HousesDone { id: number; houses?: Shape; error?: string }
 
 self.onmessage = (e: MessageEvent<HousesJob>) => {
@@ -16,8 +16,8 @@ self.onmessage = (e: MessageEvent<HousesJob>) => {
     const built = new Batch();
     for (const l of lots) raise(built, l, 1);
     if (ground) pave(built, ground);
-    const pos = new Float32Array(built.pos), houses = { pos, nor: new Float32Array(built.nor), col: new Float32Array(built.col), ball: ballOf(pos) };
-    (self as unknown as Worker).postMessage({ id, houses } satisfies HousesDone, [houses.pos.buffer, houses.nor.buffer, houses.col.buffer]);
+    const houses = e.data.small ? small(built) : flat(built);
+    (self as unknown as Worker).postMessage({ id, houses } satisfies HousesDone, [houses.pos, houses.nor, houses.col].map((a) => (a as Float32Array).buffer as ArrayBuffer));
   } catch (err) {
     (self as unknown as Worker).postMessage({ id, error: String(err) } satisfies HousesDone);
   }

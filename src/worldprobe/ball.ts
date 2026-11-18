@@ -1,7 +1,7 @@
 // The ball around a mesh, worked out where the mesh is built: off the page's thread.
 
 /** The ball around the points of a list: about the middle of their box, as the stage would work it out on the page's thread. */
-export function ballOf(pos: Float32Array): [number, number, number, number] {
+export function ballOf(pos: ArrayLike<number>): [number, number, number, number] {
   const lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
   for (let i = 0; i < pos.length; i++) { const v = pos[i], k = i % 3; if (v < lo[k]) lo[k] = v; if (v > hi[k]) hi[k] = v; }
   if (!pos.length) return [0, 0, 0, 0];

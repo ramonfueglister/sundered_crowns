@@ -33,7 +33,7 @@ export interface Fine {
 }
 
 /** `still`: a tool takes one picture, in which nothing dissolves. `changed` is called whenever houses have arrived. */
-export function createFine(stage: Stage, o: { still: boolean; changed(): void }): Fine {
+export function createFine(stage: Stage, o: { still: boolean; changed(): void; /** the houses' lists as small numbers (small.ts) */ small?: boolean }): Fine {
   const states = new Map<string, State>(), jobs = new Map<number, string>(), idle: Worker[] = [], workers: Worker[] = [];
   const fine: Fine = { look, failed: '', dispose: () => { for (const w of workers) w.terminate(); } };
   let nextId = 1, last = 0;
@@ -47,7 +47,7 @@ export function createFine(stage: Stage, o: { still: boolean; changed(): void })
       // the cell may have left the stage while its houses were built
       else if (s && e.data.houses) {
         s.fine = stage.more(s.cell.group, e.data.houses); s.fine.visible = false;
-        stage.probe.counts['fine triangles'] = (stage.probe.counts['fine triangles'] ?? 0) + e.data.houses.pos.length / 9;
+        stage.probe.counts['fine triangles'] = (stage.probe.counts['fine triangles'] ?? 0) + s.fine.geometry.getAttribute('position').count / 3;
       }
       if (s) s.asked = false;
       o.changed();
@@ -87,7 +87,7 @@ export function createFine(stage: Stage, o: { still: boolean; changed(): void })
     while (idle.length && queue.length) {
       const s = queue.pop()!, id = nextId++;
       s.asked = true; jobs.set(id, s.cell.key);
-      idle.pop()!.postMessage({ id, lots: s.cell.lots, ground: s.cell.ground } satisfies HousesJob);
+      idle.pop()!.postMessage({ id, lots: s.cell.lots, ground: s.cell.ground, small: o.small } satisfies HousesJob);
     }
     return { missing, fading };
   }

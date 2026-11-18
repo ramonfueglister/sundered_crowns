@@ -2,9 +2,10 @@
 // it and shown with the camera of Ramon's reference image.
 // Address options: ?webgl=1 (WebGL 2 instead of WebGPU), ?w=1672&h=941 (fixed picture size), ?blur=1 (miniature blur,
 // which the reference does not have), ?shadows=0, ?mirror=0 (no mirror image on the water), ?sky=0 (without the baked sky share: light step 1 only),
-// ?ao=0 (without the darkening of creases and corners; ?aoscale, ?aosamples, ?aosmooth: see there).
+// ?ao=0 (without the darkening of creases and corners; ?aoscale, ?aosamples, ?aosmooth: see there). ?small=1: the pieces' directions and
+// colours come as bytes (worldprobe/small.ts).
 import * as THREE from 'three/webgpu';
-import { clamp, convertToTexture, dot, float, fract, getViewPosition, max, mix, mrt, normalView, output, pass, reflector, rtt, screenCoordinate, screenSize, screenUV, select, smoothstep, step, texture, uniform, userData, uv, vec2, vec3, vec4 } from 'three/tsl';
+import { attribute, clamp, convertToTexture, dot, float, fract, getViewPosition, materialColor, max, mix, mrt, normalView, output, pass, reflector, rtt, screenCoordinate, screenSize, screenUV, select, smoothstep, step, texture, uniform, userData, uv, vec2, vec3, vec4 } from 'three/tsl';
 import { MapControls } from 'three/addons/controls/MapControls.js';
 import { dof } from 'three/addons/tsl/display/DepthOfFieldNode.js';
 import { denoise } from 'three/addons/tsl/display/DenoiseNode.js';
@@ -55,8 +56,16 @@ const FIGURES_GONE = 0.3;
 /** the layer the figures are drawn on: the picture's camera sees it, the water mirror's does not */
 const FIGURES_LAYER = 1;
 
-/** A mesh as flat lists: three numbers per corner for position, direction and colour. A `Batch` is one. */
-export interface Shape { pos: ArrayLike<number>; nor: ArrayLike<number>; col: ArrayLike<number>; /** the ball around all its points, middle and radius, where its builder has worked it out (else the stage does, on the page's thread) */ ball?: [number, number, number, number] }
+/**
+ * A mesh as flat lists: three numbers per corner for position, direction and colour. A `Batch` is one. Or, where
+ * `small`, direction and colour as four bytes per corner each (worldprobe/small.ts): 20 bytes to a corner, not 36.
+ */
+export interface Shape {
+  pos: ArrayLike<number>; nor: ArrayLike<number>; col: ArrayLike<number>;
+  /** the ball around all its points, middle and radius, where its builder has worked it out (else the stage does, on the page's thread) */
+  ball?: [number, number, number, number];
+  small?: boolean;
+}
 export interface StageScene<S extends Shape = Batch> {
   ground: S; things: S;
   /** the sea, which mirrors what stands beside it */
@@ -162,7 +171,16 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   const scene = new THREE.Scene();
   let pending = 3;
   scene.background = new THREE.Color(...OPEN_WATER);
-  const solid = new THREE.MeshLambertNodeMaterial({ vertexColors: true });
+  // `?small=1`: the pieces come with directions and colours as bytes (worldprobe/small.ts). A corner's colour is
+  // then three floats, or four bytes: the share each part has of the brightest, and half that brightest, of which
+  // 254 is one. A colour of three floats has a one as its fourth number by the graphics card's rule, which a
+  // colour of bytes never has: so both kinds are told apart here, at the corner, and what lies between the corners
+  // is the same for both. (Without the switch the materials take the corners' colours as they always did.)
+  const smallLists = flag('small', false);
+  const tone = attribute('color', 'vec4') as unknown as ReturnType<typeof vec4>;
+  const toned = () => materialColor.mul(tone.rgb.mul(select(tone.a.lessThan(254.5 / 255), tone.a.mul((2 * 255) / 254), float(1))).toVarying());
+  const coloured = () => { const m = new THREE.MeshLambertNodeMaterial({ vertexColors: !smallLists }); if (smallLists) m.colorNode = toned(); return m; };
+  const solid = coloured();
   // every mesh is drawn on the dots of the picture whose value lies between its two marks (see `dissolve`); the
   // pattern is interleaved gradient noise, which has no stripes or clumps
   const dots = fract(fract(dot(screenCoordinate.xy, vec2(0.06711056, 0.00583715))).mul(52.9829189)), marks = userData('dots', 'vec2') as unknown as ReturnType<typeof vec2>;
@@ -185,14 +203,17 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     mirror.target.rotateX(-Math.PI / 2);
     mirror.target.position.y = SEA_Y;
     marked(mirror.target); scene.add(mirror.target);
-    water = new THREE.MeshLambertNodeMaterial({ vertexColors: true });
+    water = coloured();
     water.maskNode = solid.maskNode;
     // the mirror image is tinted like the water, so a white sail shows as a pale green shape, not as a light
     water.emissiveNode = hashBlur(mirror, float(LOOK.mirrorBlur), { repeats: float(24) }).rgb.mul(tint);
   }
   const geometry = (s: Shape) => {
     const g = new THREE.BufferGeometry(), list = (a: ArrayLike<number>) => new THREE.BufferAttribute(a instanceof Float32Array ? a : new Float32Array(a), 3);
-    g.setAttribute('position', list(s.pos)); g.setAttribute('normal', list(s.nor)); g.setAttribute('color', list(s.col));
+    g.setAttribute('position', list(s.pos));
+    // (bytes, which the graphics card reads as shares of their largest)
+    if (s.small) { g.setAttribute('normal', new THREE.BufferAttribute(s.nor as Int8Array, 4, true)); g.setAttribute('color', new THREE.BufferAttribute(s.col as Uint8Array, 4, true)); }
+    else { g.setAttribute('normal', list(s.nor)); g.setAttribute('color', list(s.col)); }
     if (s.ball) g.boundingSphere = new THREE.Sphere(new THREE.Vector3(s.ball[0], s.ball[1], s.ball[2]), s.ball[3]); else g.computeBoundingSphere();
     return g;
   };
@@ -442,6 +463,12 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   const pilot = mesh({ pos: [0, 0, 0, 0, 0, 1, 1, 0, 0], nor: [0, 1, 0, 0, 1, 0, 0, 1, 0], col: [0, 0, 0, 0, 0, 0, 0, 0, 0] }, solid, false);
   (pilot.userData.dots as THREE.Vector2).set(0, 0); pilot.frustumCulled = false; pilot.layers.set(FIGURES_LAYER);
   scene.add(pilot);
+  // (and one of small lists, whose pipeline is another)
+  if (smallLists) {
+    const pilotSmall = mesh({ pos: new Float32Array(9), nor: new Int8Array(12), col: new Uint8Array(12), small: true }, solid, false);
+    (pilotSmall.userData.dots as THREE.Vector2).set(0, 0); pilotSmall.frustumCulled = false; pilotSmall.layers.set(FIGURES_LAYER);
+    scene.add(pilotSmall);
+  }
   const weight = (g: THREE.BufferGeometry) => { let bytes = 0; for (const name in g.attributes) bytes += (g.attributes[name].array as Float32Array).byteLength; return Math.max(SEND_LEAST, bytes); };
   const cool = <M extends THREE.Mesh>(made: M): M => { if (!fixedW) { cold.add(made); waiting += weight(made.geometry); } return made; };
   const warm = (made: THREE.Mesh) => { if (cold.delete(made)) waiting -= weight(made.geometry); };
@@ -472,15 +499,15 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     for (const made of sending) warm(made);
     sending = [];
   };
-  /** a mesh has no more triangles than this (4 MB of lists): the share of one picture while the view moves */
-  const MOST = Math.floor(SEND_MOVING / 108);
-  /** A shape as meshes of MOST triangles at most, which share its lists. */
+  /** A shape as meshes of no more than 4 MB of lists each, the share of one picture while the view moves; they share its lists. */
   const parts = (shape: Shape): Shape[] => {
-    const n = shape.pos.length / 9, { pos, nor, col } = shape;
-    if (n <= MOST || !(pos instanceof Float32Array) || !(nor instanceof Float32Array) || !(col instanceof Float32Array)) return [shape];
-    const list: Shape[] = [];
+    const { pos, nor, col } = shape, n = pos.length / 9, per = shape.small ? 12 : 9;
+    if (!ArrayBuffer.isView(pos) || !ArrayBuffer.isView(nor) || !ArrayBuffer.isView(col)) return [shape];
+    const most = Math.floor(SEND_MOVING / ((pos.byteLength + nor.byteLength + col.byteLength) / Math.max(1, n)));
+    if (n <= most) return [shape];
+    const list: Shape[] = [], cut = <T extends ArrayLike<number>>(a: T, from: number, to: number) => (a as unknown as Float32Array).subarray(from, to) as unknown as T;
     // (each keeps the ball of the whole: it is left out of a picture only where the whole would be)
-    for (let from = 0; from < n; from += MOST) { const a = from * 9, b = Math.min(n, from + MOST) * 9; list.push({ pos: pos.subarray(a, b), nor: nor.subarray(a, b), col: col.subarray(a, b), ball: shape.ball }); }
+    for (let from = 0; from < n; from += most) { const to = Math.min(n, from + most); list.push({ ...shape, pos: cut(pos, from * 9, to * 9), nor: cut(nor, from * per, to * per), col: cut(col, from * per, to * per) }); }
     return list;
   };
   const stage: Stage = {
