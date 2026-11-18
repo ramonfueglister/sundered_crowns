@@ -78,6 +78,9 @@ export interface EconomyChecks { cities: CityChecks[]; merchants: { off: number;
 export interface EconomyEngine {
   /** New cities that trade with each other, with the clock and the rules of their firms: their state. */
   create(cities: readonly CitySetup[], clock: EconomyClock, rules: EconomyRules): Uint8Array;
+  /** The cities of a state that has not computed a period, with distance between them (economy feature 17): the
+   *  days of travel and the labour of carrying per pair of cities, and the elasticity of the stock to keep. */
+  routes(state: Uint8Array, routes: { cities: number; days: Uint32Array; labour: Float64Array; weight: readonly number[]; elasticity: number }): Uint8Array;
   /** The state after `periods` more periods. */
   step(state: Uint8Array, periods: number): Uint8Array;
   /** The key figures of every city, `FIGURES` numbers a city in the order of the cities. */
@@ -91,6 +94,7 @@ interface Exports {
   memory: WebAssembly.Memory;
   sce_alloc(len: number): number; sce_free(ptr: number, len: number): void;
   sce_create(list: number, len: number, plan: number, window: number, wage: number, prices: number, savings: number, crown: number): number;
+  sce_routes(state: number, len: number, routes: number, routesLen: number): number;
   sce_step(state: number, len: number, periods: number): number;
   sce_figures(state: number, len: number): number;
   sce_checks(state: number, len: number): number;
@@ -154,6 +158,16 @@ export function wasmEconomyEngine(wasm: Uint8Array): EconomyEngine {
       if (!(savings >= 0 && savings <= 1)) throw new Error(`${savings} is not a share of the savings spent per period`);
       if (crown !== 'series' && crown !== 'revenue') throw new Error(`${crown} is not a way for the crown to buy: 'series' or 'revenue'`);
       return call([list(cities)], (e, a) => e.sce_create(a[0], a[1], clock.plan, clock.window, wage === 'money' ? 1 : 0, prices === 'demand' ? 1 : 0, savings, crown === 'revenue' ? 1 : 0));
+    },
+    routes(state, { cities: n, days, labour, weight, elasticity }) {
+      if (days.length !== n * n || labour.length !== n * n) throw new Error(`routes of ${days.length} ways and ${labour.length} labours do not fit ${n} cities`);
+      // as `sce_routes` reads them: the elasticity, the weight per product, then per pair of cities the days and the labour
+      const G = weight.length, out = new Uint8Array(8 + 8 * G + 12 * n * n), dv = new DataView(out.buffer);
+      dv.setFloat64(0, elasticity, true);
+      weight.forEach((v, g) => dv.setFloat64(8 + 8 * g, v, true));
+      let at = 8 + 8 * G;
+      for (let k = 0; k < n * n; k++) { dv.setUint32(at, days[k], true); dv.setFloat64(at + 4, labour[k], true); at += 12; }
+      return call([state, out], (e, a) => e.sce_routes(a[0], a[1], a[2], a[3]));
     },
     step(state, periods) {
       if (!Number.isInteger(periods) || periods < 0) throw new Error(`${periods} is not a number of periods`);

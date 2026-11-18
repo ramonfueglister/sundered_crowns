@@ -30,6 +30,7 @@ import { createTable, spawn } from '../ecs';
 import { AGENT, FIGURE, FIGURES, type CitySetup } from '../economy/engine';
 import { activePersons, cityTable, dailyCalibration, type EconomyCalibration } from '../economy/calibration';
 import { citiesOf } from '../content/cities';
+import { cityRoutes } from '../economy/routes';
 import { dateToDay, dayToDate, fmtDate } from '../calendar';
 import { hash01 } from '../rng';
 import { uses1356Tables } from '../tables';
@@ -105,7 +106,8 @@ export function foundEconomy(s: WorldState, w: World): void {
     setups.push({ parameters: JSON.stringify(x.calibration.parameters), initialConditions: JSON.stringify(x.calibration.initial_conditions), seed: citySeed(s.seed, x.place) });
   });
   firm0[cities.length] = s.firm.size;
-  const model = w.economyEngine.create(setups, c.clock, c.rules);
+  const places = cities.map((x) => x.place);
+  const model = w.economyEngine.routes(w.economyEngine.create(setups, c.clock, c.rules), cityRoutes(w, places, c.table));
   s.economy = { cities: { day: s.day, model, figures: w.economyEngine.figures(model), years: new Float64Array(0), halted: '', places: Int32Array.from(cities, (x) => x.place), firm0 } };
   writeAgents(s, w);
 }

@@ -14,6 +14,7 @@ import { REFERENCE, calibrationJson, cityCalibrations, readTable } from '../tool
 import { calibrateEconomy, cityTable, dailyCalibration, dailyEconomy, unemploymentBenefit, ar1, roundHalfEven, type Entry } from '../src/sim/economy/calibration';
 import { FIGURE, FIGURES, type CitySetup, type EconomyEngine, type EconomyRules } from '../src/sim/economy/engine';
 import { cityAt, cityPlaces, citySeed, computeTo, yearRow } from '../src/sim/systems/economy';
+import { cityRoutes } from '../src/sim/economy/routes';
 import { cityPeopleByPlace } from '../src/sim/systems/people';
 import { advanceDay } from '../src/sim/engine';
 import { encodeState, decodeState, hashState } from '../src/sim/snapshot';
@@ -474,6 +475,8 @@ describe('the economies of the cities in the world', () => {
   // one world that runs 400 days, day by day (1356 is a leap year: day 365 is 31 December, day 366 is 1 January 1357)
   const run = newWorldState();
   const CITIES = cityCalibrations(), N = CITIES.length; // the cities of this world: it is the reference world
+  // the cities without a way to the others (economy feature 17): those of the regions the table names as apart
+  const APART = new Set(CITIES.map((x, c) => (run.w.cityEconomies.table.routes.apart.value.includes(run.w.provinces[run.w.provOf[x.place]].region) ? c : -1)).filter((c) => c >= 0));
   if (run.s.seed !== REFERENCE.seed || run.s.startYear !== REFERENCE.year) throw new Error('the tests run the reference world');
   const at: Record<number, { hash: string; state: Uint8Array; figures: Float64Array; model: number }> = {};
   beforeAll(() => {
@@ -492,7 +495,8 @@ describe('the economies of the cities in the world', () => {
     for (let k = 0; k < N; k++) expect(e.figures[k * FIGURES + FIGURE.periods]).toBe(0);
     expect(Array.from(e.places)).toEqual(CITIES.map((x) => x.place));
     const setups = CITIES.map((x) => ({ parameters: JSON.stringify(x.calibration.parameters), initialConditions: JSON.stringify(x.calibration.initial_conditions), seed: citySeed(s.seed, x.place) }));
-    expect(Buffer.compare(e.model, w.economyEngine.create(setups, c.clock, c.rules))).toBe(0);
+    const routes = cityRoutes(w, CITIES.map((x) => x.place), c.table);
+    expect(Buffer.compare(e.model, w.economyEngine.routes(w.economyEngine.create(setups, c.clock, c.rules), routes))).toBe(0);
     expect(hashState(newWorldState(1357).s)).not.toBe(hashState(s));
   });
   it('give every city random numbers of its own, from the seed of the world and its place', () => {
@@ -538,18 +542,23 @@ describe('the economies of the cities in the world', () => {
     expect(k.cities.length).toBe(N);
     for (const x of k.cities) for (const v of [x.income, x.nominal, x.real, x.centralBank, x.banks]) expect(Math.abs(v) / x.gdpSum).toBeLessThan(1e-9);
     for (const m of k.merchants) expect(Math.abs(m.off)).toBeLessThanOrEqual(1e-9 * m.scale);
-    // every city has sold to the merchants and bought from them
+    // every city with a way to the others has sold to the merchants and bought from them; Texcoco has none
+    // (economy feature 17) and sells nothing
     const f = run.s.economy.cities!.figures;
-    for (let c = 0; c < N; c++) { expect(f[c * FIGURES + FIGURE.exports]).toBeGreaterThan(0); expect(f[c * FIGURES + FIGURE.imports]).toBeGreaterThan(0); }
+    for (let c = 0; c < N; c++) {
+      if (APART.has(c)) { expect(f[c * FIGURES + FIGURE.exports]).toBe(0); continue; }
+      expect(f[c * FIGURES + FIGURE.exports]).toBeGreaterThan(0); expect(f[c * FIGURES + FIGURE.imports]).toBeGreaterThan(0);
+    }
+    expect(APART.size).toBe(1);
   });
   it('sell to the merchants about the same share of their output, the largest city as the smallest', () => {
     // the merchants pick among the firms of the other cities, so a city counts by its firms; were every city one
     // seller among 29, Cairo would export less than half of what the smallest cities do, measured by output
-    const f = at[365].figures, share = Array.from({ length: N }, (_, c) => f[c * FIGURES + FIGURE.exports] / f[c * FIGURES + FIGURE.realGdp]);
+    const f = at[365].figures, all = Array.from({ length: N }, (_, c) => f[c * FIGURES + FIGURE.exports] / f[c * FIGURES + FIGURE.realGdp]), share = all.filter((_, c) => !APART.has(c));
     const people = CITIES.map((c) => c.people), largest = people.indexOf(Math.max(...people));
     expect(run.w.names[CITIES[largest].place]).toBe('Cairo');
     expect(Math.max(...share) / Math.min(...share)).toBeLessThan(1.4);
-    expect(share[largest]).toBeGreaterThan(0.75 * Math.max(...share));
+    expect(all[largest]).toBeGreaterThan(0.75 * Math.max(...share));
   });
   it('give for many days at once what the same days give one by one', () => {
     const { s, w } = newWorldState();

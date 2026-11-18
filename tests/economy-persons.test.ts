@@ -147,7 +147,8 @@ describe('what the engine computes', () => {
         // the savings of the persons are the deposits of the households (the components hold 32 bits)
         const deposits = figure(s, k, FIGURE.depositsHouseholds);
         expect(Math.abs(sum(P.savings, everybody) - deposits)).toBeLessThan(1e-5 * Math.abs(deposits));
-        for (const id of everybody) expect(P.spent[id]).toBeGreaterThanOrEqual(0);
+        // what a person spent is the port's budget less what was left of it: 0 up to the rounding of that difference
+        for (const id of everybody) expect(P.spent[id]).toBeGreaterThanOrEqual(-1e-15);
       }
       for (let f = 0; f < s.firm.size; f++) {
         expect(F.employees[f]).toBe(staff[f]);

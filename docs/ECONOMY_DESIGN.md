@@ -44,6 +44,7 @@ players and the AI of realms without a player act through the same commands.
 | 14 | The check of the model, and feature 12 taken back | asked by Ramon 17 Nov 2026 ("zuerst das modell jetzt sauber prüfen abschliessen ob alles aufgeht"); feature 12 taken back by his choice the same day; next by his order: distance in trade, then consumption and hunger (section 14) |
 | 15 | Households spend out of their savings, and a family has a need of food | order changed by Ramon 17 Nov 2026 ("Verbrauch und Hunger zuerst", 19:27 UTC) after the slump of remote cities in the trials of the distance was traced to the households' consumption; he asked for "einfach möglichst genau nach beforeit" (20:02 UTC) and chose "BeforeIT plus Erspartes" (20:06 UTC): the market stays the port's, only the budget gets the spending out of savings, need and hunger are a booking of the family purse. Built, with tests and numbers from the game; not yet in the running world (section 15) |
 | 16 | The crown of a city buys with what it took in | after feature 15 the distance in trade was tried again and one city still sank steadily; Ramon chose to clear that first ("Erst den Geldabfluss klären", 17 Nov 2026, 20:45 UTC). The money lay with the crown of the city, whose purchases follow a random series of their own. He chose "Krone gibt aus, was sie einnimmt" (18 Nov 2026, 02:36 UTC). Built, with tests and numbers; not yet in the running world (section 16) |
+| 17 | Distance in trade: goods travel for days, and carrying costs labour | proposed 17 Nov 2026 (https://claude.ai/artifact/9Gt22ijoL8Xdqx4cfLM7NV), variant B agreed by Ramon ("ok"); held back until the money drain was cleared (features 15 and 16); built after his choice of 18 Nov 2026 ("Krone gibt aus, was sie einnimmt": then the distance). How the Americas stay apart in 1356 is asked of him (card of 18 Nov 2026). Built, with tests and numbers; not yet in the running world (section 17) |
 
 ## 1. Grain harvest per place
 
@@ -2727,4 +2728,114 @@ anew on the day the world has reached, as the step to 21 did: the rule changes w
 persons' feature 2 (pull request 69) also uses the state versions 22 and 23: the one merged second has to take the
 next numbers.**
 
-Next by Ramon's order: the distance in trade.
+## 17. Distance in trade: goods travel for days, and carrying costs labour
+
+### The thought
+
+Until now every city lay one day from every other and carrying cost nothing. Ramon wants a system that holds over
+the centuries, not freight rates of one year. Freight is time times what a day costs: whoever moves goods needs
+people and animals for as many days as the way takes. What a day costs the model says itself, in every city and
+every year: the wage. Fixed are only technical quantities (how far a cart or a ship gets in a day, how much labour
+a tonne-kilometre takes), and they change when the technique changes.
+
+Read for it (notes in `/mnt/project-files/wirtschaft/entfernung/quellen_notizen.md`): in the Price Edict of 301 sea
+freight follows the days of travel (Scheidel, Meeks and Weiland 2012, ORBIS v1.0; Scheidel 2013); the costs of
+carting in Brabant 1450 to 1650 are fodder (76 %) and labour (24 %) (Ballaux and Blondé 2018). The ratio wagon to
+river downstream to sea is 46 : 4.5 : 1 in the Edict of 301 and 44 to 47 : 4.7 : 1 for England in 1680
+(Alvarez-Palau et al. 2024): two sources 1,400 years apart with nearly the same ratio.
+
+### The rule
+
+**1. The way** (`src/sim/economy/routes.ts`). Between two cities the way over the net of the world's places
+(27,024 places; every edge is land, river, or water: sea, coast, strait) on which carrying a tonne takes the least
+labour. The result per pair: days of travel and days of labour a tonne.
+
+| | km a day | days of labour a tonne-kilometre |
+|---|---|---|
+| Land (ox cart) | 12 | 1.39 |
+| River (mean of both directions) | 65 down, 15 up | 0.14 down, 0.27 up |
+| Sea | 126 | 0.03 |
+
+The net does not know which way a river flows, so a kilometre of river takes the mean time and the mean labour of
+both directions. Days are rounded, at least 1. Examples: Paris to Ghent 14 days and 137 days of labour a tonne;
+Venice to Alexandria 19 and 70; Baghdad to Tabriz 52 and 840; Cairo to London 65 and 420. The 756 ways of 1356 take
+70 days in the mean, 222 at most.
+
+**2. The time.** What the merchants buy in a city for another lies at the stall there after the days of the way
+(`economy/src/trade.rs`, `Routes`). Goods on the way are the merchants' and count at cost.
+
+**3. Carrying.** A real unit of a product (a pound of the start year) weighs so many tonnes (the table's
+`tonnes_per_pound`), and carrying it takes the labour of the way times that weight. The merchants buy this labour
+as services in the city of origin on the day they buy the goods, at the price services have there, and lay it on
+the cost of the goods. So carrying is income of the people of the city of origin, no money leaves the circulation,
+and the price at the stall is purchase plus carrying. For the choice of the origin the merchants reckon a day of
+labour at the mean wage of the city of origin.
+
+**4. The choice of the origin** stays the rule of feature 5 (the port's weights of a buyer), with the price of a
+city's firms plus carrying. Near cities trade more with each other without a rule that says so.
+
+**5. The stock to keep.** stock to keep = share · output · (price at the stall / price of the city's own
+firms)^(−ε), ε = 2. Without it a remote city imports as much as a near one whatever the goods cost there: in the
+first trial its deficit grew by 1 to 1.6 % of its GDP a year and it sank (Sarai to 77 in 20 years). The merchants
+also order ahead: the stall needs what it sells while an order travels, and goods on the way count as stock.
+
+**6. The start.** The merchants have on the way to every stall what it sells in a day, for every day an order
+travels: the position of merchants who ordered day by day before the first day too. Without that the first order
+is for all those days at once; in the world of 1291 it bought 22 small cities empty on the first day (their crown
+found no goods, and the port's accounts gave no number).
+
+**7. Regions apart.** The regions of the world the table names (`routes.apart`: the Americas, Oceania) have ways
+among themselves only. In the net the Americas can be reached along the northern coasts, also within 300 km of a
+coast, so no limit of seamanship that the net can express keeps them apart; the trial of the first proposal cut
+Texcoco by hand. **How this is decided is asked of Ramon (card of 18 November 2026); built is the recommended
+answer, the known world as a datum of the start year.**
+
+Two orders rules derailed in the trials and are not built: a stock for the days of travel that hangs on sales
+(goods on the way grew beyond the yearly output of the world), and a choice of the origin by distance alone.
+
+### The numbers
+
+All 29 cities of 1356 over 30 years with the routes of the world (`economy/examples/distance.rs`, results in
+`/mnt/project-files/wirtschaft/entfernung/gebaut/`), seeds 1356 to 1359, on the state with features 15 and 16:
+
+| After 30 years | Without distance (section 16) | With distance |
+|---|---|---|
+| Real output of all cities (start 100) | 115.3 to 115.5 | 113.6 to 114.0 |
+| Weakest city (start 100) | 112.5 to 113.0 | 103.3 to 110.7 (Niani three times, Prague once) |
+| Highest share without work in the 30 years | | 3.5 to 5.4 % |
+| Equity of all banks (start 551) | 458 to 551 | 206 to 551 |
+| Banks with negative equity | 0 to 2 | 0 to 2 |
+| Imports over output | | 2.4 to 2.5 % |
+| Carrying over output | 0 | about 1 % |
+| Merchants' money of a city over its GDP | −0.07 to +0.13 | −0.14 to +0.26 |
+
+The books of the merchants and of every city balance in every year (largest check 1e-13). Texcoco, which trades
+with nobody, stands at 115 after 30 years. Distance costs about 1.5 points of output in 30 years.
+
+### Deviations and what stays open
+
+- **The weight of the goods is set, not sourced**: 0.25 tonnes a pound of agricultural goods, 0.02 a pound of
+  industrial goods, services nothing.
+- **ε = 2 is set, not sourced.** It is the value the merchants' choice of a seller already uses for prices.
+- **Roman values.** Speeds and labour are of the Roman world. That they hold in 1356 rests on the technique and on
+  the cross-check with England in 1680, not on a medieval source. The Roman mile at 1.48 km is not from a source
+  read. The speed at sea is the mean of whole summer routes, not the speed of a ship; there are no seasons.
+- **Rivers have no direction** in the net.
+- **Carrying is services**, bought in the city of origin only; nobody along the way earns from it, and there are no
+  tolls.
+- **The merchants' money drifts apart** between the cities, as before and somewhat wider (section 16). No rule
+  read closes it.
+- **The ways of the 550 cities of 1291 take about six seconds** when the economies are founded; they are kept per
+  world.
+- **Texcoco alone.** A city without ways keeps the stock the merchants had there at the start until it is sold and
+  then has no imports.
+- **A person's spending can be −1e-18** on a day (the port's budget less what was left of it, rounded); the family's
+  `fed` is cut at 0.
+
+### State and upgrade
+
+State version 25. The format of the cities' state is 2: the routes, the goods on the way (a
+ring as long as the longest way) and the carrying ordered; format 1 is read as cities without routes. The upgrade
+founds the economies anew on the day the world has reached: routes are given to cities that have not computed a
+day. **The persons' feature 2 (pull request 69) uses state versions too: the one merged later takes the next
+numbers.**

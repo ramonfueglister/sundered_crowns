@@ -486,6 +486,39 @@ pub mod abi {
         answer(cities(unsafe { bytes(list, len) }, plan as usize, window as usize, wage, prices, savings, crown).map(keep))
     }
 
+    /// The cities of a state that has not computed a period, with distance between them (economy feature 17,
+    /// [`Cities::with_routes`]). The routes are, little endian: the elasticity of the stock to keep and, per
+    /// product, the tonnes of a real unit (64-bit floats); then for every city of origin and every city of
+    /// destination the days of travel (32 bits, 0 for no way) and the days of labour that carry a tonne (64-bit
+    /// float). Result: their state.
+    ///
+    /// # Safety
+    ///
+    /// As [`sce_create`], for both pairs of pointer and length.
+    #[unsafe(no_mangle)]
+    pub unsafe extern "C" fn sce_routes(state: *const u8, len: usize, routes: *const u8, routes_len: usize) -> u32 {
+        hook();
+        answer((|| {
+            let all = take(unsafe { bytes(state, len) })?;
+            let (n, G) = (all.cities.len(), all.merchants.bought.len());
+            let r = unsafe { bytes(routes, routes_len) };
+            if r.len() != 8 + 8 * G + 12 * n * n {
+                return Err(format!("routes of {} bytes do not fit {n} cities with {G} products", r.len()));
+            }
+            let f = |at: usize| f64::from_le_bytes(r[at..at + 8].try_into().unwrap());
+            let weight = (0..G).map(|g| f(8 + 8 * g)).collect();
+            let (mut days, mut labour, mut at) = (vec![vec![0; n]; n], vec![vec![0.0; n]; n], 8 + 8 * G);
+            for c in 0..n {
+                for d in 0..n {
+                    days[c][d] = u32::from_le_bytes(r[at..at + 4].try_into().unwrap()) as usize;
+                    labour[c][d] = f(at + 4);
+                    at += 12;
+                }
+            }
+            Ok(keep(all.with_routes(days, labour, weight, f(0))?))
+        })())
+    }
+
     /// Computes `periods` periods from a state. Result: the state after them.
     ///
     /// # Safety
