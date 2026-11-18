@@ -2,7 +2,7 @@
 // graphic draws those pieces without building them (src/worldprobe/table.ts; the worker reads them,
 // src/worldprobe/piece.worker.ts).
 //
-// Every piece of the steps 2 to 7 that reaches into the world's frame is built once as the worker builds it
+// Every piece of the steps 1 to 7 that reaches into the world's frame is built once as the worker builds it
 // (src/worldprobe/build.ts), and the table of its columns is kept: <step>/<px>_<pz>.bin.gz. index.json lists the
 // pieces that have a table and those that are open sea, and holds a stamp of every file the tables were built from.
 //
@@ -25,12 +25,14 @@ import { buildPiece } from '../../src/worldprobe/build';
 import { extentOf } from '../../src/worldprobe/extent';
 import { FINER, blockOfCell, cellOfBlock } from '../../src/worldprobe/land';
 import { projectionOf } from '../../src/worldprobe/region';
-import { type TablesIndex, keepTables, packTable, tabled, withThings } from '../../src/worldprobe/table';
+import { type TablesIndex, keepTables, packTable, tabled, whereTable, withThings } from '../../src/worldprobe/table';
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '../..');
 const year = Number(process.argv[2] ?? 1291), base = '/', name = 'world';
 /** the pieces of the world graphic and the ground a far piece is built on: 200 blocks a side with 32 round them (src/worldprobe/pieces.ts PIECE, NARROW) */
-const PIECE = 200, MARGIN = 32, SIDE = PIECE + 2 * MARGIN, STEPS = [2, 3, 4, 5, 6, 7];
+const PIECE = 200, MARGIN = 32, SIDE = PIECE + 2 * MARGIN, STEPS = [1, 2, 3, 4, 5, 6, 7];
+/** the steps whose tables are put into packs of so many pieces each way (TablesIndex.packs): step 1 has some 16 000, too many files for a deployment */
+const PACKED: Record<number, number> = { 1: 4 };
 const checking = process.argv[3] === 'check', steps = !checking && process.argv[3] ? process.argv[3].split(',').map(Number) : STEPS;
 const dir = resolve(ROOT, `public/map/tables/${name}_${year}`);
 /** the files of public/ the tables were built from, each with a stamp of its content */
@@ -78,11 +80,21 @@ async function tableOf(w: { step: number; px: number; pz: number }): Promise<Buf
 }
 const fileOf = (w: { step: number; px: number; pz: number }) => resolve(dir, `${w.step}`, `${w.px}_${w.pz}.bin.gz`);
 
+/** The kept table of a piece, unzipped, from its own file or its pack; null where there is none. */
+function keptTable(w: { step: number; px: number; pz: number }): Buffer | null {
+  const index: TablesIndex = JSON.parse(readFileSync(resolve(dir, 'index.json'), 'utf8')), at = index.land[w.step] ?? [];
+  let k = -1;
+  for (let i = 0; i < at.length; i += 2) if (at[i] === w.px && at[i + 1] === w.pz) { k = i / 2; break; }
+  if (k < 0) return null;
+  const { file, range } = whereTable(index, w.step, w.px, w.pz, k), bytes = readFileSync(resolve(dir, file));
+  return gunzipSync(range ? bytes.subarray(range[0], range[0] + range[1]) : bytes);
+}
+
 if (checking) {
   // one table in fifty is built again and held against the file
   let differ = 0, held = 0;
   for (const w of wanted.filter((_, k) => k % 50 === 0)) {
-    const now = await tableOf(w), file = fileOf(w), was = existsSync(file) ? gunzipSync(readFileSync(file)) : null;
+    const now = await tableOf(w), was = keptTable(w);
     held++;
     if (typeof now === 'string' ? was !== null : !was || !gunzipSync(now).equals(was)) { differ++; console.log(`step ${w.step} piece ${w.px},${w.pz}: ${typeof now === 'string' ? now : was ? 'differs' : 'has no table'}`); }
   }
@@ -108,16 +120,35 @@ if (!share) {
   }
   const before: TablesIndex | null = existsSync(resolve(dir, 'index.json')) ? JSON.parse(readFileSync(resolve(dir, 'index.json'), 'utf8')) : null;
   let files = 0, bytes = 0;
+  const packs: Record<string, { by: number; at: number[] }> = {};
   for (const step of STEPS) {
     const here = resolve(dir, `${step}`);
     if (!existsSync(here)) continue;
+    // (a packed step that was not built now is what the index held before)
+    if (PACKED[step] && !steps.includes(step)) {
+      if (before?.packs?.[step]) { found.land[step] = before.land[step]; packs[step] = before.packs[step]; files += before.land[step].length / 2; for (const f of readdirSync(here)) bytes += readFileSync(resolve(here, f)).length; }
+      continue;
+    }
     const at: number[] = [];
     for (const file of readdirSync(here).sort()) { const m = /^(-?\d+)_(-?\d+)\.bin\.gz$/.exec(file); if (m) { at.push(+m[1], +m[2]); files++; bytes += readFileSync(resolve(here, file)).length; } }
     found.land[step] = at;
+    if (PACKED[step]) {
+      // the tables of by × by pieces one after the other in a pack, and where each lies in it
+      const by = PACKED[step], groups = new Map<string, number[]>(), where: number[] = [];
+      for (let k = 0; k < at.length; k += 2) { const g = `${Math.floor(at[k] / by)}_${Math.floor(at[k + 1] / by)}`; groups.set(g, [...(groups.get(g) ?? []), k / 2]); }
+      for (const [g, members] of groups) {
+        const parts = members.map((k) => readFileSync(resolve(here, `${at[k * 2]}_${at[k * 2 + 1]}.bin.gz`)));
+        let offset = 0;
+        members.forEach((k, j) => { where[k * 2] = offset; where[k * 2 + 1] = parts[j].length; offset += parts[j].length; });
+        writeFileSync(resolve(here, `${g}.bin`), Buffer.concat(parts));
+      }
+      for (let k = 0; k < at.length; k += 2) rmSync(resolve(here, `${at[k]}_${at[k + 1]}.bin.gz`));
+      packs[step] = { by, at: where };
+    }
     // (the open sea of a step that was not built now is what the index held before)
     if (!found.sea[step] && before?.sea[step]) found.sea[step] = before.sea[step];
   }
-  const index: TablesIndex = { about: 'The tables of the world graphic\'s pieces of the coarse steps (src/worldprobe/table.ts): land lists the pieces that have one (<step>/<px>_<pz>.bin.gz), sea those that are open sea, each step as pairs px, pz. Written by tools/worldprobe/build_tables.ts; to be built again when the land\'s shape or cover changes.', region: name, year, piece: PIECE, side: SIDE, steps: Object.keys(found.land).map(Number), land: found.land, sea: found.sea, inputs: { ...before?.inputs, ...found.inputs } };
+  const index: TablesIndex = { about: 'The tables of the world graphic\'s pieces of the coarse steps (src/worldprobe/table.ts): land lists the pieces that have one (<step>/<px>_<pz>.bin.gz), sea those that are open sea, each step as pairs px, pz. Written by tools/worldprobe/build_tables.ts; to be built again when the land\'s shape or cover changes.', region: name, year, piece: PIECE, side: SIDE, steps: Object.keys(found.land).map(Number), land: found.land, sea: found.sea, inputs: { ...before?.inputs, ...found.inputs }, ...(Object.keys(packs).length ? { packs } : {}) };
   writeFileSync(resolve(dir, 'index.json'), JSON.stringify(index));
   for (const odd of found.odd) console.log(`not drawn from a table: ${odd}`);
   console.log(`tables/${name}_${year}: ${files} tables, ${(bytes / 1e6).toFixed(1)} MB; open sea: ${Object.values(found.sea).reduce((s, at) => s + at.length / 2, 0)} pieces`);

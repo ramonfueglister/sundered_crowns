@@ -67,6 +67,20 @@ export interface TablesIndex {
   steps: number[]; land: Record<string, number[]>; sea: Record<string, number[]>;
   /** the files the tables were built from, each with a stamp of its content */
   inputs: Record<string, string>;
+  /**
+   * The steps whose tables lie in packs, not each in a file of its own (step 1 has some 16 000): the tables of `by` ×
+   * `by` pieces one after the other in <step>/<px / by>_<pz / by>.bin (rounded down), each zipped on its own; `at`
+   * holds where each of the step's tables in `land` lies in its pack, its first byte and its length, in that order.
+   * A table is fetched from its pack by that range.
+   */
+  packs?: Record<string, { by: number; at: number[] }>;
+}
+
+/** Where the table of a piece lies, the `k`th of its step in the index's `land`: its file, and the bytes of it that are the table where it lies in a pack. */
+export function whereTable(index: TablesIndex, step: number, px: number, pz: number, k: number): { file: string; range?: [number, number] } {
+  const packed = index.packs?.[step];
+  if (!packed) return { file: `${step}/${px}_${pz}.bin.gz` };
+  return { file: `${step}/${Math.floor(px / packed.by)}_${Math.floor(pz / packed.by)}.bin`, range: [packed.at[k * 2], packed.at[k * 2 + 1]] };
 }
 /** A table with what stands on its piece (`Table.things`), where anything does. */
 export function withThings(table: Table, things: { pos: ArrayLike<number>; nor: ArrayLike<number>; col: ArrayLike<number>; triangles: number }): Table {
