@@ -303,6 +303,31 @@ describe('the glide of a far piece to the coarser one over it', () => {
     expect(stay).toBeGreaterThan(100);
   });
 
+  it('keeps every mesh within the ball round it, in which the stage looks whether to draw it: where it lies and where it ends up', () => {
+    const { shapes } = piece();
+    let corners = 0;
+    for (const [name, shape] of Object.entries(shapes)) {
+      const [cx, cy, cz, r] = shape.ball!;
+      let out = 0;
+      const lies = (x: number, y: number, z: number) => { out = Math.max(out, Math.hypot(x - cx, y - cy, z - cz) - r); corners++; };
+      for (let v = 0; v < shape.pos.length / 3; v++) {
+        lies(shape.pos[v * 3], shape.pos[v * 3 + 1], shape.pos[v * 3 + 2]);
+        if (shape.sink) lies(shape.pos[v * 3], shape.sink[v], shape.pos[v * 3 + 2]);
+      }
+      const f = shape.faces;
+      if (f) for (let k = 0; k < f.geo.length / FACE_GEO; k++) for (const share of [0, 1]) {
+        const g = k * FACE_GEO, axis = f.geo[g] % FLIPPED, [end0, end1] = glided(f, k, share);
+        for (const a of [0, 1]) for (const b of [0, 1]) {
+          if (axis === 1) lies(f.geo[g + 2 + a] / S, end0 / S, f.geo[g + 4 + b] / S);
+          else if (axis === 0) lies(f.geo[g + 1] / S, (a ? end1 : end0) / S, f.geo[g + 4 + b] / S);
+          else lies(f.geo[g + 2 + a] / S, (b ? end1 : end0) / S, f.geo[g + 1] / S);
+        }
+      }
+      expect(out, name).toBeLessThanOrEqual(1e-3);
+    }
+    expect(corners).toBeGreaterThan(50000);
+  });
+
   it('sets nothing where the coarser piece does not lie over the piece', () => {
     const { ground, carried, shapes, before, columns } = piece({ ox: OVER.ox + 40, oz: OVER.oz });
     expect(columns).toBe(0);

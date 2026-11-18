@@ -99,15 +99,42 @@ const STAYS = 0, LAND = 1, SINKS = 2, COMES = 3;
 /** what is to be out of sight lies this far under the top of the land that hides it, or under the level of the water that does (deeper than a bank's foot: shore.ts) */
 const UNDER_LAND = 0.05, UNDER_WATER = 0.3;
 
-/** The lists of a shape with more triangles after them; `ends` are the heights the new corners end up at, where the shape tells them. */
+type Ball = [number, number, number, number];
+/** The ball that holds two balls (a ball of no size holds nothing). */
+function both(a: Ball | undefined, b: Ball): Ball {
+  if (!a || !a[3]) return b;
+  if (!b[3]) return a;
+  const d = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
+  if (d + b[3] <= a[3]) return a;
+  if (d + a[3] <= b[3]) return b;
+  const r = (d + a[3] + b[3]) / 2, k = (r - a[3]) / d;
+  return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k, r];
+}
+/** How far the corners of a list move at most: from where they lie to the heights they end up at. */
+function reach(pos: ArrayLike<number>, ends: Float32Array, from = 0): number {
+  let most = 0;
+  for (let v = 0; v < ends.length; v++) most = Math.max(most, Math.abs(ends[v] - pos[(from + v) * 3 + 1]));
+  return most;
+}
+/**
+ * The lists of a shape with more triangles after them; `ends` are the heights the new corners end up at, where the
+ * shape tells them. The ball round the shape (in which the stage looks whether to draw it) then holds what it held,
+ * the shape's faces too, and the new corners all the way.
+ */
 function join(shape: Shape, add: Shape, ends?: Float32Array) {
   const all = <T extends Float32Array | Int8Array | Uint8Array>(a: T, b: T): T => { const c = new (a.constructor as new (n: number) => T)(a.length + b.length); c.set(a); c.set(b, a.length); return c; };
   if (shape.sink || ends) {
     const was = shape.sink ?? Float32Array.from({ length: shape.pos.length / 3 }, (_, v) => shape.pos[v * 3 + 1]);
     shape.sink = all(was, ends ?? Float32Array.from({ length: add.pos.length / 3 }, (_, v) => add.pos[v * 3 + 1]));
   }
+  const more = ballOf(add.pos);
+  if (ends) more[3] += reach(add.pos, ends);
+  shape.ball = both(shape.pos.length || shape.faces ? shape.ball as Ball | undefined : undefined, more);
   shape.pos = all(shape.pos as Float32Array, add.pos as Float32Array); shape.nor = all(shape.nor as Int8Array, add.nor as Int8Array); shape.col = all(shape.col as Uint8Array, add.col as Uint8Array);
-  shape.ball = ballOf(shape.pos);
+}
+/** The ball round a shape made wider by as far as its corners move. */
+function wider(shape: Shape, by: number) {
+  if (by > 0 && shape.ball) shape.ball = [shape.ball[0], shape.ball[1], shape.ball[2], shape.ball[3] + by];
 }
 
 /**
@@ -225,6 +252,13 @@ export function glide(shapes: { ground: Shape; carried?: Shape; things?: Shape; 
       }
     }
     f.aim = aims; f.aimCol = cols;
+    // (the ball round the mesh holds its faces all the way)
+    let far = 0;
+    for (let k = 0, g = 0; k < count; k++, g += FACE_GEO) {
+      const axis = f.geo[g] % FLIPPED, lo = axis === 0 ? 2 : 4;
+      far = Math.max(far, axis === 1 ? Math.abs(aims[k * 2] - f.geo[g + 1]) : Math.max(Math.abs(aims[k * 2] - f.geo[g + lo]), Math.abs(aims[k * 2 + 1] - f.geo[g + lo + 1])));
+    }
+    wider(shape!, far / S);
   }
 
   const ground = shapes.ground.faces;
@@ -262,6 +296,8 @@ export function glide(shapes: { ground: Shape; carried?: Shape; things?: Shape; 
     if (extra !== tops.length + spans.length) throw new Error('glide: a face to come that is no face');
     const count = ground.geo.length / FACE_GEO, geo = new Int16Array((count + extra) * FACE_GEO), col = new Uint8Array((count + extra) * FACE_COL), nor = new Int8Array((count + extra) * 4), aims = new Int16Array((count + extra) * 2), aimCol = new Uint8Array((count + extra) * FACE_COL);
     geo.set(ground.geo); col.set(ground.col); nor.set(ground.nor); aims.set(ground.aim); aimCol.set(ground.aimCol!);
+    /** two corners of each, where it starts and where it ends, for the ball round the mesh */
+    const span: number[] = [];
     for (let k = 0; k < extra; k++) {
       const g = k * FACE_GEO, axis = added.geo[g] % FLIPPED, at = count + k, o = at * FACE_GEO;
       geo.set(added.geo.subarray(g, g + FACE_GEO), o);
@@ -270,20 +306,23 @@ export function glide(shapes: { ground: Shape; carried?: Shape; things?: Shape; 
         // a top to come: in the colours of the coarser column's top; where that has none, a meadow's
         const i = tops[k], p = over[i], x = i % n, z = (i - x) / n;
         geo[o + 1] = from[i]; aims[at * 2] = aim[i];
+        span.push(x, from[i] / S, z, x + 1, aim[i] / S, z + 1);
         if (above.has[p]) { nor[at * 4 + 3] = above.ink[p] ? 127 : 0; topsTo(aimCol, at * FACE_COL, p, x, z, geo[o + 2], geo[o + 3], geo[o + 4], geo[o + 5]); }
         else for (let c = 0; c < 4; c++) write([0.3, 0.36, 0.16], aimCol, at * FACE_COL + c * 4);
       }
       else {
-        const lo = axis === 0 ? 2 : 4, span = spans[k - tops.length];
+        const lo = axis === 0 ? 2 : 4, side = spans[k - tops.length];
         // (the quad was made one block tall, its first corners at the foot: so the face's span in height runs upwards)
         if (added.geo[g + lo] !== 0 || added.geo[g + lo + 1] !== S) throw new Error('glide: a side that runs downwards');
-        geo[o] += RISES; geo[o + lo] = span.foot; geo[o + lo + 1] = span.top;
-        aims[at * 2] = span.footAim; aims[at * 2 + 1] = span.topAim;
+        geo[o] += RISES; geo[o + lo] = side.foot; geo[o + lo + 1] = side.top;
+        aims[at * 2] = side.footAim; aims[at * 2 + 1] = side.topAim;
+        const across = added.geo[g + 1] / S, a0 = added.geo[g + (axis === 0 ? 4 : 2)] / S, a1 = added.geo[g + (axis === 0 ? 5 : 3)] / S, low = Math.min(side.foot, side.footAim) / S, high = Math.max(side.top, side.topAim) / S;
+        span.push(axis === 0 ? across : a0, low, axis === 0 ? a0 : across, axis === 0 ? across : a1, high, axis === 0 ? a1 : across);
         // its colours: the coarser step's side there; where that has none, the coarser column's top, darker
         for (let c = 0; c < 4; c++) {
-          const u = added.geo[g + (c === 1 || c === 2 ? 3 : 2)], v = added.geo[g + (c >= 2 ? 5 : 4)], y = (axis === 0 ? u : v) === 0 ? span.footAim : span.topAim, a = axis === 0 ? alongZ(v) : alongX(u);
-          if (span.p < 0 || !sideAt(span.p, span.dir, coarse(y), a)) {
-            if (span.owner >= 0 && above.has[span.owner]) topAt(span.owner, 0.5, 0.5); else tone.fill(0.4);
+          const u = added.geo[g + (c === 1 || c === 2 ? 3 : 2)], v = added.geo[g + (c >= 2 ? 5 : 4)], y = (axis === 0 ? u : v) === 0 ? side.footAim : side.topAim, a = axis === 0 ? alongZ(v) : alongX(u);
+          if (side.p < 0 || !sideAt(side.p, side.dir, coarse(y), a)) {
+            if (side.owner >= 0 && above.has[side.owner]) topAt(side.owner, 0.5, 0.5); else tone.fill(0.4);
             for (let m = 0; m < 3; m++) tone[m] *= 0.7;
           }
           write(tone, aimCol, at * FACE_COL + c * 4);
@@ -293,6 +332,7 @@ export function glide(shapes: { ground: Shape; carried?: Shape; things?: Shape; 
       col.set(aimCol.subarray(at * FACE_COL, (at + 1) * FACE_COL), at * FACE_COL);
     }
     shapes.ground.faces = { geo, col, nor, aim: aims, aimCol };
+    shapes.ground.ball = both(shapes.ground.ball as Ball | undefined, ballOf(span));
   }
 
   // The lists: what is no face moves by the height each of its corners ends up at.
@@ -312,7 +352,7 @@ export function glide(shapes: { ground: Shape; carried?: Shape; things?: Shape; 
       const i = columnOf(land, t), hide = way[i] === COMES ? aim[i] / S - UNDER_LAND : fine.wet[i] ? ends(i) - UNDER_WATER : NaN;
       for (let c = 0; c < 3; c++) { const y = land.pos[(t * 3 + c) * 3 + 1]; banks[t * 3 + c] = Number.isNaN(hide) ? y + (aim[i] - from[i]) / S : Math.min(y, hide); }
     }
-    if (banks.length) land.sink = banks;
+    if (banks.length) { land.sink = banks; wider(land, reach(land.pos, banks)); }
     // the coarser piece's banks over this piece come up to where that piece has them: from under the land or the
     // water that lies there now
     const banked = small(theirs ? drawBanks(parent, bakedSky, quarter) : new Batch()), pos = banked.pos as Float32Array, to = new Float32Array(pos.length / 3);
@@ -335,7 +375,7 @@ export function glide(shapes: { ground: Shape; carried?: Shape; things?: Shape; 
       const i = columnOf(raised, t, 0.25), by = fine.wet[i] && !way[i] ? ends(i) - fine.surf[i] : 0, hide = way[i] === COMES ? aim[i] / S - UNDER_LAND : Infinity;
       for (let c = 0; c < 3; c++) sink[t * 3 + c] = Math.min(raised.pos[(t * 3 + c) * 3 + 1] + by, hide);
     }
-    raised.sink = sink;
+    raised.sink = sink; wider(raised, reach(raised.pos, sink));
   }
   // the water that is to stand where land sinks: the sea lies under the land from the start; water above the sea
   // lies under the land's top and comes to its level
@@ -380,7 +420,7 @@ export function glide(shapes: { ground: Shape; carried?: Shape; things?: Shape; 
       const x = Math.max(0, Math.min(n - 1, Math.floor(things.pos[v * 3]))), z = Math.max(0, Math.min(n - 1, Math.floor(things.pos[v * 3 + 2])));
       sink[v] = way[z * n + x] ? aim[z * n + x] / S - UNDER_LAND : things.pos[v * 3 + 1];
     }
-    things.sink = sink;
+    things.sink = sink; wider(things, reach(things.pos, sink));
   }
   return gliding;
 }
