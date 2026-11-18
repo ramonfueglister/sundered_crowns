@@ -23,6 +23,7 @@ import { countPeople, settleHamlets } from '../src/sim/systems/hamlets';
 import { foundLots } from '../src/sim/systems/lots';
 import { cultivate } from '../src/sim/systems/cultivation';
 import { bringInHarvest } from '../src/sim/systems/harvest';
+import { foundMoves } from '../src/sim/systems/moves';
 
 const { s, w } = newWorldState();
 const start = decodeState(encodeState(s)); // the world on the day it is founded
@@ -317,7 +318,7 @@ describe('the state', () => {
     const old = decodeState(encodeState(s)) as any; old.v = 23;
     const up = upgradeState(decodeState(encodeState(old)), w, () => loadSetup(1356));
     expect(up.v).toBe(STATE_VERSION);
-    const founded = decodeState(encodeState(s)); foundEconomy(founded, w);
+    const founded = decodeState(encodeState(s)); foundEconomy(founded, w); foundMoves(founded); // (the step to 25 draws the days of the moves on the day reached)
     expect(hashState(up)).toBe(hashState(founded));
     const c = up.economy.cities!;
     expect(c.day).toBe(s.day); expect(c.years.length).toBe(0);

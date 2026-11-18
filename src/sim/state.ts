@@ -25,8 +25,9 @@ import type { Table } from './ecs';
  *  (src/sim/systems/deaths.ts): every person has the day of death that was drawn from the life table. 23: the persons marry and are born
  *  (src/sim/systems/families.ts), after England around 1300: the life table of La Poutré & Janssen 2021, a fixed number of
  *  households in every town, a wedding only into a vacant one; the persons are founded anew. 24: the crown of a city buys
- *  with what it took in (economy feature 16); the economies are founded anew. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
-export const STATE_VERSION = 24;
+ *  with what it took in (economy feature 16); the economies are founded anew. 25: the unmarried move to other places and
+ *  an heir comes home (src/sim/systems/moves.ts): every person has the place they come from and the day of the next move. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
+export const STATE_VERSION = 25;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
@@ -91,6 +92,11 @@ export const PERSON_SCHEMA = {
   dies: 'i32',
   /** the day a wife bears her next child (src/sim/systems/families.ts), ALIVE while none is due */
   bears: 'i32',
+  /** the place the person comes from: where the person was born, or lived when the world was founded; −1 for a ruler
+   *  (people feature 4, src/sim/systems/moves.ts) */
+  home: 'i32',
+  /** the day the person may next move to another place (src/sim/systems/moves.ts), ALIVE while none is due */
+  moves: 'i32',
 } as const;
 /** `died` of a living person. */
 export const ALIVE = 0x7fffffff;
