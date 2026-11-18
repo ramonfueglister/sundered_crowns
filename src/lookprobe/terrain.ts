@@ -161,7 +161,7 @@ export function buildTerrain(g: Ground, t: GroundTraits, baked = true, part: Par
     };
     const c00 = corner(x, z), c10 = corner(x + 1, z), c11 = corner(x + 1, z + 1), c01 = corner(x, z + 1);
     const on = carried && cover && cover.stands !== false && !(cover.share! < CARRIED_FROM) ? carried : b;
-    if (!g.wet[i]) on.quad([x, h, z], [x, h, z + 1], [x + 1, h, z + 1], [x + 1, h, z], [c00, c01, c11, c10], [0, 1, 0]);
+    if (!g.wet[i]) on.quadAt(x, h, z, x, h, z + 1, x + 1, h, z + 1, x + 1, h, z, c00, c01, c11, c10, 0, 1, 0);
     if (g.wet[i]) continue;
     for (const [dx, dz] of NB) {
       const nx = x + dx, nz = z + dz;
@@ -196,15 +196,15 @@ export function buildTerrain(g: Ground, t: GroundTraits, baked = true, part: Par
           const tone = 1 + (y < split ? 1 : 0.4) * ((hash2(key, wz * 4 + dz, 300 + y) - 0.5) * ROCK_GRAIN - (lot > 0.9 ? ROCK_NOTCH : 0));
           const base = y < split ? side : dx === 1 ? ROCK_SIDE_HIGH : ROCK_SIDE_HIGH_COOL;
           const [px, pz, qx, qz] = half ? [mx, mz, bx, bz] : [ax, az, mx, mz], lp = y < split ? (half ? lm2 : la2) : 1, lq = y < split ? (half ? lb2 : lm2) : 1;
-          b.quad([px, y, pz], [qx, y, qz], [qx, top, qz], [px, top, pz], [shade(base, lp * tone), shade(base, lq * tone), shade(base, lq * tone), shade(base, lp * tone)], [dx, 0, dz]);
+          b.quadAt(px, y, pz, qx, y, qz, qx, top, qz, px, top, pz, shade(base, lp * tone), shade(base, lq * tone), shade(base, lq * tone), shade(base, lp * tone), dx, 0, dz);
           y = top;
         }
         continue;
       }
       // what the column carries shows its own sides, down to the ground it stands on
       const ground = cover ? Math.max(nh, h - cover.rise) : h;
-      if (ground < h) on.quad([ax, ground, az], [bx, ground, bz], [bx, h, bz], [ax, h, az], [shade(cover!.side, la * 0.85), shade(cover!.side, lb * 0.85), shade(cover!.side, lb), shade(cover!.side, la)], [dx, 0, dz]);
-      if (nh < ground) b.quad([ax, nh, az], [bx, nh, bz], [bx, ground, bz], [ax, ground, az], [shade(side, la * foot), shade(side, lb * foot), shade(side, lb), shade(side, la)], [dx, 0, dz]);
+      if (ground < h) on.quadAt(ax, ground, az, bx, ground, bz, bx, h, bz, ax, h, az, shade(cover!.side, la * 0.85), shade(cover!.side, lb * 0.85), shade(cover!.side, lb), shade(cover!.side, la), dx, 0, dz);
+      if (nh < ground) b.quadAt(ax, nh, az, bx, nh, bz, bx, ground, bz, ax, ground, az, shade(side, la * foot), shade(side, lb * foot), shade(side, lb), shade(side, la), dx, 0, dz);
     }
   }
   return b;
@@ -237,13 +237,13 @@ export function buildWater(g: Ground, raised = false, part: Part = whole()): Bat
   for (let z = part.z0; z < part.z1; z++) for (let x = part.x0; x < part.x1; x++) {
     const i = idx(x, z), y = g.surf[i];
     if (!g.wet[i] || (y > SEA_Y + 0.01) !== raised) continue;
-    b.quad([x, y, z], [x, y, z + 1], [x + 1, y, z + 1], [x + 1, y, z], [corner(x, z), corner(x, z + 1), corner(x + 1, z + 1), corner(x + 1, z)], [0, 1, 0]);
+    b.quadAt(x, y, z, x, y, z + 1, x + 1, y, z + 1, x + 1, y, z, corner(x, z), corner(x, z + 1), corner(x + 1, z + 1), corner(x + 1, z), 0, 1, 0);
     // where raised water meets lower water it falls: a pale sheet down to the lower surface
     if (raised) for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
       const nx = x + dx, nz = z + dz, low = nx >= 0 && nz >= 0 && nx < N && nz < N && g.wet[idx(nx, nz)] ? g.surf[idx(nx, nz)] : y;
       if (low > y - 0.01) continue;
       const ax = dx === 1 ? x + 1 : x, az = dz === 1 ? z + 1 : z, bx = dx === -1 ? x : x + 1, bz = dz === -1 ? z : z + 1;
-      b.quad([ax, low, az], [bx, low, bz], [bx, y, bz], [ax, y, az], FALLS, [dx, 0, dz]);
+      b.quadAt(ax, low, az, bx, low, bz, bx, y, bz, ax, y, az, FALLS, FALLS, FALLS, FALLS, dx, 0, dz);
     }
   }
   return b;
@@ -257,7 +257,7 @@ export function buildOpenSea(ox: number, oz: number, part: Part, step = 8): Batc
   const b = new Batch(), corner = (x: number, z: number): RGB => shade(WATER_DEEP, 0.91 + 0.14 * fbm2((x + ox) / 14, (z + oz) / 14, 43) + 0.025);
   for (let z = part.z0; z < part.z1; z += step) for (let x = part.x0; x < part.x1; x += step) {
     const x1 = Math.min(part.x1, x + step), z1 = Math.min(part.z1, z + step);
-    b.quad([x, SEA_Y, z], [x, SEA_Y, z1], [x1, SEA_Y, z1], [x1, SEA_Y, z], [corner(x, z), corner(x, z1), corner(x1, z1), corner(x1, z)], [0, 1, 0]);
+    b.quadAt(x, SEA_Y, z, x, SEA_Y, z1, x1, SEA_Y, z1, x1, SEA_Y, z, corner(x, z), corner(x, z1), corner(x1, z1), corner(x1, z), 0, 1, 0);
   }
   return b;
 }

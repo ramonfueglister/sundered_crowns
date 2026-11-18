@@ -267,6 +267,8 @@ function aimFaces(c: Columns, shape: Shape | undefined, ink: number) {
 
 /** the colour of a top to come where the coarser step shows none: a meadow's */
 const MEADOW = [0.3, 0.36, 0.16];
+/** the colour the faces to come are laid down with before their own is set (one list for all: see batch.ts `triAt`) */
+const BLANK: RGB = [1, 1, 1];
 /**
  * The faces to come, on the piece's own columns, added to the ground's:
  *  - the top of a column of water that ends as land: it comes up from the column's bed;
@@ -279,7 +281,7 @@ function comingFaces(c: Columns, land: Shape) {
   const more = new Batch(), tops: number[] = [], spans: { foot: number; top: number; footAim: number; topAim: number; /** the coarser column over the side's own, and that where the coarser step has a side here */ owner: number; p: number; dir: number }[] = [];
   for (let z = own.z0; z < own.z1; z++) for (let x = own.x0; x < own.x1; x++) {
     const i = z * n + x;
-    if (way[i] === COMES) { more.quad([x, 0, z], [x, 0, z + 1], [x + 1, 0, z + 1], [x + 1, 0, z], [1, 1, 1], [0, 1, 0]); tops.push(i); }
+    if (way[i] === COMES) { more.quadAt(x, 0, z, x, 0, z + 1, x + 1, 0, z + 1, x + 1, 0, z, BLANK, BLANK, BLANK, BLANK, 0, 1, 0); tops.push(i); }
   }
   for (let z = own.z0; z < own.z1; z++) for (let x = own.x0; x < own.x1; x++) {
     const i = z * n + x, moves = way[i], water = wet[i];
@@ -295,7 +297,7 @@ function comingFaces(c: Columns, land: Shape) {
       // the two top corners of this side, in the order that keeps the face turned outwards (terrain.ts)
       const ax = dx === 1 ? x + 1 : dx === -1 ? x : dz === 1 ? x : x + 1, az = dz === 1 ? z + 1 : dz === -1 ? z : dx === 1 ? z : z + 1;
       const bx = dx === 1 ? x + 1 : dx === -1 ? x : dz === 1 ? x + 1 : x, bz = dz === 1 ? z + 1 : dz === -1 ? z : dx === 1 ? z + 1 : z;
-      more.quad([ax, 0, az], [bx, 0, bz], [bx, 1, bz], [ax, 1, az], [1, 1, 1], [dx, 0, dz]);
+      more.quadAt(ax, 0, az, bx, 0, bz, bx, 1, bz, ax, 1, az, BLANK, BLANK, BLANK, BLANK, dx, 0, dz);
       spans.push({ foot: from[j], top: from[i], footAim: aim[j], topAim: aim[i], owner: over[i], p: over[i] >= 0 && over[j] !== over[i] ? over[i] : -1, dir: w });
     }
   }
