@@ -310,6 +310,17 @@ describe('the state', () => {
     expect(up.economy.cities!.halted).toBe('');
     expect(up.family.cols.fed.some((v) => v === 1)).toBe(true);
   }, 60_000);
+  it('of a world from before feature 16 is founded anew by the upgrade, with a crown that buys with what it took in', () => {
+    const old = decodeState(encodeState(s)) as any; old.v = 21;
+    const up = upgradeState(decodeState(encodeState(old)), w, () => loadSetup(1356));
+    expect(up.v).toBe(STATE_VERSION);
+    const founded = decodeState(encodeState(s)); foundEconomy(founded, w);
+    expect(hashState(up)).toBe(hashState(founded));
+    const c = up.economy.cities!;
+    expect(c.day).toBe(s.day); expect(c.years.length).toBe(0);
+    advanceDay(up, w); advanceDay(up, w);
+    expect(up.economy.cities!.halted).toBe('');
+  }, 60_000);
 });
 
 describe('a household', () => {

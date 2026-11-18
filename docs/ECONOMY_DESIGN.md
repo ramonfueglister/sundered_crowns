@@ -43,6 +43,7 @@ players and the AI of realms without a player act through the same commands.
 | 13 | The merchants' money (examined, nothing built) | chosen by Ramon 17 Nov 2026 as the next feature ("Händlerguthaben abbauen"), with "möglichst papernah" and "kein delulu"; after the reading and the measurement he left the decision to Claude ("du entscheidest selbständig", 17:19 UTC): the finding is recorded, no rule is built (section 13) |
 | 14 | The check of the model, and feature 12 taken back | asked by Ramon 17 Nov 2026 ("zuerst das modell jetzt sauber prüfen abschliessen ob alles aufgeht"); feature 12 taken back by his choice the same day; next by his order: distance in trade, then consumption and hunger (section 14) |
 | 15 | Households spend out of their savings, and a family has a need of food | order changed by Ramon 17 Nov 2026 ("Verbrauch und Hunger zuerst", 19:27 UTC) after the slump of remote cities in the trials of the distance was traced to the households' consumption; he asked for "einfach möglichst genau nach beforeit" (20:02 UTC) and chose "BeforeIT plus Erspartes" (20:06 UTC): the market stays the port's, only the budget gets the spending out of savings, need and hunger are a booking of the family purse. Built, with tests and numbers from the game; not yet in the running world (section 15) |
+| 16 | The crown of a city buys with what it took in | after feature 15 the distance in trade was tried again and one city still sank steadily; Ramon chose to clear that first ("Erst den Geldabfluss klären", 17 Nov 2026, 20:45 UTC). The money lay with the crown of the city, whose purchases follow a random series of their own. He chose "Krone gibt aus, was sie einnimmt" (18 Nov 2026, 02:36 UTC). Built, with tests and numbers; not yet in the running world (section 16) |
 
 ## 1. Grain harvest per place
 
@@ -2620,5 +2621,110 @@ states of formats 4 to 6 are read and spend nothing out of savings. The upgrade 
 and founds the economies anew on the day the world has reached, as the steps to 12 and 14 did: the rule changes
 what every city computes. **The persons' feature 2 (pull request 69) also uses the state versions 21 and 22: the one
 merged second has to take the next numbers.**
+
+## 16. The crown of a city buys with what it took in
+
+### Why
+
+After feature 15 the distance in trade was tried again outside the game (29 cities of 1356, 30 years, four seeds,
+goods that travel for days and a stock that answers to the price). The heavy slump was gone, but in one of the four
+worlds one city sank steadily: Seville, seed 1356, to 90 of its start with 11.3 % without work. Ramon asked to clear
+that before the distance is built.
+
+The first reading, that Seville buys more than it sells, was wrong. In year 30 Seville sells 55 abroad and buys 31,
+and the merchants have brought 421 into the city. The money lies with the crown of the city: it holds 457, which is
+39 % of the city's output of a year, while the deposits of households and firms fell from 251 to 235.
+
+The cause is the rule of the paper for the government. Its real purchases follow an autoregressive series of their
+own (Poledna et al. 2023, appendix A.55 and A.56; `gov_expenditure` of the port): log C_G(t) = α_G · log C_G(t−1) +
+β_G + ε. Nothing in it reads what the government takes in. Our values (section 4) are fitted to the revenue of the
+English crown 1280 to 1356 (Bank of England workbook, sheet A26): persistence 0.952 and spread 0.168 a year, which
+is a long-run spread of 0.168 / √(1 − 0.952²) = 0.55 around the mean and a half-life of 14 years. That is the
+revenue of a whole realm at war. In the model every city draws its own path of it, and the revenue of the city's
+crown (a tax on incomes) follows the city's economy, not that path. A crown whose path runs low takes in more than
+it spends for decades and the money leaves the city's circulation; one whose path runs high owes.
+
+### The trial
+
+Outside the game, with the distance in trade (files in `/mnt/project-files/wirtschaft/entfernung/krone/`), 29
+cities, 30 years, seeds 1356 to 1359:
+
+| After 30 years | Series of the paper | Constant purchases | Buys with its revenue |
+|---|---|---|---|
+| Real output of all cities (start 100) | 112.5 to 113.5 | 112.9 to 113.3 | 113.9 to 114.1 |
+| Weakest city (start 100) | 90 to 105 | 108 to 110 | 110 to 111 |
+| Highest share without work in the 30 years | 3.6 to 11.3 % | 3.3 to 6.2 % | 2.8 to 5.3 % |
+| Equity of all banks (start 551) | −1,451 to −3,594 | −87 to −185 | +395 to +527 |
+| Banks with negative equity (of 29) | 8 to 13 | 3 to 6 | 1 to 2 |
+| Debt of a city's crown over the city's GDP (negative: hoard) | −0.42 to +0.52 | −0.10 to −0.03 | −0.01 to 0.00 |
+
+Seville, seed 1356: output 90 with the series, 114 with constant purchases, 115 with a crown that buys with its
+revenue; nobody without work in year 30 in the last two.
+
+### The rule
+
+With `cities.crown` = `revenue` in the calibration table, the budget of the crown of a city for a day is
+
+    budget(t) = max(0, Y_G(t−1) − other outlays(t−1))
+
+Y_G is the revenue of the paper (A.59, unchanged). The other outlays are what the crown paid besides its purchases
+that day, benefits and interest (A.60): the change of its debt plus its revenue less its purchases. In the game both
+are next to nothing (benefit 1e-9 of the wage, no interest on the crown's debt). The budget is split among the
+crown's buyers as in the port, and the real purchases the crown plans are the budget at the prices it expects. The
+series of the paper is still computed and its random number drawn, so that every other draw of the day stays where
+it was. On the first day nothing has been taken in yet, and the series stands: that day is bit for bit the day of
+the rule before. `series` is the rule of the paper, unchanged.
+
+The rule holds no value and no year. It is `gov_expenditure` and `gov_loans` of the extension in
+`economy/src/clock.rs` (`DailyClock::crown_revenue`, `crown_outlays`), `Economy::with_crown_spending_revenue`, and
+the last argument of `sce_create`.
+
+**The ground.** No paper was read that gives this rule. It is the assumption of our own calibration (section 3:
+"the crown spends its revenue"), kept in every period instead of at the start only; the series the random values
+come from is a series of revenue. Kept apart from the paper it is a deviation: A.55 and A.56 drop out.
+
+### The numbers
+
+The state of the game without distance (`economy/examples/longrun.rs`, 29 cities of 1356, results in
+`/mnt/project-files/wirtschaft/krone/`):
+
+| After 30 years | Series of the paper (seed 1356) | Buys with its revenue (seeds 1356, 1357, 1358) |
+|---|---|---|
+| Real output of all cities (start 100) | 116.1 | 115.5, 115.3, 115.3 |
+| Weakest city (start 100) | 113.5 | 113.0, 112.5, 112.5 |
+| Firms' deposits (start 2,045) | −113 | 1,565, 1,442, 1,468 |
+| Equity of all banks (start 551) | −731 | 551, 458, 502 |
+| Banks with negative equity | 10 of 29 | 0, 2, 2 |
+| Written off by the banks in year 30 | 71 | 0, 23, 0 |
+| Consumption got over wanted, year 30 | 96.1 % | 97.7 %, 97.7 %, 97.8 % |
+| Merchants' money of a city over its GDP | −0.13 to +0.15 | −0.07 to +0.05, −0.05 to +0.12, −0.06 to +0.13 |
+| Debt of a city's crown over its GDP | −0.38 to +0.41 | −0.01 to 0.00, −0.02 to 0.00, −0.02 to 0.00 |
+
+The merchants' books balance in every year (largest check 1e-13).
+
+### Deviations and what stays open
+
+- **Not the paper.** The purchases of the crown no longer follow A.55 and A.56. Output of all cities is 0.6 to 0.8
+  points lower after 30 years than with the series in the one seed compared.
+- **No years of war.** The spread of the crown's revenue (grants of parliament, wars on credit) is gone: the
+  crown's purchases move with the city's economy only. War and credit of a realm are a matter of the game's realms,
+  not of a random series per city; nothing of that is built.
+- **The crown of a city is still the model's government**, one per city, and no realm of the game.
+- **A small hoard remains** (1 to 2 % of a year's output after 30 years): the crown spends the revenue of the day
+  before while revenue grows, and it does not always find the goods it wants.
+- **The merchants' money still drifts apart.** With the distance in trade and a crown that buys with its revenue,
+  the merchants' balances of the cities grow by about the same amount every year (−0.13 to +0.24 of a city's GDP
+  after 30 years). No city suffers from it within 30 years (the weakest stands at 110). Over centuries it would go
+  on. No rule was read that closes it (section 13); it stays open.
+- **Two banks of 29 still end below zero** in two of three seeds; firms still pay out profits on unsold goods
+  (section 15).
+
+### State and upgrade
+
+State version 22 (21 is main's). The format of the engine's state is 8: the clock holds the rule and the other
+outlays of the last day; states of formats 4 to 7 are read and keep the series. The upgrade founds the economies
+anew on the day the world has reached, as the step to 21 did: the rule changes what every city computes. **The
+persons' feature 2 (pull request 69) also uses the state versions 22 and 23: the one merged second has to take the
+next numbers.**
 
 Next by Ramon's order: the distance in trade.

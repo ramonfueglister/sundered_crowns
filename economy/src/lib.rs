@@ -116,6 +116,14 @@ impl Economy {
         Ok(self)
     }
 
+    /// The same economy with a crown that buys with what it took in from now on (economy feature 16, [`clock`]): its
+    /// budget of a period is its revenue of the period before, less the benefits and the interest it paid then.
+    /// Without it the crown's purchases follow the series of the paper, whatever the crown takes in.
+    pub fn with_crown_spending_revenue(mut self) -> Economy {
+        self.model.ext.crown_revenue = true;
+        self
+    }
+
     /// Computes `periods` periods: the port's `run`, one step and one row of its national accounts per period. No
     /// rule of the port reads these rows. Of every new row the clock keeps the series that [`Economy::figures`]
     /// sums, for the last `window` periods ([`clock::DailyClock::accounts`]); of the port's rows only the last
@@ -402,7 +410,7 @@ pub mod abi {
 
     /// The cities of a list as [`sce_create`] takes it: for every city the 64-bit seed, then the parameters and the
     /// initial conditions of the port (JSON), each with its length in 32 bits before it; all little endian.
-    fn cities(mut list: &[u8], plan: usize, window: usize, wage: u32, prices: u32, savings: f64) -> Result<Cities, String> {
+    fn cities(mut list: &[u8], plan: usize, window: usize, wage: u32, prices: u32, savings: f64, crown: u32) -> Result<Cities, String> {
         fn take<'a>(list: &mut &'a [u8], n: usize) -> Result<&'a [u8], String> {
             if list.len() < n {
                 return Err(format!("the list of cities ends {} bytes early", n - list.len()));
@@ -421,6 +429,9 @@ pub mod abi {
         if prices > 1 {
             return Err(format!("prices of kind {prices}: 0 is the paper's rule of costs, 1 the demand pull of CANVAS"));
         }
+        if crown > 1 {
+            return Err(format!("a crown of kind {crown}: 0 buys by the paper's series, 1 with what it took in"));
+        }
         let mut all = Vec::new();
         while !list.is_empty() {
             let c = all.len();
@@ -431,6 +442,7 @@ pub mod abi {
             let e = if wage == 1 { e.with_wages_in_money() } else { e };
             let e = if prices == 1 { e.with_demand_pull().map_err(|e| format!("city {c}: {e}"))? } else { e };
             let e = e.with_savings_spent(savings).map_err(|e| format!("city {c}: {e}"))?;
+            let e = if crown == 1 { e.with_crown_spending_revenue() } else { e };
             // the cities of the game run for centuries: their past has a fixed size
             all.push(e.with_bounded_past());
         }
@@ -462,15 +474,16 @@ pub mod abi {
     /// that follows the consumer prices, 1 for the wage in money ([`Economy::with_wages_in_money`]); and the kind
     /// of prices: 0 for the paper's rule of costs, 1 for the demand pull of CANVAS ([`Economy::with_demand_pull`]);
     /// and the share of the savings above their target that households spend per period, 0 for the port's rule
-    /// ([`Economy::with_savings_spent`]). Result: their state.
+    /// ([`Economy::with_savings_spent`]); and the crown: 0 buys by the paper's series, 1 with what it took in
+    /// ([`Economy::with_crown_spending_revenue`]). Result: their state.
     ///
     /// # Safety
     ///
     /// The pointer and the length describe memory from [`sce_alloc`] that the caller has filled.
     #[unsafe(no_mangle)]
-    pub unsafe extern "C" fn sce_create(list: *const u8, len: usize, plan: u32, window: u32, wage: u32, prices: u32, savings: f64) -> u32 {
+    pub unsafe extern "C" fn sce_create(list: *const u8, len: usize, plan: u32, window: u32, wage: u32, prices: u32, savings: f64, crown: u32) -> u32 {
         hook();
-        answer(cities(unsafe { bytes(list, len) }, plan as usize, window as usize, wage, prices, savings).map(keep))
+        answer(cities(unsafe { bytes(list, len) }, plan as usize, window as usize, wage, prices, savings, crown).map(keep))
     }
 
     /// Computes `periods` periods from a state. Result: the state after them.

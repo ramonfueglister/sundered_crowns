@@ -96,6 +96,11 @@ pub struct DailyClock {
     /// the port.
     pub savings: f64,
     pub norm: f64,
+    /// whether the crown buys with what it took in (economy feature 16): its budget of a period is its revenue of the
+    /// period before, less what it paid besides its purchases in that period (`crown_outlays`: benefits and interest).
+    /// Without it the purchases follow the series of the paper (A.55, A.56), whatever the crown takes in.
+    pub crown_revenue: bool,
+    pub crown_outlays: f64,
     /// the past in a fixed size ([`crate::past`]); `None`: the expectations are estimated on the port's lists of
     /// every period since the start, bit for bit as the port does
     pub past: Option<Past>,
@@ -110,7 +115,7 @@ impl DailyClock {
         if plan == 0 || window == 0 {
             return Err(format!("a plan every {plan} periods and windows of {window} periods: both need at least one period"));
         }
-        Ok(DailyClock { plan, window, demand: vec![0.0; firms], periods: vec![0; firms], start: [f64::NAN; 2], accounts: Vec::new(), wage: Vec::new(), real_wage: Vec::new(), demand_pull: false, savings: 0.0, norm: -1.0, past: None, trade: None })
+        Ok(DailyClock { plan, window, demand: vec![0.0; firms], periods: vec![0; firms], start: [f64::NAN; 2], accounts: Vec::new(), wage: Vec::new(), real_wage: Vec::new(), demand_pull: false, savings: 0.0, norm: -1.0, crown_revenue: false, crown_outlays: 0.0, past: None, trade: None })
     }
 
     /// Whether firm `i` plans in period `t` (counted from 1). Every firm plans in the first period; after that
@@ -296,6 +301,31 @@ impl Extension for DailyClock {
         d.DM_d_i = DM_d_i;
         d.N_d_i = N_d_i;
         d
+    }
+
+    /// The port's `gov_expenditure` (A.55, A.56); with [`DailyClock::crown_revenue`] the crown's budget is what it
+    /// took in the period before, less its other outlays of that period, and never below 0 (economy feature 16). The
+    /// series of the port is computed and its random number drawn all the same, so that every other draw of the
+    /// period stays where it was; before the first revenue (the first period) the series stands.
+    fn gov_expenditure<R: Randomness + ?Sized>(m: &mut AbstractModel<Self>, rng: &mut R) -> (f64, Vec<f64>) {
+        let (c, d) = base::gov_expenditure(m, rng);
+        if !m.ext.crown_revenue || !(m.gov.Y_G > 0.0) {
+            return (c, d);
+        }
+        let budget = (m.gov.Y_G - m.ext.crown_outlays).max(0.0);
+        let price = m.prop.c_G_g.iter().zip(&m.agg.P_bar_g).map(|(c, p)| c * p).sum::<f64>() * (1.0 + m.agg.pi_e);
+        let j = d.len();
+        (budget / price, vec![budget / j as f64; j])
+    }
+
+    /// The port's `gov_loans` (A.60, A.61); for a crown that buys with its revenue the clock notes what it paid
+    /// besides its purchases, which is the change of its debt plus its revenue less its purchases.
+    fn gov_loans(m: &mut AbstractModel<Self>) -> f64 {
+        let l = base::gov_loans(m);
+        if m.ext.crown_revenue {
+            m.ext.crown_outlays = l - m.gov.L_G - m.gov.C_j + m.gov.Y_G;
+        }
+        l
     }
 
     /// The port's `rotw_import_export`; in a city with merchants what they want and bring ([`trade::import_export`]).

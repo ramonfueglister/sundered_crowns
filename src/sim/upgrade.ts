@@ -152,6 +152,13 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     foundEconomy(s, w);
     s.v = 21;
   }
+  if (s.v === 21) { // 21 → 22: the crown of a city buys with what it took in (economy feature 16). The rule changes
+    // what every city computes, so the economies are founded anew on the day the world has reached, as in the step
+    // before: their days and yearly figures are gone, and the first period is the next day of the world. Nobody has
+    // been born or has died.
+    foundEconomy(s, w);
+    s.v = 22;
+  }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one
   const o = s as unknown as Record<string, unknown>;

@@ -21,8 +21,9 @@ import type { Table } from './ecs';
  *  person has a culture and a faith, the counted minorities of the towns among them; a place has none of its own: it
  *  has those of its persons (src/sim/systems/cultures.ts). 20: the land register (src/sim/systems/lots.ts): every family that
  *  lives in a town has a parcel, and every family of the hamlets a farmstead in a hamlet. 21: households spend out of
- *  their savings and a family has a need of food (economy feature 15); the economies are founded anew. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
-export const STATE_VERSION = 21;
+ *  their savings and a family has a need of food (economy feature 15); the economies are founded anew. 22: the crown of a city buys
+ *  with what it took in (economy feature 16); the economies are founded anew. Snapshots from 11 on are brought up to date by src/sim/upgrade.ts. */
+export const STATE_VERSION = 22;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
