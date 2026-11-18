@@ -73,8 +73,9 @@ export interface WorldView {
 }
 
 /**
- * The name under which the pieces are kept on disk (store.ts), or none where they are not: the build of the game, so
- * that a new build does not read the pieces of an old one. While the game is being worked on (the dev server) its
+ * The name under which the pieces are kept on disk (store.ts), or none where they are not: a stamp of the code and
+ * data the pieces are made of (tools/stamp/piece_key.ts), so that a build which changes them does not read the pieces
+ * of an old one, and a build which changes neither keeps them all. While the game is being worked on (the dev server) its
  * code changes without a new build, so there the pieces are kept only where the address asks for it: `?keep=<name>`
  * (and `?keep=0` keeps nothing in a build either).
  */

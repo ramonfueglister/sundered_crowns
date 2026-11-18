@@ -51,12 +51,21 @@ export function layoutNames(names: readonly (RealmName & { name: string })[], w:
   }
   // the larger names first; a name that would run into one already written is left out, as on a printed map
   laid.sort((p, q) => q.size - p.size);
-  const kept: (LaidName & { pts: [number, number][] })[] = [];
-  for (const n of laid) {
-    const clash = kept.some((k) => n.pts.some((p) => k.pts.some((q) => Math.hypot(p[0] - q[0], p[1] - q[1]) < (n.size + k.size) * CLEAR)));
+  // (two names whose points' boxes lie further apart than the clearance cannot clash: most pairs are told apart by
+  // their boxes, without the 81 distances between their points; this is worked out for every picture of a zoom)
+  type Boxed = LaidName & { pts: [number, number][]; box: [number, number, number, number] };
+  const kept: Boxed[] = [];
+  for (const m of laid) {
+    const n = m as Boxed, xs = n.pts.map((p) => p[0]), ys = n.pts.map((p) => p[1]);
+    n.box = [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+    const clash = kept.some((k) => {
+      const reach = (n.size + k.size) * CLEAR;
+      if (n.box[0] - k.box[2] >= reach || k.box[0] - n.box[2] >= reach || n.box[1] - k.box[3] >= reach || k.box[1] - n.box[3] >= reach) return false;
+      return n.pts.some((p) => k.pts.some((q) => Math.hypot(p[0] - q[0], p[1] - q[1]) < reach));
+    });
     if (!clash) kept.push(n);
   }
-  return kept.map(({ pts: _, ...n }) => n);
+  return kept.map(({ pts: _, box: __, ...n }) => n);
 }
 
 /**
