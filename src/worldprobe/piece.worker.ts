@@ -11,6 +11,7 @@ import { loadRural } from './rural';
 import { loadArable } from './arable';
 import { loadHamletLands } from './hamlets';
 import { loadParcels } from './lots';
+import { loadRoads } from './roads';
 import { loadModels } from './models';
 import { FINER_STEPS } from './land';
 import { Water, loadWindow } from './region';
@@ -43,8 +44,8 @@ async function build(job: PieceJob, step: number, piece: Piece, mean: Cover | nu
   if (step === 0) await loadTownPeople(undefined, year); // the persons of the 30 cities walk in their towns (src/figures/people.ts)
   const climate = await loadClimate(base, region.worldW ?? region.mapW, region.worldH ?? region.mapH), people = await loadInhabitants(base, year), models = await loadModels(base);
   const forest = await loadForest(base, year, region.worldW ?? region.mapW, region.worldH ?? region.mapH), rural = await loadRural(base, year, region.mapW, region.mapH), arable = await loadArable(base, year, region.mapW, region.mapH);
-  const hamlets = await loadHamletLands(base, year ?? 1356), parcels = await loadParcels(base, year ?? 1356);
-  return onGrid(job.grid, () => buildWorld(region, piece, gazetteer.places, landmarks.landmarks, bakedSky, step, climate, people, models, forest, rural, arable, hamlets, parcels, undefined, mean));
+  const hamlets = await loadHamletLands(base, year ?? 1356), parcels = await loadParcels(base, year ?? 1356), roads = await loadRoads(base, year ?? 1356);
+  return onGrid(job.grid, () => buildWorld(region, piece, gazetteer.places, landmarks.landmarks, bakedSky, step, climate, people, models, forest, rural, arable, hamlets, parcels, undefined, mean, undefined, roads));
 }
 
 /** What a piece of the finest step shows, summed up four blocks to one of the next step (mean.ts); null where it is open sea. */
