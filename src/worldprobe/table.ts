@@ -115,21 +115,36 @@ export function tableOf(g: Ground, t: GroundTraits, part: Part): Table {
   return table;
 }
 
-/** The traits of a table's ground, as its build had them: each asks the column a point lies in. */
-function traitsOf(table: Table): GroundTraits {
-  const { side, colours, tints } = table, last = side - 1;
-  const cell = (x: number, z: number) => Math.max(0, Math.min(last, Math.floor(z))) * side + Math.max(0, Math.min(last, Math.floor(x)));
-  const colour = (k: number): RGB => [colours[k * 3], colours[k * 3 + 1], colours[k * 3 + 2]];
-  const pulls: (readonly [RGB, number])[] = [];
-  for (let k = 0; k < tints.length; k += 4) pulls.push([[tints[k], tints[k + 1], tints[k + 2]], tints[k + 3]]);
-  return {
-    city: (x, z) => table.town[cell(x, z)] === 1, plaza: () => Infinity, road: () => Infinity, crop: () => null,
-    bleach: (x, z) => table.bleach[cell(x, z)], summit: (x, z) => table.summit[cell(x, z)],
-    tint: (x, z) => pulls[table.tint[cell(x, z)] - 1] ?? null,
-    slope: table.slope,
-    cover: (x, z) => { const i = z * side + x; return table.has[i] ? { top: colour(table.top[i]), side: colour(table.flank[i]), rise: table.rise[i], share: table.share[i], stands: table.has[i] === 1 } : null; },
-  };
+/**
+ * The traits of a table's ground, as its build had them: each asks the column a point lies in. A class, so that the
+ * answers are the same functions for every table: as functions made for each table they lost their fast code with it.
+ */
+class TableTraits implements GroundTraits {
+  readonly slope: GroundTraits['slope'];
+  private readonly side: number;
+  private readonly last: number;
+  private readonly pulls: (readonly [RGB, number])[] = [];
+  constructor(private readonly table: Table) {
+    this.slope = table.slope; this.side = table.side; this.last = table.side - 1;
+    const tints = table.tints;
+    for (let k = 0; k < tints.length; k += 4) this.pulls.push([[tints[k], tints[k + 1], tints[k + 2]], tints[k + 3]]);
+  }
+  /** the column a point lies in */
+  private cell(x: number, z: number) { const last = this.last; return Math.max(0, Math.min(last, Math.floor(z))) * this.side + Math.max(0, Math.min(last, Math.floor(x))); }
+  private colour(k: number): RGB { const colours = this.table.colours; return [colours[k * 3], colours[k * 3 + 1], colours[k * 3 + 2]]; }
+  city(x: number, z: number) { return this.table.town[this.cell(x, z)] === 1; }
+  plaza() { return Infinity; }
+  road() { return Infinity; }
+  crop() { return null; }
+  bleach(x: number, z: number) { return this.table.bleach[this.cell(x, z)]; }
+  summit(x: number, z: number) { return this.table.summit[this.cell(x, z)]; }
+  tint(x: number, z: number) { return this.pulls[this.table.tint[this.cell(x, z)] - 1] ?? null; }
+  cover(x: number, z: number) {
+    const table = this.table, i = z * this.side + x;
+    return table.has[i] ? { top: this.colour(table.top[i]), side: this.colour(table.flank[i]), rise: table.rise[i], share: table.share[i], stands: table.has[i] === 1 } : null;
+  }
 }
+const traitsOf = (table: Table): GroundTraits => new TableTraits(table);
 
 /**
  * Draws the land of a part of a table's own columns, without water and banks: what the piece shows there on its
