@@ -288,6 +288,7 @@ describe('a world whose unmarried move', () => {
 describe('the state of the moves', () => {
   it('of a world from before the moves gets the place of origin and the day of the next move by the upgrade', () => {
     const { s, w } = newWorldState(1291, 1291);
+    // biome-ignore lint/suspicious/noExplicitAny: a state of an older version, which no type of today describes
     const old = decodeState(encodeState(s)) as any;
     delete old.person.cols.home;
     delete old.person.cols.moves;

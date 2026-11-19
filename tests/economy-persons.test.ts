@@ -2,23 +2,18 @@
 // and every firm is an entity. Who works (src/sim/systems/work.ts), the founding and the daily writing
 // (src/sim/systems/economy.ts), the state, the upgrade, and what the server and the panel say of a person.
 import { describe, it, expect } from 'vitest';
-import { foundDeaths } from '../src/sim/systems/deaths';
 import { newWorldState, loadSetup } from '../tools/sim/load';
 import { advanceDay } from '../src/sim/engine';
 import { FIGURE, FIGURES } from '../src/sim/economy/engine';
 import { activePersons } from '../src/sim/economy/calibration';
 import { ROLE, WORKING_AGE, workforce } from '../src/sim/systems/work';
-import { cityCalibrations, cityPlaces, foundEconomy } from '../src/sim/systems/economy';
+import { cityCalibrations, cityPlaces } from '../src/sim/systems/economy';
 import { ageOn } from '../src/sim/systems/people';
 import { encodeState, decodeState, hashState } from '../src/sim/snapshot';
 import { upgradeState } from '../src/sim/upgrade';
 import { ALIVE, STATE_VERSION, PERSON_SCHEMA, type WorldState } from '../src/sim/state';
 import { personDetail, personEconomy } from '../src/net/people';
 import { economyRows, lsd, pence } from '../src/people/economy_rows';
-import { countPeople, settleHamlets } from '../src/sim/systems/hamlets';
-import { foundLots } from '../src/sim/systems/lots';
-import { cultivate } from '../src/sim/systems/cultivation';
-import { bringInHarvest } from '../src/sim/systems/harvest';
 
 const { s, w } = newWorldState();
 const P = s.person.cols,
@@ -223,6 +218,7 @@ describe('the state', () => {
   });
   it('of a world from before feature 10 gets them by the upgrade: the economies are founded anew on the day reached', () => {
     // version 11: the cities' economies with persons of their own, no components of the economy, no firms
+    // biome-ignore lint/suspicious/noExplicitAny: a state of an older version, which no type of today describes
     const old = decodeState(encodeState(s)) as any;
     for (const k of ['role', 'agent', 'firm', 'wage', 'income', 'spent', 'savings']) delete old.person.cols[k];
     delete old.firm;

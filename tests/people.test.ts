@@ -3,7 +3,7 @@
 import { describe, it, expect } from 'vitest';
 import { lifeExpectancy, survivorship } from '../src/sim/people/lifetable';
 import { CITIES, SCALE, ageOn, cityPeopleByPlace, personsIn, MOTHER_AGE } from '../src/sim/systems/people';
-import { newWorldState, loadSetup } from '../tools/sim/load';
+import { newWorldState } from '../tools/sim/load';
 import { toHeads } from '../src/sim/scale';
 import { encodeState, decodeState, hashState } from '../src/sim/snapshot';
 import { residents } from '../src/sim/systems/hamlets';

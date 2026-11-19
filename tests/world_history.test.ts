@@ -32,6 +32,8 @@ function tiny(owner: number[], realms: string[], day = 0): WorldState {
     })),
   } as unknown as WorldState;
 }
+/** A realm that comes in: one more entry in a column of `tiny`, which keeps them as plain arrays. */
+const grow = (column: ArrayLike<number>, value: number) => (column as number[]).push(value);
 /** The owners and realms after every line of a history, by day. */
 function play(h: History) {
   const owner = [...h.lines[0].owner!],
@@ -62,9 +64,9 @@ describe('history of the borders', () => {
     b.record(s);
     // a realm comes in with a place, another is renamed
     s.day = 5;
-    (s.realm as any).size = 3;
-    (s.realm.alive as any).push(1);
-    (s.realm.cols.color as any).push(0xabcdef);
+    s.realm.size = 3;
+    grow(s.realm.alive, 1);
+    grow(s.realm.cols.color, 0xabcdef);
     s.realmText.push({
       key: 'c',
       name: { en: 'C', de: 'C' },
@@ -82,7 +84,7 @@ describe('history of the borders', () => {
     expect(p.names).toEqual(['A2', 'b', 'C']);
     b.close();
     // read back, with a torn last line from a crash: nothing is lost but the torn line, and what moved since comes as one line
-    writeFileSync(file, readFileSync(file, 'utf8') + '{"d":6,"c":[[0');
+    writeFileSync(file, `${readFileSync(file, 'utf8')}{"d":6,"c":[[0`);
     s.day = 7;
     s.place.owner[0] = 2;
     const again = new BorderHistory(file, s, w, () => null),

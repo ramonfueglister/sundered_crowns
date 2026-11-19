@@ -18,7 +18,9 @@ describe('the persons of a place', () => {
     const places = [...new Set(CITIES.map((c) => c.place))].slice(0, 5).reverse().concat([2000]);
     const many = manyPlacesPeople(s, places);
     expect(many.map((m) => m.place)).toEqual(places);
-    places.forEach((p, k) => expect(many[k]).toEqual(placePeople(s, p)));
+    places.forEach((p, k) => {
+      expect(many[k]).toEqual(placePeople(s, p));
+    });
     expect(PLACES_PER_REQUEST).toBe(MAX_PLACES_PER_REQUEST); // the figures ask for no more than the server gives
   });
 });

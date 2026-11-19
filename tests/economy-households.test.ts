@@ -19,10 +19,6 @@ import { upgradeState } from '../src/sim/upgrade';
 import { STATE_VERSION, FAMILY_SCHEMA, PERSON_SCHEMA, type WorldState } from '../src/sim/state';
 import { personDetail, personHousehold } from '../src/net/people';
 import { householdRows, lsd, pence } from '../src/people/economy_rows';
-import { countPeople, settleHamlets } from '../src/sim/systems/hamlets';
-import { foundLots } from '../src/sim/systems/lots';
-import { cultivate } from '../src/sim/systems/cultivation';
-import { bringInHarvest } from '../src/sim/systems/harvest';
 import { foundMoves } from '../src/sim/systems/moves';
 
 const { s, w } = newWorldState();
@@ -377,6 +373,7 @@ describe('the state', () => {
   });
   it('of a world from before feature 11 gets them by the upgrade: the economies are founded anew with the women without a husband at work', () => {
     // version 13: no purse, no consumption (who works there was drawn by the rule before; the upgrade draws again)
+    // biome-ignore lint/suspicious/noExplicitAny: a state of an older version, which no type of today describes
     const old = decodeState(encodeState(s)) as any;
     for (const k of ['persons', 'working', 'baskets', 'income', 'spent', 'savings']) delete old.family.cols[k];
     delete old.person.cols.consumed;
@@ -410,6 +407,7 @@ describe('the state', () => {
     expect(up.family.cols.income.some((v) => v > 0)).toBe(true);
   }, 60_000);
   it('of a world from before feature 15 gets the need by the upgrade: the economies are founded anew with households that spend out of savings', () => {
+    // biome-ignore lint/suspicious/noExplicitAny: a state of an older version, which no type of today describes
     const old = decodeState(encodeState(s)) as any;
     delete old.family.cols.need;
     delete old.family.cols.fed;
@@ -432,6 +430,7 @@ describe('the state', () => {
     expect(up.family.cols.fed.some((v) => v === 1)).toBe(true);
   }, 60_000);
   it('of a world from before features 16 and 17 is founded anew by the upgrade, with a crown that buys with what it took in and with distance between the cities', () => {
+    // biome-ignore lint/suspicious/noExplicitAny: a state of an older version, which no type of today describes
     const old = decodeState(encodeState(s)) as any;
     old.v = 23;
     const up = upgradeState(decodeState(encodeState(old)), w, () => loadSetup(1356));

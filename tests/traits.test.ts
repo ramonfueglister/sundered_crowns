@@ -222,6 +222,7 @@ describe('the traits in a world of 1291', () => {
 describe('the state of the traits', () => {
   it('a world from before the traits draws deaths and moves anew by the upgrade and keeps where its persons come from', () => {
     const { s, w } = newWorldState(1291, 1291);
+    // biome-ignore lint/suspicious/noExplicitAny: a state of an older version, which no type of today describes
     const old = decodeState(encodeState(s)) as any;
     old.v = 26;
     const P = old.person.cols;

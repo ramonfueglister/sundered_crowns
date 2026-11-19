@@ -90,7 +90,9 @@ describe('the people of a place', () => {
     const paris = w.names.indexOf('Paris');
     const [list] = manyPlacesPeople(s, [paris]);
     expect(list.hamlet.length).toBe(list.id.length);
-    list.id.forEach((id, k) => expect(list.hamlet[k]).toBe(F.hamlet[P.family[id]]));
+    list.id.forEach((id, k) => {
+      expect(list.hamlet[k]).toBe(F.hamlet[P.family[id]]);
+    });
     expect(placeDetail(s, w, paris)!.harvest!.farmers).toBe(list.hamlet.filter((h) => h === 1).length);
   });
 });

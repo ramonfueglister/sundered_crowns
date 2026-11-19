@@ -13,8 +13,11 @@ const ADMIN = '00000000-0000-4000-8000-0000000000ad';
 
 let db: PGlite;
 
+/** A row of a query: its columns by name. */
+type Row = Record<string, unknown>;
+
 /** Run SQL as a given user (uid) or as anon (null) or as the world server ('service'). */
-async function as<T = any>(who: string | null | 'service', sql: string, params: any[] = []): Promise<T[]> {
+async function as<T = Row>(who: string | null | 'service', sql: string, params: unknown[] = []): Promise<T[]> {
   await db.exec('reset role');
   const role = who === 'service' ? 'service_role' : who ? 'authenticated' : 'anon';
   await db.query(`select set_config('request.jwt.claim.sub', $1, false)`, [who && who !== 'service' ? who : '']);
@@ -25,7 +28,7 @@ async function as<T = any>(who: string | null | 'service', sql: string, params: 
     await db.exec('reset role');
   }
 }
-async function asCount(who: string | null | 'service', sql: string, params: any[] = []): Promise<number> {
+async function asCount(who: string | null | 'service', sql: string, params: unknown[] = []): Promise<number> {
   await db.exec('reset role');
   await db.query(`select set_config('request.jwt.claim.sub', $1, false)`, [who && who !== 'service' ? who : '']);
   await db.exec(`set role ${who === 'service' ? 'service_role' : who ? 'authenticated' : 'anon'}`);
@@ -35,7 +38,7 @@ async function asCount(who: string | null | 'service', sql: string, params: any[
     await db.exec('reset role');
   }
 }
-const root = async (sql: string, params: any[] = []) => (await db.query(sql, params)).rows as any[];
+const root = async (sql: string, params: unknown[] = []) => (await db.query<Row>(sql, params)).rows;
 
 beforeAll(async () => {
   db = new PGlite();
@@ -294,8 +297,8 @@ describe('player messages', () => {
           `insert into public.player_messages (world_id, season, kind, from_user, body) values ('w1', 1, 'chat', $1, $2)`,
           [B, `line ${i}`],
         );
-      } catch (e: any) {
-        failed = /slow down/.test(String(e.message));
+      } catch (e) {
+        failed = /slow down/.test(String((e as Error).message));
       }
     }
     expect(failed).toBe(true);

@@ -79,11 +79,11 @@ describe('the counted communities of 1291', () => {
       else expect(m.length).toBeLessThanOrEqual(Math.round(c.people! / SCALE));
       for (const id of m) expect(rulers.has(id)).toBe(false);
     }
-    expect(got['Amberg']).toBe(0);
-    expect(got['Nördlingen']).toBe(0); // fewer than 50 people: no person at 1:100
-    expect(got['Nuremberg']).toBeGreaterThanOrEqual(4);
-    expect(got['Würzburg']).toBeGreaterThanOrEqual(6);
-    expect(got['Paris']).toBeGreaterThan(0);
+    expect(got.Amberg).toBe(0);
+    expect(got.Nördlingen).toBe(0); // fewer than 50 people: no person at 1:100
+    expect(got.Nuremberg).toBeGreaterThanOrEqual(4);
+    expect(got.Würzburg).toBeGreaterThanOrEqual(6);
+    expect(got.Paris).toBeGreaterThan(0);
   });
   it('show in the place: the town has the culture of its majority and its minority beside it', () => {
     const i = w.names.indexOf('Nuremberg'),
@@ -107,6 +107,7 @@ describe('the counted communities of 1291', () => {
 
 describe('a world of 1291 saved before the persons had cultures', () => {
   it('gets them by the upgrade from 18 and encodes as a new world', { timeout: 60_000 }, () => {
+    // biome-ignore lint/suspicious/noExplicitAny: a state of an older version, which no type of today describes
     const old = structuredClone(s) as any;
     old.v = 18;
     delete old.person.cols.culture;

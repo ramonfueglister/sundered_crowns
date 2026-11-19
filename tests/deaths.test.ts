@@ -45,7 +45,7 @@ describe('the day of death is drawn from the life table', () => {
       ages = Array.from({ length: N }, (_, k) => ageAtDeath(from, u(k)));
     const at = (x: number) => {
       const y = Math.floor(x);
-      return l[y] * Math.pow(l[y + 1] / l[y], x - y);
+      return l[y] * (l[y + 1] / l[y]) ** (x - y);
     };
     expect(ages.reduce((a, b) => Math.min(a, b), Infinity)).toBeGreaterThanOrEqual(from);
     for (const x of [35, 40, 55, 75]) expect(ages.filter((a) => a > x).length / N).toBeCloseTo(l[x] / at(from), 3);

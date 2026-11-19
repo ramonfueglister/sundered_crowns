@@ -4,7 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { loadWorld, loadSetup } from '../tools/sim/load';
 import { createWorldState } from '../src/sim/setup';
 import { compileChronicle, dayOf, type ChronicleJson } from '../src/sim/content/chronicle';
-import { playChronicle, foundRulers } from '../src/sim/systems/rulers';
+import { playChronicle } from '../src/sim/systems/rulers';
 import { ALIVE, BORN_UNKNOWN, STATE_VERSION, type WorldState } from '../src/sim/state';
 import { upgradeState } from '../src/sim/upgrade';
 import { hashState, encodeState, decodeState } from '../src/sim/snapshot';

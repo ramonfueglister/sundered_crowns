@@ -70,7 +70,7 @@ describe('JWKS (ES256) tokens', () => {
     const { privateKey, publicKey } = generateKeyPairSync('ec', { namedCurve: 'P-256' });
     const jwk = { ...publicKey.export({ format: 'jwk' }), kid: 'k1', alg: 'ES256', use: 'sig' };
     vi.stubGlobal('fetch', async () => new Response(JSON.stringify({ keys: [jwk] }), { status: 200 }));
-    const enc = (o: any) => Buffer.from(JSON.stringify(o)).toString('base64url');
+    const enc = (o: unknown) => Buffer.from(JSON.stringify(o)).toString('base64url');
     const head = enc({ alg: 'ES256', kid: 'k1', typ: 'JWT' }),
       body = enc({ sub: UID, aud: 'authenticated', exp: now + 600 });
     const sig = sign('SHA256', Buffer.from(`${head}.${body}`), { key: privateKey, dsaEncoding: 'ieee-p1363' }).toString(

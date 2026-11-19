@@ -19,7 +19,7 @@ function memBucket() {
     async list(prefix: string) {
       return {
         data: [...files.keys()]
-          .filter((k) => k.startsWith(prefix + '/'))
+          .filter((k) => k.startsWith(`${prefix}/`))
           .map((k) => ({ name: k.slice(prefix.length + 1) })),
         error: null,
       };
@@ -35,6 +35,7 @@ function memBucket() {
 function store() {
   const s = new SupabaseStore('http://localhost:54321', 'service-key');
   const m = memBucket();
+  // biome-ignore lint/suspicious/noExplicitAny: the store's client is private; the test puts a bucket in memory in its place
   (s as any).db = m.db;
   return { s, files: m.files };
 }

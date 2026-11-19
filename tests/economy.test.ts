@@ -38,15 +38,19 @@ const sum = (v: number[]) => v.reduce((a, b) => a + b, 0);
 const days = (s: WorldState, w: World, n: number) => {
   for (let i = 0; i < n; i++) advanceDay(s, w);
 };
+/** A table of the port's JSON (parameters, initial conditions, accounts): numbers and series of numbers by key, each
+ *  read here in the shape the port gives it. */
+// biome-ignore lint/suspicious/noExplicitAny: the port's tables are JSON; a key's shape is the port's, not a type here
+type PortJson = Record<string, any>;
 const bits = (v: Float64Array) =>
   Array.from(new BigUint64Array(v.buffer, v.byteOffset, v.length), (x) => x.toString(16).padStart(16, '0')).join(' ');
 
 describe("the calibration of England's economy (the year of the sources)", () => {
   const table = readTable(),
     c = calibrateEconomy(table);
-  const a = c.accounts as Record<string, any>,
-    p = c.parameters as Record<string, any>,
-    ic = c.initial_conditions as Record<string, any>;
+  const a = c.accounts as PortJson,
+    p = c.parameters as PortJson,
+    ic = c.initial_conditions as PortJson;
 
   it('names a source or says "assumption" for every input', () => {
     const entries = [table.scale, ...Object.values(table.inputs)] as Entry<unknown>[];
@@ -133,10 +137,10 @@ describe('the calibration turned into days', () => {
   const table = readTable(),
     y = calibrateEconomy(table),
     d = dailyCalibration(table);
-  const py = y.parameters as Record<string, any>,
-    pd = d.parameters as Record<string, any>;
-  const iy = y.initial_conditions as Record<string, any>,
-    id = d.initial_conditions as Record<string, any>;
+  const py = y.parameters as PortJson,
+    pd = d.parameters as PortJson;
+  const iy = y.initial_conditions as PortJson,
+    id = d.initial_conditions as PortJson;
   const FLOWS = ['alpha_s', 'kappa_s', 'delta_s', 'w_s'],
     RULES = ['mu', 'theta', 'alpha_G', 'beta_G', 'sigma_G', 'alpha_E', 'beta_E', 'sigma_E', 'C'];
   const HISTORY = ['Y', 'pi', 'C_G', 'C_E', 'Y_I'];
@@ -155,8 +159,8 @@ describe('the calibration turned into days', () => {
       for (let t = 0; t < 76; t++) expect(id[k][t]).toBe(iy[k][t] / 365);
     }
     expect(pd.T_prime).toBe(76);
-    expect(365 * sum(pd.alpha_s.map((x: number, g: number) => x * (y.accounts as any).employees[g]))).toBeCloseTo(
-      sum((y.accounts as any).output),
+    expect(365 * sum(pd.alpha_s.map((x: number, g: number) => x * (y.accounts.employees as number[])[g]))).toBeCloseTo(
+      sum(y.accounts.output as number[]),
       6,
     );
   });
@@ -167,14 +171,14 @@ describe('the calibration turned into days', () => {
     expect(Object.keys(id)).toEqual(Object.keys(iy));
   });
   it('compounds the interest of a day to the interest of the year', () => {
-    expect(Math.pow(1 + pd.mu, 365)).toBeCloseTo(1.075, 12);
+    expect((1 + pd.mu) ** 365).toBeCloseTo(1.075, 12);
     expect(pd.theta).toBe(py.theta / 365);
   });
   it('keeps the memory of a year, the long-run mean and the spread of the crown and of the exports', () => {
     for (const s of ['G', 'E']) {
       const a = py[`alpha_${s}`],
         ad = pd[`alpha_${s}`];
-      expect(Math.pow(ad, 365)).toBeCloseTo(a, 12);
+      expect(ad ** 365).toBeCloseTo(a, 12);
       expect(pd[`beta_${s}`] / (1 - ad)).toBeCloseTo(py[`beta_${s}`] / (1 - a) - Math.log(365), 9); // the mean of the logarithm, a day is 1/365 of a year
       expect(pd[`sigma_${s}`] ** 2 / (1 - ad * ad)).toBeCloseTo(py[`sigma_${s}`] ** 2 / (1 - a * a), 12); // the variance in the long run
     }
@@ -192,8 +196,8 @@ describe('the calibration of the cities', () => {
   const table = readTable(),
     cities = cityCalibrations(table),
     england = calibrateEconomy(table);
-  const pe = england.parameters as Record<string, any>,
-    ae = england.accounts as Record<string, any>;
+  const pe = england.parameters as PortJson,
+    ae = england.accounts as PortJson;
 
   it('is the file of the reference world, as the game founds the economies of its cities', () => {
     expect(readFileSync(dataPath('economy_cities.json'), 'utf8')).toBe(calibrationJson(table)); // else: npm run economy:calibrate
@@ -255,17 +259,17 @@ describe('the calibration of the cities', () => {
     withBenefit.cities.unemployment_benefit.value = 0.55;
     for (const c of cities) {
       // the game (feature 9): the rate is switched off and nobody starts with a benefit
-      const po = c.calibration.parameters as Record<string, any>,
-        io = c.calibration.initial_conditions as Record<string, any>;
-      const a = c.calibration.accounts as Record<string, any>;
+      const po = c.calibration.parameters as PortJson,
+        io = c.calibration.initial_conditions as PortJson;
+      const a = c.calibration.accounts as PortJson;
       expect(po.theta_UB).toBe(1e-9); // not 0: the port divides the starting wage by this rate
       expect(io.w_UB).toBe(0);
       expect(io.sb_other).toBe(0);
       expect(io.sb_inact).toBe(0);
       // the same city with the rate of feature 6: 55 % of the last wage after tax, from the first day
       const on = dailyEconomy(calibrateEconomy(cityTable(withBenefit, c.people, c.working.length)), 365, 30);
-      const p = on.parameters as Record<string, any>,
-        ic = on.initial_conditions as Record<string, any>;
+      const p = on.parameters as PortJson,
+        ic = on.initial_conditions as PortJson;
       expect(p.theta_UB).toBeCloseTo(0.55 * (1 - p.tau_INC) * (1 - p.tau_SIW), 15);
       expect(p.theta_UB).toBeGreaterThan(0.5);
       expect(p.theta_UB).toBeLessThan(0.55);
@@ -275,8 +279,8 @@ describe('the calibration of the cities', () => {
       expect(ic.w_UB * 365).toBeCloseTo((p.theta_UB * sum(a.wages)) / sum(a.employees), 12);
       // the same city as a year: the benefit of a day is a 365th of the benefit of the year
       const year = calibrateEconomy(cityTable(withBenefit, c.people, c.working.length));
-      expect(ic.w_UB).toBe((year.initial_conditions as any).w_UB / 365);
-      expect(p.theta_UB).toBe((year.parameters as any).theta_UB);
+      expect(ic.w_UB).toBe((year.initial_conditions as PortJson).w_UB / 365);
+      expect(p.theta_UB).toBe((year.parameters as PortJson).theta_UB);
       // Between the two: with the benefit households spend from an income that includes the benefit of the one
       // person without work at the start (the original's calibration), so they buy at the start what the accounts
       // say. Nothing else differs.
@@ -294,8 +298,8 @@ describe('the calibration of the cities', () => {
     const englandPeople = table.inputs.population_thousand.value * 1e3;
     for (const c of cities) {
       const share = c.people / englandPeople;
-      const p = c.calibration.parameters as Record<string, any>,
-        a = c.calibration.accounts as Record<string, any>;
+      const p = c.calibration.parameters as PortJson,
+        a = c.calibration.accounts as PortJson;
       expect(c.calibration.scale).toBeCloseTo(0.01 * share, 15);
       expect(a.people).toBeCloseTo(c.people / 100, 6); // the model computes the city at 1:100
       expect(a.gdp / ae.gdp).toBeCloseTo(share, 12);
@@ -328,9 +332,9 @@ describe('the calibration of the cities', () => {
         'alpha_G',
         'alpha_E',
       ]) {
-        if (k === 'mu') expect(Math.pow(1 + p.mu, 365)).toBeCloseTo(1 + pe.mu, 12);
+        if (k === 'mu') expect((1 + p.mu) ** 365).toBeCloseTo(1 + pe.mu, 12);
         else if (k === 'theta') expect(p.theta * 365).toBeCloseTo(pe.theta, 12);
-        else if (k === 'alpha_G' || k === 'alpha_E') expect(Math.pow(p[k], 365)).toBeCloseTo(pe[k], 12);
+        else if (k === 'alpha_G' || k === 'alpha_E') expect(p[k] ** 365).toBeCloseTo(pe[k], 12);
         else if (k === 'c_E_g')
           for (let g = 0; g < 3; g++) expect(p.c_E_g[g]).toBeCloseTo(pe.c_E_g[g], 12); // a quotient of scaled amounts
         else expect(p[k], k).toEqual(pe[k]);
@@ -496,7 +500,7 @@ describe('the economy engine (WebAssembly)', () => {
     table.cities.unemployment_benefit.value = 0.55;
     const paid = THREE.map((x, k): CitySetup => {
       const d = dailyEconomy(calibrateEconomy(cityTable(table, x.people, x.working)), 365, CLOCK.plan);
-      expect((d.parameters as any).theta_UB).toBeGreaterThan(0.5);
+      expect((d.parameters as PortJson).theta_UB).toBeGreaterThan(0.5);
       return {
         parameters: JSON.stringify(d.parameters),
         initialConditions: JSON.stringify(d.initial_conditions),
@@ -534,7 +538,9 @@ describe('the economy engine (WebAssembly)', () => {
         for (const v of [x.income, x.nominal, x.real, x.centralBank, x.banks])
           expect(Math.abs(v) / x.gdpSum).toBeLessThan(1e-9);
         const y = city(f, n);
-        expect(y[FIGURE.employees] + y[FIGURE.owners] + y[FIGURE.unemployed]).toBe((THREE[n].parameters as any).H_act);
+        expect(y[FIGURE.employees] + y[FIGURE.owners] + y[FIGURE.unemployed]).toBe(
+          (THREE[n].parameters as PortJson).H_act,
+        );
       });
       // the worth of the merchants, then the goods of each of the three products
       expect(k.merchants.length).toBe(4);
@@ -550,8 +556,8 @@ describe('the economy engine (WebAssembly)', () => {
       expect(y[FIGURE.exports]).toBeGreaterThan(0);
       expect(y[FIGURE.imports]).toBeGreaterThan(0);
       // the starting position stands for the days before the start: 305 days of it are still in the sums
-      bought += y[FIGURE.exports] - (305 / 365) * (THREE[k].initial_conditions as any).C_E[75] * 365;
-      sold += y[FIGURE.imports] - (305 / 365) * (THREE[k].initial_conditions as any).Y_I[75] * 365;
+      bought += y[FIGURE.exports] - (305 / 365) * (THREE[k].initial_conditions as PortJson).C_E[75] * 365;
+      sold += y[FIGURE.imports] - (305 / 365) * (THREE[k].initial_conditions as PortJson).Y_I[75] * 365;
     }
     expect(bought).toBeGreaterThan(0);
     expect(sold).toBeGreaterThan(0);
@@ -562,7 +568,7 @@ describe('the economy engine (WebAssembly)', () => {
       accounts = cityCalibrations(readTable());
     THREE.forEach((x, k) => {
       const y = city(f, k),
-        a = accounts.find((q) => q.place === x.place)!.calibration.accounts as Record<string, any>;
+        a = accounts.find((q) => q.place === x.place)!.calibration.accounts as PortJson;
       expect(y[FIGURE.periods]).toBe(0);
       expect(y[FIGURE.realGdp]).toBeCloseTo(a.gdp, 3);
       expect(y[FIGURE.nominalGdp]).toBeCloseTo(a.gdp, 3);
@@ -601,8 +607,10 @@ describe('the economy engine (WebAssembly)', () => {
     expect(() => engine.create([a, { ...b, seed: -1 }], CLOCK, RULES)).toThrow();
     expect(() => engine.create([a, b], { plan: 0, window: 365 }, RULES)).toThrow();
     expect(() => engine.create([a, b], { plan: 30, window: 1.5 }, RULES)).toThrow();
-    expect(() => engine.create([a, b], CLOCK, { ...RULES, wage: 'gold' as any })).toThrow(/not a way to pay wages/);
-    expect(() => engine.create([a, b], CLOCK, { ...RULES, prices: 'stars' as any })).toThrow(/not a way to set prices/);
+    expect(() => engine.create([a, b], CLOCK, { ...RULES, wage: 'gold' as never })).toThrow(/not a way to pay wages/);
+    expect(() => engine.create([a, b], CLOCK, { ...RULES, prices: 'stars' as never })).toThrow(
+      /not a way to set prices/,
+    );
     // parameters of the port that let only a part of the firms adjust do not go with the demand pull of the clock
     const calvo = { ...b, parameters: JSON.stringify({ ...JSON.parse(b.parameters), theta_calvo: 0.5 }) };
     expect(() => engine.create([a, calvo], CLOCK, RULES)).toThrow(/economy engine: city 1: theta_calvo = 0\.5/);
@@ -625,7 +633,7 @@ describe('the economy engine (WebAssembly)', () => {
   });
   it('reports a rule of the port that fails, and starts afresh', () => {
     // a state in which a worker of the first city has an employer that does not exist: its labour market stops
-    const p = THREE[0].parameters as any,
+    const p = THREE[0].parameters as PortJson,
       workers = p.H_act - sum(p.I_s) - 1;
     // (a copy: the engine takes an array it handed out itself as the state it keeps, which nobody changes)
     const state = engine.step(create(1356), 1).slice();
@@ -902,7 +910,7 @@ describe('what a player sees of the economy', () => {
     let shown = 0;
     for (let i = 0; i < w.L; i++) {
       const d = placeDetail(s, w, i)!;
-      expect((d as any).economy).toBeUndefined(); // the section of England's economy is gone
+      expect(d).not.toHaveProperty('economy'); // the section of England's economy is gone
       if (d.cityEconomy) {
         shown++;
         expect(places).toContain(i);
@@ -920,7 +928,7 @@ describe('what a player sees of the economy', () => {
     const { s, w } = newWorldState();
     const london = w.names.indexOf('London'),
       k = cityAt(s.economy.cities!, london);
-    const p = cityCalibrations()[k].calibration.parameters as Record<string, any>;
+    const p = cityCalibrations()[k].calibration.parameters as PortJson;
     const d0 = placeDetail(s, w, london)!.cityEconomy!;
     expect(d0).toMatchObject({ day: 0, baseYear: 1356, scale: 0.01 });
     expect(d0.realGdp).toBeCloseTo((45247.8 * 60862) / 2583180, 3); // London's share of England's GDP at 1:100
