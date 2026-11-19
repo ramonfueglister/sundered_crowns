@@ -206,6 +206,36 @@ impl Economy {
         self.model.ext.periods_computed(self.model.agg.t)
     }
 
+    /// The same economy with the working days of its firms and households for its next `days` periods (economy
+    /// feature 19, [`clock::Attendance`]): per calendar and kind of day the factor of the flows of a firm or a
+    /// household (`kinds` numbers a calendar), per calendar the kind of each of the days, per firm its calendar (and
+    /// its owner's), and per household that owns no firm its calendar: the workers, the persons who do not work and
+    /// the owners of the banks, in the port's order. They take the place of the days it had; after them every period
+    /// is a working day of the factor 1 again.
+    pub fn with_working_days(
+        mut self,
+        days: usize,
+        kinds: usize,
+        factor: Vec<f64>,
+        day: Vec<u8>,
+        calendar: Vec<u8>,
+        household: Vec<u8>,
+    ) -> Result<Economy, String> {
+        let m = &self.model;
+        let (firms, households) = (m.firms.len(), m.w_act.len() + m.w_inact.len() + m.banks.len());
+        if calendar.len() != firms || household.len() != households {
+            return Err(format!(
+                "working days for {} firms and {} households of an economy of {firms} firms and {households} other \
+                 households",
+                calendar.len(),
+                household.len()
+            ));
+        }
+        self.model.ext.attendance =
+            clock::Attendance::new(self.periods() + 1, days, kinds, factor, day, calendar, household)?;
+        Ok(self)
+    }
+
     /// The same economy with a past of a fixed size from now on ([`past`]): for the expectations of growth and
     /// inflation it keeps, instead of the real GDP and the inflation of every period since the start, the values of
     /// the last window and the sums that the port's estimate is made of. The rule is the port's; its results agree
@@ -434,6 +464,53 @@ fn drop_rows(d: &mut Data, n: usize) {
     ] {
         v.drain(..n);
     }
+}
+
+/// The cities with the working days of their firms and households (economy feature 19) as bytes: per city the number
+/// of its calendars, of the kinds of a day and of the days (32 bits each), per calendar and kind the factor of the
+/// flows (64-bit floats), per calendar the kind of every day (a byte each), the number of its firms (32 bits) and the
+/// calendar of every firm (a byte each), the number of its other households (32 bits) and the calendar of each (a byte
+/// each, [`Economy::with_working_days`]).
+pub fn working_days(all: &mut trade::Cities, mut r: &[u8]) -> Result<(), String> {
+    fn take_bytes<'a>(r: &mut &'a [u8], n: usize) -> Result<&'a [u8], String> {
+        if r.len() < n {
+            return Err(format!(
+                "the working days end after {} more bytes, {n} were read",
+                r.len()
+            ));
+        }
+        let (head, rest) = r.split_at(n);
+        *r = rest;
+        Ok(head)
+    }
+    let u32_ = |r: &mut &[u8]| -> Result<usize, String> {
+        Ok(u32::from_le_bytes(take_bytes(r, 4)?.try_into().unwrap()) as usize)
+    };
+    let mut cities = Vec::with_capacity(all.cities.len());
+    for (c, e) in std::mem::take(&mut all.cities).into_iter().enumerate() {
+        let (calendars, kinds, n) = (u32_(&mut r)?, u32_(&mut r)?, u32_(&mut r)?);
+        let factor = take_bytes(&mut r, 8 * calendars * kinds)?
+            .chunks_exact(8)
+            .map(|b| f64::from_le_bytes(b.try_into().unwrap()))
+            .collect();
+        let day = take_bytes(&mut r, calendars * n)?.to_vec();
+        let firms = u32_(&mut r)?;
+        let calendar = take_bytes(&mut r, firms)?.to_vec();
+        let households = u32_(&mut r)?;
+        let household = take_bytes(&mut r, households)?.to_vec();
+        cities.push(
+            e.with_working_days(n, kinds, factor, day, calendar, household)
+                .map_err(|e| format!("city {c}: {e}"))?,
+        );
+    }
+    if !r.is_empty() {
+        return Err(format!(
+            "{} bytes of working days are left over after the cities",
+            r.len()
+        ));
+    }
+    all.cities = cities;
+    Ok(())
 }
 
 /// The interface of the WebAssembly file (src/sim/economy/engine.ts is the other side). The caller copies its inputs
@@ -719,6 +796,26 @@ pub mod abi {
                 }
             }
             Ok(keep(all.with_routes(days, labour, weight, f(0))?))
+        })())
+    }
+
+    /// The cities of a state with the working days of their firms from their next period on (economy feature 19,
+    /// [`Economy::with_working_days`]). The days are, little endian, for every city in its order: the number of its
+    /// calendars, of the kinds of a day and of the days (32 bits each), per calendar and kind the factor of a firm's
+    /// flows (64-bit floats), per calendar the kind of every day (a byte each), the number of its firms (32 bits) and
+    /// the calendar of every firm (a byte each), the number of its other households (32 bits) and the calendar of each
+    /// (a byte each, [`Economy::with_working_days`]). Result: their state.
+    ///
+    /// # Safety
+    ///
+    /// As [`sce_create`], for both pairs of pointer and length.
+    #[unsafe(no_mangle)]
+    pub unsafe extern "C" fn sce_working_days(state: *const u8, len: usize, days: *const u8, days_len: usize) -> u32 {
+        hook();
+        answer((|| {
+            let mut all = take(unsafe { bytes(state, len) })?;
+            crate::working_days(&mut all, unsafe { bytes(days, days_len) })?;
+            Ok(keep(all))
         })())
     }
 

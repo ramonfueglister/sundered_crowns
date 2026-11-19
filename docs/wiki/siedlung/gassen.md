@@ -4,7 +4,7 @@
 
 > Jede Stadt hat einen Markt und Gassen, die zu den Parzellen ihrer Familien wachsen. Die Gassen stehen mit Lage, Art und Breite im Grundbuch der Welt.
 
-Ramon hat den Vorschlag am 18. November 2026 angenommen. Gebaut in Zustand 31.
+Ramon hat den Vorschlag am 18. November 2026 angenommen. Gebaut in Zustand 32.
 
 ## Das Feature
 

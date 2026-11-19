@@ -59,12 +59,147 @@
 //! The port takes one model type per model, so this one also carries what a city needs that trades with other cities
 //! ([`crate::trade`]): while the merchants have set what they want and bring, the rule of the rest of the world reads
 //! that instead of the port's random series. An economy on its own never has merchants and computes as before.
+//!
+//! And it carries the working days of the firms and households (economy feature 19, [`Attendance`]). In the port
+//! every period is a working day. With a day as the period a firm and a household keep the working days of a calendar
+//! (src/sim/holy_days.ts in the game: the Sundays and feasts of the Latin Church, the Sabbath, and so on; a firm
+//! that of its owner). On a day with the factor `a`, the share of the day that is worked times the days of the year over
+//! the working days of the year, the flows of a firm and the purchases of a household are `a` times those of a mean
+//! day: on a day of rest nothing, on a working day more, and over a year as much as in the port in as many periods.
+//!
+//! 1. The output of the Leontief function (A.13) is `min(Q_s, N α, K κ, M β)`: the planned supply, what the workers,
+//!    the capital and the materials allow in a period. On the day it is `min(a Q_s, a N α, a K κ, M β)`; `M β` is a
+//!    stock and is not scaled.
+//! 2. A firm buys the materials (A.18) and the investment (A.14) for the day's work, `a` times the port's.
+//! 3. A household that owns no firm buys `a` times its budget (A.46, A.49, with the spending out of savings): the
+//!    market of its faith is closed on its days of rest. The crown and the merchants buy every day, and so does the
+//!    owner of a firm, by his own rule (feature 18) on the profit of the day before: after a day of rest, a day of
+//!    wages without sales, he has nothing to spend out of income; after a working day more than on a mean day.
+//! 4. In the market the spare capacity of a firm, which records the demand it cannot serve, is that of the day,
+//!    `a K κ − Y`.
+//! 5. A firm plans on the mean demand per worked day: the demand since its last plan over the factors of those days,
+//!    which without working days are as many as the days. A firm that has not worked since its last plan keeps its
+//!    supply and its price until it has.
+//! 6. Wages are paid every day as in the port, worked or not (the work effort of A.26 is the port's): a holy day costs
+//!    a firm its output, not its workers' pay.
+//! 7. A price index of the port that weights with what was made, sold or bought, and the mean prices paid, are 0 / 0
+//!    on a day without any: they keep the value of the day before.
+//!
+//! Without a calendar, and on every day of the factor 1, the economy computes as before, number for number.
 #![allow(non_snake_case)] // the fields of the port carry the names of the paper's appendix
 
+use beforeit::julia::min;
 use beforeit::{AbstractModel, Extension, Firms, FirmsDecisions, Randomness, base};
 
 use crate::past::Past;
 use crate::trade::{self, Trade};
+
+/// The working days of the firms and households of an economy (economy feature 19): for a run of days, per calendar the
+/// kind of every day, per calendar and kind the factor of the flows of a firm or a household on such a day, per firm
+/// its calendar and per household that owns no firm its calendar. Empty: every period is a working day of the factor
+/// 1, as in the port.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct Attendance {
+    /// the period (counted from 1) of the first day
+    pub from: usize,
+    /// the days
+    pub days: usize,
+    /// the kinds of a day
+    pub kinds: usize,
+    /// per calendar and kind of day: the factor of the flows of a firm on such a day (`kinds` numbers a calendar)
+    pub factor: Vec<f64>,
+    /// per calendar and day: the kind of the day (`days` numbers a calendar)
+    pub day: Vec<u8>,
+    /// per firm: its calendar (and so of its owner's household)
+    pub calendar: Vec<u8>,
+    /// per household that does not own a firm: its calendar, in the port's order of the workers, the persons who do
+    /// not work and the owners of the banks
+    pub household: Vec<u8>,
+}
+
+impl Attendance {
+    /// Working days for `days` days from period `from`: `factor` per calendar and kind, `day` the kind of every day
+    /// per calendar, `calendar` per firm, `household` per household that owns no firm.
+    pub fn new(
+        from: usize,
+        days: usize,
+        kinds: usize,
+        factor: Vec<f64>,
+        day: Vec<u8>,
+        calendar: Vec<u8>,
+        household: Vec<u8>,
+    ) -> Result<Attendance, String> {
+        let calendars = if kinds == 0 { 0 } else { factor.len() / kinds };
+        if kinds == 0 || calendars == 0 || factor.len() != calendars * kinds || day.len() != calendars * days {
+            return Err(format!(
+                "working days with {} factors for {kinds} kinds of days and {} kinds of days for {days} days",
+                factor.len(),
+                day.len()
+            ));
+        }
+        if let Some(k) = day.iter().find(|&&k| k as usize >= kinds) {
+            return Err(format!("a day of the kind {k} of {kinds}"));
+        }
+        if let Some(c) = calendar.iter().find(|&&c| c as usize >= calendars) {
+            return Err(format!("a firm of the calendar {c} of {calendars}"));
+        }
+        if let Some(c) = household.iter().find(|&&c| c as usize >= calendars) {
+            return Err(format!("a household of the calendar {c} of {calendars}"));
+        }
+        if let Some(f) = factor.iter().find(|f| !(f.is_finite() && **f >= 0.0)) {
+            return Err(format!("a factor of the flows of {f}"));
+        }
+        Ok(Attendance {
+            from,
+            days,
+            kinds,
+            factor,
+            day,
+            calendar,
+            household,
+        })
+    }
+
+    /// Whether there are no working days: every period is a working day as in the port.
+    pub fn is_empty(&self) -> bool {
+        self.calendar.is_empty()
+    }
+
+    /// The factor of the flows of firm `i` in period `t`: 1 outside the days.
+    pub fn factor(&self, i: usize, t: usize) -> f64 {
+        if self.calendar.is_empty() {
+            return 1.0;
+        }
+        self.of_calendar(self.calendar[i], t)
+    }
+
+    /// The factor of the purchases of household `h` that owns no firm (in the order of [`Attendance::household`]) in
+    /// period `t`: 1 outside the days.
+    pub fn household_factor(&self, h: usize, t: usize) -> f64 {
+        if self.calendar.is_empty() {
+            return 1.0;
+        }
+        self.of_calendar(self.household[h], t)
+    }
+
+    fn of_calendar(&self, c: u8, t: usize) -> f64 {
+        if t < self.from || t - self.from >= self.days {
+            return 1.0;
+        }
+        let c = c as usize;
+        self.factor[c * self.kinds + self.day[c * self.days + t - self.from] as usize]
+    }
+}
+
+/// The work effort of the port (A.25, A.26, `firms.jl`): the output that planned supply, capital and intermediate
+/// inputs allow, relative to what the employees produce at average productivity, at most 1.5. (The port keeps its own
+/// copy private.)
+fn effort(f: &Firms, i: usize) -> f64 {
+    min(
+        1.5,
+        min(f.Q_s_i[i], min(f.K_i[i] * f.kappa_i[i], f.M_i[i] * f.beta_i[i])) / (f.N_i[i] as f64 * f.alpha_bar_i[i]),
+    )
+}
 
 /// The model type of the daily clock and the fields it adds to a model.
 #[derive(Clone, Debug, PartialEq)]
@@ -76,6 +211,10 @@ pub struct DailyClock {
     /// per firm: the demand of the periods since its last plan, summed, and the number of those periods
     pub demand: Vec<f64>,
     pub periods: Vec<u32>,
+    /// per firm: the factors of its flows (economy feature 19, [`Attendance`]) of the periods whose demand `demand`
+    /// holds or will hold at the next decision: the periods since its last plan, the starting position counting as one
+    /// period of the factor 1. Without working days it is the number of those periods.
+    pub worked: Vec<f64>,
     /// real and nominal GDP of the starting position, per period
     pub start: [f64; 2],
     /// of the national accounts, the series that the key figures sum over a window ([`crate::summed`]): one row per
@@ -114,6 +253,8 @@ pub struct DailyClock {
     /// what the merchants want from this economy and bring to it in the period that is being computed
     /// ([`crate::trade`]); `None` between two periods and in an economy on its own. Not part of the saved state.
     pub trade: Option<Trade>,
+    /// the working days of the firms (economy feature 19); empty: every period is a working day, as in the port
+    pub attendance: Attendance,
 }
 
 impl DailyClock {
@@ -129,6 +270,7 @@ impl DailyClock {
             window,
             demand: vec![0.0; firms],
             periods: vec![0; firms],
+            worked: vec![1.0; firms],
             start: [f64::NAN; 2],
             accounts: Vec::new(),
             wage: Vec::new(),
@@ -142,6 +284,7 @@ impl DailyClock {
             borne: Vec::new(),
             past: None,
             trade: None,
+            attendance: Attendance::default(),
         })
     }
 
@@ -244,6 +387,23 @@ fn spend_savings(c: &mut [f64], d: &[f64], savings: f64, norm: f64, tau_VAT: f64
     }
 }
 
+/// The budgets `c` and `i` of households that own no firm, the first of them number `first` of
+/// [`Attendance::household`], for the day (economy feature 19): a household buys on the days of its calendar, on a day
+/// of rest nothing and on a working day more than on a mean day, so that over the year it buys what the port's
+/// household buys in as many periods.
+fn on_working_days(m: &AbstractModel<DailyClock>, c: &mut [f64], i: &mut [f64], first: usize) {
+    let a = &m.ext.attendance;
+    if a.is_empty() {
+        return;
+    }
+    let t = m.ext.periods_computed(m.agg.t) + 1;
+    for h in 0..c.len() {
+        let f = a.household_factor(first + h, t);
+        c[h] *= f;
+        i[h] *= f;
+    }
+}
+
 impl Extension for DailyClock {
     /// The port's `growth_inflation_expectations` (A.6, A.7, A.10) on windows: expected GDP, growth and inflation of
     /// the next period.
@@ -326,7 +486,7 @@ impl Extension for DailyClock {
     ) -> FirmsDecisions {
         let I = m.firms.len();
         assert!(
-            m.ext.demand.len() == I && m.ext.periods.len() == I,
+            m.ext.demand.len() == I && m.ext.periods.len() == I && m.ext.worked.len() == I,
             "the daily clock holds {} firms, the model has {I}",
             m.ext.demand.len()
         );
@@ -348,8 +508,10 @@ impl Extension for DailyClock {
         for i in 0..I {
             m.ext.demand[i] += m.firms.Q_d_i[i];
             m.ext.periods[i] += 1;
-            if m.ext.plans(i, t) {
-                let Q_d = m.ext.demand[i] / m.ext.periods[i] as f64;
+            // the mean demand per day: over the factors of the days (economy feature 19), which without working days
+            // are as many as the periods; a firm that has not worked since its last plan waits for a day it works
+            if m.ext.plans(i, t) && m.ext.worked[i] > 0.0 {
+                let Q_d = m.ext.demand[i] / m.ext.worked[i];
                 if m.ext.demand_pull {
                     let (Q_s, P, P_g) = (m.firms.Q_s_i[i], m.firms.P_i[i], m.agg.P_bar_g[m.firms.G_i[i]]);
                     let gap = Q_d / Q_s - 1.0;
@@ -366,17 +528,110 @@ impl Extension for DailyClock {
                 }
                 m.ext.demand[i] = 0.0;
                 m.ext.periods[i] = 0;
+                m.ext.worked[i] = 0.0;
             } else {
                 d.Q_s_i[i] = m.firms.Q_s_i[i];
                 d.new_P_i[i] = m.firms.P_i[i];
             }
         }
         // what follows from the supply, by the port's rule (A.14, A.18, A.22)
-        let (I_d_i, DM_d_i, N_d_i) = Self::desired_capital_material_employment(&m.firms, &d.Q_s_i);
+        let (mut I_d_i, mut DM_d_i, N_d_i) = Self::desired_capital_material_employment(&m.firms, &d.Q_s_i);
+        // a firm buys the materials the day's work uses and invests on the days it works (economy feature 19)
+        if !m.ext.attendance.is_empty() {
+            for i in 0..I {
+                let a = m.ext.attendance.factor(i, t);
+                DM_d_i[i] *= a;
+                I_d_i[i] *= a;
+            }
+        }
         d.I_d_i = I_d_i;
         d.DM_d_i = DM_d_i;
         d.N_d_i = N_d_i;
         d
+    }
+
+    /// The port's `firms_production` (A.13, A.25); with working days ([`Attendance`]) the flows of the Leontief
+    /// function are those of the day: `min(a Q_s, a N α, a K κ, M β)` with the factor `a` of the firm's day, α the
+    /// productivity times the port's work effort. With the factor 1 it is the port's number for number. Every firm adds
+    /// the factor of the day to the days it worked since its last plan ([`DailyClock::worked`]).
+    fn firms_production(m: &mut AbstractModel<Self>) -> Vec<f64> {
+        if m.ext.attendance.is_empty() {
+            m.ext.worked.iter_mut().for_each(|w| *w += 1.0);
+            return base::firms_production(m);
+        }
+        let t = m.ext.periods_computed(m.agg.t) + 1;
+        let (f, c) = (&m.firms, &mut m.ext);
+        (0..f.len())
+            .map(|i| {
+                let (a, alpha) = (c.attendance.factor(i, t), f.alpha_bar_i[i] * effort(f, i));
+                c.worked[i] += a;
+                min(
+                    a * f.Q_s_i[i],
+                    min(
+                        a * f.N_i[i] as f64 * alpha,
+                        min(a * f.K_i[i] * f.kappa_i[i], f.M_i[i] * f.beta_i[i]),
+                    ),
+                )
+            })
+            .collect()
+    }
+
+    /// The port's price index (A.11, A.12), which weights the prices of the firms with what they made in the period.
+    /// On a day on which no firm works (economy feature 19) there is nothing to weight with: the price index stays
+    /// where it was and the inflation of the day is 0.
+    fn inflation_priceindex(m: &mut AbstractModel<Self>) -> (f64, f64) {
+        if m.firms.Y_i.iter().all(|&y| y == 0.0) {
+            return (0.0, m.agg.P_bar);
+        }
+        base::inflation_priceindex(m)
+    }
+
+    /// The port's price index of every product (A.32), which weights with what was sold and imported in the period:
+    /// a product of which nothing was sold or imported (on a day of rest, economy feature 19) keeps its index.
+    fn sector_specific_priceindex(m: &mut AbstractModel<Self>) -> Vec<f64> {
+        let mut index = base::sector_specific_priceindex(m);
+        for (p, before) in index.iter_mut().zip(&m.agg.P_bar_g) {
+            if !p.is_finite() {
+                *p = *before;
+            }
+        }
+        index
+    }
+
+    /// The port's goods market (A.42 and the rules of the market). With working days the spare capacity of a firm,
+    /// `K κ − Y` in the port, which records the demand the firm cannot serve, is that of the day: `a K κ − Y`. The mean
+    /// prices the households paid for what they consumed and for what they invested, and the crown and the buyers
+    /// abroad for what they bought, are what they paid over what they bought: 0 / 0 or 0 on a day on which they bought
+    /// nothing, which a day of rest gives (economy feature 19). Such a price stays that of the day before, or 1 if
+    /// there is none; what they bought is 0 at any price.
+    fn search_and_matching<R: Randomness + ?Sized>(m: &mut AbstractModel<Self>, rng: &mut R, parallel: bool) {
+        let before = [m.agg.P_bar_h, m.agg.P_bar_CF_h, m.gov.P_j, m.rotw.P_l];
+        // the spare capacity of a firm, which records the demand it cannot serve, is that of the day: a K κ − Y
+        let kappa = (!m.ext.attendance.is_empty()).then(|| {
+            let t = m.ext.periods_computed(m.agg.t) + 1;
+            let kappa = m.firms.kappa_i.clone();
+            for i in 0..kappa.len() {
+                m.firms.kappa_i[i] *= m.ext.attendance.factor(i, t);
+            }
+            kappa
+        });
+        base::search_and_matching(m, rng, parallel);
+        if let Some(kappa) = kappa {
+            m.firms.kappa_i = kappa;
+        }
+        let keep = |now: &mut f64, before: f64| {
+            if !(now.is_finite() && *now > 0.0) {
+                *now = if before.is_finite() && before > 0.0 {
+                    before
+                } else {
+                    1.0
+                };
+            }
+        };
+        keep(&mut m.agg.P_bar_h, before[0]);
+        keep(&mut m.agg.P_bar_CF_h, before[1]);
+        keep(&mut m.gov.P_j, before[2]);
+        keep(&mut m.rotw.P_l, before[3]);
     }
 
     /// The port's profit of a firm (A.27); with [`DailyClock::owner`] without the stock it built or sold from,
@@ -435,14 +690,16 @@ impl Extension for DailyClock {
     /// The port's budgets of the four kinds of households (A.46, A.49), and out of savings ([`spend_savings`]).
     fn households_budget_act(m: &mut AbstractModel<Self>) -> (Vec<f64>, Vec<f64>) {
         let n = norm(m);
-        let (mut c, i) = base::households_budget_act(m);
+        let (mut c, mut i) = base::households_budget_act(m);
         spend_savings(&mut c, &m.w_act.D_h, m.ext.savings, n, m.prop.tau_VAT);
+        on_working_days(m, &mut c, &mut i, 0);
         (c, i)
     }
     fn households_budget_inact(m: &mut AbstractModel<Self>) -> (Vec<f64>, Vec<f64>) {
         let n = norm(m);
-        let (mut c, i) = base::households_budget_inact(m);
+        let (mut c, mut i) = base::households_budget_inact(m);
         spend_savings(&mut c, &m.w_inact.D_h, m.ext.savings, n, m.prop.tau_VAT);
+        on_working_days(m, &mut c, &mut i, m.w_act.len());
         (c, i)
     }
     /// The port's income of an owner (A.33, A.44), which holds the share of a profit and nothing of a loss; with
@@ -488,8 +745,9 @@ impl Extension for DailyClock {
     }
     fn households_budget_banks(m: &mut AbstractModel<Self>) -> (Vec<f64>, Vec<f64>) {
         let n = norm(m);
-        let (mut c, i) = base::households_budget_banks(m);
+        let (mut c, mut i) = base::households_budget_banks(m);
         spend_savings(&mut c, &m.banks.D_h, m.ext.savings, n, m.prop.tau_VAT);
+        on_working_days(m, &mut c, &mut i, m.w_act.len() + m.w_inact.len());
         (c, i)
     }
 

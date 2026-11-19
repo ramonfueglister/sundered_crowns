@@ -5,6 +5,7 @@
 // person in the archive is told from the year of the archive the world server keeps.
 import type { WorldState } from '../sim/state';
 import { ALIVE, BORN_UNKNOWN, LOT_KIND, NO_LOT } from '../sim/state';
+import { citiesOf } from '../sim/content/cities';
 import { farmHarvest, placeFarmFields } from '../sim/systems/fields';
 import { genesOf } from '../sim/systems/people';
 import { NG } from '../sim/people/genes';
@@ -80,6 +81,15 @@ export interface PersonDetail {
   household: PersonHousehold | null;
   /** a person of history (a ruler, src/sim/systems/rulers.ts); null for everybody else */
   history: PersonHistory | null;
+  /** the uid of the other one of the couple at the head of the person's family, −1 when the person heads none with a
+   *  partner (and for the dead of the archive) */
+  spouse: number;
+  /** the uids of the person's children in the table of the persons (not those already in the archive of the dead) */
+  children: number[];
+  /** the town the person lives in (the name of src/sim/content/cities.ts), null where none is known */
+  town: string | null;
+  /** where the family lives: on a parcel of the town, on a farmstead of a hamlet outside its walls, or nowhere known */
+  dwelling: 'parcel' | 'farmstead' | null;
   /** the farmstead of the person's family and its fields (settlement feature 4); null for a family without one */
   farm: PersonFarm | null;
 }
@@ -193,8 +203,36 @@ export function personDetail(s: WorldState, uid: number, cultureKey: (index: num
     economy: personEconomy(s, id),
     household: personHousehold(s, id),
     history: personHistory(s, id),
+    spouse: spouseOf(s, id),
+    children: childrenOf(s, id),
+    ...homeOf(s, id),
     farm: personFarm(s, id),
   };
+}
+
+/** The uid of the other one of the couple at the head of the family of the person in row `id`, −1 when there is none. */
+export function spouseOf(s: WorldState, id: number): number {
+  const F = s.family.cols, f = s.person.cols.family[id];
+  if (f < 0) return -1;
+  const other = F.man[f] === id ? F.woman[f] : F.woman[f] === id ? F.man[f] : -1;
+  return other >= 0 ? s.person.cols.uid[other] : -1;
+}
+
+/** The uids of the children of the person in row `id` who are in the table of the persons (not those in the archive
+ *  of the dead): one pass over the table (some hundred thousand rows, well under a millisecond). */
+export function childrenOf(s: WorldState, id: number): number[] {
+  const P = s.person.cols, col = P.sex[id] === 0 ? P.mother : P.father, uid = P.uid[id], out: number[] = [];
+  for (let i = 0; i < s.person.size; i++) if (col[i] === uid) out.push(P.uid[i]);
+  return out;
+}
+
+/** The town and the ground the person's family lives on. */
+export function homeOf(s: WorldState, id: number): Pick<PersonDetail, 'town' | 'dwelling'> {
+  const f = s.person.cols.family[id], lot = f < 0 ? NO_LOT : s.family.cols.lot[f], cities = citiesOf(s.startYear);
+  const site = lot === NO_LOT ? -1 : s.lot.cols.site[lot], place = f < 0 ? -1 : s.family.cols.place[f];
+  const city = (site >= 0 ? cities.find((c) => c.site === site) : undefined) ?? cities.find((c) => c.place === place);
+  const kind = lot === NO_LOT ? -1 : s.lot.cols.kind[lot];
+  return { town: city?.name ?? null, dwelling: kind === LOT_KIND.parcel ? 'parcel' : kind === LOT_KIND.farmstead ? 'farmstead' : null };
 }
 
 /** A dead person of the archive, with what the archive keeps. */
@@ -208,6 +246,6 @@ export function archivedDetail(s: WorldState, a: ArchivedPersons, k: number, cul
     place: A.place[k], culture: cultureKey(A.culture[k]),
     iq: A.iq[k], big5: [A.o[k], A.c[k], A.e[k], A.a[k], A.n[k]],
     genes: Array.from(A.genes.subarray(k * 2 * NG, (k + 1) * 2 * NG)),
-    economy: null, household: null, history: null, farm: null,
+    economy: null, household: null, history: null, spouse: -1, children: [], town: null, dwelling: null, farm: null,
   };
 }
