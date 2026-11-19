@@ -323,17 +323,17 @@ describe('the streets of a world of 1291', () => {
   it('front every parcel of the register', () => {
     for (let i = 0; i < s.lot.size; i++) if (L.kind[i] === LOT_KIND.parcel) expect(fronts(found.streets.get(L.site[i])! as Town, { x: L.x[i], z: L.z[i], front: L.front[i] }, { w: L.w[i], d: L.d[i] })).toBe(true);
   });
-  it('meet as the streets of real towns: the shares of dead ends, T-junctions and crossings (Barthelemy & Boeing 2025: 0.18, 0.62, 0.19) and the areas of the blocks (Lämmer et al. 2006: P(A) ~ A^−1.9)', () => {
+  it('meet as the streets of medieval Paris: the shares of dead ends, T-junctions and crossings (the Vasserot cadastre inside the wall of Philippe Auguste: 0.10, 0.78, 0.12) and the areas of the blocks (Lämmer et al. 2006: P(A) ~ A^−1.9)', () => {
     let ends = 0, tees = 0, crosses = 0;
-    const blocks: number[] = [];
+    const blocks: number[] = [], real = JSON.parse(readFileSync('data/cadastre/paris_1291.json', 'utf8'));
     for (const v of found.streets.values()) {
       if (v.streets.length >= 20) { ends += v.nodes.ends; tees += v.nodes.tees; crosses += v.nodes.crosses; }
       blocks.push(...v.blocks);
     }
     const n = ends + tees + crosses;
-    expect(Math.abs(ends / n - 0.18)).toBeLessThan(0.1); // 0.26: more dead ends than the cities of today (docs/SETTLEMENT_DESIGN.md)
-    expect(Math.abs(tees / n - 0.62)).toBeLessThan(0.08);
-    expect(Math.abs(crosses / n - 0.19)).toBeLessThan(0.08);
+    expect(Math.abs(ends / n - real.dead)).toBeLessThan(0.05); // 0.13
+    expect(Math.abs(tees / n - real.T)).toBeLessThan(0.05); // 0.77
+    expect(Math.abs(crosses / n - real.X)).toBeLessThan(0.05); // 0.11
     // the exponent by maximum likelihood over the blocks of 200 m² and more (Clauset et al. 2009, Eq. 3.1)
     const big = blocks.filter((a) => a >= 200), tau = 1 + big.length / big.reduce((m, a) => m + Math.log(a / 200), 0);
     expect(big.length).toBeGreaterThan(500);

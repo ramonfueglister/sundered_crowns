@@ -70,18 +70,21 @@ export const R_C = 0.5;
 
 /** a family's parcel lies at a street if one passes within this many parcel depths of its spot; else a street grows to it */
 const NEAR_DEEP = 1;
-/** a new street ends on another that lies ahead of it or to either side within this many parcel depths. Calibrated
- *  against the share of dead ends (0.18, Barthelemy & Boeing 2025); more than 5 changes nothing */
+/** a new street, and at the end every dead end, runs on to another that lies ahead of it or to either side within this
+ *  many parcel depths. Calibrated against medieval Paris (the Vasserot cadastre inside the wall of Philippe Auguste,
+ *  tools/settlement/cadastre_paris.py: dead ends 0.10, T-junctions 0.78, crossings 0.12): the towns of 20 streets and
+ *  more get 0.13, 0.77, 0.11; more than 5 changes nothing */
 const JOIN_DEEP = 5;
 /** a lane leaves from a T-junction facing its spot rather than from the nearest point if that costs at most this many
- *  parcel widths more. Calibrated against the share of crossings (0.19, Barthelemy & Boeing 2025): 3 makes 0.27 */
+ *  parcel widths more. Calibrated against the share of crossings of medieval Paris (0.12): 1 makes 0.07, 2.5 makes
+ *  0.15 (and 0.73 T-junctions) */
 const CROSS = 2;
 
 const EMPTY = 0, BLOCKED = 1, ROAD = 2, PARCEL = 3, MARKET = 4, UNKNOWN = 5;
 
 /** the calibrated values (R_C, JOIN_DEEP, CROSS); the calibration tries others (tools/settlement/streets_probe.ts) */
 export const DEFAULT_TUNING: Tuning = { rc: R_C, join: JOIN_DEEP, cross: CROSS };
-export interface Tuning { rc: number; join: number; cross: number; /** count the junctions and the blocks (the calibration and the tests; the register does not need them) */ measure?: boolean }
+export interface Tuning { rc: number; join: number; cross: number; /** false: the dead ends left after the parcels stay (the calibration) */ ends?: boolean; /** count the junctions and the blocks (the calibration and the tests; the register does not need them) */ measure?: boolean }
 
 /** the ground a town is laid on: whether a street or a parcel can lie on the metre at (x, z) (metres east and south
  *  of the centre), whether a parcel's house can stand (`stands`, optional), and the metres beyond which nothing is free */
@@ -245,7 +248,30 @@ function layOnce(families: number, size: ParcelSize, ways: readonly Way[], seed:
   const ring = half + hw;
   for (let k = -ring; k <= ring; k++) { lay(k, -ring, STREET.lane); lay(k, ring, STREET.lane); lay(-ring, k, STREET.lane); lay(ring, k, STREET.lane); }
 
+  const isLine = (x: number, z: number) => inside(x, z) && line[at(x, z)] === 1;
   const STEP = [[1, 0], [0, 1], [-1, 0], [0, -1]];
+  /** every dead end runs on to the nearest street ahead of it or to either side within JOIN parcel depths, straight
+   *  over ground without parcels, as a lane does when it is grown (4b below): a loop instead of a dead end (Emilien
+   *  et al. 2012, Sec. 4.3) */
+  const joinEnds = () => {
+    for (const i of all.slice()) {
+      const x = (i % N) - R, z = Math.floor(i / N) - R, nb = STEP.filter(([dx, dz]) => isLine(x + dx, z + dz));
+      if (nb.length !== 1) continue;
+      const last = STEP.findIndex(([dx, dz]) => dx === -nb[0][0] && dz === -nb[0][1]);
+      let best: [number, number][] | null = null;
+      for (const q of [last, (last + 1) % 4, (last + 3) % 4]) {
+        const [dx, dz] = STEP[q], path: [number, number][] = [];
+        let px = x, pz = z;
+        for (let n = 0; n < JOIN * d + 2 * hw + 2 && (!best || path.length < best.length); n++) {
+          px += dx; pz += dz;
+          if (n > hw && isLine(px, pz)) { best = path.slice(); break; }
+          if (!passable(px, pz)) break;
+          path.push([px, pz]);
+        }
+      }
+      if (best) for (const [qx, qz] of best) lay(qx, qz, STREET.lane);
+    }
+  };
   // 2. a town with a real plan: its main streets, where their ground lets a street pass (water, rock, the edge of the
   // town's ground: the piece goes on beyond it, as a bridge or a street round it is not laid). They are the old roads
   // through the town (Conzen 1960: the plan of the streets outlives the houses), so they are laid as roads.
@@ -255,26 +281,8 @@ function layOnce(families: number, size: ParcelSize, ways: readonly Way[], seed:
       for (let k = 0; k <= n; k++) { const x = x0 + k * sx, z = z0 + k * sz; if (passable(x, z)) lay(x, z, STREET.road); }
     }
     // a main street that ends short of another (its real course went on in a street the plan does not keep, or over
-    // water) runs on to the nearest street ahead of it or to either side within JOIN parcel depths, as a lane does
-    // (4b below): the plan keeps the busiest streets whole, and their ends met the rest of the town
-    const on = (x: number, z: number) => inside(x, z) && line[at(x, z)] === 1;
-    for (const i of all.slice()) {
-      const x = (i % N) - R, z = Math.floor(i / N) - R, nb = STEP.filter(([dx, dz]) => on(x + dx, z + dz));
-      if (nb.length !== 1) continue;
-      const last = STEP.findIndex(([dx, dz]) => dx === -nb[0][0] && dz === -nb[0][1]);
-      let best: [number, number][] | null = null;
-      for (const q of [last, (last + 1) % 4, (last + 3) % 4]) {
-        const [dx, dz] = STEP[q], path: [number, number][] = [];
-        let px = x, pz = z;
-        for (let n = 0; n < JOIN * d + 2 * hw + 2 && (!best || path.length < best.length); n++) {
-          px += dx; pz += dz;
-          if (n > hw && on(px, pz)) { best = path.slice(); break; }
-          if (!passable(px, pz)) break;
-          path.push([px, pz]);
-        }
-      }
-      if (best) for (const [qx, qz] of best) lay(qx, qz, STREET.lane);
-    }
+    // water) runs on to the nearest street, as a dead end does at the end (joinEnds)
+    joinEnds();
   }
   // otherwise a street out along each way, by the nearest of the four directions; a town with one way or none is one street through it
   else {
@@ -309,7 +317,6 @@ function layOnce(families: number, size: ParcelSize, ways: readonly Way[], seed:
   spots.sort((p, q) => Math.hypot(p[0], p[1]) - Math.hypot(q[0], q[1]) || p[1] - q[1] || p[0] - q[0]);
 
   // a parcel at the street through (x, z), on the side `side` of it; null where it cannot lie
-  const isLine = (x: number, z: number) => inside(x, z) && line[at(x, z)] === 1;
   const slot = (x: number, z: number, side: number): (Parcel & { cx: number; cz: number }) | null => {
     // side: the parcel lies 0 north, 1 east, 2 south, 3 west of the street; it fronts the street on the opposite side
     const across = side === 0 || side === 2, sign = side === 0 || side === 3 ? -1 : 1;
@@ -545,6 +552,8 @@ function layOnce(families: number, size: ParcelSize, ways: readonly Way[], seed:
     if (!p) break; // no ground left within the reach
     take(p); parcels.push(p);
   }
+  // 5. the dead ends that are left run on to the nearest street where no parcel stands in the way
+  if (tune.ends !== false) joinEnds();
 
   // the streets as straight pieces, and what the network looks like
   const streets: Street[] = [];
