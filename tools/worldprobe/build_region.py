@@ -33,7 +33,7 @@ from scipy import ndimage
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'geo'))
 from erosion import erode_lands
-from common import CACHE, H, LAT_N, LAT_S, LON0, LON1, ROOT, W, YMAX, YMIN, lonlat_to_px, load_json, lines_from_geojson_geom, polys_from_geojson_geom, px_to_lonlat_np
+from common import CACHE, H, LAT_N, LAT_S, LON0, LON1, ROOT, W, YMAX, YMIN, lines_from_geojson_geom, load_json, lonlat_to_px, polys_from_geojson_geom
 
 Image.MAX_IMAGE_PIXELS = None
 CELLS = 4
@@ -211,7 +211,7 @@ def read_rivers(area, water, drawn, km):
             c = down[c]
         else: path.append(c)
         # cut out the straight stretches
-        runs, start = [], 0
+        runs, start, last = [], 0, None
         for i in range(1, len(path)):
             step = (path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1])
             if i == 1 or step != last: turn = i - 1

@@ -1,4 +1,4 @@
-# Every pull request and every push to main: the types, the lint (biome.json) and the tests (README.md, "Tests").
+# Every pull request and every push to main: the types, the lint (biome.json, ruff.toml) and the tests (README.md, "Tests").
 # The tests build the economy engine and the portrait builder from Rust first (tests/setup/), so the job installs the
 # compiler that economy/rust-toolchain.toml and portrait/rust-toolchain.toml fix, with the WebAssembly target.
 name: CI
@@ -36,6 +36,7 @@ jobs:
           cache: npm
       - run: npm ci --no-audit --no-fund
       - run: npm run lint
+      - run: pipx run ruff==0.17.4 check
 
   test:
     runs-on: ubuntu-latest
