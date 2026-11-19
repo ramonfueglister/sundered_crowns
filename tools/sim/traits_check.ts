@@ -15,7 +15,7 @@ const YEARS = Number(process.argv[2] ?? 100);
 const w = loadWorld(), s = createWorldState(w, loadSetup(1291), 1291), P = s.person.cols, F = s.family.cols;
 const TR = ['iq', 'o', 'c', 'e', 'a', 'n'] as const; type Tr = (typeof TR)[number];
 const z = (t: Tr, i: number) => (t === 'iq' ? (P.iq[i] - 100) / 15 : (P[t][i] - 50) / 10);
-const living = (i: number) => s.person.alive[i] && P.died[i] === ALIVE && P.dies[i] !== ALIVE;
+const living = (i: number): boolean => s.person.alive[i] !== 0 && P.died[i] === ALIVE && P.dies[i] !== ALIVE;
 function traits(pick: (i: number) => boolean) { const m = TR.map(() => 0), q = TR.map(() => 0); let n = 0; for (let i = 0; i < s.person.size; i++) if (pick(i)) { n++; TR.forEach((t, k) => { const v = z(t, i); m[k] += v; q[k] += v * v; }); }
   return `n ${n}: ` + TR.map((t, k) => `${t} ${(m[k] / n).toFixed(3)} (sd ${Math.sqrt(q[k] / n - (m[k] / n) ** 2).toFixed(2)})`).join(', '); }
 console.log('living at the start,', traits(living));
