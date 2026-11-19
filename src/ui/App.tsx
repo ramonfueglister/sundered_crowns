@@ -3,14 +3,14 @@
 // once as an observer and offers no sign-in. The server still knows players (src/online, server/auth.ts) for later.
 import { useEffect, useState } from 'preact/hooks';
 import { computed } from '@preact/signals';
-import { status, refusal, me, world, realms, placeInfo, connect, disconnect, claim, abdicate, askPlace } from '../net/client';
+import { status, refusal, me, world, realms, placeInfo, connect, disconnect, claim, abdicate, askPlace, setTime } from '../net/client';
 import { MapView, selectedPlace, mapCtl } from './MapView';
 import { WorldView } from './WorldView';
-import { IconDefs, IconPlaces, IconCalendar, IconGear, IconPolitical, IconTerrain, IconClose, IconReplay } from './icons';
-import { replay, startReplay, stopReplay } from './replay';
+import { IconDefs, IconPlaces, IconCalendar, IconGear, IconPolitical, IconTerrain, IconClose, IconReplay, IconPause, IconPlay } from './icons';
+import { replay, replayClock, replayLoading, replayError, REPLAY_SPEEDS, startReplay, stopReplay, toggleReplay, seekReplay, replaySpeed } from './replay';
 import { type TextKey, t, L, lang, setLang, terrainName, resourceName, num, heads, pct, kcalText, pounds, index } from './i18n';
 import { fmtDate } from '../sim/calendar';
-import type { RealmInfo } from '../net/protocol';
+import { SPEEDS, type RealmInfo } from '../net/protocol';
 import { MAP_MODES, mapMode, mapModeKey, setMapMode } from './mapmode';
 import { startMusic, musicKey, musicMuted, musicVolume, nowPlaying, musicWaiting, setMuted, setVolume, skip } from '../audio/music';
 
@@ -31,6 +31,7 @@ export function App() {
       <Music />
       <TopBar />
       <RealmBanner />
+      <ReplayBar />
       {st !== 'open' && <div class="notice">{st === 'connecting' ? t('connecting') : t('disconnected')}</div>}
       {selectedPlace.value >= 0 && <PlacePanel />}
     </>}
@@ -127,19 +128,79 @@ function Refused() {
   </div>;
 }
 
+/** Seconds as the time control says them: "4 min", "2 s", "0,25 s". */
+const secondsText = (ms: number) => ms >= 60_000 ? `${Math.round(ms / 60_000)} min` : `${(ms / 1000).toLocaleString(lang.value === 'de' ? 'de-CH' : 'en-GB', { maximumFractionDigits: 2 })} s`;
+/** What a speed of the world's clock means, for its tooltip. */
+function speedText(speed: number, secondsPerDay: number) {
+  const v = SPEEDS[speed - 1];
+  return v === 'own' ? t('time_speed_own', { s: secondsText(secondsPerDay * 1000) }) : v === 0 ? t('time_speed_max') : t('time_speed_ms', { s: secondsText(v) });
+}
+
+/** The world's clock top left (Ramon, 19 November 2026: "zeit beschleunigung links oben", for debugging too): the date,
+ *  pause and five speeds, as the grand strategy games have it. Space pauses, + and − change the speed. Who may not
+ *  change the time (`me.time`, see server/world.ts) sees the clock as it runs. */
+function TimeControl() {
+  const wi = world.value, may = !!me.value?.time, speed = wi?.speed ?? 1, paused = !!wi?.paused;
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey || (e.target as HTMLElement)?.closest?.('input, textarea, select')) return;
+      if (replayClock.value && (e.code === 'Space' || e.key === 'Escape')) { e.preventDefault(); if (e.key === 'Escape') stopReplay(); else toggleReplay(); return; }
+      const w = world.value;
+      if (!me.value?.time || !w) return;
+      const now = w.speed ?? 1;
+      if (e.code === 'Space') { e.preventDefault(); setTime({ paused: !w.paused }); }
+      else if (e.key === '+' || e.code === 'NumpadAdd') { e.preventDefault(); setTime({ speed: Math.min(SPEEDS.length, now + 1) }); }
+      else if (e.key === '-' || e.code === 'NumpadSubtract') { e.preventDefault(); setTime({ speed: Math.max(1, now - 1) }); }
+    };
+    addEventListener('keydown', key);
+    return () => removeEventListener('keydown', key);
+  }, []);
+  const lock = may ? '' : `\n${t('time_locked')}`;
+  return <div class={`timectl${paused ? ' paused' : ''}`} role="group" aria-label={t('time_control')}>
+    <span class="timectl-date" title={wi ? speedText(speed, wi.secondsPerDay) : ''}><IconCalendar size={22} /><span>{wi ? fmtDate(wi.day, wi.startYear, lang.value) : '…'}</span>{paused && <small>{t('paused')}</small>}</span>
+    <button class="tool timectl-pause" disabled={!may || !wi} aria-pressed={paused} aria-label={t(paused ? 'time_run' : 'time_pause')}
+      title={`${t(paused ? 'time_run' : 'time_pause')} (${t('key')} ␣)${lock}`} onClick={() => setTime({ paused: !paused })}>{paused ? <IconPlay /> : <IconPause />}</button>
+    <button class="timectl-step" disabled={!may || speed <= 1} aria-label={t('time_slower')} title={`${t('time_slower')} (−)${lock}`} onClick={() => setTime({ speed: speed - 1 })}>−</button>
+    <div class="timectl-pips">
+      {SPEEDS.map((_, k) => <button key={k} class={`pip${k < speed ? ' on' : ''}`} disabled={!may || !wi} aria-pressed={k + 1 === speed} aria-label={t('time_speed', { n: k + 1 })}
+        title={`${t('time_speed', { n: k + 1 })}: ${wi ? speedText(k + 1, wi.secondsPerDay) : ''}\n${t('time_keys')}${lock}`} onClick={() => setTime({ speed: k + 1, paused: false })} />)}
+    </div>
+    <button class="timectl-step" disabled={!may || speed >= SPEEDS.length} aria-label={t('time_faster')} title={`${t('time_faster')} (+)${lock}`} onClick={() => setTime({ speed: speed + 1 })}>+</button>
+  </div>;
+}
+
+/** The replay's bar at the bottom while it plays (replay.ts): play and pause, the timeline, the date, the speed and back to the world. */
+function ReplayBar() {
+  const c = replayClock.value, err = replayError.value;
+  if (replayLoading.value) return <div class="replay-bar pnl"><span class="muted">{t('replay_loading')}</span></div>;
+  if (err && !c) return <div class="replay-bar pnl"><span class="neg">{t('replay_failed', { why: err })}</span><button class="close" title={t('close')} aria-label={t('close')} onClick={() => stopReplay()}><IconClose /></button></div>;
+  if (!c) return null;
+  const date = fmtDate(Math.floor(c.day), c.startYear, lang.value), first = fmtDate(c.from, c.startYear, lang.value), last = fmtDate(c.to, c.startYear, lang.value);
+  return <div class="replay-bar pnl" role="group" aria-label={t('replay')}>
+    <button class="tool" aria-label={t(c.playing ? 'replay_pause' : 'replay_play')} title={`${t(c.playing ? 'replay_pause' : 'replay_play')} (${t('key')} ␣)`} onClick={() => toggleReplay()}>{c.playing ? <IconPause /> : <IconPlay />}</button>
+    <span class="replay-date">{date}</span>
+    <input class="replay-line" type="range" min={c.from} max={c.to} step={1} value={Math.floor(c.day)} aria-label={t('replay_timeline')} title={`${first} – ${last}`}
+      onInput={(e) => seekReplay(Number((e.target as HTMLInputElement).value))} />
+    <div class="replay-speed" role="radiogroup" aria-label={t('replay_speed')}>
+      {REPLAY_SPEEDS.map((f, k) => <button key={k} role="radio" aria-checked={c.speed === k + 1} class={`btn small${c.speed === k + 1 ? ' gold' : ''}`} onClick={() => replaySpeed(k + 1)}>{`${f < 1 ? `1/${1 / f}` : f}×`}</button>)}
+    </div>
+    <button class="close" title={`${t('replay_stop')} (Esc)`} aria-label={t('replay_stop')} onClick={() => stopReplay()}><IconClose /></button>
+  </div>;
+}
+
 function TopBar() {
-  const wi = world.value, mine = myRealm.value;
+  const mine = myRealm.value, open = status.value === 'open';
   const [menu, setMenu] = useState(false);
-  // no texts in the bar but the date (Ramon, 16 November 2026): the map modes, the date and the settings
+  // no texts in the bar but the date (Ramon, 16 November 2026): the clock top left, the map modes and the settings
   return <header class="hud-top">
     <div class={`hud-values${mine ? ' ruled' : ''}`}>
+      <TimeControl />
       <MapModes />
-      <button class={`tool mode${replay.value ? ' on' : ''}`} aria-pressed={!!replay.value} aria-label={t(replay.value ? 'replay_stop' : 'replay')}
-        title={replay.value ? t('replay_stop') : `${t('replay')}\n${t('replay_hint')}`}
-        onClick={() => { if (replay.value) stopReplay(); else startReplay(world.value?.startYear ?? 1291).catch((e) => { console.error(e); stopReplay(); }); }}><IconReplay /></button>
+      <button class={`tool mode${replay.value ? ' on' : ''}`} aria-pressed={!!replayClock.value} aria-label={t(replayClock.value ? 'replay_stop' : 'replay')} disabled={!open && !replayClock.value}
+        title={replayClock.value ? t('replay_stop') : `${t('replay')}\n${t('replay_hint')}${open ? '' : `\n${t('replay_offline')}`}`}
+        onClick={() => { if (replayClock.value || replayError.value) stopReplay(); else void startReplay(); }}><IconReplay /></button>
       {mine && <span class="val" title={`${L(mine.name)}: ${num(mine.places)} ${t('places')}`}><IconPlaces /><b>{num(mine.places)}</b></span>}
     </div>
-    <div class="hud-date"><IconCalendar /><span>{replay.value ? String(replay.value.year) : wi ? fmtDate(wi.day, wi.startYear, lang.value) : ''}</span>{replay.value ? <small>{t('replay')}</small> : wi?.paused && <small>{t('paused')}</small>}</div>
     <button class="tb" title={t('settings')} aria-label={t('settings')} aria-expanded={menu} onClick={() => setMenu(!menu)}><IconGear /></button>
     {menu && <div class="hud-menu" onClick={() => setMenu(false)}>
       <MusicSettings />

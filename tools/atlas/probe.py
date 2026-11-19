@@ -13,6 +13,8 @@ light falls on the land's own shape there), paper grain and dark corners are lef
 metres, size, r, g, b) are written too.
 """
 import gzip, json, math, os, sys
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'worldprobe'))
+import tiles as tiles_file
 import numpy as np
 from PIL import Image, ImageDraw
 from scipy import ndimage as ndi
@@ -52,9 +54,9 @@ have = set(index['tiles'])
 def tile(tx, ty):
     name = f'{tx}_{ty}'
     d = f'{PUB}/map/regions/world/' + (f'z{z}/' if z else '')
-    p = d + name + '.bin.gz'
-    if not os.path.exists(p): return None, []
-    raw = gzip.open(p).read(); t = T * T
+    raw = tiles_file.read(d, name, T)
+    if raw is None: return None, []
+    t = T * T
     lay = lambda k: np.frombuffer(raw, np.uint8, t, t * (2 + k)).reshape(T, T)
     rivers = json.load(open(d + name + '.json')) if os.path.exists(d + name + '.json') else []
     return (np.frombuffer(raw, '<i2', t).reshape(T, T), lay(0), lay(1), lay(2), lay(3)), rivers

@@ -7,7 +7,7 @@
 // triangles in those lists, not as faces (faces.ts); ?free=0: the rectangles on no grid of what stands on them do.
 // ?pilots=0: the shaders of a kind of mesh are made when its first mesh is drawn, not at the start (see there).
 import * as THREE from 'three/webgpu';
-import { Fn, agxToneMapping, attribute, clamp, convertToTexture, dot, float, fract, getViewPosition, materialColor, max, mix, mrt, neutralToneMapping, normalView, output, pass, positionGeometry, reflector, rtt, saturation, screenCoordinate, screenSize, screenUV, select, smoothstep, step, texture, uniform, userData, uv, vec2, vec3, vec4, vertexColor } from 'three/tsl';
+import { Fn, If, agxToneMapping, attribute, clamp, convertToTexture, dot, float, fract, getViewPosition, materialColor, max, mix, mrt, neutralToneMapping, normalView, output, pass, positionGeometry, reflector, rtt, saturation, screenCoordinate, screenSize, screenUV, select, smoothstep, step, texture, uniform, userData, uv, vec2, vec3, vec4, vertexColor } from 'three/tsl';
 import { MapControls } from 'three/addons/controls/MapControls.js';
 import { dof } from 'three/addons/tsl/display/DepthOfFieldNode.js';
 import { denoise } from 'three/addons/tsl/display/DenoiseNode.js';
@@ -66,6 +66,77 @@ const FIGURES_GONE = 0.3;
  * of the mirror's own camera, which leaves the mirror black)
  */
 const FIGURES_LAYER = 1;
+
+/**
+ * The sun's shadow map, drawn in two parts. What stands still (land, houses, ships, all but the figures) is drawn
+ * into a depth picture of its own, kept from picture to picture; each picture copies it into the shadow map and
+ * draws the walking figures over it. The part that stands still is drawn anew only in a picture that something
+ * other than the figures asks for (`full`: the view, a piece that comes, goes, glides or dissolves …) and wherever
+ * the sun's camera has moved. So while the figures walk and nothing else changes, a picture draws the shadows of
+ * the figures alone, where it drew everything that casts a shadow again (near a town two million triangles and more),
+ * and the copy is one pass over the map. The map is drawn once a picture, also where the water's mirror draws the
+ * stage a second time: it was drawn twice there (the mirror's camera does not see the figures; the parts are drawn
+ * by their layers, whichever camera comes first). Both depth pictures have no colour beside them, which three gives
+ * its shadow map and which is never read with PCF: so the kept one takes no more memory than that colour took.
+ */
+class KeptShadow extends THREE.ShadowNode {
+  /** whether the part that stands still is to be drawn anew in the next picture */
+  full = true;
+  private kept: THREE.RenderTarget | null = null;
+  private copy: THREE.QuadMesh | null = null;
+  private readonly seen = new THREE.Matrix4();
+  constructor(light: THREE.DirectionalLight) {
+    super(light, light.shadow);
+    light.shadow.autoUpdate = false;
+    (light.shadow as unknown as { shadowNode: THREE.ShadowNode }).shadowNode = this;
+  }
+  /** the shadow map of three's own, without its colour */
+  setupRenderTarget(shadow: THREE.LightShadow, builder: { renderer: THREE.WebGPURenderer }) {
+    const depthTexture = new THREE.DepthTexture(shadow.mapSize.width, shadow.mapSize.height);
+    depthTexture.name = 'ShadowDepthTexture';
+    depthTexture.compareFunction = builder.renderer.reversedDepthBuffer ? THREE.GreaterEqualCompare : THREE.LessEqualCompare;
+    const shadowMap = new THREE.RenderTarget(shadow.mapSize.width, shadow.mapSize.height, { count: 0, depthTexture });
+    return { shadowMap, depthTexture };
+  }
+  renderShadow(frame: { renderer: THREE.WebGPURenderer; scene: THREE.Scene }) {
+    const { shadow, light, shadowMap } = this as unknown as { shadow: THREE.LightShadow; light: THREE.DirectionalLight; shadowMap: THREE.RenderTarget };
+    const { renderer, scene } = frame, eye = shadow.camera, w = shadow.mapSize.width, h = shadow.mapSize.height;
+    shadow.updateMatrices(light);
+    shadowMap.setSize(w, h);
+    if (!this.kept) {
+      const depth = new THREE.DepthTexture(w, h);
+      depth.minFilter = depth.magFilter = THREE.NearestFilter;
+      this.kept = new THREE.RenderTarget(w, h, { count: 0, depthTexture: depth });
+      const copied = new THREE.NodeMaterial();
+      copied.name = 'KeptShadow';
+      copied.depthNode = texture(depth).r;
+      copied.depthFunc = THREE.AlwaysDepth; copied.depthTest = true; copied.depthWrite = true; copied.colorWrite = false;
+      this.copy = new THREE.QuadMesh(copied);
+      this.full = true;
+    }
+    this.kept.setSize(w, h);
+    const layers = eye.layers.mask;
+    // (renderShadow is called with the shadow map as the target, its clearing, three's shadow material and its way of
+    // drawing only what casts a shadow; updateShadow sets the layers of the sun's camera back afterwards)
+    if (this.full || !this.seen.equals(shadow.matrix)) {
+      this.seen.copy(shadow.matrix);
+      eye.layers.set(0);
+      renderer.setRenderTarget(this.kept);
+      renderer.render(scene, eye);
+      renderer.setRenderTarget(shadowMap);
+      this.full = false;
+    }
+    const drawing = renderer.getRenderObjectFunction();
+    renderer.setRenderObjectFunction(null);
+    this.copy!.render(renderer);
+    renderer.setRenderObjectFunction(drawing);
+    eye.layers.set(FIGURES_LAYER);
+    renderer.autoClear = false;
+    renderer.render(scene, eye);
+    renderer.autoClear = true;
+    eye.layers.mask = layers;
+  }
+}
 
 /**
  * A mesh as flat lists: three numbers per corner for position, direction and colour. A `Batch` is one. Or, where
@@ -272,8 +343,13 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     // From afar what stands by the water is smaller than the mirror's blur, and the mirror shows the sky alone, which
     // is the picture's background: there it is not drawn (a whole second picture of the scene, every picture), and
     // the water takes the background's colour in its place (see Stage.mirror).
-    const sky = new THREE.Color(...OPEN_WATER);
-    water.emissiveNode = mix(vec3(sky.r, sky.g, sky.b), hashBlur(mirror, float(LOOK.mirrorBlur), { repeats: float(24) }).rgb, mirrorShare).mul(tint);
+    // (the 24 looks into the mirror's picture that blur it are taken only where it is drawn)
+    const sky = new THREE.Color(...OPEN_WATER), open = vec3(sky.r, sky.g, sky.b), blurred = hashBlur(mirror, float(LOOK.mirrorBlur), { repeats: float(24) }).rgb;
+    water.emissiveNode = Fn(() => {
+      const seen = open.toVar();
+      If(mirrorShare.greaterThan(0), () => { seen.assign(mix(open, blurred, mirrorShare)); });
+      return seen;
+    })().mul(tint);
     const reflecting = mirror.reflector as unknown as { updateBefore(frame: unknown): unknown }, draw = reflecting.updateBefore.bind(reflecting);
     reflecting.updateBefore = (frame) => (mirrorShare.value > 0 ? draw(frame) : undefined);
   }
@@ -401,6 +477,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   sun.castShadow = true;
   sun.shadow.mapSize.set(4096, 4096);
   sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.05;
+  const shade = new KeptShadow(sun);
   const side = new THREE.DirectionalLight(L.sideColor), sky = new THREE.HemisphereLight();
   // light thrown back by the sunlit ground and walls: it lifts the walls that face the viewer's left, as in the reference
   const fill = new THREE.DirectionalLight(L.fillColor);
@@ -536,15 +613,25 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
       open = sum.div(weight);
     }
     // a crease does not turn grey: it keeps a share of bluish light, as the shadows of the reference do
-    const deep = new THREE.Color(LOOK.creaseColor);
-    picture = colour.mul(mix(vec3(1, 1, 1), mix(vec3(deep.r, deep.g, deep.b), vec3(1, 1, 1), open), creased));
+    // (where the creases do not show, the dots of the smaller picture are not looked at either)
+    const deep = new THREE.Color(LOOK.creaseColor), creasedColour = colour.mul(mix(vec3(1, 1, 1), mix(vec3(deep.r, deep.g, deep.b), vec3(1, 1, 1), open), creased));
+    picture = Fn(() => {
+      const shown = vec4(colour).toVar();
+      If(creased.greaterThan(0), () => { shown.assign(creasedColour); });
+      return shown;
+    })() as unknown as typeof picture;
   }
   // things that share the picture's dots (see Stage.dissolve): at every dot the thing drawn there is taken as it is,
   // what it shares the dots with is the mean of the dots around that are drawn on the other set, and the two are
   // mixed by their shares. So both are whole pictures again, as in a resolve of screen-door transparency, and they
-  // blend without single dots showing. Where a thing has all the dots, the picture is as it was drawn.
+  // blend without single dots showing. Where a thing has all the dots, the picture is as it was drawn: so while
+  // nothing on the stage is drawn on a share of the dots (most pictures: a piece dissolves for a third of a second),
+  // the picture is not copied into a texture of its own and read nine times at every dot, but taken as it is.
+  /** whether something on the stage is drawn on a share of the picture's dots (see `partial`) */
+  const dissolving = uniform(0);
   {
     const whole = convertToTexture(picture);
+    { const resolving = whole as unknown as { updateBefore(frame: unknown): unknown }, draw = resolving.updateBefore.bind(resolving); resolving.updateBefore = (frame) => (dissolving.value > 0 ? draw(frame) : undefined); }
     /** of a dot: whether it is of the set from a mark up to 1, and the mark */
     const read = (at: Parameters<typeof facing.sample>[0]) => { const code = facing.sample(at).a, upper = step(0.5001, code).mul(step(code, 0.999)); return { upper, mark: mix(code.mul(2).min(1), code.sub(0.5).mul(2), upper) }; };
     const own = read(screenUV), here = whole.sample(screenUV).rgb, mine = mix(own.mark, own.mark.oneMinus(), own.upper);
@@ -556,8 +643,12 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
       const counts = it.upper.sub(own.upper).abs().mul(max(it.upper, step(it.mark, 0.9999)));
       others = others.add(whole.sample(at).rgb.mul(counts)); found = found.add(counts);
     }
-    const other = mix(here, others.div(max(found, 1)), step(0.5, found));
-    picture = mix(other, here, mine) as unknown as typeof picture;
+    const other = mix(here, others.div(max(found, 1)), step(0.5, found)), drawn = picture;
+    picture = Fn(() => {
+      const shown = vec3(drawn.rgb).toVar();
+      If(dissolving.greaterThan(0.5), () => { shown.assign(mix(other, here, mine)); });
+      return shown;
+    })() as unknown as typeof picture;
   }
   // The picture's light as film takes it: a curve that keeps the shadows and the middle tones and rolls the bright
   // ones off softly instead of cutting them, with the colours of what is bright a little paler, as light is seen
@@ -678,10 +769,12 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     }
     seaPilots = sea;
   }
+  /** the meshes on the stage that are drawn on a share of the picture's dots, neither all nor none (see `dissolving`) */
+  const partial = new Set<THREE.Object3D>();
   // The renderer keeps a record of every mesh it has drawn, and each record hangs on the material, which all pieces
   // share and which is never let go: only the mesh's own 'dispose' takes the record, and with it the mesh and its
   // numbers, out of the renderer. Letting go of the geometry alone leaves them held for good.
-  const gone = (made: THREE.Mesh) => { warm(made); made.dispatchEvent({ type: 'dispose' } as never); made.geometry.dispose(); };
+  const gone = (made: THREE.Mesh) => { warm(made); partial.delete(made); made.dispatchEvent({ type: 'dispose' } as never); made.geometry.dispose(); };
   // A mesh's lists go to the graphics card in the picture that first draws it, and that takes the page's thread a
   // millisecond or two for every megabyte and more for every list (measured on a Mac: the 49 meshes of one piece
   // of a town 77 ms; 27 meshes that came into the picture together, one picture of 247 ms). So the lists are sent
@@ -790,7 +883,10 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
       const kept = Math.max(0, Math.min(1, until) * (1 - from / FIGURES_GONE));
       for (const part of (thing as THREE.Mesh).isMesh ? [thing] : thing.children) {
         if (part.userData.figures) keepFigures(part, kept);
-        else (part.userData.dots as THREE.Vector2).set(from, until);
+        else {
+          (part.userData.dots as THREE.Vector2).set(from, until);
+          if (until > from && (from > 0 || until < 1)) partial.add(part); else partial.delete(part);
+        }
       }
       pending = Math.max(pending, 1);
     },
@@ -798,7 +894,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     glide(group, share) { for (const part of group.children) if (part.userData.glide !== undefined && part.userData.glide !== share) { part.userData.glide = share; pending = Math.max(pending, 1); } },
     pictures: () => pictures,
     put(thing) { marked(thing); scene.add(thing); pending = Math.max(pending, 1); },
-    take(thing) { scene.remove(thing); pending = Math.max(pending, 1); },
+    take(thing) { scene.remove(thing); thing.traverse((part) => partial.delete(part)); pending = Math.max(pending, 1); },
     paper,
     lay(strength, flat, seaTop, things = 1, calm = 0) {
       if (laid.strength.value === strength && laid.flat.value === flat && laid.seaTop.value === seaTop && laid.things.value === things && laid.calm.value === calm) return;
@@ -844,11 +940,15 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   renderer.setAnimationLoop(() => {
     // a picture of fixed size is taken by a tool, which waits for the finished scene: nothing is drawn before
     // walking figures keep the picture moving; a picture of fixed size is a still, so that a tool's picture comes
+    // (a picture that something other than the walking figures asks for draws the shadows of all that stands still anew: see KeptShadow)
+    const full = pending > 0 || cold.size > 0;
     if (!fixedW && (anyFigures() || cold.size)) pending = Math.max(pending, 1);
     if (pending <= 0 || (fixedW && stage.busy)) return;
+    shade.full ||= full; sun.shadow.needsUpdate = true;
     if (cold.size) send(); else sentAt = 0;
     if (laid.strength.value > 0) { aimPaper(); renderer.setRenderTarget(paperPicture); renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.render(paper, paperEye); renderer.setRenderTarget(null); }
     const began = timed ? performance.now() : 0, had = renderer.info.memory.attributesSize;
+    dissolving.value = partial.size ? 1 : 0;
     pipeline.render();
     if (sending.length) haveSent();
     drawn++; pictures++;

@@ -29,9 +29,22 @@ const UNDER = 1.5e9;
 const SPARE = 16, AT_ONCE = 4;
 
 /** A tile of the pyramid that has been painted; without a mesh it holds no realm. */
-interface Held { level: number; x: number; y: number; seen: number; mesh?: THREE.Mesh; picture?: THREE.Texture; /** painted for realms that have changed since: shown until its new picture comes */ old?: boolean }
-/** what the worker was asked for: a tile, the names, to draw other realms or pick another place out, or which place lies somewhere */
-type Asked = Want | 'names' | 'realms' | 'chosen' | ((place: number) => void);
+interface Held {
+  level: number; x: number; y: number; seen: number; mesh?: THREE.Mesh; picture?: THREE.Texture;
+  /** the realms it was painted for (see `set`) */
+  age: number;
+  /** painted for realms that have changed since where it lies: shown until its new picture comes */
+  old?: boolean;
+}
+/** what the worker was asked for: a tile, the names, to draw other realms or pick another place out (with the age
+ *  they begin), or which place lies somewhere */
+type Asked = Want | 'names' | { realms: number } | ((place: number) => void);
+/** where the map changed with the realms of `age`, as rectangles of map pixels (realms.worker.ts `RealmsDone.dirty`) */
+interface Dirt { age: number; rects: number[] }
+/** the realms' names are found anew at most this often (ms) */
+const NAMES_EVERY = 700;
+/** changes kept to test tiles that come late against; a tile older than the oldest is painted anew */
+const DIRT_KEPT = 64;
 interface Want { key: string; level: number; x: number; y: number; rank: number; /** the realms it was asked for (see `set`) */ age: number }
 
 export interface RealmsMap {
@@ -64,8 +77,31 @@ export interface RealmsMap {
  */
 export function createRealms(stage: Stage, o: { region: string; base: string; year?: number; map: readonly [number, number]; cells: number; round: number; rows?: number; ahead: boolean; changed(): void }): RealmsMap {
   const held = new Map<string, Held>(), asked = new Map<number, Asked>(), busy = new Set<string>();
-  const realms: RealmsMap = { look, names: [], lap: 0, failed: '', mode: 'far', named: 0, set, choose, placeAt, dispose: () => { worker.terminate(); paint.dispose(); } };
-  let nextId = 1, looks = 0, named = false, age = 0, chosen = -1;
+  const realms: RealmsMap = { look, names: [], lap: 0, failed: '', mode: 'far', named: 0, set, choose, placeAt, dispose: () => { if (namesLater) clearTimeout(namesLater); worker.terminate(); paint.dispose(); } };
+  let nextId = 1, looks = 0, named = false, age = 0, chosen = -1, forgot = 0, naming = false, namesAt = -Infinity, namesLater: ReturnType<typeof setTimeout> | 0 = 0;
+  const dirt: Dirt[] = [];
+  /** whether the tile (level, x, y) touches a rectangle of map pixels of `rects`, with the margin its shading reaches */
+  const touches = (level: number, x: number, y: number, rects: number[]) => {
+    const side = (TILE * 2 ** level) / o.cells, pad = Math.max(8, (6 * 2 ** level) / o.cells), round = Number.isFinite(o.round) ? o.round / o.cells : 0;
+    // round the globe the tiles go on with the laps: the tile on the game map's own lap
+    let x0 = x * side;
+    if (round) x0 = ((x0 % round) + round) % round;
+    const x1 = x0 + side, y0 = y * side, y1 = y0 + side;
+    for (let k = 0; k < rects.length; k += 4) {
+      if (rects[k + 1] - pad >= y1 || rects[k + 3] + pad <= y0) continue;
+      for (const lap of round ? [0, round, -round] : [0]) if (rects[k] + lap - pad < x1 && rects[k + 2] + lap + pad > x0) return true;
+    }
+    return false;
+  };
+  /** whether a tile painted for the realms of `painted` shows realms that have changed since where it lies */
+  const outdated = (level: number, x: number, y: number, painted: number) => painted < forgot || dirt.some((d) => d.age > painted && touches(level, x, y, d.rects));
+  /** the map changed there with the realms of `since`: the tiles there that show older realms are painted anew */
+  const soil = (since: number, rects: number[] | undefined) => {
+    if (!rects?.length) return;
+    dirt.push({ age: since, rects });
+    while (dirt.length > DIRT_KEPT) forgot = dirt.shift()!.age;
+    for (const h of held.values()) if (h.age < since && !h.old && touches(h.level, h.x, h.y, rects)) h.old = true;
+  };
 
   // One material for every tile: a tile's picture is its mesh's (`userData.picture`), so that all tiles are drawn
   // by one shader. With a material of its own per tile three built a shader for every tile that came, on the
@@ -95,14 +131,18 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ye
     asked.delete(e.data.id);
     if (typeof what === 'function') return what(e.data.place ?? -1);
     if (e.data.error) realms.failed ||= e.data.error;
-    else if (what === 'names') realms.names = e.data.names ?? [];
-    else if (what === 'realms' || what === 'chosen') {
-      // the worker works through what it is asked in turn: every tile that comes from now on shows the new realms,
-      // and takes the place of the one that shows the old
-      for (const h of held.values()) h.old = true;
-      if (what === 'realms') named = false;
-    } else if (what.age === age) {
-      const h: Held = { level: what.level, x: what.x, y: what.y, seen: looks };
+    else if (what === 'names') { realms.names = e.data.names ?? []; namesAt = performance.now(); }
+    else if ('realms' in what) {
+      // the worker works through what it is asked in turn: tiles asked for from now on show the new realms; those
+      // painted before, where the map changed, are painted anew (and shown until then)
+      soil(what.realms, e.data.dirty);
+      if (e.data.renamed) named = false;
+    } else {
+      // a tile painted for older realms than the one it would replace comes too late; one painted for realms that
+      // have changed since where it lies is shown, and painted anew
+      const before = held.get(what.key);
+      if (before && before.age > what.age) { busy.delete(what.key); o.changed(); return; }
+      const h: Held = { level: what.level, x: what.x, y: what.y, seen: looks, age: what.age, old: outdated(what.level, what.x, what.y, what.age) };
       if (e.data.tile) {
         h.picture = new THREE.DataTexture(new Uint8Array(e.data.tile.buffer), TILE, TILE, THREE.RGBAFormat);
         h.picture.magFilter = THREE.LinearFilter; h.picture.minFilter = THREE.LinearMipmapLinearFilter; h.picture.generateMipmaps = true; h.picture.anisotropy = 4; h.picture.needsUpdate = true;
@@ -111,11 +151,11 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ye
         h.mesh.frustumCulled = false; h.mesh.visible = false;
         stage.paper.add(h.mesh); stage.redraw();
       }
-      const before = held.get(what.key);
       if (before) drop(before);
       held.set(what.key, h);
     }
-    if (typeof what === 'object') busy.delete(what.key);
+    if (typeof what === 'object' && 'key' in what) busy.delete(what.key);
+    if (what === 'names') naming = false;
     o.changed();
   };
   worker.onerror = (e) => { realms.failed ||= e.message; o.changed(); };
@@ -125,14 +165,14 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ye
   };
 
   function set(now: RealmsNow) {
-    // tiles asked for before this are of the old realms: they are let go when they come
+    // tiles asked for from now on are of these realms
     age++;
-    ask({ kind: 'realms', ...now }, 'realms');
+    ask({ kind: 'realms', ...now }, { realms: age });
   }
   function choose(place: number) {
     if (place === chosen) return;
     chosen = place; age++;
-    ask({ kind: 'choose', place }, 'chosen');
+    ask({ kind: 'choose', place }, { realms: age });
   }
   function placeAt(u: number, v: number): Promise<number> {
     const x = Number.isFinite(o.round) ? ((u % o.round) + o.round) % o.round : u;
@@ -174,7 +214,11 @@ export function createRealms(stage: Stage, o: { region: string; base: string; ye
       if (o.ahead && level < PAPER_COARSEST) for (const t of near(level + 1, 0)) want(level + 1, t, t.far);
       for (const t of near(level, o.ahead ? AHEAD * v.wide : 0)) want(level, t, (t.out > 0 ? 2e9 : 1e9) + t.far);
       if (o.ahead) for (let l = level + 2; l <= PAPER_COARSEST; l++) for (const t of near(l, 0)) want(l, t, UNDER - l);
-      if (!named) { named = true; ask({ kind: 'names' }, 'names'); }
+      // the names anew once the realms changed: one asking at a time and not more often than NAMES_EVERY, so that
+      // while the borders move quickly (the replay, a fast clock) the tiles are painted between
+      const wait = NAMES_EVERY - (performance.now() - namesAt);
+      if (!named && !naming && wait <= 0) { named = true; naming = true; ask({ kind: 'names' }, 'names'); }
+      else if (!named && !naming && !namesLater) namesLater = setTimeout(() => { namesLater = 0; o.changed(); }, wait);
     }
     // for measuring (`__probe.counts`): the most tiles of a picture that lay under no painted tile of any level, so
     // that the land showed there without the realms' colours
