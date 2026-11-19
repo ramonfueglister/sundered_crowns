@@ -9,7 +9,7 @@
 // The probe's own page (main.ts) and the game (ui/WorldView.tsx) both show the world through this.
 import * as THREE from 'three/webgpu';
 import { smooth } from '../lookprobe/batch';
-import { NEAR, RIGHT, SEA_Y } from '../lookprobe/layout';
+import { LAND_Y, NEAR, RIGHT, SEA_Y } from '../lookprobe/layout';
 import { bakedSky, createStage } from '../lookprobe/stage';
 import { createNames } from './names';
 // the face of the realms' names (names.ts), bundled: no requests to a font service
@@ -73,9 +73,22 @@ export interface WorldView {
   choose(place: number): void;
   /** Sets the map mode: `political` lays the realms' colours on the land at every distance, `terrain` shows the land alone (until it is set, they show only on the flat world far out). */
   mapMode(mode: MapMode): void;
+  /**
+   * Marks points of the world with dots (the map mode of the rulers): each at its degrees, with a colour, a title
+   * for the pointer and what a click on it does. Shown while the view is drawn coarser than its finest step: near,
+   * the figures themselves stand there. An empty list takes them away.
+   */
+  setMarks(marks: readonly WorldMark[]): void;
+  /** Asks for a new picture (something drawn changed that the view does not know of, such as the figures' colours). */
+  redraw(): void;
   /** Stops the view and lets go of all it holds. */
   dispose(): void;
 }
+
+/** A dot on the map (WorldView.setMarks). */
+export interface WorldMark { lon: number; lat: number; color: string; title: string; open?(): void }
+/** the dots of the marks, in pixels across, and how far apart dots of one place are pushed */
+const MARK_SIZE = 9, MARK_SPREAD = 7;
 
 /**
  * The name under which the pieces are kept on disk (store.ts), or none where they are not: a stamp of the code and
@@ -103,6 +116,23 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
   let [x, z] = blockOfCell(...projection.cellOf(o.lon, o.lat)), wide = Math.min(farthest, Math.max(NEAREST, o.wide));
   const pieces = createPieces(stage, { region: name, base, bakedSky: bakedSky(), ahead: !still, changed: () => look(), workers: +(new URLSearchParams(location.search).get('workers') ?? 0) || undefined, keep: keepAs(), small: new URLSearchParams(location.search).get('small') !== '0', faces: new URLSearchParams(location.search).get('faces') !== '0', free: new URLSearchParams(location.search).get('free') !== '0', tables: new URLSearchParams(location.search).get('tables') !== '0', glide: new URLSearchParams(location.search).get('glide') !== '0', margin: +(new URLSearchParams(location.search).get('margin') ?? 0) || undefined, year: o.year, mean: new URLSearchParams(location.search).get('mean') === 'compare' ? 'compare' : new URLSearchParams(location.search).get('mean') === '1' });
   const realms = createRealms(stage, { region: name, base, year: o.year, map: projection.map, cells: projection.cells, round: projection.round, rows: projection.rows, ahead: !still, changed: () => look() }), names = createNames(o.names);
+  // the dots of the marks (setMarks): buttons over the canvas, put where their point is drawn whenever the view moves
+  const markLayer = document.createElement('div');
+  markLayer.style.cssText = 'position:fixed;left:0;top:0;width:0;height:0;pointer-events:none;z-index:4';
+  (o.names ?? document.body).append(markLayer);
+  let marks: { m: WorldMark; dot: HTMLButtonElement; x: number; z: number; k: number }[] = [];
+  const placeMarks = () => {
+    const show = marks.length > 0 && laid.step > 0;
+    markLayer.style.display = show ? '' : 'none';
+    if (!show) return;
+    const tall = reliefOf(wide, laid.step), y = LAND_Y * tall + SEA_Y * (1 - tall);
+    for (const { dot, x, z, k } of marks) {
+      const at = stage.toScreen(x / laid.coarse - laid.homeX, y, z / laid.coarse - laid.homeZ);
+      if (!at) { dot.style.display = 'none'; continue; }
+      dot.style.display = '';
+      dot.style.transform = `translate(${(at[0] - MARK_SIZE / 2 + k * MARK_SPREAD).toFixed(1)}px, ${(at[1] - MARK_SIZE / 2).toFixed(1)}px)`;
+    }
+  };
   const middle = (): [number, number] => { const box = canvas.getBoundingClientRect(); return [box.left + box.width / 2, box.top + box.height / 2]; };
 
   /** how the stage is laid out for the view, as of the last look */
@@ -129,6 +159,7 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
     stage.busy = missing > 0 && !failed;
     if (stage.busy) stage.probe.ready = false;
     o.status?.(failed || (still && missing ? `Lade ${missing} ${missing === 1 ? 'Stück' : 'Stücke'} der Welt …` : ''));
+    placeMarks();
     moved();
   };
   const note = () => { if (o.moved) { const [lon, lat] = projection.placeOf(...cellOfBlock(x, z)); o.moved(lon, lat, wide); } };
@@ -277,9 +308,24 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
     setRealms(now) { realms.set(now); },
     choose(place) { realms.choose(place); },
     mapMode(mode) { if (realms.mode !== mode) { realms.mode = mode; look(); } },
+    redraw() { stage.redraw(); },
+    setMarks(now) {
+      const seen = new Map<string, number>();
+      marks = now.map((m) => {
+        const [x, z] = blockOfCell(...projection.cellOf(m.lon, m.lat)), at = `${Math.round(x)},${Math.round(z)}`, k = seen.get(at) ?? 0;
+        seen.set(at, k + 1);
+        const dot = document.createElement('button');
+        dot.type = 'button'; dot.className = 'world-mark'; dot.title = m.title; dot.setAttribute('aria-label', m.title);
+        dot.style.cssText = `position:absolute;left:0;top:0;width:${MARK_SIZE}px;height:${MARK_SIZE}px;padding:0;border-radius:50%;border:1.5px solid ${m.color};background:#111;box-shadow:0 0 0 1px rgba(255,255,255,.7);cursor:pointer;pointer-events:auto`;
+        if (m.open) dot.onclick = m.open;
+        return { m, dot, x, z, k };
+      });
+      markLayer.replaceChildren(...marks.map((d) => d.dot));
+      placeMarks();
+    },
     dispose() {
       gone = true;
-      hoverOff();
+      hoverOff(); markLayer.remove();
       window.removeEventListener('keydown', key); window.removeEventListener('resize', look); sized.disconnect();
       pieces.dispose(); realms.dispose(); names.remove(); stage.dispose();
     },

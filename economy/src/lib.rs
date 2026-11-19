@@ -624,7 +624,26 @@ pub mod abi {
     }
 
     fn floats(v: impl IntoIterator<Item = f64>) -> Rc<Vec<u8>> {
-        Rc::new(v.into_iter().flat_map(|x| x.to_le_bytes()).collect())
+        let v = v.into_iter();
+        let mut out = Vec::with_capacity(8 * v.size_hint().0);
+        for x in v {
+            out.extend_from_slice(&x.to_le_bytes());
+        }
+        Rc::new(out)
+    }
+
+    /// The lists of every city one after the other as [`floats`]: one list of bytes of the right length at once
+    /// (the persons and firms of 550 cities are 1.3 million numbers: byte by byte through a flattening iterator,
+    /// they were a tenth of the time of a day of the world).
+    fn float_lists(lists: impl IntoIterator<Item = Vec<f64>>) -> Rc<Vec<u8>> {
+        let lists: Vec<Vec<f64>> = lists.into_iter().collect();
+        let mut out = Vec::with_capacity(8 * lists.iter().map(Vec::len).sum::<usize>());
+        for l in &lists {
+            for x in l {
+                out.extend_from_slice(&x.to_le_bytes());
+            }
+        }
+        Rc::new(out)
     }
 
     /// SAFETY: `ptr` and `len` describe memory from [`sce_alloc`] that the caller has filled.
@@ -899,7 +918,7 @@ pub mod abi {
     #[unsafe(no_mangle)]
     pub extern "C" fn sce_agents_last() -> u32 {
         hook();
-        answer(look_last(|all| floats(all.cities.iter().flat_map(Economy::agents))))
+        answer(look_last(|all| float_lists(all.cities.iter().map(Economy::agents))))
     }
 
     /// Result: the key figures of every city of a state, [`super::FIGURES`] 64-bit floats a city.
@@ -925,7 +944,7 @@ pub mod abi {
     pub unsafe extern "C" fn sce_agents(state: *const u8, len: usize) -> u32 {
         hook();
         answer(look(unsafe { bytes(state, len) }, |all| {
-            floats(all.cities.iter().flat_map(Economy::agents))
+            float_lists(all.cities.iter().map(Economy::agents))
         }))
     }
 

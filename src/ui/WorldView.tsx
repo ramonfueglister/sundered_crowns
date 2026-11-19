@@ -5,10 +5,11 @@ import { effect } from '@preact/signals';
 import { owners, realms, status, world } from '../net/client';
 import { L, lang } from './i18n';
 import { hoverPlace, mapCtl, mapError, selectedPlace } from './mapstate';
-import { mapMode } from './mapmode';
+import { landOf, mapMode } from './mapmode';
 import { replay } from './replay';
 import { listenForWorldClicks } from '../people/panel';
 import { listenForWorldHover } from '../people/hover';
+import { showRulers } from '../people/rulers_mode';
 import type { WorldView as View } from '../worldprobe/view';
 
 /** where the game opens: as far out as the view goes, the world's frame from west to east as a map of its realms */
@@ -50,6 +51,8 @@ function startYear(): Promise<number | undefined> {
 }
 /** whether the panel of the person clicked and the card of the person under the pointer listen yet: once for the page */
 let listeningForPeople = false;
+/** the panel of the person clicked (once for the page), which the dots of the rulers open too */
+let peoplePanel: ReturnType<typeof listenForWorldClicks> | undefined;
 
 export function WorldView() {
   const canvas = useRef<HTMLCanvasElement>(null),
@@ -136,9 +139,26 @@ export function WorldView() {
         // the map mode chosen bottom right (political: the realms' colours lie on the land near and far)
         stops.push(
           effect(() => {
-            made.mapMode(mapMode.value);
+            made.mapMode(landOf(mapMode.value));
           }),
         );
+        // the map mode of the rulers: a dot for each far out, their figure in their realm's colour near
+        {
+          let hide: (() => void) | null = null;
+          const loc = geo.then((g) => g.loc);
+          stops.push(
+            effect(() => {
+              const on = mapMode.value === 'rulers';
+              if (on && !hide)
+                hide = showRulers(made, loc, (uid) => void peoplePanel?.show(uid), import.meta.env.VITE_WORLD_URL);
+              else if (!on && hide) {
+                hide();
+                hide = null;
+              }
+            }),
+          );
+          stops.push(() => hide?.());
+        }
         // the place selected is picked out on the far map
         stops.push(
           effect(() => {
@@ -149,7 +169,7 @@ export function WorldView() {
         if (!listeningForPeople) {
           listeningForPeople = true;
           const host = wrap.current!.closest<HTMLElement>('.app') ?? document.body;
-          listenForWorldClicks(host);
+          peoplePanel = listenForWorldClicks(host);
           listenForWorldHover(host);
         }
       } catch (e) {
