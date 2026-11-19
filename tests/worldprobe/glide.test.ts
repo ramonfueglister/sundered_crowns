@@ -75,10 +75,10 @@ function colourAt(top: { corners: number[][][] }, x: number, z: number): number[
 }
 /** the triangles of a list that lie on a column: their corners' heights now and where they end up */
 function sheetsOn(shape: { pos: ArrayLike<number>; sink?: Float32Array }, x: number, z: number, from = 0) {
-  const found: { now: number[]; then: number[] }[] = [];
+  const found: { now: number[]; later: number[] }[] = [];
   for (let t = from; t < shape.pos.length / 9; t++) {
     const o = t * 9, mx = (shape.pos[o] + shape.pos[o + 3] + shape.pos[o + 6]) / 3, mz = (shape.pos[o + 2] + shape.pos[o + 5] + shape.pos[o + 8]) / 3;
-    if (Math.floor(mx) === x && Math.floor(mz) === z) found.push({ now: [0, 1, 2].map((c) => shape.pos[o + c * 3 + 1]), then: [0, 1, 2].map((c) => (shape.sink ? shape.sink[t * 3 + c] : shape.pos[o + c * 3 + 1])) });
+    if (Math.floor(mx) === x && Math.floor(mz) === z) found.push({ now: [0, 1, 2].map((c) => shape.pos[o + c * 3 + 1]), later: [0, 1, 2].map((c) => (shape.sink ? shape.sink[t * 3 + c] : shape.pos[o + c * 3 + 1])) });
   }
   return found;
 }
@@ -229,18 +229,18 @@ describe('the glide of a far piece to the coarser one over it', () => {
       if (!c.wetNow && c.wetThen) {
         // land that sinks: two triangles of water over the column, out of sight under its top now, at the coarser step's level then
         expect(sheets.length, `${x}, ${z}`).toBe(2);
-        for (const s of sheets) for (let n = 0; n < 3; n++) { expect(s.now[n]).toBeLessThan(fine.h[c.i]); expect(s.then[n]).toBeCloseTo(c.level, 5); }
+        for (const s of sheets) for (let n = 0; n < 3; n++) { expect(s.now[n]).toBeLessThan(fine.h[c.i]); expect(s.later[n]).toBeCloseTo(c.level, 5); }
         if (high) lake++; else sea++;
       }
       else if (c.wetNow && c.wetThen && fine.surf[c.i] > SEA_Y + 0.01) {
         // water above the sea in both: at its own level now, at the coarser step's then
         expect(sheets.length).toBe(2);
-        for (const s of sheets) for (let n = 0; n < 3; n++) { expect(s.now[n]).toBeCloseTo(fine.surf[c.i], 5); expect(s.then[n]).toBeCloseTo(c.level, 5); }
+        for (const s of sheets) for (let n = 0; n < 3; n++) { expect(s.now[n]).toBeCloseTo(fine.surf[c.i], 5); expect(s.later[n]).toBeCloseTo(c.level, 5); }
         moved++;
       }
       else if (c.wetNow && !c.wetThen) {
         // water that ends as land: what there is of it ends under the land's top
-        for (const s of sheets) for (let n = 0; n < 3; n++) expect(s.then[n]).toBeLessThan(c.end / S + 1e-6);
+        for (const s of sheets) for (let n = 0; n < 3; n++) expect(s.later[n]).toBeLessThan(c.end / S + 1e-6);
         covered++;
       }
     }

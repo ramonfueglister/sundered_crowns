@@ -6,11 +6,16 @@ import { createRequire } from 'node:module';
 
 const { chromium } = createRequire(import.meta.url)('playwright');
 const [out, from, until, ratio = '1.08', lon = '2.35', lat = '48.85', mode = 'terrain'] = process.argv.slice(2);
-const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+const browser = await chromium.launch({
+  args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'],
+});
 for (let wide = Number(from); wide <= Number(until); wide *= Number(ratio)) {
-  const w = Math.round(wide), page = await browser.newPage({ viewport: { width: 960, height: 540 }, deviceScaleFactor: 1 });
+  const w = Math.round(wide),
+    page = await browser.newPage({ viewport: { width: 960, height: 540 }, deviceScaleFactor: 1 });
   page.on('pageerror', (e) => console.log('[pageerror]', e.message));
-  await page.goto(`${process.env.PROBE_URL ?? 'http://localhost:5173'}/world-probe.html?webgl=1&w=960&h=540&year=1291&mode=${mode}&lon=${lon}&lat=${lat}&wide=${w}`);
+  await page.goto(
+    `${process.env.PROBE_URL ?? 'http://localhost:5173'}/world-probe.html?webgl=1&w=960&h=540&year=1291&mode=${mode}&lon=${lon}&lat=${lat}&wide=${w}`,
+  );
   await page.waitForFunction(() => globalThis.__probe?.ready === true, null, { timeout: 300000 });
   await page.waitForTimeout(300);
   await page.screenshot({ path: `${out}/wide_${String(w).padStart(6, '0')}.png` });
