@@ -14,6 +14,7 @@ import { above, lay, meanCover, summary } from './mean';
 import { faced, flat as floats, small } from './small';
 import { bytesOf, pack, unpack } from './pack';
 import { folderOf, kept } from './store';
+import { unbrotli } from './brotli';
 import { type Table, type TablesIndex, drawTable, keepTables, keyOfTable, tabled, unpackTable, whereTable } from './table';
 import type { Piece, WorldScene } from './world';
 
@@ -109,7 +110,7 @@ function tableAt(tables: { dir: string; index: TablesIndex; land: Map<string, nu
     let bytes = new Uint8Array(await r.arrayBuffer());
     if (range && r.status !== 206) bytes = bytes.subarray(range[0], range[0] + range[1]);
     if (range && bytes.length !== range[1]) return null;
-    const raw = await maybeGunzip(bytes);
+    const raw = tables.index.coding === 'br' ? await unbrotli(bytes) : await maybeGunzip(bytes);
     return unpackTable((raw.byteOffset || raw.byteLength !== raw.buffer.byteLength ? raw.slice() : raw).buffer as ArrayBuffer);
   // (a table that cannot be read is no table)
   }).catch(() => null);
