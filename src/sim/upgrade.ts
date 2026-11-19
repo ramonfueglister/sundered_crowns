@@ -22,7 +22,7 @@ import { foundMoves, redrawMoves } from './systems/moves';
 import type { SetupState } from './setup';
 
 /** The fields of a WorldState in the order createWorldState writes them. */
-const STATE_FIELDS = ['v', 'seed', 'startYear', 'day', 'rng', 'place', 'realm', 'realmText', 'ruler', 'economy', 'person', 'family', 'firm', 'named', 'lot', 'hamlets', 'street', 'field'] as const;
+const STATE_FIELDS = ['v', 'seed', 'startYear', 'day', 'rng', 'place', 'realm', 'realmText', 'ruler', 'economy', 'person', 'family', 'firm', 'named', 'lot', 'hamlets', 'street', 'field', 'landmark'] as const;
 
 /**
  * The steps before 11 are gone (2026-11-16): the only world, europa-1291, is at 11 or later, and the worlds before it are
@@ -258,6 +258,15 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     // reached; nothing else changes.
     foundFields(s, w.tilth);
     s.v = 31;
+  }
+  if (s.v === 31) { // 31 → 32: the landmarks (settlement feature 5, src/sim/systems/landmarks.ts). The land register
+    // is founded anew, as a new world founds it on the day the world has reached: the church of every town's see and
+    // its buildings known by name first, the streets and parcels of the town round them, its hamlets clear of them,
+    // the convents and the residence at its edge, and the fields of the hamlets. (The hamlets cannot stay where they
+    // were: a landmark may stand on them.) Nothing else changes.
+    foundLots(s, w.ground, w.dry);
+    foundFields(s, w.tilth);
+    s.v = 32;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one

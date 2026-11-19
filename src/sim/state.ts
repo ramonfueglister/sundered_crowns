@@ -37,9 +37,11 @@ import type { Table } from './ecs';
  *  town (settlement feature 3, src/sim/settlement/streets.ts): the parcels lie at streets that grew to them, no longer
  *  on a grid; every parcel keeps its family and its size. 31: the fields of the farmsteads (settlement feature 4,
  *  src/sim/settlement/fields.ts): every hamlet has its furlongs in courses, shared in strips by its farmsteads.
+ *  32: the landmarks (settlement feature 5, src/sim/systems/landmarks.ts): the church of every town's see, the
+ *  convents, the rulers' residences and the buildings known by name stand on their ground; the streets grow round them.
  *  Snapshots from 11 on are brought up to date by
  *  src/sim/upgrade.ts. */
-export const STATE_VERSION = 31;
+export const STATE_VERSION = 32;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
@@ -214,6 +216,29 @@ export const FIELD_SCHEMA = {
   farm: 'i32',
 } as const;
 export type FieldSchema = typeof FIELD_SCHEMA;
+/** The landmarks (settlement feature 5, src/sim/settlement/landmarks.ts): the church of every town's see, the convents
+ *  of the mendicant orders, the residences of the rulers, the abbeys and the buildings known by name, each on its
+ *  ground. A row is never freed. */
+export const LANDMARK_SCHEMA = {
+  /** what it is (LANDMARK_KIND in src/sim/settlement/landmarks.ts) */
+  kind: 'u8',
+  /** the place of the map and the town (its site, as in the land register); −1 for one that stands alone */
+  place: 'i16', site: 'i16',
+  /** its middle: metres east and south of the centre of its town, at the scale of the houses (0 for one alone) */
+  x: 'f32', z: 'f32',
+  /** its real place, NaN where it has none of its own (it stands where the town has room) */
+  lat: 'f32', lon: 'f32',
+  /** metres east-west and north-south */
+  w: 'f32', d: 'f32',
+  /** the years its building began and ended and the year it became a ruin (NO_YEAR where none): how it stands in a
+   *  year is `builtIn(start, end, ruined, year)` */
+  start: 'i16', end: 'i16', ruined: 'i16',
+  /** the building known by name it is (its index in src/sim/content/landmarks_<year>.json `named`), −1 for none */
+  named: 'i16',
+  /** the mendicant order of a convent (its index in ORDERS), 255 for none */
+  order: 'u8',
+} as const;
+export type LandmarkSchema = typeof LANDMARK_SCHEMA;
 /** A firm of the economy of a city (economy feature 10): an entity for every firm the engine computes. The firms of
  *  a city lie one after the other, in the engine's order (`CityEconomies.firm0`). All but the place and the owner
  *  are written by the economy after every day (src/sim/systems/economy.ts). */
@@ -298,6 +323,8 @@ export interface WorldState {
   street: Table<StreetSchema>;
   /** the furlongs of the hamlets' fields (src/sim/systems/fields.ts) */
   field: Table<FieldSchema>;
+  /** the landmarks of the towns and those that stand alone (src/sim/systems/landmarks.ts) */
+  landmark: Table<LandmarkSchema>;
   economy: {
     /** the cities as economies that trade; null in a world that does not start in the year of their calibration */
     cities: CityEconomies | null;

@@ -69,8 +69,10 @@ const NEAR_DEEP = 1;
  *  against the share of dead ends (0.18, Barthelemy & Boeing 2025); more than 5 changes nothing */
 const JOIN_DEEP = 5;
 /** a lane leaves from a T-junction facing its spot rather than from the nearest point if that costs at most this many
- *  parcel widths more. Calibrated against the share of crossings (0.19, Barthelemy & Boeing 2025): 3 makes 0.27 */
-const CROSS = 2;
+ *  parcel widths more. Calibrated against the shares of dead ends and crossings (0.18, 0.19, Barthelemy & Boeing 2025)
+ *  on the building ground without the churches the world graphic built of its own (feature 5): 2 makes 0.34 dead ends,
+ *  3 makes 0.24 crossings */
+const CROSS = 2.5;
 
 const EMPTY = 0, BLOCKED = 1, ROAD = 2, PARCEL = 3, MARKET = 4, UNKNOWN = 5;
 
@@ -101,10 +103,11 @@ const offsetsOf = (q: number) => {
 /** Where the market of a town lies: the middle nearest the centre whose square and the street round it lie on
  *  open ground. In the world graphic the church stands at the centre (src/worldprobe/settle.ts), and the market lies
  *  beside it, as the market of many a medieval town lay at the church (OWN RULE). Without such ground within
- *  MARKET_SEARCH parcel depths, at the centre. */
+ *  MARKET_SEARCH parcel depths, within four times as far (a town whose landmarks take the open ground at its centre,
+ *  feature 5), and without it at all at the centre. */
 function marketAt(size: ParcelSize, free: (x: number, z: number) => boolean): [number, number] {
   // first near (most churches are small), then as far as the search goes: the same answer, the nearest first
-  return marketWithin(size, free, Math.round(size.d)) ?? marketWithin(size, free, Math.round(MARKET_SEARCH * size.d)) ?? [0, 0];
+  return marketWithin(size, free, Math.round(size.d)) ?? marketWithin(size, free, Math.round(MARKET_SEARCH * size.d)) ?? marketWithin(size, free, Math.round(4 * MARKET_SEARCH * size.d)) ?? [0, 0];
 }
 function marketWithin(size: ParcelSize, free: (x: number, z: number) => boolean, q: number): [number, number] | null {
   const { hw, half } = dims(size), k = half + 2 * hw, S = q + k, n = 2 * S + 2;

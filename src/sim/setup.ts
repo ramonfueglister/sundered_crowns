@@ -2,7 +2,7 @@
 // who owns which place, the realms with their capitals, colours, cultures and faiths, and how many people live where.
 import type { World } from './world';
 import type { WorldState, RealmText } from './state';
-import { STATE_VERSION, REALM_SCHEMA, RANKS, PERSON_SCHEMA, FAMILY_SCHEMA, FIRM_SCHEMA, LOT_SCHEMA, HAMLET_SCHEMA, STREET_SCHEMA, FIELD_SCHEMA } from './state';
+import { STATE_VERSION, REALM_SCHEMA, RANKS, PERSON_SCHEMA, FAMILY_SCHEMA, FIRM_SCHEMA, LOT_SCHEMA, HAMLET_SCHEMA, STREET_SCHEMA, FIELD_SCHEMA, LANDMARK_SCHEMA } from './state';
 import { createTable, spawn } from './ecs';
 import { seedRng } from './rng';
 import { cultureIndex, faithIndex, foundPersonCultures } from './systems/cultures';
@@ -49,7 +49,7 @@ export function createWorldState(w: World, setup: SetupState, seed: number): Wor
   const s: WorldState = {
     v: STATE_VERSION, seed, startYear: setup.year, day: 0, rng: seedRng(seed),
     place, realm, realmText: [], ruler: [],
-    economy: { cities: null }, person: createTable(PERSON_SCHEMA), family: createTable(FAMILY_SCHEMA), firm: createTable(FIRM_SCHEMA), named: [], lot: createTable(LOT_SCHEMA), hamlets: createTable(HAMLET_SCHEMA), street: createTable(STREET_SCHEMA), field: createTable(FIELD_SCHEMA), // in the order
+    economy: { cities: null }, person: createTable(PERSON_SCHEMA), family: createTable(FAMILY_SCHEMA), firm: createTable(FIRM_SCHEMA), named: [], lot: createTable(LOT_SCHEMA), hamlets: createTable(HAMLET_SCHEMA), street: createTable(STREET_SCHEMA), field: createTable(FIELD_SCHEMA), landmark: createTable(LANDMARK_SCHEMA), // in the order
     // the fields were added (src/sim/upgrade.ts), so an upgraded world encodes as a new one
   };
   addRealms(s, setup, 0, L);

@@ -125,7 +125,7 @@ describe('the fields of a world of 1291', () => {
     for (const i of rows) { const k = `${C.site[i]}:${C.x[i] - C.w[i] / 2}:${C.z[i] - C.d[i] / 2}`; expect(at.has(k)).toBe(false); at.add(k); }
     for (let h = 0; h < s.hamlets.size; h++) {
       const b = hamletBox(H.farms[h]);
-      for (const i of rows) if (C.site[i] === H.site[h]) expect(Math.abs(C.x[i] - H.x[h]) < (C.w[i] + b.w) / 2 + HAMLET_GAP && Math.abs(C.z[i] - (H.z[h])) < (GEWANN.d * 2 + b.d) / 2 + HAMLET_GAP).toBe(false);
+      for (const i of rows) if (C.site[i] === H.site[h]) expect(Math.abs(C.x[i] - H.x[h]) < (C.w[i] + b.w) / 2 + HAMLET_GAP && Math.abs(C.z[i] - C.d[i] / 2 + GEWANN.d - H.z[h]) < (GEWANN.d * 2 + b.d) / 2 + HAMLET_GAP).toBe(false); // the whole lot of a furlong, a shortened one too
     }
   });
   it('give each farmstead its strips and its part of the harvest: together the harvest of the place', () => {

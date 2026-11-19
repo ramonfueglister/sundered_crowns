@@ -17,7 +17,8 @@ computes is in the world: what a town shows must be state of the ECS.
 | 2 | Every farming family has a farmstead in a hamlet (hamlets and farmsteads in the land register) | agreed by Ramon 17 Nov 2026 as a draft with the small farmstead ("Ja, mit kleinem Hof"); built in the same state step, on main since 17 Nov 2026 (PR #61). The world graphic sets the hamlets where the register has them and a farmhouse on each farmstead (PR #64) |
 | 3 | The streets and the market of every town grow to its parcels (the street network in the state) | agreed by Ramon 18 Nov 2026 ("ja"); built in state 30 |
 | 4 | Every farmstead has its fields: the furlongs of each hamlet in the courses of its open field, a strip of each farmstead in every furlong | agreed by Ramon 19 Nov 2026 ("ok"); built in state 31. The world graphic draws only these fields round the towns |
-| – | Where a new house arises while the world runs; real plans of the large towns; walls and gates; bridges; landmarks on their ground; building by players | not proposed yet |
+| 5 | The landmarks of every town at their real place and size: the church of its see, the great buildings known by name, the convents of the mendicants, the ruler's residence, the great abbeys alone | agreed by Ramon 19 Nov 2026 ("Ja, alles wie vorgeschlagen"); built in state 32. The world graphic draws only these landmarks |
+| – | Where a new house arises while the world runs; real plans of the large towns; walls and gates; bridges; building by players | not proposed yet |
 
 ## Feature 1: every family of a town has a parcel
 
@@ -305,7 +306,7 @@ keeps its exact ground (feature 1): the step is the parcel's width divided by th
 | market | a parcel deep, a lane round it | PLACEHOLDER, no measure of a market read |
 | r_c | 0.5 of the packed radius | calibrated: the blocks of the world of 1291 fall off as A^−1.87 above 200 m² (Dresden: A^−1.9, Lämmer et al. 2006; Barthelemy & Flammini 2008 get it with an exponential density of centres) |
 | join | 5 parcel depths | calibrated against the share of dead ends (Barthelemy & Boeing 2025); more changes nothing |
-| crossing | 2 parcel widths | calibrated against the share of crossings (Barthelemy & Boeing 2025): 3 makes 0.27 |
+| crossing | 2.5 parcel widths | calibrated against the shares of dead ends and crossings (Barthelemy & Boeing 2025); 2 until feature 5, see below |
 | served | 1 parcel depth | PLACEHOLDER: a spot this near a street takes its parcel there |
 | market search | 3 parcel depths | PLACEHOLDER |
 | ways | 1.5 px near, 3 px on, 30° | PLACEHOLDER: what reads the road map of 1291 as the ways of a town |
@@ -320,6 +321,18 @@ families, over those with 20 streets and more (the measure of real cities):
 | 0.4, 5, 2 | 0.25 | 0.59 | 0.15 | 1.92 (one town more too tight) |
 | 0.5, 5, 3 | 0.24 | 0.49 | 0.27 | 1.90 |
 | 0.6, 6, 2 | 0.26 | 0.54 | 0.20 | 1.86 |
+
+Recalibrated with feature 5 (19 Nov 2026), on the building ground surveyed without the churches the world graphic built
+of its own and with the landmarks laid before the streets:
+
+| r_c, join, crossing | dead ends | T-junctions | crossings | τ of the blocks |
+|---|---|---|---|---|
+| 0.5, 5, 2 (as before) | 0.34 | 0.50 | 0.16 | 1.86 |
+| **0.5, 5, 2.5 (chosen)** | 0.23 | 0.57 | 0.20 | 1.88 |
+| 0.5, 5, 3 | 0.22 | 0.54 | 0.24 | 1.89 |
+| 0.45, 5, 3 | 0.21 | 0.55 | 0.24 | 1.90 |
+| 0.4, 5, 2 | 0.29 | 0.57 | 0.14 | 1.90 |
+| 0.6, 5, 2 | 0.30 | 0.54 | 0.16 | 1.85 |
 
 ### What the world of 1291 gets (seed 1291)
 
@@ -505,3 +518,127 @@ Candia 59 %, L'Aquila 60 %, Istanbul 65 %, Fez 69 %, Ceuta 70 %, the rest above 
   (abstract only). https://doi.org/10.1017/S0022050700038985
 - Bolòs (2026): Understanding the Formation of a Mediterranean Landscape. Land 15(2), 225 (abstract only).
 - Hall (2014): The Open Fields of England. Oxford (summary only; its types are not taken over).
+
+## Feature 5: the landmarks of every town
+
+Proposal with the sources as Ramon read it: https://claude.ai/artifact/8fJhERPyMorP25hDhPo7XN (Ramon, 18 November
+2026: "zuerst felder je hof, dann wahrzeichen"). Agreed with "Ja, alles wie vorgeschlagen" on 19 November 2026.
+
+Code: `src/sim/settlement/landmarks.ts` (the arithmetic: kinds, sizes, the mendicant orders, `builtIn`, `URBAN`),
+`src/sim/content/landmarks.ts` and `src/sim/content/landmarks_1291.json` (the sees of the towns and the buildings known
+by name), `src/sim/systems/landmarks.ts` (`coreLandmarks`, `edgeLandmarks`, `aloneLandmarks`: where each is laid),
+`src/sim/systems/lots.ts` (laid with the towns), state in `src/sim/state.ts` (`landmark`), `src/net/lots.ts` and
+`tools/sim/write_lots.ts` (the landmarks in the answer of the server and in the file), the drawing in
+`src/worldprobe/landmarks.ts`, `settle.ts` and `world.ts`. Tests: `tests/landmarks.test.ts`.
+
+Written once when a world is founded, with the land register, or by the upgrade 31 → 32 of a running world, which
+founds the register anew (the hamlets of an old world may stand where a landmark now stands). Nothing changes while the
+world runs; how far a building is built follows from the year.
+
+| Table | Column | Type | Meaning |
+|---|---|---|---|
+| landmark | kind | u8 | 0 cathedral, 1 orthodox cathedral, 2 Friday mosque, 3 convent, 4 abbey, 5 castle, 6 palace, 7 church, 8 monument |
+| landmark | place, site | i16 | place of the map and the town; −1 for one that stands alone |
+| landmark | x, z | f32 | its middle, metres east and south of the town's centre (as the parcels) |
+| landmark | lat, lon | f32 | its real place, for one known by name (NaN for the others) |
+| landmark | w, d | f32 | metres east-west and north-south (the long side east-west, as a church is built) |
+| landmark | start, end, ruined | i16 | the years its building began and ended, and it became a ruin; −32768 where none |
+| landmark | named | i16 | its row in `landmarks_<year>.json` `named`, −1 for none |
+| landmark | order | u8 | the mendicant order of a convent (0 Franciscans, 1 Dominicans, 2 Augustinian hermits, 3 Carmelites), 255 for none |
+
+### Steps
+
+1. **The church of the see.** Every town that was the see of a Latin archbishop or bishop in 1291 has its cathedral, of
+   an orthodox (or other eastern) bishop its orthodox cathedral, a Muslim town its Friday mosque. Where the church is
+   known by name, at its real place; otherwise at the centre of the town (where the world graphic stood its church).
+2. **Buildings known by name in a town.** At their real place: their real metres from the town's point times
+   `URBAN` = √(1/SCALE) = 0.1. A town of the world has 1/100 of the people at the density of houses of the real town
+   (feature 1), so it is a tenth as wide; a building keeps its real size. The church of the see first, then the
+   others in the order of the file. Where its spot is taken by one laid before, or is not building ground, a landmark
+   moves to the nearest spot round it that is (rings of 4 m, at most 80 m).
+3. **Streets round them.** These landmarks are laid before the streets (feature 3). No street runs over a landmark;
+   no parcel lies nearer than 4 m (`LANDMARK_GAP`), and a street may run in that gap, round the church.
+4. **Convents at the edge.** A Latin town has a convent of each mendicant order it was large enough for in 1291
+   (`ORDERS`: Franciscans from 2,000 people of the time, Dominicans from 4,000, Augustinian hermits from 10,000,
+   Carmelites from 15,000), after its parcels and hamlets: one after another round the town from the east by the
+   south, each on the first free ground out from 0.7 of the town's reach (Le Goff 1968: the friars settled at the edge
+   of the towns and in their suburbs).
+5. **The ruler's residence.** The largest town of the place that holds the capital of a realm has the residence of
+   its ruler, a palace where the realm is Muslim, a castle elsewhere, at its edge as a convent, unless one is known by
+   name (or the town's great church holds it, as St Mark's the Doge's Palace).
+6. **Alone.** The buildings known by name outside the towns (abbeys, castles, Great Zimbabwe) stand at their real
+   place.
+7. **Built in a year.** `builtIn(start, end, ruined, year)`: not yet begun, being built (the share of its years),
+   standing, a ruin. The world graphic draws one being built as the part built so far from its east end (a church was
+   built from its choir), at least 0.4 of it; a ruin at 0.35 of its height; one not yet begun not at all.
+
+The world graphic draws only these landmarks (`settle.ts` `marks`, `world.ts`): the model of the kind in the town's
+building tradition, or the own model of a building known by name, turned so that its long side runs as the landmark's
+and scaled evenly so that its long side has the landmark's real length, on levelled ground. A castle or palace rises at
+most 30 m. The towers of a town stay a matter of the graphics.
+
+### Parameters
+
+| Parameter | Value | Source |
+|---|---|---|
+| sees of 1291 | 48 archbishops, 182 bishops, 19 orthodox, 75 Friday mosques among the 558 towns | Eubel (1913) for the Latin sees; a check of 18 by the sources below; Darrouzès (1981) not read |
+| buildings known by name | 64: 27 abbeys, 12 cathedrals, 10 castles, 7 palaces, 3 monuments, 2 churches, 2 mosques, 1 orthodox; 24 alone | the Wikipedia articles of each, with the years of building as of 1291 |
+| URBAN | √(1/SCALE) = 0.1 | OWN RULE, from the scale |
+| size where not known | cathedral 90 × 32 m (an archbishop's 130 × 45), orthodox 40 × 30, mosque 60 × 45 (a town of 50,000 people of the time 100 × 80), convent 60 × 36, abbey 100 × 60, castle 60 × 50, palace 100 × 70, church 50 × 25, monument 40 × 40 | PLACEHOLDER: the middle of what the buildings known by name measure |
+| mendicant orders | from 2,000 / 4,000 / 10,000 / 15,000 people of the time | PLACEHOLDER: the order in which they came into the towns (Le Goff 1968); the thresholds not read from Le Goff or Emery (1962) |
+| gap, search | 4 m; 80 m in steps of 4 m; edge from 0.7 of the town's reach | PLACEHOLDER |
+| castle height | at most 30 m | PLACEHOLDER: the keep of the Louvre 31 m, the White Tower 27 m |
+
+### What the world of 1291 gets (seed 1291)
+
+1,766 landmarks: 230 cathedrals, 19 orthodox cathedrals, 75 Friday mosques, 1,247 convents (454 Franciscan, 454
+Dominican, 212 Augustinian, 127 Carmelite), 27 abbeys, 141 castles, 22 palaces, 2 churches, 3 monuments. Paris has 7
+(Notre-Dame, being built until 1345; the Palais de la Cité; the Louvre; four convents), London 8, Cologne 6, Venice 6,
+Zürich 4, Cairo 2.
+
+Of the 40 buildings known by name in the towns, 17 stand at their spot, 23 moved off it (median 40 m, at most 104 m)
+where the water or one laid before took it. Of the 309 churches of a see without a name, 106 stand at the centre of
+their town, the others moved off it (median of all 16 m, nine in ten within 48 m).
+
+Six towns are laid out without regard to their ground (feature 1), but clear of their landmarks: Venice (islands),
+Aberdeen, Baghdad, Dax, Seville and Strasbourg (a river, and the landmarks at their real place, leave too little
+ground on one bank). Before feature 5: Venice and Hormuz.
+
+The building ground of the towns (`ground_<year>.json`) is surveyed before anything the world graphic builds of its
+own (`build_ground.ts`, settle.ts): before it had the graphic's church and towers at the centre of every town as
+built ground, and a town whose neighbour's houses stood on its middle (Fustat beside Cairo) had none. The streets
+were recalibrated on it (feature 3, crossing 2.5 parcel widths). On it the fields of feature 4 come out at 108,272 furlongs with
+97.9 % of the arable laid, 28 towns short of ground (before 107,435, 97.3 %, 33). Beyond the surveyed ground of a town its dry ground
+counts too (`widened`, from `dry_<year>.json`), so that the landmarks at its edge find room.
+
+### Own rules and gaps (no source)
+
+- The sees are compiled from knowledge and checked against the sources for 18 of them (Murcia 1291, Grasse 1244,
+  Chioggia, L'Aquila 1257, Bayonne, Dax, Dorpat, Reval; Zaragoza an archbishop only from 1318, Toulouse from 1317,
+  Prague from 1344, Pamiers a bishop from 1295; the Great Mosque of Tripoli 1294–98, so none in 1291; the Djenné mosque
+  uncertain, about 1200–1330; an archbishop of Dongola attested 1113). Eubel itself was not read (archive.org is
+  blocked here).
+- A church of a see without a name at the centre, the convents and residences at the edge by a fixed bearing; their
+  sizes; the thresholds of the orders (Le Goff and Emery not read); a residence only for the capital of a realm.
+- `URBAN` draws the buildings known by name together as the town is drawn together; their size stays real, so a
+  great church takes much of a small town of the world.
+- The models are those of the world graphic, scaled evenly; only some buildings known by name have their own.
+- No parish churches, hospitals, town halls, guild halls, synagogues, bridges or walls; no landmark is built while the
+  world runs; the list is of 1291 only.
+- The upgrade 31 → 32 founds the land register anew: who lives on which parcel follows the rule of a new world.
+- `ground_<year>.json` must be written anew when the world graphic's ground changes, then `lots_<year>.json`, the tilth
+  survey, `lots_<year>.json` again, the plan and the far view's tables.
+
+### Sources
+
+- Eubel, Conrad (1913): Hierarchia catholica medii aevi, vol. 1. Münster, Regensberg (the bishops of every Latin see
+  from 1198; not read, the list compiled from it at second hand).
+- Le Goff, Jacques (1968): Apostolat mendiant et fait urbain dans la France médiévale: l'implantation des ordres
+  mendiants. Programme-questionnaire pour une enquête. Annales ESC 23(2), 335–352 (the summary of the enquiry read).
+- Emery, Richard W. (1962): The Friars in Medieval France. A Catalogue of French Mendicant Convents, 1200–1550. New
+  York, Columbia University Press (not read).
+- Darrouzès, Jean (1981): Notitiae episcopatuum Ecclesiae Constantinopolitanae. Paris, Institut français d'études
+  byzantines (not read).
+- The Wikipedia articles of the buildings known by name, for their place, size and years: among them the Lighthouse of
+  Alexandria (collapse in the earthquake of 1303; Ibn Battuta 1326 "one of its faces in ruins") and the Moscow Kremlin
+  (destroyed 1238; oak walls 1339–1340; stone walls from 1367).
