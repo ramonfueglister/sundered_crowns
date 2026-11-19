@@ -13,17 +13,28 @@ import { hashState, encodeState, decodeState } from '../src/sim/snapshot';
 import { createWorldState } from '../src/sim/setup';
 
 const { s, w } = newWorldState(1291, 1291);
-const s1291 = loadSetup(1291), s1356 = loadSetup(1356);
+const s1291 = loadSetup(1291),
+  s1356 = loadSetup(1356);
 /** A world as it was before state 19: the persons had no culture or faith, the places had those of the setup. */
 function asBeforeCultures(old: ReturnType<typeof createWorldState>): void {
   const P = old.person.cols as unknown as Record<string, unknown>;
-  delete P.culture; delete P.faith;
+  delete P.culture;
+  delete P.faith;
   Object.assign(old.place, {
     culture: Uint16Array.from(s1291.culture.slice(0, w.L), (c) => Math.max(0, ALL_CULTURES.indexOf(c ?? 'unknown'))),
-    faith: Uint8Array.from(s1291.faith.slice(0, w.L), (f) => Math.max(0, FAITHS.findIndex((x) => x.id === (f ?? 'latin'))))
+    faith: Uint8Array.from(s1291.faith.slice(0, w.L), (f) =>
+      Math.max(
+        0,
+        FAITHS.findIndex((x) => x.id === (f ?? 'latin')),
+      ),
+    ),
   });
 }
-const sum = (a: ArrayLike<number | null>) => { let t = 0; for (let i = 0; i < a.length; i++) t += a[i] ?? 0; return t; };
+const sum = (a: ArrayLike<number | null>) => {
+  let t = 0;
+  for (let i = 0; i < a.length; i++) t += a[i] ?? 0;
+  return t;
+};
 
 describe('a world of 1291', () => {
   it('starts in 1291 with the realms of 1291', () => {
@@ -38,9 +49,13 @@ describe('a world of 1291', () => {
     expect(s.economy.cities!.halted).toBe('');
   });
   it('holds in every place at least the people of the towns the world graphic builds there', () => {
-    const towns = JSON.parse(readFileSync(dataPath('towns_1291.json'), 'utf8')) as { people: (number | null)[]; place: number[] };
+    const towns = JSON.parse(readFileSync(dataPath('towns_1291.json'), 'utf8')) as {
+      people: (number | null)[];
+      place: number[];
+    };
     const inTowns = new Map<number, number>();
-    const inFrame = new Set(citiesOf(1291).map((c) => c.site)), persons = new Map<number, number>();
+    const inFrame = new Set(citiesOf(1291).map((c) => c.site)),
+      persons = new Map<number, number>();
     towns.people.forEach((n, k) => {
       if (!n) return;
       inTowns.set(towns.place[k], (inTowns.get(towns.place[k]) ?? 0) + n);
@@ -52,16 +67,34 @@ describe('a world of 1291', () => {
   });
   it('has only its persons as people and feeds a head as a person of the time', () => {
     expect(sum(s.place.pop)).toBe(s.person.size); // all alive on the first day; the land without towns is empty
-    let kcal = 0, heads = 0;
-    for (let i = 0; i < w.L; i++) if (s.place.harvest[i] > 0) { kcal += s.place.harvest[i]; heads += s.place.pop[i]; }
-    expect(kcal / heads / 365).toBeGreaterThan(800); expect(kcal / heads / 365).toBeLessThan(3000);
+    let kcal = 0,
+      heads = 0;
+    for (let i = 0; i < w.L; i++)
+      if (s.place.harvest[i] > 0) {
+        kcal += s.place.harvest[i];
+        heads += s.place.pop[i];
+      }
+    expect(kcal / heads / 365).toBeGreaterThan(800);
+    expect(kcal / heads / 365).toBeLessThan(3000);
   });
   it('has persons in every town of the world graphic with people inside the world frame, as many as the towns house', () => {
     const cities = citiesOf(1291);
-    const ext = JSON.parse(readFileSync('data/content/world_extent.json', 'utf8')) as { west: number; east: number; north: number; south: number };
-    const gaz = JSON.parse(readFileSync('data/content/gazetteer.json', 'utf8')).places as { lon: number; lat: number }[];
-    const towns = JSON.parse(readFileSync(dataPath('towns_1291.json'), 'utf8')) as { people: (number | null)[]; place: number[] };
-    const inFrame = (k: number) => gaz[k].lon >= ext.west && gaz[k].lon <= ext.east && gaz[k].lat >= ext.south && gaz[k].lat <= ext.north;
+    const ext = JSON.parse(readFileSync('data/content/world_extent.json', 'utf8')) as {
+      west: number;
+      east: number;
+      north: number;
+      south: number;
+    };
+    const gaz = JSON.parse(readFileSync('data/content/gazetteer.json', 'utf8')).places as {
+      lon: number;
+      lat: number;
+    }[];
+    const towns = JSON.parse(readFileSync(dataPath('towns_1291.json'), 'utf8')) as {
+      people: (number | null)[];
+      place: number[];
+    };
+    const inFrame = (k: number) =>
+      gaz[k].lon >= ext.west && gaz[k].lon <= ext.east && gaz[k].lat >= ext.south && gaz[k].lat <= ext.north;
     const expected = towns.people.flatMap((n, k) => (n && inFrame(k) ? [k] : []));
     expect(cities.length).toBe(558);
     expect(cities.map((c) => c.site).sort((a, b) => a - b)).toEqual(expected);
@@ -76,25 +109,41 @@ describe('a world of 1291', () => {
     }
     // Chandler's towns first, each group largest first: the 30 largest of Chandler are the first 30
     const ch = cities.filter((c) => c.source === 'chandler');
-    expect(ch.length).toBe(65); expect(cities.slice(0, 65)).toEqual(ch);
-    for (let k = 1; k < cities.length; k++) if (cities[k].source === cities[k - 1].source) expect(cities[k].people).toBeLessThanOrEqual(cities[k - 1].people);
+    expect(ch.length).toBe(65);
+    expect(cities.slice(0, 65)).toEqual(ch);
+    for (let k = 1; k < cities.length; k++)
+      if (cities[k].source === cities[k - 1].source) expect(cities[k].people).toBeLessThanOrEqual(cities[k - 1].people);
   });
   it('gets them by the upgrade from 14, and the persons of the 30 cities stay who they were, with their numbers', () => {
     // a world of 1291 as version 14 founded it: persons only in the 30 largest towns of Chandler
-    const list = citiesOf(1291) as City[], all = list.slice();
+    const list = citiesOf(1291) as City[],
+      all = list.slice();
     list.splice(30);
     let old: ReturnType<typeof createWorldState>;
-    try { old = createWorldState(w, s1291, 1291); } finally { list.splice(0, list.length, ...all); }
-    old.v = 14; asBeforeCultures(old);
+    try {
+      old = createWorldState(w, s1291, 1291);
+    } finally {
+      list.splice(0, list.length, ...all);
+    }
+    old.v = 14;
+    asBeforeCultures(old);
     expect(old.person.size - old.named.length).toBe(24_828); // and the rulers after them expect(old.economy.cities!.places.length).toBe(30);
     const before = decodeState(encodeState(old));
     const up = upgradeState(old, w, () => s1291);
     expect(up.v).toBe(STATE_VERSION);
     expect(hashState(up)).toBe(hashState(s)); // as a new world
-    const P = up.person.cols, B = before.person.cols;
+    const P = up.person.cols,
+      B = before.person.cols;
     let differ = 0; // counted, not one expect per person: 24,828 persons
     for (let id = 0; id < 24_828; id++) {
-      if (P.born[id] !== B.born[id] || P.sex[id] !== B.sex[id] || P.family[id] !== B.family[id] || P.mother[id] !== B.mother[id] || P.iq[id] !== B.iq[id]) differ++;
+      if (
+        P.born[id] !== B.born[id] ||
+        P.sex[id] !== B.sex[id] ||
+        P.family[id] !== B.family[id] ||
+        P.mother[id] !== B.mother[id] ||
+        P.iq[id] !== B.iq[id]
+      )
+        differ++;
     }
     for (let k = 0; k < 24_828 * 100; k++) if (P.genes[k] !== B.genes[k]) differ++; // 100 gene bytes a person
     expect(differ).toBe(0);
@@ -103,25 +152,45 @@ describe('a world of 1291', () => {
 });
 
 describe('the peoples of 1291', () => {
-  const rules = JSON.parse(readFileSync('data/history/1291/peoples.json', 'utf8')).rules as { id: string; sources: string[]; note: string }[];
-  const at = (name: string) => { const i = w.names.indexOf(name); expect(i, name).toBeGreaterThanOrEqual(0); return i; };
+  const rules = JSON.parse(readFileSync('data/history/1291/peoples.json', 'utf8')).rules as {
+    id: string;
+    sources: string[];
+    note: string;
+  }[];
+  const at = (name: string) => {
+    const i = w.names.indexOf(name);
+    expect(i, name).toBeGreaterThanOrEqual(0);
+    return i;
+  };
   // the setup of 1291 (its rules): the persons of a town are founded with these (src/sim/systems/cultures.ts)
-  const culture = (i: number) => s1291.culture[i] ?? 'unknown', faith = (i: number) => s1291.faith[i] ?? 'latin';
+  const culture = (i: number) => s1291.culture[i] ?? 'unknown',
+    faith = (i: number) => s1291.faith[i] ?? 'latin';
   const owner = (i: number) => s.realmText[s.place.owner[i]]?.key;
   it('differ from those of 1356 only by rules that name their sources', () => {
     expect(rules.length).toBeGreaterThanOrEqual(10);
-    for (const r of rules) { expect(r.sources.length, r.id).toBeGreaterThan(0); expect(r.note.length, r.id).toBeGreaterThan(20); }
+    for (const r of rules) {
+      expect(r.sources.length, r.id).toBeGreaterThan(0);
+      expect(r.note.length, r.id).toBeGreaterThan(20);
+    }
     let differ = 0;
-    for (let i = 0; i < w.L; i++) if (s1291.culture[i] !== s1356.culture[i] || s1291.faith[i] !== s1356.faith[i]) differ++;
-    expect(differ).toBeGreaterThan(600); expect(differ).toBeLessThan(1000);
+    for (let i = 0; i < w.L; i++)
+      if (s1291.culture[i] !== s1356.culture[i] || s1291.faith[i] !== s1356.faith[i]) differ++;
+    expect(differ).toBeGreaterThan(600);
+    expect(differ).toBeLessThan(1000);
   });
   it('are Greek and Orthodox where Byzantium held Asia Minor', () => {
-    for (const n of ['Bursa', 'Nicaea', 'Smyrna']) { expect(owner(at(n))).toBe('byzantium'); expect([culture(at(n)), faith(at(n))]).toEqual(['greek', 'orthodox']); }
+    for (const n of ['Bursa', 'Nicaea', 'Smyrna']) {
+      expect(owner(at(n))).toBe('byzantium');
+      expect([culture(at(n)), faith(at(n))]).toEqual(['greek', 'orthodox']);
+    }
   });
   it('keep the steppe religion among the nomads of the Golden Horde, Islam in its towns and in Volga Bulgaria', () => {
-    expect(faith(at('Sarai'))).toBe('sunni'); expect(faith(at('Bolghar'))).toBe('sunni');
-    let nomads = 0, muslims = 0;
-    for (let i = 0; i < w.L; i++) if (owner(i) === 'golden_horde' && culture(i) === 'kipchak_nomad') faith(i) === 'tengri' ? nomads++ : muslims++;
+    expect(faith(at('Sarai'))).toBe('sunni');
+    expect(faith(at('Bolghar'))).toBe('sunni');
+    let nomads = 0,
+      muslims = 0;
+    for (let i = 0; i < w.L; i++)
+      if (owner(i) === 'golden_horde' && culture(i) === 'kipchak_nomad') faith(i) === 'tengri' ? nomads++ : muslims++;
     expect(nomads).toBeGreaterThan(10 * muslims);
     for (let i = 0; i < w.L; i++) expect(culture(i)).not.toBe('crimean'); // the Kipchaks of the Crimea
   });
@@ -131,7 +200,8 @@ describe('the peoples of 1291', () => {
     expect([culture(at('Lucera')), faith(at('Lucera'))]).toEqual(['maghrebi', 'sunni']);
     expect([culture(at('Xàtiva')), faith(at('Xàtiva'))]).toEqual(['andalusi', 'sunni']);
     expect(culture(at('Valencia'))).toBe('catalan');
-    expect(culture(at('Rastenburg'))).toBe('old_prussian'); expect(culture(at('Königsberg'))).toBe('prussian_german');
+    expect(culture(at('Rastenburg'))).toBe('old_prussian');
+    expect(culture(at('Königsberg'))).toBe('prussian_german');
   });
   it('have the Jews of France in its towns until 1306', () => {
     const m = (s1291 as unknown as { minority: ([string, string, number] | null)[] }).minority;
@@ -143,7 +213,8 @@ describe('the peoples of 1291', () => {
   });
   it('come into a world of 1291 by the upgrade from 12 only as borders: Murcia goes to Castile', () => {
     const old = structuredClone(s);
-    old.v = 12; asBeforeCultures(old);
+    old.v = 12;
+    asBeforeCultures(old);
     const aragon = old.realmText.findIndex((r) => r.key === 'aragon');
     for (const n of ['Cieza', 'Mula', 'Villena', 'Almansa', 'Moya']) old.place.owner[at(n)] = aragon;
     expect(hashState(old)).not.toBe(hashState(s));
@@ -151,9 +222,14 @@ describe('the peoples of 1291', () => {
     expect(up.v).toBe(STATE_VERSION);
     expect(hashState(up)).toBe(hashState(s));
   }, 60_000); // copies and hashes the whole world of 558 towns several times, and founds its economies anew
-  it('are the persons\' own: the persons of Bursa and Smyrna are Greek and Orthodox, those of Acre Frankish and Latin', () => {
-    const P = s.person.cols, F = s.family.cols;
-    for (const [n, c, f] of [['Bursa', 'greek', 'orthodox'], ['Smyrna', 'greek', 'orthodox'], ['Acre', 'french', 'latin']] as const) {
+  it("are the persons' own: the persons of Bursa and Smyrna are Greek and Orthodox, those of Acre Frankish and Latin", () => {
+    const P = s.person.cols,
+      F = s.family.cols;
+    for (const [n, c, f] of [
+      ['Bursa', 'greek', 'orthodox'],
+      ['Smyrna', 'greek', 'orthodox'],
+      ['Acre', 'french', 'latin'],
+    ] as const) {
       const i = citiesOf(1291).find((c) => c.name === n)!.place;
       let persons = 0;
       for (let id = 0; id < s.person.size; id++) {
@@ -165,4 +241,3 @@ describe('the peoples of 1291', () => {
     }
   });
 });
-

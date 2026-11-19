@@ -20,6 +20,10 @@ beforeit = { path = "vendor/port-beforeit", default-features = false }
 # the mathematical functions the port itself uses, so that the native build and WebAssembly agree bit for bit
 libm = "0.2"
 
+[lints.clippy]
+# the port computes over several arrays by one index, as the paper writes it; an iterator over one of them reads worse
+needless_range_loop = "allow"
+
 [profile.release]
 opt-level = 3
 

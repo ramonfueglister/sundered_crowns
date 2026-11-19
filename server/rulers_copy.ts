@@ -12,7 +12,8 @@ import type { World } from '../src/sim/world';
 
 export interface PersonRow {
   world_id: string;
-  /** the row of the person in the person table of the world (ECS id) */
+  /** the uid of the person in the world (src/sim/people/archive.ts; up to state 29 the row of the person table, which
+   *  was the same number) */
   person: number;
   /** the key of the person in the chronicle: the Wikidata id where known */
   key: string;
@@ -65,7 +66,7 @@ export function rulerRows(worldId: string, s: WorldState, w: World): { persons: 
       died = P.died[n.person] === ALIVE ? null : P.died[n.person];
     persons.push({
       world_id: worldId,
-      person: n.person,
+      person: P.uid[n.person],
       key: n.key,
       name: n.name,
       house: n.house,
@@ -90,7 +91,7 @@ export function rulerRows(worldId: string, s: WorldState, w: World): { persons: 
         world_id: worldId,
         realm,
         n,
-        person: id,
+        person: P.uid[id],
         start: g.from,
         end: ended === null ? null : g.to,
         start_day: g.from === null ? null : g.start,

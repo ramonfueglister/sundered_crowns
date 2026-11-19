@@ -65,11 +65,19 @@ fn main() {
         || !["prices", "money"].contains(&a[7].as_str())
         || !["costs", "demand"].contains(&a[8].as_str())
     {
-        eprintln!("usage: cities <days> <every> <seed> <plan> <window> <linked|alone> <prices|money> <costs|demand> (<parameters.json> <initial_conditions.json>)…");
+        eprintln!(
+            "usage: cities <days> <every> <seed> <plan> <window> <linked|alone> <prices|money> <costs|demand> (<parameters.json> <initial_conditions.json>)…"
+        );
         std::process::exit(2);
     }
     let n = |k: usize, what: &str| a[k].parse::<usize>().unwrap_or_else(|_| panic!("{what}: {}", a[k]));
-    let (days, every, seed, plan, window) = (n(1, "days"), n(2, "every"), n(3, "seed") as u64, n(4, "plan"), n(5, "window"));
+    let (days, every, seed, plan, window) = (
+        n(1, "days"),
+        n(2, "every"),
+        n(3, "seed") as u64,
+        n(4, "plan"),
+        n(5, "window"),
+    );
     let read = |p: &str| std::fs::read_to_string(p).unwrap_or_else(|e| panic!("{p}: {e}"));
     let (money, pull) = (a[7] == "money", a[8] == "demand");
     let fixed = std::env::var("PAST").is_ok_and(|v| v == "fixed");
@@ -79,7 +87,11 @@ fn main() {
         .map(|(c, f)| {
             let e = Economy::new(&read(&f[0]), &read(&f[1]), seed + c as u64, plan, window).expect("economy");
             let e = if money { e.with_wages_in_money() } else { e };
-            let e = if pull { e.with_demand_pull().expect("demand pull") } else { e };
+            let e = if pull {
+                e.with_demand_pull().expect("demand pull")
+            } else {
+                e
+            };
             if fixed { e.with_bounded_past() } else { e }
         })
         .collect();
@@ -92,10 +104,17 @@ fn main() {
                 cities.iter().zip(&mut met).for_each(|(e, m)| m.add(e));
             }
             if day % every == 0 || day == days {
-                cities.iter().enumerate().for_each(|(c, e)| line(day, c, e, 0.0, &mut met[c]));
+                cities
+                    .iter()
+                    .enumerate()
+                    .for_each(|(c, e)| line(day, c, e, 0.0, &mut met[c]));
             }
         }
-        eprintln!("{days} days of {} cities on their own in {:.1} s", cities.len(), t0.elapsed().as_secs_f64());
+        eprintln!(
+            "{days} days of {} cities on their own in {:.1} s",
+            cities.len(),
+            t0.elapsed().as_secs_f64()
+        );
         return;
     }
     let mut all = Cities::new(cities).expect("cities");
@@ -108,10 +127,23 @@ fn main() {
             for (c, e) in all.cities.iter().enumerate() {
                 line(day, c, e, all.merchants.stock[c].iter().sum(), &mut met[c]);
             }
-            let checks: Vec<String> = all.checks().iter().map(|[off, scale]| format!("{:.2e}", if *scale > 0.0 { off / scale } else { *off })).collect();
+            let checks: Vec<String> = all
+                .checks()
+                .iter()
+                .map(|[off, scale]| format!("{:.2e}", if *scale > 0.0 { off / scale } else { *off }))
+                .collect();
             println!("# {day} checks {}", checks.join(" "));
-            eprintln!("day {day}: {:.1} s, state {} bytes", t0.elapsed().as_secs_f64(), all.save().len());
+            eprintln!(
+                "day {day}: {:.1} s, state {} bytes",
+                t0.elapsed().as_secs_f64(),
+                all.save().len()
+            );
         }
     }
-    eprintln!("{days} days of {} cities in {:.1} s, state {} bytes", all.cities.len(), t0.elapsed().as_secs_f64(), all.save().len());
+    eprintln!(
+        "{days} days of {} cities in {:.1} s, state {} bytes",
+        all.cities.len(),
+        t0.elapsed().as_secs_f64(),
+        all.save().len()
+    );
 }

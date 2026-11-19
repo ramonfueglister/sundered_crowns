@@ -92,7 +92,12 @@ const http = createServer((req, res) => {
     }
   }
   if (person) {
-    const d = personDetail(core.s, Number(person[1]), (i) => ALL_CULTURES[i] ?? 'unknown');
+    const d = personDetail(
+      core.s,
+      Number(person[1]),
+      (i) => ALL_CULTURES[i] ?? 'unknown',
+      (uid) => core.archived(uid),
+    );
     if (d) {
       res.writeHead(200, h);
       res.end(JSON.stringify(d));

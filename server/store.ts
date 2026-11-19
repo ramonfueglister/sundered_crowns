@@ -37,6 +37,10 @@ export interface WorldStore {
   ): Promise<boolean>;
   /** The log since that snapshot (replaces the one before). */
   uploadLog(world: string, log: string): Promise<boolean>;
+  /** A year of the archive of the dead (gzip, src/sim/people/archive.ts), written once; true when it arrived. */
+  uploadArchived(world: string, day: number, bin: Uint8Array): Promise<boolean>;
+  /** That year, null when the store does not have it; throws when Storage cannot be read. */
+  downloadArchived(world: string, day: number): Promise<Uint8Array | null>;
   /** The copy of the world, null when there is none; throws when Storage cannot be read. */
   downloadBackup(world: string): Promise<Backup | null>;
   /** The readable copy of the rulers (tables world_persons, world_reigns): rows that are new or changed; true when the
@@ -57,6 +61,12 @@ export class NullStore implements WorldStore {
   }
   async uploadLog() {
     return false;
+  }
+  async uploadArchived() {
+    return false;
+  }
+  async downloadArchived() {
+    return null;
   }
   async downloadBackup() {
     return null;
@@ -218,17 +228,27 @@ export class SupabaseStore implements WorldStore {
   uploadLog(world: string, log: string) {
     return this.run('log', this.up(world, 'log.ndjson', log));
   }
+  // The archive of the dead lies in `world-snapshots/<world>/persistent/archive/dead-<day>.bin`, a file a year (a few
+  // hundred KB), written once and never removed: the snapshot names the years it needs.
+  uploadArchived(world: string, day: number, bin: Uint8Array) {
+    return this.run('archive', this.up(world, `archive/dead-${day}.bin`, bin));
+  }
+  downloadArchived(world: string, day: number) {
+    return this.get(world, `archive/dead-${day}.bin`);
+  }
+  /** A file of the copy of a world, null when there is none; throws when Storage cannot be read. */
+  private async get(world: string, name: string): Promise<Uint8Array | null> {
+    const { data, error } = await this.bucket().download(`${world}/persistent/${name}`);
+    if (error) {
+      const e = error as { status?: unknown; statusCode?: unknown; code?: unknown; message?: string };
+      if (e.status === 404 || e.statusCode === '404' || e.code === 'NoSuchKey' || /not.?found/i.test(e.message ?? ''))
+        return null;
+      throw new Error(`[store] reading ${name} of ${world} failed: ${e.message ?? e}`);
+    }
+    return new Uint8Array(await data.arrayBuffer());
+  }
   async downloadBackup(world: string): Promise<Backup | null> {
-    const get = async (name: string): Promise<Uint8Array | null> => {
-      const { data, error } = await this.bucket().download(`${world}/persistent/${name}`);
-      if (error) {
-        const e = error as { status?: unknown; statusCode?: unknown; code?: unknown; message?: string };
-        if (e.status === 404 || e.statusCode === '404' || e.code === 'NoSuchKey' || /not.?found/i.test(e.message ?? ''))
-          return null;
-        throw new Error(`[store] reading ${name} of ${world} failed: ${e.message ?? e}`);
-      }
-      return new Uint8Array(await data.arrayBuffer());
-    };
+    const get = (name: string) => this.get(world, name);
     const dec = new TextDecoder();
     const head = await get('snapshot.json');
     if (!head) return null;
