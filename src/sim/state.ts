@@ -40,8 +40,11 @@ import type { Table } from './ecs';
  *  dead whom nothing in the running world needs leave the table of the persons for the archive; the rows of the
  *  others close up.
  *  31: the firms of the cities work on the working days of their owner's faith (economy feature 19,
- *  src/sim/holy_days.ts): the economies keep the last day of the working days they have. */
-export const STATE_VERSION = 31;
+ *  src/sim/holy_days.ts): the economies keep the last day of the working days they have.
+ *  32: the days of rest without a leak (economy feature 20): a firm buys on a working day the materials of its next
+ *  working day, and the owner of a firm buys on the working days of his faith on the mean profit of his firm over a
+ *  year; the engine's state keeps those profits (its format 11). */
+export const STATE_VERSION = 32;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {

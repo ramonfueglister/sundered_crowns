@@ -23,8 +23,9 @@
 // The firms work on the working days of their owner's faith (economy feature 19, src/sim/holy_days.ts): on a Sunday
 // or a feast a Latin firm makes nothing and buys no materials, on a working day more than on a mean day, so that over a
 // year it makes what it made before; wages are paid every day (economy/src/clock.rs). A household buys on the working
-// days of its own faith, the owner of a firm, the crown and the merchants every day. The engine is given the days of a
-// year before it computes the year's first day.
+// days of its own faith, the owner of a firm too, on the mean profit of his firm over a year (economy feature 20); the
+// crown and the merchants buy every day. The engine is given the days of a year before it computes the year's first
+// day.
 //
 // The economies are not connected to anything else in the world yet: not to the harvest or the arable, and nothing a
 // player does reaches them. Places without a city have no economy. The year has no seasons.
