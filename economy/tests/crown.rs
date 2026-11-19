@@ -9,8 +9,23 @@ fn city(seed: u64) -> Economy {
     let file: serde_json::Value = serde_json::from_str(CITIES).unwrap();
     let city = &file["cities"].as_array().unwrap()[0];
     let clock = &file["clock"];
-    let (plan, window) = (clock["plan"].as_u64().unwrap() as usize, clock["window"].as_u64().unwrap() as usize);
-    Economy::new(&city["parameters"].to_string(), &city["initial_conditions"].to_string(), seed, plan, window).unwrap().with_wages_in_money().with_demand_pull().unwrap().with_savings_spent(0.4 / 365.0).unwrap()
+    let (plan, window) = (
+        clock["plan"].as_u64().unwrap() as usize,
+        clock["window"].as_u64().unwrap() as usize,
+    );
+    Economy::new(
+        &city["parameters"].to_string(),
+        &city["initial_conditions"].to_string(),
+        seed,
+        plan,
+        window,
+    )
+    .unwrap()
+    .with_wages_in_money()
+    .with_demand_pull()
+    .unwrap()
+    .with_savings_spent(0.4 / 365.0)
+    .unwrap()
 }
 
 /// The budget the crown set for the period that was computed last.
@@ -39,9 +54,16 @@ fn the_budget_of_a_day_is_the_revenue_of_the_day_before_less_the_other_outlays()
         let (taken, other) = (e.model.gov.Y_G, e.model.ext.crown_outlays);
         assert!(taken > 0.0);
         // the benefit of the game is next to nothing and the crown pays no interest
-        assert!(other >= 0.0 && other < 1e-6 * taken, "other outlays of {other} against a revenue of {taken}");
+        assert!(
+            other >= 0.0 && other < 1e-6 * taken,
+            "other outlays of {other} against a revenue of {taken}"
+        );
         e.step(1);
-        assert!((budget(&e) / (taken - other) - 1.0).abs() < 1e-12, "a budget of {} after a revenue of {taken}", budget(&e));
+        assert!(
+            (budget(&e) / (taken - other) - 1.0).abs() < 1e-12,
+            "a budget of {} after a revenue of {taken}",
+            budget(&e)
+        );
         // the real purchases the crown plans are that budget at the prices it expects
         let m = &e.model;
         let price: f64 = m.prop.c_G_g.iter().zip(&m.agg.P_bar_g).map(|(c, p)| c * p).sum();
@@ -57,11 +79,20 @@ fn a_crown_that_buys_with_its_revenue_neither_hoards_nor_owes_after_years() {
         let (mut series, mut revenue) = (city(seed), city(seed).with_crown_spending_revenue());
         series.step(365 * 10);
         revenue.step(365 * 10);
-        let (a, b) = (series.model.gov.L_G / series.figures()[3], revenue.model.gov.L_G / revenue.figures()[3]);
-        assert!(b.abs() < 0.02, "seed {seed}: the crown's debt is {b} of a year's output");
+        let (a, b) = (
+            series.model.gov.L_G / series.figures()[3],
+            revenue.model.gov.L_G / revenue.figures()[3],
+        );
+        assert!(
+            b.abs() < 0.02,
+            "seed {seed}: the crown's debt is {b} of a year's output"
+        );
         widest = widest.max(a.abs());
     }
-    assert!(widest > 0.05, "the series of the paper leaves at most {widest} of a year's output");
+    assert!(
+        widest > 0.05,
+        "the series of the paper leaves at most {widest} of a year's output"
+    );
 }
 
 #[test]

@@ -1,4 +1,5 @@
-# Every pull request and every push to main: the types, the lint (biome.json, ruff.toml) and the tests (README.md, "Tests").
+# Every pull request and every push to main: the types, the lint (biome.json, ruff.toml), the Rust of the economy engine
+# (rustfmt.toml, clippy, its own tests) and the tests (README.md, "Tests").
 # The tests build the economy engine and the portrait builder from Rust first (tests/setup/), so the job installs the
 # compiler that economy/rust-toolchain.toml and portrait/rust-toolchain.toml fix, with the WebAssembly target.
 name: CI
@@ -37,6 +38,30 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npm run lint
       - run: pipx run ruff==0.17.4 check
+
+  # The economy engine: its layout (economy/rustfmt.toml), clippy for the native and the WebAssembly build, and the Rust
+  # tests of the shell. portrait/ joins once its open pull request is in.
+  rust:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: economy
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup toolchain install 1.88.0 --profile minimal --component rustfmt,clippy --target wasm32-unknown-unknown
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            economy/target
+          key: rust-${{ runner.os }}-${{ hashFiles('economy/Cargo.lock', 'economy/rust-toolchain.toml') }}
+          restore-keys: rust-${{ runner.os }}-
+      - run: cargo fmt --check
+      - run: cargo clippy --locked --all-targets -- -D warnings
+      - run: cargo clippy --locked --lib --target wasm32-unknown-unknown -- -D warnings
+      - run: cargo test --locked --release
 
   test:
     runs-on: ubuntu-latest
