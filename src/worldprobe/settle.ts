@@ -18,7 +18,10 @@ export interface Site { /** the same in every ground the place falls on */ id: n
  * the street and `d` metres deep, their middles `x` metres east and `z` metres south of the town's centre, the
  * street on the side `front` (0 north, 1 east, 2 south, 3 west). Metres at the scale of the houses.
  */
-export interface Parcels { w: number; d: number; x: readonly number[]; z: readonly number[]; front: readonly number[] }
+export interface Parcels { w: number; d: number; x: readonly number[]; z: readonly number[]; front: readonly number[]; /** the streets of the town (settlement feature 3): straight pieces [x0, z0, x1, z1, kind] on their middle line, the market (kind 4) as its corners; metres as the parcels */ streets?: readonly (readonly number[])[]; /** how wide every street is, metres */ street?: number }
+
+/** the kind of the market among a town's streets (STREET_KIND in src/sim/state.ts) */
+const MARKET = 4;
 /**
  * Asked for every town once its great buildings stand and before its houses: `free` tells whether a block `dx` east
  * and `dz` south of the town's middle can carry a house (dry, no rock, level with its neighbours, nothing built).
@@ -255,6 +258,28 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     return reach;
   };
 
+  /**
+   * The streets and the market of a town as the land register lays them (settlement feature 3): their ground is
+   * paved where it is dry, no rock and no house stands on it, and nothing grows or is built on it after. The edges
+   * round to blocks as those of the parcels do, so that a street reaches the houses at its side.
+   */
+  const onStreets = (s: Site, cx: number, cz: number, walled: boolean) => {
+    const L = s.lots!, half = (L.street ?? 0) / 2;
+    let paved = 0;
+    for (const q of L.streets ?? []) {
+      const [x0, z0, x1, z1, k] = q, pad = k === MARKET ? 0 : half;
+      const a0 = Math.round(m(Math.min(x0, x1) - pad)), a1 = Math.max(a0 + 1, Math.round(m(Math.max(x0, x1) + pad)));
+      const b0 = Math.round(m(Math.min(z0, z1) - pad)), b1 = Math.max(b0 + 1, Math.round(m(Math.max(z0, z1) + pad)));
+      for (let z = cz + b0; z < cz + b1; z++) for (let x = cx + a0; x < cx + a1; x++) {
+        if (!inGrid(x, z)) continue;
+        const i = idx(x, z);
+        if (g.wet[i] || g.mat[i] === Mat.Rock || used[i] === 1) continue;
+        g.mat[i] = Mat.Paved; used[i] = 2; if (walled) town[i] = 1; paved++;
+      }
+    }
+    if (own(cx, cz) && paved) count('street', paved);
+  };
+
   /** whether a house can stand on a column: buildable, and within a step of the columns beside it */
   const bears = (x: number, z: number) => buildable(x, z) && [[1, 0], [-1, 0], [0, 1], [0, -1]].every(([dx, dz]) => Math.abs(g.h[idx(x + dx, z + dz)] - g.h[idx(x, z)]) <= 1);
 
@@ -306,7 +331,7 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
       // a village or small town: a church in the small town, houses scattered round it
       if (size === 2) landmark(s.style.church, r, cx, cz, 4, 'church');
       survey?.(s, (dx, dz) => bears(cx + dx, cz + dz));
-      if (s.lots) { onParcels(s, r, cx, cz, false); if (own(cx, cz)) count('village'); return; }
+      if (s.lots) { onParcels(s, r, cx, cz, false); onStreets(s, cx, cz, false); if (own(cx, cz)) count('village'); return; }
       const reach = 5 + 2.5 * Math.sqrt(need);
       for (let tries = 0; housed < need && tries < 400; tries++) {
         const a = r.range(0, Math.PI * 2), q = Math.sqrt(r.next()) * reach, turn = r.chance(0.5), long = blocks(r, 5.7, 7.2), short = blocks(r, 4.3, 5.7), w = turn ? short : long, d = turn ? long : short;
@@ -326,6 +351,7 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     /** the side of a footprint that lies on a street, the sides towards the viewer first */
     const onStreet = (x: number, z: number, w: number, d: number): Side => (street(x, z + d) ? 'pz' : street(x + w, z) ? 'px' : street(x, z - 1) ? 'nz' : street(x - 1, z) ? 'nx' : 'pz');
     let half = s.lots ? onParcels(s, r, cx, cz, true) + 2 : firstHalf(pop);
+    if (s.lots) onStreets(s, cx, cz, true);
     for (; !s.lots && housed < need && half <= 70; half += 2) {
       for (let z = cz - half; z < cz + half && housed < need; z++) for (let x = cx - half; x < cx + half && housed < need; x++) {
         if (!inGrid(x, z) || used[idx(x, z)] || street(x, z)) continue;

@@ -212,6 +212,13 @@ describe('the farmsteads of a world of 1291', () => {
       hs.forEach((h, a) => { for (const g of hs.slice(0, a)) expect(near(boxes[h], boxes[g], HAMLET_GAP)).toBe(false); });
       for (const h of hs) for (const p of built.get(town) ?? []) expect(near(boxes[h], p, HAMLET_OFF)).toBe(false);
     }
+    // and off the streets and the market of their town (beside them they may lie)
+    const S = s.street.cols;
+    for (let i = 0; i < s.street.size; i++) {
+      const pad = S.kind[i] === STREET_KIND.market ? 0 : S.width[i] / 2;
+      const q = { x: (S.x0[i] + S.x1[i]) / 2, z: (S.z0[i] + S.z1[i]) / 2, w: Math.abs(S.x1[i] - S.x0[i]) + 2 * pad, d: Math.abs(S.z1[i] - S.z0[i]) + 2 * pad };
+      for (const h of of.get(S.site[i]) ?? []) expect(near(boxes[h], q, 0)).toBe(false);
+    }
   });
   it('stand on dry ground in all but a few hamlets: a hamlet whose own spot is wet lies on the nearest ground that carries it', { timeout: 60_000 }, () => {
     const dry = w.dry!, C = s.lot.cols, wet = new Set<number>();
@@ -223,7 +230,7 @@ describe('the farmsteads of a world of 1291', () => {
     const found = foundLots(decodeState(encodeState(s)), w.ground, w.dry);
     expect(found.rough).toBe(wet.size);
     expect(found.rough).toBeLessThan(s.hamlets.size / 30);
-    expect(found.crowded).toBeLessThan(s.hamlets.size / 50);
+    expect(found.crowded).toBeLessThan(s.hamlets.size / 30); // 56 of 1857 in 1291: most whose own spot lies on a street out of the town (feature 3)
     // by the building ground alone, which ends 96 blocks from the centre and counts every step, more hamlets stay rough
     expect(foundLots(decodeState(encodeState(s)), w.ground, null).rough).toBeGreaterThan(found.rough);
   });

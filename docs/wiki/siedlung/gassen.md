@@ -14,7 +14,7 @@ Nicht dabei: echte Stadtpläne für die grossen Städte (die Kartendaten von Ope
 
 ## Im Spiel
 
-Jede Parzelle liegt an einer Gasse und zeigt mit der schmalen Seite zu ihr, nach Norden, Osten, Süden oder Westen. Die 3D-Welt stellt die Häuser auf diese Parzellen; die Gassen selbst zeichnet sie noch nicht. Der Weltserver gibt die Gassen und den Markt jeder Stadt aus, die Datei des Grundbuchs für die 3D-Welt enthält sie auch.
+Jede Parzelle liegt an einer Gasse und zeigt mit der schmalen Seite zu ihr, nach Norden, Osten, Süden oder Westen. Die 3D-Welt stellt die Häuser auf diese Parzellen und pflastert die Gassen und den Markt. Die Weiler liegen neben den Strassen hinaus, nie auf ihnen. Der Weltserver gibt die Gassen und den Markt jeder Stadt aus, die Datei des Grundbuchs für die 3D-Welt enthält sie auch.
 
 ## Das Modell
 
