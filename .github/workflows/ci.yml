@@ -1,0 +1,49 @@
+# Every pull request and every push to main: the types, then the tests (README.md, "Tests").
+# The tests build the economy engine and the portrait builder from Rust first (tests/setup/), so the job installs the
+# compiler that economy/rust-toolchain.toml and portrait/rust-toolchain.toml fix, with the WebAssembly target.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run typecheck
+
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      # rustup reads the toolchain files when cargo runs in economy/ and portrait/; this only fetches it once
+      - run: rustup toolchain install 1.88.0 --profile minimal --target wasm32-unknown-unknown
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            economy/target
+            portrait/target
+          key: cargo-${{ runner.os }}-${{ hashFiles('economy/Cargo.lock', 'portrait/Cargo.lock', '*/rust-toolchain.toml') }}
+          restore-keys: cargo-${{ runner.os }}-
+      - run: npm ci --no-audit --no-fund
+      - run: npx vitest run
