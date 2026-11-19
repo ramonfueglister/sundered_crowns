@@ -2,8 +2,7 @@
 
 The map's props (trees, houses, churches, castles, soldiers, ships) are modelled procedurally in Blender
 (bmesh, no hand-made files) and exported to `public/models/models.json` + `public/models/models.bin`.
-The game loads them with `loadModels()` from `src/render/models.ts` (or `loadModelSet()` in the renderer's
-`props.ts`); every mesh found there replaces the renderer's built-in stand-in of the same name.
+The flat map loads them with `loadModelSet()` in the renderer's `props.ts`; every mesh found there replaces the renderer's built-in stand-in of the same name.
 
 ## Rebuild
 
