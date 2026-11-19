@@ -7,7 +7,7 @@ import { buildOpenSea } from '../lookprobe/terrain';
 import { FACE_STEPS } from '../lookprobe/faces';
 import { GRID, N, SEA_Y, onGrid } from '../lookprobe/layout';
 import { maybeGunzip } from '../render/assets';
-import { buildPiece } from './build';
+import { buildPiece, warmPieces } from './build';
 import { type Cover, KINDS, laidOut } from './far';
 import { glide } from './glide';
 import { above, lay, meanCover, summary } from './mean';
@@ -19,6 +19,8 @@ import { type Table, type TablesIndex, drawTable, keepTables, keyOfTable, tabled
 import type { Piece, WorldScene } from './world';
 
 export interface PieceJob { id: number; piece: Piece; region: string; /** step of the map: blocks 2^step cells wide */ step: number; base: string; bakedSky: boolean; /** the piece is kept on disk under this name, in the folder of this build (store.ts); `kept`: it is there, or may be (the store has not yet said what it holds), and is read if so, not built */ keep?: { build: string; name: string; kept: boolean }; /** the world's start year, whose towns are built, whose forest stands and whose people live on the land (default 1356) */ year?: number; /** false: a far step as far.ts lays it out, not as the mean of the finer step */ mean?: boolean | 'compare'; /** for a piece of the first far step: the summaries of the four finest pieces under it that the page holds (mean.ts), in rows */ under?: (Float32Array | undefined)[]; /** side of the ground the piece is built on, where it is not the usual one (layout.ts: GRID); the piece's ox, oz and part are given on that ground */ grid?: number; /** the piece's lists as small numbers (small.ts), not as floats */ small?: boolean; /** and of those the rectangles on the grid of blocks as faces (lookprobe/faces.ts) */ faces?: boolean; /** false: the rectangles on no grid of what stands on the piece stay triangles (faces.ts `Free`) */ free?: boolean; /** false: the piece is built even where its table was built ahead (table.ts) */ tables?: boolean; /** the piece's land as faces that glide to the shape of the coarser piece over it, where that has a table (glide.ts) */ glide?: boolean }
+/** Asks a worker to load the map's data of the finest step before its first piece of that step (build.ts `warmPieces`); no answer comes. */
+export interface WarmJob { warm: true; region: string; base: string; year?: number }
 export interface PieceDone { id: number; scene?: WorldScene<Shape>; /** of a piece of the finest step: what it shows, summed up for the piece of the next step over it (mean.ts) */ summary?: Float32Array; /** the piece packed, to be kept on disk (pack.ts) */ packed?: ArrayBuffer; /** the piece was read from disk */ kept?: boolean; error?: string }
 /** what is kept of a piece */
 type Kept = Pick<PieceDone, 'scene' | 'summary'>;
@@ -152,7 +154,9 @@ async function keptOf(job: PieceJob): Promise<Kept | null> {
   try { return run ? unpack<Kept>(run) : null; } catch { return null; }
 }
 
-self.onmessage = async (e: MessageEvent<PieceJob>) => {
+self.onmessage = async (e: MessageEvent<PieceJob | WarmJob>) => {
+  // (a piece asked for meanwhile waits for the same loads, which each happen once)
+  if ('warm' in e.data) { void warmPieces(e.data).catch(() => undefined); return; }
   const { id, piece, step, keep } = e.data;
   try {
     const began = performance.now(), had = await keptOf(e.data);
