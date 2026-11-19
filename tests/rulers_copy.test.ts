@@ -29,7 +29,10 @@ describe('readable copy of the rulers', () => {
     const H = s.realm.cols.holder;
     for (let r = 0; r < s.realm.size; r++) {
       if (!s.realm.alive[r] || H[r] < 0) continue;
-      expect(reigns.some((g) => g.realm === s.realmText[r].key && g.person === H[r] && g.end_day === null), s.realmText[r].key).toBe(true);
+      expect(
+        reigns.some((g) => g.realm === s.realmText[r].key && g.person === H[r] && g.end_day === null),
+        s.realmText[r].key,
+      ).toBe(true);
     }
     // France on 1 January 1291: Philip IV
     const fr = s.realmText.findIndex((t) => t.key === 'france');
@@ -43,7 +46,8 @@ describe('readable copy of the rulers', () => {
     copy.sentOk(first.keys);
     expect(copy.changes(s, w).keys).toEqual([]);
     // a holder dies: their person row and the reigns they held change, nothing else
-    const fr = s.realmText.findIndex((t) => t.key === 'france'), king = s.realm.cols.holder[fr];
+    const fr = s.realmText.findIndex((t) => t.key === 'france'),
+      king = s.realm.cols.holder[fr];
     s.person.cols.died[king] = 0;
     try {
       const ch = copy.changes(s, w);
@@ -51,13 +55,26 @@ describe('readable copy of the rulers', () => {
       expect(ch.persons[0].died_day).toBe(0);
       expect(ch.reigns.length).toBeGreaterThan(0);
       expect(ch.reigns.every((g) => g.person === king && g.end_day === 0)).toBe(true);
-    } finally { s.person.cols.died[king] = ALIVE; }
+    } finally {
+      s.person.cols.died[king] = ALIVE;
+    }
   });
 
   it('goes out when a world server with a store starts', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'scw-r-'));
     const store = new MemStore();
-    const core = new WorldCore({ ...configFromEnv({}), dataDir: dir, id: 'test', startYear: 1291, seed: 1291, uploadMinMinutes: 0, log: () => {} }, store).init();
+    const core = new WorldCore(
+      {
+        ...configFromEnv({}),
+        dataDir: dir,
+        id: 'test',
+        startYear: 1291,
+        seed: 1291,
+        uploadMinMinutes: 0,
+        log: () => {},
+      },
+      store,
+    ).init();
     await core.flushUploads();
     expect(store.persons.size).toBe(core.s.named.length);
     expect(store.reigns.size).toBeGreaterThan(200);
