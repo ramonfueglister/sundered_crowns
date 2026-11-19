@@ -607,8 +607,8 @@ ground on one bank). Before feature 5: Venice and Hormuz.
 The building ground of the towns (`ground_<year>.json`) is surveyed before anything the world graphic builds of its
 own (`build_ground.ts`, settle.ts): before it had the graphic's church and towers at the centre of every town as
 built ground, and a town whose neighbour's houses stood on its middle (Fustat beside Cairo) had none. The streets
-were recalibrated on it (feature 3, crossing 2.5 parcel widths). On it the fields of feature 4 come out at 108,272 furlongs with
-97.9 % of the arable laid, 28 towns short of ground (before 107,435, 97.3 %, 33). Beyond the surveyed ground of a town its dry ground
+were recalibrated on it (feature 3, crossing 2.5 parcel widths). On it the fields of feature 4 come out at 108,261 furlongs with
+97.9 % of the arable laid, 28 towns short of ground (before 107,447, 97.3 %, 32). Beyond the surveyed ground of a town its dry ground
 counts too (`widened`, from `dry_<year>.json`), so that the landmarks at its edge find room.
 
 ### Own rules and gaps (no source)
