@@ -4,6 +4,7 @@
 import type { WorldState } from '../sim/state';
 import { ALIVE, NO_LOT, LOT_KIND } from '../sim/state';
 import { stripOrder } from '../sim/settlement/fields';
+import { presentPersons } from '../sim/people/living';
 
 /** The ground of a town and of its hamlets in the land register, as columns of equal length (JSON). Metres at the
  *  scale of the houses; x east and z south of the centre of the town. */
@@ -81,8 +82,8 @@ export function manyTownsLots(s: WorldState, sites: readonly number[]): TownLots
     const o = at.get(L.site[l])!;
     if (o.family[row[l]] < 0) o.family[row[l]] = f;
   }
-  for (let i = 0; i < s.person.size; i++) {
-    if (!s.person.alive[i] || P.died[i] !== ALIVE) continue;
+  for (const i of presentPersons(s)) {
+    if (P.died[i] !== ALIVE) continue;
     const l = F.lot[P.family[i]];
     if (l === NO_LOT || row[l] < 0) continue;
     at.get(L.site[l])!.persons[row[l]]++;

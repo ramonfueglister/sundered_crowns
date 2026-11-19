@@ -1,0 +1,2 @@
+# rustfmt for the economy engine; CI runs `cargo fmt --check` here.
+max_width = 120

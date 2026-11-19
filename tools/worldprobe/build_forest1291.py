@@ -44,13 +44,21 @@ data/content/world_extent.json). public/map/conifer1291.bin.gz, the same grid: s
 
 Usage: python3 tools/worldprobe/build_forest1291.py [--report]
 """
-import csv, gzip, json, os, sys
+
+import csv
+import gzip
+import json
+import os
+import pathlib
+import sys
+
 import numpy as np
 from matplotlib.path import Path
 from scipy import ndimage
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'geo'))
-from common import CACHE, H, ROOT, W
+from common import CACHE, ROOT, H, W
+
 sys.path.insert(0, os.path.dirname(__file__))
 from build_region import WORLD_H, WORLD_W, world_lonlat
 
@@ -70,7 +78,7 @@ STEP = 250
 
 
 def frame():
-    e = json.load(open(os.path.join(ROOT, 'data', 'content', 'world_extent.json')))
+    e = json.loads(pathlib.Path(os.path.join(ROOT, 'data', 'content', 'world_extent.json')).read_text())
     return e['west'], e['east'], e['south'], e['north']
 
 
@@ -84,66 +92,92 @@ def grid():
 
 
 def land_mask(cols, rows):
-    ids = np.frombuffer(gzip.decompress(open(os.path.join(ROOT, 'public', 'map', 'ids.bin.gz'), 'rb').read()), '<u2').reshape(H, W)
-    L = json.load(open(os.path.join(ROOT, 'public', 'data', 'geo.json')))['L']
-    py = np.clip(rows * 2 + 1, 0, H - 1); px = np.clip(cols * 2 + 1, 0, W - 1)
+    ids = np.frombuffer(
+        gzip.decompress(pathlib.Path(os.path.join(ROOT, 'public', 'map', 'ids.bin.gz')).read_bytes()), '<u2'
+    ).reshape(H, W)
+    L = json.loads(pathlib.Path(os.path.join(ROOT, 'public', 'data', 'geo.json')).read_text())['L']
+    py = np.clip(rows * 2 + 1, 0, H - 1)
+    px = np.clip(cols * 2 + 1, 0, W - 1)
     v = ids[np.ix_(py, px)]
     return (v >= 1) & (v <= L)
 
 
 def climate_kinds(cols, rows):
-    c = np.frombuffer(gzip.decompress(open(os.path.join(ROOT, 'public', 'map', 'climate.bin.gz'), 'rb').read()), np.uint8).reshape(WORLD_H // 2, WORLD_W // 2)
+    c = np.frombuffer(
+        gzip.decompress(pathlib.Path(os.path.join(ROOT, 'public', 'map', 'climate.bin.gz')).read_bytes()), np.uint8
+    ).reshape(WORLD_H // 2, WORLD_W // 2)
     return c[np.ix_(rows, cols)] & 63
 
 
 def pollen():
     """1-degree cells: centre lon, lat, share of trees, share of the trees that are evergreen."""
     out = []
-    for r in csv.DictReader(open(POLLEN)):
-        c, b = float(r['C_KK10LonLatElev']), float(r['B_KK10LonLatElev'])
-        out.append((float(r['Lon']), float(r['Lat']), c + b, c / max(c + b, 1e-9)))
+    with open(POLLEN) as f:
+        for r in csv.DictReader(f):
+            c, b = float(r['C_KK10LonLatElev']), float(r['B_KK10LonLatElev'])
+            out.append((float(r['Lon']), float(r['Lat']), c + b, c / max(c + b, 1e-9)))
     return np.array(out)
 
 
 def kk10(lon, lat):
     """KK10 land use (share) at the grid's places: mean of 1281-1301, bilinear between the 5' cells."""
     u = np.load(os.path.join(KK10, 'kk10_1281_1301_mean.npy')).astype(np.float32)
-    klat = np.load(os.path.join(KK10, 'lat.npy')); klon = np.load(os.path.join(KK10, 'lon.npy'))
-    if u.shape != (klat.size, klon.size): u = u.T
+    klat = np.load(os.path.join(KK10, 'lat.npy'))
+    klon = np.load(os.path.join(KK10, 'lon.npy'))
+    if u.shape != (klat.size, klon.size):
+        u = u.T
     u = np.where((u < 0) | (u > 1), np.nan, u)
     # KK10 has no value on water; a shore takes its land's, not none (else every lake and coast gets a ring of woods)
     idx = ndimage.distance_transform_edt(np.isnan(u), return_distances=False, return_indices=True)
     u = u[idx[0], idx[1]]
-    if klat[0] > klat[-1]: klat = klat[::-1]; u = u[::-1]
-    fy = np.interp(lat, klat, np.arange(klat.size)); fx = np.interp(lon, klon, np.arange(klon.size))
+    if klat[0] > klat[-1]:
+        klat = klat[::-1]
+        u = u[::-1]
+    fy = np.interp(lat, klat, np.arange(klat.size))
+    fx = np.interp(lon, klon, np.arange(klon.size))
     return ndimage.map_coordinates(u, np.meshgrid(fy, fx, indexing='ij'), order=1, mode='nearest')
 
 
 def polygon_mask(lon, lat, units):
     """Cells inside the Natural Earth map units named (ne_10m_admin_0_map_units, cached in ne/)."""
-    d = json.load(open(os.path.join(CACHE, 'ne', 'ne_10m_admin_0_map_units.geojson')))
-    LON, LAT = np.meshgrid(lon, lat); pts = np.c_[LON.ravel(), LAT.ravel()]; m = np.zeros(pts.shape[0], bool)
+    d = json.loads(pathlib.Path(os.path.join(CACHE, 'ne', 'ne_10m_admin_0_map_units.geojson')).read_text())
+    LON, LAT = np.meshgrid(lon, lat)
+    pts = np.c_[LON.ravel(), LAT.ravel()]
+    m = np.zeros(pts.shape[0], bool)
     for f in d['features']:
-        if f['properties'].get('GEOUNIT') not in units: continue
-        g = f['geometry']; polys = g['coordinates'] if g['type'] == 'MultiPolygon' else [g['coordinates']]
+        if f['properties'].get('GEOUNIT') not in units:
+            continue
+        g = f['geometry']
+        polys = g['coordinates'] if g['type'] == 'MultiPolygon' else [g['coordinates']]
         for p in polys:
-            ring = np.array(p[0]); x0, y0 = ring.min(0); x1, y1 = ring.max(0)
+            ring = np.array(p[0])
+            x0, y0 = ring.min(0)
+            x1, y1 = ring.max(0)
             sel = (pts[:, 0] >= x0) & (pts[:, 0] <= x1) & (pts[:, 1] >= y0) & (pts[:, 1] <= y1)
-            if sel.any(): m[sel] |= Path(ring).contains_points(pts[sel])
+            if sel.any():
+                m[sel] |= Path(ring).contains_points(pts[sel])
     return m.reshape(LAT.shape)
 
 
-sig = lambda z: 1 / (1 + np.exp(-z))
-logit = lambda p: np.log(np.clip(p, 1e-4, 1 - 1e-4) / (1 - np.clip(p, 1e-4, 1 - 1e-4)))
+def sig(z):
+    return 1 / (1 + np.exp(-z))
+
+
+def logit(p):
+    return np.log(np.clip(p, 1e-4, 1 - 1e-4) / (1 - np.clip(p, 1e-4, 1 - 1e-4)))
 
 
 def solve_offset(pot, base, wgt, groups, target, n, lo=-12.0, hi=12.0):
     """Per group, the b in pot * sigmoid(base + b) whose weighted mean is the target (bisection, all at once)."""
-    a = np.full(n, lo); z = np.full(n, hi); sw = np.bincount(groups, wgt, n)
+    a = np.full(n, lo)
+    z = np.full(n, hi)
+    sw = np.bincount(groups, wgt, n)
     for _ in range(50):
         m = (a + z) / 2
         mean = np.bincount(groups, wgt * pot * sig(base + m[groups]), n) / np.maximum(sw, 1e-12)
-        up = mean < target; a = np.where(up, m, a); z = np.where(up, z, m)
+        up = mean < target
+        a = np.where(up, m, a)
+        z = np.where(up, z, m)
     return (a + z) / 2
 
 
@@ -154,7 +188,8 @@ def main():
     pot = np.vectorize(POTENTIAL.get)(climate_kinds(cols, rows)).astype(np.float64)
     # the kinds come in blocks of the climate sources' cells (up to half a degree); nature has no such edges: the
     # potential is eased over SOFT_DEG between them (on land only, so the sea does not thin the coast)
-    k = SOFT_DEG / abs(lat[0] - lat[1]); lm = land.astype(float)
+    k = SOFT_DEG / abs(lat[0] - lat[1])
+    lm = land.astype(float)
     pot = np.where(land, ndimage.gaussian_filter(pot * lm, k) / np.maximum(ndimage.gaussian_filter(lm, k), 1e-6), pot)
     used = kk10(lon, lat)
     base = logit(1 - used)
@@ -163,36 +198,47 @@ def main():
     # 1-degree lattice over the pollen maps
     x0, y0 = P[:, 0].min(), P[:, 1].min()
     nx, ny = int(round(P[:, 0].max() - x0)) + 1, int(round(P[:, 1].max() - y0)) + 1
-    T = np.full((ny, nx), np.nan); C = np.full((ny, nx), np.nan)
-    ix = np.round(P[:, 0] - x0).astype(int); iy = np.round(P[:, 1] - y0).astype(int)
-    T[iy, ix] = P[:, 2]; C[iy, ix] = P[:, 3]
+    T = np.full((ny, nx), np.nan)
+    C = np.full((ny, nx), np.nan)
+    ix = np.round(P[:, 0] - x0).astype(int)
+    iy = np.round(P[:, 1] - y0).astype(int)
+    T[iy, ix] = P[:, 2]
+    C[iy, ix] = P[:, 3]
     # which lattice cell each grid place is in
-    gx = np.floor(lon - (x0 - 0.5)).astype(int); gy = np.floor(lat - (y0 - 0.5)).astype(int)
+    gx = np.floor(lon - (x0 - 0.5)).astype(int)
+    gy = np.floor(lat - (y0 - 0.5)).astype(int)
     GX, GY = np.meshgrid(gx, gy)
-    inside = (GX >= 0) & (GX < nx) & (GY >= 0) & (GY < ny)
+    inside = (GX >= 0) & (nx > GX) & (GY >= 0) & (ny > GY)
     cell = np.where(inside, GY.clip(0, ny - 1) * nx + GX.clip(0, nx - 1), -1)
     known = inside & ~np.isnan(T.ravel()[cell.clip(0)]) & land
     # history overrides: England's overall level from the records
     england = polygon_mask(lon, lat, {'England'}) & land
     # solve b per lattice cell, then spread it smoothly; repeat so the smooth field keeps the cells' means
-    n = nx * ny; g = np.where(known, cell, n)
+    n = nx * ny
+    g = np.where(known, cell, n)
     target = np.append(np.nan_to_num(T.ravel()), 0)
     # cells whose potential cannot carry the pollen's trees keep their potential (reported)
 
     def spread(bc):
         """b of the lattice, missing cells from the nearest known, eased over a cell, bilinear between the cells' centres, faded
         out within FADE_DEG of the pollen maps' edge (the fade itself eased over a cell, so its steps do not show)."""
-        grid_b = bc[:n].reshape(ny, nx); have = np.zeros((ny, nx), bool)
+        grid_b = bc[:n].reshape(ny, nx)
+        have = np.zeros((ny, nx), bool)
         have.ravel()[np.unique(g[g < n])] = True
         idx = ndimage.distance_transform_edt(~have, return_distances=False, return_indices=True)
         filled = ndimage.gaussian_filter(grid_b[idx[0], idx[1]], 0.75, mode='nearest')
-        fade = ndimage.gaussian_filter(np.clip(1 - ndimage.distance_transform_edt(np.isnan(T)) / FADE_DEG, 0, 1), 1.0, mode='nearest')
-        fy = np.clip(lat - y0, 0, ny - 1); fx = np.clip(lon - x0, 0, nx - 1)
+        fade = ndimage.gaussian_filter(
+            np.clip(1 - ndimage.distance_transform_edt(np.isnan(T)) / FADE_DEG, 0, 1), 1.0, mode='nearest'
+        )
+        fy = np.clip(lat - y0, 0, ny - 1)
+        fx = np.clip(lon - x0, 0, nx - 1)
         FY, FX = np.meshgrid(fy, fx, indexing='ij')
         field = ndimage.map_coordinates(filled, [FY, FX], order=1, mode='nearest')
         out_y = np.maximum(0, np.maximum(y0 - lat, lat - (y0 + ny - 1)))[:, None]
         out_x = np.maximum(0, np.maximum(x0 - lon, lon - (x0 + nx - 1)))[None, :]
-        w = np.clip(ndimage.map_coordinates(fade, [FY, FX], order=3, mode='nearest'), 0, 1) * np.clip(1 - np.hypot(out_y, out_x) / FADE_DEG, 0, 1)
+        w = np.clip(ndimage.map_coordinates(fade, [FY, FX], order=3, mode='nearest'), 0, 1) * np.clip(
+            1 - np.hypot(out_y, out_x) / FADE_DEG, 0, 1
+        )
         return field * w
 
     wgt = np.where(known, area, 0.0)
@@ -206,7 +252,14 @@ def main():
     forest = pot * sig(base + field)
     # England: one offset over the whole of it so its woods are those of the records; eased in over half a degree
     if england.any():
-        eb = solve_offset(pot[england], (base + field)[england], area[england], np.zeros(england.sum(), int), np.array([ENGLAND_1291]), 1)[0]
+        eb = solve_offset(
+            pot[england],
+            (base + field)[england],
+            area[england],
+            np.zeros(england.sum(), int),
+            np.array([ENGLAND_1291]),
+            1,
+        )[0]
         ease = ndimage.gaussian_filter(england.astype(float), sigma=max(1, int(0.25 / abs(lat[1] - lat[0]))))
         ease = np.where(england, 1.0, ease)
         field = field + eb * ease
@@ -215,21 +268,46 @@ def main():
     out[np.ix_(rows, cols)] = np.where(land, np.round(np.clip(forest, 0, 1) * STEP), 255).astype(np.uint8)
     con = np.full((WORLD_H // 2, WORLD_W // 2), 255, np.uint8)
     FY, FX = np.meshgrid(np.clip(lat - y0, 0, ny - 1), np.clip(lon - x0, 0, nx - 1), indexing='ij')
-    cfill = C.copy(); miss = np.isnan(cfill)
-    idx = ndimage.distance_transform_edt(miss, return_distances=False, return_indices=True); cfill = cfill[idx[0], idx[1]]
+    cfill = C.copy()
+    miss = np.isnan(cfill)
+    idx = ndimage.distance_transform_edt(miss, return_distances=False, return_indices=True)
+    cfill = cfill[idx[0], idx[1]]
     cv = ndimage.map_coordinates(cfill, [FY, FX], order=1, mode='nearest')
-    con[np.ix_(rows, cols)] = np.where(land & inside & (ndimage.map_coordinates((~miss).astype(float), [FY, FX], order=1) > 0.5), np.round(cv * STEP), 255).astype(np.uint8)
+    con[np.ix_(rows, cols)] = np.where(
+        land & inside & (ndimage.map_coordinates((~miss).astype(float), [FY, FX], order=1) > 0.5),
+        np.round(cv * STEP),
+        255,
+    ).astype(np.uint8)
     for name, arr in (('forest1291', out), ('conifer1291', con)):
-        with open(os.path.join(ROOT, 'public', 'map', f'{name}.bin.gz'), 'wb') as f: f.write(gzip.compress(arr.tobytes(), 9, mtime=0))
+        with open(os.path.join(ROOT, 'public', 'map', f'{name}.bin.gz'), 'wb') as f:
+            f.write(gzip.compress(arr.tobytes(), 9, mtime=0))
     # how well the cells keep the pollen
-    mean = np.bincount(g.ravel(), (wgt * forest).ravel(), n + 1)[:n] / np.maximum(np.bincount(g.ravel(), wgt.ravel(), n + 1)[:n], 1e-12)
+    mean = np.bincount(g.ravel(), (wgt * forest).ravel(), n + 1)[:n] / np.maximum(
+        np.bincount(g.ravel(), wgt.ravel(), n + 1)[:n], 1e-12
+    )
     ok = np.bincount(g.ravel(), wgt.ravel(), n + 1)[:n] > 0
-    capped = ok & (np.bincount(g.ravel(), (wgt * pot).ravel(), n + 1)[:n] / np.maximum(np.bincount(g.ravel(), wgt.ravel(), n + 1)[:n], 1e-12) < target[:n] - 0.02)
+    capped = ok & (
+        np.bincount(g.ravel(), (wgt * pot).ravel(), n + 1)[:n]
+        / np.maximum(np.bincount(g.ravel(), wgt.ravel(), n + 1)[:n], 1e-12)
+        < target[:n] - 0.02
+    )
     err = (mean - target[:n])[ok & ~capped]
-    print(f'pollen cells {ok.sum()}: {capped.sum()} held lower by the potential (desert, steppe); the other {err.size}: mean |error| {np.abs(err).mean() * 100:.1f} %, 95 % within {np.percentile(np.abs(err), 95) * 100:.1f} %, worst {np.abs(err).max() * 100:.1f} %')
-    print(f'England {np.average(forest[england], weights=area[england]) * 100:.1f} % (records {ENGLAND_1291 * 100:.1f} %)')
+    print(
+        f'pollen cells {ok.sum()}: {capped.sum()} held lower by the potential (desert, steppe); the other {err.size}: mean |error| {np.abs(err).mean() * 100:.1f} %, 95 % within {np.percentile(np.abs(err), 95) * 100:.1f} %, worst {np.abs(err).max() * 100:.1f} %'
+    )
+    print(
+        f'England {np.average(forest[england], weights=area[england]) * 100:.1f} % (records {ENGLAND_1291 * 100:.1f} %)'
+    )
     if report:
-        np.savez_compressed(os.path.join(KK10, 'forest1291_report.npz'), lon=lon, lat=lat, forest=np.where(land, forest, np.nan), pot=pot, used=used, field=field)
+        np.savez_compressed(
+            os.path.join(KK10, 'forest1291_report.npz'),
+            lon=lon,
+            lat=lat,
+            forest=np.where(land, forest, np.nan),
+            pot=pot,
+            used=used,
+            field=field,
+        )
 
 
 if __name__ == '__main__':

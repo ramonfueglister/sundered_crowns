@@ -21,7 +21,9 @@ const WINDOW: usize = 365;
 fn main() {
     let a: Vec<String> = std::env::args().collect();
     if a.len() < 7 || (a.len() - 5) % 2 != 0 || !["series", "revenue"].contains(&a[4].as_str()) {
-        eprintln!("usage: longrun <years> <seed> <savings per year> <series|revenue> (<parameters.json> <initial_conditions.json>)…");
+        eprintln!(
+            "usage: longrun <years> <seed> <savings per year> <series|revenue> (<parameters.json> <initial_conditions.json>)…"
+        );
         std::process::exit(2);
     }
     let (years, seed): (usize, u64) = (a[1].parse().expect("years"), a[2].parse().expect("seed"));
@@ -33,16 +35,27 @@ fn main() {
         .enumerate()
         .map(|(c, f)| {
             let e = Economy::new(&read(&f[0]), &read(&f[1]), seed + c as u64, PLAN, WINDOW).expect("economy");
-            let e = e.with_wages_in_money().with_demand_pull().expect("demand pull").with_savings_spent(savings / WINDOW as f64).expect("savings");
+            let e = e
+                .with_wages_in_money()
+                .with_demand_pull()
+                .expect("demand pull")
+                .with_savings_spent(savings / WINDOW as f64)
+                .expect("savings");
             let e = if revenue { e.with_crown_spending_revenue() } else { e };
-            let e = if std::env::var("OWNER").as_deref() == Ok("paper") { e } else { e.with_owner_household() };
+            let e = if std::env::var("OWNER").as_deref() == Ok("paper") {
+                e
+            } else {
+                e.with_owner_household()
+            };
             e.with_bounded_past()
         })
         .collect();
     let mut all = Cities::new(cities).expect("cities");
     let s = |v: &[f64]| v.iter().sum::<f64>();
     let start: Vec<f64> = all.cities.iter().map(|e| e.figures()[2]).collect();
-    println!("year D_i L_i E_k D_workers D_owners D_bankers | profits losses stock written_off wanted got | GDP weakest without_work merchants_low merchants_high banks_negative check crown_low crown_high");
+    println!(
+        "year D_i L_i E_k D_workers D_owners D_bankers | profits losses stock written_off wanted got | GDP weakest without_work merchants_low merchants_high banks_negative check crown_low crown_high"
+    );
     for y in 1..=years {
         let (mut profits, mut losses, mut stock, mut off, mut wanted, mut got) = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
         for _ in 0..WINDOW {
@@ -52,12 +65,17 @@ fn main() {
                 let m = &e.model;
                 let f = &m.firms;
                 for i in 0..f.Pi_i.len() {
-                    if f.Pi_i[i] > 0.0 { profits += f.Pi_i[i] } else { losses -= f.Pi_i[i] }
+                    if f.Pi_i[i] > 0.0 {
+                        profits += f.Pi_i[i]
+                    } else {
+                        losses -= f.Pi_i[i]
+                    }
                     stock += f.P_i[i] * f.DS_i[i];
                 }
                 // what the equity of the banks fell by beyond their profits after dividends (A.67): written off
                 let pk = s(&m.banks.Pi_k);
-                let kept = pk - m.prop.theta_DIV * (1.0 - m.prop.tau_FIRM) * pk.max(0.0) - m.prop.tau_FIRM * pk.max(0.0);
+                let kept =
+                    pk - m.prop.theta_DIV * (1.0 - m.prop.tau_FIRM) * pk.max(0.0) - m.prop.tau_FIRM * pk.max(0.0);
                 off += (kept - (s(&m.banks.E_k) - before[c])).max(0.0);
                 wanted += s(&m.w_act.C_d_h) + s(&m.w_inact.C_d_h) + s(&f.C_d_h) + s(&m.banks.C_d_h);
                 got += s(&m.w_act.C_h) + s(&m.w_inact.C_h) + s(&f.C_h) + s(&m.banks.C_h);
@@ -66,19 +84,53 @@ fn main() {
         let t = |g: &dyn Fn(&Economy) -> f64| all.cities.iter().map(g).sum::<f64>();
         let fig: Vec<[f64; sc_economy::FIGURES]> = all.cities.iter().map(Economy::figures).collect();
         let gdp = fig.iter().map(|f| f[1]).sum::<f64>() / start.iter().sum::<f64>() * 100.0;
-        let weakest = fig.iter().zip(&start).map(|(f, s)| f[1] / s * 100.0).fold(f64::INFINITY, f64::min);
+        let weakest = fig
+            .iter()
+            .zip(&start)
+            .map(|(f, s)| f[1] / s * 100.0)
+            .fold(f64::INFINITY, f64::min);
         let idle = fig.iter().map(|f| f[12] / (f[10] + f[11] + f[12])).fold(0.0, f64::max);
-        let merchants: Vec<f64> = all.cities.iter().zip(&fig).map(|(e, f)| e.model.rotw.D_RoW / f[3]).collect();
-        let crown: Vec<f64> = all.cities.iter().zip(&fig).map(|(e, f)| e.model.gov.L_G / f[3]).collect();
+        let merchants: Vec<f64> = all
+            .cities
+            .iter()
+            .zip(&fig)
+            .map(|(e, f)| e.model.rotw.D_RoW / f[3])
+            .collect();
+        let crown: Vec<f64> = all
+            .cities
+            .iter()
+            .zip(&fig)
+            .map(|(e, f)| e.model.gov.L_G / f[3])
+            .collect();
         let negative = all.cities.iter().filter(|e| s(&e.model.banks.E_k) < 0.0).count();
-        let check = all.checks().iter().map(|[o, sc]| if *sc > 0.0 { (o / sc).abs() } else { o.abs() }).fold(0.0, f64::max);
+        let check = all
+            .checks()
+            .iter()
+            .map(|[o, sc]| if *sc > 0.0 { (o / sc).abs() } else { o.abs() })
+            .fold(0.0, f64::max);
         println!(
             "{y} {:.0} {:.0} {:.0} {:.0} {:.0} {:.0} | {:.0} {:.0} {:.0} {:.0} {:.0} {:.0} | {:.1} {:.1} {:.3} {:.2} {:.2} {} {:.0e} {:.2} {:.2}",
-            t(&|e| s(&e.model.firms.D_i)), t(&|e| s(&e.model.firms.L_i)), t(&|e| s(&e.model.banks.E_k)),
-            t(&|e| s(&e.model.w_act.D_h) + s(&e.model.w_inact.D_h)), t(&|e| s(&e.model.firms.D_h)), t(&|e| s(&e.model.banks.D_h)),
-            profits, losses, stock, off, wanted, got,
-            gdp, weakest, idle, merchants.iter().cloned().fold(f64::INFINITY, f64::min), merchants.iter().cloned().fold(f64::NEG_INFINITY, f64::max), negative, check,
-            crown.iter().cloned().fold(f64::INFINITY, f64::min), crown.iter().cloned().fold(f64::NEG_INFINITY, f64::max),
+            t(&|e| s(&e.model.firms.D_i)),
+            t(&|e| s(&e.model.firms.L_i)),
+            t(&|e| s(&e.model.banks.E_k)),
+            t(&|e| s(&e.model.w_act.D_h) + s(&e.model.w_inact.D_h)),
+            t(&|e| s(&e.model.firms.D_h)),
+            t(&|e| s(&e.model.banks.D_h)),
+            profits,
+            losses,
+            stock,
+            off,
+            wanted,
+            got,
+            gdp,
+            weakest,
+            idle,
+            merchants.iter().cloned().fold(f64::INFINITY, f64::min),
+            merchants.iter().cloned().fold(f64::NEG_INFINITY, f64::max),
+            negative,
+            check,
+            crown.iter().cloned().fold(f64::INFINITY, f64::min),
+            crown.iter().cloned().fold(f64::NEG_INFINITY, f64::max),
         );
     }
 }

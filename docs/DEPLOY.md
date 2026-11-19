@@ -36,7 +36,7 @@ Without Supabase the sign-in asks for a display name only (DEV world).
 DEV mode is for development only: anyone can claim any name. It switches off as soon as `SUPABASE_URL`,
 `SUPABASE_JWT_SECRET` or `SUPABASE_JWKS_URL` is set on the server.
 
-World data is stored in `./world-data/<WORLD_ID>/world/`: `snap-<day>.bin` (gzip-compressed state, the
+World data is stored in `./world-data/<WORLD_ID>/world/`: `snap-<day>.bin` (zstd-compressed state, older gzip ones are still read; the
 genesis snapshot plus the three most recent), `log-<day>.ndjson` (command log segments, one per snapshot) and
 `snapshot.json`; `./world-data/<WORLD_ID>/meta.json` holds the seats and whether the world is paused;
 `./world-data/<WORLD_ID>/borders.ndjson` the history of the borders that the replay plays (server/history.ts). On start
@@ -197,8 +197,10 @@ runs, and resumes from its snapshot and log after every restart.
   (snapshot every `SNAPSHOT_UPLOAD_EVERY_DAYS` = 30 in-game days ≈ 2 hours, log every day ≈ 4 minutes).
 - **Vercel Hobby**: free for personal, non-commercial projects; the game is a static build of ≈ 30 MB (mostly map data).
   Commercial use needs Pro (US$20/month per member).
-- **Fly.io**: `shared-cpu-1x` with 1 GB RAM ≈ US$5–6/month, volume US$0.15/GB/month. The daily tick sends only the
-  date and what changed.
+- **Fly.io**: `performance-1x` with 2 GB RAM ≈ US$33/month (Ramon, 19 November 2026), volume US$0.15/GB/month. The
+  daily tick sends only the date and what changed. A `shared-cpu-1x` (≈ US$12/month) would do at the world's own pace,
+  but it may run at full speed only from a burst balance (at most 500 s, 5 s after a deploy) and is held to 6.25 % of
+  a core once that is spent: the fast speeds of the time control spend it within minutes.
 - Server-side limits (env): `MAX_PLAYERS` (100), `CMDS_PER_DAY` (60 commands per player per in-game day),
   3 sessions per account, 12 connections per IP,
   64 KB per WebSocket message.

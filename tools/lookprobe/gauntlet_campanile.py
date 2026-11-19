@@ -6,13 +6,15 @@ read along its axis (gold finial, green spire, white cornice, brick dado, white 
 heights of the bands, their colours, the stripes of the shaft, the openings of the belfry, the width of the shaft.
 Prints one line per check with reference value, probe value and PASS or FAIL; exits 1 when a check fails.
 """
+
 import sys
+
 import numpy as np
 from PIL import Image
 from scipy import ndimage as ndi
 
-WINDOW = (1180, 240, 1340, 560)   # x0, y0, x1, y1: the tower stands in here in both pictures
-PX_PER_BLOCK = 8.33               # height, from the look probe's calibration
+WINDOW = (1180, 240, 1340, 560)  # x0, y0, x1, y1: the tower stands in here in both pictures
+PX_PER_BLOCK = 8.33  # height, from the look probe's calibration
 
 
 def hsv(im):
@@ -51,17 +53,20 @@ class Tower:
             if c[y, cx] != 'B':
                 continue
             l = r = cx
-            while l > 0 and c[y, l - 1] in 'BDW': l -= 1
-            while r < c.shape[1] - 1 and c[y, r + 1] in 'BDW': r += 1
+            while l > 0 and c[y, l - 1] in 'BDW':
+                l -= 1
+            while r < c.shape[1] - 1 and c[y, r + 1] in 'BDW':
+                r += 1
             if 20 < r - l < 90:
-                self.widths.append(r - l + 1); centres.append((l + r) / 2)
+                self.widths.append(r - l + 1)
+                centres.append((l + r) / 2)
         self.cx = int(round(np.median(centres))) if centres else cx
         # the bands and colours are read on the sunlit face, right of the corner: the probe's stage shades the
         # other face far more than the reference does, which is the stage's business, not the tower's
         self.lit = slice(self.cx + 2, self.cx + 13)
         # the spire narrows, so it and the finial are read on the axis, everything below on the lit face
         self.rows, self.runs = self._rows(c[:, self.lit])
-        self.rows_axis, self.runs_axis = self._rows(c[:, self.cx - 3:self.cx + 4])
+        self.rows_axis, self.runs_axis = self._rows(c[:, self.cx - 3 : self.cx + 4])
         self.bands = self._bands()
 
     @staticmethod
@@ -84,18 +89,28 @@ class Tower:
         runs, rows = self.runs_axis, self.rows_axis
         gi = max(range(len(runs)), key=lambda i: runs[i][2] if runs[i][0] == 'G' else -1)
         top, bottom = runs[gi][1], runs[gi][1] + runs[gi][2]
-        while top > 0 and rows[top - 1] in 'W': top -= 1
+        while top > 0 and rows[top - 1] in 'W':
+            top -= 1
         b = {'spire': (top, bottom)}
         rows = self.rows
         # the finial: gold on the axis, with the strip's edges not gold (a gold field behind the tower is not a finial)
-        b['finial'] = sum(1 for y in range(max(0, top - 25), top) if (self.c[y, self.cx - 2:self.cx + 3] == 'Y').any() and not (self.c[y, self.cx - 9] == 'Y' and self.c[y, self.cx + 9] == 'Y'))
+        b['finial'] = sum(
+            1
+            for y in range(max(0, top - 25), top)
+            if (self.c[y, self.cx - 2 : self.cx + 3] == 'Y').any()
+            and not (self.c[y, self.cx - 9] == 'Y' and self.c[y, self.cx + 9] == 'Y')
+        )
+
         def next_run(y, kinds, n):
-            while y + n <= len(rows) and not all(rows[k] in kinds for k in range(y, y + n)): y += 1
+            while y + n <= len(rows) and not all(rows[k] in kinds for k in range(y, y + n)):
+                y += 1
             return min(y, len(rows))
+
         d0 = next_run(bottom, 'B', 3)
         b['cornice'] = (bottom, bottom + sum(1 for y in range(bottom, d0) if rows[y] == 'W'))
         w1 = next_run(d0, 'W', 2)
-        if w1 - d0 > 40: w1 = next_run(d0, 'W.D', 3)
+        if w1 - d0 > 40:
+            w1 = next_run(d0, 'W.D', 3)
         b['dado'] = (d0, w1)
         s0 = next_run(w1, 'B', 6)
         b['belfry'] = (w1, s0)
@@ -114,46 +129,72 @@ class Tower:
 def main(ref_path, probe_path):
     ref, probe = Tower(ref_path), Tower(probe_path)
     fails = 0
+
     def check(name, a, b, ok, fmt='{:.2f}'):
         nonlocal fails
         good = ok(a, b)
         fails += not good
-        print(f"{'PASS' if good else 'FAIL'}  {name:34s} ref {fmt.format(a):>12s}  probe {fmt.format(b):>12s}")
-    within = lambda tol: (lambda a, b: abs(a - b) <= tol)
-    rel = lambda tol: (lambda a, b: abs(a - b) <= tol * max(abs(a), 1e-6))
+        print(f'{"PASS" if good else "FAIL"}  {name:34s} ref {fmt.format(a):>12s}  probe {fmt.format(b):>12s}')
+
+    def within(tol):
+        return lambda a, b: abs(a - b) <= tol
+
+    def rel(tol):
+        return lambda a, b: abs(a - b) <= tol * max(abs(a), 1e-6)
+
     for name in ('spire', 'cornice', 'dado', 'belfry'):
-        check(f'{name} height (blocks)', ref.height(name), probe.height(name), rel(0.2) if name != 'cornice' else within(0.4))
+        check(
+            f'{name} height (blocks)',
+            ref.height(name),
+            probe.height(name),
+            rel(0.2) if name != 'cornice' else within(0.4),
+        )
     check('shaft visible (blocks, at least)', ref.height('shaft'), probe.height('shaft'), lambda a, b: b >= a * 0.8)
     check('finial gold rows (px)', ref.bands['finial'], probe.bands['finial'], lambda a, b: b >= min(a, 3), '{:d}')
     check('shaft width (px)', np.median(ref.widths), np.median(probe.widths), rel(0.2))
+
     def mean_colour(t, name, kind):
         im, c = t.band(name)
         px = im[c == kind]
         return px.mean(0) if len(px) > 20 else np.array([np.nan] * 3)
-    rgbfmt = lambda v: '-' if np.isnan(v).any() else '#' + ''.join(f'{int(np.clip(x, 0, 1) * 255):02x}' for x in v)
-    for label, name, kind in (('spire green', 'spire', 'G'), ('shaft brick', 'shaft', 'B'), ('belfry white', 'belfry', 'W'), ('dado brick', 'dado', 'B')):
+
+    def rgbfmt(v):
+        return '-' if np.isnan(v).any() else '#' + ''.join(f'{int(np.clip(x, 0, 1) * 255):02x}' for x in v)
+
+    for label, name, kind in (
+        ('spire green', 'spire', 'G'),
+        ('shaft brick', 'shaft', 'B'),
+        ('belfry white', 'belfry', 'W'),
+        ('dado brick', 'dado', 'B'),
+    ):
         a, b = mean_colour(ref, name, kind), mean_colour(probe, name, kind)
         check(label, rgbfmt(a), rgbfmt(b), lambda _a, _b, a=a, b=b: bool(np.all(np.abs(a - b) <= 0.08)), '{}')
+
     def frac(t, name, kind):
         _, c = t.band(name)
         return (c == kind).mean() if c.size else 0
+
     check('belfry openings (dark share)', frac(ref, 'belfry', 'D'), frac(probe, 'belfry', 'D'), within(0.12))
     check('belfry white share', frac(ref, 'belfry', 'W'), frac(probe, 'belfry', 'W'), within(0.15))
     check('dado white marks (share)', frac(ref, 'dado', 'W'), frac(probe, 'dado', 'W'), within(0.15))
+
     def stripes(t):
         im, c = t.band('shaft')
         lum = im @ np.array([0.2126, 0.7152, 0.0722])
         cols = lum.mean(0)
         return cols.std() / max(cols.mean(), 1e-6)
+
     check('shaft stripe contrast', stripes(ref), stripes(probe), rel(0.4))
+
     def fine(t, name):
         """small-scale liveliness of a band on the lit face: what a 3-pixel blur removes"""
         im, _ = t.band(name)
         g = im @ np.array([0.2126, 0.7152, 0.0722])
         return float(np.abs(g - ndi.gaussian_filter(g, 1.5)).mean()) if g.size else 0.0
+
     for name in ('spire', 'belfry', 'dado', 'shaft'):
         check(f'{name} fine detail', fine(ref, name), fine(probe, name), lambda a, b: b >= 0.75 * a, '{:.4f}')
-    print(f"{fails} failed")
+    print(f'{fails} failed')
     return fails
 
 

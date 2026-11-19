@@ -22,13 +22,30 @@ import { foundMoves, redrawMoves } from './systems/moves';
 import type { SetupState } from './setup';
 
 /** The fields of a WorldState in the order createWorldState writes them. */
-const STATE_FIELDS = ['v', 'seed', 'startYear', 'day', 'rng', 'place', 'realm', 'realmText', 'ruler', 'economy', 'person', 'family', 'firm', 'named', 'lot', 'hamlets', 'street', 'field'] as const;
+const STATE_FIELDS = ['v', 'seed', 'startYear', 'day', 'rng', 'place', 'realm', 'realmText', 'ruler', 'economy', 'person', 'family', 'firm', 'named', 'lot', 'hamlets', 'nextUid', 'archive', 'street', 'field'] as const;
 
 /**
  * The steps before 11 are gone (2026-11-16): the only world, europa-1291, is at 11 or later, and the worlds before it are
  * deleted. A state older than 11 is refused; to read one, take the build of its time.
  */
 export const OLDEST_STATE_VERSION = 11;
+
+/** Every person gets the uid of the row and the count of the children she has borne; the state the next uid and an
+ *  empty archive. */
+function withUids(s: WorldState): void {
+  const t = s.person, cols = t.cols as Record<string, Column>;
+  if (!cols.uid || !cols.children) {
+    const fresh = makeColumns(PERSON_SCHEMA, t.alive.length) as Record<string, Column>;
+    for (const k of Object.keys(fresh)) if (k in cols) fresh[k] = cols[k]; // in the order of the schema
+    (t as { cols: unknown }).cols = fresh;
+  }
+  const P = t.cols;
+  for (let id = 0; id < t.size; id++) P.uid[id] = id;
+  P.children.fill(0);
+  for (let id = 0; id < t.size; id++) { const m = P.mother[id]; if (t.alive[id] && m >= 0 && m < t.size && P.children[m] < 255) P.children[m]++; }
+  s.nextUid = t.size;
+  s.archive = [];
+}
 
 /** `setup`: the setup of the world's start year (public/data/setup_<year>.json), read only by the steps that need it. */
 export function upgradeState(s: WorldState, w: World, setup?: () => SetupState): WorldState {
@@ -39,6 +56,10 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
   if (s.v < 29 && s.person.cols.genes.length !== s.person.alive.length * 2 * NG) {
     (s.person.cols as Record<string, Column>).genes = new Uint8Array(s.person.alive.length * 2 * NG);
   }
+  // (people feature 7, step 2) Up to version 29 the row of a person was the person for ever: the uid is the row, the
+  // parents (rows) are uids as they are, and a woman has borne the children who name her as mother. Given before any
+  // step reads the persons, which read them by the uid.
+  if (s.v < 30) withUids(s);
   if (s.v === 11) { // 11 → 12: the persons of the cities' economies are the persons of the cities, and every firm
     // is an entity (economy feature 10). The persons get their components of the economy, and the economies are
     // founded anew on the day the world has reached, each city from its starting position and with as many active
@@ -245,19 +266,24 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     rulerGenes(s, w); giveGenes(s);
     s.v = 29;
   }
-  if (s.v === 29) { // 29 → 30: the streets and the market of every town (settlement feature 3,
+  if (s.v === 29) { // 29 → 30: the archive of the dead (people feature 7, src/sim/people/archive.ts). The uids were given
+    // above; nobody is in the archive yet. The dead whom nothing needs go to it on the next first of January. Who the
+    // persons are and all they have done stays, and they draw on as before: the uid of everybody is the row.
+    s.v = 30;
+  }
+  if (s.v === 30) { // 30 → 31: the streets and the market of every town (settlement feature 3,
     // src/sim/settlement/streets.ts). Each town is laid out along streets that grow to its parcels, as a new world
     // lays it: every parcel keeps its id, its family and its size and moves to its street, the lowest id first. The
     // hamlets and everybody's life stay as they are. (A world older than the land register got it at 19 → 20, already
     // with its streets.)
     if (!s.street) relayTowns(s, w.ground);
-    s.v = 30;
+    s.v = 31;
   }
-  if (s.v === 30) { // 30 → 31: the fields of the farmsteads (settlement feature 4, src/sim/settlement/fields.ts).
+  if (s.v === 31) { // 31 → 32: the fields of the farmsteads (settlement feature 4, src/sim/settlement/fields.ts).
     // Every hamlet gets its furlongs as a new world lays them, on the arable its place has on the day the world has
     // reached; nothing else changes.
     foundFields(s, w.tilth);
-    s.v = 31;
+    s.v = 32;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one

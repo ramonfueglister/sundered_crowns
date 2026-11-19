@@ -36,6 +36,7 @@ import { hash01 } from '../rng';
 import { uses1356Tables } from '../tables';
 import { ROLE, workforce } from './work';
 import { writeHouseholds } from './household';
+import { presentPersons } from '../people/living';
 
 /** The state of the economies that the engine keeps for a world (economy/src/lib.rs `LAST`): their bytes
  *  (`CityEconomies.model`) are written only when something reads them, a snapshot or a hash. */
@@ -148,9 +149,9 @@ export function writeAgents(s: WorldState, w: World): void {
   if (at !== a.length) throw new Error(`the engine gave ${a.length} numbers for the persons and firms of the cities, ${at} were read`);
   const cityOf = new Map<number, number>(Array.from(e.places, (p, k) => [p, k]));
   const seen = new Int32Array(4 * N);
-  for (let id = 0; id < s.person.size; id++) {
+  for (const id of presentPersons(s)) { // the living and the dead who still hold a part (src/sim/people/living.ts)
     const role = P.role[id];
-    if (!role || !s.person.alive[id]) continue;
+    if (!role) continue;
     const k = cityOf.get(Fam.place[P.family[id]]), n = P.agent[id];
     if (k === undefined || n < 0 || n >= count[4 * k + role - 1]) throw new Error(`person ${id} is number ${n} of part ${role} in a city that has no such person`);
     seen[4 * k + role - 1]++;

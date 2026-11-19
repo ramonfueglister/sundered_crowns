@@ -9,26 +9,60 @@ use sc_economy::state::FORMAT_CITIES;
 use sc_economy::trade::Cities;
 
 fn cities(seeds: &[u64]) -> Cities {
-    let city = |s: u64| Economy::new(&AUSTRIA2010Q1.parameters.to_json(), &AUSTRIA2010Q1.initial_conditions.to_json(), s, 3, 4).unwrap();
+    let city = |s: u64| {
+        Economy::new(
+            &AUSTRIA2010Q1.parameters.to_json(),
+            &AUSTRIA2010Q1.initial_conditions.to_json(),
+            s,
+            3,
+            4,
+        )
+        .unwrap()
+    };
     Cities::new(seeds.iter().map(|&s| city(s)).collect()).unwrap()
 }
 
 /// Routes of `days` days between any two of `n` cities, with `labour` days of labour a real unit of every product.
 fn routes(all: Cities, days: usize, labour: f64, elasticity: f64) -> Cities {
     let (n, G) = (all.cities.len(), all.merchants.bought.len());
-    all.with_routes(vec![vec![days; n]; n], vec![vec![labour; n]; n], vec![1.0; G], elasticity).unwrap()
+    all.with_routes(
+        vec![vec![days; n]; n],
+        vec![vec![labour; n]; n],
+        vec![1.0; G],
+        elasticity,
+    )
+    .unwrap()
 }
 
 fn assert_books(all: &Cities, when: &str) {
     for (k, [off, scale]) in all.checks().into_iter().enumerate() {
-        assert!(off.abs() <= 1e-9 * scale, "{when}: check {k} of the merchants is off by {off} against {scale}");
+        assert!(
+            off.abs() <= 1e-9 * scale,
+            "{when}: check {k} of the merchants is off by {off} against {scale}"
+        );
     }
     let m = &all.merchants;
-    assert!(m.stock.iter().chain(&m.value).flatten().all(|&x| x >= 0.0 && x.is_finite()), "{when}");
+    assert!(
+        m.stock
+            .iter()
+            .chain(&m.value)
+            .flatten()
+            .all(|&x| x >= 0.0 && x.is_finite()),
+        "{when}"
+    );
     for (c, e) in all.cities.iter().enumerate() {
         let [income, nominal, real, central_bank, banks, gdp] = e.checks();
-        for (name, v) in [("income", income), ("nominal", nominal), ("real", real), ("central bank", central_bank), ("banks", banks)] {
-            assert!((v / gdp).abs() < 1e-9, "{when}, city {c}, {name}: {v} against a GDP of {gdp}");
+        for (name, v) in [
+            ("income", income),
+            ("nominal", nominal),
+            ("real", real),
+            ("central bank", central_bank),
+            ("banks", banks),
+        ] {
+            assert!(
+                (v / gdp).abs() < 1e-9,
+                "{when}, city {c}, {name}: {v} against a GDP of {gdp}"
+            );
         }
     }
 }
@@ -58,7 +92,9 @@ fn goods_lie_at_the_stall_after_the_days_of_the_way() {
     let G = all.merchants.bought.len();
     let on = |all: &Cities, arrives: usize| {
         let r = all.merchants.routes.as_ref().unwrap();
-        (0..3).map(|d| (0..G).map(|g| r.on_way[r.slot(arrives, d, g)]).sum::<f64>()).sum::<f64>()
+        (0..3)
+            .map(|d| (0..G).map(|g| r.on_way[r.slot(arrives, d, g)]).sum::<f64>())
+            .sum::<f64>()
     };
     assert_eq!(all.merchants.routes.as_ref().unwrap().horizon, 5);
     // the ring has five days: before the first day nothing arrives with the settling of day 5 (period 4)
@@ -73,11 +109,20 @@ fn goods_lie_at_the_stall_after_the_days_of_the_way() {
         assert_eq!(on(&all, 4), bought_first, "day {day}");
         assert_books(&all, &format!("day {day}"));
     }
-    let (before, sold_before): (f64, f64) = (all.merchants.stock.iter().flatten().sum(), all.merchants.sold.iter().sum());
+    let (before, sold_before): (f64, f64) = (
+        all.merchants.stock.iter().flatten().sum(),
+        all.merchants.sold.iter().sum(),
+    );
     all.step(1);
-    let (after, sold): (f64, f64) = (all.merchants.stock.iter().flatten().sum(), all.merchants.sold.iter().sum());
+    let (after, sold): (f64, f64) = (
+        all.merchants.stock.iter().flatten().sum(),
+        all.merchants.sold.iter().sum(),
+    );
     // the stalls hold what they held, less what they sold on day 5, plus the goods of day 1
-    assert!((after - (before - (sold - sold_before) + bought_first)).abs() < 1e-9 * bought_first, "{after} {before} {bought_first}");
+    assert!(
+        (after - (before - (sold - sold_before) + bought_first)).abs() < 1e-9 * bought_first,
+        "{after} {before} {bought_first}"
+    );
     assert_books(&all, "day 5");
 }
 
@@ -91,13 +136,21 @@ fn at_the_start_what_a_stall_sells_in_a_day_is_on_the_way_for_every_day_an_order
             let daily = plain.merchants.stock[d][g];
             for arrives in 0..5 {
                 let want = if arrives < 4 { daily } else { 0.0 };
-                assert!((r.on_way[r.slot(arrives, d, g)] - want).abs() <= 1e-12 * daily, "city {d}, product {g}, day {arrives}");
+                assert!(
+                    (r.on_way[r.slot(arrives, d, g)] - want).abs() <= 1e-12 * daily,
+                    "city {d}, product {g}, day {arrives}"
+                );
             }
         }
     }
     // so the first order is the order without routes: one day of sales
     let sum = |a: &Cities| a.merchants.orders.iter().flatten().flatten().sum::<f64>();
-    assert!((sum(&far) / sum(&plain) - 1.0).abs() < 1e-9, "{} against {}", sum(&far), sum(&plain));
+    assert!(
+        (sum(&far) / sum(&plain) - 1.0).abs() < 1e-9,
+        "{} against {}",
+        sum(&far),
+        sum(&plain)
+    );
     // the goods on the way are the merchants': their worth and their goods balance from the first day on
     assert_books(&far, "the start");
     assert!(far.worth() > plain.worth());
@@ -105,7 +158,10 @@ fn at_the_start_what_a_stall_sells_in_a_day_is_on_the_way_for_every_day_an_order
 
 #[test]
 fn carrying_is_bought_as_services_in_the_city_of_origin_and_laid_on_the_goods() {
-    let (mut free, mut dear) = (routes(cities(&[1, 2, 3]), 2, 0.0, 0.0), routes(cities(&[1, 2, 3]), 2, 1e-3, 0.0));
+    let (mut free, mut dear) = (
+        routes(cities(&[1, 2, 3]), 2, 0.0, 0.0),
+        routes(cities(&[1, 2, 3]), 2, 1e-3, 0.0),
+    );
     let G = dear.merchants.bought.len();
     // the carrying ordered is services: the days of labour of the goods ordered, at the mean wage, over the price of services
     let r = dear.merchants.routes.as_ref().unwrap();
@@ -118,7 +174,10 @@ fn carrying_is_bought_as_services_in_the_city_of_origin_and_laid_on_the_goods() 
         dear.step(1);
     }
     assert_books(&dear, "day 10 with carrying");
-    let (r, f) = (dear.merchants.routes.as_ref().unwrap(), free.merchants.routes.as_ref().unwrap());
+    let (r, f) = (
+        dear.merchants.routes.as_ref().unwrap(),
+        free.merchants.routes.as_ref().unwrap(),
+    );
     assert!(r.paid > 0.0 && f.paid == 0.0);
     // a unit at the stall is what cost 1 at the start, carrying included: a unit bought makes more than one there
     for c in 0..3 {
@@ -136,8 +195,18 @@ fn carrying_is_bought_as_services_in_the_city_of_origin_and_laid_on_the_goods() 
 #[test]
 fn carrying_that_costs_more_than_at_the_start_makes_the_stall_dearer() {
     // the same cities, but in one the wages of the start were half of what they are: carrying has doubled since
-    let (mut same, mut risen) = (routes(cities(&[1, 2, 3]), 1, 2e-2, 0.0), routes(cities(&[1, 2, 3]), 1, 2e-2, 0.0));
-    risen.merchants.routes.as_mut().unwrap().wage0.iter_mut().for_each(|w| *w /= 2.0);
+    let (mut same, mut risen) = (
+        routes(cities(&[1, 2, 3]), 1, 2e-2, 0.0),
+        routes(cities(&[1, 2, 3]), 1, 2e-2, 0.0),
+    );
+    risen
+        .merchants
+        .routes
+        .as_mut()
+        .unwrap()
+        .wage0
+        .iter_mut()
+        .for_each(|w| *w /= 2.0);
     let G = same.merchants.bought.len();
     same.step(1);
     risen.step(1);
@@ -158,8 +227,15 @@ fn carrying_that_costs_more_than_at_the_start_makes_the_stall_dearer() {
     // though carrying is paid (here a tenth and more of the goods)
     let mut free = routes(cities(&[1, 2, 3]), 1, 0.0, 0.0);
     free.step(1);
-    let (r, goods) = (same.merchants.routes.as_ref().unwrap(), same.cities.iter().map(|e| e.model.rotw.C_l).sum::<f64>());
-    assert!(r.paid / goods > 0.1, "carrying is {} of what the merchants spent", r.paid / goods);
+    let (r, goods) = (
+        same.merchants.routes.as_ref().unwrap(),
+        same.cities.iter().map(|e| e.model.rotw.C_l).sum::<f64>(),
+    );
+    assert!(
+        r.paid / goods > 0.1,
+        "carrying is {} of what the merchants spent",
+        r.paid / goods
+    );
     let mut worst: f64 = 0.0;
     for c in 0..3 {
         for g in 0..G - 1 {
@@ -186,7 +262,11 @@ fn a_dearer_stall_keeps_less_stock() {
     let base = ordered(1.0, 2.0);
     assert!(base > 0.0);
     assert_eq!(ordered(2.0, 0.0), base);
-    assert!((ordered(2.0, 2.0) / base - 0.25).abs() < 1e-9, "{}", ordered(2.0, 2.0) / base);
+    assert!(
+        (ordered(2.0, 2.0) / base - 0.25).abs() < 1e-9,
+        "{}",
+        ordered(2.0, 2.0) / base
+    );
     assert!((ordered(0.5, 2.0) / base - 4.0).abs() < 1e-9);
     assert!((ordered(2.0, 1.0) / base - 0.5).abs() < 1e-9);
     // and the books balance over weeks with an elasticity
@@ -204,13 +284,24 @@ fn cities_without_a_way_do_not_trade() {
         days[0][c] = 0;
         days[c][0] = 0;
     }
-    let mut all = all.with_routes(days, vec![vec![1e-4; n]; n], vec![1.0; G], 2.0).unwrap();
+    let mut all = all
+        .with_routes(days, vec![vec![1e-4; n]; n], vec![1.0; G], 2.0)
+        .unwrap();
     for day in 1..=8 {
         for c in 0..n {
-            assert!(all.merchants.orders[0][c].iter().chain(&all.merchants.orders[c][0]).all(|&o| o == 0.0), "day {day}");
+            assert!(
+                all.merchants.orders[0][c]
+                    .iter()
+                    .chain(&all.merchants.orders[c][0])
+                    .all(|&o| o == 0.0),
+                "day {day}"
+            );
         }
         all.step(1);
-        assert_eq!(all.cities[0].model.rotw.C_l, 0.0, "day {day}: the city without a way exports");
+        assert_eq!(
+            all.cities[0].model.rotw.C_l, 0.0,
+            "day {day}: the city without a way exports"
+        );
         assert!(all.cities[1].model.rotw.C_l > 0.0);
     }
     assert_books(&all, "day 8 with a city without a way");
@@ -253,19 +344,49 @@ fn routes_that_do_not_fit_are_refused() {
     let (d, l, w) = ok();
     assert!(cities(&[1, 2]).with_routes(d, l, w, 2.0).is_ok());
     let (d, l, w) = ok();
-    assert!(cities(&[1, 2, 3]).with_routes(d, l, w, 2.0).unwrap_err().contains("do not fit"));
+    assert!(
+        cities(&[1, 2, 3])
+            .with_routes(d, l, w, 2.0)
+            .unwrap_err()
+            .contains("do not fit")
+    );
     let (d, l, _) = ok();
-    assert!(cities(&[1, 2]).with_routes(d, l, vec![1.0], 2.0).unwrap_err().contains("do not fit"));
+    assert!(
+        cities(&[1, 2])
+            .with_routes(d, l, vec![1.0], 2.0)
+            .unwrap_err()
+            .contains("do not fit")
+    );
     let (d, mut l, w) = ok();
     l[0][1] = -1.0;
-    assert!(cities(&[1, 2]).with_routes(d, l, w, 2.0).unwrap_err().contains("labour"));
+    assert!(
+        cities(&[1, 2])
+            .with_routes(d, l, w, 2.0)
+            .unwrap_err()
+            .contains("labour")
+    );
     let (d, l, w) = ok();
-    assert!(cities(&[1, 2]).with_routes(d, l, w, f64::NAN).unwrap_err().contains("elasticity"));
+    assert!(
+        cities(&[1, 2])
+            .with_routes(d, l, w, f64::NAN)
+            .unwrap_err()
+            .contains("elasticity")
+    );
     let (d, l, w) = ok();
     let mut late = cities(&[1, 2]);
     late.step(1);
-    assert!(late.with_routes(d, l, w, 2.0).unwrap_err().contains("have not computed"));
+    assert!(
+        late.with_routes(d, l, w, 2.0)
+            .unwrap_err()
+            .contains("have not computed")
+    );
     let (d, l, w) = ok();
     let (d2, l2, w2) = ok();
-    assert!(cities(&[1, 2]).with_routes(d, l, w, 2.0).unwrap().with_routes(d2, l2, w2, 2.0).is_err());
+    assert!(
+        cities(&[1, 2])
+            .with_routes(d, l, w, 2.0)
+            .unwrap()
+            .with_routes(d2, l2, w2, 2.0)
+            .is_err()
+    );
 }

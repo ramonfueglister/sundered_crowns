@@ -330,7 +330,7 @@ describe('the streets of a world of 1291', () => {
 describe('a world of 1291 saved before the streets', () => {
   it('lays its towns out along streets: every family keeps its parcel and its size, and the parcels front the streets', { timeout: 60_000 }, () => {
     const old = decodeState(encodeState(s)) as WorldState, L = old.lot.cols;
-    old.v = 29;
+    old.v = 30;
     delete (old as Partial<WorldState>).street;
     for (let i = 0; i < old.lot.size; i++) if (L.kind[i] === LOT_KIND.parcel) { L.x[i] = 0; L.z[i] = 0; L.front[i] = FRONT.north; } // where they were does not count
     const up = upgradeState(decodeState(encodeState(old)), w, () => loadSetup(1291)), U = up.lot.cols, F = s.family.cols;

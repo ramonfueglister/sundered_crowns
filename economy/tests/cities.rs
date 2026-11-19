@@ -8,7 +8,14 @@ use sc_economy::Economy;
 use sc_economy::trade::{Cities, origins};
 
 fn city(seed: u64, plan: usize, window: usize) -> Economy {
-    Economy::new(&AUSTRIA2010Q1.parameters.to_json(), &AUSTRIA2010Q1.initial_conditions.to_json(), seed, plan, window).unwrap()
+    Economy::new(
+        &AUSTRIA2010Q1.parameters.to_json(),
+        &AUSTRIA2010Q1.initial_conditions.to_json(),
+        seed,
+        plan,
+        window,
+    )
+    .unwrap()
 }
 
 /// Cities with the seeds given, a plan every 3 periods and windows of 4 periods.
@@ -19,17 +26,45 @@ fn cities(seeds: &[u64]) -> Cities {
 /// The books of the merchants and of every city balance, and no stall holds less than nothing.
 fn assert_books(all: &Cities, when: &str) {
     for (k, [off, scale]) in all.checks().into_iter().enumerate() {
-        assert!(off.abs() <= 1e-9 * scale, "{when}: check {k} of the merchants is off by {off} against {scale}");
+        assert!(
+            off.abs() <= 1e-9 * scale,
+            "{when}: check {k} of the merchants is off by {off} against {scale}"
+        );
     }
     let m = &all.merchants;
-    assert!(m.stock.iter().chain(&m.value).flatten().all(|&x| x >= 0.0 && x.is_finite()), "{when}: {:?} {:?}", m.stock, m.value);
-    assert!(m.orders.iter().flatten().flatten().all(|&x| x >= 0.0 && x.is_finite()), "{when}: {:?}", m.orders);
+    assert!(
+        m.stock
+            .iter()
+            .chain(&m.value)
+            .flatten()
+            .all(|&x| x >= 0.0 && x.is_finite()),
+        "{when}: {:?} {:?}",
+        m.stock,
+        m.value
+    );
+    assert!(
+        m.orders.iter().flatten().flatten().all(|&x| x >= 0.0 && x.is_finite()),
+        "{when}: {:?}",
+        m.orders
+    );
     for (c, e) in all.cities.iter().enumerate() {
         let [income, nominal, real, central_bank, banks, gdp] = e.checks();
-        for (name, v) in [("income", income), ("nominal", nominal), ("real", real), ("central bank", central_bank), ("banks", banks)] {
-            assert!((v / gdp).abs() < 1e-9, "{when}, city {c}, {name}: {v} against a GDP of {gdp}");
+        for (name, v) in [
+            ("income", income),
+            ("nominal", nominal),
+            ("real", real),
+            ("central bank", central_bank),
+            ("banks", banks),
+        ] {
+            assert!(
+                (v / gdp).abs() < 1e-9,
+                "{when}, city {c}, {name}: {v} against a GDP of {gdp}"
+            );
         }
-        assert!(e.model.ext.trade.is_none(), "{when}: city {c} still holds the merchants' day");
+        assert!(
+            e.model.ext.trade.is_none(),
+            "{when}: city {c} still holds the merchants' day"
+        );
     }
 }
 
@@ -49,7 +84,10 @@ fn the_merchants_start_with_the_import_supply_of_every_city() {
         // for the first period they have ordered that supply again, in the other cities
         for g in 0..p.G {
             let ordered: f64 = (0..3).map(|o| m.orders[o][c][g]).sum();
-            assert!((ordered - m.stock[c][g]).abs() <= 1e-12 * m.stock[c][g], "city {c}, product {g}: {ordered}");
+            assert!(
+                (ordered - m.stock[c][g]).abs() <= 1e-12 * m.stock[c][g],
+                "city {c}, product {g}: {ordered}"
+            );
             assert_eq!(m.orders[c][c][g], 0.0);
         }
     }
@@ -102,16 +140,27 @@ fn what_one_city_exports_lies_in_the_other_the_next_day_at_what_it_cost() {
             let (from, to) = (&all.cities[c].model, &all.cities[d].model.rotw);
             let (goods, cost) = if from.rotw.C_l > 0.0 {
                 traded += 1;
-                (from.rotw.C_l / from.rotw.P_l, (1.0 + from.prop.tau_EXPORT) * from.rotw.C_l)
+                (
+                    from.rotw.C_l / from.rotw.P_l,
+                    (1.0 + from.prop.tau_EXPORT) * from.rotw.C_l,
+                )
             } else {
                 (0.0, 0.0)
             };
             for g in 0..G {
                 let left = before.stock[d][g] - to.Q_m[g];
                 let stock = left + from.prop.c_E_g[g] * goods;
-                assert!((m.stock[d][g] - stock).abs() <= 1e-12 * stock, "day {day}, product {g}: {} against {stock}", m.stock[d][g]);
+                assert!(
+                    (m.stock[d][g] - stock).abs() <= 1e-12 * stock,
+                    "day {day}, product {g}: {} against {stock}",
+                    m.stock[d][g]
+                );
                 let value = before.value[d][g] - to.P_m[g] * to.Q_m[g] + from.prop.c_E_g[g] * cost;
-                assert!((m.value[d][g] - value).abs() <= 1e-9 * value.abs().max(1.0), "day {day}, product {g}: {} against {value}", m.value[d][g]);
+                assert!(
+                    (m.value[d][g] - value).abs() <= 1e-9 * value.abs().max(1.0),
+                    "day {day}, product {g}: {} against {value}",
+                    m.value[d][g]
+                );
             }
         }
         assert_books(&all, &format!("day {day}"));
@@ -129,12 +178,21 @@ fn nothing_is_made_or_lost_between_the_cities() {
     }
     // the merchants' money has moved between the cities and into goods, their worth has not
     let m = &all.merchants;
-    assert!(all.cities.iter().any(|e| e.model.rotw.D_RoW != AUSTRIA2010Q1.initial_conditions.D_RoW));
+    assert!(
+        all.cities
+            .iter()
+            .any(|e| e.model.rotw.D_RoW != AUSTRIA2010Q1.initial_conditions.D_RoW)
+    );
     assert!((all.worth() - start).abs() <= 1e-9 * m.value.iter().flatten().sum::<f64>());
     // goods were traded: every city sold to the merchants and bought from them over the last window
     for (c, e) in all.cities.iter().enumerate() {
         let f = e.figures();
-        assert!(f[8] > 0.0 && f[9] > 0.0, "city {c}: exports {} and imports {}", f[8], f[9]);
+        assert!(
+            f[8] > 0.0 && f[9] > 0.0,
+            "city {c}: exports {} and imports {}",
+            f[8],
+            f[9]
+        );
     }
     assert!(m.bought.iter().sum::<f64>() > 0.0 && m.sold.iter().sum::<f64>() > 0.0);
     // what is on its way never exceeds what was bought: every product in stock was either there at the start or bought
@@ -187,7 +245,10 @@ fn the_merchants_order_what_a_stall_will_lack_after_one_more_day() {
             let missing = p.c_I_g[g] * keep - (1.0 - sells) * m.stock[d][g];
             if missing > 0.0 {
                 ordered_something = true;
-                assert!((ordered - missing).abs() <= 1e-12 * missing, "city {d}, product {g}: ordered {ordered}, missing {missing}");
+                assert!(
+                    (ordered - missing).abs() <= 1e-12 * missing,
+                    "city {d}, product {g}: ordered {ordered}, missing {missing}"
+                );
             } else {
                 assert_eq!(ordered, 0.0);
             }
@@ -209,7 +270,10 @@ fn a_stall_is_full_again_the_morning_after_next_when_the_orders_are_filled() {
         // the part of its orders that every city of origin filled
         let fill: Vec<f64> = (0..3)
             .map(|c| {
-                let (r, ordered) = (&all.cities[c].model.rotw, then.merchants.orders[c].iter().flatten().sum::<f64>());
+                let (r, ordered) = (
+                    &all.cities[c].model.rotw,
+                    then.merchants.orders[c].iter().flatten().sum::<f64>(),
+                );
                 if ordered > 0.0 { r.C_l / r.P_l / ordered } else { 1.0 }
             })
             .collect();
@@ -223,12 +287,19 @@ fn a_stall_is_full_again_the_morning_after_next_when_the_orders_are_filled() {
                     continue;
                 }
                 let before = &e.model.rotw;
-                let sold_then = if before.Y_m[g] > 0.0 { before.Q_m[g] / before.Y_m[g] } else { 1.0 };
+                let sold_then = if before.Y_m[g] > 0.0 {
+                    before.Q_m[g] / before.Y_m[g]
+                } else {
+                    1.0
+                };
                 let sold_now = r.Q_m[g] / offered;
                 let not_filled: f64 = (0..3).map(|c| then.merchants.orders[c][d][g] * (1.0 - fill[c])).sum();
                 let expected = to_keep - not_filled + (sold_then - sold_now) * offered;
                 let stock = all.merchants.stock[d][g];
-                assert!((stock - expected).abs() <= 1e-9 * to_keep, "day {day}, city {d}, product {g}: {stock} against {expected}");
+                assert!(
+                    (stock - expected).abs() <= 1e-9 * to_keep,
+                    "day {day}, city {d}, product {g}: {stock} against {expected}"
+                );
                 if not_filled.abs() <= 1e-9 * to_keep && sold_then == sold_now {
                     filled += 1;
                     assert!((stock / to_keep - 1.0).abs() < 1e-9);
@@ -247,13 +318,24 @@ fn the_merchants_pick_among_the_firms_of_the_other_cities_as_a_buyer_of_the_port
     all.step(5);
     // city 0 orders product g from 1 and 2: every firm of the product there has the weight of a seller of the
     // port, half by its price and half by what it offers, and a city has the weights of its firms
-    let g = (0..all.cities[0].model.prop.G).find(|&g| all.merchants.orders[1][0][g] > 0.0).expect("an order of city 0");
+    let g = (0..all.cities[0].model.prop.G)
+        .find(|&g| all.merchants.orders[1][0][g] > 0.0)
+        .expect("an order of city 0");
     let m = &all.merchants;
     let base = m.orders[1][0][g] / (m.orders[1][0][g] + m.orders[2][0][g]);
     assert!(base > 0.0 && base < 1.0);
-    let firms = |e: &Economy| -> Vec<usize> { (0..e.model.firms.len()).filter(|&i| e.model.firms.G_i[i] == g).collect() };
+    let firms = |e: &Economy| -> Vec<usize> {
+        (0..e.model.firms.len())
+            .filter(|&i| e.model.firms.G_i[i] == g)
+            .collect()
+    };
     let cheap = |e: &Economy| -> f64 { firms(e).iter().map(|&i| libm::exp(-2.0 * e.model.firms.P_i[i])).sum() };
-    let offer = |e: &Economy| -> f64 { firms(e).iter().map(|&i| e.model.firms.Y_i[i] + e.model.firms.S_i[i]).sum() };
+    let offer = |e: &Economy| -> f64 {
+        firms(e)
+            .iter()
+            .map(|&i| e.model.firms.Y_i[i] + e.model.firms.S_i[i])
+            .sum()
+    };
     let (one, two) = (&all.cities[1], &all.cities[2]);
     let expected = 0.5 * cheap(one) / (cheap(one) + cheap(two)) + 0.5 * offer(one) / (offer(one) + offer(two));
     assert!((base - expected).abs() < 1e-12, "{base} against {expected}");
@@ -297,7 +379,12 @@ fn the_merchants_pick_among_the_firms_of_the_other_cities_as_a_buyer_of_the_port
     }
     let w = origins(&alike.cities, 0, g);
     let n = firms(&alike.cities[1]).len() as f64;
-    assert!((w[2] / w[1] - keep as f64 / n).abs() < 1e-12, "{} against {}", w[2] / w[1], keep as f64 / n);
+    assert!(
+        (w[2] / w[1] - keep as f64 / n).abs() < 1e-12,
+        "{} against {}",
+        w[2] / w[1],
+        keep as f64 / n
+    );
 
     // with two cities the other one gets the whole order; a product that no other city makes is not ordered
     assert_eq!(origins(&all.cities[..2], 0, g), vec![0.0, 1.0]);
@@ -373,7 +460,11 @@ fn broken_bytes_are_refused() {
     let refused = |b: &[u8]| Cities::load(b).unwrap_err();
     assert!(refused(&[]).contains("ends at byte 0"));
     assert!(refused(&all.cities[0].save()).contains("not the state of cities")); // one economy is not cities
-    assert!(Economy::load(&bytes).unwrap_err().contains("not the state of an economy"));
+    assert!(
+        Economy::load(&bytes)
+            .unwrap_err()
+            .contains("not the state of an economy")
+    );
     let mut other = bytes.clone();
     other[4] = 9;
     assert!(refused(&other).contains("format 9"));
@@ -399,10 +490,22 @@ fn broken_bytes_are_refused() {
 
 #[test]
 fn cities_that_cannot_trade_are_refused() {
-    assert!(Cities::new(vec![city(1, 3, 4)]).unwrap_err().contains("trade needs two"));
+    assert!(
+        Cities::new(vec![city(1, 3, 4)])
+            .unwrap_err()
+            .contains("trade needs two")
+    );
     assert!(Cities::new(vec![]).unwrap_err().contains("trade needs two"));
     let mut late = city(2, 3, 4);
     late.step(1);
-    assert!(Cities::new(vec![city(1, 3, 4), late]).unwrap_err().contains("city 1 has computed 1 periods"));
-    assert!(Cities::new(vec![city(1, 3, 4), city(2, 1, 1)]).unwrap_err().contains("another clock"));
+    assert!(
+        Cities::new(vec![city(1, 3, 4), late])
+            .unwrap_err()
+            .contains("city 1 has computed 1 periods")
+    );
+    assert!(
+        Cities::new(vec![city(1, 3, 4), city(2, 1, 1)])
+            .unwrap_err()
+            .contains("another clock")
+    );
 }
