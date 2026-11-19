@@ -2,7 +2,7 @@
 // it go out; a world server that finds its disk empty takes the world back from that copy, on the same day and with
 // the same hash, instead of founding a new world.
 import { describe, it, expect } from 'vitest';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { WorldCore, configFromEnv } from '../server/world';
@@ -17,15 +17,17 @@ class MemStore implements WorldStore {
   logs = 0;
   async upsertWorld() {} async upsertSeat() {} async removeSeat() {}
   async isAdmin() { return false; } async profileName() { return null; }
-  async uploadSnapshot(world: string, day: number, bin: Uint8Array, meta: string) {
+  async uploadSnapshot(world: string, day: number, bin: Uint8Array, meta: string, history: Uint8Array | null) {
     this.files.set(`${world}/snapshot.bin`, bin); this.files.set(`${world}/meta.json`, meta); this.snapshots.push(day);
+    if (history) this.files.set(`${world}/borders.ndjson.gz`, history);
     return true;
   }
   async uploadLog(world: string, log: string) { this.files.set(`${world}/log.ndjson`, log); this.logs++; return true; }
   async downloadBackup(world: string): Promise<Backup | null> {
     const bin = this.files.get(`${world}/snapshot.bin`) as Uint8Array | undefined;
     if (!bin) return null;
-    return { bin, log: (this.files.get(`${world}/log.ndjson`) as string) ?? '', meta: (this.files.get(`${world}/meta.json`) as string) ?? null };
+    return { bin, log: (this.files.get(`${world}/log.ndjson`) as string) ?? '', meta: (this.files.get(`${world}/meta.json`) as string) ?? null,
+      history: (this.files.get(`${world}/borders.ndjson.gz`) as Uint8Array) ?? null };
   }
 }
 
@@ -48,6 +50,7 @@ describe('copy of the world in the store', () => {
 
     const b = new WorldCore({ ...base, dataDir: dirB }, store);
     expect(await b.restoreIfEmpty()).toBe(true);
+    expect(existsSync(join(dirB, 'test', 'borders.ndjson'))).toBe(true); // the history of the borders comes back too
     b.init();
     expect(b.s.day).toBe(day);
     expect(hashState(b.s)).toBe(hash);

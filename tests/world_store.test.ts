@@ -33,7 +33,7 @@ describe('copy of the world in Supabase Storage', () => {
     const { s, files } = store();
     const big = new Uint8Array(SupabaseStore.PART * 2 + 12345);
     for (let i = 0; i < big.length; i += 4096) big[i] = (i / 4096) & 255;
-    expect(await s.uploadSnapshot('w', 30, big, '{"seats":{}}')).toBe(true);
+    expect(await s.uploadSnapshot('w', 30, big, '{"seats":{}}', new Uint8Array([7]))).toBe(true);
     expect([...files.keys()].filter((k) => k.includes('snapshot-30-')).length).toBe(3);
     expect(await s.uploadLog('w', '{"d":30,"adv":1}\n')).toBe(true);
     const b = await s.downloadBackup('w');
@@ -41,8 +41,9 @@ describe('copy of the world in Supabase Storage', () => {
     expect(Buffer.from(b!.bin).equals(Buffer.from(big))).toBe(true);
     expect(b!.log).toBe('{"d":30,"adv":1}\n');
     expect(b!.meta).toBe('{"seats":{}}');
+    expect([...b!.history!]).toEqual([7]);
     // the next snapshot replaces the parts of this one
-    expect(await s.uploadSnapshot('w', 60, new Uint8Array([1, 2, 3]), '{}')).toBe(true);
+    expect(await s.uploadSnapshot('w', 60, new Uint8Array([1, 2, 3]), '{}', null)).toBe(true);
     expect([...files.keys()].filter((k) => /snapshot-\d+-\d+\.bin$/.test(k))).toEqual(['w/persistent/snapshot-60-0.bin']);
     expect([...(await s.downloadBackup('w'))!.bin]).toEqual([1, 2, 3]);
   });

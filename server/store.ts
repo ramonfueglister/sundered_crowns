@@ -5,7 +5,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { WorldInfo } from '../src/net/protocol';
 
 const SEASON = 1;
-export interface Backup { bin: Uint8Array; log: string; meta: string | null }
+export interface Backup { bin: Uint8Array; log: string; meta: string | null; /** borders.ndjson, gzip */ history: Uint8Array | null }
 export interface SeatRow { uid: string; name: string; key: string; joinedAt: number; lastSeen: number }
 
 export interface WorldStore {
@@ -13,9 +13,9 @@ export interface WorldStore {
   upsertWorld(w: WorldInfo): Promise<unknown>;
   upsertSeat(world: string, seat: SeatRow): Promise<unknown>;
   removeSeat(world: string, uid: string): Promise<unknown>;
-  /** The copy of the world in Storage: the latest snapshot (gzip) with the meta of the world; true when all of it
-   *  arrived. */
-  uploadSnapshot(world: string, day: number, bin: Uint8Array, meta: string): Promise<boolean>;
+  /** The copy of the world in Storage: the latest snapshot (gzip) with the meta of the world and the history of its
+   *  borders (gzip, server/history.ts); true when all of it arrived. */
+  uploadSnapshot(world: string, day: number, bin: Uint8Array, meta: string, history: Uint8Array | null): Promise<boolean>;
   /** The log since that snapshot (replaces the one before). */
   uploadLog(world: string, log: string): Promise<boolean>;
   /** The copy of the world, null when there is none; throws when Storage cannot be read. */
@@ -83,12 +83,13 @@ export class SupabaseStore implements WorldStore {
     return this.bucket().upload(`${world}/persistent/${name}`, typeof body === 'string' ? new TextEncoder().encode(body) : body,
       { upsert: true, contentType: 'application/octet-stream' });
   }
-  async uploadSnapshot(world: string, day: number, bin: Uint8Array, meta: string) {
+  async uploadSnapshot(world: string, day: number, bin: Uint8Array, meta: string, history: Uint8Array | null) {
     const parts = Math.max(1, Math.ceil(bin.length / SupabaseStore.PART));
     for (let i = 0; i < parts; i++) {
       if (!await this.run('snapshot', this.up(world, `snapshot-${day}-${i}.bin`, bin.subarray(i * SupabaseStore.PART, (i + 1) * SupabaseStore.PART)))) return false;
     }
     if (!await this.run('world meta', this.up(world, 'meta.json', meta))) return false;
+    if (history && !await this.run('border history', this.up(world, 'borders.ndjson.gz', history))) return false;
     if (!await this.run('snapshot meta', this.up(world, 'snapshot.json', JSON.stringify({ day, parts, bytes: bin.length, at: new Date().toISOString() })))) return false;
     // the parts of older snapshots (and the single file of the format before) go
     try {
@@ -128,8 +129,8 @@ export class SupabaseStore implements WorldStore {
       bin = new Uint8Array(chunks.reduce((n, c) => n + c.length, 0));
       let o = 0; for (const c of chunks) { bin.set(c, o); o += c.length; }
     }
-    const log = await get('log.ndjson'), meta = await get('meta.json');
-    return { bin, log: log ? dec.decode(log) : '', meta: meta ? dec.decode(meta) : null };
+    const log = await get('log.ndjson'), meta = await get('meta.json'), history = await get('borders.ndjson.gz');
+    return { bin, log: log ? dec.decode(log) : '', meta: meta ? dec.decode(meta) : null, history };
   }
   async isAdmin(uid: string) {
     if (!isUuid(uid)) return false;

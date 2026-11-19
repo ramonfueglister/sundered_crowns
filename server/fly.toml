@@ -16,6 +16,8 @@ kill_timeout = "30s"
   WORLD_SEED = "1291"
   SECONDS_PER_DAY = "240"
   MAX_PLAYERS = "100"
+  # everyone may pause the world and change its speed with the clock top left (Ramon, 19 November 2026)
+  TIME_CONTROL = "all"
 
 # persistent disk for snapshots and the command log (one volume = one machine = one world)
 [[mounts]]

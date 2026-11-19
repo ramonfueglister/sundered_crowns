@@ -6,7 +6,25 @@ export const PROTOCOL_VERSION = 1;
 
 export interface WorldInfo {
   id: string; name: string; day: number; startYear: number; secondsPerDay: number; paused: boolean; players: number; maxPlayers: number;
+  /** how fast the world runs, 1 … SPEEDS.length (1: its own pace, `secondsPerDay`); absent from an older server: 1 */
+  speed?: number;
 }
+/** The speeds of the world's clock (the time control top left), in real milliseconds per day; the first is the world's
+ *  own pace (`secondsPerDay`), the last as fast as the server can reckon the days. */
+export const SPEEDS = ['own', 2000, 1000, 250, 0] as const;
+/** The history of the borders (`GET /history` on the world server): the first line holds the owner of every place and
+ *  every realm, each later one what changed on its day. */
+export interface History { startYear: number; lines: HistoryLine[] }
+export interface HistoryLine {
+  d: number;
+  /** the owner of every place (-1: none); only in the first line */
+  owner?: number[];
+  /** places that went to another realm: [place, realm] */
+  c?: [number, number][];
+  /** realms that came in or took another name or colour */
+  r?: HistoryRealm[];
+}
+export interface HistoryRealm { id: number; key: string; color: number; short: I18n; name: I18n }
 export interface RealmInfo {
   id: number; key: string; name: I18n; short: I18n; adjective: I18n; color: number; capital: number; faith: number; places: number;
   /** display name of the player who rules it (null: the realm has no player) */
@@ -60,14 +78,20 @@ export interface ArableDetail {
   /** the place cultivates all the land it can: more people get no more land */
   atLimit: boolean;
 }
-export interface Me { uid: string; name: string; admin: boolean; realm: number; /** watches the world without an account: may not take a realm */ observer?: boolean }
+export interface Me {
+  uid: string; name: string; admin: boolean; realm: number; /** watches the world without an account: may not take a realm */ observer?: boolean;
+  /** may pause the world and change its speed (admins, and everyone in a DEV world or with TIME_CONTROL=all) */
+  time?: boolean;
+}
 
 export type ClientMsg =
   | { type: 'hello'; v: number; token?: string; name?: string }
   | { type: 'claim'; realm: number }
   | { type: 'abdicate' }
   | { type: 'cmd'; id: number; cmd: Command }
-  | { type: 'place'; place: number };
+  | { type: 'place'; place: number }
+  /** pauses or runs the world, or sets its speed (1 … SPEEDS.length); only for whom `Me.time` allows */
+  | { type: 'time'; paused?: boolean; speed?: number };
 
 export type ServerMsg =
   | { type: 'welcome'; me: Me; world: WorldInfo; realms: RealmInfo[] }

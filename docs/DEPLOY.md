@@ -34,20 +34,21 @@ DEV mode is for development only: anyone can claim any name. It switches off as 
 
 World data is stored in `./world-data/<WORLD_ID>/world/`: `snap-<day>.bin` (gzip-compressed state, the
 genesis snapshot plus the three most recent), `log-<day>.ndjson` (command log segments, one per snapshot) and
-`snapshot.json`; `./world-data/<WORLD_ID>/meta.json` holds the seats. On start the server loads the latest snapshot and
-replays the log after it, so a crash loses nothing that was logged: the log is forced onto the disk after every day
-marker, snapshots and `meta.json` are written to a temporary file, forced onto the disk and renamed. `SIGTERM` (every
-deploy) writes a final snapshot.
+`snapshot.json`; `./world-data/<WORLD_ID>/meta.json` holds the seats and whether the world is paused;
+`./world-data/<WORLD_ID>/borders.ndjson` the history of the borders that the replay plays (server/history.ts). On start
+the server loads the latest snapshot and replays the log after it, so a crash loses nothing that was logged: the log is
+forced onto the disk after every day marker, snapshots and `meta.json` are written to a temporary file, forced onto
+the disk and renamed. `SIGTERM` (every deploy) writes a final snapshot.
 
 With Supabase the server keeps a copy of the world in the bucket `world-snapshots`, under `<WORLD_ID>/persistent/`:
 the snapshot in parts of at most 40 MB (`snapshot-<day>-<i>.bin`; the Free plan takes no file over 50 MB, and a
-snapshot of 1291 is about 38 MB on its first day and grows), `snapshot.json` and `meta.json` after every snapshot
-(`SNAPSHOT_UPLOAD_EVERY_DAYS`, 30 in-game days ≈ 2 hours at 240 s a day), and `log.ndjson`, the log since that
-snapshot, every day (`LOG_UPLOAD_EVERY_DAYS`, 1 ≈ 4 minutes). `snapshot.json` points at the new parts once they are
-all there, then the parts before go; the other files are overwritten in place, so the copy does not grow. A server
-that starts on an empty disk (a new or a lost volume) takes the world back from that copy before it starts, on the day
-of the last log it sent; when the bucket cannot be read it does not start, rather than found a new world that would
-overwrite the copy.
+snapshot of 1291 is about 38 MB on its first day and grows), `snapshot.json`, `meta.json` and the history of the
+borders (`borders.ndjson.gz`) after every snapshot (`SNAPSHOT_UPLOAD_EVERY_DAYS`, 30 in-game days ≈ 2 hours at 240 s a
+day), and `log.ndjson`, the log since that snapshot, every day (`LOG_UPLOAD_EVERY_DAYS`, 1 ≈ 4 minutes).
+`snapshot.json` points at the new parts once they are all there, then the parts before go; the other files are
+overwritten in place, so the copy does not grow. A server that starts on an empty disk (a new or a lost volume) takes
+the world back from that copy before it starts, on the day of the last log it sent; when the bucket cannot be read it
+does not start, rather than found a new world that would overwrite the copy.
 
 ---
 
@@ -159,7 +160,9 @@ fly logs --app grand-strategy-game
 
 ### Endpoints
 
-- `GET /health` – liveness · `GET /world` – world clock/status (JSON)
+- `GET /health` – liveness · `GET /world` – world clock/status (JSON) · `GET /history` – the history of the borders for the replay (JSON, gzip when asked)
+- The clock top left pauses the world and sets its speed (1: `SECONDS_PER_DAY`, then 2 s, 1 s and 0.25 s a day, and as fast as the server reckons).
+  Admins may use it, in a DEV world everyone; `TIME_CONTROL=all` opens it to everyone. The speed is not kept over a restart, the pause is.
 - WebSocket on `/` – protocol in `src/net/protocol.ts` (JSON frames, plus one binary frame with the owners of all places).
 
 ---
