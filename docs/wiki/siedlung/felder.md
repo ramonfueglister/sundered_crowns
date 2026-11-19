@@ -41,9 +41,9 @@ Welche Zelge was trägt, folgt aus dem Jahr:
 
 ## Was die Welt von 1291 bekommt
 
-107'435 Gewanne in 1'762 Weilern. 97,3 % des Ackerlands liegen auf dem Boden. Im Mittel 63 Gewanne je Weiler, neun von zehn höchstens 96, am meisten 162. 460 Weiler haben zwei Zelgen.
+107'447 Gewanne in 1'762 Weilern. 97,3 % des Ackerlands liegen auf dem Boden. Im Mittel 63 Gewanne je Weiler, neun von zehn höchstens 96, am meisten 162. 460 Weiler haben zwei Zelgen.
 
-33 Städte haben zu wenig Boden, weil Berge, Meer oder Wald sie umgeben: Trabzon 9 %, Messina 17 %, Trento 32 %, Palermo 34 %, Granada 49 % und andere.
+32 Städte haben zu wenig Boden, weil Berge, Meer oder Wald sie umgeben: Trabzon 9 %, Messina 17 %, Trento 32 %, Palermo 34 %, Granada 49 % und andere.
 
 ## Historische Prüfung
 

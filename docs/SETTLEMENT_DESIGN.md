@@ -448,7 +448,7 @@ corn, 2 fallow (two courses: 0 corn, 1 fallow).
 
 ### What the world of 1291 gets (seed 1291)
 
-107,435 furlongs in 1,762 hamlets with fields (of 1,857; the hamlets of the towns without arable, Cairo among them,
+107,447 furlongs in 1,762 hamlets with fields (of 1,857; the hamlets of the towns without arable, Cairo among them,
 have none). 97.3 % of the arable asked for is laid. 63 furlongs per hamlet in the median (fewest 3, nine in ten at
 most 96, most 162). 460 hamlets till in two courses. The survey finds 698,221 lots with room round 545 towns.
 
@@ -467,7 +467,7 @@ real farming family. Nothing is calibrated to it.
 | Zürich / Bayonne / Limoges | 12.0 / 9.2 / 7.0 ha |
 | London / Barcelona / Florence / Paris / Venice | 5.0 / 5.5 / 1.7 / 1.5 / 0.6 ha: places at the land frontier |
 
-33 towns get less land than asked, where the ground round them is mountain, sea or woods: Trabzon 9 %, Messina 17 %,
+32 towns get less land than asked, where the ground round them is mountain, sea or woods: Trabzon 9 %, Messina 17 %,
 Trento 32 %, Palermo 34 %, Tripoli 48 %, Nice 48 %, Granada 49 %, Novgorod 49 %, Reggio Calabria 52 %, Genova 58 %,
 Candia 59 %, L'Aquila 60 %, Istanbul 65 %, Fez 69 %, Ceuta 70 %, the rest above 75 %.
 
@@ -484,7 +484,7 @@ Candia 59 %, L'Aquila 60 %, Istanbul 65 %, Fez 69 %, Ceuta 70 %, the rest above 
 - A block of the world graphic is a nominal 125 m of land; a strip of the world (125 m or less × 875 m) stands for
   the strips of 100 families (real ones about 200 m long and 5 to 20 m wide).
 - The fields do not follow the arable of later years; the fields of neighbouring towns are not held apart from each
-  other; 33 towns are short of ground.
+  other; 32 towns are short of ground.
 - No pasture, common, meadow or vineyard; the vines stay a matter of the graphics. No irrigation, terraces or field
   paths.
 - `tilth_<year>.json` must be written anew when the towns, the hamlets, the forest or the ground change, then
