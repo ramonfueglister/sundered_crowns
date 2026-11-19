@@ -28,7 +28,7 @@ def dist(a, b, c, d):
     return math.hypot((a - c) * 111320, (b - d) * 111320 * k)
 
 def centre(t):
-    q = f'[out:json][timeout:60];node[place~"^(city|town)$"](around:{FIND},{t["lat"]},{t["lon"]});out tags;'
+    q = f'[out:json][timeout:60];node[place~"^(city|town)$"](around:{FIND},{t["lat"]},{t["lon"]});out body;'
     els = ask(q)['elements']
     want = t['name'].lower()
     def score(e):
