@@ -52,7 +52,7 @@ STATIC = BUCKET + 'era5/1959-2022-6h-512x256_equiangular_conservative.zarr/'
 # the grid of the source, and its days of the year in chunks of 30
 LONS, LATS, DAYS, CHUNK = 512, 256, 366, 30
 # the summer of each half of the globe, as days of the year counted from 0: June to August, December to February
-SUMMER_NORTH, SUMMER_SOUTH = range(152, 244), [*range(335, 366), *range(0, 60)]
+SUMMER_NORTH, SUMMER_SOUTH = range(152, 244), [*range(335, 366), *range(60)]
 LAPSE = 0.0065
 # the most precipitation of a year (mm) among the glaciers the relation was measured on
 WETTEST = 4000
@@ -74,10 +74,13 @@ def climate():
     if os.path.exists(KEPT):
         kept = np.load(KEPT)
         return [kept[k] for k in ('days', 'rain', 'ground', 'lon', 'lat')]
+
     # a chunk holds CHUNK days, the last one filled up beyond the end of the year
-    year = lambda field, k: chunk(
-        f'{CLIMATE}{field}/0.{k}.0.0', f'{"t2m" if field[0] == "2" else "tp"}_{k}', (4, CHUNK, LONS, LATS)
-    )[:, : min(CHUNK, DAYS - k * CHUNK)]
+    def year(field, k):
+        return chunk(
+            f'{CLIMATE}{field}/0.{k}.0.0', f'{"t2m" if field[0] == "2" else "tp"}_{k}', (4, CHUNK, LONS, LATS)
+        )[:, : min(CHUNK, DAYS - k * CHUNK)]
+
     chunks = range((DAYS + CHUNK - 1) // CHUNK)
     days = np.concatenate([year('2m_temperature', k).mean(0) for k in chunks]).astype(np.float32) - 273.15
     # each of the four hours of a day carries the precipitation of the 24 hours before it, in metres
@@ -145,7 +148,10 @@ def main():
         with open(path, 'wb') as f:
             f.write(gzip.compress(cells.tobytes(), 9, mtime=0))
         print(f'{name}: {cells.shape[1]} x {cells.shape[0]}, {os.path.getsize(path) / 1e3:.0f} kB')
-    at = lambda name, lo, la: int(out[name][np.abs(wlat - la).argmin(), np.abs((wlon - lo + 180) % 360 - 180).argmin()])
+
+    def at(name, lo, la):
+        return int(out[name][np.abs(wlat - la).argmin(), np.abs((wlon - lo + 180) % 360 - 180).argmin()])
+
     for place, lo, la in (
         ('Alps', 9.5, 46.5),
         ('Pyrenees', 0.5, 42.6),

@@ -157,7 +157,7 @@ def main():
         def nearest_land(lo, la):
             x, y = lonlat_to_px(lo, la)
             xi, yi = int(x), int(y)
-            for r in range(0, 40):
+            for r in range(40):
                 y0, y1, x0, x1 = max(0, yi - r), min(H, yi + r + 1), max(0, xi - r), min(W, xi + r + 1)
                 win = ids[y0:y1, x0:x1]
                 m = (win >= 1) & (win <= L)
@@ -221,14 +221,13 @@ def main():
                 d, j = t.query([px[i], py[i]])
                 km = d * float(km_per_px(lat[i]))
                 k = named_pts[j]
-                if km < 90:
-                    if prov_name[i] is None:
-                        prov_name[i] = prov_name[k]
+                if km < 90 and prov_name[i] is None:
+                    prov_name[i] = prov_name[k]
                 if region_key[i] is None:
                     region_key[i] = region_key[k]
     # land adjacency lists
     adj = [[] for _ in range(N)]
-    for a, b, kind, c, rf in edges:
+    for a, b, kind, c, _rf in edges:
         adj[a].append(b)
         adj[b].append(a)
     for a, b, nm in strait_edges:
@@ -461,7 +460,7 @@ def name_seas(marine, L, S, px, py, lon, lat):
     feats.sort(key=lambda t: -(t[2] or 0))
     # draw big (low scalerank) first, specific (high scalerank) later so they win
     feats.sort(key=lambda t: t[2] or 0)
-    for k, (nm, f, sr) in enumerate(feats):
+    for k, (nm, f, _sr) in enumerate(feats):
         for poly in polys_from_geojson_geom(f['geometry']):
             pts = [lonlat_to_px(lo, max(min(la, 85), -85)) for lo, la in poly[0]]
             pts = [(x / 4, y / 4) for x, y in pts]

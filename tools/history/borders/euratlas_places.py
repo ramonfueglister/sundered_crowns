@@ -44,11 +44,11 @@ from skimage.measure import label as sklabel
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 ORDER = 3
-PROJ = dict(lon0=0.0, lat0=45.0)
+PROJ = {'lon0': 0.0, 'lat0': 45.0}
 QUARTERS = ('Northwest', 'Northeast', 'Southwest', 'Southeast')
-QK = dict(Northwest='NW', Northeast='NE', Southwest='SW', Southeast='SE')
+QK = {'Northwest': 'NW', 'Northeast': 'NE', 'Southwest': 'SW', 'Southeast': 'SE'}
 # quarter map pixel -> entity frame pixel: ent = scale * q + offset (measured on 1300 by colour matching)
-CROP = dict(NW=(0.595, 5, -2), NE=(0.593, 361, -2), SW=(0.595, 5, 278), SE=(0.592, 361, 279))
+CROP = {'NW': (0.595, 5, -2), 'NE': (0.593, 361, -2), 'SW': (0.595, 5, 278), 'SE': (0.592, 361, 279)}
 SEA = np.array([230, 233, 242])
 BLIND = [(503, 512, 684, 544)]  # "Copyright Euratlas" box in the entity frame: no data
 CONTROL_POINTS = [  # quarter, city, lon, lat, x, y (pixel on the quarter map; measured on the 1300 quarters)
@@ -159,17 +159,17 @@ def entity_fit():
         Ci = fit(ll[m], px[m], ORDER)
         loo.append(np.linalg.norm(apply(Ci, ll[i : i + 1], ORDER)[0] - px[i]))
     loo = np.array(loo)
-    return C, dict(
-        control_points=len(names),
-        points_on_quarters=len(CONTROL_POINTS),
-        model=f'{ORDER}rd-order polynomial in lon/lat (equirectangular, lon0 0, lat0 45)'
+    return C, {
+        'control_points': len(names),
+        'points_on_quarters': len(CONTROL_POINTS),
+        'model': f'{ORDER}rd-order polynomial in lon/lat (equirectangular, lon0 0, lat0 45)'
         if ORDER == 3
         else f'order {ORDER}',
-        rms_px=round(float(np.sqrt((r**2).mean())), 2),
-        loo_rms_px=round(float(np.sqrt((loo**2).mean())), 2),
-        max_px=round(float(r.max()), 2),
-        per_city_px={n: round(float(v), 2) for n, v in zip(names, r)},
-    )
+        'rms_px': round(float(np.sqrt((r**2).mean())), 2),
+        'loo_rms_px': round(float(np.sqrt((loo**2).mean())), 2),
+        'max_px': round(float(r.max()), 2),
+        'per_city_px': {n: round(float(v), 2) for n, v in zip(names, r)},
+    }
 
 
 def darkdots(a):
@@ -228,7 +228,13 @@ def read_entities(d):
             t = html.unescape(re.sub('<[^>]+>', '', b)).strip()
             if t.startswith('Depends on'):
                 dep = t[len('Depends on') :].strip()
-        ents[e] = dict(short=short, long=long, dep=dep, status=status.get(e, (None, None))[1], page=os.path.basename(p))
+        ents[e] = {
+            'short': short,
+            'long': long,
+            'dep': dep,
+            'status': status.get(e, (None, None))[1],
+            'page': os.path.basename(p),
+        }
     return ents
 
 
@@ -513,7 +519,7 @@ def sample(LL, C, sov, dep, quarters):
     conf = np.zeros(N)
     for i in range(N):
         cands = []
-        for k, M in quarters.items():
+        for M in quarters.values():
             r = map_label(M, (ent_px[i] - [M['ox'], M['oy']]) / M['f'])
             if r and r[0] >= 0:
                 cands.append(r)
@@ -566,16 +572,16 @@ def main(year, d):
         pred = (apply(C, ll, ORDER) - [ox, oy]) / f
         dist = [float(np.linalg.norm(dots - p, axis=1).min()) for p in pred] if len(dots) else []
         near = [x for x in dist if x <= 6]
-        residuals[f'{year}_{qn}'] = dict(
-            crop_of_entity_frame=dict(scale=f, offset_px=[ox, oy]),
-            crop_colour_match=round(cc[0], 3),
-            crop_best_shift_px=[cc[1], cc[2]],
-            control_cities=len(pred),
-            city_dots_found=len(dots),
-            cities_with_dot_within_6px=len(near),
-            rms_px_to_nearest_dot=round(float(np.sqrt(np.mean(np.square(near)))), 2) if near else None,
-        )
-        quarters[k] = dict(a=a, f=f, ox=ox, oy=oy)
+        residuals[f'{year}_{qn}'] = {
+            'crop_of_entity_frame': {'scale': f, 'offset_px': [ox, oy]},
+            'crop_colour_match': round(cc[0], 3),
+            'crop_best_shift_px': [cc[1], cc[2]],
+            'control_cities': len(pred),
+            'city_dots_found': len(dots),
+            'cities_with_dot_within_6px': len(near),
+            'rms_px_to_nearest_dot': round(float(np.sqrt(np.mean(np.square(near)))), 2) if near else None,
+        }
+        quarters[k] = {'a': a, 'f': f, 'ox': ox, 'oy': oy}
         print(
             f'{qn}: colour match {cc[0]:.3f} at shift {cc[1:]}; {len(near)}/{len(pred)} cities with a dot within 6 px',
             flush=True,
@@ -584,7 +590,10 @@ def main(year, d):
     residuals['entity_maps_frame']['per_city_px'] = ent_fit['per_city_px']
     masks = build_masks(d, ents, base)
     sov, dep = raster(ents, order, masks, base)
-    sea = lambda a: np.abs(a - SEA).sum(-1) < 25
+
+    def sea(a):
+        return np.abs(a - SEA).sum(-1) < 25
+
     for k, M in quarters.items():
         seg = segment(M['a'])
         s, dd, pur = label_segments(seg, sov, dep, M['f'], (M['ox'], M['oy']), sea(M['a']))
@@ -599,7 +608,7 @@ def main(year, d):
         (LL[:, 0] >= ext['west']) & (LL[:, 0] <= ext['east']) & (LL[:, 1] >= ext['south']) & (LL[:, 1] <= ext['north'])
     )
     # states.tsv
-    STATUS = dict(S='sovereign', D='dependent', P='people')
+    STATUS = {'S': 'sovereign', 'D': 'dependent', 'P': 'people'}
     qbox = {k: (ox, oy, ox + 728 * f, oy + 593 * f) for k, (f, ox, oy) in CROP.items()}
     outdir = os.path.join(ROOT, 'data', 'history', 'borders', 'euratlas')
     os.makedirs(outdir, exist_ok=True)
@@ -618,22 +627,22 @@ def main(year, d):
                 )
             w.writerow([i, v['short'], v['long'], STATUS.get(v['status'], ''), v['dep'] or '', '', quarter, v['page']])
     lab = out_s >= 0
-    summary = dict(
-        entities=len(order),
-        places=int(L),
-        places_in_entity_frame=int(inbox.sum()),
-        places_in_world_frame=int(inframe.sum()),
-        labelled=int(lab.sum()),
-        labelled_share_of_entity_frame=round(float((lab & inbox).sum() / max(inbox.sum(), 1)), 3),
-        labelled_share_of_world_frame=round(float((lab & inframe).sum() / max(inframe.sum(), 1)), 3),
-        with_dependent=int((out_d >= 0).sum()),
-        mean_confidence=round(float(conf[lab].mean()), 3) if lab.any() else 0,
-        entities_with_mask=sum(1 for e in order if masks.get(e)),
-        entities_holding_places=int(len(np.unique(out_s[lab]))),
-    )
-    out = dict(
-        source=f'Euratlas Periodis {year} (Nüssli), maps viewed on euratlas.net, sampled at place centres',
-        method='Identity from the per-entity maps (one shared frame; red outline = held in sovereignty, green outline/tint = held as '
+    summary = {
+        'entities': len(order),
+        'places': int(L),
+        'places_in_entity_frame': int(inbox.sum()),
+        'places_in_world_frame': int(inframe.sum()),
+        'labelled': int(lab.sum()),
+        'labelled_share_of_entity_frame': round(float((lab & inbox).sum() / max(inbox.sum(), 1)), 3),
+        'labelled_share_of_world_frame': round(float((lab & inframe).sum() / max(inframe.sum(), 1)), 3),
+        'with_dependent': int((out_d >= 0).sum()),
+        'mean_confidence': round(float(conf[lab].mean()), 3) if lab.any() else 0,
+        'entities_with_mask': sum(1 for e in order if masks.get(e)),
+        'entities_holding_places': int(len(np.unique(out_s[lab]))),
+    }
+    out = {
+        'source': f'Euratlas Periodis {year} (Nüssli), maps viewed on euratlas.net, sampled at place centres',
+        'method': 'Identity from the per-entity maps (one shared frame; red outline = held in sovereignty, green outline/tint = held as '
         'a dependency), filled to area masks (ray-parity inside test; colour fill checked by parity where outlines failed). '
         'Sovereign = smallest sovereign mask covering the pixel, dependent = smallest dependent mask (or a sovereign holding '
         'the land under another). Geometry: the four quarter maps are 0.59x crops of the entity frame; the entity frame is the '
@@ -641,15 +650,15 @@ def main(year, d):
         "checked against this year's quarter maps (residuals_px). Each place is sampled in the entity frame (3x3 majority) and "
         'on the quarter maps (flat-colour segment of the place, labelled by entity-raster majority); weighted vote. No regional '
         'maps. confidence = vote share x local agreement; -1 = outside Euratlas coverage or unmapped (desert/white).',
-        script='tools/history/borders/euratlas_places.py',
-        summary=summary,
-        residuals_px=residuals,
-        entities=[ents[e]['short'] for e in order],
-        entity_pages=[ents[e]['page'] for e in order],
-        place=out_s.tolist(),
-        dependent=out_d.tolist(),
-        confidence=[float(c) for c in conf],
-    )
+        'script': 'tools/history/borders/euratlas_places.py',
+        'summary': summary,
+        'residuals_px': residuals,
+        'entities': [ents[e]['short'] for e in order],
+        'entity_pages': [ents[e]['page'] for e in order],
+        'place': out_s.tolist(),
+        'dependent': out_d.tolist(),
+        'confidence': [float(c) for c in conf],
+    }
     with open(os.path.join(outdir, f'euratlas_{year}_places.json'), 'w', encoding='utf-8') as fo:
         json.dump(out, fo, ensure_ascii=False, separators=(',', ':'))
     print(json.dumps(summary))

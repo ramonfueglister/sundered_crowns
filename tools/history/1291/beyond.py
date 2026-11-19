@@ -28,7 +28,10 @@ NOTES = [
     'Rulers of the Americas are not known by name for 1291; Cahokia is in decline but still occupied.',
 ]
 
-C = lambda *pts: ';'.join(pts)
+
+def C(*pts):
+    return ';'.join(pts)
+
 
 states = [
     S(

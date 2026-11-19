@@ -35,8 +35,10 @@ BLOCKS_PER_MAP_PIXEL = 16
 index = json.load(open(f'{PUB}/map/regions/world/index.json'))
 T, CELLS, MAPW, MAPH, WORLDW = index['tile'], index['cells'], index['mapW'], index['mapH'], index['worldW']
 
+
 # ---------------------------------------------------------------- the frame
-merc = lambda d: math.asinh(math.tan(math.radians(d)))
+def merc(d):
+    return math.asinh(math.tan(math.radians(d)))
 
 
 def map_pixel(lon, lat):
@@ -77,7 +79,10 @@ def tile(tx, ty):
     if raw is None:
         return None, []
     t = T * T
-    lay = lambda k: np.frombuffer(raw, np.uint8, t, t * (2 + k)).reshape(T, T)
+
+    def lay(k):
+        return np.frombuffer(raw, np.uint8, t, t * (2 + k)).reshape(T, T)
+
     rivers = json.load(open(d + name + '.json')) if os.path.exists(d + name + '.json') else []
     return (np.frombuffer(raw, '<i2', t).reshape(T, T), lay(0), lay(1), lay(2), lay(3)), rivers
 
@@ -104,7 +109,11 @@ for ty in range(cy0 // T, (cy0 + ch - 1) // T + 1):
 # cell coordinates of the picture's pixels within the window
 GX = (PX * cpm - cx0 - 0.5)[None, :].repeat(H, 0)
 GY = (PY * cpm - cy0 - 0.5)[:, None].repeat(W, 1)
-samp = lambda a, order=1: ndi.map_coordinates(a, [GY, GX], order=order, mode='nearest')
+
+
+def samp(a, order=1):
+    return ndi.map_coordinates(a, [GY, GX], order=order, mode='nearest')
+
 
 sea_c = ndi.gaussian_filter((water == 1).astype(np.float32), 0.7)
 lake_c = ndi.gaussian_filter((water == 2).astype(np.float32), 0.6)
@@ -142,14 +151,23 @@ def hillshade(h):
 
 relief = np.clip(0.6 * hillshade(hgt) + 0.4 * hillshade(broad), 0.3, 1.5)
 
+
 # ---------------------------------------------------------------- colours (sRGB 0 … 255, mixed in linear light)
-lin = lambda c: np.where(
-    np.asarray(c, np.float32) / 255 <= 0.04045,
-    np.asarray(c, np.float32) / 255 / 12.92,
-    ((np.asarray(c, np.float32) / 255 + 0.055) / 1.055) ** 2.4,
-)
-srgb = lambda v: np.where(v <= 0.0031308, v * 12.92, 1.055 * np.clip(v, 0, None) ** (1 / 2.4) - 0.055)
-mix = lambda a, b, t: a + (b - a) * (t[..., None] if isinstance(t, np.ndarray) else t)
+def lin(c):
+    return np.where(
+        np.asarray(c, np.float32) / 255 <= 0.04045,
+        np.asarray(c, np.float32) / 255 / 12.92,
+        ((np.asarray(c, np.float32) / 255 + 0.055) / 1.055) ** 2.4,
+    )
+
+
+def srgb(v):
+    return np.where(v <= 0.0031308, v * 12.92, 1.055 * np.clip(v, 0, None) ** (1 / 2.4) - 0.055)
+
+
+def mix(a, b, t):
+    return a + (b - a) * (t[..., None] if isinstance(t, np.ndarray) else t)
+
 
 # the kinds of land (climate.ts) and the lines of trees and snow, over the world frame
 cl = np.frombuffer(gzip.open(f'{PUB}/map/climate.bin.gz').read(), np.uint8).reshape(index['worldH'] // 2, WORLDW // 2)
@@ -251,8 +269,12 @@ def label_of(kind_of):
     return best
 
 
-place_of = lambda v: np.where((v >= 1) & (v <= lands), v.astype(np.int32) - 1, -2)
-realm_of = lambda v: np.where((v >= 1) & (v <= lands), owner[np.clip(v.astype(np.int32) - 1, 0, lands - 1)], -2)
+def place_of(v):
+    return np.where((v >= 1) & (v <= lands), v.astype(np.int32) - 1, -2)
+
+
+def realm_of(v):
+    return np.where((v >= 1) & (v <= lands), owner[np.clip(v.astype(np.int32) - 1, 0, lands - 1)], -2)
 
 
 def settle(lab):
@@ -349,8 +371,12 @@ fill = np.where(has[..., None], FILL[np.clip(realm, 0, len(FILL) - 1)], SAND)
 edge = np.where(has[..., None], EDGE[np.clip(realm, 0, len(FILL) - 1)], SAND * 0.8)
 ink = np.where(has[..., None], INK[np.clip(realm, 0, len(FILL) - 1)], SAND * 0.55)
 
+
 # ---------------------------------------------------------------- the picture
-shade = lambda c, r, k: c * (1 + k * (0.3 if SKIN else 1) * (r - 1))[..., None]
+def shade(c, r, k):
+    return c * (1 + k * (0.3 if SKIN else 1) * (r - 1))[..., None]
+
+
 if mode == 'political':
     grey = (terrain * np.array([0.2126, 0.7152, 0.0722])).sum(-1, keepdims=True)
     img = mix(fill, fill * (grey / 0.55), 0.18)  # a breath of the land's own lightness

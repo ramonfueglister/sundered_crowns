@@ -37,7 +37,10 @@ def main():
     raw = open(args.map_units, 'rb').read()
     fc = json.loads(raw)
     feats = fc['features']
-    low = lambda p: {k.lower(): v for k, v in p.items()}
+
+    def low(p):
+        return {k.lower(): v for k, v in p.items()}
+
     hits = [
         f
         for f in feats
@@ -81,7 +84,7 @@ def main():
     with open(path, 'w', encoding='utf-8') as fh:
         json.dump(out, fh, ensure_ascii=False, separators=(',', ':'))
         fh.write('\n')
-    print('properties %s' % json.dumps(out['properties']))
+    print('properties {}'.format(json.dumps(out['properties'])))
     print(
         'polygons %d, vertices %d, area %.0f km2, bbox %s'
         % (len(polys), sum(len(r) for q in polys for r in q), area, out['bbox'])

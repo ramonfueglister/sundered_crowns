@@ -100,10 +100,7 @@ def main():
     def rings_of(key):
         out = []
         for item in ov.get(key, []) or []:
-            if isinstance(item, dict):
-                r = item.get('polygon') or item.get('coords') or item.get('points')
-            else:
-                r = item
+            r = (item.get('polygon') or item.get('coords') or item.get('points')) if isinstance(item, dict) else item
             if r and isinstance(r[0], (list, tuple)) and len(r) >= 3 and isinstance(r[0][0], (int, float)):
                 out.append(r)
         return out

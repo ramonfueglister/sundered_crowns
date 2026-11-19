@@ -64,8 +64,7 @@ def polys_from_geojson_geom(geom):
     if t == 'Polygon':
         yield geom['coordinates']
     elif t == 'MultiPolygon':
-        for p in geom['coordinates']:
-            yield p
+        yield from geom['coordinates']
 
 
 def lines_from_geojson_geom(geom):
@@ -73,5 +72,4 @@ def lines_from_geojson_geom(geom):
     if t == 'LineString':
         yield geom['coordinates']
     elif t == 'MultiLineString':
-        for l in geom['coordinates']:
-            yield l
+        yield from geom['coordinates']

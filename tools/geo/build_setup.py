@@ -22,6 +22,7 @@ from common import CACHE, OUT_DATA, OUT_PUBLIC, ROOT, H, W, km_per_px, load_json
 from PIL import Image
 from scipy import ndimage
 from scipy.spatial import cKDTree
+import contextlib
 
 STAGE = os.path.join(CACHE, 'stage')
 YEAR = int(sys.argv[1]) if len(sys.argv) > 1 else 1356
@@ -108,12 +109,12 @@ def main():
     # adjacency (land graph with distances)
     adj = [[] for _ in range(L + S + 1)]
     coastal = np.zeros(L + 1, bool)
-    for a, b, kind, c, rf in geo['edges']:
+    for a, b, kind, c, _rf in geo['edges']:
         adj[a].append(b)
         adj[b].append(a)
         if kind == 1:
             coastal[min(a, b)] = True
-    for a, b, nm in geo['straits']:
+    for a, b, _nm in geo['straits']:
         adj[a].append(b)
         adj[b].append(a)
     states, wars = load_states()
@@ -255,7 +256,7 @@ def main():
     def reach(i):
         if lon[i - 1] < -30 or lat[i - 1] < 10:
             return 260
-        if 40 < lon[i - 1] or lat[i - 1] < 30:
+        if lon[i - 1] > 40 or lat[i - 1] < 30:
             return 420
         return 300
 
@@ -383,16 +384,14 @@ def main():
         pop[i] = dens[i] * area[i] * tmul[terrain[i]]
         p0 = loc['pop'][i]
         if p0:
-            try:
+            with contextlib.suppress(Exception):
                 pop[i] += float(p0)
-            except Exception:
-                pass
         else:
             sz = loc['size'][i] or 0
             pop[i] += [0, 400, 1500, 4000, 12000, 40000][min(5, sz)]
     # ---------------- names ----------------
     names = list(loc['name'][:L])
-    used = set(n for n in names if n)
+    used = {n for n in names if n}
     for i in range(L):
         if not names[i]:
             names[i] = gen_name(culture[i], i, used, lon[i], lat[i])
@@ -873,7 +872,7 @@ def gen_name(cult, i, used, lo, la):
     h = int(hashlib.md5(f'{cult}-{i}'.encode()).hexdigest(), 16)
     if grp is None:
         # peoples outside the European naming sets: describe the district neutrally
-        return None or f'{"Upland" if h % 2 else "Lowland"} district {i % 997}'
+        return f'{"Upland" if h % 2 else "Lowland"} district {i % 997}'
     a, b = SYL[grp]
     for k in range(20):
         nm = a[(h >> (k * 3)) % len(a)] + b[(h >> (k * 5 + 7)) % len(b)]

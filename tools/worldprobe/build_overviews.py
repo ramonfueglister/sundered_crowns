@@ -88,14 +88,21 @@ def halve(*layers):
 
 
 def halve_band(shaped, drainage, water, forest, crops):
-    four = lambda a: (
-        a.reshape(a.shape[0] // 2, 2, a.shape[1] // 2, 2).swapaxes(1, 2).reshape(a.shape[0] // 2, a.shape[1] // 2, 4)
-    )
+    def four(a):
+        return (
+            a.reshape(a.shape[0] // 2, 2, a.shape[1] // 2, 2)
+            .swapaxes(1, 2)
+            .reshape(a.shape[0] // 2, a.shape[1] // 2, 4)
+        )
+
     w4, s4 = four(water), four(shaped).astype(np.float32)
     land, lake = w4 == LAND, w4 == LAKE
     n_land, n_lake = land.sum(2), lake.sum(2)
     out = np.where(n_land >= 2, LAND, np.where(n_lake > 4 - n_land - n_lake, LAKE, SEA)).astype(np.uint8)
-    over = lambda v, m, n: (v * m).sum(2) / np.maximum(n, 1)
+
+    def over(v, m, n):
+        return (v * m).sum(2) / np.maximum(n, 1)
+
     high = np.where(land, s4, -1e9).max(2)
     height = np.where(
         out == LAND, 0.5 * over(s4, land, n_land) + 0.5 * high, np.where(out == LAKE, over(s4, lake, n_lake), 0)

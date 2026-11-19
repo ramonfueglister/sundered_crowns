@@ -98,7 +98,10 @@ def main(year=1291):
     }
     path = os.path.join(ROOT, 'public', 'data', f'towns_{year}.json')
     json.dump(doc, open(path, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
-    n = lambda w: sum(1 for h in how if h == w)
+
+    def n(w):
+        return sum(1 for h in how if h == w)
+
     print(
         f'{n("chandler")} towns after Chandler, {n("factor")} by the factor of their region, '
         f'{sum(1 for p in people if p is None)} unknown; {sum(p or 0 for p in people)} people -> {path}'
@@ -158,7 +161,7 @@ def write_cities(year, gaz, people, how, place, geo):
     with open(dst, 'w', encoding='utf-8') as f:
         f.write(json.dumps(doc, ensure_ascii=False, indent=1) + '\n')
     print(
-        f'{len(cities)} towns, {len(set(c["place"] for c in cities))} places, {sum(c["people"] for c in cities)} people -> {dst}'
+        f'{len(cities)} towns, {len({c["place"] for c in cities})} places, {sum(c["people"] for c in cities)} people -> {dst}'
     )
 
 

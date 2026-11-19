@@ -64,7 +64,7 @@ class Model:
     colours: list
 
     @classmethod
-    def new(cls, name: str) -> 'Model':
+    def new(cls, name: str) -> Model:
         return cls(name, bmesh.new(), [])
 
     def _add_faces(self, verts, faces, colour, outward=None):
@@ -144,7 +144,10 @@ class Model:
     def pane(self, side: str, x0, y0, x1, y1, z0, z1, u0, u1, colour, lift=0.04):
         """A flat rectangle lying on one side of the box x0..x1 × y0..y1, from u0 to u1 along that side and z0 to z1
         up it, a little off the wall so that it does not flicker into it."""
-        on = lambda u, z: self._on(side, x0, y0, x1, y1, u, z, lift)
+
+        def on(u, z):
+            return self._on(side, x0, y0, x1, y1, u, z, lift)
+
         self._add_faces(
             [on(u0, z0), on(u1, z0), on(u1, z1), on(u0, z1)], [(0, 1, 2, 3)], colour, ('along', SIDE_NORMAL[side])
         )
@@ -156,7 +159,10 @@ class Model:
             (uc + math.cos(math.pi * k / segs) * half, spring + math.sin(math.pi * k / segs) * half)
             for k in range(segs + 1)
         ]
-        on = lambda u, z: self._on(side, x0, y0, x1, y1, u, z, lift)
+
+        def on(u, z):
+            return self._on(side, x0, y0, x1, y1, u, z, lift)
+
         for (ua, za), (ub, zb) in zip(pts, pts[1:]):
             self._add_faces([on(uc, spring), on(ua, za), on(ub, zb)], [(0, 1, 2)], colour, ('along', SIDE_NORMAL[side]))
 
@@ -170,7 +176,10 @@ class Model:
         ow = (length - (n + 1) * pier) / n
         radius = ow / 2
         spring = z1 - top_gap - radius
-        on = lambda u, z, t=0.0: self._on(side, x0, y0, x1, y1, u, z, t)
+
+        def on(u, z, t=0.0):
+            return self._on(side, x0, y0, x1, y1, u, z, t)
+
         normal = Vector(SIDE_NORMAL[side])
         if sill > 0:
             a, c = on(0, z0, 0), on(length, z0, -thickness)

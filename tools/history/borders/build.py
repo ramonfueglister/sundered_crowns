@@ -90,7 +90,9 @@ def year_of(d):
 
 
 def build():
-    J = lambda *p: json.load(open(os.path.join(ROOT, *p), encoding='utf-8'))
+    def J(*p):
+        return json.load(open(os.path.join(ROOT, *p), encoding='utf-8'))
+
     clio, setup, rulers, geo = (
         J('data', 'history', 'borders', 'cliopatria_places.json'),
         J('public', 'data', 'setup_1291.json'),

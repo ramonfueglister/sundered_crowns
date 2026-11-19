@@ -38,7 +38,40 @@ from common import ROOT, H, W
 Image.MAX_IMAGE_PIXELS = None
 SOURCE = 'https://raw.githubusercontent.com/cwru-sdle/kgcpy/4bce28ba7596f870e50838a16e3799a9067eb742/kgcpy/kmz_int_reshape.png'
 # the zones in the order of the source's numbers 1 … 32
-ZONES = 'Af Am As Aw BSh BSk BWh BWk Cfa Cfb Cfc Csa Csb Csc Cwa Cwb Cwc Dfa Dfb Dfc Dfd Dsa Dsb Dsc Dsd Dwa Dwb Dwc Dwd EF ET Ocean'.split()
+ZONES = [
+    'Af',
+    'Am',
+    'As',
+    'Aw',
+    'BSh',
+    'BSk',
+    'BWh',
+    'BWk',
+    'Cfa',
+    'Cfb',
+    'Cfc',
+    'Csa',
+    'Csb',
+    'Csc',
+    'Cwa',
+    'Cwb',
+    'Cwc',
+    'Dfa',
+    'Dfb',
+    'Dfc',
+    'Dfd',
+    'Dsa',
+    'Dsb',
+    'Dsc',
+    'Dsd',
+    'Dwa',
+    'Dwb',
+    'Dwc',
+    'Dwd',
+    'EF',
+    'ET',
+    'Ocean',
+]
 # kinds of land, as src/worldprobe/climate.ts names them
 # west of this longitude, in the middle of the Atlantic, lie the Americas
 OLD_WORLD_FROM = -30

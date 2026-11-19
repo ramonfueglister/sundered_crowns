@@ -37,7 +37,11 @@ from common import W as MAP_W
 
 DATA = os.path.join(ROOT, 'public', 'data')
 MAP = os.path.join(ROOT, 'public', 'map')
-read = lambda name: json.load(open(os.path.join(DATA, name), encoding='utf-8'))
+
+
+def read(name):
+    return json.load(open(os.path.join(DATA, name), encoding='utf-8'))
+
 
 # names for the peoples beyond the game map, built as build_setup.py builds the European ones (prefix + suffix)
 SYL.update(
@@ -342,7 +346,7 @@ def main():
 
     # --- names: the researched ones, the rest after the people's naming --------------------------------------------------
     world = read('world.json')
-    used = set(n for n in world['name'] if n)
+    used = {n for n in world['name'] if n}
     names = []
     for i in range(L2):
         nm = seeds[i][2]
@@ -595,7 +599,7 @@ def main():
     land['yield'] += [None if np.isnan(m) else round(float(m), 1) for m in ymean]
     land['curve']['fertile'] += [float(f) for f in fert2]
     land['curve']['steps'] += steps2
-    land['source']['beyond'] = 'places beyond the game map: the whole raster, %s' % cc['file']
+    land['source']['beyond'] = 'places beyond the game map: the whole raster, {}'.format(cc['file'])
     print(
         'yield of the new places: without data %d, median %.0f'
         % (int(np.isnan(ymean).sum()), float(np.nanmedian(ymean)))

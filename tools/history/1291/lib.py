@@ -16,6 +16,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')) + '/tools/geo')
 from common import H, W, lonlat_to_px
+import contextlib
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')) + ''
 OLD = {}
@@ -42,10 +43,8 @@ def _add(name, lat, lon, src):
 
 for s in OLD.values():
     for p in [s['capital']] + list(s.get('holdings') or []):
-        try:
+        with contextlib.suppress(Exception):
             _add(p['name'], p['lat'], p['lon'], '1356')
-        except Exception:
-            pass
 for p in json.load(open(f'{ROOT}/data/content/gazetteer.json', encoding='utf-8'))['places']:
     _add(p['name'], p['lat'], p['lon'], 'gaz')
     if p.get('alt'):

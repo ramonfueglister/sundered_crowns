@@ -25,7 +25,7 @@ def value_noise(h, w, cell, octaves=4, seed=0):
     out = np.zeros((h, w), np.float32)
     amp = 1.0
     tot = 0
-    for o in range(octaves):
+    for _o in range(octaves):
         gh, gw = h // cell + 2, w // cell + 2
         g = r.standard_normal((gh, gw)).astype(np.float32)
         z = ndimage.zoom(g, (h / (gh - 1) * 1.0001, w / (gw - 1) * 1.0001), order=3)[:h, :w]

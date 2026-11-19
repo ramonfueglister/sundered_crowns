@@ -120,7 +120,7 @@ def in_gamut(L, C, h):
 
 def to_hex(L, C, h):
     ok, rgb = in_gamut(L, C, h)
-    return '#%02x%02x%02x' % tuple(lin_to_srgb(v) for v in rgb)
+    return '#{:02x}{:02x}{:02x}'.format(*tuple(lin_to_srgb(v) for v in rgb))
 
 
 def dist(p, q):

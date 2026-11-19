@@ -140,10 +140,10 @@ def main():
     names = json.load(open(os.path.join(ROOT, 'public', 'data', 'world.json'), encoding='utf-8'))['name']
     ids = np.load(os.path.join(os.environ.get('GEO_CACHE', '/home/user/geo-cache'), 'stage', 'ids.npy'))
     adj = [[] for _ in range(L + S + 1)]
-    for a, b, kind, c, rf in geo['edges']:
+    for a, b, _kind, c, _rf in geo['edges']:
         adj[a].append(b)
         adj[b].append(a)
-    for a, b, nm in geo['straits']:
+    for a, b, _nm in geo['straits']:
         adj[a].append(b)
         adj[b].append(a)
     # places on the sphere for the nearest-place lookup outside the game map's raster
@@ -247,7 +247,7 @@ def main():
             return 380  # the rest of the globe (tools/geo/merge_beyond.py)
         if lon[i - 1] < -30 or lat[i - 1] < 10:
             return 260
-        if 40 < lon[i - 1] or lat[i - 1] < 30:
+        if lon[i - 1] > 40 or lat[i - 1] < 30:
             return 420
         return 300
 

@@ -195,7 +195,10 @@ def elevation(lon, lat, land):
     dry = ndimage.binary_dilation(dry, np.ones((3, 3), bool))
     # round the globe the tiles begin again
     wanted = [(x, y) for x in range(x0, x1 + 1) for y in range(y0, y1 + 1) if dry[y - y0, x - x0]]
-    source = lambda x, y: cached(TILES.format(z=ZOOM, x=x % n, y=y), f'terrarium/{ZOOM}_{x % n}_{y}.png')
+
+    def source(x, y):
+        return cached(TILES.format(z=ZOOM, x=x % n, y=y), f'terrarium/{ZOOM}_{x % n}_{y}.png')
+
     with ThreadPoolExecutor(16) as pool:
         list(pool.map(lambda t: source(*t), wanted))
     mosaic = np.zeros(((y1 - y0 + 1) * 256, (x1 - x0 + 1) * 256), np.float32)

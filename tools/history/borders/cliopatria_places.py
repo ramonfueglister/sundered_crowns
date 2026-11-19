@@ -79,7 +79,7 @@ def main(path):
         json.dump(out, fo, ensure_ascii=False, separators=(',', ':'))
     n = sum(len(r['places']) for r in rows)
     print(
-        f'{len(rows)} rows, {len(set(r["name"] for r in rows))} polities, {n} place-rows, {inside.sum()} places in the frame; skipped {skipped}'
+        f'{len(rows)} rows, {len({r["name"] for r in rows})} polities, {n} place-rows, {inside.sum()} places in the frame; skipped {skipped}'
     )
 
 

@@ -91,7 +91,10 @@ def spacing_km(lon, lat, height):
     lat = np.asarray(lat)
     height = np.asarray(height)
     r = np.full(lon.shape, 130.0)
-    box = lambda a, b, c, d: (lon >= a) & (lon <= b) & (lat >= c) & (lat <= d)
+
+    def box(a, b, c, d):
+        return (lon >= a) & (lon <= b) & (lat >= c) & (lat <= d)
+
     r[box(70, 180, -12, 56)] = 80  # Asia, generally
     r[box(70, 100, 5, 37)] = 40  # the Indian subcontinent
     r[box(73, 92, 21, 31)] = 32  # Gangetic plain, Punjab

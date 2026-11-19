@@ -157,8 +157,12 @@ def polygon_mask(lon, lat, units):
     return m.reshape(LAT.shape)
 
 
-sig = lambda z: 1 / (1 + np.exp(-z))
-logit = lambda p: np.log(np.clip(p, 1e-4, 1 - 1e-4) / (1 - np.clip(p, 1e-4, 1 - 1e-4)))
+def sig(z):
+    return 1 / (1 + np.exp(-z))
+
+
+def logit(p):
+    return np.log(np.clip(p, 1e-4, 1 - 1e-4) / (1 - np.clip(p, 1e-4, 1 - 1e-4)))
 
 
 def solve_offset(pot, base, wgt, groups, target, n, lo=-12.0, hi=12.0):
@@ -202,7 +206,7 @@ def main():
     gx = np.floor(lon - (x0 - 0.5)).astype(int)
     gy = np.floor(lat - (y0 - 0.5)).astype(int)
     GX, GY = np.meshgrid(gx, gy)
-    inside = (GX >= 0) & (GX < nx) & (GY >= 0) & (GY < ny)
+    inside = (GX >= 0) & (nx > GX) & (GY >= 0) & (ny > GY)
     cell = np.where(inside, GY.clip(0, ny - 1) * nx + GX.clip(0, nx - 1), -1)
     known = inside & ~np.isnan(T.ravel()[cell.clip(0)]) & land
     # history overrides: England's overall level from the records
