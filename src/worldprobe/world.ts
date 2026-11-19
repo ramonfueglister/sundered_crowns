@@ -122,10 +122,11 @@ const seedOf = (a: number, b: number, salt: number) => Math.floor(hash2(a, b, sa
  * column by column from the heights as they are, every rise of a few dozen metres on the rolling high plains (the
  * Meseta, the Bavarian and Swiss plateaus, Anatolia) became an edge or a patch of its own: some 85 patches of less
  * than 50 columns to a piece of step 2, 170 of step 3, which made the map restless and bore no shape of the land.
- * Measured on eight such landscapes over steps 0 to 4, the two together take 41 to 53 % of the grass steps' sides
- * and 80 to 90 % of the patches away; the hills and the rock keep their shape.
+ * Measured on eight such landscapes over steps 0 to 4, averaging over 9 × 9 columns with steps of 7 columns took 41
+ * to 53 % of the grass steps' sides and 80 to 90 % of the patches away; 13 × 13 with steps of 11 (some 1.4 km at
+ * the finest step) takes another 22 to 28 % of the sides and 40 to 55 % of the patches left. The rock keeps its shape.
  */
-const SMOOTH_REACH = 4, TERRACE_REACH = 3;
+const SMOOTH_REACH = 6, TERRACE_REACH = 5;
 /** the heights of the dry land averaged over a square reaching `reach` columns to each side, of the dry columns in it; water keeps its own */
 export function landAveraged(metres: Float32Array, kind: Uint8Array, reach = SMOOTH_REACH) {
   const n = N, rowSum = new Float32Array(n * n), rowCount = new Uint16Array(n * n), out = new Float32Array(metres);
@@ -156,7 +157,7 @@ export function terrace(level: Int16Array, mat: Uint8Array, reach = TERRACE_REAC
 }
 /** one pass of `terrace`: every column of the grass land takes the lowest (`up`: the highest) of the grass in the square round it */
 function terracePass(from: Int16Array, mat: Uint8Array, up: boolean, reach: number) {
-  // (in two runs, along the rows and then along the columns: the square of 7 × 7 walked at once took several times as
+  // (in two runs, along the rows and then along the columns: the square of 11 × 11 walked at once took several times as
   // long; a column with no grass in its run of the row holds a height that loses against every other)
   const n = N, none = up ? -32768 : 32767, row = new Int16Array(n * n), to = new Int16Array(from);
   for (let z = 0; z < n; z++) for (let x = 0; x < n; x++) {
