@@ -1,10 +1,12 @@
 // The persistent world server in-process: players take up realms, the world runs, a snapshot plus the command log
 // reproduces it, and a restart resumes where it stopped.
 import { describe, it, expect } from 'vitest';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
+import { gzipSync } from 'node:zlib';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { WorldCore, configFromEnv, type Conn } from '../server/world';
+import { WorldCore, WorldFiles, configFromEnv, packSnapshot, unpackSnapshot, type Conn } from '../server/world';
+import { encodeState, hashState } from '../src/sim/snapshot';
 import type { ServerMsg } from '../src/net/protocol';
 import { BIN_OWNERS } from '../src/net/protocol';
 
@@ -76,4 +78,23 @@ describe('world server', () => {
     core.shutdown();
     rmSync(dir, { recursive: true, force: true });
   });
+});
+
+describe('snapshots on disk', () => {
+  it('are written with zstd, and those gzip wrote before are still read', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'scs-'));
+    const core = new WorldCore({ ...configFromEnv({}), dataDir: dir, id: 'snap', log: () => {} }).init();
+    core.step();
+    const files = new WorldFiles(join(dir, 'probe')), raw = encodeState(core.s);
+    const w = files.writeSnapshot(core.s), file = join(dir, 'probe', `snap-${w.day}.bin`);
+    expect([...readFileSync(file).subarray(0, 4)]).toEqual([0x28, 0xb5, 0x2f, 0xfd]);
+    expect(w.hash).toBe(hashState(core.s));
+    expect(hashState(files.readSnapshot(w.day))).toBe(w.hash);
+    expect(Buffer.from(unpackSnapshot(packSnapshot(raw))).equals(Buffer.from(raw))).toBe(true);
+    // a snapshot of an older build
+    writeFileSync(file, gzipSync(raw));
+    expect(hashState(files.readSnapshot(w.day))).toBe(w.hash);
+    files.close(); core.shutdown();
+    rmSync(dir, { recursive: true, force: true });
+  }, 60_000);
 });

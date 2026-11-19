@@ -6,12 +6,12 @@
 // (verifyReplay). Real-time facts (a player left long ago) become log entries before they touch the state.
 import { mkdirSync, existsSync, readFileSync, writeFileSync, renameSync, readdirSync, openSync, writeSync, closeSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
-import { gzipSync, gunzipSync } from 'node:zlib';
+import { gunzipSync, zstdCompressSync, zstdDecompressSync, constants as zlibConstants } from 'node:zlib';
 import type { WorldState } from '../src/sim/state';
 import type { World } from '../src/sim/world';
 import { applyCommand, type Command, type CmdResult } from '../src/sim/commands';
 import { advanceDay } from '../src/sim/engine';
-import { encodeState, decodeState, hashState } from '../src/sim/snapshot';
+import { encodeState, decodeState, hashState, hashBytes } from '../src/sim/snapshot';
 import { createWorldState } from '../src/sim/setup';
 import { upgradeState } from '../src/sim/upgrade';
 import { loadWorldFor, loadSetup } from '../tools/sim/load';
@@ -70,7 +70,18 @@ export function parseLog(text: string): LogLine[] {
 }
 
 // ======================================================================= files on disk
-/** Snapshots (gzip) and log segments: log-<day>.ndjson holds everything after the snapshot of that day. */
+/**
+ * A snapshot as it goes to disk and to the store: zstd at its fastest level. The state of 1291 is ~80 MB; gzip took
+ * 1.6 s for it (41 MB), zstd takes 0.15 s (28 MB), which matters when the clock runs fast and a snapshot falls every
+ * few seconds. Snapshots written by gzip before are still read (unpackSnapshot tells them by their first bytes).
+ */
+export function packSnapshot(raw: Uint8Array): Uint8Array { return zstdCompressSync(raw, { params: { [zlibConstants.ZSTD_c_compressionLevel]: 1 } }); }
+export function unpackSnapshot(b: Uint8Array): Uint8Array {
+  if (b[0] === 0x1f && b[1] === 0x8b) return gunzipSync(b);
+  if (b[0] === 0x28 && b[1] === 0xb5 && b[2] === 0x2f && b[3] === 0xfd) return zstdDecompressSync(b);
+  return b;
+}
+/** Snapshots (zstd) and log segments: log-<day>.ndjson holds everything after the snapshot of that day. */
 export class WorldFiles {
   private fd = -1;
   constructor(readonly dir: string) { mkdirSync(dir, { recursive: true }); }
@@ -78,7 +89,7 @@ export class WorldFiles {
   snapshots(): number[] { return readdirSync(this.dir).map((f) => /^snap-(\d+)\.bin$/.exec(f)).filter(Boolean).map((m) => Number(m![1])).sort((a, b) => a - b); }
   segments(): number[] { return readdirSync(this.dir).map((f) => /^log-(\d+)\.ndjson$/.exec(f)).filter(Boolean).map((m) => Number(m![1])).sort((a, b) => a - b); }
   writeSnapshot(s: WorldState): { day: number; hash: string; bin: Uint8Array } {
-    const bin = gzipSync(encodeState(s)), day = s.day, hash = hashState(s);
+    const raw = encodeState(s), bin = packSnapshot(raw), day = s.day, hash = hashBytes(raw);
     const file = join(this.dir, `snap-${day}.bin`);
     writeFileSync(file + '.tmp', bin); renameSync(file + '.tmp', file);
     writeFileSync(join(this.dir, 'snapshot.json.tmp'), JSON.stringify({ day, hash })); renameSync(join(this.dir, 'snapshot.json.tmp'), join(this.dir, 'snapshot.json'));
@@ -88,7 +99,7 @@ export class WorldFiles {
     this.openSegment(day);
     return { day, hash, bin };
   }
-  readSnapshot(day: number): WorldState { return decodeState(gunzipSync(readFileSync(join(this.dir, `snap-${day}.bin`)))); }
+  readSnapshot(day: number): WorldState { return decodeState(unpackSnapshot(readFileSync(join(this.dir, `snap-${day}.bin`)))); }
   readLines(fromDay: number): LogLine[] {
     const out: LogLine[] = [];
     for (const seg of this.segments()) if (seg >= fromDay) out.push(...parseLog(readFileSync(join(this.dir, `log-${seg}.ndjson`), 'utf8')));

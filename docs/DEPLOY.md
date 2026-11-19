@@ -32,7 +32,7 @@ Without Supabase the sign-in asks for a display name only (DEV world).
 DEV mode is for development only: anyone can claim any name. It switches off as soon as `SUPABASE_URL`,
 `SUPABASE_JWT_SECRET` or `SUPABASE_JWKS_URL` is set on the server.
 
-World data is stored in `./world-data/<WORLD_ID>/world/`: `snap-<day>.bin` (gzip-compressed state, the
+World data is stored in `./world-data/<WORLD_ID>/world/`: `snap-<day>.bin` (zstd-compressed state, older gzip ones are still read; the
 genesis snapshot plus the three most recent), `log-<day>.ndjson` (command log segments, one per snapshot) and
 `snapshot.json`; `./world-data/<WORLD_ID>/meta.json` holds the seats and whether the world is paused;
 `./world-data/<WORLD_ID>/borders.ndjson` the history of the borders that the replay plays (server/history.ts). On start the server loads the latest snapshot and
@@ -170,8 +170,11 @@ runs, and resumes from its snapshot and log after every restart.
   overwritten in place (uploaded every `SNAPSHOT_UPLOAD_EVERY_DAYS` = 300 in-game days ≈ 3 hours).
 - **Vercel Hobby**: free for personal, non-commercial projects; the game is a static build of ≈ 30 MB (mostly map data).
   Commercial use needs Pro (US$20/month per member).
-- **Fly.io**: `shared-cpu-1x` with 1 GB RAM ≈ US$5–6/month, volume US$0.15/GB/month. The daily tick sends only the
-  date and what changed.
+- **Fly.io**: `shared-cpu-1x` with 2 GB RAM, volume US$0.15/GB/month. The daily tick sends only the
+  date and what changed. A shared CPU may run at full speed only from a burst balance (at most 500 s, 5 s after a
+  deploy) and is held to 6.25 % of a core once it is spent: at its own pace the world needs far less, but the time
+  control at its fast speeds spends the balance within minutes and is then throttled to a fraction of a day a second.
+  `performance-1x` (a whole core, ≈ US$33/month with 2 GB) runs fast without a limit.
 - Server-side limits (env): `MAX_PLAYERS` (100), `CMDS_PER_DAY` (60 commands per player per in-game day),
   3 sessions per account, 12 connections per IP,
   64 KB per WebSocket message.
