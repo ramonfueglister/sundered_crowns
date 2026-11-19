@@ -3,7 +3,7 @@
 // there, and nobody would be told: the steps below them are built from the map as it is. These tests tell.
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
-import { gunzipSync } from 'node:zlib';
+import { brotliDecompressSync, gunzipSync } from 'node:zlib';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildPiece } from '../../src/worldprobe/build';
 import { type TablesIndex, keepTables, keyOfTable, packTable, tabled, whereTable, withThings } from '../../src/worldprobe/table';
@@ -19,7 +19,8 @@ function keptTable(step: number, px: number, pz: number): Uint8Array {
   for (let i = 0; i < at.length; i += 2) if (at[i] === px && at[i + 1] === pz) { k = i / 2; break; }
   if (k < 0) return new Uint8Array(0);
   const { file, range } = whereTable(index, step, px, pz, k), bytes = readFileSync(`${DIR}/${file}`);
-  return new Uint8Array(gunzipSync(range ? bytes.subarray(range[0], range[0] + range[1]) : bytes));
+  const zipped = range ? bytes.subarray(range[0], range[0] + range[1]) : bytes;
+  return new Uint8Array(index.coding === 'br' ? brotliDecompressSync(zipped) : gunzipSync(zipped));
 }
 
 describe('the kept tables of the far pieces', () => {

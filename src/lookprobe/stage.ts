@@ -7,7 +7,7 @@
 // triangles in those lists, not as faces (faces.ts); ?free=0: the rectangles on no grid of what stands on them do.
 // ?pilots=0: the shaders of a kind of mesh are made when its first mesh is drawn, not at the start (see there).
 import * as THREE from 'three/webgpu';
-import { Fn, agxToneMapping, attribute, clamp, convertToTexture, dot, float, fract, getViewPosition, materialColor, max, mix, mrt, neutralToneMapping, normalView, output, pass, positionGeometry, reflector, rtt, saturation, screenCoordinate, screenSize, screenUV, select, smoothstep, step, texture, uniform, userData, uv, vec2, vec3, vec4, vertexColor } from 'three/tsl';
+import { Fn, If, agxToneMapping, attribute, clamp, convertToTexture, dot, float, fract, getViewPosition, materialColor, max, mix, mrt, neutralToneMapping, normalView, output, pass, positionGeometry, reflector, rtt, saturation, screenCoordinate, screenSize, screenUV, select, smoothstep, step, texture, uniform, userData, uv, vec2, vec3, vec4, vertexColor } from 'three/tsl';
 import { MapControls } from 'three/addons/controls/MapControls.js';
 import { dof } from 'three/addons/tsl/display/DepthOfFieldNode.js';
 import { denoise } from 'three/addons/tsl/display/DenoiseNode.js';
@@ -272,8 +272,13 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     // From afar what stands by the water is smaller than the mirror's blur, and the mirror shows the sky alone, which
     // is the picture's background: there it is not drawn (a whole second picture of the scene, every picture), and
     // the water takes the background's colour in its place (see Stage.mirror).
-    const sky = new THREE.Color(...OPEN_WATER);
-    water.emissiveNode = mix(vec3(sky.r, sky.g, sky.b), hashBlur(mirror, float(LOOK.mirrorBlur), { repeats: float(24) }).rgb, mirrorShare).mul(tint);
+    // (the 24 looks into the mirror's picture that blur it are taken only where it is drawn)
+    const sky = new THREE.Color(...OPEN_WATER), open = vec3(sky.r, sky.g, sky.b), blurred = hashBlur(mirror, float(LOOK.mirrorBlur), { repeats: float(24) }).rgb;
+    water.emissiveNode = Fn(() => {
+      const seen = open.toVar();
+      If(mirrorShare.greaterThan(0), () => { seen.assign(mix(open, blurred, mirrorShare)); });
+      return seen;
+    })().mul(tint);
     const reflecting = mirror.reflector as unknown as { updateBefore(frame: unknown): unknown }, draw = reflecting.updateBefore.bind(reflecting);
     reflecting.updateBefore = (frame) => (mirrorShare.value > 0 ? draw(frame) : undefined);
   }
@@ -536,15 +541,25 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
       open = sum.div(weight);
     }
     // a crease does not turn grey: it keeps a share of bluish light, as the shadows of the reference do
-    const deep = new THREE.Color(LOOK.creaseColor);
-    picture = colour.mul(mix(vec3(1, 1, 1), mix(vec3(deep.r, deep.g, deep.b), vec3(1, 1, 1), open), creased));
+    // (where the creases do not show, the dots of the smaller picture are not looked at either)
+    const deep = new THREE.Color(LOOK.creaseColor), creasedColour = colour.mul(mix(vec3(1, 1, 1), mix(vec3(deep.r, deep.g, deep.b), vec3(1, 1, 1), open), creased));
+    picture = Fn(() => {
+      const shown = vec4(colour).toVar();
+      If(creased.greaterThan(0), () => { shown.assign(creasedColour); });
+      return shown;
+    })() as unknown as typeof picture;
   }
   // things that share the picture's dots (see Stage.dissolve): at every dot the thing drawn there is taken as it is,
   // what it shares the dots with is the mean of the dots around that are drawn on the other set, and the two are
   // mixed by their shares. So both are whole pictures again, as in a resolve of screen-door transparency, and they
-  // blend without single dots showing. Where a thing has all the dots, the picture is as it was drawn.
+  // blend without single dots showing. Where a thing has all the dots, the picture is as it was drawn: so while
+  // nothing on the stage is drawn on a share of the dots (most pictures: a piece dissolves for a third of a second),
+  // the picture is not copied into a texture of its own and read nine times at every dot, but taken as it is.
+  /** whether something on the stage is drawn on a share of the picture's dots (see `partial`) */
+  const dissolving = uniform(0);
   {
     const whole = convertToTexture(picture);
+    { const resolving = whole as unknown as { updateBefore(frame: unknown): unknown }, draw = resolving.updateBefore.bind(resolving); resolving.updateBefore = (frame) => (dissolving.value > 0 ? draw(frame) : undefined); }
     /** of a dot: whether it is of the set from a mark up to 1, and the mark */
     const read = (at: Parameters<typeof facing.sample>[0]) => { const code = facing.sample(at).a, upper = step(0.5001, code).mul(step(code, 0.999)); return { upper, mark: mix(code.mul(2).min(1), code.sub(0.5).mul(2), upper) }; };
     const own = read(screenUV), here = whole.sample(screenUV).rgb, mine = mix(own.mark, own.mark.oneMinus(), own.upper);
@@ -556,8 +571,12 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
       const counts = it.upper.sub(own.upper).abs().mul(max(it.upper, step(it.mark, 0.9999)));
       others = others.add(whole.sample(at).rgb.mul(counts)); found = found.add(counts);
     }
-    const other = mix(here, others.div(max(found, 1)), step(0.5, found));
-    picture = mix(other, here, mine) as unknown as typeof picture;
+    const other = mix(here, others.div(max(found, 1)), step(0.5, found)), drawn = picture;
+    picture = Fn(() => {
+      const shown = vec3(drawn.rgb).toVar();
+      If(dissolving.greaterThan(0.5), () => { shown.assign(mix(other, here, mine)); });
+      return shown;
+    })() as unknown as typeof picture;
   }
   // The picture's light as film takes it: a curve that keeps the shadows and the middle tones and rolls the bright
   // ones off softly instead of cutting them, with the colours of what is bright a little paler, as light is seen
@@ -678,10 +697,12 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     }
     seaPilots = sea;
   }
+  /** the meshes on the stage that are drawn on a share of the picture's dots, neither all nor none (see `dissolving`) */
+  const partial = new Set<THREE.Object3D>();
   // The renderer keeps a record of every mesh it has drawn, and each record hangs on the material, which all pieces
   // share and which is never let go: only the mesh's own 'dispose' takes the record, and with it the mesh and its
   // numbers, out of the renderer. Letting go of the geometry alone leaves them held for good.
-  const gone = (made: THREE.Mesh) => { warm(made); made.dispatchEvent({ type: 'dispose' } as never); made.geometry.dispose(); };
+  const gone = (made: THREE.Mesh) => { warm(made); partial.delete(made); made.dispatchEvent({ type: 'dispose' } as never); made.geometry.dispose(); };
   // A mesh's lists go to the graphics card in the picture that first draws it, and that takes the page's thread a
   // millisecond or two for every megabyte and more for every list (measured on a Mac: the 49 meshes of one piece
   // of a town 77 ms; 27 meshes that came into the picture together, one picture of 247 ms). So the lists are sent
@@ -790,7 +811,10 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
       const kept = Math.max(0, Math.min(1, until) * (1 - from / FIGURES_GONE));
       for (const part of (thing as THREE.Mesh).isMesh ? [thing] : thing.children) {
         if (part.userData.figures) keepFigures(part, kept);
-        else (part.userData.dots as THREE.Vector2).set(from, until);
+        else {
+          (part.userData.dots as THREE.Vector2).set(from, until);
+          if (until > from && (from > 0 || until < 1)) partial.add(part); else partial.delete(part);
+        }
       }
       pending = Math.max(pending, 1);
     },
@@ -798,7 +822,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     glide(group, share) { for (const part of group.children) if (part.userData.glide !== undefined && part.userData.glide !== share) { part.userData.glide = share; pending = Math.max(pending, 1); } },
     pictures: () => pictures,
     put(thing) { marked(thing); scene.add(thing); pending = Math.max(pending, 1); },
-    take(thing) { scene.remove(thing); pending = Math.max(pending, 1); },
+    take(thing) { scene.remove(thing); thing.traverse((part) => partial.delete(part)); pending = Math.max(pending, 1); },
     paper,
     lay(strength, flat, seaTop, things = 1, calm = 0) {
       if (laid.strength.value === strength && laid.flat.value === flat && laid.seaTop.value === seaTop && laid.things.value === things && laid.calm.value === calm) return;
@@ -849,6 +873,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     if (cold.size) send(); else sentAt = 0;
     if (laid.strength.value > 0) { aimPaper(); renderer.setRenderTarget(paperPicture); renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.render(paper, paperEye); renderer.setRenderTarget(null); }
     const began = timed ? performance.now() : 0, had = renderer.info.memory.attributesSize;
+    dissolving.value = partial.size ? 1 : 0;
     pipeline.render();
     if (sending.length) haveSent();
     drawn++; pictures++;
