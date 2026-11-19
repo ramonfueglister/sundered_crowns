@@ -18,7 +18,7 @@ use beforeit::{
 };
 
 use crate::Economy;
-use crate::clock::{Attendance, DailyClock};
+use crate::clock::{Attendance, DailyClock, OWNER_PLANS, OwnerProfit};
 use crate::past::{Past, Phase, Series};
 use crate::trade::{Cities, Merchants, Routes};
 
@@ -33,11 +33,13 @@ pub const FORMAT_CITIES: u32 = 2;
 /// 4: the demand pull. 5: of the national accounts the clock keeps the series that the key figures sum, the port
 /// keeps its last row. 6: the clock can keep the past in a fixed size ([`crate::past`]). 7: the spending out of
 /// savings (economy feature 15). 8: the crown that buys with what it took in (economy feature 16). 9: firm and
-/// owner as one household (economy feature 18). 10: the working days of the firms (economy feature 19). States of
-/// formats 4 to 9 are still read and become format 10 when they are saved ([`load`]); formats 4 and 5 keep the whole
-/// past, as they had it, none before 7 spends out of savings, none before 8 has a crown that buys with its revenue,
-/// none before 9 has owners who bear losses, and none before 10 has working days.
-pub const FORMAT: u32 = 10;
+/// owner as one household (economy feature 18). 10: the working days of the firms (economy feature 19). 11: the
+/// profits the owners plan their spending on (economy feature 20). States of formats 4 to 10 are still read and
+/// become format 11 when they are saved ([`load`]); formats 4 and 5 keep the whole past, as they had it, none before
+/// 7 spends out of savings, none before 8 has a crown that buys with its revenue, none before 9 has owners who bear
+/// losses, none before 10 has working days, and none before 11 has the profits of the owners (they are gathered
+/// anew from the first period that is computed).
+pub const FORMAT: u32 = 11;
 const NONE: u32 = u32::MAX;
 /// The length of the last state of cities written ([`save_cities`]): how much room the next one is given at once.
 /// It changes no byte of a state.
@@ -967,6 +969,7 @@ fn put_clock(o: &mut Out, c: &DailyClock) {
         past,
         trade: _,
         attendance,
+        owner_profit,
     } = c;
     o.n(*plan);
     o.n(*window);
@@ -1035,6 +1038,21 @@ fn put_clock(o: &mut Out, c: &DailyClock) {
     o.bytes(calendar);
     o.bytes(household);
     o.f64s(worked);
+    let OwnerProfit {
+        ended,
+        ended_periods,
+        open,
+        open_periods,
+        ends,
+    } = owner_profit;
+    o.f64s(ended);
+    o.f64s(ended_periods);
+    o.f64s(open);
+    o.f64s(open_periods);
+    o.n(ends.len());
+    for &x in ends {
+        o.u32(x);
+    }
 }
 
 fn get_series(i: &mut In, window: usize) -> Res<Series> {
@@ -1160,6 +1178,41 @@ fn get_clock(i: &mut In, format: u32) -> Res<DailyClock> {
     } else {
         (Attendance::default(), periods.iter().map(|&p| p as f64 + 1.0).collect())
     };
+    // formats before 11 know no profits of the owners: they are gathered anew
+    let owner_profit = if format >= 11 {
+        let (ended, ended_periods, open, open_periods) = (i.f64s()?, i.f64s()?, i.f64s()?, i.f64s()?);
+        let n = i.len(4)?;
+        let mut ends = Vec::with_capacity(n);
+        for _ in 0..n {
+            ends.push(i.u32()?);
+        }
+        let firms = open.len();
+        if (firms != 0 && firms != demand.len())
+            || open_periods.len() != firms
+            || ends.len() != firms
+            || ended.len() != OWNER_PLANS * firms
+            || ended_periods.len() != OWNER_PLANS * firms
+            || ended.iter().chain(&open).any(|x| !x.is_finite())
+            || ended_periods
+                .iter()
+                .chain(&open_periods)
+                .any(|x| !(x.is_finite() && *x >= 0.0))
+        {
+            return Err(format!(
+                "a clock with the profits of the owners of {firms} firms and {} firms",
+                demand.len()
+            ));
+        }
+        OwnerProfit {
+            ended,
+            ended_periods,
+            open,
+            open_periods,
+            ends,
+        }
+    } else {
+        OwnerProfit::default()
+    };
     Ok(DailyClock {
         plan,
         window,
@@ -1180,6 +1233,7 @@ fn get_clock(i: &mut In, format: u32) -> Res<DailyClock> {
         past,
         trade: None,
         attendance,
+        owner_profit,
     })
 }
 
