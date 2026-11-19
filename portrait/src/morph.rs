@@ -242,12 +242,53 @@ pub fn jaw_edge_field(h: &Head) -> Vec<f32> {
         .collect()
 }
 
+/// (round 120) Where `jaw_soften` reaches up the cheek beside the mouth, in units: from how far beside the
+/// face's middle none and all of it, and up to where against the line of the mouth all and none of it (4 mm
+/// under it, 3 mm over it). Under the mouth's corner and a thumb's breadth beside it MakeHuman's net has a
+/// second fold, from the cheek down to the jaw's edge: with the fuller cheeks and the narrower jaw of the women
+/// it was a notch in the cheek's outline and a dark line on the shaded cheek, at a game's size a scar. It
+/// begins 4 cm beside the middle: nearer lie the lips' corners and what `seam_shut` moves about them (0.31 and
+/// `SEAM_REACH`), which keep their own form to the hundredth of a millimetre (tests/faces.rs). Higher lie the
+/// cheek's pad and the folds of the gene "folds": with the band up to the nose's foot the far cheek ran in by
+/// 3 mm at the mouth's height and the gene showed a third less. PLACEHOLDER: by eye, on two women's heads.
+pub const CHEEK_SOFT: ([f32; 2], [f32; 2]) = ([0.4, 0.45], [-0.04, 0.03]);
+
+/// How much of `jaw_soften` each vertex of the base head takes on the cheek beside the mouth, over what
+/// `jaw_edge_field` gives it (`CHEEK_SOFT`): none on the mouth, the nose, the cheekbones and the ears.
+pub fn cheek_soft_field(h: &Head) -> Vec<f32> {
+    use crate::measure::{JAW, MENTON, STOMION, TRAGION};
+    let b = &h.base;
+    let chin = b[MENTON];
+    let corner: [f32; 2] = [1, 2].map(|c| JAW.iter().map(|&(i, j)| b[i][c] + b[j][c]).sum::<f32>() / (2 * JAW.len()) as f32);
+    let tz = (b[TRAGION.0][2] + b[TRAGION.1][2]) / 2.0;
+    let (front, _, _, _) = JAW_NARROW;
+    let (mouth, (beside, up)) = ((b[STOMION[0]][1] + b[STOMION[1]][1]) / 2.0, CHEEK_SOFT);
+    let (n, inside) = (vnormals(b, h.body_full()), [0.0, corner[0], (corner[1] + chin[2]) / 2.0 - 0.15]);
+    let edge = jaw_edge_field(h);
+    b.iter()
+        .enumerate()
+        .map(|(v, q)| {
+            let out = sub(*q, inside);
+            if len(n[v]) == 0.0 || len(out) == 0.0 {
+                return 0.0;
+            }
+            let t = ((chin[2] - q[2]) / (chin[2] - corner[1])).clamp(0.0, 1.0);
+            let under = chin[1] + t * (corner[0] - chin[1]);
+            let w = if q[1] > under { sm(beside[0], beside[1], q[0].abs()) * (1.0 - sm(mouth + up[0], mouth + up[1], q[1])) } else { 0.0 };
+            (w * sm(front[0], front[1], q[2] - tz) * sm(0.0, 0.2, dot(n[v], out) / (len(n[v]) * len(out))) - edge[v]).max(0.0)
+        })
+        .collect()
+}
+
 /// The jaw's lower edge drawn soft (`Style::edge`): the skin along it moved towards the middle of its
 /// neighbours, `JAW_SOFT.1` times, by `k` times its share of `jaw_edge_field` each time. A fold becomes a round.
 /// The chin's lowest point stays where it is: the face's length and the mouth's place are measured from it
-/// (its neighbours move by under half a millimetre about it).
+/// (its neighbours move by under half a millimetre about it). On the cheek beside the mouth (`cheek_soft_field`,
+/// round 120) the skin moves in and out alone, along its own normal: moved towards its neighbours whole, the
+/// net's uneven facets there slide along the cheek by up to 7 mm and take the skin's image with them.
 pub fn jaw_soften(h: &Head, pp: &mut [V3], k: f32) {
-    let field = jaw_edge_field(h);
+    let (edge, cheek) = (jaw_edge_field(h), cheek_soft_field(h));
+    let field: Vec<f32> = edge.iter().zip(&cheek).map(|(a, b)| a + b).collect();
     let mut near: Vec<Vec<u32>> = vec![Vec::new(); pp.len()];
     for t in h.body_full().chunks_exact(3) {
         if t.iter().any(|&v| (v as usize) < field.len() && field[v as usize] > 0.0) {
@@ -263,12 +304,14 @@ pub fn jaw_soften(h: &Head, pp: &mut [V3], k: f32) {
     }
     for _ in 0..JAW_SOFT.1 {
         let was = pp.to_vec();
+        let normals = vnormals(&was, h.body_full());
         for (v, w) in field.iter().enumerate().take(pp.len()) {
             if *w > 0.0 && !near[v].is_empty() && v != crate::measure::MENTON {
                 let n = near[v].len() as f32;
+                let d: V3 = [0, 1, 2].map(|c| near[v].iter().map(|&u| was[u as usize][c]).sum::<f32>() / n - was[v][c]);
+                let along = if len(normals[v]) > 0.0 { dot(d, normals[v]) / dot(normals[v], normals[v]) } else { 0.0 };
                 for c in 0..3 {
-                    let mid = near[v].iter().map(|&u| was[u as usize][c]).sum::<f32>() / n;
-                    pp[v][c] += k * w * (mid - was[v][c]);
+                    pp[v][c] += k * (edge[v] * d[c] + cheek[v] * along * normals[v][c]);
                 }
             }
         }

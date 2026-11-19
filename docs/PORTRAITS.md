@@ -4627,6 +4627,80 @@ Pictures (project files, `portraits/`): `runde119_neben_referenz.png` (the refer
 of round 118 and of this round below, at one size), `runde119_vorher_nachher_frauen.png`,
 `runde119_vorher_nachher_maenner.png`.
 
+**Round 120: the fold in the cheek beside the mouth** (2026-11-19). The round set out for the nose, where two
+of the gauntlet's three open lines lie ("woman: nose's back against cheek" 1.2 for the reference's 8, "woman:
+beside the nose against cheek" 4.1 off). It did not get them, and what it built is something else, found when
+two women were drawn large to look at the nose.
+
+**The nose, tried again and left open.** Read on the eight grown women alone (30 seconds a reading instead
+of the gauntlet's three minutes), against the lit cheek: the nose's back 1.2 L lighter (reference 8), beside
+the nose 30.4 darker (34.5), the cheek beyond it 16.9 darker (16), the far cheek 18.2 darker, the forehead
+5.5, the chin 15.6. The key light further to the front (45, 35 and 25 degrees for 56): the nose's back stays
+at 1.0 and the far cheek loses its shade (11.1, 7.6 and 4.9 darker). The key higher (50 degrees): the nose's
+back 4.4, and beside the nose 23.5 for the reference's 34.5, the chin 21.2 darker; higher and further to the
+side (55 and 70 degrees) 6.4, with the forehead 12.2 and the chin 25.4 darker than the cheek: a face lit
+from above, which theirs are not. More oil on the skin (`oil` 1, `specular` 0.6): 0.3. The head turned
+further (0.32, 0.40 and 0.50 for 0.24): 1.5, 2.3 and 7.5, the last with the forehead 10.8 darker and the
+eyes looking past the viewer. And the thing itself, which round 113 read on the five faces of the
+reference it measured, a narrow streak of gloss on the nose's far flank from the light behind: a trial `skin.back` that let the back
+light reach the skin (its diffuse light 0.15 to 0.3, its gloss 1, 4 and 8 times, the rim at 105 and 120
+degrees) gave chalky pale patches on the far cheek and the forehead and no narrow streak, and where the rim
+stands it does not reach a face under a veil or a hood. None of it is kept. The line of the nose's back
+cannot be had from the light, the gloss or the pose that stand now without losing other lines; it is open,
+and the gauntlet says so.
+
+One reading that was not looked for: how smooth the skin is. The spread of L over the cheek at 55 pixels
+from pupil to chin, fine and coarse: ours 1.15 and 2.33, the reference's ten women 0.88 and 1.79. Ours is
+not the smoother. "Skin as smooth as wax", which the last rounds wrote, is not a lack of grain at the game's
+size; what reads as wax there is not found yet.
+
+**What it is.** Drawn at twice the size, a woman's cheek has a hard fold under and beside the mouth's
+corner, running from the cheek down to the jaw's edge: a pit with a sharp rim, most on the shaded cheek, and
+at the game's size a short dark line like a scar. It is not the veil (it stays without it), not a cast
+shadow, not the cheek's fill of round 116 (without the fill it is harder), not the narrow jaw, the round
+chin or the soft edge of rounds 115 and 117 (it stays without them). It is in MakeHuman's net and targets:
+for the most part one vertex a side (4.6 cm beside the middle, 3 mm under the mouth's line) that lies
+behind its neighbours on a measured woman's head. On 40 grown women the skin there bends from facet to facet
+by 7.4 degrees in the mean and 20.8 at the sharpest fold.
+
+**What is changed.** `jaw_soften` (portrait/src/morph.rs), which since round 117 moves the jaw's edge
+towards the mean of its neighbours, now reaches up the cheek under the mouth's corner (`cheek_soft_field`,
+`CHEEK_SOFT`): from 4 cm beside the middle outwards, up to the mouth's line. There a vertex moves along its
+own normal only, in and out, not along the skin. The fold after it: 5.4 degrees in the mean and 16.4 at the
+sharpest, the skin moved by 1.29 mm at most. The jaw's edge is moved as before. The mouth, the nose, the
+cheekbones and the ears take nothing of it, nor does any facet that touches what the lips' seam moves.
+
+**Tried and not kept.** Three versions before this one, each stopped by a test. The band of the jaw's edge
+simply made broader: the net's uneven facets slid along the cheek by up to 7.6 mm and took the skin's image
+with them, a landmark of the cheekbone moved by 6.4 mm, the far cheek's outline ran 17.0 mm in at the
+mouth's height (the limit of round 116: 9 to 15) and the gene "folds" showed 1.18 mm for its 1.7. A field
+of its own, moved along the normal, up to the nose's foot: the far cheek 15.5, the gene 1.18. To make up for
+it the cheek's fill at 7 and 8.5 for 6 and the gene's weights raised: the pit came back. The field begun
+nearer the mouth (3 cm): the vertex at the mouth's corner took a hair of it and the lips no longer lay on
+each other to the last digit, which their test asks. The field higher and broader ([0.4, 0.48] beside,
+2 mm under to 10 mm over the mouth's line): the fold no smaller and the gene at 1.42.
+
+**The gauntlet**: 19 of 22, and no line moved against round 119: the same three fail ("woman: beside the
+nose against cheek" 4.1 off, "woman: nose's back against cheek" 1.2 for 8, "man: far cheek against the lit"
+-25.8 for -16.9). No limit and no reading of the reference was touched. The fold is not a line of the
+gauntlet; it is held by a test of the builder.
+
+Honest about it. A small step again, and not the one that was announced. The fold is softer, not gone: at
+twice the game's size a dent is left where the pit was, and at the game's size the difference is small: the
+dark line on a woman's shaded cheek is fainter, and on some faces one has to know where to look. The men are next to unchanged (their cheek has less of it). The
+gene "folds" moves the skin by 1.5 mm now (1.7 before), which passes its limit of 1.5 by little: the field
+may not grow upward without that limit being looked at. The far cheek at the mouth's height is 12.8 mm
+inside its top (12.3). `CHEEK_SOFT` is by eye on two women's heads: PLACEHOLDER. What causes the fold in
+MakeHuman's targets (which of them push that vertex back) was not traced; the field mends the place, not
+the cause. And the nose: half the round went into it without a result, as the lines above say.
+
+Tests: `portrait/tests/faces.rs`, "the cheek under the mouth's corner is drawn without its fold": the
+field leaves the landmarks of mouth, nose, cheekbones and ears alone, shares no facet with the lips' seam,
+is the same on both sides, and on 40 grown women the fold is smaller after it (the mean by a tenth at least)
+with the skin moved between 0.3 and 3 mm. Cargo: 77 of 77. Pictures (project files, `portraits/`):
+`runde120_vorher_nachher_wange.png` (two women at twice the size, round 119 above, this round below),
+`runde120_vorher_nachher_gesichter.png` (twelve faces of the sample, before above, after below).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
@@ -4639,7 +4713,8 @@ stage alone (no light painted into the skin, a shaded half in the skin's colour)
 face runs in to the chin, since round 117 as far as the reference's does, with a round chin and a jaw whose
 edge is a soft shade, since round 118 the eyes have warm whites, a soft pupil and no dark line under
 them, since round 119 the white of the eye goes into the shade with the face, under brows that lie as high
-as theirs (read on ten of their women in round 119) but are rows of hairs where theirs are a closed band, and the face still lacks the
+as theirs (read on ten of their women in round 119) but are rows of hairs where theirs are a closed band, since round 120 the cheek beside the mouth has
+lost the net's hard fold, and the face still lacks the
 reference's streak of gloss on the nose's flank; the thrown-back hood closes round the neck since round 35, but
 has no folds across its cloth. Since round 111 the people of every part of the world can be drawn, in a plain
 dress that is no people's own, and without a picture of the reference to hold them against.
