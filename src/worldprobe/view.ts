@@ -11,6 +11,7 @@ import * as THREE from 'three/webgpu';
 import { smooth } from '../lookprobe/batch';
 import { LAND_Y, NEAR, RIGHT, SEA_Y } from '../lookprobe/layout';
 import { bakedSky, createStage } from '../lookprobe/stage';
+import { withCoast } from '../lookprobe/sea';
 import { createNames } from './names';
 // the face of the realms' names (names.ts), bundled: no requests to a font service
 import '@fontsource/eb-garamond/latin-500.css';
@@ -332,11 +333,11 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
   };
 }
 
-/** The depth of the sea under the game map (public/map/depth.png, tools/worldprobe/build_depth.py); null where it cannot be read. */
+/** The depth of the sea under the game map (public/map/depth.png, tools/worldprobe/build_depth.py) and the coast's distance (sea.ts `withCoast`); null where it cannot be read. */
 async function depthsOf(base: string): Promise<THREE.Texture | null> {
   try {
+    // (with the coast's distance beside the depth, for the sea's band of lighter water along the coast)
     const t = await new THREE.TextureLoader().loadAsync(`${base}map/depth.png`);
-    t.colorSpace = THREE.NoColorSpace; t.minFilter = THREE.LinearFilter; t.generateMipmaps = false;
-    return t;
+    return withCoast(t.image as HTMLImageElement);
   } catch { return null; }
 }

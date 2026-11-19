@@ -15,7 +15,7 @@ computes is in the world: what a town shows must be state of the ECS.
 |---|---|---|
 | 1 | Every family who lives in a town has a parcel (the land register) | agreed by Ramon 16 Nov 2026 as a draft; built in state 20, on main since 17 Nov 2026 (PR #61). The world graphic sets a house on each parcel of `public/data/lots_1291.json` |
 | 2 | Every farming family has a farmstead in a hamlet (hamlets and farmsteads in the land register) | agreed by Ramon 17 Nov 2026 as a draft with the small farmstead ("Ja, mit kleinem Hof"); built in the same state step, on main since 17 Nov 2026 (PR #61). The world graphic sets the hamlets where the register has them and a farmhouse on each farmstead (PR #64) |
-| 3 | The streets and the market of every town grow to its parcels (the street network in the state) | agreed by Ramon 18 Nov 2026 ("ja"); built in state 32 |
+| 3 | The streets and the market of every town grow to its parcels (the street network in the state) | agreed by Ramon 18 Nov 2026 ("ja"); built in state 33 |
 | – | Where a new house arises while the world runs; real plans of the large towns; walls and gates; bridges; landmarks on their ground; which field belongs to which farm; building by players | not proposed yet |
 
 ## Feature 1: every family of a town has a parcel
@@ -242,14 +242,14 @@ echte Pläne"; for the smaller places the state of research in generators, and "
 against real towns). Agreed with "ja" the same day.
 
 Code: `src/sim/settlement/streets.ts` (the growth, only arithmetic), `src/sim/systems/lots.ts` (`layStreets`: the
-plan of a town into the register; `relayTowns`: the upgrade 31 → 32), `src/sim/content/town_ways.ts` and
+plan of a town into the register; `relayTowns`: the upgrade 32 → 33), `src/sim/content/town_ways.ts` and
 `town_ways_1291.json` (the ways of the world that leave each town, written by `tools/settlement/town_ways.ts` from
 `public/data/roads_1291.json`), `src/sim/content/town_plans.ts` and `town_plans_1291.json` (the real plans, written by
 `tools/settlement/cadastre_skeleton.py` from `data/cadastre/`), state in `src/sim/state.ts` (`street`), `src/net/lots.ts` and `tools/sim/write_lots.ts`
 (the streets in the answer of the server and in the file), the calibration `tools/settlement/streets_probe.ts`.
 Tests: `tests/settlement.test.ts`.
 
-Written once when a world is founded, as the parcels (feature 1), or by the upgrade 31 → 32 of a running world:
+Written once when a world is founded, as the parcels (feature 1), or by the upgrade 32 → 33 of a running world:
 every parcel keeps its id, its family and its size and moves to its street. Nothing changes while the world runs.
 
 | Table | Column | Type | Meaning |

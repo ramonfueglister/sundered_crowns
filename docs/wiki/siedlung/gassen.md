@@ -4,7 +4,7 @@
 
 > Jede Stadt hat einen Markt und Gassen, die zu den Parzellen ihrer Familien wachsen. Die Gassen stehen mit Lage, Art und Breite im Grundbuch der Welt.
 
-Ramon hat den Vorschlag am 18. November 2026 angenommen. Gebaut in Zustand 32. Am 19. November hat Ramon «Alte Kataster, Stadt für Stadt» gewählt und mit «ja» bestätigt, dass alle Städte nach dem mittelalterlichen Paris eingestellt werden.
+Ramon hat den Vorschlag am 18. November 2026 angenommen. Gebaut in Zustand 33. Am 19. November hat Ramon «Alte Kataster, Stadt für Stadt» gewählt und mit «ja» bestätigt, dass alle Städte nach dem mittelalterlichen Paris eingestellt werden.
 
 ## Das Feature
 

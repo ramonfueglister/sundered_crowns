@@ -276,13 +276,18 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     if (s.economy.cities) s.economy.cities.workingTo = -1;
     s.v = 31;
   }
-  if (s.v === 31) { // 31 → 32: the streets and the market of every town (settlement feature 3,
+  if (s.v === 31) { // 31 → 32: the days of rest without a leak (economy feature 20, economy/src/clock.rs). The economies
+    // go on where they are: the engine reads their state of the format before without the profits of the owners and
+    // gathers them from the next day on, taking the year before to be the profit of the day before.
+    s.v = 32;
+  }
+  if (s.v === 32) { // 32 → 33: the streets and the market of every town (settlement feature 3,
     // src/sim/settlement/streets.ts). Each town is laid out along streets that grow to its parcels, as a new world
     // lays it: every parcel keeps its id, its family and its size and moves to its street, the lowest id first. The
     // hamlets and everybody's life stay as they are. (A world older than the land register got it at 19 → 20, already
     // with its streets.)
     if (!s.street) relayTowns(s, w.ground);
-    s.v = 32;
+    s.v = 33;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one

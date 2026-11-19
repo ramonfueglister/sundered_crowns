@@ -335,19 +335,14 @@ describe('the need of food (economy feature 15)', () => {
   it('is the baskets of the family at that cost, and the family is fed by the part of it that it spent', () => {
     const price = foodPrices(s);
     // what a family has to buy on the day: each member's baskets times the factor of the calendar of its faith
-    // (economy feature 19), in the family of an owner of a firm every day
+    // (economy feature 19), in the family of an owner of a firm too (economy feature 20)
     const { y, m, d } = dayToDate(e.day, s.startYear),
       doy = dateToDay(y, m, d, y),
       toBuy = new Float64Array(s.family.size);
-    const P = s.person.cols,
-      owners = new Set<number>();
-    for (let id = 0; id < s.person.size; id++)
-      if (s.person.alive[id] && P.died[id] === ALIVE && P.role[id] === ROLE.owner) owners.add(P.family[id]);
+    const P = s.person.cols;
     for (let id = 0; id < s.person.size; id++) {
       if (s.person.alive[id] && P.died[id] === ALIVE)
-        toBuy[P.family[id]] +=
-          basketsOf(ageOn(P.born[id], e.day)) *
-          (owners.has(P.family[id]) ? 1 : dayFactor(calendarOf(P.faith[id]), y, doy));
+        toBuy[P.family[id]] += basketsOf(ageOn(P.born[id], e.day)) * dayFactor(calendarOf(P.faith[id]), y, doy);
     }
     let families = 0,
       short = 0,

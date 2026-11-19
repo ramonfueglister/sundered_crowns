@@ -174,7 +174,7 @@ function layStreets(s: WorldState, site: number, count: number, size: ParcelSize
 }
 
 /**
- * Lays the towns of a running world out anew along their streets (the upgrade 31 → 32): each town keeps its parcels,
+ * Lays the towns of a running world out anew along their streets (the upgrade 32 → 33): each town keeps its parcels,
  * their families and their size; the parcels move to the streets that grow to them, the lowest id
  * the first, as a new world lays them. The hamlets stay where they are.
  */
