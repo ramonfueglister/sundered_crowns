@@ -10,7 +10,7 @@ import { WorldCore } from './world';
 import { NullStore, SupabaseStore } from './store';
 import { authConfigFromEnv, authenticate } from './auth';
 import { PROTOCOL_VERSION, type ClientMsg, type ServerMsg } from '../src/net/protocol';
-import { placePeople, manyPlacesPeople, personDetail, MAX_PLACES_PER_REQUEST } from '../src/net/people';
+import { placePeople, manyPlacesPeople, personDetail, rulersOnMap, MAX_PLACES_PER_REQUEST } from '../src/net/people';
 import { townLots, manyTownsLots, MAX_SITES_PER_REQUEST } from '../src/net/lots';
 import { ALL_CULTURES } from '../src/sim/content/peoples';
 
@@ -80,6 +80,12 @@ const http = createServer((req, res) => {
   if (people && Number(people[1]) < core.s.place.pop.length) {
     res.writeHead(200, h);
     res.end(JSON.stringify(placePeople(core.s, Number(people[1]))));
+    return;
+  }
+  // the rulers who hold a crown, for the map mode of the rulers (src/ui/mapmode.ts)
+  if (req.url === '/rulers') {
+    res.writeHead(200, h);
+    res.end(JSON.stringify(rulersOnMap(core.s)));
     return;
   }
   const many = /^\/people\?places=(\d+(?:,\d+)*)$/.exec(req.url ?? '');

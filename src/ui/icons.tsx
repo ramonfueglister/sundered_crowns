@@ -101,6 +101,21 @@ export const IconPolitical = ({ size = 26 }: P) => (
   </svg>
 );
 
+/** The rulers map mode: a crown over a dot. */
+export const IconRulers = ({ size = 26 }: P) => (
+  <svg width={size} height={size} viewBox="0 0 26 26" aria-hidden="true">
+    <path
+      d="M4 17.5 3 7.5l5.5 4.5L13 4.5l4.5 7.5L23 7.5l-1 10z"
+      fill="url(#icgc)"
+      stroke="#6b5a2e"
+      stroke-width="1"
+      stroke-linejoin="round"
+    />
+    <rect x="4" y="18.5" width="18" height="3" rx="1" fill="url(#icgc)" stroke="#6b5a2e" stroke-width="1" />
+    <circle cx="13" cy="12.5" r="1.8" fill="#1a1a1a" />
+  </svg>
+);
+
 /** The terrain map mode: the land alone, its hills and mountains. */
 export const IconTerrain = ({ size = 26 }: P) => (
   <svg width={size} height={size} viewBox="0 0 26 26" aria-hidden="true">

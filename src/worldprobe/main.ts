@@ -1,6 +1,6 @@
 // World probe: the world to travel through (view.ts) on a page of its own.
 // Address options, besides those of the stage (see ../lookprobe/stage/index.ts): ?lon=12.1&lat=45.85 (the place at the middle),
-// ?wide=190 (finest blocks across the picture), ?region=world (the cut of the world to show), ?year=1291 (the start year whose realms colour the map; default 1356), ?mode=political or terrain (the map mode; default:
+// ?wide=190 (finest blocks across the picture), ?region=world (the cut of the world to show), ?year=1291 (the start year whose realms colour the map; default 1356), ?mode=political, terrain or rulers (the map mode; default:
 // the realms only on the flat world far out). The address follows the view.
 import { showError } from '../lookprobe/stage';
 import { createWorldView } from './view';
@@ -24,4 +24,12 @@ createWorldView({
       history.replaceState(null, '', `${location.pathname}?${to}`);
     }, 400);
   },
-}).then((view) => { if (mode === 'political' || mode === 'terrain') view.mapMode(mode); }).catch(showError);
+}).then((view) => {
+  if (mode === 'political' || mode === 'terrain' || mode === 'rulers') view.mapMode(mode === 'rulers' ? 'political' : mode);
+  // the rulers' dots and figures (src/people/rulers_mode.ts), from the world server of the build
+  if (mode === 'rulers') {
+    const env = (import.meta as { env?: Record<string, string> }).env ?? {};
+    const loc = fetch(`${env.BASE_URL ?? '/'}data/geo.json`).then((r) => r.json()).then((g: { loc: { lon: number[]; lat: number[] } }) => g.loc);
+    void import('../people/rulers_mode').then((m) => m.showRulers(view, loc, () => {}, env.VITE_WORLD_URL));
+  }
+}).catch(showError);

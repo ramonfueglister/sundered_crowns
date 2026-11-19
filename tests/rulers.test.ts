@@ -7,6 +7,8 @@ import { compileChronicle, dayOf, type ChronicleJson } from '../src/sim/content/
 import { playChronicle } from '../src/sim/systems/rulers';
 import { ALIVE, BORN_UNKNOWN, STATE_VERSION, type WorldState } from '../src/sim/state';
 import { upgradeState } from '../src/sim/upgrade';
+import { placePeople, rulersOnMap } from '../src/net/people';
+import { rowOf } from '../src/sim/people/archive';
 import { hashState, encodeState, decodeState } from '../src/sim/snapshot';
 import { personsIn } from '../src/sim/systems/people';
 import { workforce } from '../src/sim/systems/work';
@@ -170,4 +172,19 @@ describe('a world of 1291 saved before the rulers', () => {
     expect(holderName(up, 'france')).toBe('Philip IV');
     expect(up.named.map((n) => n.name).sort()).toEqual(s.named.map((n) => n.name).sort());
   }, 60_000);
+});
+
+describe('the rulers on the map (GET /rulers)', () => {
+  it('are the living holders of a crown, where they live, and stand in the list of their place', () => {
+    const s = fresh();
+    const list = rulersOnMap(s);
+    expect(list.map((r) => r.name).sort()).toEqual(['A ruler without a known birth', 'Edward I', 'Philip IV']);
+    for (const r of list) {
+      const row = rowOf(s, r.uid);
+      expect(s.person.cols.died[row]).toBe(ALIVE);
+      for (const c of r.crowns) expect(s.realm.cols.holder[c.id]).toBe(row);
+      expect(r.place).toBe(s.family.cols.place[s.person.cols.family[row]]);
+      expect(placePeople(s, r.place).rulers).toContainEqual({ uid: r.uid, color: r.crowns[0].color });
+    }
+  });
 });

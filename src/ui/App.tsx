@@ -1,7 +1,7 @@
 // Application shell: the world (WorldView) with the HUD (banner, value bar, map tools) and the panel of the selected place.
 // For now everyone only watches the world (Ramon, 15 November 2026: "im moment nur zuschauer möglichkeit"): the game opens at
 // once as an observer and offers no sign-in. The server still knows players (server/auth.ts) for later.
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { computed } from '@preact/signals';
 import {
   status,
@@ -26,6 +26,7 @@ import {
   IconGear,
   IconPolitical,
   IconTerrain,
+  IconRulers,
   IconClose,
   IconReplay,
   IconPause,
@@ -214,39 +215,76 @@ function MusicSettings() {
   );
 }
 
-const MODE_ICON = { political: IconPolitical, terrain: IconTerrain } as const;
+const MODE_ICON = { political: IconPolitical, terrain: IconTerrain, rulers: IconRulers } as const;
 
-/** The map modes in the top bar (Ramon, 16 November 2026: "die umschaltmöglichkeiten der karte kommen dafür nach oben"): the one shown is lit in gold; keys 1 and 2. */
+/**
+ * The map modes in the top bar, in one menu (Ramon, 19 November 2026: "gruppiere die bestehenden map modi in einem
+ * gemeinsamen menü"): the button shows the mode shown, a click opens the list of all modes; keys 1, 2 and 3.
+ */
 function MapModes() {
-  const now = mapMode.value;
+  const now = mapMode.value,
+    [open, setOpen] = useState(false),
+    box = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
-      if (mapModeKey(e)) e.preventDefault();
+      if (e.key === 'Escape') setOpen(false);
+      else if (mapModeKey(e)) e.preventDefault();
+    };
+    // a click anywhere else closes the menu
+    const away = (e: PointerEvent) => {
+      if (box.current && !box.current.contains(e.target as Node)) setOpen(false);
     };
     addEventListener('keydown', key);
-    return () => removeEventListener('keydown', key);
+    addEventListener('pointerdown', away);
+    return () => {
+      removeEventListener('keydown', key);
+      removeEventListener('pointerdown', away);
+    };
   }, []);
+  const Now = MODE_ICON[now];
   return (
-    <div class="mapmodes" role="radiogroup" aria-label={t('map_modes')}>
-      {MAP_MODES.map(({ mode, key }) => {
-        const Icon = MODE_ICON[mode],
-          name = t(`map_mode_${mode}` as TextKey);
-        return (
-          // biome-ignore lint/a11y/useSemanticElements: a button in the radio role keeps the look of the round tool buttons; a native radio input would need a label round its icon
-          <button
-            type="button"
-            key={mode}
-            class="tool mode"
-            role="radio"
-            aria-checked={now === mode}
-            aria-label={name}
-            title={`${name} (${t('key')} ${key})\n${t(`map_mode_${mode}_hint` as TextKey)}`}
-            onClick={() => setMapMode(mode)}
-          >
-            <Icon />
-          </button>
-        );
-      })}
+    <div class="mapmodes" ref={box}>
+      <button
+        type="button"
+        class="tool mode"
+        aria-pressed="true"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={`${t('map_modes')}: ${t(`map_mode_${now}` as TextKey)}`}
+        title={`${t('map_modes')}: ${t(`map_mode_${now}` as TextKey)}`}
+        onClick={() => setOpen(!open)}
+      >
+        <Now />
+        <span class="caret" aria-hidden="true">
+          ▾
+        </span>
+      </button>
+      {open && (
+        <div class="modemenu" role="menu" aria-label={t('map_modes')}>
+          {MAP_MODES.map(({ mode, key }) => {
+            const Icon = MODE_ICON[mode],
+              name = t(`map_mode_${mode}` as TextKey);
+            return (
+              <button
+                type="button"
+                key={mode}
+                role="menuitemradio"
+                aria-checked={now === mode}
+                class="modeitem"
+                title={t(`map_mode_${mode}_hint` as TextKey)}
+                onClick={() => {
+                  setMapMode(mode);
+                  setOpen(false);
+                }}
+              >
+                <Icon size={22} />
+                <span>{name}</span>
+                <kbd>{key}</kbd>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
