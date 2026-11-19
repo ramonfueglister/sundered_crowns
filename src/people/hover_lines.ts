@@ -20,7 +20,9 @@ export function hoverLines(p: PersonDetail): { title: string; rows: [string, str
   const work = workOf(p);
   if (work) rows.push(['Erwerb', work]);
   if (p.town) rows.push(['Wohnt', p.dwelling === 'parcel' ? `Parzelle in ${p.town}` : p.dwelling === 'farmstead' ? `Hof bei ${p.town}` : p.town]);
-  const kin = [p.spouse >= 0 ? 'verheiratet' : '', p.children.length ? `${p.children.length} ${p.children.length === 1 ? 'Kind' : 'Kinder'}` : ''].filter(Boolean);
+  // a world server older than these fields sends no spouse and no children
+  const children = p.children ?? [];
+  const kin = [p.spouse >= 0 ? 'verheiratet' : '', children.length ? `${children.length} ${children.length === 1 ? 'Kind' : 'Kinder'}` : ''].filter(Boolean);
   if (kin.length) rows.push(['Familie', kin.join(', ')]);
   if (p.household && p.household.persons > 1) rows.push(['Haushalt', `${p.household.persons} Personen, ${p.household.working} erwerbstätig`]);
   const traits = p.big5.flatMap((v, k) => (v >= 50 + STANDS_OUT ? [BIG5[k][0]] : v <= 50 - STANDS_OUT ? [BIG5[k][1]] : []));

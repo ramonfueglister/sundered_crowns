@@ -29,3 +29,11 @@ describe('the card of the person under the pointer', () => {
     expect(r).toEqual({ Alter: 'unbekannt', Merkmale: 'IQ 104, offen, zurückhaltend' });
   });
 });
+
+describe('the card with a world server older than spouse, children and town', () => {
+  it('shows what the server sends', () => {
+    const { spouse: _s, children: _c, town: _t, dwelling: _d, ...old } = base;
+    expect(rows(old as PersonDetail).Familie).toBeUndefined();
+    expect(rows(old as PersonDetail).Wohnt).toBeUndefined();
+  });
+});
