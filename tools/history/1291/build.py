@@ -17,7 +17,13 @@ rules of data/history/1291/peoples.json (peoples.py).
 Run: python3 tools/history/1291/build.py   (after the region scripts and peoples.py; then python3 tools/map/palette.py 1291)
 """
 
-import glob, heapq, json, math, os, sys
+import glob
+import heapq
+import json
+import math
+import os
+import sys
+
 import numpy as np
 from scipy.spatial import cKDTree
 
@@ -25,8 +31,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..', '..'))
 sys.path.insert(0, os.path.join(ROOT, 'tools', 'geo'))
 sys.path.insert(0, os.path.join(ROOT, 'tools', 'map'))
-from common import lonlat_to_px, W, H, km_per_px  # noqa: E402
 import borders  # noqa: E402
+from common import H, W, km_per_px, lonlat_to_px  # noqa: E402
 
 YEAR = 1291
 RANK_W = {

@@ -9,7 +9,11 @@ deeper in the picture; the nearer still is stretched by that too, so that the ti
 A smooth zoom has small, even numbers; a step of the map stands out. Usage: python3 jumps.py <dir>
 """
 
-import glob, math, re, sys
+import glob
+import math
+import re
+import sys
+
 import numpy as np
 from PIL import Image, ImageFilter
 

@@ -22,6 +22,7 @@ the water starts is taken from the finest step, so that a river runs the same wa
 """
 
 import heapq
+
 import numpy as np
 
 # the floor is read at points this far apart along a line, in cells of the step

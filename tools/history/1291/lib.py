@@ -6,11 +6,16 @@ S(...) builds a state; continuing states inherit name/short/adjective/colour/coa
 from their 1356 entry (inherit=True or inherit='<1356 id>').  Places are resolved to coordinates from the 1356
 holdings, the gazetteer and the map's named locations; 'Name@lat,lon' gives explicit coordinates.
 """
-import json, glob, math, sys, unicodedata
+import glob
+import json
+import math
+import sys
+import unicodedata
+
 import numpy as np
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')) + '/tools/geo')
-from common import lonlat_to_px, W, H
+from common import H, W, lonlat_to_px
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')) + ''
 OLD = {}

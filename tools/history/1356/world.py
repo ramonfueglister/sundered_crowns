@@ -12,7 +12,8 @@ of 100° W) are in EXTENDS: the spread of tools/geo/merge_beyond.py starts from 
 Run: python3 tools/history/1356/world.py
 """
 
-import json, os
+import json
+import os
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 

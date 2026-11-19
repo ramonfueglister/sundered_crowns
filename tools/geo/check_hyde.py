@@ -16,7 +16,14 @@ Usage (ESRI ASCII grids as they come out of HYDE's zip files; the year is read f
                         --pop popc_1300AD.asc popc_1400AD.asc > hyde_regions.json
 """
 
-import argparse, gzip, hashlib, json, os, re, sys
+import argparse
+import gzip
+import hashlib
+import json
+import os
+import re
+import sys
+
 import numpy as np
 from common import LON0, LON1, OUT_DATA, OUT_PUBLIC, km_per_px, px_to_lonlat_np
 

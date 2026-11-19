@@ -49,7 +49,11 @@ Rules (nothing is invented; what the sources leave open is counted):
     python3 tools/history/borders/build.py
 """
 
-import collections, datetime, json, os, re
+import collections
+import datetime
+import json
+import os
+import re
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 FIRST, LAST = 1291, 1848

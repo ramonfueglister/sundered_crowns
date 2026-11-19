@@ -11,6 +11,7 @@ Needs numba.
 """
 
 import heapq
+
 import numpy as np
 from numba import njit
 from scipy import ndimage

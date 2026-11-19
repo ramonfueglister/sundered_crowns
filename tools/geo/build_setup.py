@@ -9,12 +9,19 @@
 - writes data/map/setup_<year>.json, data/map/world.json (static per-location data) and public/map/biome.png
 """
 
-import os, sys, json, math, glob, heapq, hashlib
+import glob
+import hashlib
+import heapq
+import json
+import math
+import os
+import sys
+
 import numpy as np
+from common import CACHE, OUT_DATA, OUT_PUBLIC, ROOT, H, W, km_per_px, load_json, lonlat_to_px, lonlat_to_px_np
 from PIL import Image
 from scipy import ndimage
 from scipy.spatial import cKDTree
-from common import CACHE, H, OUT_DATA, OUT_PUBLIC, ROOT, W, km_per_px, load_json, lonlat_to_px, lonlat_to_px_np
 
 STAGE = os.path.join(CACHE, 'stage')
 YEAR = int(sys.argv[1]) if len(sys.argv) > 1 else 1356

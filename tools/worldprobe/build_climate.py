@@ -21,15 +21,19 @@ Output: public/map/climate.bin.gz
 Usage: python3 tools/worldprobe/build_climate.py
 """
 
-import gzip, io, os, sys
+import gzip
+import io
+import os
+import sys
+
 import numpy as np
 from PIL import Image
 from scipy import ndimage
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'geo'))
-from build_setup import TERRAINS
-from common import H, ROOT, W
 from build_region import CACHE, WORLD_H, WORLD_W, cached, world_lonlat
+from build_setup import TERRAINS
+from common import ROOT, H, W
 
 Image.MAX_IMAGE_PIXELS = None
 SOURCE = 'https://raw.githubusercontent.com/cwru-sdle/kgcpy/4bce28ba7596f870e50838a16e3799a9067eb742/kgcpy/kmz_int_reshape.png'

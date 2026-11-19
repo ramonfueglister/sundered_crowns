@@ -45,13 +45,18 @@ data/content/world_extent.json). public/map/conifer1291.bin.gz, the same grid: s
 Usage: python3 tools/worldprobe/build_forest1291.py [--report]
 """
 
-import csv, gzip, json, os, sys
+import csv
+import gzip
+import json
+import os
+import sys
+
 import numpy as np
 from matplotlib.path import Path
 from scipy import ndimage
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'geo'))
-from common import CACHE, H, ROOT, W
+from common import CACHE, ROOT, H, W
 
 sys.path.insert(0, os.path.dirname(__file__))
 from build_region import WORLD_H, WORLD_W, world_lonlat

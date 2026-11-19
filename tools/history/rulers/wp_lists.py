@@ -14,7 +14,15 @@ Usage:
   wp_lists.py validate <csv> [...]        # check a list CSV
 """
 
-import csv, fcntl, json, os, re, sys, time, urllib.parse, urllib.request
+import csv
+import fcntl
+import json
+import os
+import re
+import sys
+import time
+import urllib.parse
+import urllib.request
 
 API = 'https://en.wikipedia.org/w/api.php'
 UA = 'research-client/0.1'

@@ -37,6 +37,7 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npm run lint
       - run: pipx run ruff==0.17.4 check
+      - run: pipx run ruff==0.17.4 format --check
 
   test:
     runs-on: ubuntu-latest

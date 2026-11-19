@@ -1,9 +1,10 @@
 """Scandinavia, the Baltic, Poland and Silesia, Lithuania, the Rus' principalities, the Golden Horde, the Caucasus and Trebizond on 1 January 1291."""
 
-import os, sys
+import os
+import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
-from lib import N, OLD, R, S, write
+from lib import OLD, N, R, S, write
 
 SOURCES = [
     'Euratlas-Nüssli, Euratlas Periodis: Europe in the year 1300; regional map Between Oder and Dnieper',

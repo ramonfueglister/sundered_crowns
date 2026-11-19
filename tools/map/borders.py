@@ -16,7 +16,10 @@ The rules live in data/history/<year>/borders.json, each with its sources. They 
 Run on the baked setup: python3 tools/map/borders.py [year] [--dry]   (build_setup.py calls `apply` itself)
 """
 
-import json, math, os, sys
+import json
+import math
+import os
+import sys
 from collections import defaultdict
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))

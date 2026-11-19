@@ -16,10 +16,15 @@ each step joins itself as the world does.
 Usage: python3 tools/worldprobe/build_overviews.py world      (some minutes and 9 GB of memory; run after build_region.py)
 """
 
-import gzip, json, os, shutil, sys
+import gzip
+import json
+import os
+import shutil
+import sys
+
 import numpy as np
-from beds import Land, Reaches, cut_run
 import tiles as tiles_file
+from beds import Land, Reaches, cut_run
 
 ROOT = os.path.join(os.path.dirname(__file__), '..', '..')
 STEPS = 7

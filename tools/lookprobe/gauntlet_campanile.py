@@ -8,6 +8,7 @@ Prints one line per check with reference value, probe value and PASS or FAIL; ex
 """
 
 import sys
+
 import numpy as np
 from PIL import Image
 from scipy import ndimage as ndi

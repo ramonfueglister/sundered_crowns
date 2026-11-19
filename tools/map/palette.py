@@ -16,7 +16,12 @@ Writes the colours into public/data/setup_1356.json and into the state files dat
 Run: python3 tools/map/palette.py [year] [--dry]   (year: 1356 by default)
 """
 
-import json, math, os, sys, glob, random
+import glob
+import json
+import math
+import os
+import random
+import sys
 from collections import defaultdict
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))

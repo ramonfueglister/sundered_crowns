@@ -6,8 +6,12 @@ are: the world graphic draws their pieces from the tables built ahead (src/world
 Usage: python3 tools/worldprobe/recode_regions.py world      (some minutes on all cores; needs pip install brotli)
 """
 
-import gzip, json, os, sys
+import gzip
+import json
+import os
+import sys
 from multiprocessing import Pool
+
 import tiles
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')

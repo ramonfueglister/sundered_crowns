@@ -14,7 +14,14 @@ rows without any coordinates have in_frame null.
 --cache keeps the raw API answers in DIR (they are not committed). Needs only the standard library.
 """
 
-import json, os, re, sys, time, urllib.parse, urllib.request, urllib.error
+import json
+import os
+import re
+import sys
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 FIRST, LAST = 1291, 1848

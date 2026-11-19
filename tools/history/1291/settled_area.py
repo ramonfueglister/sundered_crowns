@@ -14,7 +14,11 @@ src/sim/content/settled_area_1300.json:
 Run: python3 tools/history/1291/settled_area.py
 """
 
-import csv, json, math, os, unicodedata
+import csv
+import json
+import math
+import os
+import unicodedata
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..', '..'))

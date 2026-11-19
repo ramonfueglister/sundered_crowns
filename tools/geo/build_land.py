@@ -19,10 +19,13 @@ England written by build_england.py, and writes public/data/land.json:
 Nothing is tuned here. The report printed at the end says how much of the map the index covers.
 """
 
-import gzip, json, os
+import gzip
+import json
+import os
+
 import numpy as np
-from PIL import Image, ImageDraw
 from common import LON0, LON1, OUT_DATA, OUT_PUBLIC, ROOT, km_per_px, lonlat_to_px_np, px_to_lonlat_np
+from PIL import Image, ImageDraw
 
 DATA = os.path.join(ROOT, 'tools', 'geo', 'data')
 

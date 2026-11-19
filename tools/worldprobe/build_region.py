@@ -25,31 +25,40 @@ Usage: python3 tools/worldprobe/build_region.py europe      (a part of the world
 then   python3 tools/worldprobe/build_overviews.py world    (the coarser steps of the whole)
 """
 
-import http.client, io, json, math, os, shutil, sys, time, urllib.request
+import http.client
+import io
+import json
+import math
+import os
+import shutil
+import sys
+import time
+import urllib.request
 from concurrent.futures import ThreadPoolExecutor
+
 import numpy as np
-from PIL import Image, ImageDraw
 import tiles as tiles_file
+from PIL import Image, ImageDraw
 from scipy import ndimage
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'geo'))
-from erosion import erode_lands
 from common import (
     CACHE,
-    H,
     LAT_N,
     LAT_S,
     LON0,
     LON1,
     ROOT,
-    W,
     YMAX,
     YMIN,
+    H,
+    W,
     lines_from_geojson_geom,
     load_json,
     lonlat_to_px,
     polys_from_geojson_geom,
 )
+from erosion import erode_lands
 
 Image.MAX_IMAGE_PIXELS = None
 CELLS = 4

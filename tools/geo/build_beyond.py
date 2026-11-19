@@ -19,12 +19,19 @@ L2+1..L2+S2 sea) and CACHE/beyond/places.json (seeds, L2, S2). tools/geo/merge_b
 Run: python3 tools/geo/build_beyond.py
 """
 
-import gzip, json, math, os, sys
+import gzip
+import json
+import math
+import os
+import sys
+
 import numpy as np
+from build_locations import fix_components, value_noise
+from common import CACHE, LON0, LON1, ROOT, YMAX, YMIN
+from common import H as MAP_H
+from common import W as MAP_W
 from scipy import ndimage
 from scipy.spatial import cKDTree
-from common import CACHE, H as MAP_H, LON0, LON1, ROOT, W as MAP_W, YMAX, YMIN
-from build_locations import value_noise, fix_components
 
 OUT = os.path.join(CACHE, 'beyond')
 REGION = os.path.join(ROOT, 'public', 'map', 'regions', 'world', 'z3')

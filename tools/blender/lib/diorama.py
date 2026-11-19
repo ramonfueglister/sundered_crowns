@@ -13,8 +13,8 @@ import math
 import os
 from dataclasses import dataclass
 
-import bpy  # noqa: F401  (bpy must be imported first: it brings bmesh and mathutils with it)
 import bmesh
+import bpy  # noqa: F401  (bpy must be imported first: it brings bmesh and mathutils with it)
 from mathutils import Vector
 
 # The colours of src/buildings/palette.ts, as sRGB hex. Keep the two lists the same: a model must share the palette

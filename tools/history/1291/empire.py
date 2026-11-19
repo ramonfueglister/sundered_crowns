@@ -1,6 +1,7 @@
 """The Holy Roman Empire (German kingdom and Burgundy) on 1 January 1291; Lorraine, the Low Countries and Italy are in west.py and italy_balkans.py."""
 
-import os, sys
+import os
+import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
 from lib import N, R, S, write

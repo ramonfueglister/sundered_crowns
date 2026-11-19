@@ -5,13 +5,16 @@ otherwise Natural Earth populated places; filled with variable-density Poisson-d
 Outputs: CACHE/stage/ids.npy (int32, 0 = lake/none, 1..L land, L+1..L+S sea) and CACHE/stage/locations_raw.json
 """
 
-import os, json, math
+import json
+import math
+import os
+
 import numpy as np
+from common import CACHE, LAT_N, LAT_S, LON0, LON1, ROOT, H, W, km_per_px, load_json, lonlat_to_px, px_to_lonlat_np
 from scipy import ndimage
-from scipy.spatial import cKDTree
 from scipy.sparse import coo_matrix
 from scipy.sparse.csgraph import connected_components
-from common import CACHE, H, LAT_N, LAT_S, LON0, LON1, ROOT, W, km_per_px, load_json, lonlat_to_px, px_to_lonlat_np
+from scipy.spatial import cKDTree
 
 STAGE = os.path.join(CACHE, 'stage')
 rng = np.random.default_rng(1356)

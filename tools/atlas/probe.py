@@ -13,11 +13,15 @@ light falls on the land's own shape there), paper grain and dark corners are lef
 metres, size, r, g, b) are written too.
 """
 
-import gzip, json, math, os, sys
+import gzip
+import json
+import math
+import os
+import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'worldprobe'))
-import tiles as tiles_file
 import numpy as np
+import tiles as tiles_file
 from PIL import Image, ImageDraw
 from scipy import ndimage as ndi
 

@@ -6,6 +6,7 @@ The limits are tight on purpose: a pass has to mean that the two pictures are ha
 """
 
 import sys
+
 import numpy as np
 from PIL import Image
 from scipy import ndimage as ndi

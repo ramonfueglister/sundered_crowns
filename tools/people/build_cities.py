@@ -16,7 +16,11 @@ Rules (docs/PEOPLE_DESIGN.md):
   coordinates are known to be wrong (OVERRIDES).
 """
 
-import csv, hashlib, json, math, sys
+import csv
+import hashlib
+import json
+import math
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]

@@ -2,7 +2,10 @@
 frame (data/content/world_extent.json), with what the 1291 research says about them. It is the work list for the
 lists of rulers 1291-1848 (one list per realm, every row with its source)."""
 
-import json, glob, collections, pathlib
+import collections
+import glob
+import json
+import pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parents[3]
 geo = json.load(open(ROOT / 'public/data/geo.json'))

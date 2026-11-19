@@ -22,7 +22,9 @@ def oklch(rgb):
     return np.stack([L, np.hypot(A, B), np.degrees(np.arctan2(B, A)) % 360], -1)
 
 
-import json, sys
+import json
+import sys
+
 from PIL import Image
 
 # points inside the realms on the reference picture (its own pixels, 2552 x 1272)

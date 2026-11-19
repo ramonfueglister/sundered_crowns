@@ -6,15 +6,16 @@ Inputs (public-domain / open):
 Outputs: CACHE/stage/*.npy
 """
 
-import os, json, math
+import json
+import math
+import os
+
 import numpy as np
-from PIL import Image, ImageDraw
-from scipy import ndimage
 from common import (
     CACHE,
-    H,
     OUT_DATA,
     ROOT,
+    H,
     W,
     lines_from_geojson_geom,
     load_json,
@@ -22,6 +23,8 @@ from common import (
     polys_from_geojson_geom,
     px_to_lonlat_np,
 )
+from PIL import Image, ImageDraw
+from scipy import ndimage
 
 STAGE = os.path.join(CACHE, 'stage')
 os.makedirs(STAGE, exist_ok=True)

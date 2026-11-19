@@ -8,7 +8,14 @@ Like build_csi_crop.py this runs where the source can be downloaded; it writes t
 Usage: python3 build_england.py --map-units ne_10m_admin_0_map_units.geojson
 """
 
-import argparse, datetime, hashlib, json, math, os, sys
+import argparse
+import datetime
+import hashlib
+import json
+import math
+import os
+import sys
+
 from common import ROOT
 
 OUT = os.path.join(ROOT, 'tools', 'geo', 'data', 'ne')

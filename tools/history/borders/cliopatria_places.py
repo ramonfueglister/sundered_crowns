@@ -12,10 +12,13 @@ not stored, only the place ids, the years and the names and ids the row gives.
 Needs shapely (2.x).
 """
 
-import json, os, sys
+import json
+import os
+import sys
+
 import numpy as np
-from shapely.geometry import shape, Point
 from shapely import STRtree, prepare
+from shapely.geometry import Point, shape
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 FIRST, LAST = 1291, 1848

@@ -35,13 +35,16 @@ Output: public/map/snowline.bin.gz, public/map/treeline.bin.gz
 Usage: python3 tools/worldprobe/build_lines.py     (needs numcodecs; fetches 1 GB into the cache folder once)
 """
 
-import gzip, os, sys
+import gzip
+import os
+import sys
+
 import numpy as np
 from scipy import ndimage
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'geo'))
-from common import ROOT
 from build_region import CACHE, WORLD_H, WORLD_W, cached, world_lonlat
+from common import ROOT
 
 BUCKET = 'https://storage.googleapis.com/weatherbench2/datasets/'
 CLIMATE = BUCKET + 'era5-hourly-climatology/1990-2019_6h_512x256_equiangular_conservative.zarr/'

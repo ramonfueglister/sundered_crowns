@@ -12,7 +12,9 @@ plain rasters zipped with gzip (the coarser steps of build_overviews.py).
 Needs Brotli for Python: pip install brotli
 """
 
-import gzip, os
+import gzip
+import os
+
 import numpy as np
 
 

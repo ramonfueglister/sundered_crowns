@@ -29,7 +29,14 @@ Method (the one of the 1300 reading, made into one script):
 Needs numpy, scipy, scikit-image and Pillow.
 """
 
-import csv, glob, html, json, os, re, sys
+import csv
+import glob
+import html
+import json
+import os
+import re
+import sys
+
 import numpy as np
 from PIL import Image
 from scipy import ndimage as nd

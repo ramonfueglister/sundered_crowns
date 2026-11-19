@@ -10,6 +10,7 @@ stage's, not the houses'.
 """
 
 import sys
+
 import numpy as np
 from gauntlet import class_colour, detail, hexc, hsv, inner, load, lum
 from scipy import ndimage as ndi

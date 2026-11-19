@@ -14,7 +14,10 @@ towns whose persons the simulation founds (src/sim/content/cities_<year>.json): 
     python3 tools/history/1291/chandler.py chandlerV2.csv [year]
 """
 
-import csv, hashlib, json, sys
+import csv
+import hashlib
+import json
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]

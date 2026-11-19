@@ -2,25 +2,29 @@
 public/map/ids.bin.gz (uint16 id raster), public/map/height.bin.gz (int16 delta rows), data/map/geo.json.
 """
 
-import os, json, math, gzip
+import gzip
+import json
+import math
+import os
+
 import numpy as np
-from scipy import ndimage
-from scipy.spatial import cKDTree
 from common import (
     CACHE,
-    H,
     LAT_N,
     LAT_S,
     LON0,
     LON1,
     OUT_DATA,
     OUT_PUBLIC,
+    H,
     W,
     km_per_px,
     lonlat_to_px,
     polys_from_geojson_geom,
     px_to_lonlat_np,
 )
+from scipy import ndimage
+from scipy.spatial import cKDTree
 
 STAGE = os.path.join(CACHE, 'stage')
 

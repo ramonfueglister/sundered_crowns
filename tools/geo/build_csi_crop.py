@@ -19,9 +19,16 @@ Usage:
         (tools/geo/merge_beyond.py); nothing else is written then
 """
 
-import argparse, datetime, gzip, hashlib, json, os, sys
+import argparse
+import datetime
+import gzip
+import hashlib
+import json
+import os
+import sys
+
 import numpy as np
-from common import LON0, LON1, LAT_N, LAT_S, ROOT
+from common import LAT_N, LAT_S, LON0, LON1, ROOT
 
 OUT = os.path.join(ROOT, 'tools', 'geo', 'data', 'csi')
 MARGIN = 2  # cells kept around the map window

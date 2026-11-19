@@ -16,16 +16,24 @@ zones renumbered) and public/map/beyond.bin.gz (the new raster: u16 ids over ste
 game map). Run once on the files as committed before the merge: python3 tools/geo/merge_beyond.py
 """
 
-import gzip, heapq, json, math, os, sys
+import gzip
+import heapq
+import json
+import math
+import os
+import sys
+
 import numpy as np
 from scipy.spatial import cKDTree
 
 sys.path.insert(0, os.path.dirname(__file__))
-from common import CACHE, H as MAP_H, ROOT, W as MAP_W
 from build_beyond import frame, load_step
-from build_export import build_provinces, build_areas
+from build_export import build_areas, build_provinces
 from build_land import yield_curve
-from build_setup import climate, assign_resources, gen_name, SYL, CULT_GROUP
+from build_setup import CULT_GROUP, SYL, assign_resources, climate, gen_name
+from common import CACHE, ROOT
+from common import H as MAP_H
+from common import W as MAP_W
 
 DATA = os.path.join(ROOT, 'public', 'data')
 MAP = os.path.join(ROOT, 'public', 'map')

@@ -16,7 +16,9 @@ the map that would hold fewer people than its towns to their sum (`towns_by_plac
 Run: python3 tools/history/1291/towns.py [year]   (build.py imports it for the setup)
 """
 
-import json, os, sys
+import json
+import os
+import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..', '..'))

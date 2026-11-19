@@ -13,12 +13,13 @@ time, so the lines of parts that have not changed are left alone.)
 Usage: python3 tools/worldprobe/stitch_parts.py [--dry] [part ...]      (--dry only tells how the land steps at every line)
 """
 
-import os, sys
-import numpy as np
-from scipy import ndimage
+import os
+import sys
 
-from build_region import ACROSS, PARTS, ROOT, SEA, TILE, tile_start
+import numpy as np
 import tiles as tiles_file
+from build_region import ACROSS, PARTS, ROOT, SEA, TILE, tile_start
+from scipy import ndimage
 
 # the step is spread over this many cells to either side of the line
 REACH = 96

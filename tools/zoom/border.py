@@ -2,7 +2,11 @@
 laid over each other as tools/zoom/jumps.py does. Prints the mean of coarser minus finer on the land (0 … 255), of the sRGB numbers and (`light`) of the light they stand for.
 Usage: python3 border.py <dir>"""
 
-import glob, math, re, sys
+import glob
+import math
+import re
+import sys
+
 import numpy as np
 from PIL import Image, ImageFilter
 

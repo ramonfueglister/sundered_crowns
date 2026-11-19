@@ -14,7 +14,8 @@ faith the place had before the rule.
 Writes data/history/1291/peoples.json, which build.py applies. Run: python3 tools/history/1291/peoples.py
 """
 
-import json, os
+import json
+import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..', '..'))
