@@ -43,5 +43,7 @@ kill_timeout = "30s"
     path = "/health"
 
 [[vm]]
-  size = "shared-cpu-1x"
+  # a whole core: a shared CPU is held to 6.25 % once its burst balance (at most 500 s) is spent, which the fast speeds
+  # of the time control spend within minutes (docs/DEPLOY.md)
+  size = "performance-1x"
   memory = "2gb" # persons and economies in all 558 towns of 1291: ~1.5 GB after a year (Ramon chose 2 GB, 16 November 2026)

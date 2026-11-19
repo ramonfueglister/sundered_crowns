@@ -67,8 +67,10 @@ export function decodeData(magic: number, bytes: Uint8Array, what = 'not the dat
 }
 
 /** FNV-1a over the encoded state, as 8 hex digits. */
-export function hashState(s: WorldState): string {
-  const b = encodeState(s); let h = 0x811c9dc5;
+export function hashState(s: WorldState): string { return hashBytes(encodeState(s)); }
+/** FNV-1a over a state already encoded (encodeState): the hash of hashState without encoding it again. */
+export function hashBytes(b: Uint8Array): string {
+  let h = 0x811c9dc5;
   for (let i = 0; i < b.length; i++) { h ^= b[i]; h = Math.imul(h, 0x01000193); }
   return (h >>> 0).toString(16).padStart(8, '0');
 }
