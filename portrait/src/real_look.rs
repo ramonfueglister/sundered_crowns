@@ -12,7 +12,7 @@ use crate::settings;
 /// facets, normals averaged, the UVs of the base mesh (at a seam the corner
 /// UVs that lie closest together).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age: f32, female: bool, hair: Rgb, scalp_file: Option<String>, sun: f32, seed: u32, flush: (f32, &str), lash_line: f32, lash_tone: (f32, &str), lips: Option<(&crate::dress::Lips, f32)>, girls_image: bool, tone: f32) {
+pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age: f32, female: bool, hair: Rgb, scalp_file: Option<String>, sun: f32, seed: u32, flush: (f32, &str), lash_line: f32, lid_under: [f32; 2], lash_tone: (f32, &str), lips: Option<(&crate::dress::Lips, f32)>, girls_image: bool, tone: f32) {
     let Some(rows) = crate::real::rows(&format!("{dir}/uvs.txt")) else { return };
     let uvs: Vec<Vec<[f32; 2]>> = rows.iter().map(|f| f.chunks_exact(2).map(|c| [c[0], 1.0 - c[1]]).collect()).collect();
     if s.pos.len() != idx.len() {
@@ -82,6 +82,9 @@ pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age:
     // and show only further out. Only a dress with a table asks for it (`lash_line`); the colour is the lashes'
     // (build.rs, `DressSet::lash_tone`), and only ever darker than the skin (white lashes leave the lid as it is)
     let lash: Vec<f32> = if lash_line > 0.0 { crate::real::column(&format!("{dir}/skin_lash.txt"), 0.0) } else { Vec::new() };
+    // the lower lid's rim in that table: skin_lash.py writes the lower lid at half weight (`LOWER=0.5`), so a
+    // value up to a half is the lower lid's, and how much of a half says how near the rim
+    let under = |v: usize| lash.get(v).map_or(0.0, |&l| if l <= 0.5 { l * 2.0 } else { 0.0 });
     let lash_c = mix(mul(linear(hair), lash_tone.0), linear(hex(lash_tone.1)), 0.5);
     // real look: the lips. Where the red of the lips is (skin_lip.txt, per vertex how much lip, 0..1, and how
     // much of that upper lip; tools/portrait/pipeline/skin_lip.py) a share of the skin's own colour is kept and
@@ -162,9 +165,10 @@ pub(crate) fn real_skin(s: &mut Surface, idx: &[u32], pp: &[V3], dir: &str, age:
             if on_seam[v] > 0.0 {
                 c = mul(c, on_seam[v]);
             } else if let Some(&a) = ao.get(v) {
-                c = mul(c, 1.0 - ao_k * (1.0 - a.max(0.0)).powf(1.3));
+                c = mul(c, 1.0 - ao_k * (1.0 - a.max(0.0)).powf(1.3) * (1.0 - (1.0 - lid_under[1]) * under(v)));
             }
             if let Some(&l) = lash.get(v) {
+                let l = l * (1.0 - (1.0 - lid_under[0]) * under(v));
                 c = mix(c, [c[0].min(lash_c[0]), c[1].min(lash_c[1]), c[2].min(lash_c[2])], (l * lash_line).min(1.0));
             }
             if let Some(fv) = folds.as_ref().and_then(|f| f.get(v)) {

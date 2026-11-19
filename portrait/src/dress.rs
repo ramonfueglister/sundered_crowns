@@ -382,6 +382,14 @@ pub struct DressSet {
     /// reference's woman about -46). Weaker still (0.55, 0.45) an old woman's lid has no dark edge of its own
     /// left (tests/portrait.test.ts holds it).
     pub lash_line: [f32; 2],
+    /// The lower lid's rim: the share of the lash line that is painted on it, and the share of the socket's shade
+    /// (skin_ao.txt) that stays on it; [1, 1] = as the tables say. The socket's shade is darkest where a lid lies
+    /// against the ball, on both lids alike, and the lash line lay on the lower lid at half the upper's weight
+    /// (skin_lash.py `LOWER`): together a dark line all round the eye, as drawn with a pen, which is a large
+    /// part of a stare. An eye's lashes are thick on the upper lid and few on the lower, and the lower lid's rim
+    /// faces up, to the light. Which vertices are the lower lid's is read from the lash table (real_look.rs).
+    /// PLACEHOLDER, by eye on faces drawn at 896 by 1120 beside the reference's eyes. Round 118.
+    pub lid_under: [f32; 2],
     /// The image drawn on the lashes' cards, if not MakeHuman's `Eyelashes01` ("" = that one). MakeHuman's is a row
     /// of long single hairs: drawn thin they do not show, drawn dense they stand off the lid as a doll's
     /// (rounds 65 and 76). `Eyelashes1356.webp` is the same hairs blurred into a soft fringe, and the lower lid's
@@ -791,6 +799,7 @@ const ENGLAND: DressSet = DressSet {
     brow_soft: [0.3, 0.3],
     lips: [Lips { skin: 0.17, blood: [0.27, 0.026, 0.020], upper: 1.5, seam: 1.43, child: 0.6, dark: [0.38, 0.85] }, Lips { skin: 0.24, blood: [0.275, 0.025, 0.019], upper: 1.5, seam: 1.1, child: 0.6, dark: [0.38, 0.85] }],
     lash_line: [0.65, 0.55],
+    lid_under: [0.3, 0.25],
     lash_image: "Eyelashes1356",
     lash_tone: (0.6, "#3a2416"),
     hair_red: [0.45, 0.74],

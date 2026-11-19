@@ -390,7 +390,7 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
             // the scalp under the hair this person wears (name_scalp.txt beside it), if bare-headed
             let bare = !matches!(p.hat_style(), Hat::Cap | Hat::Pileus | Hat::Petasos) && !(long_hair && p.hair_style() == Hair::Veil);
             let sf = if bare { mh_pick(p, long_hair).map(|(d, n)| format!("{d}/{}_scalp.txt", garb.map_or(n.as_str(), |g| g.under_of(&n)))).filter(|f| crate::real::exists(f)) } else { None };
-            real_skin(&mut s, &h.parts["body"][lod], &x.pp, dir, p.age, fem, hair, sf, lf.sun, p.seed, garb.map_or((1.0, "skin_red.txt"), |d| (d.flush[if fem { 0 } else { 1 }] * d.flush_of(p), d.flush_map)), garb.map_or(0.0, |d| d.lash_line[if fem { 0 } else { 1 }] * d.eyes_of(fem, p.age)[1]), garb.map_or((0.5, "#140d08"), |d| d.lash_tone), garb.map(|d| d.lips_of(fem, p.age)), garb.is_some_and(|d| !fem && p.age < d.boy_skin), { let l = linear(skin); 0.2126 * l[0] + 0.7152 * l[1] + 0.0722 * l[2] });
+            real_skin(&mut s, &h.parts["body"][lod], &x.pp, dir, p.age, fem, hair, sf, lf.sun, p.seed, garb.map_or((1.0, "skin_red.txt"), |d| (d.flush[if fem { 0 } else { 1 }] * d.flush_of(p), d.flush_map)), garb.map_or(0.0, |d| d.lash_line[if fem { 0 } else { 1 }] * d.eyes_of(fem, p.age)[1]), garb.map_or([1.0; 2], |d| d.lid_under), garb.map_or((0.5, "#140d08"), |d| d.lash_tone), garb.map(|d| d.lips_of(fem, p.age)), garb.is_some_and(|d| !fem && p.age < d.boy_skin), { let l = linear(skin); 0.2126 * l[0] + 0.7152 * l[1] + 0.0722 * l[2] });
         }
         out.push(s);
     }

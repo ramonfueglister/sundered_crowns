@@ -458,10 +458,12 @@ describe('portraits', { timeout: 20_000 }, () => {
   it('the lid\'s edge of a person of England is dark where the lashes grow', () => {
     // MakeHuman's lashes are long single hairs that point at the viewer where they grow: the eye lay in the face
     // without an outline (until round 65). The skin within reach of the eyeball against the lid further out:
-    // 0.36 to 0.59 with the lash line, 0.73 to 0.83 without (the shade of the fold alone)
+    // 0.36 to 0.59 with the lash line, 0.73 to 0.83 without (the shade of the fold alone). Since round 118 the
+    // line is the upper lid's (the lower lid's rim keeps a share of it, `lid_under`): on England's people the
+    // upper lid alone is read, 0.29 to 0.59; all round the eye they have 0.52 to 0.75
     const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
     const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
-    const edgeToLid = (p: Portrait): number => {
+    const edgeToLid = (p: Portrait, upper: boolean): number => {
       const eye = p.surfaces.find(s => surfaceKind(s) === 'eyeball')!, skin = p.surfaces.find(s => surfaceKind(s) === 'skin')!;
       const sums = { edge: 0, edges: 0, lid: 0, lids: 0 };
       for (const side of [1, -1]) {
@@ -473,16 +475,50 @@ describe('portraits', { timeout: 20_000 }, () => {
           if (skin.pos[i + 2]! < c[2]! + 0.3 * r) continue;
           const d = Math.hypot(skin.pos[i]! - c[0]!, skin.pos[i + 1]! - c[1]!, skin.pos[i + 2]! - c[2]!) / r;
           const light = 0.2126 * skin.col[i]! + 0.7152 * skin.col[i + 1]! + 0.0722 * skin.col[i + 2]!;
+          if (upper && skin.pos[i + 1]! < c[1]!) continue;
           if (d < 1.15) { sums.edge += light; sums.edges++; } else if (d > 1.45 && d < 1.9) { sums.lid += light; sums.lids++; }
         }
       }
-      expect(sums.edges).toBeGreaterThan(300);
-      expect(sums.lids).toBeGreaterThan(300);
+      expect(sums.edges).toBeGreaterThan(upper ? 150 : 300);
+      expect(sums.lids).toBeGreaterThan(upper ? 150 : 300);
       return sums.edge / sums.edges / (sums.lid / sums.lids);
     };
-    for (const p of sample) expect(edgeToLid(b.build(p)), `person ${p.pid}`).toBeLessThan(0.65);
+    for (const p of sample) expect(edgeToLid(b.build(p), true), `person ${p.pid}`).toBeLessThan(0.65);
     // and everyone else's lids are Apoleia's
-    for (const p of people) expect(edgeToLid(b.build(p)), `person ${p.pid}`).toBeGreaterThan(0.7);
+    for (const p of people) expect(edgeToLid(b.build(p), false), `person ${p.pid}`).toBeGreaterThan(0.7);
+  });
+  it('the lower lid\'s rim of a person of England is not drawn round with a dark line', () => {
+    // (round 118) the stare. The shade of the eye's socket (skin_ao.txt) is darkest where a lid lies against the
+    // ball, and it and the lash line lay on the lower lid's rim as on the upper's: a dark line all round the eye,
+    // as drawn with a pen. Lashes are thick on the upper lid, and the lower lid's rim faces the light: England
+    // keeps a share of both there (portrait/src/dress.rs `lid_under`). The skin within reach of the eyeball,
+    // below the eye's middle against above it: 1.02 to 1.67 with the tables as they are (1.25 over all), 1.35 to
+    // 2.40 since (1.76)
+    const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
+    const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
+    const underToOver = (p: Portrait): number => {
+      const eye = p.surfaces.find(s => surfaceKind(s) === 'eyeball')!, skin = p.surfaces.find(s => surfaceKind(s) === 'skin')!;
+      const sums = { under: 0, unders: 0, over: 0, overs: 0 };
+      for (const side of [1, -1]) {
+        const own: number[] = [];
+        for (let i = 0; i < eye.pos.length; i += 3) if ((eye.pos[i]! - p.cx) * side > 0) own.push(i);
+        const c = [0, 1, 2].map(k => own.reduce((a, i) => a + eye.pos[i + k]!, 0) / own.length);
+        const r = own.reduce((a, i) => a + Math.hypot(eye.pos[i]! - c[0]!, eye.pos[i + 1]! - c[1]!, eye.pos[i + 2]! - c[2]!), 0) / own.length;
+        for (let i = 0; i < skin.pos.length; i += 3) {
+          if (skin.pos[i + 2]! < c[2]! + 0.3 * r) continue;
+          if (Math.hypot(skin.pos[i]! - c[0]!, skin.pos[i + 1]! - c[1]!, skin.pos[i + 2]! - c[2]!) / r >= 1.15) continue;
+          const light = 0.2126 * skin.col[i]! + 0.7152 * skin.col[i + 1]! + 0.0722 * skin.col[i + 2]!;
+          if (skin.pos[i + 1]! < c[1]!) { sums.under += light; sums.unders++; } else { sums.over += light; sums.overs++; }
+        }
+      }
+      expect(sums.unders).toBeGreaterThan(100);
+      expect(sums.overs).toBeGreaterThan(100);
+      return sums.under / sums.unders / (sums.over / sums.overs);
+    };
+    const all = sample.map(p => underToOver(b.build(p)));
+    // every one of them, and all of them together
+    for (const [k, v] of all.entries()) expect(v, `person ${sample[k]!.pid}`).toBeGreaterThan(1.3);
+    expect(all.reduce((a, x) => a + x, 0) / all.length).toBeGreaterThan(1.6);
   });
   it('the lips of a person of England close over the mouth, in a colour that goes with the skin', () => {
     // MakeHuman's closed mouth is a slit of a millimetre between the edges where the lips turn inward: one looked
@@ -549,7 +585,21 @@ describe('portraits', { timeout: 20_000 }, () => {
     const eye = compiled('real/eyeball.webp', false);
     expect(surfaceKind({ tex: 'real/eyeball.webp', double: false } as never)).toBe('eyeball');
     expect(eye).toContain('eyeWhite = smoothstep(');
-    expect(eye).toContain(`mix( ${ENGLAND_1356.eye!.iris.toFixed(3)} * ( 1.0 - ${ENGLAND_1356.eye!.ring.toFixed(3)} * eyeRing ), ${ENGLAND_1356.eye!.white.toFixed(3)}, eyeWhite )`);
+    expect(eye).toContain(`mix( ${ENGLAND_1356.eye!.iris.toFixed(3)} * ( 1.0 - ${ENGLAND_1356.eye!.ring.toFixed(3)} * eyeRing ) * mix( 1.0, ${ENGLAND_1356.eye!.pupil.dark.toFixed(3)}, eyePupil ), ${ENGLAND_1356.eye!.white.toFixed(3)}, eyeWhite )`);
+    // (round 118) the stare. The image's pupil is 0.29 of the iris with a hard edge, a pinpoint as of an eye in
+    // glaring light: the stage draws its own, larger and soft-edged, as an eye has it indoors. The white of the
+    // eye was grey beside warm skin (a 6.6, b 9.2 in CIELAB where the skin under the eye has 14.0 and 20.9) and
+    // stood out of the face by its colour: it is drawn warmer, and as light as it was. The key's glint: rough enough
+    // that the stage's eight key lights (`shadow.lights`) are one glint and not a cluster of dots
+    expect(eye).toContain('eyePupil = 1.0 - smoothstep(');
+    expect(ENGLAND_1356.eye!.pupil.size).toBeGreaterThan(0.35);
+    expect(ENGLAND_1356.eye!.pupil.size).toBeLessThan(0.5);
+    expect(ENGLAND_1356.eye!.pupil.soft).toBeGreaterThan(0.05);
+    const [br, bg, bb] = ENGLAND_1356.eye!.blush;
+    expect(br).toBeGreaterThan(bg); expect(bg).toBeGreaterThan(bb);
+    expect(Math.abs(0.2126 * br + 0.7152 * bg + 0.0722 * bb - 1)).toBeLessThan(0.03);
+    expect(ENGLAND_1356.eye!.rough).toBeGreaterThan(0.2);
+    expect(ENGLAND_1356.eye!.rough).toBeLessThan(0.3);
     // the white of the eye lighter than the image gives it. The iris too, since round 103, and its darks lifted:
     // from round 65 to 102 it was drawn darker (0.7), by one brown-eyed face of the reference, and a blue or a
     // green iris was as black as a brown one, a hole in the face. It is darkest in a ring at its rim

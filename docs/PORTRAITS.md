@@ -4471,6 +4471,88 @@ is its measured one with the soft edge and nothing else. Pictures (project files
 `runde117_vorher_nachher_frauen.png`, `runde117_vorher_nachher_maenner.png` (round 116 above, now below),
 `runde117_neben_referenz.png` (the reference above, ours below).
 
+**Round 118: the stare** (2026-11-19). Round 117 named it first of what stands out beside the reference:
+eyes wide open with bright whites, a stare. The eyes were laid large beside four faces of the reference (a
+face drawn at 896 by 1120, the eye's band cut out) and read before anything was changed.
+
+**What it is not.** Not the lids' opening: its height against the length from the eyes to the chin is 0.082 to
+0.124 on ours, and 0.072, 0.088 and 0.113 on three faces of the reference; the iris fills it as theirs does.
+And not a white that is too light: on a face in the reference's light the white of the eye near the camera is
+L 30.1 where the skin under the eye has 36.6; the reference's woman A has 29.3 and 37.0.
+
+**What it is.** Four things, each seen in the large picture and then counted:
+
+- *A dark line all round the eye, as drawn with a pen.* It stayed with the lashes off (`without=Eyelashes`),
+  with the cast shadows off and with the lash line off; it went with the socket's painted shade off
+  (`SKIN_AO` 0). That shade (skin_ao.txt, rays over each vertex) is darkest where a lid lies against the ball,
+  on the lower lid as on the upper, and the lash line lay on the lower lid too, at half weight. An eye has
+  thick lashes above and few below, and the lower lid's rim faces up, to the light: the reference's eyes have
+  a soft dark band above and a light rim below. (My first reading, that the line is the lash line alone, was
+  wrong: with `lash_line` 0 it stood.)
+- *A grey white.* The white's colour was a 6.6, b 9.2 beside skin of a 14.0, b 20.9: grey-blue in a warm face,
+  and it is by its colour that it jumps out, not by its lightness. The reference's whites are near the skin's
+  colour (A: a 14.1, b 17.1; C: a 7.5 to 12.7, b 15.6 to 18.2): a white lit by a warm lamp and by the light
+  the lids throw on it.
+- *A pinpoint pupil.* The image's pupil is 0.29 of the iris across, with a hard edge and black (L 0.8): an
+  eye in glaring light. The reference's light-eyed man has about 0.45, soft at the edge, L 4.8.
+- *A glint of dots.* Since round 116 the key is eight lights; on a ball as smooth as the eye was (`rough`
+  0.14) each throws its own point: a cluster of six to eight dots beside the pupil.
+
+**What is changed.**
+
+- `DressSet::lid_under` (England [0.3, 0.25]): on the lower lid's rim that share of the lash line is painted
+  and that share of the socket's shade stays. Which vertices are the lower lid's is read from the lash table
+  (skin_lash.py writes the lower lid at half weight; `real_look.rs`). The upper lid is as it was.
+- The stage's eye (`profile.ts` `eye`, `materials.ts` `eyeLook`): `blush` [1.27, 0.945, 0.76], a colour on the
+  white alone, warmer and as light as before (the same lid's white now a 10.2, b 13.7 at L 31.9); `pupil`
+  { size 0.42, soft 0.1, dark 0.25 }: the stage draws its own pupil over the image's, 0.42 of the iris, soft
+  by 0.1 to either side, the iris under it at a quarter; `rough` 0.22 (0.14): the eight points run together.
+
+| the skin within reach of the eyeball, below the eye's middle against above it (36 of the sample) | least | most | mean |
+|---|---|---|---|
+| the tables as they are | 1.02 | 1.67 | 1.25 |
+| now | 1.35 | 2.40 | 1.76 |
+
+Tried and not kept. *The women's brows lower.* The gap from the brow's lower edge to the lid's rim is 0.106
+to 0.146 of the length from the eyes to the chin on our women and 0.065 to 0.085 on the reference's (men
+about 0.09 against 0.06), and with `brow_lift` at 1.0 or at -0.5 mm for 3.0 the faces read calmer and less
+surprised. Not kept: 3.0 is what puts the brow where a young woman's was measured (round 69, Matros 2009),
+and round 69 found that a low brow "made the women read as men, and as glowering"; the reference's brows
+are a drawn style's, heavier and lower than measured ones. It stays open as a choice (below). `rough` 0.25:
+one soft glint, but faint, the eye loses its life at 448 by 560; 0.35: next to no glint. `blush` [1.1, 0.82,
+0.66]: warm, and an eighth darker, which no reading asked for. `blush` further to yellow ([1.2, 0.84, 0.52]: b
+16.7): a yellow eye. `pupil.dark` 0.1: blacker than the reference's pupil; 0.4: the image's pinpoint shows through. `white` 1.1 for
+1.3: darker, greyer. `lid.dark` and `corner.dark` are what is left of the light, not how dark: set to 0 by
+mistake they black out the ball.
+
+**The gauntlet**: 19 of 22 as before, the same three lines. The two lines of the eye moved away from the
+reference's by about one L and stay within their limit of 4: "woman: eye against cheek" -41.9 (-41.0; the
+reference's -40.2), "emperor: eye against cheek" -41.9 (-39.8; -40.6). They read the middle of the eye's
+opening, which is the pupil: the larger pupil makes it darker (with the old glint on the new pupil -41.7
+and -40.8), and so does the fainter glint, which lay in that place. No limit and no reading of the reference
+was touched.
+
+Honest about it. The stare is less, not gone. At 448 by 560 the eyes sit in the face instead of on it
+(warm whites, no pen line under the eye, a pupil that is not a pinpoint); beside the reference the women's
+eyes still look larger and more open than theirs, and I take the brows for the larger part of what is left
+(high and thin over the eye, theirs low and heavy), with the choice above not made. The colours were read on
+one face of ours (940008, the eye near the camera) and one to two of the reference, in boxes set by hand;
+the opening's heights on three. `blush` reaches the reference's white in a (10.2 for 7.5 to 14.1), not in b
+(13.7 for 15.6 to 18.2): further is yellow on our faces. At 896 by 1120 the glint still shows two or
+three of its points. The lower lid is told from the upper by a table's half weight, which is a
+side-effect of how that table was written, not a mark of its own. All of `lid_under`, `blush`, `pupil` and
+`rough` are by eye: PLACEHOLDER. What stands out next: the brows (a choice), the skin (smooth as wax), the
+gloss on the nose's flank, a man's far cheek.
+
+Tests: `tests/portrait.test.ts`: new "the lower lid's rim of a person of England is not drawn round with a
+dark line" (every one of the sample over 1.3, all together over 1.6); "the lid's edge ... is dark where the
+lashes grow" reads the upper lid alone on England's people (0.29 to 0.59; all round the eye they now have
+0.52 to 0.75, which is what the change is); the eye's shader has the pupil and the white's colour, the
+pupil 0.35 to 0.5 of the iris, the white warmer and within 0.03 as light, the glint's roughness 0.2 to 0.3.
+Pictures (project files, `portraits/`): `runde118_vorher_nachher_augen.png` (the eyes' band of two women
+and a man, round 117 above, now below), `runde118_vorher_nachher_frauen.png`,
+`runde118_vorher_nachher_maenner.png`, `runde118_neben_referenz.png` (the reference above, ours below).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
@@ -4481,7 +4563,8 @@ children are not; since round 112 the faces differ from each other as real ones 
 measures, by eye in the rest, and wear one hair and one brow each still; since round 113 the face is lit by the
 stage alone (no light painted into the skin, a shaded half in the skin's colour), since round 115 the lower
 face runs in to the chin, since round 117 as far as the reference's does, with a round chin and a jaw whose
-edge is a soft shade, and it still lacks the
+edge is a soft shade, since round 118 the eyes have warm whites, a soft pupil and no dark line under
+them, under brows that are still higher and thinner than theirs, and the face still lacks the
 reference's streak of gloss on the nose's flank; the thrown-back hood closes round the neck since round 35, but
 has no folds across its cloth. Since round 111 the people of every part of the world can be drawn, in a plain
 dress that is no people's own, and without a picture of the reference to hold them against.

@@ -59,8 +59,11 @@ export interface StageProfile {
    *  ball's shaded side (wrap lighting as on skin: the white of the eye lets light through; without it the side
    *  of each ball away from the key light is a dark sickle beside the iris), and the cornea: how far the surface's
    *  normal leans outward at the iris' rim (the tangent of the angle; 0 = a plain ball. A cornea of 7.8 mm radius
-   *  on a ball of 12 mm leans 20 degrees further out at the rim of an iris of 11.7 mm: 0.36). */
-  eye: null | { lid: { from: number; to: number; dark: number }; corner: { from: number; to: number; dark: number }; tint: readonly [number, number, number]; white: number; iris: number; colour: number; lift: number; rough: number; specular: number; wrap: number; cornea: number; ring: number };
+   *  on a ball of 12 mm leans 20 degrees further out at the rim of an iris of 11.7 mm: 0.36), `ring`: how much
+   *  darker the iris is in a ring at its rim, the pupil: its radius as a share of the iris' (0 = as the image has
+   *  it, 0.29), how soft its edge is (the same share, to either side) and how dark it is drawn (a factor on the
+   *  iris under it), and `blush`: a colour on the white of the eye alone (1, 1, 1 = none). */
+  eye: null | { lid: { from: number; to: number; dark: number }; corner: { from: number; to: number; dark: number }; tint: readonly [number, number, number]; white: number; iris: number; colour: number; lift: number; rough: number; specular: number; wrap: number; cornea: number; ring: number; pupil: { size: number; soft: number; dark: number }; blush: readonly [number, number, number] };
   /** Lashes and brows: null as they are. Else roughness, "specular", and how dense the lashes and the brows are
    *  (1 = as painted). */
   brow: null | { rough: number; specular: number; lashes: number; brows: number };
@@ -392,7 +395,12 @@ export const APOLEIA: StageProfile = {
  *  shadow's edge is soft there: the men's 24.3 (the reference's 16.9), the women's 19.0 as before, the shade
  *  beside a woman's nose 30.7 (33.2; the reference's 34.5). At 24 and more that shade leaves the reference's by
  *  more than 4; a key more from the front (50 and 45 degrees off the face instead of 56) lights the women's far
- *  cheek as much as the men's and loses two lines. */
+ *  cheek as much as the men's and loses two lines.
+ *  Round 118: the stare (docs/PORTRAITS.md). The white of the eye was grey beside warm skin (a 6.6, b 9.2 in
+ *  CIELAB under skin of 14.0 and 20.9) and stood out by its colour: `eye.blush` warms it and leaves it as light
+ *  (a 10.2, b 13.7; the reference's 7.5 to 14.1 and 15.6 to 18.2). The image's pupil is a hard pinpoint (0.29 of
+ *  the iris): `eye.pupil` draws one of 0.42 with a soft edge. The eight key lights of round 116 threw eight
+ *  points on the ball: `eye.rough` 0.22 (0.14) runs them together; at 0.25 the glint is faint and the eye dull. */
 export const ENGLAND_1356: StageProfile = {
   key: 'england1356',
   lights: {
@@ -408,7 +416,7 @@ export const ENGLAND_1356: StageProfile = {
   turn: -0.24, rise: 0.03, close: 1.12,
   anisotropy: 8,
   skin: { rough: 0.55, specular: 0.42, pores: 0.4, wrap: [0.3, 0.16, 0.10], finer: 1, fit: 1, blotch: 0.05, speckle: 0.10, colour: 0.7, tint: [1, 0.87, 0.77], relief: 0.0015, oil: 0.5, fuzz: 0.3, child: 0.3, bleed: [1, 0.5, 0.35] },
-  eye: { corner: { from: 0.3, to: 0.8, dark: 0.35 }, lid: { from: -0.35, to: 0.05, dark: 0.4 }, tint: [0.84, 0.73, 0.57], white: 1.3, iris: 1.15, colour: 1.1, lift: 0.6, rough: 0.14, specular: 0.6, wrap: 0.5, cornea: 0.36, ring: 0.35 },
+  eye: { corner: { from: 0.3, to: 0.8, dark: 0.35 }, lid: { from: -0.35, to: 0.05, dark: 0.4 }, tint: [0.84, 0.73, 0.57], white: 1.3, iris: 1.15, colour: 1.1, lift: 0.6, rough: 0.22, specular: 0.6, wrap: 0.5, cornea: 0.36, ring: 0.35, pupil: { size: 0.42, soft: 0.1, dark: 0.25 }, blush: [1.27, 0.945, 0.76] },
   brow: { rough: 1, specular: 0.05, lashes: 0.3, brows: 0.95 },
   cap: { tone: 1.7, light: 2.6, colour: 0.7, wrap: 1, shadow: false, stubble: 0, beard: { tone: 5.5, light: 3.2, colour: 0.65, wrap: 0.3 } },
   cloth: { wool: 2.6, linen: 1 },
