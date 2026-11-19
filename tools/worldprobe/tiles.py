@@ -11,13 +11,17 @@ plain rasters zipped with gzip (the coarser steps of build_overviews.py).
 
 Needs Brotli for Python: pip install brotli
 """
-import gzip, os
+
+import gzip
+import os
+
 import numpy as np
 
 
 def coded(folder):
     """Whether the tiles of a region's folder are written in the coding above, by its index."""
     import json
+
     path = os.path.join(folder, 'index.json')
     return os.path.exists(path) and json.load(open(path)).get('coding') == 'br'
 
@@ -29,25 +33,29 @@ def path_of(folder, key, br=True):
 def pack(raw, tile):
     """The plain rasters of a tile (bytes) in the coding above."""
     import brotli
+
     t = tile * tile
     s = np.frombuffer(raw, '<i2', t).reshape(tile, tile).astype(np.int32)
     d = np.empty_like(s)
-    d[:, 1:] = s[:, 1:] - s[:, :-1]; d[1:, 0] = s[1:, 0] - s[:-1, 0]; d[0, 0] = s[0, 0]
+    d[:, 1:] = s[:, 1:] - s[:, :-1]
+    d[1:, 0] = s[1:, 0] - s[:-1, 0]
+    d[0, 0] = s[0, 0]
     d = (d + 32768) % 65536 - 32768
     z = np.where(d >= 0, 2 * d, -2 * d - 1).astype('<u2').view(np.uint8).reshape(-1, 2)
-    body = z[:, 0].tobytes() + z[:, 1].tobytes() + bytes(raw[t * 2:])
+    body = z[:, 0].tobytes() + z[:, 1].tobytes() + bytes(raw[t * 2 :])
     return brotli.compress(body, quality=10, lgwin=22)
 
 
 def unpack(packed, tile):
     """The plain rasters of a tile from the coding above."""
     import brotli
+
     body, t = brotli.decompress(packed), tile * tile
     z = np.frombuffer(body, np.uint8, t).astype(np.int64) | (np.frombuffer(body, np.uint8, t, t).astype(np.int64) << 8)
     d = np.where(z & 1, -((z + 1) >> 1), z >> 1).reshape(tile, tile)
     d[:, 0] = np.cumsum(d[:, 0])
     s = (np.cumsum(d, axis=1) + 32768) % 65536 - 32768
-    return s.astype('<i2').tobytes() + body[t * 2:]
+    return s.astype('<i2').tobytes() + body[t * 2 :]
 
 
 def read(folder, key, tile):
@@ -55,7 +63,8 @@ def read(folder, key, tile):
     for br in (True, False):
         path = path_of(folder, key, br)
         if os.path.exists(path):
-            with open(path, 'rb') as f: data = f.read()
+            with open(path, 'rb') as f:
+                data = f.read()
             return unpack(data, tile) if br else gzip.decompress(data)
     return None
 
@@ -65,6 +74,8 @@ def write(folder, key, raw, tile, br=True):
     (no time of writing in the file: a tile that has not changed stays the same file). The other file of the tile goes."""
     path, other = path_of(folder, key, br), path_of(folder, key, not br)
     data = pack(raw, tile) if br else gzip.compress(bytes(raw), 9, mtime=0)
-    with open(path + '.new', 'wb') as f: f.write(data)
+    with open(path + '.new', 'wb') as f:
+        f.write(data)
     os.replace(path + '.new', path)
-    if os.path.exists(other): os.remove(other)
+    if os.path.exists(other):
+        os.remove(other)

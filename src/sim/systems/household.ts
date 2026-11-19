@@ -38,6 +38,7 @@ import { ALIVE } from '../state';
 import type { World } from '../world';
 import { ROLE } from './work';
 import { ageOn } from './people';
+import { presentPersons } from '../people/living';
 
 /** From this age a person consumes a whole basket (Horrell, Humphries and Weisdorf 2022, pp. 538 and 540). */
 export const BASKET_AGE = 15;
@@ -71,15 +72,15 @@ export function writeHouseholds(s: WorldState, w: World): void {
   F.persons.fill(0); F.working.fill(0); F.baskets.fill(0); F.income.fill(0); F.spent.fill(0); F.savings.fill(0); F.need.fill(0); F.fed.fill(0); P.consumed.fill(0);
   if (!e) return;
   const n = s.family.size, income = new Float64Array(n), spent = new Float64Array(n), savings = new Float64Array(n), baskets = new Float64Array(n);
-  const own = new Float32Array(s.person.size);
-  for (let id = 0; id < s.person.size; id++) {
-    if (!s.person.alive[id]) continue;
-    const f = P.family[id], role = P.role[id];
+  // the living and the dead who still hold a part (src/sim/people/living.ts); a dead person without a part has no money
+  const persons = presentPersons(s).slice(), own = new Float32Array(persons.length);
+  for (let k = 0; k < persons.length; k++) {
+    const id = persons[k], f = P.family[id], role = P.role[id];
     // the dead are no members; the money of a dead person whose part nobody has taken yet (src/sim/systems/deaths.ts)
     // stays with the family
     if (P.died[id] === ALIVE) {
-      own[id] = basketsOf(ageOn(P.born[id], e.day));
-      F.persons[f]++; baskets[f] += own[id];
+      own[k] = basketsOf(ageOn(P.born[id], e.day));
+      F.persons[f]++; baskets[f] += own[k];
       if (role === ROLE.worker || role === ROLE.owner || role === ROLE.banker) F.working[f]++;
     }
     income[f] += P.income[id]; spent[f] += P.spent[id]; savings[f] += P.savings[id];
@@ -92,9 +93,10 @@ export function writeHouseholds(s: WorldState, w: World): void {
     const need = baskets[f] * cost * price[k];
     F.need[f] = need; F.fed[f] = Math.min(1, Math.max(0, spent[f]) / need);
   }
-  for (let id = 0; id < s.person.size; id++) {
-    if (!s.person.alive[id] || P.died[id] !== ALIVE) continue;
+  for (let k = 0; k < persons.length; k++) {
+    const id = persons[k];
+    if (P.died[id] !== ALIVE) continue;
     const f = P.family[id];
-    P.consumed[id] = (spent[f] * own[id]) / baskets[f];
+    P.consumed[id] = (spent[f] * own[k]) / baskets[f];
   }
 }

@@ -15,7 +15,12 @@ Rules (docs/PEOPLE_DESIGN.md):
 - each city lies in the land place of the map whose centre is nearest to its coordinates, except where the data set's
   coordinates are known to be wrong (OVERRIDES).
 """
-import csv, hashlib, json, math, sys
+
+import csv
+import hashlib
+import json
+import math
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -75,11 +80,21 @@ def main(csv_path):
         else:
             c = math.cos(math.radians(lat))
             place = min(range(geo['L']), key=lambda k: (loc['lat'][k] - lat) ** 2 + ((loc['lon'][k] - lon) * c) ** 2)
-        out.append({'name': r['City'], 'country': r['Country'], 'people': round(pop), 'certainty': int(r['Certainty']),
-                    'years': from_years, 'place': place, 'placeName': loc['name'][place],
-                    'lon': round(loc['lon'][place], 3), 'lat': round(loc['lat'][place], 3),
-                    # the town of the world graphic the persons walk in: the nearest place of the gazetteer
-                    'site': site(gaz, r['City'], lat, lon)})
+        out.append(
+            {
+                'name': r['City'],
+                'country': r['Country'],
+                'people': round(pop),
+                'certainty': int(r['Certainty']),
+                'years': from_years,
+                'place': place,
+                'placeName': loc['name'][place],
+                'lon': round(loc['lon'][place], 3),
+                'lat': round(loc['lat'][place], 3),
+                # the town of the world graphic the persons walk in: the nearest place of the gazetteer
+                'site': site(gaz, r['City'], lat, lon),
+            }
+        )
     doc = {
         'year': YEAR,
         'source': 'Reba, Reitsma & Seto (2016), Scientific Data 3, 160034, chandlerV2.csv (CC BY 4.0), after Chandler (1987)',

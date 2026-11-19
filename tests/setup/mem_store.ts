@@ -36,6 +36,13 @@ export class MemStore implements WorldStore {
     this.logs++;
     return true;
   }
+  async uploadArchived(world: string, day: number, bin: Uint8Array) {
+    this.files.set(`${world}/archive/dead-${day}.bin`, bin);
+    return true;
+  }
+  async downloadArchived(world: string, day: number) {
+    return (this.files.get(`${world}/archive/dead-${day}.bin`) as Uint8Array | undefined) ?? null;
+  }
   async downloadBackup(world: string): Promise<Backup | null> {
     const bin = this.files.get(`${world}/snapshot.bin`) as Uint8Array | undefined;
     if (!bin) return null;

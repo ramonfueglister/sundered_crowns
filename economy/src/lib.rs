@@ -18,7 +18,8 @@ pub mod state;
 pub mod trade;
 
 use beforeit::{
-    AbstractModel, Data, InitialConditions, Model, Parameters, Xoshiro, get_accounting_identities, get_accounting_identity_banks,
+    AbstractModel, Data, InitialConditions, Model, Parameters, Xoshiro, get_accounting_identities,
+    get_accounting_identity_banks,
 };
 use clock::DailyClock;
 
@@ -67,23 +68,58 @@ impl Economy {
     /// `Model(parameters, initial_conditions)` of the port from its two JSON objects, with a generator seeded by
     /// `seed`, as the model type of the daily clock: a firm plans every `plan` periods, expectations are formed on
     /// windows of `window` periods. The state holds the starting position and no computed period.
-    pub fn new(parameters: &str, initial_conditions: &str, seed: u64, plan: usize, window: usize) -> Result<Economy, String> {
+    pub fn new(
+        parameters: &str,
+        initial_conditions: &str,
+        seed: u64,
+        plan: usize,
+        window: usize,
+    ) -> Result<Economy, String> {
         let p = Parameters::from_json(parameters)?;
         let ic = InitialConditions::from_json(initial_conditions)?;
         let mut rng = Xoshiro::seed_from_u64(seed);
         // the port builds the agents of a model type from those of its own model (the constructor of a model type
         // in BeforeIT.jl): the same agents, and the fields of the clock beside them
-        let Model { w_act, w_inact, firms, banks, cb, gov, rotw, agg, prop, data, ext: _ } = Model::new(&p, &ic, &mut rng)?;
+        let Model {
+            w_act,
+            w_inact,
+            firms,
+            banks,
+            cb,
+            gov,
+            rotw,
+            agg,
+            prop,
+            data,
+            ext: _,
+        } = Model::new(&p, &ic, &mut rng)?;
         let mut ext = DailyClock::new(plan, window, firms.len())?;
         ext.start = [data.real_gdp[0], data.nominal_gdp[0]];
         ext.accounts = vec![summed(&data, 0)];
-        Ok(Economy { model: AbstractModel { w_act, w_inact, firms, banks, cb, gov, rotw, agg, prop, data, ext }, rng })
+        Ok(Economy {
+            model: AbstractModel {
+                w_act,
+                w_inact,
+                firms,
+                banks,
+                cb,
+                gov,
+                rotw,
+                agg,
+                prop,
+                data,
+                ext,
+            },
+            rng,
+        })
     }
 
     /// The same economy with wages paid in money from now on (economy feature 7, [`clock`]): every firm keeps the
     /// wage it pays today as an amount of money, instead of a real wage that follows the consumer prices.
     pub fn with_wages_in_money(mut self) -> Economy {
-        self.model.ext.pay_in_money(&self.model.firms.w_bar_i, self.model.agg.P_bar_HH);
+        self.model
+            .ext
+            .pay_in_money(&self.model.firms.w_bar_i, self.model.agg.P_bar_HH);
         self
     }
 
@@ -97,7 +133,9 @@ impl Economy {
     pub fn with_demand_pull(mut self) -> Result<Economy, String> {
         let theta_calvo = self.model.prop.theta_calvo;
         if theta_calvo != 1.0 {
-            return Err(format!("theta_calvo = {theta_calvo}: with the demand pull every planning firm adjusts (theta_calvo = 1)"));
+            return Err(format!(
+                "theta_calvo = {theta_calvo}: with the demand pull every planning firm adjusts (theta_calvo = 1)"
+            ));
         }
         let f = &mut self.model.firms;
         f.Q_s_i.clone_from(&f.Q_d_i);
@@ -110,7 +148,9 @@ impl Economy {
     /// the households relative to their budgets. 0 is the rule of the port.
     pub fn with_savings_spent(mut self, share: f64) -> Result<Economy, String> {
         if !(0.0..=1.0).contains(&share) {
-            return Err(format!("a share of {share} of the savings spent per period: between 0 and 1"));
+            return Err(format!(
+                "a share of {share} of the savings spent per period: between 0 and 1"
+            ));
         }
         self.model.ext.savings = share;
         Ok(self)
@@ -147,7 +187,10 @@ impl Economy {
             for _ in 0..periods {
                 self.model.run(1, &mut self.rng);
                 let m = &mut self.model;
-                let (Y, pi) = (m.agg.Y.pop().expect("the port appends the real GDP of a period"), m.agg.pi_.pop().expect("the port appends the inflation of a period"));
+                let (Y, pi) = (
+                    m.agg.Y.pop().expect("the port appends the real GDP of a period"),
+                    m.agg.pi_.pop().expect("the port appends the inflation of a period"),
+                );
                 m.agg.t = 1;
                 let past = m.ext.past.as_mut().expect("checked above");
                 past.Y.push(past.periods, Y);
@@ -245,10 +288,25 @@ impl Economy {
         v.extend([w.len() as f64, f.len() as f64, b.Y_h.len() as f64, x.len() as f64]);
         for h in 0..w.len() {
             let firm = w.O_h[h].map(|id| f.index(id));
-            v.extend([firm.map_or(-1.0, |i| i as f64), firm.map_or(0.0, pay), w.Y_h[h], w.D_h[h], w.C_h[h]]);
+            v.extend([
+                firm.map_or(-1.0, |i| i as f64),
+                firm.map_or(0.0, pay),
+                w.Y_h[h],
+                w.D_h[h],
+                w.C_h[h],
+            ]);
         }
         for i in 0..f.len() {
-            v.extend([f.G_i[i] as f64, f.N_i[i] as f64, f.Y_i[i], f.P_i[i], pay(i), f.Y_h[i], f.D_h[i], f.C_h[i]]);
+            v.extend([
+                f.G_i[i] as f64,
+                f.N_i[i] as f64,
+                f.Y_i[i],
+                f.P_i[i],
+                pay(i),
+                f.Y_h[i],
+                f.D_h[i],
+                f.C_h[i],
+            ]);
         }
         for k in 0..b.Y_h.len() {
             v.extend([b.Y_h[k], b.D_h[k], b.C_h[k]]);
@@ -301,24 +359,79 @@ pub(crate) fn take_rows(m: &mut AbstractModel<DailyClock>) {
 /// series, this stops compiling instead of keeping it whole.
 fn drop_rows(d: &mut Data, n: usize) {
     let Data {
-        collection_time, nominal_gdp, real_gdp, nominal_gva, real_gva, nominal_household_consumption, real_household_consumption,
-        nominal_government_consumption, real_government_consumption, nominal_capitalformation, real_capitalformation,
-        nominal_fixed_capitalformation, real_fixed_capitalformation, nominal_fixed_capitalformation_dwellings,
-        real_fixed_capitalformation_dwellings, nominal_exports, real_exports, nominal_imports, real_imports, operating_surplus,
-        compensation_employees, wages, taxes_production, gdp_deflator_growth_ea, real_gdp_ea, euribor, nominal_sector_gva,
-        real_sector_gva, credit_new_per_bank, credit_stock_per_bank, equity_per_bank, reserves_per_bank, roe_per_bank,
+        collection_time,
+        nominal_gdp,
+        real_gdp,
+        nominal_gva,
+        real_gva,
+        nominal_household_consumption,
+        real_household_consumption,
+        nominal_government_consumption,
+        real_government_consumption,
+        nominal_capitalformation,
+        real_capitalformation,
+        nominal_fixed_capitalformation,
+        real_fixed_capitalformation,
+        nominal_fixed_capitalformation_dwellings,
+        real_fixed_capitalformation_dwellings,
+        nominal_exports,
+        real_exports,
+        nominal_imports,
+        real_imports,
+        operating_surplus,
+        compensation_employees,
+        wages,
+        taxes_production,
+        gdp_deflator_growth_ea,
+        real_gdp_ea,
+        euribor,
+        nominal_sector_gva,
+        real_sector_gva,
+        credit_new_per_bank,
+        credit_stock_per_bank,
+        equity_per_bank,
+        reserves_per_bank,
+        roe_per_bank,
     } = d;
     collection_time.drain(..n);
     for v in [
-        nominal_gdp, real_gdp, nominal_gva, real_gva, nominal_household_consumption, real_household_consumption,
-        nominal_government_consumption, real_government_consumption, nominal_capitalformation, real_capitalformation,
-        nominal_fixed_capitalformation, real_fixed_capitalformation, nominal_fixed_capitalformation_dwellings,
-        real_fixed_capitalformation_dwellings, nominal_exports, real_exports, nominal_imports, real_imports, operating_surplus,
-        compensation_employees, wages, taxes_production, gdp_deflator_growth_ea, real_gdp_ea, euribor,
+        nominal_gdp,
+        real_gdp,
+        nominal_gva,
+        real_gva,
+        nominal_household_consumption,
+        real_household_consumption,
+        nominal_government_consumption,
+        real_government_consumption,
+        nominal_capitalformation,
+        real_capitalformation,
+        nominal_fixed_capitalformation,
+        real_fixed_capitalformation,
+        nominal_fixed_capitalformation_dwellings,
+        real_fixed_capitalformation_dwellings,
+        nominal_exports,
+        real_exports,
+        nominal_imports,
+        real_imports,
+        operating_surplus,
+        compensation_employees,
+        wages,
+        taxes_production,
+        gdp_deflator_growth_ea,
+        real_gdp_ea,
+        euribor,
     ] {
         v.drain(..n);
     }
-    for v in [nominal_sector_gva, real_sector_gva, credit_new_per_bank, credit_stock_per_bank, equity_per_bank, reserves_per_bank, roe_per_bank] {
+    for v in [
+        nominal_sector_gva,
+        real_sector_gva,
+        credit_new_per_bank,
+        credit_stock_per_bank,
+        equity_per_bank,
+        reserves_per_bank,
+        roe_per_bank,
+    ] {
         v.drain(..n);
     }
 }
@@ -344,8 +457,11 @@ pub mod abi {
         /// tens of megabytes, and the memory of an instance never shrinks.
         /// The bytes are `None` after [`sce_advance_last`] until [`sce_save_last`] writes them: the world computes
         /// day after day and needs the bytes of its economies only for a snapshot.
-        static LAST: RefCell<Option<(Option<Rc<Vec<u8>>>, Cities)>> = const { RefCell::new(None) };
+        static LAST: RefCell<Option<Last>> = const { RefCell::new(None) };
     }
+
+    /// What [`LAST`] holds: the bytes of a state (or `None` until they are written) and its cities.
+    type Last = (Option<Rc<Vec<u8>>>, Cities);
 
     /// The cities of a state, taken out of [`LAST`] when the bytes are those it holds. The result of the call before
     /// is given up first, so that the bytes it shares with [`LAST`] are free before the next state is written.
@@ -360,12 +476,19 @@ pub mod abi {
     /// The cities that [`LAST`] holds, for the calls that are told to take them without being given their bytes.
     fn take_last() -> Result<Cities, String> {
         OUT.with(|o| *o.borrow_mut() = Rc::new(Vec::new()));
-        LAST.with(|l| l.borrow_mut().take()).map(|(_, all)| all).ok_or_else(|| "no state is kept from the call before".to_string())
+        LAST.with(|l| l.borrow_mut().take())
+            .map(|(_, all)| all)
+            .ok_or_else(|| "no state is kept from the call before".to_string())
     }
 
     /// What `f` says about the cities that [`LAST`] holds.
     fn look_last<T>(f: impl FnOnce(&Cities) -> T) -> Result<T, String> {
-        LAST.with(|l| l.borrow().as_ref().map(|(_, all)| f(all)).ok_or_else(|| "no state is kept from the call before".to_string()))
+        LAST.with(|l| {
+            l.borrow()
+                .as_ref()
+                .map(|(_, all)| f(all))
+                .ok_or_else(|| "no state is kept from the call before".to_string())
+        })
     }
 
     /// Hands out the state of `all` and keeps both in [`LAST`].
@@ -395,7 +518,10 @@ pub mod abi {
         HOOK.call_once(|| {
             std::panic::set_hook(Box::new(|info| {
                 let payload = info.payload();
-                let said = payload.downcast_ref::<&str>().copied().or_else(|| payload.downcast_ref::<String>().map(String::as_str));
+                let said = payload
+                    .downcast_ref::<&str>()
+                    .copied()
+                    .or_else(|| payload.downcast_ref::<String>().map(String::as_str));
                 let mut text = said.unwrap_or("a rule failed").to_string();
                 if let Some(l) = info.location() {
                     let file = l.file();
@@ -426,12 +552,26 @@ pub mod abi {
 
     /// SAFETY: `ptr` and `len` describe memory from [`sce_alloc`] that the caller has filled.
     unsafe fn bytes<'a>(ptr: *const u8, len: usize) -> &'a [u8] {
-        if len == 0 { &[] } else { unsafe { std::slice::from_raw_parts(ptr, len) } }
+        if len == 0 {
+            &[]
+        } else {
+            unsafe { std::slice::from_raw_parts(ptr, len) }
+        }
     }
 
     /// The cities of a list as [`sce_create`] takes it: for every city the 64-bit seed, then the parameters and the
     /// initial conditions of the port (JSON), each with its length in 32 bits before it; all little endian.
-    fn cities(mut list: &[u8], plan: usize, window: usize, wage: u32, prices: u32, savings: f64, crown: u32, owner: u32) -> Result<Cities, String> {
+    #[allow(clippy::too_many_arguments)] // the arguments of sce_create, one by one
+    fn cities(
+        mut list: &[u8],
+        plan: usize,
+        window: usize,
+        wage: u32,
+        prices: u32,
+        savings: f64,
+        crown: u32,
+        owner: u32,
+    ) -> Result<Cities, String> {
         fn take<'a>(list: &mut &'a [u8], n: usize) -> Result<&'a [u8], String> {
             if list.len() < n {
                 return Err(format!("the list of cities ends {} bytes early", n - list.len()));
@@ -445,16 +585,24 @@ pub mod abi {
             std::str::from_utf8(take(list, n)?).map_err(|e| format!("{what} of city {c} are not text: {e}"))
         }
         if wage > 1 {
-            return Err(format!("wages of kind {wage}: 0 is the port's wage that follows the prices, 1 the wage in money"));
+            return Err(format!(
+                "wages of kind {wage}: 0 is the port's wage that follows the prices, 1 the wage in money"
+            ));
         }
         if prices > 1 {
-            return Err(format!("prices of kind {prices}: 0 is the paper's rule of costs, 1 the demand pull of CANVAS"));
+            return Err(format!(
+                "prices of kind {prices}: 0 is the paper's rule of costs, 1 the demand pull of CANVAS"
+            ));
         }
         if crown > 1 {
-            return Err(format!("a crown of kind {crown}: 0 buys by the paper's series, 1 with what it took in"));
+            return Err(format!(
+                "a crown of kind {crown}: 0 buys by the paper's series, 1 with what it took in"
+            ));
         }
         if owner > 1 {
-            return Err(format!("an owner of kind {owner}: 0 is paid the paper's profit and bears no loss, 1 is one household with the firm"));
+            return Err(format!(
+                "an owner of kind {owner}: 0 is paid the paper's profit and bears no loss, 1 is one household with the firm"
+            ));
         }
         let mut all = Vec::new();
         while !list.is_empty() {
@@ -464,7 +612,11 @@ pub mod abi {
             let ic = text(&mut list, "the initial conditions", c)?;
             let e = Economy::new(p, ic, seed, plan, window).map_err(|e| format!("city {c}: {e}"))?;
             let e = if wage == 1 { e.with_wages_in_money() } else { e };
-            let e = if prices == 1 { e.with_demand_pull().map_err(|e| format!("city {c}: {e}"))? } else { e };
+            let e = if prices == 1 {
+                e.with_demand_pull().map_err(|e| format!("city {c}: {e}"))?
+            } else {
+                e
+            };
             let e = e.with_savings_spent(savings).map_err(|e| format!("city {c}: {e}"))?;
             let e = if crown == 1 { e.with_crown_spending_revenue() } else { e };
             let e = if owner == 1 { e.with_owner_household() } else { e };
@@ -507,9 +659,31 @@ pub mod abi {
     ///
     /// The pointer and the length describe memory from [`sce_alloc`] that the caller has filled.
     #[unsafe(no_mangle)]
-    pub unsafe extern "C" fn sce_create(list: *const u8, len: usize, plan: u32, window: u32, wage: u32, prices: u32, savings: f64, crown: u32, owner: u32) -> u32 {
+    pub unsafe extern "C" fn sce_create(
+        list: *const u8,
+        len: usize,
+        plan: u32,
+        window: u32,
+        wage: u32,
+        prices: u32,
+        savings: f64,
+        crown: u32,
+        owner: u32,
+    ) -> u32 {
         hook();
-        answer(cities(unsafe { bytes(list, len) }, plan as usize, window as usize, wage, prices, savings, crown, owner).map(keep))
+        answer(
+            cities(
+                unsafe { bytes(list, len) },
+                plan as usize,
+                window as usize,
+                wage,
+                prices,
+                savings,
+                crown,
+                owner,
+            )
+            .map(keep),
+        )
     }
 
     /// The cities of a state that has not computed a period, with distance between them (economy feature 17,
@@ -529,7 +703,10 @@ pub mod abi {
             let (n, G) = (all.cities.len(), all.merchants.bought.len());
             let r = unsafe { bytes(routes, routes_len) };
             if r.len() != 8 + 8 * G + 12 * n * n {
-                return Err(format!("routes of {} bytes do not fit {n} cities with {G} products", r.len()));
+                return Err(format!(
+                    "routes of {} bytes do not fit {n} cities with {G} products",
+                    r.len()
+                ));
             }
             let f = |at: usize| f64::from_le_bytes(r[at..at + 8].try_into().unwrap());
             let weight = (0..G).map(|g| f(8 + 8 * g)).collect();
@@ -556,7 +733,10 @@ pub mod abi {
         answer((|| {
             let mut all = take(unsafe { bytes(state, len) })?;
             // cities from before the past of a fixed size take it on the day they are computed again
-            all.cities = std::mem::take(&mut all.cities).into_iter().map(Economy::with_bounded_past).collect();
+            all.cities = std::mem::take(&mut all.cities)
+                .into_iter()
+                .map(Economy::with_bounded_past)
+                .collect();
             all.step(periods as usize);
             Ok(keep(all))
         })())
@@ -569,7 +749,10 @@ pub mod abi {
         hook();
         answer((|| {
             let mut all = take_last()?;
-            all.cities = std::mem::take(&mut all.cities).into_iter().map(Economy::with_bounded_past).collect();
+            all.cities = std::mem::take(&mut all.cities)
+                .into_iter()
+                .map(Economy::with_bounded_past)
+                .collect();
             all.step(periods as usize);
             Ok(keep(all))
         })())
@@ -583,7 +766,10 @@ pub mod abi {
         hook();
         answer((|| {
             let mut all = take_last()?;
-            all.cities = std::mem::take(&mut all.cities).into_iter().map(Economy::with_bounded_past).collect();
+            all.cities = std::mem::take(&mut all.cities)
+                .into_iter()
+                .map(Economy::with_bounded_past)
+                .collect();
             all.step(periods as usize);
             LAST.with(|l| *l.borrow_mut() = Some((None, all)));
             Ok(Rc::new(Vec::new()))
@@ -627,7 +813,9 @@ pub mod abi {
     #[unsafe(no_mangle)]
     pub unsafe extern "C" fn sce_figures(state: *const u8, len: usize) -> u32 {
         hook();
-        answer(look(unsafe { bytes(state, len) }, |all| floats(all.cities.iter().flat_map(Economy::figures))))
+        answer(look(unsafe { bytes(state, len) }, |all| {
+            floats(all.cities.iter().flat_map(Economy::figures))
+        }))
     }
 
     /// Result: the persons and firms of every city of a state one by one, as 64-bit floats: the lists of
@@ -639,7 +827,9 @@ pub mod abi {
     #[unsafe(no_mangle)]
     pub unsafe extern "C" fn sce_agents(state: *const u8, len: usize) -> u32 {
         hook();
-        answer(look(unsafe { bytes(state, len) }, |all| floats(all.cities.iter().flat_map(Economy::agents))))
+        answer(look(unsafe { bytes(state, len) }, |all| {
+            floats(all.cities.iter().flat_map(Economy::agents))
+        }))
     }
 
     /// Result: what must be 0 in a state, as 64-bit floats: for every city the six numbers of [`Economy::checks`],
@@ -652,7 +842,12 @@ pub mod abi {
     pub unsafe extern "C" fn sce_checks(state: *const u8, len: usize) -> u32 {
         hook();
         answer(look(unsafe { bytes(state, len) }, |all| {
-            floats(all.cities.iter().flat_map(Economy::checks).chain(all.checks().into_iter().flatten()))
+            floats(
+                all.cities
+                    .iter()
+                    .flat_map(Economy::checks)
+                    .chain(all.checks().into_iter().flatten()),
+            )
         }))
     }
 

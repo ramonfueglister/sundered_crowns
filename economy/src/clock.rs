@@ -120,9 +120,29 @@ impl DailyClock {
     /// The clock of a model with `firms` firms that has not computed a period yet.
     pub fn new(plan: usize, window: usize, firms: usize) -> Result<DailyClock, String> {
         if plan == 0 || window == 0 {
-            return Err(format!("a plan every {plan} periods and windows of {window} periods: both need at least one period"));
+            return Err(format!(
+                "a plan every {plan} periods and windows of {window} periods: both need at least one period"
+            ));
         }
-        Ok(DailyClock { plan, window, demand: vec![0.0; firms], periods: vec![0; firms], start: [f64::NAN; 2], accounts: Vec::new(), wage: Vec::new(), real_wage: Vec::new(), demand_pull: false, savings: 0.0, norm: -1.0, crown_revenue: false, crown_outlays: 0.0, owner: false, borne: Vec::new(), past: None, trade: None })
+        Ok(DailyClock {
+            plan,
+            window,
+            demand: vec![0.0; firms],
+            periods: vec![0; firms],
+            start: [f64::NAN; 2],
+            accounts: Vec::new(),
+            wage: Vec::new(),
+            real_wage: Vec::new(),
+            demand_pull: false,
+            savings: 0.0,
+            norm: -1.0,
+            crown_revenue: false,
+            crown_outlays: 0.0,
+            owner: false,
+            borne: Vec::new(),
+            past: None,
+            trade: None,
+        })
     }
 
     /// Whether firm `i` plans in period `t` (counted from 1). Every firm plans in the first period; after that
@@ -152,12 +172,20 @@ impl DailyClock {
 
 /// `(1 + rate)` compounded over `periods` periods.
 fn compound(rate: f64, periods: usize) -> f64 {
-    if periods == 1 { 1.0 + rate } else { libm::pow(1.0 + rate, periods as f64) }
+    if periods == 1 {
+        1.0 + rate
+    } else {
+        libm::pow(1.0 + rate, periods as f64)
+    }
 }
 
 /// The rate per period that compounds to `rate` over `periods` periods.
 fn per_period(rate: f64, periods: usize) -> f64 {
-    if periods == 1 { rate } else { libm::pow(1.0 + rate, 1.0 / periods as f64) - 1.0 }
+    if periods == 1 {
+        rate
+    } else {
+        libm::pow(1.0 + rate, 1.0 / periods as f64) - 1.0
+    }
 }
 
 /// The sums of a series over windows of `window` periods, the last one ending with the series. The first `history`
@@ -169,7 +197,13 @@ pub fn windows(series: &[f64], history: usize, window: usize) -> Vec<f64> {
     }
     let before = history * window;
     let periods = before + series.len() - history;
-    let value = |j: usize| if j < before { series[j / window] } else { series[history + j - before] };
+    let value = |j: usize| {
+        if j < before {
+            series[j / window]
+        } else {
+            series[history + j - before]
+        }
+    };
     let count = periods / window;
     (0..count)
         .map(|k| {
@@ -187,7 +221,10 @@ fn norm(m: &mut AbstractModel<DailyClock>) -> f64 {
     }
     if m.ext.norm < 0.0 {
         let sum = |v: &[f64]| v.iter().sum::<f64>();
-        let budgets = sum(&base::households_budget_act(m).0) + sum(&base::households_budget_inact(m).0) + sum(&base::households_budget_firms(m).0) + sum(&base::households_budget_banks(m).0);
+        let budgets = sum(&base::households_budget_act(m).0)
+            + sum(&base::households_budget_inact(m).0)
+            + sum(&base::households_budget_firms(m).0)
+            + sum(&base::households_budget_banks(m).0);
         let deposits = sum(&m.w_act.D_h) + sum(&m.w_inact.D_h) + sum(&m.firms.D_h) + sum(&m.banks.D_h);
         m.ext.norm = if budgets > 0.0 { deposits / budgets } else { 0.0 };
     }
@@ -210,25 +247,42 @@ fn spend_savings(c: &mut [f64], d: &[f64], savings: f64, norm: f64, tau_VAT: f64
 impl Extension for DailyClock {
     /// The port's `growth_inflation_expectations` (A.6, A.7, A.10) on windows: expected GDP, growth and inflation of
     /// the next period.
-    fn growth_inflation_expectations<R: Randomness + ?Sized>(m: &mut AbstractModel<Self>, rng: &mut R) -> (f64, f64, f64) {
+    fn growth_inflation_expectations<R: Randomness + ?Sized>(
+        m: &mut AbstractModel<Self>,
+        rng: &mut R,
+    ) -> (f64, f64, f64) {
         let window = m.ext.window;
         // the forecasts of the logarithm of real GDP and of inflation, and the two windows that end today
         let (next_Y, next_pi, Y, pi) = if let Some(past) = &m.ext.past {
-            (past.Y.next_value(past.periods, rng), past.pi.next_value(past.periods, rng), past.Y.sum, past.pi.sum)
+            (
+                past.Y.next_value(past.periods, rng),
+                past.pi.next_value(past.periods, rng),
+                past.Y.sum,
+                past.pi.sum,
+            )
         } else {
             let n = m.prop.T_prime + m.agg.t - 1;
             let Y = windows(&m.agg.Y[..n], m.prop.T_prime, window);
             let pi = windows(&m.agg.pi_[..n], m.prop.T_prime, window);
             let last = Y.len() - 1;
             let log_Y: Vec<f64> = Y.iter().map(|&y| libm::log(y)).collect();
-            (Self::estimate_next_value(&log_Y, rng), Self::estimate_next_value(&pi, rng), Y[last], pi[last])
+            (
+                Self::estimate_next_value(&log_Y, rng),
+                Self::estimate_next_value(&pi, rng),
+                Y[last],
+                pi[last],
+            )
         };
         let Y_e = libm::exp(next_Y);
         let gamma_e = Y_e / Y - 1.0;
         let mut pi_e = libm::exp(next_pi) - 1.0;
         let omega_pi = m.prop.omega_pi;
         pi_e = (1.0 - omega_pi) * pi_e + (omega_pi * pi);
-        (Y_e / window as f64, per_period(gamma_e, window), per_period(pi_e, window))
+        (
+            Y_e / window as f64,
+            per_period(gamma_e, window),
+            per_period(pi_e, window),
+        )
     }
 
     /// The port's `cost_push_inflation` (A.9). In an economy that pays wages in money the term of labour is the
@@ -266,11 +320,22 @@ impl Extension for DailyClock {
     /// # Panics
     ///
     /// If the model has gained or lost firms: the clock does not follow that.
-    fn firms_expectations_and_decisions<R: Randomness + ?Sized>(m: &mut AbstractModel<Self>, rng: &mut R) -> FirmsDecisions {
+    fn firms_expectations_and_decisions<R: Randomness + ?Sized>(
+        m: &mut AbstractModel<Self>,
+        rng: &mut R,
+    ) -> FirmsDecisions {
         let I = m.firms.len();
-        assert!(m.ext.demand.len() == I && m.ext.periods.len() == I, "the daily clock holds {} firms, the model has {I}", m.ext.demand.len());
+        assert!(
+            m.ext.demand.len() == I && m.ext.periods.len() == I,
+            "the daily clock holds {} firms, the model has {I}",
+            m.ext.demand.len()
+        );
         if m.ext.pays_in_money() {
-            assert!(m.ext.wage.len() == I && m.ext.real_wage.len() == I, "the daily clock holds the wages of {} firms, the model has {I}", m.ext.wage.len());
+            assert!(
+                m.ext.wage.len() == I && m.ext.real_wage.len() == I,
+                "the daily clock holds the wages of {} firms, the model has {I}",
+                m.ext.wage.len()
+            );
             let P_bar_HH = m.agg.P_bar_HH;
             for i in 0..I {
                 m.firms.w_bar_i[i] = m.ext.wage[i] / P_bar_HH;
@@ -288,7 +353,11 @@ impl Extension for DailyClock {
                 if m.ext.demand_pull {
                     let (Q_s, P, P_g) = (m.firms.Q_s_i[i], m.firms.P_i[i], m.agg.P_bar_g[m.firms.G_i[i]]);
                     let gap = Q_d / Q_s - 1.0;
-                    let (gamma_d, pi_d) = if (Q_s <= Q_d) == (P >= P_g) { (gap, 0.0) } else { (0.0, gap) };
+                    let (gamma_d, pi_d) = if (Q_s <= Q_d) == (P >= P_g) {
+                        (gap, 0.0)
+                    } else {
+                        (0.0, gap)
+                    };
                     d.Q_s_i[i] = Q_s * growth * (1.0 + gamma_d);
                     d.new_P_i[i] = P * (1.0 + cost_push[i]) * inflation * (1.0 + pi_d);
                 } else {
@@ -329,7 +398,7 @@ impl Extension for DailyClock {
     /// period stays where it was; before the first revenue (the first period) the series stands.
     fn gov_expenditure<R: Randomness + ?Sized>(m: &mut AbstractModel<Self>, rng: &mut R) -> (f64, Vec<f64>) {
         let (c, d) = base::gov_expenditure(m, rng);
-        if !m.ext.crown_revenue || !(m.gov.Y_G > 0.0) {
+        if !m.ext.crown_revenue || m.gov.Y_G.is_nan() || m.gov.Y_G <= 0.0 {
             return (c, d);
         }
         let budget = (m.gov.Y_G - m.ext.crown_outlays).max(0.0);
@@ -349,7 +418,10 @@ impl Extension for DailyClock {
     }
 
     /// The port's `rotw_import_export`; in a city with merchants what they want and bring ([`trade::import_export`]).
-    fn rotw_import_export<R: Randomness + ?Sized>(m: &mut AbstractModel<Self>, rng: &mut R) -> (f64, f64, Vec<f64>, Vec<f64>, Vec<f64>) {
+    fn rotw_import_export<R: Randomness + ?Sized>(
+        m: &mut AbstractModel<Self>,
+        rng: &mut R,
+    ) -> (f64, f64, Vec<f64>, Vec<f64>, Vec<f64>) {
         match m.ext.trade.take() {
             Some(t) => {
                 let r = trade::import_export(m, &t);

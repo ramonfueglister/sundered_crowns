@@ -22,6 +22,7 @@ nothing built before Ramon agrees. Proposal with sources (German): https://claud
 | 4 | The unmarried move to other places, and an heir comes home | built 18 Nov 2026 (Ramon, 18 Nov: the young unmarried move by the measured rates, heirs come home; work, whole families and the flight from a famine follow later, one by one). State 25 |
 | 5 | IQ and the Big Five shift the rates of death, of a far move and of who marries | built 18 Nov 2026 (Ramon, 18 Nov: «So bauen» on the proposal, with the factor 0.89 for the IQ). State 28 |
 | 6 | Who wants work looks for a part in the economy, in the own town and within 115 km | built 18 Nov 2026 (Ramon, 18 Nov: «weiter» on the proposal, read as «So bauen»). No new state |
+| 7 | The living and the dead: the systems go over the living, the dead go to an archive (step 1: the list of the living; step 2: the archive, with a uid for every person) | built 19 Nov 2026 (Ramon, 19 Nov: «weiter» on the proposal of the archive and the day plan, read as «So bauen» for way A: the archive first, then the day plan). Step 1 no new state, step 2 state 30 |
 
 ## Feature 1: persons of the 30 largest cities
 
@@ -31,7 +32,9 @@ cities in `src/sim/content/cities_1356.json` (written by `tools/people/build_cit
 Built once when a world starting in 1356 is founded (or by the upgrade 4 → 5 of an older one). Nothing changes while
 the world runs yet: no births, deaths, marriages or moves. Age = (day − born) / 365.25 and is never stored. No row of
 either table is ever freed, so ids are never reused (parents, families and the portraits' seed stay valid).
-All randomness comes from a stream of its own, `hash01(seed, person id, draw)`, never from `s.rng`.
+All randomness comes from a stream of its own, `hash01(seed, person id, draw)`, never from `s.rng`. (Since feature 7,
+step 2, the dead go to an archive on the first of January and the rows of the persons close up: the parents, the
+draws and the portraits' seed are by the `uid`, which never changes.)
 
 | Table | Column | Type | Meaning |
 |---|---|---|---|
@@ -704,3 +707,154 @@ The moves by the measured rates (feature 4) stay beside it.
   (`src/sim/systems/household.ts`), as before; nobody does the work.
 - 896 parts wait and 1,785 persons look at the end: they are out of each other's reach, or the persons are married
   (whole families do not move).
+
+## Feature 7: the living and the dead
+
+Ramon, 19 November 2026: «weiter» on the proposal (German): https://claude.ai/artifact/8UqSxP49CfvpPfX1UCDULc
+(«Personen: Archiv der Toten und Tagesplan»), after the research behind it (German, in the project files:
+recherche/tagesplaner/). Read as «So bauen» for way A: first the archive of the dead (steps 1 and 2), then the day
+plan of every person (steps 3 to 6); while the day plan is new, the wages go on on days nobody works.
+
+The world is to run for centuries. The table of the persons keeps the dead, because an id is never reused, so a loop
+over its rows grows with the history of the world, not with its people: 102,042 rows at the founding of 1291,
+374,667 after 100 years, 919,687 after 300, while the living stay near 98,000 (deaths, moves, weddings and births
+only, seed 1291). The economy went over all rows twice a day (`writeAgents`, `writeHouseholds`), the weddings once a
+month.
+
+### Step 1: the list of the living
+
+`presentPersons` (`src/sim/people/living.ts`) gives the living persons and the dead who still hold a part in the
+economy (an estate, feature 2), in the order of their ids. The list is derived from the columns: built when a table
+of persons is first seen, the persons who came into the world since it was last read are added (rows are only ever
+added), and the dead without a part drop out when it is next read. A dead person never comes back onto it. No new
+column and no new state: a snapshot does not change.
+
+The systems that run every day, month or year go over the list: `writeAgents` (`src/sim/systems/economy.ts`),
+`writeHouseholds` (`src/sim/systems/household.ts`), the children away from a vacant house in `weddingsOn`
+(`src/sim/systems/families.ts`), `residents` and `farmersOf` (`src/sim/systems/hamlets.ts`), `placeCultures`
+(`src/sim/systems/cultures.ts`), `personsIn` (`src/sim/systems/people.ts`), and the views of the world server
+(`src/net/people.ts`, `src/net/lots.ts`, `src/net/views.ts`). What runs once, when a world is founded or a list is
+built, still goes over the rows.
+
+A dead person without a part has no money (the part's money goes to the successor with the part), so the purses of
+the families are the same without them.
+
+### Measured
+
+| | Rows of the persons | On the list | A pass over the rows | A pass over the list |
+|---|---|---|---|---|
+| Founding of 1291 | 102,042 | 102,042 | 2.4 ms | 2.3 ms |
+| After 100 years | 374,667 | 97,840 | 7.4 ms | 1.5 ms |
+| After 200 years | 647,011 | 97,281 | 12.0 ms | 1.5 ms |
+| After 300 years | 919,687 | 97,881 | 17.4 ms | 1.2 ms |
+
+A pass is the bare loop (deaths, moves, weddings and births only, seed 1291, one run in the cloud); the day ran three
+of them in the economy. The world of 1291 with all its systems has the same hash after two years with the list as
+without it (`npm run years:check -- 2`: f9165182), at about 175 ms a day in the cloud.
+
+### Limits of step 1
+
+- The rows themselves stay: the memory, the snapshot and the loops that run once still grow with the dead. Step 2
+  (the archive) moves the dead out of the table.
+- The families are never freed either (21,754 rows at the founding, 22,972 after two years): `writeHouseholds` still
+  goes over all of them every day. Step 2 leaves them where they are (below).
+
+### Step 2: the archive of the dead
+
+`src/sim/people/archive.ts`; state version 30.
+
+**Two numbers.** A person has a row and a `uid`. The row is the id every system reads the columns by; it holds from
+one first of January to the next. The `uid` never changes and is never given twice in a world: the founders count
+0, 1, 2 … in the order they came, every newcomer (a birth, a ruler entering the world) gets the next one
+(`spawnPerson`, `WorldState.nextUid`). The rows lie in the order of the uids, so the row of a uid is found by halving
+(`rowOf`). Everything that keeps a person beyond the day names the uid:
+
+- the parents (`mother`, `father` are uids: a parent may be in the archive), compared as uids where kin is asked for
+  (the weddings, the heir who comes home, the successor of an estate);
+- the person's own draws of chance (`hash01(seed, uid, draw)`: the birth, the traits, the genes, the day of death,
+  the moves, the wish to work, the lot of a wedding), so a person draws the same with the archive and without it;
+- the browser (`GET /people/<place>` lists uids, `GET /person/<uid>`, the portrait's seed);
+- the copy of the rulers in Supabase (`world_persons.person`, `world_reigns.person`);
+- the archive.
+
+The count of the children a woman has borne is a column of its own (`children`): the draw of her next birth is by
+it, and it no longer comes from counting the rows that name her as mother.
+
+**On the first of January** the archive runs first, before the deaths of the day. The dead whom nothing needs leave
+the table, the rows of the others close up in their order, and everything that names a row names the new one: the
+heads of the families (`family.man`, `family.woman`), the owners of the firms, the holders of the crowns and the
+persons of history (`named`). The table is a new one, so what the systems derive from it (the lists of the events of
+deaths, births and moves, the persons of each place, the list of the living, the index of the rulers, the persons by
+place of the views) is kept by table and built anew, as for a loaded state.
+
+The dead who stay in the table:
+
+- a dead person who still holds a part in the economy (an estate, feature 2);
+- a person of history: the crowns and the copy of the rulers name them, and they are few;
+- the dead parents of a living person whose mother or father belongs to a household with a seat. When the
+  household is vacant, the weddings look for its heir among the children by the family of their parents and take
+  the custom of the heir's father. A family that has no seat never gets one again (a household passes to a new
+  family), so a parent who went to the archive is never looked for.
+
+Nothing else reads a dead person: a parent who is not in the table has died (the orphan's rate of moving, feature 4).
+
+**The archive** keeps of a dead person who the person was, about 140 bytes: uid, birth, death, sex, the parents, the
+family and its place, where the person came from, culture, faith, IQ, the Big Five and the genes. The archived
+persons leave the state: it keeps for every year only how many went and their smallest and greatest uid
+(`WorldState.archive`). The persons are handed to whoever runs the world (`takeArchived`). The world server writes
+each year once to its disk (`archive/dead-<day>.bin`, gzip, in the encoding of the snapshot) and to Supabase Storage
+(`world-snapshots/<world>/persistent/archive/dead-<day>.bin`, never removed). A world restored on an empty disk
+fetches the years its snapshot names; a replay archives the same persons on the same day and writes the same bytes
+again. `GET /person/<uid>` reads a dead person of the archive from the year that holds them (the server keeps the
+eight years read last), with what the archive keeps and no economy or household.
+
+A year a file rather than a decade: nothing of the archive is kept in the state, and a year is a few hundred KB.
+
+**The upgrade 29 → 30** gives every person the row as uid (up to 29 the row was the person for ever, so the parents
+are uids as they are) and every woman the count of the children who name her as mother. Nobody goes to the archive
+until the next first of January. A replay from the genesis snapshot of a world that ran under 29 no longer gives
+the hash of the live world (it archives on first days of January the live world did not), as after the upgrades
+28 and 29; a replay from any snapshot of 29 or later does.
+
+### Measured: the same world, and the table stays
+
+`npm run archive:check [-- years] [-- --bare]` runs a world of 1291 twice, with the archive and without it, and
+compares them every year over a hash in which every person is named by the uid (`tools/sim/living_hash.ts`): the
+living and the estates with all their columns, the families, the firms, the crowns, the persons of history, the
+economies and the people of every place.
+
+| Run (seed 1291, cloud) | Years | Hash with and without the archive | Rows of the persons (with / without) | Snapshot, gzip (with / without) |
+|---|---|---|---|---|
+| All systems | 4 | the same every year (year 4: 7e2fc945) | 105,223 / 112,325 | 54.5 / 55.4 MB |
+| People only (deaths, moves, weddings, births) | 100 | the same every year (year 100: 579ae68b) | 106,746 / 374,832 | 39.2 / 70.9 MB |
+
+The world without the archive is the world of main: over three years of the people its hash is the same on main
+(88dadb32, 82f3835d, 666528ac), and so it is after a year with all systems (f5474dfc).
+
+The table of the persons holds the living, the dead of the running year and those that stay:
+
+| People only | Living | Dead in the table at the end of the year | Of them estates | Archived so far | Rows without the archive |
+|---|---|---|---|---|---|
+| Year 1 | 101,688 | 661 | 150 | 2,264 | 104,613 |
+| Year 10 | 100,336 | 6,191 | 153 | 22,156 | 128,683 |
+| Year 30 | 98,209 | 9,177 | 402 | 75,759 | 183,145 |
+| Year 50 | 96,495 | 10,074 | 871 | 131,035 | 237,604 |
+| Year 70 | 96,356 | 10,147 | 1,091 | 186,107 | 292,610 |
+| Year 100 | 96,941 | 9,805 | 987 | 268,086 | 374,832 |
+
+The dead in the table level off near 10,000: about 2,800 who died in the running year, the estates, and the dead
+parents of the households. A day costs the same with the archive as without it (all systems, year 4: 218 / 217 ms in
+the cloud); the first of January costs 55 to 90 ms more (the years 1 to 3, the cloud under load). A year of the archive is about
+2,400 persons, 270 KB gzip. The snapshot at the founding is 37.7 MB with the two new columns (37.4 MB before).
+
+### Limits of step 2
+
+- The families are not archived: their table keeps every family that ever was (21,754 at the founding, about 600 more
+  a year), and `writeHouseholds` goes over all of them every day. A family is small (13 columns) and the weddings draw
+  by its id, so it would need an id of its own like the uid; left for when it costs.
+- The dead parents of the households stay in the table (about 6,000 after some decades): an exact rule, not the
+  smallest one.
+- `giveGenes` (the upgrade 28 → 29) gives a child the genes of its parents only where both are in the table; it is
+  not called on a world that has an archive.
+- The archive is read by the world server only; the browser asks for one dead person at a time.
+
