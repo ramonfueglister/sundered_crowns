@@ -4,7 +4,9 @@
 import { createServer, type IncomingMessage } from 'node:http';
 import { existsSync } from 'node:fs';
 import { WebSocketServer, type WebSocket, type RawData } from 'ws';
-import { WorldCore, configFromEnv, type Session } from './world';
+import { configFromEnv } from './config';
+import type { Session } from './session';
+import { WorldCore } from './world';
 import { NullStore, SupabaseStore } from './store';
 import { authConfigFromEnv, authenticate } from './auth';
 import { PROTOCOL_VERSION, type ClientMsg, type ServerMsg } from '../src/net/protocol';

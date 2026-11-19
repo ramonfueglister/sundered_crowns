@@ -22,7 +22,8 @@ import { STATE_VERSION, type WorldState } from '../src/sim/state';
 import { createWorldState } from '../src/sim/setup';
 import { placeDetail } from '../src/net/views';
 import { World } from '../src/sim/world';
-import { WorldCore, configFromEnv } from '../server/world';
+import { configFromEnv } from '../server/config';
+import { WorldCore } from '../server/world';
 
 const sum = (v: number[]) => v.reduce((a, b) => a + b, 0);
 const days = (s: WorldState, w: World, n: number) => { for (let i = 0; i < n; i++) advanceDay(s, w); };

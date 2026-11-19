@@ -27,7 +27,9 @@ npm run dev        # the client at http://localhost:5173 (a browser with WebGPU)
 - `economy/`: the economy engine, a Rust shell around the port of BeforeIT.jl (`economy/vendor/port-beforeit`, kept in
   the repository since its own repository is gone), built to WebAssembly
   (`npm run economy:build`; needs the Rust toolchain). `data/economy/` holds its calibration table.
-- `server/`: the world server (`world.ts` core, `main.ts` WebSocket transport, `auth.ts`, `store.ts` for Supabase).
+- `server/`: the world server (`world.ts` core, `log.ts` the log entries and their replay, `files.ts` snapshots and log
+  on disk, `config.ts` settings, `session.ts` connections, `main.ts` WebSocket transport, `auth.ts`, `store.ts` for
+  Supabase).
 - `supabase/migrations/`: accounts, worlds and seats with Row Level Security.
 - `tools/geo/` builds the map, `tools/history/` the start setups.
 
