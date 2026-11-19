@@ -57,7 +57,7 @@ export interface Table {
 
 /**
  * The list of the tables built ahead for a region and a year (public/map/tables/<region>_<year>/index.json; the
- * table of a piece lies beside it as <step>/<px>_<pz>.bin.gz): the pieces of the steps `steps` that have a table
+ * table of a piece lies beside it as <step>/<px>_<pz>.tab, zipped as `coding` says, or in a pack: see `packs`): the pieces of the steps `steps` that have a table
  * and those that are open sea, each step's as pairs px, pz one after the other.
  */
 export interface TablesIndex {
@@ -74,12 +74,14 @@ export interface TablesIndex {
    * A table is fetched from its pack by that range.
    */
   packs?: Record<string, { by: number; at: number[] }>;
+  /** how each table is zipped: 'br' Brotli (brotli.ts; a table of its own is then <step>/<px>_<pz>.tab), else gzip (<step>/<px>_<pz>.bin.gz) */
+  coding?: 'br';
 }
 
 /** Where the table of a piece lies, the `k`th of its step in the index's `land`: its file, and the bytes of it that are the table where it lies in a pack. */
 export function whereTable(index: TablesIndex, step: number, px: number, pz: number, k: number): { file: string; range?: [number, number] } {
   const packed = index.packs?.[step];
-  if (!packed) return { file: `${step}/${px}_${pz}.bin.gz` };
+  if (!packed) return { file: `${step}/${px}_${pz}.${index.coding === 'br' ? 'tab' : 'bin.gz'}` };
   return { file: `${step}/${Math.floor(px / packed.by)}_${Math.floor(pz / packed.by)}.bin`, range: [packed.at[k * 2], packed.at[k * 2 + 1]] };
 }
 /** A table with what stands on its piece (`Table.things`), where anything does. */

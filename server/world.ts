@@ -1,174 +1,72 @@
 // World server core: one authoritative, persistent world that runs without end. No sockets here (server/main.ts is
-// the transport), so tests can drive it in-process.
-//
-// Determinism: every change to the state goes through a log entry, appended to the command log in the order it was
-// applied and interleaved with day markers. A snapshot plus the log after it reproduces the state exactly
-// (verifyReplay). Real-time facts (a player left long ago) become log entries before they touch the state.
-import { mkdirSync, existsSync, readFileSync, writeFileSync, renameSync, readdirSync, openSync, writeSync, closeSync, unlinkSync } from 'node:fs';
+// the transport), so tests can drive it in-process. Its parts: the log entries and their replay (log.ts), the files
+// on disk (files.ts), the settings (config.ts) and the connections (session.ts).
+import { mkdirSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { gunzipSync, zstdCompressSync, zstdDecompressSync, constants as zlibConstants } from 'node:zlib';
+import { gzipSync, gunzipSync } from 'node:zlib';
 import type { WorldState } from '../src/sim/state';
 import type { World } from '../src/sim/world';
-import { applyCommand, type Command, type CmdResult } from '../src/sim/commands';
+import type { CmdResult, Command } from '../src/sim/commands';
 import { advanceDay } from '../src/sim/engine';
-import { encodeState, decodeState, hashState, hashBytes } from '../src/sim/snapshot';
+import { decodeState, hashState } from '../src/sim/snapshot';
 import { createWorldState } from '../src/sim/setup';
 import { upgradeState } from '../src/sim/upgrade';
 import { loadWorldFor, loadSetup } from '../tools/sim/load';
 import { realmInfos, placeDetail } from '../src/net/views';
-import { encodeOwners, SPEEDS, type ClientMsg, type ServerMsg, type WorldInfo, type Me } from '../src/net/protocol';
+import { encodeOwners, SPEEDS, type ClientMsg, type WorldInfo, type Me } from '../src/net/protocol';
+import type { WorldConfig } from './config';
+import { unpackSnapshot, WorldFiles, writeFileDurable } from './files';
+import { applyEntry, type LogEntry, replayLines, parseLog } from './log';
+import { type Conn, Session, type UserAuth } from './session';
 import { NullStore, type WorldStore } from './store';
+import { RulerCopy } from './rulers_copy';
 import { BorderHistory } from './history';
 
-// ======================================================================= deterministic layer
-export type LogEntry =
-  | { k: 'cmd'; uid: string; cmd: Command }
-  | { k: 'claim'; uid: string; realm: number }
-  | { k: 'release'; realm: number };
-export type LogLine = { d: number; e: LogEntry } | { d: number; adv: 1 };
-
-const OK: CmdResult = { ok: true };
-const err = (e: string): CmdResult => ({ ok: false, err: e });
-
-/** Applies one log entry. A pure function of (state, entry): used live and in replay. */
-export function applyEntry(s: WorldState, w: World, e: LogEntry): CmdResult {
-  switch (e.k) {
-    case 'cmd': {
-      const r = e.cmd?.realm;
-      if (!Number.isInteger(r) || r < 0 || r >= s.realm.size || !s.realm.alive[r]) return err('no such realm');
-      if (s.ruler[r] !== e.uid) return err('not your realm');
-      return applyCommand(s, w, e.cmd);
-    }
-    case 'claim': {
-      const r = e.realm;
-      if (!Number.isInteger(r) || r < 0 || r >= s.realm.size || !s.realm.alive[r]) return err('no such realm');
-      if (s.ruler[r]) return err('this realm already has a ruler');
-      if (s.ruler.includes(e.uid)) return err('you already rule a realm');
-      s.ruler[r] = e.uid;
-      return OK;
-    }
-    case 'release': {
-      if (!s.ruler[e.realm]) return err('no ruler');
-      s.ruler[e.realm] = '';
-      return OK;
-    }
-  }
-  return err('unknown entry');
-}
-
-export function replayLines(s: WorldState, w: World, lines: Iterable<LogLine>): WorldState {
-  for (const l of lines) {
-    if ('adv' in l) { if (l.d !== s.day) throw new Error(`replay out of step: log day ${l.d}, state day ${s.day}`); advanceDay(s, w); }
-    else applyEntry(s, w, l.e);
-  }
-  return s;
-}
-export function parseLog(text: string): LogLine[] {
-  const out: LogLine[] = [];
-  for (const line of text.split('\n')) { if (!line.trim()) continue; try { out.push(JSON.parse(line)); } catch { break; /* torn last line after a crash */ } }
-  return out;
-}
-
-// ======================================================================= files on disk
-/**
- * A snapshot as it goes to disk and to the store: zstd at its fastest level. The state of 1291 is ~80 MB; gzip took
- * 1.6 s for it (41 MB), zstd takes 0.15 s (28 MB), which matters when the clock runs fast and a snapshot falls every
- * few seconds. Snapshots written by gzip before are still read (unpackSnapshot tells them by their first bytes).
- */
-export function packSnapshot(raw: Uint8Array): Uint8Array { return zstdCompressSync(raw, { params: { [zlibConstants.ZSTD_c_compressionLevel]: 1 } }); }
-export function unpackSnapshot(b: Uint8Array): Uint8Array {
-  if (b[0] === 0x1f && b[1] === 0x8b) return gunzipSync(b);
-  if (b[0] === 0x28 && b[1] === 0xb5 && b[2] === 0x2f && b[3] === 0xfd) return zstdDecompressSync(b);
-  return b;
-}
-/** Snapshots (zstd) and log segments: log-<day>.ndjson holds everything after the snapshot of that day. */
-export class WorldFiles {
-  private fd = -1;
-  constructor(readonly dir: string) { mkdirSync(dir, { recursive: true }); }
-  latest(): { day: number; hash: string } | null { try { return JSON.parse(readFileSync(join(this.dir, 'snapshot.json'), 'utf8')); } catch { return null; } }
-  snapshots(): number[] { return readdirSync(this.dir).map((f) => /^snap-(\d+)\.bin$/.exec(f)).filter(Boolean).map((m) => Number(m![1])).sort((a, b) => a - b); }
-  segments(): number[] { return readdirSync(this.dir).map((f) => /^log-(\d+)\.ndjson$/.exec(f)).filter(Boolean).map((m) => Number(m![1])).sort((a, b) => a - b); }
-  writeSnapshot(s: WorldState): { day: number; hash: string; bin: Uint8Array } {
-    const raw = encodeState(s), bin = packSnapshot(raw), day = s.day, hash = hashBytes(raw);
-    const file = join(this.dir, `snap-${day}.bin`);
-    writeFileSync(file + '.tmp', bin); renameSync(file + '.tmp', file);
-    writeFileSync(join(this.dir, 'snapshot.json.tmp'), JSON.stringify({ day, hash })); renameSync(join(this.dir, 'snapshot.json.tmp'), join(this.dir, 'snapshot.json'));
-    // keep the genesis snapshot and the three most recent ones; log segments older than the oldest kept go too
-    const snaps = this.snapshots().filter((d) => d !== 0);
-    for (const d of snaps.slice(0, Math.max(0, snaps.length - 3))) { try { unlinkSync(join(this.dir, `snap-${d}.bin`)); } catch { /* gone */ } }
-    this.openSegment(day);
-    return { day, hash, bin };
-  }
-  readSnapshot(day: number): WorldState { return decodeState(unpackSnapshot(readFileSync(join(this.dir, `snap-${day}.bin`)))); }
-  readLines(fromDay: number): LogLine[] {
-    const out: LogLine[] = [];
-    for (const seg of this.segments()) if (seg >= fromDay) out.push(...parseLog(readFileSync(join(this.dir, `log-${seg}.ndjson`), 'utf8')));
-    return out;
-  }
-  segmentText(day: number): string { try { return readFileSync(join(this.dir, `log-${day}.ndjson`), 'utf8'); } catch { return ''; } }
-  openSegment(day: number) { if (this.fd >= 0) closeSync(this.fd); this.fd = openSync(join(this.dir, `log-${day}.ndjson`), 'a'); }
-  append(line: LogLine) { if (this.fd < 0) throw new Error('log not open'); writeSync(this.fd, JSON.stringify(line) + '\n'); }
-  close() { if (this.fd >= 0) closeSync(this.fd); this.fd = -1; }
-}
-
-// ======================================================================= world core
 /** at the highest speed, the days of one beat of the clock take this much real time at most before what changed goes out */
 const BATCH_MS = 100;
 /** smoothed real time of the parts of a day */
 const ema = (a: number, b: number) => a * 0.9 + b * 0.1;
 
-export interface WorldConfig {
-  id: string; name: string; dataDir: string;
-  /** real seconds per in-game day */
-  secondsPerDay: number;
-  snapshotEveryDays: number;
-  /** in-game days between snapshot uploads to Supabase Storage */
-  uploadEveryDays: number;
-  seed: number; startYear: number; maxPlayers: number;
-  /** real time without a login after which a player's realm is free again */
-  inactiveReleaseMs: number;
-  /** commands a player may give per in-game day */
-  cmdsPerDay: number;
-  /** account ids or display names with admin rights (besides the store's admin table) */
-  admins: string[];
-  devAuth: boolean;
-  /** who may pause the world and change its speed (the time control top left): admins (in a DEV world everyone), or everyone */
-  timeControl?: 'admins' | 'all';
-  log?: (msg: string) => void;
+interface Seat {
+  uid: string;
+  name: string;
+  realm: number;
+  joinedAt: number;
+  lastSeen: number;
 }
-export function configFromEnv(env: Record<string, string | undefined> = process.env): WorldConfig {
-  const num = (k: string, d: number) => { const v = Number(env[k]); return env[k] !== undefined && env[k] !== '' && Number.isFinite(v) ? v : d; };
-  return {
-    id: (env.WORLD_ID || 'europa-1').toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 32), name: env.WORLD_NAME || 'Europa I', dataDir: env.WORLD_DATA_DIR || './world-data',
-    secondsPerDay: num('SECONDS_PER_DAY', 240), snapshotEveryDays: Math.max(1, num('SNAPSHOT_EVERY_DAYS', 30)), uploadEveryDays: Math.max(1, num('SNAPSHOT_UPLOAD_EVERY_DAYS', 300)),
-    seed: num('WORLD_SEED', 1356), startYear: num('WORLD_START_YEAR', 1356), maxPlayers: num('MAX_PLAYERS', 100),
-    inactiveReleaseMs: num('INACTIVE_RELEASE_DAYS', 7) * 86400_000, cmdsPerDay: num('CMDS_PER_DAY', 60),
-    admins: (env.ADMIN_USERS || '').split(',').map((x) => x.trim()).filter(Boolean),
-    devAuth: !(env.SUPABASE_JWT_SECRET || env.SUPABASE_JWKS_URL || env.SUPABASE_URL),
-    timeControl: env.TIME_CONTROL === 'all' ? 'all' : 'admins',
-  };
+interface Meta {
+  id: string;
+  name: string;
+  seed: number;
+  startedAt: number;
+  paused: boolean;
+  seats: Record<string, Seat>;
+  /** the day of the last snapshot sent to the store (Supabase Storage); absent while none was */
+  uploaded?: number;
 }
-
-export interface UserAuth { uid: string; name: string; admin: boolean; /** connected without signing in: sees the world, rules nothing */ observer?: boolean }
-export interface Conn { send(m: ServerMsg): void; sendBin(b: Uint8Array): void; close(code: number, reason: string): void }
-
-interface Seat { uid: string; name: string; realm: number; joinedAt: number; lastSeen: number }
-interface Meta { id: string; name: string; seed: number; startedAt: number; paused: boolean; seats: Record<string, Seat> }
-interface Queued { e: LogEntry; session: Session | null; id: number }
+interface Queued {
+  e: LogEntry;
+  session: Session | null;
+  id: number;
+}
 
 class Bucket {
-  t: number; last = Date.now();
-  constructor(private cap: number, private perSec: number) { this.t = cap; }
-  take(): boolean { const now = Date.now(); this.t = Math.min(this.cap, this.t + ((now - this.last) / 1000) * this.perSec); this.last = now; if (this.t < 1) return false; this.t -= 1; return true; }
-}
-
-export class Session {
-  closed = false;
-  constructor(readonly core: WorldCore, readonly conn: Conn, readonly user: UserAuth) {}
-  send(m: ServerMsg) { if (!this.closed) try { this.conn.send(m); } catch { /* socket gone */ } }
-  sendBin(b: Uint8Array) { if (!this.closed) try { this.conn.sendBin(b); } catch { /* socket gone */ } }
-  handle(m: ClientMsg) { if (!this.closed) this.core.handle(this, m); }
-  disconnect() { if (this.closed) return; this.closed = true; this.core.detach(this); }
+  t: number;
+  last = Date.now();
+  constructor(
+    private cap: number,
+    private perSec: number,
+  ) {
+    this.t = cap;
+  }
+  take(): boolean {
+    const now = Date.now();
+    this.t = Math.min(this.cap, this.t + ((now - this.last) / 1000) * this.perSec);
+    this.last = now;
+    if (this.t < 1) return false;
+    this.t -= 1;
+    return true;
+  }
 }
 
 export class WorldCore {
@@ -184,7 +82,14 @@ export class WorldCore {
   private timer: ReturnType<typeof setTimeout> | null = null;
   private running = false;
   private prevOwner!: Int16Array;
-  private lastUpload = 0;
+  /** the uploads to the store, one after the other (a log never overtakes the snapshot it follows) */
+  private uploads: Promise<void> = Promise.resolve();
+  /** what is queued or on its way; a kind already on its way is not queued again (the next one sends what this one
+   *  would have, so nothing is lost when the clock runs faster than the uploads) */
+  private pending = { snapshot: false, log: false, rulers: false };
+  private lastSnapshotUpload = -Infinity;
+  /** the readable copy of the rulers in Supabase (null without a store) */
+  private rulerCopy: RulerCopy | null = null;
   private log: (m: string) => void;
   /** the history of the borders (server/history.ts), for the replay */
   history!: BorderHistory;
@@ -196,16 +101,56 @@ export class WorldCore {
   stepMs = { cmds: 0, day: 0, persist: 0, broadcast: 0 };
 
   constructor(cfg: WorldConfig, store: WorldStore = new NullStore()) {
-    this.cfg = cfg; this.store = store; this.log = cfg.log ?? ((m) => console.log(`[world ${cfg.id}] ${m}`));
+    this.cfg = cfg;
+    this.store = store;
+    this.log = cfg.log ?? ((m) => console.log(`[world ${cfg.id}] ${m}`));
   }
-  get root() { return join(this.cfg.dataDir, this.cfg.id); }
+  get root() {
+    return join(this.cfg.dataDir, this.cfg.id);
+  }
+
+  /** When the disk holds no world (a new or a lost volume) and the store holds a copy of it, puts that copy on the
+   *  disk, so that init() resumes it instead of founding a new world that would then overwrite the copy. Throws when
+   *  the store cannot be read: better no world server than a new world over the old one. */
+  async restoreIfEmpty(): Promise<boolean> {
+    if (!this.store.enabled) return false;
+    const files = new WorldFiles(join(this.root, 'world'));
+    if (files.latest()) {
+      files.close();
+      return false;
+    }
+    const b = await this.store.downloadBackup(this.cfg.id);
+    if (!b) return false;
+    const s = decodeState(unpackSnapshot(b.bin)),
+      day = s.day,
+      hash = hashState(s);
+    // the log lines after the snapshot, if they follow it without a gap
+    const lines = parseLog(b.log).filter((l) => l.d >= day);
+    const usable = lines.length > 0 && lines[0].d === day;
+    files.putSnapshot(day, hash, b.bin);
+    if (usable) for (const l of lines) files.append(l);
+    files.sync();
+    files.close();
+    if (b.history && !existsSync(join(this.root, 'borders.ndjson')))
+      writeFileDurable(join(this.root, 'borders.ndjson'), gunzipSync(b.history));
+    if (b.meta && !existsSync(join(this.root, 'meta.json'))) {
+      const meta: Meta = JSON.parse(b.meta);
+      meta.uploaded = day;
+      writeFileDurable(join(this.root, 'meta.json'), JSON.stringify(meta));
+    }
+    this.log(
+      `restored from the store: snapshot of day ${day} + ${usable ? lines.length : 0} log lines${lines.length && !usable ? ' (log does not follow the snapshot, left out)' : ''}`,
+    );
+    return true;
+  }
 
   /** Creates the world, or resumes it from its latest snapshot and the log after it. */
   init(): this {
     this.w = loadWorldFor(this.cfg.startYear);
     mkdirSync(this.root, { recursive: true });
     const metaPath = join(this.root, 'meta.json');
-    this.meta = existsSync(metaPath) ? JSON.parse(readFileSync(metaPath, 'utf8'))
+    this.meta = existsSync(metaPath)
+      ? JSON.parse(readFileSync(metaPath, 'utf8'))
       : { id: this.cfg.id, name: this.cfg.name, seed: this.cfg.seed, startedAt: Date.now(), paused: false, seats: {} };
     this.files = new WorldFiles(join(this.root, 'world'));
     const latest = this.files.latest();
@@ -218,20 +163,97 @@ export class WorldCore {
       const lines = this.files.readLines(latest.day);
       replayLines(this.s, this.w, lines);
       this.files.openSegment(latest.day);
-      this.log(`resumed at day ${this.s.day} (snapshot ${latest.day} + ${lines.length} log lines), hash ${hashState(this.s)}`);
+      this.log(
+        `resumed at day ${this.s.day} (snapshot ${latest.day} + ${lines.length} log lines), hash ${hashState(this.s)}`,
+      );
     }
     // seats and state agree (a crash between the two writes)
-    for (const seat of Object.values(this.meta.seats)) if (this.s.ruler[seat.realm] !== seat.uid) delete this.meta.seats[seat.uid];
+    for (const seat of Object.values(this.meta.seats))
+      if (this.s.ruler[seat.realm] !== seat.uid) delete this.meta.seats[seat.uid];
     this.prevOwner = this.s.place.owner.slice();
-    this.history = new BorderHistory(join(this.root, 'borders.ndjson'), this.s, this.w,
-      () => (this.files.snapshots().includes(0) ? upgradeState(this.files.readSnapshot(0), this.w, () => loadSetup(this.cfg.startYear)) : null));
+    this.history = new BorderHistory(join(this.root, 'borders.ndjson'), this.s, this.w, () =>
+      this.files.snapshots().includes(0)
+        ? upgradeState(this.files.readSnapshot(0), this.w, () => loadSetup(this.cfg.startYear))
+        : null,
+    );
+    // a world the store has no copy of yet sends its latest snapshot right away
+    const now = this.files.latest()!;
+    if (this.store.enabled && this.meta.uploaded === undefined)
+      this.uploadSnapshot(now.day, readFileSync(join(this.files.dir, `snap-${now.day}.bin`)));
     this.saveMeta();
-    this.store.upsertWorld(this.worldInfo()).catch(() => {});
+    const info = this.worldInfo();
+    this.queueUpload(() => this.store.upsertWorld(info)); // the row the copy of the rulers points at comes first
+    if (this.store.enabled) {
+      this.rulerCopy = new RulerCopy(this.cfg.id);
+      this.copyRulers();
+    }
     return this;
   }
   private saveMeta() {
-    const p = join(this.root, 'meta.json');
-    writeFileSync(p + '.tmp', JSON.stringify(this.meta)); renameSync(p + '.tmp', p);
+    writeFileDurable(join(this.root, 'meta.json'), JSON.stringify(this.meta));
+  }
+  /** Queues an upload behind the ones before it; a failed upload is logged by the store and does not stop the world. */
+  private queueUpload(f: () => Promise<unknown>) {
+    this.uploads = this.uploads.then(f).then(
+      () => {},
+      () => {},
+    );
+  }
+  /** Resolves when every upload queued so far has ended. */
+  flushUploads(): Promise<void> {
+    return this.uploads;
+  }
+  private uploadSnapshot(day: number, bin: Uint8Array) {
+    if (this.pending.snapshot) return;
+    this.pending.snapshot = true;
+    this.lastSnapshotUpload = Date.now();
+    const meta = JSON.stringify({ ...this.meta, uploaded: day });
+    const historyFile = join(this.root, 'borders.ndjson');
+    const history = existsSync(historyFile) ? gzipSync(readFileSync(historyFile)) : null;
+    this.queueUpload(async () => {
+      // only a snapshot that arrived whole counts: until then the log goes on from the one before
+      try {
+        if (await this.store.uploadSnapshot(this.cfg.id, day, bin, meta, history)) {
+          this.meta.uploaded = day;
+          this.saveMeta();
+        }
+      } finally {
+        this.pending.snapshot = false;
+      }
+    });
+  }
+  /** Sends the log since the last snapshot sent: with it and that snapshot the store can rebuild today's world. */
+  private uploadLog() {
+    if (this.pending.log || this.meta.uploaded === undefined) return;
+    this.pending.log = true;
+    this.queueUpload(async () => {
+      try {
+        // read when its turn comes: behind a snapshot that just arrived, the log starts at that snapshot
+        const from = this.meta.uploaded!;
+        const text = this.files
+          .segments()
+          .filter((d) => d >= from)
+          .map((d) => this.files.segmentText(d))
+          .join('');
+        if (text) await this.store.uploadLog(this.cfg.id, text);
+      } finally {
+        this.pending.log = false;
+      }
+    });
+  }
+  /** Sends the rows of the readable copy of the rulers that changed (server/rulers_copy.ts). */
+  private copyRulers() {
+    if (!this.rulerCopy || this.pending.rulers) return;
+    const ch = this.rulerCopy.changes(this.s, this.w);
+    if (!ch.persons.length && !ch.reigns.length) return;
+    this.pending.rulers = true;
+    this.queueUpload(async () => {
+      try {
+        if (await this.store.upsertRulers(ch.persons, ch.reigns)) this.rulerCopy!.sentOk(ch.keys);
+      } finally {
+        this.pending.rulers = false;
+      }
+    });
   }
   /** Applies an entry and logs it (only accepted entries change the state, but every one is logged in order). */
   private apply(e: LogEntry): CmdResult {
@@ -240,11 +262,27 @@ export class WorldCore {
     return r;
   }
 
-  start() { this.running = true; this.schedule(); }
-  stop() { this.running = false; if (this.timer) clearTimeout(this.timer); this.timer = null; }
-  shutdown() { this.stop(); this.files.writeSnapshot(this.s); this.saveMeta(); this.files.close(); this.history.close(); }
+  start() {
+    this.running = true;
+    this.schedule();
+  }
+  stop() {
+    this.running = false;
+    if (this.timer) clearTimeout(this.timer);
+    this.timer = null;
+  }
+  shutdown() {
+    this.stop();
+    this.files.writeSnapshot(this.s);
+    this.saveMeta();
+    this.files.close();
+    this.history.close();
+  }
   /** real milliseconds per day at the clock's speed (0: as fast as the days can be reckoned) */
-  msPerDay(): number { const v = SPEEDS[this.speed - 1]; return v === 'own' ? this.cfg.secondsPerDay * 1000 : v; }
+  msPerDay(): number {
+    const v = SPEEDS[this.speed - 1];
+    return v === 'own' ? this.cfg.secondsPerDay * 1000 : v;
+  }
   private schedule() {
     if (!this.running) return;
     this.timer = setTimeout(() => this.beat(), Math.max(0, this.msPerDay() - this.beatMs));
@@ -255,10 +293,13 @@ export class WorldCore {
     try {
       if (!this.meta.paused) {
         const fast = this.msPerDay() === 0;
-        do this.runDay(); while (fast && !this.meta.paused && performance.now() - t0 < BATCH_MS);
+        do this.runDay();
+        while (fast && !this.meta.paused && performance.now() - t0 < BATCH_MS);
         this.broadcastDay();
       }
-    } catch (e: any) { this.log(`step failed: ${e?.stack ?? e}`); }
+    } catch (e) {
+      this.log(`step failed: ${(e as Error | undefined)?.stack ?? e}`);
+    }
     this.beatMs = this.meta.paused ? 0 : performance.now() - t0;
     this.schedule();
   }
@@ -266,24 +307,39 @@ export class WorldCore {
   /** Pauses or runs the world, or sets the speed of its clock; everyone is told. */
   setTime(t: { paused?: boolean; speed?: number }) {
     let changed = false;
-    if (typeof t.paused === 'boolean' && t.paused !== this.meta.paused) { this.meta.paused = t.paused; this.saveMeta(); changed = true; }
-    if (Number.isInteger(t.speed) && t.speed! >= 1 && t.speed! <= SPEEDS.length && t.speed !== this.speed) { this.speed = t.speed!; changed = true; }
+    if (typeof t.paused === 'boolean' && t.paused !== this.meta.paused) {
+      this.meta.paused = t.paused;
+      this.saveMeta();
+      changed = true;
+    }
+    if (Number.isInteger(t.speed) && t.speed! >= 1 && t.speed! <= SPEEDS.length && t.speed !== this.speed) {
+      this.speed = t.speed!;
+      changed = true;
+    }
     if (!changed) return;
     // the wait for the next day is that of the new speed, from now (at its own pace the world would wait minutes)
-    if (this.running) { if (this.timer) clearTimeout(this.timer); this.beatMs = 0; this.schedule(); }
+    if (this.running) {
+      if (this.timer) clearTimeout(this.timer);
+      this.beatMs = 0;
+      this.schedule();
+    }
     const world = this.worldInfo();
     for (const ss of this.sessions) ss.send({ type: 'world', world });
     this.log(`clock: ${this.meta.paused ? 'paused' : 'running'}, speed ${this.speed}`);
   }
 
   /** One in-game day, and what changed goes out. */
-  step() { this.runDay(); this.broadcastDay(); }
+  step() {
+    this.runDay();
+    this.broadcastDay();
+  }
 
   /** One in-game day: queued entries, the day, persistence. */
   private runDay() {
     const t0 = performance.now();
     this.releaseInactive();
-    const q = this.queue; this.queue = [];
+    const q = this.queue;
+    this.queue = [];
     for (const x of q) {
       const r = this.apply(x.e);
       if (x.session && x.e.k === 'cmd') x.session.send({ type: 'result', id: x.id, ok: r.ok, err: r.err });
@@ -291,66 +347,114 @@ export class WorldCore {
     }
     const t1 = performance.now();
     this.files.append({ d: this.s.day, adv: 1 });
+    this.files.sync();
     advanceDay(this.s, this.w);
     const t2 = performance.now();
     this.history.record(this.s);
     if (this.s.day % this.cfg.snapshotEveryDays === 0) this.snapshot();
+    else if (this.store.enabled && this.s.day % this.cfg.logUploadEveryDays === 0) this.uploadLog();
+    this.copyRulers();
     const t3 = performance.now();
-    this.stepMs = { ...this.stepMs, cmds: ema(this.stepMs.cmds, t1 - t0), day: ema(this.stepMs.day, t2 - t1), persist: ema(this.stepMs.persist, t3 - t2) };
+    this.stepMs = {
+      ...this.stepMs,
+      cmds: ema(this.stepMs.cmds, t1 - t0),
+      day: ema(this.stepMs.day, t2 - t1),
+      persist: ema(this.stepMs.persist, t3 - t2),
+    };
   }
 
   snapshot(forceUpload = false) {
-    const from = this.files.segments().filter((d) => d < this.s.day).pop() ?? 0;
-    const logText = this.files.segmentText(from);
     const { day, bin } = this.files.writeSnapshot(this.s);
-    this.saveMeta();
-    if (forceUpload || day - this.lastUpload >= this.cfg.uploadEveryDays) {
-      this.lastUpload = day;
-      this.store.uploadSnapshot(this.cfg.id, day, bin, from, logText).catch(() => {});
-      this.store.upsertWorld(this.worldInfo()).catch(() => {});
+    if (this.store.enabled) {
+      const due =
+        this.meta.uploaded === undefined ||
+        (day - this.meta.uploaded >= this.cfg.uploadEveryDays &&
+          Date.now() - this.lastSnapshotUpload >= this.cfg.uploadMinMinutes * 60_000);
+      if (forceUpload || due) {
+        this.uploadSnapshot(day, bin);
+        this.store.upsertWorld(this.worldInfo()).catch(() => {});
+      } else this.uploadLog();
     }
+    this.saveMeta();
   }
 
   /** Replays the log from a snapshot on disk and compares with the live state. */
   verifyReplay(fromDay?: number): { hash: string; live: string; from: number; lines: number } {
     const from = fromDay ?? this.files.snapshots()[0] ?? 0;
-    const s = upgradeState(this.files.readSnapshot(from), this.w, () => loadSetup(this.cfg.startYear)); const lines = this.files.readLines(from);
+    const s = upgradeState(this.files.readSnapshot(from), this.w, () => loadSetup(this.cfg.startYear));
+    const lines = this.files.readLines(from);
     replayLines(s, this.w, lines);
     return { hash: hashState(s), live: hashState(this.s), from, lines: lines.length };
   }
 
   // ------------------------------------------------------------- players
-  seats(): Seat[] { return Object.values(this.meta.seats); }
+  seats(): Seat[] {
+    return Object.values(this.meta.seats);
+  }
   private rulerName = (uid: string) => this.meta.seats[uid]?.name ?? null;
-  private me(ss: Session): Me { return { uid: ss.user.uid, name: ss.user.name, admin: ss.user.admin, realm: this.meta.seats[ss.user.uid]?.realm ?? -1, ...(ss.user.observer ? { observer: true } : {}), ...(this.mayTime(ss) ? { time: true } : {}) }; }
+  private me(ss: Session): Me {
+    return {
+      uid: ss.user.uid,
+      name: ss.user.name,
+      admin: ss.user.admin,
+      realm: this.meta.seats[ss.user.uid]?.realm ?? -1,
+      ...(ss.user.observer ? { observer: true } : {}),
+      ...(this.mayTime(ss) ? { time: true } : {}),
+    };
+  }
   /** who may pause the world and change its speed: admins; everyone in a DEV world (for debugging) or with TIME_CONTROL=all */
-  private mayTime(ss: Session) { return ss.user.admin || this.cfg.devAuth || this.cfg.timeControl === 'all'; }
+  private mayTime(ss: Session) {
+    return ss.user.admin || this.cfg.devAuth || this.cfg.timeControl === 'all';
+  }
   worldInfo(): WorldInfo {
-    return { id: this.cfg.id, name: this.meta.name, day: this.s.day, startYear: this.s.startYear, secondsPerDay: this.cfg.secondsPerDay, paused: this.meta.paused, players: this.seats().length, maxPlayers: this.cfg.maxPlayers, speed: this.speed };
+    return {
+      id: this.cfg.id,
+      name: this.meta.name,
+      day: this.s.day,
+      startYear: this.s.startYear,
+      secondsPerDay: this.cfg.secondsPerDay,
+      paused: this.meta.paused,
+      players: this.seats().length,
+      maxPlayers: this.cfg.maxPlayers,
+      speed: this.speed,
+    };
   }
 
   attach(conn: Conn, user: UserAuth): Session {
-    const ss = new Session(this, conn, { ...user, admin: user.admin || this.cfg.admins.includes(user.uid) || this.cfg.admins.includes(user.name) });
+    const ss = new Session(this, conn, {
+      ...user,
+      admin: user.admin || this.cfg.admins.includes(user.uid) || this.cfg.admins.includes(user.name),
+    });
     this.sessions.add(ss);
     const seat = this.meta.seats[user.uid];
-    if (seat) { seat.lastSeen = Date.now(); seat.name = user.name; }
+    if (seat) {
+      seat.lastSeen = Date.now();
+      seat.name = user.name;
+    }
     ss.send({ type: 'welcome', me: this.me(ss), world: this.worldInfo(), realms: realmInfos(this.s, this.rulerName) });
     ss.sendBin(encodeOwners(this.s.place.owner));
     return ss;
   }
   detach(ss: Session) {
     this.sessions.delete(ss);
-    const seat = this.meta.seats[ss.user.uid]; if (seat) seat.lastSeen = Date.now();
+    const seat = this.meta.seats[ss.user.uid];
+    if (seat) seat.lastSeen = Date.now();
   }
-  private online(uid: string) { for (const ss of this.sessions) if (ss.user.uid === uid) return true; return false; }
+  private online(uid: string) {
+    for (const ss of this.sessions) if (ss.user.uid === uid) return true;
+    return false;
+  }
 
   handle(ss: Session, m: ClientMsg) {
     switch (m?.type) {
-      case 'claim': return this.claim(ss, m.realm);
+      case 'claim':
+        return this.claim(ss, m.realm);
       case 'abdicate': {
-        const seat = this.meta.seats[ss.user.uid]; if (!seat) return;
+        const seat = this.meta.seats[ss.user.uid];
+        if (!seat) return;
         this.queue.push({ e: { k: 'release', realm: seat.realm }, session: ss, id: 0 });
-        delete this.meta.seats[ss.user.uid]; this.saveMeta();
+        delete this.meta.seats[ss.user.uid];
+        this.saveMeta();
         this.store.removeSeat(this.cfg.id, ss.user.uid).catch(() => {});
         ss.send({ type: 'me', me: this.me(ss) });
         return;
@@ -359,15 +463,24 @@ export class WorldCore {
         const seat = this.meta.seats[ss.user.uid];
         const id = Number(m.id) || 0;
         if (!seat || ss.user.observer) return ss.send({ type: 'result', id, ok: false, err: 'you rule no realm' });
-        let b = this.buckets.get(ss.user.uid); if (!b) this.buckets.set(ss.user.uid, (b = new Bucket(this.cfg.cmdsPerDay, this.cfg.cmdsPerDay / Math.max(0.05, this.cfg.secondsPerDay))));
+        let b = this.buckets.get(ss.user.uid);
+        if (!b) {
+          b = new Bucket(this.cfg.cmdsPerDay, this.cfg.cmdsPerDay / Math.max(0.05, this.cfg.secondsPerDay));
+          this.buckets.set(ss.user.uid, b);
+        }
         if (!b.take()) return ss.send({ type: 'result', id, ok: false, err: 'too many orders, wait a moment' });
         const cmd = { ...(m.cmd ?? {}), realm: seat.realm } as Command;
         this.queue.push({ e: { k: 'cmd', uid: ss.user.uid, cmd }, session: ss, id });
         return;
       }
-      case 'place': { const d = placeDetail(this.s, this.w, m.place); if (d) ss.send({ type: 'place', detail: d }); return; }
+      case 'place': {
+        const d = placeDetail(this.s, this.w, m.place);
+        if (d) ss.send({ type: 'place', detail: d });
+        return;
+      }
       case 'time': {
-        if (!this.mayTime(ss)) return ss.send({ type: 'error', code: 'time', message: 'Only an admin may change the time.' });
+        if (!this.mayTime(ss))
+          return ss.send({ type: 'error', code: 'time', message: 'Only an admin may change the time.' });
         return this.setTime({ paused: m.paused, speed: m.speed });
       }
     }
@@ -377,15 +490,25 @@ export class WorldCore {
     const uid = ss.user.uid;
     if (ss.user.observer) return ss.send({ type: 'error', code: 'claim', message: 'Sign in to rule a realm.' });
     if (this.meta.seats[uid]) return ss.send({ type: 'error', code: 'claim', message: 'You already rule a realm.' });
-    if (this.seats().length >= this.cfg.maxPlayers) return ss.send({ type: 'error', code: 'claim', message: 'This world is full.' });
-    if (this.queue.some((q) => q.e.k === 'claim' && (q.e.realm === realm || q.e.uid === uid))) return ss.send({ type: 'error', code: 'claim', message: 'Someone is taking this realm just now.' });
+    if (this.seats().length >= this.cfg.maxPlayers)
+      return ss.send({ type: 'error', code: 'claim', message: 'This world is full.' });
+    if (this.queue.some((q) => q.e.k === 'claim' && (q.e.realm === realm || q.e.uid === uid)))
+      return ss.send({ type: 'error', code: 'claim', message: 'Someone is taking this realm just now.' });
     // checked now and applied at once (a seat must not wait for the next day), logged like any entry
     const r = this.apply({ k: 'claim', uid, realm });
     if (!r.ok) return ss.send({ type: 'error', code: 'claim', message: r.err ?? 'not possible' });
     const now = Date.now();
     this.meta.seats[uid] = { uid, name: ss.user.name, realm, joinedAt: now, lastSeen: now };
     this.saveMeta();
-    this.store.upsertSeat(this.cfg.id, { uid, name: ss.user.name, key: this.s.realmText[realm].key, joinedAt: now, lastSeen: now }).catch(() => {});
+    this.store
+      .upsertSeat(this.cfg.id, {
+        uid,
+        name: ss.user.name,
+        key: this.s.realmText[realm].key,
+        joinedAt: now,
+        lastSeen: now,
+      })
+      .catch(() => {});
     ss.send({ type: 'me', me: this.me(ss) });
     this.rulersChanged();
   }
@@ -403,15 +526,23 @@ export class WorldCore {
   }
 
   private rulersChanged() {
-    const realms = realmInfos(this.s, this.rulerName), world = this.worldInfo();
-    for (const ss of this.sessions) { ss.send({ type: 'realms', realms }); ss.send({ type: 'world', world }); }
+    const realms = realmInfos(this.s, this.rulerName),
+      world = this.worldInfo();
+    for (const ss of this.sessions) {
+      ss.send({ type: 'realms', realms });
+      ss.send({ type: 'world', world });
+    }
   }
 
   private broadcastDay() {
     const t0 = performance.now();
     const changes: [number, number][] = [];
     const o = this.s.place.owner;
-    for (let i = 0; i < o.length; i++) if (o[i] !== this.prevOwner[i]) { changes.push([i, o[i]]); this.prevOwner[i] = o[i]; }
+    for (let i = 0; i < o.length; i++)
+      if (o[i] !== this.prevOwner[i]) {
+        changes.push([i, o[i]]);
+        this.prevOwner[i] = o[i];
+      }
     // the borders moved (src/sim/systems/borders.ts): the realms first, a realm may have come in and the counts changed
     if (changes.length) this.rulersChanged();
     for (const ss of this.sessions) {
@@ -422,5 +553,7 @@ export class WorldCore {
   }
 
   /** Enqueues an entry as the world itself (tests, admin tools). */
-  enqueue(e: LogEntry) { this.queue.push({ e, session: null, id: 0 }); }
+  enqueue(e: LogEntry) {
+    this.queue.push({ e, session: null, id: 0 });
+  }
 }

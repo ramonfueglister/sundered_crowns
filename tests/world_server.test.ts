@@ -5,7 +5,10 @@ import { mkdtempSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { WorldCore, WorldFiles, configFromEnv, packSnapshot, unpackSnapshot, type Conn } from '../server/world';
+import { configFromEnv } from '../server/config';
+import type { Conn } from '../server/session';
+import { packSnapshot, unpackSnapshot, WorldFiles } from '../server/files';
+import { WorldCore } from '../server/world';
 import { encodeState, hashState } from '../src/sim/snapshot';
 import type { ServerMsg } from '../src/net/protocol';
 import { BIN_OWNERS } from '../src/net/protocol';
@@ -94,7 +97,8 @@ describe('snapshots on disk', () => {
     // a snapshot of an older build
     writeFileSync(file, gzipSync(raw));
     expect(hashState(files.readSnapshot(w.day))).toBe(w.hash);
-    files.close(); core.shutdown();
+    files.close();
+    core.shutdown();
     rmSync(dir, { recursive: true, force: true });
   }, 60_000);
 });

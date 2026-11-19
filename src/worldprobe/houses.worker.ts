@@ -2,7 +2,7 @@
 // fine blocks and for the fine ground under them, the answer carries both as one mesh, as flat lists that are handed
 // over, not copied.
 import { Batch } from '../lookprobe/batch';
-import type { Shape } from '../lookprobe/stage';
+import type { Shape } from '../lookprobe/shape';
 import { faced, flat, small } from './small';
 import { type Columns, pave } from './nearground';
 import { type Lot, raise } from './settle';

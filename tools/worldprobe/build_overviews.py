@@ -18,6 +18,7 @@ Usage: python3 tools/worldprobe/build_overviews.py world      (some minutes and 
 import gzip, json, os, shutil, sys
 import numpy as np
 from beds import Land, Reaches, cut_run
+import tiles as tiles_file
 
 ROOT = os.path.join(os.path.dirname(__file__), '..', '..')
 STEPS = 7
@@ -84,6 +85,8 @@ def halve_band(shaped, drainage, water, forest, crops):
 def main(name):
     base = os.path.join(ROOT, 'public', 'map', 'regions', name)
     meta = json.load(open(os.path.join(base, 'index.json')))
+    # (the coarser steps are plain rasters zipped with gzip, which their indexes say by having no coding)
+    meta.pop('coding', None)
     T, keys, cells = meta['tile'], [tuple(map(int, k.split('_'))) for k in meta.pop('tiles')], meta['cells']
     # the tiles the region reaches over: all of a world (the last one across is cut short where it joins itself and
     # filled up with sea, which stays sea at every step), else the box of those it has
@@ -95,7 +98,7 @@ def main(name):
     # the region's own heights are held whole all the same, for the beds of its rivers
     rivers, held, finest = [], [], np.zeros((down * T, across * T), '<i2')
     for tx, ty in keys:
-        raw, at, tile = gzip.open(os.path.join(base, f'{tx}_{ty}.bin.gz')).read(), 0, []
+        raw, at, tile = tiles_file.read(base, f'{tx}_{ty}', T), 0, []
         for layer in layers:
             n = T * T * layer.dtype.itemsize
             tile.append(np.frombuffer(raw[at:at + n], layer.dtype).reshape(T, T)); at += n

@@ -175,10 +175,9 @@ def main():
     # history overrides: England's overall level from the records
     england = polygon_mask(lon, lat, {'England'}) & land
     # solve b per lattice cell, then spread it smoothly; repeat so the smooth field keeps the cells' means
-    n = nx * ny; g = np.where(known, cell, n); b = np.zeros(n + 1)
+    n = nx * ny; g = np.where(known, cell, n)
     target = np.append(np.nan_to_num(T.ravel()), 0)
     # cells whose potential cannot carry the pollen's trees keep their potential (reported)
-    lattice_lat = y0 + np.arange(ny); lattice_lon = x0 + np.arange(nx)
 
     def spread(bc):
         """b of the lattice, missing cells from the nearest known, eased over a cell, bilinear between the cells' centres, faded

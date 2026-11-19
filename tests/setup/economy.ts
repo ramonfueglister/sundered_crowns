@@ -3,8 +3,11 @@
 import { buildEconomy, cargo } from '../../tools/sim/build_economy';
 
 export default function setup(): void {
-  try { cargo(['--version'], true); }
-  catch { throw new Error('the tests build the economy engine and need the Rust toolchain (https://rustup.rs)'); }
+  try {
+    cargo(['--version'], true);
+  } catch {
+    throw new Error('the tests build the economy engine and need the Rust toolchain (https://rustup.rs)');
+  }
   buildEconomy(true);
   cargo(['build', '--release', '--locked', '--example', 'reference'], true);
 }

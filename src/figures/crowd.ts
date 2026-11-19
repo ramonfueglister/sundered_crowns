@@ -75,13 +75,13 @@ export function crowd(g: Ground, s: SettledGround, own: (x: number, z: number) =
     for (let dz = -2; dz <= 2; dz++) for (let dx = -2; dx <= 2; dx++) { const i = idx(x + dx, z + dz); if (s.used[i] === 1 && !s.field[i] && !s.town[i]) return true; }
     return false;
   };
-  const towns = (s.towns ?? []).map((t) => ({ t, aims: aimsOf(t) })).filter((t) => t.aims);
+  const towns = (s.towns ?? []).flatMap((t) => { const aims = aimsOf(t); return aims ? [{ t, aims }] : []; });
   for (let z = 2; z < N - 2; z++) for (let x = 2; x < N - 2; x++) {
     if (!own(x, z)) continue;
     const wx = x + ox, wz = z + oz, i = idx(x, z), lot = hash2(wx, wz, 401);
     // in a town with persons the street holds them, not chance
     const town = towns.find(({ t }) => Math.abs(wx - t.cx) <= t.half && Math.abs(wz - t.cz) <= t.half);
-    const person = town?.aims!.get(key(wx, wz));
+    const person = town?.aims.get(key(wx, wz));
     // farmers work from the strip of grass round a field, facing their crop: inside it the crop would hide them
     const street = free(x, z, true), field = !street && free(x, z, false) ? DIRS.findIndex(([dx, dz]) => s.field[idx(x + dx, z + dz)] > 0) : -1;
     let kind: 'street' | 'house' | 'field' | null = null;

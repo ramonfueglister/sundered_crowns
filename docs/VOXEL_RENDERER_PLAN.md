@@ -1,6 +1,7 @@
 # Neue Kartengrafik: Voxel-Welt mit Three.js (Plan)
 
-Stand: 14. November 2026. Status: **Entwurf zur Diskussion, noch nichts gebaut.**
+Stand: 14. November 2026, als Plan geschrieben und seither nicht nachgeführt. Gebaut ist inzwischen die Weltgrafik
+(`src/worldprobe/`, `src/lookprobe/`); das Umformen des Geländes nicht.
 Dieses Dokument plant den neuen Kartenrenderer. Es ersetzt keinen Code. Die grossen Weichen in Abschnitt 2 sind
 Vorschläge und werden erst nach Ramons Entscheid festgeschrieben.
 
