@@ -21,6 +21,8 @@ never simulate. The world has no end date: it runs one day per `SECONDS_PER_DAY`
 Everything that changes the state is a log entry (`cmd`, `claim`, `release`), applied in order and appended to the
 command log between day markers. Snapshots are written every `SNAPSHOT_EVERY_DAYS`; on start the server loads the
 latest and replays the log after it. `verifyReplay` checks that a snapshot plus the log reproduces the live state.
+A copy of the latest snapshot and of the log since it goes to Supabase Storage (`server/store.ts`); a server that
+starts on an empty disk resumes from that copy (`WorldCore.restoreIfEmpty`).
 Randomness comes only from the seeded generator in the state (`src/sim/rng.ts`), from `hash01` of ids, or from the
 generator inside the state of an economy (below).
 

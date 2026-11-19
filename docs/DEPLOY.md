@@ -35,7 +35,19 @@ DEV mode is for development only: anyone can claim any name. It switches off as 
 World data is stored in `./world-data/<WORLD_ID>/world/`: `snap-<day>.bin` (gzip-compressed state, the
 genesis snapshot plus the three most recent), `log-<day>.ndjson` (command log segments, one per snapshot) and
 `snapshot.json`; `./world-data/<WORLD_ID>/meta.json` holds the seats. On start the server loads the latest snapshot and
-replays the log after it, so a crash loses nothing that was logged. `SIGTERM` (every deploy) writes a final snapshot.
+replays the log after it, so a crash loses nothing that was logged: the log is forced onto the disk after every day
+marker, snapshots and `meta.json` are written to a temporary file, forced onto the disk and renamed. `SIGTERM` (every
+deploy) writes a final snapshot.
+
+With Supabase the server keeps a copy of the world in the bucket `world-snapshots`, under `<WORLD_ID>/persistent/`:
+the snapshot in parts of at most 40 MB (`snapshot-<day>-<i>.bin`; the Free plan takes no file over 50 MB, and a
+snapshot of 1291 is about 38 MB on its first day and grows), `snapshot.json` and `meta.json` after every snapshot
+(`SNAPSHOT_UPLOAD_EVERY_DAYS`, 30 in-game days ≈ 2 hours at 240 s a day), and `log.ndjson`, the log since that
+snapshot, every day (`LOG_UPLOAD_EVERY_DAYS`, 1 ≈ 4 minutes). `snapshot.json` points at the new parts once they are
+all there, then the parts before go; the other files are overwritten in place, so the copy does not grow. A server
+that starts on an empty disk (a new or a lost volume) takes the world back from that copy before it starts, on the day
+of the last log it sent; when the bucket cannot be read it does not start, rather than found a new world that would
+overwrite the copy.
 
 ---
 
@@ -59,7 +71,8 @@ current server does not use them; they stay so that existing projects keep a con
    `saves` (cloud saves, 50 MB per file, users can only touch `<their user id>/…`) and `world-snapshots`
    (no client access; the world server uploads snapshots there with the service role).
    Check them under *Storage*. If your project refused the `insert into storage.buckets`, create them by hand with the
-   same names, *Public bucket* off, file size limit 50 MB (`saves`) / 200 MB (`world-snapshots`), MIME type
+   same names, *Public bucket* off, file size limit 50 MB (`saves`) / 200 MB (`world-snapshots`; the Free plan caps every file at
+   50 MB, so the server sends snapshots in parts of 40 MB), MIME type
    `application/octet-stream`, then run only the `create policy … on storage.objects` statements of that migration.
 4. **Auth settings** (*Authentication*):
    - *Sign In / Providers → Email*: enabled. The game uses magic links (`signInWithOtp`); no passwords are stored.
@@ -163,8 +176,8 @@ runs, and resumes from its snapshot and log after every restart.
 - **Supabase Free**: 500 MB database, 1 GB file storage, 5 GB egress, 50,000 monthly active users, 2 projects.
   Free projects are paused after a week without activity (a running world server keeps it active). Built-in e-mail is
   limited to a few messages per hour → custom SMTP for launch. Pro plan from US$25/month removes pausing.
-  Storage use here: world snapshots (a few MB),
-  overwritten in place (uploaded every `SNAPSHOT_UPLOAD_EVERY_DAYS` = 300 in-game days ≈ 3 hours).
+  Storage use here: one copy of the world per world (snapshot, meta, log since the snapshot), overwritten in place
+  (snapshot every `SNAPSHOT_UPLOAD_EVERY_DAYS` = 30 in-game days ≈ 2 hours, log every day ≈ 4 minutes).
 - **Vercel Hobby**: free for personal, non-commercial projects; the game is a static build of ≈ 30 MB (mostly map data).
   Commercial use needs Pro (US$20/month per member).
 - **Fly.io**: `shared-cpu-1x` with 1 GB RAM ≈ US$5–6/month, volume US$0.15/GB/month. The daily tick sends only the

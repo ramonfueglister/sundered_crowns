@@ -4,7 +4,7 @@
 // Determinism: every change to the state goes through a log entry, appended to the command log in the order it was
 // applied and interleaved with day markers. A snapshot plus the log after it reproduces the state exactly
 // (verifyReplay). Real-time facts (a player left long ago) become log entries before they touch the state.
-import { mkdirSync, existsSync, readFileSync, writeFileSync, renameSync, readdirSync, openSync, writeSync, closeSync, unlinkSync } from 'node:fs';
+import { mkdirSync, existsSync, readFileSync, renameSync, readdirSync, openSync, writeSync, closeSync, unlinkSync, fsyncSync } from 'node:fs';
 import { join } from 'node:path';
 import { gzipSync, gunzipSync } from 'node:zlib';
 import type { WorldState } from '../src/sim/state';
@@ -69,7 +69,17 @@ export function parseLog(text: string): LogLine[] {
 }
 
 // ======================================================================= files on disk
-/** Snapshots (gzip) and log segments: log-<day>.ndjson holds everything after the snapshot of that day. */
+/** Writes a file so that a crash or a power loss leaves either the old or the new one, whole: the bytes go to a
+ *  temporary file, are forced onto the disk, and the temporary file takes the place of the old one. */
+export function writeFileDurable(file: string, data: Uint8Array | string) {
+  const fd = openSync(file + '.tmp', 'w');
+  try { writeSync(fd, typeof data === 'string' ? Buffer.from(data) : data); fsyncSync(fd); } finally { closeSync(fd); }
+  renameSync(file + '.tmp', file);
+}
+
+/** Snapshots (gzip) and log segments: log-<day>.ndjson holds everything after the snapshot of that day. The genesis
+ *  snapshot and the three most recent ones stay; the log segments all stay (a few bytes a day), so the world can be
+ *  replayed from day 0. */
 export class WorldFiles {
   private fd = -1;
   constructor(readonly dir: string) { mkdirSync(dir, { recursive: true }); }
@@ -78,14 +88,17 @@ export class WorldFiles {
   segments(): number[] { return readdirSync(this.dir).map((f) => /^log-(\d+)\.ndjson$/.exec(f)).filter(Boolean).map((m) => Number(m![1])).sort((a, b) => a - b); }
   writeSnapshot(s: WorldState): { day: number; hash: string; bin: Uint8Array } {
     const bin = gzipSync(encodeState(s)), day = s.day, hash = hashState(s);
-    const file = join(this.dir, `snap-${day}.bin`);
-    writeFileSync(file + '.tmp', bin); renameSync(file + '.tmp', file);
-    writeFileSync(join(this.dir, 'snapshot.json.tmp'), JSON.stringify({ day, hash })); renameSync(join(this.dir, 'snapshot.json.tmp'), join(this.dir, 'snapshot.json'));
-    // keep the genesis snapshot and the three most recent ones; log segments older than the oldest kept go too
+    this.putSnapshot(day, hash, bin);
+    return { day, hash, bin };
+  }
+  /** Puts the bytes of a snapshot (gzip) on disk as the latest one and opens the log segment after it. */
+  putSnapshot(day: number, hash: string, bin: Uint8Array) {
+    writeFileDurable(join(this.dir, `snap-${day}.bin`), bin);
+    writeFileDurable(join(this.dir, 'snapshot.json'), JSON.stringify({ day, hash }));
+    // keep the genesis snapshot and the three most recent ones
     const snaps = this.snapshots().filter((d) => d !== 0);
     for (const d of snaps.slice(0, Math.max(0, snaps.length - 3))) { try { unlinkSync(join(this.dir, `snap-${d}.bin`)); } catch { /* gone */ } }
     this.openSegment(day);
-    return { day, hash, bin };
   }
   readSnapshot(day: number): WorldState { return decodeState(gunzipSync(readFileSync(join(this.dir, `snap-${day}.bin`)))); }
   readLines(fromDay: number): LogLine[] {
@@ -96,6 +109,8 @@ export class WorldFiles {
   segmentText(day: number): string { try { return readFileSync(join(this.dir, `log-${day}.ndjson`), 'utf8'); } catch { return ''; } }
   openSegment(day: number) { if (this.fd >= 0) closeSync(this.fd); this.fd = openSync(join(this.dir, `log-${day}.ndjson`), 'a'); }
   append(line: LogLine) { if (this.fd < 0) throw new Error('log not open'); writeSync(this.fd, JSON.stringify(line) + '\n'); }
+  /** Forces what was appended onto the disk (once a day, after the day marker). */
+  sync() { if (this.fd >= 0) fsyncSync(this.fd); }
   close() { if (this.fd >= 0) closeSync(this.fd); this.fd = -1; }
 }
 
@@ -107,6 +122,8 @@ export interface WorldConfig {
   snapshotEveryDays: number;
   /** in-game days between snapshot uploads to Supabase Storage */
   uploadEveryDays: number;
+  /** in-game days between uploads of the log since the last snapshot to Supabase Storage */
+  logUploadEveryDays: number;
   seed: number; startYear: number; maxPlayers: number;
   /** real time without a login after which a player's realm is free again */
   inactiveReleaseMs: number;
@@ -121,7 +138,8 @@ export function configFromEnv(env: Record<string, string | undefined> = process.
   const num = (k: string, d: number) => { const v = Number(env[k]); return env[k] !== undefined && env[k] !== '' && Number.isFinite(v) ? v : d; };
   return {
     id: (env.WORLD_ID || 'europa-1').toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 32), name: env.WORLD_NAME || 'Europa I', dataDir: env.WORLD_DATA_DIR || './world-data',
-    secondsPerDay: num('SECONDS_PER_DAY', 240), snapshotEveryDays: Math.max(1, num('SNAPSHOT_EVERY_DAYS', 30)), uploadEveryDays: Math.max(1, num('SNAPSHOT_UPLOAD_EVERY_DAYS', 300)),
+    secondsPerDay: num('SECONDS_PER_DAY', 240), snapshotEveryDays: Math.max(1, num('SNAPSHOT_EVERY_DAYS', 30)), uploadEveryDays: Math.max(1, num('SNAPSHOT_UPLOAD_EVERY_DAYS', 30)),
+    logUploadEveryDays: Math.max(1, num('LOG_UPLOAD_EVERY_DAYS', 1)),
     seed: num('WORLD_SEED', 1356), startYear: num('WORLD_START_YEAR', 1356), maxPlayers: num('MAX_PLAYERS', 100),
     inactiveReleaseMs: num('INACTIVE_RELEASE_DAYS', 7) * 86400_000, cmdsPerDay: num('CMDS_PER_DAY', 60),
     admins: (env.ADMIN_USERS || '').split(',').map((x) => x.trim()).filter(Boolean),
@@ -133,7 +151,11 @@ export interface UserAuth { uid: string; name: string; admin: boolean; /** conne
 export interface Conn { send(m: ServerMsg): void; sendBin(b: Uint8Array): void; close(code: number, reason: string): void }
 
 interface Seat { uid: string; name: string; realm: number; joinedAt: number; lastSeen: number }
-interface Meta { id: string; name: string; seed: number; startedAt: number; paused: boolean; seats: Record<string, Seat> }
+interface Meta {
+  id: string; name: string; seed: number; startedAt: number; paused: boolean; seats: Record<string, Seat>;
+  /** the day of the last snapshot sent to the store (Supabase Storage); absent while none was */
+  uploaded?: number;
+}
 interface Queued { e: LogEntry; session: Session | null; id: number }
 
 class Bucket {
@@ -164,7 +186,8 @@ export class WorldCore {
   private timer: ReturnType<typeof setTimeout> | null = null;
   private running = false;
   private prevOwner!: Int16Array;
-  private lastUpload = 0;
+  /** the uploads to the store, one after the other (a log never overtakes the snapshot it follows) */
+  private uploads: Promise<void> = Promise.resolve();
   private log: (m: string) => void;
   /** smoothed real time of each part of a day (ms), for /health */
   stepMs = { cmds: 0, day: 0, persist: 0, broadcast: 0 };
@@ -173,6 +196,30 @@ export class WorldCore {
     this.cfg = cfg; this.store = store; this.log = cfg.log ?? ((m) => console.log(`[world ${cfg.id}] ${m}`));
   }
   get root() { return join(this.cfg.dataDir, this.cfg.id); }
+
+  /** When the disk holds no world (a new or a lost volume) and the store holds a copy of it, puts that copy on the
+   *  disk, so that init() resumes it instead of founding a new world that would then overwrite the copy. Throws when
+   *  the store cannot be read: better no world server than a new world over the old one. */
+  async restoreIfEmpty(): Promise<boolean> {
+    if (!this.store.enabled) return false;
+    const files = new WorldFiles(join(this.root, 'world'));
+    if (files.latest()) { files.close(); return false; }
+    const b = await this.store.downloadBackup(this.cfg.id);
+    if (!b) return false;
+    const s = decodeState(gunzipSync(b.bin)), day = s.day, hash = hashState(s);
+    // the log lines after the snapshot, if they follow it without a gap
+    const lines = parseLog(b.log).filter((l) => l.d >= day);
+    const usable = lines.length > 0 && lines[0].d === day;
+    files.putSnapshot(day, hash, b.bin);
+    if (usable) for (const l of lines) files.append(l);
+    files.sync(); files.close();
+    if (b.meta && !existsSync(join(this.root, 'meta.json'))) {
+      const meta: Meta = JSON.parse(b.meta); meta.uploaded = day;
+      writeFileDurable(join(this.root, 'meta.json'), JSON.stringify(meta));
+    }
+    this.log(`restored from the store: snapshot of day ${day} + ${usable ? lines.length : 0} log lines${lines.length && !usable ? ' (log does not follow the snapshot, left out)' : ''}`);
+    return true;
+  }
 
   /** Creates the world, or resumes it from its latest snapshot and the log after it. */
   init(): this {
@@ -197,13 +244,31 @@ export class WorldCore {
     // seats and state agree (a crash between the two writes)
     for (const seat of Object.values(this.meta.seats)) if (this.s.ruler[seat.realm] !== seat.uid) delete this.meta.seats[seat.uid];
     this.prevOwner = this.s.place.owner.slice();
+    // a world the store has no copy of yet sends its latest snapshot right away
+    const now = this.files.latest()!;
+    if (this.store.enabled && this.meta.uploaded === undefined) this.uploadSnapshot(now.day, readFileSync(join(this.files.dir, `snap-${now.day}.bin`)));
     this.saveMeta();
     this.store.upsertWorld(this.worldInfo()).catch(() => {});
     return this;
   }
-  private saveMeta() {
-    const p = join(this.root, 'meta.json');
-    writeFileSync(p + '.tmp', JSON.stringify(this.meta)); renameSync(p + '.tmp', p);
+  private saveMeta() { writeFileDurable(join(this.root, 'meta.json'), JSON.stringify(this.meta)); }
+  /** Queues an upload behind the ones before it; a failed upload is logged by the store and does not stop the world. */
+  private queueUpload(f: () => Promise<unknown>) { this.uploads = this.uploads.then(f).then(() => {}, () => {}); }
+  /** Resolves when every upload queued so far has ended. */
+  flushUploads(): Promise<void> { return this.uploads; }
+  private uploadSnapshot(day: number, bin: Uint8Array) {
+    const meta = JSON.stringify({ ...this.meta, uploaded: day });
+    this.queueUpload(async () => {
+      // only a snapshot that arrived whole counts: until then the log goes on from the one before
+      if (await this.store.uploadSnapshot(this.cfg.id, day, bin, meta)) { this.meta.uploaded = day; this.saveMeta(); }
+    });
+  }
+  /** Sends the log since the last snapshot sent: with it and that snapshot the store can rebuild today's world. */
+  private uploadLog() {
+    const from = this.meta.uploaded;
+    if (from === undefined) return;
+    const text = this.files.segments().filter((d) => d >= from).map((d) => this.files.segmentText(d)).join('');
+    if (text) this.queueUpload(() => this.store.uploadLog(this.cfg.id, text));
   }
   /** Applies an entry and logs it (only accepted entries change the state, but every one is logged in order). */
   private apply(e: LogEntry): CmdResult {
@@ -232,9 +297,11 @@ export class WorldCore {
     }
     const t1 = performance.now();
     this.files.append({ d: this.s.day, adv: 1 });
+    this.files.sync();
     advanceDay(this.s, this.w);
     const t2 = performance.now();
     if (this.s.day % this.cfg.snapshotEveryDays === 0) this.snapshot();
+    else if (this.store.enabled && this.s.day % this.cfg.logUploadEveryDays === 0) this.uploadLog();
     const t3 = performance.now();
     this.broadcastDay();
     const t4 = performance.now();
@@ -243,15 +310,14 @@ export class WorldCore {
   }
 
   snapshot(forceUpload = false) {
-    const from = this.files.segments().filter((d) => d < this.s.day).pop() ?? 0;
-    const logText = this.files.segmentText(from);
     const { day, bin } = this.files.writeSnapshot(this.s);
-    this.saveMeta();
-    if (forceUpload || day - this.lastUpload >= this.cfg.uploadEveryDays) {
-      this.lastUpload = day;
-      this.store.uploadSnapshot(this.cfg.id, day, bin, from, logText).catch(() => {});
-      this.store.upsertWorld(this.worldInfo()).catch(() => {});
+    if (this.store.enabled) {
+      if (forceUpload || this.meta.uploaded === undefined || day - this.meta.uploaded >= this.cfg.uploadEveryDays) {
+        this.uploadSnapshot(day, bin);
+        this.store.upsertWorld(this.worldInfo()).catch(() => {});
+      } else this.uploadLog();
     }
+    this.saveMeta();
   }
 
   /** Replays the log from a snapshot on disk and compares with the live state. */
