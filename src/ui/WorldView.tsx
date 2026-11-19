@@ -48,10 +48,8 @@ function startYear(): Promise<number | undefined> {
     if (over) for (const s of stops) s();
   });
 }
-/** the panel of the person clicked, once for the page */
-let people: ReturnType<typeof listenForWorldClicks> | undefined;
-/** the card of the person under the pointer, once for the page */
-let peopleHover: ReturnType<typeof listenForWorldHover> | undefined;
+/** whether the panel of the person clicked and the card of the person under the pointer listen yet: once for the page */
+let listeningForPeople = false;
 
 export function WorldView() {
   const canvas = useRef<HTMLCanvasElement>(null),
@@ -97,7 +95,7 @@ export function WorldView() {
           return;
         }
         view = made;
-        if (import.meta.env.DEV) (window as any).__world = made; // for browser tests
+        if (import.meta.env.DEV) (window as Window & { __world?: unknown }).__world = made; // for browser tests
         // the places of the game map, to fly to
         const geo: Promise<Geo> = fetch(`${import.meta.env.BASE_URL}data/geo.json`).then((r) => r.json());
         mapCtl.home = (loc: number) => {
@@ -147,13 +145,16 @@ export function WorldView() {
             made.choose(selectedPlace.value);
           }),
         );
-        // a click on a figure of the great cities opens that person
-        people ??= listenForWorldClicks(wrap.current!.closest<HTMLElement>('.app') ?? document.body);
-        // the pointer resting on one shows who it is
-        peopleHover ??= listenForWorldHover(wrap.current!.closest<HTMLElement>('.app') ?? document.body);
-      } catch (e: any) {
+        // a click on a figure of the great cities opens that person; the pointer resting on one shows who it is
+        if (!listeningForPeople) {
+          listeningForPeople = true;
+          const host = wrap.current!.closest<HTMLElement>('.app') ?? document.body;
+          listenForWorldClicks(host);
+          listenForWorldHover(host);
+        }
+      } catch (e) {
         console.error(e);
-        mapError.value = String(e?.message || e);
+        mapError.value = String((e as Error | undefined)?.message || e);
       }
     })();
     hoverPlace.value = -1;

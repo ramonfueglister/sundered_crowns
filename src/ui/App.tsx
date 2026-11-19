@@ -78,7 +78,7 @@ const realmById = computed(() => {
   for (const r of realms.value) m.set(r.id, r);
   return m;
 });
-const hex = (c: number) => '#' + c.toString(16).padStart(6, '0');
+const hex = (c: number) => `#${c.toString(16).padStart(6, '0')}`;
 
 export function App() {
   const st = status.value;
@@ -127,7 +127,13 @@ function RealmBanner() {
   if (!r) return null;
   const arms = ARMS[r.key];
   return (
-    <button class="realm-banner" title={L(r.name)} aria-label={L(r.name)} onClick={() => mapCtl.home(r.capital)}>
+    <button
+      type="button"
+      class="realm-banner"
+      title={L(r.name)}
+      aria-label={L(r.name)}
+      onClick={() => mapCtl.home(r.capital)}
+    >
       <svg width="145" height="104" viewBox="0 0 150 104" preserveAspectRatio="none" aria-hidden="true">
         <path
           d="M5 0h141v80c-14-6-28 4-46 0s-30-8-48-2-34 6-47 2z"
@@ -163,10 +169,12 @@ function Music() {
 function MusicSettings() {
   const off = musicMuted.value;
   return (
+    // biome-ignore lint/a11y/useKeyWithClickEvents lint/a11y/noStaticElementInteractions: the click is only kept from closing the menu (TopBar); the controls inside are buttons and inputs, which take the keyboard themselves
     <div class="music-set" onClick={(e) => e.stopPropagation()}>
       <div class="music-row">
         <span class="music-label">{t('music')}</span>
         <button
+          type="button"
           class="btn small"
           aria-pressed={!off}
           title={`${t(off ? 'music_on' : 'music_off')} (M)`}
@@ -192,6 +200,7 @@ function MusicSettings() {
         </small>
         {!off && (
           <button
+            type="button"
             class="btn small"
             title={`${t('music_next')} (N)`}
             aria-label={t('music_next')}
@@ -223,7 +232,9 @@ function MapModes() {
         const Icon = MODE_ICON[mode],
           name = t(`map_mode_${mode}` as TextKey);
         return (
+          // biome-ignore lint/a11y/useSemanticElements: a button in the radio role keeps the look of the round tool buttons; a native radio input would need a label round its icon
           <button
+            type="button"
             key={mode}
             class="tool mode"
             role="radio"
@@ -242,7 +253,7 @@ function MapModes() {
 
 function LangSwitch() {
   return (
-    <button class="btn small" onClick={() => setLang(lang.value === 'de' ? 'en' : 'de')}>
+    <button type="button" class="btn small" onClick={() => setLang(lang.value === 'de' ? 'en' : 'de')}>
       {lang.value === 'de' ? 'EN' : 'DE'}
     </button>
   );
@@ -257,7 +268,7 @@ function Refused() {
         <h1>{t('title')}</h1>
         <p class="muted">{t('tagline')}</p>
         {refusal.value && <p class="neg">{refusal.value}</p>}
-        <button class="btn big gold" onClick={() => location.reload()}>
+        <button type="button" class="btn big gold" onClick={() => location.reload()}>
           {t('reload')}
         </button>
         <div class="menu-foot">
@@ -319,6 +330,7 @@ function TimeControl() {
   }, []);
   const lock = may ? '' : `\n${t('time_locked')}`;
   return (
+    // biome-ignore lint/a11y/useSemanticElements: a fieldset would bring its own border, padding and least width into the bar; the group role names the controls the same
     <div class={`timectl${paused ? ' paused' : ''}`} role="group" aria-label={t('time_control')}>
       <span class="timectl-date" title={wi ? speedText(speed, wi.secondsPerDay) : ''}>
         <IconCalendar size={22} />
@@ -326,6 +338,7 @@ function TimeControl() {
         {paused && <small>{t('paused')}</small>}
       </span>
       <button
+        type="button"
         class="tool timectl-pause"
         disabled={!may || !wi}
         aria-pressed={paused}
@@ -336,6 +349,7 @@ function TimeControl() {
         {paused ? <IconPlay /> : <IconPause />}
       </button>
       <button
+        type="button"
         class="timectl-step"
         disabled={!may || speed <= 1}
         aria-label={t('time_slower')}
@@ -347,6 +361,7 @@ function TimeControl() {
       <div class="timectl-pips">
         {SPEEDS.map((_, k) => (
           <button
+            type="button"
             key={k}
             class={`pip${k < speed ? ' on' : ''}`}
             disabled={!may || !wi}
@@ -358,6 +373,7 @@ function TimeControl() {
         ))}
       </div>
       <button
+        type="button"
         class="timectl-step"
         disabled={!may || speed >= SPEEDS.length}
         aria-label={t('time_faster')}
@@ -384,7 +400,7 @@ function ReplayBar() {
     return (
       <div class="replay-bar pnl">
         <span class="neg">{t('replay_failed', { why: err })}</span>
-        <button class="close" title={t('close')} aria-label={t('close')} onClick={() => stopReplay()}>
+        <button type="button" class="close" title={t('close')} aria-label={t('close')} onClick={() => stopReplay()}>
           <IconClose />
         </button>
       </div>
@@ -394,8 +410,10 @@ function ReplayBar() {
     first = fmtDate(c.from, c.startYear, lang.value),
     last = fmtDate(c.to, c.startYear, lang.value);
   return (
+    // biome-ignore lint/a11y/useSemanticElements: a fieldset would bring its own border, padding and least width into the bar; the group role names the controls the same
     <div class="replay-bar pnl" role="group" aria-label={t('replay')}>
       <button
+        type="button"
         class="tool"
         aria-label={t(c.playing ? 'replay_pause' : 'replay_play')}
         title={`${t(c.playing ? 'replay_pause' : 'replay_play')} (${t('key')} ␣)`}
@@ -417,7 +435,9 @@ function ReplayBar() {
       />
       <div class="replay-speed" role="radiogroup" aria-label={t('replay_speed')}>
         {REPLAY_SPEEDS.map((f, k) => (
+          // biome-ignore lint/a11y/useSemanticElements: a button in the radio role keeps the look of the other small buttons; a native radio input would need a label round its text
           <button
+            type="button"
             key={k}
             role="radio"
             aria-checked={c.speed === k + 1}
@@ -427,6 +447,7 @@ function ReplayBar() {
         ))}
       </div>
       <button
+        type="button"
         class="close"
         title={`${t('replay_stop')} (Esc)`}
         aria-label={t('replay_stop')}
@@ -449,6 +470,7 @@ function TopBar() {
         <TimeControl />
         <MapModes />
         <button
+          type="button"
           class={`tool mode${replay.value ? ' on' : ''}`}
           aria-pressed={!!replayClock.value}
           aria-label={t(replayClock.value ? 'replay_stop' : 'replay')}
@@ -473,6 +495,7 @@ function TopBar() {
         )}
       </div>
       <button
+        type="button"
         class="tb"
         title={t('settings')}
         aria-label={t('settings')}
@@ -482,14 +505,16 @@ function TopBar() {
         <IconGear />
       </button>
       {menu && (
+        // biome-ignore lint/a11y/useKeyWithClickEvents lint/a11y/noStaticElementInteractions: a click anywhere in the menu closes it; from the keyboard the settings button closes it
         <div class="hud-menu" onClick={() => setMenu(false)}>
           <MusicSettings />
+          {/* biome-ignore lint/a11y/useKeyWithClickEvents lint/a11y/noStaticElementInteractions: the click is only kept from closing the menu; the switch inside is a button */}
           <div class="music-row lang-row" onClick={(e) => e.stopPropagation()}>
             <span class="music-label">{t('language')}</span>
             <LangSwitch />
           </div>
           {mine && (
-            <button class="menu-item danger" onClick={() => abdicate()}>
+            <button type="button" class="menu-item danger" onClick={() => abdicate()}>
               {t('abdicate')}
             </button>
           )}
@@ -535,6 +560,7 @@ function PlacePanel() {
       <div class="side-head">
         <b>{d ? (lang.value === 'de' ? d.nameDe : d.name) : '…'}</b>
         <button
+          type="button"
           class="close"
           title={t('close')}
           aria-label={t('close')}
@@ -720,7 +746,7 @@ function PlacePanel() {
             {t('ruled_by')}: {r.ruler ?? <span class="muted">{t('no_player')}</span>}
           </p>
           {!r.ruler && m && m.realm < 0 && !m.observer && (
-            <button class="btn big gold" onClick={() => claim(r.id)}>
+            <button type="button" class="btn big gold" onClick={() => claim(r.id)}>
               {t('claim')}
             </button>
           )}

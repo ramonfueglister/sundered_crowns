@@ -199,11 +199,6 @@ canvas.map {
 .hud-values.ruled {
   padding-left: 175px;
 }
-/* the map modes in the bar: round buttons as the bar's height allows */
-.hud-top .tool.mode {
-  width: 42px;
-  height: 42px;
-}
 .lang-row {
   padding: 0 4px;
 }
@@ -387,6 +382,11 @@ canvas.map {
   box-shadow:
     inset 0 0 0 2px var(--gold),
     0 0 8px rgba(241, 219, 164, 0.35);
+}
+/* the map modes in the bar: round buttons as the bar's height allows */
+.hud-top .tool.mode {
+  width: 42px;
+  height: 42px;
 }
 .tool:focus-visible {
   outline: 2px solid var(--gold);
