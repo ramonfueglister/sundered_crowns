@@ -4,6 +4,7 @@ import { placePeople, manyPlacesPeople, personDetail, MAX_PLACES_PER_REQUEST } f
 import { PLACES_PER_REQUEST } from '../src/figures/people';
 import { CITIES, personsIn, genesOf } from '../src/sim/systems/people';
 import { newWorldState } from '../tools/sim/load';
+import { rowOf } from '../src/sim/people/archive';
 
 const { s } = newWorldState();
 describe('the persons of a place', () => {
@@ -31,5 +32,30 @@ describe('one person in full', () => {
     expect(d.age).toBeCloseTo(-s.person.cols.born[100] / 365.25, 1);
     expect(personDetail(s, s.person.size, () => 'x')).toBeNull();
     expect(personDetail(s, -1, () => 'x')).toBeNull();
+  });
+});
+describe('the kin and the home of a person', () => {
+  const F = s.family.cols,
+    P = s.person.cols,
+    U = P.uid;
+  it('has the other one of the couple as spouse, and the spouse has the person (uids)', () => {
+    let f = 0;
+    while (f < s.family.size && !(F.man[f] >= 0 && F.woman[f] >= 0)) f++;
+    const d = personDetail(s, U[F.man[f]], () => 'x')!;
+    expect(d.spouse).toBe(U[F.woman[f]]);
+    expect(personDetail(s, U[F.woman[f]], () => 'x')!.spouse).toBe(U[F.man[f]]);
+  });
+  it('has as children every person whose mother or father it is (uids)', () => {
+    let c = 0;
+    while (c < s.person.size && P.mother[c] < 0) c++;
+    const mother = P.mother[c],
+      d = personDetail(s, mother, () => 'x')!;
+    expect(d.children).toContain(U[c]);
+    for (const k of d.children) expect(P.mother[rowOf(s, k)]).toBe(mother);
+  });
+  it('lives in the town of its place', () => {
+    const london = CITIES.find((c) => c.name === 'London')!,
+      uid = placePeople(s, london.place).id[0];
+    expect(personDetail(s, uid, () => 'x')!.town).toBe('London');
   });
 });

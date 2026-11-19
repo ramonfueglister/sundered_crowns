@@ -67,6 +67,12 @@ export type EconomyOwner = 'paper' | 'household';
  *  economy/src/clock.rs); 0 is the port's rule, a household that spends out of its income only. */
 export interface EconomyRules { wage: EconomyWage; prices: EconomyPrices; savings: number; crown: EconomyCrown; owner: EconomyOwner }
 
+/** The working days of the firms and households of a city (economy feature 19, economy/src/clock.rs `Attendance`)
+ *  for its next `days` periods: per calendar and kind of day the factor of the flows of a firm or a household on such
+ *  a day (`kinds` numbers a calendar), per calendar the kind of each of the days (`days` numbers a calendar), the
+ *  calendar of every firm (and of its owner), and of every other household: the workers, the persons who do not work
+ *  and the owners of the bank, in the engine's order. */
+export interface CityWorkingDays { days: number; kinds: number; factor: Float64Array; day: Uint8Array; calendar: Uint8Array; household: Uint8Array }
 /** What the engine is given for a city: the port's parameters and initial conditions (JSON text) and the seed of
  *  the city's random numbers. */
 export interface CitySetup { parameters: string; initialConditions: string; seed: number }
@@ -91,6 +97,9 @@ export interface EconomyEngine {
   /** The cities of a state that has not computed a period, with distance between them (economy feature 17): the
    *  days of travel and the labour of carrying per pair of cities, and the elasticity of the stock to keep. */
   routes(state: Uint8Array, routes: { cities: number; days: Uint32Array; labour: Float64Array; weight: readonly number[]; elasticity: number }): Uint8Array;
+  /** The cities of a state with the working days of their firms from their next period on (economy feature 19), one
+   *  entry per city in their order. */
+  workingDays(state: EconomyState, cities: readonly CityWorkingDays[]): Uint8Array;
   /** The state after `periods` more periods. */
   step(state: EconomyState, periods: number): Uint8Array;
   /** The state after `periods` more periods, kept inside the engine: the same state as `step` gives, without
@@ -108,6 +117,7 @@ interface Exports {
   sce_alloc(len: number): number; sce_free(ptr: number, len: number): void;
   sce_create(list: number, len: number, plan: number, window: number, wage: number, prices: number, savings: number, crown: number, owner: number): number;
   sce_routes(state: number, len: number, routes: number, routesLen: number): number;
+  sce_working_days(state: number, len: number, days: number, daysLen: number): number;
   sce_step(state: number, len: number, periods: number): number;
   sce_figures(state: number, len: number): number;
   sce_checks(state: number, len: number): number;
@@ -222,6 +232,30 @@ export function wasmEconomyEngine(wasm: Uint8Array): EconomyEngine {
       const b = bytesOf(state);
       flush();
       return keeps(call([b, out], (e, a) => e.sce_routes(a[0], a[1], a[2], a[3])));
+    },
+    workingDays(state, cities) {
+      // as `sce_working_days` reads them: per city its calendars, kinds and days, the factors, the kinds of the days,
+      // its firms and their calendars, its other households and theirs
+      let size = 0;
+      for (const c of cities) {
+        const calendars = c.factor.length / c.kinds;
+        if (!Number.isInteger(calendars) || c.day.length !== calendars * c.days) throw new Error(`working days of ${c.factor.length} factors and ${c.day.length} days do not fit ${c.kinds} kinds and ${c.days} days`);
+        size += 20 + 8 * c.factor.length + c.day.length + c.calendar.length + c.household.length;
+      }
+      const out = new Uint8Array(size), dv = new DataView(out.buffer);
+      let at = 0;
+      for (const c of cities) {
+        dv.setUint32(at, c.factor.length / c.kinds, true); dv.setUint32(at + 4, c.kinds, true); dv.setUint32(at + 8, c.days, true); at += 12;
+        for (const f of c.factor) { dv.setFloat64(at, f, true); at += 8; }
+        out.set(c.day, at); at += c.day.length;
+        dv.setUint32(at, c.calendar.length, true); at += 4;
+        out.set(c.calendar, at); at += c.calendar.length;
+        dv.setUint32(at, c.household.length, true); at += 4;
+        out.set(c.household, at); at += c.household.length;
+      }
+      const b = bytesOf(state);
+      flush();
+      return keeps(call([b, out], (e, a) => e.sce_working_days(a[0], a[1], a[2], a[3])));
     },
     step,
     advance(state, periods) {

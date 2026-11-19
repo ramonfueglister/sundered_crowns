@@ -23,6 +23,7 @@ nothing built before Ramon agrees. Proposal with sources (German): https://claud
 | 5 | IQ and the Big Five shift the rates of death, of a far move and of who marries | built 18 Nov 2026 (Ramon, 18 Nov: «So bauen» on the proposal, with the factor 0.89 for the IQ). State 28 |
 | 6 | Who wants work looks for a part in the economy, in the own town and within 115 km | built 18 Nov 2026 (Ramon, 18 Nov: «weiter» on the proposal, read as «So bauen»). No new state |
 | 7 | The living and the dead: the systems go over the living, the dead go to an archive (step 1: the list of the living; step 2: the archive, with a uid for every person) | built 19 Nov 2026 (Ramon, 19 Nov: «weiter» on the proposal of the archive and the day plan, read as «So bauen» for way A: the archive first, then the day plan). Step 1 no new state, step 2 state 30 |
+| 8 | The calendar of the town: the firms work on the working days of their owner's faith (step 3 of the day plan) | built 19 Nov 2026 (Ramon, 19 Nov: way A of the proposal, after the archive the day plan; «vorwärts machen alles mergen comitten und feddich»). Economy feature 19. State 31 |
 
 ## Feature 1: persons of the 30 largest cities
 
@@ -858,3 +859,69 @@ the cloud); the first of January costs 55 to 90 ms more (the years 1 to 3, the c
   not called on a world that has an archive.
 - The archive is read by the world server only; the browser asks for one dead person at a time.
 
+## Feature 8: the calendar of the town
+
+Step 3 of way A of the proposal «Personen: Archiv der Toten und Tagesplan» (feature 7): every faith has its days of
+rest, the firms of the cities work on the working days of their owner's faith, and a household buys on the working
+days of its own faith. The calendars are a pure function
+of the faith and the date (`src/sim/holy_days.ts`): nothing of them is saved, the same year always gives the same
+days. The economy reads them (economy feature 19, docs/ECONOMY_DESIGN.md, section 19); the persons' own day (steps 4
+to 6: sickness and childbed, templates and places, a target income) follows.
+
+### The calendars
+
+A day is a working day, a half day or a day of rest; a half day counts as half a day of work.
+
+| calendar | faiths | days of rest | half days | source |
+|---|---|---|---|---|
+| Latin | Latin Church | the Sundays and the feasts of the canon law in force in 1291: Christmas, St Stephen, St John, the Innocents, St Silvester, 1 January, the Epiphany, the Purification, the week of Easter, the three Rogation days, the Ascension, Pentecost, the Nativity of St John the Baptist, the twelve apostles, St Lawrence, the Assumption, the Nativity of Mary, St Michael, All Saints, St Martin | Saturdays and the eves of the feasts | Gratian, Decretum, De consecratione D.3 c.1; work stopped at noon on Saturdays and eves in the cloth towns of Flanders and Artois (Stabel 2014, TSEG 11(4), pp. 36–38: Douai c. 1250, Arras before 1236) |
+| Orthodox | Orthodox Church | the Sundays and 25 holy days of the Greek church, on the days of the Julian calendar | none | Holweck, «Ecclesiastical Feasts», Catholic Encyclopedia (1909); the Book of the Eparch (ch. XIII §3) forbids selling on Sundays and feasts |
+| Sunday | the other churches (Coptic, Armenian, Syriac, of the East, Ethiopian, Bosnian, Hussite, of the Reformation) | the Sundays | none | their feasts were not read |
+| Muslim | Sunni, Shia, Ibadi Islam | 1 Shawwāl and 10 Dhū l-Ḥijja, by the tabular calendar (civil epoch, 16 July 622) | none | Friday «is not at all a day of rest, but one of obligatory public worship, held at noon» (Goitein 1959, The Muslim World 49, 183–195) |
+| Jewish | Judaism | the Sabbath and the seven days of Leviticus 23 on which no servile work is done (15 and 21 Nisan, Shavuot, 1, 10, 15 and 22 Tishri), by the fixed Hebrew calendar | none | Leviticus 23; Dershowitz and Reingold, Calendrical Calculations |
+| none | the other faiths | none | none | no day of rest was read |
+
+The world's calendar (`src/sim/calendar.ts`) is Julian before 1583 and has the Gregorian leap years after, without
+dropping ten days. The Latin feasts lie on the world's dates, Easter by the Gregorian computus from 1583; the
+Orthodox, Muslim and Jewish days lie on the day the sun and the moon give, through the Julian day number.
+
+### 1291 (`tests/holy_days.test.ts`)
+
+| calendar | working days | half days | days of rest | worked, a half day as half |
+|---|---|---|---|---|
+| Latin | 219 | 63 | 83 (52 Sundays, 31 feasts on other days) | 250.5 |
+| Orthodox | 292 | 0 | 73 | 292 |
+| Sunday | 313 | 0 | 52 | 313 |
+| Muslim | 363 | 0 | 2 | 363 |
+| Jewish | 307 | 0 | 58 | 307 |
+
+Dates of 1291 checked against the computations of elsewhere: Easter 22 April (Julian); Ramaḍān 690 from 28 August
+to 26 September, 1 Shawwāl 27 September, 10 Dhū l-Ḥijja 4 December; 15 Nisan 17 March, Shavuot 6 May, Rosh
+Hashanah 27 August, Yom Kippur 5 September, Sukkot 10 September. The day numbers are tested against known dates of
+today (1 Ramaḍān 1445 = 11 March 2024, Rosh Hashanah 5784 and 5785, Easter 2024 and 2025).
+
+### Against the sources
+
+- **Latin: 282 days with work, 250.5 counted whole.** The English lists of the 13th century ask for 52 to 54 feasts
+  besides the Sundays (Exeter 1287: 54; Harvey 1972), which leaves 259 to 261 days; Walter of Henley reckons with
+  44 working weeks, 264 days of six. Our 282 days with work lie above, because the Decretum has fewer feasts than the
+  English dioceses and the patron and the dedication of the church, which the canon leaves to the bishop, have no
+  day; our 250.5 lie below, because the Saturdays and eves of the Flemish cloth towns are half days everywhere.
+  The days a day labourer was actually employed, 150 to 200 in the wage histories (the research of feature 7,
+  recherche/tagesplaner/ in the project files),
+  are a target for step 6, not for the calendar.
+- **Orthodox: 292.** The constitution of Manuel Komnenos of 1166 had 66 whole and 27 half holy days besides the
+  Sundays (Holweck, same article), about 233 days; their names were not found, so the list of 1909 stands in.
+- **Muslim: 363.** How many days the two festivals lasted, and how much less was worked by day in Ramaḍān, were
+  not found (Lane's description of Cairo could not be read in full; Eychenne's study of Damascus was not reachable).
+  The tabular calendar may differ by a day or two from the sighting of the moon.
+- **Jewish:** the second days of the diaspora and the eve of the Sabbath are not counted.
+
+### Limits
+
+- A firm keeps the calendar of its owner's faith; its workers rest with it, whatever their own faith. A household
+  buys on the working days of its own faith (the market of its faith is closed on its days of rest), the family
+  purse of a person with the calendar of that person's faith: in a mixed city a Jewish family buys on a Sunday
+  from the firms that work then or hold stock.
+- A firm without an owner works every day; a household of a faith without days of rest buys every day.
+- No seasons and no hours of the day yet: those are the templates of step 5.

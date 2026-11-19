@@ -114,7 +114,11 @@ export function createPersonPanel(host: HTMLElement, worldUrl: string | undefine
       if (p.mother >= 0) links.append(kin('Mutter', p.mother));
       if (p.father >= 0) links.append(kin('Vater', p.father));
       if (links.childElementCount) family.append(el('h3', '', 'Eltern'), links);
-      box.replaceChildren(head, pic, facts, ...(rows.length ? [work] : []), ...(purse.length ? [house] : []), traits, ...(links.childElementCount ? [family] : []));
+      const own = el('div', 'kin');
+      if (p.spouse >= 0) own.append(kin(p.female ? 'Ehemann' : 'Ehefrau', p.spouse));
+      for (const [k, c] of (p.children ?? []).entries()) own.append(kin(`Kind ${k + 1}`, c));
+      if (own.childElementCount) family.append(el('h3', '', 'Familie'), own);
+      box.replaceChildren(head, pic, facts, ...(rows.length ? [work] : []), ...(purse.length ? [house] : []), traits, ...(family.childElementCount ? [family] : []));
       box.hidden = false;
       await portrait(p, pic).catch((e) => console.warn('portrait', e));
     },

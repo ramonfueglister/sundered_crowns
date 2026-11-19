@@ -8,6 +8,7 @@ import { hoverPlace, mapCtl, mapError, selectedPlace } from './mapstate';
 import { mapMode } from './mapmode';
 import { replay } from './replay';
 import { listenForWorldClicks } from '../people/panel';
+import { listenForWorldHover } from '../people/hover';
 import type { WorldView as View } from '../worldprobe/view';
 
 /** where the game opens: as far out as the view goes, the world's frame from west to east as a map of its realms */
@@ -33,6 +34,8 @@ function startYear(): Promise<number | undefined> {
 }
 /** the panel of the person clicked, once for the page */
 let people: ReturnType<typeof listenForWorldClicks> | undefined;
+/** the card of the person under the pointer, once for the page */
+let peopleHover: ReturnType<typeof listenForWorldHover> | undefined;
 
 export function WorldView() {
   const canvas = useRef<HTMLCanvasElement>(null), wrap = useRef<HTMLDivElement>(null);
@@ -78,6 +81,8 @@ export function WorldView() {
         stops.push(effect(() => { made.choose(selectedPlace.value); }));
         // a click on a figure of the great cities opens that person
         people ??= listenForWorldClicks(wrap.current!.closest<HTMLElement>('.app') ?? document.body);
+        // the pointer resting on one shows who it is
+        peopleHover ??= listenForWorldHover(wrap.current!.closest<HTMLElement>('.app') ?? document.body);
       } catch (e: any) { console.error(e); mapError.value = String(e?.message || e); }
     })();
     hoverPlace.value = -1;
