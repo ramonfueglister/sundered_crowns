@@ -11,6 +11,7 @@
 import type { WorldState, NamedPerson } from '../state';
 import { ALIVE, BORN_UNKNOWN, NO_LOT } from '../state';
 import { spawn } from '../ecs';
+import { spawnPerson } from '../people/archive';
 import type { World } from '../world';
 import type { System } from '../schedule';
 import { type Chronicle, Happening, firstEventOn } from '../content/chronicle';
@@ -33,12 +34,13 @@ function normal(seed: number, key: number, k: number): number {
 }
 const clampU8 = (v: number) => Math.min(255, Math.max(0, Math.round(v)));
 
-/** The realm of each key, and the person of each chronicle key, of a state (rebuilt when the state changes). */
-const index = new WeakMap<WorldState, { realms: Map<string, number>; persons: Map<string, number>; n: number }>();
+/** The realm of each key, and the person (the row) of each chronicle key, of a state (rebuilt when the state changes:
+ *  a person of history comes into the world, or the rows close up on the first of January, src/sim/people/archive.ts). */
+const index = new WeakMap<WorldState, { realms: Map<string, number>; persons: Map<string, number>; n: number; table: object }>();
 function indexOf(s: WorldState) {
   let x = index.get(s);
-  if (!x || x.n !== s.named.length) {
-    x = { realms: new Map(s.realmText.map((t, k) => [t.key, k])), persons: new Map(s.named.map((p) => [p.key, p.person])), n: s.named.length };
+  if (!x || x.n !== s.named.length || x.table !== s.person) {
+    x = { realms: new Map(s.realmText.map((t, k) => [t.key, k])), persons: new Map(s.named.map((p) => [p.key, p.person])), n: s.named.length, table: s.person };
     index.set(s, x);
   }
   return x;
@@ -84,7 +86,7 @@ function happen(s: WorldState, w: World, c: Chronicle, e: Chronicle['events'][nu
     if (realm === undefined) return false;
     const place = seatOf(s, realm);
     if (place < 0 || x.persons.has(cp.key)) return false;
-    const id = spawn(s.person), seed = s.seed >>> 0, kh = keyHash(cp.key);
+    const id = spawnPerson(s), seed = s.seed >>> 0, kh = keyHash(cp.key);
     const born = c.bornDay[e.person];
     P.born[id] = born ?? BORN_UNKNOWN; P.sex[id] = cp.sex; P.mother[id] = -1; P.father[id] = -1;
     P.role[id] = 0; P.agent[id] = 0; // as the economy leaves every person outside it (src/sim/systems/economy.ts)

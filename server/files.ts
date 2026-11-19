@@ -15,6 +15,7 @@ import { join } from 'node:path';
 import { gunzipSync, gzipSync } from 'node:zlib';
 import { decodeState, encodeState, hashState } from '../src/sim/snapshot';
 import type { WorldState } from '../src/sim/state';
+import { type ArchivedPersons, decodeArchived, encodeArchived } from '../src/sim/people/archive';
 import { type LogLine, parseLog } from './log';
 
 /** Writes a file so that a crash or a power loss leaves either the old or the new one, whole: the bytes go to a
@@ -89,6 +90,32 @@ export class WorldFiles {
     for (const seg of this.segments())
       if (seg >= fromDay) out.push(...parseLog(readFileSync(join(this.dir, `log-${seg}.ndjson`), 'utf8')));
     return out;
+  }
+  /** The years of the archive of the dead (src/sim/people/archive.ts): `archive/dead-<day>.bin` (gzip), written once.
+   *  A replay writes the same bytes again. */
+  putArchived(a: ArchivedPersons): Uint8Array {
+    const bin = gzipSync(encodeArchived(a));
+    this.putArchivedBytes(a.day, bin);
+    return bin;
+  }
+  putArchivedBytes(day: number, bin: Uint8Array) {
+    const dir = join(this.dir, 'archive');
+    mkdirSync(dir, { recursive: true });
+    writeFileDurable(join(dir, `dead-${day}.bin`), bin);
+  }
+  hasArchived(day: number): boolean {
+    return this.archivedBytes(day) !== null;
+  }
+  archivedBytes(day: number): Uint8Array | null {
+    try {
+      return readFileSync(join(this.dir, 'archive', `dead-${day}.bin`));
+    } catch {
+      return null;
+    }
+  }
+  readArchived(day: number): ArchivedPersons | null {
+    const b = this.archivedBytes(day);
+    return b ? decodeArchived(gunzipSync(b)) : null;
   }
   segmentText(day: number): string {
     try {
