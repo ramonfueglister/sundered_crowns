@@ -2,7 +2,7 @@
 // on the land: rural.ts; the land under the plough: arable.ts), made by tools/worldprobe from the simulation's own
 // data for a start year. One byte per two by two pixels of the game map, 255 where no place is (water, beyond the
 // game map). A place has borders: nothing is blended between places.
-import { maybeGunzip } from '../render/assets';
+import { maybeGunzip } from './gunzip';
 
 export interface PlaceLayer { w: number; h: number; cells: Uint8Array }
 /** the byte where no place is */

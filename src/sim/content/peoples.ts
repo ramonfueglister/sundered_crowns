@@ -120,4 +120,3 @@ export const FAITHS: FaithDef[] = [
   { id: 'anitism', name: { en: 'Anito faith', de: 'Anito-Glaube' }, family: 'traditional', color: '#558b2f' },
 ];
 export const FAITH_INDEX: Record<string, number> = Object.fromEntries(FAITHS.map((f, i) => [f.id, i]));
-export function faithFamily(i: number) { return FAITHS[i]?.family ?? 'traditional'; }

@@ -15,18 +15,42 @@ export class MemStore implements WorldStore {
     for (const r of reigns) this.reigns.set(`${r.realm}#${r.n}`, r);
     return true;
   }
-  async upsertWorld() {} async upsertSeat() {} async removeSeat() {}
-  async isAdmin() { return false; } async profileName() { return null; }
+  async upsertWorld() {}
+  async upsertSeat() {}
+  async removeSeat() {}
+  async isAdmin() {
+    return false;
+  }
+  async profileName() {
+    return null;
+  }
   async uploadSnapshot(world: string, day: number, bin: Uint8Array, meta: string, history: Uint8Array | null) {
-    this.files.set(`${world}/snapshot.bin`, bin); this.files.set(`${world}/meta.json`, meta); this.snapshots.push(day);
+    this.files.set(`${world}/snapshot.bin`, bin);
+    this.files.set(`${world}/meta.json`, meta);
+    this.snapshots.push(day);
     if (history) this.files.set(`${world}/borders.ndjson.gz`, history);
     return true;
   }
-  async uploadLog(world: string, log: string) { this.files.set(`${world}/log.ndjson`, log); this.logs++; return true; }
+  async uploadLog(world: string, log: string) {
+    this.files.set(`${world}/log.ndjson`, log);
+    this.logs++;
+    return true;
+  }
+  async uploadArchived(world: string, day: number, bin: Uint8Array) {
+    this.files.set(`${world}/archive/dead-${day}.bin`, bin);
+    return true;
+  }
+  async downloadArchived(world: string, day: number) {
+    return (this.files.get(`${world}/archive/dead-${day}.bin`) as Uint8Array | undefined) ?? null;
+  }
   async downloadBackup(world: string): Promise<Backup | null> {
     const bin = this.files.get(`${world}/snapshot.bin`) as Uint8Array | undefined;
     if (!bin) return null;
-    return { bin, log: (this.files.get(`${world}/log.ndjson`) as string) ?? '', meta: (this.files.get(`${world}/meta.json`) as string) ?? null,
-      history: (this.files.get(`${world}/borders.ndjson.gz`) as Uint8Array) ?? null };
+    return {
+      bin,
+      log: (this.files.get(`${world}/log.ndjson`) as string) ?? '',
+      meta: (this.files.get(`${world}/meta.json`) as string) ?? null,
+      history: (this.files.get(`${world}/borders.ndjson.gz`) as Uint8Array) ?? null,
+    };
   }
 }

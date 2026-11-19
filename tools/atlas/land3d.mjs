@@ -11,8 +11,11 @@ import { dirname, basename, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const [out, elevation = '48', steep = ''] = process.argv.slice(2);
-const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..'), dir = dirname(out), name = basename(out);
-const W = 1280, H = 720;
+const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..'),
+  dir = dirname(out),
+  name = basename(out);
+const W = 1280,
+  H = 720;
 const page = `<!doctype html><meta charset="utf-8"><style>body{margin:0;background:#000;overflow:hidden}canvas{display:block}
 @font-face{font-family:'EB Garamond';font-weight:500;src:url('/font/eb-garamond-latin-500-normal.woff2')}@font-face{font-family:'EB Garamond';font-weight:600;src:url('/font/eb-garamond-latin-600-normal.woff2')}
 @font-face{font-family:'EB Garamond';font-weight:500;unicode-range:U+0100-024F;src:url('/font/eb-garamond-latin-ext-500-normal.woff2')}
@@ -104,21 +107,54 @@ for (const t of towns) {
 }
 globalThis.__done = { clumps: count, houses: spots.length, steep };
 </script>`;
-const types = { woff2: 'font/woff2', js: 'text/javascript', json: 'application/json', png: 'image/png', f32: 'application/octet-stream' };
+const types = {
+  woff2: 'font/woff2',
+  js: 'text/javascript',
+  json: 'application/json',
+  png: 'image/png',
+  f32: 'application/octet-stream',
+};
 const server = createServer((req, res) => {
   const url = decodeURIComponent(req.url.split('?')[0]);
-  const file = url === '/' ? null : url.startsWith('/three/') ? join(root, 'node_modules/three/build', url.slice(7)) : url.startsWith('/font/') ? join(root, 'node_modules/@fontsource/eb-garamond/files', url.slice(6)) : url.startsWith('/data/') ? join(dir, url.slice(6)) : '';
-  if (file === null) { res.writeHead(200, { 'content-type': 'text/html' }); return res.end(page); }
-  if (!file || !existsSync(file)) { res.writeHead(404); return res.end(); }
-  res.writeHead(200, { 'content-type': types[file.split('.').pop()] ?? 'application/octet-stream' }); res.end(readFileSync(file));
+  const file =
+    url === '/'
+      ? null
+      : url.startsWith('/three/')
+        ? join(root, 'node_modules/three/build', url.slice(7))
+        : url.startsWith('/font/')
+          ? join(root, 'node_modules/@fontsource/eb-garamond/files', url.slice(6))
+          : url.startsWith('/data/')
+            ? join(dir, url.slice(6))
+            : '';
+  if (file === null) {
+    res.writeHead(200, { 'content-type': 'text/html' });
+    return res.end(page);
+  }
+  if (!file || !existsSync(file)) {
+    res.writeHead(404);
+    return res.end();
+  }
+  res.writeHead(200, { 'content-type': types[file.split('.').pop()] ?? 'application/octet-stream' });
+  res.end(readFileSync(file));
 }).listen(0);
 const port = server.address().port;
-let playwright; try { playwright = createRequire(import.meta.url)('playwright'); } catch { playwright = createRequire('/opt/node22/lib/node_modules/')('playwright'); }
-const browser = await playwright.chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+let playwright;
+try {
+  playwright = createRequire(import.meta.url)('playwright');
+} catch {
+  playwright = createRequire('/opt/node22/lib/node_modules/')('playwright');
+}
+const browser = await playwright.chromium.launch({
+  args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'],
+});
 const tab = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
-tab.on('pageerror', (e) => console.log('[pageerror]', e.message)); tab.on('console', (msg) => { if (msg.type() === 'error') console.log('[console]', msg.text()); });
+tab.on('pageerror', (e) => console.log('[pageerror]', e.message));
+tab.on('console', (msg) => {
+  if (msg.type() === 'error') console.log('[console]', msg.text());
+});
 await tab.goto(`http://localhost:${port}/`);
 await tab.waitForFunction(() => globalThis.__done, null, { timeout: 600000 });
 console.log(`${out}.3d.png`, JSON.stringify(await tab.evaluate(() => globalThis.__done)));
 await tab.screenshot({ path: `${out}.3d.png` });
-await browser.close(); server.close();
+await browser.close();
+server.close();

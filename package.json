@@ -8,6 +8,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
+    "lint": "biome ci .",
+    "format": "biome format --write .",
     "test": "vitest run",
     "world": "tsx server/main.ts",
     "map": "cd tools/geo && python3 build_rasters.py && python3 build_locations.py && python3 build_setup.py",
@@ -20,10 +22,14 @@
     "people:check": "tsx tools/sim/people_check.ts",
     "families:check": "tsx tools/sim/families_check.ts",
     "traits:check": "tsx tools/sim/traits_check.ts",
+    "years:check": "tsx tools/sim/years_check.ts",
     "lots:write": "tsx tools/sim/write_lots.ts",
-    "portrait:build": "tsx tools/portrait/build_portrait.ts"
+    "portrait:build": "tsx tools/portrait/build_portrait.ts",
+    "archive:check": "tsx tools/sim/archive_check.ts",
+    "workdays:check": "tsx tools/sim/working_days_check.ts"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.6.5",
     "@electric-sql/pglite": "^0.5.15",
     "@preact/preset-vite": "^2.10.6",
     "@types/node": "^26.6.6",

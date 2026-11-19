@@ -33,11 +33,21 @@
 // the port (b_HH_g, src/markets.rs), so the food the families are booked with here and the goods the engine sold
 // from agriculture are not the same number. Nothing reads `fed` yet; what hunger does to a person belongs to the
 // persons of the world (docs/PEOPLE_DESIGN.md).
+//
+// Since economy feature 19 a person buys on the working days of the calendar of its faith (src/sim/holy_days.ts):
+// nothing on a day of rest, and on a working day the share of the day that is worked times the days of the year over
+// its working days. The family of the owner of a firm buys every day, as the owner does in the economy
+// (economy/src/clock.rs). The need of a day stays what the family eats; what it has to buy of it that day is the need
+// of each member times that member's factor, and `fed` is what it spent over that. On a day on which the family buys
+// nothing it needs to buy nothing: `fed` is 1.
 import type { WorldState } from '../state';
 import { ALIVE } from '../state';
 import type { World } from '../world';
 import { ROLE } from './work';
 import { ageOn } from './people';
+import { presentPersons } from '../people/living';
+import { calendarOf, dayFactor } from '../holy_days';
+import { dateToDay, dayToDate } from '../calendar';
 
 /** From this age a person consumes a whole basket (Horrell, Humphries and Weisdorf 2022, pp. 538 and 540). */
 export const BASKET_AGE = 15;
@@ -71,15 +81,25 @@ export function writeHouseholds(s: WorldState, w: World): void {
   F.persons.fill(0); F.working.fill(0); F.baskets.fill(0); F.income.fill(0); F.spent.fill(0); F.savings.fill(0); F.need.fill(0); F.fed.fill(0); P.consumed.fill(0);
   if (!e) return;
   const n = s.family.size, income = new Float64Array(n), spent = new Float64Array(n), savings = new Float64Array(n), baskets = new Float64Array(n);
-  const own = new Float32Array(s.person.size);
-  for (let id = 0; id < s.person.size; id++) {
-    if (!s.person.alive[id]) continue;
-    const f = P.family[id], role = P.role[id];
+  // the baskets the family buys on this day: each member's times the factor of its calendar, if the engine computed
+  // the day with working days (economy feature 19)
+  const toBuy = new Float64Array(n), { y, m, d } = dayToDate(e.day, s.startYear), doy = dateToDay(y, m, d, y);
+  const factors = new Map<number, number>(), factorOf = (faith: number) => {
+    let a = factors.get(faith);
+    if (a === undefined) { a = e.workingTo >= e.day ? dayFactor(calendarOf(faith), y, doy) : 1; factors.set(faith, a); }
+    return a;
+  };
+  // the living and the dead who still hold a part (src/sim/people/living.ts); a dead person without a part has no money
+  const persons = presentPersons(s).slice(), own = new Float32Array(persons.length);
+  const owners = new Set<number>();
+  for (const id of persons) if (P.died[id] === ALIVE && P.role[id] === ROLE.owner) owners.add(P.family[id]);
+  for (let k = 0; k < persons.length; k++) {
+    const id = persons[k], f = P.family[id], role = P.role[id];
     // the dead are no members; the money of a dead person whose part nobody has taken yet (src/sim/systems/deaths.ts)
     // stays with the family
     if (P.died[id] === ALIVE) {
-      own[id] = basketsOf(ageOn(P.born[id], e.day));
-      F.persons[f]++; baskets[f] += own[id];
+      own[k] = basketsOf(ageOn(P.born[id], e.day));
+      F.persons[f]++; baskets[f] += own[k]; toBuy[f] += own[k] * (owners.has(f) ? 1 : factorOf(P.faith[id]));
       if (role === ROLE.worker || role === ROLE.owner || role === ROLE.banker) F.working[f]++;
     }
     income[f] += P.income[id]; spent[f] += P.spent[id]; savings[f] += P.savings[id];
@@ -89,12 +109,13 @@ export function writeHouseholds(s: WorldState, w: World): void {
     F.baskets[f] = baskets[f]; F.income[f] = income[f]; F.spent[f] = spent[f]; F.savings[f] = savings[f];
     const k = city.get(F.place[f]);
     if (k === undefined || !(baskets[f] > 0)) continue;
-    const need = baskets[f] * cost * price[k];
-    F.need[f] = need; F.fed[f] = Math.min(1, Math.max(0, spent[f]) / need);
+    const need = baskets[f] * cost * price[k], today = toBuy[f] * cost * price[k];
+    F.need[f] = need; F.fed[f] = today > 0 ? Math.min(1, Math.max(0, spent[f]) / today) : 1;
   }
-  for (let id = 0; id < s.person.size; id++) {
-    if (!s.person.alive[id] || P.died[id] !== ALIVE) continue;
+  for (let k = 0; k < persons.length; k++) {
+    const id = persons[k];
+    if (P.died[id] !== ALIVE) continue;
     const f = P.family[id];
-    P.consumed[id] = (spent[f] * own[id]) / baskets[f];
+    P.consumed[id] = (spent[f] * own[k]) / baskets[f];
   }
 }

@@ -1,15 +1,21 @@
 // The persistent world server in-process: players take up realms, the world runs, a snapshot plus the command log
 // reproduces it, and a restart resumes where it stopped.
 import { describe, it, expect } from 'vitest';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
+import { gzipSync } from 'node:zlib';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { WorldCore, configFromEnv, type Conn } from '../server/world';
+import { configFromEnv } from '../server/config';
+import type { Conn } from '../server/session';
+import { packSnapshot, unpackSnapshot, WorldFiles } from '../server/files';
+import { WorldCore } from '../server/world';
+import { encodeState, hashState } from '../src/sim/snapshot';
 import type { ServerMsg } from '../src/net/protocol';
 import { BIN_OWNERS } from '../src/net/protocol';
 
 function conn() {
-  const msgs: ServerMsg[] = [], bins: Uint8Array[] = [];
+  const msgs: ServerMsg[] = [],
+    bins: Uint8Array[] = [];
   const c: Conn = { send: (m) => msgs.push(m), sendBin: (b) => bins.push(b), close: () => {} };
   return { c, msgs, bins };
 }
@@ -31,7 +37,8 @@ describe('world server', () => {
     expect(core.s.ruler[fr.id]).toBe('dev-anna');
     expect((a.msgs.filter((m) => m.type === 'me').pop() as any).me.realm).toBe(fr.id);
     // a second player cannot take the same realm
-    const b = conn(); const sb = core.attach(b.c, { uid: 'dev-ben', name: 'Ben', admin: false });
+    const b = conn();
+    const sb = core.attach(b.c, { uid: 'dev-ben', name: 'Ben', admin: false });
     sb.handle({ type: 'claim', realm: fr.id });
     expect(b.msgs.some((m) => m.type === 'error')).toBe(true);
     // unknown commands are refused with a reason
@@ -42,7 +49,8 @@ describe('world server', () => {
     expect(a.msgs.filter((m) => m.type === 'tick').length).toBe(12);
     sb.handle({ type: 'place', place: 0 });
     // an observer sees the world and its places but cannot take a realm or give orders
-    const o = conn(); const so = core.attach(o.c, { uid: 'watch-1', name: 'Observer', admin: false, observer: true });
+    const o = conn();
+    const so = core.attach(o.c, { uid: 'watch-1', name: 'Observer', admin: false, observer: true });
     const ow = o.msgs.find((m) => m.type === 'welcome') as Extract<ServerMsg, { type: 'welcome' }>;
     expect(ow.me).toMatchObject({ realm: -1, observer: true });
     const en = welcome.realms.find((r) => r.key === 'england')!;
@@ -55,7 +63,8 @@ describe('world server', () => {
     expect(core.seats().length).toBe(1);
     expect(b.msgs.some((m) => m.type === 'place')).toBe(true);
     // abdicating frees the realm on the next day
-    sa.handle({ type: 'abdicate' }); core.step();
+    sa.handle({ type: 'abdicate' });
+    core.step();
     expect(core.s.ruler[fr.id]).toBe('');
     sb.handle({ type: 'claim', realm: fr.id });
     expect(core.s.ruler[fr.id]).toBe('dev-ben');
@@ -76,4 +85,26 @@ describe('world server', () => {
     core.shutdown();
     rmSync(dir, { recursive: true, force: true });
   });
+});
+
+describe('snapshots on disk', () => {
+  it('are written with zstd, and those gzip wrote before are still read', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'scs-'));
+    const core = new WorldCore({ ...configFromEnv({}), dataDir: dir, id: 'snap', log: () => {} }).init();
+    core.step();
+    const files = new WorldFiles(join(dir, 'probe')),
+      raw = encodeState(core.s);
+    const w = files.writeSnapshot(core.s),
+      file = join(dir, 'probe', `snap-${w.day}.bin`);
+    expect([...readFileSync(file).subarray(0, 4)]).toEqual([0x28, 0xb5, 0x2f, 0xfd]);
+    expect(w.hash).toBe(hashState(core.s));
+    expect(hashState(files.readSnapshot(w.day))).toBe(w.hash);
+    expect(Buffer.from(unpackSnapshot(packSnapshot(raw))).equals(Buffer.from(raw))).toBe(true);
+    // a snapshot of an older build
+    writeFileSync(file, gzipSync(raw));
+    expect(hashState(files.readSnapshot(w.day))).toBe(w.hash);
+    files.close();
+    core.shutdown();
+    rmSync(dir, { recursive: true, force: true });
+  }, 60_000);
 });

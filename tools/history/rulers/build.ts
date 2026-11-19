@@ -20,70 +20,152 @@ import type { ChronicleJson, ChroniclePerson, ChronicleReign } from '../../../sr
 
 const ROOT = resolve(import.meta.dirname, '../../..');
 const LISTS = resolve(ROOT, 'data/history/rulers/lists');
-const YEAR = 1291, UNTIL = '1848-12-31';
+const YEAR = 1291,
+  UNTIL = '1848-12-31';
 
 /** A CSV with a header row and quoted fields (RFC 4180). */
 export function parseCsv(text: string): Record<string, string>[] {
-  const rows: string[][] = []; let row: string[] = [], f = '', q = false;
+  const rows: string[][] = [];
+  let row: string[] = [],
+    f = '',
+    q = false;
   for (let i = 0; i < text.length; i++) {
     const c = text[i];
-    if (q) { if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; continue; }
+    if (q) {
+      if (c === '"') {
+        if (text[i + 1] === '"') {
+          f += '"';
+          i++;
+        } else q = false;
+      } else f += c;
+      continue;
+    }
     if (c === '"') q = true;
-    else if (c === ',') { row.push(f); f = ''; }
-    else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(f); f = ''; if (row.some((x) => x !== '')) rows.push(row); row = []; }
-    else f += c;
+    else if (c === ',') {
+      row.push(f);
+      f = '';
+    } else if (c === '\n' || c === '\r') {
+      if (c === '\r' && text[i + 1] === '\n') i++;
+      row.push(f);
+      f = '';
+      if (row.some((x) => x !== '')) rows.push(row);
+      row = [];
+    } else f += c;
   }
-  if (f !== '' || row.length) { row.push(f); if (row.some((x) => x !== '')) rows.push(row); }
+  if (f !== '' || row.length) {
+    row.push(f);
+    if (row.some((x) => x !== '')) rows.push(row);
+  }
   const [head, ...body] = rows;
   return body.map((r) => Object.fromEntries(head.map((h, k) => [h.trim(), (r[k] ?? '').trim()])));
 }
 
 const FEMALE = /\b(queen|empress|duchess|countess|margravine|princess|abbess|lady|tsaritsa|sultana)\b/i;
-const COLLECTIVE = /collective government/i, NO_PERSON = /^(papal control|occupation by)\b/i;
-const NOT_HOLDER = /claimant|pretender|not a monarch|anti-?king|antipope/i, IN_CONTROL = /in control|de facto/i;
+const COLLECTIVE = /collective government/i,
+  NO_PERSON = /^(papal control|occupation by)\b/i;
+const NOT_HOLDER = /claimant|pretender|not a monarch|anti-?king|antipope/i,
+  IN_CONTROL = /in control|de facto/i;
 const date = (s: string) => (/^-?\d{1,4}(-\d{2}(-\d{2})?)?$/.test(s) ? s : null);
 /** Later of two dates given as the source gives them (compared on the text, padded to a full day). */
 const pad = (d: string) => (d.length === 4 ? `${d}-07-01` : d.length === 7 ? `${d}-15` : d);
 
-export function build(): { chronicle: ChronicleJson; report: Record<string, number | string[]> } {
+/** What the build counted, and the rows it could not use. */
+export interface RulersReport {
+  lists: number;
+  rows: number;
+  collective: number;
+  claimants: number;
+  noDates: number;
+  beforeStart: number;
+  sexByWikidata: number;
+  sexByWord: number;
+  sexAssumed: number;
+  problems: string[];
+}
+
+export function build(): { chronicle: ChronicleJson; report: RulersReport } {
   const sex = new Map<string, 0 | 1>();
   const wd = resolve(ROOT, 'data/history/rulers/wikidata/holders.csv');
-  if (existsSync(wd)) for (const r of parseCsv(readFileSync(wd, 'utf8'))) {
-    if (r.sex === 'Q6581072') sex.set(r.person, 0); else if (r.sex === 'Q6581097') sex.set(r.person, 1);
-  }
-  const persons: ChroniclePerson[] = [], reigns: ChronicleReign[] = [], byKey = new Map<string, number>();
-  const report = { lists: 0, rows: 0, collective: 0, claimants: 0, noDates: 0, beforeStart: 0, sexByWikidata: 0, sexByWord: 0, sexAssumed: 0, problems: [] as string[] };
-  const files = existsSync(LISTS) ? readdirSync(LISTS).filter((f) => f.endsWith('.csv') && f !== 'INDEX.csv').sort() : [];
+  if (existsSync(wd))
+    for (const r of parseCsv(readFileSync(wd, 'utf8'))) {
+      if (r.sex === 'Q6581072') sex.set(r.person, 0);
+      else if (r.sex === 'Q6581097') sex.set(r.person, 1);
+    }
+  const persons: ChroniclePerson[] = [],
+    reigns: ChronicleReign[] = [],
+    byKey = new Map<string, number>();
+  const report: RulersReport = {
+    lists: 0,
+    rows: 0,
+    collective: 0,
+    claimants: 0,
+    noDates: 0,
+    beforeStart: 0,
+    sexByWikidata: 0,
+    sexByWord: 0,
+    sexAssumed: 0,
+    problems: [],
+  };
+  const files = existsSync(LISTS)
+    ? readdirSync(LISTS)
+        .filter((f) => f.endsWith('.csv') && f !== 'INDEX.csv')
+        .sort()
+    : [];
   for (const file of files) {
-    const realm = file.slice(0, -4), rows = parseCsv(readFileSync(resolve(LISTS, file), 'utf8'));
+    const realm = file.slice(0, -4),
+      rows = parseCsv(readFileSync(resolve(LISTS, file), 'utf8'));
     rows.sort((a, b) => Number(a.order) - Number(b.order));
     report.lists++;
     const kept = rows.filter((r) => {
-      if (COLLECTIVE.test(r.note ?? '') || !r.name || NO_PERSON.test(r.name)) { report.collective++; return false; }
-      if (NOT_HOLDER.test(r.note ?? '') && !IN_CONTROL.test(r.note ?? '')) { report.claimants++; return false; }
+      if (COLLECTIVE.test(r.note ?? '') || !r.name || NO_PERSON.test(r.name)) {
+        report.collective++;
+        return false;
+      }
+      if (NOT_HOLDER.test(r.note ?? '') && !IN_CONTROL.test(r.note ?? '')) {
+        report.claimants++;
+        return false;
+      }
       return true;
     });
     kept.forEach((r, k) => {
       report.rows++;
-      const start = date(r.reign_start) ?? (k > 0 ? date(kept[k - 1].reign_end) : null) ?? (k === 0 ? `${YEAR}-01-01` : null);
+      const start =
+        date(r.reign_start) ?? (k > 0 ? date(kept[k - 1].reign_end) : null) ?? (k === 0 ? `${YEAR}-01-01` : null);
       const end = date(r.reign_end) ?? (k + 1 < kept.length ? date(kept[k + 1].reign_start) : null);
-      if (!start) { report.noDates++; report.problems.push(`${realm} #${r.order} ${r.name}: no start`); return; }
-      if (end && pad(end) < `${YEAR}-01-01`) { report.beforeStart++; return; }
-      const born = date(r.born), died = date(r.died);
+      if (!start) {
+        report.noDates++;
+        report.problems.push(`${realm} #${r.order} ${r.name}: no start`);
+        return;
+      }
+      if (end && pad(end) < `${YEAR}-01-01`) {
+        report.beforeStart++;
+        return;
+      }
+      const born = date(r.born),
+        died = date(r.died);
       const key = r.qid || `${r.name}|${born ?? `${realm}#${r.order}`}`;
       let p = byKey.get(key);
       if (p === undefined) {
         let sx: 0 | 1;
-        if (r.qid && sex.has(r.qid)) { sx = sex.get(r.qid)!; report.sexByWikidata++; }
-        else if (FEMALE.test(`${r.name} ${r.note}`)) { sx = 0; report.sexByWord++; }
-        else { sx = 1; report.sexAssumed++; }
+        if (r.qid && sex.has(r.qid)) {
+          sx = sex.get(r.qid)!;
+          report.sexByWikidata++;
+        } else if (FEMALE.test(`${r.name} ${r.note}`)) {
+          sx = 0;
+          report.sexByWord++;
+        } else {
+          sx = 1;
+          report.sexAssumed++;
+        }
         p = persons.push({ key, name: r.name, house: r.house ?? '', qid: r.qid ?? '', sex: sx, born, died }) - 1;
         byKey.set(key, p);
       } else {
         const q = persons[p]; // the same person in another list: keep what one of them knows
-        q.born ??= born; q.died ??= died; if (!q.house) q.house = r.house ?? '';
+        q.born ??= born;
+        q.died ??= died;
+        if (!q.house) q.house = r.house ?? '';
       }
-      const source = r.source_revid ? `${r.source_url} (revision ${r.source_revid})` : r.source_url ?? '';
+      const source = r.source_revid ? `${r.source_url} (revision ${r.source_revid})` : (r.source_url ?? '');
       reigns.push({ realm, person: p, start, end: end && pad(end) <= UNTIL ? end : null, source });
     });
   }

@@ -5,7 +5,7 @@
 // The region `world` goes once round the globe: after `worldW` map pixels it begins again, so a window may lie
 // anywhere to the east or west. The first `mapW` of those pixels are the game map; beyond it a pixel spans a touch
 // less longitude, so that the way round is a whole number of cells at every step of the map.
-import { maybeGunzip } from '../render/assets';
+import { maybeGunzip } from './gunzip';
 import { unbrotli } from './brotli';
 import { stamped } from './stamp';
 

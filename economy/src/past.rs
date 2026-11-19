@@ -89,11 +89,20 @@ impl Series {
     ///
     /// For a history of fewer than two entries: on the first day the port's estimate has one window then and stops.
     pub fn new(series: &[f64], history: usize, window: usize, log: bool) -> Series {
-        assert!(history >= 2, "a history of {history} entries: the AR(1) estimate needs two windows");
+        assert!(
+            history >= 2,
+            "a history of {history} entries: the AR(1) estimate needs two windows"
+        );
         let before = history * window;
         let computed = series.len() - history;
         let periods = before + computed;
-        let value = |j: usize| if j < before { series[j / window] } else { series[history + j - before] };
+        let value = |j: usize| {
+            if j < before {
+                series[j / window]
+            } else {
+                series[history + j - before]
+            }
+        };
         let mut running = Vec::with_capacity(periods + 1);
         let mut total = 0.0;
         running.push(total);
@@ -102,9 +111,19 @@ impl Series {
             running.push(total);
         }
         let today = computed % window;
-        let days: Vec<f64> = (0..window).map(|i| value(periods - window + (i + window - today) % window)).collect();
+        let days: Vec<f64> = (0..window)
+            .map(|i| value(periods - window + (i + window - today) % window))
+            .collect();
         let sum = (0..window).map(|i| days[(today + i) % window]).sum();
-        let mut s = Series { log, origin: 0.0, history, early: [series[0], series[1]], days, sum, phases: vec![Phase::default(); window] };
+        let mut s = Series {
+            log,
+            origin: 0.0,
+            history,
+            early: [series[0], series[1]],
+            days,
+            sum,
+            phases: vec![Phase::default(); window],
+        };
         s.origin = s.measure(window as f64 * series[0]);
         for q in 0..window {
             // the last day at position q: today, a day of this window before today, or a day of the window before
@@ -113,7 +132,11 @@ impl Series {
             s.phases[q].last = s.first(q);
             for k in 1..count {
                 let from = end - (count - k) * window;
-                let sum = if q == today && k + 1 == count { s.sum } else { running[from + window] - running[from] };
+                let sum = if q == today && k + 1 == count {
+                    s.sum
+                } else {
+                    running[from + window] - running[from]
+                };
                 let x = s.measure(sum);
                 s.phases[q].add(x);
             }
@@ -164,7 +187,11 @@ impl Series {
         };
         // the port: the squared deviations of the residuals from their mean times 1 / (n − 1); not a number for one
         // residual, and then no shock
-        let sigma = if n > 1.0 { (residuals / (n - 1.0)).max(0.0).sqrt() } else { f64::NAN };
+        let sigma = if n > 1.0 {
+            (residuals / (n - 1.0)).max(0.0).sqrt()
+        } else {
+            f64::NAN
+        };
         let epsilon = if sigma > 0.0 { sigma * rng.randn() } else { 0.0 };
         forecast + epsilon
     }
@@ -190,7 +217,11 @@ mod tests {
 
     fn port(series: &[f64], history: usize, window: usize, log: bool, seed: u64) -> f64 {
         let w = windows(series, history, window);
-        let w: Vec<f64> = if log { w.iter().map(|&y| libm::log(y)).collect() } else { w };
+        let w: Vec<f64> = if log {
+            w.iter().map(|&y| libm::log(y)).collect()
+        } else {
+            w
+        };
         beforeit::estimate::estimate_next_value(&w, &mut rng(seed))
     }
 
@@ -198,7 +229,9 @@ mod tests {
     /// drift and noise.
     fn series(history: usize, days: usize, level: f64, noise: f64, seed: u64) -> Vec<f64> {
         let mut r = rng(seed);
-        let mut v: Vec<f64> = (0..history).map(|k| level * (1.0 + 0.01 * k as f64 + 0.02 * r.randn())).collect();
+        let mut v: Vec<f64> = (0..history)
+            .map(|k| level * (1.0 + 0.01 * k as f64 + 0.02 * r.randn()))
+            .collect();
         let mut x = level * 1.1;
         for _ in 0..days {
             x += noise * level * r.randn() - 0.02 * (x - level * 1.15);
@@ -216,7 +249,11 @@ mod tests {
     /// `None` when the values before are all the same.
     fn around_the_means(series: &[f64], history: usize, window: usize, log: bool, seed: u64) -> Option<f64> {
         let w = windows(series, history, window);
-        let w: Vec<f64> = if log { w.iter().map(|&y| libm::log(y)).collect() } else { w };
+        let w: Vec<f64> = if log {
+            w.iter().map(|&y| libm::log(y)).collect()
+        } else {
+            w
+        };
         let (x, y) = (&w[..w.len() - 1], &w[1..]);
         let n = x.len() as f64;
         let (mx, my) = (x.iter().sum::<f64>() / n, y.iter().sum::<f64>() / n);
@@ -227,7 +264,9 @@ mod tests {
         let alpha = x.iter().zip(y).map(|(a, b)| (a - mx) * (b - my)).sum::<f64>() / sxx;
         let u: Vec<f64> = x.iter().zip(y).map(|(a, b)| (b - my) - alpha * (a - mx)).collect();
         let mu = u.iter().sum::<f64>() / n;
-        let sigma = (u.iter().map(|v| (v - mu) * (v - mu)).sum::<f64>() / (n - 1.0)).max(0.0).sqrt();
+        let sigma = (u.iter().map(|v| (v - mu) * (v - mu)).sum::<f64>() / (n - 1.0))
+            .max(0.0)
+            .sqrt();
         let epsilon = if sigma > 0.0 { sigma * rng(seed).randn() } else { 0.0 };
         Some(my + alpha * (w[w.len() - 1] - mx) + epsilon)
     }
@@ -236,9 +275,15 @@ mod tests {
     fn the_estimate_from_the_sums_is_the_ports_estimate_on_the_whole_past() {
         for (window, history, days) in [(1, 5, 40), (7, 3, 100), (365, 77, 1200), (365, 2, 800)] {
             let Y = series(history, days, 180.0, 0.01, 7);
-            let pi: Vec<f64> = series(history, days, 1.0, 0.3, 8).iter().map(|v| (v - 1.1) * 1e-3).collect();
+            let pi: Vec<f64> = series(history, days, 1.0, 0.3, 8)
+                .iter()
+                .map(|v| (v - 1.1) * 1e-3)
+                .collect();
             // built at the start and fed day by day, and built from the whole past of that day
-            let (mut fed_Y, mut fed_pi) = (Series::new(&Y[..history], history, window, true), Series::new(&pi[..history], history, window, false));
+            let (mut fed_Y, mut fed_pi) = (
+                Series::new(&Y[..history], history, window, true),
+                Series::new(&pi[..history], history, window, false),
+            );
             for t in 0..=days {
                 let n = history + t;
                 if t > 0 {
@@ -246,7 +291,10 @@ mod tests {
                     fed_pi.push(t - 1, pi[n - 1]);
                 }
                 if t % 97 == 0 || t == days || t < 3 {
-                    let (built_Y, built_pi) = (Series::new(&Y[..n], history, window, true), Series::new(&pi[..n], history, window, false));
+                    let (built_Y, built_pi) = (
+                        Series::new(&Y[..n], history, window, true),
+                        Series::new(&pi[..n], history, window, false),
+                    );
                     let last = *windows(&Y[..n], history, window).last().unwrap();
                     assert_eq!(fed_Y.sum, last, "the window that ends today, window {window} day {t}");
                     assert_eq!(built_Y.sum, last);
@@ -256,10 +304,30 @@ mod tests {
                     let tolerance = if history >= 5 { 1e-12 } else { 1e-8 };
                     for seed in [1, 2] {
                         let what = format!("window {window}, history {history}, day {t}");
-                        close(fed_Y.next_value(t, &mut rng(seed)), port(&Y[..n], history, window, true, seed), tolerance, &format!("real GDP fed, {what}"));
-                        close(built_Y.next_value(t, &mut rng(seed)), port(&Y[..n], history, window, true, seed), tolerance, &format!("real GDP built, {what}"));
-                        close(fed_pi.next_value(t, &mut rng(seed)), port(&pi[..n], history, window, false, seed), tolerance, &format!("inflation fed, {what}"));
-                        close(built_pi.next_value(t, &mut rng(seed)), port(&pi[..n], history, window, false, seed), tolerance, &format!("inflation built, {what}"));
+                        close(
+                            fed_Y.next_value(t, &mut rng(seed)),
+                            port(&Y[..n], history, window, true, seed),
+                            tolerance,
+                            &format!("real GDP fed, {what}"),
+                        );
+                        close(
+                            built_Y.next_value(t, &mut rng(seed)),
+                            port(&Y[..n], history, window, true, seed),
+                            tolerance,
+                            &format!("real GDP built, {what}"),
+                        );
+                        close(
+                            fed_pi.next_value(t, &mut rng(seed)),
+                            port(&pi[..n], history, window, false, seed),
+                            tolerance,
+                            &format!("inflation fed, {what}"),
+                        );
+                        close(
+                            built_pi.next_value(t, &mut rng(seed)),
+                            port(&pi[..n], history, window, false, seed),
+                            tolerance,
+                            &format!("inflation built, {what}"),
+                        );
                     }
                 }
             }
@@ -272,7 +340,10 @@ mod tests {
         let (history, window) = (4, 30);
         let mut Y = vec![5.0; history];
         let mut pi = vec![0.0; history];
-        let (mut sY, mut sp) = (Series::new(&Y, history, window, true), Series::new(&pi, history, window, false));
+        let (mut sY, mut sp) = (
+            Series::new(&Y, history, window, true),
+            Series::new(&pi, history, window, false),
+        );
         let mut r = rng(3);
         for t in 0..100 {
             for seed in [1, 2] {
@@ -281,11 +352,31 @@ mod tests {
                 // Once one of them differs a little, the port decomposes regressors that are nearly one column and
                 // its solution carries rounding up to the sixth digit; the sums agree with least squares around
                 // the means to 10 digits, and with the port as far as the port is exact.
-                close(mine_Y, port(&Y, history, window, true, seed), 1e-5, &format!("real GDP against the port, day {t}"));
-                close(mine_pi, port(&pi, history, window, false, seed), 1e-9, &format!("inflation against the port, day {t}"));
+                close(
+                    mine_Y,
+                    port(&Y, history, window, true, seed),
+                    1e-5,
+                    &format!("real GDP against the port, day {t}"),
+                );
+                close(
+                    mine_pi,
+                    port(&pi, history, window, false, seed),
+                    1e-9,
+                    &format!("inflation against the port, day {t}"),
+                );
                 match around_the_means(&Y, history, window, true, seed) {
-                    Some(exact) => close(mine_Y, exact, 1e-10, &format!("real GDP against least squares around the means, day {t}")),
-                    None => close(mine_Y, port(&Y, history, window, true, seed), 1e-12, &format!("real GDP, the same windows before, day {t}")),
+                    Some(exact) => close(
+                        mine_Y,
+                        exact,
+                        1e-10,
+                        &format!("real GDP against least squares around the means, day {t}"),
+                    ),
+                    None => close(
+                        mine_Y,
+                        port(&Y, history, window, true, seed),
+                        1e-12,
+                        &format!("real GDP, the same windows before, day {t}"),
+                    ),
                 }
             }
             let (y, p) = (5.0 * (1.0 + 0.01 * r.randn()), 1e-4 * r.randn());

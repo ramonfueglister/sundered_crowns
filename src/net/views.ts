@@ -10,6 +10,7 @@ import { TERRAINS, RESOURCES } from '../sim/geo';
 import { ALL_CULTURES, cultureLabel, FAITHS } from '../sim/content/peoples';
 import { hectares, landLimitHa, soilOf } from '../sim/systems/cultivation';
 import { kcalPerHeadDay } from '../sim/systems/harvest';
+import { presentPersons } from '../sim/people/living';
 
 export function realmInfos(s: WorldState, rulerName: (uid: string) => string | null): RealmInfo[] {
   const count = new Int32Array(s.realm.size);
@@ -43,27 +44,23 @@ export function cityEconomyDetail(s: WorldState, w: World, i: number): CityEcono
 
 const NONE = { en: '—', de: '—' };
 
-/** The cultures and faiths of the living persons of a place, as pairs, most persons first (src/sim/systems/cultures.ts). */
-export function placePeoples(s: WorldState, place: number): { culture: I18n; faith: I18n; persons: number }[] {
-  return personsOfPlace(s, place).peoples;
-}
-
 /** The persons of every place, grouped once a day (a click on a place reads only its own persons): person ids by the
  *  place of their family, ids of place p at start[p] … start[p + 1]. Rebuilt when the day, the persons or the families
  *  change in number (persons and families are only made and freed by the day's systems); who is alive and what a
  *  person is are read when asked. */
-const grouped = new WeakMap<WorldState, { day: number; persons: number; families: number; start: Int32Array; ids: Int32Array }>();
+const grouped = new WeakMap<object, { day: number; persons: number; families: number; start: Int32Array; ids: Int32Array }>(); // by the table of the persons, which the archive makes anew (src/sim/people/archive.ts)
 const count = (t: { size: number; free: number[] }) => t.size * 65536 + t.free.length;
 function personsByPlace(s: WorldState): { start: Int32Array; ids: Int32Array } {
-  let g = grouped.get(s);
+  let g = grouped.get(s.person);
   if (g && g.day === s.day && g.persons === count(s.person) && g.families === count(s.family)) return g;
   const L = s.place.owner.length, P = s.person.cols, F = s.family.cols, start = new Int32Array(L + 1);
-  for (let id = 0; id < s.person.size; id++) { const p = F.place[P.family[id]]; if (p >= 0 && p < L) start[p + 1]++; }
+  const persons = presentPersons(s); // the dead without a part are never asked for (src/sim/people/living.ts)
+  for (const id of persons) { const p = F.place[P.family[id]]; if (p >= 0 && p < L) start[p + 1]++; }
   for (let p = 0; p < L; p++) start[p + 1] += start[p];
   const ids = new Int32Array(start[L]), at = start.slice(0, L);
-  for (let id = 0; id < s.person.size; id++) { const p = F.place[P.family[id]]; if (p >= 0 && p < L) ids[at[p]++] = id; }
+  for (const id of persons) { const p = F.place[P.family[id]]; if (p >= 0 && p < L) ids[at[p]++] = id; }
   g = { day: s.day, persons: count(s.person), families: count(s.family), start, ids };
-  grouped.set(s, g);
+  grouped.set(s.person, g);
   return g;
 }
 

@@ -32,8 +32,13 @@ const GLIDE_WINDOW = 90, GLIDE_END = 2e-5;
 /** a flight to a place takes this many milliseconds, and rises on its way so that about half its way lies in the picture */
 const FLIGHT = 1400, FLIGHT_SEES = 0.5;
 
+/** the pointer resting over the ground is looked up at most this often, in milliseconds (a ray through the ground costs) */
+const HOVER_EVERY = 90;
+
 /** What a click on the ground hit: the point in finest world blocks (y: blocks above the stage's floor as the land was built), the step the view is drawn in, and the place in degrees. */
 export interface WorldClick { x: number; y: number; z: number; step: number; lon: number; lat: number }
+/** Where the pointer rests over the ground (`world-hover`): the point as a click's, and the pointer on the page. */
+export interface WorldHover extends WorldClick { px: number; py: number }
 
 export interface WorldViewOptions {
   /** the canvas to draw on (default: the page's first, filling the window) */
@@ -102,6 +107,8 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
 
   /** how the stage is laid out for the view, as of the last look */
   let laid: Layout = { step: 0, coarse: 1, homeX: 0, homeZ: 0 };
+  /** what the pointer at rest wants to know when the view moved (set below, with the pointer) */
+  let moved = () => {};
   const look = () => {
     const elevation = elevationOf(wide), aspect = canvas.clientWidth / canvas.clientHeight, squash = Math.sin((elevation * Math.PI) / 180);
     // the picture stops at the edges of the world's frame (the map's rows and columns run with the picture's sides)
@@ -122,6 +129,7 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
     stage.busy = missing > 0 && !failed;
     if (stage.busy) stage.probe.ready = false;
     o.status?.(failed || (still && missing ? `Lade ${missing} ${missing === 1 ? 'Stück' : 'Stücke'} der Welt …` : ''));
+    moved();
   };
   const note = () => { if (o.moved) { const [lon, lat] = projection.placeOf(...cellOfBlock(x, z)); o.moved(lon, lat, wide); } };
 
@@ -188,22 +196,46 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
    * finest world blocks (x, z; y in blocks above the stage's floor as the land was built, before the relief was
    * scaled), the step the view is drawn in and the place in degrees. Who wants to know what stands there listens for it.
    */
-  const click = (px: number, py: number) => {
+  const groundAt = (px: number, py: number): { at: WorldClick; u: number; v: number } | null => {
     const hit = stage.pick(px, py), tall = reliefOf(wide, laid.step);
-    if (!hit) return;
+    if (!hit) return null;
     const wx = (hit[0] + laid.homeX) * laid.coarse, wz = (hit[2] + laid.homeZ) * laid.coarse, [u, v] = cellOfBlock(wx, wz), [lon, lat] = projection.placeOf(u, v);
-    const detail: WorldClick = { x: wx, y: (hit[1] - SEA_Y * (1 - tall)) / tall, z: wz, step: laid.step, lon, lat };
-    window.dispatchEvent(new CustomEvent('world-click', { detail }));
-    o.clicked?.(detail, () => realms.placeAt(u, v));
+    return { at: { x: wx, y: (hit[1] - SEA_Y * (1 - tall)) / tall, z: wz, step: laid.step, lon, lat }, u, v };
   };
+  const click = (px: number, py: number) => {
+    const g = groundAt(px, py);
+    if (!g) return;
+    window.dispatchEvent(new CustomEvent('world-click', { detail: g.at }));
+    o.clicked?.(g.at, () => realms.placeAt(g.u, g.v));
+  };
+  /**
+   * Tells the page where the pointer rests over the ground: the event `world-hover` on the window, whose detail is
+   * the point as a click's and the pointer on the page (WorldHover), or null when the pointer left the ground, a
+   * button went down or the view is drawn coarser than its finest step (nothing small stands there to point at).
+   * Looked up at most every HOVER_EVERY milliseconds, and anew when the view moves under a pointer at rest.
+   */
+  let pointer: { x: number; y: number } | null = null, hoverWait = 0, hovering = false;
+  const hoverOff = () => { clearTimeout(hoverWait); hoverWait = 0; if (hovering) { hovering = false; window.dispatchEvent(new CustomEvent('world-hover', { detail: null })); } };
+  const hover = () => {
+    if (hoverWait || !pointer) return;
+    hoverWait = window.setTimeout(() => {
+      hoverWait = 0;
+      const g = pointer && !held.size && laid.step === 0 ? groundAt(pointer.x, pointer.y) : null;
+      if (!g) { hoverOff(); return; }
+      hovering = true;
+      window.dispatchEvent(new CustomEvent('world-hover', { detail: { ...g.at, px: pointer!.x, py: pointer!.y } satisfies WorldHover }));
+    }, HOVER_EVERY);
+  };
+  moved = hover;
   // one pointer drags the ground along; two pinch it larger or smaller
   const held = new Map<number, { x: number; y: number }>(), trail: { t: number; right: number; near: number }[] = [];
   let pressed = { x: 0, y: 0, t: 0, alone: false };
   canvas.style.touchAction = 'none'; canvas.style.cursor = 'grab';
-  canvas.addEventListener('pointerdown', (e) => { pressed = { x: e.clientX, y: e.clientY, t: performance.now(), alone: held.size === 0 }; held.set(e.pointerId, { x: e.clientX, y: e.clientY }); canvas.setPointerCapture(e.pointerId); canvas.style.cursor = 'grabbing'; glide = [0, 0]; flight = null; trail.length = 0; });
+  canvas.addEventListener('pointerdown', (e) => { hoverOff(); pressed = { x: e.clientX, y: e.clientY, t: performance.now(), alone: held.size === 0 }; held.set(e.pointerId, { x: e.clientX, y: e.clientY }); canvas.setPointerCapture(e.pointerId); canvas.style.cursor = 'grabbing'; glide = [0, 0]; flight = null; trail.length = 0; });
   canvas.addEventListener('pointermove', (e) => {
     const was = held.get(e.pointerId);
-    if (!was) return;
+    if (e.pointerType === 'mouse') pointer = { x: e.clientX, y: e.clientY };
+    if (!was) { hover(); return; }
     if (held.size === 2) {
       const other = [...held].find(([id]) => id !== e.pointerId)![1];
       goal = wide * (Math.hypot(was.x - other.x, was.y - other.y) / Math.max(1, Math.hypot(e.clientX - other.x, e.clientY - other.y)));
@@ -215,6 +247,7 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
     }
     held.set(e.pointerId, { x: e.clientX, y: e.clientY });
   });
+  canvas.addEventListener('pointerleave', () => { pointer = null; hoverOff(); });
   for (const up of ['pointerup', 'pointercancel'] as const) canvas.addEventListener(up, (e) => {
     held.delete(e.pointerId);
     if (held.size) { pressed.alone = false; return; }
@@ -246,6 +279,7 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
     mapMode(mode) { if (realms.mode !== mode) { realms.mode = mode; look(); } },
     dispose() {
       gone = true;
+      hoverOff();
       window.removeEventListener('keydown', key); window.removeEventListener('resize', look); sized.disconnect();
       pieces.dispose(); realms.dispose(); names.remove(); stage.dispose();
     },

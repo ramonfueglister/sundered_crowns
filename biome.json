@@ -1,0 +1,88 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "files": {
+    "ignoreUnknown": true,
+    "includes": ["src/**", "server/**", "tests/**", "tools/**", "*.ts", "!**/*.json"]
+  },
+  "formatter": { "enabled": false, "indentStyle": "space", "indentWidth": 2, "lineWidth": 120 },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "jsxQuoteStyle": "double",
+      "semicolons": "always",
+      "trailingCommas": "all",
+      "arrowParentheses": "always"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "style": { "noNonNullAssertion": "off" },
+      "suspicious": { "noAssignInExpressions": "warn", "useIterableCallbackReturn": "warn" },
+      "a11y": {
+        "useButtonType": "warn",
+        "useSemanticElements": "warn",
+        "noStaticElementInteractions": "warn",
+        "useKeyWithClickEvents": "warn"
+      }
+    }
+  },
+  "assist": { "enabled": false },
+  "overrides": [
+    {
+      "includes": [
+        "server/**",
+        "src/audio/**",
+        "src/ui/**",
+        "tests/buildings/**",
+        "tests/figures/**",
+        "tests/setup/**",
+        "tests/archive.test.ts",
+        "tests/borders.test.ts",
+        "tests/cultivation.test.ts",
+        "tests/cultures.test.ts",
+        "tests/deaths.test.ts",
+        "tests/economy-households.test.ts",
+        "tests/economy-persons.test.ts",
+        "tests/economy-routes.test.ts",
+        "tests/economy.test.ts",
+        "tests/families.test.ts",
+        "tests/foundation.test.ts",
+        "tests/hamlets.test.ts",
+        "tests/holy_days.test.ts",
+        "tests/inheritance.test.ts",
+        "tests/moves.test.ts",
+        "tests/music.test.ts",
+        "tests/people-genes.test.ts",
+        "tests/people-net.test.ts",
+        "tests/people.test.ts",
+        "tests/piece_key.test.ts",
+        "tests/portrait_skin.test.ts",
+        "tests/roads.test.ts",
+        "tests/rulers.test.ts",
+        "tests/rulers_copy.test.ts",
+        "tests/supabase_rls.test.ts",
+        "tests/traits.test.ts",
+        "tests/work-offers.test.ts",
+        "tests/world-1291.test.ts",
+        "tests/world-beyond.test.ts",
+        "tests/world_auth.test.ts",
+        "tests/world_backup.test.ts",
+        "tests/world_history.test.ts",
+        "tests/world_server.test.ts",
+        "tests/world_store.test.ts",
+        "tools/atlas/**",
+        "tools/history/**",
+        "tools/lookprobe/**",
+        "tools/map/**",
+        "tools/roads/**",
+        "tools/stamp/**",
+        "tools/zoom/**",
+        "vite.config.ts"
+      ],
+      "formatter": { "enabled": true }
+    }
+  ]
+}
