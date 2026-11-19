@@ -41,6 +41,11 @@ export interface ChronicleJson {
  *  predecessor has left it. */
 export const enum Happening { Enter = 0, End = 1, Die = 2, Accede = 3 }
 export interface ChronicleEvent { day: number; what: Happening; person: number; realm: string }
+export interface ChronicleReignDays {
+  person: number; start: number; end: number | null;
+  /** the dates of the source (null: none given) and the source of the row */
+  from: string | null; to: string | null; source: string;
+}
 
 export interface Chronicle {
   year: number;
@@ -53,8 +58,9 @@ export interface Chronicle {
   /** sorted by day, then by what happens, then by person */
   events: readonly ChronicleEvent[];
   /** the reigns of each realm as days (end null: past the chronicle), for co-rulers: when one of them leaves, the
-   *  crown stays with another who still reigns */
-  reignsOf: ReadonlyMap<string, readonly { person: number; start: number; end: number | null }[]>;
+   *  crown stays with another who still reigns; with the dates and the source as the chronicle gives them (for the
+   *  readable copy of the rulers, server/rulers_copy.ts) */
+  reignsOf: ReadonlyMap<string, readonly ChronicleReignDays[]>;
 }
 
 /** A date of the source as a day of the world. A date without a day is taken as the middle of its month, one without
@@ -103,10 +109,10 @@ export function compileChronicle(j: ChronicleJson): Chronicle {
     if (r.e !== null) events.push({ day: r.e, what: Happening.End, person: r.person, realm: r.realm });
   }
   events.sort((a, b) => a.day - b.day || a.what - b.what || a.person - b.person || (a.realm < b.realm ? -1 : a.realm > b.realm ? 1 : 0));
-  const reignsOf = new Map<string, { person: number; start: number; end: number | null }[]>();
+  const reignsOf = new Map<string, ChronicleReignDays[]>();
   for (const r of reigns) {
     const l = reignsOf.get(r.realm) ?? []; reignsOf.set(r.realm, l);
-    l.push({ person: r.person, start: r.s ?? 0, end: r.e });
+    l.push({ person: r.person, start: r.s ?? 0, end: r.e, from: r.start, to: r.end, source: r.source });
   }
   return { year: Y, persons: j.persons, bornDay, diedDay, home, events, reignsOf };
 }

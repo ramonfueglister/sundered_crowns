@@ -12,11 +12,12 @@ time, so the lines of parts that have not changed are left alone.)
 
 Usage: python3 tools/worldprobe/stitch_parts.py [--dry] [part ...]      (--dry only tells how the land steps at every line)
 """
-import gzip, os, sys
+import os, sys
 import numpy as np
 from scipy import ndimage
 
 from build_region import ACROSS, PARTS, ROOT, SEA, TILE, tile_start
+import tiles as tiles_file
 
 # the step is spread over this many cells to either side of the line
 REACH = 96
@@ -27,14 +28,15 @@ SHORE = 12
 OUT = os.path.join(ROOT, 'public', 'map', 'regions', 'world')
 
 
-def path(tx, ty): return os.path.join(OUT, f'{tx % ACROSS}_{ty}.bin.gz')
+def key(tx, ty): return f'{tx % ACROSS}_{ty}'
 def width(tx): return tile_start(tx % ACROSS + 1) - tile_start(tx % ACROSS)
 
 
 def read(tx, ty):
     """The heights and the water of a tile (None: open sea), and all its bytes."""
-    if not os.path.exists(path(tx, ty)): return None
-    with gzip.open(path(tx, ty), 'rb') as f: raw = bytearray(f.read())
+    raw = tiles_file.read(OUT, key(tx, ty), TILE)
+    if raw is None: return None
+    raw = bytearray(raw)
     return raw, np.frombuffer(raw, '<i2', TILE * TILE).reshape(TILE, TILE), np.frombuffer(raw, np.uint8, TILE * TILE, TILE * TILE * 3).reshape(TILE, TILE)
 
 
@@ -104,8 +106,7 @@ def stitch(upright, at, first, last, dry):
             if upright: h[:, (slice(0, REACH) if side else slice(w - 1, w - 1 - REACH, -1))] = fresh
             else: h[(slice(0, REACH) if side else slice(TILE - 1, TILE - 1 - REACH, -1)), :w] = fresh.T
             # written beside the tile and put in its place whole, so that a run cut short leaves no half tile
-            with open(path(tx, ty) + '.new', 'wb') as f: f.write(gzip.compress(bytes(raw), 9, mtime=0))
-            os.replace(path(tx, ty) + '.new', path(tx, ty))
+            tiles_file.write(OUT, key(tx, ty), bytes(raw), TILE, tiles_file.coded(OUT))
             written += 1
         row += m
     return written

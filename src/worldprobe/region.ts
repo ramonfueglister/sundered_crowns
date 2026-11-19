@@ -6,6 +6,7 @@
 // anywhere to the east or west. The first `mapW` of those pixels are the game map; beyond it a pixel spans a touch
 // less longitude, so that the way round is a whole number of cells at every step of the map.
 import { maybeGunzip } from '../render/assets';
+import { unbrotli } from './brotli';
 
 export const Water = { Land: 0, Sea: 1, Lake: 2 } as const;
 export interface River {
@@ -34,7 +35,11 @@ export interface Region {
   forest: Uint8Array; crops: Uint8Array;
   rivers: River[];
 }
-export interface Index { tile: number; cells: number; mapW: number; mapH: number; lon0: number; lon1: number; latN: number; latS: number; worldW?: number; worldH?: number; tiles: string[] }
+export interface Index {
+  tile: number; cells: number; mapW: number; mapH: number; lon0: number; lon1: number; latN: number; latS: number; worldW?: number; worldH?: number; tiles: string[];
+  /** 'br': the tiles are <tx>_<ty>.bin, their heights as differences and all zipped with Brotli (`fromDifferences`); else <tx>_<ty>.bin.gz, the rasters zipped with gzip */
+  coding?: 'br';
+}
 type Frame = Pick<Index, 'mapW' | 'mapH' | 'lon0' | 'lon1' | 'latN' | 'latS' | 'worldW'>;
 
 const merc = (deg: number) => Math.asinh(Math.tan((deg * Math.PI) / 180));
@@ -60,6 +65,23 @@ export function latOf(r: Region, cy: number): number {
   return (Math.atan(Math.sinh(y)) * 180) / Math.PI;
 }
 
+/**
+ * The rasters of a tile from a tile's file of the coding 'br' (tools/worldprobe/tiles.py), unzipped: its heights come
+ * as their differences to the cell on the left (in the first column: to the cell above), zigzagged into whole numbers
+ * from nought, the low bytes of all cells before their high bytes; the layers of bytes follow as they are. A tile is a
+ * quarter smaller so than as rasters zipped with gzip.
+ */
+export function fromDifferences(body: Uint8Array, T: number): Uint8Array {
+  const t = T * T, raw = new Uint8Array(t * 6), shaped = new Int16Array(raw.buffer, 0, t);
+  for (let y = 0; y < T; y++) for (let x = 0; x < T; x++) {
+    const i = y * T + x, z = body[i] | (body[t + i] << 8);
+    // (the sum is taken as a number of 16 bits, as the difference was)
+    shaped[i] = (z & 1 ? -((z + 1) >> 1) : z >> 1) + (x ? shaped[i - 1] : y ? shaped[i - T] : 0);
+  }
+  raw.set(body.subarray(t * 2, t * 6), t * 2);
+  return raw;
+}
+
 /** What one tile of a region holds, unpacked. */
 interface Tile { shaped: Int16Array; layers: Uint8Array[]; rivers: River[] }
 const indexes = new Map<string, Promise<Index & { has: Set<string> }>>(), tiles = new Map<string, Promise<Tile>>();
@@ -71,12 +93,12 @@ export const indexOf = (name: string, base: string) => {
   if (!indexes.has(name)) indexes.set(name, get(`${base}map/regions/${name}/index.json`).then(async (r) => { const index = (await r.json()) as Index; return { ...index, has: new Set(index.tiles) }; }));
   return indexes.get(name)!;
 };
-function tileOf(name: string, base: string, T: number, tx: number, ty: number): Promise<Tile> {
+function tileOf(name: string, base: string, T: number, tx: number, ty: number, coding?: Index['coding']): Promise<Tile> {
   const key = `${name}/${tx}_${ty}`, kept = tiles.get(key);
   if (kept) { tiles.delete(key); tiles.set(key, kept); return kept; }
   const tile = (async () => {
-    const [packed, rivers] = await Promise.all([get(`${base}map/regions/${key}.bin.gz`).then((r) => r.arrayBuffer()), get(`${base}map/regions/${key}.json`).then((r) => r.json() as Promise<River[]>)]);
-    const raw = await maybeGunzip(new Uint8Array(packed)), t = T * T;
+    const [packed, rivers] = await Promise.all([get(`${base}map/regions/${key}.${coding === 'br' ? 'bin' : 'bin.gz'}`).then((r) => r.arrayBuffer()), get(`${base}map/regions/${key}.json`).then((r) => r.json() as Promise<River[]>)]);
+    const raw = coding === 'br' ? fromDifferences(await unbrotli(new Uint8Array(packed)), T) : await maybeGunzip(new Uint8Array(packed)), t = T * T;
     if (raw.byteLength !== t * 6) throw new Error(`${key}.bin: expected ${t * 6} bytes, got ${raw.byteLength}`);
     const bytes = (layer: number) => raw.subarray(t * (2 + layer), t * (3 + layer));
     return { shaped: new Int16Array(raw.buffer.slice(raw.byteOffset, raw.byteOffset + t * 2)), layers: [bytes(0), bytes(1), bytes(2), bytes(3)], rivers };
@@ -111,7 +133,7 @@ export async function loadWindow(name: string, gx0: number, gy0: number, w: numb
     at += len;
   }
   await Promise.all(wanted.map(async ({ tx, ty, at, x, len }) => {
-    const tile = await tileOf(name, base, T, tx, ty), to = [region.drainage, region.water, region.forest, region.crops];
+    const tile = await tileOf(name, base, T, tx, ty, index.coding), to = [region.drainage, region.water, region.forest, region.crops];
     // the part of the tile that lies in the window, row by row
     for (let gy = Math.max(gy0, ty * T); gy < Math.min(gy0 + h, (ty + 1) * T); gy++) {
       const src = (gy - ty * T) * T + (x - tx * T), dst = (gy - gy0) * w + (at - gx0);

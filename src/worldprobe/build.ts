@@ -13,7 +13,7 @@ import { FINER_STEPS } from './land';
 import { loadParcels } from './lots';
 import { loadRoads } from './roads';
 import { loadModels } from './models';
-import { Water, loadWindow } from './region';
+import { type Index, type Region, Water, indexOf, loadWindow } from './region';
 import { loadRural } from './rural';
 import { loadInhabitants } from './towns';
 import { type Piece, type WorldScene, buildWorld, windowOf } from './world';
@@ -39,9 +39,31 @@ export async function buildPiece(from: From, step: number, piece: Piece, mean: C
   if (!land) return null;
   // a far step lays out its places by the plan of the finest step, where there is one (far.ts)
   if (step > 0) usePlan(await loadPlan(base, year ?? 1356));
-  if (step === 0) await loadTownPeople(undefined, year); // the persons of the 30 cities walk in their towns (src/figures/people.ts)
-  const climate = await loadClimate(base, region.worldW ?? region.mapW, region.worldH ?? region.mapH), people = await loadInhabitants(base, year), models = await loadModels(base);
-  const forest = await loadForest(base, year, region.worldW ?? region.mapW, region.worldH ?? region.mapH), rural = await loadRural(base, year, region.mapW, region.mapH), arable = await loadArable(base, year, region.mapW, region.mapH);
-  const hamlets = await loadHamletLands(base, year ?? 1356), parcels = await loadParcels(base, year ?? 1356), roads = await loadRoads(base, year ?? 1356);
+  const { climate, people, models, forest, rural, arable, hamlets, parcels, roads } = await mapData(base, year, region, step === 0);
   return onGrid(from.grid, () => buildWorld(region, piece, gazetteer.places, landmarks.landmarks, bakedSky, step, climate, people, models, forest, rural, arable, hamlets, parcels, undefined, mean, undefined, roads));
 }
+
+/**
+ * The map's data a piece is built from, beside its window of the region: each part is fetched and unpacked once by
+ * a worker and kept (every loader keeps what it loaded), and all parts are asked for at once, not one after the other.
+ * `people`: with the persons of the towns, who walk in the pieces of the finest step (src/figures/people.ts).
+ */
+async function mapData(base: string, year: number | undefined, map: Pick<Region | Index, 'mapW' | 'mapH' | 'worldW' | 'worldH'>, people: boolean) {
+  const w = map.worldW ?? map.mapW, h = map.worldH ?? map.mapH;
+  const [climate, inhabitants, models, forest, rural, arable, hamlets, parcels, roads] = await Promise.all([
+    loadClimate(base, w, h), loadInhabitants(base, year), loadModels(base), loadForest(base, year, w, h), loadRural(base, year, map.mapW, map.mapH), loadArable(base, year, map.mapW, map.mapH),
+    loadHamletLands(base, year ?? 1356), loadParcels(base, year ?? 1356), loadRoads(base, year ?? 1356), people ? loadTownPeople(undefined, year) : undefined,
+  ]);
+  return { climate, people: inhabitants, models, forest, rural, arable, hamlets, parcels, roads };
+}
+
+/**
+ * Loads what the pieces of the finest step are built from, before the first of them is asked for: the region's
+ * index and the map's data (some 4 MB to fetch, and unpacked in every worker). Its first piece then takes a worker
+ * as long as every other, not half a second more. The tiles of the region come with the pieces that lie on them.
+ */
+export async function warmPieces(from: Pick<From, 'region' | 'base' | 'year'>): Promise<void> {
+  const index = await indexOf(from.region, from.base);
+  await mapData(from.base, from.year, index, true);
+}
+

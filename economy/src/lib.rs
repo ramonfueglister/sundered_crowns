@@ -342,7 +342,9 @@ pub mod abi {
         /// from here instead of reading the bytes; any other bytes are read. So the answers stay a function of the
         /// bytes alone. The bytes are the same list as the result in [`OUT`], not a copy: the state of a world is
         /// tens of megabytes, and the memory of an instance never shrinks.
-        static LAST: RefCell<Option<(Rc<Vec<u8>>, Cities)>> = const { RefCell::new(None) };
+        /// The bytes are `None` after [`sce_advance_last`] until [`sce_save_last`] writes them: the world computes
+        /// day after day and needs the bytes of its economies only for a snapshot.
+        static LAST: RefCell<Option<(Option<Rc<Vec<u8>>>, Cities)>> = const { RefCell::new(None) };
     }
 
     /// The cities of a state, taken out of [`LAST`] when the bytes are those it holds. The result of the call before
@@ -350,22 +352,33 @@ pub mod abi {
     fn take(state: &[u8]) -> Result<Cities, String> {
         OUT.with(|o| *o.borrow_mut() = Rc::new(Vec::new()));
         match LAST.with(|l| l.borrow_mut().take()) {
-            Some((bytes, all)) if *bytes == state => Ok(all),
+            Some((Some(bytes), all)) if *bytes == state => Ok(all),
             _ => Cities::load(state),
         }
+    }
+
+    /// The cities that [`LAST`] holds, for the calls that are told to take them without being given their bytes.
+    fn take_last() -> Result<Cities, String> {
+        OUT.with(|o| *o.borrow_mut() = Rc::new(Vec::new()));
+        LAST.with(|l| l.borrow_mut().take()).map(|(_, all)| all).ok_or_else(|| "no state is kept from the call before".to_string())
+    }
+
+    /// What `f` says about the cities that [`LAST`] holds.
+    fn look_last<T>(f: impl FnOnce(&Cities) -> T) -> Result<T, String> {
+        LAST.with(|l| l.borrow().as_ref().map(|(_, all)| f(all)).ok_or_else(|| "no state is kept from the call before".to_string()))
     }
 
     /// Hands out the state of `all` and keeps both in [`LAST`].
     fn keep(all: Cities) -> Rc<Vec<u8>> {
         let bytes = Rc::new(all.save());
-        LAST.with(|l| *l.borrow_mut() = Some((bytes.clone(), all)));
+        LAST.with(|l| *l.borrow_mut() = Some((Some(bytes.clone()), all)));
         bytes
     }
 
     /// What `f` says about the cities of a state, which stay in [`LAST`] when they are the ones there.
     fn look<T>(state: &[u8], f: impl FnOnce(&Cities) -> T) -> Result<T, String> {
         LAST.with(|l| match &*l.borrow() {
-            Some((bytes, all)) if **bytes == state => Ok(f(all)),
+            Some((Some(bytes), all)) if **bytes == state => Ok(f(all)),
             _ => Cities::load(state).map(|all| f(&all)),
         })
     }
@@ -547,6 +560,63 @@ pub mod abi {
             all.step(periods as usize);
             Ok(keep(all))
         })())
+    }
+
+    /// As [`sce_step`], from the state that the call before handed out (kept in [`LAST`]), without being given its
+    /// bytes again: the caller saves copying tens of megabytes into the instance and comparing them every day.
+    #[unsafe(no_mangle)]
+    pub extern "C" fn sce_step_last(periods: u32) -> u32 {
+        hook();
+        answer((|| {
+            let mut all = take_last()?;
+            all.cities = std::mem::take(&mut all.cities).into_iter().map(Economy::with_bounded_past).collect();
+            all.step(periods as usize);
+            Ok(keep(all))
+        })())
+    }
+
+    /// As [`sce_step_last`], but the state after the periods stays in [`LAST`] without its bytes: the result is
+    /// empty, and [`sce_save_last`] gives the bytes when they are needed. Writing the state of a world (some 50 MB)
+    /// every day took as long as computing the day.
+    #[unsafe(no_mangle)]
+    pub extern "C" fn sce_advance_last(periods: u32) -> u32 {
+        hook();
+        answer((|| {
+            let mut all = take_last()?;
+            all.cities = std::mem::take(&mut all.cities).into_iter().map(Economy::with_bounded_past).collect();
+            all.step(periods as usize);
+            LAST.with(|l| *l.borrow_mut() = Some((None, all)));
+            Ok(Rc::new(Vec::new()))
+        })())
+    }
+
+    /// Result: the bytes of the state kept in [`LAST`], written now if [`sce_advance_last`] left them out.
+    #[unsafe(no_mangle)]
+    pub extern "C" fn sce_save_last() -> u32 {
+        hook();
+        answer(LAST.with(|l| match &mut *l.borrow_mut() {
+            Some((Some(bytes), _)) => Ok(bytes.clone()),
+            Some((none, all)) => {
+                let bytes = Rc::new(all.save());
+                *none = Some(bytes.clone());
+                Ok(bytes)
+            }
+            None => Err("no state is kept from the call before".to_string()),
+        }))
+    }
+
+    /// As [`sce_figures`], of the state kept in [`LAST`].
+    #[unsafe(no_mangle)]
+    pub extern "C" fn sce_figures_last() -> u32 {
+        hook();
+        answer(look_last(|all| floats(all.cities.iter().flat_map(Economy::figures))))
+    }
+
+    /// As [`sce_agents`], of the state kept in [`LAST`].
+    #[unsafe(no_mangle)]
+    pub extern "C" fn sce_agents_last() -> u32 {
+        hook();
+        answer(look_last(|all| floats(all.cities.iter().flat_map(Economy::agents))))
     }
 
     /// Result: the key figures of every city of a state, [`super::FIGURES`] 64-bit floats a city.
