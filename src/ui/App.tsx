@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { computed } from '@preact/signals';
 import { status, refusal, me, world, realms, placeInfo, connect, disconnect, claim, abdicate, askPlace } from '../net/client';
-import { MapView, selectedPlace, mapCtl } from './MapView';
+import { selectedPlace, mapCtl } from './mapstate';
 import { WorldView } from './WorldView';
 import { IconDefs, IconPlaces, IconCalendar, IconGear, IconPolitical, IconTerrain, IconClose, IconReplay } from './icons';
 import { replay, startReplay, stopReplay } from './replay';
@@ -16,8 +16,6 @@ import { startMusic, musicKey, musicMuted, musicVolume, nowPlaying, musicWaiting
 
 const realmById = computed(() => { const m = new Map<number, RealmInfo>(); for (const r of realms.value) m.set(r.id, r); return m; });
 const hex = (c: number) => '#' + c.toString(16).padStart(6, '0');
-/** the address option ?map=2d shows the earlier flat map in place of the world (kept until the world has all it showed) */
-const FLAT_MAP = new URLSearchParams(location.search).get('map') === '2d';
 
 
 export function App() {
@@ -27,7 +25,7 @@ export function App() {
   return <div class={`app lang-${lang.value}`}>
     <IconDefs />
     {st === 'refused' ? <Refused /> : <>
-      {FLAT_MAP ? <MapView /> : <WorldView />}
+      <WorldView />
       <Music />
       <TopBar />
       <RealmBanner />

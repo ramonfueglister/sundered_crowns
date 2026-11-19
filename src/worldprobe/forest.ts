@@ -4,7 +4,7 @@
 // where nothing is known (the sea, the land outside the world's frame, for the conifers the land the pollen maps do
 // not reach). A share that coarse says how much of a landscape is wooded, not where its woods stand: `stand` lays
 // them out as woods with open land between, so that the share holds over the landscape.
-import { maybeGunzip } from '../render/assets';
+import { maybeGunzip } from './gunzip';
 import { noise2, smooth } from '../lookprobe/batch';
 
 export interface Forest { w: number; h: number; /** share of the land under trees */ share: Uint8Array; /** share of conifers among the trees */ conifers: Uint8Array | null }

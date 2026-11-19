@@ -48,5 +48,5 @@ cities, computes a day of all of them in one call, and gives figures and checks 
 and an effect. Players and the AI of realms without a player use the same commands.
 
 ## Client
-`src/net/client.ts` keeps the server's messages as signals; `src/ui/` draws them. The map (`src/render/`) gets the
-owners of all places as one binary frame at sign-in and the changes each day.
+`src/net/client.ts` keeps the server's messages as signals; `src/ui/` draws them. The world view (`src/worldprobe/view.ts`,
+under `src/ui/WorldView.tsx`) gets the owners of all places as one binary frame at sign-in and the changes each day.

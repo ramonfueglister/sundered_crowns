@@ -3,7 +3,7 @@
 // those of the world's start year as the game sets them up (1356 when the page does not say), until the page says
 // who holds which place now.
 import { rgb } from '../lookprobe/batch';
-import { maybeGunzip } from '../render/assets';
+import { maybeGunzip } from './gunzip';
 import { type RealmName, type Realms, type Rest, paintRealms, placeAt, realmNames } from './paint';
 import { extentOf } from './extent';
 import { indexOf, projectionFrom } from './region';
