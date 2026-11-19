@@ -7,6 +7,7 @@
 // less longitude, so that the way round is a whole number of cells at every step of the map.
 import { maybeGunzip } from '../render/assets';
 import { unbrotli } from './brotli';
+import { stamped } from './stamp';
 
 export const Water = { Land: 0, Sea: 1, Lake: 2 } as const;
 export interface River {
@@ -87,7 +88,7 @@ interface Tile { shaped: Int16Array; layers: Uint8Array[]; rivers: River[] }
 const indexes = new Map<string, Promise<Index & { has: Set<string> }>>(), tiles = new Map<string, Promise<Tile>>();
 /** tiles kept unpacked; the oldest go first */
 const TILES_KEPT = 24;
-const get = async (url: string) => { const r = await fetch(url); if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`); return r; };
+const get = async (url: string) => { const r = await fetch(stamped(url)); if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`); return r; };
 /** The index of region `name`: its tiles and how it lies on the game map. */
 export const indexOf = (name: string, base: string) => {
   if (!indexes.has(name)) indexes.set(name, get(`${base}map/regions/${name}/index.json`).then(async (r) => { const index = (await r.json()) as Index; return { ...index, has: new Set(index.tiles) }; }));
