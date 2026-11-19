@@ -2,7 +2,8 @@
 // for the figures that walk its streets, and one person in full, for the portrait and the panel a click opens.
 // Read-only HTTP: GET /people/<place>, GET /people?places=<a>,<b>,… and GET /person/<id> (server/main.ts).
 import type { WorldState } from '../sim/state';
-import { ALIVE, BORN_UNKNOWN } from '../sim/state';
+import { ALIVE, BORN_UNKNOWN, LOT_KIND, NO_LOT } from '../sim/state';
+import { citiesOf } from '../sim/content/cities';
 import { genesOf } from '../sim/systems/people';
 import { NG } from '../sim/people/genes';
 import { ROLE } from '../sim/systems/work';
@@ -71,6 +72,14 @@ export interface PersonDetail {
   household: PersonHousehold | null;
   /** a person of history (a ruler, src/sim/systems/rulers.ts); null for everybody else */
   history: PersonHistory | null;
+  /** the other one of the couple at the head of the person's family, −1 when the person heads none with a partner */
+  spouse: number;
+  /** the person's children, living and dead, in the order they were born */
+  children: number[];
+  /** the town the person lives in (the name of src/sim/content/cities.ts), null where none is known */
+  town: string | null;
+  /** where the family lives: on a parcel of the town, on a farmstead of a hamlet outside its walls, or nowhere known */
+  dwelling: 'parcel' | 'farmstead' | null;
 }
 
 /** Who a person of history is: the name, the house and the Wikidata id of the sources, the realms whose crown the
@@ -151,5 +160,32 @@ export function personDetail(s: WorldState, id: number, cultureKey: (index: numb
     economy: personEconomy(s, id),
     household: personHousehold(s, id),
     history: personHistory(s, id),
+    spouse: spouseOf(s, id),
+    children: childrenOf(s, id),
+    ...homeOf(s, id),
   };
+}
+
+/** The other one of the couple at the head of the person's family, −1 when there is none. */
+export function spouseOf(s: WorldState, id: number): number {
+  const F = s.family.cols, f = s.person.cols.family[id];
+  if (f < 0) return -1;
+  const other = F.man[f] === id ? F.woman[f] : F.woman[f] === id ? F.man[f] : -1;
+  return other >= 0 ? other : -1;
+}
+
+/** The children of a person: one pass over the person table (some hundred thousand rows, well under a millisecond). */
+export function childrenOf(s: WorldState, id: number): number[] {
+  const P = s.person.cols, col = P.sex[id] === 0 ? P.mother : P.father, out: number[] = [];
+  for (let i = 0; i < s.person.size; i++) if (col[i] === id) out.push(i);
+  return out;
+}
+
+/** The town and the ground the person's family lives on. */
+export function homeOf(s: WorldState, id: number): Pick<PersonDetail, 'town' | 'dwelling'> {
+  const f = s.person.cols.family[id], lot = f < 0 ? NO_LOT : s.family.cols.lot[f], cities = citiesOf(s.startYear);
+  const site = lot === NO_LOT ? -1 : s.lot.cols.site[lot], place = f < 0 ? -1 : s.family.cols.place[f];
+  const city = (site >= 0 ? cities.find((c) => c.site === site) : undefined) ?? cities.find((c) => c.place === place);
+  const kind = lot === NO_LOT ? -1 : s.lot.cols.kind[lot];
+  return { town: city?.name ?? null, dwelling: kind === LOT_KIND.parcel ? 'parcel' : kind === LOT_KIND.farmstead ? 'farmstead' : null };
 }

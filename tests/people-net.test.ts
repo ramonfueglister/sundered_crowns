@@ -30,3 +30,24 @@ describe('one person in full', () => {
     expect(personDetail(s, -1, () => 'x')).toBeNull();
   });
 });
+describe('the kin and the home of a person', () => {
+  const F = s.family.cols, P = s.person.cols;
+  it('has the other one of the couple as spouse, and the spouse has the person', () => {
+    let f = 0;
+    while (f < s.family.size && !(F.man[f] >= 0 && F.woman[f] >= 0)) f++;
+    const d = personDetail(s, F.man[f], () => 'x')!;
+    expect(d.spouse).toBe(F.woman[f]);
+    expect(personDetail(s, F.woman[f], () => 'x')!.spouse).toBe(F.man[f]);
+  });
+  it('has as children every person whose mother or father it is', () => {
+    let c = 0;
+    while (c < s.person.size && P.mother[c] < 0) c++;
+    const mother = P.mother[c], d = personDetail(s, mother, () => 'x')!;
+    expect(d.children).toContain(c);
+    for (const k of d.children) expect(P.mother[k]).toBe(mother);
+  });
+  it('lives in the town of its place', () => {
+    const london = CITIES.find((c) => c.name === 'London')!, id = personsIn(s, london.place)[0];
+    expect(personDetail(s, id, () => 'x')!.town).toBe('London');
+  });
+});
