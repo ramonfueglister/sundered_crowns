@@ -1,7 +1,7 @@
 """Italy, the Balkans, Hungary, the Aegean and the Latin East on 1 January 1291."""
 import os, sys
 sys.path.insert(0, os.path.dirname(__file__))
-from lib import *
+from lib import N, R, S, WAR, write
 
 SOURCES = [
     "Euratlas-Nüssli, Euratlas Periodis: Europe in the year 1300; regional maps Apennine Peninsula and Aegean Area",

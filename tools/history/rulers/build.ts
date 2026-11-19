@@ -45,14 +45,20 @@ const date = (s: string) => (/^-?\d{1,4}(-\d{2}(-\d{2})?)?$/.test(s) ? s : null)
 /** Later of two dates given as the source gives them (compared on the text, padded to a full day). */
 const pad = (d: string) => (d.length === 4 ? `${d}-07-01` : d.length === 7 ? `${d}-15` : d);
 
-export function build(): { chronicle: ChronicleJson; report: Record<string, number | string[]> } {
+/** What the build counted, and the rows it could not use. */
+export interface RulersReport {
+  lists: number; rows: number; collective: number; claimants: number; noDates: number; beforeStart: number;
+  sexByWikidata: number; sexByWord: number; sexAssumed: number; problems: string[];
+}
+
+export function build(): { chronicle: ChronicleJson; report: RulersReport } {
   const sex = new Map<string, 0 | 1>();
   const wd = resolve(ROOT, 'data/history/rulers/wikidata/holders.csv');
   if (existsSync(wd)) for (const r of parseCsv(readFileSync(wd, 'utf8'))) {
     if (r.sex === 'Q6581072') sex.set(r.person, 0); else if (r.sex === 'Q6581097') sex.set(r.person, 1);
   }
   const persons: ChroniclePerson[] = [], reigns: ChronicleReign[] = [], byKey = new Map<string, number>();
-  const report = { lists: 0, rows: 0, collective: 0, claimants: 0, noDates: 0, beforeStart: 0, sexByWikidata: 0, sexByWord: 0, sexAssumed: 0, problems: [] as string[] };
+  const report: RulersReport = { lists: 0, rows: 0, collective: 0, claimants: 0, noDates: 0, beforeStart: 0, sexByWikidata: 0, sexByWord: 0, sexAssumed: 0, problems: [] };
   const files = existsSync(LISTS) ? readdirSync(LISTS).filter((f) => f.endsWith('.csv') && f !== 'INDEX.csv').sort() : [];
   for (const file of files) {
     const realm = file.slice(0, -4), rows = parseCsv(readFileSync(resolve(LISTS, file), 'utf8'));

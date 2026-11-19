@@ -22,7 +22,8 @@ import { STATE_VERSION, type WorldState } from '../src/sim/state';
 import { createWorldState } from '../src/sim/setup';
 import { placeDetail } from '../src/net/views';
 import { World } from '../src/sim/world';
-import { WorldCore, configFromEnv } from '../server/world';
+import { configFromEnv } from '../server/config';
+import { WorldCore } from '../server/world';
 
 const sum = (v: number[]) => v.reduce((a, b) => a + b, 0);
 const days = (s: WorldState, w: World, n: number) => { for (let i = 0; i < n; i++) advanceDay(s, w); };
@@ -462,10 +463,23 @@ describe('the economy engine (WebAssembly)', () => {
     expect(engine.figures(engine.create([a, calvo], CLOCK, { ...RULES, prices: 'costs' }))[FIGURE.periods]).toBe(0);
     expect(engine.figures(create(1))[FIGURE.periods]).toBe(0);
   });
+  it('keeps a state it advanced without writing it, and gives the bytes step gives', () => {
+    const start = create(1356), want = engine.step(start, 3);
+    const k1 = engine.advance(start, 2), k2 = engine.advance(k1, 1);
+    expect(engine.figures(k2)).toEqual(engine.figures(want));
+    expect(engine.agents(k2)).toEqual(engine.agents(want));
+    expect(Buffer.compare(k2.bytes(), want)).toBe(0);
+    // another state computed in between: the bytes of one kept before are computed again from where it began
+    const k3 = engine.advance(start, 3);
+    engine.step(create(1), 1);
+    expect(Buffer.compare(k3.bytes(), want)).toBe(0);
+    expect(Buffer.compare(k1.bytes(), engine.step(start, 2))).toBe(0);
+  });
   it('reports a rule of the port that fails, and starts afresh', () => {
     // a state in which a worker of the first city has an employer that does not exist: its labour market stops
     const p = THREE[0].parameters as any, workers = p.H_act - sum(p.I_s) - 1;
-    const state = engine.step(create(1356), 1);
+    // (a copy: the engine takes an array it handed out itself as the state it keeps, which nobody changes)
+    const state = engine.step(create(1356), 1).slice();
     // economy/src/state.rs: the header of the cities and the length of the first, then that city: its header, the
     // IDs and four amounts of every worker
     const employers = 16 + 69 + 36 * workers;
@@ -627,7 +641,7 @@ describe('the economies of the cities in the world', () => {
   it('stand still when the engine cannot compute a day, and the world goes on', () => {
     const real = loadWorld();
     let calls = 0;
-    const broken: EconomyEngine = { ...real.economyEngine, step: () => { calls++; throw new Error('the economy engine stopped: a rule failed'); } };
+    const broken: EconomyEngine = { ...real.economyEngine, advance: () => { calls++; throw new Error('the economy engine stopped: a rule failed'); } };
     const w: World = Object.assign(Object.create(World.prototype), real, { economyEngine: broken });
     const { s } = newWorldState();
     const before = s.economy.cities!.model;
@@ -648,7 +662,7 @@ describe('the economies of the cities in the world', () => {
     let single = 0;
     const broken: EconomyEngine = {
       ...real.economyEngine,
-      step: (m, n) => { if (n > 1 || ++single > 3) throw new Error('the economy engine stopped: a rule failed'); return real.economyEngine.step(m, n); },
+      advance: (m, n) => { if (n > 1 || ++single > 3) throw new Error('the economy engine stopped: a rule failed'); return real.economyEngine.advance(m, n); },
     };
     const w: World = Object.assign(Object.create(World.prototype), real, { economyEngine: broken });
     const { s } = newWorldState();

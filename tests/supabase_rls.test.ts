@@ -189,3 +189,21 @@ describe('admin roles', () => {
     expect((await as('service', `select count(*)::int as n from public.profiles`))[0].n).toBe(4);
   });
 });
+
+describe('the readable copy of the rulers', () => {
+  it('is written by the world server and read by everybody, changed by nobody else', async () => {
+    await as('service', `insert into public.world_persons (world_id, person, key, name, house, qid, sex, home_realm, born, born_day)
+      values ('w1', 7, 'Q130969', 'Philip IV', 'Capet', 'Q130969', 1, 'france', '1268', -8401)`);
+    await as('service', `insert into public.world_reigns (world_id, realm, n, person, start, start_day, source)
+      values ('w1', 'france', 0, 7, '1285-10-05', -2279, 'https://en.wikipedia.org/w/index.php?oldid=1')`);
+    expect(await as(null, `select name from public.world_persons`)).toEqual([{ name: 'Philip IV' }]);
+    expect(await as(A, `select realm, person, end_day from public.world_reigns`)).toEqual([{ realm: 'france', person: 7, end_day: null }]);
+    await expect(as(A, `insert into public.world_persons (world_id, person, key, name, sex, home_realm) values ('w1', 8, 'x', 'Fake', 1, 'france')`)).rejects.toThrow(/permission denied/);
+    await expect(as(null, `update public.world_reigns set end_day = 0`)).rejects.toThrow(/permission denied/);
+    await expect(as(A, `delete from public.world_persons`)).rejects.toThrow(/permission denied/);
+    // an upsert of the server changes a row in place
+    await as('service', `insert into public.world_reigns (world_id, realm, n, person, start, start_day, "end", end_day, source)
+      values ('w1', 'france', 0, 7, '1285-10-05', -2279, '1314-11-29', 8733, 's') on conflict (world_id, realm, n) do update set end_day = excluded.end_day, "end" = excluded."end"`);
+    expect(await as(null, `select "end", end_day from public.world_reigns`)).toEqual([{ end: '1314-11-29', end_day: 8733 }]);
+  });
+});

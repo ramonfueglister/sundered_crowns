@@ -23,6 +23,7 @@ import { poolOfCulture } from '../people/pools';
 import { ALL_CULTURES } from '../content/peoples';
 import { type City, citiesOf, hasCities } from '../content/cities';
 import { SCALE, toHeads } from '../scale';
+import { presentPersons } from '../people/living';
 
 export type { City } from '../content/cities';
 /** The cities of a world of 1356 (src/sim/content/cities.ts has those of every start year). */
@@ -210,8 +211,8 @@ const clampU8 = (v: number) => Math.min(255, Math.max(0, Math.round(v)));
 /** The living persons of a place (the people of its cities, and the rulers who live there). */
 export function personsIn(s: WorldState, place: number): number[] {
   const out: number[] = [];
-  for (let i = 0; i < s.person.size; i++) {
-    if (s.person.alive[i] && s.person.cols.died[i] === ALIVE && s.family.cols.place[s.person.cols.family[i]] === place) out.push(i);
+  for (const i of presentPersons(s)) {
+    if (s.person.cols.died[i] === ALIVE && s.family.cols.place[s.person.cols.family[i]] === place) out.push(i);
   }
   return out;
 }

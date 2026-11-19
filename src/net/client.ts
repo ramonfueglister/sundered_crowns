@@ -73,6 +73,8 @@ function onMessage(m: ServerMsg) {
 export const claim = (realm: number) => send({ type: 'claim', realm });
 export const abdicate = () => send({ type: 'abdicate' });
 export const askPlace = (place: number) => send({ type: 'place', place });
+/** Pauses or runs the world, or sets its speed (only for whom `me.time` allows; the server says the new clock to all). */
+export const setTime = (t: { paused?: boolean; speed?: number }) => send({ type: 'time', ...t });
 /** Sends a command; the answer comes when the world applies it at the next day. */
 export function command(cmd: Omit<Command, 'realm'>): Promise<CmdResult> {
   const id = nextCmd++;

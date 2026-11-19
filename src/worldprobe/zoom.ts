@@ -52,6 +52,14 @@ const FLATTER = 0.6;
 
 const over = (from: number, until: number, wide: number) => smooth(Math.log2(from), Math.log2(until), Math.log2(wide));
 
+/**
+ * The water's mirror image of what stands by it shows fully up to here and not at all from there: at 6000 finest
+ * blocks across a picture of 3000 dots a block is half a dot, a tower a few dots tall, and the mirror's blur nine dots
+ * wide. Beyond it the mirror is not drawn (stage/api.ts `mirror`).
+ */
+const MIRROR_FROM = 3000, MIRROR_UNTIL = 6000;
+/** How much of the mirror image a view shows, 1 … 0. */
+export const mirrorOf = (wide: number) => 1 - over(MIRROR_FROM, MIRROR_UNTIL, wide);
 /** How much of the near view a view has, 0 … 1: its camera angle and its light. */
 export const nearOf = (wide: number) => 1 - over(FINE_UNTIL, NEAR_FROM, wide);
 /** The step of the map a view is drawn in: its blocks are 2^step finest blocks wide. */

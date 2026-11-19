@@ -4,7 +4,9 @@ import { describe, it, expect } from 'vitest';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { WorldCore, configFromEnv, type Conn } from '../server/world';
+import { configFromEnv } from '../server/config';
+import type { Conn } from '../server/session';
+import { WorldCore } from '../server/world';
 import type { ServerMsg } from '../src/net/protocol';
 import { BIN_OWNERS } from '../src/net/protocol';
 

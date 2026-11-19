@@ -2,22 +2,25 @@
 // as flat lists that are handed over, not copied. A piece of a coarse step whose table was built ahead is drawn from
 // that (table.ts), which takes a third of the time and none of the map's data.
 import { Batch } from '../lookprobe/batch';
-import type { Shape } from '../lookprobe/stage';
+import type { Shape } from '../lookprobe/shape';
 import { buildOpenSea } from '../lookprobe/terrain';
 import { FACE_STEPS } from '../lookprobe/faces';
 import { GRID, N, SEA_Y, onGrid } from '../lookprobe/layout';
-import { maybeGunzip } from '../render/assets';
-import { buildPiece } from './build';
+import { maybeGunzip } from './gunzip';
+import { buildPiece, warmPieces } from './build';
 import { type Cover, KINDS, laidOut } from './far';
 import { glide } from './glide';
 import { above, lay, meanCover, summary } from './mean';
 import { faced, flat as floats, small } from './small';
 import { bytesOf, pack, unpack } from './pack';
 import { folderOf, kept } from './store';
-import { type Table, type TablesIndex, drawTable, keepTables, keyOfTable, tabled, unpackTable } from './table';
+import { unbrotli } from './brotli';
+import { type Table, type TablesIndex, drawTable, keepTables, keyOfTable, tabled, unpackTable, whereTable } from './table';
 import type { Piece, WorldScene } from './world';
 
 export interface PieceJob { id: number; piece: Piece; region: string; /** step of the map: blocks 2^step cells wide */ step: number; base: string; bakedSky: boolean; /** the piece is kept on disk under this name, in the folder of this build (store.ts); `kept`: it is there, or may be (the store has not yet said what it holds), and is read if so, not built */ keep?: { build: string; name: string; kept: boolean }; /** the world's start year, whose towns are built, whose forest stands and whose people live on the land (default 1356) */ year?: number; /** false: a far step as far.ts lays it out, not as the mean of the finer step */ mean?: boolean | 'compare'; /** for a piece of the first far step: the summaries of the four finest pieces under it that the page holds (mean.ts), in rows */ under?: (Float32Array | undefined)[]; /** side of the ground the piece is built on, where it is not the usual one (layout.ts: GRID); the piece's ox, oz and part are given on that ground */ grid?: number; /** the piece's lists as small numbers (small.ts), not as floats */ small?: boolean; /** and of those the rectangles on the grid of blocks as faces (lookprobe/faces.ts) */ faces?: boolean; /** false: the rectangles on no grid of what stands on the piece stay triangles (faces.ts `Free`) */ free?: boolean; /** false: the piece is built even where its table was built ahead (table.ts) */ tables?: boolean; /** the piece's land as faces that glide to the shape of the coarser piece over it, where that has a table (glide.ts) */ glide?: boolean }
+/** Asks a worker to load the map's data of the finest step before its first piece of that step (build.ts `warmPieces`); no answer comes. */
+export interface WarmJob { warm: true; region: string; base: string; year?: number }
 export interface PieceDone { id: number; scene?: WorldScene<Shape>; /** of a piece of the finest step: what it shows, summed up for the piece of the next step over it (mean.ts) */ summary?: Float32Array; /** the piece packed, to be kept on disk (pack.ts) */ packed?: ArrayBuffer; /** the piece was read from disk */ kept?: boolean; error?: string }
 /** what is kept of a piece */
 type Kept = Pick<PieceDone, 'scene' | 'summary'>;
@@ -79,15 +82,16 @@ function compare(counts: Record<string, number>, mean: Cover, part: Piece['part'
 }
 
 /** the tables built ahead, by where they lie: which pieces have one and which are open sea; null where there are none */
-const indexes = new Map<string, Promise<{ index: TablesIndex; land: Set<string>; sea: Set<string> } | null>>();
+const indexes = new Map<string, Promise<{ index: TablesIndex; land: Map<string, number>; sea: Set<string> } | null>>();
 /** The tables built ahead for a job's region and year, where its piece is laid out as they were; and the piece's place among them. */
 async function tablesOf(job: PieceJob) {
   if (job.tables === false || job.mean) return null;
   const { part, ox, oz } = job.piece, wide = part.x1 - part.x0, dir = `${job.base}map/tables/${job.region}_${job.year ?? 1356}/`;
   if (!indexes.has(dir)) indexes.set(dir, fetch(`${dir}index.json`).then(async (r) => {
     if (!r.ok || !(r.headers.get('content-type') ?? '').includes('json')) return null;
-    const index = await r.json() as TablesIndex, keys = (of: Record<string, number[]>) => new Set(Object.entries(of).flatMap(([step, at]) => Array.from({ length: at.length / 2 }, (_, k) => keyOfTable(+step, at[k * 2], at[k * 2 + 1]))));
-    return { index, land: keys(index.land), sea: keys(index.sea) };
+    const index = await r.json() as TablesIndex, keys = (of: Record<string, number[]>) => Object.entries(of).flatMap(([step, at]) => Array.from({ length: at.length / 2 }, (_, k) => [keyOfTable(+step, at[k * 2], at[k * 2 + 1]), k] as const));
+    // (a piece of land is known with its place in its step's list: where it lies in a pack is told by that place)
+    return { index, land: new Map(keys(index.land)), sea: new Set(keys(index.sea).map(([key]) => key)) };
   }).catch(() => null));
   const tables = await indexes.get(dir)!;
   // (only a piece laid out as the tables were: the same side of ground, with its own columns at the same place)
@@ -97,16 +101,22 @@ async function tablesOf(job: PieceJob) {
 /** the last tables read, by their files: the pieces under a coarser piece ask for its table one after the other */
 const read = new Map<string, Promise<Table | null>>(), READ = 6;
 /** The table of a piece that has one; null where it cannot be read. */
-function tableAt(dir: string, step: number, px: number, pz: number): Promise<Table | null> {
-  const file = `${dir}${step}/${px}_${pz}.bin.gz`, known = read.get(file);
+function tableAt(tables: { dir: string; index: TablesIndex; land: Map<string, number> }, step: number, px: number, pz: number): Promise<Table | null> {
+  const k = tables.land.get(keyOfTable(step, px, pz));
+  if (k === undefined) return Promise.resolve(null);
+  const { file, range } = whereTable(tables.index, step, px, pz, k), name = `${tables.dir}${file}${range ? `#${range[0]}` : ''}`, known = read.get(name);
   if (known) return known;
-  const table = fetch(file).then(async (r) => {
+  const table = fetch(`${tables.dir}${file}`, range ? { headers: { Range: `bytes=${range[0]}-${range[0] + range[1] - 1}` } } : undefined).then(async (r) => {
     if (!r.ok) return null;
-    const raw = await maybeGunzip(new Uint8Array(await r.arrayBuffer()));
+    // (a server that does not answer the range sends the whole pack)
+    let bytes = new Uint8Array(await r.arrayBuffer());
+    if (range && r.status !== 206) bytes = bytes.subarray(range[0], range[0] + range[1]);
+    if (range && bytes.length !== range[1]) return null;
+    const raw = tables.index.coding === 'br' ? await unbrotli(bytes) : await maybeGunzip(bytes);
     return unpackTable((raw.byteOffset || raw.byteLength !== raw.buffer.byteLength ? raw.slice() : raw).buffer as ArrayBuffer);
   // (a table that cannot be read is no table)
   }).catch(() => null);
-  read.set(file, table);
+  read.set(name, table);
   if (read.size > READ) read.delete(read.keys().next().value!);
   return table;
 }
@@ -120,17 +130,19 @@ async function tableOf(job: PieceJob): Promise<{ scene: WorldScene | null; table
   const key = keyOfTable(job.step, tables.px, tables.pz);
   if (tables.sea.has(key)) return { scene: null };
   if (!tables.land.has(key)) return null;
-  const table = await tableAt(tables.dir, job.step, tables.px, tables.pz);
+  const table = await tableAt(tables, job.step, tables.px, tables.pz);
   if (!table || table.ox !== job.piece.ox || table.oz !== job.piece.oz) return null;
-  const drawn = drawTable(table, job.bakedSky);
-  return { table, scene: { ...drawn, things: new Batch(), cells: [], counts: { triangles: drawn.ground.triangles + (drawn.carried?.triangles ?? 0) + drawn.water.triangles + drawn.raised.triangles } } };
+  // (what stands on the piece was drawn with the sky's share baked in, as the tables are built: without it the piece is built)
+  if (table.things && !job.bakedSky) return null;
+  const drawn = drawTable(table, job.bakedSky), things = table.things ? Batch.of(table.things.pos, table.things.nor, table.things.col) : new Batch();
+  return { table, scene: { ...drawn, things, cells: [], counts: { triangles: drawn.ground.triangles + (drawn.carried?.triangles ?? 0) + drawn.water.triangles + drawn.raised.triangles + things.triangles } } };
 }
 /** The table of the piece of the next coarser step over a job's piece, where one was built ahead. */
 async function tableOver(job: PieceJob): Promise<Table | null> {
   const tables = await tablesOf(job);
   if (!tables) return null;
   const px = Math.floor(tables.px / 2), pz = Math.floor(tables.pz / 2);
-  return tables.land.has(keyOfTable(job.step + 1, px, pz)) ? tableAt(tables.dir, job.step + 1, px, pz) : null;
+  return tables.land.has(keyOfTable(job.step + 1, px, pz)) ? tableAt(tables, job.step + 1, px, pz) : null;
 }
 
 let folder: Promise<FileSystemDirectoryHandle | null> | undefined;
@@ -142,7 +154,9 @@ async function keptOf(job: PieceJob): Promise<Kept | null> {
   try { return run ? unpack<Kept>(run) : null; } catch { return null; }
 }
 
-self.onmessage = async (e: MessageEvent<PieceJob>) => {
+self.onmessage = async (e: MessageEvent<PieceJob | WarmJob>) => {
+  // (a piece asked for meanwhile waits for the same loads, which each happen once)
+  if ('warm' in e.data) { void warmPieces(e.data).catch(() => undefined); return; }
   const { id, piece, step, keep } = e.data;
   try {
     const began = performance.now(), had = await keptOf(e.data);

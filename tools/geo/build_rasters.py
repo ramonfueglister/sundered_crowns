@@ -5,11 +5,11 @@ Inputs (public-domain / open):
   - AWS Terrain Tiles (terrarium, zoom 6) – SRTM/GMTED/ETOPO1 derived, open data
 Outputs: CACHE/stage/*.npy
 """
-import os, glob, json, math
+import os, json, math
 import numpy as np
 from PIL import Image, ImageDraw
 from scipy import ndimage
-from common import *
+from common import CACHE, H, OUT_DATA, ROOT, W, lines_from_geojson_geom, load_json, lonlat_to_px, polys_from_geojson_geom, px_to_lonlat_np
 
 STAGE = os.path.join(CACHE, 'stage'); os.makedirs(STAGE, exist_ok=True)
 Image.MAX_IMAGE_PIXELS = None

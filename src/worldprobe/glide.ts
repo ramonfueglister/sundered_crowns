@@ -2,7 +2,7 @@
 // changed steps, every hill, wood and town of the picture changed its shape at once, and the land its grain. Now a
 // piece of a far step knows what the piece of the coarser step over it shows at each of its columns, the height of
 // the coarser column there and the colours of its top, and over the last stretch before the border the stage moves
-// each column towards that (stage.ts `gliding`, pieces.ts `GLIDE`): four columns close up into the one block that
+// each column towards that (stage/materials.ts `gliding`, pieces.ts `GLIDE`): four columns close up into the one block that
 // takes their place. At the border the piece shows what the coarser piece shows, column for column, so the change of
 // steps changes nothing on the land. A view at rest anywhere in that stretch shows one step, with its columns part
 // of the way: nothing is drawn twice. (Continuous distance-dependent level of detail, Strugar 2009, does the same for
@@ -17,7 +17,7 @@
 //    passes the water's level.
 //  - water above the sea's level (lakes, rivers) moves to the level the coarser step has it at.
 //  - the banks of the water (shore.ts), which are no faces but lists: the piece's own sink under the water, and
-//    those of the coarser piece, which the piece carries too, come up from under it (stage.ts `sinking`: each corner
+//    those of the coarser piece, which the piece carries too, come up from under it (stage/materials.ts `sinking`: each corner
 //    of such a list knows the height it ends up at).
 //  - the beds of such water, which are not drawn: the sides of the land that stand in the water follow them, so
 //    they reach under the water at whatever level it ends.
@@ -31,7 +31,7 @@
 import { Batch, type RGB } from '../lookprobe/batch';
 import { FACE_COL, FACE_GEO, FACE_STEPS, FLIPPED, RISES, type Faces } from '../lookprobe/faces';
 import { type Ground, SEA_Y, onGrid } from '../lookprobe/layout';
-import type { Shape } from '../lookprobe/stage';
+import type { Shape } from '../lookprobe/shape';
 import { buildWater } from '../lookprobe/terrain';
 import { ballOf } from './ball';
 import { BRIGHTEST, faced, small } from './small';

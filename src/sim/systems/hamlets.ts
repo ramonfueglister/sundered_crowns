@@ -13,6 +13,7 @@
 import type { WorldState } from '../state';
 import { ALIVE } from '../state';
 import { ROLE } from './work';
+import { presentPersons } from '../people/living';
 
 /** The sector of agriculture: its number in the calibration table of the economies (data/economy/england_1356.json). */
 export const AGRICULTURE = 0;
@@ -22,8 +23,8 @@ export const AGRICULTURE = 0;
 export function settleHamlets(s: WorldState): void {
   const P = s.person.cols, hamlet = s.family.cols.hamlet, sector = s.firm.cols.sector;
   hamlet.fill(0);
-  for (let i = 0; i < s.person.size; i++) {
-    if (!s.person.alive[i] || P.died[i] !== ALIVE) continue;
+  for (const i of presentPersons(s)) {
+    if (P.died[i] !== ALIVE) continue;
     if (P.role[i] !== ROLE.worker && P.role[i] !== ROLE.owner) continue;
     const f = P.firm[i];
     if (f >= 0 && sector[f] === AGRICULTURE) hamlet[P.family[i]] = 1;
@@ -34,8 +35,8 @@ export function settleHamlets(s: WorldState): void {
 export function residents(s: WorldState): { people: Float64Array; farmers: Float64Array } {
   const L = s.place.pop.length, people = new Float64Array(L), farmers = new Float64Array(L);
   const P = s.person.cols, F = s.family.cols;
-  for (let i = 0; i < s.person.size; i++) {
-    if (!s.person.alive[i] || P.died[i] !== ALIVE) continue;
+  for (const i of presentPersons(s)) {
+    if (P.died[i] !== ALIVE) continue;
     const f = P.family[i], p = F.place[f];
     if (p < 0 || p >= L) continue;
     people[p]++;
@@ -48,8 +49,8 @@ export function residents(s: WorldState): { people: Float64Array; farmers: Float
 export function farmersOf(s: WorldState, place: number): number {
   const P = s.person.cols, F = s.family.cols;
   let n = 0;
-  for (let i = 0; i < s.person.size; i++) {
-    if (!s.person.alive[i] || P.died[i] !== ALIVE) continue;
+  for (const i of presentPersons(s)) {
+    if (P.died[i] !== ALIVE) continue;
     const f = P.family[i];
     if (F.place[f] === place && F.hamlet[f]) n++;
   }

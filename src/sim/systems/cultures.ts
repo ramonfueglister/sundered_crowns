@@ -21,6 +21,7 @@ import { SCALE } from '../scale';
 import { hash01 } from '../rng';
 import { giveGenes } from './people';
 import C1291 from '../content/communities_1291.json';
+import { presentPersons } from '../people/living';
 
 export interface Community { town: string; culture: string; faith: string; people?: number; families?: number; count: string; year: number; source: string }
 
@@ -66,8 +67,8 @@ export function setCommunities(s: WorldState): void {
     const city = citiesOf(s.startYear).find((x) => x.name === c.town);
     if (!city) continue; // a world without that town (none of the start year has it unless the list is cut)
     const members = new Map<number, number[]>();
-    for (let id = 0; id < s.person.size; id++) {
-      if (!s.person.alive[id] || P.died[id] !== ALIVE) continue;
+    for (const id of presentPersons(s)) {
+      if (P.died[id] !== ALIVE) continue;
       const f = P.family[id];
       if (F.place[f] !== city.place) continue;
       const m = members.get(f) ?? []; m.push(id); members.set(f, m);
@@ -92,8 +93,8 @@ export function placeCultures(s: WorldState, place: number, without?: ReadonlySe
   const P = s.person.cols, F = s.family.cols, culture = new Map<number, number>(), faith = new Map<number, number>();
   const known = P.culture !== undefined; // a world from before state 19 counts only the persons
   let persons = 0;
-  for (let id = 0; id < s.person.size; id++) {
-    if (!s.person.alive[id] || P.died[id] !== ALIVE || F.place[P.family[id]] !== place || without?.has(id)) continue;
+  for (const id of presentPersons(s)) {
+    if (P.died[id] !== ALIVE || F.place[P.family[id]] !== place || without?.has(id)) continue;
     persons++;
     if (!known) continue;
     culture.set(P.culture[id], (culture.get(P.culture[id]) ?? 0) + 1);

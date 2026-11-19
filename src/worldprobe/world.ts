@@ -6,7 +6,7 @@
 import { Batch, hash2, noise2, rgb, seeded, shade, smooth } from '../lookprobe/batch';
 import { ACACIA, CYPRESS, JUNGLE, LEAVES, PALM, acacia, cypress, palm, tree } from '../lookprobe/blocks';
 import { type Ground, type GroundTraits, LAND_Y, Mat, N, SEA_Y, SUMMIT, idx, inGrid, measureShore, occlude, rockPillar } from '../lookprobe/layout';
-import type { Shape, StageScene } from '../lookprobe/stage';
+import type { Shape, StageScene } from '../lookprobe/shape';
 import { crowd } from '../figures';
 import { type Part, WATER_SHALLOW } from '../lookprobe/terrain';
 import { type Climate, FIELDS_KNOWN, KIND, Land, WOODS_KNOWN, climateAt, snowLineAt, treeLineAt } from './climate';
@@ -437,7 +437,9 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   }
   // at the finest step each way finds its path over the columns between pins of its line (roads.ts wayOnGround)
   if (step === 0 && ways.length) {
-    const water = Uint8Array.from(g.wet, (w, i) => (w ? (kind[i] === Water.Land ? 1 : 2) : 0)), rocky = (i: number) => g.mat[i] === Mat.Rock;
+    // (filled in a loop of its own: `Uint8Array.from` with a function to each column took 12 ms of every piece of the finest step, the loop half a millisecond)
+    const water = new Uint8Array(N * N), rocky = (i: number) => g.mat[i] === Mat.Rock;
+    for (let i = 0; i < water.length; i++) water[i] = g.wet[i] ? (kind[i] === Water.Land ? 1 : 2) : 0;
     for (const way of ways) way.pts = relaxPoints(wayOnGround(way.pts, ox, oz, N, g.h, rocky, water), WAY_SIGMA, 1);
   }
   /**
@@ -607,7 +609,10 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   /** how far the single woods of the year's forest and the fields lying together show at this step: no longer where a block is nearly as large as a wood */
   const woodsShow = smooth(WOOD * 0.8, WOOD * 0.4, cell);
   /** where in its landscape, a wood's width to each side, a column is one for woods and not for fields: on the heights, not on the valley floors */
-  const lean = (forest || arable) && woodsShow > 0 ? leanOf(metres, kind.map((k) => (k === Water.Land ? 1 : 0)), N, Math.max(1, Math.round(WOOD / cell))) : null;
+  // (the land filled in a loop: a list's `map` with a function to each column takes twenty times as long, see the ways below)
+  const onLand = new Uint8Array(N * N);
+  for (let i = 0; i < onLand.length; i++) onLand[i] = kind[i] === Water.Land ? 1 : 0;
+  const lean = (forest || arable) && woodsShow > 0 ? leanOf(metres, onLand, N, Math.max(1, Math.round(WOOD / cell))) : null;
   /** the share of the land under trees at a ground point by the forest of the world's year; null where it has none */
   const forestOf = (x: number, z: number) => { if (!forest) return null; const [cx, cy] = toCell(x, z); return forestAt(forest, region.x0 + cx / region.cells, region.y0 + cy / region.cells); };
   /**

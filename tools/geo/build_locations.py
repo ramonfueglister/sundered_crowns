@@ -10,7 +10,7 @@ from scipy import ndimage
 from scipy.spatial import cKDTree
 from scipy.sparse import coo_matrix
 from scipy.sparse.csgraph import connected_components
-from common import *
+from common import CACHE, H, LAT_N, LAT_S, LON0, LON1, ROOT, W, km_per_px, load_json, lonlat_to_px, px_to_lonlat_np
 
 STAGE = os.path.join(CACHE, 'stage')
 rng = np.random.default_rng(1356)
@@ -46,7 +46,6 @@ def region_radius_km(lon, lat, desert, impass):
 def main():
     land = np.load(os.path.join(STAGE, 'land.npy'))
     sea = np.load(os.path.join(STAGE, 'sea.npy'))
-    hgt = np.load(os.path.join(STAGE, 'height.npy'))
     desert = np.load(os.path.join(STAGE, 'desert_poly.npy'))
     impass = np.load(os.path.join(STAGE, 'impassable_poly.npy'))
     # --- seeds -----------------------------------------------------------
@@ -191,8 +190,6 @@ def fix_components(ids, land, n):
             break
         # for each fragment component, find neighbouring location via dilation
         frag2d = frag.reshape(Hh, Ww)
-        lab2d = lab.reshape(Hh, Ww)
-        pass
         next_id = ids.max() + 1
         # neighbour id for each fragment pixel: max filter of non-fragment ids
         nonfrag = np.where(frag2d, 0, ids)

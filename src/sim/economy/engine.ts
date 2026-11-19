@@ -79,6 +79,12 @@ export interface CityChecks { income: number; nominal: number; real: number; cen
  *  it by. */
 export interface EconomyChecks { cities: CityChecks[]; merchants: { off: number; scale: number }[] }
 
+/** The state of the economies after `advance`: kept inside the engine, written as bytes only when they are asked for
+ *  (a snapshot, a hash). Writing the 50 MB of a world's economies every day took as long as computing the day. */
+export interface KeptEconomy { bytes(): Uint8Array }
+/** A state as the engine takes it: its bytes, or the state it keeps. */
+export type EconomyState = Uint8Array | KeptEconomy;
+
 export interface EconomyEngine {
   /** New cities that trade with each other, with the clock and the rules of their firms: their state. */
   create(cities: readonly CitySetup[], clock: EconomyClock, rules: EconomyRules): Uint8Array;
@@ -86,12 +92,15 @@ export interface EconomyEngine {
    *  days of travel and the labour of carrying per pair of cities, and the elasticity of the stock to keep. */
   routes(state: Uint8Array, routes: { cities: number; days: Uint32Array; labour: Float64Array; weight: readonly number[]; elasticity: number }): Uint8Array;
   /** The state after `periods` more periods. */
-  step(state: Uint8Array, periods: number): Uint8Array;
+  step(state: EconomyState, periods: number): Uint8Array;
+  /** The state after `periods` more periods, kept inside the engine: the same state as `step` gives, without
+   *  writing its bytes until they are asked for. */
+  advance(state: EconomyState, periods: number): KeptEconomy;
   /** The key figures of every city, `FIGURES` numbers a city in the order of the cities. */
-  figures(state: Uint8Array): Float64Array;
-  checks(state: Uint8Array): EconomyChecks;
+  figures(state: EconomyState): Float64Array;
+  checks(state: EconomyState): EconomyChecks;
   /** The persons and firms of every city one by one (`AGENT`), one city after the other. */
-  agents(state: Uint8Array): Float64Array;
+  agents(state: EconomyState): Float64Array;
 }
 
 interface Exports {
@@ -103,6 +112,8 @@ interface Exports {
   sce_figures(state: number, len: number): number;
   sce_checks(state: number, len: number): number;
   sce_agents(state: number, len: number): number;
+  sce_step_last(periods: number): number; sce_figures_last(): number; sce_agents_last(): number;
+  sce_advance_last(periods: number): number; sce_save_last(): number;
   sce_out_ptr(): number; sce_out_len(): number; sce_panic_ptr(): number; sce_panic_len(): number;
 }
 
@@ -111,6 +122,11 @@ export function wasmEconomyEngine(wasm: Uint8Array): EconomyEngine {
   const module = new WebAssembly.Module(wasm as BufferSource);
   let x: Exports | null = null;
   const instance = (): Exports => (x ??= new WebAssembly.Instance(module, {}).exports as unknown as Exports);
+  /** The state the instance handed out last and keeps beside it (economy/src/lib.rs `LAST`). Given this very array
+   *  again (the world computes day after day), the instance takes the state it keeps instead of being given the
+   *  bytes: copying the state of a world (some 50 MB) into the instance and comparing it took about 40 ms a call,
+   *  three calls a day. The arrays the engine hands out are not changed by anyone. */
+  let last: Uint8Array | null = null;
   const text = new TextDecoder();
 
   /** Copies the inputs into the instance, calls `f` with their addresses and lengths, and returns a copy of the result. */
@@ -128,13 +144,43 @@ export function wasmEconomyEngine(wasm: Uint8Array): EconomyEngine {
       // a rule of the port failed and stopped the instance: read its message and start with a fresh instance next time
       let why = String(err);
       try { const n = e.sce_panic_len(); if (n) why = text.decode(new Uint8Array(e.memory.buffer, e.sce_panic_ptr(), n)); } catch { /* keep the error of the runtime */ }
-      x = null;
+      x = null; last = null; current = null;
       throw new Error(`the economy engine stopped: ${why}`);
     }
     for (const [p, n] of held) e.sce_free(p, n);
     const out = new Uint8Array(e.memory.buffer, e.sce_out_ptr(), e.sce_out_len()).slice();
-    if (!ok) throw new Error(`economy engine: ${text.decode(out)}`);
+    if (!ok) { last = null; current = null; throw new Error(`economy engine: ${text.decode(out)}`); }
     return out;
+  }
+  /** The state `advance` left in the instance without its bytes (null: none, or its bytes are written). */
+  let current: Kept | null = null;
+  /** A state kept by `advance`: the bytes of an earlier state and the periods computed from it since. While it is
+   *  the one the instance keeps, its bytes are written from there; otherwise (another state was computed in between,
+   *  or the instance stopped) they are computed again from the earlier bytes: the engine is deterministic. */
+  class Kept implements KeptEconomy {
+    constructor(readonly base: Uint8Array, readonly periods: number, public written: Uint8Array | null = null) {}
+    bytes(): Uint8Array {
+      if (this.written) return this.written;
+      if (this === current && x) { this.written = last = call([], (e) => e.sce_save_last()); current = null; return this.written; }
+      return (this.written = step(this.base, this.periods));
+    }
+  }
+  /** Before the instance computes or reads another state: the bytes of the one it keeps without them are written,
+   *  so that they are not lost. */
+  const flush = () => { if (current && !current.written && x) current.bytes(); current = null; };
+  /** A call that hands out a state the instance keeps (create, routes, step). */
+  const keeps = (out: Uint8Array): Uint8Array => (last = out);
+  /** Whether the instance keeps this state (see `last`), with its bytes or without (see `current`). */
+  const kept = (state: EconomyState) => x !== null && (state === last || (state === current && !!current));
+  const bytesOf = (state: EconomyState): Uint8Array => (state instanceof Uint8Array ? state : state.bytes());
+  /** `step` of the engine: from the state the instance keeps, or from bytes. */
+  function step(state: EconomyState, periods: number): Uint8Array {
+    if (!Number.isInteger(periods) || periods < 0) throw new Error(`${periods} is not a number of periods`);
+    // (a state kept without its bytes is given up: its bytes are computed again from its earlier ones if asked for)
+    if (kept(state)) { current = null; return keeps(call([], (e) => e.sce_step_last(periods))); }
+    const b = bytesOf(state);
+    flush();
+    return keeps(call([b], (e, a) => e.sce_step(a[0], a[1], periods)));
   }
   const floats = (b: Uint8Array): Float64Array => new Float64Array(b.buffer, b.byteOffset, b.byteLength / 8);
   const utf8 = new TextEncoder();
@@ -162,7 +208,8 @@ export function wasmEconomyEngine(wasm: Uint8Array): EconomyEngine {
       if (!(savings >= 0 && savings <= 1)) throw new Error(`${savings} is not a share of the savings spent per period`);
       if (crown !== 'series' && crown !== 'revenue') throw new Error(`${crown} is not a way for the crown to buy: 'series' or 'revenue'`);
       if (owner !== 'paper' && owner !== 'household') throw new Error(`${owner} is not a way for an owner to hold a firm: 'paper' or 'household'`);
-      return call([list(cities)], (e, a) => e.sce_create(a[0], a[1], clock.plan, clock.window, wage === 'money' ? 1 : 0, prices === 'demand' ? 1 : 0, savings, crown === 'revenue' ? 1 : 0, owner === 'household' ? 1 : 0));
+      flush();
+      return keeps(call([list(cities)], (e, a) => e.sce_create(a[0], a[1], clock.plan, clock.window, wage === 'money' ? 1 : 0, prices === 'demand' ? 1 : 0, savings, crown === 'revenue' ? 1 : 0, owner === 'household' ? 1 : 0)));
     },
     routes(state, { cities: n, days, labour, weight, elasticity }) {
       if (days.length !== n * n || labour.length !== n * n) throw new Error(`routes of ${days.length} ways and ${labour.length} labours do not fit ${n} cities`);
@@ -172,17 +219,26 @@ export function wasmEconomyEngine(wasm: Uint8Array): EconomyEngine {
       weight.forEach((v, g) => dv.setFloat64(8 + 8 * g, v, true));
       let at = 8 + 8 * G;
       for (let k = 0; k < n * n; k++) { dv.setUint32(at, days[k], true); dv.setFloat64(at + 4, labour[k], true); at += 12; }
-      return call([state, out], (e, a) => e.sce_routes(a[0], a[1], a[2], a[3]));
+      const b = bytesOf(state);
+      flush();
+      return keeps(call([b, out], (e, a) => e.sce_routes(a[0], a[1], a[2], a[3])));
     },
-    step(state, periods) {
+    step,
+    advance(state, periods) {
       if (!Number.isInteger(periods) || periods < 0) throw new Error(`${periods} is not a number of periods`);
-      return call([state], (e, a) => e.sce_step(a[0], a[1], periods));
+      if (!kept(state)) step(state, 0); // the state into the instance, with its bytes
+      const from = state instanceof Kept ? state : null;
+      // what the new state is computed again from if need be: the last bytes written and the periods since
+      const next = from && !from.written ? new Kept(from.base, from.periods + periods) : new Kept(from?.written ?? bytesOf(state), periods);
+      call([], (e) => e.sce_advance_last(periods));
+      last = null; current = next;
+      return next;
     },
-    figures(state) { return floats(call([state], (e, a) => e.sce_figures(a[0], a[1]))); },
-    agents(state) { return floats(call([state], (e, a) => e.sce_agents(a[0], a[1]))); },
+    figures(state) { return floats(kept(state) ? call([], (e) => e.sce_figures_last()) : call([bytesOf(state)], (e, a) => e.sce_figures(a[0], a[1]))); },
+    agents(state) { return floats(kept(state) ? call([], (e) => e.sce_agents_last()) : call([bytesOf(state)], (e, a) => e.sce_agents(a[0], a[1]))); },
     checks(state) {
       // the cities are counted by their figures: six numbers a city come first, then the pairs of the merchants
-      const v = floats(call([state], (e, a) => e.sce_checks(a[0], a[1]))), n = this.figures(state).length / FIGURES;
+      const v = floats(call([bytesOf(state)], (e, a) => e.sce_checks(a[0], a[1]))), n = this.figures(state).length / FIGURES;
       const cities = Array.from({ length: n }, (_, c) => {
         const [income, nominal, real, centralBank, banks, gdpSum] = v.subarray(6 * c, 6 * c + 6);
         return { income, nominal, real, centralBank, banks, gdpSum };

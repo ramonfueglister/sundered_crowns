@@ -17,7 +17,7 @@
 // (lookprobe/faces.ts), 32 bytes to a rectangle where its two triangles take 120; and, where asked, the upright and
 // level rectangles that lie on no grid (most of what stands on a near piece) as faces of floats, 40 bytes each.
 import { FACE_COL, FACE_GEO, FACE_STEPS, FLIPPED, FREE_GEO } from '../lookprobe/faces';
-import type { Shape } from '../lookprobe/stage';
+import type { Shape } from '../lookprobe/shape';
 import { ballOf } from './ball';
 
 /** the brightest colour that can be told */

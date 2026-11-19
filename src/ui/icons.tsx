@@ -20,10 +20,6 @@ export const IconPlaces = ({ size = 34 }: P) => <svg width={size} height={size} 
 </svg>;
 
 /** Players: two busts. */
-export const IconPlayers = ({ size = 34 }: P) => <svg width={size * 38 / 36} height={size} viewBox="0 0 38 36" aria-hidden="true">
-  <circle class="ic2" cx="26" cy="12" r="5" /><path class="ic2" d="M22 20c7-1 14 3 14 11H26c0-4-1-8-4-11z" />
-  <circle class="ic" cx="13" cy="11" r="6" /><path class="ic" d="M2 31c0-8 5-12 11-12s11 4 11 12z" />
-</svg>;
 
 export const IconCalendar = ({ size = 26 }: P) => <svg width={size} height={size} viewBox="0 0 26 26" aria-hidden="true">
   <path class="ic" fill-rule="evenodd" d="M3 5h20a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zM3 10v13h20V10zM5 12h4v3H5zm6 0h4v3h-4zm6 0h4v3h-4zM5 17h4v3H5zm6 0h4v3h-4zm6 0h4v3h-4z" />
@@ -55,6 +51,16 @@ export const IconTerrain = ({ size = 26 }: P) => <svg width={size} height={size}
   <path class="ic2" d="M1.5 21.5 8 12l3 4 2.5-3 6 8.5z" />
   <path class="ic" d="M6.5 21.5 14.5 5l9 16.5z" />
   <path d="M12.3 9.5 14.5 5l2.4 4.4-1.2-.6-1.2 1.1-1-1z" fill="#fdfaef" />
+</svg>;
+
+/** Pause: two bars. */
+export const IconPause = ({ size = 18 }: P) => <svg width={size} height={size} viewBox="0 0 18 18" aria-hidden="true">
+  <rect class="ic" x="3.5" y="2.5" width="4" height="13" rx="1" /><rect class="ic" x="10.5" y="2.5" width="4" height="13" rx="1" />
+</svg>;
+
+/** Play: a triangle pointing on. */
+export const IconPlay = ({ size = 18 }: P) => <svg width={size} height={size} viewBox="0 0 18 18" aria-hidden="true">
+  <path class="ic" d="M4.5 2.5v13l11-6.5z" />
 </svg>;
 
 export const IconClose = ({ size = 18 }: P) => <svg width={size} height={size} viewBox="0 0 18 18" aria-hidden="true">

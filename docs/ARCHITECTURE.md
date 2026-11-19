@@ -21,6 +21,9 @@ never simulate. The world has no end date: it runs one day per `SECONDS_PER_DAY`
 Everything that changes the state is a log entry (`cmd`, `claim`, `release`), applied in order and appended to the
 command log between day markers. Snapshots are written every `SNAPSHOT_EVERY_DAYS`; on start the server loads the
 latest and replays the log after it. `verifyReplay` checks that a snapshot plus the log reproduces the live state.
+A copy of the latest snapshot and of the log since it goes to Supabase Storage (`server/store.ts`); a server that
+starts on an empty disk resumes from that copy (`WorldCore.restoreIfEmpty`). The rulers have a readable copy in the
+tables `world_persons` and `world_reigns` (`server/rulers_copy.ts`), which the simulation never reads.
 Randomness comes only from the seeded generator in the state (`src/sim/rng.ts`), from `hash01` of ids, or from the
 generator inside the state of an economy (below).
 
@@ -48,5 +51,5 @@ cities, computes a day of all of them in one call, and gives figures and checks 
 and an effect. Players and the AI of realms without a player use the same commands.
 
 ## Client
-`src/net/client.ts` keeps the server's messages as signals; `src/ui/` draws them. The map (`src/render/`) gets the
-owners of all places as one binary frame at sign-in and the changes each day.
+`src/net/client.ts` keeps the server's messages as signals; `src/ui/` draws them. The world view (`src/worldprobe/view.ts`,
+under `src/ui/WorldView.tsx`) gets the owners of all places as one binary frame at sign-in and the changes each day.
