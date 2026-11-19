@@ -169,7 +169,8 @@ town has and where they lie was the world graphic's own (src/worldprobe/hamlets.
    a town has the share of its farming persons among those of its place), at 125 m of land to a block of 2 m. The
    ring is never narrower than gives each hamlet the square of its diagonal.
 5. **Ground.** Each hamlet takes the spot nearest to its own (within 8 blocks) that is clear of every parcel of the
-   town (20 m) and of the hamlets before it (4 m) and carries all its farmhouses (`houseGround`, as for the
+   town (20 m), off its streets and its market (beside them it may lie: feature 3; in 1291 this sends 56 of the
+   1,857 hamlets farther out), clear of the hamlets before it (4 m) and carries all its farmhouses (`houseGround`, as for the
    parcels); else the nearest such spot farther out (within 128 blocks); else the clear spot near its own that
    carries the most. The ground of a hamlet is the dry ground round the town (`public/data/dry_<year>.json`, written
    by `tools/worldprobe/build_plan.ts` of the world graphic: no water, no rock, up to 227 blocks from the centre;
@@ -354,8 +355,10 @@ Founding the land register of a world takes about 2.7 s, 0.5 s before the street
   environment cannot reach overpass-api.de. Until then every town grows by the model.
 - No bridges: a town cut by water grows on the side of its market, and Venice and Hormuz are laid out without their
   ground.
-- The world graphic sets the houses on the parcels but does not draw the streets yet; `public/data/plan_<year>.json`
-  must be written anew when the register changes (feature 1).
+- The world graphic paves the streets and the market (`onStreets`, src/worldprobe/settle.ts): every block whose
+  middle lies on a street, as wide as the register has it, where the ground is dry and no rock. It draws no kerb,
+  no gutter and no lamp, and a highway looks like a lane. `public/data/plan_<year>.json` must be written anew when the
+  register changes (feature 1).
 - The town stands still while the world runs: no street grows after the founding.
 
 ### Sources

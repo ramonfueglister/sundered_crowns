@@ -220,13 +220,28 @@ export function foundLots(s: WorldState, ground?: Ground | null, dry?: Ground | 
   cities.forEach((city, k) => farmersOfPlace.set(city.place, (farmersOfPlace.get(city.place) ?? 0) + towns[k].farmPersons));
   cities.forEach((city, k) => {
     const { families, persons, farmers, farmPersons } = towns[k];
-    let half = 0;
-    const built = new Map<number, Box[]>(); // the parcels of the town by the cells of CELL metres they touch
+    let half = 0, reach = 0; // how far the parcels reach from the centre, and the streets
+    const built = new Map<number, Box[]>(), paved = new Map<number, Box[]>(); // the parcels and the streets of the town by the cells of CELL metres they touch
     if (families.length) {
       const exact = parcelSize(townGround(persons, city.site), families.length);
       const size = exact;
       const town = layStreets(s, city.site, families.length, size, g, found, tune);
       const parcels: Parcel[] = town.parcels;
+      const keep = (b: Box, into = built) => {
+        for (let cz = Math.floor((b.z - b.d / 2) / CELL); cz <= Math.floor((b.z + b.d / 2) / CELL); cz++) for (let cx = Math.floor((b.x - b.w / 2) / CELL); cx <= Math.floor((b.x + b.w / 2) / CELL); cx++) {
+          const key = cz * 4096 + cx, list = into.get(key);
+          if (list) list.push(b); else into.set(key, [b]);
+        }
+      };
+      // the streets and the market: a hamlet may lie beside them, as beside a way of the world, but not on them (the
+      // hamlets' ring still starts at the parcels)
+      const mk = town.market;
+      keep({ x: mk.x, z: mk.z, w: 2 * mk.half, d: 2 * mk.half }, paved);
+      for (const q of town.streets) {
+        const b: Box = { x: (q.x0 + q.x1) / 2, z: (q.z0 + q.z1) / 2, w: Math.abs(q.x1 - q.x0) + town.width, d: Math.abs(q.z1 - q.z0) + town.width };
+        reach = Math.max(reach, Math.abs(b.x) + b.w / 2, Math.abs(b.z) + b.d / 2);
+        keep(b, paved);
+      }
       families.forEach((f, i) => {
         const id = spawn(lot), p = parcels![i];
         L.kind[id] = LOT_KIND.parcel; L.place[id] = city.place; L.site[id] = city.site; L.hamlet[id] = NO_HAMLET;
@@ -234,17 +249,13 @@ export function foundLots(s: WorldState, ground?: Ground | null, dry?: Ground | 
         F.lot[f] = id;
         const fp = footprint(p, size);
         half = Math.max(half, Math.abs(p.x) + fp.w / 2, Math.abs(p.z) + fp.d / 2);
-        const b: Box = { x: p.x, z: p.z, w: fp.w, d: fp.d };
-        for (let cz = Math.floor((b.z - b.d / 2) / CELL); cz <= Math.floor((b.z + b.d / 2) / CELL); cz++) for (let cx = Math.floor((b.x - b.w / 2) / CELL); cx <= Math.floor((b.x + b.w / 2) / CELL); cx++) {
-          const key = cz * 4096 + cx, list = built.get(key);
-          if (list) list.push(b); else built.set(key, [b]);
-        }
+        keep({ x: p.x, z: p.z, w: fp.w, d: fp.d });
       });
     }
     if (!farmers.length) return;
     const sizes = hamletSizes(farmers.length), hectares = (s.place.arable[city.place] * farmPersons) / farmersOfPlace.get(city.place)!;
     const ring = hamletRing(half, sizes, hectares), spots = hamletSpots(sizes.length, ring.inner, ring.outer);
-    const town: Box = { x: 0, z: 0, w: 2 * half, d: 2 * half }, taken: Box[] = [];
+    const town: Box = { x: 0, z: 0, w: 2 * Math.max(half, reach), d: 2 * Math.max(half, reach) }, taken: Box[] = [];
     const hg = wide?.has(city.site) ? wide : g?.has(city.site) ? g : null, surveyed = !!hg;
     let next = 0, free: ReturnType<typeof allFree> | null = null;
     sizes.forEach((farms, h) => {
@@ -253,6 +264,7 @@ export function foundLots(s: WorldState, ground?: Ground | null, dry?: Ground | 
       const nearTown = (b: Box) => {
         for (let cz = Math.floor((b.z - b.d / 2 - HAMLET_OFF) / CELL); cz <= Math.floor((b.z + b.d / 2 + HAMLET_OFF) / CELL); cz++) for (let cx = Math.floor((b.x - b.w / 2 - HAMLET_OFF) / CELL); cx <= Math.floor((b.x + b.w / 2 + HAMLET_OFF) / CELL); cx++) {
           if (built.get(cz * 4096 + cx)?.some((t) => near(b, t, HAMLET_OFF))) return true;
+          if (paved.get(cz * 4096 + cx)?.some((t) => near(b, t, 0))) return true;
         }
         return false;
       };
