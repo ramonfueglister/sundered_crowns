@@ -289,8 +289,9 @@ pub(crate) fn mh_pick(p: &Look, long_hair: bool) -> Option<(String, String)> {
             match p.hair_style() {
                 Hair::Braid => p.dress.set().map_or("braid01", |d| d.hair_girl),
                 Hair::Veil => match p.dress.set() {
-                    // (a veil that hides all hair has none under it: `hair_veiled` empty)
-                    Some(d) if !d.hair_veiled.is_empty() => d.hair_veiled,
+                    // (the hair under a veil set back; a veil on forehead and cheeks hides all hair and has none
+                    // under it)
+                    Some(d) if p.veil() == crate::dress::Veil::Back => d.hair_veiled,
                     _ => return None,
                 },
                 _ => "bun01",

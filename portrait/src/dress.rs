@@ -27,6 +27,18 @@ pub enum Hood {
     Back,
 }
 
+/// (round 121) How a woman wears her hair, by a digit of her seed (`DressSet::veils`, `veil_of`).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Veil {
+    /// No veil: a girl's hair (`DressSet::hair_girl`).
+    None,
+    /// The veil set back on the head and falling loose beside the cheeks (`DressSet::veil_back`): the hair under
+    /// it (`hair_veiled`) shows over the forehead and at the temples.
+    Back,
+    /// The veil on forehead and cheeks (`DressSet::veil`): no hair to be seen, and none under it.
+    Closed,
+}
+
 /// (round 111) Tightly curled hair of a dress with a table: no bundles that run from a whorl to a cut, one springy
 /// mass that stands off the skull (tools/portrait/pipeline/hair_body.py, the cuts `coil01` ...). Whoever's curl
 /// (the gene's share, 0 to 1) lies over `from` wears it in place of the table's other hair: Apoleia's rule gives
@@ -239,10 +251,26 @@ pub struct DressSet {
     /// Women from this age wear the veil (younger: braids), from the second age the wimple under it.
     pub veil_from: f32,
     pub wimple_from: f32,
+    /// (round 121) How a woman of the veil's age wears it, by the third digit of her seed from the right
+    /// (`veil_of`), and the age up to which one whose digit says `Veil::None` goes without it, in a girl's
+    /// plaits (from then on: `Veil::Back`).
+    /// England: until round 120 every woman from 20 wore `veil` on forehead and cheeks: eight grown women of
+    /// the sample, eight grey ovals of linen with a face in each, and no hair on any grown woman's head; of ten
+    /// women of the reference eight show their hair (docs/PORTRAITS.md, round 121). Now five in ten wear the
+    /// veil set back over parted hair and two as before; three wear plaits until 30 and the veil set back after.
+    /// The shares and the age are PLACEHOLDER: the simulation has no marriages, and nothing was read on how many
+    /// women of twenty to thirty were unmarried in 1356 or on how many wore the veil which way.
+    pub veils: [Veil; 10],
+    pub unveiled_until: f32,
     pub veil: &'static str,
+    /// The veil worn set back (`Veil::Back`), drawn with `veil`'s image. Empty: the table has none, and such a
+    /// woman wears `veil`.
+    pub veil_back: &'static str,
     pub wimple: &'static str,
-    /// Men's hair, loose and under the hood on the head; the hair under a veil (empty: none, the veil lies on
-    /// forehead and cheeks and hides all of it); the hair of girls and of women too young for the veil.
+    /// Men's hair, loose and under the hood on the head; the hair under a veil set back (`Veil::Back`; empty:
+    /// the table has none, and every veil is `Veil::Closed`, which lies on forehead and cheeks and hides all
+    /// hair): its painted layer and scalp are `hair_girl`'s (`under_of`); the hair of girls and of women who go
+    /// without the veil.
     pub hair: &'static str,
     /// Other lengths of the same cut, each with its share in ten (by the person's seed); the rest wear `hair`.
     /// With one length every man of a town has the same head.
@@ -769,7 +797,10 @@ const ENGLAND: DressSet = DressSet {
     hood_back: "cloth_hood_down",
     veil_from: 20.0,
     wimple_from: 50.0,
+    veils: [Veil::Back, Veil::Closed, Veil::None, Veil::Back, Veil::Back, Veil::None, Veil::Back, Veil::Closed, Veil::None, Veil::Back],
+    unveiled_until: 30.0,
     veil: "cloth_veil_linen",
+    veil_back: "cloth_veil_back",
     wimple: "cloth_wimple",
     hair: "bob01",
     hair_lengths: &[("bob06", 3), ("bob07", 2)],
@@ -777,7 +808,7 @@ const ENGLAND: DressSet = DressSet {
     hair_receding: "bob03",
     hair_bald: "bob04",
     hair_hooded: "bob02",
-    hair_veiled: "",
+    hair_veiled: "part01",
     hair_girl: "plait01",
     hair_small: "bob08",
     coily: Some(Coily { from: 0.86, men: "coil01", women: "coil02", small: "coil03", thin: "coil03", bald: "coil04", image: "hair1356_fleece", under: ["bob01", "bob04"] }),
@@ -986,7 +1017,7 @@ const ENGLAND: DressSet = DressSet {
         Source { what: "gown (cote) of wool, pulled over the head, close at the shoulders, round neck; linen worn under it (a shirt, a smock)", source: "Crowfoot, Pritchard & Staniland 1992 (London finds); Østergård 2004 (Herjolfsnes). Summaries only. Cut PLACEHOLDER. The cuts of round 110 (a man's neck opened in a V a hand deep, a woman's cut wide, how much linen shows) are by eye beside the reference: a wide neckline is the fashion of the 1340s to 1360s at court (Newton 1980, summary only), not sourced for a villager's wife." },
         Source { what: "hood with a short cape for men, worn on the head or thrown back", source: "Østergård 2004 (Herjolfsnes hoods); Newton 1980. Summaries only. Shares 4:3:3 PLACEHOLDER (unsourced)." },
         Source { what: "wool colours: undyed greys and browns, cheap dyes (russet, a dull blue)", source: "Statute concerning diet and apparel 1363 (russet and blanket for the poorest), read from a summary. Hex values PLACEHOLDER." },
-        Source { what: "married women's hair covered by a linen veil, a wimple round the throat on older women and widows; girls in braids", source: "Newton 1980. Summary only. Ages 20 and 50 PLACEHOLDER (the simulation has no marriages yet). How the veil is worn (its rim on the forehead and on the cheeks in front of the ears, falling to the shoulders, no hair to be seen; the wimple under it, showing under the chin and round the throat): PLACEHOLDER, by eye against one veiled figure of the reference pictures (round 70)." },
+        Source { what: "married women's hair covered by a linen veil, a wimple round the throat on older women and widows; girls in braids", source: "Newton 1980. Summary only. Ages 20 and 50 PLACEHOLDER (the simulation has no marriages yet). How the veil is worn (its rim on the forehead and on the cheeks in front of the ears, falling to the shoulders, no hair to be seen; the wimple under it, showing under the chin and round the throat): PLACEHOLDER, by eye against one veiled figure of the reference pictures (round 70). Since round 121 that is one of three ways (`veils`): the veil set back on the head over parted hair that covers the ears, the veil on forehead and cheeks, and a girl's plaits on three women in ten until 30, as unmarried. The shares, the age and the cut of the hair under the veil: PLACEHOLDER, by eye; nothing was read for them." },
         Source { what: "children under seven: the men's hair to the jaw with a fringe, girls and boys alike", source: "PLACEHOLDER, nothing read on small children's hair. Chosen because Apoleia's cropped hair begins far back on a child's large skull (a shaven head)." },
         Source { what: "men's hair in three lengths (to above the ear, to the ear's lobe, to the jaw), 3 : 5 : 2", source: "PLACEHOLDER: lengths and shares by eye, so that the men of a town do not all have one head." },
         Source { what: "men's hair to the jaw with a fringe", source: "PLACEHOLDER, to be checked against picture sources (Luttrell Psalter c. 1330, Holkham Bible)." },
@@ -1094,9 +1125,22 @@ pub fn brow_lift_at(ax: f32, xs: [f32; 3], lift: [f32; 3]) -> f32 {
 }
 
 impl DressSet {
-    /// Whether a person wears the veil (`veil_from`).
-    pub fn veiled(&self, female: bool, yrs: f32) -> bool {
-        female && yrs >= self.veil_from
+    /// How a person wears the veil (`veil_from`, `veils`, `unveiled_until`): none on men and girls.
+    pub fn veil_of(&self, female: bool, yrs: f32, seed: u32) -> Veil {
+        if !female || yrs < self.veil_from {
+            return Veil::None;
+        }
+        match self.veils[((seed / 100) % 10) as usize] {
+            Veil::None if yrs < self.unveiled_until => Veil::None,
+            Veil::Closed => Veil::Closed,
+            _ if self.veil_back.is_empty() || self.hair_veiled.is_empty() => Veil::Closed,
+            _ => Veil::Back,
+        }
+    }
+
+    /// Whether a person wears a veil, either way.
+    pub fn veiled(&self, female: bool, yrs: f32, seed: u32) -> bool {
+        self.veil_of(female, yrs, seed) != Veil::None
     }
 
     /// The brow's lift for a person (`brow_lift`): the sex's own, by how much of the head has its adult form.
@@ -1219,6 +1263,8 @@ impl DressSet {
         match &self.coily {
             Some(c) if name == c.bald => c.under[1],
             Some(c) if self.is_coily(name) => c.under[0],
+            // (round 121) the hair under a veil set back is a girl's above the ears: her painted layer, her scalp
+            _ if !self.hair_veiled.is_empty() && name == self.hair_veiled => self.hair_girl,
             _ => name,
         }
     }
@@ -1284,6 +1330,24 @@ mod tests {
     use super::*;
 
     #[test]
+    fn women_of_england_wear_the_veil_three_ways() {
+        let d = &ENGLAND_1356;
+        // no man and no girl
+        assert!((0..1000).all(|s| d.veil_of(false, 40.0, s) == Veil::None && d.veil_of(true, 19.0, s) == Veil::None));
+        // of a thousand women of 25 three in ten in plaits, five in ten the veil set back, two as until round
+        // 120; from 30 none without it
+        let count = |age: f32, v: Veil| (0..1000).filter(|&s| d.veil_of(true, age, s) == v).count();
+        assert_eq!([Veil::None, Veil::Back, Veil::Closed].map(|v| count(25.0, v)), [300, 500, 200]);
+        assert_eq!([Veil::None, Veil::Back, Veil::Closed].map(|v| count(40.0, v)), [0, 800, 200]);
+        // a table without a veil to set back, or without hair to show under it: every veil as until round 120
+        for old in [DressSet { veil_back: "", ..ENGLAND }, DressSet { hair_veiled: "", ..ENGLAND }] {
+            assert!((0..1000).all(|s| old.veil_of(true, 25.0, s) != Veil::Back && old.veil_of(true, 40.0, s) == Veil::Closed));
+        }
+        // the hair under a veil set back lies on a girl's painted layer and scalp
+        assert_eq!((d.under_of(d.hair_veiled), d.under_of(d.hair_girl), d.under_of(d.hair)), (d.hair_girl, d.hair_girl, d.hair));
+    }
+
+    #[test]
     fn origins_find_their_dress() {
         assert_eq!(Dress::of("England"), Dress::England1356);
         for o in ["", "Italia", "Graecia", "Syria", "Aegyptus"] {
@@ -1296,7 +1360,7 @@ mod tests {
         let plain = Dress::Plain1356.set().unwrap();
         assert_eq!(plain.key, "plain1356");
         assert!((0..10).all(|seed| plain.hood_of(false, 30.0, seed) == Hood::None));
-        assert!(!plain.veiled(true, 60.0));
+        assert!((0..1000).all(|seed| !plain.veiled(true, 60.0, seed)));
         assert_eq!((plain.gown, plain.hair_girl), (ENGLAND_1356.gown, ENGLAND_1356.hair_girl));
         assert!(Dress::Roman.set().is_none());
         let e = Dress::England1356.set().unwrap();

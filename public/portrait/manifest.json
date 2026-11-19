@@ -326,6 +326,14 @@
    "bytes": 37866
   },
   {
+   "name": "cloth_veil_back.txt.zst",
+   "bytes": 157090
+  },
+  {
+   "name": "cloth_veil_back_ao.txt",
+   "bytes": 28602
+  },
+  {
    "name": "cloth_veil_linen.txt.zst",
    "bytes": 166173
   },
@@ -384,6 +392,10 @@
   {
    "name": "eyebrow001.txt",
    "bytes": 20765
+  },
+  {
+   "name": "part01_body.txt.zst",
+   "bytes": 792193
   },
   {
    "name": "plait01_body.txt.zst",

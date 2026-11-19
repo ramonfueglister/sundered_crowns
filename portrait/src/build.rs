@@ -388,7 +388,8 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
                 }
             }
             // the scalp under the hair this person wears (name_scalp.txt beside it), if bare-headed
-            let bare = !matches!(p.hat_style(), Hat::Cap | Hat::Pileus | Hat::Petasos) && !(long_hair && p.hair_style() == Hair::Veil);
+            // (round 121: under a veil set back the hair shows over the forehead, and its scalp with it)
+            let bare = !matches!(p.hat_style(), Hat::Cap | Hat::Pileus | Hat::Petasos) && !(long_hair && p.hair_style() == Hair::Veil && p.veil() != crate::dress::Veil::Back);
             let sf = if bare { mh_pick(p, long_hair).map(|(d, n)| format!("{d}/{}_scalp.txt", garb.map_or(n.as_str(), |g| g.under_of(&n)))).filter(|f| crate::real::exists(f)) } else { None };
             real_skin(&mut s, &h.parts["body"][lod], &x.pp, dir, p.age, fem, hair, sf, lf.sun, p.seed, garb.map_or((1.0, "skin_red.txt"), |d| (d.flush[if fem { 0 } else { 1 }] * d.flush_of(p), d.flush_map)), garb.map_or(0.0, |d| d.lash_line[if fem { 0 } else { 1 }] * d.eyes_of(fem, p.age)[1]), garb.map_or([1.0; 2], |d| d.lid_under), garb.map_or((0.5, "#140d08"), |d| d.lash_tone), garb.map(|d| d.lips_of(fem, p.age)), garb.is_some_and(|d| !fem && p.age < d.boy_skin), { let l = linear(skin); 0.2126 * l[0] + 0.7152 * l[1] + 0.0722 * l[2] });
         }
@@ -982,10 +983,10 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
     };
     let hatted_mh = hatted;
     let veiled = long_hair && p.hair_style() == Hair::Veil;
-    // (a dress with a table has hair under the veil, the Roman veil the builder's own; a dress whose veil hides
-    // all hair has none, `hair_veiled` empty)
+    // (a dress with a table has hair under a veil set back, the Roman veil the builder's own; under a veil that
+    // lies on forehead and cheeks there is none: `Veil::Closed`)
     let mh = if hatted_mh || veiled && garb.is_none() { None } else { mh_pick(p, long_hair) };
-    let no_hair = veiled && garb.is_some_and(|d| d.hair_veiled.is_empty());
+    let no_hair = veiled && garb.is_some() && p.veil() != crate::dress::Veil::Back;
     if let Some((dir, name)) = &mh {
         // hair thins with age: women diffusely over the crown (female pattern
         // hair loss, rising to about half of women past 80; Gan & Sinclair,
@@ -1388,8 +1389,14 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
                 Some(d) => hex(d.linen),
                 None => dress(hex(st.palla.unwrap_or(["#e9e2d2", "#c8b68c", "#8396ad", "#a4664f", "#6f7d5c"][(p.seed % 5) as usize])), [0.0, 7.5, 0.0]),
             };
-            // real look: the veil draped in Blender
-            let real_veil = if real.is_some() { crate::real::folder().and_then(|d| mh_cloth(&d, garb.map_or("cloth_veil", |t| t.veil), &x.pp, &h.base, &|_| vcol, None, if garb.is_some() { Layer::Over } else { Layer::Bound })) } else { None };
+            // real look: the veil draped in Blender (round 121: a dress's veil set back is a cloth of its own,
+            // drawn with the image of the veil that lies on forehead and cheeks)
+            let (cloth, image) = match garb {
+                Some(t) if p.veil() == crate::dress::Veil::Back => (t.veil_back, t.veil),
+                Some(t) => (t.veil, ""),
+                None => ("cloth_veil", ""),
+            };
+            let real_veil = if real.is_some() { crate::real::folder().and_then(|d| mh_cloth_as(&d, cloth, image, &x.pp, &h.base, &|_| vcol, None, if garb.is_some() { Layer::Over } else { Layer::Bound })) } else { None };
             if let Some(s) = real_veil {
                 // the wimple under the veil of older women
                 if let Some(t) = garb.filter(|t| p.age >= t.wimple_from) {

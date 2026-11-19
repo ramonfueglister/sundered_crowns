@@ -4701,6 +4701,85 @@ with the skin moved between 0.3 and 3 mm. Cargo: 77 of 77. Pictures (project fil
 `runde120_vorher_nachher_wange.png` (two women at twice the size, round 119 above, this round below),
 `runde120_vorher_nachher_gesichter.png` (twelve faces of the sample, before above, after below).
 
+**Round 121: the women's hair** (2026-11-19). This round took no line of the gauntlet. It began by setting
+our eight grown women beside ten women of the reference at one size, with the hair in the crop, and took
+what stands out first. It is not in the face. Of the reference's ten, eight show their hair (plaits beside
+the face, plaits wound round the head, a band across the forehead, in red, black, brown and fair) and two
+wear a cloth set back on the head with hair under it at the forehead. Ours: eight times the same grey oval
+of linen with a face in it, and no hair on any grown woman's head. Round 119 named "every woman in the
+same coif" among what was open; no round had looked at it.
+
+**What is built.** Three ways for a woman to wear her hair, where there was one.
+
+A veil set back (`cloth_veil_back`, `DressSet::veil_back`): the veil's call with the face's opening taken
+up over the top of the head, so that its rim lies 8.7 to 10.6 cm above the nose's root (six women of 30 and
+six of 60), behind the hairline, and falls from the temples loose beside the cheeks to the shoulders. It
+stands 2 cm off the skull for the closed veil's 1, since hair lies under it. It has no image of its own:
+the builder draws it with the closed veil's linen (`mh_cloth_as`).
+
+Hair under it (`part01_body`, `DressSet::hair_veiled`): a girl's parted hair without its plaits, laid from
+the parting over the ears down to their lobes and on to the nape. In front of the veil's rim it stands half
+again as high as a girl's, under the cloth as flat as hers (`free()` in `hair_body.py`, which knows the
+rim's line as a table measured on the draped veil), and it begins 2.5 degrees lower on the forehead. Its
+painted layer and scalp are the plaits' (`DressSet::under_of`). Measured on the twelve women: the hair
+begins 6.2 to 6.9 cm above the nose's root, lies 0.5 to 0.7 cm outside each ear, and behind the rim 262 to
+617 of its points lie near the cloth, none outside it.
+
+A rule (`DressSet::veils`, `unveiled_until`, `veil_of`; `Look::veil`), by the third digit of a woman's seed:
+five in ten wear the veil set back, two the veil on forehead and cheeks as until now, and three go without
+a veil in a girl's plaits until 30 and wear the veil set back from then on. The wimple of the women from 50
+goes under either veil. A woman with tightly curled hair wears the closed veil, since there is no such hair
+cut to lie under a cloth. A dress table without a veil to set back or without hair for it draws every veil
+as before. In the sample's eight grown women: one in plaits, five with the veil set back, two closed.
+
+The tools that make cloth and hair (`tools/portrait/pipeline/`) ran in the cloud for the first time this
+round (MakeHuman's base mesh, Blender's Python as a wheel, the cote written again as the body's dress for
+the drape). Both new rows, with their calls, are in the pipeline's README.
+
+**Tried and not kept.** All eight women in a girl's plaits: one way again, and the table's own source has
+married women's hair covered. The veil wider over the ears (`EARS=0.22,30`): a lump of cloth over each ear,
+and the ear through it. Looser (`LOOSE=0.3`) and further off the head (`OFF0=0.26`): a hood, with a ragged
+fold beside the jaw. The plaits' hair itself with the plaits left off: the ear bare and a pointed tuft where
+the plait began. The hair led back higher (`PART_TO=150,-38`): it passes above the ear, which shows whole.
+The hair more than twice as high (`PART_LIFT=2.2`) and 5 degrees lower on the forehead: strands through the veil, ragged ends at the
+jaw, a bare strip at the hairline. As high under the cloth as in front of it: strands through the veil's
+rim, which is why the lift now ends at the rim. A first formula for the rim's line was wrong because the
+hair's scripts and the drape's measure angles from two different centres; the table took its place.
+
+**The gauntlet**: 19 of 22, as after round 120, and the same three fail ("woman: beside the nose against
+cheek" 4.1 off, "woman: nose's back against cheek" 1.3 for 8, "man: far cheek against the lit" -25.8 for
+-16.9). Two readings moved in the last digit (lit cheek b* 26.2 for 26.1, the nose's back 1.3 for 1.2). No
+limit and no reading of the reference was touched. The gauntlet reads skin; it has no line for hair or
+dress, so nothing in it says this round did anything. What says so is the picture beside the reference.
+
+Honest about it. The women are no longer all alike, and they are still far from the reference's. Ours have
+two cuts of hair, theirs a different one on nearly every head: no plaits wound round the head, no band or
+fillet, no net. Our hair lies close to the skull and is thin beside theirs, which stands off the head as a
+mass; half again the height in front of the rim is what went in without strands through the cloth. The
+colours are browns and greys, as the genes give them; theirs are red, black and fair too, and no gene was
+touched. Grey hair shows a pale band at the hairline, where the painted layer fades with the grey and the
+bundles begin behind it. Specks in the gown's colour come through the veil at the shoulders, on the closed
+veil as on the new one; they were there before this round and are not mended. The shares (five, two, three
+in ten), the age of 30 and the cut are by eye: PLACEHOLDER, nothing was read for them, and the simulation
+has no marriages to tell a wife from a maid. The way is picked by a digit of the seed and by age, not by
+anything in a woman's life: not her rank, not her means, not whether she is wed. Three files
+are new, 0.98 MB together. The cloth simulation does not repeat itself to the digit (the closed veil written
+again came out with other numbers in 6664 of 14928 lines), so `cloth_veil_back` cannot be had again
+exactly; the closed veil's file is left as it was. And a scar's test had to learn to skip skin whose tone
+changes within one facet (the scalp's tint at the hairline), because a scar under the new hair read as too
+pale or too dark there; the test still reads at least a quarter of each scar.
+
+Tests: `portrait/src/dress.rs`, "women of England wear the veil three ways" (of 1000 seeds at 25: 300, 500,
+200; at 40: 0, 800, 200; tables without the new veil or hair: all closed). `portrait/tests/veil.rs`: the two
+tests of the closed veil now pick six women who wear it; new, "a veil set back shows the hair over the
+forehead and keeps it under the cloth" (rim 6.5 to 12 cm above the nose's root, hair more than 2 cm below
+it and outside each ear, behind the rim hair under the cloth with fewer than 2 in 100 points outside, the
+veil in front below the chin, the wimple from 50, the plaits' painted layer and no plait). `tests/portrait.test.ts`:
+the dress test knows the three ways; new, "the grown women of England's sample do not all wear their hair
+one way" (one, five, two). Cargo: 79 of 79; the builder's three vitest files: 53 of 53. Pictures (project files, `portraits/`):
+`runde121_neben_referenz.png` (the reference's ten women, ours before, ours after, at one size),
+`runde121_vorher_nachher_frauen.png` (the eight grown women, round 120 above, this round below).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
@@ -4714,7 +4793,9 @@ face runs in to the chin, since round 117 as far as the reference's does, with a
 edge is a soft shade, since round 118 the eyes have warm whites, a soft pupil and no dark line under
 them, since round 119 the white of the eye goes into the shade with the face, under brows that lie as high
 as theirs (read on ten of their women in round 119) but are rows of hairs where theirs are a closed band, since round 120 the cheek beside the mouth has
-lost the net's hard fold, and the face still lacks the
+lost the net's hard fold, since round 121 the grown women wear their hair three ways (a veil set back over parted
+hair, the veil on forehead and cheeks, plaits), in two cuts and the genes' browns and greys where theirs have a
+different head of hair on nearly every woman, and the face still lacks the
 reference's streak of gloss on the nose's flank; the thrown-back hood closes round the neck since round 35, but
 has no folds across its cloth. Since round 111 the people of every part of the world can be drawn, in a plain
 dress that is no people's own, and without a picture of the reference to hold them against.

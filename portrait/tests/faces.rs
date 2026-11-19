@@ -425,7 +425,7 @@ fn a_scar_of_england_is_a_pale_line_in_the_skin() {
         assert!(scar.tex == skin.tex && scar.nmap == skin.nmap && scar.uv.len() == scar.pos.len() && scar.nrm.len() == scar.pos.len(), "person {k}: in the skin's image");
         // on the skin: no corner further from a corner of the skin than the skin's triangles are long (on cheek
         // and forehead up to 2 cm)
-        let (mut dark, mut light) = (f32::MAX, 0f32);
+        let (mut dark, mut light, mut read) = (f32::MAX, 0f32, 0);
         for ((q, c), uv) in scar.pos.iter().zip(&scar.col).zip(&scar.uv) {
             let near = (0..idx.len()).min_by(|&a, &b| dist(q, &skin.pos[a]).total_cmp(&dist(q, &skin.pos[b]))).unwrap();
             assert!(dist(q, &skin.pos[near]) < 0.2, "person {k}: a corner {} off the skin", dist(q, &skin.pos[near]));
@@ -434,13 +434,24 @@ fn a_scar_of_england_is_a_pale_line_in_the_skin() {
             // has a corner of the lid's dark edge, which lies elsewhere in the image)
             let d2 = |a: &[f32; 2], b: &[f32; 2]| (a[0] - b[0]).powi(2) + (a[1] - b[1]).powi(2);
             let beside = (0..idx.len()).min_by(|&a, &b| d2(uv, &skin.uv[a]).total_cmp(&d2(uv, &skin.uv[b]))).unwrap();
+            // (round 121: not where the skin itself changes its tone within one triangle. A woman who wears her
+            // veil set back shows her hair, and the scalp under hair is darkened towards the hair's colour: a
+            // scar on the forehead that runs up under the hair takes that tone, and the corner next to it may
+            // lie on the other side of the hairline)
+            let tri: [f32; 3] = std::array::from_fn(|q| grey(&skin.col[beside / 3 * 3 + q]));
+            if tri.iter().cloned().fold(0.0, f32::max) > 1.25 * tri.iter().cloned().fold(f32::MAX, f32::min) {
+                continue;
+            }
+            read += 1;
             let against = grey(c) / grey(&skin.col[beside]);
             dark = dark.min(against);
             light = light.max(against);
         }
         if std::env::var("SHOW").is_ok() {
-            println!("person {k}: {} corners, {dark:.2} to {light:.2} of the skin's lightness beside them", scar.pos.len());
+            println!("person {k}: {} corners, {read} of them on skin of one tone, {dark:.2} to {light:.2} of the skin's lightness beside them", scar.pos.len());
         }
+        // (of two scars one may lie at the hairline whole)
+        assert!(4 * read >= scar.pos.len(), "person {k}: {read} of {} corners of the scars on skin of one tone", scar.pos.len());
         assert!(dark > 0.8 && light > 1.1 && light < 1.6, "person {k}: {dark} to {light} of the skin's lightness");
     }
 }

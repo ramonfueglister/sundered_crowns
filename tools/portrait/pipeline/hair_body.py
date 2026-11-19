@@ -90,6 +90,21 @@ PARTED = dict(
     ],
 )
 CUTS['plait01'] = PARTED
+# A woman's hair under a veil that is set back on the head (round 121; `portrait/src/dress.rs` `hair_veiled`,
+# `Veil::Back`): parted as a girl's, laid over the ears and on to the nape, where it is pinned up under the veil
+# (`to`: there is no plait; `by`: lower at the temple, so that the hair covers the ear down to its lobe). In
+# front of the veil's rim it is fuller than a girl's and begins lower on the forehead (`lift`; `PART_DROP`:
+# degrees at the forehead's middle, none from 60 degrees to the side); under the veil it lies as flat as hers
+# (`veil`: the veil's rim as a table like `line`, read off the draped veil `cloth_veil_back` in this script's
+# angles; over how many degrees in front of the rim the hair comes to its full height; how much of the lift is
+# left under the cloth). The painted layer and the scalp under it are the girl's. All PLACEHOLDER by eye.
+_e = lambda k, d: [float(t) for t in os.environ.get(k, d).split(',')]
+VEIL_RIM = [(0, 50.6), (33, 47.5), (45, 40.4), (53, 21), (60, 8), (68, -14), (77, -34), (85, -45), (120, -45)]
+CUTS['part01'] = dict(
+    PARTED, to=tuple(_e('PART_TO', '130,-58')), by=tuple(_e('PART_BY', '64,-14')), lift=_e('PART_LIFT', '1.5')[0],
+    veil=(VEIL_RIM, *_e('PART_VEIL', '10,0')),
+    line=[(th, el - _e('PART_DROP', '2.5')[0] * max(0.0, min(1.0, (60 - th) / 28))) for th, el in PARTED['line']],
+)
 # Tightly curled hair (round 111): no bundles and no strands that run anywhere. Each hair is a coil of a few
 # millimetres, and a head of them is one springy mass that stands off the skull the same height all round, its
 # surface small tufts side by side, its edge the hairline itself. `h`: how high the mass stands over the skin;
@@ -288,6 +303,17 @@ def bundles(L, rng):
     return out_
 
 
+def free(d):
+    """How high parted hair stands at a place, as a factor: the cut's `lift`, and under a veil (`veil`) what is
+    left of it over 1, from a finger's breadth in front of the rim."""
+    if 'veil' not in C:
+        return LIFT + 0 * d[..., 0]
+    rim, band, left = C['veil']
+    rim = np.array(rim, float)
+    th, el = ang(d)
+    return 1 + (LIFT - 1) * (left + (1 - left) * smooth((np.interp(np.abs(th), rim[:, 0], rim[:, 1]) - el) / band))
+
+
 def parted(L, rng):
     """The bands of one layer of parted hair, as `bundles` gives a cut's."""
     line = np.array(C['line'], float)
@@ -362,7 +388,8 @@ def parted(L, rng):
             off = A * np.sin(2 * np.pi * run / lam + rng.uniform(0, 2 * np.pi)) * smooth(run / 0.4)
             off = off + cb[0] * np.sin(2 * np.pi * run / cb[1] + 2.5 * np.sin(1.3 * key[k] + SEED)) * smooth(run / 0.3) * smooth((a - near[k]) / 0.4)
             d = unit(d + side * (off / OVER.skin(d))[:, None])
-            h = LIFT * (L['h'] + L['rise'] * run) * (0.2 + 0.8 * smooth(r)) + LIFT * rng.uniform(-0.004, 0.004)
+            lift = free(d)
+            h = lift * (L['h'] + L['rise'] * run) * (0.2 + 0.8 * smooth(r)) + lift * rng.uniform(-0.004, 0.004)
             ht = ROUND * L['flat'] * hw
             h = np.maximum(h, ht + 0.004)
             roll = L['roll'] * rng.uniform(-1, 1) * ROUND

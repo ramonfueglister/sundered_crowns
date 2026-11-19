@@ -103,6 +103,7 @@ describe('portraits', { timeout: 20_000 }, () => {
   it('people of England wear the dress of 1356, Apoleia\'s own people Apoleia\'s', () => {
     const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
     const list = portraitManifest(), images = new Set(list.images.map(n => `${list.folder}/${n}`));
+    const ways = new Set<string>();
     for (const p of people) {
       const roman = b.build(p), english = b.build({ ...p, origin: 'England' });
       expect(roman.look.includes('/'), `person ${p.pid}`).toBe(false);
@@ -113,12 +114,19 @@ describe('portraits', { timeout: 20_000 }, () => {
       expect(worn.some(t => t.includes('/cloth_cote.')), `person ${p.pid} wears the gown`).toBe(true);
       expect(worn.some(t => t.includes('/cloth_tunic.') || t.includes('/cloth_veil.')), `person ${p.pid} wears nothing Roman`).toBe(false);
       for (const t of worn) if (t) expect(images.has(t), `${t} is in the repository`).toBe(true);
-      // women from the age of the veil wear it, men never
-      expect(worn.some(t => t.includes('/cloth_veil_linen.'))).toBe(p.female && p.age >= 20);
-      const plaited = p.female && p.age >= 7 && p.age < 20;
-      expect(worn.some(t => t.includes('/plait01_cap.')), `person ${p.pid}: plaits before the veil`).toBe(plaited);
+      // no man and no girl wears the veil. A woman from the age of the veil wears it one of two ways (round
+      // 121): set back over parted hair, which lies on a girl's painted layer, or on forehead and cheeks with
+      // no hair under it; or, until 30, she goes in a girl's plaits. From 30 every woman wears it
+      const veil = worn.some(t => t.includes('/cloth_veil_linen.')), cap = worn.some(t => t.includes('/plait01_cap.'));
       // the plaits themselves are round strands, a surface of their own (round 86)
-      expect(worn.some(t => t.includes('/plait01_rope.')), `person ${p.pid}: the plaits' strands`).toBe(plaited);
+      const plaits = worn.some(t => t.includes('/plait01_rope.'));
+      const woman = p.female && p.age >= 20;
+      expect(veil, `person ${p.pid}: the veil`).toBe(woman && !plaits);
+      if (woman && p.age >= 30) expect(veil, `person ${p.pid}: the veil from 30`).toBe(true);
+      if (!woman) expect(plaits, `person ${p.pid}: plaits before the veil`).toBe(p.female && p.age >= 7);
+      if (plaits) expect(cap, `person ${p.pid}: the painted layer under the plaits`).toBe(true);
+      if (cap) expect(plaits || veil, `person ${p.pid}: a girl's hair on a girl or under a veil`).toBe(true);
+      if (woman) ways.add(plaits ? 'plaits' : cap ? 'back' : 'closed');
       // hair is a body (round 109; locks from round 87, cards before): one surface of thick bundles, arched
       // bands seen from both sides, drawn with the one image of England's bundles, over the painted layer of
       // the cut. No cards and no locks of England's head hair are left
@@ -127,7 +135,7 @@ describe('portraits', { timeout: 20_000 }, () => {
       expect(body.every(s => s.double && surfaceKind(s) === 'rope'), `person ${p.pid}: bundles are open bands of solid hair`).toBe(true);
       expect(worn.some(t => t.includes('/hair1356_locks.')), `person ${p.pid}: no locks of England's head hair`).toBe(false);
       expect(worn.some(t => /\/bob0\d_cap\./.test(t)) && p.female, `person ${p.pid}: a woman wears no man's cut`).toBe(false);
-      expect(worn.some(t => /\/(bob0\d|plait01)\./.test(t)), `person ${p.pid}: no cards of England's hair`).toBe(false);
+      expect(worn.some(t => /\/(bob0\d|plait01|part01)\./.test(t)), `person ${p.pid}: no cards of England's hair`).toBe(false);
       // everyone wears the brows that sit level on these heads (the finer ones tried for women sit slanted: a
       // frown): MakeHuman's `eyebrow001`, whose cards a Roman wears with Apoleia's image of them, a closed band,
       // and a person of England with England's own, the hairs as soft as MakeHuman drew them (round 76). So with
@@ -153,6 +161,26 @@ describe('portraits', { timeout: 20_000 }, () => {
         expect(worn.some(t => t.includes(not)), `person ${p.pid} wears no ${not}`).toBe(false);
       }
     }
+    expect(ways.has('back'), 'a veil set back over hair').toBe(true);
+  });
+  it('the grown women of England\'s sample do not all wear their hair one way', () => {
+    // Until round 120 every woman from 20 wore the veil on forehead and cheeks: eight grown women of the sample,
+    // eight ovals of grey linen, and no hair on any of them. Now (portrait/src/dress.rs `veils`) five wear the
+    // veil set back over parted hair, two as before, and one of the three under 30 a girl's plaits
+    const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
+    const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
+    const ways = { plaits: 0, back: 0, closed: 0 };
+    for (const p of sample.filter(p => p.female && p.age >= 20)) {
+      const worn = b.build(p).surfaces.map(s => s.tex);
+      const veil = worn.some(t => t.includes('/cloth_veil_linen.')), plaits = worn.some(t => t.includes('/plait01_rope.'));
+      expect(veil, `person ${p.pid}: the veil or plaits`).toBe(!plaits);
+      if (plaits) expect(p.age, `person ${p.pid}: plaits until 30`).toBeLessThan(30);
+      // hair under the veil: a body of bundles on a girl's painted layer, and no plaits
+      const hair = worn.some(t => t.includes('/hair1356_body.'));
+      expect(hair, `person ${p.pid}: bundles on the painted layer`).toBe(worn.some(t => t.includes('/plait01_cap.')));
+      ways[plaits ? 'plaits' : hair ? 'back' : 'closed']++;
+    }
+    expect(ways).toEqual({ plaits: 1, back: 5, closed: 2 });
   });
   it('the skin of a person of England is light enough to take the whole tint, whatever is painted darker on it', () => {
     // the tint goes by the person's skin as a whole (the median of its colours), not point by point: a point

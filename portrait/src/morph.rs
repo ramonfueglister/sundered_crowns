@@ -440,7 +440,7 @@ fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, s
     // Ears under a veil keep MakeHuman's form: they are hidden there, and linen is bound to the skin under it. The
     // wimple, close on the skin, went out with an ear that is large or has grown with age, the veil over it,
     // further off, did not: the wimple came through the veil at the ears (round 70)
-    let ears_hidden = p.dress.set().is_some_and(|d| d.veiled(p.female, p.age));
+    let ears_hidden = p.dress.set().is_some_and(|d| d.veiled(p.female, p.age, p.seed));
     // targets a dress with a table takes the part below the cheekbones of only (`DressSet::lower_only`)
     let lower: &[&str] = p.dress.set().map_or(&[], |d| d.lower_only);
     let band = lower_band(h);

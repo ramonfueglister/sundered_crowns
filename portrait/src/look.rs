@@ -394,9 +394,21 @@ impl Look {
         }
     }
 
+    /// (round 121) How this person wears the veil of a dress with a table (`DressSet::veil_of`). Tightly curled
+    /// hair stands off the head as one mass and has no cut that lies under a veil set back: closed.
+    pub fn veil(&self) -> crate::dress::Veil {
+        use crate::dress::Veil;
+        let Some(d) = self.dress.set() else { return Veil::None };
+        match d.veil_of(self.female, self.age, self.seed) {
+            Veil::Back if d.coily_of(self.u(CURL)).is_some() => Veil::Closed,
+            v => v,
+        }
+    }
+
     pub fn hair_style(&self) -> Hair {
         if let Some(d) = self.dress.set() {
-            return if self.age < d.veil_from { Hair::Braid } else { Hair::Veil };
+            // (asked of women; by age and, since round 121, by the seed: `DressSet::veil_of`)
+            return if d.veil_of(true, self.age, self.seed) == crate::dress::Veil::None { Hair::Braid } else { Hair::Veil };
         }
         if let Some(h) = self.hair {
             return h;
