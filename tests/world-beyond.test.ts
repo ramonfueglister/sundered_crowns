@@ -18,16 +18,25 @@ describe('the realms of the rest of the globe', () => {
   });
   it('hold their capitals', () => {
     for (const key of ['yuan', 'delhi', 'ashikaga', 'goryeo', 'majapahit', 'vijayanagara']) {
-      const r = realmOf(key), cap = s.realm.cols.capital[r];
+      const r = realmOf(key),
+        cap = s.realm.cols.capital[r];
       expect(cap, key).toBeGreaterThanOrEqual(GAME_MAP);
       expect(s.place.owner[cap], key).toBe(r);
     }
   });
   it('have the cultures and faiths of their lands in the setup', () => {
-    const han = 'han', maha = 'mahayana';
+    const han = 'han',
+      maha = 'mahayana';
     const yuan = realmOf('yuan');
-    let held = 0, hanHeld = 0, mahaHeld = 0;
-    for (let i = GAME_MAP; i < w.L; i++) if (s.place.owner[i] === yuan) { held++; if (setup.culture[i] === han) hanHeld++; if (setup.faith[i] === maha) mahaHeld++; }
+    let held = 0,
+      hanHeld = 0,
+      mahaHeld = 0;
+    for (let i = GAME_MAP; i < w.L; i++)
+      if (s.place.owner[i] === yuan) {
+        held++;
+        if (setup.culture[i] === han) hanHeld++;
+        if (setup.faith[i] === maha) mahaHeld++;
+      }
     expect(held).toBeGreaterThan(500);
     expect(hanHeld / held).toBeGreaterThan(0.4);
     expect(mahaHeld / held).toBeGreaterThan(0.3);
@@ -37,6 +46,8 @@ describe('the realms of the rest of the globe', () => {
   });
   it('do not change the cultures and faiths of the game map', () => {
     expect(ALL_CULTURES.indexOf('unknown')).toBeLessThan(ALL_CULTURES.indexOf('han'));
-    expect(FAITHS.findIndex((f) => f.id === 'anglican_type')).toBeLessThan(FAITHS.findIndex((f) => f.id === 'mahayana'));
+    expect(FAITHS.findIndex((f) => f.id === 'anglican_type')).toBeLessThan(
+      FAITHS.findIndex((f) => f.id === 'mahayana'),
+    );
   });
 });

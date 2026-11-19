@@ -1,6 +1,6 @@
 // The landmarks of the land register (settlement feature 5, docs/SETTLEMENT_DESIGN.md): the rules
 // (src/sim/settlement/landmarks.ts), the list of 1291 (src/sim/content/landmarks_1291.json), the register of a new
-// world (src/sim/systems/landmarks.ts, lots.ts), the upgrade 31 → 32, what the world server tells, and what the world
+// world (src/sim/systems/landmarks.ts, lots.ts), the upgrade 32 → 33, what the world server tells, and what the world
 // graphic draws (src/worldprobe/landmarks.ts).
 import { describe, it, expect } from 'vitest';
 import { BUILT, LANDMARK_KIND, NO_YEAR, ORDERS, URBAN, builtIn, ordersOf } from '../src/sim/settlement/landmarks';
@@ -120,7 +120,7 @@ describe('the landmarks in the register of a world of 1291', () => {
 describe('a world of 1291 saved before the landmarks', () => {
   it('gets the landmarks a new world has, and encodes as one', { timeout: 60_000 }, () => {
     const old = decodeState(encodeState(s)) as WorldState;
-    old.v = 31;
+    old.v = 32;
     delete (old as Partial<WorldState>).landmark;
     const up = upgradeState(decodeState(encodeState(old)), w, () => loadSetup(1291));
     expect(up.v).toBe(STATE_VERSION);

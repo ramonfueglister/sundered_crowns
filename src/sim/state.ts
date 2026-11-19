@@ -33,15 +33,18 @@ import type { Table } from './ecs';
  *  the Big Five shift the rates of death, of a far move and of who is taken at a wedding (people feature 5,
  *  src/sim/people/traits.ts); deaths and moves are drawn anew. 29: a founder draws the genes from the pool of the
  *  culture, not of the place (src/sim/people/pools.ts; portrait round 111), and a person carries 50 genes where there
- *  were 34 (round 112: more of the face); every person's genes are given anew. 30: the streets and the market of every
- *  town (settlement feature 3, src/sim/settlement/streets.ts): the parcels lie at streets that grew to them, no longer
- *  on a grid; every parcel keeps its family and its size. 31: the fields of the farmsteads (settlement feature 4,
+ *  were 34 (round 112: more of the face); every person's genes are given anew. Snapshots from 11 on are brought up
+ *  to date by src/sim/upgrade.ts.
+ *  30: the archive of the dead (people feature 7, src/sim/people/archive.ts): every person has a uid that never
+ *  changes, the parents are uids, a woman counts the children she has borne, and on the first day of every year the
+ *  dead whom nothing in the running world needs leave the table of the persons for the archive; the rows of the
+ *  others close up. 31: the streets and the market of every town (settlement feature 3,
+ *  src/sim/settlement/streets.ts): the parcels lie at streets that grew to them, no longer on a grid; every parcel
+ *  keeps its family and its size. 32: the fields of the farmsteads (settlement feature 4,
  *  src/sim/settlement/fields.ts): every hamlet has its furlongs in courses, shared in strips by its farmsteads.
- *  32: the landmarks (settlement feature 5, src/sim/systems/landmarks.ts): the church of every town's see, the
- *  convents, the rulers' residences and the buildings known by name stand on their ground; the streets grow round them.
- *  Snapshots from 11 on are brought up to date by
- *  src/sim/upgrade.ts. */
-export const STATE_VERSION = 32;
+ *  33: the landmarks (settlement feature 5, src/sim/systems/landmarks.ts): the church of every town's see, the
+ *  convents, the rulers' residences and the buildings known by name stand on their ground; the streets grow round them. */
+export const STATE_VERSION = 33;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
@@ -65,13 +68,15 @@ export const RANKS = [
   'republic', 'archbishopric', 'prince_bishopric', 'order', 'despotate', 'sultanate', 'emirate', 'beylik', 'khanate', 'chiefdom', 'tribe',
 ] as const;
 
-/** A person (src/sim/systems/people.ts). The id is never reused. Age is not stored: it is (day − born) / 365.25. */
+/** A person (src/sim/systems/people.ts). The id is the row: it holds from one first of January to the next, when the
+ *  dead whom nothing needs go to the archive and the rows close up (src/sim/people/archive.ts); the `uid` holds for
+ *  ever. Age is not stored: it is (day − born) / 365.25. */
 export const PERSON_SCHEMA = {
   /** birthday: days since 1 January of the start year (negative: before it) */
   born: 'i32',
   /** 0 female, 1 male */
   sex: 'u8',
-  /** person ids of the parents, −1 when not known */
+  /** the uids of the parents (not their rows: a parent may be in the archive), −1 when not known */
   mother: 'i32', father: 'i32',
   /** the family the person lives in */
   family: 'i32',
@@ -97,7 +102,7 @@ export const PERSON_SCHEMA = {
    *  the family spent (economy feature 11, src/sim/systems/household.ts) */
   consumed: 'f32',
   /** the day the person died (the persons of the cities do not die yet; a ruler dies on the real day), ALIVE while
-   *  the person lives. A dead person keeps the row: ids are never reused */
+   *  the person lives. A dead person keeps the row until the archive takes it (src/sim/people/archive.ts) */
   died: 'i32',
   /** the culture and the faith of the person (indices of ALL_CULTURES and FAITHS, src/sim/content/peoples.ts;
    *  src/sim/systems/cultures.ts) */
@@ -112,6 +117,13 @@ export const PERSON_SCHEMA = {
   home: 'i32',
   /** the day the person may next move to another place (src/sim/systems/moves.ts), ALIVE while none is due */
   moves: 'i32',
+  /** the number of the person that never changes and is never given twice in a world: the persons who came into it
+   *  before count 0, 1, 2 …, in the order they came. The rows of the table lie in the order of their uids. All that
+   *  keeps a person beyond a day (the parents, the browser, the copy of the rulers, the archive) names the uid, and
+   *  the person's own draws of chance are by the uid (people feature 7, src/sim/people/archive.ts) */
+  uid: 'i32',
+  /** the children a woman has borne (the next birth takes its draw by the number, src/sim/systems/families.ts) */
+  children: 'u8',
 } as const;
 /** `died` of a living person. */
 export const ALIVE = 0x7fffffff;
@@ -121,7 +133,7 @@ export type PersonSchema = typeof PERSON_SCHEMA;
 /** A family: a couple and its unmarried children in one place, or a person on their own. The id is never reused. */
 export const FAMILY_SCHEMA = {
   place: 'i16',
-  /** the couple at its head: person ids, −1 where there is none */
+  /** the couple at its head: person ids (rows), −1 where there is none */
   man: 'i32', woman: 'i32',
   /** the purse of the family (economy feature 11, src/sim/systems/household.ts), written after every day of the
    *  economy: its persons, those of them who work, and the baskets they consume (an adult one, a child under 15 half) */
@@ -244,7 +256,7 @@ export type LandmarkSchema = typeof LANDMARK_SCHEMA;
  *  are written by the economy after every day (src/sim/systems/economy.ts). */
 export const FIRM_SCHEMA = {
   place: 'i16',
-  /** the person who owns the firm */
+  /** the person who owns the firm (the row) */
   owner: 'i32',
   /** the sector: its number in the calibration table (agriculture, industry, services) */
   sector: 'u8',
@@ -259,7 +271,7 @@ export type FirmSchema = typeof FIRM_SCHEMA;
 /** A person of history (a ruler): who the person is in the sources. Kept beside the person table (strings do not go
  *  into typed arrays), in the order the persons came into the world. */
 export interface NamedPerson {
-  /** the person's row in the person table */
+  /** the person's row in the person table (a person of history is never archived: the rows close up around it) */
   person: number;
   /** the key of the person in the chronicle of rulers (public/data/rulers_<year>.json) */
   key: string;
@@ -295,6 +307,15 @@ export interface CityEconomies {
   firm0: Int32Array;
 }
 
+/** A year of the archive of the dead (src/sim/people/archive.ts): the persons who went to it on the first day of a
+ *  year. The persons themselves are not in the state: the world server keeps them on its disk (server/world.ts). */
+export interface ArchiveYear {
+  /** the day of the world they went to the archive on (the first of January) */
+  day: number;
+  /** how many went, and the smallest and the greatest uid among them */
+  persons: number; first: number; last: number;
+}
+
 export interface WorldState {
   v: number;
   seed: number;
@@ -319,6 +340,10 @@ export interface WorldState {
   lot: Table<LotSchema>;
   /** the hamlets of the towns (src/sim/systems/lots.ts) */
   hamlets: Table<HamletSchema>;
+  /** the uid the next person who comes into the world gets (`PERSON_SCHEMA.uid`) */
+  nextUid: number;
+  /** the years of the archive of the dead, the earliest first (src/sim/people/archive.ts) */
+  archive: ArchiveYear[];
   /** the streets and the markets of the towns (src/sim/systems/lots.ts) */
   street: Table<StreetSchema>;
   /** the furlongs of the hamlets' fields (src/sim/systems/fields.ts) */

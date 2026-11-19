@@ -4,13 +4,20 @@ Usage: python3 tools/lookprobe/gauntlet.py reference.png probe.png
 Needs Pillow, numpy and scipy. Prints one line per check with the reference value, the probe value and PASS or FAIL.
 The limits are tight on purpose: a pass has to mean that the two pictures are hard to tell apart at a glance.
 """
+
 import sys
+
 import numpy as np
 from PIL import Image
 from scipy import ndimage as ndi
 
 # picture regions (x0, y0, x1, y1) in a 1672 x 941 frame; the probe scene is laid out like the reference
-REGIONS = {'Stadt': (760, 380, 1420, 700), 'Land': (0, 230, 720, 640), 'Wald/Berg': (0, 0, 900, 220), 'Wasser': (1050, 640, 1672, 941)}
+REGIONS = {
+    'Stadt': (760, 380, 1420, 700),
+    'Land': (0, 230, 720, 640),
+    'Wald/Berg': (0, 0, 900, 220),
+    'Wasser': (1050, 640, 1672, 941),
+}
 
 
 def load(path):
@@ -49,7 +56,7 @@ def detail(im, box):
     """small-scale liveliness of a region: mean local contrast at the scale of a few pixels"""
     x0, y0, x1, y1 = box
     g = lum(im)[y0:y1, x0:x1]
-    fine = np.abs(g - ndi.gaussian_filter(g, 1.5)).mean()            # what a 3-pixel blur removes
+    fine = np.abs(g - ndi.gaussian_filter(g, 1.5)).mean()  # what a 3-pixel blur removes
     coarse = np.abs(ndi.gaussian_filter(g, 1.5) - ndi.gaussian_filter(g, 6)).mean()  # shapes of 5 to 20 pixels
     return fine, coarse
 
@@ -59,7 +66,7 @@ def class_colour(im, mask, lo, hi):
     if len(px) < 300:
         return None
     order = np.argsort(lum(px))
-    return np.median(px[order[int(len(px) * lo):int(len(px) * hi)]], axis=0)
+    return np.median(px[order[int(len(px) * lo) : int(len(px) * hi)]], axis=0)
 
 
 def inner(im, mask):
@@ -82,7 +89,7 @@ def spots(im, box, sign):
 
 
 def hexc(c):
-    return '   -   ' if c is None else '#%02x%02x%02x' % tuple(int(round(v * 255)) for v in c)
+    return '   -   ' if c is None else '#{:02x}{:02x}{:02x}'.format(*tuple(int(round(v * 255)) for v in c))
 
 
 def main(ref_path, probe_path):
@@ -92,9 +99,9 @@ def main(ref_path, probe_path):
     def check(name, a, b, ok, fmt='{:.3f}'):
         nonlocal fails
         fails += 0 if ok else 1
-        print(f"{name:34s} {fmt.format(a):>9s} {fmt.format(b):>9s}  {'PASS' if ok else 'FAIL'}")
+        print(f'{name:34s} {fmt.format(a):>9s} {fmt.format(b):>9s}  {"PASS" if ok else "FAIL"}')
 
-    print(f"{'Prüfung':34s} {'Referenz':>9s} {'Probe':>9s}")
+    print(f'{"Prüfung":34s} {"Referenz":>9s} {"Probe":>9s}')
     (rd, ru), (pd, pu) = edge_angles(ref), edge_angles(probe)
     check('Kantenwinkel abwärts (Grad)', rd, pd, abs(rd - pd) <= 2, '{:+.1f}')
     check('Kantenwinkel aufwärts (Grad)', ru, pu, abs(ru - pu) <= 2, '{:+.1f}')
@@ -121,7 +128,9 @@ def main(ref_path, probe_path):
             a, b = class_colour(ref, ma, lo, hi), class_colour(probe, mb, lo, hi)
             dist = 1 if a is None or b is None else float(np.abs(a - b).max())
             fails += 0 if dist <= 0.07 else 1
-            print(f"{'Farbe ' + name + ' ' + part:34s} {hexc(a):>9s} {hexc(b):>9s}  {'PASS' if dist <= 0.07 else 'FAIL'}")
+            print(
+                f'{"Farbe " + name + " " + part:34s} {hexc(a):>9s} {hexc(b):>9s}  {"PASS" if dist <= 0.07 else "FAIL"}'
+            )
 
     # details: what lies on the surfaces of each class, and the small spots of each region
     for name, f in classes.items():
@@ -143,18 +152,28 @@ def main(ref_path, probe_path):
     for ty in range(5):
         for tx in range(8):
             box = (tx * 209, ty * 188, (tx + 1) * 209, (ty + 1) * 188)
-            a, b = ref[box[1]:box[3], box[0]:box[2]].mean((0, 1)), probe[box[1]:box[3], box[0]:box[2]].mean((0, 1))
+            a, b = (
+                ref[box[1] : box[3], box[0] : box[2]].mean((0, 1)),
+                probe[box[1] : box[3], box[0] : box[2]].mean((0, 1)),
+            )
             ok_colour += np.abs(a - b).max() <= 0.08
             (rf, rc), (pf, pc) = detail(ref, box), detail(probe, box)
             ok_live += 0.7 <= (pf + pc) / (rf + rc) <= 1.4
     check('Kacheln mit passender Farbe (%)', 100, ok_colour / 0.4, ok_colour >= 34, '{:.0f}')
     check('Kacheln mit passendem Detail (%)', 100, ok_live / 0.4, ok_live >= 34, '{:.0f}')
+
     # the whole picture's colours: overlap of the two colour histograms (hue x saturation x brightness)
     def hist(h, s_, v):
-        return np.histogramdd(np.stack([h.ravel() / 360, s_.ravel(), v.ravel()], 1), bins=(18, 5, 5), range=((0, 1),) * 3)[0] / h.size
+        return (
+            np.histogramdd(np.stack([h.ravel() / 360, s_.ravel(), v.ravel()], 1), bins=(18, 5, 5), range=((0, 1),) * 3)[
+                0
+            ]
+            / h.size
+        )
+
     overlap = np.minimum(hist(rh, rs, rv), hist(ph, ps, pv)).sum()
     check('Überdeckung der Farbverteilung', 1, overlap, overlap >= 0.8)
-    print(f"\n{fails} Prüfungen nicht bestanden" if fails else "\nAlle Prüfungen bestanden")
+    print(f'\n{fails} Prüfungen nicht bestanden' if fails else '\nAlle Prüfungen bestanden')
 
 
 if __name__ == '__main__':

@@ -2,7 +2,7 @@
 // src/sim/settlement/landmarks.ts). Laid with the towns (src/sim/systems/lots.ts): the church of a town's see and
 // its buildings known by name before its streets, which then grow round them; the convents and the ruler's
 // residence after its parcels and hamlets, at its edge. The buildings that stand alone (abbeys, castles) last.
-// Written once when a world is founded, or by the upgrade 31 → 32; nothing changes while the world runs.
+// Written once when a world is founded, or by the upgrade 32 → 33; nothing changes while the world runs.
 import type { WorldState } from '../state';
 import { LANDMARK_SCHEMA } from '../state';
 import { createTable, spawn } from '../ecs';

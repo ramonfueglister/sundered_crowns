@@ -40,10 +40,11 @@ More: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/DATA_SCHEMA.md](docs/D
 npx vitest run     # foundation, economy, world server replay and resume, auth, Row Level Security of all migrations
 npm run typecheck
 npm run lint       # Biome: lint rules everywhere, layout in the folders already formatted (biome.json)
-ruff check         # the Python tools (ruff.toml; pip install ruff==0.17.4)
+ruff check && ruff format --check   # the Python tools (ruff.toml; pip install ruff==0.17.4)
 (cd economy && cargo test --release --locked)   # the shell around the port
+(cd economy && cargo fmt --check && cargo clippy --all-targets -- -D warnings)   # its layout (rustfmt.toml) and clippy
 ```
 `npm run format` lays out the folders listed in the `overrides` of `biome.json`; the rest is taken in folder by folder,
-when no open pull request changes it. CI (`.github/workflows/ci.yml`) runs the types, the lint and the tests.
+when no open pull request changes it. CI (`.github/workflows/ci.yml`) runs the types, the lint, the Rust checks of `economy/` and the tests.
 The tests build the economy engine first and need the Rust toolchain (https://rustup.rs; the compiler version is
 fixed in `economy/rust-toolchain.toml`). The world server image builds the engine itself.
