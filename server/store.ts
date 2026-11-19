@@ -9,7 +9,8 @@ const SEASON = 1;
 export interface Backup {
   bin: Uint8Array;
   log: string;
-  meta: string | null /** borders.ndjson, gzip */;
+  meta: string | null;
+  /** borders.ndjson, gzip */
   history: Uint8Array | null;
 }
 export interface SeatRow {

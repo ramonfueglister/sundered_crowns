@@ -256,7 +256,8 @@ export function configFromEnv(env: Record<string, string | undefined> = process.
 export interface UserAuth {
   uid: string;
   name: string;
-  admin: boolean /** connected without signing in: sees the world, rules nothing */;
+  admin: boolean;
+  /** connected without signing in: sees the world, rules nothing */
   observer?: boolean;
 }
 export interface Conn {
