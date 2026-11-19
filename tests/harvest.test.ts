@@ -40,7 +40,8 @@ describe('the harvest on the map', () => {
     expect(s.v).toBe(STATE_VERSION);
     expect(s.place.harvest.length).toBe(w.L);
     const { farmers } = residents(s);
-    for (let i = 0; i < w.L; i++) expect(s.place.harvest[i] > 0).toBe(farmers[i] > 0 && soilOf(w, i, s.place.arable[i]) > 0);
+    for (let i = 0; i < w.L; i++)
+      expect(s.place.harvest[i] > 0).toBe(farmers[i] > 0 && soilOf(w, i, s.place.arable[i]) > 0);
     // the capital of France has people and good soil
     const paris = s.realm.cols.capital[s.realmText.findIndex((r) => r.key === 'france')];
     expect(s.place.harvest[paris]).toBeGreaterThan(0);
@@ -48,8 +49,11 @@ describe('the harvest on the map', () => {
   it('brings in a new harvest on the first day of a year and not before', () => {
     const { s, w } = newWorldState();
     // the capital of France is at its land limit: half the families of its hamlets leave, the others work the same arable
-    const i = s.realm.cols.capital[s.realmText.findIndex((r) => r.key === 'france')], before = s.place.harvest[i], arable = s.place.arable[i];
-    const F = s.family.cols, L = residents(s).farmers[i];
+    const i = s.realm.cols.capital[s.realmText.findIndex((r) => r.key === 'france')],
+      before = s.place.harvest[i],
+      arable = s.place.arable[i];
+    const F = s.family.cols,
+      L = residents(s).farmers[i];
     for (let f = 0; f < s.family.size; f++) if (F.place[f] === i && F.hamlet[f] && f % 2 === 0) F.hamlet[f] = 0;
     advanceDay(s, w);
     expect(s.place.harvest[i]).toBe(before);
@@ -57,7 +61,9 @@ describe('the harvest on the map', () => {
     advanceDay(s, w);
     expect(s.place.arable[i]).toBe(arable);
     const Q = s.person.cols; // on the first of January the dead go to the archive and the rows close up (a new table)
-    let left = 0; for (let id = 0; id < s.person.size; id++) if (F.place[Q.family[id]] === i && F.hamlet[Q.family[id]] && Q.died[id] === ALIVE) left++;
+    let left = 0;
+    for (let id = 0; id < s.person.size; id++)
+      if (F.place[Q.family[id]] === i && F.hamlet[Q.family[id]] && Q.died[id] === ALIVE) left++;
     expect(left).toBeLessThan(L);
     expect(s.place.harvest[i] / before).toBeCloseTo(Math.pow(left / L, 1 - LAND_SHARE), 6);
   }, 30_000); // the economies of the cities compute the 364 days the test jumps over
@@ -69,7 +75,8 @@ describe('the harvest on the map', () => {
     expect(h.perHeadDay).toBeCloseTo(h.kcal / s.place.pop[i] / 365, 6);
     expect(h.hectares).toBeCloseTo(w.area[i] * 100, 6);
     expect(h.farmers).toBe(residents(s).farmers[i]); // the persons of its hamlets
-    expect(h.farmers).toBeGreaterThan(0); expect(h.farmers).toBeLessThan(s.place.pop[i]);
+    expect(h.farmers).toBeGreaterThan(0);
+    expect(h.farmers).toBeLessThan(s.place.pop[i]);
     expect(h.landYield).toBeGreaterThan(0);
     const a = h.arable!;
     expect(a.hectares).toBe(s.place.arable[i]);
@@ -82,7 +89,8 @@ describe('the harvest on the map', () => {
 describe('a world saved by an older build', () => {
   it('older than the oldest step this build has is refused', () => {
     const { s, w } = newWorldState();
-    const old = decodeState(encodeState(s)) as any; old.v = OLDEST_STATE_VERSION - 1;
+    const old = decodeState(encodeState(s)) as any;
+    old.v = OLDEST_STATE_VERSION - 1;
     expect(() => upgradeState(decodeState(encodeState(old)), w)).toThrow(/older/);
   });
   it('refuses a state from a newer build', () => {
