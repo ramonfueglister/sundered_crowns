@@ -13,7 +13,7 @@ import { ECONOMY_DIR } from '../tools/sim/build_economy';
 import { REFERENCE, calibrationJson, cityCalibrations, readTable } from '../tools/sim/calibrate_economy';
 import { calibrateEconomy, cityTable, dailyCalibration, dailyEconomy, unemploymentBenefit, ar1, roundHalfEven, type Entry } from '../src/sim/economy/calibration';
 import { FIGURE, FIGURES, type CitySetup, type EconomyEngine, type EconomyRules } from '../src/sim/economy/engine';
-import { cityAt, cityPlaces, citySeed, computeTo, yearRow } from '../src/sim/systems/economy';
+import { cityAt, cityPlaces, citySeed, computeTo, workingDays, yearRow } from '../src/sim/systems/economy';
 import { cityRoutes } from '../src/sim/economy/routes';
 import { cityPeopleByPlace } from '../src/sim/systems/people';
 import { advanceDay } from '../src/sim/engine';
@@ -27,6 +27,9 @@ import { WorldCore } from '../server/world';
 
 const sum = (v: number[]) => v.reduce((a, b) => a + b, 0);
 const days = (s: WorldState, w: World, n: number) => { for (let i = 0; i < n; i++) advanceDay(s, w); };
+/** The state of the economies of a world with the working days of the firms that the world gives them before its
+ *  next day (economy feature 19): what the engine starts that day from. */
+const withWorkingDays = (s: WorldState, w: World) => w.economyEngine.workingDays(s.economy.cities!.model, workingDays(s, s.economy.cities!));
 const bits = (v: Float64Array) => Array.from(new BigUint64Array(v.buffer, v.byteOffset, v.length), (x) => x.toString(16).padStart(16, '0')).join(' ');
 
 describe("the calibration of England's economy (the year of the sources)", () => {
@@ -531,7 +534,7 @@ describe('the economies of the cities in the world', () => {
   });
   it('compute one period every day', () => {
     const { s, w } = newWorldState();
-    const start = s.economy.cities!.model;
+    const start = withWorkingDays(s, w);
     advanceDay(s, w);
     const e = s.economy.cities!, first = e.figures;
     expect(e.day).toBe(1); expect(first[FIGURE.periods]).toBe(1);
@@ -580,10 +583,13 @@ describe('the economies of the cities in the world', () => {
     const people = CITIES.map((c) => c.people), largest = people.indexOf(Math.max(...people));
     expect(run.w.names[CITIES[largest].place]).toBe('Cairo');
     // measured 1.405 since firm and owner are one household (economy feature 18), below 1.4 before; 1.556 since goods
-    // go over land on the ways (state version 27): the cities far from the sea and off the ways sell less
-    expect(Math.max(...share) / Math.min(...share)).toBeLessThan(1.6);
-    // with the ways the ports sell the most (Venice 3.95 % of output) and the cities inland the least (Sarai 2.54 %);
-    // Cairo sells 2.80 %, 0.71 of Venice
+    // go over land on the ways (state version 27): the cities far from the sea and off the ways sell less; 2.52 since
+    // the firms keep the working days of their owner's faith (economy feature 19): the merchants buy every day, and on
+    // a Latin day of rest from the firms that work, so the Muslim cities sell 3.1 to 4.4 % of their output and the
+    // Latin cities 1.8 to 2.7 % (Prague the least)
+    expect(Math.max(...share) / Math.min(...share)).toBeLessThan(2.7);
+    // without the working days the ports sold the most (Venice 3.95 % of output) and the cities inland the least
+    // (Sarai 2.54 %); Cairo sold 2.80 %, 0.71 of Venice; with them Cairo sells 3.31 %, 0.75 of Tlemcen
     expect(all[largest]).toBeGreaterThan(0.65 * Math.max(...share));
   });
   it('give for many days at once what the same days give one by one', () => {
@@ -644,11 +650,12 @@ describe('the economies of the cities in the world', () => {
     const broken: EconomyEngine = { ...real.economyEngine, advance: () => { calls++; throw new Error('the economy engine stopped: a rule failed'); } };
     const w: World = Object.assign(Object.create(World.prototype), real, { economyEngine: broken });
     const { s } = newWorldState();
-    const before = s.economy.cities!.model;
+    // the state of the day before stays, with the working days it was given for the day that failed
+    const before = withWorkingDays(s, real);
     advanceDay(s, w);
     const e = s.economy.cities!;
     expect(e.halted).toBe('2 January 1356: the economy engine stopped: a rule failed');
-    expect(e.day).toBe(0); expect(e.model).toBe(before);
+    expect(e.day).toBe(0); expect(Buffer.compare(e.model, before)).toBe(0);
     days(s, w, 400); // the next days do not try again
     expect(calls).toBe(1);
     expect(s.day).toBe(401);
@@ -670,7 +677,8 @@ describe('the economies of the cities in the world', () => {
     const e = s.economy.cities!;
     expect(e.day).toBe(3); expect(e.figures[FIGURE.periods]).toBe(3);
     expect(e.halted).toBe('5 January 1356: the economy engine stopped: a rule failed');
-    expect(Buffer.compare(e.model, real.economyEngine.step(newWorldState().s.economy.cities!.model, 3))).toBe(0);
+    const fresh = newWorldState().s;
+    expect(Buffer.compare(e.model, real.economyEngine.step(withWorkingDays(fresh, real), 3))).toBe(0);
   });
   it('stand still when a day ends without a GDP in one city', () => {
     const real = loadWorld();
@@ -678,10 +686,10 @@ describe('the economies of the cities in the world', () => {
     const broken: EconomyEngine = { ...real.economyEngine, figures: (m) => real.economyEngine.figures(m).fill(NaN, last, last + 1) };
     const w: World = Object.assign(Object.create(World.prototype), real, { economyEngine: broken });
     const { s } = newWorldState();
-    const before = s.economy.cities!.model;
+    const before = withWorkingDays(s, real);
     days(s, w, 2);
     expect(s.economy.cities!.halted).toBe('2 January 1356: the day ended without a GDP (not a number)');
-    expect(s.economy.cities!.model).toBe(before);
+    expect(Buffer.compare(s.economy.cities!.model, before)).toBe(0);
   });
 });
 

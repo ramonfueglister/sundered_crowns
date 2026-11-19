@@ -11,7 +11,9 @@ import { FIGURE, FIGURES } from '../src/sim/economy/engine';
 import { ROLE, WORKING_AGE, rateOfOtherWomen, workforce } from '../src/sim/systems/work';
 import { BASKET_AGE, FOOD_SECTOR, basketsOf, foodPrices, writeHouseholds } from '../src/sim/systems/household';
 import { calibrateEconomy, foodNeedCost } from '../src/sim/economy/calibration';
-import { foundEconomy } from '../src/sim/systems/economy';
+import { foundEconomy, workingDays } from '../src/sim/systems/economy';
+import { calendarOf, dayFactor } from '../src/sim/holy_days';
+import { dateToDay, dayToDate } from '../src/sim/calendar';
 import { ageOn } from '../src/sim/systems/people';
 import { hash01 } from '../src/sim/rng';
 import { encodeState, decodeState, hashState } from '../src/sim/snapshot';
@@ -208,7 +210,9 @@ describe('the purse of a family', () => {
     expect(X.role[next]).toBe(ROLE.none); // who turns 15 works only when the economies are founded again
   });
   it('is a booking of the world: the engine computes the same days without it', () => {
-    const model = w.economyEngine.step(start.economy.cities!.model, 20);
+    // with the working days of the firms (economy feature 19), which the economies are given before their first day
+    const days = w.economyEngine.workingDays(start.economy.cities!.model, workingDays(start, start.economy.cities!));
+    const model = w.economyEngine.step(days, 20);
     expect(Buffer.from(model).equals(Buffer.from(s.economy.cities!.model))).toBe(true);
     // and writing it again changes nothing
     const hash = hashState(s);
@@ -251,13 +255,21 @@ describe('the need of food (economy feature 15)', () => {
   });
   it('is the baskets of the family at that cost, and the family is fed by the part of it that it spent', () => {
     const price = foodPrices(s);
+    // what a family has to buy on the day: each member's baskets times the factor of the calendar of its faith
+    // (economy feature 19), in the family of an owner of a firm every day
+    const { y, m, d } = dayToDate(e.day, s.startYear), doy = dateToDay(y, m, d, y), toBuy = new Float64Array(s.family.size);
+    const P = s.person.cols, owners = new Set<number>();
+    for (let id = 0; id < s.person.size; id++) if (s.person.alive[id] && P.died[id] === ALIVE && P.role[id] === ROLE.owner) owners.add(P.family[id]);
+    for (let id = 0; id < s.person.size; id++) {
+      if (s.person.alive[id] && P.died[id] === ALIVE) toBuy[P.family[id]] += basketsOf(ageOn(P.born[id], e.day)) * (owners.has(P.family[id]) ? 1 : dayFactor(calendarOf(P.faith[id]), y, doy));
+    }
     let families = 0, short = 0, full = 0;
     for (let f = 0; f < s.family.size; f++) {
       const k = city.get(F.place[f]);
       if (k === undefined || F.baskets[f] === 0) { expect(F.need[f]).toBe(0); expect(F.fed[f]).toBe(0); continue; }
       families++;
       near(F.need[f], F.baskets[f] * w.cityEconomies.foodNeed * price[k]);
-      near(F.fed[f] + 1, Math.min(1, F.spent[f] / F.need[f]) + 1);
+      near(F.fed[f] + 1, Math.min(1, F.spent[f] / (F.need[f] * toBuy[f] / F.baskets[f])) + 1);
       if (F.fed[f] < 1) short++; else full++;
     }
     expect(families).toBeGreaterThan(4500);

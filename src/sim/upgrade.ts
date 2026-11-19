@@ -270,6 +270,12 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     // persons are and all they have done stays, and they draw on as before: the uid of everybody is the row.
     s.v = 30;
   }
+  if (s.v === 30) { // 30 → 31: the firms work on the working days of their owner's faith (economy feature 19,
+    // src/sim/holy_days.ts). The economies go on where they are: the engine reads their state of the format before
+    // as one without working days and is given them before it computes the next day.
+    if (s.economy.cities) s.economy.cities.workingTo = -1;
+    s.v = 31;
+  }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one
   const o = s as unknown as Record<string, unknown>;
