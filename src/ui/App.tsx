@@ -3,69 +3,156 @@
 // once as an observer and offers no sign-in. The server still knows players (server/auth.ts) for later.
 import { useEffect, useState } from 'preact/hooks';
 import { computed } from '@preact/signals';
-import { status, refusal, me, world, realms, placeInfo, connect, disconnect, claim, abdicate, askPlace, setTime } from '../net/client';
+import {
+  status,
+  refusal,
+  me,
+  world,
+  realms,
+  placeInfo,
+  connect,
+  disconnect,
+  claim,
+  abdicate,
+  askPlace,
+  setTime,
+} from '../net/client';
 import { selectedPlace, mapCtl } from './mapstate';
 import { WorldView } from './WorldView';
-import { IconDefs, IconPlaces, IconCalendar, IconGear, IconPolitical, IconTerrain, IconClose, IconReplay, IconPause, IconPlay } from './icons';
-import { replay, replayClock, replayLoading, replayError, REPLAY_SPEEDS, startReplay, stopReplay, toggleReplay, seekReplay, replaySpeed } from './replay';
-import { type TextKey, t, L, lang, setLang, terrainName, resourceName, num, heads, pct, kcalText, pounds, index } from './i18n';
+import {
+  IconDefs,
+  IconPlaces,
+  IconCalendar,
+  IconGear,
+  IconPolitical,
+  IconTerrain,
+  IconClose,
+  IconReplay,
+  IconPause,
+  IconPlay,
+} from './icons';
+import {
+  replay,
+  replayClock,
+  replayLoading,
+  replayError,
+  REPLAY_SPEEDS,
+  startReplay,
+  stopReplay,
+  toggleReplay,
+  seekReplay,
+  replaySpeed,
+} from './replay';
+import {
+  type TextKey,
+  t,
+  L,
+  lang,
+  setLang,
+  terrainName,
+  resourceName,
+  num,
+  heads,
+  pct,
+  kcalText,
+  pounds,
+  index,
+} from './i18n';
 import { fmtDate } from '../sim/calendar';
 import { SPEEDS, type RealmInfo } from '../net/protocol';
 import { MAP_MODES, mapMode, mapModeKey, setMapMode } from './mapmode';
-import { startMusic, musicKey, musicMuted, musicVolume, nowPlaying, musicWaiting, setMuted, setVolume, skip } from '../audio/music';
+import {
+  startMusic,
+  musicKey,
+  musicMuted,
+  musicVolume,
+  nowPlaying,
+  musicWaiting,
+  setMuted,
+  setVolume,
+  skip,
+} from '../audio/music';
 
-const realmById = computed(() => { const m = new Map<number, RealmInfo>(); for (const r of realms.value) m.set(r.id, r); return m; });
+const realmById = computed(() => {
+  const m = new Map<number, RealmInfo>();
+  for (const r of realms.value) m.set(r.id, r);
+  return m;
+});
 const hex = (c: number) => '#' + c.toString(16).padStart(6, '0');
-
 
 export function App() {
   const st = status.value;
   // watch at once, as an observer
-  useEffect(() => { connect({}); return () => disconnect(); }, []);
-  return <div class={`app lang-${lang.value}`}>
-    <IconDefs />
-    {st === 'refused' ? <Refused /> : <>
-      <WorldView />
-      <Music />
-      <TopBar />
-      <RealmBanner />
-      <ReplayBar />
-      {st !== 'open' && <div class="notice">{st === 'connecting' ? t('connecting') : t('disconnected')}</div>}
-      {selectedPlace.value >= 0 && <PlacePanel />}
-    </>}
-  </div>;
+  useEffect(() => {
+    connect({});
+    return () => disconnect();
+  }, []);
+  return (
+    <div class={`app lang-${lang.value}`}>
+      <IconDefs />
+      {st === 'refused' ? (
+        <Refused />
+      ) : (
+        <>
+          <WorldView />
+          <Music />
+          <TopBar />
+          <RealmBanner />
+          <ReplayBar />
+          {st !== 'open' && <div class="notice">{st === 'connecting' ? t('connecting') : t('disconnected')}</div>}
+          {selectedPlace.value >= 0 && <PlacePanel />}
+        </>
+      )}
+    </div>
+  );
 }
 
 /** The realm the player rules (undefined: none). */
-const myRealm = computed(() => { const m = me.value; return m && m.realm >= 0 ? realmById.value.get(m.realm) : undefined; });
+const myRealm = computed(() => {
+  const m = me.value;
+  return m && m.realm >= 0 ? realmById.value.get(m.realm) : undefined;
+});
 
 /** Realms with a drawn coat of arms; the others show their initial. */
 const ARMS: Record<string, string> = { venice: '/ui/arms/venice.svg' };
 
 /** A share in percent: one decimal below 1 %, else whole. */
-const share = (n: number, of: number) => { const p = 100 * n / Math.max(1, of); return (p < 1 ? p.toFixed(1) : Math.round(p).toString()).replace('.', lang.value === 'de' ? ',' : '.'); };
+const share = (n: number, of: number) => {
+  const p = (100 * n) / Math.max(1, of);
+  return (p < 1 ? p.toFixed(1) : Math.round(p).toString()).replace('.', lang.value === 'de' ? ',' : '.');
+};
 
 function RealmBanner() {
   const r = myRealm.value;
   if (!r) return null;
   const arms = ARMS[r.key];
-  return <button class="realm-banner" title={L(r.name)} aria-label={L(r.name)} onClick={() => mapCtl.home(r.capital)}>
-    <svg width="145" height="104" viewBox="0 0 150 104" preserveAspectRatio="none" aria-hidden="true">
-      <path d="M5 0h141v80c-14-6-28 4-46 0s-30-8-48-2-34 6-47 2z" fill="#1450a0" stroke="#e8c35a" stroke-width="3.5" />
-      <path d="M5 0h141v80c-14-6-28 4-46 0s-30-8-48-2-34 6-47 2z" fill="url(#flagshade)" />
-      <path d="M7 2h137v10c-18 7-38-5-68 1S30 17 7 11z" fill="#0a2e60" opacity=".6" />
-      <path d="M0 82l20 3-5 6 5 6-20-3z" fill="#c99a32" stroke="#8a6a1c" stroke-width=".8" />
-      <rect x="0" y="0" width="6" height="100" fill="#d4a93f" /><path d="M0 100h6l-3 4z" fill="#d4a93f" />
-    </svg>
-    {arms ? <img class="arms" src={arms} alt="" /> : <span class="initial">{L(r.short).slice(0, 1)}</span>}
-  </button>;
+  return (
+    <button class="realm-banner" title={L(r.name)} aria-label={L(r.name)} onClick={() => mapCtl.home(r.capital)}>
+      <svg width="145" height="104" viewBox="0 0 150 104" preserveAspectRatio="none" aria-hidden="true">
+        <path
+          d="M5 0h141v80c-14-6-28 4-46 0s-30-8-48-2-34 6-47 2z"
+          fill="#1450a0"
+          stroke="#e8c35a"
+          stroke-width="3.5"
+        />
+        <path d="M5 0h141v80c-14-6-28 4-46 0s-30-8-48-2-34 6-47 2z" fill="url(#flagshade)" />
+        <path d="M7 2h137v10c-18 7-38-5-68 1S30 17 7 11z" fill="#0a2e60" opacity=".6" />
+        <path d="M0 82l20 3-5 6 5 6-20-3z" fill="#c99a32" stroke="#8a6a1c" stroke-width=".8" />
+        <rect x="0" y="0" width="6" height="100" fill="#d4a93f" />
+        <path d="M0 100h6l-3 4z" fill="#d4a93f" />
+      </svg>
+      {arms ? <img class="arms" src={arms} alt="" /> : <span class="initial">{L(r.short).slice(0, 1)}</span>}
+    </button>
+  );
 }
 
 /** Starts the background music with the game view and listens for M (on/off) and N (next piece). */
 function Music() {
   useEffect(() => {
     startMusic();
-    const key = (e: KeyboardEvent) => { if (musicKey(e)) e.preventDefault(); };
+    const key = (e: KeyboardEvent) => {
+      if (musicKey(e)) e.preventDefault();
+    };
     addEventListener('keydown', key);
     return () => removeEventListener('keydown', key);
   }, []);
@@ -75,18 +162,47 @@ function Music() {
 /** Music settings in the settings menu: on/off, volume, the piece now playing and the next one. */
 function MusicSettings() {
   const off = musicMuted.value;
-  return <div class="music-set" onClick={(e) => e.stopPropagation()}>
-    <div class="music-row">
-      <span class="music-label">{t('music')}</span>
-      <button class="btn small" aria-pressed={!off} title={`${t(off ? 'music_on' : 'music_off')} (M)`} onClick={() => setMuted(!off)}>{t(off ? 'music_on' : 'music_off')}</button>
+  return (
+    <div class="music-set" onClick={(e) => e.stopPropagation()}>
+      <div class="music-row">
+        <span class="music-label">{t('music')}</span>
+        <button
+          class="btn small"
+          aria-pressed={!off}
+          title={`${t(off ? 'music_on' : 'music_off')} (M)`}
+          onClick={() => setMuted(!off)}
+        >
+          {t(off ? 'music_on' : 'music_off')}
+        </button>
+      </div>
+      <input
+        class="music-vol"
+        type="range"
+        min={0}
+        max={100}
+        step={1}
+        value={musicVolume.value}
+        aria-label={t('music_volume')}
+        title={`${t('music_volume')}: ${musicVolume.value}`}
+        onInput={(e) => setVolume(Number((e.target as HTMLInputElement).value))}
+      />
+      <div class="music-row">
+        <small class="music-now">
+          {off ? t('music_is_off') : musicWaiting.value ? t('music_waiting') : (nowPlaying.value ?? '…')}
+        </small>
+        {!off && (
+          <button
+            class="btn small"
+            title={`${t('music_next')} (N)`}
+            aria-label={t('music_next')}
+            onClick={() => skip()}
+          >
+            »
+          </button>
+        )}
+      </div>
     </div>
-    <input class="music-vol" type="range" min={0} max={100} step={1} value={musicVolume.value} aria-label={t('music_volume')} title={`${t('music_volume')}: ${musicVolume.value}`}
-      onInput={(e) => setVolume(Number((e.target as HTMLInputElement).value))} />
-    <div class="music-row">
-      <small class="music-now">{off ? t('music_is_off') : musicWaiting.value ? t('music_waiting') : nowPlaying.value ?? '…'}</small>
-      {!off && <button class="btn small" title={`${t('music_next')} (N)`} aria-label={t('music_next')} onClick={() => skip()}>»</button>}
-    </div>
-  </div>;
+  );
 }
 
 const MODE_ICON = { political: IconPolitical, terrain: IconTerrain } as const;
@@ -95,181 +211,521 @@ const MODE_ICON = { political: IconPolitical, terrain: IconTerrain } as const;
 function MapModes() {
   const now = mapMode.value;
   useEffect(() => {
-    const key = (e: KeyboardEvent) => { if (mapModeKey(e)) e.preventDefault(); };
+    const key = (e: KeyboardEvent) => {
+      if (mapModeKey(e)) e.preventDefault();
+    };
     addEventListener('keydown', key);
     return () => removeEventListener('keydown', key);
   }, []);
-  return <div class="mapmodes" role="radiogroup" aria-label={t('map_modes')}>
-    {MAP_MODES.map(({ mode, key }) => {
-      const Icon = MODE_ICON[mode], name = t(`map_mode_${mode}` as TextKey);
-      return <button key={mode} class="tool mode" role="radio" aria-checked={now === mode} aria-label={name}
-        title={`${name} (${t('key')} ${key})\n${t(`map_mode_${mode}_hint` as TextKey)}`} onClick={() => setMapMode(mode)}><Icon /></button>;
-    })}
-  </div>;
+  return (
+    <div class="mapmodes" role="radiogroup" aria-label={t('map_modes')}>
+      {MAP_MODES.map(({ mode, key }) => {
+        const Icon = MODE_ICON[mode],
+          name = t(`map_mode_${mode}` as TextKey);
+        return (
+          <button
+            key={mode}
+            class="tool mode"
+            role="radio"
+            aria-checked={now === mode}
+            aria-label={name}
+            title={`${name} (${t('key')} ${key})\n${t(`map_mode_${mode}_hint` as TextKey)}`}
+            onClick={() => setMapMode(mode)}
+          >
+            <Icon />
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 function LangSwitch() {
-  return <button class="btn small" onClick={() => setLang(lang.value === 'de' ? 'en' : 'de')}>{lang.value === 'de' ? 'EN' : 'DE'}</button>;
+  return (
+    <button class="btn small" onClick={() => setLang(lang.value === 'de' ? 'en' : 'de')}>
+      {lang.value === 'de' ? 'EN' : 'DE'}
+    </button>
+  );
 }
 
 /** What the server said when it turned the game away (an old client after an update, too many connections). */
 function Refused() {
-  return <div class="menu">
-    <div class="menu-bg" />
-    <div class="menu-box">
-      <h1>{t('title')}</h1>
-      <p class="muted">{t('tagline')}</p>
-      {refusal.value && <p class="neg">{refusal.value}</p>}
-      <button class="btn big gold" onClick={() => location.reload()}>{t('reload')}</button>
-      <div class="menu-foot"><LangSwitch /></div>
+  return (
+    <div class="menu">
+      <div class="menu-bg" />
+      <div class="menu-box">
+        <h1>{t('title')}</h1>
+        <p class="muted">{t('tagline')}</p>
+        {refusal.value && <p class="neg">{refusal.value}</p>}
+        <button class="btn big gold" onClick={() => location.reload()}>
+          {t('reload')}
+        </button>
+        <div class="menu-foot">
+          <LangSwitch />
+        </div>
+      </div>
     </div>
-  </div>;
+  );
 }
 
 /** Seconds as the time control says them: "4 min", "2 s", "0,25 s". */
-const secondsText = (ms: number) => ms >= 60_000 ? `${Math.round(ms / 60_000)} min` : `${(ms / 1000).toLocaleString(lang.value === 'de' ? 'de-CH' : 'en-GB', { maximumFractionDigits: 2 })} s`;
+const secondsText = (ms: number) =>
+  ms >= 60_000
+    ? `${Math.round(ms / 60_000)} min`
+    : `${(ms / 1000).toLocaleString(lang.value === 'de' ? 'de-CH' : 'en-GB', { maximumFractionDigits: 2 })} s`;
 /** What a speed of the world's clock means, for its tooltip. */
 function speedText(speed: number, secondsPerDay: number) {
   const v = SPEEDS[speed - 1];
-  return v === 'own' ? t('time_speed_own', { s: secondsText(secondsPerDay * 1000) }) : v === 0 ? t('time_speed_max') : t('time_speed_ms', { s: secondsText(v) });
+  return v === 'own'
+    ? t('time_speed_own', { s: secondsText(secondsPerDay * 1000) })
+    : v === 0
+      ? t('time_speed_max')
+      : t('time_speed_ms', { s: secondsText(v) });
 }
 
 /** The world's clock top left (Ramon, 19 November 2026: "zeit beschleunigung links oben", for debugging too): the date,
  *  pause and five speeds, as the grand strategy games have it. Space pauses, + and − change the speed. Who may not
  *  change the time (`me.time`, see server/world.ts) sees the clock as it runs. */
 function TimeControl() {
-  const wi = world.value, may = !!me.value?.time, speed = wi?.speed ?? 1, paused = !!wi?.paused;
+  const wi = world.value,
+    may = !!me.value?.time,
+    speed = wi?.speed ?? 1,
+    paused = !!wi?.paused;
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey || (e.target as HTMLElement)?.closest?.('input, textarea, select')) return;
-      if (replayClock.value && (e.code === 'Space' || e.key === 'Escape')) { e.preventDefault(); if (e.key === 'Escape') stopReplay(); else toggleReplay(); return; }
+      if (replayClock.value && (e.code === 'Space' || e.key === 'Escape')) {
+        e.preventDefault();
+        if (e.key === 'Escape') stopReplay();
+        else toggleReplay();
+        return;
+      }
       const w = world.value;
       if (!me.value?.time || !w) return;
       const now = w.speed ?? 1;
-      if (e.code === 'Space') { e.preventDefault(); setTime({ paused: !w.paused }); }
-      else if (e.key === '+' || e.code === 'NumpadAdd') { e.preventDefault(); setTime({ speed: Math.min(SPEEDS.length, now + 1) }); }
-      else if (e.key === '-' || e.code === 'NumpadSubtract') { e.preventDefault(); setTime({ speed: Math.max(1, now - 1) }); }
+      if (e.code === 'Space') {
+        e.preventDefault();
+        setTime({ paused: !w.paused });
+      } else if (e.key === '+' || e.code === 'NumpadAdd') {
+        e.preventDefault();
+        setTime({ speed: Math.min(SPEEDS.length, now + 1) });
+      } else if (e.key === '-' || e.code === 'NumpadSubtract') {
+        e.preventDefault();
+        setTime({ speed: Math.max(1, now - 1) });
+      }
     };
     addEventListener('keydown', key);
     return () => removeEventListener('keydown', key);
   }, []);
   const lock = may ? '' : `\n${t('time_locked')}`;
-  return <div class={`timectl${paused ? ' paused' : ''}`} role="group" aria-label={t('time_control')}>
-    <span class="timectl-date" title={wi ? speedText(speed, wi.secondsPerDay) : ''}><IconCalendar size={22} /><span>{wi ? fmtDate(wi.day, wi.startYear, lang.value) : '…'}</span>{paused && <small>{t('paused')}</small>}</span>
-    <button class="tool timectl-pause" disabled={!may || !wi} aria-pressed={paused} aria-label={t(paused ? 'time_run' : 'time_pause')}
-      title={`${t(paused ? 'time_run' : 'time_pause')} (${t('key')} ␣)${lock}`} onClick={() => setTime({ paused: !paused })}>{paused ? <IconPlay /> : <IconPause />}</button>
-    <button class="timectl-step" disabled={!may || speed <= 1} aria-label={t('time_slower')} title={`${t('time_slower')} (−)${lock}`} onClick={() => setTime({ speed: speed - 1 })}>−</button>
-    <div class="timectl-pips">
-      {SPEEDS.map((_, k) => <button key={k} class={`pip${k < speed ? ' on' : ''}`} disabled={!may || !wi} aria-pressed={k + 1 === speed} aria-label={t('time_speed', { n: k + 1 })}
-        title={`${t('time_speed', { n: k + 1 })}: ${wi ? speedText(k + 1, wi.secondsPerDay) : ''}\n${t('time_keys')}${lock}`} onClick={() => setTime({ speed: k + 1, paused: false })} />)}
+  return (
+    <div class={`timectl${paused ? ' paused' : ''}`} role="group" aria-label={t('time_control')}>
+      <span class="timectl-date" title={wi ? speedText(speed, wi.secondsPerDay) : ''}>
+        <IconCalendar size={22} />
+        <span>{wi ? fmtDate(wi.day, wi.startYear, lang.value) : '…'}</span>
+        {paused && <small>{t('paused')}</small>}
+      </span>
+      <button
+        class="tool timectl-pause"
+        disabled={!may || !wi}
+        aria-pressed={paused}
+        aria-label={t(paused ? 'time_run' : 'time_pause')}
+        title={`${t(paused ? 'time_run' : 'time_pause')} (${t('key')} ␣)${lock}`}
+        onClick={() => setTime({ paused: !paused })}
+      >
+        {paused ? <IconPlay /> : <IconPause />}
+      </button>
+      <button
+        class="timectl-step"
+        disabled={!may || speed <= 1}
+        aria-label={t('time_slower')}
+        title={`${t('time_slower')} (−)${lock}`}
+        onClick={() => setTime({ speed: speed - 1 })}
+      >
+        −
+      </button>
+      <div class="timectl-pips">
+        {SPEEDS.map((_, k) => (
+          <button
+            key={k}
+            class={`pip${k < speed ? ' on' : ''}`}
+            disabled={!may || !wi}
+            aria-pressed={k + 1 === speed}
+            aria-label={t('time_speed', { n: k + 1 })}
+            title={`${t('time_speed', { n: k + 1 })}: ${wi ? speedText(k + 1, wi.secondsPerDay) : ''}\n${t('time_keys')}${lock}`}
+            onClick={() => setTime({ speed: k + 1, paused: false })}
+          />
+        ))}
+      </div>
+      <button
+        class="timectl-step"
+        disabled={!may || speed >= SPEEDS.length}
+        aria-label={t('time_faster')}
+        title={`${t('time_faster')} (+)${lock}`}
+        onClick={() => setTime({ speed: speed + 1 })}
+      >
+        +
+      </button>
     </div>
-    <button class="timectl-step" disabled={!may || speed >= SPEEDS.length} aria-label={t('time_faster')} title={`${t('time_faster')} (+)${lock}`} onClick={() => setTime({ speed: speed + 1 })}>+</button>
-  </div>;
+  );
 }
 
 /** The replay's bar at the bottom while it plays (replay.ts): play and pause, the timeline, the date, the speed and back to the world. */
 function ReplayBar() {
-  const c = replayClock.value, err = replayError.value;
-  if (replayLoading.value) return <div class="replay-bar pnl"><span class="muted">{t('replay_loading')}</span></div>;
-  if (err && !c) return <div class="replay-bar pnl"><span class="neg">{t('replay_failed', { why: err })}</span><button class="close" title={t('close')} aria-label={t('close')} onClick={() => stopReplay()}><IconClose /></button></div>;
+  const c = replayClock.value,
+    err = replayError.value;
+  if (replayLoading.value)
+    return (
+      <div class="replay-bar pnl">
+        <span class="muted">{t('replay_loading')}</span>
+      </div>
+    );
+  if (err && !c)
+    return (
+      <div class="replay-bar pnl">
+        <span class="neg">{t('replay_failed', { why: err })}</span>
+        <button class="close" title={t('close')} aria-label={t('close')} onClick={() => stopReplay()}>
+          <IconClose />
+        </button>
+      </div>
+    );
   if (!c) return null;
-  const date = fmtDate(Math.floor(c.day), c.startYear, lang.value), first = fmtDate(c.from, c.startYear, lang.value), last = fmtDate(c.to, c.startYear, lang.value);
-  return <div class="replay-bar pnl" role="group" aria-label={t('replay')}>
-    <button class="tool" aria-label={t(c.playing ? 'replay_pause' : 'replay_play')} title={`${t(c.playing ? 'replay_pause' : 'replay_play')} (${t('key')} ␣)`} onClick={() => toggleReplay()}>{c.playing ? <IconPause /> : <IconPlay />}</button>
-    <span class="replay-date">{date}</span>
-    <input class="replay-line" type="range" min={c.from} max={c.to} step={1} value={Math.floor(c.day)} aria-label={t('replay_timeline')} title={`${first} – ${last}`}
-      onInput={(e) => seekReplay(Number((e.target as HTMLInputElement).value))} />
-    <div class="replay-speed" role="radiogroup" aria-label={t('replay_speed')}>
-      {REPLAY_SPEEDS.map((f, k) => <button key={k} role="radio" aria-checked={c.speed === k + 1} class={`btn small${c.speed === k + 1 ? ' gold' : ''}`} onClick={() => replaySpeed(k + 1)}>{`${f < 1 ? `1/${1 / f}` : f}×`}</button>)}
+  const date = fmtDate(Math.floor(c.day), c.startYear, lang.value),
+    first = fmtDate(c.from, c.startYear, lang.value),
+    last = fmtDate(c.to, c.startYear, lang.value);
+  return (
+    <div class="replay-bar pnl" role="group" aria-label={t('replay')}>
+      <button
+        class="tool"
+        aria-label={t(c.playing ? 'replay_pause' : 'replay_play')}
+        title={`${t(c.playing ? 'replay_pause' : 'replay_play')} (${t('key')} ␣)`}
+        onClick={() => toggleReplay()}
+      >
+        {c.playing ? <IconPause /> : <IconPlay />}
+      </button>
+      <span class="replay-date">{date}</span>
+      <input
+        class="replay-line"
+        type="range"
+        min={c.from}
+        max={c.to}
+        step={1}
+        value={Math.floor(c.day)}
+        aria-label={t('replay_timeline')}
+        title={`${first} – ${last}`}
+        onInput={(e) => seekReplay(Number((e.target as HTMLInputElement).value))}
+      />
+      <div class="replay-speed" role="radiogroup" aria-label={t('replay_speed')}>
+        {REPLAY_SPEEDS.map((f, k) => (
+          <button
+            key={k}
+            role="radio"
+            aria-checked={c.speed === k + 1}
+            class={`btn small${c.speed === k + 1 ? ' gold' : ''}`}
+            onClick={() => replaySpeed(k + 1)}
+          >{`${f < 1 ? `1/${1 / f}` : f}×`}</button>
+        ))}
+      </div>
+      <button
+        class="close"
+        title={`${t('replay_stop')} (Esc)`}
+        aria-label={t('replay_stop')}
+        onClick={() => stopReplay()}
+      >
+        <IconClose />
+      </button>
     </div>
-    <button class="close" title={`${t('replay_stop')} (Esc)`} aria-label={t('replay_stop')} onClick={() => stopReplay()}><IconClose /></button>
-  </div>;
+  );
 }
 
 function TopBar() {
-  const mine = myRealm.value, open = status.value === 'open';
+  const mine = myRealm.value,
+    open = status.value === 'open';
   const [menu, setMenu] = useState(false);
   // no texts in the bar but the date (Ramon, 16 November 2026): the clock top left, the map modes and the settings
-  return <header class="hud-top">
-    <div class={`hud-values${mine ? ' ruled' : ''}`}>
-      <TimeControl />
-      <MapModes />
-      <button class={`tool mode${replay.value ? ' on' : ''}`} aria-pressed={!!replayClock.value} aria-label={t(replayClock.value ? 'replay_stop' : 'replay')} disabled={!open && !replayClock.value}
-        title={replayClock.value ? t('replay_stop') : `${t('replay')}\n${t('replay_hint')}${open ? '' : `\n${t('replay_offline')}`}`}
-        onClick={() => { if (replayClock.value || replayError.value) stopReplay(); else void startReplay(); }}><IconReplay /></button>
-      {mine && <span class="val" title={`${L(mine.name)}: ${num(mine.places)} ${t('places')}`}><IconPlaces /><b>{num(mine.places)}</b></span>}
-    </div>
-    <button class="tb" title={t('settings')} aria-label={t('settings')} aria-expanded={menu} onClick={() => setMenu(!menu)}><IconGear /></button>
-    {menu && <div class="hud-menu" onClick={() => setMenu(false)}>
-      <MusicSettings />
-      <div class="music-row lang-row" onClick={(e) => e.stopPropagation()}><span class="music-label">{t('language')}</span><LangSwitch /></div>
-      {mine && <button class="menu-item danger" onClick={() => abdicate()}>{t('abdicate')}</button>}
-      {mine && ARMS[mine.key] && <p class="credit">{t('arms_credit')} <a href="https://commons.wikimedia.org/wiki/File:Variant_war_flag_of_the_Serene_Republic_of_Venice.svg" target="_blank" rel="noreferrer">Wikimedia Commons</a>, <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noreferrer">CC BY-SA 3.0</a></p>}
-    </div>}
-  </header>;
+  return (
+    <header class="hud-top">
+      <div class={`hud-values${mine ? ' ruled' : ''}`}>
+        <TimeControl />
+        <MapModes />
+        <button
+          class={`tool mode${replay.value ? ' on' : ''}`}
+          aria-pressed={!!replayClock.value}
+          aria-label={t(replayClock.value ? 'replay_stop' : 'replay')}
+          disabled={!open && !replayClock.value}
+          title={
+            replayClock.value
+              ? t('replay_stop')
+              : `${t('replay')}\n${t('replay_hint')}${open ? '' : `\n${t('replay_offline')}`}`
+          }
+          onClick={() => {
+            if (replayClock.value || replayError.value) stopReplay();
+            else void startReplay();
+          }}
+        >
+          <IconReplay />
+        </button>
+        {mine && (
+          <span class="val" title={`${L(mine.name)}: ${num(mine.places)} ${t('places')}`}>
+            <IconPlaces />
+            <b>{num(mine.places)}</b>
+          </span>
+        )}
+      </div>
+      <button
+        class="tb"
+        title={t('settings')}
+        aria-label={t('settings')}
+        aria-expanded={menu}
+        onClick={() => setMenu(!menu)}
+      >
+        <IconGear />
+      </button>
+      {menu && (
+        <div class="hud-menu" onClick={() => setMenu(false)}>
+          <MusicSettings />
+          <div class="music-row lang-row" onClick={(e) => e.stopPropagation()}>
+            <span class="music-label">{t('language')}</span>
+            <LangSwitch />
+          </div>
+          {mine && (
+            <button class="menu-item danger" onClick={() => abdicate()}>
+              {t('abdicate')}
+            </button>
+          )}
+          {mine && ARMS[mine.key] && (
+            <p class="credit">
+              {t('arms_credit')}{' '}
+              <a
+                href="https://commons.wikimedia.org/wiki/File:Variant_war_flag_of_the_Serene_Republic_of_Venice.svg"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Wikimedia Commons
+              </a>
+              ,{' '}
+              <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noreferrer">
+                CC BY-SA 3.0
+              </a>
+            </p>
+          )}
+        </div>
+      )}
+    </header>
+  );
 }
 
 function PlacePanel() {
   const p = selectedPlace.value;
-  useEffect(() => { placeInfo.value = null; askPlace(p); }, [p]);
+  useEffect(() => {
+    placeInfo.value = null;
+    askPlace(p);
+  }, [p]);
   const d = placeInfo.value?.id === p ? placeInfo.value : null;
-  const wi = world.value, day = wi?.day;
+  const wi = world.value,
+    day = wi?.day;
   // the economy of a city computes every day: an open panel that shows it asks again on each new day
-  useEffect(() => { if (placeInfo.value?.id === p && placeInfo.value.cityEconomy) askPlace(p); }, [day]);
+  useEffect(() => {
+    if (placeInfo.value?.id === p && placeInfo.value.cityEconomy) askPlace(p);
+  }, [day]);
   const r = d && d.owner >= 0 ? realmById.value.get(d.owner) : undefined;
   const m = me.value;
-  return <aside class="side pnl">
-    <div class="side-head"><b>{d ? (lang.value === 'de' ? d.nameDe : d.name) : '…'}</b><button class="close" title={t('close')} aria-label={t('close')} onClick={() => { selectedPlace.value = -1; }}><IconClose /></button></div>
-    {d && <table class="facts"><tbody>
-      <tr><th>{t('owner')}</th><td>{r ? <><i class="swatch" style={{ background: hex(r.color) }} />{L(r.name)}</> : t('nobody')}</td></tr>
-      <tr><th>{t('population')}</th><td>{heads(d.pop)}</td></tr>
-      {d.peoples && d.peoples.length > 1
-        ? <tr><th>{t('culture')}</th><td>{d.peoples.map((x) => `${L(x.culture)}, ${L(x.faith)} ${share(x.persons, d.pop)} %`).join(' · ')}</td></tr>
-        : <><tr><th>{t('culture')}</th><td>{L(d.culture)}</td></tr><tr><th>{t('faith')}</th><td>{L(d.faith)}</td></tr></>}
-      <tr><th>{t('terrain')}</th><td>{terrainName(d.terrain)}</td></tr>
-      <tr><th>{t('resource')}</th><td>{resourceName(d.resource)}</td></tr>
-    </tbody></table>}
-    {d?.harvest && <div class="section">
-      <h3>{t('harvest')}</h3>
-      <table class="facts"><tbody>
-        <tr><th>{t('harvest_year')}</th><td>{kcalText(d.harvest.kcal)}</td></tr>
-        <tr><th>{t('harvest_head')}</th><td>{num(d.harvest.perHeadDay)} kcal</td></tr>
-        <tr><th>{t('harvest_land')}</th><td>{num(d.harvest.hectares)} ha</td></tr>
-        {d.harvest.arable
-          ? <>
-            <tr><th>{t('arable')}</th><td>{num(d.harvest.arable.hectares)} ha ({pct(d.harvest.arable.share)})</td></tr>
-            <tr><th>{t('arable_state')}</th><td>{t(d.harvest.arable.hectares <= 0 ? 'arable_none' : d.harvest.arable.atLimit ? 'arable_limit' : 'arable_free')}</td></tr>
-            <tr><th>{t('arable_yield')}</th><td>{d.harvest.arable.landYield === null ? '–' : num(d.harvest.arable.landYield)}</td></tr>
-          </>
-          : <tr><th>{t('harvest_yield')}</th><td>{d.harvest.landYield === null ? t('no_data') : num(d.harvest.landYield)}</td></tr>}
-        <tr><th>{t('harvest_farmers')}</th><td>{heads(d.harvest.farmers)}</td></tr>
-      </tbody></table>
-    </div>}
-    {d?.cityEconomy && wi && <div class="section">
-      <h3>{t('economy_city')}</h3>
-      <p class="muted">{t('economy_note_city', { date: fmtDate(d.cityEconomy.day, wi.startYear, lang.value) })}</p>
-      {d.cityEconomy.halted && <p class="muted">{t('economy_halted', { why: d.cityEconomy.halted })}</p>}
-      <table class="facts"><tbody>
-        <tr><th>{t('economy_gdp')}</th><td>{pounds(d.cityEconomy.realGdp)}</td></tr>
-        <tr><th>{t('economy_level')}</th><td>{index(d.cityEconomy.realGdpIndex)}</td></tr>
-        <tr><th>{t('economy_prices_today')}</th><td>{index(d.cityEconomy.priceToday)}</td></tr>
-        <tr><th>{t('economy_consumption')}</th><td>{pounds(d.cityEconomy.consumption)}</td></tr>
-        <tr><th>{t('economy_crown')}</th><td>{pounds(d.cityEconomy.crown)}</td></tr>
-        <tr><th>{t('economy_investment')}</th><td>{pounds(d.cityEconomy.investment)}</td></tr>
-        <tr><th>{t('economy_exports')}</th><td>{pounds(d.cityEconomy.exports)}</td></tr>
-        <tr><th>{t('economy_imports')}</th><td>{pounds(d.cityEconomy.imports)}</td></tr>
-        <tr><th>{t('economy_employed')}</th><td>{num(d.cityEconomy.employed)}</td></tr>
-        <tr><th>{t('economy_unemployed')}</th><td>{num(d.cityEconomy.unemployed)}</td></tr>
-        <tr><th>{t('economy_coin_households')}</th><td>{pounds(d.cityEconomy.coinHouseholds)}</td></tr>
-        <tr><th>{t('economy_coin_firms')}</th><td>{pounds(d.cityEconomy.coinFirms)}</td></tr>
-      </tbody></table>
-    </div>}
-    {r && <div class="section">
-      <h3>{L(r.name)}</h3>
-      <p>{t('places')}: {num(r.places)}</p>
-      <p>{t('ruled_by')}: {r.ruler ?? <span class="muted">{t('no_player')}</span>}</p>
-      {!r.ruler && m && m.realm < 0 && !m.observer && <button class="btn big gold" onClick={() => claim(r.id)}>{t('claim')}</button>}
-    </div>}
-  </aside>;
+  return (
+    <aside class="side pnl">
+      <div class="side-head">
+        <b>{d ? (lang.value === 'de' ? d.nameDe : d.name) : '…'}</b>
+        <button
+          class="close"
+          title={t('close')}
+          aria-label={t('close')}
+          onClick={() => {
+            selectedPlace.value = -1;
+          }}
+        >
+          <IconClose />
+        </button>
+      </div>
+      {d && (
+        <table class="facts">
+          <tbody>
+            <tr>
+              <th>{t('owner')}</th>
+              <td>
+                {r ? (
+                  <>
+                    <i class="swatch" style={{ background: hex(r.color) }} />
+                    {L(r.name)}
+                  </>
+                ) : (
+                  t('nobody')
+                )}
+              </td>
+            </tr>
+            <tr>
+              <th>{t('population')}</th>
+              <td>{heads(d.pop)}</td>
+            </tr>
+            {d.peoples && d.peoples.length > 1 ? (
+              <tr>
+                <th>{t('culture')}</th>
+                <td>
+                  {d.peoples.map((x) => `${L(x.culture)}, ${L(x.faith)} ${share(x.persons, d.pop)} %`).join(' · ')}
+                </td>
+              </tr>
+            ) : (
+              <>
+                <tr>
+                  <th>{t('culture')}</th>
+                  <td>{L(d.culture)}</td>
+                </tr>
+                <tr>
+                  <th>{t('faith')}</th>
+                  <td>{L(d.faith)}</td>
+                </tr>
+              </>
+            )}
+            <tr>
+              <th>{t('terrain')}</th>
+              <td>{terrainName(d.terrain)}</td>
+            </tr>
+            <tr>
+              <th>{t('resource')}</th>
+              <td>{resourceName(d.resource)}</td>
+            </tr>
+          </tbody>
+        </table>
+      )}
+      {d?.harvest && (
+        <div class="section">
+          <h3>{t('harvest')}</h3>
+          <table class="facts">
+            <tbody>
+              <tr>
+                <th>{t('harvest_year')}</th>
+                <td>{kcalText(d.harvest.kcal)}</td>
+              </tr>
+              <tr>
+                <th>{t('harvest_head')}</th>
+                <td>{num(d.harvest.perHeadDay)} kcal</td>
+              </tr>
+              <tr>
+                <th>{t('harvest_land')}</th>
+                <td>{num(d.harvest.hectares)} ha</td>
+              </tr>
+              {d.harvest.arable ? (
+                <>
+                  <tr>
+                    <th>{t('arable')}</th>
+                    <td>
+                      {num(d.harvest.arable.hectares)} ha ({pct(d.harvest.arable.share)})
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>{t('arable_state')}</th>
+                    <td>
+                      {t(
+                        d.harvest.arable.hectares <= 0
+                          ? 'arable_none'
+                          : d.harvest.arable.atLimit
+                            ? 'arable_limit'
+                            : 'arable_free',
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>{t('arable_yield')}</th>
+                    <td>{d.harvest.arable.landYield === null ? '–' : num(d.harvest.arable.landYield)}</td>
+                  </tr>
+                </>
+              ) : (
+                <tr>
+                  <th>{t('harvest_yield')}</th>
+                  <td>{d.harvest.landYield === null ? t('no_data') : num(d.harvest.landYield)}</td>
+                </tr>
+              )}
+              <tr>
+                <th>{t('harvest_farmers')}</th>
+                <td>{heads(d.harvest.farmers)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
+      {d?.cityEconomy && wi && (
+        <div class="section">
+          <h3>{t('economy_city')}</h3>
+          <p class="muted">{t('economy_note_city', { date: fmtDate(d.cityEconomy.day, wi.startYear, lang.value) })}</p>
+          {d.cityEconomy.halted && <p class="muted">{t('economy_halted', { why: d.cityEconomy.halted })}</p>}
+          <table class="facts">
+            <tbody>
+              <tr>
+                <th>{t('economy_gdp')}</th>
+                <td>{pounds(d.cityEconomy.realGdp)}</td>
+              </tr>
+              <tr>
+                <th>{t('economy_level')}</th>
+                <td>{index(d.cityEconomy.realGdpIndex)}</td>
+              </tr>
+              <tr>
+                <th>{t('economy_prices_today')}</th>
+                <td>{index(d.cityEconomy.priceToday)}</td>
+              </tr>
+              <tr>
+                <th>{t('economy_consumption')}</th>
+                <td>{pounds(d.cityEconomy.consumption)}</td>
+              </tr>
+              <tr>
+                <th>{t('economy_crown')}</th>
+                <td>{pounds(d.cityEconomy.crown)}</td>
+              </tr>
+              <tr>
+                <th>{t('economy_investment')}</th>
+                <td>{pounds(d.cityEconomy.investment)}</td>
+              </tr>
+              <tr>
+                <th>{t('economy_exports')}</th>
+                <td>{pounds(d.cityEconomy.exports)}</td>
+              </tr>
+              <tr>
+                <th>{t('economy_imports')}</th>
+                <td>{pounds(d.cityEconomy.imports)}</td>
+              </tr>
+              <tr>
+                <th>{t('economy_employed')}</th>
+                <td>{num(d.cityEconomy.employed)}</td>
+              </tr>
+              <tr>
+                <th>{t('economy_unemployed')}</th>
+                <td>{num(d.cityEconomy.unemployed)}</td>
+              </tr>
+              <tr>
+                <th>{t('economy_coin_households')}</th>
+                <td>{pounds(d.cityEconomy.coinHouseholds)}</td>
+              </tr>
+              <tr>
+                <th>{t('economy_coin_firms')}</th>
+                <td>{pounds(d.cityEconomy.coinFirms)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
+      {r && (
+        <div class="section">
+          <h3>{L(r.name)}</h3>
+          <p>
+            {t('places')}: {num(r.places)}
+          </p>
+          <p>
+            {t('ruled_by')}: {r.ruler ?? <span class="muted">{t('no_player')}</span>}
+          </p>
+          {!r.ruler && m && m.realm < 0 && !m.observer && (
+            <button class="btn big gold" onClick={() => claim(r.id)}>
+              {t('claim')}
+            </button>
+          )}
+        </div>
+      )}
+    </aside>
+  );
 }
-
