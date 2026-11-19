@@ -24,6 +24,10 @@ import { type ArchivedPersons, indexIn, takeArchived, yearsWith } from '../src/s
 
 /** at the highest speed, the days of one beat of the clock take this much real time at most before what changed goes out */
 const BATCH_MS = 100;
+/** at the highest speed a snapshot falls due every snapshotEveryDays days, but this much real time at least lies
+ *  between two: at several days a second one every 30 days would cost a tenth of the time, and a restart after a
+ *  crash replays the log since the last one, which is then this many seconds of days at most */
+const FAST_SNAPSHOT_MS = 20_000;
 /** smoothed real time of the parts of a day */
 const ema = (a: number, b: number) => a * 0.9 + b * 0.1;
 
@@ -84,6 +88,8 @@ export class WorldCore {
   private readonly backup: StoreBackup;
   /** the years of the archive of the dead read from the disk lately (a browser that opens the ancestors asks often) */
   private deadYears = new Map<number, ArchivedPersons>();
+  /** real time of the last snapshot (FAST_SNAPSHOT_MS) */
+  private lastSnapshotAt = Date.now();
   private log: (m: string) => void;
   /** the history of the borders (server/history.ts), for the replay */
   history!: BorderHistory;
@@ -247,8 +253,10 @@ export class WorldCore {
     try {
       if (!this.meta.paused) {
         const fast = this.msPerDay() === 0;
-        do this.runDay();
+        do this.runDay(fast);
         while (fast && !this.meta.paused && performance.now() - t0 < BATCH_MS);
+        // at the highest speed the log goes onto the disk once a beat, not once a day
+        if (fast) this.files.sync();
         this.broadcastDay();
       }
     } catch (e) {
@@ -289,7 +297,7 @@ export class WorldCore {
   }
 
   /** One in-game day: queued entries, the day, persistence. */
-  private runDay() {
+  private runDay(fast = false) {
     const t0 = performance.now();
     this.releaseInactive();
     const q = this.queue;
@@ -301,12 +309,16 @@ export class WorldCore {
     }
     const t1 = performance.now();
     this.files.append({ d: this.s.day, adv: 1 });
-    this.files.sync();
+    if (!fast) this.files.sync();
     advanceDay(this.s, this.w);
     this.keepArchived();
     const t2 = performance.now();
     this.history.record(this.s);
-    if (this.s.day % this.cfg.snapshotEveryDays === 0) this.snapshot();
+    if (
+      this.s.day % this.cfg.snapshotEveryDays === 0 &&
+      (!fast || Date.now() - this.lastSnapshotAt >= FAST_SNAPSHOT_MS)
+    )
+      this.snapshot();
     else if (this.store.enabled && this.s.day % this.cfg.logUploadEveryDays === 0) this.backup.sendLog();
     this.backup.sendRulers();
     const t3 = performance.now();
@@ -320,6 +332,7 @@ export class WorldCore {
 
   snapshot(forceUpload = false) {
     const { day, bin } = this.files.writeSnapshot(this.s);
+    this.lastSnapshotAt = Date.now();
     if (this.store.enabled) {
       if (forceUpload || this.backup.snapshotDue(day, this.cfg)) {
         this.backup.sendSnapshot(day, bin);
