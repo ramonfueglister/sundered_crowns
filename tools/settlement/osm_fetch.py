@@ -8,7 +8,7 @@ import gzip, json, math, os, sys, time, urllib.parse, urllib.request
 
 SERVERS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter']
 R = 1500  # metres round the centre
-FIND = 20000  # metres round the gazetteer point in which the town's place node is looked for
+FIND = 60000  # metres round the gazetteer point in which the town's place node is looked for (the gazetteer point of Cairo lies 25 km off)
 UA = 'sundered-crowns-research/1.0'
 
 def ask(q):
@@ -39,6 +39,7 @@ def centre(t):
         return (named, tags.get('place') == 'city', pop, -dist(t['lat'], t['lon'], e['lat'], e['lon']))
     if not els: return None, []
     best = max(els, key=score)
+    if not score(best)[0]: return None, [{'id': e['id'], 'name': e.get('tags', {}).get('name'), 'lat': e['lat'], 'lon': e['lon']} for e in els[:5]]  # no place of that name: no plan (a lost town such as Sarai)
     return best, [{'id': e['id'], 'name': e.get('tags', {}).get('name'), 'place': e.get('tags', {}).get('place'), 'lat': e['lat'], 'lon': e['lon'], 'named': score(e)[0]} for e in sorted(els, key=score, reverse=True)[:5]]
 
 def plan(lat, lon):
