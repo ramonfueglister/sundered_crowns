@@ -600,6 +600,13 @@ describe('portraits', { timeout: 20_000 }, () => {
     expect(Math.abs(0.2126 * br + 0.7152 * bg + 0.0722 * bb - 1)).toBeLessThan(0.03);
     expect(ENGLAND_1356.eye!.rough).toBeGreaterThan(0.2);
     expect(ENGLAND_1356.eye!.rough).toBeLessThan(0.3);
+    // round 119: light reaches less far round the white of the eye than round the iris, so that the white goes into the
+    // shade with the skin beside it (on the face's shaded half it was lighter than the cheek under it; the reference's is darker)
+    expect(eye).toContain(`eyeWrap = mix( ${ENGLAND_1356.eye!.wrap.toFixed(3)}, ${ENGLAND_1356.eye!.wrapWhite.toFixed(3)}, eyeWhite );`);
+    expect(eye).toContain('vec3 wrapBy = vec3( eyeWrap );');
+    expect(ENGLAND_1356.eye!.wrapWhite).toBeGreaterThan(0.03);
+    expect(ENGLAND_1356.eye!.wrapWhite).toBeLessThan(0.2);
+    expect(ENGLAND_1356.eye!.wrap).toBeGreaterThan(0.4);
     // the white of the eye lighter than the image gives it. The iris too, since round 103, and its darks lifted:
     // from round 65 to 102 it was drawn darker (0.7), by one brown-eyed face of the reference, and a blue or a
     // green iris was as black as a brown one, a hole in the face. It is darkest in a ring at its rim

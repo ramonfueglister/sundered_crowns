@@ -196,7 +196,8 @@ diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.072
  *  ball darkens towards its top), a tint and less colour. */
 function eyeLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageProfile['eye']>): void {
   m.roughness = k.rough; m.ior = ior(k.specular);
-  const lights = wrapped(`vec3( ${f(k.wrap)} )`);
+  // the light's reach round the ball is the iris' or the white's by the place (`eyeWrap`, set where the image tells them apart)
+  const lights = wrapped('vec3( eyeWrap )');
   m.onBeforeCompile = shader => {
     shader.vertexShader = swap(swap(shader.vertexShader, '#include <common>', '#include <common>\nvarying float vLidY; varying float vLidX;'),
       '#include <beginnormal_vertex>', '#include <beginnormal_vertex>\nvLidY = objectNormal.y; vLidX = abs( objectNormal.x );');
@@ -210,6 +211,7 @@ float eyePupil = 0.0;
   eyeWhite = smoothstep( 0.22, 0.36, min( sampledDiffuseColor.r, min( sampledDiffuseColor.g, sampledDiffuseColor.b ) ) );
   // the iris' rim: a living iris is darkest in a ring where it meets the white (the cornea's edge lies over it)
   eyeRing = smoothstep( 0.62, 0.98, length( fract( vMapUv * 4.0 ) - 0.5 ) / ${f(27.5 / 360)} ) * ( 1.0 - eyeWhite );
+  eyeWrap = mix( ${f(k.wrap)}, ${f(k.wrapWhite)}, eyeWhite );
   eyePupil = ${k.pupil.size > 0 ? `1.0 - smoothstep( ${f(k.pupil.size - k.pupil.soft)}, ${f(k.pupil.size + k.pupil.soft)}, length( fract( vMapUv * 4.0 ) - 0.5 ) / ${f(27.5 / 360)} )` : '0.0'};
 #endif`);
     // the cornea: over the iris the eye's surface is a cap of a smaller ball, so its normal leans outward from the
@@ -231,7 +233,7 @@ float eyePupil = 0.0;
   }
 }
 #endif`);
-    shader.fragmentShader = swap(swap(swap(bulged, '#include <lights_physical_pars_fragment>', lights), '#include <common>', '#include <common>\nvarying float vLidY; varying float vLidX;'),
+    shader.fragmentShader = swap(swap(swap(bulged, '#include <lights_physical_pars_fragment>', lights), '#include <common>', `#include <common>\nvarying float vLidY; varying float vLidX; float eyeWrap = ${f(k.wrapWhite)};`),
       '#include <color_fragment>', `#include <color_fragment>
 diffuseColor.rgb *= mix( ${f(k.iris)} * ( 1.0 - ${f(k.ring)} * eyeRing ) * mix( 1.0, ${f(k.pupil.dark)}, eyePupil ), ${f(k.white)}, eyeWhite ) * vec3( ${k.tint.map(f).join(', ')} ) * mix( vec3( 1.0 ), vec3( ${k.blush.map(f).join(', ')} ), eyeWhite ) * mix( 1.0, ${f(k.lid.dark)}, smoothstep( ${f(k.lid.from)}, ${f(k.lid.to)}, vLidY ) ) * mix( 1.0, ${f(k.corner.dark)}, smoothstep( ${f(k.corner.from)}, ${f(k.corner.to)}, vLidX ) );
 diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ), pow( diffuseColor.rgb, vec3( ${f(k.lift)} ) ), ${f(k.colour)} );`);

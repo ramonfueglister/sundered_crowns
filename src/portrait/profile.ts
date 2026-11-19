@@ -57,13 +57,14 @@ export interface StageProfile {
    *  on the colour: below 1 a dark iris shows its colour), the glint of the key light on it
    *  (roughness: the rougher the larger and fainter; Godot's "specular"), and how far light reaches round to the
    *  ball's shaded side (wrap lighting as on skin: the white of the eye lets light through; without it the side
-   *  of each ball away from the key light is a dark sickle beside the iris), and the cornea: how far the surface's
+   *  of each ball away from the key light is a dark sickle beside the iris; `wrap` on the iris and the pupil,
+   *  which the cornea gathers light for from the side, `wrapWhite` on the white), and the cornea: how far the surface's
    *  normal leans outward at the iris' rim (the tangent of the angle; 0 = a plain ball. A cornea of 7.8 mm radius
    *  on a ball of 12 mm leans 20 degrees further out at the rim of an iris of 11.7 mm: 0.36), `ring`: how much
    *  darker the iris is in a ring at its rim, the pupil: its radius as a share of the iris' (0 = as the image has
    *  it, 0.29), how soft its edge is (the same share, to either side) and how dark it is drawn (a factor on the
    *  iris under it), and `blush`: a colour on the white of the eye alone (1, 1, 1 = none). */
-  eye: null | { lid: { from: number; to: number; dark: number }; corner: { from: number; to: number; dark: number }; tint: readonly [number, number, number]; white: number; iris: number; colour: number; lift: number; rough: number; specular: number; wrap: number; cornea: number; ring: number; pupil: { size: number; soft: number; dark: number }; blush: readonly [number, number, number] };
+  eye: null | { lid: { from: number; to: number; dark: number }; corner: { from: number; to: number; dark: number }; tint: readonly [number, number, number]; white: number; iris: number; colour: number; lift: number; rough: number; specular: number; wrap: number; wrapWhite: number; cornea: number; ring: number; pupil: { size: number; soft: number; dark: number }; blush: readonly [number, number, number] };
   /** Lashes and brows: null as they are. Else roughness, "specular", and how dense the lashes and the brows are
    *  (1 = as painted). */
   brow: null | { rough: number; specular: number; lashes: number; brows: number };
@@ -400,7 +401,14 @@ export const APOLEIA: StageProfile = {
  *  CIELAB under skin of 14.0 and 20.9) and stood out by its colour: `eye.blush` warms it and leaves it as light
  *  (a 10.2, b 13.7; the reference's 7.5 to 14.1 and 15.6 to 18.2). The image's pupil is a hard pinpoint (0.29 of
  *  the iris): `eye.pupil` draws one of 0.42 with a soft edge. The eight key lights of round 116 threw eight
- *  points on the ball: `eye.rough` 0.22 (0.14) runs them together; at 0.25 the glint is faint and the eye dull. */
+ *  points on the ball: `eye.rough` 0.22 (0.14) runs them together; at 0.25 the glint is faint and the eye dull.
+ *  Round 119: the eye that glows in the shade (docs/PORTRAITS.md). `eye.wrapWhite` 0.1: the white of the eye takes
+ *  less light from round the ball than the iris (`eye.wrap` 0.5 for both since round 60, when one key stood on
+ *  the other side). On the half of the face turned from the key the white was lighter than the cheek under it
+ *  (by 4.4 L on the grown women; on ten women of the reference it is 7.3 darker there and 6.7 darker on the lit
+ *  half): skin went into shade and the ball did not follow. Now 4.7 darker in the shade, 10.4 on the lit half
+ *  (9.2). The iris and the pupil keep their 0.5: with 0.15 on the whole ball the eye's middle was 5 L darker
+ *  and left the reference's by 6.9 (limit 4). */
 export const ENGLAND_1356: StageProfile = {
   key: 'england1356',
   lights: {
@@ -416,7 +424,7 @@ export const ENGLAND_1356: StageProfile = {
   turn: -0.24, rise: 0.03, close: 1.12,
   anisotropy: 8,
   skin: { rough: 0.55, specular: 0.42, pores: 0.4, wrap: [0.3, 0.16, 0.10], finer: 1, fit: 1, blotch: 0.05, speckle: 0.10, colour: 0.7, tint: [1, 0.87, 0.77], relief: 0.0015, oil: 0.5, fuzz: 0.3, child: 0.3, bleed: [1, 0.5, 0.35] },
-  eye: { corner: { from: 0.3, to: 0.8, dark: 0.35 }, lid: { from: -0.35, to: 0.05, dark: 0.4 }, tint: [0.84, 0.73, 0.57], white: 1.3, iris: 1.15, colour: 1.1, lift: 0.6, rough: 0.22, specular: 0.6, wrap: 0.5, cornea: 0.36, ring: 0.35, pupil: { size: 0.42, soft: 0.1, dark: 0.25 }, blush: [1.27, 0.945, 0.76] },
+  eye: { corner: { from: 0.3, to: 0.8, dark: 0.35 }, lid: { from: -0.35, to: 0.05, dark: 0.4 }, tint: [0.84, 0.73, 0.57], white: 1.3, iris: 1.15, colour: 1.1, lift: 0.6, rough: 0.22, specular: 0.6, wrap: 0.5, wrapWhite: 0.1, cornea: 0.36, ring: 0.35, pupil: { size: 0.42, soft: 0.1, dark: 0.25 }, blush: [1.27, 0.945, 0.76] },
   brow: { rough: 1, specular: 0.05, lashes: 0.3, brows: 0.95 },
   cap: { tone: 1.7, light: 2.6, colour: 0.7, wrap: 1, shadow: false, stubble: 0, beard: { tone: 5.5, light: 3.2, colour: 0.65, wrap: 0.3 } },
   cloth: { wool: 2.6, linen: 1 },

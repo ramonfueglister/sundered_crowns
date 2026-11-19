@@ -4553,6 +4553,80 @@ Pictures (project files, `portraits/`): `runde118_vorher_nachher_augen.png` (the
 and a man, round 117 above, now below), `runde118_vorher_nachher_frauen.png`,
 `runde118_vorher_nachher_maenner.png`, `runde118_neben_referenz.png` (the reference above, ours below).
 
+**Round 119: the eye that glows in the shade** (2026-11-19). Round 118 ended on the brows: "high and thin
+over the eye, theirs low and heavy", with a choice left to Ramon (lower them from 3 mm to 1 mm or not). Ramon's
+answer was that fetching and reading the reference is this side's work. So more of it was fetched, and the
+brows were read before they were moved.
+
+**More reference.** All 170 pictures of Crusader Kings III that lie on Ramon's computer (dev diaries, the
+store's screenshots, an earlier selection) are now in the project's files (`portraits/referenz_ck3_alle/`,
+with a list of which show faces), and the numbered selection the rounds work from went from 12 to 24
+(`portraits/referenz_ck3/`). None of it is in the repository. Two of the new ones show ten women's faces at
+about 55 pixels from the pupils to the chin, in the game's own portrait light: until now the women were held
+against one face.
+
+**The brows are not higher than theirs.** I had read the gap between lid and brow off small faces by hand
+(theirs 0.083 of the face, ours 0.106 to 0.146) and told Ramon the brows would go lower. Read at one size
+that does not hold. `face_colour.mjs --brow` on our eight grown women: the brow 0.101 of the face's length
+above the upper lid (the reference's woman of round 71: 0.115), 38.6 L darker than the skin above it (37.9),
+0.034 broad at half its darkness (0.045). And a reading of my own on the pupil's column, every face brought
+to 55 pixels from pupil to chin, the ten women of the reference against our eight (medians, in lengths
+pupil to chin): the brow's darkest place 0.136 above the pupil on theirs and 0.145 on ours, its lower edge
+0.109 and 0.127, both 0.055 broad (three pixels: as fine as that size reads). Ours lie where theirs do,
+within what the reading can tell. The brows stay at 3 mm; the choice put to Ramon is withdrawn, it was asked
+on a wrong reading. What does differ shows in the picture and not in these numbers: their brow is a closed
+dark band, heaviest at its inner half, ours a row of hairs, and thin on the side turned from the camera.
+
+**What it is.** Set face by face at one size, the eye on the shaded half of our faces stands out: its white
+is the lightest thing on that half. Read on the pupil's row, the lightest place of the white beside the iris
+against a patch of cheek 0.3 (of pupil to chin) under the pupil: on the reference's ten women the white is
+6.7 L darker than the cheek on the lit half and 7.3 darker on the shaded half (medians; single faces from 24
+darker to 19 lighter, the lighter ones in the orange light of a candle). On ours 9.2 darker on the lit
+half, and 4.4 *lighter* on the shaded half (5.7 darker to 7.3 lighter). Skin goes into the shade and the
+ball did not follow: since round 60 light reaches half way round the eyeball (`eye.wrap` 0.5), set when one
+key light stood on the other side and the eyes lay in dark sockets.
+
+**What is changed.** `eye.wrapWhite` 0.1 (src/portrait/profile.ts, materials.ts `eyeLook`): the white of
+the eye takes the light's reach round the ball on its own, the iris and the pupil keep `eye.wrap` 0.5 (the
+shader's `eyeWrap`, mixed by the same reading of the image that tells white from iris). The white on the
+shaded half is now 4.7 L darker than the cheek under it (1.4 to 11.4 darker), on the lit half 10.4 darker.
+Nothing in the builder changed; the wasm is the one of round 118.
+
+**Tried and not kept.** `eye.wrap` 0.15 on the whole ball: the white as wanted (4.9 darker in the shade),
+and in the picture a calmer eye, but the eye's middle 5 L darker: "woman: eye against cheek" -47.1 for the
+reference's -40.2, "emperor: eye against cheek" -46.5 for -40.6, the gauntlet at 17 of 22. Made up for with
+a lighter iris and white (`iris` 1.33, `white` 1.5): the middle next to unmoved (-46.2), the white lighter
+again in the shade (2.1 darker). 0.25 with `iris` 1.28 and `white` 1.44: -44.8, and the white as light as
+the cheek. `wrapWhite` 0.15: 3.7 darker in the shade; 0.05: 5.8, nearest the reference's, with the
+ball's far side darkening towards the sickle of round 60 when the eye is drawn large; 0.1 lies between. The brows, since they were
+the question: `brow_band` 1.5 for the women (1.15), `brow_paint` 0.4 (a band painted under the hairs), and
+both: at 100 pixels from pupil to chin the faces are next to the same as before. The lid's shade on the ball further down and darker (`eye.lid.to` 0.35 and 0.6,
+`dark` 0.3 and 0.2), thicker lashes (`brow.lashes` 0.6): little to see at the reference's size.
+
+**The gauntlet**: 19 of 22 as before, the same three lines ("woman: beside the nose against cheek" 4.1 off,
+"woman: nose's back against cheek", "man: far cheek against the lit" -25.8 for -16.9), the two lines of the
+eye where they were (-41.9 both). No limit and no reading of the reference was touched. The white against the
+cheek is not a line of the gauntlet: it was read with a script of my own on pictures where pupil and chin
+were set by hand, and the reference's pictures are not in the repository.
+
+Honest about it. This is a small step: one eye of each face no longer glows, and that is what the pictures
+show, not more. The first half of the round went into a question that was put wrongly; what came of it is
+that the brows' height is settled, and ten faces to read against instead of one. On the lit half our white
+is now 3.7 L darker than theirs against the cheek (it was 2.5 darker), which is the price of 0.1 and was not
+made up for (`white` 1.5 lightens the shaded half again). The readings are medians of eight and ten faces
+with a wide spread, the reference's faces are 55 pixels high and were brought to twice that; `wrapWhite` is
+by eye between two readings: PLACEHOLDER. That the iris keeps the light where the white loses it has a
+reason (the cornea gathers light for the iris from the side) but no number. Beside the reference's ten
+women ours are still told at a glance: a closed band of a brow against our hairs, skin as smooth as wax,
+every woman in the same coif and seen more from the front than theirs, the gloss on the nose's flank, a
+man's far cheek.
+
+Tests: `tests/portrait.test.ts`, "the eye of England's profile tells its white from its iris ...": the
+eye's shader mixes the light's reach by white and iris, `wrapWhite` between 0.03 and 0.2, `wrap` over 0.4.
+Pictures (project files, `portraits/`): `runde119_neben_referenz.png` (the reference's ten women above, ours
+of round 118 and of this round below, at one size), `runde119_vorher_nachher_frauen.png`,
+`runde119_vorher_nachher_maenner.png`.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
@@ -4564,7 +4638,8 @@ measures, by eye in the rest, and wear one hair and one brow each still; since r
 stage alone (no light painted into the skin, a shaded half in the skin's colour), since round 115 the lower
 face runs in to the chin, since round 117 as far as the reference's does, with a round chin and a jaw whose
 edge is a soft shade, since round 118 the eyes have warm whites, a soft pupil and no dark line under
-them, under brows that are still higher and thinner than theirs, and the face still lacks the
+them, since round 119 the white of the eye goes into the shade with the face, under brows that lie as high
+as theirs (read on ten of their women in round 119) but are rows of hairs where theirs are a closed band, and the face still lacks the
 reference's streak of gloss on the nose's flank; the thrown-back hood closes round the neck since round 35, but
 has no folds across its cloth. Since round 111 the people of every part of the world can be drawn, in a plain
 dress that is no people's own, and without a picture of the reference to hold them against.
