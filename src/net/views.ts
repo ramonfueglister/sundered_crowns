@@ -10,6 +10,7 @@ import { TERRAINS, RESOURCES } from '../sim/geo';
 import { ALL_CULTURES, cultureLabel, FAITHS } from '../sim/content/peoples';
 import { hectares, landLimitHa, soilOf } from '../sim/systems/cultivation';
 import { kcalPerHeadDay } from '../sim/systems/harvest';
+import { presentPersons } from '../sim/people/living';
 
 export function realmInfos(s: WorldState, rulerName: (uid: string) => string | null): RealmInfo[] {
   const count = new Int32Array(s.realm.size);
@@ -58,10 +59,11 @@ function personsByPlace(s: WorldState): { start: Int32Array; ids: Int32Array } {
   let g = grouped.get(s);
   if (g && g.day === s.day && g.persons === count(s.person) && g.families === count(s.family)) return g;
   const L = s.place.owner.length, P = s.person.cols, F = s.family.cols, start = new Int32Array(L + 1);
-  for (let id = 0; id < s.person.size; id++) { const p = F.place[P.family[id]]; if (p >= 0 && p < L) start[p + 1]++; }
+  const persons = presentPersons(s); // the dead without a part are never asked for (src/sim/people/living.ts)
+  for (const id of persons) { const p = F.place[P.family[id]]; if (p >= 0 && p < L) start[p + 1]++; }
   for (let p = 0; p < L; p++) start[p + 1] += start[p];
   const ids = new Int32Array(start[L]), at = start.slice(0, L);
-  for (let id = 0; id < s.person.size; id++) { const p = F.place[P.family[id]]; if (p >= 0 && p < L) ids[at[p]++] = id; }
+  for (const id of persons) { const p = F.place[P.family[id]]; if (p >= 0 && p < L) ids[at[p]++] = id; }
   g = { day: s.day, persons: count(s.person), families: count(s.family), start, ids };
   grouped.set(s, g);
   return g;

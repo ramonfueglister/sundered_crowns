@@ -52,6 +52,7 @@ import { scheduleMove } from './moves';
 import { weddingWeight } from '../people/traits';
 import { brideAge, yearsToBirth, AGE_WINDOW, BRIDE_YEARS, FERTILE_TO, GROOM_AGE_MIN, GROOM_OLDER, WIDOW_REMARRIES_BELOW } from '../people/marriage';
 import { customOf, heirOf, CUSTOM, type Child } from '../people/inheritance';
+import { presentPersons } from '../people/living';
 
 /** Draws of a person's own stream (people.ts 0 to 21 and 100 on, work.ts 30 and 31, deaths.ts 40): the birth after
  *  the n-th child takes the draw 50 + n. Draws of a family's stream: the age of the bride on a day, and on the
@@ -137,8 +138,8 @@ export function weddingsOn(s: WorldState, day: number, tally?: Passed): number {
   const awayKids = new Map<number, number[]>(), away = new Set<number>();
   if (vacant.size) {
     const vac = new Set<number>(); for (const l of vacant.values()) for (const f of l) vac.add(f);
-    for (let id = 0; id < s.person.size; id++) {
-      if (!s.person.alive[id] || P.died[id] !== ALIVE) continue;
+    for (const id of presentPersons(s)) {
+      if (P.died[id] !== ALIVE) continue;
       const m = P.mother[id], fa = P.father[id], own = P.family[id];
       const hf = m >= 0 && vac.has(P.family[m]) ? P.family[m] : fa >= 0 && vac.has(P.family[fa]) ? P.family[fa] : -1;
       if (hf < 0 || F.place[own] === F.place[hf] || F.man[own] === id || F.woman[own] === id) continue;
