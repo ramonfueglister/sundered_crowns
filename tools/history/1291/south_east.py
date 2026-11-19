@@ -1,7 +1,7 @@
 """Anatolia, the Near East, Iran and Central Asia west of 70°E, North Africa and Africa on 1 January 1291."""
 import os, sys
 sys.path.insert(0, os.path.dirname(__file__))
-from lib import *
+from lib import N, R, S, WAR, write
 
 SOURCES = [
     "Euratlas-Nüssli, Euratlas Periodis: Europe in the year 1300 (with North Africa and the Near East)",

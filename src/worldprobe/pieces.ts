@@ -14,7 +14,7 @@
 // once without showing, so that its lists reach the graphics card one piece to a picture, not all the pieces of a
 // step in the picture that first shows them. (With `?send=1` the stage
 // sends the lists itself, a few megabytes to a picture, and a piece joins the pieces the view can show once they
-// are sent: stage.ts `staged`, which says why that is not the rule.)
+// are sent: stage/api.ts `staged`, which says why that is not the rule.)
 // The houses that have fine blocks and the paved ground lie in cells of their own on their piece: from near, fine.ts
 // builds them again.
 // A piece that has been built is kept on disk as well (store.ts): the next time it is asked for, in this visit or a
@@ -25,7 +25,7 @@ import type * as THREE from 'three/webgpu';
 import { N, NEAR, RIGHT, SEA_Y } from '../lookprobe/layout';
 import type { Stage } from '../lookprobe/stage';
 import { type HouseCell, createFine } from './fine';
-import type { PieceDone, PieceJob } from './piece.worker';
+import type { PieceDone, PieceJob, WarmJob } from './piece.worker';
 import { cover, keyOf } from './pyramid';
 import type { StoreAsk, StoreSays } from './store.worker';
 import { CELL } from './world';
@@ -46,6 +46,12 @@ const PIECE = 200, MARGIN = (N - PIECE) / 2;
  * keeps the wide ground.
  */
 const NARROW_FROM = 1, NARROW = 32;
+/**
+ * Once the view (or the view it comes to rest at) is at this step or a finer one, the workers load the map's data
+ * of the finest step, whose pieces are the only ones still built from it (the others are drawn from their tables):
+ * a zoom in to the towns then finds them ready, and its first pieces do not wait half a second for it in every worker.
+ */
+const WARM_FROM = 2;
 /** pieces are built ahead of need this far around the picture, as a share of its width */
 const AHEAD = 0.3;
 /** the pieces of the next finer step are built ahead once the view is within this factor of the width at which that step takes over */
@@ -156,6 +162,8 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
   const fine = createFine(stage, { still: !o.ahead, changed: o.changed, small: o.small, free: !!o.small && !!o.faces && o.free !== false });
   const pieces: Pieces = { look, failed: '', dispose: () => { for (const w of workers) w.terminate(); store?.terminate(); fine.dispose(); } };
   let nextId = 1, looks = 0, ticking = false, layout: Layout = { step: -1, coarse: 1, homeX: 0, homeZ: 0 };
+  /** whether the workers were told to load the map's data of the finest step (WARM_FROM) */
+  let warmed = false;
   /** blocks of land around a piece of a step on the ground it is built on */
   const marginOf = (step: number) => (step >= (o.mean ? NARROW_FROM + 1 : NARROW_FROM) ? Math.min(MARGIN, o.margin ?? NARROW) : MARGIN);
   /**
@@ -301,6 +309,7 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
     // few of STAND_IN steps coarser under it: in the time one piece takes to build, that picture is covered by blocks
     // a few times as wide, where it would else show far coarser ones or none until all of its own are there
     const rest = o.ahead && v.to ? { ...v, ...v.to } : v, restStep = stepOf(rest.wide);
+    if (o.ahead && !warmed && Math.min(step, restStep) <= WARM_FROM) { warmed = true; for (const w of workers) w.postMessage({ warm: true, region: o.region, base: o.base, year: o.year } satisfies WarmJob); }
     if (o.ahead && restStep + STAND_IN <= COARSEST) for (const p of near(rest, restStep + STAND_IN, 0)) wanted.push({ ...p, rank: -1e9 + p.far });
     if (rest !== v) for (const p of near(rest, restStep, 0)) wanted.push({ ...p, rank: p.far });
     for (const p of near(v, step, o.ahead ? AHEAD * v.wide : 0)) wanted.push({ ...p, rank: (p.out > 0 ? 2e9 : 1e9) + p.far });

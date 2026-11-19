@@ -27,7 +27,7 @@ import type { CityEconomies, WorldState } from '../state';
 import { FIRM_SCHEMA } from '../state';
 import type { World } from '../world';
 import { createTable, spawn } from '../ecs';
-import { AGENT, FIGURE, FIGURES, type CitySetup } from '../economy/engine';
+import { AGENT, FIGURE, FIGURES, type CitySetup, type EconomyState, type KeptEconomy } from '../economy/engine';
 import { activePersons, cityTable, dailyCalibration, type EconomyCalibration } from '../economy/calibration';
 import { citiesOf } from '../content/cities';
 import { cityRoutes } from '../economy/routes';
@@ -36,6 +36,18 @@ import { hash01 } from '../rng';
 import { uses1356Tables } from '../tables';
 import { ROLE, workforce } from './work';
 import { writeHouseholds } from './household';
+import { presentPersons } from '../people/living';
+
+/** The state of the economies that the engine keeps for a world (economy/src/lib.rs `LAST`): their bytes
+ *  (`CityEconomies.model`) are written only when something reads them, a snapshot or a hash. */
+const keptOf = new WeakMap<CityEconomies, KeptEconomy>();
+/** The state of the economies as the engine takes it, without writing its bytes. */
+const stateOf = (e: CityEconomies): EconomyState => keptOf.get(e) ?? e.model;
+/** The economies now have the state `k`: `model` gives its bytes when read. */
+function keep(e: CityEconomies, k: KeptEconomy) {
+  keptOf.set(e, k);
+  Object.defineProperty(e, 'model', { get: () => k.bytes(), enumerable: true, configurable: true });
+}
 
 /** Numbers of a row of `CityEconomies.years` in a world with `cities` cities: the year, then the key figures of
  *  every city at its end. */
@@ -119,7 +131,7 @@ export function foundEconomy(s: WorldState, w: World): void {
 export function writeAgents(s: WorldState, w: World): void {
   const e = s.economy.cities;
   if (!e) return;
-  const a = w.economyEngine.agents(e.model), A = AGENT, P = s.person.cols, F = s.firm.cols, Fam = s.family.cols, N = e.places.length;
+  const a = w.economyEngine.agents(stateOf(e)), A = AGENT, P = s.person.cols, F = s.firm.cols, Fam = s.family.cols, N = e.places.length;
   // where the rows of each city start, and how many persons of each part it has
   const workers = new Int32Array(N), firms = new Int32Array(N), bank = new Int32Array(N), idle = new Int32Array(N), count = new Int32Array(4 * N);
   let at = 0;
@@ -137,9 +149,9 @@ export function writeAgents(s: WorldState, w: World): void {
   if (at !== a.length) throw new Error(`the engine gave ${a.length} numbers for the persons and firms of the cities, ${at} were read`);
   const cityOf = new Map<number, number>(Array.from(e.places, (p, k) => [p, k]));
   const seen = new Int32Array(4 * N);
-  for (let id = 0; id < s.person.size; id++) {
+  for (const id of presentPersons(s)) { // the living and the dead who still hold a part (src/sim/people/living.ts)
     const role = P.role[id];
-    if (!role || !s.person.alive[id]) continue;
+    if (!role) continue;
     const k = cityOf.get(Fam.place[P.family[id]]), n = P.agent[id];
     if (k === undefined || n < 0 || n >= count[4 * k + role - 1]) throw new Error(`person ${id} is number ${n} of part ${role} in a city that has no such person`);
     seen[4 * k + role - 1]++;
@@ -161,11 +173,11 @@ export function writeAgents(s: WorldState, w: World): void {
  *  itself goes on; the same state always stops in the same way.) */
 function compute(e: CityEconomies, s: WorldState, w: World, days: number): void {
   try {
-    const model = w.economyEngine.step(e.model, days), figures = w.economyEngine.figures(model);
+    const model = w.economyEngine.advance(stateOf(e), days), figures = w.economyEngine.figures(model);
     for (let k = 0; k < figures.length; k += FIGURES) {
       if (!Number.isFinite(figures[k + FIGURE.realGdp]) || !Number.isFinite(figures[k + FIGURE.nominalGdp])) throw new Error('the day ended without a GDP (not a number)');
     }
-    e.figures = figures; e.model = model; e.day += days;
+    e.figures = figures; keep(e, model); e.day += days;
   } catch (err) {
     // several days at once: day by day, to stop on the day that fails
     if (days > 1) { for (let k = 0; k < days && !e.halted; k++) compute(e, s, w, 1); return; }

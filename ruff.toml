@@ -1,0 +1,11 @@
+# Python checks for the data tools in tools/ (README.md, "Tests"): pyflakes (unused imports and variables, names that
+# are not defined) and syntax errors. CI runs `ruff check` in the lint job.
+target-version = "py311"
+extend-exclude = [
+  "economy/vendor",  # a copy of someone else's code
+  "tools/portrait",  # the portrait generator, while its open pull request (#84) changes it
+  "tools/models",    # removed by #90
+]
+
+[lint]
+select = ["F", "E9"]

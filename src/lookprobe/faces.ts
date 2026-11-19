@@ -1,7 +1,7 @@
 // A mesh's rectangles as faces. Most of the world is upright and level rectangles on the grid of blocks: the tops
 // and sides of the ground's columns, the blocks of woods and far towns. As triangles such a rectangle is six corners
 // of 20 bytes (worldprobe/small.ts); as a face it is 32 bytes, from which the stage makes its four corners on the
-// graphics card (stage.ts):
+// graphics card (stage/materials.ts):
 //
 //  - where it lies, six numbers of 16 bits in 64ths of a block: the axis it faces along (0 x, 1 y, 2 z; and FLIPPED
 //    more where its triangles turn the other way), its level on that axis, and its two spans u0, u1 and v0, v1 along
@@ -69,7 +69,7 @@ export const RISES = 8;
 export const FACE_CORNERS = [[0, 1, 2, 0, 2, 3], [0, 3, 2, 0, 2, 1]] as const;
 
 /**
- * Where a face lies at a share of its glide (0 … 1), as the stage moves it (stage.ts `gliding`), in 64ths of a block:
+ * Where a face lies at a share of its glide (0 … 1), as the stage moves it (stage/materials.ts `gliding`), in 64ths of a block:
  * a level face's level; an upright face's two ends of its span in height, in the span's order. The far end never
  * passes the near one: a side whose columns end up the other way round has no height there.
  */

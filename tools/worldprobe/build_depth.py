@@ -1,4 +1,4 @@
-"""The depth of the sea as a small picture for the world's water (src/lookprobe/stage.ts `Stage.sea`).
+"""The depth of the sea as a small picture for the world's water (src/lookprobe/stage/api.ts `Stage.sea`).
 
 Reads public/map/height.bin.gz (metres, the sea bed below nought; [w, h] uint32 LE, then int16 LE delta-coded along
 each row) and writes public/map/depth.png: one grey byte per two height pixels each way (four map pixels), the mean

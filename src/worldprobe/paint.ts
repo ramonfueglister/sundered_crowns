@@ -250,22 +250,35 @@ const LAKE = 0;
 /** a piece less than this many times as long as broad has its name run level (fully from 0.6 more) */
 const ROUND = 1.3;
 
+/** `only`: name these realms alone (the others as they were); `cache`: keeps what does not change with the realms
+ *  (the place under every sample) from one call to the next. */
+export interface NamesOptions { only?: ReadonlySet<number>; cache?: { key?: string; places?: Int32Array } }
+
 /**
  * The largest connected piece of every realm, measured on every `every`-th map pixel, and the curve its name runs along.
  * With a `frame` (map pixels, see extent.ts), only the land inside it counts: a realm reaching out of the world the game
  * shows has its name written over the part that is shown.
  */
-export function realmNames(r: Realms, every = 4, nameOf: (realm: number) => string = () => 'Xxxxxxxx', frame?: { west: number; east: number; north: number; south: number }): RealmName[] {
+export function realmNames(r: Realms, every = 4, nameOf: (realm: number) => string = () => 'Xxxxxxxx', frame?: { west: number; east: number; north: number; south: number }, opts: NamesOptions = {}): RealmName[] {
   // over the game map, or over the whole world frame where the rest of the globe has its places
   const W = r.rest ? Math.round(r.rest.w / r.rest.cells) : r.w, H = r.rest ? Math.round(r.rest.h / r.rest.cells) : r.h;
   const w = Math.floor(W / every), h = Math.floor(H / every), lands = r.owner.length, of = new Int16Array(w * h), piece = new Int32Array(w * h).fill(-1);
   const shown = (x: number, y: number) => !frame || (x >= frame.west && x < frame.east && y >= frame.north && y < frame.south);
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const place = shown(x * every, y * every) ? placeAt(r, x * every, y * every) : -1; of[y * w + x] = place >= 0 && place < lands ? r.owner[place] : -1; }
+  // the land place under every sample (-1: none) does not change with the realms: sampled once for a cache
+  const cache = opts.cache, key = `${every}|${w}|${h}|${frame ? `${frame.west},${frame.east},${frame.north},${frame.south}` : ''}`;
+  let places = cache?.key === key ? cache.places : undefined;
+  if (!places) {
+    places = new Int32Array(w * h);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const place = shown(x * every, y * every) ? placeAt(r, x * every, y * every) : -1; places[y * w + x] = place >= 0 && place < lands ? place : -1; }
+    if (cache) { cache.key = key; cache.places = places; }
+  }
+  for (let i = 0; i < w * h; i++) { const place = places[i]; of[i] = place >= 0 ? r.owner[place] : -1; }
+  const only = opts.only;
   const best = new Map<number, { id: number; n: number; sx: number; sy: number; sxx: number; syy: number; sxy: number }>(), stack: number[] = [];
   let pieces = 0;
   for (let start = 0; start < w * h; start++) {
     const o = of[start];
-    if (o < 0 || piece[start] >= 0) continue;
+    if (o < 0 || piece[start] >= 0 || (only && !only.has(o))) continue;
     const sum = { id: pieces++, n: 0, sx: 0, sy: 0, sxx: 0, syy: 0, sxy: 0 };
     stack.push(start); piece[start] = sum.id;
     while (stack.length) {

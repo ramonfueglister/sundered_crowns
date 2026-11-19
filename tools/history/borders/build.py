@@ -343,7 +343,6 @@ def date_events(events, rulers):
     for r in rulers['reigns']:
         if r['end'] is None: open_.add(r['realm'])
         elif r['realm'] not in ends or r['end'] > ends[r['realm']]: ends[r['realm']] = r['end']
-    left = collections.Counter()                      # places each realm holds, played forward
     for e in events:
         if e['kind'] == 'transfer':
             y = int(e['date']); lo = min(e['_since'], y - 1)   # a place that moved twice in one year: that year
