@@ -357,6 +357,9 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     if (walled) {
       if (own(cx, cz)) { things.append(townWall(half * 2 + 2, half * 2 + 2, gaps), mat.makeRotationY(0).setPosition(cx, lo + 1, cz)); count('wall'); }
       claim(cx - half - 2, cz - half - 2, cx + half + 2, cz + half + 2);
+      // the claim takes the square within the wall too; its paving stays street, where the persons of the town walk
+      // (src/figures/crowd.ts: a column is street where it is town and used is 2)
+      for (let i = 0; i < N * N; i++) if (town[i]) used[i] = 2;
     }
     towns.push({ site: s.id, cx: cx + (g.ox ?? 0), cz: cz + (g.oz ?? 0), half });
     if (own(cx, cz)) told?.town(s.id, cx, cz, half, g.h[idx(cx, cz)], walled ? gaps : null);
