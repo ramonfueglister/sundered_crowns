@@ -17,11 +17,12 @@
 //
 //   npx tsx tools/roads/build_roads.ts 1291
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { gunzipSync } from 'node:zlib';
+import { brotliDecompressSync, gunzipSync } from 'node:zlib';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import gazetteer from '../../data/content/gazetteer.json';
 import { MinHeap } from '../../src/sim/minheap';
+import { type Index, fromDifferences } from '../../src/worldprobe/region';
 import { ROAD_KINDS } from '../../src/worldprobe/roads';
 import { slopeTime } from '../../src/sim/roads';
 
@@ -30,7 +31,7 @@ const year = Number(process.argv[2] ?? 1291);
 
 // ---- the map, a pixel at a time -------------------------------------------------------------------------------------
 const geo = JSON.parse(readFileSync(resolve(ROOT, 'public/data/geo.json'), 'utf8')) as { W: number; H: number; L: number; lon0: number; lon1: number; latN: number; latS: number; loc: { x: number[]; y: number[] } };
-const index = JSON.parse(readFileSync(resolve(ROOT, 'public/map/regions/world/index.json'), 'utf8')) as { tile: number; cells: number; mapW: number; mapH: number; tiles: string[] };
+const index = JSON.parse(readFileSync(resolve(ROOT, 'public/map/regions/world/index.json'), 'utf8')) as Pick<Index, 'tile' | 'cells' | 'mapW' | 'mapH' | 'tiles' | 'coding'>;
 const W = geo.W, H = geo.H, C = index.cells, T = index.tile, PT = T / C;
 const merc = (deg: number) => Math.asinh(Math.tan((deg * Math.PI) / 180));
 const latOfRow = (y: number) => (Math.atan(Math.sinh(merc(geo.latN) - (y / H) * (merc(geo.latN) - merc(geo.latS)))) * 180) / Math.PI;
@@ -54,9 +55,9 @@ const height = new Float32Array(n), wet = new Uint8Array(n), drains = new Float3
 {
   const has = new Set(index.tiles), sum = new Float32Array(n), cnt = new Uint8Array(n), water = new Uint8Array(n);
   for (let ty = Math.floor(Y0 / PT); ty * PT < Y1; ty++) for (let tx = Math.floor(X0 / PT); tx * PT < X1; tx++) {
-    const file = resolve(ROOT, `public/map/regions/world/${tx}_${ty}.bin.gz`);
+    const file = resolve(ROOT, `public/map/regions/world/${tx}_${ty}.${index.coding === 'br' ? 'bin' : 'bin.gz'}`);
     if (!has.has(`${tx}_${ty}`) || !existsSync(file)) continue;
-    const raw = gunzipSync(readFileSync(file)), t = T * T;
+    const raw = index.coding === 'br' ? fromDifferences(brotliDecompressSync(readFileSync(file)), T) : gunzipSync(readFileSync(file)), t = T * T;
     const shaped = new Int16Array(raw.buffer.slice(raw.byteOffset, raw.byteOffset + t * 2)), drainage = raw.subarray(t * 2, t * 3), wat = raw.subarray(t * 3, t * 4);
     for (let cy = 0; cy < T; cy++) for (let cx = 0; cx < T; cx++) {
       const px = tx * PT + Math.floor(cx / C) - X0, py = ty * PT + Math.floor(cy / C) - Y0;

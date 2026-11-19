@@ -23,7 +23,10 @@ const cfg = configFromEnv(env);
 const store = SupabaseStore.fromEnv(env) ?? new NullStore();
 const auth = authConfigFromEnv(env);
 if (auth.devMode) console.warn('[world] DEV mode: no Supabase configured, players log in with a display name only. Do not expose this publicly.');
-const core = new WorldCore(cfg, store).init();
+const core = new WorldCore(cfg, store);
+// a lost or new volume: take the world back from its copy in Supabase Storage instead of founding a new one
+await core.restoreIfEmpty();
+core.init();
 core.start();
 console.log(`[world] ${cfg.id} day ${core.s.day}, ${cfg.secondsPerDay}s per day, store ${store.enabled ? 'supabase' : 'local only'}`);
 
@@ -35,6 +38,11 @@ const http = createServer((req, res) => {
   const h = { 'content-type': 'application/json', 'cache-control': 'no-store', ...cors(req) };
   if (req.url === '/health' || req.url === '/') { res.writeHead(200, h); res.end(JSON.stringify({ ok: true, world: core.worldInfo().id, day: core.s.day, players: core.seats().length, stepMs: core.stepMs })); return; }
   if (req.url === '/world') { res.writeHead(200, h); res.end(JSON.stringify(core.worldInfo())); return; }
+  // the history of the borders, for the replay (server/history.ts)
+  if (req.url === '/history') {
+    const { json, gz } = core.history.payload(core.s.startYear), zip = /\bgzip\b/.test(String(req.headers['accept-encoding'] ?? ''));
+    res.writeHead(200, { ...h, vary: 'Origin, Accept-Encoding', ...(zip ? { 'content-encoding': 'gzip' } : {}) }); res.end(zip ? gz : json); return;
+  }
   // the persons (src/net/people.ts): of a place for the figures, one in full for the portrait
   const people = /^\/people\/(\d+)$/.exec(req.url ?? ''), person = /^\/person\/(\d+)$/.exec(req.url ?? '');
   if (people && Number(people[1]) < core.s.place.pop.length) { res.writeHead(200, h); res.end(JSON.stringify(placePeople(core.s, Number(people[1])))); return; }
@@ -101,7 +109,7 @@ const beat = setInterval(() => {
   for (const ws of wss.clients) { if (!alive.get(ws)) { ws.terminate(); continue; } alive.set(ws, false); try { ws.ping(); } catch { /* ignore */ } }
 }, 30_000);
 
-http.listen(PORT, () => console.log(`[world] listening on :${PORT} (ws + /health, /world)`));
+http.listen(PORT, () => console.log(`[world] listening on :${PORT} (ws + /health, /world, /history)`));
 
 let stopping = false;
 function stop(sig: string) {

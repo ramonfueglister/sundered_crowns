@@ -53,6 +53,16 @@ export const IconTerrain = ({ size = 26 }: P) => <svg width={size} height={size}
   <path d="M12.3 9.5 14.5 5l2.4 4.4-1.2-.6-1.2 1.1-1-1z" fill="#fdfaef" />
 </svg>;
 
+/** Pause: two bars. */
+export const IconPause = ({ size = 18 }: P) => <svg width={size} height={size} viewBox="0 0 18 18" aria-hidden="true">
+  <rect class="ic" x="3.5" y="2.5" width="4" height="13" rx="1" /><rect class="ic" x="10.5" y="2.5" width="4" height="13" rx="1" />
+</svg>;
+
+/** Play: a triangle pointing on. */
+export const IconPlay = ({ size = 18 }: P) => <svg width={size} height={size} viewBox="0 0 18 18" aria-hidden="true">
+  <path class="ic" d="M4.5 2.5v13l11-6.5z" />
+</svg>;
+
 export const IconClose = ({ size = 18 }: P) => <svg width={size} height={size} viewBox="0 0 18 18" aria-hidden="true">
   <path d="M3 3l12 12M15 3L3 15" stroke="url(#icg)" stroke-width="2.4" stroke-linecap="round" />
 </svg>;

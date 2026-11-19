@@ -27,7 +27,7 @@ export function loadForest(base: string, year: number | undefined, mapW: number,
       if (bytes.length !== w * h) throw new Error(`${name}${year}.bin: expected ${w * h} bytes, got ${bytes.length}`);
       return bytes;
     };
-    p = (async () => ({ w, h, share: await layer('forest'), conifers: await layer('conifer') }))();
+    p = Promise.all([layer('forest'), layer('conifer')]).then(([share, conifers]) => ({ w, h, share, conifers }));
     loaded.set(year, p);
   }
   return p;

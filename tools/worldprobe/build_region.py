@@ -9,8 +9,8 @@ Inputs (all open, fetched into GEO_CACHE on first use):
   - AWS Terrain Tiles, terrarium, zoom 8 (SRTM / GMTED derived), about 430 m per pixel at 45° N
   - Natural Earth 10m: land, lakes, rivers, each with its European supplement (public domain)
   - the game's own 1356 layers: coast, lake and river overrides (data/history/1356), forest and cultivation (public/map/biome.png)
-Outputs in public/map/regions/<name>/: index.json (projection, list of tiles), <tx>_<ty>.bin.gz (the rasters of a tile,
-layer after layer, row by row) and <tx>_<ty>.json (the rivers that cross it, in cells of the whole map). Tiles are
+Outputs in public/map/regions/<name>/: index.json (projection, list of tiles), <tx>_<ty>.bin (the rasters of a tile,
+layer after layer, row by row, as tiles.py writes them) and <tx>_<ty>.json (the rivers that cross it, in cells of the whole map). Tiles are
 named by their place on the whole map. The river lists get the beds of their rivers (`bed`, `mid`) from
 build_overviews.py, which has the whole region at hand: run it after every cut.
 
@@ -24,10 +24,11 @@ Usage: python3 tools/worldprobe/build_region.py europe      (a part of the world
        python3 tools/worldprobe/build_region.py alps        (a region of its own, a minute)
 then   python3 tools/worldprobe/build_overviews.py world    (the coarser steps of the whole)
 """
-import gzip, http.client, io, json, math, os, shutil, sys, time, urllib.request
+import http.client, io, json, math, os, shutil, sys, time, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 from PIL import Image, ImageDraw
+import tiles as tiles_file
 from scipy import ndimage
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'geo'))
@@ -357,6 +358,8 @@ def main(name):
     mine = {f'{kx}_{ky}' for kx, ky, _, _ in wanted}
     for f in os.listdir(out):
         if f.split('.')[0] in mine: os.remove(os.path.join(out, f))
+    # (the tiles of the other parts must be in the coding this writes: tiles.py)
+    if any(f.endswith('.bin.gz') for f in os.listdir(out)): sys.exit(f'{out} holds tiles zipped with gzip: python3 tools/worldprobe/recode_regions.py {folder} first')
     layers = [np.clip(np.round(shaped), -500, 9000).astype('<i2'),
               # drainage area in km² as a logarithm: 16 steps per doubling
               np.clip(np.round(16 * np.log2(area / 1e6 + 1)), 0, 255).astype(np.uint8), water,
@@ -365,13 +368,12 @@ def main(name):
         # the tile's place in the window, in cells; where the world joins itself the tile is cut short and filled up with sea
         box = (slice(ky * TILE - gy0, (ky + 1) * TILE - gy0), slice(first - gx0, after - gx0))
         if (water[box] == SEA).all(): continue
-        key = f'{kx}_{ky}'
-        # no time of writing in the file: a tile that has not changed stays the same file
-        with open(os.path.join(out, f'{key}.bin.gz'), 'wb') as raw, gzip.GzipFile(fileobj=raw, mode='wb', compresslevel=9, mtime=0) as f:
-            for k, layer in enumerate(layers):
-                full = np.full((TILE, TILE), SEA if k == 2 else 0, layer.dtype)
-                full[:, :after - first] = layer[box]
-                f.write(full.tobytes())
+        key, raw = f'{kx}_{ky}', b''
+        for k, layer in enumerate(layers):
+            full = np.full((TILE, TILE), SEA if k == 2 else 0, layer.dtype)
+            full[:, :after - first] = layer[box]
+            raw += full.tobytes()
+        tiles_file.write(out, key, raw, TILE)
         # the rivers that cross the tile or pass close by, cut to the stretch that does, in the cells the tile itself counts in
         x0, y0, x1, y1, to_x, crossing = first - gx0 - 8, ky * TILE - gy0 - 8, after - gx0 + 8, (ky + 1) * TILE - gy0 + 8, gx0 - first + kx * TILE, []
         for r in rivers:
@@ -383,9 +385,9 @@ def main(name):
                 run = []
         with open(os.path.join(out, f'{key}.json'), 'w', encoding='utf-8') as f:
             json.dump(crossing, f, ensure_ascii=False, separators=(',', ':'))
-    tiles = sorted((f.split('.')[0] for f in os.listdir(out) if f.endswith('.bin.gz')), key=lambda k: [int(v) for v in k.split('_')][::-1])
+    tiles = sorted((f.split('.')[0] for f in os.listdir(out) if f.endswith('.bin')), key=lambda k: [int(v) for v in k.split('_')][::-1])
     meta = {'name': folder, 'tile': TILE, 'cells': CELLS, 'mapW': W, 'mapH': H, 'lon0': LON0, 'lon1': LON1, 'latN': LAT_N, 'latS': LAT_S,
-            'layers': ['shaped:i16', 'drainage:u8', 'water:u8', 'forest:u8', 'crops:u8'], 'tiles': tiles}
+            'layers': ['shaped:i16', 'drainage:u8', 'water:u8', 'forest:u8', 'crops:u8'], 'coding': 'br', 'tiles': tiles}
     # the world goes round the globe: its width in map pixels, after which it begins again, and its height
     if part: meta.update(worldW=WORLD_W, worldH=WORLD_H)
     with open(os.path.join(out, 'index.json'), 'w', encoding='utf-8') as f:

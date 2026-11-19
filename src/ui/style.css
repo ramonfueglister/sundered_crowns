@@ -45,8 +45,6 @@ canvas.map { position: absolute; inset: 0; width: 100%; height: 100%; display: b
 .val b { font-size: 21px; font-weight: 500; }
 .val small { font-size: 14px; color: var(--tx2); }
 .hint { color: var(--tx2); font-size: 17px; }
-.hud-date { align-self: center; display: flex; align-items: center; gap: 11px; height: 44px; padding: 0 18px; margin: 0 6px; border-radius: 7px; background: linear-gradient(#1f3d57, #1a364e); box-shadow: inset 0 0 0 1px rgba(255,255,255,.07); font-size: 19px; white-space: nowrap; }
-.hud-date small { color: var(--minus); font-size: 15px; }
 .tb { width: 46px; border: 0; border-left: 1px solid rgba(255,255,255,.08); background: none; display: grid; place-items: center; font-size: 17px; font-weight: 600; }
 .tb:hover { background: rgba(255,255,255,.06); }
 .hud-menu { position: absolute; right: 6px; top: 58px; min-width: 230px; padding: 8px; display: grid; gap: 6px; background: linear-gradient(var(--panel), var(--panel2)); border: 2px solid var(--edge); border-radius: 12px; box-shadow: var(--shadow); }
@@ -91,12 +89,38 @@ canvas.map { position: absolute; inset: 0; width: 100%; height: 100%; display: b
 .section h3 { margin: 0 0 6px; color: var(--gold); font-size: 1.1em; font-weight: 600; }
 .section p { margin: 4px 0; }
 
+/* the world's clock top left (App.tsx TimeControl): the date, pause, five speed pips between − and + */
+.timectl { display: flex; align-items: center; gap: 6px; height: 44px; padding: 0 10px 0 14px; border-radius: 7px; background: linear-gradient(#1f3d57, #1a364e); box-shadow: inset 0 0 0 1px rgba(255,255,255,.07); }
+.timectl-date { display: flex; align-items: center; gap: 9px; margin-right: 4px; font-size: 19px; white-space: nowrap; }
+.timectl-date small { color: var(--minus); font-size: 15px; }
+.timectl .tool.timectl-pause { width: 34px; height: 34px; }
+.timectl.paused .timectl-pause { box-shadow: inset 0 0 0 2px var(--minus); }
+.timectl-step { width: 22px; height: 26px; padding: 0; border: 0; border-radius: 5px; background: none; font-size: 20px; font-weight: 700; line-height: 1; color: var(--gold); }
+.timectl-step:hover:not(:disabled) { background: rgba(255,255,255,.08); }
+.timectl-pips { display: flex; align-items: flex-end; gap: 3px; height: 26px; }
+.timectl-pips .pip { width: 9px; padding: 0; border: 0; border-radius: 2px; background: rgba(166,194,208,.25); box-shadow: inset 0 0 0 1px rgba(0,0,0,.35); }
+.timectl-pips .pip:nth-child(1) { height: 10px; } .timectl-pips .pip:nth-child(2) { height: 14px; } .timectl-pips .pip:nth-child(3) { height: 18px; }
+.timectl-pips .pip:nth-child(4) { height: 22px; } .timectl-pips .pip:nth-child(5) { height: 26px; }
+.timectl-pips .pip.on { background: linear-gradient(var(--gold), var(--gold2)); }
+.timectl.paused .timectl-pips .pip.on { background: linear-gradient(#b9a77c, #8d7d57); }
+.timectl button:disabled { cursor: default; }
+.timectl-step:disabled { opacity: .35; }
+
+/* the replay's bar at the bottom (App.tsx ReplayBar) */
+.replay-bar { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 14; width: min(760px, calc(100% - 32px)); display: flex; align-items: center; gap: 12px; padding: 8px 12px; }
+.replay-date { min-width: 150px; font-size: 19px; color: var(--gold); white-space: nowrap; }
+.replay-line { flex: 1; min-width: 80px; accent-color: var(--gold); }
+.replay-speed { display: flex; gap: 3px; }
+.replay-speed .btn.small { padding: 3px 7px; }
+
 /* narrow screens: the banner shrinks, the values scroll */
 @media (max-width: 760px) {
   .realm-banner { transform: scale(.7); transform-origin: 0 0; }
   .hud-values { gap: 20px; overflow-x: auto; }
   .hud-values.ruled { padding-left: 112px; }
   .realm-name, .val small { display: none; }
-  .hud-date { padding: 0 10px; font-size: 16px; }
-  .hud-date svg { display: none; }
+  .timectl-date { font-size: 16px; } .timectl-date svg { display: none; }
+  .replay-bar { flex-wrap: wrap; gap: 8px; }
+  .replay-date { min-width: 0; font-size: 16px; }
+  .replay-line { order: 5; flex-basis: 100%; }
 }
