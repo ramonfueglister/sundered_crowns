@@ -186,5 +186,5 @@ describe('the rulers on the map (GET /rulers)', () => {
       expect(r.place).toBe(s.family.cols.place[s.person.cols.family[row]]);
       expect(placePeople(s, r.place).rulers).toContainEqual({ uid: r.uid, color: r.crowns[0].color });
     }
-  });
+  }, 60_000); // a fresh world of 1291 founds its economies (as the tests above)
 });
