@@ -10,8 +10,10 @@
 // marry and are born while the world runs (src/sim/systems/deaths.ts, src/sim/systems/families.ts). Age is never
 // stored; it follows from the birthday and the day of the world.
 //
-// Ids are never reused: no row of either table is ever freed, so a mother, a father or a family that a person points
-// to is always the one it was (the portraits seed their randomness from the person id).
+// No row of either table is freed while a year runs. A person has a uid that is never given twice: the parents are
+// uids, and the draws of a person (and the portraits' seed) are by the uid. On the first of January the dead whom
+// nothing needs go to the archive and the rows of the persons close up (people feature 7, src/sim/people/archive.ts);
+// the families keep their ids.
 import type { WorldState } from '../state';
 import { PERSON_SCHEMA, FAMILY_SCHEMA, ALIVE } from '../state';
 import { createTable, spawn } from '../ecs';
@@ -24,6 +26,7 @@ import { ALL_CULTURES } from '../content/peoples';
 import { type City, citiesOf, hasCities } from '../content/cities';
 import { SCALE, toHeads } from '../scale';
 import { presentPersons } from '../people/living';
+import { rowOf, spawnPerson } from '../people/archive';
 
 export type { City } from '../content/cities';
 /** The cities of a world of 1356 (src/sim/content/cities.ts has those of every start year). */
@@ -79,6 +82,7 @@ function stationary() {
 export function foundPeople(s: WorldState): void {
   const person = createTable(PERSON_SCHEMA, 32768), family = createTable(FAMILY_SCHEMA, 8192);
   s.person = person; s.family = family;
+  s.nextUid = 0; s.archive = []; // the persons founded anew count from 0: their history goes with the old ones
   if (!hasCities(s.startYear)) return; // the cities of the start year (src/sim/content/cities.ts)
   const st = stationary(), wifeShare = housewives(), seed = s.seed >>> 0, P = person.cols, F = family.cols, day = s.day;
   const z: Record<Trait, number[]> = { iq: [], o: [], c: [], e: [], a: [], n: [] };
@@ -91,7 +95,7 @@ export function foundPeople(s: WorldState): void {
     const ids: number[] = [], age = new Map<number, number>();
     // 1. sex and age from the stationary population
     for (let k = 0; k < n; k++) {
-      const id = spawn(person); ids.push(id);
+      const id = spawnPerson(s); ids.push(id); // a founder's uid is the row (the founding counts from 0)
       const u = u01(seed, id, K.age);
       let y = 0; while (y < st.cdf.length - 1 && st.cdf[y] <= u) y++;
       const a = y + u01(seed, id, K.ageInYear);
@@ -124,7 +128,7 @@ export function foundPeople(s: WorldState): void {
       if (!mothers.length) continue;
       const w = mothers[Math.floor(u01(seed, id, K.mother) * mothers.length)], f = P.family[w];
       P.family[id] = f;
-      if (F.man[f] >= 0) { P.mother[id] = w; P.father[id] = F.man[f]; }
+      if (F.man[f] >= 0) { P.mother[id] = P.uid[w]; P.father[id] = P.uid[F.man[f]]; P.children[w]++; }
     }
     // 4. whoever is left is a family of their own, without a seat
     for (const id of ids) if (P.family[id] < 0) P.family[id] = newFamily(city.place, -1, -1, 0);
@@ -133,7 +137,7 @@ export function foundPeople(s: WorldState): void {
     // All parents are founders (the heads of the households have no known parents), so the founders are drawn first.
     for (const id of ids) if (P.mother[id] < 0) TRAITS.forEach((t, j) => { z[t][id] = normal(seed, id, K.trait + 2 * j); });
     for (const id of ids) {
-      const mo = P.mother[id], fa = P.father[id];
+      const mo = rowOf(s, P.mother[id]), fa = rowOf(s, P.father[id]);
       if (mo < 0) continue;
       TRAITS.forEach((t, j) => { z[t][id] = inherit(t, z[t][mo], z[t][fa], normal(seed, id, K.trait + 2 * j)); });
     }
@@ -155,18 +159,19 @@ function writeTraits(P: WorldState['person']['cols'], id: number, z: (t: Trait) 
  *  the founding (from the parents' points, which are whole numbers), the genes from both, the culture and the faith
  *  of the mother. The day of death is for the caller (src/sim/systems/families.ts). Returns the child. */
 export function bearChild(s: WorldState, mother: number, father: number, day: number): number {
-  const id = spawn(s.person), P = s.person.cols, seed = s.seed >>> 0;
-  P.sex[id] = u01(seed, id, K.sex) < SEX_RATIO_AT_BIRTH / (1 + SEX_RATIO_AT_BIRTH) ? 1 : 0;
-  P.born[id] = day; P.mother[id] = mother; P.father[id] = father; P.family[id] = P.family[mother];
+  const id = spawnPerson(s), P = s.person.cols, seed = s.seed >>> 0, uid = P.uid[id];
+  P.sex[id] = u01(seed, uid, K.sex) < SEX_RATIO_AT_BIRTH / (1 + SEX_RATIO_AT_BIRTH) ? 1 : 0;
+  P.born[id] = day; P.mother[id] = P.uid[mother]; P.father[id] = P.uid[father]; P.family[id] = P.family[mother];
+  if (P.children[mother] < 255) P.children[mother]++;
   P.firm[id] = -1; P.died[id] = ALIVE; P.dies[id] = ALIVE; P.bears[id] = ALIVE;
   P.home[id] = s.family.cols.place[P.family[mother]]; P.moves[id] = ALIVE; // the first move is for the caller too (src/sim/systems/moves.ts)
   P.culture[id] = P.culture[mother]; P.faith[id] = P.faith[mother];
   const zOf = (t: Trait, x: number) => (t === 'iq' ? (P.iq[x] - 100) / 15 : (P[t][x] - 50) / 10);
   const zs = {} as Record<Trait, number>;
-  TRAITS.forEach((t, j) => { zs[t] = inherit(t, zOf(t, mother), zOf(t, father), normal(seed, id, K.trait + 2 * j)); });
+  TRAITS.forEach((t, j) => { zs[t] = inherit(t, zOf(t, mother), zOf(t, father), normal(seed, uid, K.trait + 2 * j)); });
   writeTraits(P, id, (t) => zs[t]);
   const G = P.genes, g = (x: number) => G.subarray(x * 2 * NG, (x + 1) * 2 * NG);
-  G.set(child(g(father), g(mother), geneBits(seed, id)), id * 2 * NG);
+  G.set(child(g(father), g(mother), geneBits(seed, uid)), id * 2 * NG);
   return id;
 }
 
@@ -196,12 +201,17 @@ export function giveGenes(s: WorldState): void {
   for (let id = 0; id < s.person.size; id++) {
     if (ruler.has(id)) continue;
     if (P.mother[id] >= 0) { born.push(id); continue; }
-    G.set(founder(poolOf(s, id), geneBits(seed, id)), id * 2 * NG);
+    G.set(founder(poolOf(s, id), geneBits(seed, P.uid[id])), id * 2 * NG);
   }
   // a parent is born before the child, so in the order of the birthdays every parent has genes before a child takes them
+  // (a parent in the archive keeps the genes the parent had: the child takes them from there, as at its birth, only
+  // where the parent is still in the table)
   born.sort((x, y) => P.born[x] - P.born[y] || x - y);
   const g = (x: number) => G.subarray(x * 2 * NG, (x + 1) * 2 * NG);
-  for (const id of born) G.set(child(g(P.father[id]), g(P.mother[id]), geneBits(seed, id)), id * 2 * NG);
+  for (const id of born) {
+    const fa = rowOf(s, P.father[id]), mo = rowOf(s, P.mother[id]);
+    if (fa >= 0 && mo >= 0) G.set(child(g(fa), g(mo), geneBits(seed, P.uid[id])), id * 2 * NG);
+  }
 }
 
 /** The gene bytes of a person (a view, not a copy). */

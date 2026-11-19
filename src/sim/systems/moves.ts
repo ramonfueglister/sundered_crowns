@@ -39,11 +39,12 @@ import { changeFamily, estatesOf, eventKey, livingIn, seekersIn, takeEstate } fr
 import { namedPersons } from './rulers';
 import { ROLE } from './work';
 import { moveFactor } from '../people/traits';
+import { rowOf } from '../people/archive';
 import { BANDS, MOVING_AGE, TOP_RATE, bandOf, movesAYear, yearsToNext } from '../people/moving';
 
 const DAYS_PER_YEAR = 365.25;
-/** The draws of a move come from a stream of their own: by the person and the day the draw is made on. */
-const draw = (s: WorldState, id: number, day: number, k: number): number => hash01((s.seed ^ 0x6d6f7665) >>> 0, id, 8 * day + k);
+/** The draws of a move come from a stream of their own: by the person (the uid) and the day the draw is made on. */
+const draw = (s: WorldState, id: number, day: number, k: number): number => hash01((s.seed ^ 0x6d6f7665) >>> 0, s.person.cols.uid[id], 8 * day + k);
 const K = { accept: 0, band: 1, land: 2, host: 3, next: 4, offer: 5 } as const;
 
 /** What the moves of a run of days did, for the checks. */
@@ -71,17 +72,18 @@ function nextMove(s: WorldState, id: number, from: number): number {
   return ageOn(born, day) >= MOVING_AGE[1] ? ALIVE : day;
 }
 
-/** The moves that are due, the earliest first: a heap over `person.moves`, built when a state is first seen. */
-const queues = new WeakMap<WorldState, MinHeap>();
+/** The moves that are due, the earliest first: a heap over `person.moves`, built when a table of the persons is first
+ *  seen (a loaded state, and the rows closed up on the first of January, src/sim/people/archive.ts). */
+const queues = new WeakMap<object, MinHeap>();
 function queueOf(s: WorldState): MinHeap {
-  let q = queues.get(s);
+  let q = queues.get(s.person);
   if (!q) {
     q = new MinHeap();
     const P = s.person.cols;
     for (let id = 0; id < s.person.size; id++) {
       if (s.person.alive[id] && P.died[id] === ALIVE && P.moves[id] !== ALIVE) q.push(eventKey(P.moves[id], id), id);
     }
-    queues.set(s, q);
+    queues.set(s.person, q);
   }
   return q;
 }
@@ -96,7 +98,7 @@ export function foundMoves(s: WorldState): void {
     P.home[id] = F.place[P.family[id]];
     if (P.died[id] === ALIVE && P.dies[id] !== ALIVE) P.moves[id] = nextMove(s, id, s.day);
   }
-  queues.delete(s);
+  queues.delete(s.person);
   reaches.delete(s);
 }
 
@@ -109,12 +111,12 @@ export function redrawMoves(s: WorldState): void {
     if (!s.person.alive[id] || named.has(id) || P.family[id] < 0) continue;
     if (P.died[id] === ALIVE && P.dies[id] !== ALIVE) P.moves[id] = nextMove(s, id, s.day);
   }
-  queues.delete(s);
+  queues.delete(s.person);
 }
 
 /** Draws the first move of a person who has come into the world on `day` (src/sim/systems/families.ts). */
 export function scheduleMove(s: WorldState, id: number, day: number): void {
-  const P = s.person.cols, had = queues.has(s);
+  const P = s.person.cols, had = queues.has(s.person);
   P.moves[id] = nextMove(s, id, day);
   if (had && P.moves[id] !== ALIVE) queueOf(s).push(eventKey(P.moves[id], id), id);
 }
@@ -201,7 +203,8 @@ function hostOf(s: WorldState, id: number, to: number, u: number): { family: num
   let kin = -1;
   const households: number[] = [];
   for (const o of livingIn(s, to)) {
-    if (o === mo || o === fa || (mo >= 0 && P.mother[o] === mo) || (fa >= 0 && P.father[o] === fa)) { if (kin < 0 || o < kin) kin = o; }
+    const u = P.uid[o]; // the parents are uids
+    if (u === mo || u === fa || (mo >= 0 && P.mother[o] === mo) || (fa >= 0 && P.father[o] === fa)) { if (kin < 0 || o < kin) kin = o; }
     const f = P.family[o];
     if (F.seat[f] && F.woman[f] === o) households.push(f);
   }
@@ -222,7 +225,8 @@ export function rateOf(s: WorldState, id: number, day: number): number {
     landed = false;
     for (const o of livingIn(s, place)) if (P.family[o] === f && P.role[o] === ROLE.owner) { landed = true; break; }
   }
-  const dead = (x: number) => x >= 0 && P.died[x] !== ALIVE;
+  /** a parent (a uid) who has died: in the archive, or dead in the table */
+  const dead = (x: number) => { if (x < 0) return false; const r = rowOf(s, x); return r < 0 || P.died[r] !== ALIVE; };
   // times the factor of the person's openness and agreeableness (people feature 5, src/sim/people/traits.ts)
   return movesAYear({ age, man: P.sex[id] === 1, home, landed, fatherDead: dead(P.father[id]), motherDead: dead(P.mother[id]) }) * moveFactor(P, id);
 }

@@ -21,6 +21,7 @@ import { type Conn, Session, type UserAuth } from './session';
 import { NullStore, type WorldStore } from './store';
 import { RulerCopy } from './rulers_copy';
 import { BorderHistory } from './history';
+import { type ArchivedPersons, indexIn, takeArchived, yearsWith } from '../src/sim/people/archive';
 
 /** at the highest speed, the days of one beat of the clock take this much real time at most before what changed goes out */
 const BATCH_MS = 100;
@@ -43,6 +44,8 @@ interface Meta {
   seats: Record<string, Seat>;
   /** the day of the last snapshot sent to the store (Supabase Storage); absent while none was */
   uploaded?: number;
+  /** the years of the archive of the dead that arrived in the store (their days) */
+  archiveSent?: number[];
 }
 interface Queued {
   e: LogEntry;
@@ -86,7 +89,9 @@ export class WorldCore {
   private uploads: Promise<void> = Promise.resolve();
   /** what is queued or on its way; a kind already on its way is not queued again (the next one sends what this one
    *  would have, so nothing is lost when the clock runs faster than the uploads) */
-  private pending = { snapshot: false, log: false, rulers: false };
+  private pending = { snapshot: false, log: false, rulers: false, archive: false };
+  /** the years of the archive of the dead read from the disk lately (a browser that opens the ancestors asks often) */
+  private deadYears = new Map<number, ArchivedPersons>();
   private lastSnapshotUpload = -Infinity;
   /** the readable copy of the rulers in Supabase (null without a store) */
   private rulerCopy: RulerCopy | null = null;
@@ -124,6 +129,12 @@ export class WorldCore {
     const s = decodeState(unpackSnapshot(b.bin)),
       day = s.day,
       hash = hashState(s);
+    // the years of the archive of the dead the snapshot names (the log after it makes the later ones again)
+    for (const y of s.archive ?? []) {
+      const bin = await this.store.downloadArchived(this.cfg.id, y.day);
+      if (bin) files.putArchivedBytes(y.day, bin);
+      else this.log(`the year of the archive of day ${y.day} is not in the store`);
+    }
     // the log lines after the snapshot, if they follow it without a gap
     const lines = parseLog(b.log).filter((l) => l.d >= day);
     const usable = lines.length > 0 && lines[0].d === day;
@@ -162,6 +173,7 @@ export class WorldCore {
       this.s = upgradeState(this.files.readSnapshot(latest.day), this.w, () => loadSetup(this.cfg.startYear));
       const lines = this.files.readLines(latest.day);
       replayLines(this.s, this.w, lines);
+      this.keepArchived();
       this.files.openSegment(latest.day);
       this.log(
         `resumed at day ${this.s.day} (snapshot ${latest.day} + ${lines.length} log lines), hash ${hashState(this.s)}`,
@@ -186,8 +198,68 @@ export class WorldCore {
     if (this.store.enabled) {
       this.rulerCopy = new RulerCopy(this.cfg.id);
       this.copyRulers();
+      this.uploadArchive();
     }
     return this;
+  }
+  /** Puts the years that went to the archive of the dead on this day (or in a replay) on the disk, before anything
+   *  else is written: a snapshot after the first of January no longer holds them. */
+  private keepArchived() {
+    let any = false;
+    for (const a of takeArchived(this.s)) {
+      this.files.putArchived(a);
+      this.deadYears.set(a.day, a);
+      any = true;
+    }
+    if (any) {
+      this.trimDeadYears();
+      this.uploadArchive();
+    }
+  }
+  private trimDeadYears() {
+    while (this.deadYears.size > 8) this.deadYears.delete(this.deadYears.keys().next().value!);
+  }
+  /** Sends the years of the archive of the dead that the store does not have yet (each once; one that did not arrive
+   *  goes with the next). */
+  private uploadArchive() {
+    if (!this.store.enabled || this.pending.archive) return;
+    const sent = new Set(this.meta.archiveSent ?? []),
+      due = this.s.archive.map((y) => y.day).filter((d) => !sent.has(d) && this.files.hasArchived(d));
+    if (!due.length) return;
+    this.pending.archive = true;
+    this.queueUpload(async () => {
+      try {
+        for (const d of due) {
+          const bin = this.files.archivedBytes(d);
+          if (!bin || !(await this.store.uploadArchived(this.cfg.id, d, bin))) break;
+          this.meta.archiveSent = [...(this.meta.archiveSent ?? []), d];
+          this.saveMeta();
+        }
+      } finally {
+        this.pending.archive = false;
+      }
+    });
+  }
+  /** A dead person of the archive (GET /person/<uid>): the year that holds the person, and the place there; null where
+   *  the archive has no such person. */
+  archived(uid: number): { year: ArchivedPersons; k: number } | null {
+    for (const y of yearsWith(this.s, uid)) {
+      let a = this.deadYears.get(y.day) ?? null;
+      if (!a) {
+        try {
+          a = this.files.readArchived(y.day);
+        } catch (e) {
+          this.log(`the year of the archive of day ${y.day} cannot be read: ${(e as Error).message}`);
+        }
+      }
+      if (!a) continue;
+      this.deadYears.delete(y.day);
+      this.deadYears.set(y.day, a);
+      this.trimDeadYears();
+      const k = indexIn(a, uid);
+      if (k >= 0) return { year: a, k };
+    }
+    return null;
   }
   private saveMeta() {
     writeFileDurable(join(this.root, 'meta.json'), JSON.stringify(this.meta));
@@ -349,6 +421,7 @@ export class WorldCore {
     this.files.append({ d: this.s.day, adv: 1 });
     this.files.sync();
     advanceDay(this.s, this.w);
+    this.keepArchived();
     const t2 = performance.now();
     this.history.record(this.s);
     if (this.s.day % this.cfg.snapshotEveryDays === 0) this.snapshot();
@@ -374,6 +447,7 @@ export class WorldCore {
         this.uploadSnapshot(day, bin);
         this.store.upsertWorld(this.worldInfo()).catch(() => {});
       } else this.uploadLog();
+      this.uploadArchive();
     }
     this.saveMeta();
   }

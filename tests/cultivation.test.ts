@@ -95,7 +95,8 @@ describe('cultivated land in the running world', () => {
     expect(s.place.arable[i]).toBe(arable);
     s.day = 366 - 1; // 31 December 1356, a leap year
     advanceDay(s, w);
-    let alive = 0; for (let id = 0; id < s.person.size; id++) if (s.family.cols.place[P.family[id]] === i && P.died[id] === ALIVE) alive++;
+    const Q = s.person.cols; // on the first of January the dead go to the archive and the rows close up (a new table)
+    let alive = 0; for (let id = 0; id < s.person.size; id++) if (s.family.cols.place[Q.family[id]] === i && Q.died[id] === ALIVE) alive++;
     expect(s.place.pop[i]).toBe(alive);
     expect(s.place.arable[i]).toBe(arableHa(w, i, ofTime(alive)));
     expect(s.place.arable[i]).toBeLessThan(arable * 0.6);
