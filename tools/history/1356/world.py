@@ -14,6 +14,7 @@ Run: python3 tools/history/1356/world.py
 
 import json
 import os
+from pathlib import Path
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
@@ -1842,5 +1843,5 @@ if __name__ == '__main__':
         'demography': DEMOGRAPHY,
     }
     path = os.path.join(ROOT, 'data', 'history', '1356', 'world_beyond.json')
-    json.dump(out, open(path, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    Path(path).write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding='utf-8')
     print(len(states), 'realms written to', path)

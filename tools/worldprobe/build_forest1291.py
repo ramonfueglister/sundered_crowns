@@ -49,6 +49,7 @@ import csv
 import gzip
 import json
 import os
+import pathlib
 import sys
 
 import numpy as np
@@ -77,7 +78,7 @@ STEP = 250
 
 
 def frame():
-    e = json.load(open(os.path.join(ROOT, 'data', 'content', 'world_extent.json')))
+    e = json.loads(pathlib.Path(os.path.join(ROOT, 'data', 'content', 'world_extent.json')).read_text())
     return e['west'], e['east'], e['south'], e['north']
 
 
@@ -92,9 +93,9 @@ def grid():
 
 def land_mask(cols, rows):
     ids = np.frombuffer(
-        gzip.decompress(open(os.path.join(ROOT, 'public', 'map', 'ids.bin.gz'), 'rb').read()), '<u2'
+        gzip.decompress(pathlib.Path(os.path.join(ROOT, 'public', 'map', 'ids.bin.gz')).read_bytes()), '<u2'
     ).reshape(H, W)
-    L = json.load(open(os.path.join(ROOT, 'public', 'data', 'geo.json')))['L']
+    L = json.loads(pathlib.Path(os.path.join(ROOT, 'public', 'data', 'geo.json')).read_text())['L']
     py = np.clip(rows * 2 + 1, 0, H - 1)
     px = np.clip(cols * 2 + 1, 0, W - 1)
     v = ids[np.ix_(py, px)]
@@ -103,7 +104,7 @@ def land_mask(cols, rows):
 
 def climate_kinds(cols, rows):
     c = np.frombuffer(
-        gzip.decompress(open(os.path.join(ROOT, 'public', 'map', 'climate.bin.gz'), 'rb').read()), np.uint8
+        gzip.decompress(pathlib.Path(os.path.join(ROOT, 'public', 'map', 'climate.bin.gz')).read_bytes()), np.uint8
     ).reshape(WORLD_H // 2, WORLD_W // 2)
     return c[np.ix_(rows, cols)] & 63
 
@@ -111,9 +112,10 @@ def climate_kinds(cols, rows):
 def pollen():
     """1-degree cells: centre lon, lat, share of trees, share of the trees that are evergreen."""
     out = []
-    for r in csv.DictReader(open(POLLEN)):
-        c, b = float(r['C_KK10LonLatElev']), float(r['B_KK10LonLatElev'])
-        out.append((float(r['Lon']), float(r['Lat']), c + b, c / max(c + b, 1e-9)))
+    with open(POLLEN) as f:
+        for r in csv.DictReader(f):
+            c, b = float(r['C_KK10LonLatElev']), float(r['B_KK10LonLatElev'])
+            out.append((float(r['Lon']), float(r['Lat']), c + b, c / max(c + b, 1e-9)))
     return np.array(out)
 
 
@@ -138,7 +140,7 @@ def kk10(lon, lat):
 
 def polygon_mask(lon, lat, units):
     """Cells inside the Natural Earth map units named (ne_10m_admin_0_map_units, cached in ne/)."""
-    d = json.load(open(os.path.join(CACHE, 'ne', 'ne_10m_admin_0_map_units.geojson')))
+    d = json.loads(pathlib.Path(os.path.join(CACHE, 'ne', 'ne_10m_admin_0_map_units.geojson')).read_text())
     LON, LAT = np.meshgrid(lon, lat)
     pts = np.c_[LON.ravel(), LAT.ravel()]
     m = np.zeros(pts.shape[0], bool)
@@ -157,8 +159,12 @@ def polygon_mask(lon, lat, units):
     return m.reshape(LAT.shape)
 
 
-sig = lambda z: 1 / (1 + np.exp(-z))
-logit = lambda p: np.log(np.clip(p, 1e-4, 1 - 1e-4) / (1 - np.clip(p, 1e-4, 1 - 1e-4)))
+def sig(z):
+    return 1 / (1 + np.exp(-z))
+
+
+def logit(p):
+    return np.log(np.clip(p, 1e-4, 1 - 1e-4) / (1 - np.clip(p, 1e-4, 1 - 1e-4)))
 
 
 def solve_offset(pot, base, wgt, groups, target, n, lo=-12.0, hi=12.0):
@@ -202,7 +208,7 @@ def main():
     gx = np.floor(lon - (x0 - 0.5)).astype(int)
     gy = np.floor(lat - (y0 - 0.5)).astype(int)
     GX, GY = np.meshgrid(gx, gy)
-    inside = (GX >= 0) & (GX < nx) & (GY >= 0) & (GY < ny)
+    inside = (GX >= 0) & (nx > GX) & (GY >= 0) & (ny > GY)
     cell = np.where(inside, GY.clip(0, ny - 1) * nx + GX.clip(0, nx - 1), -1)
     known = inside & ~np.isnan(T.ravel()[cell.clip(0)]) & land
     # history overrides: England's overall level from the records

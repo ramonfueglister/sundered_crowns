@@ -136,8 +136,12 @@ def main(ref_path, probe_path):
         fails += not good
         print(f'{"PASS" if good else "FAIL"}  {name:34s} ref {fmt.format(a):>12s}  probe {fmt.format(b):>12s}')
 
-    within = lambda tol: lambda a, b: abs(a - b) <= tol
-    rel = lambda tol: lambda a, b: abs(a - b) <= tol * max(abs(a), 1e-6)
+    def within(tol):
+        return lambda a, b: abs(a - b) <= tol
+
+    def rel(tol):
+        return lambda a, b: abs(a - b) <= tol * max(abs(a), 1e-6)
+
     for name in ('spire', 'cornice', 'dado', 'belfry'):
         check(
             f'{name} height (blocks)',
@@ -154,7 +158,9 @@ def main(ref_path, probe_path):
         px = im[c == kind]
         return px.mean(0) if len(px) > 20 else np.array([np.nan] * 3)
 
-    rgbfmt = lambda v: '-' if np.isnan(v).any() else '#' + ''.join(f'{int(np.clip(x, 0, 1) * 255):02x}' for x in v)
+    def rgbfmt(v):
+        return '-' if np.isnan(v).any() else '#' + ''.join(f'{int(np.clip(x, 0, 1) * 255):02x}' for x in v)
+
     for label, name, kind in (
         ('spire green', 'spire', 'G'),
         ('shaft brick', 'shaft', 'B'),

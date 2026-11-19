@@ -21,6 +21,7 @@ import json
 import os
 import shutil
 import sys
+from pathlib import Path
 
 import numpy as np
 import tiles as tiles_file
@@ -88,14 +89,21 @@ def halve(*layers):
 
 
 def halve_band(shaped, drainage, water, forest, crops):
-    four = lambda a: (
-        a.reshape(a.shape[0] // 2, 2, a.shape[1] // 2, 2).swapaxes(1, 2).reshape(a.shape[0] // 2, a.shape[1] // 2, 4)
-    )
+    def four(a):
+        return (
+            a.reshape(a.shape[0] // 2, 2, a.shape[1] // 2, 2)
+            .swapaxes(1, 2)
+            .reshape(a.shape[0] // 2, a.shape[1] // 2, 4)
+        )
+
     w4, s4 = four(water), four(shaped).astype(np.float32)
     land, lake = w4 == LAND, w4 == LAKE
     n_land, n_lake = land.sum(2), lake.sum(2)
     out = np.where(n_land >= 2, LAND, np.where(n_lake > 4 - n_land - n_lake, LAKE, SEA)).astype(np.uint8)
-    over = lambda v, m, n: (v * m).sum(2) / np.maximum(n, 1)
+
+    def over(v, m, n):
+        return (v * m).sum(2) / np.maximum(n, 1)
+
     high = np.where(land, s4, -1e9).max(2)
     height = np.where(
         out == LAND, 0.5 * over(s4, land, n_land) + 0.5 * high, np.where(out == LAKE, over(s4, lake, n_lake), 0)
@@ -111,7 +119,7 @@ def halve_band(shaped, drainage, water, forest, crops):
 
 def main(name):
     base = os.path.join(ROOT, 'public', 'map', 'regions', name)
-    meta = json.load(open(os.path.join(base, 'index.json')))
+    meta = json.loads(Path(os.path.join(base, 'index.json')).read_text())
     # (the coarser steps are plain rasters zipped with gzip, which their indexes say by having no coding)
     meta.pop('coding', None)
     T, keys, cells = meta['tile'], [tuple(map(int, k.split('_'))) for k in meta.pop('tiles')], meta['cells']
@@ -145,7 +153,7 @@ def main(name):
         finest[(ty - ty0) * T : (ty - ty0 + 1) * T, (tx - tx0) * T : (tx - tx0 + 1) * T] = tile[0]
         here = [
             {'name': r['name'], 'rank': r['rank'], 'pts': r['pts']}
-            for r in json.load(open(os.path.join(base, f'{tx}_{ty}.json'), encoding='utf-8'))
+            for r in json.loads(Path(os.path.join(base, f'{tx}_{ty}.json')).read_text(encoding='utf-8'))
         ]
         rivers += here
         held.append(len(here))

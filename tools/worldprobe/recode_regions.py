@@ -11,6 +11,7 @@ import json
 import os
 import sys
 from multiprocessing import Pool
+from pathlib import Path
 
 import tiles
 
@@ -38,7 +39,7 @@ def recode(job):
 def main(name):
     folder = os.path.join(ROOT, 'public', 'map', 'regions', name)
     index_path = os.path.join(folder, 'index.json')
-    index = json.load(open(index_path))
+    index = json.loads(Path(index_path).read_text())
     jobs = [(folder, key, index['tile']) for key in index['tiles']]
     before = after = done = 0
     with Pool() as pool:

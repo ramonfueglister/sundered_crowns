@@ -22,6 +22,7 @@ Nothing is tuned here. The report printed at the end says how much of the map th
 import gzip
 import json
 import os
+from pathlib import Path
 
 import numpy as np
 from common import LON0, LON1, OUT_DATA, OUT_PUBLIC, ROOT, km_per_px, lonlat_to_px_np, px_to_lonlat_np
@@ -79,16 +80,18 @@ def yield_curve(ids, land, cell, ncell, v0, km2, L):
 
 
 def main():
-    geo = json.load(open(os.path.join(OUT_DATA, 'geo.json'), encoding='utf-8'))
-    names = json.load(open(os.path.join(OUT_DATA, 'world.json'), encoding='utf-8'))['name']
+    geo = json.loads(Path(os.path.join(OUT_DATA, 'geo.json')).read_text(encoding='utf-8'))
+    names = json.loads(Path(os.path.join(OUT_DATA, 'world.json')).read_text(encoding='utf-8'))['name']
     W, H, L, S = geo['W'], geo['H'], geo['L'], geo['S']
-    ids = np.frombuffer(gzip.open(os.path.join(OUT_PUBLIC, 'ids.bin.gz')).read(), dtype='<u2').reshape(H, W)
-    meta = json.load(open(os.path.join(DATA, 'csi', 'pre1500_max.json'), encoding='utf-8'))
+    ids = np.frombuffer(
+        gzip.decompress(Path(os.path.join(OUT_PUBLIC, 'ids.bin.gz')).read_bytes()), dtype='<u2'
+    ).reshape(H, W)
+    meta = json.loads(Path(os.path.join(DATA, 'csi', 'pre1500_max.json')).read_text(encoding='utf-8'))
     crop = meta['crop']
-    csi = np.frombuffer(gzip.open(os.path.join(DATA, 'csi', crop['file'])).read(), dtype='<f4').reshape(
-        crop['height'], crop['width']
-    )
-    eng = json.load(open(os.path.join(DATA, 'ne', 'england.json'), encoding='utf-8'))
+    csi = np.frombuffer(
+        gzip.decompress(Path(os.path.join(DATA, 'csi', crop['file'])).read_bytes()), dtype='<f4'
+    ).reshape(crop['height'], crop['width'])
+    eng = json.loads(Path(os.path.join(DATA, 'ne', 'england.json')).read_text(encoding='utf-8'))
 
     # every map pixel takes the value of the index cell its centre lies in (a map pixel is about a third of a cell wide)
     lon = LON0 + (np.arange(W) + 0.5) / W * (LON1 - LON0)
@@ -151,7 +154,7 @@ def main():
         'cells without data are left out; null: no cell with data',
         'yield': [None if np.isnan(m) else round(float(m), 1) for m in mean],
         'england': {
-            'outline': '%s (%s)' % (eng['source']['dataset'], eng['source']['licence']),
+            'outline': '{} ({})'.format(eng['source']['dataset'], eng['source']['licence']),
             'area_km2': round(e_area, 1),
             'mean': round(e_mean, 2),
             'land': round(e_land, 0),
@@ -176,8 +179,7 @@ def main():
     cover = covered / area
     print('land of the map: %.0f km2 in %d places' % (tot, L))
     print(
-        '  with data %.2f %%, of which zero yield %.2f %% of the land'
-        % (100 * covered.sum() / tot, 100 * float(km2[land & has & (v == 0)].sum()) / tot)
+        f'  with data {100 * covered.sum() / tot:.2f} %, of which zero yield {100 * float(km2[land & has & (v == 0)].sum()) / tot:.2f} % of the land'
     )
     print(
         '  places without any data: %d, below 50 %% cover: %d, below 90 %% cover: %d'
@@ -192,14 +194,15 @@ def main():
     q = np.percentile(mean[ok], [5, 25, 50, 75, 95])
     print(
         '  yield per place: zero in %d places; percentiles 5/25/50/75/95: %s; highest %.0f'
-        % (int((mean[ok] == 0).sum()), ' / '.join('%.0f' % x for x in q), mean[ok].max())
+        % (int((mean[ok] == 0).sum()), ' / '.join(f'{x:.0f}' for x in q), mean[ok].max())
     )
-    print('England (outline: %s)' % eng['source']['dataset'])
+    print('England (outline: {})'.format(eng['source']['dataset']))
     print(
-        '  outline %.0f km2; map land inside %.0f km2 (%.2f %% of the outline), with data %.2f %%'
-        % (eng['area_km2'], e_area, 100 * e_area / eng['area_km2'], 100 * e_cov / e_area)
+        '  outline {:.0f} km2; map land inside {:.0f} km2 ({:.2f} % of the outline), with data {:.2f} %'.format(
+            eng['area_km2'], e_area, 100 * e_area / eng['area_km2'], 100 * e_cov / e_area
+        )
     )
-    print('  mean index %.1f, land %.4g (index x hectares)' % (e_mean, e_land))
+    print(f'  mean index {e_mean:.1f}, land {e_land:.4g} (index x hectares)')
     pl = np.array(places)
     print(
         '  places at least half inside: %d, %.0f km2, sum of yield x hectares %.4g (%.2f %% of land)'

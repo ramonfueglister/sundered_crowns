@@ -15,6 +15,7 @@ Needs shapely (2.x).
 import json
 import os
 import sys
+from pathlib import Path
 
 import numpy as np
 from shapely import STRtree, prepare
@@ -25,8 +26,8 @@ FIRST, LAST = 1291, 1848
 
 
 def main(path):
-    geo = json.load(open(os.path.join(ROOT, 'public', 'data', 'geo.json'), encoding='utf-8'))
-    ext = json.load(open(os.path.join(ROOT, 'data', 'content', 'world_extent.json'), encoding='utf-8'))
+    geo = json.loads(Path(os.path.join(ROOT, 'public', 'data', 'geo.json')).read_text(encoding='utf-8'))
+    ext = json.loads(Path(os.path.join(ROOT, 'data', 'content', 'world_extent.json')).read_text(encoding='utf-8'))
     L = geo['L']
     lon = np.array(geo['loc']['lon'][:L])
     lat = np.array(geo['loc']['lat'][:L])
@@ -34,7 +35,7 @@ def main(path):
     ids = np.nonzero(inside)[0]
     points = [Point(float(lon[i]), float(lat[i])) for i in ids]
     tree = STRtree(points)
-    src = json.load(open(path, encoding='utf-8'))
+    src = json.loads(Path(path).read_text(encoding='utf-8'))
     rows, skipped = [], {'type': 0, 'years': 0, 'frame': 0}
     for f in src['features']:
         p = f['properties']
@@ -79,7 +80,7 @@ def main(path):
         json.dump(out, fo, ensure_ascii=False, separators=(',', ':'))
     n = sum(len(r['places']) for r in rows)
     print(
-        f'{len(rows)} rows, {len(set(r["name"] for r in rows))} polities, {n} place-rows, {inside.sum()} places in the frame; skipped {skipped}'
+        f'{len(rows)} rows, {len({r["name"] for r in rows})} polities, {n} place-rows, {inside.sum()} places in the frame; skipped {skipped}'
     )
 
 

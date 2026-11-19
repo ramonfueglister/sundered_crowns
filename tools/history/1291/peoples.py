@@ -16,6 +16,7 @@ Writes data/history/1291/peoples.json, which build.py applies. Run: python3 tool
 
 import json
 import os
+from pathlib import Path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..', '..'))
@@ -316,7 +317,7 @@ def main():
         'rules': RULES,
     }
     path = os.path.join(ROOT, 'data', 'history', '1291', 'peoples.json')
-    json.dump(out, open(path, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    Path(path).write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding='utf-8')
     print('written', path, len(RULES), 'rules')
 
 

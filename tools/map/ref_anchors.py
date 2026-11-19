@@ -79,5 +79,5 @@ if __name__ == '__main__':
     for k, (x, y) in POINTS.items():
         b = im[y - 4 : y + 5, x - 4 : x + 5].reshape(-1, 3)
         b = b[oklch(b)[:, 0] > 0.33]
-        out[k] = '#%02x%02x%02x' % tuple(int(round(v)) for v in np.median(b, 0))
+        out[k] = '#{:02x}{:02x}{:02x}'.format(*tuple(int(round(v)) for v in np.median(b, 0)))
     print(json.dumps(out, indent=1))

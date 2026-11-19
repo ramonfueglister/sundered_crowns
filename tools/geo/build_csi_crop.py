@@ -74,7 +74,7 @@ def read_tiff(path):
         tags = {int(k): im.tag_v2[k] for k in im.tag_v2}
         return np.asarray(im), tags, 'Pillow'
     except Exception as e:  # noqa: BLE001 - any decoder failure falls through to tifffile
-        print('Pillow could not read %s (%s), trying tifffile' % (os.path.basename(path), e))
+        print(f'Pillow could not read {os.path.basename(path)} ({e}), trying tifffile')
         import tifffile
 
         with tifffile.TiffFile(path) as tf:
@@ -121,7 +121,7 @@ def georef(tags, shape):
         x0, y0 = -180.0, 90.0
         info['assumed'] = True
     else:
-        sys.exit('no georeferencing tags and not a global 5 arc-minute grid: %s' % (shape,))
+        sys.exit(f'no georeferencing tags and not a global 5 arc-minute grid: {shape}')
     info.update({'x0': x0, 'y0': y0, 'sx': sx, 'sy': sy})
     return info
 
@@ -175,7 +175,7 @@ def describe(name, a):
                 'integer_valued': bool(np.all(pos == np.round(pos))),
             }
         )
-    print('  %s: %s' % (name, json.dumps(out)))
+    print(f'  {name}: {json.dumps(out)}')
     return out
 
 
@@ -190,13 +190,13 @@ def sample(a, g, lat, lon):
 def load(path):
     arr, tags, reader = read_tiff(path)
     if arr.ndim != 2:
-        sys.exit('%s: expected one band, got shape %s' % (path, arr.shape))
+        sys.exit(f'{path}: expected one band, got shape {arr.shape}')
     g = georef(tags, arr.shape)
     nd = nodata_value(tags)
-    print('%s' % os.path.basename(path))
+    print(f'{os.path.basename(path)}')
     print('  bytes %d, sha256 %s, reader %s' % (os.path.getsize(path), sha256(path), reader))
-    print('  shape %s, dtype %s, nodata tag %r' % (arr.shape, arr.dtype, tags.get(T_NODATA)))
-    print('  georef %s' % json.dumps(g))
+    print(f'  shape {arr.shape}, dtype {arr.dtype}, nodata tag {tags.get(T_NODATA)!r}')
+    print(f'  georef {json.dumps(g)}')
     raw_nd = int((np.asarray(arr) == arr.dtype.type(nd)).sum()) if nd is not None and not np.isnan(nd) else 0
     print('  cells equal to the nodata tag: %d, non-finite cells: %d' % (raw_nd, int((~np.isfinite(arr)).sum())))
     a = clean(arr, nd)
@@ -234,9 +234,12 @@ def export(a, g, meta, stem, world=False):
     crop = np.ascontiguousarray(a[r0:r1, c0:c1]).astype('<f4')
     os.makedirs(OUT, exist_ok=True)
     bin_path = os.path.join(OUT, stem + '.f32.gz')
-    with open(bin_path, 'wb') as raw:  # mtime 0 keeps the file byte-identical between runs
-        with gzip.GzipFile(filename='', fileobj=raw, mode='wb', compresslevel=9, mtime=0) as f:
-            f.write(crop.tobytes())
+    # mtime 0 keeps the file byte-identical between runs
+    with (
+        open(bin_path, 'wb') as raw,
+        gzip.GzipFile(filename='', fileobj=raw, mode='wb', compresslevel=9, mtime=0) as f,
+    ):
+        f.write(crop.tobytes())
     print('crop of %s: rows %d..%d, cols %d..%d' % (meta['file'], r0, r1, c0, c1))
     side = {
         'source': {
@@ -288,7 +291,7 @@ def main():
     for name, lat, lon in SAMPLES:
         row = '  %-18s %6.2f %7.2f  %s' % (name, lat, lon, sample(a, g, lat, lon))
         if b is not None:
-            row += ' | %s' % sample(b, gb, lat, lon)
+            row += f' | {sample(b, gb, lat, lon)}'
         print(row)
 
     differ = False
@@ -311,7 +314,7 @@ def main():
                 'valid_only_in_csi0': int((fb & ~fa).sum()),
                 'zero_in_csi0': int((b[fb] == 0).sum()),
             }
-            print('comparison --csi against --csi0: %s' % json.dumps(cmp))
+            print(f'comparison --csi against --csi0: {json.dumps(cmp)}')
             differ = (
                 cmp['both_valid_and_different'] > 0 or cmp['of_which_positive'] > 0 or cmp['valid_only_in_csi0'] > 0
             )

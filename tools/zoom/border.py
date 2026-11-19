@@ -34,10 +34,15 @@ for k in range(0, len(files) - 1, 2):
     b = np.asarray(far.crop(box).filter(ImageFilter.GaussianBlur(6)), float)
     d = (b - a).reshape(-1, 3)
     land = a.reshape(-1, 3)[:, 2] < 120  # not sea
+
     # the eye mixes light, not sRGB numbers: a pattern of dark and light blocks and their even mix look alike, so
     # the means are taken of the light and told as the sRGB colour of that light
-    lin = lambda v: np.where(v <= 10.31, v / 3294.6, ((v / 255 + 0.055) / 1.055) ** 2.4)
-    back = lambda v: np.where(v <= 0.0031308, v * 3294.6, 255 * (1.055 * v ** (1 / 2.4) - 0.055))
+    def lin(v):
+        return np.where(v <= 10.31, v / 3294.6, ((v / 255 + 0.055) / 1.055) ** 2.4)
+
+    def back(v):
+        return np.where(v <= 0.0031308, v * 3294.6, 255 * (1.055 * v ** (1 / 2.4) - 0.055))
+
     la, lb = (
         np.asarray(
             near.resize((w, tall), Image.LANCZOS).crop((0, (tall - h) // 2, w, (tall - h) // 2 + h)), float

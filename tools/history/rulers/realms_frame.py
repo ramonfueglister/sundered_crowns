@@ -6,15 +6,16 @@ import collections
 import glob
 import json
 import pathlib
+from pathlib import Path
 
 ROOT = pathlib.Path(__file__).resolve().parents[3]
-geo = json.load(open(ROOT / 'public/data/geo.json'))
-setup = json.load(open(ROOT / 'public/data/setup_1291.json'))
-ext = json.load(open(ROOT / 'data/content/world_extent.json'))
+geo = json.loads(Path(ROOT / 'public/data/geo.json').read_text())
+setup = json.loads(Path(ROOT / 'public/data/setup_1291.json').read_text())
+ext = json.loads(Path(ROOT / 'data/content/world_extent.json').read_text())
 loc = geo['loc']
 hist = {}
 for f in sorted(glob.glob(str(ROOT / 'data/history/1291/*.json'))):
-    for st in json.load(open(f)).get('states', []):
+    for st in json.loads(Path(f).read_text()).get('states', []):
         hist[st['id']] = st
 places = collections.Counter(
     o
@@ -41,13 +42,14 @@ for k, n in places.most_common():
             'overlord': h.get('overlord'),
         }
     )
-json.dump(
-    {
-        'note': 'Realms of setup_1291 with land in the world frame, largest first. Built by tools/history/rulers/realms_frame.py.',
-        'realms': out,
-    },
-    open(ROOT / 'data/history/rulers/realms_frame.json', 'w'),
-    ensure_ascii=False,
-    indent=1,
+Path(ROOT / 'data/history/rulers/realms_frame.json').write_text(
+    json.dumps(
+        {
+            'note': 'Realms of setup_1291 with land in the world frame, largest first. Built by tools/history/rulers/realms_frame.py.',
+            'realms': out,
+        },
+        ensure_ascii=False,
+        indent=1,
+    )
 )
 print(len(out))

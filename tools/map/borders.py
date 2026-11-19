@@ -21,6 +21,7 @@ import math
 import os
 import sys
 from collections import defaultdict
+from pathlib import Path
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 
@@ -43,7 +44,7 @@ def apply(owner, state_ids, geo, names, year=1356, log=print):
     path = os.path.join(ROOT, 'data', 'history', str(year), 'borders.json')
     if not os.path.exists(path):
         return []
-    rules = json.load(open(path, encoding='utf-8'))['rules']
+    rules = json.loads(Path(path).read_text(encoding='utf-8'))['rules']
     index = {s: i for i, s in enumerate(state_ids)}
     lon, lat, L = geo['loc']['lon'], geo['loc']['lat'], len(owner)
     land_nb = defaultdict(list)
@@ -119,9 +120,9 @@ def main():
     year = int(next((a for a in sys.argv[1:] if a.isdigit()), 1356))
     dry = '--dry' in sys.argv
     setup_path = os.path.join(ROOT, 'public', 'data', f'setup_{year}.json')
-    setup = json.load(open(setup_path, encoding='utf-8'))
-    geo = json.load(open(os.path.join(ROOT, 'public', 'data', 'geo.json'), encoding='utf-8'))
-    names = json.load(open(os.path.join(ROOT, 'public', 'data', 'world.json'), encoding='utf-8'))['name']
+    setup = json.loads(Path(setup_path).read_text(encoding='utf-8'))
+    geo = json.loads(Path(os.path.join(ROOT, 'public', 'data', 'geo.json')).read_text(encoding='utf-8'))
+    names = json.loads(Path(os.path.join(ROOT, 'public', 'data', 'world.json')).read_text(encoding='utf-8'))['name']
     owner = [-1 if o is None else o for o in setup['owner']]
     changes = apply(owner, [s['id'] for s in setup['states']], geo, names, year)
     by = defaultdict(list)
@@ -131,7 +132,7 @@ def main():
         print(f'  {a} -> {b} ({len(ns)}): {", ".join(ns[:8])}{" ..." if len(ns) > 8 else ""}   [{why[:70]}]')
     if not dry:
         setup['owner'] = owner
-        json.dump(setup, open(setup_path, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+        Path(setup_path).write_text(json.dumps(setup, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
 
 
 if __name__ == '__main__':

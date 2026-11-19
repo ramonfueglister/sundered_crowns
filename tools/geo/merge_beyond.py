@@ -22,6 +22,7 @@ import json
 import math
 import os
 import sys
+from pathlib import Path
 
 import numpy as np
 from scipy.spatial import cKDTree
@@ -37,7 +38,11 @@ from common import W as MAP_W
 
 DATA = os.path.join(ROOT, 'public', 'data')
 MAP = os.path.join(ROOT, 'public', 'map')
-read = lambda name: json.load(open(os.path.join(DATA, name), encoding='utf-8'))
+
+
+def read(name):
+    return json.loads(Path(os.path.join(DATA, name)).read_text(encoding='utf-8'))
+
 
 # names for the peoples beyond the game map, built as build_setup.py builds the European ones (prefix + suffix)
 SYL.update(
@@ -191,7 +196,7 @@ def main():
         raise SystemExit('geo.json holds the rest of the world already: start from the committed files')
     L, S = geo['L'], geo['S']
     beyond = np.load(os.path.join(CACHE, 'beyond', 'ids.npy'))
-    meta = json.load(open(os.path.join(CACHE, 'beyond', 'places.json'), encoding='utf-8'))
+    meta = json.loads(Path(os.path.join(CACHE, 'beyond', 'places.json')).read_text(encoding='utf-8'))
     L2, S2, cells = meta['L'], meta['S'], meta['cells']
     h, w = beyond.shape
     ix, _, water, height = load_step()
@@ -250,7 +255,7 @@ def main():
     add_pairs(nb[:-1, :], nb[1:, :])
     add_pairs(nb[:, -1], nb[:, 0])
     # across the edges of the game map (its raster is one map pixel a cell, the new one half that)
-    raw = gzip.open(os.path.join(MAP, 'ids.bin.gz')).read()
+    raw = gzip.decompress(Path(os.path.join(MAP, 'ids.bin.gz')).read_bytes())
     gids = np.frombuffer(raw, '<u2').reshape(MAP_H, MAP_W).astype(np.int64)
     gx, gy = int(MAP_W * cells), int(MAP_H * cells)
     rows = np.arange(MAP_H)
@@ -267,12 +272,14 @@ def main():
         edges.append([a, b, kind, int(max(1, round(c / cells if a > L and b > L else c))), 0.0])
     print('edges', len(geo['edges']), '->', len(edges))
     adj = [[] for _ in range(Lt + St + 1)]
-    for a, b, k, c, rf in edges:
+    for a, b, _k, _c, _rf in edges:
         adj[a].append(b)
         adj[b].append(a)
 
     # --- people: culture, faith, density -------------------------------------------------------------------------------
-    hist = json.load(open(os.path.join(ROOT, 'data', 'history', '1356', 'world_beyond.json'), encoding='utf-8'))
+    hist = json.loads(
+        Path(os.path.join(ROOT, 'data', 'history', '1356', 'world_beyond.json')).read_text(encoding='utf-8')
+    )
     an = hist['demography']
 
     def xyz(lo, la):
@@ -342,7 +349,7 @@ def main():
 
     # --- names: the researched ones, the rest after the people's naming --------------------------------------------------
     world = read('world.json')
-    used = set(n for n in world['name'] if n)
+    used = {n for n in world['name'] if n}
     names = []
     for i in range(L2):
         nm = seeds[i][2]
@@ -353,7 +360,7 @@ def main():
 
     # --- provinces and areas, built over the new places alone ----------------------------------------------------------
     ladj = [[] for _ in range(L2 + 1)]
-    for a, b, k, c, rf in edges:
+    for a, b, _k, _c, _rf in edges:
         if L < a <= Lt and L < b <= Lt:
             ladj[a - L].append(b - L)
             ladj[b - L].append(a - L)
@@ -543,8 +550,8 @@ def main():
         'worldW': worldW,
         'raster': 'map/beyond.bin.gz',
     }
-    json.dump(
-        geo, open(os.path.join(DATA, 'geo.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':')
+    Path(os.path.join(DATA, 'geo.json')).write_text(
+        json.dumps(geo, ensure_ascii=False, separators=(',', ':')), encoding='utf-8'
     )
     world['terrain'] += terrain
     world['resource'] += resource
@@ -561,20 +568,20 @@ def main():
         [round(float(v), 2) for v in arid],
         [round(float(v), 2) for v in climate(lon[sea_sl], lat[sea_sl], np.zeros(S2))[1]],
     )
-    json.dump(
-        world, open(os.path.join(DATA, 'world.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':')
+    Path(os.path.join(DATA, 'world.json')).write_text(
+        json.dumps(world, ensure_ascii=False, separators=(',', ':')), encoding='utf-8'
     )
     land = read('land.json')
     # the Caloric Suitability Index of the whole globe (tools/geo/build_csi_crop.py --world), read over the new places as
     # tools/geo/build_land.py reads it over the game map: each cell of the step takes the index cell its centre lies in
-    cmeta = json.load(
-        open(os.path.join(ROOT, 'tools', 'geo', 'data', 'csi', 'pre1500_max_world.json'), encoding='utf-8')
+    cmeta = json.loads(
+        Path(os.path.join(ROOT, 'tools', 'geo', 'data', 'csi', 'pre1500_max_world.json')).read_text(encoding='utf-8')
     )
     if cmeta['raster']['sha256'] != land['source']['sha256']:
         raise SystemExit('the whole raster is not the one of land.json')
     cc = cmeta['crop']
     csi = np.frombuffer(
-        gzip.open(os.path.join(ROOT, 'tools', 'geo', 'data', 'csi', cc['file'])).read(), dtype='<f4'
+        gzip.decompress(Path(os.path.join(ROOT, 'tools', 'geo', 'data', 'csi', cc['file'])).read_bytes()), dtype='<f4'
     ).reshape(cc['height'], cc['width'])
     clon = np.mod(lon_of(np.mod((xs + 0.5) / cells, worldW)) + 180.0, 360.0) - 180.0
     clat = lat_of((ys + 0.5) / cells)
@@ -595,13 +602,13 @@ def main():
     land['yield'] += [None if np.isnan(m) else round(float(m), 1) for m in ymean]
     land['curve']['fertile'] += [float(f) for f in fert2]
     land['curve']['steps'] += steps2
-    land['source']['beyond'] = 'places beyond the game map: the whole raster, %s' % cc['file']
+    land['source']['beyond'] = 'places beyond the game map: the whole raster, {}'.format(cc['file'])
     print(
         'yield of the new places: without data %d, median %.0f'
         % (int(np.isnan(ymean).sum()), float(np.nanmedian(ymean)))
     )
-    json.dump(
-        land, open(os.path.join(DATA, 'land.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':')
+    Path(os.path.join(DATA, 'land.json')).write_text(
+        json.dumps(land, ensure_ascii=False, separators=(',', ':')), encoding='utf-8'
     )
     setup['states'] = states
     setup['owner'] = [int(v) for v in owner[1 : L + 1]] + [
@@ -613,11 +620,8 @@ def main():
     setup['pop'] += [int(v) for v in pop]
     setup['density'] += [round(float(v), 2) for v in dens]
     setup['wars'] += hist['wars']
-    json.dump(
-        setup,
-        open(os.path.join(DATA, 'setup_1356.json'), 'w', encoding='utf-8'),
-        ensure_ascii=False,
-        separators=(',', ':'),
+    Path(os.path.join(DATA, 'setup_1356.json')).write_text(
+        json.dumps(setup, ensure_ascii=False, separators=(',', ':')), encoding='utf-8'
     )
     for name, a in (('ids.bin.gz', old_id(gids)), ('beyond.bin.gz', nb)):
         with (

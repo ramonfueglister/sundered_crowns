@@ -89,7 +89,7 @@ def spots(im, box, sign):
 
 
 def hexc(c):
-    return '   -   ' if c is None else '#%02x%02x%02x' % tuple(int(round(v * 255)) for v in c)
+    return '   -   ' if c is None else '#{:02x}{:02x}{:02x}'.format(*tuple(int(round(v * 255)) for v in c))
 
 
 def main(ref_path, probe_path):

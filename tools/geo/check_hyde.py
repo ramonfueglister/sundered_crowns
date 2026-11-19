@@ -23,6 +23,7 @@ import json
 import os
 import re
 import sys
+from pathlib import Path
 
 import numpy as np
 from common import LON0, LON1, OUT_DATA, OUT_PUBLIC, km_per_px, px_to_lonlat_np
@@ -39,7 +40,7 @@ def sha256(path):
 def read_asc(path):
     """ESRI ASCII grid: (array with no-data as 0, header)."""
     head = {}
-    with open(path, 'r', encoding='ascii', errors='replace') as f:
+    with open(path, encoding='ascii', errors='replace') as f:
         for _ in range(6):
             k, v = f.readline().split()
             head[k.lower()] = float(v)
@@ -48,20 +49,20 @@ def read_asc(path):
     if a.shape != (rows, cols):
         sys.exit('%s: header says %d x %d, data is %s' % (path, rows, cols, a.shape))
     if 'xllcorner' not in head or 'yllcorner' not in head:
-        sys.exit('%s: no xllcorner/yllcorner in the header' % path)
+        sys.exit(f'{path}: no xllcorner/yllcorner in the header')
     nodata = head.get('nodata_value')
     n_nodata = int((a == nodata).sum()) if nodata is not None else 0
     if nodata is not None:
         a[a == nodata] = 0.0
     if (a < 0).any():
-        sys.exit('%s: negative values besides no-data' % path)
+        sys.exit(f'{path}: negative values besides no-data')
     return a, head, n_nodata
 
 
 def year_of(path):
     m = re.search(r'(\d+)\s*(AD|CE)', os.path.basename(path), re.I)
     if not m:
-        sys.exit('no year in the file name: %s' % path)
+        sys.exit(f'no year in the file name: {path}')
     return int(m.group(1))
 
 
@@ -72,10 +73,12 @@ def main():
     ap.add_argument('--pop', nargs='*', default=[])
     args = ap.parse_args()
 
-    geo = json.load(open(os.path.join(OUT_DATA, 'geo.json'), encoding='utf-8'))
-    land_json = json.load(open(os.path.join(OUT_DATA, 'land.json'), encoding='utf-8'))
+    geo = json.loads(Path(os.path.join(OUT_DATA, 'geo.json')).read_text(encoding='utf-8'))
+    land_json = json.loads(Path(os.path.join(OUT_DATA, 'land.json')).read_text(encoding='utf-8'))
     W, H, L = geo['W'], geo['H'], geo['L']
-    ids = np.frombuffer(gzip.open(os.path.join(OUT_PUBLIC, 'ids.bin.gz')).read(), dtype='<u2').reshape(H, W)
+    ids = np.frombuffer(
+        gzip.decompress(Path(os.path.join(OUT_PUBLIC, 'ids.bin.gz')).read_bytes()), dtype='<u2'
+    ).reshape(H, W)
     lon = LON0 + (np.arange(W) + 0.5) / W * (LON1 - LON0)
     lat = px_to_lonlat_np(np.zeros(H), np.arange(H) + 0.5)[1]
     km2 = np.broadcast_to((km_per_px(lat) ** 2)[:, None], ids.shape)
@@ -100,7 +103,7 @@ def main():
         col = np.floor((lon - x0) / cell).astype(np.int64)
         row = np.floor((y1 - lat) / cell).astype(np.int64)
         if col.min() < 0 or col.max() >= a.shape[1] or row.min() < 0 or row.max() >= a.shape[0]:
-            sys.exit('%s does not cover the map window' % path)
+            sys.exit(f'{path} does not cover the map window')
         idx = row[:, None] * a.shape[1] + col[None, :]
         window = np.zeros(a.size, dtype=bool)
         window[idx.ravel()] = True

@@ -18,6 +18,7 @@ import json
 import math
 import os
 import sys
+from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'worldprobe'))
 import numpy as np
@@ -32,11 +33,13 @@ W, H = (int(sys.argv[6]), int(sys.argv[7])) if len(sys.argv) > 7 else (1280, 720
 year = int(sys.argv[8]) if len(sys.argv) > 8 else 1291
 SKIN = os.environ.get('ATLAS_3D') == '1'
 BLOCKS_PER_MAP_PIXEL = 16
-index = json.load(open(f'{PUB}/map/regions/world/index.json'))
+index = json.loads(Path(f'{PUB}/map/regions/world/index.json').read_text())
 T, CELLS, MAPW, MAPH, WORLDW = index['tile'], index['cells'], index['mapW'], index['mapH'], index['worldW']
 
+
 # ---------------------------------------------------------------- the frame
-merc = lambda d: math.asinh(math.tan(math.radians(d)))
+def merc(d):
+    return math.asinh(math.tan(math.radians(d)))
 
 
 def map_pixel(lon, lat):
@@ -77,8 +80,11 @@ def tile(tx, ty):
     if raw is None:
         return None, []
     t = T * T
-    lay = lambda k: np.frombuffer(raw, np.uint8, t, t * (2 + k)).reshape(T, T)
-    rivers = json.load(open(d + name + '.json')) if os.path.exists(d + name + '.json') else []
+
+    def lay(k):
+        return np.frombuffer(raw, np.uint8, t, t * (2 + k)).reshape(T, T)
+
+    rivers = json.loads(Path(d + name + '.json').read_text()) if os.path.exists(d + name + '.json') else []
     return (np.frombuffer(raw, '<i2', t).reshape(T, T), lay(0), lay(1), lay(2), lay(3)), rivers
 
 
@@ -104,7 +110,11 @@ for ty in range(cy0 // T, (cy0 + ch - 1) // T + 1):
 # cell coordinates of the picture's pixels within the window
 GX = (PX * cpm - cx0 - 0.5)[None, :].repeat(H, 0)
 GY = (PY * cpm - cy0 - 0.5)[:, None].repeat(W, 1)
-samp = lambda a, order=1: ndi.map_coordinates(a, [GY, GX], order=order, mode='nearest')
+
+
+def samp(a, order=1):
+    return ndi.map_coordinates(a, [GY, GX], order=order, mode='nearest')
+
 
 sea_c = ndi.gaussian_filter((water == 1).astype(np.float32), 0.7)
 lake_c = ndi.gaussian_filter((water == 2).astype(np.float32), 0.6)
@@ -142,17 +152,28 @@ def hillshade(h):
 
 relief = np.clip(0.6 * hillshade(hgt) + 0.4 * hillshade(broad), 0.3, 1.5)
 
+
 # ---------------------------------------------------------------- colours (sRGB 0 … 255, mixed in linear light)
-lin = lambda c: np.where(
-    np.asarray(c, np.float32) / 255 <= 0.04045,
-    np.asarray(c, np.float32) / 255 / 12.92,
-    ((np.asarray(c, np.float32) / 255 + 0.055) / 1.055) ** 2.4,
-)
-srgb = lambda v: np.where(v <= 0.0031308, v * 12.92, 1.055 * np.clip(v, 0, None) ** (1 / 2.4) - 0.055)
-mix = lambda a, b, t: a + (b - a) * (t[..., None] if isinstance(t, np.ndarray) else t)
+def lin(c):
+    return np.where(
+        np.asarray(c, np.float32) / 255 <= 0.04045,
+        np.asarray(c, np.float32) / 255 / 12.92,
+        ((np.asarray(c, np.float32) / 255 + 0.055) / 1.055) ** 2.4,
+    )
+
+
+def srgb(v):
+    return np.where(v <= 0.0031308, v * 12.92, 1.055 * np.clip(v, 0, None) ** (1 / 2.4) - 0.055)
+
+
+def mix(a, b, t):
+    return a + (b - a) * (t[..., None] if isinstance(t, np.ndarray) else t)
+
 
 # the kinds of land (climate.ts) and the lines of trees and snow, over the world frame
-cl = np.frombuffer(gzip.open(f'{PUB}/map/climate.bin.gz').read(), np.uint8).reshape(index['worldH'] // 2, WORLDW // 2)
+cl = np.frombuffer(gzip.decompress(Path(f'{PUB}/map/climate.bin.gz').read_bytes()), np.uint8).reshape(
+    index['worldH'] // 2, WORLDW // 2
+)
 kx = np.clip((PX / 2).astype(int), 0, cl.shape[1] - 1)
 ky = np.clip((PY / 2).astype(int), 0, cl.shape[0] - 1)
 kind = cl[np.ix_(ky, kx)] & 63
@@ -160,7 +181,7 @@ kind = cl[np.ix_(ky, kx)] & 63
 
 def line(name):
     a = (
-        np.frombuffer(gzip.open(f'{PUB}/map/{name}.bin.gz').read(), np.uint8)
+        np.frombuffer(gzip.decompress(Path(f'{PUB}/map/{name}.bin.gz').read_bytes()), np.uint8)
         .reshape(index['worldH'] // 16, WORLDW // 16)
         .astype(np.float32)
         * 32
@@ -221,9 +242,9 @@ terrain = mix(terrain, ROCK, np.clip((hgt - treeline) / 250, 0, 1) * 0.85)
 terrain = mix(terrain, SNOW, np.clip((hgt - snowline) / 200 + 0.2, 0, 1) * (hgt > snowline - 200))
 
 # ---------------------------------------------------------------- the realms: who holds every pixel, with smooth borders
-raw = gzip.open(f'{PUB}/map/ids.bin.gz').read()
+raw = gzip.decompress(Path(f'{PUB}/map/ids.bin.gz').read_bytes())
 ids = np.frombuffer(raw, '<u2').reshape(MAPH, MAPW)
-setup = json.load(open(f'{PUB}/data/setup_{year}.json'))
+setup = json.loads(Path(f'{PUB}/data/setup_{year}.json').read_text())
 owner = np.array([-1 if o is None else o for o in setup['owner']], np.int32)
 lands = len(owner)
 
@@ -251,8 +272,12 @@ def label_of(kind_of):
     return best
 
 
-place_of = lambda v: np.where((v >= 1) & (v <= lands), v.astype(np.int32) - 1, -2)
-realm_of = lambda v: np.where((v >= 1) & (v <= lands), owner[np.clip(v.astype(np.int32) - 1, 0, lands - 1)], -2)
+def place_of(v):
+    return np.where((v >= 1) & (v <= lands), v.astype(np.int32) - 1, -2)
+
+
+def realm_of(v):
+    return np.where((v >= 1) & (v <= lands), owner[np.clip(v.astype(np.int32) - 1, 0, lands - 1)], -2)
 
 
 def settle(lab):
@@ -349,8 +374,12 @@ fill = np.where(has[..., None], FILL[np.clip(realm, 0, len(FILL) - 1)], SAND)
 edge = np.where(has[..., None], EDGE[np.clip(realm, 0, len(FILL) - 1)], SAND * 0.8)
 ink = np.where(has[..., None], INK[np.clip(realm, 0, len(FILL) - 1)], SAND * 0.55)
 
+
 # ---------------------------------------------------------------- the picture
-shade = lambda c, r, k: c * (1 + k * (0.3 if SKIN else 1) * (r - 1))[..., None]
+def shade(c, r, k):
+    return c * (1 + k * (0.3 if SKIN else 1) * (r - 1))[..., None]
+
+
 if mode == 'political':
     grey = (terrain * np.array([0.2126, 0.7152, 0.0722])).sum(-1, keepdims=True)
     img = mix(fill, fill * (grey / 0.55), 0.18)  # a breath of the land's own lightness
@@ -436,8 +465,8 @@ if not SKIN:
 Image.fromarray((np.clip(srgb(img), 0, 1) * 255 + 0.5).astype(np.uint8)).save(out + '.base.png')
 
 # ---------------------------------------------------------------- towns, for the labels
-gaz = json.load(open(f'{ROOT}/data/content/gazetteer.json'))['places']
-people = json.load(open(f'{PUB}/data/towns_{year}.json'))['people']
+gaz = json.loads(Path(f'{ROOT}/data/content/gazetteer.json').read_text())['places']
+people = json.loads(Path(f'{PUB}/data/towns_{year}.json').read_text())['people']
 capitals = {(round(s['capital']['lat'], 2), round(s['capital']['lon'], 2)) for s in setup['states'] if s.get('capital')}
 towns = []
 for g, p in zip(gaz, people):
@@ -484,22 +513,23 @@ if SKIN:
         1,
     ).astype('<f4').tofile(out + '.trees.f32')
     print(f'{n} clumps of wood')
-json.dump(
-    {
-        'metres': metres,
-        'w': W,
-        'h': H,
-        'x0': x0,
-        'y0': y0,
-        'mpp': mpp,
-        'mx': mx,
-        'my': my,
-        'mode': mode,
-        'year': year,
-        'wide': wide,
-        'towns': towns,
-    },
-    open(out + '.frame.json', 'w'),
+Path(out + '.frame.json').write_text(
+    json.dumps(
+        {
+            'metres': metres,
+            'w': W,
+            'h': H,
+            'x0': x0,
+            'y0': y0,
+            'mpp': mpp,
+            'mx': mx,
+            'my': my,
+            'mode': mode,
+            'year': year,
+            'wide': wide,
+            'towns': towns,
+        }
+    )
 )
 print(
     f'{out}.base.png: level z{z}, {metres:.0f} m to a pixel, {len(rivers)} rivers, {len(towns)} towns, {len(np.unique(realm))} realms'

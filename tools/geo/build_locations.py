@@ -8,6 +8,7 @@ Outputs: CACHE/stage/ids.npy (int32, 0 = lake/none, 1..L land, L+1..L+S sea) and
 import json
 import math
 import os
+from pathlib import Path
 
 import numpy as np
 from common import CACHE, LAT_N, LAT_S, LON0, LON1, ROOT, H, W, km_per_px, load_json, lonlat_to_px, px_to_lonlat_np
@@ -25,7 +26,7 @@ def value_noise(h, w, cell, octaves=4, seed=0):
     out = np.zeros((h, w), np.float32)
     amp = 1.0
     tot = 0
-    for o in range(octaves):
+    for _o in range(octaves):
         gh, gw = h // cell + 2, w // cell + 2
         g = r.standard_normal((gh, gw)).astype(np.float32)
         z = ndimage.zoom(g, (h / (gh - 1) * 1.0001, w / (gw - 1) * 1.0001), order=3)[:h, :w]
@@ -86,7 +87,7 @@ def main():
             )
         print('gazetteer seeds', len(seeds))
     else:
-        pp = json.load(open(os.path.join(CACHE, 'ne_10m_populated_places_simple.geojson')))
+        pp = json.loads(Path(os.path.join(CACHE, 'ne_10m_populated_places_simple.geojson')).read_text())
         for f in pp['features']:
             p = f['properties']
             lon, lat = f['geometry']['coordinates'][:2]
@@ -202,16 +203,17 @@ def main():
     ids[sea > 0] = sea_ids[sea > 0] + L
     print('sea zones', S)
     np.save(os.path.join(STAGE, 'ids.npy'), ids)
-    json.dump(
-        {
-            'L': int(L),
-            'S': int(S),
-            'seeds': [
-                [None if v is None else (float(v) if isinstance(v, (np.floating, float)) else v) for v in s]
-                for s in seeds_final
-            ],
-        },
-        open(os.path.join(STAGE, 'locations_raw.json'), 'w'),
+    Path(os.path.join(STAGE, 'locations_raw.json')).write_text(
+        json.dumps(
+            {
+                'L': int(L),
+                'S': int(S),
+                'seeds': [
+                    [None if v is None else (float(v) if isinstance(v, (np.floating, float)) else v) for v in s]
+                    for s in seeds_final
+                ],
+            }
+        )
     )
     print('stage B done')
 
