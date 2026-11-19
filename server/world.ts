@@ -16,8 +16,9 @@ import { createWorldState } from '../src/sim/setup';
 import { upgradeState } from '../src/sim/upgrade';
 import { loadWorldFor, loadSetup } from '../tools/sim/load';
 import { realmInfos, placeDetail } from '../src/net/views';
-import { encodeOwners, type ClientMsg, type ServerMsg, type WorldInfo, type Me } from '../src/net/protocol';
+import { encodeOwners, SPEEDS, type ClientMsg, type ServerMsg, type WorldInfo, type Me } from '../src/net/protocol';
 import { NullStore, type WorldStore } from './store';
+import { BorderHistory } from './history';
 
 // ======================================================================= deterministic layer
 export type LogEntry =
@@ -100,6 +101,11 @@ export class WorldFiles {
 }
 
 // ======================================================================= world core
+/** at the highest speed, the days of one beat of the clock take this much real time at most before what changed goes out */
+const BATCH_MS = 100;
+/** smoothed real time of the parts of a day */
+const ema = (a: number, b: number) => a * 0.9 + b * 0.1;
+
 export interface WorldConfig {
   id: string; name: string; dataDir: string;
   /** real seconds per in-game day */
@@ -115,6 +121,8 @@ export interface WorldConfig {
   /** account ids or display names with admin rights (besides the store's admin table) */
   admins: string[];
   devAuth: boolean;
+  /** who may pause the world and change its speed (the time control top left): admins (in a DEV world everyone), or everyone */
+  timeControl?: 'admins' | 'all';
   log?: (msg: string) => void;
 }
 export function configFromEnv(env: Record<string, string | undefined> = process.env): WorldConfig {
@@ -126,6 +134,7 @@ export function configFromEnv(env: Record<string, string | undefined> = process.
     inactiveReleaseMs: num('INACTIVE_RELEASE_DAYS', 7) * 86400_000, cmdsPerDay: num('CMDS_PER_DAY', 60),
     admins: (env.ADMIN_USERS || '').split(',').map((x) => x.trim()).filter(Boolean),
     devAuth: !(env.SUPABASE_JWT_SECRET || env.SUPABASE_JWKS_URL || env.SUPABASE_URL),
+    timeControl: env.TIME_CONTROL === 'all' ? 'all' : 'admins',
   };
 }
 
@@ -166,6 +175,12 @@ export class WorldCore {
   private prevOwner!: Int16Array;
   private lastUpload = 0;
   private log: (m: string) => void;
+  /** the history of the borders (server/history.ts), for the replay */
+  history!: BorderHistory;
+  /** the speed of the clock, 1 … SPEEDS.length (not kept over a restart: the world comes back at its own pace) */
+  speed = 1;
+  /** real time the last beat of the clock took (ms), taken off the wait for the next */
+  private beatMs = 0;
   /** smoothed real time of each part of a day (ms), for /health */
   stepMs = { cmds: 0, day: 0, persist: 0, broadcast: 0 };
 
@@ -197,6 +212,8 @@ export class WorldCore {
     // seats and state agree (a crash between the two writes)
     for (const seat of Object.values(this.meta.seats)) if (this.s.ruler[seat.realm] !== seat.uid) delete this.meta.seats[seat.uid];
     this.prevOwner = this.s.place.owner.slice();
+    this.history = new BorderHistory(join(this.root, 'borders.ndjson'), this.s, this.w,
+      () => (this.files.snapshots().includes(0) ? upgradeState(this.files.readSnapshot(0), this.w, () => loadSetup(this.cfg.startYear)) : null));
     this.saveMeta();
     this.store.upsertWorld(this.worldInfo()).catch(() => {});
     return this;
@@ -214,14 +231,45 @@ export class WorldCore {
 
   start() { this.running = true; this.schedule(); }
   stop() { this.running = false; if (this.timer) clearTimeout(this.timer); this.timer = null; }
-  shutdown() { this.stop(); this.files.writeSnapshot(this.s); this.saveMeta(); this.files.close(); }
+  shutdown() { this.stop(); this.files.writeSnapshot(this.s); this.saveMeta(); this.files.close(); this.history.close(); }
+  /** real milliseconds per day at the clock's speed (0: as fast as the days can be reckoned) */
+  msPerDay(): number { const v = SPEEDS[this.speed - 1]; return v === 'own' ? this.cfg.secondsPerDay * 1000 : v; }
   private schedule() {
     if (!this.running) return;
-    this.timer = setTimeout(() => { try { if (!this.meta.paused) this.step(); } catch (e: any) { this.log(`step failed: ${e?.stack ?? e}`); } this.schedule(); }, this.cfg.secondsPerDay * 1000);
+    this.timer = setTimeout(() => this.beat(), Math.max(0, this.msPerDay() - this.beatMs));
+  }
+  /** One beat of the clock: a day, or at the highest speed as many days as fit in BATCH_MS; what changed goes out once. */
+  private beat() {
+    const t0 = performance.now();
+    try {
+      if (!this.meta.paused) {
+        const fast = this.msPerDay() === 0;
+        do this.runDay(); while (fast && !this.meta.paused && performance.now() - t0 < BATCH_MS);
+        this.broadcastDay();
+      }
+    } catch (e: any) { this.log(`step failed: ${e?.stack ?? e}`); }
+    this.beatMs = this.meta.paused ? 0 : performance.now() - t0;
+    this.schedule();
   }
 
-  /** One in-game day: queued entries, the day, persistence, then what changed goes out. */
-  step() {
+  /** Pauses or runs the world, or sets the speed of its clock; everyone is told. */
+  setTime(t: { paused?: boolean; speed?: number }) {
+    let changed = false;
+    if (typeof t.paused === 'boolean' && t.paused !== this.meta.paused) { this.meta.paused = t.paused; this.saveMeta(); changed = true; }
+    if (Number.isInteger(t.speed) && t.speed! >= 1 && t.speed! <= SPEEDS.length && t.speed !== this.speed) { this.speed = t.speed!; changed = true; }
+    if (!changed) return;
+    // the wait for the next day is that of the new speed, from now (at its own pace the world would wait minutes)
+    if (this.running) { if (this.timer) clearTimeout(this.timer); this.beatMs = 0; this.schedule(); }
+    const world = this.worldInfo();
+    for (const ss of this.sessions) ss.send({ type: 'world', world });
+    this.log(`clock: ${this.meta.paused ? 'paused' : 'running'}, speed ${this.speed}`);
+  }
+
+  /** One in-game day, and what changed goes out. */
+  step() { this.runDay(); this.broadcastDay(); }
+
+  /** One in-game day: queued entries, the day, persistence. */
+  private runDay() {
     const t0 = performance.now();
     this.releaseInactive();
     const q = this.queue; this.queue = [];
@@ -234,12 +282,10 @@ export class WorldCore {
     this.files.append({ d: this.s.day, adv: 1 });
     advanceDay(this.s, this.w);
     const t2 = performance.now();
+    this.history.record(this.s);
     if (this.s.day % this.cfg.snapshotEveryDays === 0) this.snapshot();
     const t3 = performance.now();
-    this.broadcastDay();
-    const t4 = performance.now();
-    const ema = (a: number, b: number) => a * 0.9 + b * 0.1;
-    this.stepMs = { cmds: ema(this.stepMs.cmds, t1 - t0), day: ema(this.stepMs.day, t2 - t1), persist: ema(this.stepMs.persist, t3 - t2), broadcast: ema(this.stepMs.broadcast, t4 - t3) };
+    this.stepMs = { ...this.stepMs, cmds: ema(this.stepMs.cmds, t1 - t0), day: ema(this.stepMs.day, t2 - t1), persist: ema(this.stepMs.persist, t3 - t2) };
   }
 
   snapshot(forceUpload = false) {
@@ -265,9 +311,11 @@ export class WorldCore {
   // ------------------------------------------------------------- players
   seats(): Seat[] { return Object.values(this.meta.seats); }
   private rulerName = (uid: string) => this.meta.seats[uid]?.name ?? null;
-  private me(ss: Session): Me { return { uid: ss.user.uid, name: ss.user.name, admin: ss.user.admin, realm: this.meta.seats[ss.user.uid]?.realm ?? -1, ...(ss.user.observer ? { observer: true } : {}) }; }
+  private me(ss: Session): Me { return { uid: ss.user.uid, name: ss.user.name, admin: ss.user.admin, realm: this.meta.seats[ss.user.uid]?.realm ?? -1, ...(ss.user.observer ? { observer: true } : {}), ...(this.mayTime(ss) ? { time: true } : {}) }; }
+  /** who may pause the world and change its speed: admins; everyone in a DEV world (for debugging) or with TIME_CONTROL=all */
+  private mayTime(ss: Session) { return ss.user.admin || this.cfg.devAuth || this.cfg.timeControl === 'all'; }
   worldInfo(): WorldInfo {
-    return { id: this.cfg.id, name: this.meta.name, day: this.s.day, startYear: this.s.startYear, secondsPerDay: this.cfg.secondsPerDay, paused: this.meta.paused, players: this.seats().length, maxPlayers: this.cfg.maxPlayers };
+    return { id: this.cfg.id, name: this.meta.name, day: this.s.day, startYear: this.s.startYear, secondsPerDay: this.cfg.secondsPerDay, paused: this.meta.paused, players: this.seats().length, maxPlayers: this.cfg.maxPlayers, speed: this.speed };
   }
 
   attach(conn: Conn, user: UserAuth): Session {
@@ -307,6 +355,10 @@ export class WorldCore {
         return;
       }
       case 'place': { const d = placeDetail(this.s, this.w, m.place); if (d) ss.send({ type: 'place', detail: d }); return; }
+      case 'time': {
+        if (!this.mayTime(ss)) return ss.send({ type: 'error', code: 'time', message: 'Only an admin may change the time.' });
+        return this.setTime({ paused: m.paused, speed: m.speed });
+      }
     }
   }
 
@@ -345,6 +397,7 @@ export class WorldCore {
   }
 
   private broadcastDay() {
+    const t0 = performance.now();
     const changes: [number, number][] = [];
     const o = this.s.place.owner;
     for (let i = 0; i < o.length; i++) if (o[i] !== this.prevOwner[i]) { changes.push([i, o[i]]); this.prevOwner[i] = o[i]; }
@@ -354,6 +407,7 @@ export class WorldCore {
       ss.send({ type: 'tick', day: this.s.day });
       if (changes.length) ss.send({ type: 'owners', changes });
     }
+    this.stepMs.broadcast = ema(this.stepMs.broadcast, performance.now() - t0);
   }
 
   /** Enqueues an entry as the world itself (tests, admin tools). */

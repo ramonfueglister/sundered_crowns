@@ -34,7 +34,8 @@ DEV mode is for development only: anyone can claim any name. It switches off as 
 
 World data is stored in `./world-data/<WORLD_ID>/world/`: `snap-<day>.bin` (gzip-compressed state, the
 genesis snapshot plus the three most recent), `log-<day>.ndjson` (command log segments, one per snapshot) and
-`snapshot.json`; `./world-data/<WORLD_ID>/meta.json` holds the seats. On start the server loads the latest snapshot and
+`snapshot.json`; `./world-data/<WORLD_ID>/meta.json` holds the seats and whether the world is paused;
+`./world-data/<WORLD_ID>/borders.ndjson` the history of the borders that the replay plays (server/history.ts). On start the server loads the latest snapshot and
 replays the log after it, so a crash loses nothing that was logged. `SIGTERM` (every deploy) writes a final snapshot.
 
 ---
@@ -146,7 +147,9 @@ fly logs --app grand-strategy-game
 
 ### Endpoints
 
-- `GET /health` – liveness · `GET /world` – world clock/status (JSON)
+- `GET /health` – liveness · `GET /world` – world clock/status (JSON) · `GET /history` – the history of the borders for the replay (JSON, gzip when asked)
+- The clock top left pauses the world and sets its speed (1: `SECONDS_PER_DAY`, then 2 s, 1 s and 0.25 s a day, and as fast as the server reckons).
+  Admins may use it, in a DEV world everyone; `TIME_CONTROL=all` opens it to everyone. The speed is not kept over a restart, the pause is.
 - WebSocket on `/` – protocol in `src/net/protocol.ts` (JSON frames, plus one binary frame with the owners of all places).
 
 ---
