@@ -7,7 +7,7 @@ import { NEAR, RIGHT, VIEW } from './layout';
 export const RIG = { sun: 0.9, sunElevation: 48, sunTurn: 12, side: 0.78, sky: 0.36, bounce: 0.12, fill: 0.1, fillTurn: 180 + VIEW.turn, fillElevation: 20 } as const;
 
 /**
- * The creases and corners of the far view (stage.ts draws them by three's GTAONode): how far they reach in the
+ * The creases and corners of the far view (stage/picture.ts draws them by three's GTAONode): how far they reach in the
  * stage's blocks, how deep they are drawn, how far behind a point something may lie and still darken it, and the
  * colour the deepest crease keeps.
  */

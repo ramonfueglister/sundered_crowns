@@ -43,7 +43,7 @@ def api(params):
                 with urllib.request.urlopen(req, timeout=60) as r:
                     data = json.load(r)
                 break
-            except Exception as e:  # network hiccup / 429
+            except Exception:  # network hiccup / 429
                 if attempt == 4:
                     raise
                 time.sleep(2 ** (attempt + 1))

@@ -8,6 +8,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
+    "lint": "biome ci .",
+    "format": "biome format --write .",
     "test": "vitest run",
     "world": "tsx server/main.ts",
     "map": "cd tools/geo && python3 build_rasters.py && python3 build_locations.py && python3 build_setup.py",
@@ -24,6 +26,7 @@
     "portrait:build": "tsx tools/portrait/build_portrait.ts"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.6.5",
     "@electric-sql/pglite": "^0.5.15",
     "@preact/preset-vite": "^2.10.6",
     "@types/node": "^26.6.6",

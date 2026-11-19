@@ -5,7 +5,7 @@ import os, json, math, gzip
 import numpy as np
 from scipy import ndimage
 from scipy.spatial import cKDTree
-from common import *
+from common import CACHE, H, LAT_N, LAT_S, LON0, LON1, OUT_DATA, OUT_PUBLIC, W, km_per_px, lonlat_to_px, polys_from_geojson_geom, px_to_lonlat_np
 
 STAGE = os.path.join(CACHE, 'stage')
 
@@ -99,7 +99,6 @@ def main():
         ('Strait of Belle Isle', (-57.10, 51.50), (-56.80, 51.60)), ('Menai Strait', (-4.20, 53.22), (-4.17, 53.20)),
         ('Solent', (-1.30, 50.76), (-1.30, 50.80)), ('Strait of Sicily', (11.0, 37.0), (11.05, 37.0)),
     ]
-    landtree_mask = (flat >= 1) & (flat <= L)
     strait_edges = []
     for name, a, b in straits:
         def nearest_land(lo, la):

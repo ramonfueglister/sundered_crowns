@@ -2,11 +2,11 @@
 // as flat lists that are handed over, not copied. A piece of a coarse step whose table was built ahead is drawn from
 // that (table.ts), which takes a third of the time and none of the map's data.
 import { Batch } from '../lookprobe/batch';
-import type { Shape } from '../lookprobe/stage';
+import type { Shape } from '../lookprobe/shape';
 import { buildOpenSea } from '../lookprobe/terrain';
 import { FACE_STEPS } from '../lookprobe/faces';
 import { GRID, N, SEA_Y, onGrid } from '../lookprobe/layout';
-import { maybeGunzip } from '../render/assets';
+import { maybeGunzip } from './gunzip';
 import { buildPiece, warmPieces } from './build';
 import { type Cover, KINDS, laidOut } from './far';
 import { glide } from './glide';

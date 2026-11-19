@@ -1,4 +1,4 @@
-// The sea's depth and its surface, for the stage's water (stage.ts). Two things make open water read as water from
+// The sea's depth and its surface, for the stage's water (stage/materials.ts). Two things make open water read as water from
 // afar and near alike, as the sea of EU5's map does:
 //  - its depth: the sea over the shelves is light, the open ocean dark. The depths are measured ones, the sea bed of
 //    the game map's height data (public/map/height.bin.gz), kept as a small picture (public/map/depth.png, made by

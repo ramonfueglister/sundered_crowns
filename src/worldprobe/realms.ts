@@ -1,7 +1,7 @@
 // The realms' map: once the world lies flat under a camera that looks straight down (zoom.ts), the realms colour it
 // as a 2D map; with the political map mode on, their colours lie on the land at every distance, over
 // its relief, as EU5's map modes do (`mode`). Their colours are painted tile by tile (paint.ts) by a worker, at the level whose
-// dots are about a pixel wide, put on the stage's paper and laid by it onto the ground where they lie (stage.ts). The tiles form a pyramid (pyramid.ts), so that a coarser tile stands in for finer ones
+// dots are about a pixel wide, put on the stage's paper and laid by it onto the ground where they lie (stage/picture.ts). The tiles form a pyramid (pyramid.ts), so that a coarser tile stands in for finer ones
 // that are not there yet. The realms lie on the game map only; round the globe they come again with it, and between
 // its laps the map goes on as land and water.
 import * as THREE from 'three/webgpu';

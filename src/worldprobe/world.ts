@@ -6,7 +6,7 @@
 import { Batch, hash2, noise2, rgb, seeded, shade, smooth } from '../lookprobe/batch';
 import { ACACIA, CYPRESS, JUNGLE, LEAVES, PALM, acacia, cypress, palm, tree } from '../lookprobe/blocks';
 import { type Ground, type GroundTraits, LAND_Y, Mat, N, SEA_Y, SUMMIT, idx, inGrid, measureShore, occlude, rockPillar } from '../lookprobe/layout';
-import type { Shape, StageScene } from '../lookprobe/stage';
+import type { Shape, StageScene } from '../lookprobe/shape';
 import { crowd } from '../figures';
 import { type Part, WATER_SHALLOW } from '../lookprobe/terrain';
 import { type Climate, FIELDS_KNOWN, KIND, Land, WOODS_KNOWN, climateAt, snowLineAt, treeLineAt } from './climate';

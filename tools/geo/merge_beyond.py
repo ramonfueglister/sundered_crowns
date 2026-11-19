@@ -15,15 +15,15 @@ Writes public/data/geo.json, world.json, land.json, setup_1356.json, public/map/
 zones renumbered) and public/map/beyond.bin.gz (the new raster: u16 ids over step z3 of the world frame, 0 inside the
 game map). Run once on the files as committed before the merge: python3 tools/geo/merge_beyond.py
 """
-import gzip, hashlib, heapq, json, math, os, sys
+import gzip, heapq, json, math, os, sys
 import numpy as np
 from scipy.spatial import cKDTree
 sys.path.insert(0, os.path.dirname(__file__))
-from common import ROOT, CACHE, W as MAP_W, H as MAP_H
+from common import CACHE, H as MAP_H, ROOT, W as MAP_W
 from build_beyond import frame, load_step
 from build_export import build_provinces, build_areas
 from build_land import yield_curve
-from build_setup import climate, assign_resources, gen_name, SYL, CULT_GROUP, TERRAINS
+from build_setup import climate, assign_resources, gen_name, SYL, CULT_GROUP
 
 DATA = os.path.join(ROOT, 'public', 'data')
 MAP = os.path.join(ROOT, 'public', 'map')

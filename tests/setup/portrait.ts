@@ -3,7 +3,10 @@
 import { buildPortrait, cargo, PORTRAIT_TEST_WASM } from '../../tools/portrait/build_portrait';
 
 export default function setup(): void {
-  try { cargo(['--version'], true); }
-  catch { throw new Error('the tests build the portrait builder and need the Rust toolchain (https://rustup.rs)'); }
+  try {
+    cargo(['--version'], true);
+  } catch {
+    throw new Error('the tests build the portrait builder and need the Rust toolchain (https://rustup.rs)');
+  }
   buildPortrait(PORTRAIT_TEST_WASM, true);
 }

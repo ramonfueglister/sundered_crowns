@@ -1,7 +1,7 @@
 """South, East and South-East Asia, the Americas and Oceania on 1 January 1291 (mostly beyond the old game map)."""
 import os, sys
 sys.path.insert(0, os.path.dirname(__file__))
-from lib import *
+from lib import N, OLD, R, S, write
 
 SOURCES = [
     "H. Franke and D. Twitchett (eds.), The Cambridge History of China vol. 6: Alien Regimes and Border States 907-1368 (1994)",
