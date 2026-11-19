@@ -14,7 +14,7 @@
 // once without showing, so that its lists reach the graphics card one piece to a picture, not all the pieces of a
 // step in the picture that first shows them. (With `?send=1` the stage
 // sends the lists itself, a few megabytes to a picture, and a piece joins the pieces the view can show once they
-// are sent: stage.ts `staged`, which says why that is not the rule.)
+// are sent: stage/api.ts `staged`, which says why that is not the rule.)
 // The houses that have fine blocks and the paved ground lie in cells of their own on their piece: from near, fine.ts
 // builds them again.
 // A piece that has been built is kept on disk as well (store.ts): the next time it is asked for, in this visit or a

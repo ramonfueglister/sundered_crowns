@@ -13,7 +13,7 @@ import numpy as np
 from PIL import Image
 from scipy import ndimage
 from scipy.spatial import cKDTree
-from common import *
+from common import CACHE, H, OUT_DATA, OUT_PUBLIC, ROOT, W, km_per_px, load_json, lonlat_to_px, lonlat_to_px_np
 
 STAGE = os.path.join(CACHE, 'stage')
 YEAR = int(sys.argv[1]) if len(sys.argv) > 1 else 1356
@@ -205,7 +205,6 @@ def main():
     # ---------------- climate, terrain ----------------
     desert_p = np.load(os.path.join(STAGE, 'desert_poly.npy')); imp_p = np.load(os.path.join(STAGE, 'impassable_poly.npy'))
     marsh_p = np.load(os.path.join(STAGE, 'marsh_poly.npy')); fb = np.load(os.path.join(STAGE, 'forest_bias.npy'))
-    N = L + S + 1
     def frac(mask):
         return ndimage.mean(mask.astype(np.float32), labels=ids, index=np.arange(1, L + 1))
     fdes = frac(desert_p); fimp = frac(imp_p); fmar = frac(marsh_p); ffb = ndimage.mean(fb, labels=ids, index=np.arange(1, L + 1))

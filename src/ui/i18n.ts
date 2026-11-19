@@ -23,7 +23,6 @@ const S = {
   reload: ['Reload', 'Neu laden'],
   connecting: ['Connecting to the world…', 'Verbinde mit der Welt…'],
   disconnected: ['The connection to the world was lost. Reconnecting…', 'Die Verbindung zur Welt ist abgerissen. Verbinde neu…'],
-  no_webgpu: ['This browser cannot draw the map: it needs WebGPU (a current Chrome, Edge or Safari).', 'Dieser Browser kann die Karte nicht zeichnen: Er braucht WebGPU (aktuelles Chrome, Edge oder Safari).'],
   players: ['Players', 'Spieler'],
   realm: ['Realm', 'Reich'],
   your_realm: ['Your realm', 'Dein Reich'],

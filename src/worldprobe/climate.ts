@@ -3,7 +3,7 @@
 // forest layer of 1356 knows the place and in bit 6 whether its fields do. With it come the snow line and the tree
 // line of every place (tools/worldprobe/build_lines.py): one byte per sixteen by sixteen map pixels, the height in
 // steps of LINE_STEP.
-import { maybeGunzip } from '../render/assets';
+import { maybeGunzip } from './gunzip';
 
 export const Land = { None: 0, Temperate: 1, Mediterranean: 2, Steppe: 3, Desert: 4, Savanna: 5, Rainforest: 6, Boreal: 7, Tundra: 8, Ice: 9, Grassland: 10 } as const;
 /** the bits of a place's byte: its kind of land, and whether the game's layers of 1356 know its woods and its fields */

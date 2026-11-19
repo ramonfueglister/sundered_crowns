@@ -85,6 +85,6 @@ async function build(): Promise<StageScene> {
   return { ground, things, water, counts: { triangles: ground.triangles + things.triangles + water.triangles } };
 }
 
-/** the light of the near view (stage.ts), each strength to be tried out from the address */
+/** the light of the near view (stage/look.ts), each strength to be tried out from the address */
 const LIGHT = { ...NEAR_LIGHT, sun: Number(q.get('sun')) || NEAR_LIGHT.sun, side: Number(q.get('sidel')) || NEAR_LIGHT.side, sky: Number(q.get('sky')) || NEAR_LIGHT.sky, bounce: Number(q.get('bounce')) || NEAR_LIGHT.bounce, fill: Number(q.get('fill')) || NEAR_LIGHT.fill, mirror: Number(q.get('mirror')) || NEAR_LIGHT.mirror };
 stage(build, { frameW: Number(q.get('across')) || 24, elevation: Number(q.get('elev')) || 30, tall: 14, light: LIGHT, shadowRadius: Number(q.get('soft')) || NEAR_SHADOW }).catch(showError);

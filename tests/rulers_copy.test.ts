@@ -9,7 +9,8 @@ import { loadWorldFor, loadSetup } from '../tools/sim/load';
 import { createWorldState } from '../src/sim/setup';
 import { ALIVE } from '../src/sim/state';
 import { rulerRows, RulerCopy } from '../server/rulers_copy';
-import { WorldCore, configFromEnv } from '../server/world';
+import { configFromEnv } from '../server/config';
+import { WorldCore } from '../server/world';
 import { MemStore } from './setup/mem_store';
 
 describe('readable copy of the rulers', () => {

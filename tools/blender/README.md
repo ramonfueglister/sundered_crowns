@@ -46,8 +46,3 @@ Verzerrung stammt aus dem Referenzbild und ist noch nicht entschieden.
 `lib/diorama.py` führt die Palette von `src/buildings/palette.ts` als sRGB-Hex und rechnet sie wie `batch.ts` nach
 Linear um. Ein Modell aus Blender hat deshalb genau die Farben der handgebauten Gebäude daneben.
 
-## Noch nicht hier
-
-`tools/models/` mit `public/models/models.{json,bin}` ist die ältere Blender-Pipeline der 2D-Karte
-(`src/render/props.ts`) mit eigenem Binärformat. Sie bleibt, bis die 2D-Karte entschieden ist; neue Modelle gehen
-über glTF.
