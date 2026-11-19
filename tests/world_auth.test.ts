@@ -15,18 +15,31 @@ describe('auth config', () => {
   it('is DEV mode only when nothing of Supabase is configured', () => {
     expect(authConfigFromEnv({}).devMode).toBe(true);
     expect(authConfigFromEnv({ SUPABASE_URL: 'https://proj.supabase.co' }).devMode).toBe(false);
-    expect(authConfigFromEnv({ SUPABASE_URL: 'https://proj.supabase.co' }).jwksUrl).toBe('https://proj.supabase.co/auth/v1/.well-known/jwks.json');
+    expect(authConfigFromEnv({ SUPABASE_URL: 'https://proj.supabase.co' }).jwksUrl).toBe(
+      'https://proj.supabase.co/auth/v1/.well-known/jwks.json',
+    );
   });
 });
 
 describe('HS256 tokens', () => {
-  const good = { sub: UID, aud: 'authenticated', role: 'authenticated', exp: now + 600, iss: 'https://proj.supabase.co/auth/v1', email: 'alice@example.org' };
-  it('accepts a valid token', async () => { expect((await verifyJwt(signHs256(good, SECRET), hsCfg)).sub).toBe(UID); });
+  const good = {
+    sub: UID,
+    aud: 'authenticated',
+    role: 'authenticated',
+    exp: now + 600,
+    iss: 'https://proj.supabase.co/auth/v1',
+    email: 'alice@example.org',
+  };
+  it('accepts a valid token', async () => {
+    expect((await verifyJwt(signHs256(good, SECRET), hsCfg)).sub).toBe(UID);
+  });
   it('rejects a forged signature, an expired token, a wrong audience or issuer', async () => {
     await expect(verifyJwt(signHs256(good, 'another-secret'), hsCfg)).rejects.toThrow(/signature/);
     await expect(verifyJwt(signHs256({ ...good, exp: now - 3600 }, SECRET), hsCfg)).rejects.toThrow(/expired/);
     await expect(verifyJwt(signHs256({ ...good, aud: 'anon' }, SECRET), hsCfg)).rejects.toThrow(/audience/);
-    await expect(verifyJwt(signHs256({ ...good, iss: 'https://evil.example/auth/v1' }, SECRET), hsCfg)).rejects.toThrow(/issuer/);
+    await expect(verifyJwt(signHs256({ ...good, iss: 'https://evil.example/auth/v1' }, SECRET), hsCfg)).rejects.toThrow(
+      /issuer/,
+    );
     const [h, , s] = signHs256(good, SECRET).split('.');
     const tampered = `${h}.${Buffer.from(JSON.stringify({ ...good, sub: 'someone-else' })).toString('base64url')}.${s}`;
     await expect(verifyJwt(tampered, hsCfg)).rejects.toThrow(/signature/);
@@ -36,13 +49,16 @@ describe('HS256 tokens', () => {
   it('authenticate() maps the token to a user; anon-role tokens are refused', async () => {
     const u = await authenticate({ token: signHs256(good, SECRET) }, hsCfg, new NullStore());
     expect(u).toEqual({ uid: UID, name: 'alice', admin: false });
-    expect(await authenticate({ token: signHs256({ ...good, role: 'anon' }, SECRET) }, hsCfg, new NullStore())).toHaveProperty('error');
+    expect(
+      await authenticate({ token: signHs256({ ...good, role: 'anon' }, SECRET) }, hsCfg, new NullStore()),
+    ).toHaveProperty('error');
     // a name alone signs nobody in: without a token one only watches
     const m = await authenticate({ name: 'Mallory' }, hsCfg, new NullStore());
     expect(m).toMatchObject({ name: 'Observer', admin: false, observer: true });
   });
   it('lets anyone watch without signing in, each connection under an id of its own', async () => {
-    const a = await authenticate({}, hsCfg, new NullStore()), b = await authenticate({}, hsCfg, new NullStore());
+    const a = await authenticate({}, hsCfg, new NullStore()),
+      b = await authenticate({}, hsCfg, new NullStore());
     expect(a).toMatchObject({ observer: true, admin: false });
     expect((a as { uid: string }).uid).toMatch(/^watch-/);
     expect((a as { uid: string }).uid).not.toBe((b as { uid: string }).uid);
@@ -55,12 +71,17 @@ describe('JWKS (ES256) tokens', () => {
     const jwk = { ...publicKey.export({ format: 'jwk' }), kid: 'k1', alg: 'ES256', use: 'sig' };
     vi.stubGlobal('fetch', async () => new Response(JSON.stringify({ keys: [jwk] }), { status: 200 }));
     const enc = (o: any) => Buffer.from(JSON.stringify(o)).toString('base64url');
-    const head = enc({ alg: 'ES256', kid: 'k1', typ: 'JWT' }), body = enc({ sub: UID, aud: 'authenticated', exp: now + 600 });
-    const sig = sign('SHA256', Buffer.from(`${head}.${body}`), { key: privateKey, dsaEncoding: 'ieee-p1363' }).toString('base64url');
+    const head = enc({ alg: 'ES256', kid: 'k1', typ: 'JWT' }),
+      body = enc({ sub: UID, aud: 'authenticated', exp: now + 600 });
+    const sig = sign('SHA256', Buffer.from(`${head}.${body}`), { key: privateKey, dsaEncoding: 'ieee-p1363' }).toString(
+      'base64url',
+    );
     const cfg = authConfigFromEnv({ SUPABASE_URL: 'https://proj.supabase.co' });
     expect((await verifyJwt(`${head}.${body}.${sig}`, cfg)).sub).toBe(UID);
     const other = generateKeyPairSync('ec', { namedCurve: 'P-256' }).privateKey;
-    const bad = sign('SHA256', Buffer.from(`${head}.${body}`), { key: other, dsaEncoding: 'ieee-p1363' }).toString('base64url');
+    const bad = sign('SHA256', Buffer.from(`${head}.${body}`), { key: other, dsaEncoding: 'ieee-p1363' }).toString(
+      'base64url',
+    );
     await expect(verifyJwt(`${head}.${body}.${bad}`, cfg)).rejects.toThrow(/signature/);
   });
 });
@@ -68,8 +89,16 @@ describe('JWKS (ES256) tokens', () => {
 describe('DEV login', () => {
   it('accepts a sane display name and derives a stable id', async () => {
     const cfg = authConfigFromEnv({});
-    expect(await authenticate({ name: '  Jan  Žižka ' }, cfg, new NullStore())).toEqual({ uid: 'dev-jan-žižka', name: 'Jan Žižka', admin: false });
+    expect(await authenticate({ name: '  Jan  Žižka ' }, cfg, new NullStore())).toEqual({
+      uid: 'dev-jan-žižka',
+      name: 'Jan Žižka',
+      admin: false,
+    });
     expect(await authenticate({ name: 'x' }, cfg, new NullStore())).toHaveProperty('error');
-    expect(await authenticate({ name: '<script>' }, cfg, new NullStore())).toEqual({ uid: 'dev-script', name: 'script', admin: false });
+    expect(await authenticate({ name: '<script>' }, cfg, new NullStore())).toEqual({
+      uid: 'dev-script',
+      name: 'script',
+      admin: false,
+    });
   });
 });

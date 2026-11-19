@@ -8,15 +8,26 @@ function memBucket() {
   const files = new Map<string, Uint8Array>();
   const notFound = { message: 'Object not found', statusCode: '404', status: 400 };
   const bucket = {
-    async upload(path: string, body: Uint8Array) { files.set(path, body.slice()); return { data: { path }, error: null }; },
+    async upload(path: string, body: Uint8Array) {
+      files.set(path, body.slice());
+      return { data: { path }, error: null };
+    },
     async download(path: string) {
       const b = files.get(path);
       return b ? { data: new Blob([new Uint8Array(b)]), error: null } : { data: null, error: notFound };
     },
     async list(prefix: string) {
-      return { data: [...files.keys()].filter((k) => k.startsWith(prefix + '/')).map((k) => ({ name: k.slice(prefix.length + 1) })), error: null };
+      return {
+        data: [...files.keys()]
+          .filter((k) => k.startsWith(prefix + '/'))
+          .map((k) => ({ name: k.slice(prefix.length + 1) })),
+        error: null,
+      };
     },
-    async remove(paths: string[]) { for (const p of paths) files.delete(p); return { data: [], error: null }; },
+    async remove(paths: string[]) {
+      for (const p of paths) files.delete(p);
+      return { data: [], error: null };
+    },
   };
   return { files, db: { storage: { from: () => bucket } } };
 }
@@ -44,7 +55,9 @@ describe('copy of the world in Supabase Storage', () => {
     expect([...b!.history!]).toEqual([7]);
     // the next snapshot replaces the parts of this one
     expect(await s.uploadSnapshot('w', 60, new Uint8Array([1, 2, 3]), '{}', null)).toBe(true);
-    expect([...files.keys()].filter((k) => /snapshot-\d+-\d+\.bin$/.test(k))).toEqual(['w/persistent/snapshot-60-0.bin']);
+    expect([...files.keys()].filter((k) => /snapshot-\d+-\d+\.bin$/.test(k))).toEqual([
+      'w/persistent/snapshot-60-0.bin',
+    ]);
     expect([...(await s.downloadBackup('w'))!.bin]).toEqual([1, 2, 3]);
   });
 

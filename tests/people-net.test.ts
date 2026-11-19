@@ -8,7 +8,8 @@ import { newWorldState } from '../tools/sim/load';
 const { s } = newWorldState();
 describe('the persons of a place', () => {
   it('are the living persons of its cities, in columns of equal length', () => {
-    const london = CITIES.find((c) => c.name === 'London')!.place, v = placePeople(s, london);
+    const london = CITIES.find((c) => c.name === 'London')!.place,
+      v = placePeople(s, london);
     expect(v.id).toEqual(personsIn(s, london));
     for (const k of ['born', 'sex', 'family'] as const) expect(v[k].length).toBe(v.id.length);
     expect(placePeople(s, 2000).id.length).toBe(0);

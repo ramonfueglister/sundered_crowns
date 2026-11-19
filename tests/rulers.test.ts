@@ -13,7 +13,8 @@ import { workforce } from '../src/sim/systems/work';
 import { personHistory } from '../src/net/people';
 
 const fixture: ChronicleJson = {
-  year: 1291, until: '1848-12-31',
+  year: 1291,
+  until: '1848-12-31',
   persons: [
     { key: 'Q1', name: 'Edward I', house: 'Plantagenet', qid: 'Q1', sex: 1, born: '1239-06-17', died: '1307-07-07' },
     { key: 'Q2', name: 'Edward II', house: 'Plantagenet', qid: 'Q2', sex: 1, born: '1284-04-25', died: '1327-09-21' },
@@ -41,7 +42,11 @@ const holderName = (s: WorldState, key: string) => {
   return h < 0 ? null : s.named.find((n) => n.person === h)!.name;
 };
 /** Plays the chronicle up to a date, as the daily system would. */
-const until = (s: WorldState, date: string) => { const d = dayOf(date, 1291)!; playChronicle(s, w, s.day + 1, d); s.day = d; };
+const until = (s: WorldState, date: string) => {
+  const d = dayOf(date, 1291)!;
+  playChronicle(s, w, s.day + 1, d);
+  s.day = d;
+};
 
 describe('the chronicle of rulers', () => {
   it('reads the dates of the sources: a date without a day is the middle of its month or year', () => {
@@ -57,12 +62,17 @@ describe('the rulers of a world of 1291', () => {
   it('draw their genes from the pool of their culture, and get them again by the upgrade from 24', () => {
     // (portrait round 111, src/sim/people/pools.ts) the skin's two alleles: Gallia's 0 to 80 for the English and the
     // French king, Germania's 0 to 60 for the ruler of Bohemia
-    const skin = (name: string) => { const id = s.named.find((n) => n.name === name)!.person; return [s.person.cols.genes[id * 100 + 26], s.person.cols.genes[id * 100 + 50 + 26]]; };
+    const skin = (name: string) => {
+      const id = s.named.find((n) => n.name === name)!.person;
+      return [s.person.cols.genes[id * 100 + 26], s.person.cols.genes[id * 100 + 50 + 26]];
+    };
     for (const v of [...skin('Edward I'), ...skin('Philip IV')]) expect(v).toBeLessThanOrEqual(80);
     for (const v of skin('A ruler without a known birth')) expect(v).toBeLessThanOrEqual(60);
-    const old = fresh(), before = hashState(old);
+    const old = fresh(),
+      before = hashState(old);
     expect(before).toBe(hashState(s));
-    old.v = 24; old.person.cols.genes.fill(7, 0, old.person.size * 100);
+    old.v = 24;
+    old.person.cols.genes.fill(7, 0, old.person.size * 100);
     expect(hashState(old)).not.toBe(before);
     const up = upgradeState(old, w, () => loadSetup(1291));
     expect(up.v).toBe(STATE_VERSION);
@@ -77,15 +87,22 @@ describe('the rulers of a world of 1291', () => {
     expect(s.realm.cols.holder[realm(s, 'castile')]).toBe(-1);
   });
   it('brings into the world who lives on the first day, and nobody who died before it', () => {
-    expect(s.named.map((n) => n.name).sort()).toEqual(['A ruler without a known birth', 'Edward I', 'Edward II', 'Philip IV']);
-    const P = s.person.cols, e1 = s.named.find((n) => n.name === 'Edward I')!.person;
+    expect(s.named.map((n) => n.name).sort()).toEqual([
+      'A ruler without a known birth',
+      'Edward I',
+      'Edward II',
+      'Philip IV',
+    ]);
+    const P = s.person.cols,
+      e1 = s.named.find((n) => n.name === 'Edward I')!.person;
     expect(P.born[e1]).toBe(dayOf('1239-06-17', 1291));
     expect(P.died[e1]).toBe(ALIVE);
     expect(P.born[s.named.find((n) => n.key === 'X|bohemia#1')!.person]).toBe(BORN_UNKNOWN);
     expect(P.sex[s.named.find((n) => n.key === 'X|bohemia#1')!.person]).toBe(0);
   });
   it('lets a ruler live in the capital of the realm, outside the economy', () => {
-    const e1 = s.named.find((n) => n.name === 'Edward I')!.person, london = s.realm.cols.capital[realm(s, 'england')];
+    const e1 = s.named.find((n) => n.name === 'Edward I')!.person,
+      london = s.realm.cols.capital[realm(s, 'england')];
     expect(s.family.cols.place[s.person.cols.family[e1]]).toBe(london);
     expect(personsIn(s, london)).toContain(e1);
     expect(s.person.cols.role[e1]).toBe(0);
@@ -111,8 +128,13 @@ describe('the rulers of a world of 1291', () => {
   it('lets one person hold several crowns, as the real holder of a title', () => {
     const t = fresh();
     until(t, '1305-01-01');
-    const p = s.named.find((n) => n.name === 'Philip IV')!.key, id = t.named.find((n) => n.key === p)!.person;
-    expect(personHistory(t, id)!.crowns.map((c) => c.key).sort()).toEqual(['brittany', 'france']);
+    const p = s.named.find((n) => n.name === 'Philip IV')!.key,
+      id = t.named.find((n) => n.key === p)!.person;
+    expect(
+      personHistory(t, id)!
+        .crowns.map((c) => c.key)
+        .sort(),
+    ).toEqual(['brittany', 'france']);
     until(t, '1315-01-01');
     expect(personHistory(t, id)!.crowns).toEqual([]);
     expect(personHistory(t, id)!.died).toBe(dayOf('1314-11-29', 1291));
@@ -131,12 +153,17 @@ describe('a world of 1291 saved before the rulers', () => {
     until(s, '1310-01-01');
     // the world as the build before saved it: no holders, nobody's death, no persons of history
     const old = decodeState(encodeState(fresh()));
-    old.day = s.day; old.v = 15;
-    const R = old.realm.cols as Record<string, unknown>, P = old.person.cols as Record<string, unknown>;
-    delete R.holder; delete P.died; delete (old as Partial<WorldState>).named;
+    old.day = s.day;
+    old.v = 15;
+    const R = old.realm.cols as Record<string, unknown>,
+      P = old.person.cols as Record<string, unknown>;
+    delete R.holder;
+    delete P.died;
+    delete (old as Partial<WorldState>).named;
     // rows of the persons of history out again: the build before had only the persons of the cities
     const cities = old.named === undefined ? s.person.size - s.named.length : 0;
-    old.person.size = cities; old.family.size = s.family.size - s.named.length;
+    old.person.size = cities;
+    old.family.size = s.family.size - s.named.length;
     const up = upgradeState(old, w, () => loadSetup(1291));
     expect(up.v).toBe(STATE_VERSION);
     expect(holderName(up, 'england')).toBe('Edward II');

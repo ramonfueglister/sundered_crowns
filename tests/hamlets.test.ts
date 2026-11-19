@@ -16,7 +16,8 @@ import { loadSetup, dataPath } from '../tools/sim/load';
 import { readFileSync } from 'node:fs';
 
 const { s, w } = newWorldState(1291, 1291);
-const P = s.person.cols, F = s.family.cols;
+const P = s.person.cols,
+  F = s.family.cols;
 const living = (id: number) => s.person.alive[id] === 1 && P.died[id] === ALIVE;
 
 describe('the hamlets of a world of 1291', () => {
@@ -26,18 +27,25 @@ describe('the hamlets of a world of 1291', () => {
       if (!living(id) || (P.role[id] !== ROLE.worker && P.role[id] !== ROLE.owner) || P.firm[id] < 0) continue;
       if (s.firm.cols.sector[P.firm[id]] === AGRICULTURE) farm[P.family[id]] = 1;
     }
-    let differ = 0, hamlets = 0;
-    for (let f = 0; f < s.family.size; f++) { if (farm[f] !== F.hamlet[f]) differ++; hamlets += F.hamlet[f]; }
+    let differ = 0,
+      hamlets = 0;
+    for (let f = 0; f < s.family.size; f++) {
+      if (farm[f] !== F.hamlet[f]) differ++;
+      hamlets += F.hamlet[f];
+    }
     expect(differ).toBe(0);
     expect(hamlets).toBeGreaterThan(10_000);
   });
   it('hold about three quarters of the persons, as the economies of the towns put them in agriculture', () => {
     const { people, farmers } = residents(s);
-    const all = people.reduce((a, b) => a + b, 0), farm = farmers.reduce((a, b) => a + b, 0);
-    expect(farm / all).toBeGreaterThan(0.6); expect(farm / all).toBeLessThan(0.85);
+    const all = people.reduce((a, b) => a + b, 0),
+      farm = farmers.reduce((a, b) => a + b, 0);
+    expect(farm / all).toBeGreaterThan(0.6);
+    expect(farm / all).toBeLessThan(0.85);
     const paris = w.names.indexOf('Paris');
     expect(farmersOf(s, paris)).toBe(farmers[paris]);
-    expect(farmers[paris]).toBeGreaterThan(0); expect(farmers[paris]).toBeLessThan(people[paris]);
+    expect(farmers[paris]).toBeGreaterThan(0);
+    expect(farmers[paris]).toBeLessThan(people[paris]);
   });
   it('keep their families in the place of their town; rulers live in town', () => {
     for (const n of s.named) expect(F.hamlet[P.family[n.person]]).toBe(0);
@@ -47,21 +55,27 @@ describe('the hamlets of a world of 1291', () => {
 describe('the people of a place', () => {
   it('are its persons and nobody else: a place without persons has no people, no arable and no harvest', () => {
     const { people } = residents(s);
-    let empty = 0, all = 0;
+    let empty = 0,
+      all = 0;
     for (let i = 0; i < w.L; i++) {
       expect(s.place.pop[i]).toBe(people[i]);
       all += people[i];
-      if (people[i] === 0) { empty++; expect(s.place.arable[i]).toBe(0); expect(s.place.harvest[i]).toBe(0); }
-      else expect(s.place.arable[i]).toBe(arableHa(w, i, ofTime(people[i])));
+      if (people[i] === 0) {
+        empty++;
+        expect(s.place.arable[i]).toBe(0);
+        expect(s.place.harvest[i]).toBe(0);
+      } else expect(s.place.arable[i]).toBe(arableHa(w, i, ofTime(people[i])));
     }
-    let alive = 0; for (let id = 0; id < s.person.size; id++) if (living(id)) alive++;
+    let alive = 0;
+    for (let id = 0; id < s.person.size; id++) if (living(id)) alive++;
     expect(all).toBe(alive);
     expect(empty).toBeGreaterThan(w.L - 1000);
     // the setup's numbers are only the start of the persons, not people of the world
     expect(all).toBeLessThan(peopleOfMap(1291).reduce((a, b) => a + b, 0) / 10);
   });
   it('are fed by their hamlets: a harvest per head of the time in most towns', () => {
-    let fed = 0, towns = 0;
+    let fed = 0,
+      towns = 0;
     for (let i = 0; i < w.L; i++) {
       if (!(s.place.pop[i] > 0)) continue;
       towns++;
@@ -83,11 +97,20 @@ describe('the people of a place', () => {
 
 describe('the hamlets for the world graphic (public/data/hamlets_1291.json)', () => {
   it('are those of a new world', () => {
-    const file = JSON.parse(readFileSync(dataPath('hamlets_1291.json'), 'utf8')) as { place: number[]; persons: number[]; hamlet_persons: number[]; hamlet_families: number[] };
+    const file = JSON.parse(readFileSync(dataPath('hamlets_1291.json'), 'utf8')) as {
+      place: number[];
+      persons: number[];
+      hamlet_persons: number[];
+      hamlet_families: number[];
+    };
     const { people, farmers } = residents(s);
     expect(file.place.length).toBe(people.filter((n) => n > 0).length);
-    file.place.forEach((p, k) => { expect(file.persons[k]).toBe(people[p]); expect(file.hamlet_persons[k]).toBe(farmers[p]); });
-    let families = 0; for (let f = 0; f < s.family.size; f++) families += F.hamlet[f];
+    file.place.forEach((p, k) => {
+      expect(file.persons[k]).toBe(people[p]);
+      expect(file.hamlet_persons[k]).toBe(farmers[p]);
+    });
+    let families = 0;
+    for (let f = 0; f < s.family.size; f++) families += F.hamlet[f];
     expect(file.hamlet_families.reduce((a, b) => a + b, 0)).toBe(families);
   });
 });
@@ -98,7 +121,8 @@ describe('a world of 1291 saved before the hamlets', () => {
     old.v = 16;
     delete (old.family.cols as Record<string, unknown>).hamlet;
     old.place.pop.set(peopleOfMap(1291)); // the numbers of the setup, as version 16 kept them
-    old.place.arable.fill(1); old.place.harvest.fill(1);
+    old.place.arable.fill(1);
+    old.place.harvest.fill(1);
     expect(hashState(old)).not.toBe(hashState(s));
     const up = upgradeState(old, w, () => loadSetup(1291));
     expect(up.v).toBe(STATE_VERSION);
