@@ -15,7 +15,15 @@ Usage (ESRI ASCII grids as they come out of HYDE's zip files; the year is read f
   python3 check_hyde.py --name "HYDE 3.3 baseline" --cropland cropland1300AD.asc cropland1400AD.asc \
                         --pop popc_1300AD.asc popc_1400AD.asc > hyde_regions.json
 """
-import argparse, gzip, hashlib, json, os, re, sys
+
+import argparse
+import gzip
+import hashlib
+import json
+import os
+import re
+import sys
+
 import numpy as np
 from common import LON0, LON1, OUT_DATA, OUT_PUBLIC, km_per_px, px_to_lonlat_np
 
@@ -93,18 +101,28 @@ def main():
         row = np.floor((y1 - lat) / cell).astype(np.int64)
         if col.min() < 0 or col.max() >= a.shape[1] or row.min() < 0 or row.max() >= a.shape[0]:
             sys.exit('%s does not cover the map window' % path)
-        idx = (row[:, None] * a.shape[1] + col[None, :])
-        window = np.zeros(a.size, dtype=bool); window[idx.ravel()] = True
+        idx = row[:, None] * a.shape[1] + col[None, :]
+        window = np.zeros(a.size, dtype=bool)
+        window[idx.ravel()] = True
         idx = idx[land]
         cell_land = np.bincount(idx, weights=px_km2, minlength=a.size)
         flat = a.ravel()
         value = px_km2 / cell_land[idx] * flat[idx]
         outside = float(flat[window & (cell_land == 0)].sum())
-        rec = {'file': os.path.basename(path), 'bytes': os.path.getsize(path), 'sha256': sha256(path),
-               'ncols': int(head['ncols']), 'nrows': int(head['nrows']), 'xllcorner': head['xllcorner'],
-               'yllcorner': head['yllcorner'], 'cellsize': head['cellsize'], 'nodata_cells': n_nodata,
-               'sum_world': round(float(flat.sum()), 1), 'sum_map_window': round(float(flat[window].sum()), 1),
-               'outside_map_land': round(outside, 1)}
+        rec = {
+            'file': os.path.basename(path),
+            'bytes': os.path.getsize(path),
+            'sha256': sha256(path),
+            'ncols': int(head['ncols']),
+            'nrows': int(head['nrows']),
+            'xllcorner': head['xllcorner'],
+            'yllcorner': head['yllcorner'],
+            'cellsize': head['cellsize'],
+            'nodata_cells': n_nodata,
+            'sum_world': round(float(flat.sum()), 1),
+            'sum_map_window': round(float(flat[window].sum()), 1),
+            'outside_map_land': round(outside, 1),
+        }
         return np.bincount(place, weights=value, minlength=L), rec
 
     def sums(v, digits):
@@ -116,10 +134,12 @@ def main():
     out = {
         'dataset': args.name,
         'method': 'each grid cell spread over the land pixels of the map inside it, by ground area; sums per region '
-                  'of the map (public/data/geo.json), for the places of England (public/data/land.json) and for the '
-                  'whole map',
+        'of the map (public/data/geo.json), for the places of England (public/data/land.json) and for the '
+        'whole map',
         'land_km2': sums(area, 0),
-        'cropland_km2': {}, 'people': {}, 'files': [],
+        'cropland_km2': {},
+        'people': {},
+        'files': [],
     }
     for kind, paths, digits in (('cropland_km2', args.cropland, 1), ('people', args.pop, 0)):
         for path in paths:

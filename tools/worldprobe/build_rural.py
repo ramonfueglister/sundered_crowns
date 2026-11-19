@@ -18,6 +18,7 @@ d as round(25 · log2(1 + d)), up to 250 (1023 per km²).
 
     python3 tools/worldprobe/build_rural.py 1291
 """
+
 import gzip
 import json
 import sys
@@ -49,8 +50,10 @@ def main(year: int) -> None:
     with gzip.GzipFile(out, 'wb', compresslevel=9, mtime=0) as f:
         f.write(layer.tobytes())
     land = layer[layer != 255]
-    print(f'{out.relative_to(ROOT)}: {layer.shape[1]} x {layer.shape[0]}, {out.stat().st_size} bytes; people per km² on the land, '
-          f'by area: median {2 ** (np.median(land) / STEPS) - 1:.1f}, nine tenths below {2 ** (np.percentile(land, 90) / STEPS) - 1:.1f}')
+    print(
+        f'{out.relative_to(ROOT)}: {layer.shape[1]} x {layer.shape[0]}, {out.stat().st_size} bytes; people per km² on the land, '
+        f'by area: median {2 ** (np.median(land) / STEPS) - 1:.1f}, nine tenths below {2 ** (np.percentile(land, 90) / STEPS) - 1:.1f}'
+    )
 
 
 if __name__ == '__main__':

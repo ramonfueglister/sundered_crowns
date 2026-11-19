@@ -5,6 +5,7 @@ Runs inside Blender (``blender -b --python``) or with the ``bpy`` module (``pip 
 blocks: a script converts its measured metres with the factor its measure file states. Z is up here; the glTF export
 turns the model to Y up, which is what the world's Three.js stage expects.
 """
+
 from __future__ import annotations
 
 import json
@@ -12,16 +13,26 @@ import math
 import os
 from dataclasses import dataclass
 
-import bpy  # noqa: F401  (bpy must be imported first: it brings bmesh and mathutils with it)
 import bmesh
+import bpy  # noqa: F401  (bpy must be imported first: it brings bmesh and mathutils with it)
 from mathutils import Vector
 
 # The colours of src/buildings/palette.ts, as sRGB hex. Keep the two lists the same: a model must share the palette
 # of the houses it stands among.
 PALETTE = {
-    'STONE': 0xD8CCC0, 'STONE_PALE': 0xE6DCCC, 'BRICK': 0xD0603C, 'MARBLE': 0xFDF4EA, 'PINK': 0xF6DCCC,
-    'LEAD': 0xD0CED4, 'COPPER': 0x6FB078, 'GOLD': 0xF4C440, 'SLATE': 0x7C8494,
-    'WINDOW': 0x3C3E48, 'OPENING': 0x3D4650, 'DOOR': 0x5A3A26, 'GLASS': 0x46506A,
+    'STONE': 0xD8CCC0,
+    'STONE_PALE': 0xE6DCCC,
+    'BRICK': 0xD0603C,
+    'MARBLE': 0xFDF4EA,
+    'PINK': 0xF6DCCC,
+    'LEAD': 0xD0CED4,
+    'COPPER': 0x6FB078,
+    'GOLD': 0xF4C440,
+    'SLATE': 0x7C8494,
+    'WINDOW': 0x3C3E48,
+    'OPENING': 0x3D4650,
+    'DOOR': 0x5A3A26,
+    'GLASS': 0x46506A,
 }
 
 
@@ -47,6 +58,7 @@ SIDE_NORMAL = {'+x': (1, 0, 0), '-x': (-1, 0, 0), '+y': (0, 1, 0), '-y': (0, -1,
 @dataclass
 class Model:
     """One model under construction: a bmesh with a colour per face, or one per corner where a face is shaded."""
+
     name: str
     bm: bmesh.types.BMesh
     colours: list
@@ -77,7 +89,16 @@ class Model:
     def box(self, x0, y0, z0, x1, y1, z1, colour, top=None, bottom=False, foot=1.0):
         """An axis-aligned box; the lower face is left out unless asked for (the ground hides it). ``foot`` darkens the
         lower corners of the sides, the cheap contact shading the game's batch.ts gives its boxes."""
-        v = [(x0, y0, z0), (x1, y0, z0), (x1, y1, z0), (x0, y1, z0), (x0, y0, z1), (x1, y0, z1), (x1, y1, z1), (x0, y1, z1)]
+        v = [
+            (x0, y0, z0),
+            (x1, y0, z0),
+            (x1, y1, z0),
+            (x0, y1, z0),
+            (x0, y0, z1),
+            (x1, y0, z1),
+            (x1, y1, z1),
+            (x0, y1, z1),
+        ]
         sides = [(0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7)]
         centre = ('from', ((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2))
         lo = shade(colour, foot)
@@ -89,34 +110,52 @@ class Model:
     def pyramid(self, cx, cy, z0, half, height, colour, top_half=0.0):
         """A square pyramid (or a truncated one when ``top_half`` > 0) standing on z0."""
         z1 = z0 + height
-        base = [(cx - half, cy - half, z0), (cx + half, cy - half, z0), (cx + half, cy + half, z0), (cx - half, cy + half, z0)]
+        base = [
+            (cx - half, cy - half, z0),
+            (cx + half, cy - half, z0),
+            (cx + half, cy + half, z0),
+            (cx - half, cy + half, z0),
+        ]
         if top_half <= 0:
             vs = base + [(cx, cy, z1)]
             self._add_faces(vs, [(0, 1, 4), (1, 2, 4), (2, 3, 4), (3, 0, 4)], colour, ('from', (cx, cy, z0)))
         else:
             t = top_half
             vs = base + [(cx - t, cy - t, z1), (cx + t, cy - t, z1), (cx + t, cy + t, z1), (cx - t, cy + t, z1)]
-            self._add_faces(vs, [(0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7), (4, 5, 6, 7)], colour, ('from', (cx, cy, z0)))
+            self._add_faces(
+                vs,
+                [(0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7), (4, 5, 6, 7)],
+                colour,
+                ('from', (cx, cy, z0)),
+            )
 
     @staticmethod
     def _on(side, x0, y0, x1, y1, u, z, t=0.0):
         """A point on one side ('+x', '-x', '+y', '-y') of the box x0..x1 × y0..y1: ``u`` along the side as seen from
         outside, left to right, ``z`` up it, ``t`` outwards from the wall (negative: into it)."""
-        if side == '+y': return (x0 + u, y1 + t, z)
-        if side == '-y': return (x1 - u, y0 - t, z)
-        if side == '+x': return (x1 + t, y1 - u, z)
+        if side == '+y':
+            return (x0 + u, y1 + t, z)
+        if side == '-y':
+            return (x1 - u, y0 - t, z)
+        if side == '+x':
+            return (x1 + t, y1 - u, z)
         return (x0 - t, y0 + u, z)
 
     def pane(self, side: str, x0, y0, x1, y1, z0, z1, u0, u1, colour, lift=0.04):
         """A flat rectangle lying on one side of the box x0..x1 × y0..y1, from u0 to u1 along that side and z0 to z1
         up it, a little off the wall so that it does not flicker into it."""
         on = lambda u, z: self._on(side, x0, y0, x1, y1, u, z, lift)
-        self._add_faces([on(u0, z0), on(u1, z0), on(u1, z1), on(u0, z1)], [(0, 1, 2, 3)], colour, ('along', SIDE_NORMAL[side]))
+        self._add_faces(
+            [on(u0, z0), on(u1, z0), on(u1, z1), on(u0, z1)], [(0, 1, 2, 3)], colour, ('along', SIDE_NORMAL[side])
+        )
 
     def arch(self, side, x0, y0, x1, y1, uc, z0, half, spring, colour, lift=0.04, segs=6):
         """A round-headed opening drawn flat on a wall: a pane up to ``spring``, a half disc above it."""
         self.pane(side, x0, y0, x1, y1, z0, spring, uc - half, uc + half, colour, lift)
-        pts = [(uc + math.cos(math.pi * k / segs) * half, spring + math.sin(math.pi * k / segs) * half) for k in range(segs + 1)]
+        pts = [
+            (uc + math.cos(math.pi * k / segs) * half, spring + math.sin(math.pi * k / segs) * half)
+            for k in range(segs + 1)
+        ]
         on = lambda u, z: self._on(side, x0, y0, x1, y1, u, z, lift)
         for (ua, za), (ub, zb) in zip(pts, pts[1:]):
             self._add_faces([on(uc, spring), on(ua, za), on(ub, zb)], [(0, 1, 2)], colour, ('along', SIDE_NORMAL[side]))
@@ -145,9 +184,16 @@ class Model:
         for k in range(n):
             u0 = pier + k * (ow + pier)
             uc, u1 = u0 + radius, u0 + ow
-            pts = [(uc + math.cos(math.pi * i / segs) * radius, spring + math.sin(math.pi * i / segs) * radius) for i in range(segs + 1)]
+            pts = [
+                (uc + math.cos(math.pi * i / segs) * radius, spring + math.sin(math.pi * i / segs) * radius)
+                for i in range(segs + 1)
+            ]
             mid = segs // 2
-            tris = [[(u1, z1), pts[i], pts[i + 1]] for i in range(mid)] + [[(u0, z1), pts[i], pts[i + 1]] for i in range(mid, segs)] + [[pts[mid], (u0, z1), (u1, z1)]]
+            tris = (
+                [[(u1, z1), pts[i], pts[i + 1]] for i in range(mid)]
+                + [[(u0, z1), pts[i], pts[i + 1]] for i in range(mid, segs)]
+                + [[pts[mid], (u0, z1), (u1, z1)]]
+            )
             for tri in tris:
                 self._add_faces([on(u, z, 0) for u, z in tri], [(0, 1, 2)], colour, ('along', normal))
             for (ua, za), (ub, zb) in zip(pts, pts[1:]):
@@ -186,12 +232,23 @@ def export_glb(obj: bpy.types.Object, path: str):
     bpy.ops.object.select_all(action='DESELECT')
     obj.select_set(True)
     bpy.context.view_layer.objects.active = obj
-    bpy.ops.export_scene.gltf(filepath=path, export_format='GLB', use_selection=True, export_yup=True, export_apply=True,
-                              export_normals=True, export_materials='NONE', export_vertex_color='ACTIVE',
-                              export_active_vertex_color_when_no_material=True, export_all_vertex_colors=False)
+    bpy.ops.export_scene.gltf(
+        filepath=path,
+        export_format='GLB',
+        use_selection=True,
+        export_yup=True,
+        export_apply=True,
+        export_normals=True,
+        export_materials='NONE',
+        export_vertex_color='ACTIVE',
+        export_active_vertex_color_when_no_material=True,
+        export_all_vertex_colors=False,
+    )
 
 
-def render_preview(path: str, height_blocks: float, width_px=900, height_px=1200, elevation_deg=18.7, azimuth_deg=46.7, samples=48):
+def render_preview(
+    path: str, height_blocks: float, width_px=900, height_px=1200, elevation_deg=18.7, azimuth_deg=46.7, samples=48
+):
     """A preview from the look probe's camera (orthographic, 18.7° above the ground, the ground turned 46.7°), lit
     like the probe: a sun from the right and behind with crisp shadows, a bluish sky as fill. Cycles on the CPU, so
     it also runs where there is no display (the Workbench engine needs one)."""
@@ -238,7 +295,11 @@ def render_preview(path: str, height_blocks: float, width_px=900, height_px=1200
     scene.collection.objects.link(cam)
     el, az = math.radians(elevation_deg), math.radians(azimuth_deg)
     d = height_blocks * 4
-    cam.location = (math.sin(az) * math.cos(el) * d, -math.cos(az) * math.cos(el) * d, math.sin(el) * d + height_blocks / 2)
+    cam.location = (
+        math.sin(az) * math.cos(el) * d,
+        -math.cos(az) * math.cos(el) * d,
+        math.sin(el) * d + height_blocks / 2,
+    )
     cam.rotation_euler = (math.pi / 2 - el, 0, az)
     scene.camera = cam
     scene.render.filepath = path

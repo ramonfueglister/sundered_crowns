@@ -1,11 +1,15 @@
 # Python checks for the data tools in tools/ (README.md, "Tests"): pyflakes (unused imports and variables, names that
-# are not defined) and syntax errors. CI runs `ruff check` in the lint job.
+# are not defined), syntax errors, one import per line, sorted imports, stray whitespace; and the layout of
+# `ruff format`. CI runs `ruff check` and `ruff format --check` in the lint job.
 target-version = "py311"
+line-length = 120
 extend-exclude = [
   "economy/vendor",  # a copy of someone else's code
   "tools/portrait",  # the portrait generator, while its open pull request (#84) changes it
-  "tools/models",    # removed by #90
 ]
 
 [lint]
-select = ["F", "E9"]
+select = ["F", "E9", "E401", "W", "I"]
+
+[format]
+quote-style = "single"

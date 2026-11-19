@@ -6,6 +6,7 @@ depth of the sea there on a log scale, 0 on land: byte = 255 * ln(1 + d / D0) / 
 
 usage: python3 tools/worldprobe/build_depth.py
 """
+
 import gzip
 import math
 import struct

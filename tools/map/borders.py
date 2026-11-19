@@ -15,7 +15,11 @@ The rules live in data/history/<year>/borders.json, each with its sources. They 
                                                          correct the exceptions
 Run on the baked setup: python3 tools/map/borders.py [year] [--dry]   (build_setup.py calls `apply` itself)
 """
-import json, math, os, sys
+
+import json
+import math
+import os
+import sys
 from collections import defaultdict
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -45,7 +49,8 @@ def apply(owner, state_ids, geo, names, year=1356, log=print):
     land_nb = defaultdict(list)
     for a, b, kind, _, _ in geo['edges']:
         if kind == 0 and a <= L and b <= L:
-            land_nb[a - 1].append(b - 1); land_nb[b - 1].append(a - 1)
+            land_nb[a - 1].append(b - 1)
+            land_nb[b - 1].append(a - 1)
     by_name = defaultdict(list)
     for i, n in enumerate(names[:L]):
         by_name[n].append(i)
@@ -53,14 +58,19 @@ def apply(owner, state_ids, geo, names, year=1356, log=print):
 
     def give(i, si, why):
         if owner[i] != si:
-            changes.append((names[i], state_ids[owner[i]] if owner[i] >= 0 else None, state_ids[si] if si >= 0 else None, why))
+            changes.append(
+                (names[i], state_ids[owner[i]] if owner[i] >= 0 else None, state_ids[si] if si >= 0 else None, why)
+            )
             owner[i] = si
 
     for k, r in enumerate(rules):
         why = r.get('note') or f'rule {k}'
         if 'islands' in r:
-            lo0, la0, lo1, la1 = r['islands']['box']; reach = r['islands']['km']
-            held = [i for i in range(L) if owner[i] >= 0 and lo0 - 2 <= lon[i] <= lo1 + 2 and la0 - 2 <= lat[i] <= la1 + 2]
+            lo0, la0, lo1, la1 = r['islands']['box']
+            reach = r['islands']['km']
+            held = [
+                i for i in range(L) if owner[i] >= 0 and lo0 - 2 <= lon[i] <= lo1 + 2 and la0 - 2 <= lat[i] <= la1 + 2
+            ]
             seen = set()
             for start in range(L):
                 if owner[start] >= 0 or start in seen or not (lo0 <= lon[start] <= lo1 and la0 <= lat[start] <= la1):
@@ -69,13 +79,19 @@ def apply(owner, state_ids, geo, names, year=1356, log=print):
                 group, stack, island = [], [start], True
                 seen.add(start)
                 while stack:
-                    i = stack.pop(); group.append(i)
+                    i = stack.pop()
+                    group.append(i)
                     for j in land_nb[i]:
-                        if owner[j] >= 0: island = False
-                        elif j not in seen: seen.add(j); stack.append(j)
+                        if owner[j] >= 0:
+                            island = False
+                        elif j not in seen:
+                            seen.add(j)
+                            stack.append(j)
                 if not island:
                     continue
-                d, best = min(((km(lon[i], lat[i], lon[j], lat[j]), j) for i in group for j in held), default=(None, None))
+                d, best = min(
+                    ((km(lon[i], lat[i], lon[j], lat[j]), j) for i in group for j in held), default=(None, None)
+                )
                 if best is not None and d <= reach:
                     for i in group:
                         give(i, owner[best], why)
@@ -100,7 +116,8 @@ def apply(owner, state_ids, geo, names, year=1356, log=print):
 
 
 def main():
-    year = int(next((a for a in sys.argv[1:] if a.isdigit()), 1356)); dry = '--dry' in sys.argv
+    year = int(next((a for a in sys.argv[1:] if a.isdigit()), 1356))
+    dry = '--dry' in sys.argv
     setup_path = os.path.join(ROOT, 'public', 'data', f'setup_{year}.json')
     setup = json.load(open(setup_path, encoding='utf-8'))
     geo = json.load(open(os.path.join(ROOT, 'public', 'data', 'geo.json'), encoding='utf-8'))

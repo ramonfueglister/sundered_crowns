@@ -34,13 +34,17 @@ Output: public/map/snowline.bin.gz, public/map/treeline.bin.gz
 
 Usage: python3 tools/worldprobe/build_lines.py     (needs numcodecs; fetches 1 GB into the cache folder once)
 """
-import gzip, os, sys
+
+import gzip
+import os
+import sys
+
 import numpy as np
 from scipy import ndimage
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'geo'))
-from common import ROOT
 from build_region import CACHE, WORLD_H, WORLD_W, cached, world_lonlat
+from common import ROOT
 
 BUCKET = 'https://storage.googleapis.com/weatherbench2/datasets/'
 CLIMATE = BUCKET + 'era5-hourly-climatology/1990-2019_6h_512x256_equiangular_conservative.zarr/'
@@ -61,6 +65,7 @@ KEPT = os.path.join(CACHE, 'era5', 'days_and_rain.npz')
 
 def chunk(url, name, shape):
     from numcodecs import Blosc
+
     return np.frombuffer(Blosc().decode(cached(url, os.path.join('era5', name))), '<f4').reshape(shape)
 
 
@@ -70,30 +75,41 @@ def climate():
         kept = np.load(KEPT)
         return [kept[k] for k in ('days', 'rain', 'ground', 'lon', 'lat')]
     # a chunk holds CHUNK days, the last one filled up beyond the end of the year
-    year = lambda field, k: chunk(f'{CLIMATE}{field}/0.{k}.0.0', f"{'t2m' if field[0] == '2' else 'tp'}_{k}", (4, CHUNK, LONS, LATS))[:, :min(CHUNK, DAYS - k * CHUNK)]
+    year = lambda field, k: chunk(
+        f'{CLIMATE}{field}/0.{k}.0.0', f'{"t2m" if field[0] == "2" else "tp"}_{k}', (4, CHUNK, LONS, LATS)
+    )[:, : min(CHUNK, DAYS - k * CHUNK)]
     chunks = range((DAYS + CHUNK - 1) // CHUNK)
     days = np.concatenate([year('2m_temperature', k).mean(0) for k in chunks]).astype(np.float32) - 273.15
     # each of the four hours of a day carries the precipitation of the 24 hours before it, in metres
-    rain = sum(year('total_precipitation_24hr', k).mean(0).sum(0, dtype=np.float64) for k in chunks) * 1000 * 365.25 / DAYS
+    rain = (
+        sum(year('total_precipitation_24hr', k).mean(0).sum(0, dtype=np.float64) for k in chunks) * 1000 * 365.25 / DAYS
+    )
     ground = chunk(f'{STATIC}geopotential_at_surface/0.0', 'zs', (LONS, LATS)) / 9.80665
-    lon, lat = (np.frombuffer(__import__('numcodecs').Blosc().decode(cached(f'{CLIMATE}{axis}/0', os.path.join('era5', axis))), '<f8') for axis in ('longitude', 'latitude'))
+    lon, lat = (
+        np.frombuffer(
+            __import__('numcodecs').Blosc().decode(cached(f'{CLIMATE}{axis}/0', os.path.join('era5', axis))), '<f8'
+        )
+        for axis in ('longitude', 'latitude')
+    )
     np.savez_compressed(KEPT, days=days, rain=rain, ground=ground, lon=lon, lat=lat)
     return days, rain, ground, lon, lat
 
 
 def snow_line(summer, year, rain, ground):
     """Height (m) at which the summer is as cold as the snow of the year needs (Ohmura et al. 1992), and the year's mean at freezing at the lowest."""
-    needed = (-296 + np.sqrt(296 ** 2 - 36 * (645 - np.minimum(rain, WETTEST)))) / 18
+    needed = (-296 + np.sqrt(296**2 - 36 * (645 - np.minimum(rain, WETTEST)))) / 18
     return ground + np.maximum(summer - needed, year) / LAPSE
 
 
 def tree_line(days, ground):
     """Height (m) up to which the season of growth is long and warm enough for trees (Paulsen and Körner 2014)."""
+
     def grows(up):
         t = days - LAPSE * up
         season = t > GROWS_FROM
         n = season.sum(0)
         return (n >= SEASON_DAYS) & ((t * season).sum(0) >= SEASON_MEAN * n)
+
     # between far below the ground and far above it, halved until the line is known to a metre
     low, high = np.full(ground.shape, -9000.0), np.full(ground.shape, 9000.0)
     for _ in range(15):
@@ -106,22 +122,52 @@ def tree_line(days, ground):
 def main():
     days, rain, ground, lon, lat = climate()
     north, south = days[list(SUMMER_NORTH)].mean(0, dtype=np.float64), days[SUMMER_SOUTH].mean(0, dtype=np.float64)
-    lines = {'snowline': snow_line(np.where(lat[None, :] >= 0, north, south), days.mean(0, dtype=np.float64), rain, ground), 'treeline': tree_line(days, ground)}
+    lines = {
+        'snowline': snow_line(np.where(lat[None, :] >= 0, north, south), days.mean(0, dtype=np.float64), rain, ground),
+        'treeline': tree_line(days, ground),
+    }
     # onto the cells of the layer, between the points of the source
-    wlon, wlat = world_lonlat(np.arange(WORLD_W // CELL) * CELL + CELL / 2, np.arange(WORLD_H // CELL) * CELL + CELL / 2)
-    fx = ((wlon % 360) - lon[0]) / (lon[1] - lon[0]); fy = (wlat - lat[0]) / (lat[1] - lat[0])
+    wlon, wlat = world_lonlat(
+        np.arange(WORLD_W // CELL) * CELL + CELL / 2, np.arange(WORLD_H // CELL) * CELL + CELL / 2
+    )
+    fx = ((wlon % 360) - lon[0]) / (lon[1] - lon[0])
+    fy = (wlat - lat[0]) / (lat[1] - lat[0])
     out = {}
     for name, line in lines.items():
-        out[name] = ndimage.map_coordinates(np.pad(line, ((0, 1), (0, 0)), mode='wrap'), np.meshgrid(fx % LONS, np.clip(fy, 0, LATS - 1), indexing='ij'), order=1, mode='nearest').T
+        out[name] = ndimage.map_coordinates(
+            np.pad(line, ((0, 1), (0, 0)), mode='wrap'),
+            np.meshgrid(fx % LONS, np.clip(fy, 0, LATS - 1), indexing='ij'),
+            order=1,
+            mode='nearest',
+        ).T
         cells = np.clip(np.round(out[name] / STEP), 0, 255).astype(np.uint8)
         path = os.path.join(ROOT, 'public', 'map', f'{name}.bin.gz')
-        with open(path, 'wb') as f: f.write(gzip.compress(cells.tobytes(), 9, mtime=0))
+        with open(path, 'wb') as f:
+            f.write(gzip.compress(cells.tobytes(), 9, mtime=0))
         print(f'{name}: {cells.shape[1]} x {cells.shape[0]}, {os.path.getsize(path) / 1e3:.0f} kB')
     at = lambda name, lo, la: int(out[name][np.abs(wlat - la).argmin(), np.abs((wlon - lo + 180) % 360 - 180).argmin()])
-    for place, lo, la in (('Alps', 9.5, 46.5), ('Pyrenees', 0.5, 42.6), ('Caucasus', 43, 43), ('Tatra', 20.1, 49.2), ('Norway', 7, 61.5), ('Jotunheimen', 8.3, 61.6), ('Scotland', -4, 57.1), ('Iceland', -19, 64.2),
-                          ('Tibet', 86, 33), ('Everest', 87, 28), ('Karakoram', 76, 36), ('Pamir', 73, 38.5), ('Tian Shan', 80, 42), ('Kilimanjaro', 37.3, -3), ('Atacama Andes', -68, -24),
-                          ('Patagonia', -73.5, -49), ('Alaska Range', -151, 63), ('Colorado', -106, 39.5), ('Atlas', -7.9, 31)):
-        print(f"  {place}: snow {at('snowline', lo, la)} m, trees {at('treeline', lo, la)} m")
+    for place, lo, la in (
+        ('Alps', 9.5, 46.5),
+        ('Pyrenees', 0.5, 42.6),
+        ('Caucasus', 43, 43),
+        ('Tatra', 20.1, 49.2),
+        ('Norway', 7, 61.5),
+        ('Jotunheimen', 8.3, 61.6),
+        ('Scotland', -4, 57.1),
+        ('Iceland', -19, 64.2),
+        ('Tibet', 86, 33),
+        ('Everest', 87, 28),
+        ('Karakoram', 76, 36),
+        ('Pamir', 73, 38.5),
+        ('Tian Shan', 80, 42),
+        ('Kilimanjaro', 37.3, -3),
+        ('Atacama Andes', -68, -24),
+        ('Patagonia', -73.5, -49),
+        ('Alaska Range', -151, 63),
+        ('Colorado', -106, 39.5),
+        ('Atlas', -7.9, 31),
+    ):
+        print(f'  {place}: snow {at("snowline", lo, la)} m, trees {at("treeline", lo, la)} m')
 
 
 if __name__ == '__main__':

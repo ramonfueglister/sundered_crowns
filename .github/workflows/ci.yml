@@ -38,6 +38,7 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npm run lint
       - run: pipx run ruff==0.17.4 check
+      - run: pipx run ruff==0.17.4 format --check
 
   # The economy engine: its layout (economy/rustfmt.toml), clippy for the native and the WebAssembly build, and the Rust
   # tests of the shell. portrait/ joins once its open pull request is in.
