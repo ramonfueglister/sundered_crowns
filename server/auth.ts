@@ -12,7 +12,7 @@ import {
   type JsonWebKeyInput,
   type KeyObject,
 } from 'node:crypto';
-import type { UserAuth } from './world';
+import type { UserAuth } from './session';
 import type { WorldStore } from './store';
 
 export interface AuthConfig {

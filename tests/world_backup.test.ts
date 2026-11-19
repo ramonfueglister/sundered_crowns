@@ -5,7 +5,8 @@ import { describe, it, expect } from 'vitest';
 import { mkdtempSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { WorldCore, configFromEnv } from '../server/world';
+import { configFromEnv } from '../server/config';
+import { WorldCore } from '../server/world';
 import { MemStore } from './setup/mem_store';
 import { hashState } from '../src/sim/snapshot';
 

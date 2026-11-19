@@ -1,270 +1,31 @@
 // World server core: one authoritative, persistent world that runs without end. No sockets here (server/main.ts is
-// the transport), so tests can drive it in-process.
-//
-// Determinism: every change to the state goes through a log entry, appended to the command log in the order it was
-// applied and interleaved with day markers. A snapshot plus the log after it reproduces the state exactly
-// (verifyReplay). Real-time facts (a player left long ago) become log entries before they touch the state.
-import {
-  mkdirSync,
-  existsSync,
-  readFileSync,
-  renameSync,
-  readdirSync,
-  openSync,
-  writeSync,
-  closeSync,
-  unlinkSync,
-  fsyncSync,
-} from 'node:fs';
+// the transport), so tests can drive it in-process. Its parts: the log entries and their replay (log.ts), the files
+// on disk (files.ts), the settings (config.ts) and the connections (session.ts).
+import { mkdirSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { gzipSync, gunzipSync } from 'node:zlib';
 import type { WorldState } from '../src/sim/state';
 import type { World } from '../src/sim/world';
-import { applyCommand, type Command, type CmdResult } from '../src/sim/commands';
+import type { CmdResult, Command } from '../src/sim/commands';
 import { advanceDay } from '../src/sim/engine';
-import { encodeState, decodeState, hashState } from '../src/sim/snapshot';
+import { decodeState, hashState } from '../src/sim/snapshot';
 import { createWorldState } from '../src/sim/setup';
 import { upgradeState } from '../src/sim/upgrade';
 import { loadWorldFor, loadSetup } from '../tools/sim/load';
 import { realmInfos, placeDetail } from '../src/net/views';
-import { encodeOwners, SPEEDS, type ClientMsg, type ServerMsg, type WorldInfo, type Me } from '../src/net/protocol';
+import { encodeOwners, SPEEDS, type ClientMsg, type WorldInfo, type Me } from '../src/net/protocol';
+import type { WorldConfig } from './config';
+import { WorldFiles, writeFileDurable } from './files';
+import { applyEntry, type LogEntry, replayLines, parseLog } from './log';
+import { type Conn, Session, type UserAuth } from './session';
 import { NullStore, type WorldStore } from './store';
 import { RulerCopy } from './rulers_copy';
 import { BorderHistory } from './history';
 
-// ======================================================================= deterministic layer
-export type LogEntry =
-  | { k: 'cmd'; uid: string; cmd: Command }
-  | { k: 'claim'; uid: string; realm: number }
-  | { k: 'release'; realm: number };
-export type LogLine = { d: number; e: LogEntry } | { d: number; adv: 1 };
-
-const OK: CmdResult = { ok: true };
-const err = (e: string): CmdResult => ({ ok: false, err: e });
-
-/** Applies one log entry. A pure function of (state, entry): used live and in replay. */
-export function applyEntry(s: WorldState, w: World, e: LogEntry): CmdResult {
-  switch (e.k) {
-    case 'cmd': {
-      const r = e.cmd?.realm;
-      if (!Number.isInteger(r) || r < 0 || r >= s.realm.size || !s.realm.alive[r]) return err('no such realm');
-      if (s.ruler[r] !== e.uid) return err('not your realm');
-      return applyCommand(s, w, e.cmd);
-    }
-    case 'claim': {
-      const r = e.realm;
-      if (!Number.isInteger(r) || r < 0 || r >= s.realm.size || !s.realm.alive[r]) return err('no such realm');
-      if (s.ruler[r]) return err('this realm already has a ruler');
-      if (s.ruler.includes(e.uid)) return err('you already rule a realm');
-      s.ruler[r] = e.uid;
-      return OK;
-    }
-    case 'release': {
-      if (!s.ruler[e.realm]) return err('no ruler');
-      s.ruler[e.realm] = '';
-      return OK;
-    }
-  }
-  return err('unknown entry');
-}
-
-export function replayLines(s: WorldState, w: World, lines: Iterable<LogLine>): WorldState {
-  for (const l of lines) {
-    if ('adv' in l) {
-      if (l.d !== s.day) throw new Error(`replay out of step: log day ${l.d}, state day ${s.day}`);
-      advanceDay(s, w);
-    } else applyEntry(s, w, l.e);
-  }
-  return s;
-}
-export function parseLog(text: string): LogLine[] {
-  const out: LogLine[] = [];
-  for (const line of text.split('\n')) {
-    if (!line.trim()) continue;
-    try {
-      out.push(JSON.parse(line));
-    } catch {
-      break; /* torn last line after a crash */
-    }
-  }
-  return out;
-}
-
-// ======================================================================= files on disk
-/** Writes a file so that a crash or a power loss leaves either the old or the new one, whole: the bytes go to a
- *  temporary file, are forced onto the disk, and the temporary file takes the place of the old one. */
-export function writeFileDurable(file: string, data: Uint8Array | string) {
-  const fd = openSync(`${file}.tmp`, 'w');
-  try {
-    writeSync(fd, typeof data === 'string' ? Buffer.from(data) : data);
-    fsyncSync(fd);
-  } finally {
-    closeSync(fd);
-  }
-  renameSync(`${file}.tmp`, file);
-}
-
-/** Snapshots (gzip) and log segments: log-<day>.ndjson holds everything after the snapshot of that day. The genesis
- *  snapshot and the three most recent ones stay; the log segments all stay (a few bytes a day), so the world can be
- *  replayed from day 0. */
-export class WorldFiles {
-  private fd = -1;
-  constructor(readonly dir: string) {
-    mkdirSync(dir, { recursive: true });
-  }
-  latest(): { day: number; hash: string } | null {
-    try {
-      return JSON.parse(readFileSync(join(this.dir, 'snapshot.json'), 'utf8'));
-    } catch {
-      return null;
-    }
-  }
-  snapshots(): number[] {
-    return readdirSync(this.dir)
-      .map((f) => /^snap-(\d+)\.bin$/.exec(f))
-      .filter(Boolean)
-      .map((m) => Number(m![1]))
-      .sort((a, b) => a - b);
-  }
-  segments(): number[] {
-    return readdirSync(this.dir)
-      .map((f) => /^log-(\d+)\.ndjson$/.exec(f))
-      .filter(Boolean)
-      .map((m) => Number(m![1]))
-      .sort((a, b) => a - b);
-  }
-  writeSnapshot(s: WorldState): { day: number; hash: string; bin: Uint8Array } {
-    const bin = gzipSync(encodeState(s)),
-      day = s.day,
-      hash = hashState(s);
-    this.putSnapshot(day, hash, bin);
-    return { day, hash, bin };
-  }
-  /** Puts the bytes of a snapshot (gzip) on disk as the latest one and opens the log segment after it. */
-  putSnapshot(day: number, hash: string, bin: Uint8Array) {
-    writeFileDurable(join(this.dir, `snap-${day}.bin`), bin);
-    writeFileDurable(join(this.dir, 'snapshot.json'), JSON.stringify({ day, hash }));
-    // keep the genesis snapshot and the three most recent ones
-    const snaps = this.snapshots().filter((d) => d !== 0);
-    for (const d of snaps.slice(0, Math.max(0, snaps.length - 3))) {
-      try {
-        unlinkSync(join(this.dir, `snap-${d}.bin`));
-      } catch {
-        /* gone */
-      }
-    }
-    this.openSegment(day);
-  }
-  readSnapshot(day: number): WorldState {
-    return decodeState(gunzipSync(readFileSync(join(this.dir, `snap-${day}.bin`))));
-  }
-  readLines(fromDay: number): LogLine[] {
-    const out: LogLine[] = [];
-    for (const seg of this.segments())
-      if (seg >= fromDay) out.push(...parseLog(readFileSync(join(this.dir, `log-${seg}.ndjson`), 'utf8')));
-    return out;
-  }
-  segmentText(day: number): string {
-    try {
-      return readFileSync(join(this.dir, `log-${day}.ndjson`), 'utf8');
-    } catch {
-      return '';
-    }
-  }
-  openSegment(day: number) {
-    if (this.fd >= 0) closeSync(this.fd);
-    this.fd = openSync(join(this.dir, `log-${day}.ndjson`), 'a');
-  }
-  append(line: LogLine) {
-    if (this.fd < 0) throw new Error('log not open');
-    writeSync(this.fd, `${JSON.stringify(line)}\n`);
-  }
-  /** Forces what was appended onto the disk (once a day, after the day marker). */
-  sync() {
-    if (this.fd >= 0) fsyncSync(this.fd);
-  }
-  close() {
-    if (this.fd >= 0) closeSync(this.fd);
-    this.fd = -1;
-  }
-}
-
-// ======================================================================= world core
 /** at the highest speed, the days of one beat of the clock take this much real time at most before what changed goes out */
 const BATCH_MS = 100;
 /** smoothed real time of the parts of a day */
 const ema = (a: number, b: number) => a * 0.9 + b * 0.1;
-
-export interface WorldConfig {
-  id: string;
-  name: string;
-  dataDir: string;
-  /** real seconds per in-game day */
-  secondsPerDay: number;
-  snapshotEveryDays: number;
-  /** in-game days between snapshot uploads to Supabase Storage */
-  uploadEveryDays: number;
-  /** in-game days between uploads of the log since the last snapshot to Supabase Storage */
-  logUploadEveryDays: number;
-  /** real minutes at least between two snapshot uploads (a fast clock would otherwise send one every few seconds) */
-  uploadMinMinutes: number;
-  seed: number;
-  startYear: number;
-  maxPlayers: number;
-  /** real time without a login after which a player's realm is free again */
-  inactiveReleaseMs: number;
-  /** commands a player may give per in-game day */
-  cmdsPerDay: number;
-  /** account ids or display names with admin rights (besides the store's admin table) */
-  admins: string[];
-  devAuth: boolean;
-  /** who may pause the world and change its speed (the time control top left): admins (in a DEV world everyone), or everyone */
-  timeControl?: 'admins' | 'all';
-  log?: (msg: string) => void;
-}
-export function configFromEnv(env: Record<string, string | undefined> = process.env): WorldConfig {
-  const num = (k: string, d: number) => {
-    const v = Number(env[k]);
-    return env[k] !== undefined && env[k] !== '' && Number.isFinite(v) ? v : d;
-  };
-  return {
-    id: (env.WORLD_ID || 'europa-1')
-      .toLowerCase()
-      .replace(/[^a-z0-9-]/g, '-')
-      .slice(0, 32),
-    name: env.WORLD_NAME || 'Europa I',
-    dataDir: env.WORLD_DATA_DIR || './world-data',
-    secondsPerDay: num('SECONDS_PER_DAY', 240),
-    snapshotEveryDays: Math.max(1, num('SNAPSHOT_EVERY_DAYS', 30)),
-    uploadEveryDays: Math.max(1, num('SNAPSHOT_UPLOAD_EVERY_DAYS', 30)),
-    logUploadEveryDays: Math.max(1, num('LOG_UPLOAD_EVERY_DAYS', 1)),
-    uploadMinMinutes: Math.max(0, num('SNAPSHOT_UPLOAD_MIN_MINUTES', 60)),
-    seed: num('WORLD_SEED', 1356),
-    startYear: num('WORLD_START_YEAR', 1356),
-    maxPlayers: num('MAX_PLAYERS', 100),
-    inactiveReleaseMs: num('INACTIVE_RELEASE_DAYS', 7) * 86400_000,
-    cmdsPerDay: num('CMDS_PER_DAY', 60),
-    admins: (env.ADMIN_USERS || '')
-      .split(',')
-      .map((x) => x.trim())
-      .filter(Boolean),
-    devAuth: !(env.SUPABASE_JWT_SECRET || env.SUPABASE_JWKS_URL || env.SUPABASE_URL),
-    timeControl: env.TIME_CONTROL === 'all' ? 'all' : 'admins',
-  };
-}
-
-export interface UserAuth {
-  uid: string;
-  name: string;
-  admin: boolean;
-  /** connected without signing in: sees the world, rules nothing */
-  observer?: boolean;
-}
-export interface Conn {
-  send(m: ServerMsg): void;
-  sendBin(b: Uint8Array): void;
-  close(code: number, reason: string): void;
-}
 
 interface Seat {
   uid: string;
@@ -305,39 +66,6 @@ class Bucket {
     if (this.t < 1) return false;
     this.t -= 1;
     return true;
-  }
-}
-
-export class Session {
-  closed = false;
-  constructor(
-    readonly core: WorldCore,
-    readonly conn: Conn,
-    readonly user: UserAuth,
-  ) {}
-  send(m: ServerMsg) {
-    if (!this.closed)
-      try {
-        this.conn.send(m);
-      } catch {
-        /* socket gone */
-      }
-  }
-  sendBin(b: Uint8Array) {
-    if (!this.closed)
-      try {
-        this.conn.sendBin(b);
-      } catch {
-        /* socket gone */
-      }
-  }
-  handle(m: ClientMsg) {
-    if (!this.closed) this.core.handle(this, m);
-  }
-  disconnect() {
-    if (this.closed) return;
-    this.closed = true;
-    this.core.detach(this);
   }
 }
 
