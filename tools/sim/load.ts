@@ -10,6 +10,7 @@ import type { WorldState } from '../../src/sim/state';
 import { compileChronicle, type Chronicle } from '../../src/sim/content/chronicle';
 import { compileBorders, type Borders } from '../../src/sim/content/borders';
 import { compileGround, type Ground } from '../../src/sim/content/ground';
+import { compileTilth, type Tilth } from '../../src/sim/content/tilth';
 import { cityPeopleByPlace } from '../../src/sim/systems/people';
 import { toHeads } from '../../src/sim/scale';
 import { WayNet, waysOf, type RoadsFile } from '../../src/sim/roads';
@@ -83,6 +84,11 @@ export function loadDry(year: number): Ground | null {
   const f = dataPath(`dry_${year}.json`);
   return existsSync(f) ? compileGround(JSON.parse(readFileSync(f, 'utf8'))) : null;
 }
+/** The ground the fields can lie on round the towns of a start year (public/data/tilth_<year>.json), compiled; null when there is none. */
+export function loadTilth(year: number): Tilth | null {
+  const f = dataPath(`tilth_${year}.json`);
+  return existsSync(f) ? compileTilth(JSON.parse(readFileSync(f, 'utf8'))) : null;
+}
 /** The ways between the places of the map in a start year: those of the latest public/data/roads_<year>.json at or
  *  before it (a way stays until it is let go); null when there is none. */
 export function loadWays(year: number, places: number): WayNet | null {
@@ -99,6 +105,7 @@ export function loadWorldFor(year: number): World {
   if (w.borders?.year !== year) w.borders = loadBorders(year);
   if (w.ground?.year !== year) w.ground = loadGround(year);
   if (w.dry?.year !== year) w.dry = loadDry(year);
+  if (w.tilth?.year !== year) w.tilth = loadTilth(year);
   if (w.ways?.year !== year) w.ways = loadWays(year, w.N);
   return w;
 }

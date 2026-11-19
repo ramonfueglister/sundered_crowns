@@ -35,9 +35,11 @@ import type { Table } from './ecs';
  *  culture, not of the place (src/sim/people/pools.ts; portrait round 111), and a person carries 50 genes where there
  *  were 34 (round 112: more of the face); every person's genes are given anew. 30: the streets and the market of every
  *  town (settlement feature 3, src/sim/settlement/streets.ts): the parcels lie at streets that grew to them, no longer
- *  on a grid; every parcel keeps its family and its size. Snapshots from 11 on are brought up to date by
+ *  on a grid; every parcel keeps its family and its size. 31: the fields of the farmsteads (settlement feature 4,
+ *  src/sim/settlement/fields.ts): every hamlet has its furlongs in courses, shared in strips by its farmsteads.
+ *  Snapshots from 11 on are brought up to date by
  *  src/sim/upgrade.ts. */
-export const STATE_VERSION = 30;
+export const STATE_VERSION = 31;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
@@ -193,6 +195,25 @@ export const STREET_SCHEMA = {
 export type StreetSchema = typeof STREET_SCHEMA;
 /** What a row of the streets is: a lane grown to the parcels, a street along a way of the world of its kind, the market. */
 export const STREET_KIND = { lane: 0, track: 1, road: 2, highway: 3, market: 4 } as const;
+/** The fields of the hamlets (settlement feature 4, src/sim/settlement/fields.ts): every furlong (Gewann) of a
+ *  hamlet's arable. In the open field a furlong is shared in strips by all the farmsteads of its hamlet, in the
+ *  order of their places at the lane (`stripOrder`); where the land is tilled in two courses it belongs whole to one
+ *  farmstead. A row is never freed. */
+export const FIELD_SCHEMA = {
+  /** the place of the map and the town (its site, as in the land register) */
+  place: 'i16', site: 'i16',
+  /** the hamlet it belongs to (a row of the table of hamlets) */
+  hamlet: 'i32',
+  /** its middle: metres east and south of the centre of the town, at the scale of the houses (a block of 2 m is shown
+   *  as 125 m of land); metres east-west and north-south */
+  x: 'f32', z: 'f32', w: 'f32', d: 'f32',
+  /** the course it belongs to (0 … courses − 1) and in how many courses its land is tilled: what it carries in a
+   *  year is `cropOf(zelge, courses, year)` */
+  zelge: 'u8', courses: 'u8',
+  /** the farmstead that holds it whole (a row of the land register), NO_LOT for a furlong of the open field */
+  farm: 'i32',
+} as const;
+export type FieldSchema = typeof FIELD_SCHEMA;
 /** A firm of the economy of a city (economy feature 10): an entity for every firm the engine computes. The firms of
  *  a city lie one after the other, in the engine's order (`CityEconomies.firm0`). All but the place and the owner
  *  are written by the economy after every day (src/sim/systems/economy.ts). */
@@ -275,6 +296,8 @@ export interface WorldState {
   hamlets: Table<HamletSchema>;
   /** the streets and the markets of the towns (src/sim/systems/lots.ts) */
   street: Table<StreetSchema>;
+  /** the furlongs of the hamlets' fields (src/sim/systems/fields.ts) */
+  field: Table<FieldSchema>;
   economy: {
     /** the cities as economies that trade; null in a world that does not start in the year of their calibration */
     cities: CityEconomies | null;

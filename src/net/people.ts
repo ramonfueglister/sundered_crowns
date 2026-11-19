@@ -2,7 +2,8 @@
 // for the figures that walk its streets, and one person in full, for the portrait and the panel a click opens.
 // Read-only HTTP: GET /people/<place>, GET /people?places=<a>,<b>,… and GET /person/<id> (server/main.ts).
 import type { WorldState } from '../sim/state';
-import { ALIVE, BORN_UNKNOWN } from '../sim/state';
+import { ALIVE, BORN_UNKNOWN, LOT_KIND, NO_LOT } from '../sim/state';
+import { farmHarvest, placeFarmFields } from '../sim/systems/fields';
 import { genesOf } from '../sim/systems/people';
 import { NG } from '../sim/people/genes';
 import { ROLE } from '../sim/systems/work';
@@ -71,6 +72,33 @@ export interface PersonDetail {
   household: PersonHousehold | null;
   /** a person of history (a ruler, src/sim/systems/rulers.ts); null for everybody else */
   history: PersonHistory | null;
+  /** the farmstead of the person's family and its fields (settlement feature 4); null for a family without one */
+  farm: PersonFarm | null;
+}
+
+/** The farmstead of a person's family and its fields (settlement feature 4, src/sim/systems/fields.ts). */
+export interface PersonFarm {
+  /** in how many courses its land is tilled (3 or 2; 0 while it has no fields) */
+  courses: number;
+  /** the furlongs it holds whole and the strips it has in the furlongs of its hamlet's open field, and their hectares
+   *  (the land of a hundred farms of the time: a farmstead of the world stands for a hundred) */
+  furlongs: number; strips: number; hectares: number;
+  /** the farmstead's part of its place's harvest of the year (kilocalories, at 1 : 100 as the harvest), and the living
+   *  persons of the families on the farmstead */
+  harvest: number; persons: number;
+}
+
+/** The farmstead of a person's family and its fields; null when the family has none. */
+export function personFarm(s: WorldState, id: number): PersonFarm | null {
+  const f = s.person.cols.family[id], lot = s.family.cols.lot[f];
+  if (lot === NO_LOT || !s.lot.alive[lot] || s.lot.cols.kind[lot] !== LOT_KIND.farmstead) return null;
+  const fields = placeFarmFields(s, s.lot.cols.place[lot]), mine = fields.get(lot) ?? { furlongs: 0, strips: 0, hectares: 0 };
+  let courses = 0;
+  for (let k = 0; s.field && k < s.field.size; k++) if (s.field.alive[k] && s.field.cols.hamlet[k] === s.lot.cols.hamlet[lot]) { courses = s.field.cols.courses[k]; break; }
+  const P = s.person.cols, F = s.family.cols;
+  let persons = 0;
+  for (let i = 0; i < s.person.size; i++) if (s.person.alive[i] && P.died[i] === ALIVE && F.lot[P.family[i]] === lot) persons++;
+  return { courses, ...mine, harvest: farmHarvest(s, lot, fields), persons };
 }
 
 /** Who a person of history is: the name, the house and the Wikidata id of the sources, the realms whose crown the
@@ -151,5 +179,6 @@ export function personDetail(s: WorldState, id: number, cultureKey: (index: numb
     economy: personEconomy(s, id),
     household: personHousehold(s, id),
     history: personHistory(s, id),
+    farm: personFarm(s, id),
   };
 }

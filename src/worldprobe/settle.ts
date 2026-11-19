@@ -8,6 +8,8 @@ import { type Model, type Side, type Style, heightOf, houseOf, m, m2, styleOf, t
 import { type Crop, type Ground, Mat, N, type P2, idx, inGrid, occlude } from '../lookprobe/layout';
 import type { Town } from '../figures';
 import { FINER } from './land';
+import type { FieldShown } from './lots';
+import { CROP } from '../sim/settlement/fields';
 
 /** A place of the gazetteer on the ground. */
 export interface Site { /** the same in every ground the place falls on */ id: number; at: P2; /** 1 village … 5 great city */ size: number; /** inhabitants in 1356, where an estimate exists */ pop: number | null; /** the region it builds as (buildings/traditions/regions.ts) */ region: string; style: Style; /** a hamlet of a town's farming families before its walls (hamlets.ts): houses close together, no church */ hamlet?: boolean; /** the parcels of its families in the land register (lots.ts): a house stands on each, at its street */ lots?: Parcels }
@@ -35,6 +37,11 @@ export interface Told {
   town(site: number, cx: number, cz: number, half: number, y: number, wall: readonly WallGap[] | null): void;
   /** once all is built: whether a column of the ground is dry and no rock */
   dry?(at: (x: number, z: number) => boolean): void;
+  /** once the towns and hamlets stand, before the fields: whether a furlong can lie on the field lot (`lx`, `lz`) of
+   *  the grid (dry ground without rock, nothing built, level to within two blocks, with a balk round it), for the
+   *  simulation's fields (tools/worldprobe/build_tilth.ts; world.ts adds that no woods stand there, and gives the world
+   *  block of a town's centre at the finest step and the courses its land is tilled in, for the towns on this ground) */
+  room?(fits: (lx: number, lz: number) => boolean, towns?: { centre(site: number): [number, number] | null; courses(site: number): number | null }): void;
 }
 export type Survey = (s: Site, free: (dx: number, dz: number) => boolean) => void;
 /** A monument on the ground: one building of it. */
@@ -151,7 +158,7 @@ const blocks = (r: Rnd, lo: number, hi: number) => r.int(Math.max(2, Math.round(
  * on every ground that covers it; only what `own` holds at its middle is added to `things`, but for the houses that
  * have fine blocks for the near view: those are handed back as `lots`.
  */
-export function settle(g: Ground, things: Batch, sites: readonly Site[], monuments: readonly Monument[], farm: (x: number, z: number) => Builds, ploughed: (x: number, z: number) => number, vines: (x: number, z: number) => number, counts: Record<string, number>, own: (x: number, z: number) => boolean = () => true, farms: (x: number, z: number) => number = () => FARMS, courses: (x: number, z: number) => number = () => 1, survey?: Survey, told?: Told): Settled {
+export function settle(g: Ground, things: Batch, sites: readonly Site[], monuments: readonly Monument[], farm: (x: number, z: number) => Builds, ploughed: (x: number, z: number) => number, vines: (x: number, z: number) => number, counts: Record<string, number>, own: (x: number, z: number) => boolean = () => true, farms: (x: number, z: number) => number = () => FARMS, courses: (x: number, z: number) => number = () => 1, survey?: Survey, told?: Told, fieldOf?: (lx: number, lz: number) => FieldShown | undefined): Settled {
   const used = new Uint8Array(N * N), town = new Uint8Array(N * N), field = new Uint8Array(N * N), mat = new THREE.Matrix4();
   const towns: Town[] = [], lots: Lot[] = [];
   /** the place that is being built, and what its houses are */
@@ -366,11 +373,33 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
   now = -1; kind = 'farm';
   // fields: the world is cut into lots, and of the lots as many are fields as hold the land under the plough
   const ox = g.ox ?? 0, oz = g.oz ?? 0;
+  /** the corner of a lot's field (balk left off on its west and north side), on this ground */
+  const cornerOf = (lx: number, lz: number): [number, number] => [lx * LOT_W - ox + (lz & 1 ? Math.floor(LOT_W / 2) : 0) + 1, lz * LOT_D - oz + 1];
+  told?.room?.((lx, lz) => { const [x0, z0] = cornerOf(lx, lz); return lot(x0, z0, x0 + LOT_W - 1, z0 + LOT_D - 1, 1, 2) !== null; });
   for (let lz = Math.floor(oz / LOT_D); lz * LOT_D < oz + N; lz++) for (let lx = Math.floor(ox / LOT_W) - 1; lx * LOT_W < ox + N; lx++) {
     // every other row of lots is set off by half a lot; a field fills its lot but for the balk on two sides
-    const x0 = lx * LOT_W - ox + (lz & 1 ? Math.floor(LOT_W / 2) : 0) + 1, z0 = lz * LOT_D - oz + 1, w = LOT_W - 1, d = LOT_D - 1;
+    const [x0, z0] = cornerOf(lx, lz), w = LOT_W - 1, d = LOT_D - 1;
     const mx = x0 + w / 2, mz = z0 + d / 2;
-    if (mx < 0 || mz < 0 || mx >= N || mz >= N || hash2(lx, lz, 65) > ploughed(mx, mz) / FIELD_GROUND || lot(x0, z0, x0 + w, z0 + d, 1, 2) === null) continue;
+    if (mx < 0 || mz < 0 || mx >= N || mz >= N) continue;
+    if (fieldOf) {
+      // with the land register's fields only its furlongs are fields: in strips of its farmsteads, the crop of its
+      // course this year, as deep as the register has it (a shortened furlong ends short of its balk in the south)
+      const f = fieldOf(lx, lz);
+      if (!f) continue;
+      const mine = own(Math.floor(mx), Math.floor(mz)), fk = f.crop === CROP.fallow ? FALLOW : f.crop === CROP.spring ? SPRING : hash2(lx, lz, 67) < vines(mx, mz) ? 2 : 1, rows = f.rows;
+      let tilled = 0;
+      for (let k = 0; k < f.strips; k++) {
+        const a0 = x0 + Math.round((k * w) / f.strips), a1 = x0 + Math.round(((k + 1) * w) / f.strips);
+        if (a1 <= a0) continue;
+        for (let z = z0; z < z0 + rows; z++) for (let x = a0; x < a1; x++) { if (!buildable(x, z)) continue; const i = idx(x, z); field[i] = fk; g.mat[i] = Mat.Soil; tilled++; }
+        // each strip is sown by its own farmstead: its corn stands a little lighter or darker than its neighbours'
+        if (mine && CROPS[fk]) crops(things, g, [(a0 + a1) / 2, z0 + rows / 2], a1 - a0, rows, CROPS[fk]!, seeded(Math.floor(hash2(lx * 16 + k, lz, 68) * 4294967296)), f.strips > 1 ? 0.84 + 0.32 * hash2(lx * 16 + k, lz, 69) : 1);
+      }
+      if (mine) { count('field'); count('tilled', tilled); if (fk >= FALLOW) count(fk === FALLOW ? 'fallow' : 'spring'); }
+      claim(x0, z0, x0 + w, z0 + rows);
+      continue;
+    }
+    if (hash2(lx, lz, 65) > ploughed(mx, mz) / FIELD_GROUND || lot(x0, z0, x0 + w, z0 + d, 1, 2) === null) continue;
     const mine = own(Math.floor(mx), Math.floor(mz));
     // the farmhouses the people on the land ask for stand as hamlets at the ends of as many of the fields, on their ground
     let sown = w;

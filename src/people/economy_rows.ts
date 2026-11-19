@@ -43,3 +43,21 @@ export function householdRows(p: PersonDetail): [string, string][] {
     ...(h.need > 0 ? [['Nahrungsbedarf am Tag', pence(h.need)], ['davon gedeckt', `${Math.round(100 * h.fed)} %`]] as [string, string][] : []),
   ];
 }
+
+/** A number with the thousands set apart by apostrophes, as the Swiss write it: "1'234". */
+const grouped = (v: number): string => String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, "'");
+
+/** The rows of the panel about the farmstead of the person's family and its fields (settlement feature 4):
+ *  [label, value]. The hectares are those of the farmstead of the world, which stands for a hundred farms of the time;
+ *  the harvest per head and day is that of the persons on it. */
+export function farmRows(p: PersonDetail): [string, string][] {
+  const f = p.farm;
+  if (!f) return [];
+  if (!f.courses) return [['Felder', 'keine (kein Ackerland in der Nähe)']];
+  const rows: [string, string][] = [['Bewirtschaftung', f.courses >= 3 ? 'Dreizelgenwirtschaft, Streifen im Gemenge' : 'Zweifelderwirtschaft, eigene Äcker']];
+  if (f.strips) rows.push(['Streifen', `${f.strips}, einer in jedem Gewann des Weilers`]);
+  if (f.furlongs) rows.push(['Äcker', String(f.furlongs)]);
+  rows.push(['Ackerland', `${grouped(f.hectares)} ha (für 100 Höfe der Zeit)`], ['Ernte im Jahr', `${grouped(f.harvest / 1e6)} Mio. kcal`]);
+  if (f.persons > 0) rows.push(['je Kopf und Tag', `${grouped(f.harvest / f.persons / 365)} kcal`]);
+  return rows;
+}
