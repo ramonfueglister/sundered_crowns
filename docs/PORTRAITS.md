@@ -4983,6 +4983,97 @@ degrees (20), the rim's shadow between 0.5 and 1 (0.3 and 0.7), what the rim let
 `npm run lint` and `ruff check` pass; the whole vitest suite was left to CI. Pictures (project files, `portraits/`): `runde123_vorher_nachher_frauen.png`,
 `runde123_vorher_nachher_maenner.png` (the sixteen grown people, round 122 above, now below).
 
+**Round 124: a bust under the shoulders** (2026-11-19). Ramon: "fokus auf figure, haare etc.", "22/22
+vorwärts machen gesamtportraits". Round 123 named the figure's largest gap itself: framed wider, it ended in
+ragged sleeves at the upper arm, because neither the body's data nor the gowns went further than the
+shoulders. This round took no line of the gauntlet; it gives the figure a body down to under the waist, the
+gowns their length and their sleeves, and frames the picture as a bust.
+
+What was read. The reference's portraits are half figures: the head from chin to crown takes a little under
+half of the picture's height and the picture ends under the chest, on cloth. Ours showed the head on 0.59 of
+the height and ended at the collar. `head.bin` held MakeHuman's body down to 3.4 (base units of 10 cm, the
+chest's cut) and within 2.85 of the middle; the three gowns' files ended where it did.
+
+What is changed.
+
+- **The body** (`tools/portrait/pipeline/extend_head.py`, `hairlib.py` `bust_faces`). `head.bin.zst` now
+  carries the trunk to under the waist and the arms to the elbows: 848 vertices after the head's own 7001,
+  1668 triangles in a part of their own, `bust`, with what each of the file's morph targets does to them (106
+  of 391 move them). Nothing that was there is renumbered, so every file bound to the head's vertices stays as
+  it is. The part is not drawn: it carries cloth. The skin that is drawn ends where it did, under the gown.
+- **The gowns** (`bust_bind.py`; `cloth_cote`, `cloth_cote_v`, `cloth_kirtle`). Each file keeps its rows (hoods,
+  veils and wimples were draped over them and the tests read their folds). Under the old cut the rest of a
+  drape of the same garment is set, down to its hem at the hips and out to the ends of its sleeves, and bound
+  to the bust. Between the file's open edges and that piece a strip is sewn and the piece's points near it are
+  evened out. A sleeve's points are bound to the arm and the body's cloth to the trunk, so that a sleeve swings
+  in whole when the builder brings the arms down from MakeHuman's pose; the seam under the arm is left open
+  there (95 to 104 triangles a gown). The files have 4429 to 4895 points now.
+- **The bust is held** (`pose.rs` `hold_bust`, `DressSet::bust` 0.5). The gown is bound to the body as MakeHuman
+  shapes it and lay on a young woman's breasts like a wet shirt. Half of how far skin and cloth stand in front
+  of the body's front middle line is taken off, from under the collar bones down, growing to its whole over
+  5 cm of height, and not beyond 16 cm from the middle (the arms). Skin, cloth and what hangs in front of them
+  alike.
+- **What lies over the gown is lifted off it** (`layers.rs` `lift`, `GAP` 0.08). A veil's fall, a hood's cape
+  and a wimple were each held a least distance off the body, and where a fold of the gown stood further off
+  than they did the gown came through. Now a corner of such a cloth that lies inside the gown, or less than
+  8 mm outside it, is moved to 8 mm outside it.
+- **The frame** (`src/portrait/profile.ts`). `close` 0.85 (1.12): the head on 0.45 of the height, the
+  picture's foot under the chest. `rise` 0.11 (0.03) keeps the camera at the height of the eyes, where the
+  dress table's eyes look. `shadow.reach` 0.68 (new; the stage had 0.9 of the picture's height written in)
+  keeps the box in which shadows are thrown as large on the figure as it was, so that the shadows on the face
+  are drawn with the same pixels as in round 123.
+
+Tried and not kept.
+
+- The strip sewn from the two nearest points on, always by the shorter of the two next seams. On the
+  kirtle's sleeve that made a fan from one point under the arm to the whole of the other edge, with triangles
+  12 cm long through the arm: women's arms were bare from the side and small girls had teeth at the far
+  sleeve. It cost most of the round, because the open seam, the held bust, the builder's evening of the
+  cloth, the lift and the women's body were each suspected and ruled out first. Now the strip is sewn by the
+  angle round the line between the two edges' middles; the longest edge on an arm is 8 cm.
+- The seam under the arm sewn shut (`SEAM=closed`). With the fan gone it was tried again: on children of
+  8 it tears larger dark holes at the armpit than the open seam leaves specks.
+- A sleeve's points bound to the nearer of arm and flank: with the arm down the bag under the arm was torn
+  into flags.
+- The bust held from a line 2 cm under where it begins: a plait hanging in front of the chest was bent back
+  there and its strands' corners faced away from their triangles (5 cm now).
+- The lift with a gap of 0.02 and 0.04: the veil's shadow on the gown under it still flickered through.
+- `rise` 0.03 in the wider picture: the camera stood 5 cm under the eyes and they looked 2 degrees over it
+  (the test of the gaze failed).
+
+**The gauntlet**: 22 of 22 over the whole sample, read again with the final files. The numbers are round
+123's to within 0.3 (the face is lit and framed as it was): lit cheek L 58.3; women: far cheek -15.7, beside
+the nose -27.4, the cheek beyond -15.6 (3.2 of 4), nose's back +0.6 (3.4 of 4), upper lip 3.6 of 4, the far
+cheek's chroma 2.5 of 2.7; men: far cheek -19.7 (2.8 of 4).
+
+Honest about it. The picture now reads as a bust at a glance, and that is the round's whole gain: the cloth
+itself is no better than it was. The gown is one plain piece without belt, seams, trims or fastenings, and
+its folds under the chest are those of a drape on a standing body with the arms out, brought down: on small
+boys the chest is lumpy. With the open seam there is a slit behind the armpit, and on children of 8 dark
+specks at the armpit from the front. From behind, the smock shows through the gown at the shoulders as white
+specks; the gown's lower hem and the sleeves' ends are raw (below the picture and beyond the elbows, out of
+the frame). Small specks remain on some hood capes and veils. The seam between the old file and the new piece
+runs across the chest and can be found by one who looks for it. The arms end at the elbows and there are no
+hands, so the frame cannot go lower than it does. The head's share of 0.45 and the bust's hold of 0.5 are by
+eye (PLACEHOLDER): no picture of the reference was measured for them and no garment. MakeHuman's
+`neck-scale-vert` targets move the body at the old cut by 5 mm and the bust not at all. A per-vertex file
+written anew by the pipeline would have 848 rows more than those in the repository. During the round the test
+server once stopped serving a gown's file after the old files were swapped back in for the before pictures
+(it answered with the page instead, and the women's gowns came out dark and faceted); the before pictures were made
+again from a clean checkout of round 123, and the gauntlet and the after pictures after a restart of the
+server. The hair's form is as round 121 left it and the head is still not tipped from person to person.
+
+Tests: `portrait/tests/bust.rs` (five: the head file carries the body to under the waist; on 40 people the
+gown ends at least 3 cm under the picture's foot in the middle and at the sides, 7.8 measured, with no edge
+longer than 10 cm, 8.2 measured; on 16 people less than a twentieth of the arms' skin is bare under the
+sleeves, 0 to 1.7 percent measured; the lift and the hold on made-up surfaces). `portrait/tests/clothes.rs`
+and `faces.rs` know the bust's rows. Cargo: 87 of 87. `tests/portrait.test.ts`: a picture of England is a bust
+that ends on cloth (the head on 0.44 to 0.46 of the height, more on children under 12; the gown's lowest
+point under the picture's foot; the shadows' box as large on the figure as before); its two files 42 of 42.
+`npx tsc --noEmit` and `npm run lint` pass; the whole vitest suite was left to CI. Pictures (project files,
+`portraits/`): `runde124_vorher_nachher_frauen.png`, `runde124_vorher_nachher_maenner.png` (eight each: round
+123 as it was framed, round 123 framed as wide as now, round 124).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
@@ -5001,8 +5092,9 @@ hair, the veil on forehead and cheeks, plaits), in two cuts and the genes' brown
 different head of hair on nearly every woman, since round 122 hair is drawn as light and as coloured as its
 colour asks (brown, red and blond read as the reference's do at the crown; black hair is still a dark shape),
 since round 123 the light is softer (held to five of their women's faces instead of one) and the shoulders
-are turned further than the head, each person's by another angle, in a picture that still ends at the
-shoulders, and the face still lacks the
+are turned further than the head, each person's by another angle, since round 124 the picture is a bust
+that ends under the chest on cloth, as theirs does, in a plain gown without the belts, clasps, cloaks and
+layered cuts theirs wear, and without hands, and the face still lacks the
 reference's streak of gloss on the nose's flank; the thrown-back hood closes round the neck since round 35, but
 has no folds across its cloth. Since round 111 the people of every part of the world can be drawn, in a plain
 dress that is no people's own, and without a picture of the reference to hold them against.

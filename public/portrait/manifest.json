@@ -239,19 +239,19 @@
   },
   {
    "name": "cloth_cote.txt.zst",
-   "bytes": 122667
+   "bytes": 199597
   },
   {
    "name": "cloth_cote_ao.txt",
-   "bytes": 16632
+   "bytes": 26574
   },
   {
    "name": "cloth_cote_v.txt.zst",
-   "bytes": 133285
+   "bytes": 211624
   },
   {
    "name": "cloth_cote_v_ao.txt",
-   "bytes": 18894
+   "bytes": 28836
   },
   {
    "name": "cloth_hood_down.txt.zst",
@@ -271,11 +271,11 @@
   },
   {
    "name": "cloth_kirtle.txt.zst",
-   "bytes": 137613
+   "bytes": 214386
   },
   {
    "name": "cloth_kirtle_ao.txt",
-   "bytes": 19428
+   "bytes": 29370
   },
   {
    "name": "cloth_palla.txt.zst",

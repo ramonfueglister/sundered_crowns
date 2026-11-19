@@ -382,6 +382,31 @@ describe('portraits', { timeout: 20_000 }, () => {
     // and a Roman looks straight ahead of the head, past the viewer by the turn of Apoleia's stage
     for (const [beside] of offs({ ...sample[6]!, origin: 'Italia' }, APOLEIA)) expect(Math.abs(Math.abs(beside) - Math.abs(APOLEIA.turn) * 180 / Math.PI)).toBeLessThan(3);
   });
+  it('a picture of England is a bust that ends on cloth', () => {
+    // Until round 124 the figure ended in ragged sleeves at the upper arm and the picture stood so close that its
+    // foot lay over them (`close` 1.12: the head on 0.59 of the height). The body's data reaches to under the
+    // waist now (portrait/tests/bust.rs) and the picture shows the bust: the head from the chin to over the crown
+    // on 0.45 of the height (more for a small child, whose short body would end inside the picture), the picture's
+    // foot on the gown, with the gown hanging on below it.
+    const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
+    const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
+    for (const p of sample) {
+      const built = b.build(p), f = framing(built, ENGLAND_1356);
+      const head = Math.max(0.8, built.top - built.chin) / f.height;
+      expect(head, `person ${p.pid}: the head's share of the height`).toBeGreaterThan(0.44);
+      expect(head, `person ${p.pid}: the head's share of the height`).toBeLessThan(p.age < 12 ? 0.75 : 0.46);
+      // (the picture's middle lies 0.36 of its height under the top: its foot 0.86 under it)
+      const foot = built.top - 0.86 * f.height, gown = built.surfaces.find(s => s.tex.includes('/cloth_cote.'))!;
+      let lowest = Infinity;
+      for (let i = 0; i < gown.pos.length; i += 3) if (Math.abs(gown.pos[i]! - built.cx) < 1) lowest = Math.min(lowest, gown.pos[i + 1]!);
+      expect(lowest, `person ${p.pid}: the gown ends under the picture's foot`).toBeLessThan(foot - 0.3);
+    }
+    // the box in which the key's shadows are thrown is as large on the figure as it was at `close` 1.12 (0.9 of
+    // the picture's height either way), so that the shadows on the face are drawn with the same pixels: what the
+    // gauntlet reads on the face is read under the same shadows
+    expect(Math.abs(ENGLAND_1356.shadow.reach / ENGLAND_1356.close / (0.9 / 1.12) - 1)).toBeLessThan(0.02);
+    expect(APOLEIA.shadow.reach / APOLEIA.close).toBe(0.9);
+  });
   it('the hems of the garments of England are wound outward', () => {
     // a hem is a thin tube along a garment's edge (tools/portrait/pipeline/tunic_bind.py). Wound inward its normals
     // point into it, the stage's shadow lookup starts inside the tube, and the hem lies in its own shadow: a black
@@ -1143,7 +1168,7 @@ describe('portraits', { timeout: 20_000 }, () => {
     // a light without size, or drawn as one light, is the key itself; Apoleia's is such a light
     expect(keyPlaces(from, 0, 8)).toEqual([[...from]]);
     expect(keyPlaces(from, 10, 1)).toEqual([[...from]]);
-    expect(APOLEIA.shadow).toEqual({ map: 512, strength: 0.7, radius: 1, spread: 0, lights: 1 });
+    expect(APOLEIA.shadow).toEqual({ map: 512, strength: 0.7, radius: 1, spread: 0, lights: 1, reach: 0.9 });
     expect(keyPlaces(APOLEIA.lights.key.from, APOLEIA.shadow.spread, APOLEIA.shadow.lights)).toEqual([[-3.5, 4.5, 5.0]]);
   });
 });

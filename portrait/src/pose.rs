@@ -102,3 +102,51 @@ pub fn pose(surfaces: &mut [Surface], p: Pose, axis: [f32; 2], foot: f32, top: f
         }
     }
 }
+
+/// The body's front middle line from over the breasts down to the waist, as vertices of head.bin (the last six are
+/// the bust's, which a head file from before round 124 does not have), and the vertex over it at which the hold
+/// begins, under the collar bones (between the two it grows to its whole, over 5 cm of height: over 2 cm a plait
+/// that hangs in front of the chest was bent back there, and corners of its strands faced away from their
+/// triangles, tests/plait.rs).
+pub const FRONT: [usize; 14] = [1401, 1402, 1472, 1880, 1881, 1882, 1883, 2086, 7302, 7323, 7303, 7383, 7301, 7335];
+pub const FRONT_TOP: usize = 1526;
+/// How far from the middle the hold reaches whole, and where it has ended (the arms hang beyond).
+pub const BUST_SIDE: [f32; 2] = [1.2, 1.6];
+
+/// Holds the bust in: what stands in front of the body's front middle line (`line`: height and depth of its points,
+/// from the top down; below the last its depth stays) is brought nearer to it, by `share` of how far it stands in
+/// front. Skin and cloth alike, and what hangs in front of them, so that they stay on each other. Nothing above
+/// `top`, all of it from the line's first point down; nothing beyond `side[1]` from the middle, all within `side[0]`.
+pub fn hold_bust(surfaces: &mut [Surface], line: &[[f32; 2]], top: f32, side: [f32; 2], share: f32) {
+    let (Some(first), Some(last)) = (line.first(), line.last()) else { return };
+    let depth = |y: f32| -> f32 {
+        if y >= first[0] {
+            return first[1];
+        }
+        line.windows(2).find(|w| y >= w[1][0]).map_or(last[1], |w| w[1][1] + (w[0][1] - w[1][1]) * (y - w[1][0]) / (w[0][0] - w[1][0]).max(1e-6))
+    };
+    let held = |q: V3| -> f32 {
+        let (d, w) = (depth(q[1]), (1.0 - sm(first[0], top, q[1])) * (1.0 - sm(side[0], side[1], q[0].abs())));
+        if q[2] > d { d + (q[2] - d) * (1.0 - share * w) } else { q[2] }
+    };
+    for s in surfaces.iter_mut() {
+        for k in 0..s.pos.len() {
+            let q = s.pos[k];
+            let z = held(q);
+            if z == q[2] {
+                continue;
+            }
+            if let Some(n) = s.nrm.get_mut(k) {
+                // the surface's direction with it (the transposed inverse of how the places move), by differences
+                let e = 0.01;
+                let (hx, hy, hz) = ((held([q[0] + e, q[1], q[2]]) - held([q[0] - e, q[1], q[2]])) / (2.0 * e), (held([q[0], q[1] + e, q[2]]) - held([q[0], q[1] - e, q[2]])) / (2.0 * e), (held([q[0], q[1], q[2] + e]) - z) / e);
+                let out = [n[0] - n[2] * hx / hz.max(0.05), n[1] - n[2] * hy / hz.max(0.05), n[2] / hz.max(0.05)];
+                let l = (out[0] * out[0] + out[1] * out[1] + out[2] * out[2]).sqrt();
+                if l > 1e-6 && (n[0] != 0.0 || n[1] != 0.0 || n[2] != 0.0) {
+                    *n = [out[0] / l, out[1] / l, out[2] / l];
+                }
+            }
+            s.pos[k][2] = z;
+        }
+    }
+}

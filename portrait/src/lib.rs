@@ -18,6 +18,7 @@ pub mod look;
 pub mod measure;
 mod morph;
 pub mod person;
+pub mod layers;
 pub mod pose;
 pub mod real;
 mod real_look;

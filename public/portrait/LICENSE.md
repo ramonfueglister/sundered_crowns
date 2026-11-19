@@ -1,6 +1,6 @@
 # Licence of the portrait data
 
-- `head.bin.zst`: the head and shoulders of the MakeHuman base mesh
+- `head.bin.zst`: the head and shoulders of the MakeHuman base mesh, and since round 124 its trunk to under the waist and its arms to the elbows (not drawn: they carry cloth)
   (`makehuman/data/3dobjs/base.obj`) and its morph targets
   (`makehuman/data/targets/…`, the face groups and the macro targets), from
   github.com/makehumancommunity/makehuman, branch master, cropped, reduced in

@@ -1989,6 +1989,21 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
     let tris = merged.iter().map(|s| s.tris()).sum();
     // the pose, where the dress has one: the shoulders turned further than the head, the neck twisting between
     // the chin and its foot (pose.rs). The neck stands where the skin between chin and shoulders has its middle
+    // what lies over the gown lifted off it (a veil's fall, a hood's cape, a wimple)
+    if let Some(d) = garb {
+        if let Some(g) = merged.iter().position(|s| s.tex.as_deref().is_some_and(|t| t.contains(d.gown))) {
+            let gown = std::mem::replace(&mut merged[g], Surface::new(mat(0.0)));
+            for s in merged.iter_mut().filter(|s| s.tex.as_deref().is_some_and(|t| [d.veil, d.veil_back, d.wimple, d.hood_up, d.hood_back].iter().any(|n| t.contains(n)))) {
+                crate::layers::lift(s, &gown, y0, crate::layers::GAP, crate::layers::REACH);
+            }
+            merged[g] = gown;
+        }
+    }
+    // a woman's bust held by her gown (before the body is turned: the body's middle line is the picture's still)
+    if let Some(share) = garb.map(|d| d.bust).filter(|s| fem && *s > 0.0 && crate::pose::FRONT.iter().all(|&v| v < h.n)) {
+        let line = crate::pose::FRONT.map(|v| [x.pp[v][1], x.pp[v][2]]);
+        crate::pose::hold_bust(&mut merged, &line, x.pp[crate::pose::FRONT_TOP][1], crate::pose::BUST_SIDE, share);
+    }
     let range = pose.or(garb.map(|d| d.pose)).unwrap_or([0.0; 3]);
     if range != [0.0; 3] {
         let (mut lo, mut hi) = ([f32::MAX; 2], [f32::MIN; 2]);
@@ -2007,8 +2022,9 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
     if lean != 0.0 {
         lean_back(&mut merged, (y0 + y1) / 2.0, hz / hn.max(1) as f32, lean);
     }
-    // the picture's foot (0.86 of its height below the top) stays above
-    // where the chest's data ends
+    // the picture's foot (0.86 of its height below the top) stays above where the skin's data ends, on a stage
+    // that stands as the builder frames it (a stage that shows more of the figure, as England's bust since round
+    // 124, has its foot on the gown, which hangs on the bust's data to under the waist)
     let top = (y1 + 0.12).max(hat_top + 0.06);
     let low = body_full.iter().filter(|&&v| h.base[v as usize][0].abs() < 1.0).map(|&v| x.pp[v as usize][1]).fold(f32::MAX, f32::min);
     let fill = (0.86 * (top - y0).max(0.8) / (top - low - 0.1)).max(0.53);

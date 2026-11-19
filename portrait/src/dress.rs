@@ -571,6 +571,11 @@ pub struct DressSet {
     /// standard deviations off, their eyes in the brow's shade. A boy's grows from the women's to the men's
     /// (`by_sex`).
     pub lean: [f32; 2],
+    /// (round 124) How much of a woman's bust the gown holds in (`pose::hold_bust`): the share taken off how far
+    /// skin and cloth stand in front of the body's middle line, from the breasts down. 0: none (Apoleia's). The gown
+    /// is bound to the body as MakeHuman shapes it and lay on a young woman's breasts like a wet shirt, each a
+    /// point; a kirtle of the time is cut close and holds the bust. PLACEHOLDER, by eye; no garment was measured.
+    pub bust: f32,
     /// (round 123) How the body stands under the head (pose.rs): the least and the most the shoulders are turned
     /// further than the head (radians; a person's lies between them by a draw of the seed), and the most the
     /// shoulders' line is tipped, either way (radians). All 0: no pose, the portrait is one stiff piece (Apoleia's).
@@ -902,6 +907,7 @@ const ENGLAND: DressSet = DressSet {
     mouth_at: 0.31,
     mouth_gene: 0.075,
     lean: [0.12, 0.10],
+    bust: 0.5,
     pose: [0.1, 0.4, 0.035],
     iris_mm: 11.7,
     eyes_child: [0.6, 0.5],

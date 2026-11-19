@@ -226,7 +226,7 @@ export class PortraitStage {
     // the shadows of the key light and, where the profile has them, of the rim light: a box around head and
     // shoulders
     for (const l of [this.lights.rim, ...keys]) {
-      const c = l.shadow.camera, r = hv * 0.9;
+      const c = l.shadow.camera, r = hv * profile.shadow.reach;
       c.left = -r; c.right = r; c.top = r; c.bottom = -r; c.near = 0.5; c.far = 30;
       c.updateProjectionMatrix();
     }

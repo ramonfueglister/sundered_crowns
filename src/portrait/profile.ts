@@ -23,8 +23,11 @@ export interface StageProfile {
    *  of the key light: `spread` is the half angle under which it is seen from the head (degrees; 0 = a light
    *  without size, as the sun through a hole: every shadow has a hard edge) and `lights` the number of lights it
    *  is drawn as, spread evenly over its disc (stage.ts `keyPlaces`). A light with a size throws a shadow whose
-   *  edge is the softer the further the thing that throws it stands off the skin. */
-  shadow: { map: number; strength: number; radius: number; spread: number; lights: number };
+   *  edge is the softer the further the thing that throws it stands off the skin. `reach`: how far the box in
+   *  which shadows are thrown reaches to either side of the point the camera looks at, in heights of the picture
+   *  (the map's pixels are shared out over it: a picture that shows more of the figure has a coarser shadow on the
+   *  face, unless the box stays as it was). */
+  shadow: { map: number; strength: number; radius: number; spread: number; lights: number; reach: number };
   sky: { top: string; ground: string; energy: number };
   exposure: number;
   /** How far the head is turned to the left (radians), and how far above the point it looks at the camera stands
@@ -136,7 +139,7 @@ export const APOLEIA: StageProfile = {
   rimShadow: 0,
   // measured, not derived: with this map and strength the pictures come closest to Godot's, whose shadows are
   // softer and lighter than three.js' at full strength (tools/portrait/compare.mjs, docs/PORTRAITS.md)
-  shadow: { map: 512, strength: 0.7, radius: 1, spread: 0, lights: 1 },
+  shadow: { map: 512, strength: 0.7, radius: 1, spread: 0, lights: 1, reach: 0.9 },
   exposure: 0.92,
   turn: -0.35, rise: 0.08, close: 1,
   anisotropy: 1,
@@ -430,7 +433,13 @@ export const APOLEIA: StageProfile = {
  *  tenth of the rim to pass the head, 27.6. `sky.energy` 0.2 (0.12) lifts what faces up or down in the shade
  *  (the cheek beyond the nose 15.6 under; 16.9). The narrow streak of light on the far flank of the reference's
  *  noses is still not there: a light from the side (95 and 110 degrees round, the rim's shadow whole) lit the
- *  far half of the face as a second key. */
+ *  far half of the face as a second key.
+ *  Round 124: a bust (docs/PORTRAITS.md). The figure has a body under the shoulders now, and the picture shows
+ *  it: `close` 0.85 (1.12), the head from chin to crown on 0.45 of the height (0.59), the picture's foot under
+ *  the chest. `shadow.reach` 0.68 keeps the box of the shadows as large on the figure as it was (0.9 of a
+ *  picture's height at 1.12: 0.8 of the builder's frame either way), so that the shadows on the face are drawn
+ *  with the same pixels. `rise` 0.11 (0.03) keeps the camera at the eyes' height, where the dress table's eyes
+ *  look (with 0.03 it stood 5 cm under them in the wider picture, and the eyes looked 2 degrees over it). */
 export const ENGLAND_1356: StageProfile = {
   key: 'england1356',
   lights: {
@@ -441,9 +450,9 @@ export const ENGLAND_1356: StageProfile = {
   },
   sky: { top: '#e6ecff', ground: '#a0653f', energy: 0.2 },
   rimShadow: 0.9,
-  shadow: { map: 1024, strength: 0.7, radius: 2, spread: 35, lights: 8 },
+  shadow: { map: 1024, strength: 0.7, radius: 2, spread: 35, lights: 8, reach: 0.68 },
   exposure: 0.38,
-  turn: -0.24, rise: 0.03, close: 1.12,
+  turn: -0.24, rise: 0.11, close: 0.85,
   anisotropy: 8,
   skin: { rough: 0.55, specular: 0.42, pores: 0.4, wrap: [0.3, 0.16, 0.10], finer: 1, fit: 1, blotch: 0.05, speckle: 0.10, colour: 0.7, tint: [1, 0.87, 0.77], relief: 0.0015, oil: 0.5, fuzz: 0.3, child: 0.3, bleed: [1, 0.5, 0.35] },
   eye: { corner: { from: 0.3, to: 0.8, dark: 0.35 }, lid: { from: -0.35, to: 0.05, dark: 0.4 }, tint: [0.84, 0.73, 0.57], white: 1.3, iris: 1.15, colour: 1.1, lift: 0.6, rough: 0.22, specular: 0.6, wrap: 0.5, wrapWhite: 0.1, cornea: 0.36, ring: 0.35, pupil: { size: 0.42, soft: 0.1, dark: 0.25 }, blush: [1.27, 0.945, 0.76] },

@@ -268,10 +268,13 @@ fn a_gown_that_is_cut_wide_lies_within_the_gown_with_the_round_neck() {
         let sk = skin(&before);
         let (mut n, mut over, mut most) = (0, 0, 0.0f32);
         for (i, g) in cut.pos.iter().enumerate() {
-            // (the chest and the front of the shoulders, 10 cm to either side and down to 25 cm under the chin: what
+            // (the chest and the front of the shoulders, 10 cm to either side and down to 20 cm under the chin: what
             // a veil's ends and a hood's cape lie on. Further out are the sleeves, where the skin nearest to a
-            // point is the arm's for one fold and the chest's for the next, and either gown is outside the other)
-            if cut.hem[i] || g[0].abs() > 1.0 || g[1] < before.chin - 2.5 {
+            // point is the arm's for one fold and the chest's for the next, and either gown is outside the other.
+            // Until round 124 down to 25 cm, where the gowns ended; since then each passes there into the bust
+            // set under it, `bust_bind.py`, the wide cut from further in than the round gown, and stands up to
+            // 3.8 cm outside it over those 5 cm. No veil's end and no cape reaches that far down)
+            if cut.hem[i] || g[0].abs() > 1.0 || g[1] < before.chin - 2.0 {
                 continue;
             }
             if let Some(out) = beyond(g, &sk, &round) {

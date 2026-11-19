@@ -190,7 +190,8 @@ fn the_upper_lip_of_a_woman_of_england_does_not_stand_out_as_a_beak() {
     let Some(h) = head() else { return };
     let red = real::rows("real/skin_lip.txt").expect("the lips' red");
     let front = |pp: &[[f32; 3]], upper: bool| {
-        (0..pp.len()).filter(|&v| red[v][0] > 0.5 && (red[v][1] > 0.5) == upper && pp[v][0].abs() < 0.1).map(|v| pp[v][2]).fold(f32::MIN, f32::max)
+        // (the file's rows are the head's own vertices; the bust's, after them in head.bin, have no lips)
+        (0..red.len().min(pp.len())).filter(|&v| red[v][0] > 0.5 && (red[v][1] > 0.5) == upper && pp[v][0].abs() < 0.1).map(|v| pp[v][2]).fold(f32::MIN, f32::max)
     };
     let (n, mut sum, mut most) = (24, 0.0, f32::MIN);
     for k in 0..n {
