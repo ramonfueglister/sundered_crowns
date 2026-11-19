@@ -22,7 +22,7 @@ npm run dev        # the client at http://localhost:5173 (a browser with WebGPU)
   (entity tables of typed arrays, `ecs.ts`), `schedule.ts` the tick and the order of systems, `systems/` the systems,
   `commands.ts` how players change the world, `snapshot.ts` the binary snapshot and its hash.
 - `src/net/`: the wire protocol, the views the server sends, and the browser's connection.
-- `src/render/`: the WebGPU map.
+- `src/worldprobe/`, `src/lookprobe/`: the WebGPU world (the voxel world from afar down to the houses).
 - `src/ui/`: the Preact interface.
 - `economy/`: the economy engine, a Rust shell around the port of BeforeIT.jl (`economy/vendor/port-beforeit`, kept in
   the repository since its own repository is gone), built to WebAssembly

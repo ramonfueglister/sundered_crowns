@@ -6,7 +6,7 @@ import type { Shape } from '../lookprobe/stage';
 import { buildOpenSea } from '../lookprobe/terrain';
 import { FACE_STEPS } from '../lookprobe/faces';
 import { GRID, N, SEA_Y, onGrid } from '../lookprobe/layout';
-import { maybeGunzip } from '../render/assets';
+import { maybeGunzip } from './gunzip';
 import { buildPiece, warmPieces } from './build';
 import { type Cover, KINDS, laidOut } from './far';
 import { glide } from './glide';

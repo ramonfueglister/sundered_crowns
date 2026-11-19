@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'preact/hooks';
 import { effect } from '@preact/signals';
 import { owners, realms, status, world } from '../net/client';
 import { L, lang } from './i18n';
-import { hoverPlace, mapCtl, mapError, selectedPlace } from './MapView';
+import { hoverPlace, mapCtl, mapError, selectedPlace } from './mapstate';
 import { mapMode } from './mapmode';
 import { replay } from './replay';
 import { listenForWorldClicks } from '../people/panel';
