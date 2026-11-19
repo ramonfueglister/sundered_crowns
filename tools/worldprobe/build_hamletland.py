@@ -29,6 +29,7 @@ plough, the fallow counted in) and `reach_km`. src/worldprobe/hamlets.ts reads i
 Run it again when the hamlets, the cultivation or the towns change (tests/worldprobe/hamlets.test.ts holds the file
 against the hamlets of the simulation).
 """
+
 import gzip
 import json
 import math
@@ -44,7 +45,13 @@ GROUND = 70 / 88 * 0.85  # settle.ts FIELD_GROUND: the share of the ground that 
 MOST_KM = 60  # no town's fields reach farther
 KM_PER_DEGREE = 111.32
 # points spread evenly over the unit disc (a sunflower), at which the open ground is read
-SPREAD = [(math.sqrt((k + 0.5) / 600) * math.cos(k * math.pi * (3 - math.sqrt(5))), math.sqrt((k + 0.5) / 600) * math.sin(k * math.pi * (3 - math.sqrt(5)))) for k in range(600)]
+SPREAD = [
+    (
+        math.sqrt((k + 0.5) / 600) * math.cos(k * math.pi * (3 - math.sqrt(5))),
+        math.sqrt((k + 0.5) / 600) * math.sin(k * math.pi * (3 - math.sqrt(5))),
+    )
+    for k in range(600)
+]
 
 
 def merc(lat: float) -> float:
@@ -62,7 +69,10 @@ def reach_of(km2: float, lon: float, lat: float, geo: dict, land: np.ndarray, fo
     xs, zs = np.array([p[0] for p in SPREAD]), np.array([p[1] for p in SPREAD])
 
     def open_share(r: float) -> float:
-        px, py = np.clip((x + xs * r / km_per_px).astype(int), 0, w - 1), np.clip((y + zs * r / km_per_px).astype(int), 0, h - 1)
+        px, py = (
+            np.clip((x + xs * r / km_per_px).astype(int), 0, w - 1),
+            np.clip((y + zs * r / km_per_px).astype(int), 0, h - 1),
+        )
         return float((land[py, px] * (1 - forest[py >> 1, px >> 1])).mean())
 
     r = math.sqrt(km2 / (math.pi * GROUND))
@@ -73,8 +83,15 @@ def reach_of(km2: float, lon: float, lat: float, geo: dict, land: np.ndarray, fo
 
 def main(year: int) -> None:
     data = ROOT / 'public/data'
-    hamlets, towns = json.loads((data / f'hamlets_{year}.json').read_text()), json.loads((data / f'towns_{year}.json').read_text())
-    geo, land, cultivation = json.loads((data / 'geo.json').read_text()), json.loads((data / 'land.json').read_text()), json.loads((data / 'cultivation.json').read_text())
+    hamlets, towns = (
+        json.loads((data / f'hamlets_{year}.json').read_text()),
+        json.loads((data / f'towns_{year}.json').read_text()),
+    )
+    geo, land, cultivation = (
+        json.loads((data / 'geo.json').read_text()),
+        json.loads((data / 'land.json').read_text()),
+        json.loads((data / 'cultivation.json').read_text()),
+    )
     gazetteer = json.loads((ROOT / 'data/content/gazetteer.json').read_text())
     gazetteer = gazetteer['places'] if isinstance(gazetteer, dict) else gazetteer
     ids = np.frombuffer(gzip.open(ROOT / 'public/map/ids.bin.gz').read(), dtype='<u2').reshape(geo['H'], geo['W'])
@@ -89,8 +106,14 @@ def main(year: int) -> None:
         if people:
             of_place.setdefault(place, []).append((town, people))
     rows, without = [], 0
-    for place, persons, in_hamlets, families in zip(hamlets['place'], hamlets['persons'], hamlets['hamlet_persons'], hamlets['hamlet_families']):
-        limit = min(cultivation['landLimit'], land['curve']['fertile'][place]) * geo['loc']['area'][place] * HECTARES_PER_KM2
+    for place, persons, in_hamlets, families in zip(
+        hamlets['place'], hamlets['persons'], hamlets['hamlet_persons'], hamlets['hamlet_families']
+    ):
+        limit = (
+            min(cultivation['landLimit'], land['curve']['fertile'][place])
+            * geo['loc']['area'][place]
+            * HECTARES_PER_KM2
+        )
         km2 = min(cultivation['arablePerHead'] * persons * PEOPLE_PER_PERSON, limit) / HECTARES_PER_KM2
         here = of_place.get(place, [])
         if not here:
@@ -99,15 +122,35 @@ def main(year: int) -> None:
         whole = sum(people for _, people in here)
         for town, people in here:
             share = people / whole
-            rows.append((town, round((persons - in_hamlets) * share), round(in_hamlets * share), round(families * share), round(km2 * share, 1),
-                         round(reach_of(km2 * share, gazetteer[town]['lon'], gazetteer[town]['lat'], geo, is_land, forest), 2)))
+            rows.append(
+                (
+                    town,
+                    round((persons - in_hamlets) * share),
+                    round(in_hamlets * share),
+                    round(families * share),
+                    round(km2 * share, 1),
+                    round(
+                        reach_of(km2 * share, gazetteer[town]['lon'], gazetteer[town]['lat'], geo, is_land, forest), 2
+                    ),
+                )
+            )
     rows.sort()
-    out = {'year': year, 'about': 'Per town of the world graphic (index in data/content/gazetteer.json): persons inside it, persons and families of its hamlets, km² under its plough, km its fields reach from it. Written by tools/worldprobe/build_hamletland.py from hamlets_<year>.json.',
-           'town': [r[0] for r in rows], 'inside': [r[1] for r in rows], 'hamlet': [r[2] for r in rows], 'families': [r[3] for r in rows], 'km2': [r[4] for r in rows], 'reach_km': [r[5] for r in rows]}
+    out = {
+        'year': year,
+        'about': 'Per town of the world graphic (index in data/content/gazetteer.json): persons inside it, persons and families of its hamlets, km² under its plough, km its fields reach from it. Written by tools/worldprobe/build_hamletland.py from hamlets_<year>.json.',
+        'town': [r[0] for r in rows],
+        'inside': [r[1] for r in rows],
+        'hamlet': [r[2] for r in rows],
+        'families': [r[3] for r in rows],
+        'km2': [r[4] for r in rows],
+        'reach_km': [r[5] for r in rows],
+    }
     path = data / f'hamletland_{year}.json'
     path.write_text(json.dumps(out, separators=(',', ':')) + '\n')
-    print(f'{path.relative_to(ROOT)}: {len(rows)} towns, {sum(out["inside"])} persons inside, {sum(out["hamlet"])} in hamlets ({sum(out["families"])} families), '
-          f'{sum(out["km2"]):.0f} km² under the plough; {without} hamlet persons in places without a town of the graphic')
+    print(
+        f'{path.relative_to(ROOT)}: {len(rows)} towns, {sum(out["inside"])} persons inside, {sum(out["hamlet"])} in hamlets ({sum(out["families"])} families), '
+        f'{sum(out["km2"]):.0f} km² under the plough; {without} hamlet persons in places without a town of the graphic'
+    )
 
 
 if __name__ == '__main__':

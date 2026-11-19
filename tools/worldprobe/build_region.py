@@ -24,6 +24,7 @@ Usage: python3 tools/worldprobe/build_region.py europe      (a part of the world
        python3 tools/worldprobe/build_region.py alps        (a region of its own, a minute)
 then   python3 tools/worldprobe/build_overviews.py world    (the coarser steps of the whole)
 """
+
 import http.client, io, json, math, os, shutil, sys, time, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 import numpy as np
@@ -33,7 +34,22 @@ from scipy import ndimage
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'geo'))
 from erosion import erode_lands
-from common import CACHE, H, LAT_N, LAT_S, LON0, LON1, ROOT, W, YMAX, YMIN, lines_from_geojson_geom, load_json, lonlat_to_px, polys_from_geojson_geom
+from common import (
+    CACHE,
+    H,
+    LAT_N,
+    LAT_S,
+    LON0,
+    LON1,
+    ROOT,
+    W,
+    YMAX,
+    YMIN,
+    lines_from_geojson_geom,
+    load_json,
+    lonlat_to_px,
+    polys_from_geojson_geom,
+)
 
 Image.MAX_IMAGE_PIXELS = None
 CELLS = 4
@@ -103,13 +119,16 @@ def cached(url, path):
         os.makedirs(os.path.dirname(full), exist_ok=True)
         for attempt in range(5):
             try:
-                with urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'worldprobe'}), timeout=120) as r:
+                with urllib.request.urlopen(
+                    urllib.request.Request(url, headers={'User-Agent': 'worldprobe'}), timeout=120
+                ) as r:
                     data = r.read()
                 break
             except (OSError, http.client.HTTPException):
                 # the line drops now and then: wait and ask again
-                if attempt == 4: raise
-                time.sleep(2 ** attempt)
+                if attempt == 4:
+                    raise
+                time.sleep(2**attempt)
         # written under another name first, so that no half file is ever read
         with open(f'{full}.{os.getpid()}', 'wb') as f:
             f.write(data)
@@ -145,8 +164,8 @@ def grid(field, ys, xs, order=1):
     """`field` sampled on the grid of rows `ys` and columns `xs` (pixel coordinates of the field), a few rows at a time."""
     out = np.empty((len(ys), len(xs)), np.float32)
     for r in range(0, len(ys), ROWS):
-        yy, xx = np.meshgrid(ys[r:r + ROWS], xs, indexing='ij')
-        out[r:r + ROWS] = ndimage.map_coordinates(field, [yy, xx], order=order, mode='nearest')
+        yy, xx = np.meshgrid(ys[r : r + ROWS], xs, indexing='ij')
+        out[r : r + ROWS] = ndimage.map_coordinates(field, [yy, xx], order=order, mode='nearest')
     return out
 
 
@@ -155,14 +174,15 @@ def elevation(lon, lat, land):
     Metres above sea level on the grid of longitudes `lon` and latitudes `lat`, from terrarium tiles, bilinear. Only
     the tiles that `land` (the grid's cells that are not sea) reaches are fetched; the rest of the grid stays 0.
     """
-    n = 2 ** ZOOM
+    n = 2**ZOOM
     tx = (lon + 180) / 360 * n
     ty = (1 - np.arcsinh(np.tan(np.radians(lat))) / math.pi) / 2 * n
     x0, x1, y0, y1 = int(tx.min()), int(tx.max()), int(ty.min()), int(ty.max())
     # the tiles with land, and those beside them, which the blend at a tile's edge reaches into
     dry = np.zeros((y1 - y0 + 1, x1 - x0 + 1), bool)
     rows, cols = ty.astype(int) - y0, tx.astype(int) - x0
-    for r in np.unique(rows): dry[r, np.unique(cols[land[rows == r].any(0)])] = True
+    for r in np.unique(rows):
+        dry[r, np.unique(cols[land[rows == r].any(0)])] = True
     dry = ndimage.binary_dilation(dry, np.ones((3, 3), bool))
     # round the globe the tiles begin again
     wanted = [(x, y) for x in range(x0, x1 + 1) for y in range(y0, y1 + 1) if dry[y - y0, x - x0]]
@@ -172,7 +192,9 @@ def elevation(lon, lat, land):
     mosaic = np.zeros(((y1 - y0 + 1) * 256, (x1 - x0 + 1) * 256), np.float32)
     for x, y in wanted:
         a = np.asarray(Image.open(io.BytesIO(source(x, y))).convert('RGB'), dtype=np.float32)
-        mosaic[(y - y0) * 256:(y - y0 + 1) * 256, (x - x0) * 256:(x - x0 + 1) * 256] = a[..., 0] * 256 + a[..., 1] + a[..., 2] / 256 - 32768
+        mosaic[(y - y0) * 256 : (y - y0 + 1) * 256, (x - x0) * 256 : (x - x0 + 1) * 256] = (
+            a[..., 0] * 256 + a[..., 1] + a[..., 2] / 256 - 32768
+        )
     return grid(mosaic, (ty - y0) * 256 - 0.5, (tx - x0) * 256 - 0.5)
 
 
@@ -186,8 +208,10 @@ def read_rivers(area, water, drawn, km):
     """
     RIVER_FROM, CLEAR_KM, STRAIGHT, SHORTEST = 400, 7, 10, 10
     h, w = area.shape
-    img = Image.new('L', (w, h), 0); d = ImageDraw.Draw(img)
-    for r in drawn: d.line([tuple(p) for p in r['pts']], fill=1, width=1)
+    img = Image.new('L', (w, h), 0)
+    d = ImageDraw.Draw(img)
+    for r in drawn:
+        d.line([tuple(p) for p in r['pts']], fill=1, width=1)
     away = ndimage.distance_transform_edt(np.asarray(img) == 0)
     clear, stream = away * km[:, None] > CLEAR_KM, (area >= RIVER_FROM * 1e6) & (water == 0)
     down = {}
@@ -196,56 +220,95 @@ def read_rivers(area, water, drawn, km):
         for dy in (-1, 0, 1):
             for dx in (-1, 0, 1):
                 ny, nx = y + dy, x + dx
-                if (dy or dx) and 0 <= ny < h and 0 <= nx < w and area[ny, nx] > area[y, x] and (best is None or area[ny, nx] < area[best]): best = (ny, nx)
-        if best: down[(y, x)] = best
+                if (
+                    (dy or dx)
+                    and 0 <= ny < h
+                    and 0 <= nx < w
+                    and area[ny, nx] > area[y, x]
+                    and (best is None or area[ny, nx] < area[best])
+                ):
+                    best = (ny, nx)
+        if best:
+            down[(y, x)] = best
     fed = {v for c, v in down.items() if clear[c]}
     heads, seen, found = [c for c in down if clear[c] and c not in fed], set(), []
     for head in sorted(heads, key=lambda c: area[c]):
         path, c, beside = [], head, 0
         while c in down and c not in seen:
-            seen.add(c); path.append(c)
+            seen.add(c)
+            path.append(c)
             beside = 0 if clear[c] else beside + 1
             # beside a drawn river: it is joined soon, or the path is that river itself, read a little off its line
-            if away[c] <= 1.5: break
-            if beside * km[c[0]] > 2 * CLEAR_KM: path = path[:-beside]; break
+            if away[c] <= 1.5:
+                break
+            if beside * km[c[0]] > 2 * CLEAR_KM:
+                path = path[:-beside]
+                break
             c = down[c]
-        else: path.append(c)
+        else:
+            path.append(c)
         # cut out the straight stretches
         runs, start, last = [], 0, None
         for i in range(1, len(path)):
             step = (path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1])
-            if i == 1 or step != last: turn = i - 1
+            if i == 1 or step != last:
+                turn = i - 1
             last = step
-            if i - turn == STRAIGHT: runs.append(path[start:turn + 1]); start = None
-            if start is None and i - turn < STRAIGHT: start = i - 1
-        if start is not None: runs.append(path[start:])
+            if i - turn == STRAIGHT:
+                runs.append(path[start : turn + 1])
+                start = None
+            if start is None and i - turn < STRAIGHT:
+                start = i - 1
+        if start is not None:
+            runs.append(path[start:])
         found += [run for run in runs if len(run) >= SHORTEST]
     # a river goes on to water, to a drawn river or to another river that does; what ends in the open plain is dropped
     kept, reached = [], ~clear | ndimage.binary_dilation(water != 0, iterations=2)
     while True:
         more = [run for run in found if reached[run[-1]]]
-        if not more: break
+        if not more:
+            break
         for run in more:
-            found.remove(run); kept.append(run)
-            for c in run: reached[c] = True
-    return [{'name': '', 'rank': 10 if area[run[-1]] < 2000e6 else 9, 'pts': [[float(x) + 0.5, float(y) + 0.5] for y, x in run[::2] + run[-1:]]} for run in kept]
+            found.remove(run)
+            kept.append(run)
+            for c in run:
+                reached[c] = True
+    return [
+        {
+            'name': '',
+            'rank': 10 if area[run[-1]] < 2000e6 else 9,
+            'pts': [[float(x) + 0.5, float(y) + 0.5] for y, x in run[::2] + run[-1:]],
+        }
+        for run in kept
+    ]
 
 
 def main(name):
     part = name in PARTS
     if part:
         # the tiles to write, counted on round the globe, and around them the margin, as far down as the world goes
-        tx0, ty0, tx1, ty1 = PARTS[name]; m = MARGIN.get(name, MARGIN_CELLS)
+        tx0, ty0, tx1, ty1 = PARTS[name]
+        m = MARGIN.get(name, MARGIN_CELLS)
         cx0, cy0, cx1, cy1 = tile_start(tx0), ty0 * TILE, tile_start(tx1), ty1 * TILE
         gx0, gy0, gx1, gy1 = cx0 - m, max(cy0 - m, 0), cx1 + m, min(cy1 + m, WORLD_H * CELLS)
-        folder, wanted = 'world', [(t % ACROSS, ky, tile_start(t), tile_start(t + 1)) for ky in range(ty0, ty1) for t in range(tx0, tx1)]
+        folder, wanted = (
+            'world',
+            [(t % ACROSS, ky, tile_start(t), tile_start(t + 1)) for ky in range(ty0, ty1) for t in range(tx0, tx1)],
+        )
     else:
         west, south, east, north = REGIONS[name]
         # the window in cells of the whole map, widened to whole tiles
         gx0, gy0 = (int(math.floor(v * CELLS / TILE)) * TILE for v in lonlat_to_px(west, north))
         gx1, gy1 = (int(math.ceil(v * CELLS / TILE)) * TILE for v in lonlat_to_px(east, south))
         gy0, gy1 = max(gy0, 0), min(gy1, H * CELLS // TILE * TILE)
-        folder, wanted = name, [(kx, ky, kx * TILE, (kx + 1) * TILE) for ky in range(gy0 // TILE, gy1 // TILE) for kx in range(gx0 // TILE, gx1 // TILE)]
+        folder, wanted = (
+            name,
+            [
+                (kx, ky, kx * TILE, (kx + 1) * TILE)
+                for ky in range(gy0 // TILE, gy1 // TILE)
+                for kx in range(gx0 // TILE, gx1 // TILE)
+            ],
+        )
     w, h, round_the_globe = gx1 - gx0, gy1 - gy0, WORLD_W * CELLS
     # cell centres in map pixels and in degrees: columns share a longitude, rows a latitude
     mx, my = (gx0 + np.arange(w) + 0.5) / CELLS, (gy0 + np.arange(h) + 0.5) / CELLS
@@ -266,12 +329,15 @@ def main(name):
         return list(zip((x * CELLS + lap * round_the_globe - gx0).tolist(), (y * CELLS - gy0).tolist()))
 
     def mask(rings_of_polys):
-        img = Image.new('L', (w, h), 0); d = ImageDraw.Draw(img)
+        img = Image.new('L', (w, h), 0)
+        d = ImageDraw.Draw(img)
         for poly in rings_of_polys:
-            if len(poly[0]) < 3: continue
+            if len(poly[0]) < 3:
+                continue
             for lap in laps(np.asarray(poly[0], np.float64)[:, 0]):
                 for i, ring in enumerate(poly):
-                    if len(ring) >= 3: d.polygon(cells_of(ring, lap), fill=1 if i == 0 else 0)
+                    if len(ring) >= 3:
+                        d.polygon(cells_of(ring, lap), fill=1 if i == 0 else 0)
         return np.asarray(img).astype(bool)
 
     def polys(features):
@@ -281,28 +347,41 @@ def main(name):
     def near(features):
         """Features whose bounding box touches the region (keeps the drawing fast)."""
         for f in features:
-            c = np.array([p[:2] for poly in polys_from_geojson_geom(f['geometry']) for p in poly[0]] or [p[:2] for l in lines_from_geojson_geom(f['geometry']) for p in l])
-            if len(c) and c[:, 1].max() >= south and c[:, 1].min() <= north and laps(c[:, 0]): yield f
+            c = np.array(
+                [p[:2] for poly in polys_from_geojson_geom(f['geometry']) for p in poly[0]]
+                or [p[:2] for l in lines_from_geojson_geom(f['geometry']) for p in l]
+            )
+            if len(c) and c[:, 1].max() >= south and c[:, 1].min() <= north and laps(c[:, 0]):
+                yield f
 
     ov = load_json(os.path.join(ROOT, 'data', 'history', '1356', 'terrain_overrides.json'), {}) or {}
     # today's lakes without the reservoirs of the 20th century
     dammed = set((ov.get('reservoirs') or {}).get('names') or [])
+
     def natural(features):
         for f in features:
             p = f['properties']
-            if not (p.get('featurecla') == 'Reservoir' and (not p.get('name') or p['name'] in dammed)): yield f
+            if not (p.get('featurecla') == 'Reservoir' and (not p.get('name') or p['name'] in dammed)):
+                yield f
+
     land = mask(polys(near(natural_earth('ne_10m_land'))))
-    lake = mask(polys(natural(near(natural_earth('ne_10m_lakes'))))) | mask(polys(natural(near(natural_earth('ne_10m_lakes_europe')))))
+    lake = mask(polys(natural(near(natural_earth('ne_10m_lakes'))))) | mask(
+        polys(natural(near(natural_earth('ne_10m_lakes_europe'))))
+    )
     # the coast and the lakes of 1356 where they differ from today's
     for e in ov.get('coast_1356') or []:
-        if not isinstance(e, dict) or len(e.get('polygon') or []) < 3: continue
+        if not isinstance(e, dict) or len(e.get('polygon') or []) < 3:
+            continue
         m = mask([[e['polygon']]])
         # lagoons are left as Natural Earth draws them: its coast has their islands and spits, the override is a rough outline
-        if e.get('type') == 'sea': land &= ~m
-        elif e.get('type') == 'land': land |= m
+        if e.get('type') == 'sea':
+            land &= ~m
+        elif e.get('type') == 'land':
+            land |= m
     for e in ov.get('lakes_1356') or []:
         ring = e.get('polygon') if isinstance(e, dict) else e
-        if ring and len(ring) >= 3: lake |= mask([[ring]])
+        if ring and len(ring) >= 3:
+            lake |= mask([[ring]])
     water = np.zeros((h, w), np.uint8)
     water[~land] = SEA
     water[lake & land] = LAKE
@@ -334,70 +413,126 @@ def main(name):
     for source in ('ne_10m_rivers_lake_centerlines', 'ne_10m_rivers_europe'):
         for f in near(natural_earth(source)):
             p = f['properties']
-            if str(p.get('featurecla', '')).lower().startswith('lake'): continue
-            river = p.get('name_en') or p.get('name') or ''; gone = dropped.get(river)
+            if str(p.get('featurecla', '')).lower().startswith('lake'):
+                continue
+            river = p.get('name_en') or p.get('name') or ''
+            gone = dropped.get(river)
             for line in lines_from_geojson_geom(f['geometry']):
                 line = np.asarray(line, np.float64)[:, :2]
                 for lap in laps(line[:, 0]):
                     run = []
                     for xy in cells_of(line, lap) + [None]:
                         pt = None if xy is None else [round(v, 1) for v in xy]
-                        inside = pt is not None and gone is not None and 0 <= int(pt[1]) < h and 0 <= int(pt[0]) < w and gone[int(pt[1]), int(pt[0])]
-                        if pt is not None and not inside: run.append(pt); continue
-                        if len(run) >= 2: rivers.append({'name': river, 'rank': int(p.get('scalerank') or 10), 'pts': run})
+                        inside = (
+                            pt is not None
+                            and gone is not None
+                            and 0 <= int(pt[1]) < h
+                            and 0 <= int(pt[0]) < w
+                            and gone[int(pt[1]), int(pt[0])]
+                        )
+                        if pt is not None and not inside:
+                            run.append(pt)
+                            continue
+                        if len(run) >= 2:
+                            rivers.append({'name': river, 'rank': int(p.get('scalerank') or 10), 'pts': run})
                         run = []
     for e in changed:
         for lap in laps(np.asarray(e['line'], np.float64)[:, 0]):
-            rivers.append({'name': e['name'], 'rank': int(e.get('rank') or 10), 'pts': [[round(v, 1) for v in xy] for xy in cells_of(e['line'], lap)]})
+            rivers.append(
+                {
+                    'name': e['name'],
+                    'rank': int(e.get('rank') or 10),
+                    'pts': [[round(v, 1) for v in xy] for xy in cells_of(e['line'], lap)],
+                }
+            )
     rivers += read_rivers(area, water, rivers, km)
 
     out = os.path.join(ROOT, 'public', 'map', 'regions', folder)
-    if not part: shutil.rmtree(out, ignore_errors=True)
+    if not part:
+        shutil.rmtree(out, ignore_errors=True)
     os.makedirs(out, exist_ok=True)
     # of a region cut in parts, the tiles of the other parts stay
     mine = {f'{kx}_{ky}' for kx, ky, _, _ in wanted}
     for f in os.listdir(out):
-        if f.split('.')[0] in mine: os.remove(os.path.join(out, f))
+        if f.split('.')[0] in mine:
+            os.remove(os.path.join(out, f))
     # (the tiles of the other parts must be in the coding this writes: tiles.py)
-    if any(f.endswith('.bin.gz') for f in os.listdir(out)): sys.exit(f'{out} holds tiles zipped with gzip: python3 tools/worldprobe/recode_regions.py {folder} first')
-    layers = [np.clip(np.round(shaped), -500, 9000).astype('<i2'),
-              # drainage area in km² as a logarithm: 16 steps per doubling
-              np.clip(np.round(16 * np.log2(area / 1e6 + 1)), 0, 255).astype(np.uint8), water,
-              np.clip(np.round(forest), 0, 255).astype(np.uint8), np.clip(np.round(crops), 0, 255).astype(np.uint8)]
+    if any(f.endswith('.bin.gz') for f in os.listdir(out)):
+        sys.exit(f'{out} holds tiles zipped with gzip: python3 tools/worldprobe/recode_regions.py {folder} first')
+    layers = [
+        np.clip(np.round(shaped), -500, 9000).astype('<i2'),
+        # drainage area in km² as a logarithm: 16 steps per doubling
+        np.clip(np.round(16 * np.log2(area / 1e6 + 1)), 0, 255).astype(np.uint8),
+        water,
+        np.clip(np.round(forest), 0, 255).astype(np.uint8),
+        np.clip(np.round(crops), 0, 255).astype(np.uint8),
+    ]
     for kx, ky, first, after in wanted:
         # the tile's place in the window, in cells; where the world joins itself the tile is cut short and filled up with sea
         box = (slice(ky * TILE - gy0, (ky + 1) * TILE - gy0), slice(first - gx0, after - gx0))
-        if (water[box] == SEA).all(): continue
+        if (water[box] == SEA).all():
+            continue
         key, raw = f'{kx}_{ky}', b''
         for k, layer in enumerate(layers):
             full = np.full((TILE, TILE), SEA if k == 2 else 0, layer.dtype)
-            full[:, :after - first] = layer[box]
+            full[:, : after - first] = layer[box]
             raw += full.tobytes()
         tiles_file.write(out, key, raw, TILE)
         # the rivers that cross the tile or pass close by, cut to the stretch that does, in the cells the tile itself counts in
-        x0, y0, x1, y1, to_x, crossing = first - gx0 - 8, ky * TILE - gy0 - 8, after - gx0 + 8, (ky + 1) * TILE - gy0 + 8, gx0 - first + kx * TILE, []
+        x0, y0, x1, y1, to_x, crossing = (
+            first - gx0 - 8,
+            ky * TILE - gy0 - 8,
+            after - gx0 + 8,
+            (ky + 1) * TILE - gy0 + 8,
+            gx0 - first + kx * TILE,
+            [],
+        )
         for r in rivers:
             inside = [x0 <= p[0] <= x1 and y0 <= p[1] <= y1 for p in r['pts']]
             run = []
             for i, p in enumerate(r['pts'] + [None]):
-                if p is not None and (inside[i] or (i > 0 and inside[i - 1]) or (i + 1 < len(inside) and inside[i + 1])): run.append([round(p[0] + to_x, 1), round(p[1] + gy0, 1)]); continue
-                if len(run) >= 2: crossing.append({'name': r['name'], 'rank': r['rank'], 'pts': run})
+                if p is not None and (
+                    inside[i] or (i > 0 and inside[i - 1]) or (i + 1 < len(inside) and inside[i + 1])
+                ):
+                    run.append([round(p[0] + to_x, 1), round(p[1] + gy0, 1)])
+                    continue
+                if len(run) >= 2:
+                    crossing.append({'name': r['name'], 'rank': r['rank'], 'pts': run})
                 run = []
         with open(os.path.join(out, f'{key}.json'), 'w', encoding='utf-8') as f:
             json.dump(crossing, f, ensure_ascii=False, separators=(',', ':'))
-    tiles = sorted((f.split('.')[0] for f in os.listdir(out) if f.endswith('.bin')), key=lambda k: [int(v) for v in k.split('_')][::-1])
-    meta = {'name': folder, 'tile': TILE, 'cells': CELLS, 'mapW': W, 'mapH': H, 'lon0': LON0, 'lon1': LON1, 'latN': LAT_N, 'latS': LAT_S,
-            'layers': ['shaped:i16', 'drainage:u8', 'water:u8', 'forest:u8', 'crops:u8'], 'coding': 'br', 'tiles': tiles}
+    tiles = sorted(
+        (f.split('.')[0] for f in os.listdir(out) if f.endswith('.bin')),
+        key=lambda k: [int(v) for v in k.split('_')][::-1],
+    )
+    meta = {
+        'name': folder,
+        'tile': TILE,
+        'cells': CELLS,
+        'mapW': W,
+        'mapH': H,
+        'lon0': LON0,
+        'lon1': LON1,
+        'latN': LAT_N,
+        'latS': LAT_S,
+        'layers': ['shaped:i16', 'drainage:u8', 'water:u8', 'forest:u8', 'crops:u8'],
+        'coding': 'br',
+        'tiles': tiles,
+    }
     # the world goes round the globe: its width in map pixels, after which it begins again, and its height
-    if part: meta.update(worldW=WORLD_W, worldH=WORLD_H)
+    if part:
+        meta.update(worldW=WORLD_W, worldH=WORLD_H)
     with open(os.path.join(out, 'index.json'), 'w', encoding='utf-8') as f:
         json.dump(meta, f, separators=(',', ':'))
     size = sum(os.path.getsize(os.path.join(out, f)) for f in os.listdir(out) if os.path.isfile(os.path.join(out, f)))
-    print(f'{name}: {w} x {h} cells, {folder} now {len(tiles)} tiles, {size / 1e6:.0f} MB, height {height.min():.0f} … {height.max():.0f} m, '
-          f'sea {np.mean(water == SEA):.1%}, lakes {count}, rivers {len(rivers)}')
+    print(
+        f'{name}: {w} x {h} cells, {folder} now {len(tiles)} tiles, {size / 1e6:.0f} MB, height {height.min():.0f} … {height.max():.0f} m, '
+        f'sea {np.mean(water == SEA):.1%}, lakes {count}, rivers {len(rivers)}'
+    )
 
 
 if __name__ == '__main__':
     # a cut of one's own, to try something out: build_region.py <name> <west> <south> <east> <north>
-    if len(sys.argv) == 6: REGIONS[sys.argv[1]] = tuple(float(v) for v in sys.argv[2:])
+    if len(sys.argv) == 6:
+        REGIONS[sys.argv[1]] = tuple(float(v) for v in sys.argv[2:])
     main(sys.argv[1] if len(sys.argv) > 1 else 'alps')

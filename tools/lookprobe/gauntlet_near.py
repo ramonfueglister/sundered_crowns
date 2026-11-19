@@ -8,6 +8,7 @@ and the classes of green and yellow are not compared. The edge angles are not me
 one camera (its row of houses runs as seen from 16 degrees up, its roofs as seen from 40), and the camera is the
 stage's, not the houses'.
 """
+
 import sys
 import numpy as np
 from gauntlet import class_colour, detail, hexc, hsv, inner, load, lum
@@ -49,9 +50,9 @@ def main(ref_path, probe_path):
     def check(name, a, b, ok, fmt='{:.3f}'):
         nonlocal fails
         fails += 0 if ok else 1
-        print(f"{name:34s} {fmt.format(a):>9s} {fmt.format(b):>9s}  {'PASS' if ok else 'FAIL'}")
+        print(f'{name:34s} {fmt.format(a):>9s} {fmt.format(b):>9s}  {"PASS" if ok else "FAIL"}')
 
-    print(f"{'Prüfung':34s} {'Referenz':>9s} {'Probe':>9s}")
+    print(f'{"Prüfung":34s} {"Referenz":>9s} {"Probe":>9s}')
     (rh, rs, rv), (ph, ps, pv) = hsv(ref), hsv(probe)
     roi = region_mask(ref.shape)
     check('mittlere Sättigung', rs[roi].mean(), ps[roi].mean(), abs(rs[roi].mean() - ps[roi].mean()) <= 0.03)
@@ -66,7 +67,9 @@ def main(ref_path, probe_path):
             a, b = class_colour(ref, ma, lo, hi), class_colour(probe, mb, lo, hi)
             dist = 1 if a is None or b is None else float(np.abs(a - b).max())
             fails += 0 if dist <= 0.08 else 1
-            print(f"{'Farbe ' + name + ' ' + part:34s} {hexc(a):>9s} {hexc(b):>9s}  {'PASS' if dist <= 0.08 else 'FAIL'}")
+            print(
+                f'{"Farbe " + name + " " + part:34s} {hexc(a):>9s} {hexc(b):>9s}  {"PASS" if dist <= 0.08 else "FAIL"}'
+            )
     for name, f in CLASSES.items():
         if name == 'Grau/Schatten':
             continue
@@ -86,20 +89,25 @@ def main(ref_path, probe_path):
     for ty in range(5):
         for tx in range(8):
             box = (tx * 209, ty * 188, (tx + 1) * 209, (ty + 1) * 188)
-            if not roi[box[1]:box[3], box[0]:box[2]].all():
+            if not roi[box[1] : box[3], box[0] : box[2]].all():
                 continue
             n += 1
-            a, b = ref[box[1]:box[3], box[0]:box[2]].mean((0, 1)), probe[box[1]:box[3], box[0]:box[2]].mean((0, 1))
+            a, b = (
+                ref[box[1] : box[3], box[0] : box[2]].mean((0, 1)),
+                probe[box[1] : box[3], box[0] : box[2]].mean((0, 1)),
+            )
             ok_colour += np.abs(a - b).max() <= 0.1
             (rf, rc), (pf, pc) = detail(ref, box), detail(probe, box)
             ok_live += 0.7 <= (pf + pc) / (rf + rc) <= 1.4
     check(f'Kacheln mit passender Farbe (% von {n})', 100, ok_colour / n * 100, ok_colour >= 0.8 * n, '{:.0f}')
     check(f'Kacheln mit passendem Detail (% von {n})', 100, ok_live / n * 100, ok_live >= 0.8 * n, '{:.0f}')
+
     def hist(h, s_, v, m):
         return np.histogramdd(np.stack([h[m] / 360, s_[m], v[m]], 1), bins=(18, 5, 5), range=((0, 1),) * 3)[0] / m.sum()
+
     overlap = np.minimum(hist(rh, rs, rv, roi), hist(ph, ps, pv, roi)).sum()
     check('Überdeckung der Farbverteilung', 1, overlap, overlap >= 0.75)
-    print(f"\n{fails} Prüfungen nicht bestanden" if fails else "\nAlle Prüfungen bestanden")
+    print(f'\n{fails} Prüfungen nicht bestanden' if fails else '\nAlle Prüfungen bestanden')
 
 
 if __name__ == '__main__':
