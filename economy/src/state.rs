@@ -18,7 +18,7 @@ use beforeit::{
 };
 
 use crate::Economy;
-use crate::clock::DailyClock;
+use crate::clock::{Attendance, DailyClock};
 use crate::past::{Past, Phase, Series};
 use crate::trade::{Cities, Merchants, Routes};
 
@@ -33,10 +33,11 @@ pub const FORMAT_CITIES: u32 = 2;
 /// 4: the demand pull. 5: of the national accounts the clock keeps the series that the key figures sum, the port
 /// keeps its last row. 6: the clock can keep the past in a fixed size ([`crate::past`]). 7: the spending out of
 /// savings (economy feature 15). 8: the crown that buys with what it took in (economy feature 16). 9: firm and
-/// owner as one household (economy feature 18). States of formats 4 to 8 are still read and become format 9 when they
-/// are saved ([`load`]); formats 4 and 5 keep the whole past, as they had it, none before 7 spends out of savings,
-/// none before 8 has a crown that buys with its revenue, and none before 9 has owners who bear losses.
-pub const FORMAT: u32 = 9;
+/// owner as one household (economy feature 18). 10: the working days of the firms (economy feature 19). States of
+/// formats 4 to 9 are still read and become format 10 when they are saved ([`load`]); formats 4 and 5 keep the whole
+/// past, as they had it, none before 7 spends out of savings, none before 8 has a crown that buys with its revenue,
+/// none before 9 has owners who bear losses, and none before 10 has working days.
+pub const FORMAT: u32 = 10;
 const NONE: u32 = u32::MAX;
 /// The length of the last state of cities written ([`save_cities`]): how much room the next one is given at once.
 /// It changes no byte of a state.
@@ -78,6 +79,10 @@ impl Out {
         for &x in v {
             self.f64(x);
         }
+    }
+    fn bytes(&mut self, v: &[u8]) {
+        self.n(v.len());
+        self.0.extend_from_slice(v);
     }
     fn i64s(&mut self, v: &[i64]) {
         self.n(v.len());
@@ -189,6 +194,10 @@ impl In<'_> {
     }
     fn f64s(&mut self) -> Res<Vec<f64>> {
         (0..self.len(8)?).map(|_| self.f64()).collect()
+    }
+    fn bytes(&mut self) -> Res<Vec<u8>> {
+        let n = self.len(1)?;
+        Ok(self.take(n)?.to_vec())
     }
     fn i64s(&mut self) -> Res<Vec<i64>> {
         (0..self.len(8)?).map(|_| self.i64()).collect()
@@ -943,6 +952,7 @@ fn put_clock(o: &mut Out, c: &DailyClock) {
         window,
         demand,
         periods,
+        worked,
         start,
         accounts,
         wage,
@@ -956,6 +966,7 @@ fn put_clock(o: &mut Out, c: &DailyClock) {
         borne: _,
         past,
         trade: _,
+        attendance,
     } = c;
     o.n(*plan);
     o.n(*window);
@@ -1007,6 +1018,23 @@ fn put_clock(o: &mut Out, c: &DailyClock) {
     o.bool(*crown_revenue);
     o.f64(*crown_outlays);
     o.bool(*owner);
+    let Attendance {
+        from,
+        days,
+        kinds,
+        factor,
+        day,
+        calendar,
+        household,
+    } = attendance;
+    o.n(*from);
+    o.n(*days);
+    o.n(*kinds);
+    o.f64s(factor);
+    o.bytes(day);
+    o.bytes(calendar);
+    o.bytes(household);
+    o.f64s(worked);
 }
 
 fn get_series(i: &mut In, window: usize) -> Res<Series> {
@@ -1103,11 +1131,41 @@ fn get_clock(i: &mut In, format: u32) -> Res<DailyClock> {
         (false, 0.0)
     };
     let owner = format >= 9 && i.bool()?;
+    // formats before 10 know no working days: every period is one
+    // and before 10 the factors of the days since a firm's last plan are their number, with the starting position
+    let (attendance, worked) = if format >= 10 {
+        let (from, days, kinds, factor, day, calendar, household) =
+            (i.n()?, i.n()?, i.n()?, i.f64s()?, i.bytes()?, i.bytes()?, i.bytes()?);
+        let worked = i.f64s()?;
+        if worked.len() != demand.len() || worked.iter().any(|w| !(w.is_finite() && *w >= 0.0)) {
+            return Err(format!(
+                "a clock with the worked days of {} firms and {} firms",
+                worked.len(),
+                demand.len()
+            ));
+        }
+        let attendance = if calendar.is_empty() {
+            Attendance::default()
+        } else {
+            if calendar.len() != demand.len() {
+                return Err(format!(
+                    "working days of {} firms in a clock of {} firms",
+                    calendar.len(),
+                    demand.len()
+                ));
+            }
+            Attendance::new(from, days, kinds, factor, day, calendar, household)?
+        };
+        (attendance, worked)
+    } else {
+        (Attendance::default(), periods.iter().map(|&p| p as f64 + 1.0).collect())
+    };
     Ok(DailyClock {
         plan,
         window,
         demand,
         periods,
+        worked,
         start,
         accounts,
         wage,
@@ -1121,6 +1179,7 @@ fn get_clock(i: &mut In, format: u32) -> Res<DailyClock> {
         borne: Vec::new(),
         past,
         trade: None,
+        attendance,
     })
 }
 
@@ -1196,6 +1255,16 @@ pub fn load(bytes: &[u8]) -> Result<(AbstractModel<DailyClock>, Xoshiro), String
         }
         model.ext.accounts = vec![crate::summed(&model.data, 0)];
         crate::take_rows(&mut model);
+    }
+    let (a, households) = (
+        &model.ext.attendance,
+        model.w_act.len() + model.w_inact.len() + model.banks.len(),
+    );
+    if !a.is_empty() && a.household.len() != households {
+        return Err(format!(
+            "working days of {} households in a model of {households} households that own no firm",
+            a.household.len()
+        ));
     }
     if i.at != bytes.len() {
         return Err(format!("{} bytes are left over after the state", bytes.len() - i.at));

@@ -31,7 +31,8 @@
 .person-panel .bar { height: 6px; border-radius: 3px; background: rgba(166, 194, 208, .25); overflow: hidden; }
 .person-panel .bar i { display: block; height: 100%; background: var(--gold); }
 .person-panel .trait span:last-child { text-align: right; }
-.person-panel .kin { display: flex; gap: 8px; }
+.person-panel .kin { display: flex; flex-wrap: wrap; gap: 8px; }
+.person-panel .kin + h3 { margin-top: 8px; }
 .person-panel .facts + .kin { margin-top: 6px; }
 .person-panel .btn {
   border: 0; border-radius: 7px; padding: 3px 10px; font-size: .95em; font-weight: 600;

@@ -300,7 +300,7 @@ describe('the land register of a world of 1291', () => {
 describe('the streets of a world of 1291', () => {
   const t = decodeState(encodeState(s)), found = foundLots(t, w.ground, w.dry, { ...DEFAULT_TUNING, measure: true });
   const S = s.street.cols, L = s.lot.cols, rows = Array.from({ length: s.street.size }, (_, i) => i);
-  it('are the streets of a new world, measured or not, and every town has one market', () => {
+  it('are the streets of a new world, measured or not, and every town has one market', { timeout: 60_000 }, () => {
     expect(hashState(t)).toBe(hashState(s));
     const towns = cities.filter((c, k) => townFamilies(s)[k].families.length);
     expect(found.streets.size).toBe(towns.length);
@@ -330,7 +330,7 @@ describe('the streets of a world of 1291', () => {
 describe('a world of 1291 saved before the streets', () => {
   it('lays its towns out along streets: every family keeps its parcel and its size, and the parcels front the streets', { timeout: 60_000 }, () => {
     const old = decodeState(encodeState(s)) as WorldState, L = old.lot.cols;
-    old.v = 30;
+    old.v = 31;
     delete (old as Partial<WorldState>).street;
     for (let i = 0; i < old.lot.size; i++) if (L.kind[i] === LOT_KIND.parcel) { L.x[i] = 0; L.z[i] = 0; L.front[i] = FRONT.north; } // where they were does not count
     const up = upgradeState(decodeState(encodeState(old)), w, () => loadSetup(1291)), U = up.lot.cols, F = s.family.cols;

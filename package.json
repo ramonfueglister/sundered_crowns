@@ -25,7 +25,8 @@
     "years:check": "tsx tools/sim/years_check.ts",
     "lots:write": "tsx tools/sim/write_lots.ts",
     "portrait:build": "tsx tools/portrait/build_portrait.ts",
-    "archive:check": "tsx tools/sim/archive_check.ts"
+    "archive:check": "tsx tools/sim/archive_check.ts",
+    "workdays:check": "tsx tools/sim/working_days_check.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.5",
