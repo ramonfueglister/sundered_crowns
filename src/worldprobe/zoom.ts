@@ -55,7 +55,7 @@ const over = (from: number, until: number, wide: number) => smooth(Math.log2(fro
 /**
  * The water's mirror image of what stands by it shows fully up to here and not at all from there: at 6000 finest
  * blocks across a picture of 3000 dots a block is half a dot, a tower a few dots tall, and the mirror's blur nine dots
- * wide. Beyond it the mirror is not drawn (stage.ts `mirror`).
+ * wide. Beyond it the mirror is not drawn (stage/api.ts `mirror`).
  */
 const MIRROR_FROM = 3000, MIRROR_UNTIL = 6000;
 /** How much of the mirror image a view shows, 1 … 0. */

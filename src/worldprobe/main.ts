@@ -1,5 +1,5 @@
 // World probe: the world to travel through (view.ts) on a page of its own.
-// Address options, besides those of the stage (see ../lookprobe/stage.ts): ?lon=12.1&lat=45.85 (the place at the middle),
+// Address options, besides those of the stage (see ../lookprobe/stage/index.ts): ?lon=12.1&lat=45.85 (the place at the middle),
 // ?wide=190 (finest blocks across the picture), ?region=world (the cut of the world to show), ?year=1291 (the start year whose realms colour the map; default 1356), ?mode=political or terrain (the map mode; default:
 // the realms only on the flat world far out). The address follows the view.
 import { showError } from '../lookprobe/stage';
