@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config';
 import preact from '@preact/preset-vite';
-import { pieceKey } from './tools/stamp/piece_key';
+import { pieceKey } from './tools/stamp/piece_key.ts';
 export default defineConfig({
   plugins: [preact()],
   // the name under which the pieces of the world are kept on disk (src/worldprobe/store.ts): a stamp of their code and
