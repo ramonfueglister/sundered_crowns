@@ -22,7 +22,17 @@ import {
   type Entry,
 } from '../src/sim/economy/calibration';
 import { FIGURE, FIGURES, type CitySetup, type EconomyEngine, type EconomyRules } from '../src/sim/economy/engine';
-import { cityAt, cityPlaces, citySeed, computeTo, workingDays, yearRow } from '../src/sim/systems/economy';
+import {
+  cityAt,
+  cityCalibrations as foundFrom,
+  cityPlaces,
+  citySeed,
+  computeTo,
+  foundEconomy,
+  workingDays,
+  yearRow,
+} from '../src/sim/systems/economy';
+import { upgradeState } from '../src/sim/upgrade';
 import { cityRoutes } from '../src/sim/economy/routes';
 import { cityPeopleByPlace } from '../src/sim/systems/people';
 import { advanceDay } from '../src/sim/engine';
@@ -123,6 +133,29 @@ describe("the calibration of England's economy (the year of the sources)", () =>
     expect(ic.C_E[75]).toBeCloseTo(a.exports, 9);
     expect(ic.Y[0] / ic.Y[75]).toBeCloseTo(3389.51 / 2686.02, 9); // real GDP of 1281 against 1356
     expect(ic.pi[0]).toBeCloseTo(Math.log(0.1249 / 0.132607), 9); // the deflator of 1281 against 1280
+  });
+  it("hands a world that starts before the table's year the history up to its start, as the port ends it at the date of the calibration (feature 21)", () => {
+    const u = calibrateEconomy(table, 1291),
+      q = u.parameters as PortJson,
+      h = u.initial_conditions as PortJson;
+    expect(q.T_prime).toBe(11);
+    for (const k of ['Y', 'pi', 'C_G', 'C_E', 'Y_I']) expect(h[k].length).toBe(11);
+    expect(h.Y[10]).toBeCloseTo(sum(a.output), 6); // every series is scaled to its value in the start year
+    expect(h.C_G[10]).toBeCloseTo(a.crown, 9);
+    expect(h.C_E[10]).toBeCloseTo(a.exports, 9);
+    expect(h.Y[0] / h.Y[10]).toBeCloseTo(3389.51 / 3231.35, 9); // real GDP of 1281 against 1291
+    expect(h.pi).toEqual(ic.pi.slice(0, 11));
+    const e = ar1(h.C_E.map(Math.log)); // the exports' rule from 1281 to 1291
+    expect([q.alpha_E, q.beta_E, q.sigma_E]).toEqual([e.alpha, e.beta, e.sigma]);
+    // the crown's rule from the whole history: from 1281 to 1291 it has no long-run mean
+    expect(ar1(h.C_G.map(Math.log)).alpha).toBeGreaterThan(1);
+    expect(q.alpha_G).toBeCloseTo(p.alpha_G, 12);
+    expect(q.sigma_G).toBeCloseTo(p.sigma_G, 12);
+    expect(u.accounts).toEqual(c.accounts); // the accounts are the table's
+    expect(dailyCalibration(table, 1291).parameters).toMatchObject({ T_prime: 11 });
+    expect(calibrateEconomy(table, 1356)).toEqual(c);
+    for (const y of [1282, 1357, 1291.5])
+      expect(() => calibrateEconomy(table, y)).toThrow(/the history runs from 1281 to 1356/);
   });
   it('estimates an AR(1) by least squares', () => {
     const y = [1, 1.5, 1.75, 1.875, 1.9375]; // y_t = 0.5 · y_(t−1) + 1 exactly
@@ -834,6 +867,8 @@ describe('the economies of the cities in the world', () => {
     expect(e.day).toBe(0);
     expect(e.halted).toBe('');
     expect(e.figures.length).toBe(n * FIGURES);
+    // the history up to 1291, not the plague of the table's years (feature 21)
+    for (const x of foundFrom(s, w).slice(0, 3)) expect((x.calibration.parameters as PortJson).T_prime).toBe(11);
     days(s, w, 35); // past the first plan of every firm
     expect(e.day).toBe(35);
     expect(e.halted).toBe('');
@@ -848,6 +883,17 @@ describe('the economies of the cities in the world', () => {
     expect(cityPlaces(1291).map((x) => x.name)).toContain('Bruges');
     const noTown = Array.from({ length: w.L }, (_, i) => i).find((i) => s.place.pop[i] > 0 && !e.places.includes(i))!;
     expect(placeDetail(s, w, noTown)!.cityEconomy).toBeUndefined();
+    // a world of 1291 from before feature 21 has its economies founded anew on the day it has reached
+    // biome-ignore lint/suspicious/noExplicitAny: a state of an older version, which no type of today describes
+    const old = decodeState(encodeState(s)) as any;
+    old.v = 32;
+    const up = upgradeState(old, w),
+      founded = decodeState(encodeState(s));
+    foundEconomy(founded, w);
+    expect(up.v).toBe(STATE_VERSION);
+    expect(hashState(up)).toBe(hashState(founded));
+    expect(up.economy.cities!.day).toBe(35);
+    expect(up.economy.cities!.years.length).toBe(0);
   }, 300_000);
   it('stand still when the engine cannot compute a day, and the world goes on', () => {
     const real = loadWorld();
