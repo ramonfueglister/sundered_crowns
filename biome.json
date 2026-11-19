@@ -39,7 +39,9 @@
         "tests/buildings/**",
         "tests/figures/**",
         "tests/setup/**",
+        "tests/archive.test.ts",
         "tests/borders.test.ts",
+        "tests/cultivation.test.ts",
         "tests/cultures.test.ts",
         "tests/deaths.test.ts",
         "tests/economy-households.test.ts",
@@ -49,6 +51,7 @@
         "tests/families.test.ts",
         "tests/foundation.test.ts",
         "tests/hamlets.test.ts",
+        "tests/holy_days.test.ts",
         "tests/inheritance.test.ts",
         "tests/moves.test.ts",
         "tests/music.test.ts",
@@ -56,6 +59,7 @@
         "tests/people-net.test.ts",
         "tests/people.test.ts",
         "tests/piece_key.test.ts",
+        "tests/portrait_skin.test.ts",
         "tests/roads.test.ts",
         "tests/rulers.test.ts",
         "tests/rulers_copy.test.ts",
@@ -67,12 +71,16 @@
         "tests/world_auth.test.ts",
         "tests/world_backup.test.ts",
         "tests/world_history.test.ts",
+        "tests/world_server.test.ts",
         "tests/world_store.test.ts",
         "tools/atlas/**",
+        "tools/history/**",
         "tools/lookprobe/**",
         "tools/map/**",
         "tools/roads/**",
-        "tools/zoom/**"
+        "tools/stamp/**",
+        "tools/zoom/**",
+        "vite.config.ts"
       ],
       "formatter": { "enabled": true }
     }
