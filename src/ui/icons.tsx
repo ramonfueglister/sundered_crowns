@@ -20,10 +20,6 @@ export const IconPlaces = ({ size = 34 }: P) => <svg width={size} height={size} 
 </svg>;
 
 /** Players: two busts. */
-export const IconPlayers = ({ size = 34 }: P) => <svg width={size * 38 / 36} height={size} viewBox="0 0 38 36" aria-hidden="true">
-  <circle class="ic2" cx="26" cy="12" r="5" /><path class="ic2" d="M22 20c7-1 14 3 14 11H26c0-4-1-8-4-11z" />
-  <circle class="ic" cx="13" cy="11" r="6" /><path class="ic" d="M2 31c0-8 5-12 11-12s11 4 11 12z" />
-</svg>;
 
 export const IconCalendar = ({ size = 26 }: P) => <svg width={size} height={size} viewBox="0 0 26 26" aria-hidden="true">
   <path class="ic" fill-rule="evenodd" d="M3 5h20a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zM3 10v13h20V10zM5 12h4v3H5zm6 0h4v3h-4zm6 0h4v3h-4zM5 17h4v3H5zm6 0h4v3h-4zm6 0h4v3h-4z" />

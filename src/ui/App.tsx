@@ -1,6 +1,6 @@
 // Application shell: the world (WorldView) with the HUD (banner, value bar, map tools) and the panel of the selected place.
 // For now everyone only watches the world (Ramon, 15 November 2026: "im moment nur zuschauer möglichkeit"): the game opens at
-// once as an observer and offers no sign-in. The server still knows players (src/online, server/auth.ts) for later.
+// once as an observer and offers no sign-in. The server still knows players (server/auth.ts) for later.
 import { useEffect, useState } from 'preact/hooks';
 import { computed } from '@preact/signals';
 import { status, refusal, me, world, realms, placeInfo, connect, disconnect, claim, abdicate, askPlace } from '../net/client';

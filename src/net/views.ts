@@ -43,11 +43,6 @@ export function cityEconomyDetail(s: WorldState, w: World, i: number): CityEcono
 
 const NONE = { en: '—', de: '—' };
 
-/** The cultures and faiths of the living persons of a place, as pairs, most persons first (src/sim/systems/cultures.ts). */
-export function placePeoples(s: WorldState, place: number): { culture: I18n; faith: I18n; persons: number }[] {
-  return personsOfPlace(s, place).peoples;
-}
-
 /** The persons of every place, grouped once a day (a click on a place reads only its own persons): person ids by the
  *  place of their family, ids of place p at start[p] … start[p + 1]. Rebuilt when the day, the persons or the families
  *  change in number (persons and families are only made and freed by the day's systems); who is alive and what a

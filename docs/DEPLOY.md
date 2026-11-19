@@ -14,6 +14,10 @@ The **service role key** lives only on the world server.
 
 All variables are listed with comments in [`.env.example`](../.env.example).
 
+The client has no sign-in yet: for now everyone watches the world as an observer (`src/ui/App.tsx`). The
+`VITE_SUPABASE_*` values and the auth steps below are for the sign-in that comes back later; the world server already
+verifies Supabase tokens (`server/auth.ts`).
+
 ---
 
 ## 0. Run everything locally first
