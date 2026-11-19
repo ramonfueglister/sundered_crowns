@@ -23,6 +23,7 @@ import json
 import math
 import os
 import sys
+from pathlib import Path
 
 import numpy as np
 from scipy.spatial import cKDTree
@@ -66,7 +67,7 @@ ISLAND_KM = 700  # a labelled island (Orkney from Bergen, Aegean islands from th
 def load_states():
     states, wars = [], []
     for f in sorted(glob.glob(os.path.join(ROOT, 'data', 'history', str(YEAR), '*.json'))):
-        d = json.load(open(f, encoding='utf-8'))
+        d = json.loads(Path(f).read_text(encoding='utf-8'))
         if 'states' not in d:
             continue
         states += d['states']
@@ -96,11 +97,10 @@ def load_states():
 def euratlas_allow(states, lon, lat, L, min_conf=0.5):
     """Per place 1..L: the set of realm indices that may hold it by the Euratlas 1300 label, or None (no label)."""
     ref = os.path.join(ROOT, 'data', 'history', str(YEAR), 'ref')
-    lab = json.load(open(os.path.join(ref, 'euratlas_1300_places.json'), encoding='utf-8'))
-    mp = json.load(open(os.path.join(ref, 'euratlas_to_1291.json'), encoding='utf-8'))
-    rows = [l.rstrip('\n').split('\t') for l in open(os.path.join(ref, 'euratlas_1300_states.tsv'), encoding='utf-8')][
-        1:
-    ]
+    lab = json.loads(Path(os.path.join(ref, 'euratlas_1300_places.json')).read_text(encoding='utf-8'))
+    mp = json.loads(Path(os.path.join(ref, 'euratlas_to_1291.json')).read_text(encoding='utf-8'))
+    with open(os.path.join(ref, 'euratlas_1300_states.tsv'), encoding='utf-8') as f:
+        rows = [line.rstrip('\n').split('\t') for line in f][1:]
     key = {int(r[0]): f'{r[0]}:{r[1]}' for r in rows}
     idx = {s['id']: i for i, s in enumerate(states)}
     sets = {k: (None if v is None else frozenset(idx[x] for x in v)) for k, v in mp['map'].items()}
@@ -130,17 +130,17 @@ def euratlas_allow(states, lon, lat, L, min_conf=0.5):
 
 
 def main():
-    geo = json.load(open(os.path.join(ROOT, 'public', 'data', 'geo.json'), encoding='utf-8'))
+    geo = json.loads(Path(os.path.join(ROOT, 'public', 'data', 'geo.json')).read_text(encoding='utf-8'))
     L, S, loc = geo['L'], geo['S'], geo['loc']
     L0 = geo['beyond']['L0']
     lon = np.array(loc['lon'][:L])
     lat = np.array(loc['lat'][:L])
     lx = np.array(loc['x'][:L])
     ly = np.array(loc['y'][:L])
-    names = json.load(open(os.path.join(ROOT, 'public', 'data', 'world.json'), encoding='utf-8'))['name']
+    names = json.loads(Path(os.path.join(ROOT, 'public', 'data', 'world.json')).read_text(encoding='utf-8'))['name']
     ids = np.load(os.path.join(os.environ.get('GEO_CACHE', '/home/user/geo-cache'), 'stage', 'ids.npy'))
     adj = [[] for _ in range(L + S + 1)]
-    for a, b, _kind, c, _rf in geo['edges']:
+    for a, b, _kind, _c, _rf in geo['edges']:
         adj[a].append(b)
         adj[b].append(a)
     for a, b, _nm in geo['straits']:
@@ -320,14 +320,16 @@ def main():
     fixed = [int(v) for v in owner[1:]]
     borders.apply(fixed, [s['id'] for s in states], geo, names, YEAR)
     print('places held', sum(1 for o in fixed if o >= 0), 'of', L)
-    s56 = json.load(open(os.path.join(ROOT, 'public', 'data', 'setup_1356.json'), encoding='utf-8'))
+    s56 = json.loads(Path(os.path.join(ROOT, 'public', 'data', 'setup_1356.json')).read_text(encoding='utf-8'))
     out_states = []
     for si, s in enumerate(states):
         o = dict(s)
         o['capital_loc'] = capital_loc[si]
         out_states.append(o)
     # people before the plague: those of 1356 times the factor of their region (data/history/1291/demography.json)
-    dem = json.load(open(os.path.join(ROOT, 'data', 'history', str(YEAR), 'demography.json'), encoding='utf-8'))
+    dem = json.loads(
+        Path(os.path.join(ROOT, 'data', 'history', str(YEAR), 'demography.json')).read_text(encoding='utf-8')
+    )
     factor = np.ones(L)
     for i in range(L):
         for r in dem['regions']:
@@ -359,7 +361,9 @@ def main():
         list(s56['faith']),
         [None if m is None else list(m) for m in s56['minority']],
     )
-    rules = json.load(open(os.path.join(ROOT, 'data', 'history', str(YEAR), 'peoples.json'), encoding='utf-8'))['rules']
+    rules = json.loads(
+        Path(os.path.join(ROOT, 'data', 'history', str(YEAR), 'peoples.json')).read_text(encoding='utf-8')
+    )['rules']
     peoples.apply(rules, fixed, [s['id'] for s in states], lon, lat, names, in_towns, culture, faith, minority)
     print(
         'people (M): 1356',
@@ -379,7 +383,7 @@ def main():
         'density': dens,
     }
     path = os.path.join(ROOT, 'public', 'data', f'setup_{YEAR}.json')
-    json.dump(setup, open(path, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+    Path(path).write_text(json.dumps(setup, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
     size = np.bincount([o for o in fixed if o >= 0], minlength=len(states))
     print('realms without a place:', [states[i]['id'] for i in range(len(states)) if size[i] == 0])
     print('written', path)

@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 """Compact DSL for writing data/history/1291/*.json.
 
@@ -15,13 +16,14 @@ import unicodedata
 import numpy as np
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')) + '/tools/geo')
-from common import H, W, lonlat_to_px
 import contextlib
+
+from common import H, W, lonlat_to_px
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')) + ''
 OLD = {}
 for f in sorted(glob.glob(f'{ROOT}/data/history/1356/*.json')):
-    d = json.load(open(f, encoding='utf-8'))
+    d = json.loads(Path(f).read_text(encoding='utf-8'))
     for s in d.get('states', []) or []:
         if s['id'] not in OLD or 'empire' in os.path.basename(f):
             OLD[s['id']] = s
@@ -45,12 +47,12 @@ for s in OLD.values():
     for p in [s['capital']] + list(s.get('holdings') or []):
         with contextlib.suppress(Exception):
             _add(p['name'], p['lat'], p['lon'], '1356')
-for p in json.load(open(f'{ROOT}/data/content/gazetteer.json', encoding='utf-8'))['places']:
+for p in json.loads(Path(f'{ROOT}/data/content/gazetteer.json').read_text(encoding='utf-8'))['places']:
     _add(p['name'], p['lat'], p['lon'], 'gaz')
     if p.get('alt'):
         for a in str(p['alt']).split('/'):
             _add(a.strip(), p['lat'], p['lon'], 'gaz-alt')
-_geo = json.load(open(f'{ROOT}/public/data/geo.json', encoding='utf-8'))
+_geo = json.loads(Path(f'{ROOT}/public/data/geo.json').read_text(encoding='utf-8'))
 L = _geo['L']
 _loc = _geo['loc']
 for i in range(L):
@@ -264,7 +266,7 @@ def write(region, sources, states, wars, new_ids=(), notes=()):
     path = f'{ROOT}/data/history/1291/{region}.json'
     # colours set by tools/map/palette.py 1291 stay when the file is written again
     if os.path.exists(path):
-        old = {s['id']: s['color'] for s in json.load(open(path, encoding='utf-8')).get('states', [])}
+        old = {s['id']: s['color'] for s in json.loads(Path(path).read_text(encoding='utf-8')).get('states', [])}
         for s in states:
             if s['id'] in old:
                 s['color'] = old[s['id']]

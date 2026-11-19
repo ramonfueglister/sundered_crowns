@@ -15,6 +15,7 @@ import json
 import math
 import os
 import sys
+from pathlib import Path
 
 from common import ROOT
 
@@ -34,7 +35,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--map-units', required=True)
     args = ap.parse_args()
-    raw = open(args.map_units, 'rb').read()
+    raw = Path(args.map_units).read_bytes()
     fc = json.loads(raw)
     feats = fc['features']
 

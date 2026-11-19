@@ -23,6 +23,7 @@ import json
 import os
 import re
 import sys
+from pathlib import Path
 
 import numpy as np
 from common import LON0, LON1, OUT_DATA, OUT_PUBLIC, km_per_px, px_to_lonlat_np
@@ -72,10 +73,12 @@ def main():
     ap.add_argument('--pop', nargs='*', default=[])
     args = ap.parse_args()
 
-    geo = json.load(open(os.path.join(OUT_DATA, 'geo.json'), encoding='utf-8'))
-    land_json = json.load(open(os.path.join(OUT_DATA, 'land.json'), encoding='utf-8'))
+    geo = json.loads(Path(os.path.join(OUT_DATA, 'geo.json')).read_text(encoding='utf-8'))
+    land_json = json.loads(Path(os.path.join(OUT_DATA, 'land.json')).read_text(encoding='utf-8'))
     W, H, L = geo['W'], geo['H'], geo['L']
-    ids = np.frombuffer(gzip.open(os.path.join(OUT_PUBLIC, 'ids.bin.gz')).read(), dtype='<u2').reshape(H, W)
+    ids = np.frombuffer(
+        gzip.decompress(Path(os.path.join(OUT_PUBLIC, 'ids.bin.gz')).read_bytes()), dtype='<u2'
+    ).reshape(H, W)
     lon = LON0 + (np.arange(W) + 0.5) / W * (LON1 - LON0)
     lat = px_to_lonlat_np(np.zeros(H), np.arange(H) + 0.5)[1]
     km2 = np.broadcast_to((km_per_px(lat) ** 2)[:, None], ids.shape)

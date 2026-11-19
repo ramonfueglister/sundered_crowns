@@ -19,6 +19,7 @@ Run: python3 tools/history/1291/towns.py [year]   (build.py imports it for the s
 import json
 import os
 import sys
+from pathlib import Path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..', '..'))
@@ -34,13 +35,15 @@ def factor_of(regions, lon, lat):
 
 def towns(year=1291):
     """People of the time per gazetteer place, and where each value comes from ('chandler', 'factor' or None)."""
-    gaz = json.load(open(os.path.join(ROOT, 'data', 'content', 'gazetteer.json'), encoding='utf-8'))['places']
-    dem = json.load(open(os.path.join(ROOT, 'data', 'history', str(year), 'demography.json'), encoding='utf-8'))[
-        'regions'
+    gaz = json.loads(Path(os.path.join(ROOT, 'data', 'content', 'gazetteer.json')).read_text(encoding='utf-8'))[
+        'places'
     ]
-    ch = json.load(open(os.path.join(ROOT, 'data', 'history', str(year), f'chandler_{year}.json'), encoding='utf-8'))[
-        'cities'
-    ]
+    dem = json.loads(
+        Path(os.path.join(ROOT, 'data', 'history', str(year), 'demography.json')).read_text(encoding='utf-8')
+    )['regions']
+    ch = json.loads(
+        Path(os.path.join(ROOT, 'data', 'history', str(year), f'chandler_{year}.json')).read_text(encoding='utf-8')
+    )['cities']
     people, how = [None] * len(gaz), [None] * len(gaz)
     for k, p in enumerate(gaz):
         if p.get('pop1356'):
@@ -79,7 +82,7 @@ def towns_by_place(year, L, loc_lon, loc_lat):
 
 def main(year=1291):
     gaz, people, how = towns(year)
-    geo = json.load(open(os.path.join(ROOT, 'public', 'data', 'geo.json'), encoding='utf-8'))
+    geo = json.loads(Path(os.path.join(ROOT, 'public', 'data', 'geo.json')).read_text(encoding='utf-8'))
     place = place_of(gaz, geo['loc']['lon'][: geo['L']], geo['loc']['lat'][: geo['L']])
     doc = {
         'year': year,
@@ -97,7 +100,7 @@ def main(year=1291):
         'place': place,
     }
     path = os.path.join(ROOT, 'public', 'data', f'towns_{year}.json')
-    json.dump(doc, open(path, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+    Path(path).write_text(json.dumps(doc, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
 
     def n(w):
         return sum(1 for h in how if h == w)
@@ -115,11 +118,11 @@ def write_cities(year, gaz, people, how, place, geo):
     the towns of the world graphic that have a number (Ramon, 16 November 2026: only what the simulation computes is in
     the world, and the persons live in the towns the map shows). `source` says where the number comes from:
     'chandler' (Chandler's value for the year) or 'factor' (pop1356 of the gazetteer times the factor of the region)."""
-    ext = json.load(open(os.path.join(ROOT, 'data', 'content', 'world_extent.json'), encoding='utf-8'))
+    ext = json.loads(Path(os.path.join(ROOT, 'data', 'content', 'world_extent.json')).read_text(encoding='utf-8'))
     ch = {
         c['site']: c
-        for c in json.load(
-            open(os.path.join(ROOT, 'data', 'history', str(year), f'chandler_{year}.json'), encoding='utf-8')
+        for c in json.loads(
+            Path(os.path.join(ROOT, 'data', 'history', str(year), f'chandler_{year}.json')).read_text(encoding='utf-8')
         )['cities']
     }
     loc = geo['loc']

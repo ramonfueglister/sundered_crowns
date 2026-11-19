@@ -6,6 +6,7 @@ import gzip
 import json
 import math
 import os
+from pathlib import Path
 
 import numpy as np
 from common import (
@@ -31,7 +32,7 @@ STAGE = os.path.join(CACHE, 'stage')
 
 def main():
     ids = np.load(os.path.join(STAGE, 'ids.npy'))
-    raw = json.load(open(os.path.join(STAGE, 'locations_raw.json')))
+    raw = json.loads(Path(os.path.join(STAGE, 'locations_raw.json')).read_text())
     L, S = raw['L'], raw['S']
     seeds = raw['seeds']
     hgt = np.load(os.path.join(STAGE, 'height.npy'))
@@ -227,10 +228,10 @@ def main():
                     region_key[i] = region_key[k]
     # land adjacency lists
     adj = [[] for _ in range(N)]
-    for a, b, kind, c, _rf in edges:
+    for a, b, _kind, _c, _rf in edges:
         adj[a].append(b)
         adj[b].append(a)
-    for a, b, nm in strait_edges:
+    for a, b, _nm in strait_edges:
         adj[a].append(b)
         adj[b].append(a)
     provs = build_provinces(L, adj, prov_name, names, size, area, px, py, lat)
@@ -241,9 +242,9 @@ def main():
     # areas: cluster provinces into groups of ~6-8 adjacent provinces of same region key
     areas = build_areas(provs, prov_of, adj, region_key, L)
     # sea names
-    marine = json.load(open(os.path.join(CACHE, 'ne_10m_geography_marine_polys.geojson')))
+    marine = json.loads(Path(os.path.join(CACHE, 'ne_10m_geography_marine_polys.geojson')).read_text())
     sea_names = name_seas(marine, L, S, px, py, lon, lat)
-    rivers = json.load(open(os.path.join(STAGE, 'rivers.json')))
+    rivers = json.loads(Path(os.path.join(STAGE, 'rivers.json')).read_text())
     out = {
         'W': W,
         'H': H,
@@ -277,7 +278,7 @@ def main():
     }
     os.makedirs(OUT_DATA, exist_ok=True)
     os.makedirs(OUT_PUBLIC, exist_ok=True)
-    json.dump(out, open(os.path.join(OUT_DATA, 'geo.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
+    Path(os.path.join(OUT_DATA, 'geo.json')).write_text(json.dumps(out, ensure_ascii=False, separators=(',', ':')))
     with gzip.open(os.path.join(OUT_PUBLIC, 'ids.bin.gz'), 'wb', compresslevel=9) as f:
         f.write(ids.astype('<u2').tobytes())
     # height at half resolution, int16 metres, row-delta encoded
@@ -460,7 +461,7 @@ def name_seas(marine, L, S, px, py, lon, lat):
     feats.sort(key=lambda t: -(t[2] or 0))
     # draw big (low scalerank) first, specific (high scalerank) later so they win
     feats.sort(key=lambda t: t[2] or 0)
-    for k, (nm, f, _sr) in enumerate(feats):
+    for k, (_nm, f, _sr) in enumerate(feats):
         for poly in polys_from_geojson_geom(f['geometry']):
             pts = [lonlat_to_px(lo, max(min(la, 85), -85)) for lo, la in poly[0]]
             pts = [(x / 4, y / 4) for x, y in pts]

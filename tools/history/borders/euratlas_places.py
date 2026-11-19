@@ -36,6 +36,7 @@ import json
 import os
 import re
 import sys
+from pathlib import Path
 
 import numpy as np
 from PIL import Image
@@ -208,7 +209,7 @@ def read_entities(d):
     pages = sorted(glob.glob(os.path.join(d, 'entities', 'entity_*.html')))
     status = {}
     for p in pages[:3]:
-        s = open(p, encoding='utf-8', errors='replace').read()
+        s = Path(p).read_text(encoding='utf-8', errors='replace')
         for m in re.finditer(r'href="entity_(\d+)\.html">([^<]*?)\s*\((\w)\)', s):
             status[m.group(1)] = (html.unescape(m.group(2)).strip(), m.group(3))
     ents = {}
@@ -216,7 +217,7 @@ def read_entities(d):
         e = os.path.basename(p)[7:-5]
         if not os.path.exists(p[:-5] + '.jpg'):
             continue
-        s = open(p, encoding='utf-8', errors='replace').read()
+        s = Path(p).read_text(encoding='utf-8', errors='replace')
         h = re.search(r'<h3[^>]*>(.*?)</h3>', s, re.S).group(1)
         bs = re.findall(r'<b[^>]*>(.*?)</b>', h, re.S)
         full = html.unescape(re.sub('<[^>]+>', '', bs[0])).strip()
@@ -529,14 +530,14 @@ def sample(LL, C, sov, dep, quarters):
         if not cands:
             continue
         w = {}
-        for s, d, c in cands:
+        for s, _d, c in cands:
             w[s] = w.get(s, 0) + c
         best = max(w, key=w.get)
         tot = sum(w.values())
         pick = [c for c in cands if c[0] == best]
         top = max(pick, key=lambda c: c[2])
         dv = {}
-        for s, d, c in pick:
+        for _s, d, c in pick:
             dv[d] = dv.get(d, 0) + c
         out_s[i] = best
         out_d[i] = max(dv, key=dv.get)
@@ -594,16 +595,16 @@ def main(year, d):
     def sea(a):
         return np.abs(a - SEA).sum(-1) < 25
 
-    for k, M in quarters.items():
+    for _k, M in quarters.items():
         seg = segment(M['a'])
         s, dd, pur = label_segments(seg, sov, dep, M['f'], (M['ox'], M['oy']), sea(M['a']))
         M.update(seg=seg, s=s, d=dd, pur=pur)
         del M['a']
-    g = json.load(open(os.path.join(ROOT, 'public', 'data', 'geo.json'), encoding='utf-8'))
+    g = json.loads(Path(os.path.join(ROOT, 'public', 'data', 'geo.json')).read_text(encoding='utf-8'))
     L = g['L']
     LL = np.stack([np.array(g['loc']['lon'][:L]), np.array(g['loc']['lat'][:L])], 1)
     out_s, out_d, conf, inbox, ent_px = sample(LL, C, sov, dep, quarters)
-    ext = json.load(open(os.path.join(ROOT, 'data', 'content', 'world_extent.json'), encoding='utf-8'))
+    ext = json.loads(Path(os.path.join(ROOT, 'data', 'content', 'world_extent.json')).read_text(encoding='utf-8'))
     inframe = (
         (LL[:, 0] >= ext['west']) & (LL[:, 0] <= ext['east']) & (LL[:, 1] >= ext['south']) & (LL[:, 1] <= ext['north'])
     )

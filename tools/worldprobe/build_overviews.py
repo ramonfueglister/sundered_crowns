@@ -21,6 +21,7 @@ import json
 import os
 import shutil
 import sys
+from pathlib import Path
 
 import numpy as np
 import tiles as tiles_file
@@ -118,7 +119,7 @@ def halve_band(shaped, drainage, water, forest, crops):
 
 def main(name):
     base = os.path.join(ROOT, 'public', 'map', 'regions', name)
-    meta = json.load(open(os.path.join(base, 'index.json')))
+    meta = json.loads(Path(os.path.join(base, 'index.json')).read_text())
     # (the coarser steps are plain rasters zipped with gzip, which their indexes say by having no coding)
     meta.pop('coding', None)
     T, keys, cells = meta['tile'], [tuple(map(int, k.split('_'))) for k in meta.pop('tiles')], meta['cells']
@@ -152,7 +153,7 @@ def main(name):
         finest[(ty - ty0) * T : (ty - ty0 + 1) * T, (tx - tx0) * T : (tx - tx0 + 1) * T] = tile[0]
         here = [
             {'name': r['name'], 'rank': r['rank'], 'pts': r['pts']}
-            for r in json.load(open(os.path.join(base, f'{tx}_{ty}.json'), encoding='utf-8'))
+            for r in json.loads(Path(os.path.join(base, f'{tx}_{ty}.json')).read_text(encoding='utf-8'))
         ]
         rivers += here
         held.append(len(here))

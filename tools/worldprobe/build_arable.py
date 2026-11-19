@@ -39,7 +39,7 @@ def main(year: int) -> None:
         json.loads((data / 'cultivation.json').read_text()),
     )
     w, h, places = geo['W'], geo['H'], geo['L']
-    ids = np.frombuffer(gzip.open(ROOT / 'public/map/ids.bin.gz').read(), dtype='<u2').reshape(h, w)
+    ids = np.frombuffer(gzip.decompress(Path(ROOT / 'public/map/ids.bin.gz').read_bytes()), dtype='<u2').reshape(h, w)
     hectares = np.array(geo['loc']['area'][:places], float) * HECTARES_PER_KM2
     run = subprocess.run(
         ['npx', 'tsx', 'tools/sim/place_people.ts', str(year)], cwd=ROOT, check=True, capture_output=True, text=True

@@ -24,6 +24,7 @@ import json
 import math
 import os
 import sys
+from pathlib import Path
 
 import numpy as np
 from build_locations import fix_components, value_noise
@@ -41,7 +42,7 @@ rng = np.random.default_rng(1356)
 
 def load_step():
     """Water and height of step z3 of the world frame (half a cell a map pixel)."""
-    ix = json.load(open(os.path.join(REGION, 'index.json')))
+    ix = json.loads(Path(os.path.join(REGION, 'index.json')).read_text())
     T, cells = ix['tile'], ix['cells']
     w, h = int(ix['worldW'] * cells), int(ix['worldH'] * cells)
     water = np.full((h, w), SEA, np.uint8)
@@ -49,7 +50,7 @@ def load_step():
     n = T * T
     for k in ix['tiles']:
         tx, ty = map(int, k.split('_'))
-        b = gzip.open(os.path.join(REGION, f'{k}.bin.gz')).read()
+        b = gzip.decompress(Path(os.path.join(REGION, f'{k}.bin.gz')).read_bytes())
         y0, x0 = ty * T, tx * T
         y1, x1 = min(h, y0 + T), min(w, x0 + T)
         if y0 >= h or x0 >= w:
@@ -138,7 +139,7 @@ def main():
     seeds = []  # [x, y (cells), name, size, region, alt, pop]
     gz = os.path.join(ROOT, 'data', 'content', 'gazetteer_world.json')
     if os.path.exists(gz):
-        for g in json.load(open(gz, encoding='utf-8'))['places']:
+        for g in json.loads(Path(gz).read_text(encoding='utf-8'))['places']:
             x, y = px_of(g['lon'], g['lat'])
             seeds.append(
                 [
@@ -151,7 +152,7 @@ def main():
                     g.get('pop1356'),
                 ]
             )
-    pp = json.load(open(os.path.join(CACHE, 'ne_10m_populated_places_simple.geojson'), encoding='utf-8'))
+    pp = json.loads(Path(os.path.join(CACHE, 'ne_10m_populated_places_simple.geojson')).read_text(encoding='utf-8'))
     for f in pp['features']:
         p = f['properties']
         lo, la = f['geometry']['coordinates'][:2]
@@ -266,20 +267,25 @@ def main():
     ids[sea] = zones[sea] + L2
     print('sea zones', S2)
     np.save(os.path.join(OUT, 'ids.npy'), ids)
-    json.dump(
-        {
-            'L': L2,
-            'S': S2,
-            'cells': cells,
-            'w': w,
-            'h': h,
-            'places': [
-                [None if v is None else (round(float(v), 2) if isinstance(v, (float, np.floating)) else v) for v in p]
-                for p in places
-            ],
-        },
-        open(os.path.join(OUT, 'places.json'), 'w', encoding='utf-8'),
-        ensure_ascii=False,
+    Path(os.path.join(OUT, 'places.json')).write_text(
+        json.dumps(
+            {
+                'L': L2,
+                'S': S2,
+                'cells': cells,
+                'w': w,
+                'h': h,
+                'places': [
+                    [
+                        None if v is None else (round(float(v), 2) if isinstance(v, (float, np.floating)) else v)
+                        for v in p
+                    ]
+                    for p in places
+                ],
+            },
+            ensure_ascii=False,
+        ),
+        encoding='utf-8',
     )
 
 

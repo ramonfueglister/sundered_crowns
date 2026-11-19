@@ -234,9 +234,12 @@ def export(a, g, meta, stem, world=False):
     crop = np.ascontiguousarray(a[r0:r1, c0:c1]).astype('<f4')
     os.makedirs(OUT, exist_ok=True)
     bin_path = os.path.join(OUT, stem + '.f32.gz')
-    with open(bin_path, 'wb') as raw:  # mtime 0 keeps the file byte-identical between runs
-        with gzip.GzipFile(filename='', fileobj=raw, mode='wb', compresslevel=9, mtime=0) as f:
-            f.write(crop.tobytes())
+    # mtime 0 keeps the file byte-identical between runs
+    with (
+        open(bin_path, 'wb') as raw,
+        gzip.GzipFile(filename='', fileobj=raw, mode='wb', compresslevel=9, mtime=0) as f,
+    ):
+        f.write(crop.tobytes())
     print('crop of %s: rows %d..%d, cols %d..%d' % (meta['file'], r0, r1, c0, c1))
     side = {
         'source': {

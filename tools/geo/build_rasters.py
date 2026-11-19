@@ -9,6 +9,7 @@ Outputs: CACHE/stage/*.npy
 import json
 import math
 import os
+from pathlib import Path
 
 import numpy as np
 from common import (
@@ -91,9 +92,9 @@ def main():
     hp = os.path.join(STAGE, 'height.npy')
     hgt = np.load(hp) if os.path.exists(hp) else build_height()
     print('height', hgt.shape, hgt.min(), hgt.max())
-    land = json.load(open(os.path.join(CACHE, 'ne_10m_land.geojson')))
+    land = json.loads(Path(os.path.join(CACHE, 'ne_10m_land.geojson')).read_text())
     landm = rasterize_polys(land['features']).astype(bool)
-    lakes = json.load(open(os.path.join(CACHE, 'ne_10m_lakes.geojson')))
+    lakes = json.loads(Path(os.path.join(CACHE, 'ne_10m_lakes.geojson')).read_text())
     lakem = rasterize_polys(lakes['features'], filt=lambda f: (f['properties'].get('scalerank') or 9) <= 6).astype(bool)
     ov = load_json(os.path.join(ROOT, 'data', 'history', '1356', 'terrain_overrides.json'), {}) or {}
 
@@ -146,7 +147,7 @@ def main():
     np.save(os.path.join(STAGE, 'lake.npy'), lake)
     print('land px', landm.sum(), 'sea px', sea.sum(), 'lake px', lake.sum())
     # rivers
-    riv = json.load(open(os.path.join(CACHE, 'ne_10m_rivers_lake_centerlines.geojson')))
+    riv = json.loads(Path(os.path.join(CACHE, 'ne_10m_rivers_lake_centerlines.geojson')).read_text())
     img = Image.new('L', (W, H), 0)
     d = ImageDraw.Draw(img)
     river_lines = []
@@ -166,9 +167,9 @@ def main():
     rivr = np.asarray(img)
     np.save(os.path.join(STAGE, 'river.npy'), rivr)
     os.makedirs(OUT_DATA, exist_ok=True)
-    json.dump(river_lines, open(os.path.join(STAGE, 'rivers.json'), 'w'))
+    Path(os.path.join(STAGE, 'rivers.json')).write_text(json.dumps(river_lines))
     # deserts & regions
-    reg = json.load(open(os.path.join(CACHE, 'ne_10m_geography_regions_polys.geojson')))
+    reg = json.loads(Path(os.path.join(CACHE, 'ne_10m_geography_regions_polys.geojson')).read_text())
     des = rasterize_polys(
         reg['features'], filt=lambda f: f['properties']['FEATURECLA'] == 'Desert', holes=False
     ).astype(bool)

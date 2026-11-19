@@ -116,9 +116,10 @@ def sections(title):
     path = os.path.join(CACHE, safe(title) + '.wikitext')
     if not os.path.exists(path):
         fetch(title)
-    for i, line in enumerate(open(path), 1):
-        if re.match(r'^=+[^=].*=+\s*$', line):
-            print(i, line.rstrip())
+    with open(path) as f:
+        for i, line in enumerate(f, 1):
+            if re.match(r'^=+[^=].*=+\s*$', line):
+                print(i, line.rstrip())
 
 
 def qids(titles):

@@ -35,7 +35,7 @@ def main(year: int) -> None:
     setup = json.loads((ROOT / f'public/data/setup_{year}.json').read_text())
     towns = json.loads((ROOT / f'public/data/towns_{year}.json').read_text())
     w, h, places = geo['W'], geo['H'], geo['L']
-    ids = np.frombuffer(gzip.open(ROOT / 'public/map/ids.bin.gz').read(), dtype='<u2').reshape(h, w)
+    ids = np.frombuffer(gzip.decompress(Path(ROOT / 'public/map/ids.bin.gz').read_bytes()), dtype='<u2').reshape(h, w)
     area, pop = np.array(geo['loc']['area'][:places], float), np.array(setup['pop'], float)
     in_towns = np.zeros(places)
     for people, place in zip(towns['people'], towns['place']):

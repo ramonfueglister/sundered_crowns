@@ -54,6 +54,7 @@ import datetime
 import json
 import os
 import re
+from pathlib import Path
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 FIRST, LAST = 1291, 1848
@@ -91,7 +92,7 @@ def year_of(d):
 
 def build():
     def J(*p):
-        return json.load(open(os.path.join(ROOT, *p), encoding='utf-8'))
+        return json.loads(Path(os.path.join(ROOT, *p)).read_text(encoding='utf-8'))
 
     clio, setup, rulers, geo = (
         J('data', 'history', 'borders', 'cliopatria_places.json'),
@@ -514,7 +515,9 @@ def precision(d):
 
 def date_events(events, rulers):
     """the dates of the transfers (rules in the header); removes the helper fields"""
-    tl = json.load(open(os.path.join(ROOT, 'data', 'history', 'borders', 'wikipedia_timeline.json'), encoding='utf-8'))
+    tl = json.loads(
+        Path(os.path.join(ROOT, 'data', 'history', 'borders', 'wikipedia_timeline.json')).read_text(encoding='utf-8')
+    )
     rows = tl['rows']
     by_q = collections.defaultdict(list)
     for i, t in enumerate(rows):
@@ -565,11 +568,8 @@ def date_events(events, rulers):
 
 if __name__ == '__main__':
     out, report, keys, current, frame = build()
-    json.dump(
-        out,
-        open(os.path.join(ROOT, 'public', 'data', 'borders_1291.json'), 'w', encoding='utf-8'),
-        ensure_ascii=False,
-        separators=(',', ':'),
+    Path(os.path.join(ROOT, 'public', 'data', 'borders_1291.json')).write_text(
+        json.dumps(out, ensure_ascii=False, separators=(',', ':')), encoding='utf-8'
     )
     print(dict(report))
     held = collections.Counter(keys[current[p]] for p in frame if current[p] >= 0)

@@ -94,9 +94,11 @@ def main(year: int) -> None:
     )
     gazetteer = json.loads((ROOT / 'data/content/gazetteer.json').read_text())
     gazetteer = gazetteer['places'] if isinstance(gazetteer, dict) else gazetteer
-    ids = np.frombuffer(gzip.open(ROOT / 'public/map/ids.bin.gz').read(), dtype='<u2').reshape(geo['H'], geo['W'])
+    ids = np.frombuffer(gzip.decompress(Path(ROOT / 'public/map/ids.bin.gz').read_bytes()), dtype='<u2').reshape(
+        geo['H'], geo['W']
+    )
     is_land = ((ids >= 1) & (ids <= geo['L'])).astype(np.float32)
-    raw = np.frombuffer(gzip.open(ROOT / f'public/map/forest{year}.bin.gz').read(), dtype=np.uint8)
+    raw = np.frombuffer(gzip.decompress(Path(ROOT / f'public/map/forest{year}.bin.gz').read_bytes()), dtype=np.uint8)
     # the forest lies on the grid of the whole world's map, two by two pixels to a cell; the game map is its left part
     world = json.loads((ROOT / 'public/map/regions/world/index.json').read_text())
     raw = raw.reshape(world['worldH'] // 2, world['worldW'] // 2)

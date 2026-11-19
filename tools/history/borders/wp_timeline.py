@@ -22,6 +22,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from pathlib import Path
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 FIRST, LAST = 1291, 1848
@@ -50,7 +51,7 @@ MONTH_RE = '|'.join(MONTHS)
 
 def api(params, cache=None, key=None):
     if cache and key and os.path.exists(os.path.join(cache, key)):
-        return json.load(open(os.path.join(cache, key), encoding='utf-8'))
+        return json.loads(Path(os.path.join(cache, key)).read_text(encoding='utf-8'))
     url = API + '?' + urllib.parse.urlencode({**params, 'format': 'json', 'formatversion': 2})
     req = urllib.request.Request(url, headers={'User-Agent': UA})
     for attempt in range(8):
@@ -66,7 +67,7 @@ def api(params, cache=None, key=None):
     time.sleep(1)
     if cache and key:
         os.makedirs(cache, exist_ok=True)
-        json.dump(d, open(os.path.join(cache, key), 'w', encoding='utf-8'))
+        Path(os.path.join(cache, key)).write_text(json.dumps(d), encoding='utf-8')
     return d
 
 
@@ -152,7 +153,7 @@ def parse(page, revid, text):
 
 def main(argv):
     cache = argv[argv.index('--cache') + 1] if '--cache' in argv else None
-    ext = json.load(open(os.path.join(ROOT, 'data', 'content', 'world_extent.json'), encoding='utf-8'))
+    ext = json.loads(Path(os.path.join(ROOT, 'data', 'content', 'world_extent.json')).read_text(encoding='utf-8'))
     rows = []
     for page, rev in REVISIONS.items():
         d = api(

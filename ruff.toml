@@ -1,6 +1,5 @@
-# Python checks for the data tools in tools/ (README.md, "Tests"): pyflakes (unused imports and variables, names that
-# are not defined), syntax errors, one import per line, sorted imports, stray whitespace; and the layout of
-# `ruff format`. CI runs `ruff check` and `ruff format --check` in the lint job.
+# Python checks for the data tools in tools/ (README.md, "Tests"), and the layout of `ruff format`. CI runs
+# `ruff check` and `ruff format --check` in the lint job.
 target-version = "py311"
 line-length = 120
 extend-exclude = [
@@ -9,7 +8,25 @@ extend-exclude = [
 ]
 
 [lint]
-select = ["F", "E9", "E401", "W", "I"]
+select = [
+  "F",     # pyflakes: unused imports and variables, names that are not defined
+  "E4",    # imports: one per line, at the top
+  "E7",    # statements: one per line, no lambda bound to a name, comparisons to None and True
+  "E9",    # syntax errors
+  "W",     # stray whitespace
+  "I",     # sorted imports
+  "B",     # bugbear: likely bugs (unused loop variables, mutable defaults, ...)
+  "UP",    # pyupgrade: the syntax of Python 3.11
+  "SIM",   # simpler forms: files opened with `with`, no yoda conditions, ...
+  "C4",    # comprehensions instead of list(...) and dict(...) calls
+  "PIE",   # needless code
+]
+ignore = [
+  "E402",  # the tools put their folder on sys.path before importing their siblings
+  "E741",  # names l, I and O: still in the numeric code, to be renamed when it is next changed
+  "B905",  # zip(strict=...): strict raises where the lists differ in length; to be decided call by call
+  "UP031", # % formatting: allowed, like f-strings and str.format
+]
 
 [format]
 quote-style = "single"

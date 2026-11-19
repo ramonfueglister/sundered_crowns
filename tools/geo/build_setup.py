@@ -9,6 +9,7 @@
 - writes data/map/setup_<year>.json, data/map/world.json (static per-location data) and public/map/biome.png
 """
 
+import contextlib
 import glob
 import hashlib
 import heapq
@@ -16,13 +17,13 @@ import json
 import math
 import os
 import sys
+from pathlib import Path
 
 import numpy as np
 from common import CACHE, OUT_DATA, OUT_PUBLIC, ROOT, H, W, km_per_px, load_json, lonlat_to_px, lonlat_to_px_np
 from PIL import Image
 from scipy import ndimage
 from scipy.spatial import cKDTree
-import contextlib
 
 STAGE = os.path.join(CACHE, 'stage')
 YEAR = int(sys.argv[1]) if len(sys.argv) > 1 else 1356
@@ -61,7 +62,7 @@ def load_states():
     wars = []
     order = []
     for f in files:
-        d = json.load(open(f, encoding='utf-8'))
+        d = json.loads(Path(f).read_text(encoding='utf-8'))
         if 'states' not in d:
             continue
         prefer = 'empire' in os.path.basename(f)
@@ -94,7 +95,7 @@ def load_states():
 
 
 def main():
-    geo = json.load(open(os.path.join(OUT_DATA, 'geo.json'), encoding='utf-8'))
+    geo = json.loads(Path(os.path.join(OUT_DATA, 'geo.json')).read_text(encoding='utf-8'))
     L, S = geo['L'], geo['S']
     loc = geo['loc']
     lx = np.array(loc['x'])
@@ -109,7 +110,7 @@ def main():
     # adjacency (land graph with distances)
     adj = [[] for _ in range(L + S + 1)]
     coastal = np.zeros(L + 1, bool)
-    for a, b, kind, c, _rf in geo['edges']:
+    for a, b, kind, _c, _rf in geo['edges']:
         adj[a].append(b)
         adj[b].append(a)
         if kind == 1:
@@ -167,7 +168,7 @@ def main():
     pq = []
     capital_loc = []
     weights = []
-    for si, s in enumerate(states):
+    for _si, s in enumerate(states):
         w = rank_w.get(s.get('rank'), 1.0)
         if s.get('government') in ('nomadic_horde',):
             w *= 0.7
@@ -420,7 +421,9 @@ def main():
         'pop': [int(v) for v in pop],
         'density': [round(float(v), 2) for v in dens],
     }
-    json.dump(setup, open(os.path.join(OUT_DATA, f'setup_{YEAR}.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
+    Path(os.path.join(OUT_DATA, f'setup_{YEAR}.json')).write_text(
+        json.dumps(setup, ensure_ascii=False, separators=(',', ':'))
+    )
     if YEAR == 1356:
         world = {
             'terrain': terrain,
@@ -431,7 +434,9 @@ def main():
             'arid': [round(float(v), 2) for v in arid],
             'forest': [round(float(v), 2) for v in forest_cover],
         }
-        json.dump(world, open(os.path.join(OUT_DATA, 'world.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
+        Path(os.path.join(OUT_DATA, 'world.json')).write_text(
+            json.dumps(world, ensure_ascii=False, separators=(',', ':'))
+        )
         build_biome(ids, L, terrain, forest_cover, dens, desert_p, marsh_p, fb)
     from collections import Counter
 

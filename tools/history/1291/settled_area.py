@@ -19,6 +19,7 @@ import json
 import math
 import os
 import unicodedata
+from pathlib import Path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..', '..'))
@@ -93,21 +94,22 @@ def fit(rows):
 
 def main():
     rows = []
-    for r in csv.DictReader(open(SRC, encoding='utf-8')):
-        rows.append(
-            {
-                'name': r['Settlement'].strip(),
-                'people': float(r['Pop']),
-                'area_ha': float(r['Area']),
-                'lat': float(r['latitude']) if r['latitude'] else None,
-                'lon': float(r['longitude']) if r['longitude'] else None,
-                'system': r['UrbanSytem'].strip(),
-            }
-        )
+    with open(SRC, encoding='utf-8') as f:
+        for r in csv.DictReader(f):
+            rows.append(
+                {
+                    'name': r['Settlement'].strip(),
+                    'people': float(r['Pop']),
+                    'area_ha': float(r['Area']),
+                    'lat': float(r['latitude']) if r['latitude'] else None,
+                    'lon': float(r['longitude']) if r['longitude'] else None,
+                    'system': r['UrbanSytem'].strip(),
+                }
+            )
     law = fit(rows)
-    cities = json.load(open(os.path.join(ROOT, 'src', 'sim', 'content', 'cities_1291.json'), encoding='utf-8'))[
-        'cities'
-    ]
+    cities = json.loads(
+        Path(os.path.join(ROOT, 'src', 'sim', 'content', 'cities_1291.json')).read_text(encoding='utf-8')
+    )['cities']
     by_name = {}
     for c in cities:
         by_name.setdefault(norm(c['name']), []).append(c)

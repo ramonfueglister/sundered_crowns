@@ -23,6 +23,7 @@ import os
 import random
 import sys
 from collections import defaultdict
+from pathlib import Path
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 D_SMALL = 0.16  # ... and two small realms closer than this
@@ -137,8 +138,8 @@ def main():
     dry = '--dry' in sys.argv
     year = int(next((a for a in sys.argv[1:] if a.isdigit()), 1356))
     setup_path = os.path.join(ROOT, 'public', 'data', f'setup_{year}.json')
-    setup = json.load(open(setup_path, encoding='utf-8'))
-    geo = json.load(open(os.path.join(ROOT, 'public', 'data', 'geo.json'), encoding='utf-8'))
+    setup = json.loads(Path(setup_path).read_text(encoding='utf-8'))
+    geo = json.loads(Path(os.path.join(ROOT, 'public', 'data', 'geo.json')).read_text(encoding='utf-8'))
     states, owner, L = setup['states'], setup['owner'], geo['L']
     n = len(states)
     size = [0.0] * n
@@ -267,15 +268,15 @@ def main():
         return
     for s in states:
         s['color'] = colours[s['id']]
-    json.dump(setup, open(setup_path, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+    Path(setup_path).write_text(json.dumps(setup, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
     for f in glob.glob(os.path.join(ROOT, 'data', 'history', str(year), '*.json')):
-        d = json.load(open(f, encoding='utf-8'))
+        d = json.loads(Path(f).read_text(encoding='utf-8'))
         if 'states' not in d:
             continue
         for s in d['states']:
             if s['id'] in colours:
                 s['color'] = colours[s['id']]
-        json.dump(d, open(f, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+        Path(f).write_text(json.dumps(d, ensure_ascii=False, indent=1), encoding='utf-8')
     print('written')
 
 

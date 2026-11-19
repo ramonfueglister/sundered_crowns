@@ -10,13 +10,14 @@ usage: python3 tools/worldprobe/build_depth.py
 import gzip
 import math
 import struct
+from pathlib import Path
 
 import numpy as np
 from PIL import Image
 
 D0, DEEPEST, DOWN = 20.0, 6000.0, 2
 
-raw = gzip.open('public/map/height.bin.gz').read()
+raw = gzip.decompress(Path('public/map/height.bin.gz').read_bytes())
 w, h = struct.unpack('<II', raw[:8])
 height = np.cumsum(np.frombuffer(raw[8:], dtype='<i2').reshape(h, w).astype(np.int32), axis=1)
 depth = np.maximum(0, -height).astype(np.float64)

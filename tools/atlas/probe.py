@@ -18,6 +18,7 @@ import json
 import math
 import os
 import sys
+from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'worldprobe'))
 import numpy as np
@@ -32,7 +33,7 @@ W, H = (int(sys.argv[6]), int(sys.argv[7])) if len(sys.argv) > 7 else (1280, 720
 year = int(sys.argv[8]) if len(sys.argv) > 8 else 1291
 SKIN = os.environ.get('ATLAS_3D') == '1'
 BLOCKS_PER_MAP_PIXEL = 16
-index = json.load(open(f'{PUB}/map/regions/world/index.json'))
+index = json.loads(Path(f'{PUB}/map/regions/world/index.json').read_text())
 T, CELLS, MAPW, MAPH, WORLDW = index['tile'], index['cells'], index['mapW'], index['mapH'], index['worldW']
 
 
@@ -83,7 +84,7 @@ def tile(tx, ty):
     def lay(k):
         return np.frombuffer(raw, np.uint8, t, t * (2 + k)).reshape(T, T)
 
-    rivers = json.load(open(d + name + '.json')) if os.path.exists(d + name + '.json') else []
+    rivers = json.loads(Path(d + name + '.json').read_text()) if os.path.exists(d + name + '.json') else []
     return (np.frombuffer(raw, '<i2', t).reshape(T, T), lay(0), lay(1), lay(2), lay(3)), rivers
 
 
@@ -170,7 +171,9 @@ def mix(a, b, t):
 
 
 # the kinds of land (climate.ts) and the lines of trees and snow, over the world frame
-cl = np.frombuffer(gzip.open(f'{PUB}/map/climate.bin.gz').read(), np.uint8).reshape(index['worldH'] // 2, WORLDW // 2)
+cl = np.frombuffer(gzip.decompress(Path(f'{PUB}/map/climate.bin.gz').read_bytes()), np.uint8).reshape(
+    index['worldH'] // 2, WORLDW // 2
+)
 kx = np.clip((PX / 2).astype(int), 0, cl.shape[1] - 1)
 ky = np.clip((PY / 2).astype(int), 0, cl.shape[0] - 1)
 kind = cl[np.ix_(ky, kx)] & 63
@@ -178,7 +181,7 @@ kind = cl[np.ix_(ky, kx)] & 63
 
 def line(name):
     a = (
-        np.frombuffer(gzip.open(f'{PUB}/map/{name}.bin.gz').read(), np.uint8)
+        np.frombuffer(gzip.decompress(Path(f'{PUB}/map/{name}.bin.gz').read_bytes()), np.uint8)
         .reshape(index['worldH'] // 16, WORLDW // 16)
         .astype(np.float32)
         * 32
@@ -239,9 +242,9 @@ terrain = mix(terrain, ROCK, np.clip((hgt - treeline) / 250, 0, 1) * 0.85)
 terrain = mix(terrain, SNOW, np.clip((hgt - snowline) / 200 + 0.2, 0, 1) * (hgt > snowline - 200))
 
 # ---------------------------------------------------------------- the realms: who holds every pixel, with smooth borders
-raw = gzip.open(f'{PUB}/map/ids.bin.gz').read()
+raw = gzip.decompress(Path(f'{PUB}/map/ids.bin.gz').read_bytes())
 ids = np.frombuffer(raw, '<u2').reshape(MAPH, MAPW)
-setup = json.load(open(f'{PUB}/data/setup_{year}.json'))
+setup = json.loads(Path(f'{PUB}/data/setup_{year}.json').read_text())
 owner = np.array([-1 if o is None else o for o in setup['owner']], np.int32)
 lands = len(owner)
 
@@ -462,8 +465,8 @@ if not SKIN:
 Image.fromarray((np.clip(srgb(img), 0, 1) * 255 + 0.5).astype(np.uint8)).save(out + '.base.png')
 
 # ---------------------------------------------------------------- towns, for the labels
-gaz = json.load(open(f'{ROOT}/data/content/gazetteer.json'))['places']
-people = json.load(open(f'{PUB}/data/towns_{year}.json'))['people']
+gaz = json.loads(Path(f'{ROOT}/data/content/gazetteer.json').read_text())['places']
+people = json.loads(Path(f'{PUB}/data/towns_{year}.json').read_text())['people']
 capitals = {(round(s['capital']['lat'], 2), round(s['capital']['lon'], 2)) for s in setup['states'] if s.get('capital')}
 towns = []
 for g, p in zip(gaz, people):
@@ -510,22 +513,23 @@ if SKIN:
         1,
     ).astype('<f4').tofile(out + '.trees.f32')
     print(f'{n} clumps of wood')
-json.dump(
-    {
-        'metres': metres,
-        'w': W,
-        'h': H,
-        'x0': x0,
-        'y0': y0,
-        'mpp': mpp,
-        'mx': mx,
-        'my': my,
-        'mode': mode,
-        'year': year,
-        'wide': wide,
-        'towns': towns,
-    },
-    open(out + '.frame.json', 'w'),
+Path(out + '.frame.json').write_text(
+    json.dumps(
+        {
+            'metres': metres,
+            'w': W,
+            'h': H,
+            'x0': x0,
+            'y0': y0,
+            'mpp': mpp,
+            'mx': mx,
+            'my': my,
+            'mode': mode,
+            'year': year,
+            'wide': wide,
+            'towns': towns,
+        }
+    )
 )
 print(
     f'{out}.base.png: level z{z}, {metres:.0f} m to a pixel, {len(rivers)} rivers, {len(towns)} towns, {len(np.unique(realm))} realms'
