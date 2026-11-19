@@ -4867,6 +4867,122 @@ suite was left to CI. Pictures (project files, `portraits/`): `runde122_neben_re
 ten women, ours of round 121, ours now, at one size), `runde122_vorher_nachher_haar.png` (twelve heads of
 the sample, before above, after below).
 
+**Round 123: a softer light held to five faces, and shoulders that are turned** (2026-11-19). Ramon after
+round 122: the whole portrait (figure, hair), not fine details of the face, and the gauntlet to 22 of 22. The
+round took the gauntlet's three open lines and the figure's pose.
+
+**The three lines, and what each hangs on.** Read on the sixteen grown people (two minutes; the same table
+as the whole sample's), one thing changed at a time, against the lit cheek:
+
+| | far cheek, women | far cheek, men | beside the nose | cheek beyond it | nose's back |
+|---|---|---|---|---|---|
+| round 122 | -18.2 | -25.8 | -30.4 | -16.9 | +1.3 |
+| no cast shadow of the key (`shadow.strength` 0) | -10.3 | -18.0 | -29.8 | -9.0 | +1.3 |
+| the key larger (`shadow.spread` 30 for 20) | -17.1 | -21.3 | -26.2 | -16.5 | +1.2 |
+| the key higher (45 degrees for 36) | -14.3 | -21.4 | -26.3 | -16.1 | +3.3 |
+| the fill twice as strong (0.4) | -15.9 | -22.0 | -26.0 | -15.1 | +1.2 |
+| the light from below three times (0.3) | -16.7 | -23.2 | -29.4 | -15.4 | +0.4 |
+| no shadow of the rim (`rimShadow` 0) | -17.7 | -24.4 | -18.2 | -12.3 | +2.7 |
+| the rim's shadow whole (`rimShadow` 1) | -18.7 | -26.9 | -38.2 | -17.1 | +0.6 |
+| more light round the skin's shade (`skin.wrap` half again) | -17.0 | -23.7 | -27.6 | -16.1 | +1.8 |
+
+The shade beside the nose is the nose's own form and the rim's shadow, not the key's cast shadow. The men's
+far cheek is 7.6 darker than the women's and the two lines asked for 4 between them at most (-20.9 and -16.9,
+each with a limit of 4): by form alone, with no cast shadow, the men's is 7.7 darker already. Only the key's
+size brings the two nearer (at 30 degrees 4.2 apart), and it lightens the shade beside the nose. With the
+old lines no stage was found that holds all of them: the key at 35 degrees with the rim's shadow whole stood
+at the men's limit to the tenth, at the shade's limit to the tenth, and lost the women's far cheek by 0.5.
+
+**The nose's back by a light from the side, tried a third time.** The rim light at 95 and at 110 degrees
+round, its shadow whole, so that only the nose's ridge would catch it past the cheek: it lights the far half
+of the face as a second key, flat and pale (rounds 113 and 120 found much the same with other values). Not kept.
+
+**The reference read again, on four more faces.** The four lines round the nose were each read on one face,
+the ruler designer's woman (rounds 71 and 83), and the women's far cheek was held to the emperor's since
+round 107, a man's. Read now at the gauntlet's own places on four more faces of women, the landmarks set by
+eye on the pictures enlarged four and five times (scratch readings; the pictures are not in the repository):
+
+| against the lit cheek, L | her (rounds 71, 83) | A (`ck3_06`) | C (`ck3_06`) | N (`ck3_10`) | N in the game's light | mean of five |
+|---|---|---|---|---|---|---|
+| far cheek | -27.7 | -16.6 | -11.2 | -11.3 | -15.5 | **-16.5** |
+| beside the nose | -34.5 | -23.4 | -27.8 | -30.2 | -18.4 | **-26.9** |
+| the cheek beyond it | -16 | -10.6 | -9.9 | -11.1 | -14.6 | **-12.4** |
+| the nose's back, on the middle line | +8 | -3.7 | -10.3 | -7.0 | -1.2 | **-2.8** |
+
+She is the hardest lit of the five in every row, and the only one whose nose's back is lighter than her
+cheek on the middle line: on the other four the streak of round 113 lies beside the line, on the far flank,
+and the line itself reads skin in half shade. With all landmarks two pixels off, a face's far cheek reads up
+to 2.8 otherwise, its nose's back up to 5, the shade beside its nose up to 8 (a narrow place).
+
+**The lines are moved, said here plainly.** Ramon was asked and chose it: the four lines are held to the
+mean of the five faces (`tools/portrait/gauntlet.mjs`; the limits are as they were). Held to the new lines
+the stage of round 122 is 19 of 22 as before, with other lines red: the cheek beyond the nose 0.5 too dark,
+the nose's back 0.1 too light, the men's far cheek 8.9 too dark. Held to the old lines the stage of this
+round is 19 of 22 as well (the women's far cheek 5.2 too light, the shade beside the nose 6.9, the nose's
+back). So the 22 below are reached by a softer light AND by lines that ask for a softer light; neither alone.
+
+**What is changed in the light** (`src/portrait/profile.ts`, England's stage; Apoleia's is as it was):
+- `shadow.spread` 35 degrees (20): the key is a window a metre and a half wide a metre off. The edge of the
+  shadow a man's nose throws on his far cheek is softer again.
+- `rimShadow` 0.9 (0.5): under the larger key the key itself reaches further round the nose, and with half of
+  the rim let through the shade beside the nose would be 24 (round 116's reading). A tenth is let through.
+- `sky.energy` 0.2 (0.12): lifts what faces up or down in the shade.
+
+| | the five's mean | round 122 | now |
+|---|---|---|---|
+| woman: far cheek against the lit | -16.5 | -18.2 | -15.7 |
+| woman: beside the nose | -26.9 | -30.4 | -27.6 |
+| woman: the cheek beyond it | -12.4 | -16.9 | -15.6 |
+| woman: nose's back | -2.8 | +1.3 | +0.9 |
+| man: far cheek against the lit | -16.9 (three men, round 114) | -25.8 | -19.8 |
+
+**The gauntlet**: 22 of 22 over the whole sample, for the first time. Nearest their limits: the women's far
+cheek's chroma against the lit one's (2.6 off, limit 2.7; 1.7 before: the sky's light greys the shade), the nose's back (3.7 of 4), a woman's
+upper lip (3.5), the cheek beyond the nose (3.2), the men's far cheek (2.9).
+
+**The pose** (`portrait/src/pose.rs`, `DressSet::pose`). Until now a portrait was one stiff piece: head,
+neck and shoulders faced one way and the stage turned the whole of it, every person in the one pose, square
+to their own face. The reference's half figures stand with the shoulders turned further than the face. Now
+the shoulders are turned further than the head by 0.1 to 0.4 radians (6 to 23 degrees; a draw of the
+person's seed) and their line is tipped by up to 0.035 either way (2 degrees). It is a twist of the neck
+applied to the finished surfaces, to all of them alike: from the chin upward nothing moves by a digit (the
+face, its landmarks, the frame: what the gauntlet reads is read at the same places), from the neck's foot
+(5 cm under the chin on MakeHuman's base) downward everything turns as one piece, between them the neck
+twists. A hood's cape and a veil's fall go with the shoulders; a beard's locks stay with the head. The
+direction of a surface within the twist is turned by the transposed inverse of how its places move (a
+plait's strands that hang past the neck were lit as upright otherwise). Apoleia's portraits have no pose
+and are the same.
+
+Tried and not kept: the neck's foot 4 cm under the chin and the turn rising as a smooth step, up to 0.5
+radians (the neck's skin drawn to 1.67 of its length; now half even, half smooth, at most 1.38).
+
+Honest about it. The light: before and after differ little at a glance: the dark wedge beside the nose and
+the far cheek's shade are softer, most on the men; nobody would call the faces new. The 22 rest on a reading
+of five faces of which two are one woman in two lights, four are from developer diaries and one from the
+game, with landmarks set by eye; her own values were taken from rounds 71 and 83 and not read again. The
+men's line is still three men in three scenes. Two lines pass by 0.1 and 0.3. The narrow streak of light on
+the far flank of the reference's noses is still missing, and no line of the gauntlet reads it any more: the
+line that failed for it since round 113 now says only how light the nose's back is (the gauntlet's head
+says so). The key of 35 degrees is drawn as eight lights as before; no steps were seen in the shadows at
+896 x 1120, on the software driver only. The pose: the picture is framed so close (`close` 1.12) that of
+the turned shoulders one sees the collar off the middle and one shoulder nearer; framed wider (`close`
+0.85) the figure ends in ragged sleeves at the upper arm, which is why it is framed close: there is no bust
+below the shoulders to show, and that, not the pose, is the figure's largest gap to the reference. Cloth
+and hair that hang past the neck far from its axis are drawn aslant there (a veil's fall, a plait: its
+middle line turns up to 31 degrees within 2 cm, 23 as laid, and its strands are flatter there). The head
+itself is not tipped or turned from person to person: every face still looks out of the picture the same
+way. `pose` is by eye: PLACEHOLDER. The hair's form is as round 121 left it.
+
+Tests: `portrait/tests/pose.rs` (three: the head keeps its place to the digit and the shoulders turn as
+one piece by the angle asked, with the neck's skin drawn to between 0.65 and 1.45 of its length; no two
+stand alike and none past the range; a beard's locks stay on the jaw). `portrait/tests/clothes.rs` and
+`portrait/tests/plait.rs` read the gown and the plait as draped and laid, in no pose (`build_posed`), the
+plait's bend in the pose as well. Cargo: 82 of 82. `tests/portrait.test.ts`: the key's size up to 37
+degrees (20), the rim's shadow between 0.5 and 1 (0.3 and 0.7), what the rim lets through between 0.05 and
+0.5; its two files 41 of 41, the three other files that use the builder 29 of 29. `npx tsc --noEmit`,
+`npm run lint` and `ruff check` pass; the whole vitest suite was left to CI. Pictures (project files, `portraits/`): `runde123_vorher_nachher_frauen.png`,
+`runde123_vorher_nachher_maenner.png` (the sixteen grown people, round 122 above, now below).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
@@ -4884,7 +5000,9 @@ lost the net's hard fold, since round 121 the grown women wear their hair three 
 hair, the veil on forehead and cheeks, plaits), in two cuts and the genes' browns and greys where theirs have a
 different head of hair on nearly every woman, since round 122 hair is drawn as light and as coloured as its
 colour asks (brown, red and blond read as the reference's do at the crown; black hair is still a dark shape),
-and the face still lacks the
+since round 123 the light is softer (held to five of their women's faces instead of one) and the shoulders
+are turned further than the head, each person's by another angle, in a picture that still ends at the
+shoulders, and the face still lacks the
 reference's streak of gloss on the nose's flank; the thrown-back hood closes round the neck since round 35, but
 has no folds across its cloth. Since round 111 the people of every part of the world can be drawn, in a plain
 dress that is no people's own, and without a picture of the reference to hold them against.

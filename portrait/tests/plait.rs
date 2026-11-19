@@ -4,7 +4,7 @@
 mod common;
 
 use common::{head, person};
-use sc_portrait::build;
+use sc_portrait::{build, build_posed};
 
 type V3 = [f32; 3];
 
@@ -107,13 +107,25 @@ fn a_plait_hangs_without_a_kink_on_every_body() {
     // themselves. The builder evens the plait's way with the body out along it (`mh_rope`): 23 degrees, which is
     // the turn the plait is laid with below the ear.
     let Some(h) = head() else { return };
-    let mut worst = 0f32;
+    let (mut worst, mut posed) = (0f32, 0f32);
     for k in 0..40u32 {
         let age = [8.0, 10.0, 13.0, 15.0, 17.0, 19.0][k as usize % 6];
-        let out = build(&h, &person(2 * k, true, age), 1);
+        // (the plait as the body carries it, in no pose. The pose of round 123 turns the shoulders under the head
+        // and draws a plait that hangs past the neck aslant: its rings stay level, so a strand is flatter there
+        // and a corner of it may face a right angle away from one of its triangles, which is no fold)
+        let out = build_posed(&h, &person(2 * k, true, age), 1, Some([0.0; 3]));
         let rope = out.surfaces.iter().find(|s| s.tex.as_deref().is_some_and(|t| t.contains("/plait01_rope."))).expect("the plaits' strands");
         // no strand is folded over itself: every corner faces as the triangles round it do
         assert_eq!(turned_over(&rope.pos, &rope.nrm), 0, "girl {k} of {age}: triangles folded over");
+        // and in her pose: how far the middle line turns then
+        let stood = build(&h, &person(2 * k, true, age), 1);
+        let stood = stood.surfaces.iter().find(|s| s.tex.as_deref().is_some_and(|t| t.contains("/plait01_rope."))).expect("the plaits' strands");
+        for line in middle_lines(&stood.pos) {
+            for s in 16..line.len() - 16 {
+                let (a, b) = (sub(line[s], line[s - 8]), sub(line[s + 8], line[s]));
+                posed = posed.max((dot(a, b) / (len(a) * len(b))).clamp(-1.0, 1.0).acos().to_degrees());
+            }
+        }
         for line in middle_lines(&rope.pos) {
             // how far the plait's middle line turns within 2 cm (8 pieces of 2.5 mm), in degrees; the first and the
             // last 4 cm left out (the strands begin and end as points)
@@ -123,5 +135,9 @@ fn a_plait_hangs_without_a_kink_on_every_body() {
             }
         }
     }
+    if std::env::var("SHOW").is_ok() {
+        println!("a plait turns {worst} degrees within 2 cm as laid, {posed} in the pose");
+    }
     assert!(worst < 30.0, "a plait turns {worst} degrees within 2 cm");
+    assert!(posed < 40.0, "in the pose a plait turns {posed} degrees within 2 cm");
 }

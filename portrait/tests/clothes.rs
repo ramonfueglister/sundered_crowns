@@ -4,7 +4,7 @@
 mod common;
 
 use common::{head, person};
-use sc_portrait::{build, Look, Portrait};
+use sc_portrait::{build, build_posed, Look, Portrait};
 
 type V3 = [f32; 3];
 
@@ -259,7 +259,10 @@ fn a_gown_that_is_cut_wide_lies_within_the_gown_with_the_round_neck() {
     let Some(h) = head() else { return };
     let wimple_from = sc_portrait::dress::ENGLAND_1356.wimple_from;
     for k in 0..6 {
-        let (before, after) = (build(&h, &person(2 * k, true, wimple_from - 0.01), 1), build(&h, &person(2 * k, true, wimple_from), 1));
+        // (as draped, in no pose: the pose of round 123 turns both gowns alike about the neck, and with them the
+        // sleeves into the region that is read here by its place across the chest)
+        let stiff = |age: f32| build_posed(&h, &person(2 * k, true, age), 1, Some([0.0; 3]));
+        let (before, after) = (stiff(wimple_from - 0.01), stiff(wimple_from));
         let (cut, round) = (cloth(&before, "/cloth_cote.").expect("her gown"), cloth(&after, "/cloth_cote.").expect("her gown"));
         assert!(cloth(&before, "/cloth_wimple.").is_none() && cloth(&after, "/cloth_wimple.").is_some(), "woman {k}: the wimple comes at {wimple_from}");
         let sk = skin(&before);

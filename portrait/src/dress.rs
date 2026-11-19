@@ -571,6 +571,12 @@ pub struct DressSet {
     /// standard deviations off, their eyes in the brow's shade. A boy's grows from the women's to the men's
     /// (`by_sex`).
     pub lean: [f32; 2],
+    /// (round 123) How the body stands under the head (pose.rs): the least and the most the shoulders are turned
+    /// further than the head (radians; a person's lies between them by a draw of the seed), and the most the
+    /// shoulders' line is tipped, either way (radians). All 0: no pose, the portrait is one stiff piece (Apoleia's).
+    /// By eye beside the reference's half figures, whose shoulders stand 15 to 40 degrees round from the face:
+    /// PLACEHOLDER.
+    pub pose: [f32; 3],
     /// How large the iris is, across, in millimetres (0 = as the ball's image has it, Apoleia's: 27.5 degrees of
     /// the ball, tools/portrait/pipeline/eye_tex.py). MakeHuman's eyeball is 30 mm across (a real one 24), and
     /// `rest` scales the eyes up on top of that: the iris was 14 to 17 mm across and, seen from the front, took
@@ -896,6 +902,7 @@ const ENGLAND: DressSet = DressSet {
     mouth_at: 0.31,
     mouth_gene: 0.075,
     lean: [0.12, 0.10],
+    pose: [0.1, 0.4, 0.035],
     iris_mm: 11.7,
     eyes_child: [0.6, 0.5],
     gaze: [0.24, 0.0],

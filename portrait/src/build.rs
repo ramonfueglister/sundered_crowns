@@ -125,6 +125,12 @@ impl<'a> Ctx<'a> {
 }
 
 pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
+    build_posed(h, p, lod, None)
+}
+
+/// As `build`, in another pose than the dress table's (`DressSet::pose`: the least and the most turn of the
+/// shoulders, the most tip). For tests: `Some([0.0; 3])` is the portrait as one stiff piece.
+pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Portrait {
     let real = crate::real::folder();
     let lod = if real.is_some() { LODS - 1 } else { lod.min(LODS - 1) };
     let (pp, targets) = morph(h, p);
@@ -1981,6 +1987,21 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
         }
     }
     let tris = merged.iter().map(|s| s.tris()).sum();
+    // the pose, where the dress has one: the shoulders turned further than the head, the neck twisting between
+    // the chin and its foot (pose.rs). The neck stands where the skin between chin and shoulders has its middle
+    let range = pose.or(garb.map(|d| d.pose)).unwrap_or([0.0; 3]);
+    if range != [0.0; 3] {
+        let (mut lo, mut hi) = ([f32::MAX; 2], [f32::MIN; 2]);
+        for &v in body_full {
+            let b = h.base[v as usize];
+            if b[1] > 5.7 && b[1] < 6.0 && b[0].abs() < 0.75 {
+                let q = x.pp[v as usize];
+                lo = [lo[0].min(q[0]), lo[1].min(q[2])];
+                hi = [hi[0].max(q[0]), hi[1].max(q[2])];
+            }
+        }
+        crate::pose::pose(&mut merged, crate::pose::pose_of(range, p.seed), [(lo[0] + hi[0]) / 2.0, (lo[1] + hi[1]) / 2.0], y0 - crate::pose::NECK * (y1 - y0), y0);
+    }
     // the bust leaning back, where the dress asks for it
     let lean = garb.map_or(0.0, |d| crate::dress::by_sex(d.lean[0], d.lean[1], fem, p.grown()));
     if lean != 0.0 {

@@ -14,7 +14,8 @@
 // from a source: PLACEHOLDER.
 //
 // What it does not hold: forms (portrait/tests/faces.rs holds them against a survey of real heads), hair, cloth,
-// children (the reference's faces read are grown), and whether a picture is good. A face
+// children (the reference's faces read are grown), the narrow streak of light on the far flank of the reference's
+// noses (ours have none; round 123), and whether a picture is good. A face
 // can pass every line and be dead; a line that fails says where to look first.
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -61,25 +62,37 @@ const checks = [
   ['lit cheek chroma', 30.3, women['lit cheek chroma'], AB, 'round 114'],
   ['lit cheek hue (degrees)', 57.7, women['lit cheek hue'], 3, 'round 114'],
   // (Until round 107 held to her own, -27.7. The reference's faces differ in this more than in anything else: its
-  // emperor's far cheek is 20.9 under his lit one, and five women of its developer diaries, read in round 107 on
-  // pictures scaled to ours, have theirs half as far under as ours by the same reading. Held to the softer of
-  // the game's two faces since: at -24.5, round 106, the light was the hardest of all seven.)
-  ['woman: far cheek against the lit', -20.9, women['shaded cheek L'] - women['lit cheek L'], AGAINST, 'round 107'],
+  // emperor's far cheek is 20.9 under his lit one, and five women of the developer diaries, read in round 107 on
+  // pictures scaled to ours, have theirs half as far under as ours by the same reading. From round 107 to 122
+  // held to the emperor's, a man's, "the softer of the game's two faces".)
+  // (Round 123) Held to five faces of women, read at the gauntlet's own places (landmarks set by eye on the
+  // pictures, enlarged): the ruler designer's woman -27.7, and four of the developer diaries: A -16.6, C -11.2
+  // (`ck3_06`), N -11.3 and the same woman in the game's light -15.5 (`ck3_10`). With the landmarks two pixels
+  // off a face's reading moves by up to 2.8.
+  ['woman: far cheek against the lit', -16.5, women['shaded cheek L'] - women['lit cheek L'], AGAINST, 'round 123'],
   // the shade beside the nose on the far side, the black wedge of round 83, and the cheek beyond it: read then
-  // by a scratch script along the same level lines, on her picture and on ours (hers -34 to -35 and -16)
-  ['woman: beside the nose against cheek', -34.5, -women['beside the nose darker than cheek (L)'], AGAINST, 'round 83'],
-  ['woman: cheek beyond the nose', -16, -women['cheek beyond the nose darker than cheek (L)'], AGAINST, 'round 83'],
+  // by a scratch script along the same level lines, on her picture and on ours (hers -34 to -35 and -16).
+  // (Round 123) The same five faces: beside the nose -34.5, -23.4, -27.8, -30.2 and -18.4; the cheek beyond it
+  // -16, -10.6, -9.9, -11.1 and -14.6. Hers is the darkest of the five in both. (With the landmarks two pixels
+  // off the shade beside a nose reads up to 8 lighter: it is a narrow place.)
+  ['woman: beside the nose against cheek', -26.9, -women['beside the nose darker than cheek (L)'], AGAINST, 'round 123'],
+  ['woman: cheek beyond the nose', -12.4, -women['cheek beyond the nose darker than cheek (L)'], AGAINST, 'round 123'],
   // (her own: 5. Two of round 114's five faces show a forehead in the same light as the cheek: 0.9 to 4.0 by
   // where on the forehead one reads)
   ['woman: cheek redder than forehead', 2.5, women['cheek redder than forehead (a*)'], AB, 'round 114'],
-  // (Round 113) This line FAILS, and is left to: the 8 is one face's, read on the face's middle line. Five faces
-  // read in round 113 (three of the developer diaries' large women, two men) have a narrow streak of light on the
-  // nose, a thirtieth of the face wide, 1.3 to 11.0 over the lit cheek (mean 6.8), with skin 2 to 6 under the
-  // cheek on either side of it: the gloss of the light from behind on the nose's far flank, and where it lies
-  // across the nose differs from face to face (on the middle line itself they read from 12 under to 11 over).
-  // Rounds 106 to 112 passed the line by a stronger gloss in a broad stripe down every nose's back (`skin.zone`),
-  // which lay on the noses as a pale patch and is gone. Ours have no such streak yet: open.
-  ['woman: nose\'s back against cheek', 8, women['nose\'s back L'] - women['lit cheek L'], AGAINST, 'round 71'],
+  // (Round 113) Until round 122 this line asked 8 and FAILED: the 8 is one face's, read on the face's middle
+  // line. Five faces read in round 113 (three of the developer diaries' large women, two men) have a narrow
+  // streak of light on the nose, a thirtieth of the face wide, 1.3 to 11.0 over the lit cheek (mean 6.8), with
+  // skin 2 to 6 under the cheek on either side of it: the gloss of the light from behind on the nose's far
+  // flank, and where it lies across the nose differs from face to face (on the middle line itself they read
+  // from 12 under to 11 over). Rounds 106 to 112 passed the line by a stronger gloss in a broad stripe down
+  // every nose's back (`skin.zone`), which lay on the noses as a pale patch and is gone.
+  // (Round 123) Held to what the middle line reads on the five faces of women: hers +8, the four others -3.7,
+  // -10.3, -7.0 and -1.2 (their streak lies beside the line, on the far flank; two pixels off, a reading moves
+  // by up to 5). The line says how light the nose's back is, which is all its place can say. It does NOT say
+  // that ours have the streak: they have none, and no line of the gauntlet reads it (see "What it does not
+  // hold" above; tried for it in rounds 113, 120 and 123 and not found without losing the shaded half).
+  ['woman: nose\'s back against cheek', -2.8, women['nose\'s back L'] - women['lit cheek L'], AGAINST, 'round 123'],
   ['woman: lower lip against cheek', -22.9, -women['lower lip darker than cheek (L)'], AGAINST, 'round 82'],
   ['woman: lower lip redder (a*)', 6.2, women['lower lip redder than cheek (a*)'], AB, 'round 82'],
   ['woman: upper lip against cheek', -35.1, women['upper lip L'] - women['lit cheek L'], AGAINST, 'round 82'],
@@ -95,8 +108,10 @@ const checks = [
   // emperor), 11.6 and 18.3 (two men of the developer diaries) under the lit one; ours 31, with the women's at 19
   // on the same stage. Round 116 found the cause: the cast shadow of a man's larger nose lies on the place that
   // is read (without any shadow ours are 19.9 under; round 114 had tried the shadow at 0.6 for 0.7 and seen
-  // too little move). With the key light twice as large the line stands at 24.3 and still FAILS: the rest is
+  // too little move). With the key light twice as large the line stood at 24.3 and still FAILED: the rest is
   // the nose's size, which is held to a survey of real heads, or how the reference lights its men.
+  // (Round 123) With a key larger again (35 degrees for 20) it passes; the women's far cheek is lighter by it
+  // too, which their line took from round 107 to 122 only as far as -16.9.
   ['man: far cheek against the lit', -16.9, men['shaded cheek L'] - men['lit cheek L'], AGAINST, 'round 114'],
   // the reference's emperor (a small face, read five times enlarged). His picture is another scene with another
   // light than the woman's: his lit cheek is at L 65.5 where hers is at 56.1, his far cheek 20.9 under it where

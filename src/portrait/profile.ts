@@ -418,7 +418,19 @@ export const APOLEIA: StageProfile = {
  *  25 to 32 and 21 to 25). `sheen.tone` 1.6 on dark hair, `sheen.toneLight` 1 (blond and white hair were as
  *  light as the reference's), `sheen.colour` 0.85: L 26.5 and 18.6. With all of the colour a light brown was as
  *  coloured as the reference's reddest head. The painted layers in step: `cap.colour` 0.85, a short beard
- *  lighter by the same 1.6 (`cap.beard.tone` 8.8, `cap.beard.colour` 0.8). tools/portrait/hair_colour.mjs. */
+ *  lighter by the same 1.6 (`cap.beard.tone` 8.8, `cap.beard.colour` 0.8). tools/portrait/hair_colour.mjs.
+ *  Round 123: a softer light (docs/PORTRAITS.md). Four more faces of the reference's women were read at the
+ *  gauntlet's places, and four of its lines are held to the five's mean since (far cheek 16.5 under the lit one,
+ *  the shade beside the nose 26.9, the cheek beyond it 12.4, the nose's back 2.8 under): the one woman they
+ *  were read on is the hardest lit of the five in all four. Held to that, the stage of round 122 was 0.5 L
+ *  too dark on the cheek beyond the nose, 0.1 too light on the nose's back, and its men's far cheek 8.9 too
+ *  dark. The key is larger again (`shadow.spread` 35; 20: a window a metre and a half wide a metre off): the
+ *  men's far cheek 19.8 under the lit one (25.8; the reference's 16.9), the women's 15.7 (18.2). Under it the
+ *  key reaches further round the nose and the shade beside it would be 24: `rimShadow` 0.9 (0.5) leaves a
+ *  tenth of the rim to pass the head, 27.6. `sky.energy` 0.2 (0.12) lifts what faces up or down in the shade
+ *  (the cheek beyond the nose 15.6 under; 16.9). The narrow streak of light on the far flank of the reference's
+ *  noses is still not there: a light from the side (95 and 110 degrees round, the rim's shadow whole) lit the
+ *  far half of the face as a second key. */
 export const ENGLAND_1356: StageProfile = {
   key: 'england1356',
   lights: {
@@ -427,9 +439,9 @@ export const ENGLAND_1356: StageProfile = {
     fill: { from: [-4.0, -1.0, 4.0], colour: '#ff9a6a', energy: 0.2 },
     bounce: { from: [0.0, -3.0, 5.0], colour: '#efe4da', energy: 0.1 },
   },
-  sky: { top: '#e6ecff', ground: '#a0653f', energy: 0.12 },
-  rimShadow: 0.5,
-  shadow: { map: 1024, strength: 0.7, radius: 2, spread: 20, lights: 8 },
+  sky: { top: '#e6ecff', ground: '#a0653f', energy: 0.2 },
+  rimShadow: 0.9,
+  shadow: { map: 1024, strength: 0.7, radius: 2, spread: 35, lights: 8 },
   exposure: 0.38,
   turn: -0.24, rise: 0.03, close: 1.12,
   anisotropy: 8,

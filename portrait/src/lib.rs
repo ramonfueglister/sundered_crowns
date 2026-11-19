@@ -18,13 +18,14 @@ pub mod look;
 pub mod measure;
 mod morph;
 pub mod person;
+pub mod pose;
 pub mod real;
 mod real_look;
 mod settings;
 mod wasm;
 pub mod wire;
 
-pub use build::{build, Portrait, LODS};
+pub use build::{build, build_posed, Portrait, LODS};
 pub use morph::{cheek_field, jaw_field, chin_field, chin_round, jaw_edge_field, cheek_soft_field, jaw_soften, JAW_NARROW, CHIN_ROUND, JAW_SOFT, CHEEK_SOFT, lower_band, lower_share, morph_targets, morph_test, morph_test_measured, morph_test_measured_as, morph_test_mouth, morph_test_seam, morph_test_nose, morph_test_skull, morph_test_wide, face_front, FACE_FRONT, NOSE_HEIGHTS, mouth_field, neck_share, seam_field, seam_gaps, skull_field, CHEEK_FIELD, LIP_SEAM, MOUTH_FIELD, NECK_UNDER, SEAM_REACH, SKULL_CENTRE, SKULL_FLOOR, SKULL_REACH, STYLE_REACH};
 pub use geo::{Mat, Surface};
 pub use head::Head;

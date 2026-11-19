@@ -936,8 +936,11 @@ describe('portraits', { timeout: 20_000 }, () => {
     // normal (36 until round 85), and half of the head's shadow is taken off it (round 83; as light, and since
     // round 94 without the highlight of a lamp that is hidden there)
     expect(facing(rim, Math.PI / 2)).toBeGreaterThan(0.6);
-    expect(ENGLAND_1356.rimShadow).toBeGreaterThan(0.3);
-    expect(ENGLAND_1356.rimShadow).toBeLessThan(0.7);
+    // (round 123) under a key twice as large again the key itself reaches further round the nose, and the shade
+    // beside it was lighter than five faces of the reference have it: a tenth of the rim passes the head now,
+    // not half. Not none: the stage still has no light that goes through a nose or comes back off a cheek
+    expect(ENGLAND_1356.rimShadow).toBeGreaterThan(0.5);
+    expect(ENGLAND_1356.rimShadow).toBeLessThan(1);
     // two weak lights lighten the shade. What chest and ground throw back (round 78) comes from below and in
     // front, from the middle, and reaches what faces down: the jaw's underside and the neck under it, the upper
     // lip, the skin under the brow. Until then the one fill stood level on the far side (10 degrees below, 0.07
@@ -1091,9 +1094,10 @@ describe('portraits', { timeout: 20_000 }, () => {
         }
       }
     }
-    // half of the rim light's red still comes through the head as light (round 83), less of its green and blue,
-    // and none of it as a highlight
-    expect(shown(0, ENGLAND_1356.rimShadow, 0)[0]).toBeGreaterThan(0.3);
+    // some of the rim light's red still comes through the head as light (half of it from round 83, a tenth
+    // since round 123, under a larger key), less of its green and blue, and none of it as a highlight
+    expect(shown(0, ENGLAND_1356.rimShadow, 0)[0]).toBeGreaterThan(0.05);
+    expect(shown(0, ENGLAND_1356.rimShadow, 0)[0]).toBeLessThan(0.5);
     expect(shown(0, ENGLAND_1356.rimShadow, 2)[0]).toBeLessThan(0.6 * shown(0, ENGLAND_1356.rimShadow, 0)[0]);
     expect(shown(0, ENGLAND_1356.rimShadow, 0)[1]).toBe(0);
     // a light that throws no shadow (the fill, what chest and ground throw back) keeps its colour and its highlight
@@ -1110,9 +1114,11 @@ describe('portraits', { timeout: 20_000 }, () => {
     // edge of a shadow is as broad as that angle times how far the thing that throws it stands off the skin.
     // The stage draws such a light as several lights spread over its disc, which share its energy
     const { shadow, lights } = ENGLAND_1356, from = lights.key.from;
-    // a window or a lamp with a shade, not the sun (a quarter of a degree) and not the whole sky
+    // a window or a lamp with a shade, not the sun (a quarter of a degree) and not the whole sky: at most a
+    // window a metre and a half wide a metre from the head (round 123: 35 degrees; until then at most 20, under
+    // which the shadow of a man's nose lay on his far cheek 9 L darker than on the reference's men)
     expect(shadow.spread).toBeGreaterThanOrEqual(6);
-    expect(shadow.spread).toBeLessThanOrEqual(20);
+    expect(shadow.spread).toBeLessThanOrEqual(37);
     expect(shadow.lights).toBeGreaterThanOrEqual(6);
     // WebGL 2 promises 16 images to a material: the key's shadows, the rim's, the surface's image and its normals
     expect(shadow.lights + 1 + 2).toBeLessThanOrEqual(16);
