@@ -271,6 +271,12 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     sea(depths, toMap, round, blocks, homeX, homeZ) { surface?.place(depths, toMap, round, blocks, homeX, homeZ); pending = Math.max(pending, 1); },
     redraw() { pending = Math.max(pending, 1); },
     dispose() { renderer.setAnimationLoop(null); removeEventListener('resize', resize); renderer.dispose(); },
+    toScreen(x, y, z) {
+      camera.updateMatrixWorld();
+      const box = canvas.getBoundingClientRect(), v = new THREE.Vector3(x, y, z).project(camera);
+      if (v.z > 1) return null;
+      return [box.left + ((v.x + 1) / 2) * box.width, box.top + ((1 - v.y) / 2) * box.height];
+    },
     pick(px, py) {
       const box = canvas.getBoundingClientRect(), ray = new THREE.Raycaster(), grounds: THREE.Object3D[] = [];
       ray.setFromCamera(new THREE.Vector2(((px - box.left) / box.width) * 2 - 1, 1 - ((py - box.top) / box.height) * 2), camera);

@@ -34,6 +34,7 @@ export function figureMeshes(f: Figures) {
   const pair: Pair = { ...build(f), f, kept: 1 };
   pairOf.set(pair.near, pair); pairOf.set(pair.far, pair);
   draw(pair);
+  if (rulerColours.size) paint(pair);
   shown.add(pair);
   pair.near.addEventListener('dispose' as never, () => { shown.delete(pair); disposeFigures(pair.far); });
   return pair;
@@ -76,6 +77,35 @@ export function personAt(x: number, y: number, z: number, reach = 2): number | n
     }
   }
   return best;
+}
+
+/** the realm colours the rulers are painted in (the map mode of the rulers), by uid; empty: as they are built */
+let rulerColours: ReadonlyMap<number, number> = new Map();
+/** where in a figure's numbers the colours of the garment and of the headwear lie (material.ts `interleave`: a, b, c,
+ *  d, e of four each; d holds skin, garment, hose and headwear) */
+const GARMENT = 13, HEADWEAR = 15, STRIDE = 20;
+/** Paints the figures of these rulers in their colours (garment and headwear), or back as they were built. */
+function paint(p: Pair) {
+  const attr = p.near.geometry.getAttribute('figureD') as THREE.InterleavedBufferAttribute, buf = attr.data, arr = buf.array as Float32Array;
+  let changed = false;
+  for (let i = 0; i < p.f.count; i++) {
+    const id = p.f.e[i * 4 + 3];
+    if (!id) continue;
+    const c = rulerColours.get(id - 1), garment = c ?? p.f.d[i * 4 + 1], head = c ?? p.f.d[i * 4 + 3];
+    if (arr[i * STRIDE + GARMENT] !== garment || arr[i * STRIDE + HEADWEAR] !== head) {
+      arr[i * STRIDE + GARMENT] = garment; arr[i * STRIDE + HEADWEAR] = head; changed = true;
+    }
+  }
+  if (changed) buf.needsUpdate = true;
+  return changed;
+}
+/** Paints the figures of the rulers in the colours of their realms (uid → 0xRRGGBB), now and as pieces come; an empty
+ *  map paints them back. Returns whether a figure on the stage changed (the stage then needs a picture). */
+export function paintRulers(colours: ReadonlyMap<number, number>): boolean {
+  rulerColours = colours;
+  let changed = false;
+  for (const p of shown) changed = paint(p) || changed;
+  return changed;
 }
 
 /** whether any figures stand on the stage */
