@@ -1,0 +1,2 @@
+fit 1000-1225 transfers with >1 change year: 52 places: 8201 weighted mean rho: 0.395 share rho>0: 0.63 median rho: 0.195
+test 1291-1475 transfers with >1 change year: 46 places: 5521 weighted mean rho: 0.162 share rho>0: 0.59 median rho: 0.140
