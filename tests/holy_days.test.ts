@@ -2,8 +2,19 @@
 // calendars against dates known from elsewhere, and the year 1291 of every calendar.
 import { describe, it, expect } from 'vitest';
 import {
-  CALENDAR, DAY, WORKED, calendarOf, easterGregorian, easterJulian, islamicJdn, jdnOfYear, julianJdn, roshHashanahJdn, weekday,
-  workedDays, yearKinds,
+  CALENDAR,
+  DAY,
+  WORKED,
+  calendarOf,
+  easterGregorian,
+  easterJulian,
+  islamicJdn,
+  jdnOfYear,
+  julianJdn,
+  roshHashanahJdn,
+  weekday,
+  workedDays,
+  yearKinds,
 } from '../src/sim/holy_days';
 import { dateToDay, yearDays } from '../src/sim/calendar';
 import { FAITH_INDEX } from '../src/sim/content/peoples';
@@ -91,7 +102,16 @@ describe('the calendars of the faiths', () => {
   it('keep the Sabbath and the seven days of Leviticus 23 by the fixed Hebrew calendar', () => {
     // AM 5051–5052: 15 Nisan 17 March (a Sabbath), 21 Nisan 23 March, Shavuot 6 May, Rosh Hashanah 27 August, Yom
     // Kippur 5 September, Sukkot 10 September, Shemini Atzeret 17 September
-    for (const [m, d] of [[3, 17], [3, 23], [5, 6], [8, 27], [9, 5], [9, 10], [9, 17]]) expect(kind(CALENDAR.jewish, m, d)).toBe(DAY.rest);
+    for (const [m, d] of [
+      [3, 17],
+      [3, 23],
+      [5, 6],
+      [8, 27],
+      [9, 5],
+      [9, 10],
+      [9, 17],
+    ])
+      expect(kind(CALENDAR.jewish, m, d)).toBe(DAY.rest);
     expect(kind(CALENDAR.jewish, 1, 6)).toBe(DAY.rest); // a Saturday
     expect(kind(CALENDAR.jewish, 1, 7)).toBe(DAY.work); // a Sunday
     expect(counts(CALENDAR.jewish, 1291)).toEqual([307, 0, 58]);
@@ -103,7 +123,8 @@ describe('the calendars of the faiths', () => {
   it('give every year a few days of work and as many kinds as days, the same every time', () => {
     for (let c = 0; c < 6; c++) {
       for (const y of [1291, 1292, 1583, 1700, 1800]) {
-        const k = yearKinds(c, y), worked = workedDays(c, y);
+        const k = yearKinds(c, y),
+          worked = workedDays(c, y);
         expect(k.length).toBe(yearDays(y));
         expect(worked).toBeGreaterThan(0.6 * k.length);
         expect(worked).toBe(Array.from(k, (x) => WORKED[x]).reduce((a, b) => a + b, 0));

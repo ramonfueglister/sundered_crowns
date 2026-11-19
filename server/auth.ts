@@ -101,7 +101,7 @@ export async function verifyJwt(token: string, cfg: AuthConfig, now = Date.now()
   return claims;
 }
 
-export function cleanName(n: unknown): string | null {
+function cleanName(n: unknown): string | null {
   if (typeof n !== 'string') return null;
   const t = n
     .normalize('NFC')
@@ -141,7 +141,7 @@ export async function authenticate(
 }
 
 /** A watcher without an account: an id of its own per connection, so that sessions never mix. */
-export const observer = (): UserAuth => ({
+const observer = (): UserAuth => ({
   uid: `watch-${randomUUID()}`,
   name: 'Observer',
   admin: false,
