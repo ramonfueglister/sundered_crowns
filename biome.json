@@ -35,6 +35,7 @@
       "includes": [
         "server/**",
         "src/audio/**",
+        "src/ui/**",
         "tests/buildings/**",
         "tests/figures/**",
         "tests/setup/**",
