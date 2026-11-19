@@ -20,18 +20,25 @@
 // place where the amounts are computed: a component is a copy of the day. From the persons the purse of every
 // family follows (economy feature 11, src/sim/systems/household.ts).
 //
+// The firms work on the working days of their owner's faith (economy feature 19, src/sim/holy_days.ts): on a Sunday
+// or a feast a Latin firm makes nothing and buys no materials, on a working day more than on a mean day, so that over a
+// year it makes what it made before; wages are paid every day (economy/src/clock.rs). A household buys on the working
+// days of its own faith, the owner of a firm, the crown and the merchants every day. The engine is given the days of a
+// year before it computes the year's first day.
+//
 // The economies are not connected to anything else in the world yet: not to the harvest or the arable, and nothing a
-// player does reaches them. Places without a city have no economy. The year has 365 equal days: no seasons.
+// player does reaches them. Places without a city have no economy. The year has no seasons.
 import type { System } from '../schedule';
 import type { CityEconomies, WorldState } from '../state';
 import { FIRM_SCHEMA } from '../state';
 import type { World } from '../world';
 import { createTable, spawn } from '../ecs';
-import { AGENT, FIGURE, FIGURES, type CitySetup, type EconomyState, type KeptEconomy } from '../economy/engine';
+import { AGENT, FIGURE, FIGURES, type CitySetup, type CityWorkingDays, type EconomyState, type KeptEconomy } from '../economy/engine';
 import { activePersons, cityTable, dailyCalibration, type EconomyCalibration } from '../economy/calibration';
 import { citiesOf } from '../content/cities';
 import { cityRoutes } from '../economy/routes';
-import { dateToDay, dayToDate, fmtDate } from '../calendar';
+import { dateToDay, dayToDate, fmtDate, yearDays } from '../calendar';
+import { WORKED, calendarOf, workedDays, yearKinds } from '../holy_days';
 import { hash01 } from '../rng';
 import { uses1356Tables } from '../tables';
 import { ROLE, workforce } from './work';
@@ -49,6 +56,57 @@ function keep(e: CityEconomies, k: KeptEconomy) {
   Object.defineProperty(e, 'model', { get: () => k.bytes(), enumerable: true, configurable: true });
 }
 
+/** The economies now have the state of these bytes. */
+function hold(e: CityEconomies, bytes: Uint8Array) {
+  keptOf.delete(e);
+  Object.defineProperty(e, 'model', { value: bytes, writable: true, enumerable: true, configurable: true });
+}
+
+/** The working days of the firms and households of every city from the day after `e.day` to the end of its year
+ *  (economy feature 19): a firm keeps the calendar of its owner's faith, every other household the calendar of the
+ *  faith of its person (src/sim/holy_days.ts). On a day of a kind the flows of a firm, and what a household buys, are
+ *  the share of the day that is worked times the days of the year over the working days of the year: over the year a
+ *  firm makes what a firm that works every day makes, and a household buys as much. */
+export function workingDays(s: WorldState, e: CityEconomies): CityWorkingDays[] {
+  const first = e.day + 1, { y } = dayToDate(first, s.startYear), n = yearDays(y);
+  const from = first - dateToDay(y, 0, 1, s.startYear), days = n - from, kinds = WORKED.length;
+  const P = s.person.cols, F = s.firm.cols, Fam = s.family.cols, N = e.places.length;
+  // the calendar of every person who holds a part in a city, by city and part (src/sim/systems/work.ts), in the
+  // engine's order within the part
+  const cityOf = new Map<number, number>(Array.from(e.places, (p, k) => [p, k]));
+  const parts: number[][][] = Array.from({ length: N }, () => [[], [], []]); // workers, persons who do not work, bankers
+  for (const id of presentPersons(s)) {
+    const role = P.role[id], k = role ? cityOf.get(Fam.place[P.family[id]]) : undefined;
+    if (k === undefined || role === ROLE.owner) continue;
+    const part = role === ROLE.worker ? 0 : role === ROLE.idle ? 1 : 2;
+    parts[k][part][P.agent[id]] = calendarOf(P.faith[id]);
+  }
+  const out: CityWorkingDays[] = [];
+  for (let k = 0; k < N; k++) {
+    // the calendars of the city, in the order they first come
+    const used: number[] = [], local = (c: number) => {
+      let at = used.indexOf(c);
+      if (at < 0) { at = used.length; used.push(c); }
+      return at;
+    };
+    const calendar = new Uint8Array(e.firm0[k + 1] - e.firm0[k]);
+    for (let i = 0; i < calendar.length; i++) {
+      const o = F.owner[e.firm0[k] + i];
+      calendar[i] = local(o < 0 ? calendarOf(-1) : calendarOf(P.faith[o]));
+    }
+    const others = parts[k].flat();
+    if (others.length !== parts[k].reduce((a, p) => a + p.length, 0) || others.some((c) => c === undefined)) throw new Error(`city ${k} lacks a person of a part`);
+    const household = Uint8Array.from(others, local);
+    const factor = new Float64Array(used.length * kinds), day = new Uint8Array(used.length * days);
+    used.forEach((c, j) => {
+      const scale = n / workedDays(c, y);
+      for (let q = 0; q < kinds; q++) factor[j * kinds + q] = WORKED[q] * scale;
+      day.set(yearKinds(c, y).subarray(from, n), j * days);
+    });
+    out.push({ days, kinds, factor, day, calendar, household });
+  }
+  return out;
+}
 /** Numbers of a row of `CityEconomies.years` in a world with `cities` cities: the year, then the key figures of
  *  every city at its end. */
 export const yearRow = (cities: number): number => 1 + cities * FIGURES;
@@ -120,7 +178,7 @@ export function foundEconomy(s: WorldState, w: World): void {
   firm0[cities.length] = s.firm.size;
   const places = cities.map((x) => x.place);
   const model = w.economyEngine.routes(w.economyEngine.create(setups, c.clock, c.rules), cityRoutes(w, places, c.table, w.ways));
-  s.economy = { cities: { day: s.day, model, figures: w.economyEngine.figures(model), years: new Float64Array(0), halted: '', places: Int32Array.from(cities, (x) => x.place), firm0 } };
+  s.economy = { cities: { day: s.day, model, figures: w.economyEngine.figures(model), years: new Float64Array(0), halted: '', places: Int32Array.from(cities, (x) => x.place), firm0, workingTo: -1 } };
   writeAgents(s, w);
 }
 
@@ -201,6 +259,11 @@ export function computeTo(s: WorldState, w: World, day: number): void {
       e.years = years;
     }
     const lastOfYear = dateToDay(next.y + 1, 0, 1, s.startYear) - 1;
+    if (e.workingTo < e.day + 1) { // the working days of the year, from its next day on
+      try { hold(e, w.economyEngine.workingDays(stateOf(e), workingDays(s, e))); }
+      catch (err) { e.halted = `${fmtDate(e.day + 1, s.startYear)}: ${err instanceof Error ? err.message : String(err)}`; return; }
+      e.workingTo = lastOfYear;
+    }
     compute(e, s, w, Math.min(day, lastOfYear) - e.day);
   }
 }

@@ -38,8 +38,10 @@ import type { Table } from './ecs';
  *  30: the archive of the dead (people feature 7, src/sim/people/archive.ts): every person has a uid that never
  *  changes, the parents are uids, a woman counts the children she has borne, and on the first day of every year the
  *  dead whom nothing in the running world needs leave the table of the persons for the archive; the rows of the
- *  others close up. */
-export const STATE_VERSION = 30;
+ *  others close up.
+ *  31: the firms of the cities work on the working days of their owner's faith (economy feature 19,
+ *  src/sim/holy_days.ts): the economies keep the last day of the working days they have. */
+export const STATE_VERSION = 31;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
@@ -242,6 +244,10 @@ export interface CityEconomies {
   places: Int32Array;
   /** per city the id of its first firm (`WorldState.firm`), and after the last city the number of all firms */
   firm0: Int32Array;
+  /** the last day of the world up to which the engine has the working days of the firms (economy feature 19,
+   *  src/sim/holy_days.ts), −1 before the first: it is given them for the rest of a year before it computes a day
+   *  after this one */
+  workingTo: number;
 }
 
 /** A year of the archive of the dead (src/sim/people/archive.ts): the persons who went to it on the first day of a
