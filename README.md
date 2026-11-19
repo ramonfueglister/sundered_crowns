@@ -40,7 +40,7 @@ More: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/DATA_SCHEMA.md](docs/D
 npx vitest run     # foundation, economy, world server replay and resume, auth, Row Level Security of all migrations
 npm run typecheck
 npm run lint       # Biome: lint rules everywhere, layout in the folders already formatted (biome.json)
-ruff check         # the Python tools (ruff.toml; pip install ruff==0.17.4)
+ruff check && ruff format --check   # the Python tools (ruff.toml; pip install ruff==0.17.4)
 (cd economy && cargo test --release --locked)   # the shell around the port
 (cd economy && cargo fmt --check && cargo clippy --all-targets -- -D warnings)   # its layout (rustfmt.toml) and clippy
 ```

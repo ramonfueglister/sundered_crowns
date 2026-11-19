@@ -11,7 +11,16 @@ import { join } from 'node:path';
 import { newWorldState, loadWorld, loadSetup, loadEconomy, loadEconomyEngine, dataPath } from '../tools/sim/load';
 import { ECONOMY_DIR } from '../tools/sim/build_economy';
 import { REFERENCE, calibrationJson, cityCalibrations, readTable } from '../tools/sim/calibrate_economy';
-import { calibrateEconomy, cityTable, dailyCalibration, dailyEconomy, unemploymentBenefit, ar1, roundHalfEven, type Entry } from '../src/sim/economy/calibration';
+import {
+  calibrateEconomy,
+  cityTable,
+  dailyCalibration,
+  dailyEconomy,
+  unemploymentBenefit,
+  ar1,
+  roundHalfEven,
+  type Entry,
+} from '../src/sim/economy/calibration';
 import { FIGURE, FIGURES, type CitySetup, type EconomyEngine, type EconomyRules } from '../src/sim/economy/engine';
 import { cityAt, cityPlaces, citySeed, computeTo, workingDays, yearRow } from '../src/sim/systems/economy';
 import { cityRoutes } from '../src/sim/economy/routes';
@@ -26,15 +35,26 @@ import { configFromEnv } from '../server/config';
 import { WorldCore } from '../server/world';
 
 const sum = (v: number[]) => v.reduce((a, b) => a + b, 0);
-const days = (s: WorldState, w: World, n: number) => { for (let i = 0; i < n; i++) advanceDay(s, w); };
+const days = (s: WorldState, w: World, n: number) => {
+  for (let i = 0; i < n; i++) advanceDay(s, w);
+};
+/** A table of the port's JSON (parameters, initial conditions, accounts): numbers and series of numbers by key, each
+ *  read here in the shape the port gives it. */
+// biome-ignore lint/suspicious/noExplicitAny: the port's tables are JSON; a key's shape is the port's, not a type here
+type PortJson = Record<string, any>;
 /** The state of the economies of a world with the working days of the firms that the world gives them before its
  *  next day (economy feature 19): what the engine starts that day from. */
-const withWorkingDays = (s: WorldState, w: World) => w.economyEngine.workingDays(s.economy.cities!.model, workingDays(s, s.economy.cities!));
-const bits = (v: Float64Array) => Array.from(new BigUint64Array(v.buffer, v.byteOffset, v.length), (x) => x.toString(16).padStart(16, '0')).join(' ');
+const withWorkingDays = (s: WorldState, w: World) =>
+  w.economyEngine.workingDays(s.economy.cities!.model, workingDays(s, s.economy.cities!));
+const bits = (v: Float64Array) =>
+  Array.from(new BigUint64Array(v.buffer, v.byteOffset, v.length), (x) => x.toString(16).padStart(16, '0')).join(' ');
 
 describe("the calibration of England's economy (the year of the sources)", () => {
-  const table = readTable(), c = calibrateEconomy(table);
-  const a = c.accounts as Record<string, any>, p = c.parameters as Record<string, any>, ic = c.initial_conditions as Record<string, any>;
+  const table = readTable(),
+    c = calibrateEconomy(table);
+  const a = c.accounts as PortJson,
+    p = c.parameters as PortJson,
+    ic = c.initial_conditions as PortJson;
 
   it('names a source or says "assumption" for every input', () => {
     const entries = [table.scale, ...Object.values(table.inputs)] as Entry<unknown>[];
@@ -54,8 +74,8 @@ describe("the calibration of England's economy (the year of the sources)", () =>
     expect(a.people).toBeCloseTo(25831.8, 6);
     expect(a.coin).toBeCloseTo(11066.5, 6);
     expect(a.revenue).toBeCloseTo(1055.44, 6);
-    expect(a.exports).toBeCloseTo(0.01 * (32666.40 * 4.050 + 9061 * 1.751), 6);
-    expect(a.duty).toBeCloseTo(0.01 * 32666.40 * 2, 6); // 40 shillings a sack
+    expect(a.exports).toBeCloseTo(0.01 * (32666.4 * 4.05 + 9061 * 1.751), 6);
+    expect(a.duty).toBeCloseTo(0.01 * 32666.4 * 2, 6); // 40 shillings a sack
   });
   it('balances: GDP is what households, crown, investment and trade use, and what the sectors add plus the duty', () => {
     expect(Math.abs(a.gdpCheck)).toBeLessThan(1e-6);
@@ -63,7 +83,7 @@ describe("the calibration of England's economy (the year of the sources)", () =>
     expect(sum(a.households)).toBeGreaterThan(0.8 * a.gdp);
   });
   it('gives every person of the labour force a place: employee, owner of a firm or of the bank, or without work', () => {
-    expect(a.labourForce).toBe(roundHalfEven(25831.8 * 0.62 * (0.971 + 0.430) / 2));
+    expect(a.labourForce).toBe(roundHalfEven((25831.8 * 0.62 * (0.971 + 0.43)) / 2));
     expect(p.H_act).toBe(sum(a.employees) + sum(p.I_s) + 1 + 1);
     expect(sum(a.employees) + sum(p.I_s)).toBeGreaterThanOrEqual(a.labourForce - 1); // rounding by sector
     expect(sum(a.employees) + sum(p.I_s)).toBeLessThanOrEqual(a.labourForce + 1);
@@ -77,11 +97,15 @@ describe("the calibration of England's economy (the year of the sources)", () =>
       expect(a.output[g] / (a.output[g] - a.valueAdded[g])).toBeCloseTo(p.beta_s[g], 9); // output per input
     }
     expect(p.tau_EXPORT).toBeCloseTo(a.duty / a.exports, 12);
-    expect(p.tau_INC).toBeCloseTo(a.directTax / (sum(a.wages) + sum(a.valueAdded) - sum(a.wages) - 0.025 * sum(a.capital)), 12);
+    expect(p.tau_INC).toBeCloseTo(
+      a.directTax / (sum(a.wages) + sum(a.valueAdded) - sum(a.wages) - 0.025 * sum(a.capital)),
+      12,
+    );
     expect(sum(p.b_HH_g)).toBeCloseTo(1, 12);
     expect(sum(p.c_E_g)).toBeCloseTo(1, 12);
     expect(ic.E_CB).toBeCloseTo(-(ic.D_I + ic.D_H + ic.E_k), 9); // the port's rule with no government debt and no loans
-    for (const k of ['tau_VAT', 'tau_SIF', 'tau_SIW', 'tau_FIRM', 'tau_CF', 'tau_G', 'r_G', 'xi_pi', 'xi_gamma']) expect(p[k]).toBe(0);
+    for (const k of ['tau_VAT', 'tau_SIF', 'tau_SIW', 'tau_FIRM', 'tau_CF', 'tau_G', 'r_G', 'xi_pi', 'xi_gamma'])
+      expect(p[k]).toBe(0);
     expect(p.rho).toBe(1); // no Taylor rule
     expect(ic.r_bar).toBe(0);
     expect(p.mu).toBe(0.075); // the loan rate
@@ -103,21 +127,33 @@ describe("the calibration of England's economy (the year of the sources)", () =>
   it('estimates an AR(1) by least squares', () => {
     const y = [1, 1.5, 1.75, 1.875, 1.9375]; // y_t = 0.5 · y_(t−1) + 1 exactly
     const e = ar1(y);
-    expect(e.alpha).toBeCloseTo(0.5, 12); expect(e.beta).toBeCloseTo(1, 12); expect(e.sigma).toBeCloseTo(0, 12);
-    expect(roundHalfEven(2.5)).toBe(2); expect(roundHalfEven(3.5)).toBe(4); expect(roundHalfEven(2.4)).toBe(2); expect(roundHalfEven(2.6)).toBe(3);
+    expect(e.alpha).toBeCloseTo(0.5, 12);
+    expect(e.beta).toBeCloseTo(1, 12);
+    expect(e.sigma).toBeCloseTo(0, 12);
+    expect(roundHalfEven(2.5)).toBe(2);
+    expect(roundHalfEven(3.5)).toBe(4);
+    expect(roundHalfEven(2.4)).toBe(2);
+    expect(roundHalfEven(2.6)).toBe(3);
   });
 });
 
 describe('the calibration turned into days', () => {
-  const table = readTable(), y = calibrateEconomy(table), d = dailyCalibration(table);
-  const py = y.parameters as Record<string, any>, pd = d.parameters as Record<string, any>;
-  const iy = y.initial_conditions as Record<string, any>, id = d.initial_conditions as Record<string, any>;
-  const FLOWS = ['alpha_s', 'kappa_s', 'delta_s', 'w_s'], RULES = ['mu', 'theta', 'alpha_G', 'beta_G', 'sigma_G', 'alpha_E', 'beta_E', 'sigma_E', 'C'];
+  const table = readTable(),
+    y = calibrateEconomy(table),
+    d = dailyCalibration(table);
+  const py = y.parameters as PortJson,
+    pd = d.parameters as PortJson;
+  const iy = y.initial_conditions as PortJson,
+    id = d.initial_conditions as PortJson;
+  const FLOWS = ['alpha_s', 'kappa_s', 'delta_s', 'w_s'],
+    RULES = ['mu', 'theta', 'alpha_G', 'beta_G', 'sigma_G', 'alpha_E', 'beta_E', 'sigma_E', 'C'];
   const HISTORY = ['Y', 'pi', 'C_G', 'C_E', 'Y_I'];
 
   it('has a year of 365 days, a plan every 30 days and expectations on the last 365 days', () => {
-    expect(y.periods_per_year).toBe(1); expect(y.clock).toEqual({ plan: 1, window: 1 });
-    expect(d.periods_per_year).toBe(365); expect(d.clock).toEqual({ plan: 30, window: 365 });
+    expect(y.periods_per_year).toBe(1);
+    expect(y.clock).toEqual({ plan: 1, window: 1 });
+    expect(d.periods_per_year).toBe(365);
+    expect(d.clock).toEqual({ plan: 30, window: 365 });
     expect(d.accounts).toEqual(y.accounts); // the accounts of the year stay as the sources give them
   });
   it('spreads what flows in a year evenly over its days', () => {
@@ -127,21 +163,26 @@ describe('the calibration turned into days', () => {
       for (let t = 0; t < 76; t++) expect(id[k][t]).toBe(iy[k][t] / 365);
     }
     expect(pd.T_prime).toBe(76);
-    expect(365 * sum(pd.alpha_s.map((x: number, g: number) => x * (y.accounts as any).employees[g]))).toBeCloseTo(sum((y.accounts as any).output), 6);
+    expect(365 * sum(pd.alpha_s.map((x: number, g: number) => x * (y.accounts.employees as number[])[g]))).toBeCloseTo(
+      sum(y.accounts.output as number[]),
+      6,
+    );
   });
   it('leaves every share and every stock as it is', () => {
     for (const k of Object.keys(py)) if (!FLOWS.includes(k) && !RULES.includes(k)) expect(pd[k], k).toEqual(py[k]);
     for (const k of Object.keys(iy)) if (!HISTORY.includes(k)) expect(id[k], k).toEqual(iy[k]);
-    expect(Object.keys(pd)).toEqual(Object.keys(py)); expect(Object.keys(id)).toEqual(Object.keys(iy));
+    expect(Object.keys(pd)).toEqual(Object.keys(py));
+    expect(Object.keys(id)).toEqual(Object.keys(iy));
   });
   it('compounds the interest of a day to the interest of the year', () => {
-    expect(Math.pow(1 + pd.mu, 365)).toBeCloseTo(1.075, 12);
+    expect((1 + pd.mu) ** 365).toBeCloseTo(1.075, 12);
     expect(pd.theta).toBe(py.theta / 365);
   });
   it('keeps the memory of a year, the long-run mean and the spread of the crown and of the exports', () => {
     for (const s of ['G', 'E']) {
-      const a = py[`alpha_${s}`], ad = pd[`alpha_${s}`];
-      expect(Math.pow(ad, 365)).toBeCloseTo(a, 12);
+      const a = py[`alpha_${s}`],
+        ad = pd[`alpha_${s}`];
+      expect(ad ** 365).toBeCloseTo(a, 12);
       expect(pd[`beta_${s}`] / (1 - ad)).toBeCloseTo(py[`beta_${s}`] / (1 - a) - Math.log(365), 9); // the mean of the logarithm, a day is 1/365 of a year
       expect(pd[`sigma_${s}`] ** 2 / (1 - ad * ad)).toBeCloseTo(py[`sigma_${s}`] ** 2 / (1 - a * a), 12); // the variance in the long run
     }
@@ -156,15 +197,24 @@ describe('the calibration turned into days', () => {
 });
 
 describe('the calibration of the cities', () => {
-  const table = readTable(), cities = cityCalibrations(table), england = calibrateEconomy(table);
-  const pe = england.parameters as Record<string, any>, ae = england.accounts as Record<string, any>;
+  const table = readTable(),
+    cities = cityCalibrations(table),
+    england = calibrateEconomy(table);
+  const pe = england.parameters as PortJson,
+    ae = england.accounts as PortJson;
 
   it('is the file of the reference world, as the game founds the economies of its cities', () => {
     expect(readFileSync(dataPath('economy_cities.json'), 'utf8')).toBe(calibrationJson(table)); // else: npm run economy:calibrate
     const w = loadWorld();
-    expect(w.cityEconomies).toMatchObject({ year: 1356, scale: 0.01, clock: { plan: 30, window: 365 }, rules: { wage: 'money', prices: 'demand' } });
+    expect(w.cityEconomies).toMatchObject({
+      year: 1356,
+      scale: 0.01,
+      clock: { plan: 30, window: 365 },
+      rules: { wage: 'money', prices: 'demand' },
+    });
     expect(w.cityEconomies.table).toEqual(table); // the game calibrates from the table itself
-    const file = loadEconomy(), e = newWorldState(REFERENCE.seed, REFERENCE.year).s.economy.cities!;
+    const file = loadEconomy(),
+      e = newWorldState(REFERENCE.seed, REFERENCE.year).s.economy.cities!;
     expect(file.world).toEqual(REFERENCE);
     expect(Array.from(e.places)).toEqual(cities.map((c) => c.place));
     cities.forEach((c, k) => {
@@ -184,7 +234,11 @@ describe('the calibration of the cities', () => {
     expect(cities[0]).toMatchObject({ name: 'Cairo', people: 351200 });
   });
   it('says that the structure of a city, the duty between cities and the benefit of a person without work are assumptions', () => {
-    for (const e of [table.cities.structure, table.cities.duty_shillings_per_sack, table.cities.unemployment_benefit] as Entry<unknown>[]) {
+    for (const e of [
+      table.cities.structure,
+      table.cities.duty_shillings_per_sack,
+      table.cities.unemployment_benefit,
+    ] as Entry<unknown>[]) {
       expect(e.kind).toBe('assumption');
       expect(e.source.length).toBeGreaterThan(10);
     }
@@ -201,30 +255,36 @@ describe('the calibration of the cities', () => {
     expect(b.w_UB).toBeCloseTo(0.55 * 0.8 * 0.9 * 10, 12); // the benefit on the mean wage
     expect(b.w_UB / b.theta_UB).toBeCloseTo(10, 12); // the port starts every person with this last wage
     expect(unemploymentBenefit(0, 0.2, 0.1, 10)).toEqual({ theta_UB: 1e-9, w_UB: 0 });
-    for (const rate of [-0.1, 1, NaN]) expect(() => unemploymentBenefit(rate, 0.2, 0.1, 10)).toThrow(/unemployment benefit/);
+    for (const rate of [-0.1, 1, NaN])
+      expect(() => unemploymentBenefit(rate, 0.2, 0.1, 10)).toThrow(/unemployment benefit/);
   });
   it('pays a person without work nothing in any city, and still computes the benefit of the original code when the table asks for it', () => {
     const withBenefit = structuredClone(table);
     withBenefit.cities.unemployment_benefit.value = 0.55;
     for (const c of cities) {
       // the game (feature 9): the rate is switched off and nobody starts with a benefit
-      const po = c.calibration.parameters as Record<string, any>, io = c.calibration.initial_conditions as Record<string, any>;
-      const a = c.calibration.accounts as Record<string, any>;
+      const po = c.calibration.parameters as PortJson,
+        io = c.calibration.initial_conditions as PortJson;
+      const a = c.calibration.accounts as PortJson;
       expect(po.theta_UB).toBe(1e-9); // not 0: the port divides the starting wage by this rate
-      expect(io.w_UB).toBe(0); expect(io.sb_other).toBe(0); expect(io.sb_inact).toBe(0);
+      expect(io.w_UB).toBe(0);
+      expect(io.sb_other).toBe(0);
+      expect(io.sb_inact).toBe(0);
       // the same city with the rate of feature 6: 55 % of the last wage after tax, from the first day
       const on = dailyEconomy(calibrateEconomy(cityTable(withBenefit, c.people, c.working.length)), 365, 30);
-      const p = on.parameters as Record<string, any>, ic = on.initial_conditions as Record<string, any>;
+      const p = on.parameters as PortJson,
+        ic = on.initial_conditions as PortJson;
       expect(p.theta_UB).toBeCloseTo(0.55 * (1 - p.tau_INC) * (1 - p.tau_SIW), 15);
-      expect(p.theta_UB).toBeGreaterThan(0.5); expect(p.theta_UB).toBeLessThan(0.55);
+      expect(p.theta_UB).toBeGreaterThan(0.5);
+      expect(p.theta_UB).toBeLessThan(0.55);
       // the benefit of a day at the start: on the mean wage of an employee of the city on a day
       const meanWage = sum(p.w_s.map((w: number, g: number) => w * ic.N_s[g])) / sum(ic.N_s);
       expect(ic.w_UB).toBeCloseTo(p.theta_UB * meanWage, 15);
-      expect(ic.w_UB * 365).toBeCloseTo(p.theta_UB * sum(a.wages) / sum(a.employees), 12);
+      expect(ic.w_UB * 365).toBeCloseTo((p.theta_UB * sum(a.wages)) / sum(a.employees), 12);
       // the same city as a year: the benefit of a day is a 365th of the benefit of the year
       const year = calibrateEconomy(cityTable(withBenefit, c.people, c.working.length));
-      expect(ic.w_UB).toBe((year.initial_conditions as any).w_UB / 365);
-      expect(p.theta_UB).toBe((year.parameters as any).theta_UB);
+      expect(ic.w_UB).toBe((year.initial_conditions as PortJson).w_UB / 365);
+      expect(p.theta_UB).toBe((year.parameters as PortJson).theta_UB);
       // Between the two: with the benefit households spend from an income that includes the benefit of the one
       // person without work at the start (the original's calibration), so they buy at the start what the accounts
       // say. Nothing else differs.
@@ -242,21 +302,45 @@ describe('the calibration of the cities', () => {
     const englandPeople = table.inputs.population_thousand.value * 1e3;
     for (const c of cities) {
       const share = c.people / englandPeople;
-      const p = c.calibration.parameters as Record<string, any>, a = c.calibration.accounts as Record<string, any>;
+      const p = c.calibration.parameters as PortJson,
+        a = c.calibration.accounts as PortJson;
       expect(c.calibration.scale).toBeCloseTo(0.01 * share, 15);
       expect(a.people).toBeCloseTo(c.people / 100, 6); // the model computes the city at 1:100
       expect(a.gdp / ae.gdp).toBeCloseTo(share, 12);
       expect(a.coin / ae.coin).toBeCloseTo(share, 12);
-      expect(a.duty).toBe(0); expect(p.tau_EXPORT).toBe(0);
+      expect(a.duty).toBe(0);
+      expect(p.tau_EXPORT).toBe(0);
       expect(a.directTax).toBeCloseTo(a.revenue, 9); // the crown of a city takes all its revenue as a direct tax
       expect(a.imports).toBeCloseTo(a.exports, 9); // what a city sells to the others it buys from them
       expect(Math.abs(a.gdpCheck)).toBeLessThan(1e-6);
-      for (let g = 0; g < 3; g++) { expect(p.I_s[g]).toBeGreaterThanOrEqual(1); expect(a.employees[g]).toBeGreaterThanOrEqual(p.I_s[g]); }
+      for (let g = 0; g < 3; g++) {
+        expect(p.I_s[g]).toBeGreaterThanOrEqual(1);
+        expect(a.employees[g]).toBeGreaterThanOrEqual(p.I_s[g]);
+      }
       // what does not depend on the size is England's
-      for (const k of ['G', 'T_prime', 'beta_s', 'theta', 'zeta', 'zeta_LTV', 'zeta_b', 'mu', 'c_E_g', 'c_I_g', 'c_G_g', 'b_CF_g', 'b_CFH_g', 'a_sg', 'alpha_G', 'alpha_E']) {
-        if (k === 'mu') expect(Math.pow(1 + p.mu, 365)).toBeCloseTo(1 + pe.mu, 12); else if (k === 'theta') expect(p.theta * 365).toBeCloseTo(pe.theta, 12);
-        else if (k === 'alpha_G' || k === 'alpha_E') expect(Math.pow(p[k], 365)).toBeCloseTo(pe[k], 12);
-        else if (k === 'c_E_g') for (let g = 0; g < 3; g++) expect(p.c_E_g[g]).toBeCloseTo(pe.c_E_g[g], 12); // a quotient of scaled amounts
+      for (const k of [
+        'G',
+        'T_prime',
+        'beta_s',
+        'theta',
+        'zeta',
+        'zeta_LTV',
+        'zeta_b',
+        'mu',
+        'c_E_g',
+        'c_I_g',
+        'c_G_g',
+        'b_CF_g',
+        'b_CFH_g',
+        'a_sg',
+        'alpha_G',
+        'alpha_E',
+      ]) {
+        if (k === 'mu') expect((1 + p.mu) ** 365).toBeCloseTo(1 + pe.mu, 12);
+        else if (k === 'theta') expect(p.theta * 365).toBeCloseTo(pe.theta, 12);
+        else if (k === 'alpha_G' || k === 'alpha_E') expect(p[k] ** 365).toBeCloseTo(pe[k], 12);
+        else if (k === 'c_E_g')
+          for (let g = 0; g < 3; g++) expect(p.c_E_g[g]).toBeCloseTo(pe.c_E_g[g], 12); // a quotient of scaled amounts
         else expect(p[k], k).toEqual(pe[k]);
       }
       expect(c.calibration.clock).toEqual({ plan: 30, window: 365 });
@@ -283,7 +367,8 @@ describe('the calibration of the cities', () => {
     expect(e.source).toMatch(/is ours, not the papers'/);
     expect(JSON.parse(calibrationJson(table)).wage).toBe('money');
     // the wage is no number of a city's calibration: the parameters of the port are what they were
-    const other = structuredClone(table); other.cities.wage.value = 'prices';
+    const other = structuredClone(table);
+    other.cities.wage.value = 'prices';
     expect(JSON.parse(calibrationJson(other)).wage).toBe('prices');
     expect(calibrationJson(other).replace('"wage": "prices"', '"wage": "money"')).toBe(calibrationJson(table));
   });
@@ -294,18 +379,27 @@ describe('the calibration of the cities', () => {
     expect(e.source).toMatch(/init_CANVAS\.jl, lines 45 to 75/);
     expect(e.source).toMatch(/What is ours: a firm applies it on its plan day/);
     expect(JSON.parse(calibrationJson(table)).prices).toBe('demand');
-    const other = structuredClone(table); other.cities.prices.value = 'costs';
+    const other = structuredClone(table);
+    other.cities.prices.value = 'costs';
     expect(calibrationJson(other).replace('"prices": "costs"', '"prices": "demand"')).toBe(calibrationJson(table));
   });
 });
 
 describe('the economy engine (WebAssembly)', () => {
-  const engine = loadEconomyEngine(), c = loadEconomy();
+  const engine = loadEconomyEngine(),
+    c = loadEconomy();
   // three cities, so that the tests of the engine are quick: London, Ghent and Cologne
   const THREE = ['London', 'Ghent', 'Cologne'].map((name) => c.cities.find((x) => x.name === name)!);
   const setups = (seed: number, cities = THREE): CitySetup[] =>
-    cities.map((x, k) => ({ parameters: JSON.stringify(x.parameters), initialConditions: JSON.stringify(x.initial_conditions), seed: seed + k }));
-  const CLOCK = c.clock, SAVINGS = c.savings_spent_per_year / c.periods_per_year, RULES: EconomyRules = { wage: c.wage, prices: c.prices, savings: SAVINGS, crown: c.crown, owner: c.owner }, PORT: EconomyRules = { wage: 'prices', prices: 'costs', savings: 0, crown: 'series', owner: 'paper' };
+    cities.map((x, k) => ({
+      parameters: JSON.stringify(x.parameters),
+      initialConditions: JSON.stringify(x.initial_conditions),
+      seed: seed + k,
+    }));
+  const CLOCK = c.clock,
+    SAVINGS = c.savings_spent_per_year / c.periods_per_year,
+    RULES: EconomyRules = { wage: c.wage, prices: c.prices, savings: SAVINGS, crown: c.crown, owner: c.owner },
+    PORT: EconomyRules = { wage: 'prices', prices: 'costs', savings: 0, crown: 'series', owner: 'paper' };
   const create = (seed: number) => engine.create(setups(seed), CLOCK, RULES);
   const city = (f: Float64Array, k: number) => f.subarray(k * FIGURES, (k + 1) * FIGURES);
 
@@ -313,31 +407,66 @@ describe('the economy engine (WebAssembly)', () => {
     const dir = mkdtempSync(join(tmpdir(), 'sce-'));
     try {
       const files = THREE.flatMap((x, k) => {
-        writeFileSync(join(dir, `p${k}.json`), JSON.stringify(x.parameters)); writeFileSync(join(dir, `ic${k}.json`), JSON.stringify(x.initial_conditions));
+        writeFileSync(join(dir, `p${k}.json`), JSON.stringify(x.parameters));
+        writeFileSync(join(dir, `ic${k}.json`), JSON.stringify(x.initial_conditions));
         return [join(dir, `p${k}.json`), join(dir, `ic${k}.json`)];
       });
       // 65 days: every firm has planned three times. With a plan and a window of one period the clock is the port's.
       const ONE = { plan: 1, window: 1 };
       for (const [seed, clock, periods, rules] of [
-        [1356, CLOCK, 65, RULES], [7, CLOCK, 65, RULES], [1356, CLOCK, 65, PORT], [1356, CLOCK, 65, { wage: 'money', prices: 'costs', savings: 0, crown: 'series', owner: 'paper' }], [1356, CLOCK, 65, { wage: 'prices', prices: 'demand', savings: 0, crown: 'series', owner: 'paper' }], [1356, CLOCK, 65, { ...RULES, savings: 0 }], [1356, CLOCK, 65, { ...RULES, crown: 'series' }], [1356, CLOCK, 65, { ...RULES, owner: 'paper' }], [1356, CLOCK, 65, { ...PORT, owner: 'household' }],
-        [1356, ONE, 10, PORT], [1356, ONE, 10, RULES],
+        [1356, CLOCK, 65, RULES],
+        [7, CLOCK, 65, RULES],
+        [1356, CLOCK, 65, PORT],
+        [1356, CLOCK, 65, { wage: 'money', prices: 'costs', savings: 0, crown: 'series', owner: 'paper' }],
+        [1356, CLOCK, 65, { wage: 'prices', prices: 'demand', savings: 0, crown: 'series', owner: 'paper' }],
+        [1356, CLOCK, 65, { ...RULES, savings: 0 }],
+        [1356, CLOCK, 65, { ...RULES, crown: 'series' }],
+        [1356, CLOCK, 65, { ...RULES, owner: 'paper' }],
+        [1356, CLOCK, 65, { ...PORT, owner: 'household' }],
+        [1356, ONE, 10, PORT],
+        [1356, ONE, 10, RULES],
       ] as const) {
-        const args = [String(periods), String(clock.plan), String(clock.window), rules.wage, rules.prices, String(rules.savings), rules.crown, rules.owner, ...THREE.flatMap((_, k) => [String(seed + k), files[2 * k], files[2 * k + 1]])];
-        const native = execFileSync(join(ECONOMY_DIR, 'target/release/examples/reference'), args, { encoding: 'utf8' }).trim().split('\n');
+        const args = [
+          String(periods),
+          String(clock.plan),
+          String(clock.window),
+          rules.wage,
+          rules.prices,
+          String(rules.savings),
+          rules.crown,
+          rules.owner,
+          ...THREE.flatMap((_, k) => [String(seed + k), files[2 * k], files[2 * k + 1]]),
+        ];
+        const native = execFileSync(join(ECONOMY_DIR, 'target/release/examples/reference'), args, { encoding: 'utf8' })
+          .trim()
+          .split('\n');
         expect(native.length).toBe(periods + 1);
         let state = engine.create(setups(seed), clock, rules);
         expect(bits(engine.figures(state))).toBe(native[0]);
-        for (let t = 1; t <= periods; t++) { state = engine.step(state, 1); expect(bits(engine.figures(state))).toBe(native[t]); }
+        for (let t = 1; t <= periods; t++) {
+          state = engine.step(state, 1);
+          expect(bits(engine.figures(state))).toBe(native[t]);
+        }
       }
-    } finally { rmSync(dir, { recursive: true, force: true }); }
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   }, 60_000);
   it('gives the same state for the same seeds and another for another seed, another clock or another rule', () => {
-    const a = create(1356), b = create(1356), other = create(1357);
+    const a = create(1356),
+      b = create(1356),
+      other = create(1357);
     expect(Buffer.compare(a, b)).toBe(0);
     expect(Buffer.compare(engine.step(a, 3), engine.step(b, 3))).toBe(0);
     expect(Buffer.compare(a, other)).not.toBe(0);
     expect(Buffer.compare(a, engine.create(setups(1356), { plan: 31, window: 365 }, RULES))).not.toBe(0);
-    expect(RULES).toEqual({ wage: 'money', prices: 'demand', savings: 0.4 / 365, crown: 'revenue', owner: 'household' });
+    expect(RULES).toEqual({
+      wage: 'money',
+      prices: 'demand',
+      savings: 0.4 / 365,
+      crown: 'revenue',
+      owner: 'household',
+    });
     expect(Buffer.compare(a, engine.create(setups(1356), CLOCK, { ...RULES, wage: 'prices' }))).not.toBe(0);
     expect(Buffer.compare(a, engine.create(setups(1356), CLOCK, { ...RULES, prices: 'costs' }))).not.toBe(0);
     // households that spend out of their income only start from the same position and compute other days
@@ -352,16 +481,22 @@ describe('the economy engine (WebAssembly)', () => {
     expect(Buffer.compare(a, series)).not.toBe(0);
     expect(bits(engine.figures(engine.step(series, 1)))).toBe(bits(engine.figures(engine.step(a, 1))));
     expect(bits(engine.figures(engine.step(series, 40)))).not.toBe(bits(engine.figures(engine.step(a, 40))));
-    expect(() => engine.create(setups(1356), CLOCK, { ...RULES, crown: 'war' as never })).toThrow('way for the crown to buy');
+    expect(() => engine.create(setups(1356), CLOCK, { ...RULES, crown: 'war' as never })).toThrow(
+      'way for the crown to buy',
+    );
     // owners who are paid the paper's profit start from the same position and compute other days
     const paper = engine.create(setups(1356), CLOCK, { ...RULES, owner: 'paper' });
     expect(Buffer.compare(a, paper)).not.toBe(0);
     expect(bits(engine.figures(paper))).toBe(bits(engine.figures(a)));
     expect(bits(engine.figures(engine.step(paper, 40)))).not.toBe(bits(engine.figures(engine.step(a, 40))));
-    expect(() => engine.create(setups(1356), CLOCK, { ...RULES, owner: 'guild' as never })).toThrow('way for an owner to hold a firm');
+    expect(() => engine.create(setups(1356), CLOCK, { ...RULES, owner: 'guild' as never })).toThrow(
+      'way for an owner to hold a firm',
+    );
     // the seed of one city changes the others too, through the merchants
-    const one = setups(1356); one[2] = { ...one[2], seed: 99 };
-    const f = engine.figures(engine.step(engine.create(one, CLOCK, RULES), 5)), g = engine.figures(engine.step(a, 5));
+    const one = setups(1356);
+    one[2] = { ...one[2], seed: 99 };
+    const f = engine.figures(engine.step(engine.create(one, CLOCK, RULES), 5)),
+      g = engine.figures(engine.step(a, 5));
     expect(bits(city(f, 0))).not.toBe(bits(city(g, 0)));
   });
   it('still computes cities that pay the benefit of the original code, as the game did from feature 6 to feature 8', () => {
@@ -369,15 +504,21 @@ describe('the economy engine (WebAssembly)', () => {
     table.cities.unemployment_benefit.value = 0.55;
     const paid = THREE.map((x, k): CitySetup => {
       const d = dailyEconomy(calibrateEconomy(cityTable(table, x.people, x.working)), 365, CLOCK.plan);
-      expect((d.parameters as any).theta_UB).toBeGreaterThan(0.5);
-      return { parameters: JSON.stringify(d.parameters), initialConditions: JSON.stringify(d.initial_conditions), seed: 1356 + k };
+      expect((d.parameters as PortJson).theta_UB).toBeGreaterThan(0.5);
+      return {
+        parameters: JSON.stringify(d.parameters),
+        initialConditions: JSON.stringify(d.initial_conditions),
+        seed: 1356 + k,
+      };
     });
     let state = engine.create(paid, CLOCK, RULES);
     expect(Buffer.compare(state, create(1356))).not.toBe(0); // another economy than the game's
     for (let t = 0; t < 40; t++) {
       state = engine.step(state, 1);
       const k = engine.checks(state);
-      for (const x of k.cities) for (const v of [x.income, x.nominal, x.real, x.centralBank, x.banks]) expect(Math.abs(v) / x.gdpSum).toBeLessThan(1e-9);
+      for (const x of k.cities)
+        for (const v of [x.income, x.nominal, x.real, x.centralBank, x.banks])
+          expect(Math.abs(v) / x.gdpSum).toBeLessThan(1e-9);
       for (const m of k.merchants) expect(Math.abs(m.off)).toBeLessThanOrEqual(1e-9 * m.scale);
     }
   }, 30_000);
@@ -394,12 +535,16 @@ describe('the economy engine (WebAssembly)', () => {
     let state = create(1356);
     for (let t = 0; t < 40; t++) {
       state = engine.step(state, 1);
-      const k = engine.checks(state), f = engine.figures(state);
+      const k = engine.checks(state),
+        f = engine.figures(state);
       expect(k.cities.length).toBe(3);
       k.cities.forEach((x, n) => {
-        for (const v of [x.income, x.nominal, x.real, x.centralBank, x.banks]) expect(Math.abs(v) / x.gdpSum).toBeLessThan(1e-9);
+        for (const v of [x.income, x.nominal, x.real, x.centralBank, x.banks])
+          expect(Math.abs(v) / x.gdpSum).toBeLessThan(1e-9);
         const y = city(f, n);
-        expect(y[FIGURE.employees] + y[FIGURE.owners] + y[FIGURE.unemployed]).toBe((THREE[n].parameters as any).H_act);
+        expect(y[FIGURE.employees] + y[FIGURE.owners] + y[FIGURE.unemployed]).toBe(
+          (THREE[n].parameters as PortJson).H_act,
+        );
       });
       // the worth of the merchants, then the goods of each of the three products
       expect(k.merchants.length).toBe(4);
@@ -408,38 +553,46 @@ describe('the economy engine (WebAssembly)', () => {
   }, 30_000);
   it('trades: what the merchants buy in the cities they sell in the cities, at cost', () => {
     const f = engine.figures(engine.step(create(1356), 60));
-    let sold = 0, bought = 0;
+    let sold = 0,
+      bought = 0;
     for (let k = 0; k < 3; k++) {
       const y = city(f, k);
-      expect(y[FIGURE.exports]).toBeGreaterThan(0); expect(y[FIGURE.imports]).toBeGreaterThan(0);
+      expect(y[FIGURE.exports]).toBeGreaterThan(0);
+      expect(y[FIGURE.imports]).toBeGreaterThan(0);
       // the starting position stands for the days before the start: 305 days of it are still in the sums
-      bought += y[FIGURE.exports] - 305 / 365 * (THREE[k].initial_conditions as any).C_E[75] * 365;
-      sold += y[FIGURE.imports] - 305 / 365 * (THREE[k].initial_conditions as any).Y_I[75] * 365;
+      bought += y[FIGURE.exports] - (305 / 365) * (THREE[k].initial_conditions as PortJson).C_E[75] * 365;
+      sold += y[FIGURE.imports] - (305 / 365) * (THREE[k].initial_conditions as PortJson).Y_I[75] * 365;
     }
-    expect(bought).toBeGreaterThan(0); expect(sold).toBeGreaterThan(0);
+    expect(bought).toBeGreaterThan(0);
+    expect(sold).toBeGreaterThan(0);
     expect(sold).toBeLessThanOrEqual(bought * 1.5); // they cannot sell much more than they bought and had at the start
   }, 30_000);
   it('starts every city at the GDP of its calibration, as the sum of 365 days', () => {
-    const f = engine.figures(create(1356)), accounts = cityCalibrations(readTable());
+    const f = engine.figures(create(1356)),
+      accounts = cityCalibrations(readTable());
     THREE.forEach((x, k) => {
-      const y = city(f, k), a = accounts.find((q) => q.place === x.place)!.calibration.accounts as Record<string, any>;
+      const y = city(f, k),
+        a = accounts.find((q) => q.place === x.place)!.calibration.accounts as PortJson;
       expect(y[FIGURE.periods]).toBe(0);
       expect(y[FIGURE.realGdp]).toBeCloseTo(a.gdp, 3);
       expect(y[FIGURE.nominalGdp]).toBeCloseTo(a.gdp, 3);
-      expect(y[FIGURE.realGdpStart]).toBe(y[FIGURE.realGdp]); expect(y[FIGURE.nominalGdpStart]).toBe(y[FIGURE.nominalGdp]);
+      expect(y[FIGURE.realGdpStart]).toBe(y[FIGURE.realGdp]);
+      expect(y[FIGURE.nominalGdpStart]).toBe(y[FIGURE.nominalGdp]);
       expect(y[FIGURE.priceLevel]).toBe(1);
       expect(y[FIGURE.depositsHouseholds] + y[FIGURE.depositsFirms]).toBeCloseTo(a.coin, 3);
     });
-    expect(city(f, 0)[FIGURE.realGdp]).toBeCloseTo(45247.8 * 60862 / 2583180, 3); // London: its share of England's GDP at 1:100
+    expect(city(f, 0)[FIGURE.realGdp]).toBeCloseTo((45247.8 * 60862) / 2583180, 3); // London: its share of England's GDP at 1:100
   });
   it('moves a little every day: the sums of the last 365 days and the price level of today', () => {
     let state = create(1356);
     const start = engine.figures(state);
-    const prices = new Set<number>(), gdp = new Set<number>();
+    const prices = new Set<number>(),
+      gdp = new Set<number>();
     for (let t = 0; t < 40; t++) {
       state = engine.step(state, 1);
       const f = engine.figures(state);
-      prices.add(f[FIGURE.priceLevel]); gdp.add(f[FIGURE.realGdp]);
+      prices.add(f[FIGURE.priceLevel]);
+      gdp.add(f[FIGURE.realGdp]);
       for (let k = 0; k < 3; k++) {
         expect(Math.abs(city(f, k)[FIGURE.realGdp] / city(start, k)[FIGURE.realGdp] - 1)).toBeLessThan(0.03); // a day is 1/365 of the sum
         expect(Math.abs(city(f, k)[FIGURE.priceLevel] - 1)).toBeLessThan(0.05);
@@ -458,8 +611,10 @@ describe('the economy engine (WebAssembly)', () => {
     expect(() => engine.create([a, { ...b, seed: -1 }], CLOCK, RULES)).toThrow();
     expect(() => engine.create([a, b], { plan: 0, window: 365 }, RULES)).toThrow();
     expect(() => engine.create([a, b], { plan: 30, window: 1.5 }, RULES)).toThrow();
-    expect(() => engine.create([a, b], CLOCK, { ...RULES, wage: 'gold' as any })).toThrow(/not a way to pay wages/);
-    expect(() => engine.create([a, b], CLOCK, { ...RULES, prices: 'stars' as any })).toThrow(/not a way to set prices/);
+    expect(() => engine.create([a, b], CLOCK, { ...RULES, wage: 'gold' as never })).toThrow(/not a way to pay wages/);
+    expect(() => engine.create([a, b], CLOCK, { ...RULES, prices: 'stars' as never })).toThrow(
+      /not a way to set prices/,
+    );
     // parameters of the port that let only a part of the firms adjust do not go with the demand pull of the clock
     const calvo = { ...b, parameters: JSON.stringify({ ...JSON.parse(b.parameters), theta_calvo: 0.5 }) };
     expect(() => engine.create([a, calvo], CLOCK, RULES)).toThrow(/economy engine: city 1: theta_calvo = 0\.5/);
@@ -467,8 +622,10 @@ describe('the economy engine (WebAssembly)', () => {
     expect(engine.figures(create(1))[FIGURE.periods]).toBe(0);
   });
   it('keeps a state it advanced without writing it, and gives the bytes step gives', () => {
-    const start = create(1356), want = engine.step(start, 3);
-    const k1 = engine.advance(start, 2), k2 = engine.advance(k1, 1);
+    const start = create(1356),
+      want = engine.step(start, 3);
+    const k1 = engine.advance(start, 2),
+      k2 = engine.advance(k1, 1);
     expect(engine.figures(k2)).toEqual(engine.figures(want));
     expect(engine.agents(k2)).toEqual(engine.agents(want));
     expect(Buffer.compare(k2.bytes(), want)).toBe(0);
@@ -480,7 +637,8 @@ describe('the economy engine (WebAssembly)', () => {
   });
   it('reports a rule of the port that fails, and starts afresh', () => {
     // a state in which a worker of the first city has an employer that does not exist: its labour market stops
-    const p = THREE[0].parameters as any, workers = p.H_act - sum(p.I_s) - 1;
+    const p = THREE[0].parameters as PortJson,
+      workers = p.H_act - sum(p.I_s) - 1;
     // (a copy: the engine takes an array it handed out itself as the state it keeps, which nobody changes)
     const state = engine.step(create(1356), 1).slice();
     // economy/src/state.rs: the header of the cities and the length of the first, then that city: its header, the
@@ -489,7 +647,9 @@ describe('the economy engine (WebAssembly)', () => {
     const dv = new DataView(state.buffer, state.byteOffset, state.byteLength);
     expect(dv.getUint32(employers, true)).toBe(workers);
     dv.setUint32(employers + 4, 0x00ffffff, true);
-    expect(() => engine.step(state, 1)).toThrow(/^the economy engine stopped: index out of bounds: .+ \(src\/markets\.rs:\d+\)$/);
+    expect(() => engine.step(state, 1)).toThrow(
+      /^the economy engine stopped: index out of bounds: .+ \(src\/markets\.rs:\d+\)$/,
+    );
     expect(engine.figures(create(1356))[FIGURE.periods]).toBe(0); // a fresh instance answers
   });
 });
@@ -497,31 +657,57 @@ describe('the economy engine (WebAssembly)', () => {
 describe('the economies of the cities in the world', () => {
   // one world that runs 400 days, day by day (1356 is a leap year: day 365 is 31 December, day 366 is 1 January 1357)
   const run = newWorldState();
-  const CITIES = cityCalibrations(), N = CITIES.length; // the cities of this world: it is the reference world
+  const CITIES = cityCalibrations(),
+    N = CITIES.length; // the cities of this world: it is the reference world
   // the cities without a way to the others (economy feature 17): those of the regions the table names as apart
-  const APART = new Set(CITIES.map((x, c) => (run.w.cityEconomies.table.routes.apart.value.includes(run.w.provinces[run.w.provOf[x.place]].region) ? c : -1)).filter((c) => c >= 0));
-  if (run.s.seed !== REFERENCE.seed || run.s.startYear !== REFERENCE.year) throw new Error('the tests run the reference world');
+  const APART = new Set(
+    CITIES.map((x, c) =>
+      run.w.cityEconomies.table.routes.apart.value.includes(run.w.provinces[run.w.provOf[x.place]].region) ? c : -1,
+    ).filter((c) => c >= 0),
+  );
+  if (run.s.seed !== REFERENCE.seed || run.s.startYear !== REFERENCE.year)
+    throw new Error('the tests run the reference world');
   const at: Record<number, { hash: string; state: Uint8Array; figures: Float64Array; model: number }> = {};
   beforeAll(() => {
     for (let d = 1; d <= 400; d++) {
       advanceDay(run.s, run.w);
-      if ([45, 75, 365, 366, 367].includes(d)) at[d] = { hash: hashState(run.s), state: encodeState(run.s), figures: run.s.economy.cities!.figures.slice(), model: run.s.economy.cities!.model.length };
+      if ([45, 75, 365, 366, 367].includes(d))
+        at[d] = {
+          hash: hashState(run.s),
+          state: encodeState(run.s),
+          figures: run.s.economy.cities!.figures.slice(),
+          model: run.s.economy.cities!.model.length,
+        };
     }
   }, 180_000);
 
   it('are founded with the world: the starting position of every city, from the seed of the world', () => {
     const { s, w } = newWorldState();
-    const e = s.economy.cities!, c = w.cityEconomies;
+    const e = s.economy.cities!,
+      c = w.cityEconomies;
     expect(s.v).toBe(STATE_VERSION);
-    expect(e.day).toBe(0); expect(e.halted).toBe(''); expect(e.years.length).toBe(0);
+    expect(e.day).toBe(0);
+    expect(e.halted).toBe('');
+    expect(e.years.length).toBe(0);
     expect(e.figures.length).toBe(N * FIGURES);
     for (let k = 0; k < N; k++) expect(e.figures[k * FIGURES + FIGURE.periods]).toBe(0);
     expect(Array.from(e.places)).toEqual(CITIES.map((x) => x.place));
-    const setups = CITIES.map((x) => ({ parameters: JSON.stringify(x.calibration.parameters), initialConditions: JSON.stringify(x.calibration.initial_conditions), seed: citySeed(s.seed, x.place) }));
+    const setups = CITIES.map((x) => ({
+      parameters: JSON.stringify(x.calibration.parameters),
+      initialConditions: JSON.stringify(x.calibration.initial_conditions),
+      seed: citySeed(s.seed, x.place),
+    }));
     // over land on the ways of the start year (the latest before 1356: those of 1291)
     expect(w.ways?.laid).toBe(1291);
-    const routes = cityRoutes(w, CITIES.map((x) => x.place), c.table, w.ways);
-    expect(Buffer.compare(e.model, w.economyEngine.routes(w.economyEngine.create(setups, c.clock, c.rules), routes))).toBe(0);
+    const routes = cityRoutes(
+      w,
+      CITIES.map((x) => x.place),
+      c.table,
+      w.ways,
+    );
+    expect(
+      Buffer.compare(e.model, w.economyEngine.routes(w.economyEngine.create(setups, c.clock, c.rules), routes)),
+    ).toBe(0);
     expect(hashState(newWorldState(1357).s)).not.toBe(hashState(s));
   });
   it('give every city random numbers of its own, from the seed of the world and its place', () => {
@@ -536,8 +722,10 @@ describe('the economies of the cities in the world', () => {
     const { s, w } = newWorldState();
     const start = withWorkingDays(s, w);
     advanceDay(s, w);
-    const e = s.economy.cities!, first = e.figures;
-    expect(e.day).toBe(1); expect(first[FIGURE.periods]).toBe(1);
+    const e = s.economy.cities!,
+      first = e.figures;
+    expect(e.day).toBe(1);
+    expect(first[FIGURE.periods]).toBe(1);
     expect(Buffer.compare(e.model, w.economyEngine.step(start, 1))).toBe(0);
     days(s, w, 2);
     expect(e.day).toBe(3);
@@ -550,7 +738,8 @@ describe('the economies of the cities in the world', () => {
   });
   it('keep the figures of a year that has ended, and the days of the last 365 days only', () => {
     const e = run.s.economy.cities!;
-    expect(e.day).toBe(400); expect(e.halted).toBe('');
+    expect(e.day).toBe(400);
+    expect(e.halted).toBe('');
     expect(e.figures[FIGURE.periods]).toBe(400);
     // the row of 1356 was written before 1 January 1357 was computed: the figures of all cities on 31 December
     expect(e.years.length).toBe(yearRow(N));
@@ -565,22 +754,31 @@ describe('the economies of the cities in the world', () => {
   it('keep the books of every city and of the merchants after a year of the world', () => {
     const k = run.w.economyEngine.checks(run.s.economy.cities!.model);
     expect(k.cities.length).toBe(N);
-    for (const x of k.cities) for (const v of [x.income, x.nominal, x.real, x.centralBank, x.banks]) expect(Math.abs(v) / x.gdpSum).toBeLessThan(1e-9);
+    for (const x of k.cities)
+      for (const v of [x.income, x.nominal, x.real, x.centralBank, x.banks])
+        expect(Math.abs(v) / x.gdpSum).toBeLessThan(1e-9);
     for (const m of k.merchants) expect(Math.abs(m.off)).toBeLessThanOrEqual(1e-9 * m.scale);
     // every city with a way to the others has sold to the merchants and bought from them; Texcoco has none
     // (economy feature 17) and sells nothing
     const f = run.s.economy.cities!.figures;
     for (let c = 0; c < N; c++) {
-      if (APART.has(c)) { expect(f[c * FIGURES + FIGURE.exports]).toBe(0); continue; }
-      expect(f[c * FIGURES + FIGURE.exports]).toBeGreaterThan(0); expect(f[c * FIGURES + FIGURE.imports]).toBeGreaterThan(0);
+      if (APART.has(c)) {
+        expect(f[c * FIGURES + FIGURE.exports]).toBe(0);
+        continue;
+      }
+      expect(f[c * FIGURES + FIGURE.exports]).toBeGreaterThan(0);
+      expect(f[c * FIGURES + FIGURE.imports]).toBeGreaterThan(0);
     }
     expect(APART.size).toBe(1);
   });
   it('sell to the merchants about the same share of their output, the largest city as the smallest', () => {
     // the merchants pick among the firms of the other cities, so a city counts by its firms; were every city one
     // seller among 29, Cairo would export less than half of what the smallest cities do, measured by output
-    const f = at[365].figures, all = Array.from({ length: N }, (_, c) => f[c * FIGURES + FIGURE.exports] / f[c * FIGURES + FIGURE.realGdp]), share = all.filter((_, c) => !APART.has(c));
-    const people = CITIES.map((c) => c.people), largest = people.indexOf(Math.max(...people));
+    const f = at[365].figures,
+      all = Array.from({ length: N }, (_, c) => f[c * FIGURES + FIGURE.exports] / f[c * FIGURES + FIGURE.realGdp]),
+      share = all.filter((_, c) => !APART.has(c));
+    const people = CITIES.map((c) => c.people),
+      largest = people.indexOf(Math.max(...people));
     expect(run.w.names[CITIES[largest].place]).toBe('Cairo');
     // measured 1.405 since firm and owner are one household (economy feature 18), below 1.4 before; 1.556 since goods
     // go over land on the ways (state version 27): the cities far from the sea and off the ways sell less; 2.52 since
@@ -594,7 +792,8 @@ describe('the economies of the cities in the world', () => {
   });
   it('give for many days at once what the same days give one by one', () => {
     const { s, w } = newWorldState();
-    computeTo(s, w, 400); s.day = 400;
+    computeTo(s, w, 400);
+    s.day = 400;
     expect(s.economy.cities!.years.length).toBe(yearRow(N));
     expect(Buffer.compare(s.economy.cities!.model, run.s.economy.cities!.model)).toBe(0);
     expect(bits(s.economy.cities!.years)).toBe(bits(run.s.economy.cities!.years));
@@ -617,7 +816,8 @@ describe('the economies of the cities in the world', () => {
     expect(hashState(loaded)).not.toBe(before);
   }, 30_000);
   it('do not exist in a world that starts in a year without its cities', () => {
-    const w = loadWorld(), s = createWorldState(w, { ...loadSetup(1356), year: 1400 }, 1356); // no file has the cities of 1400
+    const w = loadWorld(),
+      s = createWorldState(w, { ...loadSetup(1356), year: 1400 }, 1356); // no file has the cities of 1400
     expect(s.economy.cities).toBeNull();
     days(s, w, 400);
     expect(s.economy.cities).toBeNull();
@@ -626,17 +826,22 @@ describe('the economies of the cities in the world', () => {
   });
   it('are founded in a world that starts in 1291 too: an economy in every place with a town, with the table of 1356 as a placeholder', () => {
     const { s, w } = newWorldState(1291, 1291);
-    const e = s.economy.cities!, n = e.places.length;
+    const e = s.economy.cities!,
+      n = e.places.length;
     expect(s.startYear).toBe(1291);
     expect(Array.from(e.places)).toEqual(cityPlaces(1291).map((c) => c.place));
     expect(n).toBe(550); // 558 towns inside the world frame, some places hold two
-    expect(e.day).toBe(0); expect(e.halted).toBe('');
+    expect(e.day).toBe(0);
+    expect(e.halted).toBe('');
     expect(e.figures.length).toBe(n * FIGURES);
     days(s, w, 35); // past the first plan of every firm
-    expect(e.day).toBe(35); expect(e.halted).toBe('');
+    expect(e.day).toBe(35);
+    expect(e.halted).toBe('');
     for (let k = 0; k < n; k++) expect(e.figures[k * FIGURES + FIGURE.periods]).toBe(35);
     const c = w.economyEngine.checks(e.model);
-    for (const x of c.cities) for (const v of [x.income, x.nominal, x.real, x.centralBank, x.banks]) expect(Math.abs(v) / x.gdpSum).toBeLessThan(1e-9);
+    for (const x of c.cities)
+      for (const v of [x.income, x.nominal, x.real, x.centralBank, x.banks])
+        expect(Math.abs(v) / x.gdpSum).toBeLessThan(1e-9);
     expect(placeDetail(s, w, e.places[0])!.cityEconomy).toBeDefined();
     // the economies are where the persons live: in every town of the world graphic with people, and nowhere else
     expect(placeDetail(s, w, w.names.indexOf('London'))!.cityEconomy).toBeDefined();
@@ -647,7 +852,13 @@ describe('the economies of the cities in the world', () => {
   it('stand still when the engine cannot compute a day, and the world goes on', () => {
     const real = loadWorld();
     let calls = 0;
-    const broken: EconomyEngine = { ...real.economyEngine, advance: () => { calls++; throw new Error('the economy engine stopped: a rule failed'); } };
+    const broken: EconomyEngine = {
+      ...real.economyEngine,
+      advance: () => {
+        calls++;
+        throw new Error('the economy engine stopped: a rule failed');
+      },
+    };
     const w: World = Object.assign(Object.create(World.prototype), real, { economyEngine: broken });
     const { s } = newWorldState();
     // the state of the day before stays, with the working days it was given for the day that failed
@@ -655,7 +866,8 @@ describe('the economies of the cities in the world', () => {
     advanceDay(s, w);
     const e = s.economy.cities!;
     expect(e.halted).toBe('2 January 1356: the economy engine stopped: a rule failed');
-    expect(e.day).toBe(0); expect(Buffer.compare(e.model, before)).toBe(0);
+    expect(e.day).toBe(0);
+    expect(Buffer.compare(e.model, before)).toBe(0);
     days(s, w, 400); // the next days do not try again
     expect(calls).toBe(1);
     expect(s.day).toBe(401);
@@ -669,13 +881,17 @@ describe('the economies of the cities in the world', () => {
     let single = 0;
     const broken: EconomyEngine = {
       ...real.economyEngine,
-      advance: (m, n) => { if (n > 1 || ++single > 3) throw new Error('the economy engine stopped: a rule failed'); return real.economyEngine.advance(m, n); },
+      advance: (m, n) => {
+        if (n > 1 || ++single > 3) throw new Error('the economy engine stopped: a rule failed');
+        return real.economyEngine.advance(m, n);
+      },
     };
     const w: World = Object.assign(Object.create(World.prototype), real, { economyEngine: broken });
     const { s } = newWorldState();
     computeTo(s, w, 10);
     const e = s.economy.cities!;
-    expect(e.day).toBe(3); expect(e.figures[FIGURE.periods]).toBe(3);
+    expect(e.day).toBe(3);
+    expect(e.figures[FIGURE.periods]).toBe(3);
     expect(e.halted).toBe('5 January 1356: the economy engine stopped: a rule failed');
     const fresh = newWorldState().s;
     expect(Buffer.compare(e.model, real.economyEngine.step(withWorkingDays(fresh, real), 3))).toBe(0);
@@ -683,7 +899,10 @@ describe('the economies of the cities in the world', () => {
   it('stand still when a day ends without a GDP in one city', () => {
     const real = loadWorld();
     const last = (N - 1) * FIGURES + FIGURE.realGdp;
-    const broken: EconomyEngine = { ...real.economyEngine, figures: (m) => real.economyEngine.figures(m).fill(NaN, last, last + 1) };
+    const broken: EconomyEngine = {
+      ...real.economyEngine,
+      figures: (m) => real.economyEngine.figures(m).fill(NaN, last, last + 1),
+    };
     const w: World = Object.assign(Object.create(World.prototype), real, { economyEngine: broken });
     const { s } = newWorldState();
     const before = withWorkingDays(s, real);
@@ -700,11 +919,15 @@ describe('what a player sees of the economy', () => {
     let shown = 0;
     for (let i = 0; i < w.L; i++) {
       const d = placeDetail(s, w, i)!;
-      expect((d as any).economy).toBeUndefined(); // the section of England's economy is gone
-      if (d.cityEconomy) { shown++; expect(places).toContain(i); }
+      expect(d).not.toHaveProperty('economy'); // the section of England's economy is gone
+      if (d.cityEconomy) {
+        shown++;
+        expect(places).toContain(i);
+      }
     }
     expect(shown).toBe(29);
-    for (const name of ['London', 'Paris', 'Cairo', 'Venice']) expect(placeDetail(s, w, w.names.indexOf(name))!.cityEconomy).toBeDefined();
+    for (const name of ['London', 'Paris', 'Cairo', 'Venice'])
+      expect(placeDetail(s, w, w.names.indexOf(name))!.cityEconomy).toBeDefined();
     // a place of England that is not one of the cities has no economy any more
     const york = w.names.indexOf('York');
     expect(york).toBeGreaterThanOrEqual(0);
@@ -712,25 +935,31 @@ describe('what a player sees of the economy', () => {
   });
   it('shows the last 365 days of the city and its price level of today, new every day', () => {
     const { s, w } = newWorldState();
-    const london = w.names.indexOf('London'), k = cityAt(s.economy.cities!, london);
-    const p = cityCalibrations()[k].calibration.parameters as Record<string, any>;
+    const london = w.names.indexOf('London'),
+      k = cityAt(s.economy.cities!, london);
+    const p = cityCalibrations()[k].calibration.parameters as PortJson;
     const d0 = placeDetail(s, w, london)!.cityEconomy!;
     expect(d0).toMatchObject({ day: 0, baseYear: 1356, scale: 0.01 });
-    expect(d0.realGdp).toBeCloseTo(45247.8 * 60862 / 2583180, 3); // London's share of England's GDP at 1:100
-    expect(d0.realGdpIndex).toBeCloseTo(100, 9); expect(d0.priceToday).toBe(100);
+    expect(d0.realGdp).toBeCloseTo((45247.8 * 60862) / 2583180, 3); // London's share of England's GDP at 1:100
+    expect(d0.realGdpIndex).toBeCloseTo(100, 9);
+    expect(d0.priceToday).toBe(100);
     expect(d0.employed + d0.unemployed).toBe(p.H_act);
     expect(d0.halted).toBeUndefined();
     let last = d0;
     for (let day = 1; day <= 3; day++) {
       advanceDay(s, w);
-      const f = s.economy.cities!.figures.subarray(k * FIGURES, (k + 1) * FIGURES), d = placeDetail(s, w, london)!.cityEconomy!;
+      const f = s.economy.cities!.figures.subarray(k * FIGURES, (k + 1) * FIGURES),
+        d = placeDetail(s, w, london)!.cityEconomy!;
       expect(d.day).toBe(day);
       expect(d.realGdp).toBe(f[FIGURE.realGdp]);
       expect(d.realGdp).not.toBe(last.realGdp);
-      expect(d.realGdpIndex).toBeCloseTo(100 * f[FIGURE.realGdp] / d0.realGdp, 6);
+      expect(d.realGdpIndex).toBeCloseTo((100 * f[FIGURE.realGdp]) / d0.realGdp, 6);
       expect(d.priceToday).toBe(100 * f[FIGURE.priceLevel]);
-      expect(d.consumption).toBe(f[FIGURE.consumption]); expect(d.crown).toBe(f[FIGURE.government]);
-      expect(d.investment).toBe(f[FIGURE.investment]); expect(d.exports).toBe(f[FIGURE.exports]); expect(d.imports).toBe(f[FIGURE.imports]);
+      expect(d.consumption).toBe(f[FIGURE.consumption]);
+      expect(d.crown).toBe(f[FIGURE.government]);
+      expect(d.investment).toBe(f[FIGURE.investment]);
+      expect(d.exports).toBe(f[FIGURE.exports]);
+      expect(d.imports).toBe(f[FIGURE.imports]);
       // GDP is the sum of its uses
       expect(d.consumption + d.crown + f[FIGURE.investment] + d.exports - d.imports).toBeGreaterThan(0.9 * d.realGdp);
       // another city shows another economy
@@ -748,7 +977,8 @@ describe('the world server with the economy', () => {
       const core = new WorldCore(cfg).init();
       for (let i = 0; i < 70; i++) core.step(); // snapshots at day 30 and 60
       expect(core.s.economy.cities!.day).toBe(70);
-      const fromStart = core.verifyReplay(0), fromLast = core.verifyReplay(60);
+      const fromStart = core.verifyReplay(0),
+        fromLast = core.verifyReplay(60);
       expect(fromStart.hash).toBe(fromStart.live);
       expect(fromLast.hash).toBe(fromLast.live);
       const live = hashState(core.s);
@@ -757,6 +987,8 @@ describe('the world server with the economy', () => {
       expect(again.s.day).toBe(70);
       expect(hashState(again.s)).toBe(live);
       again.shutdown();
-    } finally { rmSync(dir, { recursive: true, force: true }); }
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   }, 120_000);
 });

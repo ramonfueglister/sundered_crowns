@@ -9,7 +9,9 @@ Here the land does not start from nothing: it starts as the real terrain, and th
 shape (heights smoothed over a few kilometres) stays the real one. Erosion then only redraws what is finer than that.
 Needs numba.
 """
+
 import heapq
+
 import numpy as np
 from numba import njit
 from scipy import ndimage
@@ -59,7 +61,9 @@ def _step(h, fixed, uplift, cell):
                 d = cell[y] * np.sqrt(NEIGHBOURS[k, 0] ** 2 + NEIGHBOURS[k, 1] ** 2)
                 fall = (h[y, x] - h[ny, nx]) / d
                 if fall > steepest:
-                    steepest = fall; receiver[y * cols + x] = ny * cols + nx; reach[y * cols + x] = d
+                    steepest = fall
+                    receiver[y * cols + x] = ny * cols + nx
+                    reach[y * cols + x] = d
     area = np.repeat(cell * cell, cols)
     for i in order[::-1]:
         if receiver[i] >= 0:
