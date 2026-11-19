@@ -11,7 +11,7 @@ function memBucket() {
     async upload(path: string, body: Uint8Array) { files.set(path, body.slice()); return { data: { path }, error: null }; },
     async download(path: string) {
       const b = files.get(path);
-      return b ? { data: new Blob([b]), error: null } : { data: null, error: notFound };
+      return b ? { data: new Blob([new Uint8Array(b)]), error: null } : { data: null, error: notFound };
     },
     async list(prefix: string) {
       return { data: [...files.keys()].filter((k) => k.startsWith(prefix + '/')).map((k) => ({ name: k.slice(prefix.length + 1) })), error: null };
