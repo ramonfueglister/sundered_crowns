@@ -2,19 +2,41 @@
 import { signal } from '@preact/signals';
 import type { I18n } from '../sim/i18n';
 
-const saved = (() => { try { return localStorage.getItem('sc.lang'); } catch { return null; } })();
-export const lang = signal<'en' | 'de'>(saved === 'de' || saved === 'en' ? saved : (navigator.language || 'en').startsWith('de') ? 'de' : 'en');
-export function setLang(l: 'en' | 'de') { lang.value = l; try { localStorage.setItem('sc.lang', l); } catch { /* private mode */ } }
+const saved = (() => {
+  try {
+    return localStorage.getItem('sc.lang');
+  } catch {
+    return null;
+  }
+})();
+export const lang = signal<'en' | 'de'>(
+  saved === 'de' || saved === 'en' ? saved : (navigator.language || 'en').startsWith('de') ? 'de' : 'en',
+);
+export function setLang(l: 'en' | 'de') {
+  lang.value = l;
+  try {
+    localStorage.setItem('sc.lang', l);
+  } catch {
+    /* private mode */
+  }
+}
 
 /** The current language's text of a bilingual value. */
-export function L(t: I18n | string | undefined | null): string { if (!t) return ''; if (typeof t === 'string') return t; return t[lang.value] ?? t.en; }
+export function L(t: I18n | string | undefined | null): string {
+  if (!t) return '';
+  if (typeof t === 'string') return t;
+  return t[lang.value] ?? t.en;
+}
 
 const S = {
   title: ['Sundered Crowns', 'Sundered Crowns'],
   tagline: ['A persistent world, 1291 onwards', 'Eine persistente Welt, ab 1291'],
   enter: ['Enter the world', 'Welt betreten'],
   display_name: ['Display name', 'Anzeigename'],
-  dev_login: ['Development server: sign in with a display name only.', 'Entwicklungsserver: Anmeldung nur mit Anzeigename.'],
+  dev_login: [
+    'Development server: sign in with a display name only.',
+    'Entwicklungsserver: Anmeldung nur mit Anzeigename.',
+  ],
   email: ['E-mail address', 'E-Mail-Adresse'],
   send_link: ['Send sign-in link', 'Anmeldelink senden'],
   link_sent: ['Check your mail for the sign-in link.', 'Prüfe deine E-Mails auf den Anmeldelink.'],
@@ -22,7 +44,10 @@ const S = {
   observer_hint: ['You are watching the world.', 'Du schaust der Welt zu.'],
   reload: ['Reload', 'Neu laden'],
   connecting: ['Connecting to the world…', 'Verbinde mit der Welt…'],
-  disconnected: ['The connection to the world was lost. Reconnecting…', 'Die Verbindung zur Welt ist abgerissen. Verbinde neu…'],
+  disconnected: [
+    'The connection to the world was lost. Reconnecting…',
+    'Die Verbindung zur Welt ist abgerissen. Verbinde neu…',
+  ],
   players: ['Players', 'Spieler'],
   realm: ['Realm', 'Reich'],
   your_realm: ['Your realm', 'Dein Reich'],
@@ -53,7 +78,10 @@ const S = {
   arable_none: ['no land with a yield', 'kein Land mit Ertrag'],
   arable_yield: ['Yield of the cultivated soil', 'Ertragskraft des bestellten Bodens'],
   economy_city: ['Economy of the city', 'Wirtschaft der Stadt'],
-  economy_note_city: ['The city as an economy of its own, the last 365 days up to {date}, at the scale 1:100', 'Die Stadt als eigene Volkswirtschaft, die letzten 365 Tage bis zum {date}, im Massstab 1:100'],
+  economy_note_city: [
+    'The city as an economy of its own, the last 365 days up to {date}, at the scale 1:100',
+    'Die Stadt als eigene Volkswirtschaft, die letzten 365 Tage bis zum {date}, im Massstab 1:100',
+  ],
   economy_gdp: ['Real GDP', 'Reales BIP'],
   economy_level: ['Level (start = 100)', 'Stand (Start = 100)'],
   economy_prices_today: ['Price level today (start = 100)', 'Preisniveau heute (Start = 100)'],
@@ -66,7 +94,10 @@ const S = {
   economy_unemployed: ['Without work', 'Ohne Arbeit'],
   economy_coin_households: ['Coin of households', 'Münzgeld der Haushalte'],
   economy_coin_firms: ['Coin of firms', 'Münzgeld der Betriebe'],
-  economy_halted: ['The economies of the cities stand still since {why}', 'Die Wirtschaft der Städte steht still seit {why}'],
+  economy_halted: [
+    'The economies of the cities stand still since {why}',
+    'Die Wirtschaft der Städte steht still seit {why}',
+  ],
   no_data: ['no data', 'keine Daten'],
   close: ['Close', 'Schließen'],
   paused: ['Paused', 'Angehalten'],
@@ -74,14 +105,20 @@ const S = {
   language: ['Language', 'Sprache'],
   map_modes: ['Map modes', 'Kartenmodi'],
   replay: ['Replay of the borders', 'Zeitraffer der Grenzen'],
-  replay_hint: ['The borders of this world as it ran, from its first day to today. Only a view: the world goes on.', 'Die Grenzen dieser Welt, wie sie gelaufen ist, vom ersten Tag bis heute. Nur eine Ansicht: die Welt läuft weiter.'],
+  replay_hint: [
+    'The borders of this world as it ran, from its first day to today. Only a view: the world goes on.',
+    'Die Grenzen dieser Welt, wie sie gelaufen ist, vom ersten Tag bis heute. Nur eine Ansicht: die Welt läuft weiter.',
+  ],
   replay_stop: ['Back to the world', 'Zurück zur Welt'],
   replay_play: ['Play', 'Abspielen'],
   replay_pause: ['Pause', 'Anhalten'],
   replay_speed: ['Replay speed', 'Tempo des Zeitraffers'],
   replay_timeline: ['Timeline', 'Zeitleiste'],
   replay_loading: ['Fetching the history of the world …', 'Lade den Verlauf der Welt …'],
-  replay_failed: ['The world server has no history of the borders ({why})', 'Der Weltserver liefert keinen Grenzverlauf ({why})'],
+  replay_failed: [
+    'The world server has no history of the borders ({why})',
+    'Der Weltserver liefert keinen Grenzverlauf ({why})',
+  ],
   replay_offline: ['Needs the world server', 'Braucht den Weltserver'],
   time_control: ['Speed of the world', 'Geschwindigkeit der Welt'],
   time_pause: ['Pause the world', 'Welt anhalten'],
@@ -89,10 +126,13 @@ const S = {
   time_speed: ['Speed {n}', 'Geschwindigkeit {n}'],
   time_slower: ['Slower', 'Langsamer'],
   time_faster: ['Faster', 'Schneller'],
-  time_speed_own: ['the world\'s own pace, one day in {s}', 'eigenes Tempo der Welt, ein Tag in {s}'],
+  time_speed_own: ["the world's own pace, one day in {s}", 'eigenes Tempo der Welt, ein Tag in {s}'],
   time_speed_ms: ['one day in {s}', 'ein Tag in {s}'],
   time_speed_max: ['as fast as the server can', 'so schnell der Server kann'],
-  time_locked: ['Only an admin can change the time (in a DEV world everyone).', 'Nur ein Admin kann die Zeit ändern (in einer DEV-Welt alle).'],
+  time_locked: [
+    'Only an admin can change the time (in a DEV world everyone).',
+    'Nur ein Admin kann die Zeit ändern (in einer DEV-Welt alle).',
+  ],
   time_keys: ['Space: pause · + / −: speed', 'Leertaste: Pause · + / −: Tempo'],
   map_mode_political: ['Political', 'Politisch'],
   map_mode_political_hint: ['The realms in their colours, near and far', 'Die Reiche in ihren Farben, nah und fern'],
@@ -118,30 +158,73 @@ export function t(k: TextKey, vars?: Record<string, string | number>): string {
 }
 
 const TERRAIN_DE: Record<string, string> = {
-  plains: 'Ebene', farmland: 'Ackerland', forest: 'Wald', hills: 'Hügel', mountains: 'Gebirge', marsh: 'Sumpf', steppe: 'Steppe',
-  desert: 'Wüste', jungle: 'Dschungel', tundra: 'Tundra', wasteland: 'Ödland',
+  plains: 'Ebene',
+  farmland: 'Ackerland',
+  forest: 'Wald',
+  hills: 'Hügel',
+  mountains: 'Gebirge',
+  marsh: 'Sumpf',
+  steppe: 'Steppe',
+  desert: 'Wüste',
+  jungle: 'Dschungel',
+  tundra: 'Tundra',
+  wasteland: 'Ödland',
 };
 const RESOURCE_DE: Record<string, string> = {
-  none: '–', grain: 'Getreide', livestock: 'Vieh', fish: 'Fisch', timber: 'Holz', wool: 'Wolle', flax: 'Flachs', cotton: 'Baumwolle', furs: 'Pelze',
-  horses: 'Pferde', honey: 'Honig', salt: 'Salz', stone: 'Stein', iron_ore: 'Eisenerz', copper: 'Kupfer', tin: 'Zinn', gold: 'Gold', silver: 'Silber',
-  saltpeter: 'Salpeter', alum: 'Alaun', amber: 'Bernstein', grapes: 'Trauben', olives: 'Oliven', dyes: 'Farbstoffe', silk: 'Seide', spices: 'Gewürze',
-  sugarcane: 'Zuckerrohr', tobacco: 'Tabak', coffee: 'Kaffee',
+  none: '–',
+  grain: 'Getreide',
+  livestock: 'Vieh',
+  fish: 'Fisch',
+  timber: 'Holz',
+  wool: 'Wolle',
+  flax: 'Flachs',
+  cotton: 'Baumwolle',
+  furs: 'Pelze',
+  horses: 'Pferde',
+  honey: 'Honig',
+  salt: 'Salz',
+  stone: 'Stein',
+  iron_ore: 'Eisenerz',
+  copper: 'Kupfer',
+  tin: 'Zinn',
+  gold: 'Gold',
+  silver: 'Silber',
+  saltpeter: 'Salpeter',
+  alum: 'Alaun',
+  amber: 'Bernstein',
+  grapes: 'Trauben',
+  olives: 'Oliven',
+  dyes: 'Farbstoffe',
+  silk: 'Seide',
+  spices: 'Gewürze',
+  sugarcane: 'Zuckerrohr',
+  tobacco: 'Tabak',
+  coffee: 'Kaffee',
 };
-const words = (id: string) => id.split('_').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ');
-export const terrainName = (id: string) => (lang.value === 'de' ? TERRAIN_DE[id] ?? id : words(id));
-export const resourceName = (id: string) => (lang.value === 'de' ? RESOURCE_DE[id] ?? id : id === 'none' ? '–' : words(id));
+const words = (id: string) =>
+  id
+    .split('_')
+    .map((w) => w[0].toUpperCase() + w.slice(1))
+    .join(' ');
+export const terrainName = (id: string) => (lang.value === 'de' ? (TERRAIN_DE[id] ?? id) : words(id));
+export const resourceName = (id: string) =>
+  lang.value === 'de' ? (RESOURCE_DE[id] ?? id) : id === 'none' ? '–' : words(id);
 export const num = (v: number) => Math.round(v).toLocaleString(lang.value === 'de' ? 'de-DE' : 'en-GB');
 /** People of the world (a hundredth of the real ones, src/sim/scale.ts): a village has a few, so below 100 with one decimal. */
-export const heads = (v: number) => v.toLocaleString(lang.value === 'de' ? 'de-DE' : 'en-GB', { maximumFractionDigits: Math.abs(v) < 100 ? 1 : 0 });
+export const heads = (v: number) =>
+  v.toLocaleString(lang.value === 'de' ? 'de-DE' : 'en-GB', { maximumFractionDigits: Math.abs(v) < 100 ? 1 : 0 });
 /** A share as per cent with one decimal. */
-export const pct = (v: number) => `${(100 * v).toLocaleString(lang.value === 'de' ? 'de-DE' : 'en-GB', { maximumFractionDigits: 1 })} %`;
+export const pct = (v: number) =>
+  `${(100 * v).toLocaleString(lang.value === 'de' ? 'de-DE' : 'en-GB', { maximumFractionDigits: 1 })} %`;
 /** An amount of money in pounds. */
 export const pounds = (v: number) => `£ ${num(v)}`;
 /** An index with one decimal (100 = the base). */
-export const index = (v: number) => v.toLocaleString(lang.value === 'de' ? 'de-DE' : 'en-GB', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+export const index = (v: number) =>
+  v.toLocaleString(lang.value === 'de' ? 'de-DE' : 'en-GB', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 /** A large amount of kilocalories in millions or billions. */
 export function kcalText(v: number): string {
-  const de = lang.value === 'de', f = (x: number) => x.toLocaleString(de ? 'de-DE' : 'en-GB', { maximumSignificantDigits: 3 });
+  const de = lang.value === 'de',
+    f = (x: number) => x.toLocaleString(de ? 'de-DE' : 'en-GB', { maximumSignificantDigits: 3 });
   if (v >= 1e9) return `${f(v / 1e9)} ${de ? 'Mrd.' : 'bn'} kcal`;
   if (v >= 1e6) return `${f(v / 1e6)} ${de ? 'Mio.' : 'm'} kcal`;
   return `${num(v)} kcal`;
