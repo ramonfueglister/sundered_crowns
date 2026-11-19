@@ -754,6 +754,30 @@ describe('portraits', { timeout: 20_000 }, () => {
     // a profile without a sheen of strands (Apoleia's) draws a plait's strands as plain solid hair
     expect(surfaceMaterials(rope, null, null, APOLEIA)[0]!.transparent).toBe(false);
   });
+  it('dark hair of England is drawn lighter and hair keeps most of its colour', () => {
+    // Round 122: the strands' image and the shade baked between the bundles take half of a hair's colour away
+    // before any light falls on it, and the stage left 0.7 of its colour (set in round 47 for cards, which were
+    // lighter): brown hair at the crown read L 14 to 27 and a chroma of 9 to 15, where the reference's brown and
+    // red heads read L 25 to 42 and 21 to 30. Hair is drawn lighter where it is dark (`sheen.tone`), as it was
+    // where it is as light as white (`sheen.toneLight`: blond and white hair were as light as the reference's),
+    // and keeps more of its colour
+    const sheen = ENGLAND_1356.sheen!, cap = ENGLAND_1356.cap!;
+    expect(sheen.tone).toBeGreaterThan(1.3);
+    expect(sheen.tone).toBeLessThan(2);
+    expect(sheen.toneLight).toBe(1);
+    expect(sheen.colour).toBeGreaterThan(0.75);
+    expect(sheen.colour).toBeLessThan(1);
+    const of = (tex: string) => ({ rough: 0.6, metal: 0, double: false, tex, nmap: '', pos: new Float32Array(9), col: new Float32Array(9).fill(0.5), uv: new Float32Array(6), nrm: new Float32Array(9) });
+    for (const tex of ['real/hair1356_body.webp', 'real/plait01_rope.webp', 'real/beard1356_locks.webp']) {
+      const shader = { uniforms: {}, vertexShader: ShaderLib.physical.vertexShader, fragmentShader: ShaderLib.physical.fragmentShader };
+      surfaceMaterials(of(tex), null, null, ENGLAND_1356)[0]!.onBeforeCompile(shader as never, null as never);
+      expect(shader.fragmentShader, tex).toContain(`diffuseColor.rgb, ${sheen.colour.toFixed(3)} ) * mix( ${sheen.tone.toFixed(3)}, ${sheen.toneLight.toFixed(3)}, smoothstep( 0.08, 0.45, dot( vColor.rgb`);
+    }
+    // the painted layers go with it: the shade under the hair keeps as much colour as the hair over it, and a short
+    // beard, which is its layer alone, stays lighter than the man's hair as it was (5.5 times before the hair's 1)
+    expect(cap.colour).toBe(sheen.colour);
+    expect(cap.beard.tone / sheen.tone).toBeCloseTo(5.5, 5);
+  });
   it('a lock of hair is solid, open below, and frayed where its image is empty', () => {
     // Until round 87 the hair of a man's head was cards: thin sheets blended over each other, lit as one smooth
     // dome (a card's direction was the one from the head's centre), throwing no shadow on the forehead. Then it

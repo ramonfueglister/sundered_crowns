@@ -287,7 +287,7 @@ ${solid ? '' : 'float '}hairStrand = 1.0;
 #endif`);
     code = swap(code, '#include <color_fragment>', `#include <color_fragment>
 diffuseColor.rgb *= pow( min( hairStrand / 0.8, 1.0 ), ${f(k.light)} * smoothstep( 0.08, 0.45, dot( vColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ) );
-diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ), diffuseColor.rgb, ${f(k.colour)} );`);
+diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ), diffuseColor.rgb, ${f(k.colour)} ) * mix( ${f(k.tone)}, ${f(k.toneLight)}, smoothstep( 0.08, 0.45, dot( vColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ) );`);
     if (lights) {
       // the strands' image is read in the picture's main part and used in each light's share: a value of the
       // whole shader

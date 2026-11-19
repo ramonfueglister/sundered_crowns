@@ -4780,6 +4780,93 @@ one way" (one, five, two). Cargo: 79 of 79; the builder's three vitest files: 53
 `runde121_neben_referenz.png` (the reference's ten women, ours before, ours after, at one size),
 `runde121_vorher_nachher_frauen.png` (the eight grown women, round 120 above, this round below).
 
+**Round 122: hair as light and as coloured as its colour** (2026-11-19). Round 121 ended on hair that "lies
+close to the skull and is thin beside theirs" and on its colours, "browns and greys". This round took the
+colour, and found that it is not the genes' doing.
+
+**What was read.** The hair at the crown (above the forehead) of six of the reference's ten women, in boxes
+set by hand on crops of one size, and of three of ours the same way, in CIELAB:
+
+| hair at the crown | L | chroma |
+|---|---|---|
+| the reference's black | 17.9 | 8.0 |
+| the reference's brown (two heads) | 25.0, 31.6 | 21.1, 24.9 |
+| the reference's red (two) | 33.4, 41.9 | 25.2, 30.1 |
+| the reference's fair | 48.8 | 25.3 |
+| ours, three brown-haired women | 20.5, 21.8, 27.9 | 13.3, 14.9, 16.3 |
+
+Ours is darker than theirs and a third less coloured, and it is so against its own colour too. The three
+women's genes ask for #724e2c, #6c4829 and #8d683a: L 36.4, 33.9 and 46.8 with a chroma of 27 to 33. Drawn,
+that is L 20.5, 21.8 and 27.9. A brown that the builder asks for comes out as a grey-brown close to black.
+
+**What it is.** Two things, both older than the bundles. The image of a bundle (`hair1356_body`, round 109)
+is 0.73 in the mean, which is half in linear light, and the shade between the bundles is baked into the
+corners on top of it: half of a hair's colour is gone before any light falls on it. And the stage leaves
+0.7 of the colour in hair (`sheen.colour`), a value of round 47, set when hair was cards that read L 32 for
+the middle of England's range with a chroma of 21. On bundles the same hair reads L 18 with 11.5 (eleven
+heads of the sample whose hair is not grey, at the crown).
+
+**What is changed.** In the stage alone (`src/portrait/profile.ts`, `materials.ts` `hairLook`): solid hair
+(bundles, locks, a plait's strands, a full beard's locks) is drawn lighter where it is dark, by 1.6
+(`sheen.tone`), and as it was where it is as light as white (`sheen.toneLight` 1; between them by the hair's
+brightness, as `cap.tone` and `cap.light` are for the painted layer), and 0.85 of its colour is left
+(`sheen.colour`, 0.7). The painted layers go with it: the shade under the hair keeps 0.85 of its colour
+(`cap.colour`), and a short beard, which is its layer alone, is lighter by the same 1.6 (`cap.beard.tone`
+8.8 for 5.5, `cap.beard.colour` 0.8 for 0.65).
+
+A tool reads it, in the repository this time: `tools/portrait/hair_colour.mjs` draws the sample twice, as it
+is and with no colour left in the hair, and takes as hair every pixel whose colour goes with it. At the
+crown, before and after:
+
+| hair at the crown (hair_colour.mjs) | L before | chroma before | L now | chroma now | the reference |
+|---|---|---|---|---|---|
+| eleven heads of the sample, brown | 18.4 | 11.5 | 26.5 | 18.6 | 25.0 to 31.6, 21.1 to 24.9 |
+| blond (`gene=27:240`, four heads) | 46.8 | 20.1 | 49.0 | 25.4 | 48.8, 25.3 |
+| red, the middle of what shows red (`gene=28:150`) | 22.7 | 16.9 | 32.5 | 27.4 | 33.4 to 41.9, 25.2 to 30.1 |
+| red, the reddest the pool gives (`gene=28:170`) | 24.2 | 20.8 | 34.3 | 33.4 | |
+| dark (`gene=27:40`) | 7.5 | 4.8 | 8.3 | 6.2 | 17.9, 8.0 |
+
+White hair is as it was (three heads, L 62 to 64 before and after); a head half grey is lighter by what
+its brown is. A full beard's locks go with the head's hair. A short beard stays lighter than the man's
+hair, as the reference's emperor's is (2 to 8 L): 3.1 before, 4.5 now (one man of the sample, the lit jaw
+against the crown).
+
+**Tried and not kept.** All of the colour and no lightening: chroma 16 to 22 at L 18 to 27, coloured and as
+dark as before. The lightening and 0.7 of the colour: L as now, chroma 15 to 20, still the greyer hair. All
+of the colour with the lightening: the browns stand to their lightness as the reference's browns do (chroma
+22.5 to 29.8 at L 27 to 38), but a light brown of the sample is then as coloured as the reference's reddest
+head (29.8 for 30.1), and red hair far beyond it. Lighter by 1.8: the browns at L 29 to 39, above the
+reference's, and a dark blond (`gene=27:200`) as light as a blond (47 for 50). The lightening on light
+hair too was not tried: blond read 46.8 for the reference's 48.8 before the round.
+
+**The gauntlet**: 19 of 22, no line moved, the same three fail. It reads skin, and no skin changed.
+
+Honest about it. The hair is the colour its genes ask for now, and the women beside the reference's are
+closer for it; what the sheet still shows is the rest. All of England's hair is one warm brown, lighter or
+darker: the pool's own spread, which no round touched, and theirs are red, black and fair heads side by
+side. Black hair is still a dark shape (L 8 for the reference's 18): lightening a colour that is next to
+black gives next to nothing; their black hair is read by its sheen, and ours has none to speak of. Most of
+the world's peoples have such hair, and the world's sample was not drawn with the new values. The reddest
+hair the pool gives is more coloured than the reference's reddest (33.4 for 30.1), and our red is redder
+than theirs (hue 45 to 52 degrees for 51 to 54). A dark blond is nearly as light as a blond now (44.8 for
+49.0, read with the trial's values): the light end is pressed together. The reference is six heads in two
+screenshots, read in boxes set by hand on small faces enlarged, and which head is "brown" and which "red"
+is by eye; their hair is their people's, not England's. The values (1.6, 0.85) come from a few trials on
+four heads: PLACEHOLDER. The short beard's factor rests on one man. The cause is not mended where it lies:
+the image of a bundle still takes half the colour, and the stage gives it back. `hair_colour.mjs` finds
+hair by the colour it loses, so it does not find white hair and finds little of black hair (the dark row
+above reads the few pixels that have colour). And the hair's form is as round 121 left it: close to the
+skull, two cuts.
+
+Tests: `tests/portrait.test.ts`, "dark hair of England is drawn lighter and hair keeps most of its
+colour" (the values' ranges, the line in the shader of bundles, a plait's strands and a beard's locks, the
+painted layers in step). The builder's three vitest files: 54 of 54. No Rust changed: cargo was 79 of 79 in
+round 121 and was not run again. `main` is merged into the branch (the clean-up's nine pull requests, with
+Biome and ruff in CI): `npm run lint` and `ruff check` pass, `npx tsc --noEmit` passes; the whole vitest
+suite was left to CI. Pictures (project files, `portraits/`): `runde122_neben_referenz.png` (the reference's
+ten women, ours of round 121, ours now, at one size), `runde122_vorher_nachher_haar.png` (twelve heads of
+the sample, before above, after below).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
@@ -4795,7 +4882,9 @@ them, since round 119 the white of the eye goes into the shade with the face, un
 as theirs (read on ten of their women in round 119) but are rows of hairs where theirs are a closed band, since round 120 the cheek beside the mouth has
 lost the net's hard fold, since round 121 the grown women wear their hair three ways (a veil set back over parted
 hair, the veil on forehead and cheeks, plaits), in two cuts and the genes' browns and greys where theirs have a
-different head of hair on nearly every woman, and the face still lacks the
+different head of hair on nearly every woman, since round 122 hair is drawn as light and as coloured as its
+colour asks (brown, red and blond read as the reference's do at the crown; black hair is still a dark shape),
+and the face still lacks the
 reference's streak of gloss on the nose's flank; the thrown-back hood closes round the neck since round 35, but
 has no folds across its cloth. Since round 111 the people of every part of the world can be drawn, in a plain
 dress that is no people's own, and without a picture of the reference to hold them against.

@@ -95,10 +95,13 @@ export interface StageProfile {
    *  from strand to strand (their ragged look), how much darker the image's dark strands are drawn
    *  (exponent on the image, 1 = as painted), how much darker still on hair as light as white (`light`, a further
    *  exponent that grows with the hair's brightness: white hair has no sheen to show its strands by, so its darker
-   *  strands give it depth), how much of the hair's colour is left (`colour`, 1 = all), and how much of the light
-   *  that hair passes round to its shaded side reaches it (wrap lighting as on skin: 0 = none, 1 = Valve's half
-   *  Lambert). */
-  sheen: null | { white: number; whiteSharp: number; whiteShift: number; own: number; ownSharp: number; ownShift: number; ragged: number; strands: number; light: number; colour: number; wrap: number };
+   *  strands give it depth), how much of the hair's colour is left (`colour`, 1 = all), how much lighter the hair
+   *  is drawn (factor on its colour: `tone` for dark hair, `toneLight` for hair as light as white, between them by
+   *  the hair's brightness, as `cap.tone` and `cap.light` for the painted layer: the strands' image and the shade
+   *  baked between the bundles take half of a hair's colour away before any light falls on it), and how much of
+   *  the light that hair passes round to its shaded side reaches it (wrap lighting as on skin: 0 = none, 1 =
+   *  Valve's half Lambert). */
+  sheen: null | { white: number; whiteSharp: number; whiteShift: number; own: number; ownSharp: number; ownShift: number; ragged: number; strands: number; light: number; colour: number; tone: number; toneLight: number; wrap: number };
   /** The finish of the picture (finish.ts): null draws it straight onto the canvas through three.js' ACES curve,
    *  as Apoleia's. Else the picture is drawn in linear light `fine` times as fine a side as the canvas (each pixel
    *  of the canvas the mean of fine x fine pixels: the edges of hair, which are cut out and not blended, come out
@@ -408,7 +411,14 @@ export const APOLEIA: StageProfile = {
  *  (by 4.4 L on the grown women; on ten women of the reference it is 7.3 darker there and 6.7 darker on the lit
  *  half): skin went into shade and the ball did not follow. Now 4.7 darker in the shade, 10.4 on the lit half
  *  (9.2). The iris and the pupil keep their 0.5: with 0.15 on the whole ball the eye's middle was 5 L darker
- *  and left the reference's by 6.9 (limit 4). */
+ *  and left the reference's by 6.9 (limit 4).
+ *  Round 122: hair as light and as coloured as its colour (docs/PORTRAITS.md). The image of a bundle and the
+ *  shade baked between the bundles take half of a hair's colour, and `sheen.colour` 0.7 was set in round 47 for
+ *  cards: brown hair read L 18.4 at the crown with a chroma of 11.5 (eleven heads; the reference's brown heads
+ *  25 to 32 and 21 to 25). `sheen.tone` 1.6 on dark hair, `sheen.toneLight` 1 (blond and white hair were as
+ *  light as the reference's), `sheen.colour` 0.85: L 26.5 and 18.6. With all of the colour a light brown was as
+ *  coloured as the reference's reddest head. The painted layers in step: `cap.colour` 0.85, a short beard
+ *  lighter by the same 1.6 (`cap.beard.tone` 8.8, `cap.beard.colour` 0.8). tools/portrait/hair_colour.mjs. */
 export const ENGLAND_1356: StageProfile = {
   key: 'england1356',
   lights: {
@@ -426,10 +436,10 @@ export const ENGLAND_1356: StageProfile = {
   skin: { rough: 0.55, specular: 0.42, pores: 0.4, wrap: [0.3, 0.16, 0.10], finer: 1, fit: 1, blotch: 0.05, speckle: 0.10, colour: 0.7, tint: [1, 0.87, 0.77], relief: 0.0015, oil: 0.5, fuzz: 0.3, child: 0.3, bleed: [1, 0.5, 0.35] },
   eye: { corner: { from: 0.3, to: 0.8, dark: 0.35 }, lid: { from: -0.35, to: 0.05, dark: 0.4 }, tint: [0.84, 0.73, 0.57], white: 1.3, iris: 1.15, colour: 1.1, lift: 0.6, rough: 0.22, specular: 0.6, wrap: 0.5, wrapWhite: 0.1, cornea: 0.36, ring: 0.35, pupil: { size: 0.42, soft: 0.1, dark: 0.25 }, blush: [1.27, 0.945, 0.76] },
   brow: { rough: 1, specular: 0.05, lashes: 0.3, brows: 0.95 },
-  cap: { tone: 1.7, light: 2.6, colour: 0.7, wrap: 1, shadow: false, stubble: 0, beard: { tone: 5.5, light: 3.2, colour: 0.65, wrap: 0.3 } },
+  cap: { tone: 1.7, light: 2.6, colour: 0.85, wrap: 1, shadow: false, stubble: 0, beard: { tone: 8.8, light: 3.2, colour: 0.8, wrap: 0.3 } },
   cloth: { wool: 2.6, linen: 1 },
   cards: { rough: 0.72, specular: 0.2, anisotropy: 0.3 },
-  sheen: { white: 0.3, whiteSharp: 120, whiteShift: 0.1, own: 0.45, ownSharp: 40, ownShift: -0.1, ragged: 0.15, strands: 1.35, light: 0.5, colour: 0.7, wrap: 1 },
+  sheen: { white: 0.3, whiteSharp: 120, whiteShift: 0.1, own: 0.45, ownSharp: 40, ownShift: -0.1, ragged: 0.15, strands: 1.35, light: 0.5, colour: 0.85, tone: 1.6, toneLight: 1, wrap: 1 },
   finish: {
     fine: 2,
     curve: { contrast: 1.4, start: 0.22, length: 0.4, black: 1.5 },
