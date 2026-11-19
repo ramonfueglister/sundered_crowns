@@ -1,5 +1,5 @@
 // Look probe: one fixed scene, rendered with the camera of Ramon's reference image, to be judged side by side with it.
-// The address options are those of the stage (see stage.ts).
+// The address options are those of the stage (see stage/index.ts).
 import { glbToBatch } from '../buildings/landmarks/glb';
 import { buildScene } from './scene';
 import { showError, stage } from './stage';
