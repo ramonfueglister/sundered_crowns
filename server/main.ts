@@ -23,7 +23,10 @@ const cfg = configFromEnv(env);
 const store = SupabaseStore.fromEnv(env) ?? new NullStore();
 const auth = authConfigFromEnv(env);
 if (auth.devMode) console.warn('[world] DEV mode: no Supabase configured, players log in with a display name only. Do not expose this publicly.');
-const core = new WorldCore(cfg, store).init();
+const core = new WorldCore(cfg, store);
+// a lost or new volume: take the world back from its copy in Supabase Storage instead of founding a new one
+await core.restoreIfEmpty();
+core.init();
 core.start();
 console.log(`[world] ${cfg.id} day ${core.s.day}, ${cfg.secondsPerDay}s per day, store ${store.enabled ? 'supabase' : 'local only'}`);
 
