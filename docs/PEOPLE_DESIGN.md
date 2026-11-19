@@ -22,6 +22,7 @@ nothing built before Ramon agrees. Proposal with sources (German): https://claud
 | 4 | The unmarried move to other places, and an heir comes home | built 18 Nov 2026 (Ramon, 18 Nov: the young unmarried move by the measured rates, heirs come home; work, whole families and the flight from a famine follow later, one by one). State 25 |
 | 5 | IQ and the Big Five shift the rates of death, of a far move and of who marries | built 18 Nov 2026 (Ramon, 18 Nov: «So bauen» on the proposal, with the factor 0.89 for the IQ). State 28 |
 | 6 | Who wants work looks for a part in the economy, in the own town and within 115 km | built 18 Nov 2026 (Ramon, 18 Nov: «weiter» on the proposal, read as «So bauen»). No new state |
+| 7 | The living and the dead: the systems go over the living, the dead go to an archive (step 1 of 2: the list of the living) | step 1 built 19 Nov 2026 (Ramon, 19 Nov: «weiter» on the proposal of the archive and the day plan, read as «So bauen» for way A: the archive first, then the day plan). No new state |
 
 ## Feature 1: persons of the 30 largest cities
 
@@ -704,3 +705,55 @@ The moves by the measured rates (feature 4) stay beside it.
   (`src/sim/systems/household.ts`), as before; nobody does the work.
 - 896 parts wait and 1,785 persons look at the end: they are out of each other's reach, or the persons are married
   (whole families do not move).
+
+## Feature 7: the living and the dead
+
+Ramon, 19 November 2026: «weiter» on the proposal (German): https://claude.ai/artifact/8UqSxP49CfvpPfX1UCDULc
+(«Personen: Archiv der Toten und Tagesplan»), after the research behind it (German, in the project files:
+recherche/tagesplaner/). Read as «So bauen» for way A: first the archive of the dead (steps 1 and 2), then the day
+plan of every person (steps 3 to 6); while the day plan is new, the wages go on on days nobody works.
+
+The world is to run for centuries. The table of the persons keeps the dead, because an id is never reused, so a loop
+over its rows grows with the history of the world, not with its people: 102,042 rows at the founding of 1291,
+374,667 after 100 years, 919,687 after 300, while the living stay near 98,000 (deaths, moves, weddings and births
+only, seed 1291). The economy went over all rows twice a day (`writeAgents`, `writeHouseholds`), the weddings once a
+month.
+
+### Step 1: the list of the living
+
+`presentPersons` (`src/sim/people/living.ts`) gives the living persons and the dead who still hold a part in the
+economy (an estate, feature 2), in the order of their ids. The list is derived from the columns: built when a table
+of persons is first seen, the persons who came into the world since it was last read are added (rows are only ever
+added), and the dead without a part drop out when it is next read. A dead person never comes back onto it. No new
+column and no new state: a snapshot does not change.
+
+The systems that run every day, month or year go over the list: `writeAgents` (`src/sim/systems/economy.ts`),
+`writeHouseholds` (`src/sim/systems/household.ts`), the children away from a vacant house in `weddingsOn`
+(`src/sim/systems/families.ts`), `residents` and `farmersOf` (`src/sim/systems/hamlets.ts`), `placeCultures`
+(`src/sim/systems/cultures.ts`), `personsIn` (`src/sim/systems/people.ts`), and the views of the world server
+(`src/net/people.ts`, `src/net/lots.ts`, `src/net/views.ts`). What runs once, when a world is founded or a list is
+built, still goes over the rows.
+
+A dead person without a part has no money (the part's money goes to the successor with the part), so the purses of
+the families are the same without them.
+
+### Measured
+
+| | Rows of the persons | On the list | A pass over the rows | A pass over the list |
+|---|---|---|---|---|
+| Founding of 1291 | 102,042 | 102,042 | 2.4 ms | 2.3 ms |
+| After 100 years | 374,667 | 97,840 | 7.4 ms | 1.5 ms |
+| After 200 years | 647,011 | 97,281 | 12.0 ms | 1.5 ms |
+| After 300 years | 919,687 | 97,881 | 17.4 ms | 1.2 ms |
+
+A pass is the bare loop (deaths, moves, weddings and births only, seed 1291, one run in the cloud); the day ran three
+of them in the economy. The world of 1291 with all its systems has the same hash after two years with the list as
+without it (`npm run years:check -- 2`: f9165182), at about 175 ms a day in the cloud.
+
+### Limits
+
+- The rows themselves stay: the memory, the snapshot and the loops that run once still grow with the dead. Step 2
+  (the archive) moves the dead out of the table.
+- The families are never freed either (21,754 rows at the founding, 22,972 after two years): `writeHouseholds` still
+  goes over all of them every day. They follow the persons into the archive in step 2.
+

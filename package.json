@@ -22,6 +22,7 @@
     "people:check": "tsx tools/sim/people_check.ts",
     "families:check": "tsx tools/sim/families_check.ts",
     "traits:check": "tsx tools/sim/traits_check.ts",
+    "years:check": "tsx tools/sim/years_check.ts",
     "lots:write": "tsx tools/sim/write_lots.ts",
     "portrait:build": "tsx tools/portrait/build_portrait.ts"
   },
