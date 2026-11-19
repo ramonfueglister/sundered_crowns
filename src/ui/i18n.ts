@@ -138,6 +138,11 @@ const S = {
   map_mode_political_hint: ['The realms in their colours, near and far', 'Die Reiche in ihren Farben, nah und fern'],
   map_mode_terrain: ['Terrain', 'Gelände'],
   map_mode_terrain_hint: ['The land alone, without the realms', 'Nur das Land, ohne die Reiche'],
+  map_mode_rulers: ['Rulers', 'Herrscher'],
+  map_mode_rulers_hint: [
+    'Every ruler who holds a crown: far out a black dot where they live, near their own figure in the colour of their realm',
+    'Alle Herrscher mit Krone: weit draussen ein schwarzer Punkt, wo sie wohnen, nah ihre eigene Figur in der Farbe ihres Reichs',
+  ],
   key: ['Key', 'Taste'],
   music: ['Music', 'Musik'],
   music_on: ['Turn on', 'Einschalten'],
