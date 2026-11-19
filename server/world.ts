@@ -18,6 +18,7 @@ import { loadWorldFor, loadSetup } from '../tools/sim/load';
 import { realmInfos, placeDetail } from '../src/net/views';
 import { encodeOwners, SPEEDS, type ClientMsg, type ServerMsg, type WorldInfo, type Me } from '../src/net/protocol';
 import { NullStore, type WorldStore } from './store';
+import { RulerCopy } from './rulers_copy';
 import { BorderHistory } from './history';
 
 // ======================================================================= deterministic layer
@@ -130,6 +131,8 @@ export interface WorldConfig {
   uploadEveryDays: number;
   /** in-game days between uploads of the log since the last snapshot to Supabase Storage */
   logUploadEveryDays: number;
+  /** real minutes at least between two snapshot uploads (a fast clock would otherwise send one every few seconds) */
+  uploadMinMinutes: number;
   seed: number; startYear: number; maxPlayers: number;
   /** real time without a login after which a player's realm is free again */
   inactiveReleaseMs: number;
@@ -147,7 +150,7 @@ export function configFromEnv(env: Record<string, string | undefined> = process.
   return {
     id: (env.WORLD_ID || 'europa-1').toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 32), name: env.WORLD_NAME || 'Europa I', dataDir: env.WORLD_DATA_DIR || './world-data',
     secondsPerDay: num('SECONDS_PER_DAY', 240), snapshotEveryDays: Math.max(1, num('SNAPSHOT_EVERY_DAYS', 30)), uploadEveryDays: Math.max(1, num('SNAPSHOT_UPLOAD_EVERY_DAYS', 30)),
-    logUploadEveryDays: Math.max(1, num('LOG_UPLOAD_EVERY_DAYS', 1)),
+    logUploadEveryDays: Math.max(1, num('LOG_UPLOAD_EVERY_DAYS', 1)), uploadMinMinutes: Math.max(0, num('SNAPSHOT_UPLOAD_MIN_MINUTES', 60)),
     seed: num('WORLD_SEED', 1356), startYear: num('WORLD_START_YEAR', 1356), maxPlayers: num('MAX_PLAYERS', 100),
     inactiveReleaseMs: num('INACTIVE_RELEASE_DAYS', 7) * 86400_000, cmdsPerDay: num('CMDS_PER_DAY', 60),
     admins: (env.ADMIN_USERS || '').split(',').map((x) => x.trim()).filter(Boolean),
@@ -197,6 +200,12 @@ export class WorldCore {
   private prevOwner!: Int16Array;
   /** the uploads to the store, one after the other (a log never overtakes the snapshot it follows) */
   private uploads: Promise<void> = Promise.resolve();
+  /** what is queued or on its way; a kind already on its way is not queued again (the next one sends what this one
+   *  would have, so nothing is lost when the clock runs faster than the uploads) */
+  private pending = { snapshot: false, log: false, rulers: false };
+  private lastSnapshotUpload = -Infinity;
+  /** the readable copy of the rulers in Supabase (null without a store) */
+  private rulerCopy: RulerCopy | null = null;
   private log: (m: string) => void;
   /** the history of the borders (server/history.ts), for the replay */
   history!: BorderHistory;
@@ -266,7 +275,9 @@ export class WorldCore {
     const now = this.files.latest()!;
     if (this.store.enabled && this.meta.uploaded === undefined) this.uploadSnapshot(now.day, readFileSync(join(this.files.dir, `snap-${now.day}.bin`)));
     this.saveMeta();
-    this.store.upsertWorld(this.worldInfo()).catch(() => {});
+    const info = this.worldInfo();
+    this.queueUpload(() => this.store.upsertWorld(info)); // the row the copy of the rulers points at comes first
+    if (this.store.enabled) { this.rulerCopy = new RulerCopy(this.cfg.id); this.copyRulers(); }
     return this;
   }
   private saveMeta() { writeFileDurable(join(this.root, 'meta.json'), JSON.stringify(this.meta)); }
@@ -275,20 +286,40 @@ export class WorldCore {
   /** Resolves when every upload queued so far has ended. */
   flushUploads(): Promise<void> { return this.uploads; }
   private uploadSnapshot(day: number, bin: Uint8Array) {
+    if (this.pending.snapshot) return;
+    this.pending.snapshot = true; this.lastSnapshotUpload = Date.now();
     const meta = JSON.stringify({ ...this.meta, uploaded: day });
     const historyFile = join(this.root, 'borders.ndjson');
     const history = existsSync(historyFile) ? gzipSync(readFileSync(historyFile)) : null;
     this.queueUpload(async () => {
       // only a snapshot that arrived whole counts: until then the log goes on from the one before
-      if (await this.store.uploadSnapshot(this.cfg.id, day, bin, meta, history)) { this.meta.uploaded = day; this.saveMeta(); }
+      try { if (await this.store.uploadSnapshot(this.cfg.id, day, bin, meta, history)) { this.meta.uploaded = day; this.saveMeta(); } }
+      finally { this.pending.snapshot = false; }
     });
   }
   /** Sends the log since the last snapshot sent: with it and that snapshot the store can rebuild today's world. */
   private uploadLog() {
-    const from = this.meta.uploaded;
-    if (from === undefined) return;
-    const text = this.files.segments().filter((d) => d >= from).map((d) => this.files.segmentText(d)).join('');
-    if (text) this.queueUpload(() => this.store.uploadLog(this.cfg.id, text));
+    if (this.pending.log || this.meta.uploaded === undefined) return;
+    this.pending.log = true;
+    this.queueUpload(async () => {
+      try {
+        // read when its turn comes: behind a snapshot that just arrived, the log starts at that snapshot
+        const from = this.meta.uploaded!;
+        const text = this.files.segments().filter((d) => d >= from).map((d) => this.files.segmentText(d)).join('');
+        if (text) await this.store.uploadLog(this.cfg.id, text);
+      } finally { this.pending.log = false; }
+    });
+  }
+  /** Sends the rows of the readable copy of the rulers that changed (server/rulers_copy.ts). */
+  private copyRulers() {
+    if (!this.rulerCopy || this.pending.rulers) return;
+    const ch = this.rulerCopy.changes(this.s, this.w);
+    if (!ch.persons.length && !ch.reigns.length) return;
+    this.pending.rulers = true;
+    this.queueUpload(async () => {
+      try { if (await this.store.upsertRulers(ch.persons, ch.reigns)) this.rulerCopy!.sentOk(ch.keys); }
+      finally { this.pending.rulers = false; }
+    });
   }
   /** Applies an entry and logs it (only accepted entries change the state, but every one is logged in order). */
   private apply(e: LogEntry): CmdResult {
@@ -354,6 +385,7 @@ export class WorldCore {
     this.history.record(this.s);
     if (this.s.day % this.cfg.snapshotEveryDays === 0) this.snapshot();
     else if (this.store.enabled && this.s.day % this.cfg.logUploadEveryDays === 0) this.uploadLog();
+    this.copyRulers();
     const t3 = performance.now();
     this.stepMs = { ...this.stepMs, cmds: ema(this.stepMs.cmds, t1 - t0), day: ema(this.stepMs.day, t2 - t1), persist: ema(this.stepMs.persist, t3 - t2) };
   }
@@ -361,7 +393,9 @@ export class WorldCore {
   snapshot(forceUpload = false) {
     const { day, bin } = this.files.writeSnapshot(this.s);
     if (this.store.enabled) {
-      if (forceUpload || this.meta.uploaded === undefined || day - this.meta.uploaded >= this.cfg.uploadEveryDays) {
+      const due = this.meta.uploaded === undefined
+        || (day - this.meta.uploaded >= this.cfg.uploadEveryDays && Date.now() - this.lastSnapshotUpload >= this.cfg.uploadMinMinutes * 60_000);
+      if (forceUpload || due) {
         this.uploadSnapshot(day, bin);
         this.store.upsertWorld(this.worldInfo()).catch(() => {});
       } else this.uploadLog();

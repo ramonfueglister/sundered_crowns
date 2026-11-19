@@ -50,6 +50,15 @@ overwritten in place, so the copy does not grow. A server that starts on an empt
 the world back from that copy before it starts, on the day of the last log it sent; when the bucket cannot be read it
 does not start, rather than found a new world that would overwrite the copy.
 
+The server also keeps a readable copy of the rulers of the world in two tables (migration `…19000100_world_rulers`,
+`server/rulers_copy.ts`): `world_persons`, one row per person of history with `person`, the row of the person in the
+world's person table (the ECS id), name, house, Wikidata id and the days of birth and death in this world, and
+`world_reigns`, who held which crown from when to when (`end_day` null while the reign goes on). Everybody may read
+them, only the server writes them: all rows when it starts, then every day the rows that changed (a ruler born, crowned
+or dead). The simulation never reads them. Example: who reigned on 1 January 1300 (day 3,287 of a world of 1291):
+`select r.realm, p.name from world_reigns r join world_persons p using (world_id, person) where r.world_id =
+'europa-1291' and r.start_day <= 3287 and (r.end_day is null or r.end_day > 3287)`.
+
 ---
 
 ## 1. Supabase
@@ -67,7 +76,8 @@ current server does not use them; they stay so that existing projects keep a con
      npx supabase db push                                    # applies supabase/migrations
      ```
    - or **SQL editor**: Dashboard → *SQL Editor* → paste each file in order
-     (`20261108000100_profiles_admin.sql`, `…0200_cloud_saves.sql`, `…0300_worlds.sql`, `…0400_achievements_messages.sql`) → *Run*.
+     (`20261108000100_profiles_admin.sql`, `…0200_cloud_saves.sql`, `…0300_worlds.sql`, `…0400_achievements_messages.sql`,
+     `20261119000100_world_rulers.sql`) → *Run*.
 3. **Storage buckets**: the second migration creates two **private** buckets and their policies:
    `saves` (cloud saves, 50 MB per file, users can only touch `<their user id>/…`) and `world-snapshots`
    (no client access; the world server uploads snapshots there with the service role).

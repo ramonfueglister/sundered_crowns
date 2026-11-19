@@ -6,33 +6,11 @@ import { mkdtempSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { WorldCore, configFromEnv } from '../server/world';
-import type { WorldStore, Backup } from '../server/store';
+import { MemStore } from './setup/mem_store';
 import { hashState } from '../src/sim/snapshot';
 
-/** Storage in memory: one file per name, overwritten in place, as in the bucket. */
-class MemStore implements WorldStore {
-  readonly enabled = true;
-  files = new Map<string, Uint8Array | string>();
-  snapshots: number[] = [];
-  logs = 0;
-  async upsertWorld() {} async upsertSeat() {} async removeSeat() {}
-  async isAdmin() { return false; } async profileName() { return null; }
-  async uploadSnapshot(world: string, day: number, bin: Uint8Array, meta: string, history: Uint8Array | null) {
-    this.files.set(`${world}/snapshot.bin`, bin); this.files.set(`${world}/meta.json`, meta); this.snapshots.push(day);
-    if (history) this.files.set(`${world}/borders.ndjson.gz`, history);
-    return true;
-  }
-  async uploadLog(world: string, log: string) { this.files.set(`${world}/log.ndjson`, log); this.logs++; return true; }
-  async downloadBackup(world: string): Promise<Backup | null> {
-    const bin = this.files.get(`${world}/snapshot.bin`) as Uint8Array | undefined;
-    if (!bin) return null;
-    return { bin, log: (this.files.get(`${world}/log.ndjson`) as string) ?? '', meta: (this.files.get(`${world}/meta.json`) as string) ?? null,
-      history: (this.files.get(`${world}/borders.ndjson.gz`) as Uint8Array) ?? null };
-  }
-}
-
 describe('copy of the world in the store', () => {
-  const base = { ...configFromEnv({}), id: 'test', snapshotEveryDays: 5, uploadEveryDays: 5, logUploadEveryDays: 1, log: () => {} };
+  const base = { ...configFromEnv({}), id: 'test', snapshotEveryDays: 5, uploadEveryDays: 5, logUploadEveryDays: 1, uploadMinMinutes: 0, log: () => {} };
 
   it('sends the snapshots and the daily log, and a server with an empty disk resumes from them', async () => {
     const dirA = mkdtempSync(join(tmpdir(), 'scw-a-')), dirB = mkdtempSync(join(tmpdir(), 'scw-b-'));

@@ -3,6 +3,7 @@
 // The database still has season columns from an earlier design; a persistent world is always season 1.
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { WorldInfo } from '../src/net/protocol';
+import type { PersonRow, ReignRow } from './rulers_copy';
 
 const SEASON = 1;
 export interface Backup { bin: Uint8Array; log: string; meta: string | null; /** borders.ndjson, gzip */ history: Uint8Array | null }
@@ -20,6 +21,9 @@ export interface WorldStore {
   uploadLog(world: string, log: string): Promise<boolean>;
   /** The copy of the world, null when there is none; throws when Storage cannot be read. */
   downloadBackup(world: string): Promise<Backup | null>;
+  /** The readable copy of the rulers (tables world_persons, world_reigns): rows that are new or changed; true when the
+   *  store took all of them. */
+  upsertRulers(persons: PersonRow[], reigns: ReignRow[]): Promise<boolean>;
   isAdmin(uid: string): Promise<boolean>;
   profileName(uid: string): Promise<string | null>;
 }
@@ -29,6 +33,7 @@ export class NullStore implements WorldStore {
   readonly enabled = false;
   async upsertWorld() {} async upsertSeat() {} async removeSeat() {}
   async uploadSnapshot() { return false; } async uploadLog() { return false; } async downloadBackup() { return null; }
+  async upsertRulers() { return false; }
   async isAdmin() { return false; } async profileName() { return null; }
 }
 
@@ -131,6 +136,18 @@ export class SupabaseStore implements WorldStore {
     }
     const log = await get('log.ndjson'), meta = await get('meta.json'), history = await get('borders.ndjson.gz');
     return { bin, log: log ? dec.decode(log) : '', meta: meta ? dec.decode(meta) : null, history };
+  }
+  async upsertRulers(persons: PersonRow[], reigns: ReignRow[]) {
+    const at = new Date().toISOString(), N = 500;
+    for (let i = 0; i < persons.length; i += N) {
+      const rows = persons.slice(i, i + N).map((r) => ({ ...r, updated_at: at }));
+      if (!await this.run('world_persons', this.db.from('world_persons').upsert(rows, { onConflict: 'world_id,person' }))) return false;
+    }
+    for (let i = 0; i < reigns.length; i += N) {
+      const rows = reigns.slice(i, i + N).map((r) => ({ ...r, updated_at: at }));
+      if (!await this.run('world_reigns', this.db.from('world_reigns').upsert(rows, { onConflict: 'world_id,realm,n' }))) return false;
+    }
+    return true;
   }
   async isAdmin(uid: string) {
     if (!isUuid(uid)) return false;
