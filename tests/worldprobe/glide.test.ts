@@ -6,7 +6,7 @@ import { FACE_COL, FACE_GEO, FACE_STEPS, FLIPPED, RISES, type Faces, glided } fr
 import { SEA_Y, onGrid } from '../../src/lookprobe/layout';
 import { TALLER, glide } from '../../src/worldprobe/glide';
 import { BRIGHTEST, faced, small } from '../../src/worldprobe/small';
-import { type Table, drawBanks, drawLand, drawTable, tableOf } from '../../src/worldprobe/table';
+import { type Table, drawBanks, drawLand, drawTable, drawnHeights, tableOf } from '../../src/worldprobe/table';
 import { SIDE, land, part } from './land';
 
 const S = FACE_STEPS;
@@ -33,6 +33,9 @@ function piece(over = OVER) {
 }
 /** a height of the coarser piece in the piece's blocks */
 const tall = (y: number) => SEA_Y + (y - SEA_Y) * TALLER;
+/** the tops of a table's columns as they are drawn (lower than the table has them where trees stand), worked out once a table */
+const drawn = new WeakMap<Table, ArrayLike<number>>();
+const topsAt = (table: Table) => { let h = drawn.get(table); if (!h) drawn.set(table, h = drawnHeights(table)); return h; };
 /**
  * What becomes of a column, from the two tables alone: the coarser column over it, where its top (or its bed) starts
  * and ends in 64ths, whether it is water now and then, and the level the coarser step's water has there.
@@ -40,7 +43,8 @@ const tall = (y: number) => SEA_Y + (y - SEA_Y) * TALLER;
 function fate(fine: Table, parent: Table, x: number, z: number) {
   const i = z * SIDE + x, p = (Math.floor((fine.oz + z) / 2) - parent.oz) * parent.side + Math.floor((fine.ox + x) / 2) - parent.ox, wetNow = fine.wet[i] === 1, wetThen = parent.wet[p] === 1;
   // (the bed of the sea that stays the sea stays where it is)
-  return { i, p, wetNow, wetThen, start: fine.h[i] * S, end: wetNow && wetThen && fine.surf[i] <= SEA_Y + 0.01 ? fine.h[i] * S : Math.round(tall(parent.h[p]) * S), level: wetThen ? (parent.surf[p] > SEA_Y + 0.01 ? tall(parent.surf[p]) : SEA_Y) : NaN };
+  const h = topsAt(fine), theirH = topsAt(parent);
+  return { i, p, wetNow, wetThen, start: h[i] * S, end: wetNow && wetThen && fine.surf[i] <= SEA_Y + 0.01 ? h[i] * S : Math.round(tall(theirH[p]) * S), level: wetThen ? (parent.surf[p] > SEA_Y + 0.01 ? tall(parent.surf[p]) : SEA_Y) : NaN };
 }
 /** a face that is the top of a column: the column's x and z; none for any other face */
 function topOf(f: Faces, k: number): [number, number] | null {
@@ -57,7 +61,7 @@ function topsOf(parent: Table) {
   for (const [b, carried] of [[drawn.ground, false], [drawn.carried, true]] as [Batch, boolean][]) for (let o = 0; o < b.pos.length; o += 9) {
     const corners = [0, 1, 2].map((c) => [b.pos[o + c * 3], b.pos[o + c * 3 + 2], b.col[o + c * 3], b.col[o + c * 3 + 1], b.col[o + c * 3 + 2]]);
     const x = Math.min(...corners.map((c) => c[0])), z = Math.min(...corners.map((c) => c[1])), p = z * parent.side + x;
-    if (![0, 1, 2].every((c) => b.nor[o + c * 3 + 1] === 1 && b.pos[o + c * 3 + 1] === parent.h[p]) || !Number.isInteger(x) || !Number.isInteger(z)) continue;
+    if (![0, 1, 2].every((c) => b.nor[o + c * 3 + 1] === 1 && b.pos[o + c * 3 + 1] === topsAt(parent)[p]) || !Number.isInteger(x) || !Number.isInteger(z)) continue;
     if (Math.max(...corners.map((c) => c[0])) !== x + 1 || Math.max(...corners.map((c) => c[1])) !== z + 1) continue;
     const top = tops.get(p) ?? { corners: [], carried };
     top.corners.push(corners); tops.set(p, top);

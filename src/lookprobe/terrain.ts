@@ -134,6 +134,74 @@ function cornerColour(c: Corners, cx: number, cz: number, h: number, mat: number
   const tone = mat === Mat.Grass ? mix(base, SHADED_SOIL, Math.min(1, (1 - l) * 1.3)) : base;
   return [tone[0] * grain * l ** 1.5, tone[1] * grain * l, tone[2] * grain * l ** 0.3];
 }
+type Cover = ReturnType<NonNullable<GroundTraits['cover']>>;
+/** whether what a column carries is trees: green and standing on the ground (a field is green too, but does not rise) */
+const wooded = (cover: Cover) => !!cover && cover.stands !== false && cover.top[1] > cover.top[0] && cover.top[1] > cover.top[2];
+/**
+ * The trees of a far step stand lower than the tables have them: as high as a house, they made the woods a wall
+ * over the villages. A wooded column is drawn with this share of its rise.
+ */
+const WOODS_LOW = 0.5;
+/**
+ * The roof of a wood. Inside a wood the crowns stand at one height, the highest of those about them: of the posts and
+ * pits the tables give a wood (a tree on a column stands two blocks, a crown reaching over it one, else none) the
+ * roof becomes one. Its light swells and sinks by `ROOF_LIGHT` either way after a smooth noise some `ROOF_ACROSS`
+ * blocks across, the same for every column at a corner, so that the roof shows clumps of crowns and not the grid of
+ * the blocks; and at its edge, where a corner is a column's beside a lower one, it is `ROOF_EDGE` darker, as the
+ * crowns there turn away from the sky. (The roof stays level: the glide to the coarser step moves level and upright
+ * rectangles, worldprobe/glide.ts.)
+ */
+const ROOF_LIGHT = 0.13, ROOF_ACROSS = 1.7, ROOF_EDGE = 0.86;
+/**
+ * Where the columns carry trees: the tops of all columns as drawn, the rise of each above its ground (NaN where it
+ * carries none), whether it is part of a wood's roof (covered whole and rising) and the heights that hide the sky
+ * (Ground.occ), lowered with the trees. Null where no column does.
+ */
+export function woodsOf(g: Ground, t: GroundTraits): { tops: Float32Array; rise: Float32Array; roof: Uint8Array; occ: Float32Array } | null {
+  if (!t.cover) return null;
+  const n = N * N, given = new Float32Array(n).fill(Number.NaN), whole = new Uint8Array(n);
+  let any = false;
+  for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
+    const i = z * N + x, cover = g.wet[i] ? null : t.cover(x, z);
+    if (!wooded(cover)) continue;
+    given[i] = cover!.rise; whole[i] = cover!.share! < 1 ? 0 : 1; any = true;
+  }
+  if (!any) return null;
+  const tops = Float32Array.from(g.h), rise = new Float32Array(n).fill(Number.NaN), roof = new Uint8Array(n), occ = Float32Array.from(g.occ);
+  for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
+    const i = z * N + x;
+    if (Number.isNaN(given[i])) continue;
+    const ground = g.h[i] - given[i];
+    let most = given[i];
+    if (whole[i]) for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) {
+      const nx = x + dx, nz = z + dz, j = nz * N + nx;
+      if (nx < 0 || nz < 0 || nx >= N || nz >= N || !whole[j] || g.h[j] - given[j] !== ground) continue;
+      most = Math.max(most, given[j]);
+    }
+    rise[i] = most * WOODS_LOW; tops[i] = ground + rise[i]; roof[i] = whole[i] && most > 0 ? 1 : 0;
+    occ[i] = occ[i] > g.h[i] ? Math.max(occ[i], tops[i]) : tops[i];
+  }
+  return { tops, rise, roof, occ };
+}
+/** whether a corner of the grid lies at the edge of a wood's roof at height `h`: one of the four columns round it is no part of a roof that high */
+function roofEdge(woods: { roof: Uint8Array }, tops: ArrayLike<number>, cx: number, cz: number, h: number) {
+  for (let dz = -1; dz <= 0; dz++) for (let dx = -1; dx <= 0; dx++) {
+    const x = cx + dx, z = cz + dz;
+    if (x < 0 || z < 0 || x >= N || z >= N) continue;
+    const j = z * N + x;
+    if (!woods.roof[j] || tops[j] < h) return true;
+  }
+  return false;
+}
+/** the colour of a wood's roof at a corner of the grid (see `ROOF_LIGHT`) */
+function roofLit(c: RGB, woods: { roof: Uint8Array }, tops: ArrayLike<number>, cx: number, cz: number, h: number, ox: number, oz: number): RGB {
+  return shade(c, (1 + ROOF_LIGHT * (2 * noise2((cx + ox) / ROOF_ACROSS, (cz + oz) / ROOF_ACROSS, 51) - 1)) * (roofEdge(woods, tops, cx, cz, h) ? ROOF_EDGE : 1));
+}
+/**
+ * The tops of a ground's columns as `buildTerrain` draws them: those of `g` but where trees stand (see `woodsOf`).
+ * The glide to the coarser step reads heights from these (worldprobe/glide.ts).
+ */
+export function drawnTops(g: Ground, t: GroundTraits): ArrayLike<number> { return woodsOf(g, t)?.tops ?? g.h; }
 /** the four columns beside a column: east, west, south, north */
 const NB_X = [1, -1, 0, 0], NB_Z = [0, 0, 1, -1];
 /**
@@ -153,10 +221,10 @@ export function buildTerrain(g: Ground, t: GroundTraits, baked = true, part: Par
   // time went into working it out four times).
   // So with the colour of the ground at a corner of the grid: the four columns around it ask for it, and where they
   // are of one kind of ground the answer is the same (a ninth of a near piece's building time went into it).
-  const side = N + 1;
-  const c: Corners = { g, t, ox, oz, side, askedAt: baked ? new Float64Array(side * side).fill(NaN) : null, answer: baked ? new Float64Array(side * side) : null, groundAt: new Array(side * side), kindAt: new Int8Array(side * side).fill(-1) };
+  const side = N + 1, woods = woodsOf(g, t), tops = woods ? woods.tops : g.h;
+  const c: Corners = { g: woods ? { ...g, occ: woods.occ } : g, t, ox, oz, side, askedAt: baked ? new Float64Array(side * side).fill(NaN) : null, answer: baked ? new Float64Array(side * side) : null, groundAt: new Array(side * side), kindAt: new Int8Array(side * side).fill(-1) };
   for (let z = part.z0; z < part.z1; z++) for (let x = part.x0; x < part.x1; x++) {
-    const i = idx(x, z), h = g.h[i], mat = g.mat[i], wx = x + ox, wz = z + oz;
+    const i = idx(x, z), h = tops[i], mat = g.mat[i], wx = x + ox, wz = z + oz;
     // every cell is a touch lighter or darker than its neighbours: the fine grain of the reference's ground
     // paving lies in slabs of two by two cells, every other row shifted by one
     const col = Math.floor(wx / 2), slab = hash2(col, Math.floor((wz + (col % 2)) / 2), 47) - 0.5;
@@ -171,12 +239,17 @@ export function buildTerrain(g: Ground, t: GroundTraits, baked = true, part: Par
     const c00 = cornerColour(c, x, z, h, mat, grain, cover, rockTop, patch), c10 = cornerColour(c, x + 1, z, h, mat, grain, cover, rockTop, patch);
     const c11 = cornerColour(c, x + 1, z + 1, h, mat, grain, cover, rockTop, patch), c01 = cornerColour(c, x, z + 1, h, mat, grain, cover, rockTop, patch);
     const on = carried && cover && cover.stands !== false && !(cover.share! < CARRIED_FROM) ? carried : b;
-    if (!g.wet[i]) on.quadAt(x, h, z, x, h, z + 1, x + 1, h, z + 1, x + 1, h, z, c00, c01, c11, c10, 0, 1, 0);
+    const rise = woods && !Number.isNaN(woods.rise[i]) ? woods.rise[i] : cover ? cover.rise : 0, roofed = !!woods && woods.roof[i] === 1;
+    if (roofed) {
+      const w = woods!;
+      on.quadAt(x, h, z, x, h, z + 1, x + 1, h, z + 1, x + 1, h, z, roofLit(c00, w, tops, x, z, h, ox, oz), roofLit(c01, w, tops, x, z + 1, h, ox, oz), roofLit(c11, w, tops, x + 1, z + 1, h, ox, oz), roofLit(c10, w, tops, x + 1, z, h, ox, oz), 0, 1, 0);
+    }
+    else if (!g.wet[i]) on.quadAt(x, h, z, x, h, z + 1, x + 1, h, z + 1, x + 1, h, z, c00, c01, c11, c10, 0, 1, 0);
     if (g.wet[i]) continue;
     for (let k = 0; k < 4; k++) {
       const dx = NB_X[k], dz = NB_Z[k], nx = x + dx, nz = z + dz;
       const out = nx < 0 || nz < 0 || nx >= N || nz >= N;
-      const nh = out ? 0 : g.h[idx(nx, nz)];
+      const nh = out ? 0 : tops[idx(nx, nz)];
       if (nh >= h) continue;
       const wetSide = !out && g.wet[idx(nx, nz)] === 1;
       let side: RGB;
@@ -212,7 +285,7 @@ export function buildTerrain(g: Ground, t: GroundTraits, baked = true, part: Par
         continue;
       }
       // what the column carries shows its own sides, down to the ground it stands on
-      const ground = cover ? Math.max(nh, h - cover.rise) : h;
+      const ground = cover ? Math.max(nh, h - rise) : h;
       if (ground < h) on.quadAt(ax, ground, az, bx, ground, bz, bx, h, bz, ax, h, az, shade(cover!.side, la * 0.85), shade(cover!.side, lb * 0.85), shade(cover!.side, lb), shade(cover!.side, la), dx, 0, dz);
       if (nh < ground) b.quadAt(ax, nh, az, bx, nh, bz, bx, ground, bz, ax, ground, az, shade(side, la * foot), shade(side, lb * foot), shade(side, lb), shade(side, la), dx, 0, dz);
     }

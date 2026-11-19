@@ -27,44 +27,51 @@ const SPECKS = [rgb(0xf4e9a0), rgb(0xf6f0e0), rgb(0xe8a0b0), rgb(0xd8d0c4), rgb(
 const CLOTHES = [rgb(0x8a3b2e), rgb(0x3f5f8a), rgb(0xcaa24a), rgb(0x5a7a3a), rgb(0x6a4a7a), rgb(0xd8d0c0)];
 
 /**
- * A leafy tree: a bare trunk a good block high under a crown in three tiers (a skirt, the broad middle, a cap), bright
- * on top and darker down the sides; a little under two blocks wide and a good four high at `size` 1.
+ * The trees stand this share of the height they were made with: a good four blocks, as high as a house of two storeys
+ * with its roof, they made the woods a wall over the villages. Their crowns keep their width, so that a wood stays
+ * closed (the far steps lower theirs alike: terrain.ts WOODS_LOW).
+ */
+export const TREE_TALL = 0.62;
+
+/**
+ * A leafy tree: a bare trunk under a crown in three tiers (a skirt, the broad middle, a cap), bright on top and
+ * darker down the sides; a little under two blocks wide and a good four high at `size` 1, before TREE_TALL.
  */
 export function tree(b: Batch, x: number, y: number, z: number, r: Rnd, size = 1, leaves: readonly RGB[] = LEAVES) {
   // the sides are a deeper green than the yellowish sunlit top
-  const g = r.pick(leaves), s = r.range(0.85, 1.15) * size, flank = mix(shade(g, 0.74), FLANK, 0.85), away = mix(FLANK_AWAY_WARM, FLANK_AWAY, r.next());
-  const w = 0.92 * s, y0 = y + 1.15 * s, y1 = y0 + 0.7 * s, y2 = y1 + 1.5 * s;
+  const g = r.pick(leaves), s = r.range(0.85, 1.15) * size, v = s * TREE_TALL, flank = mix(shade(g, 0.74), FLANK, 0.85), away = mix(FLANK_AWAY_WARM, FLANK_AWAY, r.next());
+  const w = 0.92 * s, y0 = y + 1.15 * v, y1 = y0 + 0.7 * v, y2 = y1 + 1.5 * v;
   b.box(x - 0.24, y, z - 0.24, x + 0.24, y0 + 0.2, z + 0.24, TRUNK, { foot: 0.75 });
   b.box(x - w * 0.7, y0, z - w * 0.7, x + w * 0.7, y1, z + w * 0.7, shade(flank, 0.9), { bottom: true, away });
   b.box(x - w, y1, z - w, x + w, y2, z + w, flank, { top: g, foot: 0.84, bottom: true, away });
   const ox = r.range(-0.22, 0.22) * s, oz = r.range(-0.22, 0.22) * s, t = 0.62 * w;
-  b.box(x + ox - t, y2, z + oz - t, x + ox + t, y2 + 0.85 * s, z + oz + t, flank, { top: shade(g, 1.06), away });
+  b.box(x + ox - t, y2, z + oz - t, x + ox + t, y2 + 0.85 * v, z + oz + t, flank, { top: shade(g, 1.06), away });
   // a second, lower cube set against one corner makes the crown irregular
   if (r.chance(0.55)) {
-    const k = r.range(0.5, 0.7) * s, cx = x + r.pick([-1, 1]) * w * 0.7, cz = z + r.pick([-1, 1]) * w * 0.7, top = y1 + r.range(0.9, 1.4) * s;
-    b.box(cx - k, y1 - 0.2 * s, cz - k, cx + k, top, cz + k, shade(flank, r.range(0.92, 1.06)), { top: shade(g, r.range(0.94, 1.04)), foot: 0.74, bottom: true, away });
+    const k = r.range(0.5, 0.7) * s, cx = x + r.pick([-1, 1]) * w * 0.7, cz = z + r.pick([-1, 1]) * w * 0.7, top = y1 + r.range(0.9, 1.4) * v;
+    b.box(cx - k, y1 - 0.2 * v, cz - k, cx + k, top, cz + k, shade(flank, r.range(0.92, 1.06)), { top: shade(g, r.range(0.94, 1.04)), foot: 0.74, bottom: true, away });
   }
   // lumps on the sides break the cube outline, as on the trees of the reference
   for (const side of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
     if (!r.chance(0.6)) continue;
     const k = r.range(0.32, 0.48) * s, out = w + k * 0.4, along = r.range(-0.35, 0.35) * s;
-    const cx = x + side[0] * out + side[1] * along, cz = z + side[1] * out + side[0] * along, cy = y1 + r.range(0, 0.6) * s;
-    b.box(cx - k, cy, cz - k, cx + k, cy + r.range(0.7, 0.9) * s, cz + k, shade(flank, r.range(0.9, 1.05)), { top: shade(g, r.range(0.92, 1.02)), foot: 0.76, bottom: true, away });
+    const cx = x + side[0] * out + side[1] * along, cz = z + side[1] * out + side[0] * along, cy = y1 + r.range(0, 0.6) * v;
+    b.box(cx - k, cy, cz - k, cx + k, cy + r.range(0.7, 0.9) * v, cz + k, shade(flank, r.range(0.9, 1.05)), { top: shade(g, r.range(0.92, 1.02)), foot: 0.76, bottom: true, away });
   }
 }
 
-/** A cypress: a dark, narrow column in three steps, a good block wide and five to six high. */
+/** A cypress: a dark, narrow column in three steps, a good block wide and five to six high before TREE_TALL. */
 export function cypress(b: Batch, x: number, y: number, z: number, r: Rnd) {
-  const g = r.pick(CYPRESS), s = r.range(0.85, 1.15), away = mix(g, FLANK_AWAY, 0.5);
-  b.box(x - 0.16, y, z - 0.16, x + 0.16, y + 0.8, z + 0.16, TRUNK);
-  b.box(x - 0.78, y + 0.6, z - 0.78, x + 0.78, y + 3.0 * s, z + 0.78, g, { foot: 0.74, bottom: true, top: shade(g, 1.25), away });
+  const g = r.pick(CYPRESS), s = r.range(0.85, 1.15) * TREE_TALL, away = mix(g, FLANK_AWAY, 0.5);
+  b.box(x - 0.16, y, z - 0.16, x + 0.16, y + 0.8 * TREE_TALL, z + 0.16, TRUNK);
+  b.box(x - 0.78, y + 0.6 * TREE_TALL, z - 0.78, x + 0.78, y + 3.0 * s, z + 0.78, g, { foot: 0.74, bottom: true, top: shade(g, 1.25), away });
   b.box(x - 0.54, y + 3.0 * s, z - 0.54, x + 0.54, y + 4.5 * s, z + 0.54, shade(g, 1.05), { foot: 0.92, top: shade(g, 1.3), away });
   b.box(x - 0.3, y + 4.5 * s, z - 0.3, x + 0.3, y + 5.5 * s, z + 0.3, shade(g, 1.1), { top: shade(g, 1.35), away });
 }
 
-/** A palm: a thin bare trunk four to five blocks high under a cross of fronds that droop at their tips. */
+/** A palm: a thin bare trunk four to five blocks high before TREE_TALL under a cross of fronds that droop at their tips. */
 export function palm(b: Batch, x: number, y: number, z: number, r: Rnd) {
-  const g = r.pick(PALM), top = y + r.range(3.6, 5), under = shade(g, 0.7), reach = r.range(1.0, 1.3);
+  const g = r.pick(PALM), top = y + r.range(3.6, 5) * TREE_TALL, under = shade(g, 0.7), reach = r.range(1.0, 1.3);
   b.box(x - 0.15, y, z - 0.15, x + 0.15, top, z + 0.15, PALM_TRUNK, { foot: 0.8 });
   b.box(x - 0.34, top - 0.1, z - 0.34, x + 0.34, top + 0.45, z + 0.34, under, { top: g, bottom: true });
   for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {

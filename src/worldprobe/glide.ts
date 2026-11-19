@@ -35,7 +35,7 @@ import type { Shape } from '../lookprobe/shape';
 import { buildWater } from '../lookprobe/terrain';
 import { ballOf } from './ball';
 import { BRIGHTEST, faced, small } from './small';
-import { type Table, drawBanks, drawLand } from './table';
+import { type Table, drawBanks, drawLand, drawnHeights } from './table';
 import { reliefOf } from './zoom';
 
 /**
@@ -155,13 +155,16 @@ const coarse = (y: number) => (SEA_Y + (y / S - SEA_Y) / TALLER) * S;
  * a walk over a piece's columns and their neighbours took 30 ms where it now takes a few.)
  */
 interface Columns {
-  n: number; fine: Table; parent: Table; above: Above;
+  /** `h`: the tops of the piece's columns as they are drawn, which is lower than its table has them where trees stand (table.ts `drawnHeights`) */
+  n: number; fine: Table; parent: Table; above: Above; h: ArrayLike<number>;
   over: Int32Array; from: Int32Array; aim: Int32Array; way: Uint8Array; surface: Float32Array;
   gliding: number; coast: boolean; water: boolean; theirs: boolean;
 }
 function columnsOf(fine: Table, parent: Table, above: Above): Columns {
+  // (the heights the two pieces draw: where trees stand, those are lower than their tables have them)
+  const h = drawnHeights(fine), theirH = drawnHeights(parent);
   const n = fine.side, pn = parent.side, own = fine.part, fox = fine.ox, foz = fine.oz, pox = parent.ox, poz = parent.oz;
-  const h = fine.h, wet = fine.wet, surf = fine.surf, theirH = parent.h, theirWet = parent.wet, theirSurf = parent.surf;
+  const wet = fine.wet, surf = fine.surf, theirWet = parent.wet, theirSurf = parent.surf;
   const over = new Int32Array(n * n).fill(-1), from = new Int32Array(n * n), aim = new Int32Array(n * n), way = new Uint8Array(n * n), surface = new Float32Array(n * n).fill(NaN);
   let gliding = 0, coast = false, water = false, theirs = false;
   for (let z = Math.max(0, own.z0 - 1); z < Math.min(n, own.z1 + 1); z++) for (let x = Math.max(0, own.x0 - 1); x < Math.min(n, own.x1 + 1); x++) {
@@ -180,7 +183,7 @@ function columnsOf(fine: Table, parent: Table, above: Above): Columns {
     if (way[i] !== LAND) coast = true;
     if (x >= own.x0 && x < own.x1 && z >= own.z0 && z < own.z1) gliding++;
   }
-  return { n, fine, parent, above, over, from, aim, way, surface, gliding, coast, water, theirs };
+  return { n, fine, parent, above, h, over, from, aim, way, surface, gliding, coast, water, theirs };
 }
 
 /** The colour the coarser piece's side of a column shows at a height and a place along its edge, into `tone`; false where it has no side there. */
@@ -214,7 +217,7 @@ function topsTo(tops: Float32Array, cols: Uint8Array, o: number, p: number, wx: 
 function aimFaces(c: Columns, shape: Shape | undefined, ink: number) {
   const f: Faces | undefined = shape?.faces;
   if (!f) return;
-  const n = c.n, over = c.over, aim = c.aim, way = c.way, above = c.above, has = above.has, inked = above.ink, tops = above.tops, h = c.fine.h, fox = c.fine.ox, foz = c.fine.oz, pox = c.parent.ox, poz = c.parent.oz;
+  const n = c.n, over = c.over, aim = c.aim, way = c.way, above = c.above, has = above.has, inked = above.ink, tops = above.tops, h = c.h, fox = c.fine.ox, foz = c.fine.oz, pox = c.parent.ox, poz = c.parent.oz;
   const geo = f.geo, nor = f.nor, count = geo.length / FACE_GEO, aims = new Int16Array(count * 2), cols = new Uint8Array(f.col);
   for (let k = 0, g = 0; k < count; k++, g += FACE_GEO) {
     const axis: number = geo[g] % FLIPPED, level: number = geo[g + 1], u0 = geo[g + 2], u1 = geo[g + 3], v0 = geo[g + 4], v1 = geo[g + 5], facing = nor[k * 4 + axis];
@@ -277,7 +280,7 @@ const BLANK: RGB = [1, 1, 1];
  *  - the sides of such a top to come, between two beds, which the water hides until they come up.
  */
 function comingFaces(c: Columns, land: Shape) {
-  const ground = land.faces!, n = c.n, over = c.over, from = c.from, aim = c.aim, way = c.way, above = c.above, tints = above.tops, own = c.fine.part, wet = c.fine.wet, h = c.fine.h, fox = c.fine.ox, foz = c.fine.oz, pox = c.parent.ox, poz = c.parent.oz;
+  const ground = land.faces!, n = c.n, over = c.over, from = c.from, aim = c.aim, way = c.way, above = c.above, tints = above.tops, own = c.fine.part, wet = c.fine.wet, h = c.h, fox = c.fine.ox, foz = c.fine.oz, pox = c.parent.ox, poz = c.parent.oz;
   const more = new Batch(), tops: number[] = [], spans: { foot: number; top: number; footAim: number; topAim: number; /** the coarser column over the side's own, and that where the coarser step has a side here */ owner: number; p: number; dir: number }[] = [];
   for (let z = own.z0; z < own.z1; z++) for (let x = own.x0; x < own.x1; x++) {
     const i = z * n + x;
@@ -371,7 +374,7 @@ function ownBanks(c: Columns, land: Shape) {
  * them: from under the land or the water that lies there now.
  */
 function theirBanks(c: Columns, land: Shape, banked: Shape) {
-  const n = c.n, fine = c.fine, parent = c.parent, h = fine.h, wet = fine.wet, surf = fine.surf, pos = banked.pos as Float32Array, to = new Float32Array(pos.length / 3);
+  const n = c.n, fine = c.fine, parent = c.parent, h = c.h, wet = fine.wet, surf = fine.surf, pos = banked.pos as Float32Array, to = new Float32Array(pos.length / 3);
   for (let t = 0; t < to.length / 3; t++) {
     const o = t * 9;
     for (let q = 0; q < 3; q++) { pos[o + q * 3] = (pos[o + q * 3] + parent.ox) * 2 - fine.ox; pos[o + q * 3 + 2] = (pos[o + q * 3 + 2] + parent.oz) * 2 - fine.oz; to[t * 3 + q] = tall(pos[o + q * 3 + 1]); }
@@ -422,7 +425,7 @@ function sinkingWater(c: Columns, sea: Shape, raised: Shape) {
     const pos = sheets.pos as Float32Array, to = new Float32Array(pos.length / 3);
     for (let t = 0; t < to.length / 3; t++) {
       const o = t * 9, i = Math.floor((pos[o + 2] + pos[o + 5] + pos[o + 8]) / 3) * n + Math.floor((pos[o] + pos[o + 3] + pos[o + 6]) / 3);
-      for (let q = 0; q < 3; q++) { to[t * 3 + q] = pos[o + q * 3 + 1]; pos[o + q * 3 + 1] = Math.min(pos[o + q * 3 + 1], fine.h[i] - UNDER_LAND); }
+      for (let q = 0; q < 3; q++) { to[t * 3 + q] = pos[o + q * 3 + 1]; pos[o + q * 3 + 1] = Math.min(pos[o + q * 3 + 1], c.h[i] - UNDER_LAND); }
     }
     join(shape, sheets, to);
   }
