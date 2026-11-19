@@ -117,29 +117,64 @@ const RIVER_UNDER = 0.22;
 const seedOf = (a: number, b: number, salt: number) => Math.floor(hash2(a, b, salt) * 4294967296);
 
 /**
+ * The overgrown land is terraced from its heights averaged over this many columns to each side of a column (over the
+ * dry land only), and a step of it stays only where it is 2 · TERRACE_REACH + 1 columns wide (`terrace`). Rounded
+ * column by column from the heights as they are, every rise of a few dozen metres on the rolling high plains (the
+ * Meseta, the Bavarian and Swiss plateaus, Anatolia) became an edge or a patch of its own: some 85 patches of less
+ * than 50 columns to a piece of step 2, 170 of step 3, which made the map restless and bore no shape of the land.
+ * Measured on eight such landscapes over steps 0 to 4, the two together take 41 to 53 % of the grass steps' sides
+ * and 80 to 90 % of the patches away; the hills and the rock keep their shape.
+ */
+const SMOOTH_REACH = 4, TERRACE_REACH = 3;
+/** the heights of the dry land averaged over a square reaching `reach` columns to each side, of the dry columns in it; water keeps its own */
+export function landAveraged(metres: Float32Array, kind: Uint8Array, reach = SMOOTH_REACH) {
+  const n = N, rowSum = new Float32Array(n * n), rowCount = new Uint16Array(n * n), out = new Float32Array(metres);
+  for (let z = 0; z < n; z++) for (let x = 0; x < n; x++) {
+    let sum = 0, count = 0;
+    for (let u = Math.max(0, x - reach), end = Math.min(n - 1, x + reach); u <= end; u++) { const j = z * n + u; if (kind[j] === Water.Land) { sum += metres[j]; count++; } }
+    rowSum[z * n + x] = sum; rowCount[z * n + x] = count;
+  }
+  for (let z = 0; z < n; z++) for (let x = 0; x < n; x++) {
+    const i = z * n + x;
+    if (kind[i] !== Water.Land) continue;
+    let sum = 0, count = 0;
+    for (let v = Math.max(0, z - reach), end = Math.min(n - 1, z + reach); v <= end; v++) { sum += rowSum[v * n + x]; count += rowCount[v * n + x]; }
+    out[i] = sum / count;
+  }
+  return out;
+}
+
+/**
  * Makes clean terraces of the overgrown land: heights rounded column by column leave single columns standing a step
  * up or down and fray every edge where the land lies near a step. A step of the grass land stays only where it is
- * three columns wide: first what stands out narrower than that is taken down to the ground round it, then what
- * lies in narrower than that is filled up to it (an opening and a closing of the heights, each over a column and
- * its eight neighbours). The rock and the water keep their heights and count for nothing.
+ * 2 · `reach` + 1 columns wide: first what stands out narrower than that is taken down to the ground round it, then
+ * what lies in narrower than that is filled up to it (an opening and a closing of the heights, each over a square
+ * reaching `reach` columns to each side). The rock and the water keep their heights and count for nothing.
  */
-export function terrace(level: Int16Array, mat: Uint8Array) {
-  level.set(terracePass(terracePass(terracePass(terracePass(level, mat, false), mat, true), mat, true), mat, false));
+export function terrace(level: Int16Array, mat: Uint8Array, reach = TERRACE_REACH) {
+  level.set(terracePass(terracePass(terracePass(terracePass(level, mat, false, reach), mat, true, reach), mat, true, reach), mat, false, reach));
 }
-/** one pass of `terrace`: every column of the grass land takes the lowest (`up`: the highest) of itself and its eight neighbours */
-function terracePass(from: Int16Array, mat: Uint8Array, up: boolean) {
-  const to = new Int16Array(from);
-  // (the neighbours by their places in the lists, in the order of rows and columns: the walk over the eight of them
-  // through `inGrid` and `idx` was a twentieth of what a worker takes for a piece of the nearest step)
-  const n = N;
+/** one pass of `terrace`: every column of the grass land takes the lowest (`up`: the highest) of the grass in the square round it */
+function terracePass(from: Int16Array, mat: Uint8Array, up: boolean, reach: number) {
+  // (in two runs, along the rows and then along the columns: the square of 7 × 7 walked at once took several times as
+  // long; a column with no grass in its run of the row holds a height that loses against every other)
+  const n = N, none = up ? -32768 : 32767, row = new Int16Array(n * n), to = new Int16Array(from);
+  for (let z = 0; z < n; z++) for (let x = 0; x < n; x++) {
+    let v = none;
+    for (let u = Math.max(0, x - reach), end = Math.min(n - 1, x + reach); u <= end; u++) {
+      const j = z * n + u;
+      if (mat[j] !== Mat.Grass) continue;
+      const o = from[j];
+      if (up ? o > v : o < v) v = o;
+    }
+    row[z * n + x] = v;
+  }
   for (let z = 0; z < n; z++) for (let x = 0; x < n; x++) {
     const i = z * n + x;
     if (mat[i] !== Mat.Grass) continue;
     let v = from[i];
-    const x0 = x > 0 ? -1 : 0, x1 = x + 1 < n ? 1 : 0;
-    for (let dz = z > 0 ? -1 : 0, z1 = z + 1 < n ? 1 : 0; dz <= z1; dz++) for (let j = i + dz * n + x0, end = i + dz * n + x1; j <= end; j++) {
-      if (mat[j] !== Mat.Grass) continue;
-      const o = from[j];
+    for (let w = Math.max(0, z - reach), end = Math.min(n - 1, z + reach); w <= end; w++) {
+      const o = row[w * n + x];
       if (up ? o > v : o < v) v = o;
     }
     to[i] = v;
@@ -239,14 +274,14 @@ function pillarOf(m: Massifs, x: number, z: number): [number, boolean, number] {
   const [px, pz] = rockPillar(x + m.ox, z + m.oz), bx = Math.floor(px / 2) * 2 + 1, cx = bx * 2 - m.ox, cz = (Math.floor(pz / 2) * 2 + 1) * 2 - bx - m.oz;
   return [raisedAt(m, cx, cz), rockAt(fieldAt(m.massif, cx, cz), fieldAt(m.base, cx, cz), fieldAt(m.shift, cx, cz)) && fieldAt(m.away, cx, cz) >= m.rockFoot, raisedAt(m, (px + 0.5) * 2 - m.ox, (pz + 0.5) * 2 - px - m.oz)];
 }
-/** Fills `level`, the blocks above the plain of every column's own ground (water: of its surface), and the rock and the grass of `mat`. */
+/** Fills `level`, the blocks above the plain of every column's own ground (water: of its surface; grass: of its heights averaged, `landAveraged`), and the rock and the grass of `mat`. */
 function levels(m: Massifs, metres: Float32Array, kind: Uint8Array, flatter: number, level: Int16Array, mat: Uint8Array) {
-  const { shift, ox, oz } = m;
+  const { shift, ox, oz } = m, smooth = landAveraged(metres, kind);
   for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
     const i = idx(x, z);
     if (kind[i] !== Water.Land) { level[i] = kind[i] === Water.Lake ? Math.round(levelFor(metres[i], shift[i], flatter)) : 0; continue; }
     const [high, rock, mine] = pillarOf(m, x, z);
-    if (!rock) { level[i] = Math.round(levelFor(metres[i], shift[i], flatter)); mat[i] = Mat.Grass; continue; }
+    if (!rock) { level[i] = Math.round(levelFor(smooth[i], shift[i], flatter)); mat[i] = Mat.Grass; continue; }
     // the rock stands in walls, as the massifs of the reference do: a bundle of pillars is one block of rock with one
     // height, so that the faces between bundles are large; the pillars of a bundle lean a step with the slope, one here and there stands a step lower, and
     // single columns stand back as the fine grooves of the walls

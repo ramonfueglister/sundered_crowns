@@ -1,27 +1,28 @@
-// The heights of the overgrown land are cleaned into terraces: a step stays only where it is three columns wide.
+// The heights of the overgrown land are cleaned into terraces: a step stays only where it is seven columns wide.
 import { describe, expect, it } from 'vitest';
 import { Mat, N } from '../../src/lookprobe/layout';
-import { terrace } from '../../src/worldprobe/world';
+import { Water } from '../../src/worldprobe/region';
+import { landAveraged, terrace } from '../../src/worldprobe/world';
 
 describe('the terraces of the land', () => {
   const grass = () => new Uint8Array(N * N).fill(Mat.Grass);
   /** a plain with a scarp of two steps from column 200 on */
   const scarp = () => { const level = new Int16Array(N * N); for (let z = 0; z < N; z++) for (let x = 200; x < N; x++) level[z * N + x] = 2; return level; };
 
-  it('take down what stands out narrower than three columns, and fill what lies in narrower than that', () => {
+  it('take down what stands out narrower than seven columns, and fill what lies in narrower than that', () => {
     const level = scarp();
     level[50 * N + 50] = 3; // a single column
-    for (let z = 80; z < 120; z++) { level[z * N + 100] = 1; level[z * N + 101] = 1; } // a wall two columns wide
-    level[300 * N + 300] = 0; // a hole in the upper ground
-    for (let x = 250; x < 290; x++) level[150 * N + x] = 1; // a ditch one column wide
+    for (let z = 80; z < 120; z++) for (let x = 100; x < 106; x++) level[z * N + x] = 1; // a wall six columns wide
+    for (let z = 300; z < 303; z++) for (let x = 300; x < 303; x++) level[z * N + x] = 0; // a hole of three by three in the upper ground
+    for (let z = 150; z < 156; z++) for (let x = 250; x < 290; x++) level[z * N + x] = 1; // a ditch six columns wide
     terrace(level, grass());
     expect(level).toEqual(scarp());
   });
 
-  it('keep what is three columns wide, and straight edges as they are', () => {
+  it('keep what is seven columns wide, and straight edges as they are', () => {
     const level = scarp();
-    for (let z = 60; z < 63; z++) for (let x = 60; x < 63; x++) level[z * N + x] = 1; // a knoll of three by three
-    for (let z = 320; z < 323; z++) for (let x = 320; x < 360; x++) level[z * N + x] = 0; // a dell three wide
+    for (let z = 60; z < 67; z++) for (let x = 60; x < 67; x++) level[z * N + x] = 1; // a knoll of seven by seven
+    for (let z = 320; z < 327; z++) for (let x = 320; x < 360; x++) level[z * N + x] = 0; // a dell seven wide
     const before = Int16Array.from(level);
     terrace(level, grass());
     expect(level).toEqual(before);
@@ -35,6 +36,17 @@ describe('the terraces of the land', () => {
     let steps = 0;
     for (let z = 10; z < N - 10; z++) if (level[z * N + 199] !== level[(z + 1) * N + 199]) steps++;
     expect(steps).toBe(0);
+  });
+
+  it('average the heights of the dry land only', () => {
+    const metres = new Float32Array(N * N).fill(400), kind = new Uint8Array(N * N);
+    // a sea to the west of column 100, a single hill of 900 m
+    for (let z = 0; z < N; z++) for (let x = 0; x < 100; x++) { kind[z * N + x] = Water.Sea; metres[z * N + x] = -50; }
+    metres[200 * N + 200] = 900;
+    const smooth = landAveraged(metres, kind);
+    expect(smooth[50 * N + 100]).toBeCloseTo(400);
+    expect(smooth[50 * N + 50]).toBe(-50);
+    expect(smooth[200 * N + 200]).toBeCloseTo(400 + 500 / 81);
   });
 
   it('leave the rock and the water as they are, and count them for nothing', () => {
