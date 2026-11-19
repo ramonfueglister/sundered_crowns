@@ -15,7 +15,7 @@ import { loadWorldFor, loadSetup } from '../tools/sim/load';
 import { realmInfos, placeDetail } from '../src/net/views';
 import { encodeOwners, SPEEDS, type ClientMsg, type WorldInfo, type Me } from '../src/net/protocol';
 import type { WorldConfig } from './config';
-import { WorldFiles, writeFileDurable } from './files';
+import { unpackSnapshot, WorldFiles, writeFileDurable } from './files';
 import { applyEntry, type LogEntry, replayLines, parseLog } from './log';
 import { type Conn, Session, type UserAuth } from './session';
 import { NullStore, type WorldStore } from './store';
@@ -121,7 +121,7 @@ export class WorldCore {
     }
     const b = await this.store.downloadBackup(this.cfg.id);
     if (!b) return false;
-    const s = decodeState(gunzipSync(b.bin)),
+    const s = decodeState(unpackSnapshot(b.bin)),
       day = s.day,
       hash = hashState(s);
     // the log lines after the snapshot, if they follow it without a gap

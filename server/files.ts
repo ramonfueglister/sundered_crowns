@@ -12,8 +12,8 @@ import {
   writeSync,
 } from 'node:fs';
 import { join } from 'node:path';
-import { gunzipSync, gzipSync } from 'node:zlib';
-import { decodeState, encodeState, hashState } from '../src/sim/snapshot';
+import { gunzipSync, zstdCompressSync, zstdDecompressSync, constants as zlibConstants } from 'node:zlib';
+import { decodeState, encodeState, hashBytes } from '../src/sim/snapshot';
 import type { WorldState } from '../src/sim/state';
 import { type LogLine, parseLog } from './log';
 
@@ -30,7 +30,22 @@ export function writeFileDurable(file: string, data: Uint8Array | string) {
   renameSync(`${file}.tmp`, file);
 }
 
-/** Snapshots (gzip) and log segments: log-<day>.ndjson holds everything after the snapshot of that day. The genesis
+/**
+ * A snapshot as it goes to disk and to the store: zstd at its fastest level. The state of 1291 is ~80 MB; gzip took
+ * 1.6 s for it (41 MB), zstd takes 0.15 s (28 MB), which matters when the clock runs fast and a snapshot falls every
+ * few seconds. Snapshots written by gzip before (on disk or in the store) are still read: unpackSnapshot tells them by
+ * their first bytes.
+ */
+export function packSnapshot(raw: Uint8Array): Uint8Array {
+  return zstdCompressSync(raw, { params: { [zlibConstants.ZSTD_c_compressionLevel]: 1 } });
+}
+export function unpackSnapshot(b: Uint8Array): Uint8Array {
+  if (b[0] === 0x1f && b[1] === 0x8b) return gunzipSync(b);
+  if (b[0] === 0x28 && b[1] === 0xb5 && b[2] === 0x2f && b[3] === 0xfd) return zstdDecompressSync(b);
+  return b;
+}
+
+/** Snapshots (zstd) and log segments: log-<day>.ndjson holds everything after the snapshot of that day. The genesis
  *  snapshot and the three most recent ones stay; the log segments all stay (a few bytes a day), so the world can be
  *  replayed from day 0. */
 export class WorldFiles {
@@ -60,13 +75,14 @@ export class WorldFiles {
       .sort((a, b) => a - b);
   }
   writeSnapshot(s: WorldState): { day: number; hash: string; bin: Uint8Array } {
-    const bin = gzipSync(encodeState(s)),
+    const raw = encodeState(s),
+      bin = packSnapshot(raw),
       day = s.day,
-      hash = hashState(s);
+      hash = hashBytes(raw);
     this.putSnapshot(day, hash, bin);
     return { day, hash, bin };
   }
-  /** Puts the bytes of a snapshot (gzip) on disk as the latest one and opens the log segment after it. */
+  /** Puts the bytes of a snapshot (packSnapshot) on disk as the latest one and opens the log segment after it. */
   putSnapshot(day: number, hash: string, bin: Uint8Array) {
     writeFileDurable(join(this.dir, `snap-${day}.bin`), bin);
     writeFileDurable(join(this.dir, 'snapshot.json'), JSON.stringify({ day, hash }));
@@ -82,7 +98,7 @@ export class WorldFiles {
     this.openSegment(day);
   }
   readSnapshot(day: number): WorldState {
-    return decodeState(gunzipSync(readFileSync(join(this.dir, `snap-${day}.bin`))));
+    return decodeState(unpackSnapshot(readFileSync(join(this.dir, `snap-${day}.bin`))));
   }
   readLines(fromDay: number): LogLine[] {
     const out: LogLine[] = [];
