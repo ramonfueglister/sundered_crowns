@@ -35,7 +35,7 @@ export function land(ox = 4000, oz = -1200, seed = 0, sea = 60): { g: Ground; t:
   const t: GroundTraits = {
     city: (x, z) => town[cell(x, z)] === 1, plaza: () => Infinity, road: () => Infinity, crop: () => null,
     bleach: (x, z) => noise2(Math.floor(x) / 20, Math.floor(z) / 20, 8 + seed), summit: (x, z) => 0.3 + 0.7 * hash2(Math.floor(x) >> 2, Math.floor(z) >> 2, 9 + seed),
-    tint: (x, z) => (Math.floor(x) < 40 ? dry : null), slope: [0.3, 0.35, 0.1],
+    tint: (x) => (Math.floor(x) < 40 ? dry : null), slope: [0.3, 0.35, 0.1],
     cover: (x, z) => { const i = idx(x, z); return has[i] ? { top: [top[i * 3], top[i * 3 + 1], top[i * 3 + 2]], side: [side[i * 3], side[i * 3 + 1], side[i * 3 + 2]], rise: rise[i], share: share[i], stands: has[i] === 1 } : null; },
   };
   return { g, t };

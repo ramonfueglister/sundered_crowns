@@ -621,3 +621,59 @@ canvas.map {
     flex-basis: 100%;
   }
 }
+
+/* the menu of the map modes (App.tsx MapModes): the button shows the mode shown, the list opens under it */
+.mapmodes {
+  position: relative;
+}
+.mapmodes > .tool.mode {
+  position: relative;
+}
+.mapmodes .caret {
+  position: absolute;
+  right: 1px;
+  bottom: 0;
+  font-size: 10px;
+  line-height: 1;
+  color: var(--gold);
+}
+.modemenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 40;
+  min-width: 190px;
+  padding: 6px;
+  display: grid;
+  gap: 2px;
+  background: linear-gradient(var(--panel), var(--panel2));
+  border: 2px solid var(--edge);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+.modeitem {
+  display: grid;
+  grid-template-columns: 26px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--tx);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.modeitem:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.modeitem[aria-checked="true"] {
+  background: radial-gradient(circle at 30% 40%, var(--btn), var(--btn2));
+  box-shadow: inset 0 0 0 1.5px var(--gold);
+}
+.modeitem kbd {
+  font: inherit;
+  font-size: 0.8em;
+  color: var(--tx2);
+}

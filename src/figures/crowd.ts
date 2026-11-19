@@ -33,6 +33,8 @@ function aimsOf(t: Town): Map<number, TownPerson> | undefined {
   if (!m) {
     m = new Map();
     for (const p of people) {
+      // a ruler is not left to chance: the piece that holds the middle of the town stands them in a street (crowd)
+      if (p.ruler !== undefined) continue;
       const at = key(t.cx - t.half + Math.floor(hash2(p.id, 1, 920) * 2 * t.half), t.cz - t.half + Math.floor(hash2(p.id, 2, 920) * 2 * t.half));
       if (!m.has(at)) m.set(at, p);
     }
@@ -76,16 +78,33 @@ export function crowd(g: Ground, s: SettledGround, own: (x: number, z: number) =
     return false;
   };
   const towns = (s.towns ?? []).flatMap((t) => { const aims = aimsOf(t); return aims ? [{ t, aims }] : []; });
+  // the rulers of a town always stand in it: the piece that holds the town's middle puts each in the free street
+  // column nearest the middle that it holds, one column to a ruler
+  const rulerAt = new Map<number, TownPerson>();
+  for (const { t } of towns) {
+    const cx = t.cx - ox, cz = t.cz - oz;
+    if (cx < 0 || cz < 0 || cx >= N || cz >= N || !own(cx, cz)) continue;
+    for (const p of townPeople(t.site) ?? []) {
+      if (p.ruler === undefined) continue;
+      search: for (let r = 0; r <= t.half + 2; r++) for (let dz = -r; dz <= r; dz++) for (let dx = -r; dx <= r; dx++) {
+        if (Math.max(Math.abs(dx), Math.abs(dz)) !== r) continue;
+        const x = cx + dx, z = cz + dz;
+        if (!free(x, z, true) || !own(x, z) || rulerAt.has(key(x + ox, z + oz))) continue;
+        rulerAt.set(key(x + ox, z + oz), p);
+        break search;
+      }
+    }
+  }
   for (let z = 2; z < N - 2; z++) for (let x = 2; x < N - 2; x++) {
     if (!own(x, z)) continue;
     const wx = x + ox, wz = z + oz, i = idx(x, z), lot = hash2(wx, wz, 401);
     // in a town with persons the street holds them, not chance
     const town = towns.find(({ t }) => Math.abs(wx - t.cx) <= t.half && Math.abs(wz - t.cz) <= t.half);
-    const person = town?.aims.get(key(wx, wz));
+    const person = rulerAt.get(key(wx, wz)) ?? town?.aims.get(key(wx, wz));
     // farmers work from the strip of grass round a field, facing their crop: inside it the crop would hide them
     const street = free(x, z, true), field = !street && free(x, z, false) ? DIRS.findIndex(([dx, dz]) => s.field[idx(x + dx, z + dz)] > 0) : -1;
     let kind: 'street' | 'house' | 'field' | null = null;
-    if (street && (town ? person : lot < IN_STREET)) kind = 'street';
+    if (street && (person || (!town && lot < IN_STREET))) kind = 'street';
     else if (field >= 0 && lot < IN_FIELD) kind = 'field';
     else if (!street && lot < ABOUT_HOUSE && free(x, z, false) && nearHouse(x, z)) kind = 'house';
     if (!kind) continue;
@@ -97,7 +116,8 @@ export function crowd(g: Ground, s: SettledGround, own: (x: number, z: number) =
       : shown ? pickEstate(h(0), (q) => (FEMALE.has(q.name) === shown.female ? q.townShare : 0))
         : pickEstate(h(0), (q) => (kind === 'street' ? q.townShare : q.mode === Mode.Work ? 0 : q.villageShare));
     const estate = ESTATES[e];
-    let mode = kind === 'field' ? (crop === 2 ? Mode.Stand : Mode.Work) : estate.mode;
+    // a ruler stands on the spot, so that the map mode of the rulers finds them where it says
+    let mode = kind === 'field' ? (crop === 2 ? Mode.Stand : Mode.Work) : shown?.ruler !== undefined ? Mode.Stand : estate.mode;
     // the way: straight on over free ground of even height, as far as it goes
     const [dx, dz] = DIRS[Math.floor(h(1) * 4)], want = 2 + Math.floor(h(2) * (LONGEST_WAY - 1));
     let len = 0;
