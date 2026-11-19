@@ -48,10 +48,10 @@ const NONE = { en: '—', de: '—' };
  *  place of their family, ids of place p at start[p] … start[p + 1]. Rebuilt when the day, the persons or the families
  *  change in number (persons and families are only made and freed by the day's systems); who is alive and what a
  *  person is are read when asked. */
-const grouped = new WeakMap<WorldState, { day: number; persons: number; families: number; start: Int32Array; ids: Int32Array }>();
+const grouped = new WeakMap<object, { day: number; persons: number; families: number; start: Int32Array; ids: Int32Array }>(); // by the table of the persons, which the archive makes anew (src/sim/people/archive.ts)
 const count = (t: { size: number; free: number[] }) => t.size * 65536 + t.free.length;
 function personsByPlace(s: WorldState): { start: Int32Array; ids: Int32Array } {
-  let g = grouped.get(s);
+  let g = grouped.get(s.person);
   if (g && g.day === s.day && g.persons === count(s.person) && g.families === count(s.family)) return g;
   const L = s.place.owner.length, P = s.person.cols, F = s.family.cols, start = new Int32Array(L + 1);
   const persons = presentPersons(s); // the dead without a part are never asked for (src/sim/people/living.ts)
@@ -60,7 +60,7 @@ function personsByPlace(s: WorldState): { start: Int32Array; ids: Int32Array } {
   const ids = new Int32Array(start[L]), at = start.slice(0, L);
   for (const id of persons) { const p = F.place[P.family[id]]; if (p >= 0 && p < L) ids[at[p]++] = id; }
   g = { day: s.day, persons: count(s.person), families: count(s.family), start, ids };
-  grouped.set(s, g);
+  grouped.set(s.person, g);
   return g;
 }
 

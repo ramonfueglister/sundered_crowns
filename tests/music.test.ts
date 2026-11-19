@@ -5,7 +5,9 @@ import { createHash } from 'node:crypto';
 import { TRACKS } from '../src/audio/playlist';
 import { parseVolume, sliderGain, dbGain, nextTrack, DEFAULT_VOLUME } from '../src/audio/music';
 
-const record = JSON.parse(readFileSync('data/audio/music.json', 'utf8')) as { tracks: { file: string; bytes: number; sha256: string; gain_db: number; lufs: number }[] };
+const record = JSON.parse(readFileSync('data/audio/music.json', 'utf8')) as {
+  tracks: { file: string; bytes: number; sha256: string; gain_db: number; lufs: number }[];
+};
 
 describe('music', () => {
   it('lists every piece of the record once, in its order, starting with Mare et Terra', () => {
@@ -18,7 +20,11 @@ describe('music', () => {
   it('has each file in public/ with the size of the record, and the first one with its hash', () => {
     for (const t of record.tracks) expect(statSync(`public/audio/music/${t.file}`).size).toBe(t.bytes);
     const first = record.tracks[0];
-    expect(createHash('sha256').update(readFileSync(`public/audio/music/${first.file}`)).digest('hex')).toBe(first.sha256);
+    expect(
+      createHash('sha256')
+        .update(readFileSync(`public/audio/music/${first.file}`))
+        .digest('hex'),
+    ).toBe(first.sha256);
   });
 
   it('only turns pieces down, to the quietest one (-16 LUFS)', () => {
@@ -36,7 +42,8 @@ describe('music', () => {
     expect(parseVolume('140')).toBe(100);
     expect(parseVolume('-3')).toBe(0);
     expect(parseVolume('0')).toBe(0);
-    expect(sliderGain(0)).toBe(0); expect(sliderGain(100)).toBe(1);
+    expect(sliderGain(0)).toBe(0);
+    expect(sliderGain(100)).toBe(1);
     expect(20 * Math.log10(sliderGain(DEFAULT_VOLUME))).toBeCloseTo(-15.9, 1);
     expect(dbGain(-6)).toBeCloseTo(0.501, 3);
   });

@@ -15,7 +15,8 @@
 // The days of death are a column of the persons (`person.dies`), so the list of events is no state of its own: it
 // is a heap over that column, built when a state is first seen and kept beside it.
 //
-// When a person dies: the day is written (`person.died`; the row stays, ids are never reused), and the family loses
+// When a person dies: the day is written (`person.died`; the row stays until the archive of the dead takes it on a
+// first of January, src/sim/people/archive.ts), and the family loses
 // its head if the person was one; the others stay in the family. A person who had a part in the economy of the town
 // (src/sim/systems/work.ts) leaves it to a successor, because the engine computes a fixed list of persons for every
 // town (it has no way to add or remove one): the successor takes the place in the engine's list with the employer,
@@ -73,7 +74,7 @@ const survives = (a: number, b: number): number => { const y = Math.floor(a), wi
 /** The day of death of the person `id` who lives on `day`: at least the next day. */
 export function drawDeath(s: WorldState, id: number, day: number): number {
   const P = s.person.cols;
-  const age = ageOn(P.born[id], day), u = hash01(s.seed >>> 0, id, K.death);
+  const age = ageOn(P.born[id], day), u = hash01(s.seed >>> 0, P.uid[id], K.death);
   // the force of death from TRAITS_FROM_AGE on times the factor of the person's traits (people feature 5): the
   // survivorship from there on is that of the life table to the power of the factor
   const k = deathFactor(P, id), left = 1 - u;
@@ -91,15 +92,16 @@ export function foundDeaths(s: WorldState): void {
     if (!s.person.alive[id] || P.died[id] !== ALIVE || named.has(id)) continue;
     P.dies[id] = drawDeath(s, id, s.day);
   }
-  queues.delete(s);
+  queues.delete(s.person);
 }
 
 /** The list of events of a state: the days of death of its living persons, the earliest first; and the dead whose
- *  place in the economy is still theirs. Derived from the columns, so a loaded state builds it anew. */
+ *  place in the economy is still theirs. Derived from the columns, so a loaded state builds it anew; kept by the
+ *  table of the persons, so it is built anew when the rows close up (src/sim/people/archive.ts). */
 interface Queue { heap: MinHeap; estates: number[]; /** the persons of each place who are no rulers; the dead leave it when it is next read */ byPlace: Map<number, number[]> }
-const queues = new WeakMap<WorldState, Queue>();
+const queues = new WeakMap<object, Queue>();
 function queueOf(s: WorldState): Queue {
-  let q = queues.get(s);
+  let q = queues.get(s.person);
   if (!q) {
     q = { heap: new MinHeap(), estates: [], byPlace: new Map() };
     const P = s.person.cols, F = s.family.cols, named = namedPersons(s);
@@ -110,13 +112,13 @@ function queueOf(s: WorldState): Queue {
       if (P.died[id] === ALIVE) { if (P.dies[id] !== ALIVE) q.heap.push(eventKey(P.dies[id], id), id); }
       else if (P.role[id] !== ROLE.none) q.estates.push(id);
     }
-    queues.set(s, q);
+    queues.set(s.person, q);
   }
   return q;
 }
 /** Puts a person who has come into the world after the list was built on it: the day of death, and the place. */
 export function scheduleDeath(s: WorldState, id: number): void {
-  const had = queues.has(s), q = queueOf(s);
+  const had = queues.has(s.person), q = queueOf(s);
   if (!had) return; // the list was built just now, with the person
   const P = s.person.cols, d = P.dies[id], place = s.family.cols.place[P.family[id]], list = q.byPlace.get(place);
   if (d !== ALIVE) q.heap.push(eventKey(d, id), id);
@@ -149,17 +151,17 @@ export function seekersIn(s: WorldState, place: number, day: number): number[] {
     if (P.sex[id] !== 1) { women++; if (withoutHusband(id)) alone++; }
   }
   const others = rateOfOtherWomen(participation.women, women, alone);
-  return adults.filter((id) => P.role[id] === ROLE.none && wantsWork(seed, id, P.sex[id] === 1, P.sex[id] !== 1 && withoutHusband(id), others));
+  return adults.filter((id) => P.role[id] === ROLE.none && wantsWork(seed, P.uid[id], P.sex[id] === 1, P.sex[id] !== 1 && withoutHusband(id), others));
 }
 
 /** Who takes the part of `dead` in the economy of the town: a person of the same place who wants a part and has
  *  none (`seekersIn`); −1 where there is none. */
 function successor(s: WorldState, dead: number, day: number): number {
   const P = s.person.cols, F = s.family.cols, seed = s.seed >>> 0;
-  const family = P.family[dead], place = F.place[family];
+  const family = P.family[dead], place = F.place[family], uid = P.uid[dead];
   let best = -1, bestRank = 3, bestOrder = Infinity;
   for (const id of seekersIn(s, place, day)) {
-    const rank = P.family[id] === family ? 0 : P.mother[id] === dead || P.father[id] === dead ? 1 : 2, order = hash01(seed, id, WORK_K.order);
+    const rank = P.family[id] === family ? 0 : P.mother[id] === uid || P.father[id] === uid ? 1 : 2, order = hash01(seed, P.uid[id], WORK_K.order);
     if (rank < bestRank || (rank === bestRank && order < bestOrder)) { best = id; bestRank = rank; bestOrder = order; }
   }
   return best;

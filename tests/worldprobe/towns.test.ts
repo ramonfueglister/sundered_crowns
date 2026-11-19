@@ -39,3 +39,16 @@ describe('the towns of a start year', () => {
     expect(housed(pop / 2)).toBeLessThan(persons);
   }, 60000);
 });
+
+describe('a walled town', () => {
+  it('keeps its paving as street inside the wall, where the persons of the town walk (src/figures/crowd.ts)', () => {
+    const site: Site = { id: venice, at: [N / 2 + 0.5, N / 2 + 0.5], size: 5, pop: 40_000, region: 'italy', style: styleOf('italy') };
+    const counts: Record<string, number> = {};
+    const { used, town } = settle(meadow(), new Batch(), [site], [], () => ({ region: '', style: styleOf('') }), () => 0, () => 0, counts);
+    expect(counts.wall).toBe(1);
+    let paved = 0, street = 0;
+    for (let i = 0; i < N * N; i++) if (town[i]) { paved++; if (used[i] === 2) street++; }
+    expect(paved).toBeGreaterThan(0);
+    expect(street).toBe(paved);
+  }, 60000);
+});

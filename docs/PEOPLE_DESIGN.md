@@ -22,7 +22,8 @@ nothing built before Ramon agrees. Proposal with sources (German): https://claud
 | 4 | The unmarried move to other places, and an heir comes home | built 18 Nov 2026 (Ramon, 18 Nov: the young unmarried move by the measured rates, heirs come home; work, whole families and the flight from a famine follow later, one by one). State 25 |
 | 5 | IQ and the Big Five shift the rates of death, of a far move and of who marries | built 18 Nov 2026 (Ramon, 18 Nov: «So bauen» on the proposal, with the factor 0.89 for the IQ). State 28 |
 | 6 | Who wants work looks for a part in the economy, in the own town and within 115 km | built 18 Nov 2026 (Ramon, 18 Nov: «weiter» on the proposal, read as «So bauen»). No new state |
-| 7 | The living and the dead: the systems go over the living, the dead go to an archive (step 1 of 2: the list of the living) | step 1 built 19 Nov 2026 (Ramon, 19 Nov: «weiter» on the proposal of the archive and the day plan, read as «So bauen» for way A: the archive first, then the day plan). No new state |
+| 7 | The living and the dead: the systems go over the living, the dead go to an archive (step 1: the list of the living; step 2: the archive, with a uid for every person) | built 19 Nov 2026 (Ramon, 19 Nov: «weiter» on the proposal of the archive and the day plan, read as «So bauen» for way A: the archive first, then the day plan). Step 1 no new state, step 2 state 30 |
+| 8 | The calendar of the town: the firms work on the working days of their owner's faith (step 3 of the day plan) | built 19 Nov 2026 (Ramon, 19 Nov: way A of the proposal, after the archive the day plan; «vorwärts machen alles mergen comitten und feddich»). Economy feature 19. State 31 |
 
 ## Feature 1: persons of the 30 largest cities
 
@@ -32,7 +33,9 @@ cities in `src/sim/content/cities_1356.json` (written by `tools/people/build_cit
 Built once when a world starting in 1356 is founded (or by the upgrade 4 → 5 of an older one). Nothing changes while
 the world runs yet: no births, deaths, marriages or moves. Age = (day − born) / 365.25 and is never stored. No row of
 either table is ever freed, so ids are never reused (parents, families and the portraits' seed stay valid).
-All randomness comes from a stream of its own, `hash01(seed, person id, draw)`, never from `s.rng`.
+All randomness comes from a stream of its own, `hash01(seed, person id, draw)`, never from `s.rng`. (Since feature 7,
+step 2, the dead go to an archive on the first of January and the rows of the persons close up: the parents, the
+draws and the portraits' seed are by the `uid`, which never changes.)
 
 | Table | Column | Type | Meaning |
 |---|---|---|---|
@@ -750,10 +753,175 @@ A pass is the bare loop (deaths, moves, weddings and births only, seed 1291, one
 of them in the economy. The world of 1291 with all its systems has the same hash after two years with the list as
 without it (`npm run years:check -- 2`: f9165182), at about 175 ms a day in the cloud.
 
-### Limits
+### Limits of step 1
 
 - The rows themselves stay: the memory, the snapshot and the loops that run once still grow with the dead. Step 2
   (the archive) moves the dead out of the table.
 - The families are never freed either (21,754 rows at the founding, 22,972 after two years): `writeHouseholds` still
-  goes over all of them every day. They follow the persons into the archive in step 2.
+  goes over all of them every day. Step 2 leaves them where they are (below).
 
+### Step 2: the archive of the dead
+
+`src/sim/people/archive.ts`; state version 30.
+
+**Two numbers.** A person has a row and a `uid`. The row is the id every system reads the columns by; it holds from
+one first of January to the next. The `uid` never changes and is never given twice in a world: the founders count
+0, 1, 2 … in the order they came, every newcomer (a birth, a ruler entering the world) gets the next one
+(`spawnPerson`, `WorldState.nextUid`). The rows lie in the order of the uids, so the row of a uid is found by halving
+(`rowOf`). Everything that keeps a person beyond the day names the uid:
+
+- the parents (`mother`, `father` are uids: a parent may be in the archive), compared as uids where kin is asked for
+  (the weddings, the heir who comes home, the successor of an estate);
+- the person's own draws of chance (`hash01(seed, uid, draw)`: the birth, the traits, the genes, the day of death,
+  the moves, the wish to work, the lot of a wedding), so a person draws the same with the archive and without it;
+- the browser (`GET /people/<place>` lists uids, `GET /person/<uid>`, the portrait's seed);
+- the copy of the rulers in Supabase (`world_persons.person`, `world_reigns.person`);
+- the archive.
+
+The count of the children a woman has borne is a column of its own (`children`): the draw of her next birth is by
+it, and it no longer comes from counting the rows that name her as mother.
+
+**On the first of January** the archive runs first, before the deaths of the day. The dead whom nothing needs leave
+the table, the rows of the others close up in their order, and everything that names a row names the new one: the
+heads of the families (`family.man`, `family.woman`), the owners of the firms, the holders of the crowns and the
+persons of history (`named`). The table is a new one, so what the systems derive from it (the lists of the events of
+deaths, births and moves, the persons of each place, the list of the living, the index of the rulers, the persons by
+place of the views) is kept by table and built anew, as for a loaded state.
+
+The dead who stay in the table:
+
+- a dead person who still holds a part in the economy (an estate, feature 2);
+- a person of history: the crowns and the copy of the rulers name them, and they are few;
+- the dead parents of a living person whose mother or father belongs to a household with a seat. When the
+  household is vacant, the weddings look for its heir among the children by the family of their parents and take
+  the custom of the heir's father. A family that has no seat never gets one again (a household passes to a new
+  family), so a parent who went to the archive is never looked for.
+
+Nothing else reads a dead person: a parent who is not in the table has died (the orphan's rate of moving, feature 4).
+
+**The archive** keeps of a dead person who the person was, about 140 bytes: uid, birth, death, sex, the parents, the
+family and its place, where the person came from, culture, faith, IQ, the Big Five and the genes. The archived
+persons leave the state: it keeps for every year only how many went and their smallest and greatest uid
+(`WorldState.archive`). The persons are handed to whoever runs the world (`takeArchived`). The world server writes
+each year once to its disk (`archive/dead-<day>.bin`, gzip, in the encoding of the snapshot) and to Supabase Storage
+(`world-snapshots/<world>/persistent/archive/dead-<day>.bin`, never removed). A world restored on an empty disk
+fetches the years its snapshot names; a replay archives the same persons on the same day and writes the same bytes
+again. `GET /person/<uid>` reads a dead person of the archive from the year that holds them (the server keeps the
+eight years read last), with what the archive keeps and no economy or household.
+
+A year a file rather than a decade: nothing of the archive is kept in the state, and a year is a few hundred KB.
+
+**The upgrade 29 → 30** gives every person the row as uid (up to 29 the row was the person for ever, so the parents
+are uids as they are) and every woman the count of the children who name her as mother. Nobody goes to the archive
+until the next first of January. A replay from the genesis snapshot of a world that ran under 29 no longer gives
+the hash of the live world (it archives on first days of January the live world did not), as after the upgrades
+28 and 29; a replay from any snapshot of 29 or later does.
+
+### Measured: the same world, and the table stays
+
+`npm run archive:check [-- years] [-- --bare]` runs a world of 1291 twice, with the archive and without it, and
+compares them every year over a hash in which every person is named by the uid (`tools/sim/living_hash.ts`): the
+living and the estates with all their columns, the families, the firms, the crowns, the persons of history, the
+economies and the people of every place.
+
+| Run (seed 1291, cloud) | Years | Hash with and without the archive | Rows of the persons (with / without) | Snapshot, gzip (with / without) |
+|---|---|---|---|---|
+| All systems | 4 | the same every year (year 4: 7e2fc945) | 105,223 / 112,325 | 54.5 / 55.4 MB |
+| People only (deaths, moves, weddings, births) | 100 | the same every year (year 100: 579ae68b) | 106,746 / 374,832 | 39.2 / 70.9 MB |
+
+The world without the archive is the world of main: over three years of the people its hash is the same on main
+(88dadb32, 82f3835d, 666528ac), and so it is after a year with all systems (f5474dfc).
+
+The table of the persons holds the living, the dead of the running year and those that stay:
+
+| People only | Living | Dead in the table at the end of the year | Of them estates | Archived so far | Rows without the archive |
+|---|---|---|---|---|---|
+| Year 1 | 101,688 | 661 | 150 | 2,264 | 104,613 |
+| Year 10 | 100,336 | 6,191 | 153 | 22,156 | 128,683 |
+| Year 30 | 98,209 | 9,177 | 402 | 75,759 | 183,145 |
+| Year 50 | 96,495 | 10,074 | 871 | 131,035 | 237,604 |
+| Year 70 | 96,356 | 10,147 | 1,091 | 186,107 | 292,610 |
+| Year 100 | 96,941 | 9,805 | 987 | 268,086 | 374,832 |
+
+The dead in the table level off near 10,000: about 2,800 who died in the running year, the estates, and the dead
+parents of the households. A day costs the same with the archive as without it (all systems, year 4: 218 / 217 ms in
+the cloud); the first of January costs 55 to 90 ms more (the years 1 to 3, the cloud under load). A year of the archive is about
+2,400 persons, 270 KB gzip. The snapshot at the founding is 37.7 MB with the two new columns (37.4 MB before).
+
+### Limits of step 2
+
+- The families are not archived: their table keeps every family that ever was (21,754 at the founding, about 600 more
+  a year), and `writeHouseholds` goes over all of them every day. A family is small (13 columns) and the weddings draw
+  by its id, so it would need an id of its own like the uid; left for when it costs.
+- The dead parents of the households stay in the table (about 6,000 after some decades): an exact rule, not the
+  smallest one.
+- `giveGenes` (the upgrade 28 → 29) gives a child the genes of its parents only where both are in the table; it is
+  not called on a world that has an archive.
+- The archive is read by the world server only; the browser asks for one dead person at a time.
+
+## Feature 8: the calendar of the town
+
+Step 3 of way A of the proposal «Personen: Archiv der Toten und Tagesplan» (feature 7): every faith has its days of
+rest, the firms of the cities work on the working days of their owner's faith, and a household buys on the working
+days of its own faith. The calendars are a pure function
+of the faith and the date (`src/sim/holy_days.ts`): nothing of them is saved, the same year always gives the same
+days. The economy reads them (economy feature 19, docs/ECONOMY_DESIGN.md, section 19); the persons' own day (steps 4
+to 6: sickness and childbed, templates and places, a target income) follows.
+
+### The calendars
+
+A day is a working day, a half day or a day of rest; a half day counts as half a day of work.
+
+| calendar | faiths | days of rest | half days | source |
+|---|---|---|---|---|
+| Latin | Latin Church | the Sundays and the feasts of the canon law in force in 1291: Christmas, St Stephen, St John, the Innocents, St Silvester, 1 January, the Epiphany, the Purification, the week of Easter, the three Rogation days, the Ascension, Pentecost, the Nativity of St John the Baptist, the twelve apostles, St Lawrence, the Assumption, the Nativity of Mary, St Michael, All Saints, St Martin | Saturdays and the eves of the feasts | Gratian, Decretum, De consecratione D.3 c.1; work stopped at noon on Saturdays and eves in the cloth towns of Flanders and Artois (Stabel 2014, TSEG 11(4), pp. 36–38: Douai c. 1250, Arras before 1236) |
+| Orthodox | Orthodox Church | the Sundays and 25 holy days of the Greek church, on the days of the Julian calendar | none | Holweck, «Ecclesiastical Feasts», Catholic Encyclopedia (1909); the Book of the Eparch (ch. XIII §3) forbids selling on Sundays and feasts |
+| Sunday | the other churches (Coptic, Armenian, Syriac, of the East, Ethiopian, Bosnian, Hussite, of the Reformation) | the Sundays | none | their feasts were not read |
+| Muslim | Sunni, Shia, Ibadi Islam | 1 Shawwāl and 10 Dhū l-Ḥijja, by the tabular calendar (civil epoch, 16 July 622) | none | Friday «is not at all a day of rest, but one of obligatory public worship, held at noon» (Goitein 1959, The Muslim World 49, 183–195) |
+| Jewish | Judaism | the Sabbath and the seven days of Leviticus 23 on which no servile work is done (15 and 21 Nisan, Shavuot, 1, 10, 15 and 22 Tishri), by the fixed Hebrew calendar | none | Leviticus 23; Dershowitz and Reingold, Calendrical Calculations |
+| none | the other faiths | none | none | no day of rest was read |
+
+The world's calendar (`src/sim/calendar.ts`) is Julian before 1583 and has the Gregorian leap years after, without
+dropping ten days. The Latin feasts lie on the world's dates, Easter by the Gregorian computus from 1583; the
+Orthodox, Muslim and Jewish days lie on the day the sun and the moon give, through the Julian day number.
+
+### 1291 (`tests/holy_days.test.ts`)
+
+| calendar | working days | half days | days of rest | worked, a half day as half |
+|---|---|---|---|---|
+| Latin | 219 | 63 | 83 (52 Sundays, 31 feasts on other days) | 250.5 |
+| Orthodox | 292 | 0 | 73 | 292 |
+| Sunday | 313 | 0 | 52 | 313 |
+| Muslim | 363 | 0 | 2 | 363 |
+| Jewish | 307 | 0 | 58 | 307 |
+
+Dates of 1291 checked against the computations of elsewhere: Easter 22 April (Julian); Ramaḍān 690 from 28 August
+to 26 September, 1 Shawwāl 27 September, 10 Dhū l-Ḥijja 4 December; 15 Nisan 17 March, Shavuot 6 May, Rosh
+Hashanah 27 August, Yom Kippur 5 September, Sukkot 10 September. The day numbers are tested against known dates of
+today (1 Ramaḍān 1445 = 11 March 2024, Rosh Hashanah 5784 and 5785, Easter 2024 and 2025).
+
+### Against the sources
+
+- **Latin: 282 days with work, 250.5 counted whole.** The English lists of the 13th century ask for 52 to 54 feasts
+  besides the Sundays (Exeter 1287: 54; Harvey 1972), which leaves 259 to 261 days; Walter of Henley reckons with
+  44 working weeks, 264 days of six. Our 282 days with work lie above, because the Decretum has fewer feasts than the
+  English dioceses and the patron and the dedication of the church, which the canon leaves to the bishop, have no
+  day; our 250.5 lie below, because the Saturdays and eves of the Flemish cloth towns are half days everywhere.
+  The days a day labourer was actually employed, 150 to 200 in the wage histories (the research of feature 7,
+  recherche/tagesplaner/ in the project files),
+  are a target for step 6, not for the calendar.
+- **Orthodox: 292.** The constitution of Manuel Komnenos of 1166 had 66 whole and 27 half holy days besides the
+  Sundays (Holweck, same article), about 233 days; their names were not found, so the list of 1909 stands in.
+- **Muslim: 363.** How many days the two festivals lasted, and how much less was worked by day in Ramaḍān, were
+  not found (Lane's description of Cairo could not be read in full; Eychenne's study of Damascus was not reachable).
+  The tabular calendar may differ by a day or two from the sighting of the moon.
+- **Jewish:** the second days of the diaspora and the eve of the Sabbath are not counted.
+
+### Limits
+
+- A firm keeps the calendar of its owner's faith; its workers rest with it, whatever their own faith. A household
+  buys on the working days of its own faith (the market of its faith is closed on its days of rest), the family
+  purse of a person with the calendar of that person's faith: in a mixed city a Jewish family buys on a Sunday
+  from the firms that work then or hold stock.
+- A firm without an owner works every day; a household of a faith without days of rest buys every day.
+- No seasons and no hours of the day yet: those are the templates of step 5.

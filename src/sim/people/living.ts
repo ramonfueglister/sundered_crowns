@@ -1,12 +1,13 @@
 // The persons the systems go over (docs/PEOPLE_DESIGN.md, "The living and the dead"): the living, and the dead whose
 // part in the economy still waits for a successor (an estate, src/sim/systems/deaths.ts).
 //
-// The table of the persons keeps the dead (ids are never reused), so a loop over all its rows grows with the history
-// of the world: 102,042 rows at the founding of 1291, 378,000 after 100 years, while the living stay near 100,000.
+// The table of the persons keeps the dead of the year and those the world still needs (the archive takes the others on
+// the first of January, src/sim/people/archive.ts), so a loop over all its rows goes over some thousand dead too.
 // This list grows only with the people. It is derived from the columns, so a loaded state builds it anew and a
-// snapshot does not change: built when a table is first seen; the persons who came into the world since it was last
-// read are added (rows are only ever added, a person is never freed); the dead without a part drop out when it is
-// next read. A dead person never comes back onto it: the part of an estate goes to a living heir.
+// snapshot does not change: built when a table is first seen (the archive makes a new table when the rows close up);
+// the persons who came into the world since it was last read are added (rows are only ever added while a year runs);
+// the dead without a part drop out when it is next read. A dead person never comes back onto it: the part of an
+// estate goes to a living heir.
 //
 // The ids come in their order, as a loop over the rows visits them, so a system that goes over the list instead of
 // the rows computes the same, number for number.
