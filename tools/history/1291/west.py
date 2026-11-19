@@ -1,7 +1,7 @@
 """Western Europe on 1 January 1291: British Isles, France, Low Countries, Iberia."""
 import os, sys
 sys.path.insert(0, os.path.dirname(__file__))
-from lib import *
+from lib import N, R, S, WAR, write
 
 SOURCES = [
     "Euratlas-Nüssli, Euratlas Periodis: Europe in the year 1300 (sovereign and dependent states)",

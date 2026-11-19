@@ -22,7 +22,7 @@ import gzip, json, math, os, sys
 import numpy as np
 from scipy import ndimage
 from scipy.spatial import cKDTree
-from common import ROOT, CACHE, LON0, LON1, LAT_N, LAT_S, W as MAP_W, H as MAP_H, merc, YMAX, YMIN
+from common import CACHE, H as MAP_H, LON0, LON1, ROOT, W as MAP_W, YMAX, YMIN
 from build_locations import value_noise, fix_components
 
 OUT = os.path.join(CACHE, 'beyond')

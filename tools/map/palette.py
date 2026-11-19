@@ -135,7 +135,6 @@ def main():
     for i, o in enumerate(owner):
         if o is not None and o >= 0:
             size[o] += geo['loc']['area'][i]
-    total = sum(size) or 1
     weight = defaultdict(float)
     for a, b, kind, c, _ in geo['edges']:
         if kind != 0 or a > L or b > L:
