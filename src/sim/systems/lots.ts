@@ -23,6 +23,7 @@ import { SCALE } from '../scale';
 import { townGround, parcelSize, footprint, FRONT, type Parcel, type ParcelSize } from '../settlement/rule';
 import { layTown, type Street, type Town, type Tuning } from '../settlement/streets';
 import { waysOf } from '../content/town_ways';
+import { planOf } from '../content/town_plans';
 import { FARM, HAMLET_GAP, HAMLET_OFF, METRES_PER_BLOCK, hamletBox, hamletRing, hamletSizes, hamletSpots, layFarms } from '../settlement/hamlets';
 import type { Ground } from '../content/ground';
 
@@ -130,6 +131,7 @@ function layStreets(s: WorldState, site: number, count: number, size: ParcelSize
   // the plan of the town is laid in steps of `u` metres, about one, so that a parcel is a whole number of steps wide
   // and deep and keeps its exact ground (feature 1)
   const W = Math.max(1, Math.round(size.w)), u = size.w / W, cells = { w: W, d: Math.max(1, Math.round(size.d / u)) };
+  const plan = planOf(s.startYear, site); // a real plan, where an old plan of the town is read
   let town: Town | null = null;
   if (g?.has(site)) {
     const m = g.metresPerBlock, r = g.reach(site), n = 2 * r + 1, known = new Uint8Array(n * n);
@@ -144,10 +146,10 @@ function layStreets(s: WorldState, site: number, count: number, size: ParcelSize
       free: (x, z) => block(Math.round((x * u) / m), Math.round((z * u) / m)),
       stands: (p) => houseGround(g, site, { x: p.x * u, z: p.z * u, front: p.front }, size),
       reach: (g.reach(site) * m) / u,
-    }, tune);
+    }, tune, plan);
     if (town.parcels.length < count) { town = null; found.tight.push(site); }
   }
-  town ??= layTown(count, cells, ways, seed, undefined, tune);
+  town ??= layTown(count, cells, ways, seed, undefined, tune, plan);
   if (town.parcels.length < count) throw new Error(`the streets of town ${site} hold ${town.parcels.length} of its ${count} families`);
   // into metres
   const at = (v: number) => v * u;
@@ -172,7 +174,7 @@ function layStreets(s: WorldState, site: number, count: number, size: ParcelSize
 }
 
 /**
- * Lays the towns of a running world out anew along their streets (the upgrade 29 → 30): each town keeps its parcels,
+ * Lays the towns of a running world out anew along their streets (the upgrade 31 → 32): each town keeps its parcels,
  * their families and their size; the parcels move to the streets that grow to them, the lowest id
  * the first, as a new world lays them. The hamlets stay where they are.
  */

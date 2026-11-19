@@ -3,7 +3,8 @@
 // world and what the world server tells of it.
 import { describe, it, expect } from 'vitest';
 import { AREA_LAW, PARCEL_SHARE, DEPTH_PER_WIDTH, NARROWEST_FRONT, FRONT, settledHectares, townGround, parcelSize, measuredTown, footprint, type Parcel } from '../src/sim/settlement/rule';
-import { layTown, streetWidth, DEFAULT_TUNING, type Town } from '../src/sim/settlement/streets';
+import { layTown, streetWidth, DEFAULT_TUNING, STREET, type Town } from '../src/sim/settlement/streets';
+import { planOf } from '../src/sim/content/town_plans';
 import { foundLots, houseGround, townFamilies } from '../src/sim/systems/lots';
 import { compileGround } from '../src/sim/content/ground';
 import { townLots, manyTownsLots } from '../src/net/lots';
@@ -103,6 +104,19 @@ describe('the streets of a town', () => {
     for (const p of west.parcels) expect(p.x + footprint(p, size).w / 2).toBeLessThanOrEqual(0.5); // (the metres are steps of 1 m round their middle)
     for (const q of west.streets) expect(Math.max(q.x0, q.x1) + west.width / 2).toBeLessThanOrEqual(0.5);
     expect(layTown(1000, size, ways, 5, { free: () => true, reach: 100 }).parcels.length).toBeLessThan(1000);
+  });
+  it('of a town with a real plan lay its market and its main streets where the plan has them, scaled to the town', () => {
+    // one street north-south through the town and a market a radius north of the centre
+    const plan = { market: [0, -1] as const, streets: [[0.5, -1, 0.5, 1]] };
+    const t = layTown(40, size, ways, 5, undefined, DEFAULT_TUNING, plan), main = t.streets.filter((q) => q.kind === STREET.road);
+    expect(t.market.x).toBe(0);
+    expect(t.market.z).toBeLessThan(-2 * size.d); // twice the packed radius of the town: far beyond a parcel
+    expect(main.length).toBeGreaterThan(0);
+    for (const q of main) { expect(q.x0).toBe(q.x1); expect(q.x0).toBeGreaterThan(0); } // north-south, east of the centre
+    expect(t.parcels.length).toBe(40);
+    for (const p of t.parcels) expect(fronts(t, p, size)).toBe(true);
+    // the arms along the ways are not laid: the plan's streets are the town's roads
+    expect(t.streets.some((q) => q.kind === STREET.track || q.kind === STREET.highway)).toBe(false);
   });
   it('lay the market on open ground, beside the ground at the centre that is not', () => {
     const church = (x: number, z: number) => Math.abs(x) > 6 || Math.abs(z) > 6; // the centre is taken
@@ -324,6 +338,18 @@ describe('the streets of a world of 1291', () => {
     const big = blocks.filter((a) => a >= 200), tau = 1 + big.length / big.reduce((m, a) => m + Math.log(a / 200), 0);
     expect(big.length).toBeGreaterThan(500);
     expect(Math.abs(tau - 1.9)).toBeLessThan(0.15);
+  });
+  it('of Paris follow the Vasserot cadastre: the market at the Halles north of Notre-Dame, and the streets meet as Paris\'s did within 0.05 (data/cadastre/paris_1291.json)', () => {
+    const paris = site('Paris'), v = found.streets.get(paris)!, real = JSON.parse(readFileSync('data/cadastre/paris_1291.json', 'utf8'));
+    expect(planOf(1291, paris)).toBeDefined();
+    const c = cities.find((x) => x.site === paris)!;
+    expect(v.market.z).toBeLessThan(0); // north of the centre, where the world sets the church
+    expect(Math.abs(v.market.x)).toBeLessThan(Math.abs(v.market.z) / 2);
+    expect(c.name).toBe('Paris');
+    const n = v.nodes.ends + v.nodes.tees + v.nodes.crosses;
+    expect(Math.abs(v.nodes.ends / n - real.dead)).toBeLessThan(0.05);
+    expect(Math.abs(v.nodes.tees / n - real.T)).toBeLessThan(0.05);
+    expect(Math.abs(v.nodes.crosses / n - real.X)).toBeLessThan(0.05);
   });
 });
 
