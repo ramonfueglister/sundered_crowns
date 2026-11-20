@@ -11,7 +11,7 @@ import type { Ground } from './content/ground';
 import type { Tilth } from './content/tilth';
 import type { WayNet } from './roads';
 
-export interface GeoJson {
+interface GeoJson {
   W: number;
   H: number;
   lon0: number;
@@ -42,7 +42,7 @@ export interface GeoJson {
   areas: { name: string; provinces: number[]; region: string }[];
   rivers: { name: string; rank: number; pts: [number, number][] }[];
 }
-export interface WorldJson {
+interface WorldJson {
   terrain: string[];
   resource: string[];
   name: string[];
@@ -77,7 +77,7 @@ export interface CultivationJson {
 /** The economy of the world: the engine that computes a period, and the calibration table of the cities' economies
  *  (data/economy/england_1356.json; docs/ECONOMY_DESIGN.md, features 3 to 11). The world calibrates every city from
  *  the table when it founds the economies (src/sim/systems/economy.ts). */
-export interface EconomySetup {
+interface EconomySetup {
   engine: EconomyEngine;
   table: CalibrationTable;
 }
@@ -87,7 +87,7 @@ export const EDGE_RIVER = 1,
   EDGE_COAST = 4,
   EDGE_SEA = 8;
 
-export interface Province {
+interface Province {
   id: number;
   name: string;
   locs: number[];
@@ -95,7 +95,7 @@ export interface Province {
   area: number;
   region: string;
 }
-export interface Area {
+interface Area {
   id: number;
   name: string;
   provinces: number[];

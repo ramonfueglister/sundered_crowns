@@ -58,9 +58,8 @@ import { SEA_Y } from './layout';
 import { number, q } from './stage/address';
 import { WATER_DEEP, WATER_SHALLOW } from './terrain';
 
-/** how the depth picture holds the depth: byte = 255 · ln(1 + d / DEPTH_D0) / ln(1 + DEPTH_MOST / DEPTH_D0), in metres (as build_depth.py) */
-export const DEPTH_D0 = 20,
-  DEPTH_MOST = 6000;
+// The depth picture holds the depth d in metres as byte = 255 · ln(1 + d / 20) / ln(1 + 6000 / 20)
+// (tools/worldprobe/build_depth.py D0, DEEPEST); the colours below go by its share, byte / 255.
 /** the depth picture's share for the sea beyond the game map, of which no depths are known: open ocean (about 3000 m) */
 const BEYOND = 0.88;
 /** the depth's share where no depths are known (a stage without the world's map): water over the shelf */
@@ -279,7 +278,7 @@ function inverse2(re: Float64Array, im: Float64Array): Float64Array {
  * enough to break, are short strokes across it, and the picture of them is bent (`curved`), so that the strokes
  * curve a little.
  */
-export function waveTexture(): THREE.DataTexture {
+function waveTexture(): THREE.DataTexture {
   const n = TEX,
     random = seeded(1291);
   /** a height field of random phases with the given power at each wavenumber (kx, ky): its real and imaginary parts */
