@@ -9,7 +9,7 @@ Run what CI runs (`.github/workflows/ci.yml`) for what you touched, and fix ever
 
 ```
 npm run typecheck
-npm run lint                         # Biome: must show no new warning
+npm run lint                         # Biome, then the budgets: no new warning, no file past its length
 npx vitest run tests/<the tests of the code you changed>
 ruff check && ruff format --check    # when you touched Python (pip install ruff==0.17.4)
 (cd economy && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test --release --locked)
@@ -18,7 +18,9 @@ ruff check && ruff format --check    # when you touched Python (pip install ruff
 
 - Never skip, disable or loosen a test to get green.
 - No new lint warning. If a rule truly does not fit, silence that one line with
-  `// biome-ignore lint/<group>/<rule>: <why>`, and write the reason.
+  `// biome-ignore lint/<group>/<rule>: <why>`, and write the reason. `npm run lint` fails when a file has more of a
+  rule's diagnostics than `tools/check/budgets.json` allows (the warnings that were there on 20 November 2026). Never
+  raise a ceiling there: the cleanup thread lowers them as the old warnings go.
 - No new `any` and no `@ts-ignore`: give a value its real type (the few that are left, mostly three.js TSL nodes,
   are being removed). A cast with `as` needs a reason in a comment.
 - Name the PR's title and description after what it changes, and say in the description how you checked it.
@@ -35,8 +37,9 @@ ruff check && ruff format --check    # when you touched Python (pip install ruff
 
 ## Code
 
-- Keep files small: one subject per file, about 500 lines at most (300 in `src/buildings/`, which a test checks).
-  When a file grows past that, split it by subject before adding more.
+- Keep files small: one subject per file, 500 lines at most (300 in `src/buildings/` and `src/figures/`, which their
+  tests check). When a file grows past that, split it by subject before adding more. `npm run lint` checks it; the
+  files that were longer keep their length as a ceiling in `tools/check/budgets.json`, and may only get shorter.
 - Export only what another module imports. Delete code that nothing uses; git keeps the history.
 - No dead or commented-out code, no `TODO` without the name of what it waits on.
 - Use the names the code already uses for the same thing; name things after what they are in the game or the source.

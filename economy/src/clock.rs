@@ -697,8 +697,8 @@ impl Extension for DailyClock {
     /// productivity times the port's work effort. With the factor 1 it is the port's number for number. Every firm adds
     /// the factor of the day to the days it worked since its last plan ([`DailyClock::worked`]). With workers who are
     /// away ([`Absences`], economy feature 22) the labour of the day is that of the workers who are there and of
-    /// those who stand in for them (economy feature 23): `a (N − away + stand-ins) α`; the effort stays the one the
-    /// firm's employees give. What the firm would have made with all its workers is kept as the output lost
+    /// those who stand in for them (economy features 23 and 24): `a (N − away + stand-ins) α`; the effort stays the
+    /// one the firm's employees give. What the firm would have made with all its workers is kept as the output lost
     /// ([`DailyClock::lost`]) for the market of the period.
     fn firms_production(m: &mut AbstractModel<Self>) -> Vec<f64> {
         if m.ext.attendance.is_empty() && m.ext.absences.is_empty() {

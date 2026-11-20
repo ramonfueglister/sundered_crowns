@@ -1,9 +1,11 @@
 //! The contracts of the workers (economy feature 23, src/workers.rs): a servant is paid in every period, a day
 //! labourer only for the periods he works, at the wage times the factor of his firm's day; on a day on which workers
 //! of a firm are away, workers without work who are not away themselves stand in for them, as far as there are any,
-//! and are paid as day labourers. The books balance, contracts with nobody away and every day a mean day change
-//! nothing, the contracts are part of the state, a state of format 12 has none, and contracts that do not fit are
-//! refused. The calibration is the port's own data set for Austria (2010Q1), so these tests need nothing from the game.
+//! and are paid as day labourers; where the game says so, an adult of the worker's family stands in first (economy
+//! feature 24), paid into the household of the worker who is away. The books balance, contracts with nobody away and
+//! every day a mean day change nothing, the contracts and the family's stand-ins are part of the state, a state of
+//! format 12 has no contracts and one of format 13 no family that stands in, and what does not fit is refused. The
+//! calibration is the port's own data set for Austria (2010Q1), so these tests need nothing from the game.
 #![allow(non_snake_case)]
 
 use beforeit::AUSTRIA2010Q1;
@@ -298,6 +300,141 @@ fn contracts_that_do_not_fit_are_refused() {
     let mut bytes = e.with_contracts(&[0]).unwrap().save();
     let at = bytes.len() - workers as usize;
     assert_eq!(bytes[at], BY_THE_DAY);
+    bytes[at] = 2;
+    assert!(Economy::load(&bytes).is_err());
+}
+
+#[test]
+fn the_family_stands_in_first_and_is_paid_into_the_household_of_the_worker_who_is_away() {
+    let mut a = austria(7);
+    a.step(3);
+    let i = firm_bound_by_labour(&a, 4);
+    let staff = employees(&a, i);
+    assert!(without_work(&a).len() >= 2);
+    // three of its workers away on the next day: a day labourer and a servant whose families stand in, and a servant
+    // whose family does not
+    let (by_day, by_year, alone) = (staff[0], staff[1], staff[2]);
+    let mut b = a
+        .clone()
+        .with_contracts(&[by_day])
+        .unwrap()
+        .with_absences(vec![by_day, by_year, alone], vec![0; 3], vec![0; 3])
+        .unwrap()
+        .with_family(vec![true, true, false])
+        .unwrap();
+    a.step(1);
+    b.step(1);
+    close(
+        b.model.firms.Y_i[i],
+        a.model.firms.Y_i[i],
+        "the output with three stand-ins",
+    );
+    let today = &b.model.ext.today;
+    assert_eq!(today.stand_ins[i], 3);
+    assert_eq!((today.away, today.by_family, today.stood_in), (3, 2, 1));
+    // the day labourer's household has what he would have earned, the servant's his wage and the family's pay
+    let y = |h: u32| b.model.w_act.Y_h[h as usize];
+    close(
+        y(by_day),
+        port_income(&b, by_day as usize),
+        "the day labourer whose family stands in",
+    );
+    close(
+        y(by_year),
+        port_income(&b, by_year as usize) + net_wage(&b, i),
+        "the servant whose family stands in",
+    );
+    close(
+        y(alone),
+        port_income(&b, alone as usize),
+        "the servant whose family does not",
+    );
+    // one worker without work stands in for the third
+    let hired: Vec<usize> = today
+        .pays
+        .iter()
+        .filter(|p| b.model.w_act.O_h[p.worker].is_none())
+        .map(|p| p.worker)
+        .collect();
+    assert_eq!(hired.len(), 1);
+    assert_books(&b, "the day with the family's stand-ins");
+}
+
+#[test]
+fn the_family_stands_in_when_there_is_no_worker_without_work() {
+    let mut a = austria(7);
+    a.step(3);
+    let i = firm_bound_by_labour(&a, 2);
+    let staff = employees(&a, i);
+    // every worker without work is away, and so is one of the firm's workers, for whom his family stands in
+    let mut away = without_work(&a);
+    away.push(staff[0]);
+    let n = away.len();
+    let mut family = vec![false; n];
+    family[n - 1] = true;
+    let mut b = a
+        .clone()
+        .with_contracts(&[])
+        .unwrap()
+        .with_absences(away, vec![0; n], vec![0; n])
+        .unwrap()
+        .with_family(family)
+        .unwrap();
+    a.step(1);
+    b.step(1);
+    let today = &b.model.ext.today;
+    assert_eq!((today.away, today.by_family, today.stood_in), (1, 1, 0));
+    close(
+        b.model.firms.Y_i[i],
+        a.model.firms.Y_i[i],
+        "the output with the family's stand-in",
+    );
+    assert_books(&b, "the day with no worker without work");
+}
+
+#[test]
+fn the_family_s_stand_ins_are_part_of_the_state_and_a_state_of_format_13_has_none() {
+    let mut a = austria(9);
+    a.step(2);
+    let staff = employees(&a, firm_bound_by_labour(&a, 2));
+    let away = |e: Economy, family: bool| {
+        e.with_contracts(&staff)
+            .unwrap()
+            .with_absences(staff[..1].to_vec(), vec![0], vec![2])
+            .unwrap()
+            .with_family(vec![family])
+            .unwrap()
+    };
+    let (mut with, without) = (away(a.clone(), true), away(a, false));
+    let (on, off) = (with.save(), without.save());
+    with.step(2);
+    let mut b = Economy::load(&with.save()).unwrap();
+    assert_eq!(with.save(), b.save());
+    assert_eq!(b.model.ext.absences.family, [true]);
+    with.step(3);
+    b.step(3);
+    assert_eq!(with.save(), b.save());
+    // the two states differ in the one byte of the family; format 13 is format 14 without it
+    let at: Vec<usize> = (0..on.len()).filter(|&k| on[k] != off[k]).collect();
+    assert_eq!((on.len(), at.len(), on[at[0]], off[at[0]]), (off.len(), 1, 1, 0));
+    let mut old = off.clone();
+    old.remove(at[0]);
+    old[4..8].copy_from_slice(&13u32.to_le_bytes());
+    let back = Economy::load(&old).unwrap();
+    assert_eq!(back.model.ext.absences.family, [false]);
+    assert_eq!(back.save(), off);
+}
+
+#[test]
+fn a_word_on_the_family_that_does_not_fit_is_refused() {
+    let e = austria(1).with_absences(vec![0, 1], vec![0, 0], vec![0, 0]).unwrap();
+    assert!(e.clone().with_family(vec![true]).is_err());
+    assert!(e.clone().with_family(vec![true, false]).is_ok());
+    // a family that is neither yes nor no in a state: the byte in which the two states differ
+    let yes = e.clone().with_family(vec![false, true]).unwrap().save();
+    let no = e.with_family(vec![false, false]).unwrap().save();
+    let at = (0..yes.len()).find(|&k| yes[k] != no[k]).unwrap();
+    let mut bytes = yes;
     bytes[at] = 2;
     assert!(Economy::load(&bytes).is_err());
 }

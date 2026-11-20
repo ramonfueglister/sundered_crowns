@@ -1,8 +1,8 @@
 //! The workers of an economy as the game gives them (docs/ECONOMY_DESIGN.md): the workers who are away (economy
 //! feature 22, sickness and childbed in the game) and the contract of every worker with the workers without work who
-//! stand in for those who are away (economy feature 23).
+//! stand in for those who are away (economy feature 23), after the family where it stands in (economy feature 24).
 //!
-//! The contracts (people feature 10 in the game, `contracts` in src/sim/systems/economy.ts). A worker serves by the
+//! The contracts (people feature 10 in the game, `contracts` in src/sim/systems/workers.ts). A worker serves by the
 //! year, as the famuli of the demesnes did "most commonly for the whole agricultural year" (Claridge, Delabastita and
 //! Gibbs 2024, (In-kind) Wages and labour relations in the Middle Ages, working paper, p. 13), or works by the day.
 //! Both are paid the port's wage of their firm (A.26), the servant in every period, worked or not, as in the port
@@ -24,6 +24,15 @@
 //! src/markets.rs of the port): the workers without work in random order, one to each firm with places open, the
 //! firms in random order, round after round. A stand-in stays without an employer in the port's books.
 //!
+//! The family stands in first (economy feature 24). The game tells of every absence whether an adult of the worker's
+//! family who does not work stands in ([`Absences::family`]): the "family member" of the same sentence of Owen, Brown
+//! and Skinner (p. 5). Such a place is filled before the workers without work are matched to the places left open
+//! (OWN RULE: the paper names the family first and the hired man with "or even", it gives no order). The family's
+//! stand-in is not a household of the port, so the firm pays him as it pays a worker without work who stands in, the
+//! wage times the factor of the day, and the pay goes to the household of the worker who is away: in the game the
+//! family keeps one purse (economy feature 11). OWN RULE: the same pay, so that the firm's books do not depend on who
+//! stands in.
+//!
 //! Without contracts the economy computes as before, number for number: they are given together, and absences
 //! without contracts are economy feature 22 alone.
 
@@ -34,18 +43,31 @@ use crate::{Economy, trade};
 
 /// The workers who are away (people feature 9, economy feature 22: sickness and childbed): per absence the worker,
 /// in the port's order of the workers, and the first and the last period (counted from 1) of the run of days on which
-/// that worker is away. On such a day the worker's firm works with the workers who are there; the worker keeps the
+/// that worker is away, and whether an adult of the worker's family stands in on those days (economy feature 24). On
+/// such a day the worker's firm works with the workers who are there and those who stand in; the worker keeps the
 /// place and the wage. Empty: everybody is there, as in the port.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct Absences {
     pub worker: Vec<u32>,
     pub first: Vec<u32>,
     pub last: Vec<u32>,
+    pub family: Vec<bool>,
+}
+
+/// Whether a worker is away in a period ([`Absences::of_workers`]).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Away {
+    /// there
+    No,
+    /// away, and nobody of the family stands in
+    Alone,
+    /// away, and an adult of the family stands in
+    Family,
 }
 
 impl Absences {
-    /// Absences of `workers` workers: per absence the worker and the first and last period. Each worker is one of
-    /// them, and no run of days ends before it begins.
+    /// Absences of `workers` workers: per absence the worker and the first and last period, nobody of the family
+    /// standing in. Each worker is one of them, and no run of days ends before it begins.
     pub fn new(workers: usize, worker: Vec<u32>, first: Vec<u32>, last: Vec<u32>) -> Result<Absences, String> {
         if first.len() != worker.len() || last.len() != worker.len() {
             return Err(format!(
@@ -61,7 +83,26 @@ impl Absences {
         if let Some(k) = (0..worker.len()).find(|&k| first[k] == 0 || last[k] < first[k]) {
             return Err(format!("an absence from period {} to {}", first[k], last[k]));
         }
-        Ok(Absences { worker, first, last })
+        let family = vec![false; worker.len()];
+        Ok(Absences {
+            worker,
+            first,
+            last,
+            family,
+        })
+    }
+
+    /// The same absences with, per absence, whether an adult of the worker's family stands in.
+    pub fn with_family(mut self, family: Vec<bool>) -> Result<Absences, String> {
+        if family.len() != self.worker.len() {
+            return Err(format!(
+                "{} absences, {} of them with a word on the family",
+                self.worker.len(),
+                family.len()
+            ));
+        }
+        self.family = family;
+        Ok(self)
     }
 
     /// Whether nobody is away.
@@ -69,12 +110,12 @@ impl Absences {
         self.worker.is_empty()
     }
 
-    /// Per worker of `workers` whether he is away in period `t`.
-    pub fn of_workers(&self, workers: usize, t: usize) -> Vec<bool> {
-        let mut away = vec![false; workers];
+    /// Per worker of `workers` whether he is away in period `t`, and whether his family stands in.
+    pub fn of_workers(&self, workers: usize, t: usize) -> Vec<Away> {
+        let mut away = vec![Away::No; workers];
         for k in 0..self.worker.len() {
             if (self.first[k] as usize..=self.last[k] as usize).contains(&t) {
-                away[self.worker[k] as usize] = true;
+                away[self.worker[k] as usize] = if self.family[k] { Away::Family } else { Away::Alone };
             }
         }
         away
@@ -120,14 +161,16 @@ pub struct Pay {
 /// and read by the production and the books of the same period, so it is not part of the state.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Today {
-    /// per firm the workers without work who stand in for its workers who are away (empty: none)
+    /// per firm those who stand in for its workers who are away, of their families and without work (empty: none)
     pub stand_ins: Vec<u32>,
     /// the pays of the period that are not the port's
     pub pays: Vec<Pay>,
     /// per firm what it pays more than the port in the period, in units of its wage (empty: nothing)
     pub more: Vec<f64>,
-    /// the workers away from firms that work in the period, and the stand-ins: to measure, read by no rule
+    /// the workers away from firms that work in the period, those of their families who stood in for them, and the
+    /// workers without work who stood in: to measure, read by no rule
     pub away: u32,
+    pub by_family: u32,
     pub stood_in: u32,
 }
 
@@ -141,17 +184,27 @@ pub fn today<R: Randomness + ?Sized>(m: &AbstractModel<DailyClock>, rng: &mut R)
     let (f, w) = (&m.firms, &m.w_act);
     let t = c.periods_computed(m.agg.t) + 1;
     let gone = c.absences.of_workers(w.len(), t);
-    let mut open = vec![0u32; f.len()];
+    let (mut open, mut family) = (vec![0u32; f.len()], vec![0u32; f.len()]);
     let mut pays = Vec::new();
     for h in 0..w.len() {
         let Some(id) = w.O_h[h] else { continue };
         let i = f.index(id);
         let a = c.attendance.factor(i, t);
-        if gone[h] && a > 0.0 {
-            open[i] += 1;
+        match gone[h] {
+            Away::Alone if a > 0.0 => open[i] += 1,
+            Away::Family if a > 0.0 => {
+                // the family's stand-in, paid into the household of the worker who is away
+                family[i] += 1;
+                pays.push(Pay {
+                    worker: h,
+                    firm: i,
+                    more: a,
+                });
+            }
+            _ => {}
         }
         if c.contracts[h] == BY_THE_DAY {
-            let paid = if gone[h] { 0.0 } else { a };
+            let paid = if gone[h] == Away::No { a } else { 0.0 };
             if paid != 1.0 {
                 pays.push(Pay {
                     worker: h,
@@ -161,12 +214,15 @@ pub fn today<R: Randomness + ?Sized>(m: &AbstractModel<DailyClock>, rng: &mut R)
             }
         }
     }
-    let away = open.iter().sum();
-    let mut stand_ins = Vec::new();
+    let by_family: u32 = family.iter().sum();
+    let away = open.iter().sum::<u32>() + by_family;
+    let mut stand_ins = if by_family > 0 { family } else { Vec::new() };
     let mut firms: Vec<usize> = (0..f.len()).filter(|&i| open[i] > 0).collect();
     if !firms.is_empty() {
-        stand_ins = vec![0u32; f.len()];
-        let mut idle: Vec<usize> = (0..w.len()).filter(|&h| w.O_h[h].is_none() && !gone[h]).collect();
+        stand_ins.resize(f.len(), 0);
+        let mut idle: Vec<usize> = (0..w.len())
+            .filter(|&h| w.O_h[h].is_none() && gone[h] == Away::No)
+            .collect();
         rng.shuffle(&mut idle);
         let mut next = 0;
         while next < idle.len() && !firms.is_empty() {
@@ -194,12 +250,13 @@ pub fn today<R: Randomness + ?Sized>(m: &AbstractModel<DailyClock>, rng: &mut R)
             more[p.firm] += p.more;
         }
     }
-    let stood_in = stand_ins.iter().sum();
+    let stood_in = stand_ins.iter().sum::<u32>() - by_family;
     Today {
         stand_ins,
         pays,
         more,
         away,
+        by_family,
         stood_in,
     }
 }
@@ -258,6 +315,13 @@ impl Economy {
         Ok(self)
     }
 
+    /// The same economy with, per absence it has ([`Economy::with_absences`]), whether an adult of the worker's family
+    /// stands in (economy feature 24); without it nobody of the family does.
+    pub fn with_family(mut self, family: Vec<bool>) -> Result<Economy, String> {
+        self.model.ext.absences = std::mem::take(&mut self.model.ext.absences).with_family(family)?;
+        Ok(self)
+    }
+
     /// The same economy with contracts (economy feature 23): the workers who work by the day, in the port's order of
     /// the workers; every other worker serves by the year. They take the place of the contracts it had.
     pub fn with_contracts(mut self, by_the_day: &[u32]) -> Result<Economy, String> {
@@ -285,20 +349,26 @@ fn next_u32(r: &mut &[u8], what: &str) -> Result<u32, String> {
 }
 
 /// The cities with the workers who are away (economy feature 22) as bytes: per city the number of its absences (32
-/// bits), then per absence the worker, the first and the last day, counted from 0 for the next period (32 bits each,
-/// [`Economy::with_absences`]).
+/// bits), then per absence the worker, the first and the last day, counted from 0 for the next period, and 1 if an
+/// adult of the worker's family stands in, else 0 (32 bits each, [`Economy::with_absences`], [`Economy::with_family`]).
 pub fn absences(all: &mut trade::Cities, mut r: &[u8]) -> Result<(), String> {
     let mut cities = Vec::with_capacity(all.cities.len());
     for (c, e) in std::mem::take(&mut all.cities).into_iter().enumerate() {
         let n = next_u32(&mut r, "absences")? as usize;
-        let (mut worker, mut first, mut last) = (Vec::new(), Vec::new(), Vec::new());
+        let (mut worker, mut first, mut last, mut family) = (Vec::new(), Vec::new(), Vec::new(), Vec::new());
         for _ in 0..n {
             worker.push(next_u32(&mut r, "absences")?);
             first.push(next_u32(&mut r, "absences")?);
             last.push(next_u32(&mut r, "absences")?);
+            family.push(match next_u32(&mut r, "absences")? {
+                0 => false,
+                1 => true,
+                x => return Err(format!("city {c}: an absence with the family word {x}")),
+            });
         }
         cities.push(
             e.with_absences(worker, first, last)
+                .and_then(|e| e.with_family(family))
                 .map_err(|e| format!("city {c}: {e}"))?,
         );
     }

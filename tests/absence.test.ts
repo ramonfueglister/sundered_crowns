@@ -1,9 +1,10 @@
 // People feature 9 (src/sim/people/absence.ts): sickness by the sick club of Morcott (Riley & Alter 1996) and the
 // month of childbed (Astbury 2017), and how the world gives the economy the workers who are away (economy feature 22,
-// src/sim/systems/economy.ts). The engine's side has its own tests in economy/tests/absences.rs.
+// src/sim/systems/workers.ts). The engine's side has its own tests in economy/tests/absences.rs.
 import { describe, it, expect, beforeAll } from 'vitest';
 import { CHILDBED_DAYS, MORCOTT, SHORTEST, SICK_FROM, ageGroup, awayDays, sickness } from '../src/sim/people/absence';
-import { absences, computeTo } from '../src/sim/systems/economy';
+import { computeTo } from '../src/sim/systems/economy';
+import { absences } from '../src/sim/systems/workers';
 import { ROLE } from '../src/sim/systems/work';
 import { presentPersons } from '../src/sim/people/living';
 import { advanceDay } from '../src/sim/engine';

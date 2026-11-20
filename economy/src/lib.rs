@@ -954,18 +954,18 @@ pub mod abi {
         answer(look_last(|all| float_lists(all.cities.iter().map(Economy::agents))))
     }
 
-    /// Of the state kept in [`LAST`], per city the workers away from firms that worked in its last period and the
-    /// workers without work who stood in for them (economy feature 23, [`crate::workers::Today`]): two 64-bit floats a
-    /// city. A measure for the tools; no rule and no state reads it.
+    /// Of the state kept in [`LAST`], per city the workers away from firms that worked in its last period, those of
+    /// their families who stood in for them and the workers without work who stood in for them (economy features 23
+    /// and 24, [`crate::workers::Today`]): three 64-bit floats a city. A measure for the tools; no rule and no state
+    /// reads it.
     #[unsafe(no_mangle)]
     pub extern "C" fn sce_stand_ins_last() -> u32 {
         hook();
         answer(look_last(|all| {
-            floats(
-                all.cities
-                    .iter()
-                    .flat_map(|e| [e.model.ext.today.away as f64, e.model.ext.today.stood_in as f64]),
-            )
+            floats(all.cities.iter().flat_map(|e| {
+                let t = &e.model.ext.today;
+                [t.away as f64, t.by_family as f64, t.stood_in as f64]
+            }))
         }))
     }
 
