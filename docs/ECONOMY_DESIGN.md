@@ -3508,9 +3508,9 @@ supply of the demand met and the materials of what is made, on days when a firm 
 
 ### The rules that were measured and not kept
 
-Seven combinations were built and run (`npm run absence:check -- 3`: the world of 1291 against the same world in which
-everybody is there, real GDP, and those without work at the end of the third year). G was run after F was built, for
-step 6 of the day plan:
+Eight combinations were built and run (`npm run absence:check -- 3`: the world of 1291 against the same world in which
+everybody is there, real GDP, and those without work at the end of the third year). G and H were run after F was
+built, G for step 6 of the day plan and H to close the drain of the firms' deposits (below):
 
 | | the plan | the wage of a day away | the materials | real GDP, years 1 / 2 / 3 | without work in year 3 |
 |---|---|---|---|---|---|
@@ -3521,6 +3521,7 @@ step 6 of the day plan:
 | E | rule 3 | paid | for those who are there | −2.2 / −2.4 / −4.1 % | 2,015 against 1,036 |
 | **F** | **rule 3** | **paid** | **not bought again (rule 4)** | **−1.9 / −1.9 / −3.4 %** | **2,215 against 1,036** |
 | G | rule 3 | none | rule 4 | −3.7 / −4.6 / −6.3 % | 3,274 against 1,036 |
+| H | rule 3 | paid | rule 4, and the capital not worn is not replaced | −2.2 / −3.0 / −5.3 % | 3,002 against 1,036 |
 
 - **A**, the first build: a firm short of hands reads the output it could not make as a fall in demand, plans less,
   lets workers go, and does so again at its next plan. It had the rule for the day without anybody because without
@@ -3550,6 +3551,9 @@ step 6 of the day plan:
   many are without work in the third year. Our reading, not measured apart: what the firm does not pay is profit,
   the profit goes to its owner, who is a household too (feature 18) and spends on the mean profit of the year
   (feature 20), so the households hold as much but spend it later than the worker would have.
+- **H** is F with a fifth rule of the same kind as rule 4, for capital: a firm does not replace the capital that its
+  workers who were away did not wear. It closes the drain (below), but the economies shrink further every year; it
+  is not built.
 
 ### How the world gives it
 
@@ -3596,7 +3600,50 @@ real GDP in year 6, is a little more than the 3.6 % of the days away.
 The firms' deposits do not settle. They fall by about 400 a year (6,039 against 8,666 in year 6), and the
 households' deposits grow by about as much. The transfer does not slow within six years. It is not the wage of the
 days away: without that wage (G) the firms' deposits fall just as fast, so a wage by the day worked does not end it.
-Where the money goes is not known yet.
+Where the money goes is the next section.
+
+### Where the firms' money goes
+
+The cash flows of the firms of all cities were added up day by day over two years, in the world with the absences
+and in the comparison (a diagnostic of the port's terms of A.33 and A.34 that is not kept in the engine; patch,
+probe and outputs in the project files, wirtschaft/leck-der-betriebe/). A firm pays out all its profit: its owner
+takes the whole profit and bears the whole loss (feature 18; τ_FIRM is 0 in src/sim/economy/calibration.ts, and
+in the measurement the dividends less the losses the owners bore are the profits: 72,594 − 19,677 = 52,917 in year 1).
+So its deposits change only by what it spends on stocks: the change of its deposits is its depreciation less its
+investment plus the materials it used less those it bought.
+
+| change against the comparison | year 1 | year 2 |
+|---|---|---|
+| investment above depreciation | −473 | −455 |
+| materials bought above those used | −66 | −51 |
+| new credit and interest | +10 | +46 |
+| the firms' deposits | −529 | −460 |
+
+Nine tenths of the drain is investment. A firm invests what the capital of its planned supply wears (A.14:
+δ/κ · min(Q_s, K κ)), and its capital wears with what it makes (A.3: δ/κ · Y). On a day on which workers are away
+the firm makes less than it planned, so it replaces capital that was not worn: its capital grows beyond its use, and
+the money it pays goes to the firms that make the capital goods and from them to their owners as profit. The money
+is not lost: it is in capital that nobody uses, and in the households' deposits.
+
+Rule H closes it the way rule 4 closes the materials: the capital that the workers who were away did not wear
+(δ/κ times the output lost) is kept per firm and invested less at the next purchases, an own rule from A.3 and
+A.14 as rule 4 is. Measured over six years against F:
+
+| | year 1 | year 2 | year 3 | year 4 | year 5 | year 6 |
+|---|---|---|---|---|---|---|
+| real GDP, F | −1.9 % | −1.9 % | −3.4 % | −3.8 % | −4.0 % | −4.2 % |
+| real GDP, H | −2.2 % | −3.0 % | −5.3 % | −6.5 % | −7.3 % | −8.3 % |
+| employees, F | −0.1 % | −2.0 % | −3.3 % | −3.5 % | −3.8 % | −4.0 % |
+| employees, H | −0.5 % | −3.3 % | −5.5 % | −6.4 % | −7.5 % | −8.3 % |
+| firms' deposits, F | −6.1 % | −11.4 % | −16.4 % | −21.2 % | −25.7 % | −30.3 % |
+| firms' deposits, H | −0.9 % | −1.5 % | −2.1 % | −2.7 % | −3.3 % | −3.8 % |
+
+With H the deposits hold, but output and employment fall by about one per cent of the comparison a year and do not
+settle within six years (3,866 without work in year 6 against 904). The capital that was not needed was also demand:
+in F it keeps the makers of capital goods busy. Without it the owners have less to spend, and the economies shrink.
+Neither is right: F builds capital nobody uses out of the firms' deposits, which would be gone in about 15 years at
+this pace; H lets the economies shrink without end. In both the firm makes less on a day on which workers are away
+and finds nobody to stand in for them.
 
 ### Limits
 
@@ -3606,6 +3653,8 @@ Where the money goes is not known yet.
 - **No sick pay and no lost wage.** The wage of a worker who is away is paid by the firm as on any day. A club's or
   a guild's sick pay is not booked apart, and a day labourer would have lost the day's wage (step 6). Without the
   wage of the days away (G) the economies slide further.
+- **The firms' deposits fall.** F replaces capital the workers who were away did not wear (above); the drain is
+  about 5 % of the comparison a year and does not slow within six years.
 - **Rules 3 and 4 are ours.** No paper read has workers who are away in a model of this kind; the rules take the
   port's own (the supply of the demand met, the materials of what is made) to the days a firm cannot make what it
   planned, and were chosen among the combinations measured above.
