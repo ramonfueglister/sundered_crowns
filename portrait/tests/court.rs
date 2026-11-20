@@ -75,12 +75,13 @@ fn who_is_of_rank_wears_the_courts_dress_and_nobody_else() {
         assert_eq!(Dress::Roman.ranked(st), Dress::Roman);
     }
     assert_eq!(Dress::England1356.ranked(BAUER), Dress::England1356);
-    // the court's table is England's in all that is of the face, the hair and the linen: the stage lights it by
-    // the same name (round 149: a lady's gown has a cut of its own, wide and low, and no smock in its neck)
+    // the court's table is England's in all that is of the face and the hair, and its linen is cut as England's:
+    // the stage lights it by the same name (round 149: a lady's gown has a cut of its own, wide and low, and no
+    // smock in its neck; round 153: the court's linen is bleached, and veil and wimple have images of their own)
     let (e, c, k) = (&ENGLAND_1356, &COURT_1356, &CROWNED_1356);
     assert_eq!((c.key, k.key), (e.key, e.key));
     // (round 151: every cut of the court's gown is a file of its own, closer on the body; tests/clothes.rs)
-    assert_eq!((c.gown, c.under[1], c.linen, c.hair, c.hood), (e.gown, e.under[1], e.linen, e.hair, e.hood));
+    assert_eq!((c.gown, c.under[1], c.veil, c.veil_back, c.wimple, c.hair, c.hood), (e.gown, e.under[1], e.veil, e.veil_back, e.wimple, e.hair, e.hood));
     assert!(!c.gown_file.is_empty() && e.gown_file.is_empty() && (0..2).all(|i| c.gown_cut[i] != e.gown_cut[i]), "the court's gown has files of its own");
     assert!(c.origins.is_empty() && k.origins.is_empty(), "no origin names the court: a person's stand does");
     assert!(e.buttons.is_empty() && e.crown.is_empty() && e.parted.iter().all(|p| !p), "the common people's table has none of it");
@@ -283,6 +284,58 @@ fn a_lady_shows_her_plaits_until_fifty_and_seven_in_ten_of_those_wear_a_circlet(
         println!("{with} with a circlet, {without} without; its foot {:.1} to {:.1} cm over the eyes; hair through it at most {} corners", 10.0 * worst.0, 10.0 * worst.1, worst.2);
     }
     assert!(show() || (with >= 10 && without >= 10), "{with} with a circlet, {without} without");
+}
+
+#[test]
+fn a_ladys_veil_and_wimple_at_court_are_of_a_fine_white_linen() {
+    // (round 153) The court's ladies wore the villagers' linen, unbleached and with a weave a picture shows. By
+    // the page read a veil is of fine linen, white, bleached and pressed. The court's table names images of its
+    // own for veil and wimple, each beginning with its cloth's name, and a whiter linen; England's names none.
+    let (c, e) = (&COURT_1356, &ENGLAND_1356);
+    assert!(e.veil_image.is_empty() && e.wimple_image.is_empty(), "the common people's linen is their cloths' own");
+    assert!(c.veil_image.starts_with(c.veil) && c.veil_image != c.veil && c.wimple_image.starts_with(c.wimple) && c.wimple_image != c.wimple);
+    let hex = |h: &str| [1, 3, 5].map(|i| u8::from_str_radix(&h[i..i + 2], 16).unwrap() as f32 / 255.0);
+    let light = |c: &[f32; 3]| 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+    assert!(light(&hex(c.linen)) > light(&hex(e.linen)) + 0.08 && strength(&hex(c.linen)) < 1.05 && strength(&hex(e.linen)) > 1.1, "the court's linen {} beside the village's {}", c.linen, e.linen);
+
+    // On forty women of 35 to 65, each as a lady and as a villager: a lady's veil, worn either way, and her
+    // wimple are drawn with the court's images and not with the cloths' own, a villager's with their own; where
+    // both wear the veil the same way it is the same cloth, corner for corner, and the lady's is lighter and all
+    // but without colour. A lord's shirt is of the same white.
+    let Some(h) = head() else { return };
+    let named = |s: &[Surface], name: &str| -> Vec<Surface> { s.iter().filter(|s| !s.pos.is_empty() && s.tex.as_deref().is_some_and(|t| t.ends_with(&format!("/{name}.webp")))).cloned().collect() };
+    let (mut veils, mut wimples, mut same, mut least) = (0, 0, 0, f32::MAX);
+    for k in (0..80).step_by(2) {
+        let age = 35.0 + (k % 16) as f32 * 2.0;
+        let (lady, woman) = (person_of(k, true, age, 3), person(k, true, age));
+        let (at_court, in_village) = (build(&h, &lady, 1), build(&h, &woman, 1));
+        let (fine, coarse) = (named(&at_court.surfaces, c.veil_image), named(&in_village.surfaces, e.veil));
+        assert!(named(&at_court.surfaces, c.veil).is_empty() && named(&at_court.surfaces, c.wimple).is_empty(), "person {k}: the villagers' linen at court");
+        assert!(named(&in_village.surfaces, c.veil_image).is_empty() && named(&in_village.surfaces, c.wimple_image).is_empty(), "person {k}: the court's linen in the village");
+        assert_eq!(fine.len(), usize::from(c.veil_of(true, age, lady.seed) != Veil::None), "person {k} of {age}: a lady's veil");
+        assert_eq!(coarse.len(), usize::from(e.veil_of(true, age, woman.seed) != Veil::None), "person {k} of {age}: a villager's veil");
+        assert_eq!(named(&at_court.surfaces, c.wimple_image).len(), usize::from(!fine.is_empty() && age >= c.wimple_from), "person {k} of {age}: a lady's wimple");
+        wimples += named(&at_court.surfaces, c.wimple_image).len();
+        let (Some(f), Some(v)) = (fine.first(), coarse.first()) else { continue };
+        veils += 1;
+        let (white, natural) = (mean(f.col.iter().copied()), mean(v.col.iter().copied()));
+        assert!(light(&white) > 1.15 * light(&natural) && strength(&white) < 1.08, "person {k}: a lady's veil {white:?} beside a villager's {natural:?}");
+        least = least.min(light(&white) / light(&natural));
+        if c.veil_of(true, age, lady.seed) == e.veil_of(true, age, woman.seed) {
+            assert_eq!(f.pos.len(), v.pos.len(), "person {k}: the same veil in another linen");
+            same += 1;
+        }
+    }
+    assert!(veils > 12 && wimples > 8 && same > 6, "{veils} women with a veil at court and in the village, {wimples} wimples at court, {same} veils worn the same way");
+    for k in (1..20).step_by(2) {
+        let (lord, man) = (build(&h, &person_of(k, false, 34.0, 3), 1), build(&h, &person(k, false, 34.0), 1));
+        let shirt = |s: &[Surface]| s.iter().find(|s| !s.pos.is_empty() && s.tex.as_deref().is_some_and(|t| t.contains(e.under_image) || t.contains(e.under[1]))).map(|s| mean(s.col.iter().copied()));
+        let (Some(white), Some(natural)) = (shirt(&lord.surfaces), shirt(&man.surfaces)) else { panic!("person {k}: no shirt") };
+        assert!(light(&white) > 1.15 * light(&natural), "person {k}: a lord's shirt {white:?} beside a villager's {natural:?}");
+    }
+    if show() {
+        println!("{veils} veils at court and in the village ({same} worn the same way), {wimples} wimples at court; a lady's veil at least {least:.2} times as light as the villager's");
+    }
 }
 
 #[test]

@@ -17,7 +17,7 @@ one, changes nothing: same people in, same pictures out, measured.
 |---|---|---|
 | Builder | `portrait/` (Rust, WebAssembly) | From a person (100 bytes of genes, sex, age, estate, occupation, origin, food, mourning, wealth, worn clothes) to the triangles of head and shoulders: MakeHuman's head morphed by the genes, skin, eyes, hair, beard, clothes, headwear, jewellery |
 | Genes | `portrait/src/dna.rs` | 50 genes of two alleles, one byte each (Apoleia's 34, and 16 since round 112 that a dress with a table shows); a child takes one allele of each gene from either parent, plus a small mutation; founders draw from one of 23 pools (round 111), which one is the culture's (`src/sim/people/pools.ts`) |
-| Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; a culture without a set wears the plain dress of 1356 (round 111), one of Apoleia's seven regions Apoleia's Roman dress. England's has a table for people of rank and one for a crowned head (round 144), chosen by the person's stand; a crowned head wears a mantle faced with ermine over the gown (round 145, `portrait/src/mantle.rs`); a lady of rank shows her plaits and wears a circlet of gilt metal on them (round 146), a lord with nothing else on the head wears one too (round 147); a lord's hood is faced with white fur along the edge of its opening (round 148, `portrait/src/facing.rs`); a lady's gown is cut wide and low at the neck, with no linen in it (round 149, `cloth_kirtle_court`); the court's gown is of silk (round 150, `DressSet::gown_image`) and draped closer, so that it lies smooth (round 151, `DressSet::gown_file`); the ermine's tails stand in rows on the mantle's facing (round 152, `tools/portrait/pipeline/mantle.py`) |
+| Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; a culture without a set wears the plain dress of 1356 (round 111), one of Apoleia's seven regions Apoleia's Roman dress. England's has a table for people of rank and one for a crowned head (round 144), chosen by the person's stand; a crowned head wears a mantle faced with ermine over the gown (round 145, `portrait/src/mantle.rs`); a lady of rank shows her plaits and wears a circlet of gilt metal on them (round 146), a lord with nothing else on the head wears one too (round 147); a lord's hood is faced with white fur along the edge of its opening (round 148, `portrait/src/facing.rs`); a lady's gown is cut wide and low at the neck, with no linen in it (round 149, `cloth_kirtle_court`); the court's gown is of silk (round 150, `DressSet::gown_image`) and draped closer, so that it lies smooth (round 151, `DressSet::gown_file`); the ermine's tails stand in rows on the mantle's facing (round 152, `tools/portrait/pipeline/mantle.py`); veil and wimple at court are of a fine bleached linen (round 153, `DressSet::veil_image`, `wimple_image`) |
 | Stage profile | `src/portrait/profile.ts` | Light and materials per set of dress; Apoleia's portraits keep Apoleia's |
 | Pipeline | `tools/portrait/pipeline/` | Blender scripts that wrote the draped clothes and hair (not part of the build) |
 | Files of the real look | `public/portrait/` (41.5 MB) | The head (1.1 MB), data files (15.0 MB since round 111, 13.1 since round 110, 12.7 since round 109, 12.9 since round 105, 10.4 before round 104: the hair's bodies, the beard's locks, draped clothes, skin shading), images (24.8 MB: skin by age and sex, wrinkle maps, hair, cloth, eyes) |
@@ -7148,6 +7148,71 @@ and lint pass, no new warning. The module is 756 kB.
 Pictures (project files, `portraits/`): `runde152_vorher_nachher.png` (five crowned heads, before above and
 after below), `runde152_nah.png` (two of them large, before above and after below),
 `runde152_seite_und_hinten.png` (the five from the side and from behind).
+
+**Round 153: a lady's veil of fine linen** (2026-11-20). Five ladies of the court beside the reference: since
+round 150 the gown is of silk, and on three of the five the head and the shoulders were wrapped in the
+villagers' linen, a grey-brown cloth with threads 4 mm apart that a picture shows one by one. Beside the silk
+it read as sacking.
+
+What was read.
+- Rosalie Gilbert, Veils and Wimples (rosaliegilbert.com/veilsandwimples.html; read 20.11.2026 as an account
+  of the page; a re-enactor's essay that names pictures and tombs but no list of sources): veils "ranging from
+  fine opaque linens to gauzy barely-there silks", wimples "from fine opaque linens to very fine silks";
+  "white was the most overwhelmingly popular colour"; what is left of such cloths "appear to be bleached and
+  pressed"; fine Flemish linens "could cost thirty times as much as finely woven wools"; poorer women had
+  "thick wool" and "natural, unbleached colours". The goffered veil, "popular c.1350-1380", "an intricate
+  lattice or honeycomb effect made from ruffles". The page does not say in so many words that a lady's veil
+  was finer than a villager's.
+- The same author's list of the veils she has made (rosaliegilbert.com/inventory_headwear_veilswimples.html):
+  a shop's list with a picture named for each; nothing is taken from it.
+- Wikipedia, Wimple (its first section only): "usually made from white linen or silk".
+
+What is changed.
+- **The court's table** (`DressSet::veil_image`, `wimple_image`, new: the images a veil, worn either way, and a
+  wimple are drawn with in place of their own; the court's `linen`): veil and wimple are drawn with a fine
+  linen, and the court's linen is bleached (`#faf8f2` for the village's `#e6dfcd`). The cloths themselves are
+  the village's, corner for corner. A lord's shirt, his coif and the linen in a laced front take the white
+  with them and keep their own image.
+- **The image** (`cloth_veil_linen_fine`, `cloth_wimple_fine`: one image under both names, 44 kB and 3 kB
+  each; `fabric_tex.py`'s new kind `fine`): the linen's weave with five threads for one and a third of the
+  threads' shades, made small until no thread is left in it.
+- **The builder** (`build.rs`): puts the table's images on the veil and on the wimple. Nothing on the stage:
+  it knows linen by the image's name, which still holds `_veil` and `_wimple`.
+
+Measured (`portrait/tests/court.rs`), on forty women of 35 to 65, each as a lady and as a villager:
+
+| | village | court |
+|---|---|---|
+| the image's threads on the cloth | one every 4.2 mm | none to be seen (one every 0.8 mm before it is made small) |
+| how uneven the image is (the standard deviation of its light, of 1) | 0.061 | 0.030 before it is made small |
+| the linen's colour | `#e6dfcd`, its strongest part 1.12 times its weakest | `#faf8f2`, 1.03 times |
+| a veil's light as it is built (26 women who wear one both ways) | 1 | at least 1.26 |
+| veils that are the same cloth, corner for corner (19 worn the same way) | | 19 of 19 |
+| wimples in the court's image | | 20 of 20 |
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in rounds 138 to 152 to its last figure (the
+sample is of the common people, whose linen is not touched).
+
+Honest about it. This is another cloth on the same board: the veil is still a stiff sheet that stands off the
+head as a hood, with no fold of its own, and from the side the smooth white shows a small point over the ear
+that the weave hid. In the stage's light the white is a light grey in the shade, as the fur's is. That the
+bleached linen is the court's and the unbleached the village's is the table's reading of a page that says
+what fine linen cost and what the poor had to be content with; that no lady's veil is of silk or gauze, and
+that none is frilled though the page has the goffered veil for exactly these years, is PLACEHOLDER: a
+transparent cloth and a frill are not built. A lord's coif and shirt keep the villagers' weave in the court's
+white. The white's value and every value of the image are by eye.
+
+Tests: `portrait/tests/court.rs`, one new (a lady's veil and wimple in the court's images and not in the
+cloths' own, a villager's in their own; the same cloth where both wear it the same way; lighter and all but
+without colour; a lord's shirt in the same white). The same file held the court's linen to England's colour;
+it now holds the court's veil and wimple to England's files, since the colour is meant to differ. One test of
+`portrait/tests/clothes.rs` looked for a lady's wimple under the village's image name and is set to the
+court's (the full run had 125 of 126 with that one failing; it was run again alone after the change).
+`cargo test --release` as a whole: 126 of 126. `tests/portrait.test.ts` and its neighbour 44 of 44; typecheck
+and lint pass, no new warning. The module is 758 kB.
+Pictures (project files, `portraits/`): `runde153_vorher_nachher.png` (five ladies of the court, before above
+and after below), `runde153_fuenf_damen_und_seite.png` (five in veils, from the front and from the side),
+`runde153_dorf_und_herren.png` (the same five women as villagers, and five lords).
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the

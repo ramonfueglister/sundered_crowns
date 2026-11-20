@@ -292,6 +292,11 @@ pub struct DressSet {
     /// woman wears `veil`.
     pub veil_back: &'static str,
     pub wimple: &'static str,
+    /// (round 153) The images the veil (worn either way) and the wimple are drawn with in place of their own
+    /// (empty: their own): another linen for the same cloths. Each name begins with its cloth's: the builder and
+    /// the tests find a veil and a wimple by that, and the stage knows linen by it.
+    pub veil_image: &'static str,
+    pub wimple_image: &'static str,
     /// Men's hair, loose and under the hood on the head; the hair under a veil set back (`Veil::Back`; empty:
     /// the table has none, and every veil is `Veil::Closed`, which lies on forehead and cheeks and hides all
     /// hair): its painted layer and scalp are `hair_girl`'s (`under_of`); the hair of girls and of women who go
@@ -955,6 +960,8 @@ const ENGLAND: DressSet = DressSet {
     veil: "cloth_veil_linen",
     veil_back: "cloth_veil_back",
     wimple: "cloth_wimple",
+    veil_image: "",
+    wimple_image: "",
     hair: "bob01",
     hair_lengths: &[("bob06", 3), ("bob07", 1), ("bob09", 1), ("page01", 1), ("page02", 1)],
     hair_parted: &["page01", "page02"],
@@ -1285,6 +1292,12 @@ const COURT: DressSet = DressSet {
     // (round 150) the gown is of silk: a smooth cloth that shines (`sources`). PLACEHOLDER: that every gown at
     // court is, and a plain silk without a pattern
     gown_image: "cloth_cote_silk",
+    // (round 153) veil and wimple are of a fine linen, bleached: whiter than the village's and without a weave to
+    // be seen (`sources`). The shirt, the coif and the linen in a laced front take the white with them.
+    // PLACEHOLDER: the white, and that every lady's is of linen and none of silk
+    linen: "#faf8f2",
+    veil_image: "cloth_veil_linen_fine",
+    wimple_image: "cloth_wimple_fine",
     // (round 148) a lord's hood is faced with a white fur, in the white of the mantle's ermine
     hood_fur: "cloth_fur_white",
     hood_fur_dye: "#f4f0e6",
@@ -1327,6 +1340,7 @@ const COURT_SOURCES: &[Source] = &[
     Source { what: "who dresses so: lords and their families, whom the statute of 1363 leaves without restriction (round 144)", source: "Statute concerning diet and apparel 1363 (37 Edw. III), as Rosalie Gilbert's page lists it rank by rank (rosaliegilbert.com/sumptuarylaws.html; read 20.11.2026 as an account of the page, not the page itself; a re-enactor's summary that names no edition of the statute): lords with lands worth 1000 pounds a year and their families 'no restrictions'; cloth of gold, ermine and stones barred from knights of 200 marks down; silk, silver and embroidery from the yeoman down; 'blanket and russet at 12d' for those who work the land. The game knows no ranks between a ruler's house and everybody else: all its persons of history are dressed so." },
     Source { what: "cloth in strong dyes: reds, blues, a green, a murrey", source: "Wikipedia, 1300-1400 in European fashion (read 20.11.2026 as an account of the page): Edward III's robes of 1351 of 'red velvet' (after Donald King), a bridegroom of the 1350s in a 'red cotehardie', a royal lady in 'a blue mantle'; 'silk was the finest fabric of all', brocades 'for the well-off'. No dye is named there. Green and murrey and every value are PLACEHOLDER: no velvet, no pattern and no fur is drawn on a gown (its cloth: the next row)." },
     Source { what: "the gown of silk on every person of rank: a smooth cloth without a pattern that shines along its folds; the hood stays of wool (round 150)", source: "The same page: 'silk was the finest fabric of all', brocades 'for the well-off', Edward III's robes of 1351 of 'red velvet'. The statute of 1363 as Rosalie Gilbert's page lists it (the first row) takes silk from the yeoman down and leaves it to those above. Which silk a gown was of is not said, nor how many gowns at court were of silk and how many of fine wool: that every gown at court is silk, plain and without a pattern, and how much it shines (the stage's values) are PLACEHOLDER." },
+    Source { what: "veil and wimple of a fine linen, bleached white, with no weave to be seen; the shirt, the coif and the linen in a laced front in the same white (round 153)", source: "Rosalie Gilbert, Veils and Wimples (rosaliegilbert.com/veilsandwimples.html; read 20.11.2026 as an account of the page; a re-enactor's essay that names pictures and tombs but no list of sources): veils 'ranging from fine opaque linens to gauzy barely-there silks', wimples 'from fine opaque linens to very fine silks'; 'white was the most overwhelmingly popular colour'; what is left of such cloths 'appear to be bleached and pressed'; fine Flemish linens 'could cost thirty times as much as finely woven wools'; poorer women had 'thick wool' and 'natural, unbleached colours'. The page does not say in so many words that a lady's veil was finer than a villager's: that the costly bleached linen is the court's and the unbleached the village's is this table's reading. Wikipedia, Wimple (the same day, its first section only): 'usually made from white linen or silk'. PLACEHOLDER: the white's value, that the cloth is opaque and none of silk or gauze, that no veil is frilled (the page has the goffered veil, 'popular c.1350-1380', which is not built). No picture of the time was looked at." },
     Source { what: "the gown buttoned in front on eight men in ten and six women in ten from 15 and 14 years, laced on three women in ten, with buttons of gilt metal", source: "The same page: 'the cotehardie fits snugly and is buttoned up the front' (a caption of the late 14th century), and noblemen and squires about 1350 in tunics 'so short and tight' (the continuation of Guillaume de Nangis, after Braudel). Rosalie Gilbert, Buttons and Lacings (rosaliegilbert.com/buttonsandlacings.html, read 20.11.2026 as an account of the page): 'the upper classes would have preferred ... metal buttons', the lower classes 'matching cloth buttons'; a tin button with a glass stone of the late 14th century (Museum of London). Which metal is not said: gilt is PLACEHOLDER, and so are the shares." },
     Source { what: "the gown draped close: smooth on the body, with fewer folds than the village's (round 151)", source: "The same page: noblemen and squires about 1350 in tunics 'so short and tight' (the continuation of Guillaume de Nangis, after Braudel), 'the cotehardie fits snugly' (a caption of the late 14th century); for women the Fashion History Timeline (the row of the lady's cut below) has 'low-necked fitted dresses' at 1380. A fit is not built: the court's gown is the village's pattern, laid 1.2 cm off the body before it is let fall where the village's is laid 4.5 cm off, which leaves it smoother and as wide as it was. PLACEHOLDER." },
     Source { what: "mi-parti: a man's gown of two cloths, one on each side, on three men in ten from 15 years who wear no crown", source: "The same Wikipedia page: 'a fashion for mi-parti or parti-coloured garments made of two contrasting fabrics, one on each side, arose for men in mid-century ... and was especially popular at the English court' (after Black & Garland). The share is PLACEHOLDER." },

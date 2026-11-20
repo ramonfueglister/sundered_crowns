@@ -370,7 +370,8 @@ fn a_ladys_gown_at_court_is_cut_wider_and_lower_than_a_village_womans_and_shows_
         }
         assert!(broad > 5.0 && lower > 2.0, "lady {k}: the neck {broad} cm broader and {lower} cm lower than the village's");
         assert!((breadth(&q) - breadth(&l)).abs() < 0.5, "lady {k}: a queen's gown {} cm broad at the neck, a lady's {}", breadth(&q), breadth(&l));
-        assert!(breadth(&own) < breadth(&v) - 2.5 && cloth(&old, "/cloth_wimple.").is_some(), "lady {k}: the round gown under the wimple, {} cm broad", breadth(&own));
+        // (the wimple in the court's own linen since round 153: its image has another name)
+        assert!(breadth(&own) < breadth(&v) - 2.5 && cloth(&old, "/cloth_wimple_fine.").is_some(), "lady {k}: the round gown under the wimple, {} cm broad", breadth(&own));
         assert!(shown.len() == usize::from(laced) && shown.iter().all(|&t| t < 300), "lady {k}: linen in the gown's neck, {shown:?} triangles (laced: {laced})");
         // (round 149, the village's drape with the wide neck: 4 to 12 of some 2 800, by up to 0.3 cm. Round
         // 151, the court's own drape: as its round gown above, more of them over the village's folds, and no

@@ -1477,12 +1477,20 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
                 None => ("cloth_veil", ""),
             };
             let real_veil = if real.is_some() { crate::real::folder().and_then(|d| mh_cloth_as(&d, cloth, image, &x.pp, &h.base, &|_| vcol, None, if garb.is_some() { Layer::Over } else { Layer::Bound }, &arms)) } else { None };
-            if let Some(s) = real_veil {
+            if let Some(mut s) = real_veil {
+                // (round 153) a table's own linen for the veil and the wimple: the court's fine one
+                let own = |name: &str| crate::real::folder().filter(|_| !name.is_empty()).map(|d| crate::real::image(&d, name));
                 // the wimple under the veil of older women
                 if let Some(t) = garb.filter(|t| p.age >= t.wimple_from) {
-                    if let Some(w) = crate::real::folder().and_then(|d| mh_cloth(&d, t.wimple, &x.pp, &h.base, &|_| vcol, None, Layer::Over, &arms)) {
+                    if let Some(mut w) = crate::real::folder().and_then(|d| mh_cloth(&d, t.wimple, &x.pp, &h.base, &|_| vcol, None, Layer::Over, &arms)) {
+                        if let Some(image) = own(t.wimple_image) {
+                            w.tex = Some(image);
+                        }
                         out.push(w);
                     }
+                }
+                if let Some(image) = garb.and_then(|t| own(t.veil_image)) {
+                    s.tex = Some(image);
                 }
                 out.push(s);
             } else {
