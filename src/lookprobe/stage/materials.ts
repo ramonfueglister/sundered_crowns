@@ -101,12 +101,21 @@ export function createMaterials(scene: THREE.Scene) {
   const fields = createFields(), fieldAt = userData('field', 'vec3') as unknown as ReturnType<typeof vec3>;
   const spot = vec2(placed.x, placed.z).toVarying(), bounds = vec4(min(alongU, alongUOther()), min(alongV, alongVOther()), max(alongU, alongUOther()), max(alongV, alongVOther())).toVarying();
   const within = spot.sub(fieldAt.xy), column = within.floor().clamp(bounds.xy.sub(fieldAt.xy).ceil(), bounds.zw.sub(fieldAt.xy).floor().sub(1)), across = within.sub(column).clamp(0, 1);
-  const layer = int(fieldAt.z), first = ivec2(column.mul(2));
-  const read = (dx: number, dz: number) => { const t = fields.node.load(first.add(ivec2(dx, dz))).depth(layer); return t.rgb.mul(t.a.mul((2 * 255) / 254)); };
+  const first = ivec2(column.mul(2));
+  const fieldColour = (layer: Parameters<typeof int>[0]) => {
+    const read = (dx: number, dz: number) => { const t = fields.node.load(first.add(ivec2(dx, dz))).depth(int(layer)); return t.rgb.mul(t.a.mul((2 * 255) / 254)); };
+    return mix(mix(read(0, 0), read(1, 0), across.x), mix(read(0, 1), read(1, 1), across.x), across.y);
+  };
   const fieldFaced = new THREE.MeshLambertNodeMaterial();
   fieldFaced.positionNode = placed;
-  fieldFaced.colorNode = materialColor.mul(mix(mix(read(0, 0), read(1, 0), across.x), mix(read(0, 1), read(1, 1), across.x), across.y).clamp(0, MOST));
+  fieldFaced.colorNode = materialColor.mul(fieldColour(fieldAt.z).clamp(0, MOST));
   fieldFaced.maskNode = solid.maskNode;
+  // Such tops of a far piece that glide to the shape of the coarser step (worldprobe/glide.ts): each moves to the level
+  // it ends up at, and its colours to those of the field of where it ends (`userData.fieldEnd`, its layer).
+  const fieldGliding = new THREE.MeshLambertNodeMaterial(), ends = attribute('aim', 'vec2') as unknown as ReturnType<typeof vec2>;
+  fieldGliding.positionNode = vec3(alongU, mix(whole(lie.y), whole(ends.x), glided).div(FACE_STEPS), alongV);
+  fieldGliding.colorNode = materialColor.mul(mix(fieldColour(fieldAt.z), fieldColour(userData('fieldEnd', 'float') as unknown as ReturnType<typeof float>), glided).clamp(0, MOST));
+  fieldGliding.maskNode = solid.maskNode;
   // The sea's faces: its level is on no 64th of a block, so the mesh says how far above their numbers its faces lie
   // (faces.ts `lift`); and they mirror as the sea's lists do.
   const seaFaced = new THREE.MeshLambertNodeMaterial();
@@ -155,6 +164,6 @@ export function createMaterials(scene: THREE.Scene) {
   const sinking = coloured();
   sinking.maskNode = solid.maskNode;
   sinking.positionNode = vec3(positionGeometry.x, mix(positionGeometry.y, attribute('sink', 'float') as unknown as ReturnType<typeof float>, glided), positionGeometry.z);
-  return { smallLists, solid, water, faced, fieldFaced, fields, seaFaced, freed, gliding, sinking, surface, mirrored, tint, mirrorShare, shareCode, inkOf, marked };
+  return { smallLists, solid, water, faced, fieldFaced, fieldGliding, fields, seaFaced, freed, gliding, sinking, surface, mirrored, tint, mirrorShare, shareCode, inkOf, marked };
 }
 export type Materials = ReturnType<typeof createMaterials>;

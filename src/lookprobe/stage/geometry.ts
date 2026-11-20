@@ -37,6 +37,7 @@ export const fieldGeometry = (s: Shape) => {
   const lies = new THREE.InstancedInterleavedBuffer(f.geo, FACE_GEO);
   g.setAttribute('lie', new THREE.InterleavedBufferAttribute(lies, 4, 0, true)); g.setAttribute('reach', new THREE.InterleavedBufferAttribute(lies, 2, 4, true));
   g.setAttribute('normal', new THREE.InstancedBufferAttribute(f.nor, 4, true));
+  if (f.aim) g.setAttribute('aim', new THREE.InstancedBufferAttribute(f.aim, 2, true));
   g.instanceCount = f.geo.length / FACE_GEO;
   if (s.ball) g.boundingSphere = new THREE.Sphere(new THREE.Vector3(s.ball[0], s.ball[1], s.ball[2]), s.ball[3]);
   else g.boundingSphere = new THREE.Box3().setFromArray(unfaced({ ...f, col: new Uint8Array(f.geo.length / FACE_GEO * FACE_COL) }).pos).getBoundingSphere(new THREE.Sphere());
