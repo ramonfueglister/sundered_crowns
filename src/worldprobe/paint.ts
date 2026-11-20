@@ -101,12 +101,52 @@ export function paintRealms(
 ): Uint8ClampedArray {
   const out = new Uint8ClampedArray(side * side * 4),
     perDot = 2 ** level / cells,
-    lands = r.owner.length,
     chosen = r.chosen ?? -1;
   // a margin of dots around the tile, wide enough for the shading, so that a dot's distances are those of the whole map
   const margin = marginOf(level, cells),
+    dots = dotsOf(r, tx, ty, side, margin, perDot),
+    { n, kind } = dots,
+    colourOf = painter(r, dots, edgesOf(dots, chosen), perDot, chosen);
+  for (let y = 0; y < side; y++)
+    for (let x = 0; x < side; x++) {
+      const i = (y + margin) * n + x + margin,
+        o = (y * side + x) * 4;
+      if (kind[i] === OUTSIDE) continue;
+      const mx = (tx * side + x + 0.5) * perDot,
+        my = (ty * side + y + 0.5) * perDot,
+        c = colourOf(i);
+      const g = 1 + GRAIN_STRENGTH * grain(mx / GRAIN, my / GRAIN),
+        a = COVER;
+      out[o] = toByte(Math.min(1, c[0] * g) * a);
+      out[o + 1] = toByte(Math.min(1, c[1] * g) * a);
+      out[o + 2] = toByte(Math.min(1, c[2] * g) * a);
+      out[o + 3] = Math.round(a * 255);
+    }
+  return out;
+}
+
+/** What lies at every dot of a tile and its margin, `n` dots wide: `kind` (a realm, NONE, WATER or OUTSIDE), `place`
+ *  (counted from 0; -1 off the world) and `onMap` (the dot lies on the game map: its places end at the map's edge,
+ *  which is no line between places on the land). */
+interface Dots {
+  n: number;
+  kind: Int16Array;
+  place: Int32Array;
+  onMap: Uint8Array;
+}
+/** the dots at a border (land whose neighbour is other land of another holder), at a coast (land or water next to the
+ *  other), between sea zones, between a realm's own places (`seam`), and at the edge of the picked place (`mine`) */
+interface Edges {
+  border: Uint8Array;
+  coast: Uint8Array;
+  zone: Uint8Array;
+  mine: Uint8Array;
+  seam: Uint8Array;
+}
+
+function dotsOf(r: Realms, tx: number, ty: number, side: number, margin: number, perDot: number): Dots {
+  const lands = r.owner.length,
     n = side + 2 * margin;
-  // `onMap`: the dot lies on the game map (its places end at the map's edge, which is no line between places on the land)
   const kind = new Int16Array(n * n),
     place = new Int32Array(n * n),
     onMap = new Uint8Array(n * n);
@@ -127,7 +167,11 @@ export function paintRealms(
       kind[i] = at < 0 || at >= lands ? WATER : r.owner[at] >= 0 ? r.owner[at] : NONE;
     }
   }
-  // the dots at a border: land whose neighbour is other land of another holder; at a coast: land or water next to the other
+  return { n, kind, place, onMap };
+}
+
+function edgesOf(dots: Dots, chosen: number): Edges {
+  const { n, kind, place, onMap } = dots;
   const border = new Uint8Array(n * n),
     coast = new Uint8Array(n * n),
     zone = new Uint8Array(n * n),
@@ -149,10 +193,17 @@ export function paintRealms(
         if (chosen >= 0 && place[i] === chosen && place[j] !== chosen) mine[i] = 1;
       }
     }
+  return { border, coast, zone, mine, seam };
+}
+
+/** The colour of a dot of the tile (not OUTSIDE) before the paper's grain, with the distances to borders, coasts and
+ *  sea zones measured once for the whole tile. */
+function painter(r: Realms, dots: Dots, edges: Edges, perDot: number, chosen: number): (i: number) => RGB {
+  const { n, kind, place } = dots,
+    { border, coast, zone, mine, seam } = edges;
   const toBorder = distance(border, n),
     toCoast = distance(coast, n);
   const toZone = perDot < 2 ? distance(zone, n) : null;
-
   // every realm's colour on the map, and its colour at the border, once
   const styled = new Map<number, [RGB, RGB]>();
   const styleOf = (k: number) => {
@@ -166,45 +217,33 @@ export function paintRealms(
   const rim = Math.max(2, RIM / perDot),
     shallow = Math.max(1.5, SHALLOW_REACH / perDot),
     places = perDot <= 2;
-  for (let y = 0; y < side; y++)
-    for (let x = 0; x < side; x++) {
-      const i = (y + margin) * n + x + margin,
-        k = kind[i],
-        o = (y * side + x) * 4;
-      if (k === OUTSIDE) continue;
-      const mx = (tx * side + x + 0.5) * perDot,
-        my = (ty * side + y + 0.5) * perDot;
-      let c: RGB;
-      if (k === WATER) {
-        // the shallow along the coast fades into the open sea
-        const d = Math.sqrt(toCoast[i]),
-          s = Math.exp(-((d / shallow) ** 1.2));
-        c = mix(SEA, SHALLOW, s);
-        if (toZone) c = mix(c, ZONE_LINE, SEA_ZONE_LINE * line(Math.sqrt(toZone[i]), LINE));
-      } else {
-        // the edge of a land is its border with another holder or with the sea
-        const d = Math.sqrt(Math.min(toBorder[i], toCoast[i]));
-        if (k === NONE) c = mix(SAND, scale(SAND, SAND_COAST), line(d, LINE));
-        else {
-          // flat, with a narrow seam of its own darker colour along the border, and faint lines between its places
-          const [fill, edge] = styleOf(k),
-            t = smoothstep(0, rim, d);
-          c = mix(edge, fill, 1 - RIM_STRENGTH * (1 - t));
-          if (places && seam[i]) c = scale(c, PLACE_DARK);
-          c = mix(c, scale(edge, LINE_DARK), line(d, LINE));
-        }
+  return (i: number) => {
+    const k = kind[i];
+    let c: RGB;
+    if (k === WATER) {
+      // the shallow along the coast fades into the open sea
+      const d = Math.sqrt(toCoast[i]),
+        s = Math.exp(-((d / shallow) ** 1.2));
+      c = mix(SEA, SHALLOW, s);
+      if (toZone) c = mix(c, ZONE_LINE, SEA_ZONE_LINE * line(Math.sqrt(toZone[i]), LINE));
+    } else {
+      // the edge of a land is its border with another holder or with the sea
+      const d = Math.sqrt(Math.min(toBorder[i], toCoast[i]));
+      if (k === NONE) c = mix(SAND, scale(SAND, SAND_COAST), line(d, LINE));
+      else {
+        // flat, with a narrow seam of its own darker colour along the border, and faint lines between its places
+        const [fill, edge] = styleOf(k),
+          t = smoothstep(0, rim, d);
+        c = mix(edge, fill, 1 - RIM_STRENGTH * (1 - t));
+        if (places && seam[i]) c = scale(c, PLACE_DARK);
+        c = mix(c, scale(edge, LINE_DARK), line(d, LINE));
       }
-      if (chosen >= 0 && place[i] === chosen) {
-        c = mine[i] || near(mine, i, n) ? CHOSEN_LINE : mix(c, [1, 1, 1], CHOSEN_LIGHT);
-      }
-      const g = 1 + GRAIN_STRENGTH * grain(mx / GRAIN, my / GRAIN),
-        a = COVER;
-      out[o] = toByte(Math.min(1, c[0] * g) * a);
-      out[o + 1] = toByte(Math.min(1, c[1] * g) * a);
-      out[o + 2] = toByte(Math.min(1, c[2] * g) * a);
-      out[o + 3] = Math.round(a * 255);
     }
-  return out;
+    if (chosen >= 0 && place[i] === chosen) {
+      c = mine[i] || near(mine, i, n) ? CHOSEN_LINE : mix(c, [1, 1, 1], CHOSEN_LIGHT);
+    }
+    return c;
+  };
 }
 
 /** The margin in dots that a tile of `level` is painted with beyond its edges (for the distances to borders and coasts). */
