@@ -248,6 +248,13 @@ pub struct DressSet {
     pub hood_from: f32,
     pub hood_up: &'static str,
     pub hood_back: &'static str,
+    /// (round 136) The same hoods with the cape's hem dagged, cut into tongues with a round end (the files'
+    /// names, on the head and thrown back; empty: the table has none; `tools/portrait/pipeline/dag.py` cuts
+    /// them out of the plain hoods' files), drawn with the plain hoods' images, and the share of the hoods
+    /// that are such, by the seed (`hood_file`). That common men wore dagged hoods then is from the pages in
+    /// `sources`; the share, the tongues' number, depth and form are by eye: PLACEHOLDER.
+    pub hood_dagged: [&'static str; 2],
+    pub hood_dags: f32,
     /// Women from this age wear the veil (younger: braids), from the second age the wimple under it.
     pub veil_from: f32,
     pub wimple_from: f32,
@@ -883,6 +890,8 @@ const ENGLAND: DressSet = DressSet {
     hood_from: 14.0,
     hood_up: "cloth_hood_up",
     hood_back: "cloth_hood_down",
+    hood_dagged: ["cloth_hood_up_dag", "cloth_hood_down_dag"],
+    hood_dags: 0.3,
     veil_from: 20.0,
     wimple_from: 50.0,
     veils: [Veil::Back, Veil::Closed, Veil::None, Veil::Back, Veil::Back, Veil::None, Veil::Back, Veil::Closed, Veil::None, Veil::Back],
@@ -1138,6 +1147,7 @@ const ENGLAND: DressSet = DressSet {
         Source { what: "a man's coif, a close cap of linen over the hair and the ears with two strings tied under the chin, on one man in ten from 30 years, worn alone (round 132)", source: "Wikipedia, Coif; The Medieval Combat Society, Male reenactment costume; Cadw, Hats (a leaflet without dates or notes); Buckingham's Retinue, Coifs (a re-enactment group's guide); Ruth Johnston, All Things Medieval, 13th and 14th centuries: men's hats (a blog without notes); all read 20.11.2026 as quotations fetched from the pages: coifs of unadorned white linen tied under the chin, worn by all classes, out of popularity with men in the fourteenth century; a linen coif covering the hair and ears and tied under the chin under Edward II, coif and hood on effigies of 1354 and 1372; considered underwear and worn under hats by everybody over 12 except those doing physical labour; before 1500 of one or two pieces with ties at the corners. The share, the age, that it is worn alone and its cut are PLACEHOLDER." },
         Source { what: "a man's felt hat, a round crown with a broad brim, on two men in ten from 15 years, bare-headed otherwise or over a hood thrown back (round 134)", source: "Encyclopedia.com, Peasant Costume (from Gale's Arts and Humanities Through the Eras, with a list of sources, not footnoted): 'Peasant men usually wore a large round felt hat', the costume fixed 'from about 800 to about 1375', and from the French shepherd's treatise Le Bon Berger (the page: written in 1373): 'It is proper that the shepherd wear a felt hat, round and very large', its felt doubled at the brim; History Hit, What Did People Wear in Medieval England (a popular article, undated statement): 'Men wore wide-brimmed straw hats, close fitting bonnet-like hoods made from linen or hemp, or a felt cap'; Medievalists.net, quoting Margaret Scott, Fashion in the Middle Ages: 'straw hats were worn outdoors by all ranks in the summer'; Rosalie Gilbert, Hats and Hennins (a re-enactor's page on women's hats). All read 20.11.2026 as quotations fetched from the pages; no picture of the time was looked at, and none of the pages has an English man's hat of the 14th century with a date. The straw hat is not built. The shares, the age, the crown's and the brim's measures and the colours are PLACEHOLDER." },
         Source { what: "of the men who wear a hat, half with its brim turned up behind and drawn out to a point in front (round 135)", source: "Rosalie Gilbert, Rosalie's Medieval Woman, Hats and Hennins (a re-enactor's page, not a primary source; read 20.11.2026 as quotations fetched from the page): the cocked cap 'a hat, probably felted or made of stiff material, and worn with the brim turned up either before or behind', 'worn by both men and women in medieval times', 'Many contemporary images show men of all classes during the fourteenth and fifteenth centuries wearing this style of hat', 'The brim usually is a different colour to the body of the hat'; the page's first written mention of it is of 1464. No picture of the time was looked at. Ours has brim and crown of one colour, and none with the brim turned up in front. The share, how far the brim is turned up and from where, and the point's length are PLACEHOLDER." },
+        Source { what: "three in ten of the men's hoods with the cape's hem dagged: cut into eighteen tongues with a round end, 4.5 cm deep (round 136)", source: "Fashion Institute of Technology, Fashion History Timeline, dagging (K. Odom; a glossary page that quotes costume histories): dagging 'created by cutting or slashing the fabric into different shapes'; 'sleeves, tippets, collars, hemlines, cloaks, and hoods were flamboyantly edged with dagging (also dagges), a scalloped or crenelated cut' and 'this decorative treatment was not solely confined to the garments of the wealthy. Illuminated manuscripts show grooms, servants, even field workers and shepherds wearing clothing accented with dagging' (both quoting Hill); 'Simple cuts in V and U shapes' or strips. The Medieval Combat Society, 14th century men's clothing (a re-enactors' page without notes), under Edward III: 'In the 1330's edges of garments were cut away to form dagging and became a very popular fashion'; and, as D. C. Calthrop, English Costume (a painter's popular book of 1907 without notes), on that reign's common men's hoods: 'some are very full in the cape, which is jagged at the hem; some are close about the neck and are plain'. Against it: Florilegium, Dag on It! (an SCA member's article): 'these styles were worn primarily by the upper classes'. All read 20.11.2026 as quotations fetched from the pages; no picture of the time was looked at, and no page has a measure. The share, the tongues' number, depth and form are PLACEHOLDER." },
         Source { what: "the hair of one man in ten to the jaw with its ends turned out and up in rolls at the sides and behind (round 133)", source: "D. C. Calthrop, English Costume (the page gives the book's edition of 1907), the chapter on Edward III as reprinted at fashion-era.com: nearly every man 'with long hair to his neck, curled at the ears and on the forehead', and of a knight in the height of fashion 'His hair is shorter than is usual, and it is not curled' (a popular book by a painter, without notes); The Medieval Combat Society, Male reenactment costume, under Edward II (1307 to 1327, the reign before): 'Men tended to wear their hair long, almost to the shoulders', 'The hair was bushy, cut round and curled'; Encyclopedia.com, Bowl Haircut (Gale's Fashion, Costume, and Culture): the cut popular from the twelfth through the fifteenth centuries 'with long curls being popular during some decades and shorter lengths coming into style during others'. All read 20.11.2026 as quotations fetched from the pages; no picture of 1356 was looked at. That the curl is a roll turned out and up, its size, the share and the age are PLACEHOLDER; the curls on the forehead were tried and not kept." },
         Source { what: "children under seven: the men's hair to the jaw with a fringe, girls and boys alike", source: "PLACEHOLDER, nothing read on small children's hair. Chosen because Apoleia's cropped hair begins far back on a child's large skull (a shaven head)." },
         Source { what: "men's hair in three lengths (to above the ear, to the ear's lobe, to the jaw), 3 : 3 : 2, and two men in ten from 15 with their hair parted in the middle, over the ears and cut at the jaw, without a fringe (round 125), one of the two in waves (round 130)", source: "PLACEHOLDER: lengths, shares and the age by eye, so that the men of a town do not all have one head. Nothing was read for the parted cut or its waves: to be checked against picture sources as the fringe is (Luttrell Psalter c. 1330, Holkham Bible)." },
@@ -1168,7 +1178,7 @@ pub static ENGLAND_1356: DressSet = ENGLAND;
 /// PLACEHOLDER throughout: nothing read on what the common people of any of these lands wore; it is here so that
 /// their faces, skins and hair can be judged under the same light as England's, not as a statement about their
 /// dress. A dress of their own takes its place land by land.
-pub static PLAIN_1356: DressSet = DressSet { key: "plain1356", origins: &[], hood: [Bare; 10], veil_from: 999.0, wimple_from: 999.0, hair_looped: "", fillet: "", coif: "", hat: "", fastens: [[crate::fasten::Fasten::None; 10]; 2], ..ENGLAND };
+pub static PLAIN_1356: DressSet = DressSet { key: "plain1356", origins: &[], hood: [Bare; 10], veil_from: 999.0, wimple_from: 999.0, hair_looped: "", fillet: "", coif: "", hat: "", hood_dagged: ["", ""], fastens: [[crate::fasten::Fasten::None; 10]; 2], ..ENGLAND };
 
 /// Every dress with a table.
 pub static SETS: [(Dress, &DressSet); 2] = [(Dress::England1356, &ENGLAND_1356), (Dress::Plain1356, &PLAIN_1356)];
@@ -1526,6 +1536,18 @@ impl DressSet {
     /// The colour of a man's hat: one of `hat_tones` by a digit of the seed of its own.
     pub fn hat_tone(&self, seed: u32) -> &'static str {
         self.hat_tones[((seed / 1_000_000) % 10) as usize % self.hat_tones.len()]
+    }
+
+    /// The file of a man's hood and the image it is drawn with: the plain hood, or the one whose cape's hem
+    /// is dagged (`hood_dagged`), which has no image of its own.
+    pub fn hood_file(&self, hood: Hood, seed: u32) -> Option<(&'static str, &'static str)> {
+        let (k, plain) = match hood {
+            Hood::None => return None,
+            Hood::Up => (0, self.hood_up),
+            Hood::Back => (1, self.hood_back),
+        };
+        let dagged = !self.hood_dagged[k].is_empty() && crate::geo::hash(seed, 1236, 19) < self.hood_dags;
+        Some((if dagged { self.hood_dagged[k] } else { plain }, plain))
     }
 
     pub fn hood_of(&self, female: bool, age: f32, seed: u32) -> Hood {

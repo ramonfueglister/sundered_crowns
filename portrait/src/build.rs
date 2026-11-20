@@ -1593,14 +1593,10 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
     }
     // the hood of a dress with a table, on the head or thrown back, in another of its wools
     if let (Some(d), true) = (garb, real.is_some()) {
-        let name = match hood {
-            crate::dress::Hood::Up => Some(d.hood_up),
-            crate::dress::Hood::Back => Some(d.hood_back),
-            crate::dress::Hood::None => None,
-        };
-        if let Some(name) = name {
+        // (round 136: plain, or with the cape's hem dagged; the dagged file is drawn with the plain one's image)
+        if let Some((name, image)) = d.hood_file(hood, p.seed) {
             let hc = hex(d.wool[((p.seed / 10) as usize + 3) % d.wool.len()]);
-            if let Some(s) = crate::real::folder().and_then(|f| mh_cloth(&f, name, &x.pp, &h.base, &|v| cloth_col(hc, v), None, Layer::Over)) {
+            if let Some(s) = crate::real::folder().and_then(|f| mh_cloth_as(&f, name, image, &x.pp, &h.base, &|v| cloth_col(hc, v), None, Layer::Over)) {
                 out.push(s);
             }
         }

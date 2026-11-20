@@ -282,12 +282,28 @@
    "bytes": 16128
   },
   {
+   "name": "cloth_hood_down_dag.txt.zst",
+   "bytes": 122403
+  },
+  {
+   "name": "cloth_hood_down_dag_ao.txt",
+   "bytes": 21180
+  },
+  {
    "name": "cloth_hood_up.txt.zst",
    "bytes": 196921
   },
   {
    "name": "cloth_hood_up_ao.txt",
    "bytes": 35310
+  },
+  {
+   "name": "cloth_hood_up_dag.txt.zst",
+   "bytes": 213985
+  },
+  {
+   "name": "cloth_hood_up_dag_ao.txt",
+   "bytes": 37356
   },
   {
    "name": "cloth_kirtle.txt.zst",

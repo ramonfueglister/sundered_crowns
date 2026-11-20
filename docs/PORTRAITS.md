@@ -5795,6 +5795,71 @@ Pictures (project files, `portraits/`): `runde135_vorher_nachher.png` (five men 
 that draw a hat, round 134 above, now below: three of them with the turned-up brim),
 `runde135_von_allen_seiten.png`.
 
+**Round 136: a hood whose cape is dagged** (2026-11-20). Six men in ten wear a hood, on the head or thrown
+back, and every one of them had the same cape: a plain round bib with a rolled hem. The reference's hoods
+end in cut edges of many forms. Read for it, as quotations fetched from the pages (not the pages in
+full, and no picture of the time): the Fashion Institute of Technology's glossary page on dagging (K.
+Odom; it quotes costume histories): dagging is "created by cutting or slashing the fabric into different
+shapes"; "sleeves, tippets, collars, hemlines, cloaks, and hoods were flamboyantly edged with dagging
+(also dagges), a scalloped or crenelated cut"; "this decorative treatment was not solely confined to the
+garments of the wealthy. Illuminated manuscripts show grooms, servants, even field workers and shepherds
+wearing clothing accented with dagging" (both from Hill); its forms "Simple cuts in V and U shapes" or
+strips. The Medieval Combat Society's page on men's clothing (re-enactors, without notes), under Edward
+III: "In the 1330's edges of garments were cut away to form dagging and became a very popular fashion",
+and, in Calthrop's words (a painter's popular book of 1907) on that reign's common men's hoods: "some are
+very full in the cape, which is jagged at the hem; some are close about the neck and are plain". Against
+it, an SCA member's article (Florilegium, "Dag on It!"): "these styles were worn primarily by the upper
+classes". None of the pages has a measure, a number of dags or a share.
+
+What is changed. Three hoods in ten have the cape's hem dagged: cut into eighteen tongues with a round
+end, 4.5 cm deep, each 5.1 to 5.5 cm broad in a room of 6.0 to 6.4 cm, a tongue's middle at the middle
+of the chest (`DressSet::hood_dagged`,
+`hood_dags`, `hood_file`: by a draw of the seed of its own, the same whether the hood is on the head or
+thrown back). They are two new files (`cloth_hood_up_dag`, `cloth_hood_down_dag`, 0.25 and 0.14 MB with
+their shade), cut out of the plain hoods' files by a new script (`tools/portrait/pipeline/dag.py`):
+nothing is draped anew. The script lays the hood on the base body as the builder does, finds the cloth's
+lowest edge, halves every edge of the sheet along the tongues' outline (what will be cut away and a
+centimetre inside it), and cuts each triangle where the outline crosses it (the outline: a place's way from the hem against the cut's depth at its place round
+the hem). A corner the file had keeps its row to the digit; a new one is bound to the body's nearest
+triangle as `tunic_bind.py` binds. The rolled hem of that edge is left out (a dag is a cut in fulled
+wool), the hood's other edge keeps its hem. The dagged hood is drawn with the plain hood's image and in
+its colours.
+
+Tried and not kept: the sheet made finer twice (edges of 3 mm): the outline is smoother, and the
+tongues crumple, each small triangle going with its own piece of the body (the builder calms a garment
+over its neighbours, and there are four times as many within the same length). Not made finer at all:
+calm, and the cuts between the tongues are lost to shallow notches.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line where round 135 left it to the tenth (read with
+this round's builder, stage and files). Three of the sample's men wear a dagged hood (940009, 940019, 940025); the
+gauntlet reads skin, and the cape's hem lies on the chest.
+
+Honest about it. From the front it reads as a dagged cape, and it is the one form: eighteen even round
+tongues on every dagged hood, where the pages name V cuts, strips, crenels and leaves and the
+reference's hoods differ from man to man. The tongues' outline is a polygon with corners every 5 mm,
+which shows close up. A tongue lies as the plain cape lay: it does not hang or curl by itself. From
+behind, on the hood thrown back, the tongues are uneven and the cuts between them wide: the cape is
+stretched there. The cut edge has no thickness. The share (three in ten), the number, the depth and the form are
+by eye; the pages disagree on whether common people wore it at all, and the three that say so are a
+glossary quoting a costume history, a re-enactors' page and a painter's book. The cape is still a flat
+bib without folds, and the hood's point has no liripipe. Seen and left: on one man of the sample
+(940009) pale specks of the gown come through the cape at the shoulder, before this round as after it.
+Looked at on five men from the front, before and after, and on two from five sides.
+
+Tests: `portrait/tests/hood.rs` (new, two tests): of 100 000 seeds some 30 000 draw the dagged hood,
+the same on the head and thrown back, and 2 700 to 3 300 of 10 000 whatever the seed's last digit;
+on 150 men of 15 to 68, of whom 103 wear a hood, the 30 who draw it have the dagged file (23 on the
+head, 7 thrown back) and nobody else, drawn with the plain hood's image; a plain hood has no open edge,
+a dagged one an open edge 2.5 to 3.6 m long that rises 5.7 to 7.7 cm in front; the cape hangs 15 to
+23 cm under the frame's chin either way. Cargo: 103, of which one failed in the whole run
+(`tests/fasten.rs`: on one man the row of buttons began in a cut between two tongues, a millimetre
+higher over the cape's lowest corner than the test allows; the tongues were then begun so that one's
+middle lies at the front's middle, which is where the buttons are; on those files cargo was run again
+as a whole: 103 of 103). `tests/portrait.test.ts` and its neighbour 42 of 42, on the first files and on
+the last. `npm run typecheck` and `npm run lint` pass.
+Pictures (project files, `portraits/`): `runde136_vorher_nachher.png` (five men, round 135 above, now
+below; three as the sample has them, two of its men under other numbers), `runde136_von_allen_seiten.png`.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
@@ -5826,7 +5891,8 @@ are gold and contrast, on a gown that is still a loose sack, since round 131 two
 with the same buttons (theirs wear belted, layered coats), since round 132 one man in ten from 30 wears
 a plain linen coif (theirs wear caps, hats and hoods of many cuts), since round 133 one man in ten has
 the ends of his hair turned out in rolls (bands side by side, where theirs are locks), since round 134 two
-men in ten wear a felt hat, since round 135 in two forms (theirs wear many), and the face still lacks the
+men in ten wear a felt hat, since round 135 in two forms (theirs wear many), since round 136 three hoods
+in ten end in a dagged hem (one form, theirs many), and the face still lacks the
 reference's streak of gloss on the nose's flank; the thrown-back hood closes round the neck since round 35, but
 has no folds across its cloth. Since round 111 the people of every part of the world can be drawn, in a plain
 dress that is no people's own, and without a picture of the reference to hold them against.
