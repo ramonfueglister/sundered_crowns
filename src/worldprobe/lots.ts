@@ -12,7 +12,7 @@ export interface PlaceParcels extends Parcels { hamlets?: readonly HamletParcels
 export interface LotsJson { year: number; towns: ({ site: number } & PlaceParcels)[] }
 export type TownParcels = ReadonlyMap<number, PlaceParcels>;
 
-export const parcelsOf = (j: LotsJson): Map<number, PlaceParcels> => new Map(j.towns.map((t) => [t.site, { w: t.w, d: t.d, x: t.x, z: t.z, front: t.front, hamlets: t.hamlets }]));
+export const parcelsOf = (j: LotsJson): Map<number, PlaceParcels> => new Map(j.towns.map((t) => [t.site, { w: t.w, d: t.d, x: t.x, z: t.z, front: t.front, streets: t.streets, street: t.street, hamlets: t.hamlets }]));
 
 const loaded = new Map<number, Promise<Map<number, PlaceParcels> | null>>();
 /** the parcels of the towns of a start year (once per year); null where the year has no file */
