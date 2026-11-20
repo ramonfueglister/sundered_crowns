@@ -364,8 +364,12 @@ export function buildTerrain(g: Ground, t: GroundTraits, baked = true, part: Par
   return b;
 }
 
-/** the colour of open water; the picture uses it as its backdrop so that mirrored sky leaves the water as it is */
-export const OPEN_WATER = WATER_DEEP;
+/**
+ * the colour of open water as the picture shows it (the blue of the sea's shelf in sea.ts, as lit); the picture uses
+ * it as its backdrop so that mirrored sky leaves the water as it is, and beyond the farthest pieces the backdrop does
+ * not stand out against the sea
+ */
+export const OPEN_WATER = rgb(0x006c96);
 
 /** The water as level sheets. `raised` picks the water above sea level (lakes, rivers) instead of the sea. */
 export function buildWater(g: Ground, raised = false, part: Part = whole()): Batch {
