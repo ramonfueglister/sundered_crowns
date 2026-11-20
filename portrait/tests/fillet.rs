@@ -56,15 +56,26 @@ fn the_band_stands_round_the_forehead_on_the_hair() {
             let r = &mut ring[bin(q)];
             *r = (r.0.min(q[1]), r.1.max(q[1]), r.2.max(far(q)));
         }
+        // (round 132) the band's outer side faces out: of its triangles those whose normals point away from the
+        // band's middle lie further from it than those whose normals point towards it (until then the band was
+        // wound inside out, and its front was lit as the inside of a ring is)
+        let (mut away, mut toward) = ((0f32, 0), (0f32, 0));
+        for (t, n) in b.pos.chunks_exact(3).zip(b.nrm.chunks_exact(3)) {
+            let f = (far(&t[0]) + far(&t[1]) + far(&t[2])) / 3.0;
+            let side = if (t[0][0] - mid[0]) * n[0][0] + (t[0][2] - mid[1]) * n[0][2] > 0.0 { &mut away } else { &mut toward };
+            *side = (side.0 + f, side.1 + 1);
+        }
+        let faces_out = away.0 / away.1 as f32 - toward.0 / toward.1 as f32;
         let through = hair.pos.iter().filter(|q| { let r = ring[bin(q)]; q[1] > r.0 + 0.05 && q[1] < r.1 - 0.05 && far(q) > r.2 }).count();
         if show() {
-            println!("person {k} of {}: eyes {eyes:.2}, band's front {:.2} to {:.2} ({:.1} cm over the eyes), crown {crown:.2}, band {by0:.2} to {by1:.2}; band {:.1} cm broad, hair {:.1}; {through} corners of hair through it", p.age, front.0, front.1, 10.0 * (front.0 - eyes), 10.0 * (bx1 - bx0), 10.0 * (hx1 - hx0));
+            println!("person {k} of {}: eyes {eyes:.2}, band's front {:.2} to {:.2} ({:.1} cm over the eyes), crown {crown:.2}, band {by0:.2} to {by1:.2}; band {:.1} cm broad, hair {:.1}; {through} corners of hair through it; the sides facing out lie {:.1} mm further out than those facing in", p.age, front.0, front.1, 10.0 * (front.0 - eyes), 10.0 * (bx1 - bx0), 10.0 * (hx1 - hx0), 100.0 * faces_out);
             continue;
         }
         assert!(front.0 - eyes > 0.25 && front.0 - eyes < 0.7, "person {k}: the band's foot {} cm over the eyes", 10.0 * (front.0 - eyes));
         assert!(by1 < crown + 0.1 && by0 > eyes, "person {k}: the band from {by0} to {by1}, eyes {eyes}, crown {crown}");
         assert!(bx1 - bx0 > hx1 - hx0 - 0.3 && bx1 - bx0 < hx1 - hx0 + 0.35, "person {k}: the band {} cm broad, the hair {}", 10.0 * (bx1 - bx0), 10.0 * (hx1 - hx0));
         assert_eq!(through, 0, "person {k}: hair through the band");
+        assert!(faces_out > 0.005, "person {k}: the band's sides that face out lie {faces_out} further out than those that face in");
     }
     assert!(show() || (with >= 5 && without >= 15), "{with} with a band, {without} without");
 }

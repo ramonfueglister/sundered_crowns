@@ -238,6 +238,10 @@
    "bytes": 42006
   },
   {
+   "name": "cloth_coif.txt.zst",
+   "bytes": 119619
+  },
+  {
    "name": "cloth_cote.txt.zst",
    "bytes": 199597
   },
@@ -255,7 +259,7 @@
   },
   {
    "name": "cloth_fillet.txt.zst",
-   "bytes": 15899
+   "bytes": 16223
   },
   {
    "name": "cloth_hood_down.txt.zst",

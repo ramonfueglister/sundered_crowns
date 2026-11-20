@@ -76,8 +76,10 @@ for i in range(n):
         k, nx = (j + 1) % m, (i + 1) % n
         a, b, c, d = i * m + j, i * m + k, nx * m + j, nx * m + k
         ua, ub, uc, ud = uv[i, j], uv[i, j + 1], uv[i + 1, j], uv[i + 1, j + 1]
-        tri_list.append([a, b, c]); tri_uv.append([tuple(ua), tuple(ub), tuple(uc)])
-        tri_list.append([b, d, c]); tri_uv.append([tuple(ub), tuple(ud), tuple(uc)])
+        # (wound so that the band's outer side faces out: until round 132 it faced in, and the band was lit as
+        # the inside of a ring is)
+        tri_list.append([a, c, b]); tri_uv.append([tuple(ua), tuple(uc), tuple(ub)])
+        tri_list.append([b, c, d]); tri_uv.append([tuple(ub), tuple(uc), tuple(ud)])
 write_bound(out, name, bind_points(H, verts, anc), tri_list, tri_uv, int(os.environ.get('FILLET_EVEN', '300')))
 with open(os.path.join(out, name + '.obj'), 'w') as f:
     for q in verts:

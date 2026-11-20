@@ -317,6 +317,17 @@ pub struct DressSet {
     /// a fastening. The share and the age are by eye: PLACEHOLDER.
     pub fastens: [[crate::fasten::Fasten; 10]; 2],
     pub fasten_from: [f32; 2],
+    /// (round 132) A man's coif: a close cap of linen over the hair and the ears, tied under the chin (the file's
+    /// name, `tools/portrait/pipeline/coif.py`; empty: the table has none), in the table's linen colour and
+    /// drawn with the fillet's image. Who wears it: the men of `coif_from` years and more whose seed's last
+    /// digit is set in `coifs` (the digit that says how the hood is worn: only where `hood` says `Hood::None`).
+    /// Under it the head's hair is drawn as its painted layer alone, without the body of bundles: the cap lies
+    /// close on the skull. England: one man in ten from 30. That men wore it, of linen and tied under the chin,
+    /// and that it was going out of use among them in the 14th century is from the pages in `sources`; the
+    /// share, the age and its cut are by eye: PLACEHOLDER.
+    pub coif: &'static str,
+    pub coif_from: f32,
+    pub coifs: [bool; 10],
     /// The hair of children under seven. Apoleia's `crop01`, cropped short, begins far back on a child's large
     /// skull: half the head a bare forehead, which reads as a shaven head.
     /// England: until round 104 the grown's `bob01`, whose fringe ends 2 cm over the eyes. A small child's face is
@@ -878,6 +889,9 @@ const ENGLAND: DressSet = DressSet {
         [[Laced, Closed, Buttons, Laced, Laced, Closed, Laced, Buttons, Closed, Laced], [Closed, Closed, Buttons, Closed, Closed, Closed, Closed, Buttons, Closed, Closed]]
     },
     fasten_from: [14.0, 15.0],
+    coif: "cloth_coif",
+    coif_from: 30.0,
+    coifs: [false, false, false, false, false, false, false, false, false, true],
     hair_small: "bob08",
     coily: Some(Coily { from: 0.86, men: "coil01", women: "coil02", small: "coil03", thin: "coil03", bald: "coil04", image: "hair1356_fleece", under: ["bob01", "bob04"] }),
     boy_skin: 14.0,
@@ -1093,6 +1107,7 @@ const ENGLAND: DressSet = DressSet {
         Source { what: "a fillet, a stiffened band of linen 5 cm high round the head, on three in ten of the women of 15 and more who show their plaits (round 128)", source: "Rosalie Gilbert, Rosalie's Medieval Woman, Headwear (rosaliegilbert.com/headwear.html, read 20.11.2026; a re-enactor's page, not a primary source): the fillet often a stiffened linen band of about 2 to 2.5 inches, worn to hold the veil, shown high on the head on a Madonna of 1340 to 1360; fillet and barbette going out of use in the middle of the 14th century in favour of plaits beside the face. The share, the age and that it is worn with plaits and without a veil are PLACEHOLDER." },
         Source { what: "a woman's gown closed in front from 14 years: laced on five in ten (one lace through eyelets 2 cm apart, the linen showing between the edges), buttoned on two in ten (ball buttons of the gown's own cloth, 11 mm across, 2 cm apart), not opened on three in ten (round 129)", source: "Rosalie Gilbert, Rosalie's Medieval Woman: Buttons and Lacings, Kirtles, and the buttons of her collection (rosaliegilbert.com/buttonsandlacings.html, kirtles.html, thegilbertcollection_buttons.html; read 20.11.2026 as quotations fetched from the pages, not the pages in full; a re-enactor's pages, not a primary source): kirtles and gowns closed with buttons or with lacing, in front or at the side seams; a working woman likely in a front-lacing kirtle; eyelets closely set, around 2 cm; laces of the gown's colour until the 15th century; the lower classes with cloth buttons matching the gown, almost always ball-shaped, set very closely together at the very edge of the opening; a gown buttoned down the front in the Romance of Alexander, c. 1340; English buttons of 9 to 16 mm. The shares, the age, how far the laced edges stand apart, from button to button, and that none is laced at the side are PLACEHOLDER." },
         Source { what: "a man's gown buttoned in front on two in ten from 15 years, with the women's buttons, from under its opening down; the others' pulled over the head (round 131)", source: "The Medieval Combat Society, Male reenactment costume (themcs.org/costume/Male reenactment costume.htm; a re-enactors' page whose paragraphs on these garments have no notes) and Wikipedia, 1300-1400 in European fashion (both read 20.11.2026 as quotations fetched from the pages): the cotehardie, which began to replace the surcote from 1350, fastened at the front by buttons down to the height of the girdle; cheaper, looser cotehardies with no fastening at the front, put on over the head; working men in short or knee-length tunics. Nothing on the buttons' cloth, size or spacing for men (the women's are used). The share and the age are PLACEHOLDER." },
+        Source { what: "a man's coif, a close cap of linen over the hair and the ears with two strings tied under the chin, on one man in ten from 30 years, worn alone (round 132)", source: "Wikipedia, Coif; The Medieval Combat Society, Male reenactment costume; Cadw, Hats (a leaflet without dates or notes); Buckingham's Retinue, Coifs (a re-enactment group's guide); Ruth Johnston, All Things Medieval, 13th and 14th centuries: men's hats (a blog without notes); all read 20.11.2026 as quotations fetched from the pages: coifs of unadorned white linen tied under the chin, worn by all classes, out of popularity with men in the fourteenth century; a linen coif covering the hair and ears and tied under the chin under Edward II, coif and hood on effigies of 1354 and 1372; considered underwear and worn under hats by everybody over 12 except those doing physical labour; before 1500 of one or two pieces with ties at the corners. The share, the age, that it is worn alone and its cut are PLACEHOLDER." },
         Source { what: "children under seven: the men's hair to the jaw with a fringe, girls and boys alike", source: "PLACEHOLDER, nothing read on small children's hair. Chosen because Apoleia's cropped hair begins far back on a child's large skull (a shaven head)." },
         Source { what: "men's hair in three lengths (to above the ear, to the ear's lobe, to the jaw), 3 : 3 : 2, and two men in ten from 15 with their hair parted in the middle, over the ears and cut at the jaw, without a fringe (round 125), one of the two in waves (round 130)", source: "PLACEHOLDER: lengths, shares and the age by eye, so that the men of a town do not all have one head. Nothing was read for the parted cut or its waves: to be checked against picture sources as the fringe is (Luttrell Psalter c. 1330, Holkham Bible)." },
         Source { what: "men's hair to the jaw with a fringe", source: "PLACEHOLDER, to be checked against picture sources (Luttrell Psalter c. 1330, Holkham Bible)." },
@@ -1122,7 +1137,7 @@ pub static ENGLAND_1356: DressSet = ENGLAND;
 /// PLACEHOLDER throughout: nothing read on what the common people of any of these lands wore; it is here so that
 /// their faces, skins and hair can be judged under the same light as England's, not as a statement about their
 /// dress. A dress of their own takes its place land by land.
-pub static PLAIN_1356: DressSet = DressSet { key: "plain1356", origins: &[], hood: [Bare; 10], veil_from: 999.0, wimple_from: 999.0, hair_looped: "", fillet: "", fastens: [[crate::fasten::Fasten::None; 10]; 2], ..ENGLAND };
+pub static PLAIN_1356: DressSet = DressSet { key: "plain1356", origins: &[], hood: [Bare; 10], veil_from: 999.0, wimple_from: 999.0, hair_looped: "", fillet: "", coif: "", fastens: [[crate::fasten::Fasten::None; 10]; 2], ..ENGLAND };
 
 /// Every dress with a table.
 pub static SETS: [(Dress, &DressSet); 2] = [(Dress::England1356, &ENGLAND_1356), (Dress::Plain1356, &PLAIN_1356)];
@@ -1442,6 +1457,16 @@ impl DressSet {
         let (c, s) = (head[1].cos(), head[1].sin());
         let (x, y) = (g[0] * c + g[1] * s, g[1] * c - g[0] * s);
         [x.atan2(g[2] * lean.cos() + y * lean.sin()), (y * lean.cos() - g[2] * lean.sin()).clamp(-1.0, 1.0).asin()]
+    }
+
+    /// Whether a man wears a coif (`coif`): old enough, bare-headed by the hood's digit, and that digit set.
+    pub fn coif_of(&self, female: bool, yrs: f32, seed: u32) -> bool {
+        !self.coif.is_empty() && !female && yrs >= self.coif_from && self.coifs[(seed % 10) as usize] && self.hood_of(female, yrs, seed) == Hood::None
+    }
+
+    /// Whether the hair of the head lies under cloth that is close on it: a hood on the head, a coif.
+    pub fn head_covered(&self, female: bool, yrs: f32, seed: u32) -> bool {
+        self.hood_of(female, yrs, seed) == Hood::Up || self.coif_of(female, yrs, seed)
     }
 
     pub fn hood_of(&self, female: bool, age: f32, seed: u32) -> Hood {

@@ -5491,6 +5491,102 @@ Pictures (project files, `portraits/`): `runde131_vorher_nachher_maenner.png` (f
 now below; three are the sample's men under seeds that draw the buttons),
 `runde131_von_allen_seiten.png` (a buttoned man with the hood thrown back, from five sides).
 
+**Round 132: a man's coif, and the fillet's linen** (2026-11-20). The men's heads (Ramon: the figure, the
+hair, the whole portrait). A man of England had three heads: bare, a hood on it, a hood thrown back. The
+reference's men wear caps and hats of many kinds. Read this time (five pages, as quotations fetched from
+them, not the pages in full): Wikipedia's "Coif": coifs "fell out of popularity with men in the fourteenth
+century", were "worn by all classes in England and Scotland from the Middle Ages to the early seventeenth
+century" and are "usually made of unadorned white linen and tied under the chin"; the Medieval Combat
+Society's page on men's costume, under Edward II (1307 to 1327): "A linen coif or undercap covering the
+hair and ears and tied under the chin", and "Coif and hood" under effigies of 1354 and 1372 (gentry);
+Cadw's leaflet "Hats" (no dates, no notes): coifs "were considered to be underwear", worn "underneath
+formal hats by everybody over 12 except those doing physical labour", with the Luttrell Psalter, the
+Romance of Alexander and the Queen Mary Psalter named for people of all levels in coifs; a re-enactment
+group's guide (Buckingham's Retinue): before 1500 a coif of one or two pieces, "an oblong of material,
+folded in half with a curve where the back of your head should be", with ties at the corners; a blog
+without notes (Ruth Johnston): "Men still wore the linen coif", which "went under armor and even under
+other hats". Two more pages said nothing on men's coifs. Nothing was found on how many common men still
+wore one in 1356.
+
+What is changed. One man in ten from 30 years wears a coif (`DressSet::coif`, `coif_from`, `coifs`,
+`coif_of`): of the three in ten whom the seed's last digit leaves bare-headed, one. It is a close cap of
+the table's linen over the skull and the ears: its edge crosses the forehead at the hairline (6.1 to 7.5
+cm over the eyes on the test's men), goes down in front of the ears to below the lobes and round the nape,
+and is turned in 5 mm; two strings 7 mm broad run from under the cap below the ears along under the jaw
+and meet under the chin. Under it the head's hair is drawn as its painted layer alone (it shows at the
+nape and nothing of it at the forehead); the body of bundles is left out.
+
+A new file (`cloth_coif`, 0.12 MB) written by a new script (`tools/portrait/pipeline/coif.py`): a shell
+round the head's middle that stands in every direction above its edge as far out as the base head's skin
+and ears do, evened so that it passes over an ear in one bow, plus 4 mm (5.5 mm at the edge, where it is
+not evened); each corner is bound to the skin in its own direction from the head's middle, the strings to
+the skin they lie on (where the plane through the cap's two corners and the place under the chin cuts the
+head), and the builder reads the file as it reads the fillet's and evens three times how the head carries
+it. 3 305 points, 6 504 triangles. The image is the fillet's linen, laid on each half of the cap as on a
+flat piece against the side of the head (the halves meet over the crown, as a coif's two pieces do), a
+tile to 15 cm.
+
+Found on the way, both of round 128. The stage tells wool from linen by an image's name and took the
+fillet's image for wool: the fillet was drawn 2.6 times as light as the veil's linen
+(`src/portrait/materials.ts`; now linen). Drawn as linen it came out darker than the veil: the band's
+triangles were wound inside out, so that its front was lit as the inside of a ring is; the factor had
+hidden that. `fillet.py` winds them outward now, and the file is the old one with every triangle turned.
+The fillet is now the veil's linen: greyer than before, with the weave showing.
+
+Tried and not kept.
+
+- The cap over the hair that lies under a hood (`bob02`'s body of bundles, as far out as it stands): 21.8
+  cm broad on the base head, its sides standing off the cheeks, the fringe a thick roll under its edge: a
+  helmet. With a second file for a head without hair. Now one cap on the skull, 19.1 cm broad, and the hair
+  under it painted.
+- The cap evened over the head's whole form: from the head's middle the jaw and the neck are further away
+  the lower one looks, and evened with that in it the cap stood up to 2.8 cm off the lower head. It is
+  evened over what stands out of the head's own trend (20 degrees).
+- The strings straight from the cap's corner in front of the ear to the chin: a strap across the cheek.
+- A gap of 3 mm and the builder evening twelve times how the head carries the cap: on three of sixteen men
+  the skin under the ear came through the cap's rim by up to 2.2 mm. With 4 and 5.5 mm and three times, on
+  none (at least 1.3 mm of room on the nearest).
+- A tile of the image to 4 cm, as the fillet has: at a portrait's size the weave is finer than a pixel and
+  the cap was blotched like felt.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line where round 131 left it to the tenth (one man
+of the sample, of 50, wears the coif; read with this round's builder and stage, before the fillet's file
+was turned, which no one of the sample wears).
+
+Honest about it. It reads as a cap of linen, and close up as a bathing cap: the shell is smooth, with no
+fold, no wrinkle and no seam over the crown (the image has its seam there, which hardly shows); it does
+not press the ears flat as cloth does but goes over them in a bow, so the head is 1 to 2 cm broader than
+the skull; the strings have no knot and no ends, they meet under the chin, and on a man with a beard
+they are lost in it (on most men of that age, then, the coif has no strings to see). No hair shows at the
+forehead or the temples, where the reference's and the manuscripts' coifs let a fringe out; a man of 30
+with a full head of hair has a bare forehead under it. It is worn alone only: the pages have it mostly
+under a hood or a hat, as underwear, and one says not by those doing physical labour, which the people
+here are; that it was still worn by one common man in ten in 1356, from 30 years, is by eye (PLACEHOLDER),
+set low and on the older because the pages have it going out of use. The cut (where the edge runs, the
+gap, the strings' breadth and way) is by eye too; the two-piece cut is from a re-enactment group's guide.
+No manuscript, effigy or find was looked at. Looked at on four men from the front (two with beards) and
+on one from five sides, and a fillet before and after.
+
+Tests: `portrait/tests/coif.rs`, new, two: over 100 000 seeds one man in ten from 30 wears it, none at
+29, no woman, nobody in the plain dress, and whoever wears it has no hood and the hair of a covered head;
+of 150 men of 30 to 68 the sixteen whom the seed names have it and none of the first forty others, on
+each it is the file's sheet and strings on a head without a body of hair, the sheet's outer side faces
+out, no corner of any other surface lies outside the sheet over it (rays from the head's middle; at
+least 1.3 mm of room on the nearest man, up to 8.5 mm over the crown's skin), its edge lies 6.1 to 7.5 cm
+over the eyes in front, 4.4 to 5.4 under them at the sides and 2.4 to 3.6 behind, and the strings end at
+the middle, in front, 1 to 2.5 cm over the frame's chin. `tests/fillet.rs`: the band's sides that face
+out lie further out than those that face in (1.3 mm; the other way round until now). `tests/hair_body.rs`:
+the parted men's test builds men of 29 (two of its men of 30 now wear a coif). `tests/portrait.test.ts`:
+the fillet's image is linen to the stage, the sample wears it (the coif), and the two tests of the
+garments' hems leave the coif out (its edge is the sheet turned in, no tube). Cargo: 98, of which one
+failed in the first whole run (the parted men's) and was brought in line; then all again in one run;
+after the sources were written into the table the library's, the coif's and the fillet's again, and
+five portraits drawn pixel for pixel as before. `tests/portrait.test.ts` and its neighbour 42 of 42.
+`npm run typecheck` and `npm run lint` pass.
+Pictures (project files, `portraits/`): `runde132_vorher_nachher.png` (a woman with the fillet and four
+men, round 131 above, now below; three of the men are the sample's under seeds that draw the coif),
+`runde132_von_allen_seiten.png`.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
@@ -5519,7 +5615,8 @@ the chin), since round 128 three in ten of the young women in plaits wear a fill
 linen where theirs wear a narrow jewelled band, since round 129 seven in ten of the women's gowns are
 closed down the front with a lace over linen or with cloth buttons, in the gown's own colour where theirs
 are gold and contrast, on a gown that is still a loose sack, since round 131 two in ten of the men's
-with the same buttons (theirs wear belted, layered coats), and the face still lacks the
+with the same buttons (theirs wear belted, layered coats), since round 132 one man in ten from 30 wears
+a plain linen coif (theirs wear caps, hats and hoods of many cuts), and the face still lacks the
 reference's streak of gloss on the nose's flank; the thrown-back hood closes round the neck since round 35, but
 has no folds across its cloth. Since round 111 the people of every part of the world can be drawn, in a plain
 dress that is no people's own, and without a picture of the reference to hold them against.

@@ -1023,15 +1023,27 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
         // (round 126: plaits pinned up are laid on a girl's hair: her body of hair, and her strands' image)
         let under = garb.map_or(name.as_str(), |g| g.under_of(name));
         let body = if crate::real::exists(&format!("{dir}/{name}_body.txt")) { name.as_str() } else { under };
-        if let Some(sf) = mh_rope(dir, &format!("{body}_body"), body_image, &x.pp, &h.base, &|_| hair) {
-            out.push(sf);
-        }
-        if let Some(sf) = mh_rope(dir, &format!("{name}_rope"), &format!("{under}_rope"), &x.pp, &h.base, &|_| hair) {
-            out.push(sf);
+        // (under a coif the hair's painted layer alone: the cap lies close on the skull, and a body of bundles
+        // a centimetre thick under it made a helmet of it)
+        let coifed = garb.is_some_and(|d| d.coif_of(fem, p.age, p.seed));
+        if !coifed {
+            if let Some(sf) = mh_rope(dir, &format!("{body}_body"), body_image, &x.pp, &h.base, &|_| hair) {
+                out.push(sf);
+            }
+            if let Some(sf) = mh_rope(dir, &format!("{name}_rope"), &format!("{under}_rope"), &x.pp, &h.base, &|_| hair) {
+                out.push(sf);
+            }
         }
         // (round 128) a fillet on the hair: a stiff band of linen, bound and carried as a plait's strands are
         if let Some(d) = garb.filter(|d| d.fillet_of(fem, p.age, p.seed)) {
             if let Some(sf) = mh_rope(dir, d.fillet, "", &x.pp, &h.base, &|_| hex(d.linen)) {
+                out.push(sf);
+            }
+        }
+        // (round 132) a man's coif: a close cap of linen over the hair and the ears with its strings under the
+        // chin, bound and carried as the fillet is
+        if let Some(d) = garb.filter(|_| coifed) {
+            if let Some(sf) = mh_rope(dir, d.coif, d.fillet, &x.pp, &h.base, &|_| hex(d.linen)) {
                 out.push(sf);
             }
         }

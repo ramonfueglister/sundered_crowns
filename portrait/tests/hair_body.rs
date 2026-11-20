@@ -293,7 +293,8 @@ fn two_men_in_ten_wear_their_hair_parted_and_cut_at_the_jaw() {
     let (mut found, mut with_hair) = (0, 0);
     let mut names = std::collections::BTreeMap::new();
     for k in (1..160u32).step_by(2) {
-        let out = build(&h, &person(k, false, 30.0), 1);
+        // (men of 29: from 30 one man in ten wears a coif, round 132, and has no body of hair under it)
+        let out = build(&h, &person(k, false, 29.0), 1);
         let Some(hair) = body(&out) else { continue };
         with_hair += 1;
         if !parted(&out) {
@@ -320,7 +321,7 @@ fn two_men_in_ten_wear_their_hair_parted_and_cut_at_the_jaw() {
         let band = |p: &&V3| (p[1] - (out.chin + 0.3 * height)).abs() < 0.04 * height;
         let (wide_hair, wide_skin) = (hair.pos.iter().filter(band).map(|p| (p[0] - out.cx).abs()).fold(0f32, f32::max), skin.pos.iter().filter(band).map(|p| (p[0] - out.cx).abs()).fold(0f32, f32::max));
         // waved or straight (round 130): how much its bundles turn along their way
-        let name = sc_portrait::dress::ENGLAND_1356.hair_of(person(k, false, 30.0).seed, 30.0);
+        let name = sc_portrait::dress::ENGLAND_1356.hair_of(person(k, false, 29.0).seed, 29.0);
         let turns = turning(hair);
         *names.entry(name).or_insert(0) += 1;
         // (measured on nine men: straight 0.83 to 1.00, waved 1.62 to 2.14)
