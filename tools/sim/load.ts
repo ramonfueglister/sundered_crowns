@@ -111,7 +111,7 @@ export function loadItineraries(year: number, w: World): Itineraries | null {
   const files = readdirSync(dir)
     .filter((n) => n.endsWith('.json'))
     .sort();
-  // a file read from disk has the shape the tool writes (tools/history/itineraries/regesta.py)
+  // a file read from disk has the shape the tools write (tools/history/itineraries/regesta.py and gough.py)
   const all = new Map(
     files.flatMap((f) => [
       ...compileItineraries(JSON.parse(readFileSync(resolve(dir, f), 'utf8')) as ItineraryFile, w.lat, w.lon, year),
