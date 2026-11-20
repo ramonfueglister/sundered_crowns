@@ -1,11 +1,13 @@
 // The land from farther away. On the coarser steps of the map a block is two, four, eight … cells wide, and what
 // stands and grows on the land is no longer built house by house and tree by tree: it becomes part of the ground
-// itself, as it would look if the finest world were seen from that far. At the first far step the trees are still
-// the finest step's trees (trees.ts), then woods are a raised green ground; up to the third far step the houses are
-// still the finest step's houses, each under its own roof (houses.ts), then a town is a square of roof-coloured
-// blocks that shrinks to a single block; a field is a flat block of its crop. Only the great buildings stay
-// themselves for two steps, built as small as the step makes them. So the world loses its detail step by step while
-// everything stays where it is and as large as it is, and it is drawn the same way from every distance: from the
+// itself, as it would look if the finest world were seen from that far. At the first far step the trees and the
+// sheaves of the fields are still the finest step's (trees.ts, crops.ts), then woods are a raised green ground and a
+// field a flat block of its crop; up to the third far step the houses are still the finest step's houses, each under
+// its own roof (houses.ts), then a town is a square of roof-coloured blocks that shrinks to a single block. The great
+// buildings and the town walls stay themselves for two steps, built as small as the step makes them. What is still
+// drawn as itself is built as tall as the land of its step is (zoom.ts `uprightOf`). So the world loses its detail
+// step by step while everything stays where it is, as large as it is and as tall against its hills, and it is drawn
+// the same way from every distance: from the
 // second far step on woods are blocks in the colours of their crowns standing out of the open land and fields
 // patches of their crops, however much land a block holds.
 import type { FieldShown } from './lots';
@@ -13,15 +15,17 @@ import { CROP } from '../sim/settlement/fields';
 import * as THREE from 'three/webgpu';
 import { type Batch, type RGB, type Rnd, hash2, mix, noise2, rgb, seeded, shade } from '../lookprobe/batch';
 import { ACACIA, CYPRESS, JUNGLE, LEAVES, OATS, OATS_SIDE, PALM, VINE_BODY, WHEAT, WHEAT_SIDE } from '../lookprobe/blocks';
-import { FLOOR, type HouseStyle, type Model, type Style, m, tower } from '../buildings';
+import { FLOOR, type HouseStyle, type Model, type Style, m, tower, townWall } from '../buildings';
 import { type Ground, Mat, N, idx, inGrid, occlude } from '../lookprobe/layout';
 import { FALLOW_SHOWS, SOIL_FALLOW } from '../lookprobe/terrain';
+import { CROPS_AT, FALLOW_FIELD, OATS_FIELD, WHEAT_FIELD } from './crops';
 import { HOUSE_NUMBERS } from './houses';
 import { PALMS, RAINFOREST, SAVANNA, STRAY, TEMPERATE, TREE_NUMBERS, TREE_PITCH, TREE_REACH, TREES_AT, TREES_CLOSED, crownColours, treeHeight, treesCode, treesIn } from './trees';
+import { uprightOf } from './zoom';
 import { blockOf, FALLOW, FIELD_GROUND, PEOPLE_PER_PERSON, PERSONS_PER_FLOOR_BLOCK, POP_OF_SIZE, type Site, SPRING, WALLED_FROM, courseOf } from './settle';
 
 /** What a column carries as part of itself (GroundTraits.cover): where `has` is set, the colours of its top and sides and how far it stands above its ground. */
-export interface Cover { /** what far.ts laid on each column (KINDS), for measuring it against the finer step */ kind?: Uint8Array; /** of the mean of the finer step (mean.ts): the colour of all the camera sees of a column, tops and sides, as a flat top would have to show it */ whole?: Float32Array; has: Uint8Array; rise: Uint8Array; top: Float32Array; side: Float32Array; /** how much of the column's top the cover colours, 0 … 1: the rest is the ground's own colour */ share: Float32Array; /** 1 on the paved ground of the towns */ town: Uint8Array; /** the trees of the finest step where they are drawn one by one (trees.ts TREES_AT): trees.ts TREE_NUMBERS to a column */ trees?: Uint8Array; /** the houses of the finest step where they are drawn as houses (HOUSES_UNTIL): houses.ts HOUSE_NUMBERS numbers each */ houses?: number[] }
+export interface Cover { /** what far.ts laid on each column (KINDS), for measuring it against the finer step */ kind?: Uint8Array; /** of the mean of the finer step (mean.ts): the colour of all the camera sees of a column, tops and sides, as a flat top would have to show it */ whole?: Float32Array; has: Uint8Array; rise: Uint8Array; top: Float32Array; side: Float32Array; /** how much of the column's top the cover colours, 0 … 1: the rest is the ground's own colour */ share: Float32Array; /** 1 on the paved ground of the towns */ town: Uint8Array; /** the trees of the finest step where they are drawn one by one (trees.ts TREES_AT): trees.ts TREE_NUMBERS to a column */ trees?: Uint8Array; /** the houses of the finest step where they are drawn as houses (HOUSES_UNTIL): houses.ts HOUSE_NUMBERS numbers each */ houses?: number[]; /** the crop of the lot on each column where the fields are drawn sheaf by sheaf (crops.ts CROPS_AT): crops.ts WHEAT_FIELD … OATS_FIELD, 0 where no field lies */ crops?: Uint8Array }
 /**
  * The woods at a column: the share of the ground they cover (0 … 1), the colours of their crowns and whether the
  * trees are tall ones. `laid` says that the share is that of this very column, from the forest of the world's
@@ -183,6 +187,8 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
 }): Cover {
   const c: Cover = { has: new Uint8Array(N * N), rise: new Uint8Array(N * N), top: new Float32Array(N * N * 3), side: new Float32Array(N * N * 3), town: new Uint8Array(N * N), share: new Float32Array(N * N).fill(1), kind: new Uint8Array(N * N) };
   const wider = 2 ** step, ox = g.ox ?? 0, oz = g.oz ?? 0, m = new THREE.Matrix4();
+  /** a finest block of height in blocks of this step: what stands as a model, a house or a tree is built as tall as the land (zoom.ts `uprightOf`), and as wide as it is */
+  const up = uprightOf(step);
   /** the columns a house drawn as a house stands on: no field or wood grows there */
   const taken = new Uint8Array(N * N);
   const free = (x: number, z: number) => inGrid(x, z) && !g.wet[idx(x, z)] && g.mat[idx(x, z)] !== Mat.Rock && !c.has[idx(x, z)] && !c.town[idx(x, z)] && !taken[idx(x, z)];
@@ -212,8 +218,8 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
         g.h[i] = y; c.town[i] = 1; g.mat[i] = Mat.Paved;
       }
       if (step > MODELS_UNTIL) return;
-      if (o.own(x0 + (w >> 1), z0 + (d >> 1))) things.append(model.build(r), m.makeScale(1 / wider, 1 / wider, 1 / wider).setPosition(x0 + w / 2, y, z0 + d / 2));
-      occlude(g, x0, z0, x0 + w, z0 + d, y + model.height / wider);
+      if (o.own(x0 + (w >> 1), z0 + (d >> 1))) things.append(model.build(r), m.makeScale(1 / wider, up, 1 / wider).setPosition(x0 + w / 2, y, z0 + d / 2));
+      occlude(g, x0, z0, x0 + w, z0 + d, y + model.height * up);
       return;
     }
   };
@@ -279,9 +285,9 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
         for (let k = 0; k + 8 < here.houses.length; k += 9) {
           const [hx, hz, w, d, floors, tenths, wall, roof] = here.houses.slice(k, k + 9), x0 = hx / wider - ox, z0 = hz / wider - oz, x1 = (hx + w) / wider - ox, z1 = (hz + d) / wider - oz;
           if (!inGrid(Math.floor((x0 + x1) / 2), Math.floor((z0 + z1) / 2))) continue;
-          // (as tall as it is, as the great buildings and the trees stand: a step's blocks stand for as many finest blocks in height as in width)
+          // (as tall as the land is built, as the great buildings and the trees stand)
           const shape = houseShape(w, d, floors, tenths / 10, hx, hz);
-          houses.push(x0, z0, x1, z1, shape.eaves / wider, shape.rise / wider, wall, roof, shape.hips ? 1 : 0);
+          houses.push(x0, z0, x1, z1, shape.eaves * up, shape.rise * up, wall, roof, shape.hips ? 1 : 0);
           for (let z = Math.max(0, Math.floor(z0)); z < Math.min(N, Math.ceil(z1)); z++) for (let x = Math.max(0, Math.floor(x0)); x < Math.min(N, Math.ceil(x1)); x++) taken[idx(x, z)] = 1;
         }
       } else {
@@ -319,8 +325,8 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
         // the model stands on level, paved ground
         for (let z = z0; z < z1; z++) for (let x = x0; x < x1; x++) if (inGrid(x, z) && !g.wet[idx(x, z)]) { const i = idx(x, z); g.h[i] = y; c.town[i] = 1; c.has[i] = 0; g.mat[i] = Mat.Paved; }
         const mx = (gx + gw / 2) / wider - ox, mz = (gz + gd / 2) / wider - oz;
-        if (o.own(Math.floor(mx), Math.floor(mz))) things.append(model.build(seeded(1000 + id + k)), m.makeScale(1 / wider, 1 / wider, 1 / wider).setPosition(mx, y, mz));
-        occlude(g, x0, z0, x1, z1, y + tenths / 10 / wider);
+        if (o.own(Math.floor(mx), Math.floor(mz))) things.append(model.build(seeded(1000 + id + k)), m.makeScale(1 / wider, up, 1 / wider).setPosition(mx, y, mz));
+        occlude(g, x0, z0, x1, z1, y + (tenths / 10) * up);
       }
     }
     // the towns after all the houses: a town's paving and wall leave the ground of every house free, also of
@@ -357,13 +363,17 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
         }
         const paved = (x: number, z: number) => { let n = 0; for (let fz = Math.max(0, (z + oz) * wider - fz0); fz < Math.min(across, (z + oz + 1) * wider - fz0); fz++) for (let fx = Math.max(0, (x + ox) * wider - fx0); fx < Math.min(across, (x + ox + 1) * wider - fx0); fx++) n += near[fz * across + fx]; return 2 * n >= wider * wider; };
         for (let z = z0; z < z1; z++) for (let x = x0; x < x1; x++) if (inGrid(x, z) && paved(x, z)) { if (free(x, z) || (taken[idx(x, z)] && !g.wet[idx(x, z)] && g.mat[idx(x, z)] !== Mat.Rock && !c.has[idx(x, z)])) { c.town[idx(x, z)] = 1; g.mat[idx(x, z)] = Mat.Paved; } else if (c.kind![idx(x, z)] === 1) g.mat[idx(x, z)] = Mat.Paved; }
-        const open = (side: 'nz' | 'px' | 'pz' | 'nx', along: number) => (t.wall ?? []).some((gap) => gap.side === side && along >= gap.from && along <= gap.to);
-        if (step === 1 && t.wall !== null) for (let z = z0 - 1; z <= z1; z++) for (let x = x0 - 1; x <= x1; x++) {
-          if (!(x === x0 - 1 || x === x1 || z === z0 - 1 || z === z1) || x === (x0 + x1) >> 1 || z === (z0 + z1) >> 1 || !free(x, z)) continue;
-          // where the block lies along its side of the wall, in finest blocks from the side's middle
-          const ax = (x + ox + 0.5) * wider - t.cx, az = (z + oz + 0.5) * wider - t.cz;
-          if (z === z0 - 1 ? open('nz', ax) : z === z1 ? open('pz', ax) : x === x0 - 1 ? open('nx', az) : open('px', az)) continue;
-          put(x, z, 1, WALL, WALL, 2);
+        // the wall as long as the great buildings stay themselves: the finest step's wall (settle.ts), made smaller,
+        // on the lowest ground of its ring, with its gates and its openings for the water; nothing grows on its ring
+        if (step <= MODELS_UNTIL && t.wall !== null) {
+          let lo = Infinity;
+          for (let z = z0 - 1; z <= z1; z++) for (let x = x0 - 1; x <= x1; x++) {
+            if (!(x === x0 - 1 || x === x1 || z === z0 - 1 || z === z1) || !inGrid(x, z)) continue;
+            taken[idx(x, z)] = 1;
+            if (!g.wet[idx(x, z)]) lo = Math.min(lo, g.h[idx(x, z)]);
+          }
+          const mx = t.cx / wider - ox, mz = t.cz / wider - oz;
+          if (lo < Infinity && o.own(Math.floor(mx), Math.floor(mz))) things.append(townWall(t.half * 2 + 2, t.half * 2 + 2, t.wall ?? []), m.makeScale(1 / wider, up, 1 / wider).setPosition(mx, lo, mz));
         }
       }
     }
@@ -385,12 +395,19 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
   // the finest step. In hill country most lots are not, and the land stays grass.
   const built = Uint8Array.from(c.has, (has, i) => (has || c.town[i] || taken[i] || g.wet[i] || g.mat[i] === Mat.Rock ? 1 : 0)), slack = Math.floor(2 / FLATTER ** step), rooms = new Map<number, boolean>();
   // A walled town keeps the ground within its wall to itself and two blocks round it (settle.ts claims the square):
-  // no lot of the finest step touches that, so none does here. In finest world blocks, four numbers to a town.
+  // no lot of the finest step touches that and no tree stands on it (world.ts), so none does here. In finest world
+  // blocks, four numbers to a town.
   const walls: number[] = [];
   if (plan) {
     const fine = (v: number) => Math.floor((v * wider) / plan!.pieceBlocks);
     for (let pz = fine(oz) - 1; pz <= fine(oz + N) + 1; pz++) for (let px = fine(ox) - 1; px <= fine(ox + N) + 1; px++) for (const t of plan.pieces[`${px},${pz}`]?.towns ?? []) if (t.wall !== null) walls.push(t.cx - t.half - 2, t.cz - t.half - 2, t.cx + t.half + 2, t.cz + t.half + 2);
   }
+  /** whether the middle of a column lies on a walled town's square */
+  const walledIn = (x: number, z: number) => {
+    const fx = (x + ox + 0.5) * wider, fz = (z + oz + 0.5) * wider;
+    for (let k = 0; k < walls.length; k += 4) if (fx >= walls[k] && fx < walls[k + 2] && fz >= walls[k + 1] && fz < walls[k + 3]) return true;
+    return false;
+  };
   const room = (lx: number, lz: number, shift: number) => {
     const key = (lx + 32768) * 65536 + lz + 32768, known = rooms.get(key);
     if (known !== undefined) return known;
@@ -429,8 +446,16 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
     if (hash2(lx, lz, 65 + salt) > o.ploughed(mx, mz) / FIELD_GROUND || !room(lx, lz, shift)) continue;
     // the course of the block of fields the lot lies in, the same as at the finest step (settle.ts)
     const course = courseOf(courses(mx, mz), hash2(...blockOf(fx / grown, fz / grown), 66 + salt));
+    const vines = course !== SPRING && course !== FALLOW && hash2(lx, lz, 67 + salt) < o.vines(mx, mz);
+    // at the first far step a field is the finest step's: its soil, and its sheaves standing on it (crops.ts draws
+    // them from the crop laid down here); the vineyards stay a colour of their own
+    if (step === CROPS_AT && !vines) {
+      const i = idx(x, z);
+      g.mat[i] = Mat.Soil; taken[i] = 1; c.kind![i] = course === FALLOW ? 4 : course === SPRING ? 5 : 6;
+      (c.crops ??= new Uint8Array(N * N))[i] = course === FALLOW ? FALLOW_FIELD : course === SPRING ? OATS_FIELD : WHEAT_FIELD;
+      continue;
+    }
     if (course === FALLOW) { put(x, z, 0, tinted(SOIL_FALLOW, SEEN_FALLOW), SOIL_FALLOW, 4); c.share[idx(x, z)] = FALLOW_SHOWS; continue; }
-    const vines = course !== SPRING && hash2(lx, lz, 67 + salt) < o.vines(mx, mz);
     put(x, z, 0, ...(course === SPRING ? springOf(lx, lz) : cropOf(lx, lz, mx, mz)), course === SPRING ? 5 : vines ? 7 : 6);
   }
 
@@ -438,7 +463,7 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
   // its colours (trees.ts draws them from the woods' share and kind at the column, which are laid down here). The
   // ground between them is the ground, which the trees darken round them by hiding its sky, as at the finest step.
   if (step === TREES_AT) for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
-    if (!free(x, z) || g.mat[idx(x, z)] !== Mat.Grass) continue;
+    if (!free(x, z) || g.mat[idx(x, z)] !== Mat.Grass || walledIn(x, z)) continue;
     const w = o.woods(x, z);
     if (!w) continue;
     const kind = w.crowns === JUNGLE ? RAINFOREST : w.crowns === ACACIA ? SAVANNA : w.crowns === PALM ? PALMS : TEMPERATE;
@@ -446,7 +471,7 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
     let stand = 0;
     treesIn(x + ox, z + oz, (code - 1) / 254, (px, pz, tx, tz) => {
       const cx = px / wider - ox, cz = pz / wider - oz, reach = TREE_REACH / wider;
-      occlude(g, cx - reach, cz - reach, cx + reach, cz + reach, Math.ceil((g.h[i] + treeHeight(sort, tx, tz) / wider) * 64) / 64);
+      occlude(g, cx - reach, cz - reach, cx + reach, cz + reach, Math.ceil((g.h[i] + treeHeight(sort, tx, tz) * up) * 64) / 64);
       stand++;
     });
     if (!stand) continue;
@@ -456,7 +481,7 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
   // at the second far step: a block is woods by the trees of the finest step that
   // stand on it, in the same colours; a closed wood shows whole
   if (step === 2) for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
-    if (!free(x, z) || g.mat[idx(x, z)] !== Mat.Grass) continue;
+    if (!free(x, z) || g.mat[idx(x, z)] !== Mat.Grass || walledIn(x, z)) continue;
     const w = o.woods(x, z);
     if (!w) continue;
     const fx = (x + ox) * wider, fz = (z + oz) * wider;
@@ -494,7 +519,7 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
     }
     for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
       const w = grows[idx(x, z)];
-      if (!w || !free(x, z) || !level(x, z) || o.clear?.(x, z)) continue;
+      if (!w || !free(x, z) || !level(x, z) || o.clear?.(x, z) || walledIn(x, z)) continue;
       // where the single woods still show (the share differs from block to block), those about the block count
       let about = w.share;
       if (w.laid) {

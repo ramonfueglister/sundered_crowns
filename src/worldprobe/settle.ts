@@ -251,7 +251,11 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
       const deep = Math.min(b1 - b0, farm ? 3 : r.int(3, 5)), b = side === 0 || side === 3 ? b0 : b1 - deep, floors = farm ? (r.chance(0.3) ? 2 : 1) : tall ? (r.chance(0.35) ? 3 : 2) : r.chance(0.5) ? 2 : 1;
       const x = cx + (across ? a : b), z = cz + (across ? b : a), w = across ? wide : deep, d = across ? deep : wide;
       const got = home(r, x, z, w, d, floors, 0, s, (['nz', 'px', 'pz', 'nx'] as const)[side]);
-      if (got) { housedOnParcels += got; reach = Math.max(reach, Math.abs(x - cx), Math.abs(x + w - cx), Math.abs(z - cz), Math.abs(z + d - cz)); }
+      // a house beyond the ground counts as the ground that holds it builds it, so that the town reaches as far and
+      // keeps the same ground on every ground it falls on (the wall's square: no field lies within it)
+      const beyond = x < 2 || z < 2 || x + w > N - 2 || z + d > N - 2;
+      if (got || beyond) reach = Math.max(reach, Math.abs(x - cx), Math.abs(x + w - cx), Math.abs(z - cz), Math.abs(z + d - cz));
+      if (got) housedOnParcels += got;
       else if (mine) count(`${what} without house`);
     }
     if (mine) count(what, L.x.length);
@@ -376,7 +380,10 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
         if (water) from ??= k;
         else if (from !== null) { gaps.push({ side, from: from - 0.5, to: k + 0.5 }); from = null; }
         if (k > half || water) continue;
-        if (!inGrid(x, z) || g.mat[idx(x, z)] === Mat.Rock) { carries = false; continue; }
+        // (the ring beyond the ground is as the ground that holds the town finds it: that one tells whether the wall
+        // stands, and here the town keeps its square all the same)
+        if (!inGrid(x, z)) { dry++; continue; }
+        if (g.mat[idx(x, z)] === Mat.Rock) { carries = false; continue; }
         dry++; lo = Math.min(lo, g.h[idx(x, z)]); hi = Math.max(hi, g.h[idx(x, z)]);
       }
     }

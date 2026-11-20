@@ -49,6 +49,14 @@ const REALMS_FROM = 9100 * FINER, REALMS_FULL = 10500 * FINER;
 const MIDDLE = STEP_FROM * Math.SQRT2;
 /** a step's blocks stand for heights flattened by this power of their width (see buildWorld) */
 const FLATTER = 0.6;
+/**
+ * How many blocks of a step's height stand for one finest block of height: the land of a step is built flatter than
+ * its blocks are wide (FLATTER, world.ts `flatter`), and what stands on it is built as the land is. So a house, a
+ * tree, a sheaf or a wall stands as tall against its hill at every step, and as tall in the picture on both sides of
+ * a step's border as the finer step drew it there (`reliefOf`); built as tall as they are wide (1 / 2^step), they
+ * shrank by a quarter at every border.
+ */
+export const uprightOf = (step: number) => 2 ** (-FLATTER * step);
 
 const over = (from: number, until: number, wide: number) => smooth(Math.log2(from), Math.log2(until), Math.log2(wide));
 

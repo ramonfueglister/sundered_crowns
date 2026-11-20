@@ -3508,8 +3508,9 @@ supply of the demand met and the materials of what is made, on days when a firm 
 
 ### The rules that were measured and not kept
 
-Six combinations were built and run (`npm run absence:check -- 3`: the world of 1291 against the same world in which
-everybody is there, real GDP, and those without work at the end of the third year):
+Seven combinations were built and run (`npm run absence:check -- 3`: the world of 1291 against the same world in which
+everybody is there, real GDP, and those without work at the end of the third year). G was run after F was built, for
+step 6 of the day plan:
 
 | | the plan | the wage of a day away | the materials | real GDP, years 1 / 2 / 3 | without work in year 3 |
 |---|---|---|---|---|---|
@@ -3519,6 +3520,7 @@ everybody is there, real GDP, and those without work at the end of the third yea
 | D | rule 3 | none | for those who are there | −4.0 / −5.1 / −6.8 % | 2,936 against 1,036 |
 | E | rule 3 | paid | for those who are there | −2.2 / −2.4 / −4.1 % | 2,015 against 1,036 |
 | **F** | **rule 3** | **paid** | **not bought again (rule 4)** | **−1.9 / −1.9 / −3.4 %** | **2,215 against 1,036** |
+| G | rule 3 | none | rule 4 | −3.7 / −4.6 / −6.3 % | 3,274 against 1,036 |
 
 - **A**, the first build: a firm short of hands reads the output it could not make as a fall in demand, plans less,
   lets workers go, and does so again at its next plan. It had the rule for the day without anybody because without
@@ -3538,10 +3540,16 @@ everybody is there, real GDP, and those without work at the end of the third yea
   D takes the wage of the days away from the households on top, and the slide is the steepest.
 - **F**, the rule built: the effort and the wage stay those of all the firm's employees, the output that rule 3
   counts is what all would have made, and the stock of materials does not grow. GDP falls by 1.9 % in the first two
-  years and by 3.4 % in the third, about the share of the days lost (3.6 %), and the price level stays. The firms
-  pay the wages of the days away out of their deposits (6, 11 and 16 % below the comparison), their owners have
-  less to spend, and from the second year on the firms take on fewer workers: those without work are twice as many
-  in the third year (6.0 % of the workers against 2.8 %).
+  years and by 3.4 % in the third, about the share of the days lost (3.6 %), and the price level stays. The firms'
+  deposits fall (6, 11 and 16 % below the comparison) and the households' deposits rise by about as much; G shows
+  that this is not the wage of the days away. From the second year on the firms take on fewer workers: those
+  without work are twice as many in the third year (6.0 % of the workers against 2.8 %).
+- **G** is F without the wage of the days away. The firms' deposits fall just as in F (5.9, 11.0 and 15.8 % below
+  the comparison) and the households' deposits rise just as much (+1.4, +2.7 and +3.8 %): who pays the worker who
+  is away does not move the money between firms and households. GDP falls twice as fast as in F, and three times as
+  many are without work in the third year. Our reading, not measured apart: what the firm does not pay is profit,
+  the profit goes to its owner, who is a household too (feature 18) and spends on the mean profit of the year
+  (feature 20), so the households hold as much but spend it later than the worker would have.
 
 ### How the world gives it
 
@@ -3586,10 +3594,9 @@ employs 34,300 to 34,400 from year 3 to year 6, while the comparison grows by ab
 real GDP in year 6, is a little more than the 3.6 % of the days away.
 
 The firms' deposits do not settle. They fall by about 400 a year (6,039 against 8,666 in year 6), and the
-households' deposits grow by about as much. That is the wage of the days away: the firms pay it and get no output
-for it, and the households who are paid find no more goods to buy. The transfer does not slow within six years. A
-wage by the day worked (step 6 of the day plan) would end it; a club's sick pay would be paid by its members, not by
-the firms.
+households' deposits grow by about as much. The transfer does not slow within six years. It is not the wage of the
+days away: without that wage (G) the firms' deposits fall just as fast, so a wage by the day worked does not end it.
+Where the money goes is not known yet.
 
 ### Limits
 
@@ -3597,11 +3604,11 @@ the firms.
   the place to an heir (people feature 2), and the heir keeps the days away of the dead worker for the rest of the
   month; a worker who joins later in the month has none until the next.
 - **No sick pay and no lost wage.** The wage of a worker who is away is paid by the firm as on any day. A club's or
-  a guild's sick pay is not booked apart, and a day labourer would have lost the day's wage (step 6). The firms
-  carry it: their deposits fall year by year (above).
+  a guild's sick pay is not booked apart, and a day labourer would have lost the day's wage (step 6). Without the
+  wage of the days away (G) the economies slide further.
 - **Rules 3 and 4 are ours.** No paper read has workers who are away in a model of this kind; the rules take the
   port's own (the supply of the demand met, the materials of what is made) to the days a firm cannot make what it
-  planned, and were chosen among the six combinations measured above.
+  planned, and were chosen among the combinations measured above.
 - **The owners are not away.** The owner of a firm is not one of its workers in the model.
 
 ### State and upgrade

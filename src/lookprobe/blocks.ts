@@ -16,7 +16,8 @@ export const WHEAT = [rgb(0xecd26a), rgb(0xe6ca62), rgb(0xf0d672)], WHEAT_SIDE =
 /** the spring corn: still green when the winter corn is ripe, and not yet as tall */
 export const OATS = [rgb(0x9ccc52), rgb(0x92c44a), rgb(0xa6d25a)], OATS_SIDE = rgb(0x74a83c);
 /** sides of crops turned from the sun: brighter than a real surface could be, see `crops` */
-const WHEAT_GLOW: RGB = [1.6, 0.8, 0.1], VINE_GLOW: RGB = [0.82, 0.77, 0.09], HEDGE_GLOW = rgb(0x7ea634);
+export const WHEAT_GLOW: RGB = [1.6, 0.8, 0.1], HEDGE_GLOW = rgb(0x7ea634);
+const VINE_GLOW: RGB = [0.82, 0.77, 0.09];
 const VINE = [rgb(0xf2d654), rgb(0xe8ce4e), rgb(0xfadc5a), rgb(0xe2c84c)], VINE_SIDE = rgb(0xc8c42c), GRAPES = rgb(0xe89038);
 export const VINE_BODY = rgb(0x4a8c22);
 const POST = rgb(0xb06c3a), POST_CAP = rgb(0xf1e8dc), DECK = rgb(0xa9744a), PIER_STONE = rgb(0xdcc4b4);

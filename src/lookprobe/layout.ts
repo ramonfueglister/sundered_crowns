@@ -195,6 +195,8 @@ export interface GroundTraits {
   slope?: readonly [number, number, number];
   /** how far (0 … 1) the sides of meadow steps take the colour of the meadow above them, and their foot its light: from afar a step is to show as relief, not as a line drawn across the land (0 if left out) */
   sideTop?: number;
+  /** how many of its blocks high the trees of a far step stand as one crown, at least (terrain.ts `woodsOf`): as tall as the finest step's trees, where its land is built so much flatter (0 if left out) */
+  crownTall?: number;
   /**
    * What stands or grows on a column as part of the ground itself, where the land is seen from so far that a house or
    * a tree is a single block: the colour of its top, and of its sides down to `rise` blocks below the top (a field
@@ -205,6 +207,8 @@ export interface GroundTraits {
   readonly houses?: ArrayLike<number>;
   /** the trees of the finest step where the ground draws them one by one (worldprobe/trees.ts, TREE_NUMBERS to a column, N × N columns) */
   readonly trees?: ArrayLike<number>;
+  /** the crops of the lots where the ground draws the finest step's sheaves one by one (worldprobe/crops.ts, a byte to a column, N × N columns) */
+  readonly crops?: ArrayLike<number>;
 }
 export const idx = (x: number, z: number) => z * N + x;
 export const inGrid = (x: number, z: number) => x >= 0 && z >= 0 && x < N && z < N;

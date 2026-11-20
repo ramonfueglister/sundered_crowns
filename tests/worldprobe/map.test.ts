@@ -11,7 +11,7 @@ import { extentOf, heldIn } from '../../src/worldprobe/extent';
 import { FINER } from '../../src/worldprobe/land';
 import { type Index, projectionFrom } from '../../src/worldprobe/region';
 import { VIEW } from '../../src/lookprobe/layout';
-import { COARSEST, FARTHEST, FINE_UNTIL, NEAREST, PAPER_COARSEST, creasesOf, elevationOf, nearOf, paperLevelOf, realmsOf, reliefOf, stepOf } from '../../src/worldprobe/zoom';
+import { COARSEST, FARTHEST, FINE_UNTIL, NEAREST, PAPER_COARSEST, creasesOf, elevationOf, nearOf, paperLevelOf, realmsOf, reliefOf, stepOf, uprightOf } from '../../src/worldprobe/zoom';
 
 describe('pyramid', () => {
   interface T { level: number; x: number; y: number }
@@ -105,6 +105,17 @@ describe('zoom', () => {
       const a = stepOf(widths[k - 1]), b = stepOf(widths[k]);
       if (a !== b) expect(reliefOf(widths[k], b) / 2 ** (0.6 * b) / (reliefOf(widths[k - 1], a) / 2 ** (0.6 * a))).toBeCloseTo(2 ** -1, 1);
     }
+  });
+
+  it('stands a house, a tree or a wall as tall in the picture on both sides of a change of step, built as the land is', () => {
+    // a finest block of height is uprightOf(step) blocks of the step, which is drawn 2^step finest blocks wide and reliefOf as tall as built
+    const tall = (w: number, s: number) => uprightOf(s) * 2 ** s * reliefOf(w, s);
+    for (let k = 1; k < widths.length; k++) {
+      const a = stepOf(widths[k - 1]), b = stepOf(widths[k]);
+      if (a !== b) expect(tall(widths[k], b) / tall(widths[k - 1], a), `at ${widths[k]}`).toBeCloseTo(1, 2);
+    }
+    // (the finest step stands it as tall as it is)
+    expect(tall(300, 0)).toBe(1);
   });
 
   it('goes through every step of the map, one at a time, and keeps a step for at least a doubling of the width', () => {
