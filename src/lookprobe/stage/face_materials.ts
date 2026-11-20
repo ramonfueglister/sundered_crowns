@@ -31,8 +31,8 @@ import { MOST, atCorner, bytesColour } from './tones';
  * builder put it, to the last bit.
  */
 function onGrid() {
-  const lie = attribute('lie', 'vec4') as unknown as ReturnType<typeof vec4>,
-    reach = attribute('reach', 'vec2') as unknown as ReturnType<typeof vec2>;
+  const lie = attribute('lie', 'vec4'),
+    reach = attribute('reach', 'vec2');
   const whole = (n: typeof lie.x) => n.mul(32767).add(0.5).floor();
   const kind = whole(lie.x),
     flipped = kind.greaterThanEqual(FLIPPED),
@@ -45,7 +45,7 @@ function onGrid() {
   const alongUOther = () =>
       whole(select(corner.greaterThan(0.5).and(corner.lessThan(2.5)), lie.z, lie.w)).div(FACE_STEPS),
     alongVOther = () => whole(select(corner.greaterThan(1.5), reach.x, reach.y)).div(FACE_STEPS);
-  const tones = [0, 1, 2, 3].map((k) => attribute(`tone${k}`, 'vec4') as unknown as ReturnType<typeof vec4>);
+  const tones = [0, 1, 2, 3].map((k) => attribute(`tone${k}`, 'vec4'));
   const placed = select(
     axis.lessThan(0.5),
     vec3(level, alongU, alongV),
@@ -64,6 +64,7 @@ type Grid = ReturnType<typeof onGrid>;
  */
 function fieldMaterials(g: Grid, mask: THREE.Node<'bool'>, glided: ReturnType<typeof float>) {
   const { lie, whole, alongU, alongV, alongUOther, alongVOther, placed } = g;
+  // (three's types give a userData node no kind of value: here and below each is cast to the kind it is read as)
   const fields = createFields(),
     fieldAt = userData('field', 'vec3') as unknown as ReturnType<typeof vec3>;
   const spot = vec2(placed.x, placed.z).toVarying(),
@@ -88,7 +89,7 @@ function fieldMaterials(g: Grid, mask: THREE.Node<'bool'>, glided: ReturnType<ty
   // Such tops of a far piece that glide to the shape of the coarser step (worldprobe/glide.ts): each moves to the level
   // it ends up at, and its colours to those of the field of where it ends (`userData.fieldEnd`, its layer).
   const fieldGliding = new THREE.MeshLambertNodeMaterial(),
-    ends = attribute('aim', 'vec2') as unknown as ReturnType<typeof vec2>;
+    ends = attribute('aim', 'vec2');
   fieldGliding.positionNode = vec3(alongU, mix(whole(lie.y), whole(ends.x), glided).div(FACE_STEPS), alongV);
   fieldGliding.colorNode = materialColor.mul(
     mix(
@@ -109,7 +110,7 @@ function fieldMaterials(g: Grid, mask: THREE.Node<'bool'>, glided: ReturnType<ty
  */
 function glidingMaterial(g: Grid, mask: THREE.Node<'bool'>, glided: ReturnType<typeof float>) {
   const { lie, reach, whole, kind, tones } = g;
-  const aimed = attribute('aim', 'vec2') as unknown as ReturnType<typeof vec2>;
+  const aimed = attribute('aim', 'vec2');
   const rises = kind.greaterThanEqual(RISES),
     kindG = kind.sub(select(rises, float(RISES), float(0))),
     flippedG = kindG.greaterThanEqual(FLIPPED),
@@ -133,7 +134,7 @@ function glidingMaterial(g: Grid, mask: THREE.Node<'bool'>, glided: ReturnType<t
     alongVG = select(third, select(axisG.greaterThan(1.5), end1, v1), select(axisG.greaterThan(1.5), end0, v0)).div(
       FACE_STEPS,
     );
-  const aims = [0, 1, 2, 3].map((k) => attribute(`aimTone${k}`, 'vec4') as unknown as ReturnType<typeof vec4>);
+  const aims = [0, 1, 2, 3].map((k) => attribute(`aimTone${k}`, 'vec4'));
   const pick = (four: typeof tones) => bytesColour(atCorner(cornerG, four));
   const gliding = new THREE.MeshLambertNodeMaterial();
   gliding.positionNode = select(
@@ -152,9 +153,9 @@ function glidingMaterial(g: Grid, mask: THREE.Node<'bool'>, glided: ReturnType<t
  * direction tells its axis, and the fourth number beside it which way its triangles turn.
  */
 function freeMaterial(tones: Grid['tones'], mask: THREE.Node<'bool'>) {
-  const levelF = attribute('freeLevel', 'float') as unknown as ReturnType<typeof float>,
-    spans = attribute('freeSpans', 'vec4') as unknown as ReturnType<typeof vec4>,
-    towards4 = attribute('normal', 'vec4') as unknown as ReturnType<typeof vec4>;
+  const levelF = attribute('freeLevel', 'float'),
+    spans = attribute('freeSpans', 'vec4'),
+    towards4 = attribute('normal', 'vec4');
   const cornerF = select(towards4.w.greaterThan(0.004), positionGeometry.y, positionGeometry.x);
   const alongUF = select(cornerF.greaterThan(0.5).and(cornerF.lessThan(2.5)), spans.y, spans.x),
     alongVF = select(cornerF.greaterThan(1.5), spans.w, spans.z);

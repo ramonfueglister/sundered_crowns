@@ -23,9 +23,8 @@
 // OWN RULE: the world is built of blocks and a house stands square to them (src/worldprobe/settle.ts), so a street
 // runs east-west or north-south and turns at right angles; a way that leaves the town at a slant leaves by the
 // nearest of the four directions.
-import type { Parcel, ParcelSize } from './rule';
-import { FRONT, PARCEL_SHARE, PARCELS_PER_ROW } from './rule';
-import type { PlanGround } from './plan_ground';
+import { FRONT, PARCEL_SHARE, PARCELS_PER_ROW, type Parcel, type ParcelSize } from './rule';
+import type { Plan } from './plan_ground';
 import { seedRng, rand } from '../rng';
 
 /** a way of the world that leaves the town: its direction (radians, east 0, south positive) and its kind (0 track, 1 road, 2 highway) */
@@ -37,16 +36,6 @@ export const STREET = { lane: 0, track: 1, road: 2, highway: 3 } as const;
 /** a straight piece of street, east-west or north-south: its ends (metres east and south of the town's centre, on the street's middle line) and its kind (STREET) */
 export interface Street { x0: number; z0: number; x1: number; z1: number; kind: number }
 
-/** the real plan of a town where an old plan of it is open (src/sim/content/town_plans_<year>.json): its market and
- *  the pieces of its main streets [x0, z0, x1, z1], east-west or north-south, east and south of the centre in radii
- *  of the real town. It gives the form, not the size: layTown lays it as wide as the town it lays. */
-export interface Plan {
-  market: readonly [number, number]; streets: readonly (readonly number[])[];
-  /** the real metres of one radius of the walled town (the plans of src/sim/content/town_plans.ts) */
-  radius?: number;
-  /** the plan's land and water, where it draws them (plan_ground.ts) */
-  ground?: PlanGround;
-}
 
 export interface Town {
   parcels: Parcel[];

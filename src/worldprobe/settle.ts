@@ -8,19 +8,13 @@ import { type Model, type Side, type Style, heightOf, houseOf, m, m2, styleOf, t
 import { type Crop, type Ground, Mat, N, type P2, idx, inGrid, occlude } from '../lookprobe/layout';
 import type { Town } from '../figures';
 import { FINER } from './land';
-import type { FieldShown } from './lots';
+import type { FieldShown, Parcels } from './lots';
 import { CROP } from '../sim/settlement/fields';
 
 /** A place of the gazetteer on the ground. */
 export interface Site { /** the same in every ground the place falls on */ id: number; at: P2; /** 1 village … 5 great city */ size: number; /** inhabitants in 1356, where an estimate exists */ pop: number | null; /** the region it builds as (buildings/traditions/regions.ts) */ region: string; style: Style; /** a hamlet of a town's farming families before its walls (hamlets.ts): houses close together, no church */ hamlet?: boolean; /** the parcels of its families in the land register (lots.ts): a house stands on each, at its street */ lots?: Parcels; /** its landmarks in the land register (landmarks.ts): each at its middle, `x` metres east and `z` south of the town's centre; with them the town has no church of the graphic's own */ marks?: readonly Mark[] }
 /** A landmark of the register as it is built: its middle (metres from the town's centre), its model of w × d blocks, and what it is counted as. */
 export interface Mark { x: number; z: number; model: Model; kind: string }
-/**
- * The parcels of a town as the simulation's land register holds them (src/sim/systems/lots.ts): all `w` metres along
- * the street and `d` metres deep, their middles `x` metres east and `z` metres south of the town's centre, the
- * street on the side `front` (0 north, 1 east, 2 south, 3 west). Metres at the scale of the houses.
- */
-export interface Parcels { w: number; d: number; x: readonly number[]; z: readonly number[]; front: readonly number[]; /** the streets of the town (settlement feature 3): straight pieces [x0, z0, x1, z1, kind] on their middle line, the market (kind 4) as its corners; metres as the parcels */ streets?: readonly (readonly number[])[]; /** how wide every street is, metres */ street?: number; /** a town on a real plan that draws its ground: the metres of a radius of the plan and how far its streets reach from their middle lines (src/net/lots.ts) */ ground?: { radius: number; half: number } }
 
 /** the kind of the market among a town's streets (STREET_KIND in src/sim/state.ts) */
 const MARKET = 4;
@@ -320,9 +314,9 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
 
   for (const mon of monuments) monument(mon.model, seeded(500 + mon.id), Math.floor(mon.at[0]), Math.floor(mon.at[1]), mon.level);
 
-  /** the site itself may lie in the water or on the rock at this scale: the nearest ground that can be built on */
+  /** the site itself may lie in the water or on the rock at this scale: the nearest ground that can be built on (a town
+   *  on a real plan that draws its ground: its site's block, round which that ground lies, plan_ground.ts) */
   const middleOf = (s: Site): [number, number] | null => {
-    // (a town on a real plan that draws its ground is laid round its site's block, as that ground: plan_ground.ts)
     if (s.lots?.ground) return [Math.floor(s.at[0]), Math.floor(s.at[1])];
     for (let k = 0; k <= 10; k++) for (let dz = -k; dz <= k; dz++) for (let dx = -k; dx <= k; dx++) {
       const x = Math.floor(s.at[0]) + dx, z = Math.floor(s.at[1]) + dz;

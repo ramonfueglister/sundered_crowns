@@ -110,11 +110,13 @@ export interface CityWorkingDays {
   household: Uint8Array;
 }
 /** The workers of a city who are away (economy feature 22): per absence the worker (the position in the engine's list
- *  of workers) and the first and the last day of the absence, counted from 0 for the next period. */
+ *  of workers), the first and the last day of the absence, counted from 0 for the next period, and 1 if an adult of
+ *  the worker's family stands in on those days, else 0 (economy feature 24). */
 export interface CityAbsences {
   worker: Uint32Array;
   first: Uint32Array;
   last: Uint32Array;
+  family: Uint8Array;
 }
 /** What the engine is given for a city: the port's parameters and initial conditions (JSON text) and the seed of
  *  the city's random numbers. */
@@ -169,9 +171,9 @@ export interface EconomyEngine {
    *  who work by the day (positions in the engine's list of workers); every other worker serves by the year. They
    *  take the place of the contracts the cities had. */
   contracts(state: EconomyState, byTheDay: readonly Uint32Array[]): Uint8Array;
-  /** Of the state the engine computed last, per city the workers away from firms that worked in its last period and
-   *  the workers without work who stood in for them (economy feature 23): two numbers a city. A measure for the tools;
-   *  no rule reads it. */
+  /** Of the state the engine computed last, per city the workers away from firms that worked in its last period,
+   *  those of their families who stood in for them and the workers without work who stood in for them (economy
+   *  features 23 and 24): three numbers a city. A measure for the tools; no rule reads it. */
   standIns(): Float64Array;
   /** The state after `periods` more periods. */
   step(state: EconomyState, periods: number): Uint8Array;
@@ -429,22 +431,24 @@ export function wasmEconomyEngine(wasm: Uint8Array): EconomyEngine {
     },
     absences(state, cities) {
       // as `sce_absences` reads them: per city the number of its absences, then per absence the worker, the first and
-      // the last day
-      const out = new Uint8Array(cities.reduce((n, c) => n + 4 + 12 * c.worker.length, 0)),
+      // the last day and whether the family stands in
+      const out = new Uint8Array(cities.reduce((n, c) => n + 4 + 16 * c.worker.length, 0)),
         dv = new DataView(out.buffer);
       let at = 0;
       for (const c of cities) {
-        if (c.first.length !== c.worker.length || c.last.length !== c.worker.length)
+        const n = c.worker.length;
+        if (c.first.length !== n || c.last.length !== n || c.family.length !== n)
           throw new Error(
-            `absences of ${c.worker.length} workers with ${c.first.length} first and ${c.last.length} last days`,
+            `absences of ${n} workers with ${c.first.length} first and ${c.last.length} last days and ${c.family.length} words on the family`,
           );
-        dv.setUint32(at, c.worker.length, true);
+        dv.setUint32(at, n, true);
         at += 4;
-        for (let k = 0; k < c.worker.length; k++) {
+        for (let k = 0; k < n; k++) {
           dv.setUint32(at, c.worker[k], true);
           dv.setUint32(at + 4, c.first[k], true);
           dv.setUint32(at + 8, c.last[k], true);
-          at += 12;
+          dv.setUint32(at + 12, c.family[k], true);
+          at += 16;
         }
       }
       const b = bytesOf(state);

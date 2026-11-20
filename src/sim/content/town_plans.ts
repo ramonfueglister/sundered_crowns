@@ -4,8 +4,7 @@
 // plan draws them its land and water (src/sim/settlement/plan_ground.ts). Such a town lays these streets instead of
 // the ones along the ways of the world (settlement feature 3, src/sim/settlement/streets.ts).
 import P1291 from './town_plans_1291.json';
-import type { Plan } from '../settlement/streets';
-import type { PlanGround } from '../settlement/plan_ground';
+import type { Plan, PlanGround } from '../settlement/plan_ground';
 
 interface GroundJson {
   x0: number;

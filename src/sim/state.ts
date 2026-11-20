@@ -58,9 +58,12 @@ import type { Table } from './ecs';
  *  in courses, shared in strips by its farmsteads.
  *  38: the landmarks (settlement feature 5, src/sim/systems/landmarks.ts): the church of every town's see, the
  *  convents, the rulers' residences and the buildings known by name stand on their ground; the streets grow round them.
- *  39: Venice on the land and water of its land register of 1808 (settlement feature 3, real plans,
+ *  39: the family stands in (economy feature 24, src/sim/systems/workers.ts): on a day on which a worker is away, an
+ *  adult of his family who does not work takes his place before a worker without work does; the engine's state keeps
+ *  per absence whether the family stands in (its format 14).
+ *  40: Venice on the land and water of its land register of 1808 (settlement feature 3, real plans,
  *  src/sim/settlement/plan_ground.ts): its parcels, streets and landmarks lie on the register's land. */
-export const STATE_VERSION = 39;
+export const STATE_VERSION = 40;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {

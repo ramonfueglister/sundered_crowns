@@ -157,8 +157,10 @@ const FOAM = new THREE.Color(0xf2f8f6);
  */
 const SURFACE_UNTIL: readonly [number, number] = [0.8, 1.8],
   FLECKS_UNTIL: readonly [number, number] = [0.5, 1.3];
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TSL's node types do not carry through sums and mixes
-type Nd = any;
+/** TSL's nodes of one number, a pair and a colour (or a direction) */
+type Float = THREE.Node<'float'>;
+type Vec2 = THREE.Node<'vec2'>;
+type Vec3 = THREE.Node<'vec3'>;
 /** the view's place on the world is taken modulo these many finest blocks: the fine waves', and the coarse ones' */
 const PERIOD = 1024,
   PERIOD_COARSE = 65536,
@@ -166,11 +168,11 @@ const PERIOD = 1024,
 
 export interface Sea {
   /** the water's colour from its corners' colour (which carries the material's colour) */
-  colour(corners: Nd): Nd;
+  colour(corners: Vec3): Vec3;
   /** the surface's direction, in the view's frame */
-  normal: Nd;
+  normal: Vec3;
   /** what the water gives back: the mirror image (`mirror`) broken by the swell, the sky in the swell, and the flecks */
-  mirror: Nd;
+  mirror: Vec3;
   /**
    * Tells where the stage lies on the world: the depth picture (null: no depths, the water's own colours), how a
    * point (x, z) of the stage lies on it (u = a·x + b·z + c, v = d·x + e·z + f, in shares of the picture), after how
@@ -190,7 +192,7 @@ export interface Sea {
 }
 
 /** The sea's nodes; `mirror` is what the water gives back where it lies level (the stage's tinted mirror image). */
-export function createSea(mirror: Nd): Sea {
+export function createSea(mirror: Vec3): Sea {
   const depth = readDepths();
   const blocks = uniform(1),
     home = uniform(new THREE.Vector2()),
@@ -257,7 +259,7 @@ function readDepths() {
 }
 
 /** The water as the picture sees it (`blocks`, `home`, `homeCoarse`: the uniforms `place` sets). */
-function whereSeen(blocks: Nd, home: Nd, homeCoarse: Nd) {
+function whereSeen(blocks: Float, home: Vec2, homeCoarse: Vec2) {
   // where the water lies in finest blocks, and how many of them a dot of the picture is wide there (by the geometric
   // mean of a dot's width and height on the water: seen at a slant, a dot reaches farther up the water than across it)
   const world = positionWorld.xz.mul(blocks);
@@ -280,15 +282,15 @@ const lin = (c: THREE.Color) => vec3(c.r, c.g, c.b);
 const [, gs, bs] = WATER_SHALLOW,
   [, gd, bd] = WATER_DEEP;
 /** the colour of the depth's share t, through the stops of RAMP */
-const ramp = (t: Nd) => {
-  let c: Nd = lin(new THREE.Color(RAMP[0][1]));
+const ramp = (t: Float) => {
+  let c: Vec3 = lin(new THREE.Color(RAMP[0][1]));
   for (let i = 1; i < RAMP.length; i++)
     c = mix(c, lin(new THREE.Color(RAMP[i][1])), smoothstep(RAMP[i - 1][0], RAMP[i][0], t));
   return c;
 };
 
 /** The water's colour from its corners' colour (Sea.colour), by the depth picture and, nearest, the light on the bed. */
-function waterColour(corners: Nd, depth: ReturnType<typeof readDepths>, nearest: Nd, caustic: Nd): Nd {
+function waterColour(corners: Vec3, depth: ReturnType<typeof readDepths>, nearest: Float, caustic: Float): Vec3 {
   const { share, known, coastDots, dotsPerTexel } = depth;
   // how far from the coast the corners are, as their colour has it (terrain.ts: WATER_SHALLOW at the coast, mixed
   // towards WATER_DEEP by k = 0 … 1 within some 8 columns, and the mix a tenth lighter or darker in broad patches
@@ -369,7 +371,7 @@ function surfaceOf({ pFine, pCoarse, acrossDot, nearest, surface, flecked }: Ret
   const slope = a.slope.mul(w0).add(b.slope.mul(w1)).mul(keep).mul(slopeShare).mul(gust);
   const facing = normalize(vec3(slope.x.negate(), 1, slope.y.negate()));
   const eye = normalize(cameraPosition.sub(positionWorld));
-  const fresnel = (n: Nd) => float(0.02).add(pow(float(1).sub(max(dot(n, eye), 0)), 5).mul(0.98));
+  const fresnel = (n: Vec3) => float(0.02).add(pow(float(1).sub(max(dot(n, eye), 0)), 5).mul(0.98));
   const level = fresnel(vec3(0, 1, 0)),
     waved = fresnel(facing);
   // the flecks: where a crest of the flecks' waves rises above the line (lower where the wind is strong, and on the
@@ -383,14 +385,14 @@ function surfaceOf({ pFine, pCoarse, acrossDot, nearest, surface, flecked }: Ret
     .sub(gust.sub(1).mul(FLECK_GUST / (PATCHY[1] - 1)))
     .sub(swell.mul(FLECK_CREST))
     .add(sway);
-  const broken = (h: Nd) => smoothstep(line.sub(fwidth(h)), line.add(fwidth(h)), h);
+  const broken = (h: Float) => smoothstep(line.sub(fwidth(h)), line.add(fwidth(h)), h);
   const fleck = broken(flecksAt(oF))
     .mul(float(1).sub(fF))
     .add(broken(flecksAt(oF.add(1))).mul(fF))
     .mul(flecked);
   // the glitter: where two pictures of the flecks' waves an octave finer than the swell's, turned apart and drifting
   // against each other, both peak (they meet and part again: the points twinkle), more at a slant to the water
-  const glint = (h: Nd, k: Nd) => smoothstep(SPARKLE, SPARKLE + 0.6, min(h, k));
+  const glint = (h: Float, k: Float) => smoothstep(SPARKLE, SPARKLE + 0.6, min(h, k));
   const sparkle = glint(
     flecksAt(o0.sub(1), 1.9, vec2(0.21, 0.83), 1.1),
     flecksAt(o0.sub(1), -1.3, vec2(0.77, 0.41), -0.8),
@@ -408,7 +410,7 @@ function surfaceOf({ pFine, pCoarse, acrossDot, nearest, surface, flecked }: Ret
 
 /** The wave picture laid over the water at `pFine` (and `pCoarse`, where its octave is wider than PERIOD), drifting
  *  with the water's clock: the swell's octaves, the flecks' and the bed's. */
-function createWaves(pFine: Nd, pCoarse: Nd) {
+function createWaves(pFine: Vec2, pCoarse: Vec2) {
   const waves = texture(waveTexture());
   /** the water's clock in seconds (a still's is fixed) */
   const clock = STILL ? uniform(number('seatime', 0)) : time;
@@ -416,18 +418,18 @@ function createWaves(pFine: Nd, pCoarse: Nd) {
   // through globalThis, whose type has no such field)
   if (STILL) (globalThis as { __seaClock?: unknown }).__seaClock = clock;
   /** how far a picture of octave n has drifted along the wind (in its own frame), at `run` of the swell's pace */
-  const drift = (n: Nd, run: number) =>
+  const drift = (n: Float, run: number) =>
     vec2(Math.cos(WIND), Math.sin(WIND)).mul(
       fract(clock.mul(SWELL_RUN * run * SPAN_LEAST ** 0.25).mul(exp2(n.mul(-0.25)))),
     );
   // octave n: the picture spans 2^n finest blocks; every other one is turned a quarter round and all are shifted
   // apart, so that the octaves do not lie on each other (both keep the picture repeating every PERIOD blocks); each
   // is read twice, the second time turned by SWELL_TURN and drifting more slowly, and the two are added
-  const octaveAt = (n: Nd) => {
+  const octaveAt = (n: Float) => {
     const size = exp2(n),
       odd = fract(n.mul(0.5)).greaterThan(0.25),
       p = select(size.greaterThan(PERIOD), pCoarse, pFine);
-    const read = (angle: number, shift: Nd, run: number) => {
+    const read = (angle: number, shift: Vec2, run: number) => {
       // the picture's frame: a quarter round for odd octaves, and `angle` more
       const c = select(odd, float(-Math.sin(angle)), float(Math.cos(angle))),
         s = select(odd, float(Math.cos(angle)), float(Math.sin(angle)));
@@ -450,7 +452,7 @@ function createWaves(pFine: Nd, pCoarse: Nd) {
   };
   // the flecks' octave n likewise, but every other one turned by FLECK_TURN alone: their strokes stand across the
   // wind in every octave (turned a quarter round, two octaves faded into each other cross), and not all alike
-  const flecksAt = (n: Nd, angle = 0, shift: Nd = vec2(0.53, 0.29), run = FLECK_RUN) => {
+  const flecksAt = (n: Float, angle = 0, shift: Vec2 = vec2(0.53, 0.29), run = FLECK_RUN) => {
     const size = exp2(n),
       p = select(size.greaterThan(PERIOD), pCoarse, pFine),
       odd = fract(n.mul(0.5)).greaterThan(0.25);
@@ -463,7 +465,7 @@ function createWaves(pFine: Nd, pCoarse: Nd) {
   };
   // the light on the bed of the shallows: the swell's height at octave n (surfaceOf reads it at half the swell's
   // span, twice, drifting apart); a line where it crosses its middle
-  const bed = (n: Nd, angle: number, shift: Nd, run: number) => {
+  const bed = (n: Float, angle: number, shift: Vec2, run: number) => {
     const size = exp2(n),
       c = Math.cos(angle),
       s = Math.sin(angle);
@@ -477,6 +479,6 @@ function createWaves(pFine: Nd, pCoarse: Nd) {
 }
 
 /** a point of the world (finest blocks) and its dot's extent turned by (c, s) */
-function turn(q: Nd, c: Nd, s: Nd) {
+function turn(q: Vec2, c: Float, s: Float) {
   return vec2(q.x.mul(c).sub(q.y.mul(s)), q.x.mul(s).add(q.y.mul(c)));
 }

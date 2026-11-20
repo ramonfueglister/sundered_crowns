@@ -164,7 +164,9 @@ describe('what the world tells of the fields', () => {
     const t = townLots(s, site), n = Array.from({ length: s.field.size }, (_, i) => i).filter((i) => s.field.cols.site[i] === site).length;
     expect(t.fields.x.length).toBe(n);
     for (const k of Object.keys(t.fields) as (keyof typeof t.fields)[]) expect(t.fields[k].length).toBe(n);
-    t.hamlets.id.forEach((h, k) => expect(t.hamlets.strips[k]).toEqual(hamletStrips(s, h)));
+    t.hamlets.id.forEach((h, k) => {
+      expect(t.hamlets.strips[k]).toEqual(hamletStrips(s, h));
+    });
   });
   it('to a person of a farmstead: its strips, its land and its part of the harvest', () => {
     const P = s.person.cols, F = s.family.cols;

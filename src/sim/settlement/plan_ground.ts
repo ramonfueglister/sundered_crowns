@@ -3,7 +3,18 @@
 // lays the town's parcels and streets on it (src/sim/systems/lots.ts), and the world graphic draws it in place of the
 // map's own land and water (src/worldprobe/plan_ground.ts): both ask the same blocks, so the houses stand where the
 // graphic has land. Only arithmetic here, no state.
-import type { Plan } from './streets';
+
+/** the real plan of a town where an old plan of it is open (src/sim/content/town_plans_<year>.json): its market and
+ *  the pieces of its main streets [x0, z0, x1, z1], east-west or north-south, east and south of the centre in radii
+ *  of the real town. It gives the form, not the size: layTown lays it as wide as the town it lays. */
+export interface Plan {
+  market: readonly [number, number];
+  streets: readonly (readonly number[])[];
+  /** the real metres of one radius of the walled town (the plans of src/sim/content/town_plans.ts) */
+  radius?: number;
+  /** the plan's land and water, where it draws them (below) */
+  ground?: PlanGround;
+}
 
 /** what a block of such a town is: `open` lies outside what the plan draws (the map's own ground holds there) */
 export const GROUND = { open: 0, land: 1, water: 2 } as const;
