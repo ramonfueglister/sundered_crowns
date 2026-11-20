@@ -307,13 +307,16 @@ pub struct DressSet {
     pub fillet: &'static str,
     pub fillet_from: f32,
     pub fillets: [bool; 10],
-    /// (round 129) How a woman's gown is closed in front (fasten.rs), by the sixth digit of her seed from the
-    /// right, from `fasten_from` years; a girl's and a man's is pulled over the head as it was. Lace and buttons
-    /// are of the gown's cloth and colour. England: five in ten laced, two in ten buttoned, three in ten not
-    /// opened. That common women laced the gown in front and had buttons of the gown's own cloth is from one
-    /// secondary page (`sources`); the shares and the age are by eye: PLACEHOLDER.
-    pub fastens: [crate::fasten::Fasten; 10],
-    pub fasten_from: f32,
+    /// (round 129) How a gown is closed in front (fasten.rs), a woman's and a man's, by the sixth digit of the
+    /// seed from the right, from `fasten_from` years (hers, his); a child's is pulled over the head. Lace and
+    /// buttons are of the gown's cloth and colour. England's women: five in ten laced, two in ten buttoned, three
+    /// in ten not opened. That common women laced the gown in front and had buttons of the gown's own cloth is
+    /// from one secondary page (`sources`); the shares and the age are by eye: PLACEHOLDER.
+    /// (round 131) England's men: two in ten buttoned, the others' pulled over the head as before: the pages read
+    /// (`sources`) have the cotehardie buttoned in front down to the girdle and the cheaper, looser ones without
+    /// a fastening. The share and the age are by eye: PLACEHOLDER.
+    pub fastens: [[crate::fasten::Fasten; 10]; 2],
+    pub fasten_from: [f32; 2],
     /// The hair of children under seven. Apoleia's `crop01`, cropped short, begins far back on a child's large
     /// skull: half the head a bare forehead, which reads as a shaven head.
     /// England: until round 104 the grown's `bob01`, whose fringe ends 2 cm over the eyes. A small child's face is
@@ -872,9 +875,9 @@ const ENGLAND: DressSet = DressSet {
     fillets: [true, false, false, true, false, false, false, true, false, false],
     fastens: {
         use crate::fasten::Fasten::{Buttons, Laced, None as Closed};
-        [Laced, Closed, Buttons, Laced, Laced, Closed, Laced, Buttons, Closed, Laced]
+        [[Laced, Closed, Buttons, Laced, Laced, Closed, Laced, Buttons, Closed, Laced], [Closed, Closed, Buttons, Closed, Closed, Closed, Closed, Buttons, Closed, Closed]]
     },
-    fasten_from: 14.0,
+    fasten_from: [14.0, 15.0],
     hair_small: "bob08",
     coily: Some(Coily { from: 0.86, men: "coil01", women: "coil02", small: "coil03", thin: "coil03", bald: "coil04", image: "hair1356_fleece", under: ["bob01", "bob04"] }),
     boy_skin: 14.0,
@@ -1089,6 +1092,7 @@ const ENGLAND: DressSet = DressSet {
         Source { what: "plaits pinned up beside the cheeks, each from below the ear up in front of it to the temple, on six in ten of the women of 15 and more who wear plaits (round 126)", source: "PLACEHOLDER. Nothing was read for the form, the share or the age: by eye; to be checked against picture sources." },
         Source { what: "a fillet, a stiffened band of linen 5 cm high round the head, on three in ten of the women of 15 and more who show their plaits (round 128)", source: "Rosalie Gilbert, Rosalie's Medieval Woman, Headwear (rosaliegilbert.com/headwear.html, read 20.11.2026; a re-enactor's page, not a primary source): the fillet often a stiffened linen band of about 2 to 2.5 inches, worn to hold the veil, shown high on the head on a Madonna of 1340 to 1360; fillet and barbette going out of use in the middle of the 14th century in favour of plaits beside the face. The share, the age and that it is worn with plaits and without a veil are PLACEHOLDER." },
         Source { what: "a woman's gown closed in front from 14 years: laced on five in ten (one lace through eyelets 2 cm apart, the linen showing between the edges), buttoned on two in ten (ball buttons of the gown's own cloth, 11 mm across, 2 cm apart), not opened on three in ten (round 129)", source: "Rosalie Gilbert, Rosalie's Medieval Woman: Buttons and Lacings, Kirtles, and the buttons of her collection (rosaliegilbert.com/buttonsandlacings.html, kirtles.html, thegilbertcollection_buttons.html; read 20.11.2026 as quotations fetched from the pages, not the pages in full; a re-enactor's pages, not a primary source): kirtles and gowns closed with buttons or with lacing, in front or at the side seams; a working woman likely in a front-lacing kirtle; eyelets closely set, around 2 cm; laces of the gown's colour until the 15th century; the lower classes with cloth buttons matching the gown, almost always ball-shaped, set very closely together at the very edge of the opening; a gown buttoned down the front in the Romance of Alexander, c. 1340; English buttons of 9 to 16 mm. The shares, the age, how far the laced edges stand apart, from button to button, and that none is laced at the side are PLACEHOLDER." },
+        Source { what: "a man's gown buttoned in front on two in ten from 15 years, with the women's buttons, from under its opening down; the others' pulled over the head (round 131)", source: "The Medieval Combat Society, Male reenactment costume (themcs.org/costume/Male reenactment costume.htm; a re-enactors' page whose paragraphs on these garments have no notes) and Wikipedia, 1300-1400 in European fashion (both read 20.11.2026 as quotations fetched from the pages): the cotehardie, which began to replace the surcote from 1350, fastened at the front by buttons down to the height of the girdle; cheaper, looser cotehardies with no fastening at the front, put on over the head; working men in short or knee-length tunics. Nothing on the buttons' cloth, size or spacing for men (the women's are used). The share and the age are PLACEHOLDER." },
         Source { what: "children under seven: the men's hair to the jaw with a fringe, girls and boys alike", source: "PLACEHOLDER, nothing read on small children's hair. Chosen because Apoleia's cropped hair begins far back on a child's large skull (a shaven head)." },
         Source { what: "men's hair in three lengths (to above the ear, to the ear's lobe, to the jaw), 3 : 3 : 2, and two men in ten from 15 with their hair parted in the middle, over the ears and cut at the jaw, without a fringe (round 125), one of the two in waves (round 130)", source: "PLACEHOLDER: lengths, shares and the age by eye, so that the men of a town do not all have one head. Nothing was read for the parted cut or its waves: to be checked against picture sources as the fringe is (Luttrell Psalter c. 1330, Holkham Bible)." },
         Source { what: "men's hair to the jaw with a fringe", source: "PLACEHOLDER, to be checked against picture sources (Luttrell Psalter c. 1330, Holkham Bible)." },
@@ -1118,7 +1122,7 @@ pub static ENGLAND_1356: DressSet = ENGLAND;
 /// PLACEHOLDER throughout: nothing read on what the common people of any of these lands wore; it is here so that
 /// their faces, skins and hair can be judged under the same light as England's, not as a statement about their
 /// dress. A dress of their own takes its place land by land.
-pub static PLAIN_1356: DressSet = DressSet { key: "plain1356", origins: &[], hood: [Bare; 10], veil_from: 999.0, wimple_from: 999.0, hair_looped: "", fillet: "", fastens: [crate::fasten::Fasten::None; 10], ..ENGLAND };
+pub static PLAIN_1356: DressSet = DressSet { key: "plain1356", origins: &[], hood: [Bare; 10], veil_from: 999.0, wimple_from: 999.0, hair_looped: "", fillet: "", fastens: [[crate::fasten::Fasten::None; 10]; 2], ..ENGLAND };
 
 /// Every dress with a table.
 pub static SETS: [(Dress, &DressSet); 2] = [(Dress::England1356, &ENGLAND_1356), (Dress::Plain1356, &PLAIN_1356)];
@@ -1214,13 +1218,13 @@ impl DressSet {
         !self.fillet.is_empty() && female && yrs >= self.fillet_from && self.veil_of(female, yrs, seed) == Veil::None && self.fillets[((seed / 10_000) % 10) as usize]
     }
 
-    /// How a person's gown is closed in front (`fastens`): a woman's of `fasten_from` years and more, by a digit
-    /// of her seed.
+    /// How a person's gown is closed in front (`fastens`): from `fasten_from` years, by a digit of the seed.
     pub fn fasten_of(&self, female: bool, yrs: f32, seed: u32) -> crate::fasten::Fasten {
-        if !female || yrs < self.fasten_from {
+        let sex = if female { 0 } else { 1 };
+        if yrs < self.fasten_from[sex] {
             return crate::fasten::Fasten::None;
         }
-        self.fastens[((seed / 100_000) % 10) as usize]
+        self.fastens[sex][((seed / 100_000) % 10) as usize]
     }
 
     /// Whether a person wears a veil, either way.

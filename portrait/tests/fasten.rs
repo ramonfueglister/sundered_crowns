@@ -69,23 +69,27 @@ fn half_the_women_are_laced_and_two_in_ten_buttoned_from_fourteen() {
     let d = &ENGLAND_1356;
     let count = |age: f32, female: bool, kind: Fasten| (0..1_000_000u32).filter(|&s| d.fasten_of(female, age, s) == kind).count();
     assert_eq!((count(14.0, true, Fasten::Laced), count(60.0, true, Fasten::Laced), count(14.0, true, Fasten::Buttons), count(60.0, true, Fasten::Buttons)), (500_000, 500_000, 200_000, 200_000));
-    // a girl's gown and a man's are pulled over the head, and so is every gown of the dress without a table
-    assert_eq!((count(13.0, true, Fasten::None), count(30.0, false, Fasten::None)), (1_000_000, 1_000_000));
-    assert!((0..1000).all(|s| PLAIN_1356.fasten_of(true, 30.0, s) == Fasten::None));
+    // a child's gown is pulled over the head, and so is every gown of the dress without a table
+    assert_eq!((count(13.0, true, Fasten::None), count(14.0, false, Fasten::None)), (1_000_000, 1_000_000));
+    // (round 131) two men in ten from 15 are buttoned, none is laced
+    assert_eq!((count(15.0, false, Fasten::Buttons), count(60.0, false, Fasten::Buttons), count(30.0, false, Fasten::Laced)), (200_000, 200_000, 0));
+    assert!((0..1000).all(|s| PLAIN_1356.fasten_of(true, 30.0, s) == Fasten::None && PLAIN_1356.fasten_of(false, 30.0, s) == Fasten::None));
 }
 
 #[test]
 fn lace_and_buttons_lie_on_the_gown_down_its_front() {
-    // On forty women and girls of 10 to 68 and ten men (heads and bodies of every form the pool has), standing
-    // as their seed turns them: who has a lace or buttons by her seed has them and nobody else. The fastening
+    // On forty women and girls and a hundred men and boys of 10 to 68 (heads and bodies of every form the pool has),
+    // standing as their seed turns them: who has a lace or buttons by the seed has them and nobody else. A man's
+    // buttons (round 131) begin under the opening of his gown's neck, and where he wears a hood, under the edge
+    // of its cape: none under the cape. The fastening
     // is of the gown's cloth (its image); every one of its triangles is wound as its corners face; the buttons
     // are balls of 11 mm whose middles stand a third of a ball off the gown (neither sunk in it nor floating),
     // 2 cm from one to the next, ten of them and more; the lace crosses 2 cm apart, each way across as long as
     // from eyelet to eyelet and lying on the gown, eight of them and more; between the laced edges lies linen, in
     // the smock's image.
     let Some(h) = head() else { return };
-    let (mut laced, mut buttoned, mut plain) = (0, 0, 0);
-    for k in 0..50u32 {
+    let (mut laced, mut buttoned, mut plain, mut men, mut hooded) = (0, 0, 0, 0, 0);
+    for k in 0..140u32 {
         let (female, age) = (k < 40, [10.0, 14.0, 17.0, 24.0, 35.0, 50.0, 68.0][(k % 7) as usize]);
         let p = person(2 * k + if female { 0 } else { 1 }, female, age);
         let kind = ENGLAND_1356.fasten_of(female, age, p.seed);
@@ -93,6 +97,7 @@ fn lace_and_buttons_lie_on_the_gown_down_its_front() {
         let of = |name: &str| out.surfaces.iter().filter(|s| s.tex.as_deref().is_some_and(|t| t.contains(name))).collect::<Vec<_>>();
         let (gowns, linens) = (of(ENGLAND_1356.gown), of(ENGLAND_1356.under[0]));
         let wimpled = female && age >= ENGLAND_1356.wimple_from;
+        let hood = out.surfaces.iter().find(|s| s.tex.as_deref().is_some_and(|t| t.contains(ENGLAND_1356.hood_up) || t.contains(ENGLAND_1356.hood_back)));
         assert_eq!(gowns.len(), if kind == Fasten::None { 1 } else { 2 }, "person {k} of {age}: {kind:?}");
         // (linen: her smock or his shirt at the neck, none under a wimple; and what shows between laced edges)
         assert_eq!(linens.len(), usize::from(!wimpled) + usize::from(kind == Fasten::Laced), "person {k} of {age}: {kind:?}");
@@ -120,6 +125,8 @@ fn lace_and_buttons_lie_on_the_gown_down_its_front() {
                 let round = f.pos[..at.len() * 240].chunks_exact(240).zip(&at).all(|(c, m)| c.iter().all(|q| (far(q, m) - BUTTON).abs() < 0.05 * BUTTON));
                 assert!(round, "person {k}: a button that is no ball");
                 buttoned += 1;
+                men += usize::from(!female);
+                hooded += usize::from(!female && hood.is_some());
                 (at.len(), at.windows(2).map(|w| far(&w[0], &w[1])).fold((f32::MAX, f32::MIN), |(lo, hi), d| (lo.min(d), hi.max(d))), (2.0 * BUTTON, 2.0 * BUTTON), off_gown(&at))
             }
             _ => {
@@ -133,22 +140,31 @@ fn lace_and_buttons_lie_on_the_gown_down_its_front() {
                 (at.len(), at.windows(2).map(|w| far(&w[0], &w[1])).fold((f32::MAX, f32::MIN), |(lo, hi), d| (lo.min(d), hi.max(d))), long, off_gown(&at))
             }
         };
+        // the cape's edge in front of the fastening: the lowest of its corners there
+        let cape = hood.map(|h| h.pos.iter().filter(|q| q[0] > lo[0] - 0.3 && q[0] < hi[0] + 0.3 && q[2] > out.cz).map(|q| q[1]).fold(f32::MAX, f32::min));
         if show() {
+            println!("person {k:2} {} hood's cape down to {cape:.2?}", if female { "woman" } else { "man" });
             println!("person {k:2} of {age:2} {kind:?}: {n} pieces, {:.3} to {:.3} apart, {:.3} to {:.3} long, {:.3} to {:.3} off the gown, {} triangles, {inward} wound inward, from y {:.2} to {:.2} (chin {:.2})", step.0, step.1, size.0, size.1, off.0, off.1, f.pos.len() / 3, lo[1], hi[1], out.chin);
         }
         assert_eq!(inward, 0, "person {k}: triangles wound against their corners");
         let (least, apart, across, stands) = match kind {
-            Fasten::Buttons => (10, BUTTONS, (2.0 * BUTTON, 2.0 * BUTTON), (0.4 * BUTTON, 0.8 * BUTTON)),
+            Fasten::Buttons => (if cape.is_some() { 4 } else { 10 }, BUTTONS, (2.0 * BUTTON, 2.0 * BUTTON), (0.4 * BUTTON, 0.8 * BUTTON)),
             _ => (8, EYELETS, (2.0 * EYELET_IN, (2.0 * EYELET_IN).hypot(LACE_SLANT) + 6.0 * LACE), (0.0, 3.0 * LACE)),
         };
         assert!(off.0 >= stands.0 && off.1 <= stands.1, "person {k}: {:.3} to {:.3} off the gown", off.0, off.1);
         assert!(n >= least && n <= 23, "person {k} of {age}: {n} pieces");
         assert!(step.0 > 0.85 * apart && step.1 < 1.15 * apart, "person {k}: {:.3} to {:.3} apart", step.0, step.1);
         assert!(size.0 >= across.0 - 0.001 && size.1 <= across.1 + 0.001, "person {k}: {:.3} to {:.3} long", size.0, size.1);
+        if let Some(edge) = cape {
+            assert!(hi[1] < edge + 2.0 * BUTTON, "person {k}: buttons up to {:.2} under a cape that ends at {edge:.2}", hi[1]);
+        }
         // below the chin, and none of it above the gown's neckline
         assert!(hi[1] < out.chin && hi[1] <= gown.pos.iter().map(|q| q[1]).fold(f32::MIN, f32::max), "person {k}: up to {:.2}", hi[1]);
     }
-    assert!(laced >= 8 && buttoned >= 3 && plain >= 20, "{laced} laced, {buttoned} buttoned, {plain} plain");
+    assert!(laced >= 8 && buttoned >= 12 && plain >= 60 && men >= 6 && hooded >= 2 && men - hooded >= 2, "{laced} laced, {buttoned} buttoned ({men} men, {hooded} of them under a hood), {plain} plain");
+    if show() {
+        println!("{laced} laced, {buttoned} buttoned ({men} men, {hooded} of them under a hood), {plain} plain");
+    }
 }
 
 #[test]

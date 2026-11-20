@@ -1,8 +1,9 @@
 //! How a gown is closed in front (round 129). Until then every gown of England was a sack pulled over the head:
-//! a plain front from the neck to the picture's foot. A woman's gown that lies on her body is opened to put it
-//! on, and closed again down the front: with a lace through eyelets on both edges, or with a row of buttons.
+//! a plain front from the neck to the picture's foot. A gown that lies on the body is opened to put it on, and
+//! closed again down the front: a woman's with a lace through eyelets on both edges or with a row of buttons, a
+//! man's (round 131) with a row of buttons.
 //!
-//! Both are laid on the gown as it lies on the person (after her bust is held, before the body is turned), along
+//! Both are laid on the gown as it lies on the person (after the bust is held, before the body is turned), along
 //! the gown's front middle line from under its neckline down: the places are read off the gown's own triangles,
 //! so that lace and buttons lie on a broad chest and on a narrow one, and what a veil's fall, a wimple or a hood's
 //! cape covers is left out. They are of the gown's cloth and colour (`dress::DressSet::fastens`, where the source

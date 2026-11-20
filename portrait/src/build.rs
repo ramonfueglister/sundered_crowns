@@ -2020,8 +2020,8 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
         let line = crate::pose::FRONT.map(|v| [x.pp[v][1], x.pp[v][2]]);
         crate::pose::hold_bust(&mut merged, &line, x.pp[crate::pose::FRONT_TOP][1], crate::pose::BUST_SIDE, share);
     }
-    // how a woman's gown is closed in front: a lace or buttons laid on the gown as it lies now (fasten.rs), left
-    // out where a veil's fall, a wimple or a hood's cape lies over it
+    // how a gown is closed in front: a lace or buttons laid on the gown as it lies now (fasten.rs), left out
+    // where a veil's fall, a wimple or a hood's cape lies over it
     if let Some(d) = garb.filter(|_| crate::pose::FRONT.iter().all(|&v| v < h.n)) {
         let kind = d.fasten_of(fem, p.age, p.seed);
         if let Some(g) = merged.iter().position(|s| s.tex.as_deref().is_some_and(|t| t.contains(d.gown))).filter(|_| kind != crate::fasten::Fasten::None) {

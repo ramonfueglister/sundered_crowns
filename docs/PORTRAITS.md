@@ -5440,6 +5440,57 @@ and one tenth. Cargo: 96 of 96, in one run.
 files, `portraits/`): `runde130_vorher_nachher_maenner.png` (three of the sample's men under seeds that
 draw the waved cut, round 129 above, now below), `runde130_von_allen_seiten.png`.
 
+**Round 131: a man's gown is buttoned** (2026-11-20). The dress again (Ramon: the figure, the hair, the
+whole portrait). Round 129 closed the women's gowns and left the men's "as it was: nothing was read on how
+a common man's was closed". Read now (two pages, as quotations fetched from them, not the pages in full:
+the Medieval Combat Society's "Male reenactment costume", a re-enactors' page whose paragraphs on these
+garments have no notes, and Wikipedia's "1300-1400 in European fashion"): the cotehardie, which began to
+replace the surcote from 1350, "fastened at the front by buttons down to the height of the girdle";
+cheaper cotehardies were looser, had "no fastening at the front" and were "put on over the head"; working
+men wore short or knee-length tunics. Nothing was found on a common man's buttons themselves (cloth, size,
+spacing).
+
+What is changed. Two men in ten from 15 years wear the gown buttoned down the front, by the same digit of
+the seed that closes the women's (`DressSet::fastens` and `fasten_from` now hold a row and an age for
+each sex; `fasten_of` reads the person's). The others' gown is pulled over the head as before, and no man
+is laced. The buttons are the women's (round 129: balls of the gown's own cloth, 11 mm across, 2 cm
+apart, with the line of the buttonhole edge beside them), set from under the point of the men's slit
+neckline down, by the same part of the builder; nothing in `fasten.rs` changed but its words. Six men in
+ten wear a hood, whose cape lies over the chest: there the buttons are left out as far as the cape goes
+and begin under its edge (the leaving-out was built in round 129 and tested on a sheet only; here it is
+seen on people, hood up and hood thrown back). Girls, women and boys are as they were.
+
+Tried and not kept: nothing was built twice this round. A test set of ten men (round 129's) drew two
+buttoned ones, both under a hood, which says nothing about a bare neck; the set is a hundred men now.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line where round 130 left it to the tenth (the
+faces are not touched; two of the sample's men, both hooded, wear the buttons).
+
+Honest about it. It is round 129's row of buttons on a second gown, not a new garment: the men's gown is
+the same loose tunic, not the cotehardie the pages speak of, which lies close on the body and is what
+buttons are for; it has no belt, which is where the pages have the buttons end (ours go down as far as
+the gown's data, under the picture's foot). The buttons are of the gown's colour, so in a small picture
+they are a row of dots; the reference's are metal and contrast. On a bare neck the row begins under the
+slit, and the slit itself is not closed with them. Under a hood, which most men wear, three or four
+buttons show between the cape's edge and the picture's foot: for six men in ten of the buttoned the round
+is nearly nothing to see. The sources are thin: a re-enactors' page without notes and an encyclopedia,
+read as fetched quotations, and what they say is of the cotehardie, a garment of people better off than a
+field hand; that two in ten of the common men wore such a front, the age of 15 and the women's buttons
+on it are by eye (PLACEHOLDER). No buttonholes, no second layer of cloth (as round 129). Looked at on
+four men from the front (one bare-necked with the slit, one bald, one hood thrown back, one hood up) and
+on one from five sides.
+
+Tests: `portrait/tests/fasten.rs`, the three of round 129, widened: over a million seeds two in ten of
+the men from 15 are buttoned, none at 14, none laced, nobody in the plain dress; the set that is built is
+forty women and girls and a hundred men of 10 to 68 (16 laced, 14 buttoned, seven of them men, five of
+those under a hood; 110 plain), with round 129's measures on every one (winding, the balls' roundness,
+their height off the gown, the spacing), ten buttons and more on a bare-necked man, four and more under
+a cape, and under a cape the row's top no more than a button's breadth above the cape's lowest point in
+front. Cargo: 96 of 96, in one run. `tests/portrait.test.ts` and its neighbour 42 of 42. `npm run lint` passes.
+Pictures (project files, `portraits/`): `runde131_vorher_nachher_maenner.png` (four men, round 130 above,
+now below; three are the sample's men under seeds that draw the buttons),
+`runde131_von_allen_seiten.png` (a buttoned man with the hood thrown back, from five sides).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
@@ -5467,7 +5518,8 @@ person carries the head turned and tilted by angles of their own (small ones, an
 the chin), since round 128 three in ten of the young women in plaits wear a fillet, a plain broad ring of
 linen where theirs wear a narrow jewelled band, since round 129 seven in ten of the women's gowns are
 closed down the front with a lace over linen or with cloth buttons, in the gown's own colour where theirs
-are gold and contrast, on a gown that is still a loose sack, and the face still lacks the
+are gold and contrast, on a gown that is still a loose sack, since round 131 two in ten of the men's
+with the same buttons (theirs wear belted, layered coats), and the face still lacks the
 reference's streak of gloss on the nose's flank; the thrown-back hood closes round the neck since round 35, but
 has no folds across its cloth. Since round 111 the people of every part of the world can be drawn, in a plain
 dress that is no people's own, and without a picture of the reference to hold them against.
