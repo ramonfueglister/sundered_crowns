@@ -10,7 +10,7 @@ Der Entwurf ist gebaut und seit dem 17. November 2026 auf main. Die 3D-Welt setz
 
 Die Familien, die von der Landwirtschaft leben, wohnen in [Weilern vor den Mauern](../personen/weiler-der-bauern.md). Bisher wusste die Simulation von ihnen nur das. Jetzt legt sie beim Gründen der Welt die Weiler jeder Stadt an und gibt jeder Bauernfamilie einen Hof darin. Die Familie zeigt auf ihren Hof, so wie eine Stadtfamilie auf ihre [Parzelle](parzellen.md).
 
-Nicht dabei: welches Feld zu welchem Hof gehört, Kirche und Mühle im Weiler, Wege zur Stadt, das Wachsen von Weilern zu Dörfern.
+Nicht dabei: Kirche und Mühle im Weiler, Wege zur Stadt, das Wachsen von Weilern zu Dörfern.
 
 ## Im Spiel
 

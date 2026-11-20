@@ -5,3 +5,4 @@ Wie Dörfer und Städte in Sundered Crowns entstehen und wachsen: wo eine Famili
 - [Jede Familie hat eine Parzelle](parzellen.md) *(Entwurf)*: das Grundbuch der Städte
 - [Die Höfe in den Weilern](hoefe.md) *(Entwurf)*: Weiler und Höfe der Bauernfamilien im Grundbuch
 - [Gassen und Markt](gassen.md) *(Entwurf)*: wie die Gassen einer Stadt zu ihren Parzellen wachsen
+- [Felder je Hof](felder.md) *(Entwurf)*: die Gewanne, Zelgen und Streifen jedes Hofs
