@@ -9,18 +9,28 @@ const CHILD_UNTIL = 14;
 
 /** The lines of the card: a title and [label, value] rows. Text only, so it can be tested without a page. */
 export function hoverLines(p: PersonDetail): { title: string; rows: [string, string][] } {
-  const h = p.history, title = `${h ? h.name : p.female ? 'Frau' : 'Mann'}${p.alive ? '' : ' †'}`, rows: [string, string][] = [];
+  const h = p.history,
+    title = `${h ? h.name : p.female ? 'Frau' : 'Mann'}${p.alive ? '' : ' †'}`,
+    rows: [string, string][] = [];
   rows.push(['Alter', p.age === null ? 'unbekannt' : `${Math.floor(p.age)} Jahre`]);
   if (h?.crowns.length) rows.push([h.crowns.length > 1 ? 'Kronen' : 'Krone', h.crowns.map((c) => c.name).join(', ')]);
   else if (h?.house) rows.push(['Haus', h.house]);
   const work = workOf(p);
   if (work) rows.push(['Erwerb', work]);
-  if (p.town) rows.push(['Wohnt', p.dwelling === 'parcel' ? `Parzelle in ${p.town}` : p.dwelling === 'farmstead' ? `Hof bei ${p.town}` : p.town]);
+  if (p.town)
+    rows.push([
+      'Wohnt',
+      p.dwelling === 'parcel' ? `Parzelle in ${p.town}` : p.dwelling === 'farmstead' ? `Hof bei ${p.town}` : p.town,
+    ]);
   // a world server older than these fields sends no spouse and no children
   const children = p.children ?? [];
-  const kin = [p.spouse >= 0 ? 'verheiratet' : '', children.length ? `${children.length} ${children.length === 1 ? 'Kind' : 'Kinder'}` : ''].filter(Boolean);
+  const kin = [
+    p.spouse >= 0 ? 'verheiratet' : '',
+    children.length ? `${children.length} ${children.length === 1 ? 'Kind' : 'Kinder'}` : '',
+  ].filter(Boolean);
   if (kin.length) rows.push(['Familie', kin.join(', ')]);
-  if (p.household && p.household.persons > 1) rows.push(['Haushalt', `${p.household.persons} Personen, ${p.household.working} erwerbstätig`]);
+  if (p.household && p.household.persons > 1)
+    rows.push(['Haushalt', `${p.household.persons} Personen, ${p.household.working} erwerbstätig`]);
   // only the IQ: the Big Five are numbers of the simulation, and no word for them was agreed (Ramon, 19 Nov 2026)
   rows.push(['Merkmale', `IQ ${p.iq}`]);
   return { title, rows };

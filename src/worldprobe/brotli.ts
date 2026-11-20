@@ -6,7 +6,19 @@ let wasm: Promise<{ decompress(b: Uint8Array): Uint8Array }> | undefined;
 
 /** The bytes of a run zipped with Brotli, unzipped. */
 export async function unbrotli(bytes: Uint8Array): Promise<Uint8Array> {
-  if (native === undefined) { try { new DecompressionStream('brotli' as CompressionFormat); native = true; } catch { native = false; } }
-  if (native) return new Uint8Array(await new Response(new Blob([bytes as BlobPart]).stream().pipeThrough(new DecompressionStream('brotli' as CompressionFormat))).arrayBuffer());
+  if (native === undefined) {
+    try {
+      new DecompressionStream('brotli' as CompressionFormat);
+      native = true;
+    } catch {
+      native = false;
+    }
+  }
+  if (native)
+    return new Uint8Array(
+      await new Response(
+        new Blob([bytes as BlobPart]).stream().pipeThrough(new DecompressionStream('brotli' as CompressionFormat)),
+      ).arrayBuffer(),
+    );
   return (await (wasm ??= import('brotli-dec-wasm').then((m) => m.default))).decompress(bytes);
 }

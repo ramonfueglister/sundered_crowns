@@ -31,7 +31,13 @@ export function shardRange(n: number, shard: number): [number, number] {
 export function tick(s: WorldState, w: World, systems: readonly System[]): Tick {
   s.day++;
   const date = dayToDate(s.day, s.startYear);
-  const t: Tick = { day: s.day, date, newMonth: date.d === 1, newYear: date.d === 1 && date.m === 0, shard: s.day % SHARDS };
+  const t: Tick = {
+    day: s.day,
+    date,
+    newMonth: date.d === 1,
+    newYear: date.d === 1 && date.m === 0,
+    shard: s.day % SHARDS,
+  };
   for (const sys of systems) sys.run(s, w, t);
   return t;
 }

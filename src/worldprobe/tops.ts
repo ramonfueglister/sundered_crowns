@@ -15,17 +15,21 @@ import {
 } from '../lookprobe/faces';
 import type { Shape } from '../lookprobe/shape';
 
-/**
- * A shape with the level tops of its columns taken out of its faces and joined (`Shape.tops`): the faces that face
- * upwards, are one block square on the blocks and lie in the field's columns from (x0, z0). The rest of the faces
- * stay as they are. A shape without faces is handed back as it is.
- */
 /** how far a joined top reaches over its columns' edges, in 64ths of a block (see `joinTops`) */
 const OVERLAP = 1;
 
+/**
+ * A shape with the level tops of its columns taken out of its faces and joined (`Shape.tops`): the faces that face
+ * upwards, are one block square on the blocks and lie in the field's columns from (x0, z0). The rest of the faces
+ * stay as they are. A shape without faces is handed back as it is. Where the faces glide to the coarser step
+ * (worldprobe/glide.ts), only tops that end at one height are joined, and the colours they end with go into a field of
+ * their own.
+ */
 export function joinTops(shape: Shape, x0: number, z0: number): Shape {
   const f = shape.faces;
-  if (!f || f.lift || f.aim) return shape;
+  if (!f || f.lift) return shape;
+  const aim = f.aim,
+    aimCol = f.aimCol;
   const n = f.geo.length / FACE_GEO,
     S = FACE_STEPS;
   // the column each top lies on, and the kind of top it is: of one height, one way round and one direction
@@ -34,6 +38,7 @@ export function joinTops(shape: Shape, x0: number, z0: number): Shape {
     faceOf = new Int32Array(FIELD_COLUMNS * FIELD_COLUMNS).fill(-1);
   const first: number[] = [];
   const tones = new Uint8Array(FIELD_SIDE * FIELD_SIDE * 4),
+    aimTones = aim && aimCol ? new Uint8Array(FIELD_SIDE * FIELD_SIDE * 4) : null,
     keep = new Uint8Array(n).fill(1);
   for (let k = 0; k < n; k++) {
     const g = k * FACE_GEO,
@@ -50,7 +55,7 @@ export function joinTops(shape: Shape, x0: number, z0: number): Shape {
     const x = u / S - x0,
       z = v / S - z0;
     if (x < 0 || z < 0 || x >= FIELD_COLUMNS || z >= FIELD_COLUMNS || faceOf[z * FIELD_COLUMNS + x] >= 0) continue;
-    const name = `${kind} ${f.geo[g + 1]} ${ua < uc ? 1 : 0} ${va < vc ? 1 : 0} ${f.nor[k * 4]} ${f.nor[k * 4 + 2]} ${f.nor[k * 4 + 3]}`;
+    const name = `${kind} ${f.geo[g + 1]} ${ua < uc ? 1 : 0} ${va < vc ? 1 : 0} ${f.nor[k * 4]} ${f.nor[k * 4 + 2]} ${f.nor[k * 4 + 3]} ${aim ? aim[k * 2] : ''}`;
     let id = kinds.get(name);
     if (id === undefined) {
       id = kinds.size + 1;
@@ -66,12 +71,14 @@ export function joinTops(shape: Shape, x0: number, z0: number): Shape {
         cv = c >= 2 ? vc : va,
         at = ((2 * z + (cv > v ? 1 : 0)) * FIELD_SIDE + 2 * x + (cu > u ? 1 : 0)) * 4;
       for (let m = 0; m < 4; m++) tones[at + m] = f.col[k * FACE_COL + c * 4 + m];
+      if (aimTones) for (let m = 0; m < 4; m++) aimTones[at + m] = aimCol![k * FACE_COL + c * 4 + m];
     }
   }
   if (!kinds.size) return shape;
   // the tops joined: along a row as far as they are of one kind, then down as far as every column of the row below is too
   const geo: number[] = [],
     nor: number[] = [],
+    ends: number[] = [],
     done = new Uint8Array(FIELD_COLUMNS * FIELD_COLUMNS);
   for (let z = 0; z < FIELD_COLUMNS; z++)
     for (let x = 0; x < FIELD_COLUMNS; x++) {
@@ -101,6 +108,7 @@ export function joinTops(shape: Shape, x0: number, z0: number): Shape {
         v1 = (z + z0 + h) * S + OVERLAP;
       geo.push(f.geo[g], f.geo[g + 1], uUp ? u0 : u1, uUp ? u1 : u0, vUp ? v0 : v1, vUp ? v1 : v0);
       nor.push(f.nor[k * 4], f.nor[k * 4 + 1], f.nor[k * 4 + 2], f.nor[k * 4 + 3]);
+      if (aim) ends.push(aim[k * 2], 0);
     }
   // the faces that are not such tops stay
   const kept: number[] = [];
@@ -109,12 +117,22 @@ export function joinTops(shape: Shape, x0: number, z0: number): Shape {
     geo: new Int16Array(kept.length * FACE_GEO),
     col: new Uint8Array(kept.length * FACE_COL),
     nor: new Int8Array(kept.length * 4),
+    ...(aim && aimCol ? { aim: new Int16Array(kept.length * 2), aimCol: new Uint8Array(kept.length * FACE_COL) } : {}),
   };
   kept.forEach((k, i) => {
     faces.geo.set(f.geo.subarray(k * FACE_GEO, (k + 1) * FACE_GEO), i * FACE_GEO);
     faces.col.set(f.col.subarray(k * FACE_COL, (k + 1) * FACE_COL), i * FACE_COL);
     faces.nor.set(f.nor.subarray(k * 4, (k + 1) * 4), i * 4);
+    faces.aim?.set(aim!.subarray(k * 2, k * 2 + 2), i * 2);
+    faces.aimCol?.set(aimCol!.subarray(k * FACE_COL, (k + 1) * FACE_COL), i * FACE_COL);
   });
-  const tops: Field = { geo: Int16Array.from(geo), nor: Int8Array.from(nor), tones, x0, z0 };
+  const tops: Field = {
+    geo: Int16Array.from(geo),
+    nor: Int8Array.from(nor),
+    tones,
+    x0,
+    z0,
+    ...(aimTones ? { aim: Int16Array.from(ends), aimTones } : {}),
+  };
   return { ...shape, faces, tops };
 }
