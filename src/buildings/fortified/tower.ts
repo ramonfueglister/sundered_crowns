@@ -6,7 +6,10 @@ import { OPENING, ROOFS, WINDOW } from '../palette';
 
 /** A slim town tower of brick with a pointed roof, as in the towns of the reference; 2.4 × 2.4, about 10 high. */
 export function tower(r: Rnd): Batch {
-  const b = new Batch(), h = 1.2, top = r.range(8, 10.5), c = r.pick([rgb(0xc98a64), rgb(0xd29a72), rgb(0xbf7f5c)]);
+  const b = new Batch(),
+    h = 1.2,
+    top = r.range(8, 10.5),
+    c = r.pick([rgb(0xc98a64), rgb(0xd29a72), rgb(0xbf7f5c)]);
   b.box(-h, -1, -h, h, top, h, c, { foot: 0.88 });
   for (const s of SIDES) {
     const wl = wallOf(-h, -h, h, h, s);

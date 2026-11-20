@@ -13,17 +13,40 @@ const W = v.wand.farben_hex;
 
 export const VENICE: Tradition = {
   // the fondamenta: wall and coping of stone, paving, water steps and mooring posts (measure file, assumptions)
-  quay: { wall: hex(v.kai.mauer_hex), coping: hex(v.kai.abdeckung_hex), paving: hex(v.kai.pflaster_hex), post: hex(v.kai.poller_hex), stepsEvery: [m(v.kai.treppe_alle_m[0]), m(v.kai.treppe_alle_m[1])], postEvery: [m(v.kai.poller_alle_m[0]), m(v.kai.poller_alle_m[1])] },
+  quay: {
+    wall: hex(v.kai.mauer_hex),
+    coping: hex(v.kai.abdeckung_hex),
+    paving: hex(v.kai.pflaster_hex),
+    post: hex(v.kai.poller_hex),
+    stepsEvery: [m(v.kai.treppe_alle_m[0]), m(v.kai.treppe_alle_m[1])],
+    postEvery: [m(v.kai.poller_alle_m[0]), m(v.kai.poller_alle_m[1])],
+  },
   // ground floor 8 or 9 piedi, upper storeys 7 or 8 (Dorigo): 3.0 m and the middle of 2.43 to 2.78 m, in fine blocks
-  ground: vox(3.0), upper: vox((v.geschoss.obergeschoss_m[0] + v.geschoss.obergeschoss_m[1]) / 2), noble: vox(v.geschoss.piano_nobile_m[0]),
-  storeys: pair(v.geschosse.klein), greatStoreys: pair(v.geschosse.kaufmannshaus),
+  ground: vox(3.0),
+  upper: vox((v.geschoss.obergeschoss_m[0] + v.geschoss.obergeschoss_m[1]) / 2),
+  noble: vox(v.geschoss.piano_nobile_m[0]),
+  storeys: pair(v.geschosse.klein),
+  greatStoreys: pair(v.geschosse.kaufmannshaus),
   // bare ochre brick most often, pale plaster often, red plaster and red brick now and then (shares from the measure file)
   walls: Object.entries(v.wand.anteile).flatMap(([name, n]) => Array<RGB>(n).fill(hex(W[name as keyof typeof W]))),
-  stone: hex(W.istrischer_stein), roof: hex(v.dach.farbe_hex), wood: hex(v.barbacani.holz_hex), chimneyC: hex(v.kamin.farbe_hex),
-  window: pair(ref.fenster_feinbloecke), door: pair(ref.tuer_feinbloecke), sill: ref.fenster_sohlbank_feinblock, bay: ref.achsabstand_feinbloecke,
-  arched: v.oeffnungen.bogenanteil, shutters: v.oeffnungen.laeden_anteil, washing: v.oeffnungen.waesche_anteil,
+  stone: hex(W.istrischer_stein),
+  roof: hex(v.dach.farbe_hex),
+  wood: hex(v.barbacani.holz_hex),
+  chimneyC: hex(v.kamin.farbe_hex),
+  window: pair(ref.fenster_feinbloecke),
+  door: pair(ref.tuer_feinbloecke),
+  sill: ref.fenster_sohlbank_feinblock,
+  bay: ref.achsabstand_feinbloecke,
+  arched: v.oeffnungen.bogenanteil,
+  shutters: v.oeffnungen.laeden_anteil,
+  washing: v.oeffnungen.waesche_anteil,
   jetty: { out: vox(v.barbacani.vorsprung_m), from: v.barbacani.ab_geschoss, share: v.barbacani.anteil },
-  pitch: pair(v.dach.neigung), altana: v.dach.altana_anteil,
+  pitch: pair(v.dach.neigung),
+  altana: v.dach.altana_anteil,
   chimney: { height: [vox(v.kamin.hoehe_m[0]), vox(v.kamin.hoehe_m[1])], perHouse: v.kamin.anteil_je_haus },
-  plot: { width: [m(v.parzelle.breite_m[0]), m(v.parzelle.breite_m[1])], depth: [m(v.parzelle.tiefe_m[0]), m(v.parzelle.tiefe_m[1])], greatWidth: [m(v.parzelle.kaufmannshaus_breite_m[0]), m(v.parzelle.kaufmannshaus_breite_m[1])] },
+  plot: {
+    width: [m(v.parzelle.breite_m[0]), m(v.parzelle.breite_m[1])],
+    depth: [m(v.parzelle.tiefe_m[0]), m(v.parzelle.tiefe_m[1])],
+    greatWidth: [m(v.parzelle.kaufmannshaus_breite_m[0]), m(v.parzelle.kaufmannshaus_breite_m[1])],
+  },
 };
