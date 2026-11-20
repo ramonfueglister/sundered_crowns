@@ -9,7 +9,7 @@
 //    sea's colour does not change from one step to the next. By the coast the water is lighter still: within a few
 //    columns of the land by the colours of the water's own corners (terrain.ts, which this reads back by their hue,
 //    which their patches of light and shade leave alone), wider out within some dots of the coast as the depth
-//    picture has it (`withCoast`).
+//    picture has it (`withCoast`, sea_coast.ts).
 //  - its surface changes with the distance, as EU5's does: from near and in the middle distance a calm swell, a few
 //    long soft waves in which the sky and what stands by the water are mirrored, and white strokes where the wind
 //    breaks a crest, short and a little bent, across the wind and in groups; from farther out (a dot some blocks
@@ -17,9 +17,9 @@
 //    read as strokes of paint and never as a fine grey chop or as specks.
 //    (The first round laid a natural wind sea of fine ripples over the water at every distance: it was measured
 //    close to EU5's numbers, but looked like a photograph of the sea and did not belong to the model.)
-//    Both come from one picture made once at the start (`waveTexture`): random waves worked out by the inverse
-//    Fourier transform, so that it repeats seamlessly, laid over the world at the octave whose texels are a dot or
-//    two wide where it is seen.
+//    Both come from one picture made once at the start (`waveTexture`, sea_waves.ts): random waves worked out by the
+//    inverse Fourier transform, so that it repeats seamlessly, laid over the world at the octave whose texels are a
+//    dot or two wide where it is seen.
 // The waves lie in the world's blocks, so that they stay where they are when the view moves.
 import * as THREE from 'three/webgpu';
 import {
@@ -55,6 +55,8 @@ import {
   vec3,
 } from 'three/tsl';
 import { SEA_Y } from './layout';
+import { COAST_REACH } from './sea_coast';
+import { TEX, WIND, waveTexture } from './sea_waves';
 import { number, q } from './stage/address';
 import { WATER_DEEP, WATER_SHALLOW } from './terrain';
 
@@ -92,26 +94,13 @@ const RIM: readonly [number, number] = [0.1, 0.8];
 const NEAREST_DARKER = 0.74;
 /** the sky as the water gives it back where a wave turns towards it (linear light, at the share Fresnel gives) */
 const SKY = new THREE.Color(0xd8ecf6);
-/** the wave picture: its size in texels, and how many of the picture's dots a texel is laid over (between this and twice it) */
-const TEX = 256,
-  DOTS_PER_TEXEL = 1.4;
+/** how many dots of the picture a texel of the wave picture is laid over (between this and twice it) */
+const DOTS_PER_TEXEL = 1.4;
 /** from near the picture spans at least this many finest blocks, so that the flecks are as large as a part of a house, not specks */
 const SPAN_LEAST = 32;
-/**
- * the swell's waves (2 to SWELL_K across the picture: 18 to 128 texels long) and the flecks' (FLECK_K, 4 to 11 texels,
- * within FLECK_SPREAD of the wind's direction as the power of the cosine: their crests are long and narrow), and how
- * the flecks' picture is bent (by up to BEND texels, in waves BEND_K across the picture: the strokes curve)
- */
-const SWELL_K = 14,
-  FLECK_K: readonly [number, number] = [24, 64],
-  FLECK_SPREAD = 12,
-  BEND = 2.5,
-  BEND_K: readonly [number, number] = [5, 12];
 /** the swell's slope, as the root of the mean square of rise over run: from afar, and from nearest (where the view is steeper and sees less of the sky) */
 const SWELL = 0.028,
   SWELL_NEAR = 0.05;
-/** the wind's direction in the wave picture (radians from its u axis); the flecks' crests stand across it */
-const WIND = 0.55;
 /** the waves come in patches (gusts of wind): their strength runs between these shares over two long waves */
 const PATCHY: readonly [number, number] = [0.6, 1.3];
 /**
@@ -198,267 +187,6 @@ export interface Sea {
   ): void;
   /** whether the water moves in a picture `across` blocks of the stage and `dots` dots wide (then every picture is to be drawn) */
   moving(across: number, dots: number): boolean;
-}
-
-/** A small random number source of its own, so that the waves are the same at every start. */
-function seeded(seed: number) {
-  let s = seed >>> 0;
-  return () => {
-    s = (s + 0x6d2b79f5) >>> 0;
-    let t = Math.imul(s ^ (s >>> 15), 1 | s);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-/** The Fourier transform of `n` complex numbers in place (n a power of two); `back`: the inverse, without the 1/n. */
-function fft(re: Float64Array, im: Float64Array, back: boolean) {
-  const n = re.length;
-  for (let i = 1, j = 0; i < n; i++) {
-    let bit = n >> 1;
-    for (; j & bit; bit >>= 1) j ^= bit;
-    j ^= bit;
-    if (i < j) {
-      [re[i], re[j]] = [re[j], re[i]];
-      [im[i], im[j]] = [im[j], im[i]];
-    }
-  }
-  for (let len = 2; len <= n; len <<= 1) {
-    const a = ((back ? 2 : -2) * Math.PI) / len,
-      wr = Math.cos(a),
-      wi = Math.sin(a);
-    for (let i = 0; i < n; i += len) {
-      let cr = 1,
-        ci = 0;
-      for (let k = 0; k < len / 2; k++) {
-        const p = i + k,
-          q = p + len / 2,
-          tr = re[q] * cr - im[q] * ci,
-          ti = re[q] * ci + im[q] * cr;
-        re[q] = re[p] - tr;
-        im[q] = im[p] - ti;
-        re[p] += tr;
-        im[p] += ti;
-        const nr = cr * wr - ci * wi;
-        ci = cr * wi + ci * wr;
-        cr = nr;
-      }
-    }
-  }
-}
-
-/** The inverse transform of a square of TEX × TEX complex numbers, rows then columns; the real part. */
-function inverse2(re: Float64Array, im: Float64Array): Float64Array {
-  const n = TEX,
-    rr = new Float64Array(n),
-    ri = new Float64Array(n);
-  for (let pass = 0; pass < 2; pass++)
-    for (let a = 0; a < n; a++) {
-      for (let b = 0; b < n; b++) {
-        const i = pass ? b * n + a : a * n + b;
-        rr[b] = re[i];
-        ri[b] = im[i];
-      }
-      fft(rr, ri, true);
-      for (let b = 0; b < n; b++) {
-        const i = pass ? b * n + a : a * n + b;
-        re[i] = rr[b];
-        im[i] = ri[b];
-      }
-    }
-  return re;
-}
-
-/**
- * The wave picture: the swell's slopes along u and v (red, green: rise over run in shares of four times their
- * spread, about 0.5 level), the swell's height (blue: in shares of four times its spread about 0.5) and the height
- * of the flecks' waves (alpha: in shares of eight times its spread about 0.5). The swell is a height field of
- * random phases whose power falls as the fourth power of the wavenumber, from 2 to SWELL_K waves across the
- * picture; the flecks' waves are short (FLECK_K) and run with the wind, so that their crests, where they rise high
- * enough to break, are short strokes across it, and the picture of them is bent (`curved`), so that the strokes
- * curve a little.
- */
-function waveTexture(): THREE.DataTexture {
-  const n = TEX,
-    random = seeded(1291);
-  /** a height field of random phases with the given power at each wavenumber (kx, ky): its real and imaginary parts */
-  const field = (power: (kx: number, ky: number) => number) => {
-    const hr = new Float64Array(n * n),
-      hi = new Float64Array(n * n);
-    for (let j = 0; j < n; j++)
-      for (let i = 0; i < n; i++) {
-        const kx = i < n / 2 ? i : i - n,
-          ky = j < n / 2 ? j : j - n,
-          p = power(kx, ky);
-        // a Gaussian number of each part (Box and Muller), drawn for every wavenumber so that each field keeps its own
-        const r = Math.sqrt(-2 * Math.log(1 - random())) * Math.sqrt(p),
-          a = 2 * Math.PI * random();
-        if (p > 0) {
-          hr[j * n + i] = r * Math.cos(a);
-          hi[j * n + i] = r * Math.sin(a);
-        }
-      }
-    return [hr, hi] as const;
-  };
-  const along = (kx: number, ky: number) => Math.cos(Math.atan2(ky, kx) - WIND);
-  const [sr, si] = field((kx, ky) => {
-    const k = Math.hypot(kx, ky);
-    return k < 2 || k > SWELL_K ? 0 : (0.6 + 0.4 * along(kx, ky) ** 2) / k ** 4;
-  });
-  const [fr, fi] = field((kx, ky) => {
-    const k = Math.hypot(kx, ky);
-    return k < FLECK_K[0] || k > FLECK_K[1] ? 0 : along(kx, ky) ** FLECK_SPREAD / k ** 2;
-  });
-  const bent = (k: number) => (k < BEND_K[0] || k > BEND_K[1] ? 0 : 1 / k ** 2);
-  const [br, bi] = field((kx, ky) => bent(Math.hypot(kx, ky))),
-    [cr, ci] = field((kx, ky) => bent(Math.hypot(kx, ky)));
-  // the slopes are the transforms of i·k times the heights' (k in radians per texel)
-  const slope = (axis: 0 | 1) => {
-    const re = new Float64Array(n * n),
-      im = new Float64Array(n * n);
-    for (let j = 0; j < n; j++)
-      for (let i = 0; i < n; i++) {
-        const k = ((axis === 0 ? (i < n / 2 ? i : i - n) : j < n / 2 ? j : j - n) * 2 * Math.PI) / n,
-          at = j * n + i;
-        re[at] = -si[at] * k;
-        im[at] = sr[at] * k;
-      }
-    return inverse2(re, im);
-  };
-  const spread = (v: Float64Array) => Math.sqrt(v.reduce((s, x) => s + x * x, 0) / v.length);
-  const su = slope(0),
-    sv = slope(1),
-    h = inverse2(sr.slice(), si.slice()),
-    f = curved(inverse2(fr, fi), inverse2(br, bi), inverse2(cr, ci));
-  /** the flecks' picture read (between its texels, repeating) at each texel moved by `bu`, `bv` (BEND texels a spread) */
-  function curved(straight: Float64Array, bu: Float64Array, bv: Float64Array) {
-    const out = new Float64Array(n * n),
-      ku = BEND / spread(bu),
-      kv = BEND / spread(bv),
-      wrap = (i: number) => ((i % n) + n) % n;
-    for (let j = 0; j < n; j++)
-      for (let i = 0; i < n; i++) {
-        const u = i + bu[j * n + i] * ku,
-          v = j + bv[j * n + i] * kv,
-          u0 = Math.floor(u),
-          v0 = Math.floor(v),
-          fu = u - u0,
-          fv = v - v0;
-        const at = (x: number, y: number) => straight[wrap(y) * n + wrap(x)];
-        out[j * n + i] =
-          (at(u0, v0) * (1 - fu) + at(u0 + 1, v0) * fu) * (1 - fv) +
-          (at(u0, v0 + 1) * (1 - fu) + at(u0 + 1, v0 + 1) * fu) * fv;
-      }
-    return out;
-  }
-  const s = Math.sqrt((spread(su) ** 2 + spread(sv) ** 2) / 2),
-    hs = spread(h),
-    fs = spread(f);
-  const byte = (v: number) => Math.max(0, Math.min(255, Math.round(127.5 + 127.5 * v)));
-  const data = new Uint8Array(n * n * 4);
-  for (let i = 0; i < n * n; i++) {
-    data[i * 4] = byte(su[i] / (4 * s));
-    data[i * 4 + 1] = byte(sv[i] / (4 * s));
-    data[i * 4 + 2] = byte(h[i] / (4 * hs));
-    data[i * 4 + 3] = byte(f[i] / (8 * fs));
-  }
-  const t = new THREE.DataTexture(data, n, n);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.magFilter = THREE.LinearFilter;
-  t.minFilter = THREE.LinearMipmapLinearFilter;
-  t.generateMipmaps = true;
-  t.anisotropy = 8;
-  t.needsUpdate = true;
-  return t;
-}
-
-/** The squared distance of each point of a row to the nearest of `on` (Felzenszwalb and Huttenlocher), in place. */
-function distance1(f: Float64Array, n: number, v: Int32Array, z: Float64Array, d: Float64Array) {
-  let k = 0;
-  v[0] = 0;
-  z[0] = -Infinity;
-  z[1] = Infinity;
-  for (let q = 1; q < n; q++) {
-    let s = (f[q] + q * q - (f[v[k]] + v[k] * v[k])) / (2 * q - 2 * v[k]);
-    while (s <= z[k]) {
-      k--;
-      s = (f[q] + q * q - (f[v[k]] + v[k] * v[k])) / (2 * q - 2 * v[k]);
-    }
-    k++;
-    v[k] = q;
-    z[k] = s;
-    z[k + 1] = Infinity;
-  }
-  k = 0;
-  for (let q = 0; q < n; q++) {
-    while (z[k + 1] < q) k++;
-    d[q] = (q - v[k]) ** 2 + f[v[k]];
-  }
-  for (let q = 0; q < n; q++) f[q] = d[q];
-}
-
-/** The distance of every dot of a picture of w × h to the nearest dot that is `inside`, in dots (0 on those). */
-function distances(inside: Uint8Array, w: number, h: number): Float64Array {
-  const big = 1e12,
-    g = new Float64Array(w * h),
-    n = Math.max(w, h),
-    f = new Float64Array(n),
-    d = new Float64Array(n),
-    v = new Int32Array(n),
-    z = new Float64Array(n + 1);
-  for (let i = 0; i < w * h; i++) g[i] = inside[i] ? 0 : big;
-  for (let x = 0; x < w; x++) {
-    for (let y = 0; y < h; y++) f[y] = g[y * w + x];
-    distance1(f, h, v, z, d);
-    for (let y = 0; y < h; y++) g[y * w + x] = f[y];
-  }
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) f[x] = g[y * w + x];
-    distance1(f, w, v, z, d);
-    for (let x = 0; x < w; x++) g[y * w + x] = Math.sqrt(f[x]);
-  }
-  return g;
-}
-
-/** how many dots of the depth picture the coast's distance reaches on either side (it is kept in a byte, COAST_REACH / 128 dots a step) */
-const COAST_REACH = 8;
-
-/**
- * The depth picture with the coast's distance beside the depth: red the depth (as the picture has it, 0 on land),
- * green the distance from the coast in dots of the picture, 128 at the coast, more over the sea, less on the land
- * (so that the coast lies where it crosses 128 between the dots, and not on their edges). The rows run from the
- * bottom up, as a picture loaded by three's loader lies.
- */
-export function withCoast(image: CanvasImageSource & { width: number; height: number }): THREE.DataTexture {
-  const w = image.width,
-    h = image.height,
-    canvas = new OffscreenCanvas(w, h),
-    c = canvas.getContext('2d')!;
-  c.drawImage(image, 0, 0);
-  const px = c.getImageData(0, 0, w, h).data,
-    land = new Uint8Array(w * h),
-    sea = new Uint8Array(w * h);
-  for (let i = 0; i < w * h; i++) {
-    land[i] = px[i * 4] === 0 ? 1 : 0;
-    sea[i] = 1 - land[i];
-  }
-  const toLand = distances(land, w, h),
-    toSea = distances(sea, w, h),
-    data = new Uint8Array(w * h * 4);
-  for (let y = 0; y < h; y++)
-    for (let x = 0; x < w; x++) {
-      const i = y * w + x,
-        o = ((h - 1 - y) * w + x) * 4,
-        signed = land[i] ? -(toSea[i] - 0.5) : toLand[i] - 0.5;
-      data[o] = px[i * 4];
-      data[o + 1] = Math.max(0, Math.min(255, Math.round(128 + (signed * 128) / COAST_REACH)));
-      data[o + 3] = 255;
-    }
-  const t = new THREE.DataTexture(data, w, h);
-  t.magFilter = t.minFilter = THREE.LinearFilter;
-  t.generateMipmaps = false;
-  t.needsUpdate = true;
-  return t;
 }
 
 /** The sea's nodes; `mirror` is what the water gives back where it lies level (the stage's tinted mirror image). */
