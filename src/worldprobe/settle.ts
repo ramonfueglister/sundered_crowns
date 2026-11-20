@@ -23,6 +23,21 @@ export interface Parcels { w: number; d: number; x: readonly number[]; z: readon
 /** the kind of the market among a town's streets (STREET_KIND in src/sim/state.ts) */
 const MARKET = 4;
 /**
+ * The ground of a town's streets and market as blocks from its middle, four numbers to a piece (x0, z0, x1, z1, the
+ * ends not included): a street as wide as the register makes it about its middle line, the market as its corners.
+ * The edges round to blocks as those of the parcels do, so that a street reaches the houses at its side.
+ */
+export function streetsOf(L: Parcels): number[] {
+  const half = (L.street ?? 0) / 2, out: number[] = [];
+  for (const [x0, z0, x1, z1, k] of L.streets ?? []) {
+    const pad = k === MARKET ? 0 : half;
+    const a0 = Math.round(m(Math.min(x0, x1) - pad)), a1 = Math.max(a0 + 1, Math.round(m(Math.max(x0, x1) + pad)));
+    const b0 = Math.round(m(Math.min(z0, z1) - pad)), b1 = Math.max(b0 + 1, Math.round(m(Math.max(z0, z1) + pad)));
+    out.push(a0, b0, a1, b1);
+  }
+  return out;
+}
+/**
  * Asked for every town once its great buildings stand and before its houses: `free` tells whether a block `dx` east
  * and `dz` south of the town's middle can carry a house (dry, no rock, level with its neighbours, nothing built).
  * The simulation's land register lays its parcels by it (tools/worldprobe/build_ground.ts).
@@ -268,13 +283,10 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
    * round to blocks as those of the parcels do, so that a street reaches the houses at its side.
    */
   const onStreets = (s: Site, cx: number, cz: number, walled: boolean) => {
-    const L = s.lots!, half = (L.street ?? 0) / 2;
+    const rects = streetsOf(s.lots!);
     let paved = 0;
-    for (const q of L.streets ?? []) {
-      const [x0, z0, x1, z1, k] = q, pad = k === MARKET ? 0 : half;
-      const a0 = Math.round(m(Math.min(x0, x1) - pad)), a1 = Math.max(a0 + 1, Math.round(m(Math.max(x0, x1) + pad)));
-      const b0 = Math.round(m(Math.min(z0, z1) - pad)), b1 = Math.max(b0 + 1, Math.round(m(Math.max(z0, z1) + pad)));
-      for (let z = cz + b0; z < cz + b1; z++) for (let x = cx + a0; x < cx + a1; x++) {
+    for (let q = 0; q < rects.length; q += 4) {
+      for (let z = cz + rects[q + 1]; z < cz + rects[q + 3]; z++) for (let x = cx + rects[q]; x < cx + rects[q + 2]; x++) {
         if (!inGrid(x, z)) continue;
         const i = idx(x, z);
         if (g.wet[i] || g.mat[i] === Mat.Rock || used[i] === 1) continue;
@@ -392,14 +404,17 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     // paved as far as the houses reach: within three blocks of a building
     const built = (x: number, z: number) => { for (let dz = -3; dz <= 3; dz++) for (let dx = -3; dx <= 3; dx++) if (inGrid(x + dx, z + dz) && used[idx(x + dx, z + dz)] === 1) return true; return false; };
     for (let z = cz - half; z < cz + half; z++) for (let x = cx - half; x < cx + half; x++) if (inGrid(x, z) && !g.wet[idx(x, z)] && g.mat[idx(x, z)] !== Mat.Rock && built(x, z)) { g.mat[idx(x, z)] = Mat.Paved; town[idx(x, z)] = 1; }
-    for (let i = 0; i < N * N; i++) if (town[i]) used[i] = 2;
+    // the paving that nothing stands on is street; the ground of a house or a great building stays its own (used 1),
+    // so that no figure stands or walks in it (src/figures/crowd.ts)
+    const streets: number[] = [];
+    for (let i = 0; i < N * N; i++) if (town[i] && used[i] !== 1) { used[i] = 2; streets.push(i); }
     const walled = carries && hi - lo <= 2;
     if (walled) {
       if (own(cx, cz)) { things.append(townWall(half * 2 + 2, half * 2 + 2, gaps), mat.makeRotationY(0).setPosition(cx, lo + 1, cz)); count('wall'); }
       claim(cx - half - 2, cz - half - 2, cx + half + 2, cz + half + 2);
       // the claim takes the square within the wall too; its paving stays street, where the persons of the town walk
       // (src/figures/crowd.ts: a column is street where it is town and used is 2)
-      for (let i = 0; i < N * N; i++) if (town[i]) used[i] = 2;
+      for (const i of streets) used[i] = 2;
     }
     towns.push({ site: s.id, cx: cx + (g.ox ?? 0), cz: cz + (g.oz ?? 0), half });
     if (own(cx, cz)) told?.town(s.id, cx, cz, half, g.h[idx(cx, cz)], walled ? gaps : null);

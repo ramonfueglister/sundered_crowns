@@ -382,6 +382,8 @@ export interface GroundTraits {
   readonly trees?: ArrayLike<number>;
   /** the crops of the lots where the ground draws the finest step's sheaves one by one (worldprobe/crops.ts, a byte to a column, N × N columns) */
   readonly crops?: ArrayLike<number>;
+  /** where the figures are drawn from afar, what the finest step has on the four blocks of a column (worldprobe/crowd.ts, a byte to a column, N × N columns): kept with the ground, not drawn by it */
+  readonly quarters?: ArrayLike<number>;
 }
 export const idx = (x: number, z: number) => z * N + x;
 export const inGrid = (x: number, z: number) => x >= 0 && z >= 0 && x < N && z < N;
