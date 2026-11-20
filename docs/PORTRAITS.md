@@ -5302,11 +5302,100 @@ whole suite with the band 2 mm off the hair; the band's tests and the library's 
 `portraits/`): `runde128_vorher_nachher_frauen.png` (four of the sample's women under seeds that draw the
 band, round 127 above, now below), `runde128_von_allen_seiten.png`.
 
+**Round 129: a woman's gown is closed in front** (2026-11-20). The dress (Ramon: the figure, the hair, the
+whole portrait). Since round 124 the picture ends under the chest, and what it shows there was a plain front
+of cloth from the neck to the picture's foot, on everyone: a sack pulled over the head. The reference's
+gowns are closed down the front, the common women's with a lace over linen, the ladies' with a row of
+buttons. What was read this time (three pages of one re-enactor, Rosalie Gilbert: Buttons and Lacings,
+Kirtles, and the buttons of her collection; not a primary source, and read as quotations fetched from the
+pages, not the pages in full): kirtles and gowns closed with buttons or with lacing, in front or at the
+side seams; a working woman was likely to wear a kirtle laced in front, since she could dress herself;
+eyelets "closely set, around 2cm"; the lace of the gown's colour until the 15th century; the lower classes
+"would have to be content with matching cloth buttons", which were "almost always ball-shaped", "set very
+closely together" and at the very edge of the opening; a gown buttoned down the front in the Romance of
+Alexander, c. 1340; the English buttons the collection lists are 9 to 16 mm.
+
+What is changed. A woman's gown is closed in front from 14 years, by the sixth digit of her seed
+(`DressSet::fastens`, `fasten_from`, `fasten_of`): on five in ten with a lace, on two in ten with buttons,
+on three in ten not at all, as before. The lace: the two edges stand 5 mm apart from the neckline down,
+the linen she wears under the gown shows between them, and one lace of the gown's colour crosses them
+every 2 cm, from an eyelet 1.3 cm inside one edge to the next on the other. The buttons: balls of the
+gown's own cloth, 11 mm across, 2 cm from one to the next, from 1.6 cm under the neckline down, and beside
+them the line where the edge with the buttonholes ends. Both go down the gown as far as its data does
+(under the waist, 16 or 17 of them; the picture shows the upper seven or eight).
+
+They are not files: a new part of the builder (`portrait/src/fasten.rs`) lays them on the gown as it lies
+on the person. After her bust is held and before the body is turned, it reads the gown's front down the
+body's middle line off the gown's own triangles (every millimetre of height, the foremost triangle that
+faces the front; the neckline is where that line begins), and sets the pieces along the way down the
+cloth: a button's ball with its middle a third of a ball off the gown, a lace out of the cloth at one
+eyelet, over both edges and into the cloth at the other. So they lie on a broad chest and a narrow one, on
+a girl of 14 and a woman of 68, and are turned with the shoulders. Each piece is drawn with the gown's
+image and the gown's colour at its place (a patch's, a fold's shade); the linen between the edges with the
+smock's image in the table's linen. What another cloth covers is left out (a wimple, a veil's fall, a
+hood's cape). A fastening is 900 to 1 550 triangles of some 122 000 and took 2.8 and 3.6 ms of a
+portrait's 150 and 60 on the two measured here. The wire, the stage and the files are as they were; only the builder changed.
+
+Tried and not kept.
+
+- The laced edges meeting in one dark line, the lace 2.8 mm thick from eyelets 8 mm inside the edges: a
+  scar sewn up with short stitches. With the edges 5 mm apart over linen and a lace of 3.4 mm from eyelets
+  1.3 cm inside it reads as a laced opening. That the edges stand apart is by eye (PLACEHOLDER): the pages
+  say nothing on it, the reference's laced gowns show linen between the edges.
+- The opening beginning 8 mm under the neckline's rolled edge: a slit in a closed front, which nobody could
+  put on. It begins 3 mm under the edge's top now, on the roll.
+- A ball's and a lace's places in the cloth's image taken from where their corners stand before the gown:
+  the sides of a ball have no breadth in the image then, and the stage, which reads the weave's relief by
+  how the image lies on a triangle, drew those triangles black (black chips on every button). Each corner
+  now has its own place: a ball's cloth is drawn together behind it, a lace's laid round it.
+- The first search for the neckline found the gown's rolled edge at the nape, which faces the front too:
+  no fastening at all. Only what lies in front of the chest's skin is read.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line where round 128 left it to the tenth (the
+faces are not touched; six of the sample's women wear a fastening). Read with this round's builder, before
+the source's text was written into the table.
+
+Honest about it. Buttons and lace are of the gown's colour, as the pages say of common people, so at the
+size of a small picture they are a row of dots and a pale line, not the reference's gold buttons and
+contrasting laces; in a large picture they read well. The gown itself is the same loose sack: it is not
+cut closer to the body, which is what a lace or buttons are for, and it has no belt, no trim and no seam.
+The buttoned gown has no buttonholes and no second layer of cloth, only a dark line beside the buttons;
+the laced one has no eyelets (the lace goes into the cloth) and no knot or hanging end; the edges of the
+opening are flat lines 0.6 mm over the gown, not turned cloth, and the linen between them is a band on the
+gown, not a gap in it. Seen close from the side one sees that. The line follows the body's middle, not a
+fold of the cloth, and a strong fold across it would be bridged or cut; none was seen on the people looked
+at. One re-enactor's pages are thin ground, and they were read as fetched quotations: no find, effigy or
+manuscript was looked at. The shares (five, two, three in ten), the age of 14, that none is laced at the
+side, the 5 mm between the edges and the 2 cm from button to button are by eye (PLACEHOLDER). The men's
+gown is as it was: nothing was read on how a common man's was closed. On England's women no cloth lies
+over the gown's front middle (the wimple ends at the neckline), so the leaving-out is tested on a sheet,
+not seen on a person. Looked at on the six of the sample's women who wear one from the front, on two from
+five sides and on two close up. From behind, the linen specks on the gown's shoulder are still there (the slit behind
+the armpit, not this round's).
+
+Tests: `portrait/tests/fasten.rs`, new, three: over a million seeds five in ten of the women from 14 are
+laced and two in ten buttoned, no girl of 13, no man, nobody in the plain dress; on forty women and girls
+of 10 to 68 and ten men, each standing as their seed turns them, the ones the table names have a
+fastening and nobody else (16 laced, 7 buttoned on this set), every triangle is wound as its corners face,
+the buttons are balls of 11 mm (the topmost round to 5 %: it lies where the neck's twist ends) whose
+middles stand 0.4 to 0.8 of a ball's radius off the gown's triangles (measured 3.2 to 3.3 mm), 2 cm apart
+to 15 % (measured 1.94 to 2.07), ten and more; the lace's ways are 2 cm apart, as long as from eyelet to
+eyelet, on the gown (0 to 2.3 mm off it), eight and more, with linen between the edges as far as the lace
+goes; and on a sheet with a second sheet over its upper part both begin below where the second ends.
+`tests/clothes.rs`: a woman under a wimple has no smock at the neck as before, and linen only as the
+strip of a laced gown. Cargo: 96 of 96 (one of the old tests failed on that linen in the first whole run
+and was brought in line; it and its file's others then ran again, the rest was not run twice; after the
+source's text was written into the table, the library's tests and the fastening's again).
+`tests/portrait.test.ts` and its neighbour 42 of 42. `npm run lint` and `npm run typecheck` pass.
+Pictures (project files, `portraits/`): `runde129_vorher_nachher_frauen.png` (four of the sample's women,
+round 128 above, now below), `runde129_nah.png` (buttons and lace close up),
+`runde129_von_allen_seiten.png` (a buttoned and a laced woman from five sides).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
 is a body of thick bundles as theirs is, evener and duller than theirs; since round 110 a gown is cut at
-the neck and linen shows under it, without the bands, trims and fastenings theirs have; the veil (no folds),
+the neck and linen shows under it, without the bands and trims theirs have; the veil (no folds),
 the fine forms of the face (lids, nostrils, edge of the lips), stubble and
 children are not; since round 112 the faces differ from each other as real ones do in what the survey
 measures, by eye in the rest, and wear one hair and one brow each still; since round 113 the face is lit by the
@@ -5327,7 +5416,9 @@ the jaw beside the bowl cut, straight where theirs is waved, since round 126 six
 plaits wear them pinned up beside the cheeks, without the band theirs wear over them, since round 127 each
 person carries the head turned and tilted by angles of their own (small ones, and nobody lifts or lowers
 the chin), since round 128 three in ten of the young women in plaits wear a fillet, a plain broad ring of
-linen where theirs wear a narrow jewelled band, and the face still lacks the
+linen where theirs wear a narrow jewelled band, since round 129 seven in ten of the women's gowns are
+closed down the front with a lace over linen or with cloth buttons, in the gown's own colour where theirs
+are gold and contrast, on a gown that is still a loose sack, and the face still lacks the
 reference's streak of gloss on the nose's flank; the thrown-back hood closes round the neck since round 35, but
 has no folds across its cloth. Since round 111 the people of every part of the world can be drawn, in a plain
 dress that is no people's own, and without a picture of the reference to hold them against.

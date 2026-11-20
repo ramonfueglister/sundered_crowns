@@ -22,7 +22,7 @@ fn cell(q: V3) -> [i32; 3] {
 }
 
 /// How far along `d` from `o` the line meets the triangle (a, b, c), if it does (Möller and Trumbore 1997).
-fn meets(o: V3, d: V3, a: V3, b: V3, c: V3) -> Option<f32> {
+pub(crate) fn meets(o: V3, d: V3, a: V3, b: V3, c: V3) -> Option<f32> {
     let sub = |p: V3, q: V3| [p[0] - q[0], p[1] - q[1], p[2] - q[2]];
     let cross = |p: V3, q: V3| [p[1] * q[2] - p[2] * q[1], p[2] * q[0] - p[0] * q[2], p[0] * q[1] - p[1] * q[0]];
     let dot = |p: V3, q: V3| p[0] * q[0] + p[1] * q[1] + p[2] * q[2];

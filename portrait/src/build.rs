@@ -2003,7 +2003,6 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
             merged.push(s);
         }
     }
-    let tris = merged.iter().map(|s| s.tris()).sum();
     // the pose, where the dress has one: the shoulders turned further than the head, the neck twisting between
     // the chin and its foot (pose.rs). The neck stands where the skin between chin and shoulders has its middle
     // what lies over the gown lifted off it (a veil's fall, a hood's cape, a wimple)
@@ -2021,6 +2020,20 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
         let line = crate::pose::FRONT.map(|v| [x.pp[v][1], x.pp[v][2]]);
         crate::pose::hold_bust(&mut merged, &line, x.pp[crate::pose::FRONT_TOP][1], crate::pose::BUST_SIDE, share);
     }
+    // how a woman's gown is closed in front: a lace or buttons laid on the gown as it lies now (fasten.rs), left
+    // out where a veil's fall, a wimple or a hood's cape lies over it
+    if let Some(d) = garb.filter(|_| crate::pose::FRONT.iter().all(|&v| v < h.n)) {
+        let kind = d.fasten_of(fem, p.age, p.seed);
+        if let Some(g) = merged.iter().position(|s| s.tex.as_deref().is_some_and(|t| t.contains(d.gown))).filter(|_| kind != crate::fasten::Fasten::None) {
+            let over: Vec<&Surface> = merged.iter().filter(|s| s.tex.as_deref().is_some_and(|t| [d.veil, d.veil_back, d.wimple, d.hood_up, d.hood_back].iter().any(|n| t.contains(n)))).collect();
+            let middle = crate::pose::FRONT.iter().map(|&v| x.pp[v][0]).sum::<f32>() / crate::pose::FRONT.len() as f32;
+            let behind = crate::pose::FRONT.iter().map(|&v| x.pp[v][2]).fold(f32::MAX, f32::min) - 0.3;
+            let under = crate::real::folder().filter(|_| !d.under[0].is_empty()).map(|dir| (crate::real::image(&dir, d.under[0]), linear(hex(d.linen))));
+            let made = crate::fasten::fasten(&merged[g], &over, under, kind, middle, y0, behind);
+            merged.extend(made);
+        }
+    }
+    let tris = merged.iter().map(|s| s.tris()).sum();
     let range = pose.or(garb.map(|d| d.pose)).unwrap_or([0.0; 3]);
     // how the person carries the head: the stage tilts the whole figure, the shoulders are tipped back by as much
     // (a pose asked for by the caller is taken as it is)

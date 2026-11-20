@@ -243,7 +243,11 @@ fn a_womans_gown_is_cut_wide_and_under_a_wimple_close() {
         }
         assert!(wide > close + 2.5, "woman {k}: the gown's neck {wide} cm broad at 30, {close} cm at 60");
         assert!(cloth(&old, "/cloth_wimple.").is_some(), "woman {k}: no wimple at 60");
-        assert!(cloth(&old, "/cloth_smock.").is_none(), "woman {k}: linen under the gown under her wimple");
+        // (since round 129 the linen shows between the edges of a laced gown: a narrow strip down the front, and
+        // no smock at the neck)
+        let laced = sc_portrait::dress::ENGLAND_1356.fasten_of(true, 60.0, person(2 * k, true, 60.0).seed) == sc_portrait::fasten::Fasten::Laced;
+        let linen = old.surfaces.iter().filter(|s| s.tex.as_deref().is_some_and(|t| t.contains("/cloth_smock."))).map(|s| s.pos.len() / 3).collect::<Vec<_>>();
+        assert!(linen.len() == usize::from(laced) && linen.iter().all(|&n| n < 300), "woman {k}: linen under the gown under her wimple, {linen:?} triangles (laced: {laced})");
     }
 }
 
