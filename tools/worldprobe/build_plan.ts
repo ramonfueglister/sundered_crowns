@@ -69,7 +69,7 @@ for (const name of ['gazetteer.json', 'landmarks.json'])
     .digest('hex')
     .slice(0, 12);
 
-/** the pieces of the world graphic: 200 blocks a side with 100 round them (src/worldprobe/pieces.ts) */
+/** the pieces of the world graphic: 200 blocks a side with 100 round them (src/worldprobe/piece_sight.ts PIECE, pieces.ts MARGIN) */
 const PIECE = 200,
   MARGIN = (N - PIECE) / 2,
   KM_PER_DEGREE = 111.32;
