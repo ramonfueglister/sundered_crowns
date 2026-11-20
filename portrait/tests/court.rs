@@ -75,11 +75,12 @@ fn who_is_of_rank_wears_the_courts_dress_and_nobody_else() {
         assert_eq!(Dress::Roman.ranked(st), Dress::Roman);
     }
     assert_eq!(Dress::England1356.ranked(BAUER), Dress::England1356);
-    // the court's table is England's in all that is of the face, the hair and the gown's cut: the stage lights
-    // it by the same name
+    // the court's table is England's in all that is of the face, the hair and a man's gown: the stage lights
+    // it by the same name (round 149: a lady's gown has a cut of its own, wide and low, and no smock in its neck;
+    // tests/clothes.rs)
     let (e, c, k) = (&ENGLAND_1356, &COURT_1356, &CROWNED_1356);
     assert_eq!((c.key, k.key), (e.key, e.key));
-    assert_eq!((c.gown, c.gown_cut, c.under, c.linen, c.hair, c.hood), (e.gown, e.gown_cut, e.under, e.linen, e.hair, e.hood));
+    assert_eq!((c.gown, c.gown_cut[1], c.under[1], c.linen, c.hair, c.hood), (e.gown, e.gown_cut[1], e.under[1], e.linen, e.hair, e.hood));
     assert!(c.origins.is_empty() && k.origins.is_empty(), "no origin names the court: a person's stand does");
     assert!(e.buttons.is_empty() && e.crown.is_empty() && e.parted.iter().all(|p| !p), "the common people's table has none of it");
     // the court's cloth is strongly dyed: each of its wools at least twice as strong in its strongest part as in

@@ -17,7 +17,7 @@ one, changes nothing: same people in, same pictures out, measured.
 |---|---|---|
 | Builder | `portrait/` (Rust, WebAssembly) | From a person (100 bytes of genes, sex, age, estate, occupation, origin, food, mourning, wealth, worn clothes) to the triangles of head and shoulders: MakeHuman's head morphed by the genes, skin, eyes, hair, beard, clothes, headwear, jewellery |
 | Genes | `portrait/src/dna.rs` | 50 genes of two alleles, one byte each (Apoleia's 34, and 16 since round 112 that a dress with a table shows); a child takes one allele of each gene from either parent, plus a small mutation; founders draw from one of 23 pools (round 111), which one is the culture's (`src/sim/people/pools.ts`) |
-| Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; a culture without a set wears the plain dress of 1356 (round 111), one of Apoleia's seven regions Apoleia's Roman dress. England's has a table for people of rank and one for a crowned head (round 144), chosen by the person's stand; a crowned head wears a mantle faced with ermine over the gown (round 145, `portrait/src/mantle.rs`); a lady of rank shows her plaits and wears a circlet of gilt metal on them (round 146), a lord with nothing else on the head wears one too (round 147); a lord's hood is faced with white fur along the edge of its opening (round 148, `portrait/src/facing.rs`) |
+| Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; a culture without a set wears the plain dress of 1356 (round 111), one of Apoleia's seven regions Apoleia's Roman dress. England's has a table for people of rank and one for a crowned head (round 144), chosen by the person's stand; a crowned head wears a mantle faced with ermine over the gown (round 145, `portrait/src/mantle.rs`); a lady of rank shows her plaits and wears a circlet of gilt metal on them (round 146), a lord with nothing else on the head wears one too (round 147); a lord's hood is faced with white fur along the edge of its opening (round 148, `portrait/src/facing.rs`); a lady's gown is cut wide and low at the neck, with no linen in it (round 149, `cloth_kirtle_court`) |
 | Stage profile | `src/portrait/profile.ts` | Light and materials per set of dress; Apoleia's portraits keep Apoleia's |
 | Pipeline | `tools/portrait/pipeline/` | Blender scripts that wrote the draped clothes and hair (not part of the build) |
 | Files of the real look | `public/portrait/` (41.5 MB) | The head (1.1 MB), data files (15.0 MB since round 111, 13.1 since round 110, 12.7 since round 109, 12.9 since round 105, 10.4 before round 104: the hair's bodies, the beard's locks, draped clothes, skin shading), images (24.8 MB: skin by age and sex, wrinkle maps, hair, cloth, eyes) |
@@ -6867,6 +6867,87 @@ again with the same result.
 Pictures (project files, `portraits/`): `runde148_vorher_nachher.png` (ten of the sample's men at court, before
 and after), `runde148_kapuze_reif.png` (a lord with the hood on the head and one with it thrown back, from the
 front, the side and behind).
+
+**Round 149: a lady's gown cut wide at the neck** (2026-11-20). Round 148's own list: "the court gown is the
+villagers' sack". Ten of the sample's ladies at court beside each other: six without a wimple, each in the
+village woman's cut, a neck 19 cm broad that ends a hand under the chin, with the smock's grey edge in it. The
+reference's ladies show the collarbones and the start of the shoulders over a wide neckline; at a picture's
+size that is what tells a lady's gown from a village woman's before its colour does.
+
+What was read (each as an account of the page, not the page itself). Encyclopedia.com, "A New Look for
+Women" (from Gale's Arts and Humanities Through the Eras; a list of sources, no notes), under "Necklines and
+Upper Body Coverings": "a low neckline revealing shoulders and the upper portions of the breasts", "around the
+middle of the fourteenth century in France and England", "perhaps at first a climate-related trend from
+Italy", and "women's arms still remained covered by sleeves"; no estate is named. Rosalie Gilbert, Kirtles (a
+re-enactor's page without notes): "Most of these were cut with a wide, low neckline", and a decree of 1375
+whose issuer the page does not name: "The neckline should not be lower than the armpits". Against the date:
+the Fashion History Timeline of the Fashion Institute of Technology, 1350-1399, has "Women's shoulders are
+revealed for the first time in low-necked fitted dresses" at 1380. Wikipedia (1300-1400 in European fashion)
+and La Cotte Simple (the versatile dress layer) say nothing of a woman's neckline at mid-century. No page says
+that a lady's was cut lower than a village woman's, whether a smock showed in it, or whether it was edged.
+
+What is changed.
+- **The cut** (`public/portrait/real/cloth_kirtle_court.txt.zst`, 198 kB, and `_ao.txt`; 4 545 points, 8 984
+  triangles): the gown draped anew with a neckline 16.5 cm out on either shoulder, its edge 5.5 cm under the
+  collarbones' notch in front and 1 cm under it at the back, as a boat's line (below); held under the round
+  gown (1 558 of 4 068 points set back onto it, by up to 6 cm), bound, and the part below the old cut sewn on,
+  as the village's cut was made. Drawn with the gown's image, in the court's wools.
+- **The line** (`tools/portrait/pipeline/neckline.py`, `NROUND=1`): from the shoulder the edge falls as a
+  quarter of an ellipse, steep at the shoulder and flat in the middle. The line the village's cuts were made
+  with, an S between two flat ends, stays the default.
+- **Who wears it** (`DressSet::gown_cut`, `under`, `under_image`): the court's table has the new cut for women
+  and girls and no smock under it; a queen wears it under her mantle (her table is the court's). From the
+  wimple's age a lady wears the round gown, as before. A lord's gown and shirt are what they were. The linen
+  between the edges of a laced gown is still drawn: the table names the linen's image apart from the smock now
+  (`under_image`), since the builder took it from the smock's row.
+- **A tool repaired** (`drape_under.py`): it read the round gown's file as it was before round 124 and stopped
+  on the file as it is now, with the part below the old cut sewn on. It leaves that part out now (2 938 of
+  4 429 points and 5 660 of 8 663 triangles are kept: all that lies near a neckline).
+
+Measured, on eight ladies of 30 years and the same bodies as village women (`portrait/tests/clothes.rs`):
+
+| | village | court |
+|---|---|---|
+| the gown's neck, from its hem's outermost place on one shoulder to the other | 18.9 to 19.6 cm | 37.4 to 37.7 cm |
+| its lowest place in front, under the chin's lowest place | 5.5 to 7.3 cm | 8.4 to 9.8 cm (2.4 to 2.9 cm lower on the same body) |
+| linen in the neck | the smock's edge | none (a laced gown: the strip between its edges, 162 triangles) |
+| the day before the wimple's age: points of the cut more than 2 mm outside the round gown | | 4 to 12 of some 2 800, by up to 0.3 cm |
+
+The line asks for 33 cm; the cut leaves the mesh's faces whole beyond it, and the hem's roll lies on them.
+
+Tried and not kept.
+- The same breadth with the old line (`NECKLINE=1.65,5.1,5.6,5.72`, the S): a tub. The edge ran flat across
+  the chest, rose steeply a hand from the middle and ran out flat again along the top of either shoulder, so
+  each shoulder showed as a shelf of skin with the gown's back edge standing behind it.
+- Wider still (`NROUND=1 NECKLINE=1.8,5.2,5.62,5.74`): the opening reached the place where the gown's file
+  is cut at the arms, its edge came apart in two (61 and 71 points), and the part below could not be sewn on.
+
+**The gauntlet**: 22 of 22 over the whole sample (read with this round's build), every line as in rounds 138
+to 148 to its last figure: the sample is of the common people, and no line reads a gown's neck.
+
+Honest about it. A lady is told from a village woman by her gown's cut now, and a bare neck and collarbones
+sit under her plaits and her circlet, which is nearer to the reference than a smock's edge at the throat. But
+the neckline is all that is new: under it hangs the same loose gown, with the villagers' weave, no close fit,
+no silk, no pattern, no fur and no belt, and where the gown stands off the far shoulder one looks into it. It
+is less low than the first page has it: the breast is covered. The edge is a plain rolled hem that waves a
+little across the chest; nothing is known here of how such an edge was finished. Girls and small children at
+court wear the same cut, since the table cuts by sex and not by age; no page speaks of children. The date is
+not safe either: one page has the low neckline about 1350, another the bare shoulders at 1380. That the
+court has this cut and the village keeps its own, the line, and the bare skin in it are PLACEHOLDER; no
+picture of the time was looked at. A lady in a veil without a wimple has the veil's ends hanging beside a bare
+neck and chest, which nothing read speaks of.
+
+Tests: `portrait/tests/clothes.rs`, one new, on eight ladies (six, and the first two with a laced gown): the
+court's neck more than 5 cm broader and more than 2 cm lower than the village's on the same body; a queen's
+the same; under the wimple the round gown; no smock, and linen only in a laced front; the day before the
+wimple's age the cut lies within the round gown; a lord's shirt shows as before. `portrait/tests/court.rs`
+held the court's table to England's in the gown's cut and the linen: it holds it to a man's cut and shirt now,
+since a lady's are meant to differ.
+`cargo test --release` as a whole: 123 of 123. `tests/portrait.test.ts` and its neighbour 43 of 43; typecheck
+and lint pass, no new warning. The module is 753 kB (751 before: the table's new source row).
+Pictures (project files, `portraits/`): `runde149_vorher_nachher.png` (six of the sample's ladies at court
+without a wimple, before above and after below), `runde149_nah_und_koenigin.png` (three ladies large, and
+three as queens under the mantle).
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the

@@ -3,7 +3,7 @@
 
 mod common;
 
-use common::{head, person};
+use common::{head, person, person_of};
 use sc_portrait::{build, build_posed, Look, Portrait};
 
 type V3 = [f32; 3];
@@ -295,4 +295,75 @@ fn a_gown_that_is_cut_wide_lies_within_the_gown_with_the_round_neck() {
         // (held under it: 0.01 of them, by up to 0.7 cm; draped anew and not held: 0.2 of them, by up to 2.2 cm)
         assert!((over as f32) < 0.04 * n as f32 && most < 1.2, "woman {k}: {over} of {n} points of the wide cut outside the round gown, by up to {most} cm");
     }
+}
+
+#[test]
+fn a_ladys_gown_at_court_is_cut_wider_and_lower_than_a_village_womans_and_shows_no_linen() {
+    // (round 149) Until now a lady at court wore the village's cut: a neck 25 cm broad that ends a hand under the
+    // chin, with the smock's edge in it. Her gown is cut wide and low now: on the same body as the village woman's,
+    // its neck is broader and its lowest point in front lies lower; the collarbones are bare, and no smock's edge
+    // shows (linen only between the edges of a laced front). A queen wears it under her mantle. From the age of
+    // the wimple a lady wears the round gown, as in the village, and the wide cut lies within that one: the
+    // veil's ends and a hood's cape were draped over the round gown.
+    let Some(h) = head() else { return };
+    let (e, c) = (&sc_portrait::dress::ENGLAND_1356, &sc_portrait::dress::COURT_1356);
+    assert_ne!(c.gown_cut[0], e.gown_cut[0], "the court's ladies have a cut of their own");
+    assert_eq!((c.gown_cut[1], c.gown, c.under[1], c.under_image, c.wimple_from), (e.gown_cut[1], e.gown, e.under[1], e.under_image, e.wimple_from));
+    assert!(c.under[0].is_empty(), "no smock shows in a lady's neck");
+    let linen = |out: &Portrait| out.surfaces.iter().filter(|s| s.tex.as_deref().is_some_and(|t| t.contains("/cloth_smock."))).map(|s| s.pos.len() / 3).collect::<Vec<_>>();
+    let mut laces = 0;
+    // (six ladies, and after them the first two whose gown is laced)
+    for k in 0..40 {
+        let laced = c.fasten_of(true, 30.0, person_of(2 * k, true, 30.0, 3).seed) == sc_portrait::fasten::Fasten::Laced;
+        if k >= 6 && (!laced || laces >= 2) {
+            continue;
+        }
+        let stiff = |age: f32, stand: u8| build_posed(&h, &person_of(2 * k, true, age, stand), 1, Some([0.0; 3]));
+        let (village, court, queen, old) = (stiff(30.0, 1), stiff(30.0, 3), stiff(30.0, 4), stiff(c.wimple_from, 3));
+        let gown = |out: &Portrait| cloth(out, "/cloth_cote.").expect("her gown");
+        let (v, l, q, round) = (gown(&village), gown(&court), gown(&queen), gown(&old));
+        let low = |g: &Cloth, out: &Portrait| 10.0 * (out.chin - opening(g, middle(g)));
+        let (broad, lower) = (breadth(&l) - breadth(&v), low(&l, &court) - low(&v, &village));
+        let shown = linen(&court);
+        laces += usize::from(laced);
+        // held under the round gown, as the village's cut is (the test above: on the same body, the day before
+        // the wimple's age)
+        let before = stiff(c.wimple_from - 0.01, 3);
+        let (last, sk) = (gown(&before), skin(&before));
+        assert!((breadth(&last) - breadth(&l)).abs() < 1.0, "lady {k}: the wide cut until the wimple's age");
+        let (mut n, mut over, mut most) = (0, 0, 0.0f32);
+        for (i, g) in last.pos.iter().enumerate() {
+            if last.hem[i] || g[0].abs() > 1.0 || g[1] < before.chin - 2.0 {
+                continue;
+            }
+            if let Some(out) = beyond(g, &sk, &round) {
+                n += 1;
+                most = most.max(10.0 * out);
+                over += (out > 0.02) as usize;
+            }
+        }
+        if show() {
+            println!(
+                "lady {k}: the neck {:.1} cm broad ({broad:.1} more than the village's {:.1}), its lowest point {:.1} cm under the chin ({lower:.1} lower than the village's {:.1}); a queen's {:.1} broad; with the wimple {:.1}; linen {shown:?} (laced: {laced}); {n} points where the round gown lies, {over} outside it by up to {most:.2} cm",
+                breadth(&l),
+                breadth(&v),
+                low(&l, &court),
+                low(&v, &village),
+                breadth(&q),
+                breadth(&round),
+            );
+            continue;
+        }
+        assert!(broad > 5.0 && lower > 2.0, "lady {k}: the neck {broad} cm broader and {lower} cm lower than the village's");
+        assert!((breadth(&q) - breadth(&l)).abs() < 0.5, "lady {k}: a queen's gown {} cm broad at the neck, a lady's {}", breadth(&q), breadth(&l));
+        assert!(breadth(&round) < breadth(&v) - 2.5 && cloth(&old, "/cloth_wimple.").is_some(), "lady {k}: the round gown under the wimple, {} cm broad", breadth(&round));
+        assert!(shown.len() == usize::from(laced) && shown.iter().all(|&t| t < 300), "lady {k}: linen in the gown's neck, {shown:?} triangles (laced: {laced})");
+        // (measured: 4 to 12 of some 2 800, by up to 0.3 cm)
+        assert!(n > 2000, "lady {k}: {n} points of the wide cut where the round gown lies");
+        assert!((over as f32) < 0.04 * n as f32 && most < 1.2, "lady {k}: {over} of {n} points of the wide cut outside the round gown, by up to {most} cm");
+    }
+    assert!(laces == 2, "{laces} ladies of forty with a laced gown");
+    // a lord's shirt shows in his gown as before
+    let lord = build(&h, &person_of(1, false, 34.0, 3), 1);
+    assert!(linen(&lord).iter().any(|&t| t > 300), "a lord's shirt: {:?}", linen(&lord));
 }

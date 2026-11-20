@@ -47,6 +47,11 @@ def unbound(path):
     rows = [l.split() for l in open(path)]
     nv, nt = int(rows[0][0]), int(rows[0][1])
     R = np.array(rows[1:1 + nv], float)
+    # (round 149) a gown's file has had the part below the bust sewn on since round 124 (`bust_bind.py`): those
+    # points hang on the longer body's points, beyond this list, and lie far under any neckline. They are set
+    # on the list's first three points, and their triangles are left out.
+    whole = (R[:, :3] < len(used)).all(axis=1)
+    R[~whole, :3] = [0, 1, 2]
     a, b, c = (V[used[R[:, k].astype(int)]] for k in range(3))
     n = np.cross(b - a, c - a)
     n /= np.linalg.norm(n, axis=1)[:, None]
@@ -54,9 +59,9 @@ def unbound(path):
     e2 = np.cross(n, e1)
     P = R[:, 3:4] * a + R[:, 4:5] * b + R[:, 5:6] * c + R[:, 6:7] * n + R[:, 7:8] * e1 + R[:, 8:9] * e2
     T = np.array(rows[1 + nv:1 + nv + nt], float)
-    print('the old gown set back on the base body:', nv, 'points,', nt, 'triangles')
-    return P, T[:, :3].astype(int).tolist()
-
+    tris = [t for t in T[:, :3].astype(int).tolist() if whole[t].all()]
+    print('the old gown set back on the base body:', int(whole.sum()), 'of', nv, 'points,', len(tris), 'of', nt, 'triangles')
+    return P, tris
 
 
 P, F = obj(new)

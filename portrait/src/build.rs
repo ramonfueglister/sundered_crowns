@@ -1621,7 +1621,7 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
         // what is worn under the gown and shows at its neck: a woman's smock, a man's shirt, of the dress's linen
         if let Some(t) = garb {
             // (nothing under a wimple: it covers the gown's neckline and what would show in it)
-            let (name, image) = if wimpled { ("", "") } else { (t.under[cut], if cut == 0 { "" } else { t.under[0] }) };
+            let (name, image) = if wimpled { ("", "") } else { (t.under[cut], t.under_image) };
             if !name.is_empty() {
                 let linen = hex(t.linen);
                 if let Some(u) = crate::real::folder().and_then(|d| mh_cloth_as(&d, name, image, &x.pp, &h.base, &|_| linen, None, Layer::Under, &arms)) {
@@ -2099,7 +2099,7 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
             let over: Vec<&Surface> = merged.iter().filter(|s| s.tex.as_deref().is_some_and(|t| d.over_gown().iter().any(|n| !n.is_empty() && t.contains(n)))).collect();
             let middle = crate::pose::FRONT.iter().map(|&v| x.pp[v][0]).sum::<f32>() / crate::pose::FRONT.len() as f32;
             let behind = crate::pose::FRONT.iter().map(|&v| x.pp[v][2]).fold(f32::MAX, f32::min) - 0.3;
-            let under = crate::real::folder().filter(|_| !d.under[0].is_empty()).map(|dir| (crate::real::image(&dir, d.under[0]), linear(hex(d.linen))));
+            let under = crate::real::folder().filter(|_| !d.under_image.is_empty()).map(|dir| (crate::real::image(&dir, d.under_image), linear(hex(d.linen))));
             let metal = Some(d.buttons).filter(|m| !m.is_empty()).map(|m| linear(hex(m)));
             let made = crate::fasten::fasten(&merged[g], &over, under, kind, metal, middle, y0, behind);
             merged.extend(made);
