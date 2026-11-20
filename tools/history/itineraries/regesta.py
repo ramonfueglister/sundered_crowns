@@ -18,8 +18,9 @@ Rules (nothing is invented):
   king's name ('Karl IV.', 'Karl IV. Nachträge.', but not 'Karls IV. Gemahlinnen.' or 'Clemens VI.'). Within the
   king's part, a letter dated by the year of the pontificate ("pontificatus nostri anno", the dating of papal
   letters) is the pope's and is left out, and so is a forgery (a regest number with "†" or "Fälschung").
-- In RI VI,4 (Heinrich VII.), only the regesta whose summary begins with the king (`OWN_ACT`): the volume also
-  calendars the acts of his envoys, of the pope and of communes under his name.
+- In RI VI,4 (Heinrich VII.), only the regesta whose summary begins with the king (`OWN_ACT`), or that say he was
+  at the place (`PRESENT`): the volume also calendars the acts of his envoys, of the pope and of communes under his
+  name.
 - A regest whose day is a range, or whose place is missing or unknown ("...."), is left out.
 - A regest whose place of issue the editors mark in a footnote as not where the king was (the charter dated ahead or
   back, or given a made-up place: "passt nicht ins Itinerar", "vordatiert", "fiktiv") is left out, and so is one that
@@ -147,6 +148,20 @@ OWN_ACT = {
         r'^(?:\[[\dIVX]+\]\s*)?\[?(?:Römerkönig|Römerkaiser|König|Kaiser)(?:\s+und\s+Kaiser)?\s+Heinrich\b(?!\]?\s+wird\b)'
     ),
 }
+#: regesta of RI VI,4 that do not begin with the king but say that he was at the place (OWN_ACT would leave them out)
+PRESENT = {
+    '51578',  # 1309-02-28 Speyer: "Zu König Heinrich kommen ... in Speyer Gesandte der Stadt Straßburg"
+    '51584',  # Straßburg: "Wie schon in Speyer lehnt König Heinrich die Erneuerung ... ab"
+    '51662',  # Ulm: "kommt König Heinrich mit Erzbischof Peter von Mainz" (überein)
+    '51673',  # Lauingen: the same agreement
+    '51731',  # Heilbronn: "Zu König Heinrich kommen Angehörige der innerböhmischen Opposition"
+    '51732',  # Heilbronn: "In Gegenwart König Heinrichs verkündet der Dominikaner Mathäus"
+    '193822',  # Speyer: "Zwischen König Heinrich und Graf Eberhard von Württemberg kommt es in persönlicher Begegnung"
+    '193928',  # Augsburg: "Bei König Heinrichs Eintreffen in Augsburg ... entscheidet der König mehrere Fälle"
+    '194863',  # am Fuß von Burg Helfenstein: "König Heinrich wird ... befaßt und entscheidet in Gegenwart der Parteien"
+    '194970',  # Speyer: "In Gegenwart König Heinrichs urteilen Fürsten"
+    '194988',  # Speyer: "Zu König Heinrich kommt ... Tebaldo [de' Brusati] ... und wird von ihm zum Ritter promoviert"
+}
 UNKNOWN_PLACE = {'', '-', '?', '....'}
 PAPAL_DATING = re.compile(r'pontificatus', re.IGNORECASE)
 QID = re.compile(r'Q\d+')
@@ -248,7 +263,7 @@ def main(data, out_path):
                     continue
                 uid = (row.get('uid') or '').strip()
                 summary = re.sub(r'<[^>]+>', '', html.unescape(row.get('summary') or '')).strip()
-                if name in OWN_ACT and not OWN_ACT[name].match(summary):
+                if name in OWN_ACT and not OWN_ACT[name].match(summary) and uid not in PRESENT:
                     count['not_his_act'] += 1
                     continue
                 if uid in NOT_THE_KINGS:
