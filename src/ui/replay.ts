@@ -5,8 +5,9 @@
 // is closed.
 //
 // The replay has its own clock: play and pause, five speeds and a timeline to drag along (the bar at the bottom,
-// App.tsx). The map is given new owners only when places changed, and then at most MAP_HZ times a second, so that the
-// map's painter (worldprobe/realms.ts) keeps up and every frame shows whole borders; the date runs smoothly between.
+// ReplayBar.tsx). The map is given new owners only when places changed, and then at most MAP_HZ times a second, so that
+// the map's painter (worldprobe/realms.ts) keeps up and every frame shows whole borders; the date runs smoothly
+// between.
 import { signal } from '@preact/signals';
 import type { I18n } from '../sim/i18n';
 import type { History, HistoryLine } from '../net/protocol';

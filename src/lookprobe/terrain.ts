@@ -143,8 +143,9 @@ const wooded = (cover: Cover) => !!cover && cover.stands !== false && cover.top[
  * step two blocks where a tree stands on it and one where a crown reaches over it, farther out one where trees
  * stand). Drawn as columns that tall the woods were a wall over the villages, and drawn as one roof a flat sheet. So
  * a wooded column is drawn at its ground, as the floor of the wood, and on it its trees stand as one crown of their
- * own: a block narrower than the column, set off in it by chance, `CROWN_LOW` of the rise high, give or take
- * `CROWN_TALLER`. Where trees cover the column whole the crown is `CROWN_NARROW` of it wide, and the floor between
+ * own: a block narrower than the column, set off in it by chance, `CROWN_LOW` of the rise high or as tall as the
+ * finest step's trees where that is more (GroundTraits.crownTall: at the second far step, which takes over from
+ * the trees of the first without a glide), give or take `CROWN_TALLER`. Where trees cover the column whole the crown is `CROWN_NARROW` of it wide, and the floor between
  * the crowns shows `FLOOR` as light as they are; where they cover part of it, the crown covers as much of it and the
  * floor is the ground's own. Each crown is a touch lighter or darker than the next (`CROWN_LIGHT`). A column whose
  * trees have no rise (a crown that reaches over it from the next) is a floor alone.
@@ -179,7 +180,7 @@ export function woodsOf(g: Ground, t: GroundTraits): { tops: Float32Array; crown
       const share = coveredBy(cover!), wide = share < 1 ? Math.max(CROWN_PART[0], Math.min(CROWN_PART[1], Math.sqrt(share))) : CROWN_NARROW[0] + (CROWN_NARROW[1] - CROWN_NARROW[0]) * hash2(wx, wz, 131);
       const most = S - 2 * CROWN_INSET, w = Math.min(most, Math.round(wide * (0.94 + 0.12 * hash2(wx, wz, 132)) * S)), d = Math.min(most, Math.round(wide * (0.94 + 0.12 * hash2(wx, wz, 133)) * S));
       const x0 = CROWN_INSET + Math.floor(hash2(wx, wz, 134) * (most - w + 1)), z0 = CROWN_INSET + Math.floor(hash2(wx, wz, 135) * (most - d + 1));
-      top = ground + Math.max(CROWN_LEAST, Math.round(rise * CROWN_LOW * (1 + CROWN_TALLER * (2 * hash2(wx, wz, 136) - 1)) * S)) / S;
+      top = ground + Math.max(CROWN_LEAST, Math.round(Math.max(rise * CROWN_LOW, t.crownTall ?? 0) * (1 + CROWN_TALLER * (2 * hash2(wx, wz, 136) - 1)) * S)) / S;
       crowns.set([x + x0 / S, z + z0 / S, x + (x0 + w) / S, z + (z0 + d) / S, top], i * 5);
     }
     occ[i] = occ[i] > g.h[i] ? Math.max(occ[i], top) : top;
