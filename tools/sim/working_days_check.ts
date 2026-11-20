@@ -1,21 +1,31 @@
 // Checks the working days of the firms (economy feature 19, src/sim/holy_days.ts): one world of 1291 run twice, with
 // the working days and with every day a working day, compared year by year: the output, GDP, prices and employment of
 // the cities, and the output of the firms of each calendar on the days of each kind.
-//   npm run workdays:check [-- years]
+//   npm run workdays:check [-- years] [-- factor1]
+// Without `factor1` the second run is never given working days, so its owners keep the rule of feature 18 (on the
+// profit of the day before). With it the second run is given a calendar with the factor 1 on every day: the rules of
+// feature 20 without a day of rest, so that only the days of rest differ (economy feature 21, "The gap").
 import { loadSetup, loadWorld } from './load';
 import { createWorldState } from '../../src/sim/setup';
 import { tick } from '../../src/sim/schedule';
 import { SYSTEMS } from '../../src/sim/systems';
 import { encodeState, decodeState } from '../../src/sim/snapshot';
-import { FIGURE, FIGURES } from '../../src/sim/economy/engine';
+import { FIGURE, FIGURES, type CityWorkingDays } from '../../src/sim/economy/engine';
 import { calendarOf, yearKinds, CALENDAR } from '../../src/sim/holy_days';
 import { dayToDate, dateToDay } from '../../src/sim/calendar';
 import type { WorldState } from '../../src/sim/state';
+import type { World } from '../../src/sim/world';
 
-const YEARS = Number(process.argv.slice(2).find((a) => /^\d+$/.test(a)) ?? 2);
+const YEARS = Number(process.argv.slice(2).find((a) => /^\d+$/.test(a)) ?? 2), FACTOR1 = process.argv.includes('factor1');
 const w = loadWorld(), a = createWorldState(w, loadSetup(1291), 1291), b = decodeState(encodeState(a));
-// b: every day a working day: the engine is never given working days
-b.economy.cities!.workingTo = Number.MAX_SAFE_INTEGER;
+const engine = w.economyEngine;
+// b: every day a working day: the engine is never given working days, or (factor1) given every day with the factor 1
+const wb: World = FACTOR1
+  ? Object.assign(Object.create(Object.getPrototypeOf(w)), w, {
+      economyEngine: { ...engine, workingDays: (st: Uint8Array, days: readonly CityWorkingDays[]) => engine.workingDays(st, days.map((d) => ({ ...d, factor: d.factor.map(() => 1) }))) },
+    })
+  : w;
+if (!FACTOR1) b.economy.cities!.workingTo = Number.MAX_SAFE_INTEGER;
 const names = Object.keys(CALENDAR);
 /** output summed per calendar of the firm and kind of the day */
 const out = (s: WorldState, acc: Float64Array) => {
@@ -32,7 +42,7 @@ for (let y = 1; y <= YEARS; y++) {
   let ta = 0, tb = 0;
   for (let d = 0; d < 365; d++) {
     let t = Date.now(); tick(a, w, SYSTEMS); ta += Date.now() - t; out(a, accA);
-    t = Date.now(); tick(b, w, SYSTEMS); tb += Date.now() - t; out(b, accB);
+    t = Date.now(); tick(b, wb, SYSTEMS); tb += Date.now() - t; out(b, accB);
   }
   const ea = a.economy.cities!, eb = b.economy.cities!;
   console.log(`year ${y} (day ${a.day}): halted '${ea.halted}' / '${eb.halted}', ${(ta / 365).toFixed(0)} / ${(tb / 365).toFixed(0)} ms a day`);

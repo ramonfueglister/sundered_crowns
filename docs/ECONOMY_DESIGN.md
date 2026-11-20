@@ -47,7 +47,7 @@ players and the AI of realms without a player act through the same commands.
 | 17 | Distance in trade: goods travel for days, and carrying costs labour | proposed 17 Nov 2026 (https://claude.ai/artifact/9Gt22ijoL8Xdqx4cfLM7NV), variant B agreed by Ramon ("ok"); held back until the money drain was cleared (features 15 and 16); built after his choice of 18 Nov 2026 ("Krone gibt aus, was sie einnimmt": then the distance). How the Americas stay apart in 1356 is asked of him (card of 18 Nov 2026). Built, with tests and numbers; not yet in the running world (section 17) |
 | 19 | The firms and households keep the working days of their faith | step 3 of way A of the proposal «Personen: Archiv der Toten und Tagesplan» (https://claude.ai/artifact/8UqSxP49CfvpPfX1UCDULc), chosen by Ramon 19 Nov 2026, with merge and deploy ("vorwärts machen alles mergren comitten und feddich", "du darfst deployen"). Built, with tests and numbers from the game (section 19); people feature 8 holds the calendars |
 | 20 | The days of rest without a leak | after feature 19 Ramon wrote "naja jetzt sind wir aber nicht fertig" (19 Nov 2026), chose to damp the firms' price rule first, "nur literaturkonform"; Calvo held the prices but cost work, and he chose "Zuerst Leck an Ruhetagen schliessen" (card, 19 Nov 2026). Built: materials for the next working day, the owner on his working days on the profit of the year; with tests and numbers from the game (section 20) |
-| 21 | A world knows the history only up to its start | the open gap of feature 20, found to come from the history of the placeholder tables: a world of 1291 expected the recovery after the plague of 1348. Under Ramon's "nur literaturkonform" (19 Nov 2026) and his order to clear the open questions of the economy first; the port's window (data up to the date of the calibration). Built, with tests and numbers from the game (section 21) |
+| 21 | A world knows the history only up to its start | the open gap of feature 20, found to come from the history of the placeholder tables: a world of 1291 expected the recovery after the plague of 1348. Under Ramon's "nur literaturkonform" (19 Nov 2026) and his order to clear the open questions of the economy first; the port's window (data up to the date of the calibration). Built, with tests and numbers from the game (section 21). The gap of 1.5 % that remained, cleared at Ramon's choice ("Erst Restlücke 1,5 % klären", 20 Nov 2026): the owners' rule of the run it was measured against, not the days of rest; nothing built |
 
 ## 1. Grain harvest per place
 
@@ -3420,12 +3420,43 @@ day a working day):
 The run without working days no longer grows 2.4 % a year: it is flat, as England was before the plague, and the gap
 between the two runs stays at about 1.5 % instead of widening to 4.4 %.
 
+### The gap: the owners of the run it is measured against
+
+After this feature Ramon chose to clear the gap of about 1.5 % first ("Erst Restlücke 1,5 % klären", card of
+20 November 2026). The run without working days is not the same economy without days of rest. It is never given
+working days, so its owners keep the rule of feature 18 and plan on the profit of the day before, while with working
+days they plan on the profit of the year (feature 20). A third run separates the two: the same world given a calendar
+with the factor 1 on every day, which has the rules of feature 20 and no day of rest (`npm run workdays:check -- 3
+factor1`):
+
+| | year 1 | year 2 | year 3 |
+|---|---|---|---|
+| real GDP, the calendars of the faiths | 178,367 | 180,280 | 179,635 |
+| real GDP, the factor 1 on every day | 178,258 | 178,655 | 179,521 |
+| real GDP, without working days | 180,955 | 182,915 | 182,486 |
+| without work at the end of the year (calendars / factor 1 / none) | 2.6 / 3.4 / 1.9 % | 2.7 / 3.3 / 1.9 % | 2.8 / 3.2 / 2.0 % |
+| mean price level (calendars / factor 1 / none) | 1.004 / 0.997 / 1.002 | 0.996 / 0.997 / 1.001 | 0.999 / 0.997 / 1.001 |
+
+- **The days of rest cost nothing.** The world with the calendars of the faiths makes 0.1, 0.9 and 0.1 % more than
+  the same world without a day of rest, and fewer of its workers are without work.
+- **The whole gap is the owner's rule.** The factor 1 on every day and no working days differ only in the profit the
+  owner plans on, and they differ by 1.5, 2.3 and 1.6 %, the gap itself.
+- **On the profit of the day before the owners take more.** Over the three years their income is 4.3 % above the run
+  with the factor 1 while GDP is 1.9 % above: 31.2 % of GDP against 30.5 %. The owner's budget comes out of the
+  expected profit and is not below 0 (A.46, A.49 with the rule of feature 18). Cut day by day, a firm that loses on some days gives
+  its owner 0 on those days and the full profit on the others, more than the cut of the profit of the year (feature
+  18 found a third of the owners in the red on a day). That surplus is demand; the profit of the year (feature 20)
+  takes most of it away.
+
+Nothing is built for the gap: the world of the game has the rule of feature 20, and the run it was measured against
+has the larger bias. The paper's period over which the owner expects his profit is a quarter (Poledna et al. 2023,
+A.28 on quarterly profit), closer to a year than to a day.
+
 ### What stays open
 
-- **The gap of about 1.5 % to the run without working days.** It no longer widens, but in year 3 about 2.8 % of the
-  workers are without work against 2.0 % without working days. The two runs do not have the same owners: without
-  working days the owner plans on the profit of the day before (feature 18), with them on the profit of the year
-  (feature 20). Whether the gap is that difference or the days of rest themselves is the next question.
+- **Who is without work.** About 3 % of the workers in the world with the factor 1 on every day and 2.6 to 2.8 % with
+  the calendars, against one person per city at the start: what share of the workers of a medieval town was without
+  work is not set by any source used here.
 - **The tables of 1291 are still those of 1356.** Only the history is cut at the start; the accounts (people, output,
   coin, the crown's revenue) are post-plague numbers for a pre-plague world (`src/sim/tables.ts`).
 
