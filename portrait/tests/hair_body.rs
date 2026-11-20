@@ -28,6 +28,14 @@ const IMAGE: &str = "/hair1356_body.";
 /// The image's height to a unit of a bundle's length (`hair_body.py` `VSCALE`).
 const VSCALE: f32 = 0.75;
 
+/// The shell under the bundles is a grid of 5 degrees round the head, 45 degrees to the image's breadth
+/// (`hair_body.py` `shell`): a step across it takes a ninth of the image.
+fn shell_step(share: f32) -> bool {
+    (share - 1.0 / 9.0).abs() < 1e-3
+}
+/// How far above the fringe's lowest end its depth is read, in the head's height: above the frayed ends.
+const FRINGE_FROM: f32 = 0.07;
+
 fn body(out: &Portrait) -> Option<&Surface> {
     out.surfaces.iter().find(|s| s.tex.as_deref().is_some_and(|t| t.contains(IMAGE)))
 }
@@ -99,8 +107,13 @@ fn turning(s: &Surface) -> f32 {
         rows.entry(root(&mut of, id)).or_default().entry((s.uv[k][1] * 2000.0).round() as i32).or_default().insert(id, s.pos[k]);
     }
     let mut turns: Vec<f32> = Vec::new();
-    for piece in rows.values().filter(|p| p.len() >= 8) {
-        let line: Vec<V3> = piece.values().map(|row| { let n = row.len() as f32; row.values().fold([0.0; 3], |a, p| [a[0] + p[0] / n, a[1] + p[1] / n, a[2] + p[2] / n]) }).collect();
+    for piece in rows.values() {
+        // (a ring of the bundle itself: five corners and more; a wisp of a frayed end, round 138, has four at most)
+        let piece: Vec<_> = piece.values().filter(|row| row.len() >= 5).collect();
+        if piece.len() < 8 {
+            continue;
+        }
+        let line: Vec<V3> = piece.iter().map(|row| { let n = row.len() as f32; row.values().fold([0.0; 3], |a, p| [a[0] + p[0] / n, a[1] + p[1] / n, a[2] + p[2] / n]) }).collect();
         // (its middle half: a bundle begins across the parting in a sharp bow and ends in a slanted point)
         let line = &line[line.len() / 4..line.len() - line.len() / 4];
         let step: Vec<V3> = line.windows(2).map(|w| [w[1][0] - w[0][0], w[1][1] - w[0][1], w[1][2] - w[0][2]]).collect();
@@ -113,6 +126,40 @@ fn turning(s: &Surface) -> f32 {
     }
     turns.sort_by(|a, b| a.partial_cmp(b).expect("a number"));
     turns.get(turns.len() / 2).copied().unwrap_or(0.0)
+}
+
+/// The points the bundles of a hair end in (round 138): for each bundle (a piece, as above) how many places it
+/// has where a triangle has two corners at one place (a band that narrows to nothing ends in one; a band that
+/// ends at a breadth has none), and how far apart along the bundle the first and the last of them lie (read from
+/// the image, units of 10 cm).
+fn points(s: &Surface) -> Vec<(usize, f32)> {
+    fn root(of: &mut [usize], mut i: usize) -> usize {
+        while of[i] != i {
+            of[i] = of[of[i]];
+            i = of[i];
+        }
+        i
+    }
+    let mut place: HashMap<[u32; 3], usize> = HashMap::new();
+    let ids: Vec<usize> = s.pos.iter().map(|p| { let n = place.len(); *place.entry(p.map(f32::to_bits)).or_insert(n) }).collect();
+    let mut of: Vec<usize> = (0..place.len()).collect();
+    for t in ids.chunks_exact(3) {
+        let a = root(&mut of, t[0]);
+        for &k in &t[1..] {
+            let b = root(&mut of, k);
+            of[b] = a;
+        }
+    }
+    let mut found: HashMap<usize, HashMap<usize, f32>> = HashMap::new();
+    for (t, u) in ids.chunks_exact(3).zip(s.uv.chunks_exact(3)) {
+        let piece = found.entry(root(&mut of, t[0])).or_default();
+        for (a, b) in [(0, 1), (1, 2), (2, 0)] {
+            if t[a] == t[b] {
+                piece.insert(t[a], u[a][1]);
+            }
+        }
+    }
+    found.values().map(|at| (at.len(), at.values().fold((f32::MAX, f32::MIN), |r, v| (r.0.min(*v), r.1.max(*v))))).map(|(n, r)| (n, if n > 0 { (r.1 - r.0) / VSCALE } else { 0.0 })).collect()
 }
 
 fn show() -> bool {
@@ -146,13 +193,15 @@ fn a_head_of_england_wears_a_body_of_thick_bundles() {
         let mut found = pieces(hair);
         found.sort_by(|a, b| a.1.partial_cmp(&b.1).expect("a number"));
         let long = found[found.len() / 2].1;
-        // how broad a bundle is: six steps from flank to flank, each the side of a triangle that lies across it
-        // (its two corners at one height of the image)
+        // how broad a bundle is: the side of a triangle that lies across it (its two corners at one height of the
+        // image) by the share of the image's breadth it takes (until round 138 always a sixth; a bundle with a
+        // frayed end has its corners where its wisps part)
         let mut across: Vec<f32> = Vec::new();
         for (t, u) in hair.pos.chunks_exact(3).zip(hair.uv.chunks_exact(3)) {
             for (a, b) in [(0, 1), (1, 2), (2, 0)] {
-                if (u[a][1] - u[b][1]).abs() < 1e-5 && ((u[a][0] - u[b][0]).abs() - 1.0 / 6.0).abs() < 1e-3 {
-                    across.push(6.0 * len(sub(t[a], t[b])));
+                let share = (u[a][0] - u[b][0]).abs();
+                if (u[a][1] - u[b][1]).abs() < 1e-5 && share > 0.02 && !shell_step(share) {
+                    across.push(len(sub(t[a], t[b])) / share);
                 }
             }
         }
@@ -432,7 +481,7 @@ fn hair_that_is_cut_runs_to_the_cut_and_wears_the_image_along_its_length() {
             } else {
                 continue;
             };
-            if ((u[a][0] - u[b][0]).abs() - 1.0 / 6.0).abs() > 1e-3 {
+            if shell_step((u[a][0] - u[b][0]).abs()) {
                 continue;                                  // the shell's triangles
             }
             let mid = [0, 1, 2].map(|i| 0.5 * (t[a][i] + t[b][i]));
@@ -450,16 +499,16 @@ fn hair_that_is_cut_runs_to_the_cut_and_wears_the_image_along_its_length() {
         if fringed == 0.0 {
             continue;
         }
-        // the bundles over the forehead, a centimetre and more above the lowest end of the fringe, across the
-        // middle of the head's breadth (three fifths of it as a rule): how many lie over each other at 84 places
-        // seen from the front
+        // the bundles over the forehead, above where they fray (round 138: FRINGE_FROM of the head's height and
+        // more above the lowest end of the fringe; a centimetre until then), across the middle of the head's
+        // breadth (three fifths of it as a rule): how many lie over each other at 84 places seen from the front
         let (skin, crown) = skin(&out);
         let height = crown - out.chin;
         let broad = skin.pos.iter().filter(|p| p[1] > crown - 0.3 * height).map(|p| (p[0] - out.cx).abs()).fold(0f32, f32::max);
         let fringe = hair.pos.iter().filter(|p| (p[0] - out.cx).abs() < fringed.min(0.25) * broad && p[2] > out.cz).map(|p| p[1]).fold(f32::MAX, f32::min);
         let mut deep: Vec<u32> = Vec::new();
         for row in 0..4 {
-            let y = fringe + (0.03 + 0.012 * row as f32) * height;
+            let y = fringe + (FRINGE_FROM + 0.012 * row as f32) * height;
             for col in -10..=10 {
                 let x = out.cx + fringed * broad * col as f32 / 10.0;
                 let over = hair.pos.chunks_exact(3).filter(|t| {
@@ -482,5 +531,68 @@ fn hair_that_is_cut_runs_to_the_cut_and_wears_the_image_along_its_length() {
         // (the forelock of the hair gone back ends ragged, its line rising to either side: its teeth leave places bare)
         let least = if fringed < 0.3 { 0 } else { 1 };
         assert!(median >= 2 && eighth >= least, "{who}: the fringe is {median} bundles deep in the median and {eighth} at its thinnest eighth");
+    }
+}
+
+#[test]
+fn hair_that_is_cut_ends_in_wisps() {
+    // Round 138. Until then a bundle of a man's hair ended as it was broad, cut at a slant: one point each, and a
+    // fringe and a cut's edge that were a row of teeth. Now a bundle that is cut keeps its breadth to its end and
+    // is parted there into wisps side by side, two to seven by its breadth, each narrowing to a point of its own
+    // and each of a length of its own (`hair_body.py` `fray`, `lay(frayed=)`). Turned ends (`bob09`: at the sides
+    // and behind) and hair drawn to a plait or pinned up under a veil end as they did.
+    let Some(h) = head() else { return };
+    let d = &sc_portrait::dress::ENGLAND_1356;
+    let mut seen = std::collections::BTreeMap::new();
+    let mut read = |p: &sc_portrait::look::Look, who: &str| {
+        let out = build(&h, p, 1);
+        let Some(hair) = body(&out) else { return (0, 0, 0, 0) };
+        // (the cut by its painted layer and the seed's draw: a head that loses its hair or has curls wears those)
+        let cap = out.surfaces.iter().filter_map(|s| s.tex.as_deref()).find(|t| t.contains("_cap.") && !t.contains("beard")).map(|t| t.rsplit('/').next().unwrap_or(t).trim_end_matches(".webp").trim_end_matches("_cap").to_string()).unwrap_or_default();
+        let drawn = d.hair_of(p.seed, p.age);
+        let name = if p.female || d.under_of(drawn) != cap { cap } else { drawn.to_string() };
+        let mut found = points(hair);
+        found.sort_by_key(|f| f.0);
+        let n = found.len();
+        let many = found.iter().filter(|f| f.0 >= 2).count();
+        let median = found[n / 2].0;
+        let mut apart: Vec<f32> = found.iter().filter(|f| f.0 >= 2).map(|f| f.1).collect();
+        apart.sort_by(|a, b| a.partial_cmp(b).expect("a number"));
+        let between = apart.get(apart.len() / 2).copied().unwrap_or(0.0);
+        if show() {
+            println!("{who}: {name}, {n} pieces, {many} with two points and more, the median piece {median}, the most {}; their points {:.1} mm apart along the bundle in the median, {:.1} at most", found[n - 1].0, 100.0 * between, 100.0 * apart.last().copied().unwrap_or(0.0));
+        }
+        let e = seen.entry(name).or_insert((0usize, 0usize, 0usize, f32::MAX, 0f32));
+        *e = (e.0 + 1, e.1 + n, e.2 + many, e.3.min(between), e.4.max(apart.last().copied().unwrap_or(0.0)));
+        (n, many, median, found[n - 1].0)
+    };
+    // men of 29 and boys of 8 without a hood (their seeds' last digit), girls, and women under a veil set back
+    for k in (1..240u32).step_by(2) {
+        for age in [8.0f32, 29.0] {
+            let p = person(k, false, age);
+            if d.head_covered(false, p.age, p.seed) {
+                continue;
+            }
+            read(&p, &format!("man {k} of {age}"));
+        }
+    }
+    for k in (0..40u32).step_by(2) {
+        let (n, many, _, most) = read(&person(k, true, 12.0), &format!("girl {k}"));
+        // hair drawn to a plait narrows and ends at a breadth: no wisps
+        assert!(n > 0 && many == 0 && most <= 1, "girl {k}: {many} of {n} bundles end in two points and more (the most {most})");
+    }
+    if show() {
+        println!("{seen:?}");
+        return;
+    }
+    for name in ["bob01", "bob06", "bob07", "bob09", "page01", "page02"] {
+        let (heads, pieces, many, least, most) = *seen.get(name).unwrap_or_else(|| panic!("nobody wears {name}: {seen:?}"));
+        let share = many as f32 / pieces as f32;
+        // (measured: 99 hundredths of a cut's pieces and all of a parted cut's, the shell being the rest; 56 of
+        // the turned cut's 206 on two heads, whose bundles at the sides and behind end in rolls; a bundle's
+        // points 5.6 to 6.5 mm apart along it in the median, 10.8 at most)
+        let enough = if name == "bob09" { 0.2 } else { 0.8 };
+        assert!(heads >= 2 && share > enough, "{name}: on {heads} heads {many} of {pieces} pieces end in two points and more");
+        assert!(least > 0.01 && most < 0.2, "{name}: a bundle's points lie {least} apart along it in the median at least, {most} at most (1 is 10 cm)");
     }
 }

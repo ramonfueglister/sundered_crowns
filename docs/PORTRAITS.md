@@ -5906,6 +5906,69 @@ and lint pass.
 Pictures (project files, `portraits/`): `runde137_vorher_nachher.png` (two hooded men of the sample from
 three sides, round 136 above, now below).
 
+**Round 138: hair that is cut ends in wisps** (2026-11-20). Looked at on the sample's grown people after
+round 137, beside the reference's men with a fringe (one sheet of bowl cuts, by eye, nothing measured): what
+stands out most on ours is where the men's hair ends. A bundle is 1 to 2 cm broad and ended as broad as it
+is, cut at a slant in one point (round 109): a fringe, and the cut's edge round the head, were a row of
+teeth, from behind a row of blocks. Theirs ends in single strands on an even line.
+
+What is changed. A bundle of hair that is cut keeps its breadth to its end and is parted there into wisps
+side by side, each narrowing to a point of its own (`tools/portrait/pipeline/hair_body.py`, a cut's
+`fray`, `lay(frayed=)`): over the last 0.8 to 2 cm of the bundle, a wisp some 3.5 mm broad where it
+begins, so two to seven of them by the bundle's breadth; one wisp runs to the bundle's end and the others
+end somewhere in the frayed length's second half, each point a little to one side of its wisp's middle,
+and a wisp is flatter at its point than the bundle's ridge. The wisps lie in the bundle's own surface
+and begin on its last ring corner on corner (their edges are corners of every ring of that bundle), so
+the builder takes a bundle and its wisps for one piece and carries them with the head together. They
+draw random numbers of their own: a bundle is what it was up to where it frays. All bowl cuts (`bob01`
+to `bob09`: every length, under a hood, the hair gone back, the horseshoe, the curls, a small child's,
+and the fringe of the cut with turned ends, whose rolls are as broad as they were to a tenth of a
+millimetre) and the parted hair cut at the jaw (`page01`, `page02`) are written anew: eleven files,
+7.34 MB packed as before (`bob01` 42 676 triangles where it had 49 992: the slanted end had more rings
+than the frayed one has). A girl's parted hair and the hair under
+a veil are drawn to a plait or pinned up and end as they did: `plait01` and `part01` are written byte for
+byte as before (checked). Nothing in the builder or the stage is changed.
+
+Tried and not kept. The wisps as pieces of their own that begin anywhere on the bundle's last ring: the
+builder evens each piece's way with the head by itself, so a wisp and its bundle parted by a fraction of
+a millimetre, and under a hood dark and pale lines lay across the fringe where the wisps begin. The
+wisps drawing from the bundle's own random numbers: every bundle after the first frayed one came out
+another, and the turned cut's rolls 2 mm narrower (its test failed, rightly). A ring every 5 mm in a
+frayed curl where a curl had one every 3: coarser curls, found by the file's size and set back.
+
+**The gauntlet**: 22 of 22 over the whole sample (read with this round's files). One line moved by a tenth:
+a man's far cheek against the lit one, 2.1 of its 4 where it was 2.2 (the hair beside the cheek ends
+otherwise); every other line is where round 137 left it. The gauntlet reads skin and has no line for hair.
+
+Honest about it. It is the ends only. A bundle is still a thick smooth band with a ridge and two flanks,
+and a head of them reads as carved, where the reference's hair is fine strands along its whole length:
+that is the larger part of the distance and is not touched. A wisp is a flat pointed band with straight
+edges, close up a paper point; at a portrait's size the edge reads as hair. The line the hair ends on
+is more ragged than the reference's fringe, which is nearly straight: ours frays over a centimetre and
+more (on a boy of 13, of 84 places 1 to 2 cm above the fringe's lowest end 11 are bare). Nothing was read
+for it: no page was looked for on how a man's hair was cut in 1356, and the length, the breadth and the
+shares are by eye, PLACEHOLDER. The two felt hats were made on the hair as it was (their script reads
+the meshes of the hair under a hood and of the horseshoe) and are not made anew: the hair's height on the
+head is unchanged, only its ends. The women's hair has no free end to fray, so no woman changes. Seen and left: the
+bundles' tops over the crown as carved as before; white specks of linen on the gown's back at one
+shoulder (round 124's).
+
+Tests: `portrait/tests/hair_body.rs`. New: on 163 bare heads of men and boys and 20 girls, 99 in 100 of
+a bowl cut's pieces and every piece of a parted cut end in two points and more (the shell is the
+hundredth), 56 of the turned cut's 206 on two heads (its rolls end at a breadth), no bundle of a girl's
+hair; a bundle's first and last point lie 5.6 to 6.5 mm apart along it in the median, 10.8 at most.
+Three measures of older tests moved with the form, and one of them moved its place: a bundle's breadth is
+read by the share of the image a step across it takes (it was six steps of a sixth), a bundle's turning
+on whole rings only (a wisp's ring has four corners at most), and how many bundles lie over each other in
+the fringe is read 1.5 cm and more above its lowest end where it was 0.7 (0.07 of the head's height for
+0.03): what it read before is now where the hair frays. `cargo test --release` as a whole:
+106 of 106 in one run on the last files (on the first, four of the six hair tests failed: three by their
+measures reading the old form, one rightly, see above). `tests/portrait.test.ts` and its neighbour 42 of
+42; typecheck and lint pass.
+Pictures (project files, `portraits/`): `runde138_vorher_nachher.png` (six men, one of each cut that is
+drawn on a bare head, and six of the sample, round 137 above, now below), `runde138_von_allen_seiten.png`
+(the six from the side and from behind, round 137 above, now below).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
