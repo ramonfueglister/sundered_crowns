@@ -320,7 +320,8 @@ fn a_ladys_gown_at_court_is_cut_wider_and_lower_than_a_village_womans_and_shows_
         }
         let stiff = |age: f32, stand: u8| build_posed(&h, &person_of(2 * k, true, age, stand), 1, Some([0.0; 3]));
         let (village, court, queen, old) = (stiff(30.0, 1), stiff(30.0, 3), stiff(30.0, 4), stiff(c.wimple_from, 3));
-        let gown = |out: &Portrait| cloth(out, "/cloth_cote.").expect("her gown");
+        // (the court's gown is drawn with the silk's image since round 150, `cloth_cote_silk`)
+        let gown = |out: &Portrait| cloth(out, "/cloth_cote").expect("her gown");
         let (v, l, q, round) = (gown(&village), gown(&court), gown(&queen), gown(&old));
         let low = |g: &Cloth, out: &Portrait| 10.0 * (out.chin - opening(g, middle(g)));
         let (broad, lower) = (breadth(&l) - breadth(&v), low(&l, &court) - low(&v, &village));

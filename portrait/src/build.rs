@@ -1611,7 +1611,12 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
                 Some(t) => (t.gown, ""),
                 None => ("cloth_tunic", ""),
             };
-            mh_cloth_as(&d, name, image, &x.pp, &h.base, &col, Some(&cell), if garb.is_some() { Layer::Gown } else { Layer::Bound }, &arms)
+            let mut gown = mh_cloth_as(&d, name, image, &x.pp, &h.base, &col, Some(&cell), if garb.is_some() { Layer::Gown } else { Layer::Bound }, &arms)?;
+            // (round 150) a table's own cloth for the gown, whatever its cut: the court's silk
+            if let Some(t) = garb.filter(|t| !t.gown_image.is_empty()) {
+                gown.tex = Some(crate::real::image(&d, t.gown_image));
+            }
+            Some(gown)
         })
     } else {
         None

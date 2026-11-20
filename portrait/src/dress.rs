@@ -232,6 +232,9 @@ pub struct DressSet {
     /// 110): a woman's neckline cut wide, out onto the shoulders, and a man's opened in front in a V a hand
     /// deep.
     pub gown_cut: [&'static str; 2],
+    /// (round 150) The image the gown and its cuts are drawn with in place of `gown`'s (empty: `gown`'s): another
+    /// cloth for the same gown. Its name begins with `gown`'s: the builder and the tests find a gown by that.
+    pub gown_image: &'static str,
     /// What is worn under those cuts and shows at the neck, women's and men's (empty: nothing): a layer of
     /// linen that lies on the skin, the second drawn with the first's image where it has none of its own.
     /// England's (round 110): a woman's smock, its edge a finger's breadth inside her gown's neckline, and a
@@ -928,6 +931,7 @@ const ENGLAND: DressSet = DressSet {
     origins: &["England"],
     gown: "cloth_cote",
     gown_cut: ["cloth_kirtle", "cloth_cote_v"],
+    gown_image: "",
     under: ["cloth_smock", "cloth_shirt"],
     under_image: "cloth_smock",
     wool: &["#958565", "#6e665a", "#7d5c40", "#51647c", "#84503f", "#6c6c45"],
@@ -1271,6 +1275,9 @@ const COURT: DressSet = DressSet {
     // the village's (`sources`)
     gown_cut: ["cloth_kirtle_court", "cloth_cote_v"],
     under: ["", "cloth_shirt"],
+    // (round 150) the gown is of silk: a smooth cloth that shines (`sources`). PLACEHOLDER: that every gown at
+    // court is, and a plain silk without a pattern
+    gown_image: "cloth_cote_silk",
     // (round 148) a lord's hood is faced with a white fur, in the white of the mantle's ermine
     hood_fur: "cloth_fur_white",
     hood_fur_dye: "#f4f0e6",
@@ -1311,7 +1318,8 @@ pub static CROWNED_1356: DressSet = DressSet {
 
 const COURT_SOURCES: &[Source] = &[
     Source { what: "who dresses so: lords and their families, whom the statute of 1363 leaves without restriction (round 144)", source: "Statute concerning diet and apparel 1363 (37 Edw. III), as Rosalie Gilbert's page lists it rank by rank (rosaliegilbert.com/sumptuarylaws.html; read 20.11.2026 as an account of the page, not the page itself; a re-enactor's summary that names no edition of the statute): lords with lands worth 1000 pounds a year and their families 'no restrictions'; cloth of gold, ermine and stones barred from knights of 200 marks down; silk, silver and embroidery from the yeoman down; 'blanket and russet at 12d' for those who work the land. The game knows no ranks between a ruler's house and everybody else: all its persons of history are dressed so." },
-    Source { what: "cloth in strong dyes: reds, blues, a green, a murrey", source: "Wikipedia, 1300-1400 in European fashion (read 20.11.2026 as an account of the page): Edward III's robes of 1351 of 'red velvet' (after Donald King), a bridegroom of the 1350s in a 'red cotehardie', a royal lady in 'a blue mantle'; 'silk was the finest fabric of all', brocades 'for the well-off'. No dye is named there. Green and murrey, every value and that the cloth is drawn as wool with the villagers' weave are PLACEHOLDER: no silk, no velvet, no pattern and no fur is drawn on a gown." },
+    Source { what: "cloth in strong dyes: reds, blues, a green, a murrey", source: "Wikipedia, 1300-1400 in European fashion (read 20.11.2026 as an account of the page): Edward III's robes of 1351 of 'red velvet' (after Donald King), a bridegroom of the 1350s in a 'red cotehardie', a royal lady in 'a blue mantle'; 'silk was the finest fabric of all', brocades 'for the well-off'. No dye is named there. Green and murrey and every value are PLACEHOLDER: no velvet, no pattern and no fur is drawn on a gown (its cloth: the next row)." },
+    Source { what: "the gown of silk on every person of rank: a smooth cloth without a pattern that shines along its folds; the hood stays of wool (round 150)", source: "The same page: 'silk was the finest fabric of all', brocades 'for the well-off', Edward III's robes of 1351 of 'red velvet'. The statute of 1363 as Rosalie Gilbert's page lists it (the first row) takes silk from the yeoman down and leaves it to those above. Which silk a gown was of is not said, nor how many gowns at court were of silk and how many of fine wool: that every gown at court is silk, plain and without a pattern, and how much it shines (the stage's values) are PLACEHOLDER." },
     Source { what: "the gown buttoned in front on eight men in ten and six women in ten from 15 and 14 years, laced on three women in ten, with buttons of gilt metal", source: "The same page: 'the cotehardie fits snugly and is buttoned up the front' (a caption of the late 14th century), and noblemen and squires about 1350 in tunics 'so short and tight' (the continuation of Guillaume de Nangis, after Braudel). Rosalie Gilbert, Buttons and Lacings (rosaliegilbert.com/buttonsandlacings.html, read 20.11.2026 as an account of the page): 'the upper classes would have preferred ... metal buttons', the lower classes 'matching cloth buttons'; a tin button with a glass stone of the late 14th century (Museum of London). Which metal is not said: gilt is PLACEHOLDER, and so are the shares." },
     Source { what: "mi-parti: a man's gown of two cloths, one on each side, on three men in ten from 15 years who wear no crown", source: "The same Wikipedia page: 'a fashion for mi-parti or parti-coloured garments made of two contrasting fabrics, one on each side, arose for men in mid-century ... and was especially popular at the English court' (after Black & Garland). The share is PLACEHOLDER." },
     Source { what: "a crown on a king, an emperor and a queen who reigns: a circlet of gold with twelve fleurons, six large and six small in turn, a sapphire or a balas ruby on the circlet under each, a balas ruby and three pearls on each large fleuron; nothing else on the head, a woman's hair in plaits under it", source: "Crowns in the treasure of Richard II (Institute of Historical Research and Royal Holloway, archives.history.ac.uk/richardII/crowns.html; read 20.11.2026 as an account of the page): eleven gold crowns in the inventory of 1399, crowns 'with alternating large and small fleurons', of eight, ten, twelve and fourteen; the one that survives (Munich, Schatzkammer, c. 1380) 'a circlet of twelve hinged plaques and six large and six small fleurons'; 'sapphires, balas rubies and clusters of pearls'. Forty years after 1356 and no measure given: the crown's height, the form of a fleuron (a lily of three leaves, by the page's gloss 'lily-shaped') and the stones' places are PLACEHOLDER; the plaques, their tracery and enamel are not drawn. The plaits under a crown: the Wikipedia page's royal lady of the 1350s, 'her hair is worn in two braids beneath her crown' (Italy)." },

@@ -17,7 +17,7 @@ one, changes nothing: same people in, same pictures out, measured.
 |---|---|---|
 | Builder | `portrait/` (Rust, WebAssembly) | From a person (100 bytes of genes, sex, age, estate, occupation, origin, food, mourning, wealth, worn clothes) to the triangles of head and shoulders: MakeHuman's head morphed by the genes, skin, eyes, hair, beard, clothes, headwear, jewellery |
 | Genes | `portrait/src/dna.rs` | 50 genes of two alleles, one byte each (Apoleia's 34, and 16 since round 112 that a dress with a table shows); a child takes one allele of each gene from either parent, plus a small mutation; founders draw from one of 23 pools (round 111), which one is the culture's (`src/sim/people/pools.ts`) |
-| Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; a culture without a set wears the plain dress of 1356 (round 111), one of Apoleia's seven regions Apoleia's Roman dress. England's has a table for people of rank and one for a crowned head (round 144), chosen by the person's stand; a crowned head wears a mantle faced with ermine over the gown (round 145, `portrait/src/mantle.rs`); a lady of rank shows her plaits and wears a circlet of gilt metal on them (round 146), a lord with nothing else on the head wears one too (round 147); a lord's hood is faced with white fur along the edge of its opening (round 148, `portrait/src/facing.rs`); a lady's gown is cut wide and low at the neck, with no linen in it (round 149, `cloth_kirtle_court`) |
+| Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; a culture without a set wears the plain dress of 1356 (round 111), one of Apoleia's seven regions Apoleia's Roman dress. England's has a table for people of rank and one for a crowned head (round 144), chosen by the person's stand; a crowned head wears a mantle faced with ermine over the gown (round 145, `portrait/src/mantle.rs`); a lady of rank shows her plaits and wears a circlet of gilt metal on them (round 146), a lord with nothing else on the head wears one too (round 147); a lord's hood is faced with white fur along the edge of its opening (round 148, `portrait/src/facing.rs`); a lady's gown is cut wide and low at the neck, with no linen in it (round 149, `cloth_kirtle_court`); the court's gown is of silk (round 150, `DressSet::gown_image`) |
 | Stage profile | `src/portrait/profile.ts` | Light and materials per set of dress; Apoleia's portraits keep Apoleia's |
 | Pipeline | `tools/portrait/pipeline/` | Blender scripts that wrote the draped clothes and hair (not part of the build) |
 | Files of the real look | `public/portrait/` (41.5 MB) | The head (1.1 MB), data files (15.0 MB since round 111, 13.1 since round 110, 12.7 since round 109, 12.9 since round 105, 10.4 before round 104: the hair's bodies, the beard's locks, draped clothes, skin shading), images (24.8 MB: skin by age and sex, wrinkle maps, hair, cloth, eyes) |
@@ -6948,6 +6948,58 @@ and lint pass, no new warning. The module is 753 kB (751 before: the table's new
 Pictures (project files, `portraits/`): `runde149_vorher_nachher.png` (six of the sample's ladies at court
 without a wimple, before above and after below), `runde149_nah_und_koenigin.png` (three ladies large, and
 three as queens under the mantle).
+
+**Round 150: the court's gown of silk** (2026-11-20). Round 149's own paragraph: "under it hangs the same
+loose gown, with the villagers' weave". Ten people of rank beside each other and beside the reference's sheet
+of women's dress: the reference's ladies wear a smooth cloth that shines along its folds, its village women a
+matt wool whose weave shows. Ours wore the village's wool at court, weave and all, in a stronger dye: at a
+picture's size a lord's gown was told from a villager's by its colour alone.
+
+What was read. Nothing new. Round 144's reading of Wikipedia, 1300-1400 in European fashion (as an account of
+the page): "silk was the finest fabric of all", brocades "for the well-off", Edward III's robes of 1351 of
+"red velvet"; and the statute of 1363 as Rosalie Gilbert's page lists it, which takes silk from the yeoman
+down and leaves it to those above. Which silk a gown was of is not said, nor how many gowns at court were of
+silk and how many of fine wool.
+
+What is changed.
+- **The cloth's image** (`cloth_cote_silk.webp` and `_n`, 139 and 58 kB; `fabric_tex.py`, a new kind `silk`):
+  a plain weave of 320 threads across the image, twice the gown's wool, with no nap, a fifth of the threads'
+  own shades, hardly any mottling and a relief of 2 degrees: at a picture's size no thread shows.
+- **Whose gown** (`DressSet::gown_image`, new, set in the court's table): the gown is drawn with this image in
+  every cut, a lady's wide one, the round one under her wimple, a lord's, a queen's and a king's under the
+  mantle, and so are the edges of its closing. Hoods, the mantle and all linen are what they were.
+- **How it is lit** (`src/portrait/materials.ts`, `profile.ts` `cloth.silk`): a cloth whose image is named
+  `_silk` is drawn smoother and with more of a glint than wool and linen (roughness 0.55 for 0.95, "specular"
+  0.5 for 0.15), as much lighter than its own colour as wool is (2.6 times). Nothing else of the stage changed.
+
+Tried and not kept. The image with all of the threads' own shades, as wool and linen have them: at 320 threads
+the lighter and darker threads drew a plaid across the gown (the image's colour 0.047 from its middle on
+average; 0.018 now).
+
+**The gauntlet**: 22 of 22 over the whole sample (read with this round's build), every line as in rounds 138
+to 149 to its last figure: the sample is of the common people, who wear no silk.
+
+Honest about it. The court's gowns read as another cloth than the village's now, and that is seen at the
+size of a picture: a glint along the folds on the lit side, a deeper shade on the other. But it is one plain
+silk for every gown at court, with no pattern, where the reference's silks are figured, and nothing read says
+that every lord and lady wore silk rather than fine wool. The glint is a smooth surface's: silk shines along
+its threads, across the folds, and that is not built, so some gowns read as oiled cloth or thin leather as
+much as as silk. The smooth cloth also shows what the wool's weave hid: the small dents and facets of the
+drape on the chest, and the gown as loose as before. Hoods are still the villagers' wool, the mantle's cloth
+is what it was. The values of the image and of the stage are by eye: PLACEHOLDER.
+
+Tests: `portrait/tests/court.rs`, the test of the court's cloth, which held the court's gown to the village's
+image: it holds the village's gown to the wool's image and the court's to the silk's now, in every cut, silk
+on nothing but the gown, none in the village, the hoods' image the same in both. `portrait/tests/clothes.rs`
+finds a lady's gown by the silk's name too. `tests/portrait.test.ts`, one new: silk is drawn as cloth, from
+both sides, smoother and with more of a glint than wool and linen, by the profile's values; a profile without
+cloth of its own draws it as any cloth.
+`cargo test --release` as a whole: 123 of 123. `tests/portrait.test.ts` and its neighbour: 42 of 44 in the
+whole run; the two that failed looked for the gown of a person of rank under the wool's image name, were set to
+the silk's (and one holds the gown's image by stand now) and passed when run again, 44 of 44 with them.
+Typecheck and lint pass, no new warning. The module is 754 kB.
+Pictures (project files, `portraits/`): `runde150_vorher_nachher.png` (six ladies at court, before above and
+after below), `runde150_herren_und_gekroente.png` (five lords, and five crowned heads under the mantle).
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the

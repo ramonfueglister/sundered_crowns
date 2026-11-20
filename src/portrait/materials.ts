@@ -343,6 +343,10 @@ export function surfaceMaterials(s: PortraitSurface, map: Texture | null, normal
     case 'cloth':
       m.side = DoubleSide; m.roughness = 0.95; m.ior = ior(0.15);
       if (p.cloth) m.color.setScalar(/_veil|_wimple|_smock|_fillet/.test(s.tex) ? p.cloth.linen : p.cloth.wool);
+      // (round 150) silk shines: a smoother cloth with a glint along its folds
+      if (p.cloth && s.tex.includes('_silk')) {
+        m.color.setScalar(p.cloth.silk.tone); m.roughness = p.cloth.silk.rough; m.ior = ior(p.cloth.silk.specular);
+      }
       break;
     case 'cap': blended(m); m.roughness = 0.85; m.ior = ior(0.15); m.side = DoubleSide; if (p.cap) capLook(m, p, p.cap, s.tex); break;
     case 'eyeball': m.roughness = 0.08; m.ior = ior(0.6); if (p.eye) eyeLook(m, p, p.eye); break;

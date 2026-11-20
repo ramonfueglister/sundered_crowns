@@ -110,10 +110,18 @@ fn the_courts_gown_is_of_strong_cloth_with_buttons_of_metal_and_some_of_two_clot
         let (female, age) = (k % 2 == 0, [24.0f32, 35.0, 50.0, 17.0][(k / 2) as usize % 4]);
         let (low, high) = (person(k, female, age), person_of(k, female, age, 3));
         let (a, b) = (build(&h, &low, 1), build(&h, &high, 1));
-        let gown = |s: &'_ [Surface]| -> usize { s.iter().position(|s| s.tex.as_deref().is_some_and(|t| t.contains("/cloth_cote.") || t.contains("/cloth_kirtle."))).unwrap_or_else(|| panic!("person {k}: no gown")) };
+        let gown = |s: &'_ [Surface]| -> usize { s.iter().position(|s| s.tex.as_deref().is_some_and(|t| t.contains("/cloth_cote"))).unwrap_or_else(|| panic!("person {k}: no gown")) };
         let (ga, gb) = (&a.surfaces[gown(&a.surfaces)], &b.surfaces[gown(&b.surfaces)]);
-        // the same gown, in another cloth
-        assert_eq!(ga.tex, gb.tex, "person {k}: the gown's cut is the common people's");
+        // (round 150) the gown in another cloth: the common people's is drawn with the wool's image, the court's
+        // with the silk's, whatever its cut (a lady's wide one, the round one under her wimple, a lord's); the
+        // court's hood is of wool as the village's
+        let image = |s: &Surface| s.tex.clone().unwrap_or_default();
+        assert!(image(ga).ends_with("/cloth_cote.webp") && image(gb).ends_with("/cloth_cote_silk.webp"), "person {k}: the gown's image, {} and {}", image(ga), image(gb));
+        // (the edges of a gown's closing are surfaces of their own, of the gown's cloth)
+        assert!(b.surfaces.iter().map(image).filter(|t| t.contains("_silk")).all(|t| t.ends_with("/cloth_cote_silk.webp")), "person {k}: silk on the gown alone");
+        assert!(!a.surfaces.iter().any(|s| image(s).contains("_silk")), "person {k}: no silk in the village");
+        let hoods = |s: &'_ [Surface]| s.iter().map(image).filter(|t| t.contains("/cloth_hood_")).collect::<Vec<_>>();
+        assert_eq!(hoods(&a.surfaces), hoods(&b.surfaces), "person {k}: the hood's cloth");
         let (ca, cb) = (mean(ga.col.iter().copied()), mean(gb.col.iter().copied()));
         // (in linear light, as the builder hands it over; the common people's wools are 1.5 to 5 times there)
         assert!(strength(&cb) > 3.0 && (0..3).any(|i| (cb[i] - ca[i]).abs() > 0.02), "person {k}: the court's cloth {cb:?} against {ca:?}");

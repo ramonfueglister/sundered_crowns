@@ -111,7 +111,8 @@ describe('portraits', { timeout: 20_000 }, () => {
       expect(english.look.startsWith('england1356/'), `person ${p.pid}`).toBe(true);
       expect(profileOf(english.look)).toBe(ENGLAND_1356);
       const worn = english.surfaces.map(s => s.tex);
-      expect(worn.some(t => t.includes('/cloth_cote.')), `person ${p.pid} wears the gown`).toBe(true);
+      // (a person of rank wears it in silk since round 150)
+      expect(worn.some(t => t.includes('/cloth_cote.') || t.includes('/cloth_cote_silk.')), `person ${p.pid} wears the gown`).toBe(true);
       expect(worn.some(t => t.includes('/cloth_tunic.') || t.includes('/cloth_veil.')), `person ${p.pid} wears nothing Roman`).toBe(false);
       for (const t of worn) if (t) expect(images.has(t), `${t} is in the repository`).toBe(true);
       // no man and no girl wears the veil. A woman from the age of the veil wears it one of two ways (round
@@ -847,6 +848,23 @@ describe('portraits', { timeout: 20_000 }, () => {
     expect(shader.fragmentShader).toContain('directLight.color * hairLit * hairStrand');
     expect(shader.fragmentShader).not.toContain('directionalLights[ i ].color * hairLit');
   });
+  it('silk is drawn smoother than wool and shines (round 150)', () => {
+    // The court's gown is of silk (`DressSet::gown_image`, an image named `_silk`): the stage draws wool and
+    // linen as matt cloth, silk with a glint along its folds. Until then a lord's gown was the villagers' wool
+    // in a stronger dye.
+    const of = (tex: string) => ({ rough: 0.5, metal: 0, double: false, tex, nmap: '', pos: new Float32Array(9), col: new Float32Array(9).fill(0.5), uv: new Float32Array(6), nrm: new Float32Array(9) });
+    const look = (tex: string) => { const m = surfaceMaterials(of(tex), null, null, ENGLAND_1356)[0]!; return { rough: m.roughness, ior: m.ior, tone: m.color.r, side: m.side }; };
+    const [wool, silk, linen] = [look('real/cloth_cote.webp'), look('real/cloth_cote_silk.webp'), look('real/cloth_smock.webp')];
+    expect(surfaceKind(of('real/cloth_cote_silk.webp'))).toBe('cloth');
+    const k = ENGLAND_1356.cloth!;
+    expect([wool.rough, linen.rough, silk.rough]).toEqual([0.95, 0.95, k.silk.rough]);
+    expect(silk.rough).toBeLessThan(0.7);
+    expect(silk.ior).toBeGreaterThan(wool.ior);
+    expect([wool.tone, linen.tone, silk.tone]).toEqual([k.wool, k.linen, k.silk.tone]);
+    expect(silk.side).toBe(DoubleSide);
+    // Apoleia's profile has no cloth of its own: an image named so is drawn as any cloth
+    expect(surfaceMaterials(of('real/cloth_cote_silk.webp'), null, null, APOLEIA)[0]!.roughness).toBe(0.95);
+  });
   it('a scar takes the tone of the skin it lies in', () => {
     // a scar of the real look is a small surface of skin of its own, lighter than the skin as a whole: with a
     // tone of its own it would take more of the profile's tint than the skin round it and show as a patch
@@ -1228,7 +1246,9 @@ describe('portraits', { timeout: 20_000 }, () => {
       expect(king.surfaces.filter(s => /cloth_(hood|veil|wimple|fillet|coif|hat)/.test(s.tex)), at).toEqual([]);
       // a person of rank without a crown: none, and a gown of another cloth than the common people's
       expect(metal(3).every(s => s.pos.length / 9 < 2500), `${at}: no crown without a kingdom`).toBe(true);
-      const gown = (stand: number) => built(stand).surfaces.find(s => /cloth_(cote|kirtle)\./.test(s.tex))!;
+      // (round 150: the common people's gown is drawn with the wool's image, the court's with the silk's)
+      const gown = (stand: number) => built(stand).surfaces.find(s => /cloth_cote(_silk)?\./.test(s.tex))!;
+      expect([1, 3, 4].map(stand => gown(stand).tex.replace(/^.*\/|\..*$/g, '')), `${at}: the gown's cloth`).toEqual(['cloth_cote', 'cloth_cote_silk', 'cloth_cote_silk']);
       const red = (stand: number) => { const c = gown(stand).col; let r = 0, g = 0; for (let i = 0; i < c.length; i += 3) { r += c[i]!; g += c[i + 1]!; } return r / g; };
       expect(Math.abs(Math.log(red(3) / red(1))), `${at}: the court's cloth`).toBeGreaterThan(0.15);
     }
