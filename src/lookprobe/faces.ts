@@ -51,6 +51,29 @@ export interface Free {
   nor: Int8Array;
 }
 
+/**
+ * The level tops of a mesh's columns, joined where columns of one height lie side by side (worldprobe/tops.ts): a
+ * face of these may span many columns, so its colour is not that of its four corners. Each column keeps the colours
+ * of its own four corners in the field, a square of FIELD_SIDE × FIELD_SIDE colours (four bytes each, as a face's
+ * colours are) that holds two by two of them to each column of the FIELD_COLUMNS × FIELD_COLUMNS from (x0, z0); the
+ * stage reads them where it draws a dot of such a face, and mixes them across the column as the two triangles of its
+ * own face did. A face of these has no colours of its own.
+ */
+export interface Field {
+  /** where each lies, FACE_GEO numbers as `Faces.geo` */
+  geo: Int16Array;
+  /** its direction, four bytes */
+  nor: Int8Array;
+  /** the colours of the columns' corners, FIELD_SIDE² × 4 bytes: the corner (u0, v0) of the column (x, z) at (2 (x − x0), 2 (z − z0)), (u1, v0) one to the right of that, (u0, v1) one below it */
+  tones: Uint8Array;
+  /** the first column the field holds, in the mesh's own blocks */
+  x0: number; z0: number;
+}
+/** the columns a field holds along each side: those of a piece of the world (worldprobe/pieces.ts PIECE) */
+export const FIELD_COLUMNS = 200;
+/** and its colours along each side, two to a column */
+export const FIELD_SIDE = FIELD_COLUMNS * 2;
+
 /** a block is this many steps of a face's numbers; a face reaches no farther than 511 blocks from its mesh's own beginning */
 export const FACE_STEPS = 64;
 /** numbers to a face of where it lies, and bytes of its colours */
@@ -133,7 +156,7 @@ export function freeHit(f: Free, from: ArrayLike<number>, along: ArrayLike<numbe
  * How far along a ray the first face lies that the ray meets from its front, in lengths of `along`; none where it
  * meets no face. `from` and `along` in the mesh's own blocks.
  */
-export function faceHit(f: Faces, from: ArrayLike<number>, along: ArrayLike<number>): number | null {
+export function faceHit(f: Pick<Faces, 'geo' | 'nor' | 'lift'>, from: ArrayLike<number>, along: ArrayLike<number>): number | null {
   // (the ray among the faces as their numbers put them)
   const start = [from[0], from[1] - (f.lift ?? 0), from[2]];
   let first = Infinity;

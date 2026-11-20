@@ -29,6 +29,19 @@ export const faceGeometry = (s: Shape) => {
   else g.boundingSphere = new THREE.Box3().setFromArray(unfaced(f).pos).getBoundingSphere(new THREE.Sphere());
   return g;
 };
+/** The joined tops of a shape (faces.ts `Field`) likewise: a row of numbers and a direction to each, and no colours, which the stage reads from the shape's field. */
+export const fieldGeometry = (s: Shape) => {
+  const f = s.tops!, g = new THREE.InstancedBufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(CORNERS, 3));
+  g.setIndex(new THREE.BufferAttribute(TRIANGLES, 1));
+  const lies = new THREE.InstancedInterleavedBuffer(f.geo, FACE_GEO);
+  g.setAttribute('lie', new THREE.InterleavedBufferAttribute(lies, 4, 0, true)); g.setAttribute('reach', new THREE.InterleavedBufferAttribute(lies, 2, 4, true));
+  g.setAttribute('normal', new THREE.InstancedBufferAttribute(f.nor, 4, true));
+  g.instanceCount = f.geo.length / FACE_GEO;
+  if (s.ball) g.boundingSphere = new THREE.Sphere(new THREE.Vector3(s.ball[0], s.ball[1], s.ball[2]), s.ball[3]);
+  else g.boundingSphere = new THREE.Box3().setFromArray(unfaced({ ...f, col: new Uint8Array(f.geo.length / FACE_GEO * FACE_COL) }).pos).getBoundingSphere(new THREE.Sphere());
+  return g;
+};
 /** The faces on no grid of a shape likewise: a row of five floats, of colours and of its direction to each. */
 export const freeGeometry = (s: Shape) => {
   const f = s.free!, g = new THREE.InstancedBufferGeometry();

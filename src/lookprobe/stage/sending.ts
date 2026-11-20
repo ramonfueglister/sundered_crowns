@@ -9,8 +9,8 @@ import type { Materials } from './materials';
 type MakeMesh = (shape: Shape, material: THREE.Material, casts: boolean) => THREE.Mesh;
 
 /** The sending of lists for the stage of `scene` seen by `camera` (`fixedW`: a picture of fixed size, see below). */
-export function createSender(scene: THREE.Scene, camera: THREE.Camera, fixedW: number, mesh: MakeMesh, m: Pick<Materials, 'solid' | 'faced' | 'seaFaced' | 'gliding' | 'freed' | 'smallLists'>) {
-  const { solid, faced, seaFaced, gliding, freed, smallLists } = m;
+export function createSender(scene: THREE.Scene, camera: THREE.Camera, fixedW: number, mesh: MakeMesh, m: Pick<Materials, 'solid' | 'faced' | 'fieldFaced' | 'seaFaced' | 'gliding' | 'freed' | 'smallLists'>) {
+  const { solid, faced, fieldFaced, seaFaced, gliding, freed, smallLists } = m;
   // A mesh's lists go to the graphics card in the picture that first draws it, and that takes the page's thread a
   // millisecond or two for every megabyte and more for every list (measured on a Mac: the 49 meshes of one piece
   // of a town 77 ms; 27 meshes that came into the picture together, one picture of 247 ms). So the lists are sent
@@ -56,7 +56,7 @@ export function createSender(scene: THREE.Scene, camera: THREE.Camera, fixedW: n
     for (const made of cold) {
       const bytes = weight(made.geometry);
       if (sending.length && bytes > room) break;
-      const standIn = new THREE.Mesh(made.geometry, made.material === seaFaced ? faced : made.material === faced || made.material === gliding || made.material === freed ? made.material : solid);
+      const standIn = new THREE.Mesh(made.geometry, made.material === seaFaced ? faced : made.material === faced || made.material === fieldFaced || made.material === gliding || made.material === freed ? made.material : solid);
       // (all that the material reads of a mesh, as its own mesh has it)
       standIn.userData = { ...made.userData, ground: false, dots: new THREE.Vector2(0, 0) };
       // (it lies on the layer the water's mirror does not draw, and casts no shadow: one pass sends the lists)
