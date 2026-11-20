@@ -16,7 +16,10 @@ Rules (nothing is invented):
   next day of the month when the number the OCR read or the weekday agrees with it (the book uses the Julian
   calendar, as the game does).
 - An entry lists a feast, the place, the county (or ditto ',,') and the records (the abbreviations of the book's
-  "Explanation of references to records"); the place is the part of the entry that is none of the others.
+  "Explanation of references to records"); the place is the part of the entry that is none of the others. The rest of
+  the day's row begins the entry: on some pages the OCR read the place into it.
+- OWN RULE: the book names a county where it changes and leaves the column blank or writes a ditto below it (Exeter,
+  Devon, then Exeter with a ditto or blank), so a place without a county is in the county named last.
 - OWN RULE: where an entry names two places on one day, the day goes to the last that can be placed (the king reached
   it that day; the book lists them in order).
 - A place the OCR misread is the place of the book's index of places with the most like name (difflib, 85 %), or
@@ -68,13 +71,24 @@ RECORDS = {
     'romr', 'sr', 'vr', 'wa', 'wr',
 }
 # fmt: on
-FEAST = re.compile(
-    r'\b(?:after|Circumcision|Epiphany|Purification|Annunciation|Easter|Ascension|Pentecost|Whit\w*|Trinity|Corpus|'
-    r'Christmas|Nativity|Assumption|Michaelmas|Advent|Septuagesima|Sexagesima|Quinquagesima|Quadragesima|Lent|Palm|'
-    r'Good\s+Friday|Ash\s+Wednesday|Rogation|Low\s+Sunday|Innocents|All\s+Saints|All\s+Souls|Candlemas|Lammas|'
-    r'Exaltation|Invention|Conversion|Decollation|Translation|Sunday|Vigil|begins|Edw)\b',
+#: the feasts and the Sundays the book names before the place of a day; a column may open with one ('Circumcision St.
+#: Macaire'), FEAST_LEAD is the feast at its start with its number ('2 in Lent') and its day ('Easter Day')
+FEAST_WORDS = (
+    r'(?:after|aft\.?|Circumcision|Epiphany|Purification|Annunciation|Easter|Ascen\w*|Pentecost|Whit[- ]?(?:sun|mon|tues)\w*|'
+    r'Trinity|Corpus|Christmas|Nativity|Assumption|Michaelmas|Advent|Septuagesima|Sexagesima|Quinquagesima|'
+    r'Quadragesima|Lent|Palm|Passion|Midsummer|Lady\s+day|Good\s+Friday|Ash\s+Wednesday|Rogation|Low\s+Sunday|'
+    r'Innocents|All\s+Saints|All\s+Souls|Candlemas|Lammas|Exaltation|Invention|Conversion|Decollation|Translation|'
+    r'Sunday|Vigil|begins|Edw)'
+)
+FEAST = re.compile(r'\b' + FEAST_WORDS + r'(?!\w)', re.IGNORECASE)
+FEAST_LEAD = re.compile(
+    r'^(?:[\dil]{1,2}\s+(?:after|aft\.?|in)\s+)?' + FEAST_WORDS + r'(?!\w)(?:\s+(?:Day|Eve|Even|Sunday)(?!\w))?\.?',
     re.IGNORECASE,
 )
+DITTO = {',,', '„', ',', '"'}
+#: the last day of the reign: Edward I died at Burgh by Sands on 7 July 1307; the book's days run on to the end of
+#: that month
+REIGN_END = (1307, 7, 7)
 PROSE = re.compile(r'\b(?:the|was|were|is|had|appears|read|ibid|see|which|that)\b', re.IGNORECASE)
 #: the counties and lands of the county column that are not also the name of a town, as the book writes them in full
 #: or shortened (keys), besides those its index of places names
@@ -219,12 +233,15 @@ def parse(lines):
                         report['month_inferred'] += 1
                         y, m = date[0], date[1]
                     last = date[2]
-                    entry = [date, [], n + 1]
+                    # the rest of the row is the start of the entry (the feast, or on some pages the place itself)
+                    entry = [date, [row.group(3)] if row.group(3) else [], n + 1]
                     days.append(entry)
                     continue
                 if number is not None and weekday is not None:
+                    # what follows a row that is not the next day belongs to that row, not to the day before
                     report['day_row_rejected'] += 1
                     odd.append(f'{n + 1}: rejected day row {t!r} after {y}-{m}-{last}')
+                    entry = None
                     continue
         if entry is not None:
             entry[1].append(t)
@@ -276,8 +293,15 @@ def continues(t, y, m, last):
     return num == str(nxt) and weekday == julian_weekday(y, m, nxt)
 
 
-def places_of(entry_lines, places, counties, report):
-    """The places an entry names, in order (above)."""
+def place_in(seg):
+    """The place a column names, after a feast that may open it ('Circumcision St. Macaire'); '' where it names none."""
+    rest = FEAST_LEAD.sub('', seg, count=1).strip() if FEAST.search(seg) else seg
+    return '' if not rest or FEAST.search(rest) or is_noise(rest) else clean(rest)
+
+
+def places_of(entry_lines, places, counties, county, report):
+    """The places an entry names, in order (above), each as [place, the key of its county]; and the county named last,
+    which the next entry goes on from."""
     out, state = [], 'place'
     for t in entry_lines:
         for seg in segments(t):
@@ -286,18 +310,21 @@ def places_of(entry_lines, places, counties, report):
                 state = 'place'
                 continue
             k = key(clean(seg))
-            if seg in (',,', '„', ',', '"'):
+            if seg in DITTO:
                 state = 'records'
-            elif FEAST.search(seg) or is_noise(seg):
+            elif not place_in(seg):
                 report['segments_skipped'] += 1
             elif k in counties and k not in places or state == 'county':
+                county = k
+                if out:
+                    out[-1][1] = k
                 state = 'records'
             else:
-                out.append(clean(seg))
+                out.append([place_in(seg), county])
                 state = 'county'
             if had_records:
                 state = 'place'
-    return [p for p in out if p]
+    return out, county
 
 
 def index_names(lines):
@@ -328,7 +355,7 @@ def misread(days, gaz, index, report):
     """Put the names the OCR misread right by the index of places or by the days around (above)."""
     found = {}
     for _, names, _ in days:
-        for n in names:
+        for n, _ in names:
             if n not in found:
                 found[n] = bool(gaz.lookup(n)[0])
     for n in [n for n, ok in found.items() if not ok]:
@@ -337,17 +364,18 @@ def misread(days, gaz, index, report):
             found[n] = index[close[0]]
             report['names_by_index'] += 1
     for i, (_, names, _) in enumerate(days):
-        for j, n in enumerate(names):
+        for name in names:
+            n = name[0]
             if isinstance(found[n], str):
-                names[j] = found[n]
+                name[0] = found[n]
                 continue
             if found[n]:
                 continue
-            near = [m for d in days[max(0, i - 3) : i + 4] for m in d[1] if found.get(m) is True]
+            near = [m for d in days[max(0, i - 3) : i + 4] for m, _ in d[1] if found.get(m) is True]
             ratio = {m: difflib.SequenceMatcher(None, key(n), key(m)).ratio() for m in near}
             best = max(ratio, key=ratio.get, default=None)
             if best and ratio[best] >= 0.7:
-                names[j] = best
+                name[0] = best
                 report['names_by_neighbour'] += 1
 
 
@@ -357,8 +385,15 @@ def main(text_path, geonames_path, out_path):
     days, report, odd = parse(lines)
     index, counties = index_names(lines)
     report['index_names'], report['index_counties'] = len(index), len(counties)
+    county = ''
     for d in days:
-        d[1] = places_of(d[1], index, counties | COUNTIES, report)
+        d[1], county = places_of(d[1], index, counties | COUNTIES, county, report)
+        # OWN RULE: the book names one place a day, two where the king moved on; more are a column of places the OCR
+        # read apart from its days (February 1288), whose days cannot be told
+        if len(d[1]) > 2:
+            report['entries_read_apart'] += 1
+            d[1] = []
+    days = [d for d in days if d[0] <= REIGN_END]
     report['days'] = len(days)
     report['days_with_a_place'] = sum(1 for d in days if d[1])
     gaz = Gazetteer(geonames_path)
@@ -380,7 +415,15 @@ def main(text_path, geonames_path, out_path):
         'license': 'the book is in the public domain; GeoNames CC BY 4.0 (https://www.geonames.org)',
         'columns': {'places': ['place', 'lat', 'lon'], 'stops': ['day', 'place']},
         'places': places,
-        'kings': [{'key': 'Q57798', 'name': 'Edward I', 'from': dated[0][0], 'to': '1307-07-07', 'stops': rows}],
+        'kings': [
+            {
+                'key': 'Q57798',
+                'name': 'Edward I',
+                'from': dated[0][0],
+                'to': '{:04d}-{:02d}-{:02d}'.format(*REIGN_END),
+                'stops': rows,
+            }
+        ],
     }
     with open(out_path, 'w', encoding='utf-8') as f:
         json.dump(out, f, ensure_ascii=False, separators=(',', ':'))
