@@ -41,3 +41,4 @@
 
 /* inside the game (the HUD's .app), under the top bar like the place panel */
 .app .person-panel { top: 64px; right: 10px; max-height: calc(100% - 150px); }
+.person-panel .speak { display: block; width: 100%; margin-bottom: 8px; padding: 6px 10px; font-size: 1em; }

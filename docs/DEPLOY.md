@@ -161,6 +161,9 @@ fly logs --app grand-strategy-game
 - Deploys send `SIGTERM`; the server snapshots and exits, the new version resumes from that snapshot.
 - A second world = a second app (or a second process group) with its own volume and `WORLD_ID`.
 - Non-secret settings (`SECONDS_PER_DAY`, `MAX_PLAYERS`, `WORLD_ID`, …) are in `[env]` of `server/fly.toml`.
+- Conversations with the persons (docs/TALK.md) need an OpenRouter key, as a secret only on the world server:
+  `fly secrets set --app grand-strategy-game OPENROUTER_API_KEY=<key>` (set a credit limit for the key on
+  openrouter.ai). Without it the "Sprechen" button answers that conversations are not set up.
 
 ### Alternatives
 
@@ -203,7 +206,10 @@ runs, and resumes from its snapshot and log after every restart.
   a core once that is spent: the fast speeds of the time control spend it within minutes.
 - Server-side limits (env): `MAX_PLAYERS` (100), `CMDS_PER_DAY` (60 commands per player per in-game day),
   3 sessions per account, 12 connections per IP,
-  64 KB per WebSocket message.
+  64 KB per WebSocket message; conversations: `TALK_PER_USER_HOUR` (60), `TALK_PER_HOUR` (1000 for all players),
+  `TALK_MAX_TOKENS` (300 per answer).
+- **OpenRouter** (conversations, docs/TALK.md): DeepSeek V4.1 Flash at about US$0.14 per million tokens in and
+  US$0.42 out (November 2026), about US$0.001 for a conversation of eight turns.
 
 ## 6. Fairness
 
