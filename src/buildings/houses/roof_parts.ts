@@ -5,6 +5,10 @@
 import { type Batch, type RGB, type V3, hash2, shade } from '../../lookprobe/batch';
 import { VOXEL as V } from './style';
 
+/** the tiles' shades: the darkest, and how much lighter the lightest is */
+export type Shades = readonly [number, number];
+const SHADES: Shades = [0.88, 0.2];
+
 const lerp3 = (a: V3, b: V3, t: number): V3 => [
   a[0] + (b[0] - a[0]) * t,
   a[1] + (b[1] - a[1]) * t,
@@ -19,7 +23,17 @@ const lerp3 = (a: V3, b: V3, t: number): V3 => [
  * face of every cube (the step to the row below), and all four sides of the rim cubes (`verges` false: no rim at the sides); an inner cube's other sides
  * are hidden by its neighbours, since the gap between them is a twentieth of a block.
  */
-export function tiles(b: Batch, e0: V3, e1: V3, r0: V3, r1: V3, c: RGB, seed: number, verges = true) {
+export function tiles(
+  b: Batch,
+  e0: V3,
+  e1: V3,
+  r0: V3,
+  r1: V3,
+  c: RGB,
+  seed: number,
+  verges = true,
+  [low, spread]: Shades = SHADES,
+) {
   const cols = Math.max(1, Math.round(Math.hypot(e1[0] - e0[0], e1[2] - e0[2]) / V)),
     rows = Math.max(1, Math.round(Math.hypot(r0[0] - e0[0], r0[2] - e0[2]) / V));
   const at = (u: number, t: number): V3 => lerp3(lerp3(e0, e1, u), lerp3(r0, r1, u), t);
@@ -32,7 +46,7 @@ export function tiles(b: Batch, e0: V3, e1: V3, r0: V3, r1: V3, c: RGB, seed: nu
       const a = at(j / cols, k / rows),
         d = at((j + 1) / cols, (k + 1) / rows),
         h = hash2(j, k, seed),
-        col = shade(c, 0.88 + 0.2 * hash2(j, k, seed + 5));
+        col = shade(c, low + spread * hash2(j, k, seed + 5));
       const rim = (verges && (j === 0 || j === cols - 1)) || k === 0 || k === rows - 1,
         top = Math.max(a[1], d[1]) + V * (0.15 + 0.2 * h) + (rim ? V * 0.7 : 0),
         g = V * 0.05;
@@ -68,6 +82,7 @@ export function tiledGable(
   c: RGB,
   wallC: RGB,
   seed: number,
+  shades: Shades = SHADES,
 ) {
   const top = y + rise,
     under = shade(c, 0.68),
@@ -76,16 +91,16 @@ export function tiledGable(
     const zc = (z0 + z1) / 2;
     b.quad([x0, y, z1], [x1, y, z1], [x1, top, zc], [x0, top, zc], under, [0, 1, 1]);
     b.quad([x1, y, z0], [x0, y, z0], [x0, top, zc], [x1, top, zc], under, [0, 1, -1]);
-    tiles(b, [x0, y, z1], [x1, y, z1], [x0, top, zc], [x1, top, zc], c, seed);
-    tiles(b, [x1, y, z0], [x0, y, z0], [x1, top, zc], [x0, top, zc], c, seed + 1);
+    tiles(b, [x0, y, z1], [x1, y, z1], [x0, top, zc], [x1, top, zc], c, seed, true, shades);
+    tiles(b, [x1, y, z0], [x0, y, z0], [x1, top, zc], [x0, top, zc], c, seed + 1, true, shades);
     b.tri([x1, y, z1], [x1, y, z0], [x1, top, zc], ...w3, [1, 0, 0]);
     b.tri([x0, y, z0], [x0, y, z1], [x0, top, zc], ...w3, [-1, 0, 0]);
   } else {
     const xc = (x0 + x1) / 2;
     b.quad([x1, y, z1], [x1, y, z0], [xc, top, z0], [xc, top, z1], under, [1, 1, 0]);
     b.quad([x0, y, z0], [x0, y, z1], [xc, top, z1], [xc, top, z0], under, [-1, 1, 0]);
-    tiles(b, [x1, y, z1], [x1, y, z0], [xc, top, z1], [xc, top, z0], c, seed);
-    tiles(b, [x0, y, z0], [x0, y, z1], [xc, top, z0], [xc, top, z1], c, seed + 1);
+    tiles(b, [x1, y, z1], [x1, y, z0], [xc, top, z1], [xc, top, z0], c, seed, true, shades);
+    tiles(b, [x0, y, z0], [x0, y, z1], [xc, top, z0], [xc, top, z1], c, seed + 1, true, shades);
     b.tri([x0, y, z1], [x1, y, z1], [xc, top, z1], ...w3, [0, 0, 1]);
     b.tri([x1, y, z0], [x0, y, z0], [xc, top, z0], ...w3, [0, 0, -1]);
   }
@@ -105,6 +120,7 @@ export function tiledHip(
   rise: number,
   c: RGB,
   seed: number,
+  shades: Shades = SHADES,
 ) {
   const s = Math.min(x1 - x0, z1 - z0) / 2,
     top = y + rise,
@@ -135,7 +151,7 @@ export function tiledHip(
   slopes.forEach(([e0, e1, r0, r1, n], i) => {
     b.quad(e0, e1, r1, r0, under, n);
     // a hip has no verges: the slopes meet along the hips, where a raised rim would stand as a comb
-    tiles(b, e0, e1, r0, r1, c, seed + i, false);
+    tiles(b, e0, e1, r0, r1, c, seed + i, false, shades);
   });
 }
 
@@ -178,7 +194,15 @@ export function stack(b: Batch, cx: number, cz: number, y: number, hv: number, c
   const s = V * 0.75,
     top = y + hv * V;
   b.box(cx - s, y - V, cz - s, cx + s, top, cz + s, c, { foot: 0.88 });
-  b.box(cx - s - V * 0.15, top, cz - s - V * 0.15, cx + s + V * 0.15, top + V * 0.35, cz + s + V * 0.15, shade(c, 1.05));
+  b.box(
+    cx - s - V * 0.15,
+    top,
+    cz - s - V * 0.15,
+    cx + s + V * 0.15,
+    top + V * 0.35,
+    cz + s + V * 0.15,
+    shade(c, 1.05),
+  );
   b.box(cx - s * 0.6, top + V * 0.35, cz - s * 0.6, cx + s * 0.6, top + V * 0.4, cz + s * 0.6, dark);
 }
 

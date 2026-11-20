@@ -4,6 +4,7 @@
 import * as THREE from 'three/webgpu';
 import { Batch, type RGB, type Rnd, hash2, rgb, seeded, shade } from './batch';
 import { boat } from './blocks';
+import { EARTH, LEAF, cypress, tree } from './scenery';
 import { COAST, PARIS, type Column, LAGOON, VENICE, VOXEL as V, cloth, crate, fineGround, fineHouse, jar, jetty, waterColourAt, waterFlecks, wallOf } from '../buildings';
 import { LAND_Y, N, SEA_Y } from './layout';
 import { NEAR_LIGHT, NEAR_SHADOW, type StageScene, showError, stage } from './stage';
@@ -26,30 +27,6 @@ function row(things: Batch, xf: number, z0: number, z1: number, r: Rnd, great: b
     const house = fineHouse(d, w, floors, tr, r, { front: 'px', shop: !big && r.chance(0.35), great: big, blind: [...(before ? [] : ['nz' as const]), ...(lane ? [] : ['pz' as const])] });
     things.append(house, mat.identity().setPosition(xf - d / 2, LAND_Y, z + w / 2));
     z += w + lane; k++; before = lane;
-  }
-}
-
-const CYPRESS = rgb(0x2c5a2e);
-
-/** A cypress: a slim column of dark green cubes narrowing to a point (scenery of the coast prototype). */
-function cypress(b: Batch, x: number, y: number, z: number, r: Rnd) {
-  const h = r.range(3.4, 4.8), w = r.range(0.3, 0.4), n = 10;
-  b.box(x - 0.08, y, z - 0.08, x + 0.08, y + 0.4, z + 0.08, TRUNK);
-  for (let k = 0; k < n; k++) {
-    const t = k / n, e = w * Math.max(0.15, (1 - t) ** 0.6) * Math.min(1, 0.7 + t * 3);
-    b.box(x - e, y + 0.3 + t * h, z - e, x + e, y + 0.3 + (t + 1 / n) * h + 0.05, z + e, shade(CYPRESS, r.range(0.85, 1.1)), { top: shade(CYPRESS, 1.15) });
-  }
-}
-
-const LEAF = rgb(0x6fae3a), EARTH = rgb(0x9a7046), TRUNK = rgb(0x6b4a2c);
-
-/** A tree in blocks: a trunk and a crown of a few leafy cubes (scenery of the probe, not of the house kit). */
-function tree(b: Batch, x: number, y: number, z: number, r: Rnd) {
-  const h = r.range(1.2, 2.0), s = r.range(0.7, 1.0);
-  b.box(x - 0.15, y, z - 0.15, x + 0.15, y + h, z + 0.15, TRUNK);
-  for (let k = 0; k < r.int(3, 5); k++) {
-    const dx = r.range(-0.5, 0.5) * s, dz = r.range(-0.5, 0.5) * s, dy = r.range(-0.3, 0.5) * s, e = r.range(0.4, 0.6) * s;
-    b.box(x + dx - e, y + h + dy - e, z + dz - e, x + dx + e, y + h + dy + e, z + dz + e, shade(LEAF, r.range(0.85, 1.15)), { top: shade(LEAF, 1.1) });
   }
 }
 

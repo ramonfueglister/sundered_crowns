@@ -13,12 +13,18 @@ const hexes = (a: readonly number[]): readonly RGB[] => a.map((h) => rgb(h));
 
 export const PARIS: Tradition = {
   ...VENICE,
+  // the lanes and squares paved with grey-rose stones, as the reference picture draws them (assumption)
+  quay: { ...VENICE.quay, paving: rgb(0x7e6664), joint: 0.18 },
   storeys: [2, 3],
   greatStoreys: [3, 4],
-  walls: hexes([0xe6d6bc, 0xdcc9a8, 0xeadfca, 0xd6c2a2, 0xe2cfb0]),
-  stone: rgb(0xcdbb9c),
+  walls: hexes([0xd2b49c, 0xc8aa92, 0xd8bca4, 0xc4a48c, 0xceb098]),
+  stone: rgb(0xe6d8c2),
   roof: rgb(0x9a5a38),
-  roofs: hexes([0x7e4a30, 0x8c5034, 0x9a4e32, 0x6c4630, 0x5e5c62, 0x86583a, 0xa05a3a, 0x535257]),
+  // brown tiles most often, red and orange ones between them, and now and then slate, as the picture shows (assumption)
+  roofs: hexes([
+    0x5e3a2a, 0x7e4e36, 0x9e6242, 0x744832, 0x845238, 0xb06e4a, 0x8a3e30, 0xa04838, 0xb85a40, 0xa86a34, 0xc0783c,
+    0xd08a4c, 0x5a4440, 0x5e5c62,
+  ]),
   wood: rgb(0x5a3a24),
   chimneyC: rgb(0xd8c8ac),
   arched: 0,
@@ -26,9 +32,11 @@ export const PARIS: Tradition = {
   washing: 0.05,
   jetty: { ...VENICE.jetty, share: 0.35 },
   altana: 0,
-  pitch: [1.15, 1.45],
-  chimney: { height: [3, 5], perHouse: 1.3 },
-  plot: { width: [m(5.5), m(8)], depth: [m(7), m(10)], greatWidth: [m(9), m(12)] },
-  timber: { share: 0.8, c: rgb(0x3e2716) },
+  pitch: [0.85, 1.05],
+  chimney: { height: [3, 5], perHouse: 2 },
+  dormers: 1,
+  tileShades: [0.9, 0.15],
+  plot: { width: [m(4.5), m(6.5)], depth: [m(6), m(8)], greatWidth: [m(9), m(12)] },
+  timber: { share: 0.65, c: rgb(0x5e4838) },
   plainChimney: true,
 };

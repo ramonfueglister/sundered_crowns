@@ -14,7 +14,7 @@ export default defineConfig({
   build: {
     target: 'es2022',
     chunkSizeWarningLimit: 4000,
-    rollupOptions: { input: ['index.html', 'look-probe.html', 'world-probe.html', 'near-probe.html'] },
+    rollupOptions: { input: ['index.html', 'look-probe.html', 'world-probe.html', 'near-probe.html', 'paris-probe.html'] },
   },
   server: { port: 5173, host: true },
   // A test that builds a world takes 3 to 4 s alone (with the streets of every town since #85), and more beside the

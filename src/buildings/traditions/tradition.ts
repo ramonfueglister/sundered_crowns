@@ -11,6 +11,8 @@ export interface Quay {
   post: RGB;
   /** a flight of water steps every so many blocks of straight quay, and a mooring post every so many */
   stepsEvery: readonly [number, number];
+  /** the joint between two paving slabs in fine blocks, where the ground shows; none if not given */
+  joint?: number;
   postEvery: readonly [number, number];
 }
 
@@ -59,4 +61,8 @@ export interface Tradition {
   timber?: { share: number; c: RGB };
   /** plain square chimneys instead of the Venetian bell */
   plainChimney?: boolean;
+  /** mean number of dormers on a gable roof */
+  dormers?: number;
+  /** the shades of a roof's tiles: the darkest, and how much lighter the lightest is ([0.88, 0.2] if not given) */
+  tileShades?: readonly [number, number];
 }

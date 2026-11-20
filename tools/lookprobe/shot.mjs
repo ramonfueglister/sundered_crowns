@@ -7,12 +7,15 @@ import { createRequire } from 'node:module';
 const { chromium } = createRequire(import.meta.url)('playwright');
 
 const out = process.argv[2] ?? 'look-probe.png',
-  extra = process.argv[3] ? `&${process.argv[3]}` : '';
-const url = `${process.env.PROBE_URL ?? 'http://localhost:5173'}/${process.env.PROBE_PAGE ?? 'look-probe.html'}?webgl=1&w=1672&h=941${extra}`;
+  extra = process.argv[3] ? `&${process.argv[3]}` : '',
+  // SHOT_W and SHOT_H take a picture of another size, e.g. that of a reference image
+  W = Number(process.env.SHOT_W) || 1672,
+  H = Number(process.env.SHOT_H) || 941;
+const url = `${process.env.PROBE_URL ?? 'http://localhost:5173'}/${process.env.PROBE_PAGE ?? 'look-probe.html'}?webgl=1&w=${W}&h=${H}${extra}`;
 const browser = await chromium.launch({
   args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'],
 });
-const page = await browser.newPage({ viewport: { width: 1672, height: 941 }, deviceScaleFactor: 1 });
+const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
 page.on('console', (m) => {
   if (m.type() === 'error' || m.type() === 'warning') console.log(`[${m.type()}]`, m.text());
 });

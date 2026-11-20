@@ -10,6 +10,7 @@ import type { Tradition } from '../traditions/tradition';
 import { awning, jar } from './clutter';
 import { type Materials, ashlar, corbels, door, gate, jointOf, shop, shutters, washing, window } from './parts';
 import { altana, chimney, stack, tiledGable, tiledHip } from './roof_parts';
+import { dormers } from './dormer';
 import { gableFrame, timberFrame } from './timber';
 import { VOXEL as V } from './style';
 
@@ -131,14 +132,16 @@ export function fineHouse(w: number, d: number, floors: number, tr: Tradition, r
     rx1 = f.x1 + ov,
     rz1 = f.z1 + ov;
   if (hipped) {
-    if (detail) tiledHip(b, rx0, rz0, rx1, rz1, top, rise, roofC, seed);
+    if (detail) tiledHip(b, rx0, rz0, rx1, rz1, top, rise, roofC, seed, tr.tileShades);
     else hipRoof(b, rx0, rz0, rx1, rz1, top, rise, roofC, 3);
-  } else if (detail) tiledGable(b, rx0, rz0, rx1, rz1, top, rise, roofC, wallC, seed);
+  } else if (detail) tiledGable(b, rx0, rz0, rx1, rz1, top, rise, roofC, wallC, seed, tr.tileShades);
   else gableRoof(b, rx0, rz0, rx1, rz1, top, rise, roofC, wallC, 3);
   // the gable ends of a timber-framed house show their frame too (on the short sides, where tiledGable fills the gable)
   if (frame && detail && !hipped)
     for (const sd of (rx1 - rx0 >= rz1 - rz0 ? ['px', 'nx'] : ['pz', 'nz']) as Side[])
       gableFrame(b, wallOf(rx0, rz0, rx1, rz1, sd), top, rise, frame);
+  if (tr.dormers && detail && !hipped)
+    dormers(b, rx0, rz0, rx1, rz1, top, rise, r.int(0, Math.round(tr.dormers * 2)), wallC, roofC, mt.glass, r);
   if (altanaOn && detail) {
     const s = Math.min(W, D) * 0.25;
     altana(b, -s, -s, s, s, top + rise, tr.wood);
