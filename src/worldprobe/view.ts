@@ -10,7 +10,7 @@
 import * as THREE from 'three/webgpu';
 import { NEAR, RIGHT, SEA_Y } from '../lookprobe/layout';
 import { type Stage, bakedSky, createStage } from '../lookprobe/stage';
-import { withCoast } from '../lookprobe/sea';
+import { withCoast } from '../lookprobe/sea_coast';
 import { createNames } from './names';
 // the face of the realms' names (names.ts), bundled: no requests to a font service
 import '@fontsource/eb-garamond/latin-500.css';
