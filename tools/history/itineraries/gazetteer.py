@@ -249,7 +249,7 @@ def place_days(days, gaz, report):
     for s in [s for s in stays if s['sure'] and not in_county(s['at'], regions.get(s['county'], ()))]:
         for t in stays:
             if t['sure'] and same_name(t['name'], s['name']) and apart(s, t) <= SAME_NAME_DAYS:
-                t['at'], t['sure'] = None, False
+                t['at'], t['sure'], t['known'] = None, False, False
                 report['stays_out_of_county'] += 1
     for s in thin([s for s in stays if s['sure']]):
         s['at'], s['sure'], s['why'] = None, False, 'out of reach of the stays around'
@@ -294,9 +294,10 @@ def place(s, i, stays, by, cands, region, gaz, report):
     else at the likest name near it; each first within reach of both, then within reach of those as many days name
     (as src/sim/content/travel.ts reachableStops, a stay fewer days name gives way where two contradict). A place of
     the name comes before a like name: the name is the book's word, the likeness a guess; and a name only one place
-    bears is never taken for a like name (OWN RULE: the likeness is for names the gazetteer does not know or knows
-    only far off; a day out of reach of the one place of its name is a wrong day, not a wrong name: Jedburgh in
-    August 1304, between Stirling and Perth, is not Edinburgh)."""
+    bears, in the county the book puts it in, is never taken for a like name (OWN RULE: the likeness is for names the
+    gazetteer does not know, or knows only elsewhere; a day out of reach of the one place of its name in its county is
+    a wrong day, not a wrong name: Jedburgh in August 1304, between Stirling and Perth, is not Edinburgh; but Condac
+    in Guienne, where the one Condac is in the Charente, is Condat by Libourne)."""
     prev = next((t for t in reversed(stays[:i]) if t[by]), None)
     nxt = next((t for t in stays[i + 1 :] if t[by]), None)
     before, after = prev and around(s, prev, -1), nxt and around(s, nxt, 1)
