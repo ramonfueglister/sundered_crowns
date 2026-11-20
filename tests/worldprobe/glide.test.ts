@@ -7,7 +7,7 @@ import { SEA_Y, onGrid } from '../../src/lookprobe/layout';
 import { TALLER, glide } from '../../src/worldprobe/glide';
 import { BRIGHTEST, faced, small } from '../../src/worldprobe/small';
 import { type Table, drawBanks, drawLand, drawTable, drawnHeights, tableOf } from '../../src/worldprobe/table';
-import { SIDE, land, part } from './land';
+import { LAND_STEP, SIDE, land, part } from './land';
 
 const S = FACE_STEPS;
 /** the coarser piece's ground lies so that the quarter of it over the piece is its columns 36 … 60 */
@@ -26,9 +26,9 @@ function pair(over = OVER): { fine: Table; parent: Table } {
 }
 function piece(over = OVER) {
   // (the meshes as the worker hands them over: the sea as faces on a grid lifted to its level, the water above it as lists)
-  const { fine, parent } = pair(over), drawn = drawTable(fine, true), ground = faced(drawn.ground), carried = faced(drawn.carried!), water = faced(drawn.water, SEA_Y - Math.floor(SEA_Y * S) / S), raised = small(drawn.raised);
+  const { fine, parent } = pair(over), drawn = drawTable(fine, true, LAND_STEP), ground = faced(drawn.ground), carried = faced(drawn.carried!), water = faced(drawn.water, SEA_Y - Math.floor(SEA_Y * S) / S), raised = small(drawn.raised);
   const before = { faces: ground.faces!.geo.length / FACE_GEO, geo: ground.faces!.geo.slice(), col: ground.faces!.col.slice(), carried: carried.faces!.geo.length / FACE_GEO, banks: ground.pos.length / 9, water: water.pos.length / 9, raised: raised.pos.length / 9 };
-  const columns = glide({ ground, carried, water, raised }, fine, parent, true);
+  const columns = glide({ ground, carried, water, raised }, fine, parent, true, LAND_STEP);
   return { fine, parent, shapes: { ground, carried, water, raised }, ground: ground.faces!, carried: carried.faces!, before, columns };
 }
 /** a height of the coarser piece in the piece's blocks */
@@ -57,7 +57,7 @@ const inside = (x: number, z: number) => x >= part.x0 && x < part.x1 && z >= par
 
 /** The tops of the coarser piece's columns as it draws them: by column, the two triangles of its top with their colours, and whether the column is what the ground carries. */
 function topsOf(parent: Table) {
-  const drawn = drawLand(parent, true, QUARTER), tops = new Map<number, { corners: number[][][]; carried: boolean }>();
+  const drawn = drawLand(parent, true, QUARTER, LAND_STEP + 1), tops = new Map<number, { corners: number[][][]; carried: boolean }>();
   for (const [b, carried] of [[drawn.ground, false], [drawn.carried, true]] as [Batch, boolean][]) for (let o = 0; o < b.pos.length; o += 9) {
     const corners = [0, 1, 2].map((c) => [b.pos[o + c * 3], b.pos[o + c * 3 + 2], b.col[o + c * 3], b.col[o + c * 3 + 1], b.col[o + c * 3 + 2]]);
     const x = Math.min(...corners.map((c) => c[0])), z = Math.min(...corners.map((c) => c[1])), p = z * parent.side + x;
@@ -314,7 +314,7 @@ describe('the glide of a far piece to the coarser one over it', () => {
     }
     expect(own).toBeGreaterThan(500);
     // the coarser piece's: each of its crowns' faces over the piece, under the columns now, where that piece has them then
-    const theirs = faced(drawLand(parent, true, QUARTER).carried).faces!, wanted: string[] = [], came: string[] = [];
+    const theirs = faced(drawLand(parent, true, QUARTER, LAND_STEP + 1).carried).faces!, wanted: string[] = [], came: string[] = [];
     for (let k = 0; k < theirs.geo.length / FACE_GEO; k++) {
       const at = crownOf(theirs, k, parent.side);
       if (!at) continue;
@@ -339,14 +339,14 @@ describe('the glide of a far piece to the coarser one over it', () => {
   });
 
   it('takes what stands on the ground down into its column: at the end it lies under the top there, with no height', () => {
-    const { fine, parent } = pair(), drawn = drawTable(fine, true), stands = new Batch();
+    const { fine, parent } = pair(), drawn = drawTable(fine, true, LAND_STEP), stands = new Batch();
     // a wall two blocks tall on every third column, on its top or on its water
     for (let z = part.z0; z < part.z1; z += 3) for (let x = part.x0; x < part.x1; x += 3) {
       const i = z * SIDE + x, y = fine.wet[i] ? fine.surf[i] : fine.h[i];
       stands.quad([x + 0.2, y, z + 0.5], [x + 0.8, y, z + 0.5], [x + 0.8, y + 2, z + 0.5], [x + 0.2, y + 2, z + 0.5], [0.5, 0.4, 0.3], [0, 0, 1]);
     }
     const things = small(stands), was = Float32Array.from(things.pos);
-    glide({ ground: faced(drawn.ground), carried: faced(drawn.carried!), things, water: small(drawn.water), raised: small(drawn.raised) }, fine, parent, true);
+    glide({ ground: faced(drawn.ground), carried: faced(drawn.carried!), things, water: small(drawn.water), raised: small(drawn.raised) }, fine, parent, true, LAND_STEP);
     expect(things.pos).toEqual(was);
     let down = 0, stay = 0;
     for (let v = 0; v < things.pos.length / 3; v++) {

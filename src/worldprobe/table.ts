@@ -15,7 +15,7 @@
 import { Batch, type RGB } from '../lookprobe/batch';
 import { type Ground, type GroundTraits, Mat, N, SUMMIT, idx, onGrid } from '../lookprobe/layout';
 import { buildShore } from '../lookprobe/shore';
-import { type Part, buildTerrain, buildWater, drawnTops } from '../lookprobe/terrain';
+import { type Part, buildTerrain, buildWater, drawnTops, sideTopAt } from '../lookprobe/terrain';
 import { pack, unpack } from './pack';
 import { FAR_FROM_ROADS, ROAD_SHOWS, roadOn } from './roads';
 
@@ -155,11 +155,12 @@ export function tableOf(g: Ground, t: GroundTraits, part: Part, roads: Float32Ar
  */
 class TableTraits implements GroundTraits {
   readonly slope: GroundTraits['slope'];
+  readonly sideTop: number;
   private readonly side: number;
   private readonly last: number;
   private readonly pulls: (readonly [RGB, number])[] = [];
-  constructor(private readonly table: Table) {
-    this.slope = table.slope; this.side = table.side; this.last = table.side - 1;
+  constructor(private readonly table: Table, step: number) {
+    this.slope = table.slope; this.sideTop = sideTopAt(step); this.side = table.side; this.last = table.side - 1;
     const tints = table.tints;
     for (let k = 0; k < tints.length; k += 4) this.pulls.push([[tints[k], tints[k + 1], tints[k + 2]], tints[k + 3]]);
   }
@@ -178,35 +179,36 @@ class TableTraits implements GroundTraits {
     return table.has[i] ? { top: this.colour(table.top[i]), side: this.colour(table.flank[i]), rise: table.rise[i], share: table.share[i], stands: table.has[i] === 1 } : null;
   }
 }
-const traitsOf = (table: Table): GroundTraits => new TableTraits(table);
+/** `step`: the step of the map the table's piece belongs to (the tables hold nothing of the look, so not that either) */
+const traitsOf = (table: Table, step: number): GroundTraits => new TableTraits(table, step);
 
 /**
  * Draws the land of a part of a table's own columns, without water and banks: what the piece shows there on its
  * columns' tops and sides (glide.ts asks the coarser piece for it).
  */
-export function drawLand(table: Table, bakedSky: boolean, part: Part): { ground: Batch; carried: Batch } {
+export function drawLand(table: Table, bakedSky: boolean, part: Part, step: number): { ground: Batch; carried: Batch } {
   const g: Ground = { h: table.h, mat: table.mat, wet: table.wet, shore: table.shore, occ: table.occ, surf: table.surf, ox: table.ox, oz: table.oz };
-  return onGrid(table.side, () => { const carried = new Batch(); return { ground: buildTerrain(g, traitsOf(table), bakedSky, part, carried), carried }; });
+  return onGrid(table.side, () => { const carried = new Batch(); return { ground: buildTerrain(g, traitsOf(table, step), bakedSky, part, carried), carried }; });
 }
 
 /** The tops of a table's columns as they are drawn: where trees stand, lower than the table has them (terrain.ts `drawnTops`). */
 export function drawnHeights(table: Table): ArrayLike<number> {
   const g: Ground = { h: table.h, mat: table.mat, wet: table.wet, shore: table.shore, occ: table.occ, surf: table.surf, ox: table.ox, oz: table.oz };
-  return onGrid(table.side, () => drawnTops(g, traitsOf(table)));
+  return onGrid(table.side, () => drawnTops(g, traitsOf(table, 0)));
 }
 
 /** Draws the banks of the water in a part of a table's own columns, as the piece has them there (glide.ts asks the coarser piece for them). */
 export function drawBanks(table: Table, bakedSky: boolean, part: Part): Batch {
   const g: Ground = { h: table.h, mat: table.mat, wet: table.wet, shore: table.shore, occ: table.occ, surf: table.surf, ox: table.ox, oz: table.oz };
-  return onGrid(table.side, () => { const banks = new Batch(); buildShore(banks, g, traitsOf(table), bakedSky, part); return banks; });
+  return onGrid(table.side, () => { const banks = new Batch(); buildShore(banks, g, traitsOf(table, 0), bakedSky, part); return banks; });
 }
 
 /** Draws the piece of a table, as its build drew it. */
-export function drawTable(table: Table, bakedSky: boolean): { ground: Batch; carried?: Batch; water: Batch; raised: Batch } {
+export function drawTable(table: Table, bakedSky: boolean, step: number): { ground: Batch; carried?: Batch; water: Batch; raised: Batch } {
   const g: Ground = { h: table.h, mat: table.mat, wet: table.wet, shore: table.shore, occ: table.occ, surf: table.surf, ox: table.ox, oz: table.oz };
   const keeping = wanted;
   wanted = false;
-  try { return onGrid(table.side, () => drawGround(g, traitsOf(table), bakedSky, table.part, true)); } finally { wanted = keeping; }
+  try { return onGrid(table.side, () => drawGround(g, traitsOf(table, step), bakedSky, table.part, true)); } finally { wanted = keeping; }
 }
 
 /** what a packed table holds: the table's lists in fewer bytes (see `packTable`) */
