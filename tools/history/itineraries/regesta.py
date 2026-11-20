@@ -122,6 +122,9 @@ NOT_THE_KINGS = {
 #: the editors' footnote on a place of issue that says the king was not there (RI VII H. 11 n. 208 note 1: "wodurch der
 #: Ausstellungsort nicht ins Itinerar passt"; H. 14 n. 128 note 1: "vordatiert und mit einem fiktivem Ausstellungsort";
 #: H. 5 n. 157 note 1: "paßt nicht ins Itinerar ... dürfte in Ravensburg rückdatiert sein")
+#: regesta the footnote rule would leave out though the editors put their place right: uid 222423 (Ludwig, 1332-02-16)
+#: puts '[Frankfurt a. Main]' for the printed Nürnberg, which its note says does not fit
+ON_ITINERARY = {'222423'}
 OFF_ITINERARY = re.compile(r'nicht ins Itinerar|vordatiert|rückdatiert|vorausdatiert|Vorausdatierung|fiktiv', re.I)
 FOOTNOTE_MARK = re.compile(r'<sup>\s*(\d+)\s*\)?\s*</sup>')
 FOOTNOTE = re.compile(r'<li>\s*<sup>\s*(\d+)\s*</sup>(.*?)</li>', re.S)
@@ -138,7 +141,9 @@ def number(text):
 
 
 def norm(name):
-    return re.sub(r'\s+', ' ', html.unescape(name or '').strip().lower())
+    """A name for matching: without HTML entities, tags and the footnote marks of the editors."""
+    bare = re.sub(r'<sup>.*?</sup>|<[^>]+>', '', html.unescape(name or ''))
+    return re.sub(r'\s+', ' ', bare.strip().lower())
 
 
 def coordinates(data):
@@ -226,13 +231,12 @@ def main(data, out_path):
                 if uid in NOT_THE_KINGS:
                     count['not_the_king'] += 1
                     continue
-                if off_itinerary(where, row.get('footnotes')):
+                if uid not in ON_ITINERARY and off_itinerary(where, row.get('footnotes')):
                     count['off_itinerary'] += 1
                     continue
                 q = CORRECTED.get(uid) or CORRECTED.get(where) or qid_of_uid.get(uid)
                 at = (WIKIDATA_COORDINATES.get(q) or by_qid.get(q)) if q else None
-                bare = re.sub(r'<sup>.*?</sup>|<[^>]+>', '', where)
-                at = at or by_name.get(norm(bare)) or by_name.get(norm(re.sub(r'\s*\(.*?\)', '', bare)))
+                at = at or by_name.get(norm(where)) or by_name.get(norm(re.sub(r'\s*\(.*?\)', '', where)))
                 if not at:
                     count['no_coordinates'] += 1
                     continue
