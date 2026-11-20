@@ -3,14 +3,14 @@ import { describe, expect, it } from 'vitest';
 import type { Batch } from '../../src/lookprobe/batch';
 import { LAND_Y, Mat, N, SEA_Y, SUMMIT, idx, onGrid } from '../../src/lookprobe/layout';
 import { RIM, drawGround, drawTable, keepTables, packTable, tableOf, tabled, unpackTable } from '../../src/worldprobe/table';
-import { SIDE, land, part } from './land';
+import { LAND_STEP, SIDE, land, part } from './land';
 
 const lists = (b: Batch | undefined) => ({ pos: b!.pos, nor: b!.nor, col: b!.col });
 
 describe('the table of a far piece', () => {
   it('draws the piece as its build drew it, to the last number', () => {
     onGrid(SIDE, () => {
-      const { g, t } = land(), built = drawGround(g, t, true, part, true), again = drawTable(tableOf(g, t, part), true);
+      const { g, t } = land(), built = drawGround(g, t, true, part, true), again = drawTable(tableOf(g, t, part), true, LAND_STEP);
       // the land has all its kinds: ground, what it carries, sea, raised water and its falls
       expect(built.ground.triangles).toBeGreaterThan(4000);
       expect(built.carried!.triangles).toBeGreaterThan(500);
@@ -39,7 +39,7 @@ describe('the table of a far piece', () => {
       const built = drawGround(g, t, false, part, true), table = tabled();
       keepTables(false);
       expect(table).not.toBeNull();
-      expect(lists(drawTable(table!, false).ground)).toEqual(lists(built.ground));
+      expect(lists(drawTable(table!, false, LAND_STEP).ground)).toEqual(lists(built.ground));
       drawGround(g, t, false, part, true);
       expect(tabled()).toBeNull();
     });
@@ -47,7 +47,7 @@ describe('the table of a far piece', () => {
 
   it('packed and unpacked draws the same shapes, with colours within a 200th', () => {
     onGrid(SIDE, () => {
-      const { g, t } = land(), built = drawGround(g, t, true, part, true), run = packTable(tableOf(g, t, part)), again = drawTable(unpackTable(run), true);
+      const { g, t } = land(), built = drawGround(g, t, true, part, true), run = packTable(tableOf(g, t, part)), again = drawTable(unpackTable(run), true, LAND_STEP);
       // (a tenth of the lists it is drawn as)
       expect(run.byteLength).toBeLessThan(SIDE * SIDE * 32);
       for (const name of ['ground', 'carried', 'water', 'raised'] as const) {
@@ -73,7 +73,7 @@ describe('the table of a far piece', () => {
     onGrid(SIDE, () => {
       const { g, t } = land(), table = tableOf(g, t, part), near = [SUMMIT - 0.003, SUMMIT - 0.001, SUMMIT, SUMMIT + 1e-6, SUMMIT + 0.003];
       for (let i = 0; i < SIDE * SIDE; i++) if (table.mat[i] === Mat.Rock) table.summit[i] = near[i % near.length];
-      const back = unpackTable(packTable(table)), exact = drawTable(table, true), again = drawTable(back, true);
+      const back = unpackTable(packTable(table)), exact = drawTable(table, true, LAND_STEP), again = drawTable(back, true, LAND_STEP);
       for (let i = 0; i < SIDE * SIDE; i++) if (table.mat[i] === Mat.Rock) expect(back.summit[i] > SUMMIT, `${table.summit[i]}`).toBe(table.summit[i] > SUMMIT);
       // (a column that changed sides would split its walls elsewhere: other shapes)
       expect(again.ground.pos).toEqual(exact.ground.pos);
