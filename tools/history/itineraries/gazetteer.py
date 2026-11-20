@@ -43,6 +43,10 @@ FEATURES = {'CSTL', 'MSTY', 'CH', 'RUIN', 'HSEC', 'HSE', 'PAL', 'EST', 'ANS', 'M
 #: one ('Le Gard', the Abbaye du Gard)
 ADDED = ('castle', 'abbey', 'priory', 'manor', 'house', 'park', 'palace', 'hall')
 ADDED_BEFORE = tuple(f'{w} {a}' for w in ('abbaye', 'chateau', 'prieure') for a in ('de', 'du', 'de la', 'des', 'd'))
+#: the river or land a place's name was told apart by in modern times, which the records leave out: Henley for
+#: Henley-on-Thames, Boulogne for Boulogne-sur-Mer, Croft for Croft-on-Tees (OWN RULE: a place is also known by its
+#: name without them)
+QUALIFIED = re.compile(r' (?:on|upon|in|under|sur|sous|en) .*$')
 
 
 def key(name):
@@ -110,7 +114,7 @@ def ratio(a, b):
 class Gazetteer:
     """The places of GeoNames (a cut of the dumps: id, name, asciiname, alternatenames, lat, lon, class, code,
     country, admin1, admin2, population), by name and by cell of half a degree; now_called gives a place the book
-    names (by its key) under the name GeoNames knows it by."""
+    names (by its key) the names GeoNames knows the places it may be by."""
 
     def __init__(self, path, now_called=None):
         self.now_called = now_called or {}
@@ -129,6 +133,7 @@ class Gazetteer:
                 self.settled.append(c[6] in ('P', 'A'))
                 self.church.append(c[7] == 'CH')
                 own = {key(c[1]), key(c[2])}
+                own |= {short for k in own if len(short := QUALIFIED.sub('', k)) >= 3}
                 other = {key(n) for n in c[3].split(',') if n} - own
                 self.names.append(tuple(own | other))
                 self.own_names.append(tuple(own))
@@ -145,7 +150,7 @@ class Gazetteer:
         bears the name (OWN RULE: a church bears the name of its saint, the king lodged in a town, a castle, an abbey or
         a house; 'St. Andrew's' is the town in Fife, not the church of Cheddar)."""
         forms = list(variants(name))
-        forms += [v for f in forms if f in self.now_called for v in variants(self.now_called[f])]
+        forms += [v for f in forms if f in self.now_called for n in self.now_called[f] for v in variants(n)]
         for own, table in ((True, self.own), (False, self.other)):
             every = sorted({i for v in forms for i in table.get(v, ())})
             every = [i for i in every if not self.church[i]] or every
@@ -249,7 +254,7 @@ def place_days(days, gaz, report):
     for s in [s for s in stays if s['sure'] and not in_county(s['at'], regions.get(s['county'], ()))]:
         for t in stays:
             if t['sure'] and same_name(t['name'], s['name']) and apart(s, t) <= SAME_NAME_DAYS:
-                t['at'], t['sure'], t['known'] = None, False, False
+                t['at'], t['sure'], t['known'], t['rejected'] = None, False, False, t['at']
                 report['stays_out_of_county'] += 1
     for s in thin([s for s in stays if s['sure']]):
         s['at'], s['sure'], s['why'] = None, False, 'out of reach of the stays around'
@@ -297,7 +302,11 @@ def place(s, i, stays, by, cands, region, gaz, report):
     bears, in the county the book puts it in, is never taken for a like name (OWN RULE: the likeness is for names the
     gazetteer does not know, or knows only elsewhere; a day out of reach of the one place of its name in its county is
     a wrong day, not a wrong name: Jedburgh in August 1304, between Stirling and Perth, is not Edinburgh; but Condac
-    in Guienne, where the one Condac is in the Charente, is Condat by Libourne)."""
+    in Guienne, where the one Condac is in the Charente, is Condat by Libourne). The place its county rejected is not
+    taken again (the county test grows weak where the sure places of a county are thinned out: Le Gard in Picardy is
+    not the Le Gard in the Dordogne). Where both stays around name fewer days, the nearer of them in days holds it
+    (OWN RULE: a stay is held by one stay at least; without it any place far off fits, and wins the thinning against
+    the right places around: Abbeville in August 1289)."""
     prev = next((t for t in reversed(stays[:i]) if t[by]), None)
     nxt = next((t for t in stays[i + 1 :] if t[by]), None)
     before, after = prev and around(s, prev, -1), nxt and around(s, nxt, 1)
@@ -306,6 +315,9 @@ def place(s, i, stays, by, cands, region, gaz, report):
         after if nxt and len(nxt['days']) >= len(s['days']) else None,
     )
     ends = [e for e in (before, after) if e]
+    if ends and not any(longer):
+        nearer = min(ends, key=lambda e: e[1])
+        longer = (nearer, None) if nearer is before else (None, nearer)
     same = [
         t['at']
         for t in stays
@@ -314,7 +326,7 @@ def place(s, i, stays, by, cands, region, gaz, report):
     for rb, ra in ((before, after), longer):
 
         def fits(p, rb=rb, ra=ra):
-            return reachable(p, rb, ra) and in_county(p, region)
+            return p != s.get('rejected') and reachable(p, rb, ra) and in_county(p, region)
 
         ok = [c for c in same if fits(c)] or [c for c in cands if fits(c)]
         if ok:
@@ -323,7 +335,12 @@ def place(s, i, stays, by, cands, region, gaz, report):
                 report['stays_by_nearness'] += 1
             return
     for rb, ra in ((before, after), longer) if not s['known'] else ():
-        near = gaz.near(s['name'], before, after, lambda p, rb=rb, ra=ra: reachable(p, rb, ra) and in_county(p, region))
+        near = gaz.near(
+            s['name'],
+            before,
+            after,
+            lambda p, rb=rb, ra=ra: p != s.get('rejected') and reachable(p, rb, ra) and in_county(p, region),
+        )
         if near:
             s['at'] = near
             if by == 'at':
@@ -356,7 +373,8 @@ def one_sense(stays, regions, report):
             prev = next((t for k, t in reversed(placed) if k < i and k not in inside), None)
             nxt = next((t for k, t in placed if k > i and k not in inside), None)
             ends.append((prev and around(s, prev, -1), nxt and around(s, nxt, 1), regions.get(s['county'], ())))
-        ok = [p for p in at if all(reachable(p, b, a) and in_county(p, r) for b, a, r in ends)]
+        rejected = {s.get('rejected') for _, s in d}
+        ok = [p for p in at if p not in rejected and all(reachable(p, b, a) and in_county(p, r) for b, a, r in ends)]
         if not ok:
             continue
         best = min(ok, key=lambda p: sum(detour(p, [e for e in (b, a) if e]) for b, a, _ in ends if b or a))

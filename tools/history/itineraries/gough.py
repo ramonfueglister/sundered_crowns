@@ -105,10 +105,16 @@ COUNTIES = {
 SAME_COUNTY = {'beam': 'bearn'}
 #: a county the column names: one or two words of letters, not an abbreviation of a record
 COUNTY_SHAPE = re.compile(r"[A-Z][A-Za-z'’]+\.?(?:[ -][A-Z][A-Za-z'’]+\.?)?")
-#: places the book names that GeoNames knows only by the place that grew there: the Cistercian abbey of Holm Cultram
-#: (the book's index: Holme-Cultram, Cumberland) at Abbey Town; Oleron in Béarn (the book's county column), the town
-#: of Oloron, one with Sainte-Marie since 1858 (GeoNames gives the name Oleron only to the Île d'Oléron in Saintonge)
-NOW_CALLED = {'holme cultram': 'Abbey Town', 'oleron': 'Oloron-Sainte-Marie'}
+#: places the book names that GeoNames knows only by the place that grew there or the commune they lie in: the
+#: Cistercian abbey of Holm Cultram (the book's index: Holme-Cultram, Cumberland) at Abbey Town; the Cistercian abbey
+#: of Le Gard on the Somme at Crouy-Saint-Pierre (between Abbeville and Amiens, where the book has it in May 1286 and
+#: August 1289); Oleron, which the book's county column puts in Béarn (the town of Oloron, one with Sainte-Marie since
+#: 1858) and in Aunis (the Île d'Oléron), where GeoNames gives the name only to the island
+NOW_CALLED = {
+    'holme cultram': ('Abbey Town',),
+    'legard': ('Crouy-Saint-Pierre',),
+    'oleron': ('Oloron-Sainte-Marie', "Île d'Oléron"),
+}
 # fmt: on
 
 
