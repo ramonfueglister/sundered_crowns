@@ -11,15 +11,16 @@
 import * as THREE from 'three/webgpu';
 import { type Batch, type RGB, type Rnd, hash2, mix, noise2, rgb, seeded, shade } from '../lookprobe/batch';
 import { ACACIA, CYPRESS, JUNGLE, LEAVES, OATS, OATS_SIDE, PALM, VINE_BODY, WHEAT, WHEAT_SIDE } from '../lookprobe/blocks';
-import { FLOOR, type HouseStyle, type Model, type Style, m, tower } from '../buildings';
+import { FLOOR, type HouseStyle, type Model, type Style, m, tower, townWall } from '../buildings';
 import { type Ground, Mat, N, idx, inGrid, occlude } from '../lookprobe/layout';
 import { FALLOW_SHOWS, SOIL_FALLOW } from '../lookprobe/terrain';
+import { CROPS_AT, FALLOW_FIELD, OATS_FIELD, WHEAT_FIELD } from './crops';
 import { HOUSE_NUMBERS } from './houses';
 import { PALMS, RAINFOREST, SAVANNA, STRAY, TEMPERATE, TREE_NUMBERS, TREE_PITCH, TREE_REACH, TREES_AT, TREES_CLOSED, crownColours, treeHeight, treesCode, treesIn } from './trees';
 import { blockOf, FALLOW, FIELD_GROUND, PEOPLE_PER_PERSON, PERSONS_PER_FLOOR_BLOCK, POP_OF_SIZE, type Site, SPRING, WALLED_FROM, courseOf } from './settle';
 
 /** What a column carries as part of itself (GroundTraits.cover): where `has` is set, the colours of its top and sides and how far it stands above its ground. */
-export interface Cover { /** what far.ts laid on each column (KINDS), for measuring it against the finer step */ kind?: Uint8Array; /** of the mean of the finer step (mean.ts): the colour of all the camera sees of a column, tops and sides, as a flat top would have to show it */ whole?: Float32Array; has: Uint8Array; rise: Uint8Array; top: Float32Array; side: Float32Array; /** how much of the column's top the cover colours, 0 … 1: the rest is the ground's own colour */ share: Float32Array; /** 1 on the paved ground of the towns */ town: Uint8Array; /** the trees of the finest step where they are drawn one by one (trees.ts TREES_AT): trees.ts TREE_NUMBERS to a column */ trees?: Uint8Array; /** the houses of the finest step where they are drawn as houses (HOUSES_UNTIL): houses.ts HOUSE_NUMBERS numbers each */ houses?: number[] }
+export interface Cover { /** what far.ts laid on each column (KINDS), for measuring it against the finer step */ kind?: Uint8Array; /** of the mean of the finer step (mean.ts): the colour of all the camera sees of a column, tops and sides, as a flat top would have to show it */ whole?: Float32Array; has: Uint8Array; rise: Uint8Array; top: Float32Array; side: Float32Array; /** how much of the column's top the cover colours, 0 … 1: the rest is the ground's own colour */ share: Float32Array; /** 1 on the paved ground of the towns */ town: Uint8Array; /** the trees of the finest step where they are drawn one by one (trees.ts TREES_AT): trees.ts TREE_NUMBERS to a column */ trees?: Uint8Array; /** the houses of the finest step where they are drawn as houses (HOUSES_UNTIL): houses.ts HOUSE_NUMBERS numbers each */ houses?: number[]; /** the crop of the lot on each column where the fields are drawn sheaf by sheaf (crops.ts CROPS_AT): crops.ts WHEAT_FIELD … OATS_FIELD, 0 where no field lies */ crops?: Uint8Array }
 /**
  * The woods at a column: the share of the ground they cover (0 … 1), the colours of their crowns and whether the
  * trees are tall ones. `laid` says that the share is that of this very column, from the forest of the world's
@@ -355,13 +356,17 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
         }
         const paved = (x: number, z: number) => { let n = 0; for (let fz = Math.max(0, (z + oz) * wider - fz0); fz < Math.min(across, (z + oz + 1) * wider - fz0); fz++) for (let fx = Math.max(0, (x + ox) * wider - fx0); fx < Math.min(across, (x + ox + 1) * wider - fx0); fx++) n += near[fz * across + fx]; return 2 * n >= wider * wider; };
         for (let z = z0; z < z1; z++) for (let x = x0; x < x1; x++) if (inGrid(x, z) && paved(x, z)) { if (free(x, z) || (taken[idx(x, z)] && !g.wet[idx(x, z)] && g.mat[idx(x, z)] !== Mat.Rock && !c.has[idx(x, z)])) { c.town[idx(x, z)] = 1; g.mat[idx(x, z)] = Mat.Paved; } else if (c.kind![idx(x, z)] === 1) g.mat[idx(x, z)] = Mat.Paved; }
-        const open = (side: 'nz' | 'px' | 'pz' | 'nx', along: number) => (t.wall ?? []).some((gap) => gap.side === side && along >= gap.from && along <= gap.to);
-        if (step === 1 && t.wall !== null) for (let z = z0 - 1; z <= z1; z++) for (let x = x0 - 1; x <= x1; x++) {
-          if (!(x === x0 - 1 || x === x1 || z === z0 - 1 || z === z1) || x === (x0 + x1) >> 1 || z === (z0 + z1) >> 1 || !free(x, z)) continue;
-          // where the block lies along its side of the wall, in finest blocks from the side's middle
-          const ax = (x + ox + 0.5) * wider - t.cx, az = (z + oz + 0.5) * wider - t.cz;
-          if (z === z0 - 1 ? open('nz', ax) : z === z1 ? open('pz', ax) : x === x0 - 1 ? open('nx', az) : open('px', az)) continue;
-          put(x, z, 1, WALL, WALL, 2);
+        // the wall as long as the great buildings stay themselves: the finest step's wall (settle.ts), made smaller,
+        // on the lowest ground of its ring, with its gates and its openings for the water; nothing grows on its ring
+        if (step <= MODELS_UNTIL && t.wall !== null) {
+          let lo = Infinity;
+          for (let z = z0 - 1; z <= z1; z++) for (let x = x0 - 1; x <= x1; x++) {
+            if (!(x === x0 - 1 || x === x1 || z === z0 - 1 || z === z1) || !inGrid(x, z)) continue;
+            taken[idx(x, z)] = 1;
+            if (!g.wet[idx(x, z)]) lo = Math.min(lo, g.h[idx(x, z)]);
+          }
+          const mx = t.cx / wider - ox, mz = t.cz / wider - oz;
+          if (lo < Infinity && o.own(Math.floor(mx), Math.floor(mz))) things.append(townWall(t.half * 2 + 2, t.half * 2 + 2, t.wall ?? []), m.makeScale(1 / wider, 1 / wider, 1 / wider).setPosition(mx, lo, mz));
         }
       }
     }
@@ -414,8 +419,16 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
     if (hash2(lx, lz, 65 + salt) > o.ploughed(mx, mz) / FIELD_GROUND || !room(lx, lz, shift)) continue;
     // the course of the block of fields the lot lies in, the same as at the finest step (settle.ts)
     const course = courseOf(courses(mx, mz), hash2(...blockOf(fx / grown, fz / grown), 66 + salt));
+    const vines = course !== SPRING && course !== FALLOW && hash2(lx, lz, 67 + salt) < o.vines(mx, mz);
+    // at the first far step a field is the finest step's: its soil, and its sheaves standing on it (crops.ts draws
+    // them from the crop laid down here); the vineyards stay a colour of their own
+    if (step === CROPS_AT && !vines) {
+      const i = idx(x, z);
+      g.mat[i] = Mat.Soil; taken[i] = 1; c.kind![i] = course === FALLOW ? 4 : course === SPRING ? 5 : 6;
+      (c.crops ??= new Uint8Array(N * N))[i] = course === FALLOW ? FALLOW_FIELD : course === SPRING ? OATS_FIELD : WHEAT_FIELD;
+      continue;
+    }
     if (course === FALLOW) { put(x, z, 0, tinted(SOIL_FALLOW, SEEN_FALLOW), SOIL_FALLOW, 4); c.share[idx(x, z)] = FALLOW_SHOWS; continue; }
-    const vines = course !== SPRING && hash2(lx, lz, 67 + salt) < o.vines(mx, mz);
     put(x, z, 0, ...(course === SPRING ? springOf(lx, lz) : cropOf(lx, lz, mx, mz)), course === SPRING ? 5 : vines ? 7 : 6);
   }
 

@@ -314,13 +314,14 @@ class WorldTraits implements GroundTraits {
   readonly sideTop: number;
   readonly houses: GroundTraits['houses'];
   readonly trees: GroundTraits['trees'];
+  readonly crops: GroundTraits['crops'];
   constructor(step: number, private readonly town: Uint8Array, private readonly field: Uint8Array | null, private readonly mean: Cover | undefined, private readonly land: Uint8Array, private readonly metres: Float32Array, private readonly snow: Float32Array, private readonly massifs: Massifs, private readonly roads: Float32Array | null) {
-    this.sideTop = sideTopAt(step); this.houses = mean?.houses; this.trees = mean?.trees;
+    this.sideTop = sideTopAt(step); this.houses = mean?.houses; this.trees = mean?.trees; this.crops = mean?.crops;
   }
   city(x: number, z: number) { return fieldAt(this.town, x, z) === 1; }
   plaza() { return Infinity; }
   road(x: number, z: number) { return this.roads ? roadOn(this.roads, x, z) + ROAD_SHOWS : Infinity; }
-  crop(x: number, z: number) { return this.field ? CROPS[fieldAt(this.field, x, z)] : null; }
+  crop(x: number, z: number) { const field = this.field ?? this.mean?.crops; return field ? CROPS[fieldAt(field, x, z)] : null; }
   cover(x: number, z: number) {
     const cover = this.mean;
     if (!cover) return null;
@@ -717,6 +718,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   if (cover) for (let i = 0; i < N * N; i++) {
     const wet = stream[i];
     if (wet && cover.trees) cover.trees.fill(0, i * TREE_NUMBERS, (i + 1) * TREE_NUMBERS);
+    if (wet && cover.crops?.[i]) { cover.crops[i] = 0; g.mat[i] = Mat.Grass; }
     if (!wet || g.wet[i] || g.mat[i] === Mat.Rock || cover.town[i]) continue;
     const was = cover.has[i] ? cover.share[i] * (1 - wet) : 0, all = wet + was;
     for (let k = 0; k < 3; k++) cover.top[i * 3 + k] = (WATER_SHALLOW[k] * wet + cover.top[i * 3 + k] * was) / all;
@@ -790,6 +792,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   if (cover && roadEdge && step > 0) for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
     const i = idx(x, z);
     if (cover.trees?.[i * TREE_NUMBERS] && roadAt(x + 0.5, z + 0.5) < FAR_CLEAR) cover.trees.fill(0, i * TREE_NUMBERS, (i + 1) * TREE_NUMBERS);
+    if (cover.crops?.[i] && roadAt(x + 0.5, z + 0.5) < FAR_CLEAR) { cover.crops[i] = 0; g.mat[i] = Mat.Grass; }
     if (!cover.has[i] || g.wet[i] || cover.town[i] || roadAt(x + 0.5, z + 0.5) >= FAR_CLEAR) continue;
     if (cover.rise[i] > 0) { g.h[i] -= cover.rise[i]; g.occ[i] = g.h[i]; cover.rise[i] = 0; }
     cover.has[i] = 0;
