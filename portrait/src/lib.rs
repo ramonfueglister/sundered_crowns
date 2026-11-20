@@ -11,6 +11,7 @@ mod build;
 mod caster;
 pub mod dna;
 pub mod dress;
+pub mod facing;
 pub mod fasten;
 pub mod geo;
 mod hair;

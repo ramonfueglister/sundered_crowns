@@ -2186,6 +2186,13 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
             merged.extend(made);
         }
     }
+    // (round 148) a hood's facing of fur, laid on the hood as it is drawn (facing.rs)
+    if let (Some(d), Some(dir)) = (garb.filter(|d| !d.hood_fur.is_empty()), crate::real::folder()) {
+        let hood = merged.iter().find(|s| s.tex.as_deref().is_some_and(|t| t.contains(d.hood_up) || t.contains(d.hood_back)));
+        if let Some(fur) = hood.and_then(|h| crate::facing::face(h, &crate::real::image(&dir, d.hood_fur), linear(hex(d.hood_fur_dye)))) {
+            merged.push(fur);
+        }
+    }
     let tris = merged.iter().map(|s| s.tris()).sum();
     Portrait { surfaces: merged, top, chin: y0, cx: hx / hn.max(1) as f32, cz: hz / hn.max(1) as f32, fill, young, head, neck: [neck[0], neck[1]], tris, targets }
 }

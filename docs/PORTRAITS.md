@@ -17,7 +17,7 @@ one, changes nothing: same people in, same pictures out, measured.
 |---|---|---|
 | Builder | `portrait/` (Rust, WebAssembly) | From a person (100 bytes of genes, sex, age, estate, occupation, origin, food, mourning, wealth, worn clothes) to the triangles of head and shoulders: MakeHuman's head morphed by the genes, skin, eyes, hair, beard, clothes, headwear, jewellery |
 | Genes | `portrait/src/dna.rs` | 50 genes of two alleles, one byte each (Apoleia's 34, and 16 since round 112 that a dress with a table shows); a child takes one allele of each gene from either parent, plus a small mutation; founders draw from one of 23 pools (round 111), which one is the culture's (`src/sim/people/pools.ts`) |
-| Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; a culture without a set wears the plain dress of 1356 (round 111), one of Apoleia's seven regions Apoleia's Roman dress. England's has a table for people of rank and one for a crowned head (round 144), chosen by the person's stand; a crowned head wears a mantle faced with ermine over the gown (round 145, `portrait/src/mantle.rs`); a lady of rank shows her plaits and wears a circlet of gilt metal on them (round 146), a lord with nothing else on the head wears one too (round 147) |
+| Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; a culture without a set wears the plain dress of 1356 (round 111), one of Apoleia's seven regions Apoleia's Roman dress. England's has a table for people of rank and one for a crowned head (round 144), chosen by the person's stand; a crowned head wears a mantle faced with ermine over the gown (round 145, `portrait/src/mantle.rs`); a lady of rank shows her plaits and wears a circlet of gilt metal on them (round 146), a lord with nothing else on the head wears one too (round 147); a lord's hood is faced with white fur along the edge of its opening (round 148, `portrait/src/facing.rs`) |
 | Stage profile | `src/portrait/profile.ts` | Light and materials per set of dress; Apoleia's portraits keep Apoleia's |
 | Pipeline | `tools/portrait/pipeline/` | Blender scripts that wrote the draped clothes and hair (not part of the build) |
 | Files of the real look | `public/portrait/` (41.5 MB) | The head (1.1 MB), data files (15.0 MB since round 111, 13.1 since round 110, 12.7 since round 109, 12.9 since round 105, 10.4 before round 104: the hair's bodies, the beard's locks, draped clothes, skin shading), images (24.8 MB: skin by age and sex, wrinkle maps, hair, cloth, eyes) |
@@ -6780,6 +6780,92 @@ circlet), then `court.rs` again, 5 of 5. `tests/portrait.test.ts` and its neighb
 lint pass.
 Pictures (project files, `portraits/`): `runde147_vorher_nachher.png` (six villagers and the sample's eight
 grown men at court, before and after), `runde147_herren_reif.png` (five lords with the circlet from the
+front, the side and behind).
+
+**Round 148: a lord's hood faced with fur** (2026-11-20). Round 147's own list: "four lords in ten still wear
+the villagers' hood on the head". Ten of the sample's men at court beside each other: five in a hood, on the
+head or thrown back, and each of them the villager's hood in a stronger dye. The reference's hoods show a pale
+lining round the face and as a collar where the hood is thrown back.
+
+What was read. Nothing new: round 145's reading of Elspeth Veale, The English Fur Trade in the Later Middle
+Ages, ch. I (as an account of the page, not the page itself) has the statute of 1363 leave lesser knights "only
+facings of ermine and lettice on their hoods", and a lining "turned back at neck or wrist, showing as a collar,
+revers, or cuffs of fur", edges "turned back to form borders or facings of fur in front"; La Cotte Simple's fur
+primer (read the same day) has ermine's tails "either left in place or removed and powdered on the skins". So
+a facing of fur on a hood is named, for knights below the lords this table dresses; that the lords, whom the
+statute leaves without restriction, wore it too is this table's reading. No picture of the time was looked at.
+
+What is changed.
+- **The facing** (`portrait/src/facing.rs`, new; `DressSet::hood_fur`, `hood_fur_dye`, set in the court's
+  table only): when everything stands as it is drawn, a roll of fur is laid on a lord's hood along the edge of
+  its opening: round the face of a hood on the head, round the neck of one thrown back. The edge is found in
+  the hood as it is drawn, as `dag.py` finds a hood's hems (where the rolled hem's tube hangs on the sheet an
+  edge has more than two triangles; of the hemmed edges the opening's lies highest). At each corner of that
+  edge the roll has a ring of twelve corners: 2.5 cm broad on the wool and 0.7 cm beyond the edge, over the
+  hem; 0.9 cm over the wool, and more where the wool under it bulges, so that the wool and the hem's tube lie
+  at least 2 mm within it (to 2.5 cm at most); 3 mm under the wool. The edge's way and the roll's lie are
+  evened out along the edge, so the roll passes over the tuck a hood on the head has at either corner of the
+  jaw. The hood itself is not touched: the villagers' file, whole, plain or dagged.
+- **The fur's image** (`cloth_fur_white.webp` and `_n`, 31 and 62 kB): `fur_tex.py` without tails and with
+  short hairs (`TAILS=0,0 HAIR=7,1.6 DEPTH=0.6`), drawn in the white of the mantle's ermine: ermine with its
+  tails removed, or lettice; which, the sources do not say.
+
+Measured, on 120 lords of 15 to 68 years (`portrait/tests/facing.rs`): 53 wear the hood on the head, 29 thrown
+back, 38 none.
+
+| | |
+|---|---|
+| the roll round the face: its lowest place | 0.5 to 2.2 cm under the chin's lowest place |
+| its highest place | 23 to 26 cm over it |
+| before the face's middle, a hand broad: the upper rim of the roll under the chin | 1.9 to 3.8 cm over the chin's lowest place |
+| the lower rim of the roll over the brow | 20 to 22.5 cm over it |
+| the roll round the neck of a hood thrown back: its highest place (at the nape) | 5.4 to 6.9 cm over the chin's lowest place |
+| the roll: broad, thick | 3.2 cm; 1.2 to 2.8 cm |
+| its middle from the nearest corner of the wool | 0 to 1 cm |
+| the wool within 1 cm of its middle, under its top | 0.3 to 22.5 mm |
+| triangles | 2 736 on the head, 2 304 thrown back |
+
+Tried and not kept.
+- The facing as a part of the hood's own sheet, marked in the hoods' files as the mantle's is (a script that
+  added 64 to a triangle's place across the image, for the triangles within 3 cm of the edge): a white tape
+  round the face, as thin as the wool, with the ermine's tails as black ticks on it; a border in stairs at
+  the temples where each corner's own way along the sheet reached 3 cm, and, drawn ring by ring instead, a bib
+  under the chin, where the sheet's rings lie 2 cm apart.
+- The same cut in the builder, 3 cm from the edge straight through the air, and lifted 6 mm along the
+  corners' own directions: a clean border, but the tuck at either corner of the jaw stood up in shards, and
+  with the ermine's long hairs across the band it read as a pleated ruff of linen.
+- The roll's first casts: laid along the straight way from the edge to the wool 2 to 3 cm in, it lay under
+  the wool where the hood bulges over the forehead; wound the other way round, the stage lit it as a cloth's
+  back, grey; and at the nape of a hood thrown back, where no corner lies 2 to 3 cm from the edge, it shrank
+  to a point and stood up as a flap. 3 cm broad on the wool it was a costume's trim.
+
+**The gauntlet**: 22 of 22 over the whole sample (read with this round's build), every line as in rounds 138
+to 147 to its last figure: no line reads a hood.
+
+Honest about it. A lord in a hood is now told from a villager at the size of a picture, which he was not. But
+it is one white roll, the same on every lord who wears a hood: smooth, with no hair standing on its outline,
+and at a picture's size the image's hairs do not show, so it reads as the trim of a winter coat as much as as
+ermine. It is thicker where the wool bulges under it, to 2.8 cm at the corners of the jaw, where a tuck of
+the hood's wool still shows inside it on some heads. Under the chin its upper rim lies 2 to 4 cm over the
+chin's lowest place, as the villagers' hem did. Round the neck of a hood thrown back it is a white ring that
+ends in the wool at the nape; what a turned-out lining looks like there was not looked up. No lining is drawn
+inside the hood. The hood under it is still the villagers': their cut, their wool, no buttons, no liripipe.
+The source names such facings for lesser knights; that every lord's hood has one, the fur, its breadth, its
+depth and its form are PLACEHOLDER, and no picture of the time was looked at. Not built from round 147's
+reading: the beaver hat, the painted hood, the chaperon.
+
+Tests: `portrait/tests/facing.rs`, two new, on 120 lords of 15 to 68 years: who has the fur (a lord with a
+hood, one roll with a ring for every corner of the edge, the hood under it whole; no villager, no lord without
+a hood, no crowned head, no lady), pale and nearly without colour; where it lies (round the face from under
+the chin to over the brow and on both sides, nothing of it before the face from 4.5 to 19 cm over the chin;
+round the neck of a hood thrown back; on the wool, as broad and as thick as `facing.rs` says, no corner of the
+wool under its middle through its top).
+`cargo test --release` as a whole: 122 of 122. `tests/portrait.test.ts` and its neighbour 43 of 43; typecheck
+and lint pass, no new warning. The whole run was made twice: after the first, the search for the opening's
+edge was rewritten (with it the module had grown from 721 to 784 kB; it is 751 kB now), and everything was run
+again with the same result.
+Pictures (project files, `portraits/`): `runde148_vorher_nachher.png` (ten of the sample's men at court, before
+and after), `runde148_kapuze_reif.png` (a lord with the hood on the head and one with it thrown back, from the
 front, the side and behind).
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
