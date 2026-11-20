@@ -10,6 +10,8 @@
 // the same way from every distance: from the
 // second far step on woods are blocks in the colours of their crowns standing out of the open land and fields
 // patches of their crops, however much land a block holds.
+import type { FieldShown } from './lots';
+import { CROP } from '../sim/settlement/fields';
 import * as THREE from 'three/webgpu';
 import { type Batch, type RGB, type Rnd, hash2, mix, noise2, rgb, seeded, shade } from '../lookprobe/batch';
 import { ACACIA, CYPRESS, JUNGLE, LEAVES, OATS, OATS_SIDE, PALM, VINE_BODY, WHEAT, WHEAT_SIDE } from '../lookprobe/blocks';
@@ -169,7 +171,7 @@ export const laidOut = () => last;
  */
 export function coverLand(g: Ground, step: number, things: Batch, sites: readonly Site[], o: {
   ploughed(x: number, z: number): number; laid?: boolean; courses?(x: number, z: number): number; vines(x: number, z: number): number; farm(x: number, z: number): HouseStyle; /** the farmhouses to a field (everywhere FARMS without it) */ farms?(x: number, z: number): number;
-  woods(x: number, z: number): Woods | null; own(x: number, z: number): boolean; /** whether a column is kept clear of woods: a stream narrower than a block runs through it (world.ts) */ clear?(x: number, z: number): boolean;
+  woods(x: number, z: number): Woods | null; own(x: number, z: number): boolean; /** the furlong of the land register on a field lot (lots.ts): with it only the register's furlongs are fields */ field?(lx: number, lz: number): FieldShown | undefined; /** whether a column is kept clear of woods: a stream narrower than a block runs through it (world.ts) */ clear?(x: number, z: number): boolean;
 }): Cover {
   const c: Cover = { has: new Uint8Array(N * N), rise: new Uint8Array(N * N), top: new Float32Array(N * N * 3), side: new Float32Array(N * N * 3), town: new Uint8Array(N * N), share: new Float32Array(N * N).fill(1), kind: new Uint8Array(N * N) };
   if (step === CROWD_AT) c.quarters = new Uint8Array(N * N);
@@ -424,7 +426,20 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
     rooms.set(key, fits);
     return fits;
   };
-  for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
+  // with the land register's fields: a block is field where its middle lies on a furlong of the register (from the
+  // second far step on, where a block is half a lot and more, anywhere on its lot), in the colour of its course's crop
+  if (o.field) for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
+    if (!free(x, z)) continue;
+    const px = (x + ox + 0.5) * wider, pz = (z + oz + 0.5) * wider, { lx, lz, shift } = spotOf(px, pz), f = o.field(lx, lz);
+    if (!f) continue;
+    const ax = px - (lx * LOT_W + shift), az = pz - lz * LOT_D;
+    if (wider < 4 && (ax < 1 || az < 1 || az >= 1 + f.rows)) continue;
+    const mx = ((lx + 0.5) * LOT_W + shift) / wider - ox, mz = ((lz + 0.5) * LOT_D) / wider - oz;
+    if (f.crop === CROP.fallow) { put(x, z, 0, tinted(SOIL_FALLOW, SEEN_FALLOW), SOIL_FALLOW, 4); c.share[idx(x, z)] = FALLOW_SHOWS; continue; }
+    const vines = f.crop === CROP.winter && hash2(lx, lz, 67) < o.vines(mx, mz);
+    put(x, z, 0, ...(f.crop === CROP.spring ? springOf(lx, lz) : cropOf(lx, lz, mx, mz)), f.crop === CROP.spring ? 5 : vines ? 7 : 6);
+  }
+  else for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
     if (!free(x, z)) continue;
     const { lx, lz, shift } = spotOf(((x + ox + 0.5) * wider) / grown, ((z + oz + 0.5) * wider) / grown);
     const fx = ((lx + 0.5) * LOT_W + shift) * grown, fz = (lz + 0.5) * LOT_D * grown, mx = fx / wider - ox, mz = fz / wider - oz;

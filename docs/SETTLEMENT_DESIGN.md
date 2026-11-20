@@ -16,7 +16,8 @@ computes is in the world: what a town shows must be state of the ECS.
 | 1 | Every family who lives in a town has a parcel (the land register) | agreed by Ramon 16 Nov 2026 as a draft; built in state 20, on main since 17 Nov 2026 (PR #61). The world graphic sets a house on each parcel of `public/data/lots_1291.json` |
 | 2 | Every farming family has a farmstead in a hamlet (hamlets and farmsteads in the land register) | agreed by Ramon 17 Nov 2026 as a draft with the small farmstead ("Ja, mit kleinem Hof"); built in the same state step, on main since 17 Nov 2026 (PR #61). The world graphic sets the hamlets where the register has them and a farmhouse on each farmstead (PR #64) |
 | 3 | The streets and the market of every town grow to its parcels (the street network in the state) | agreed by Ramon 18 Nov 2026 ("ja"); built in state 33 |
-| – | Where a new house arises while the world runs; real plans of the large towns; walls and gates; bridges; landmarks on their ground; which field belongs to which farm; building by players | not proposed yet |
+| 4 | Every farmstead has its fields: the furlongs of each hamlet in the courses of its open field, a strip of each farmstead in every furlong | agreed by Ramon 19 Nov 2026 ("ok"); built in state 37. The world graphic draws only these fields round the towns |
+| – | Where a new house arises while the world runs; real plans of the large towns; walls and gates; bridges; landmarks on their ground; building by players | not proposed yet |
 
 ## Feature 1: every family of a town has a parcel
 
@@ -425,3 +426,128 @@ Founding the land register of a world takes about 2.7 s, 0.5 s before the street
 - Porta, Crucitti & Latora (2006): The network analysis of urban streets: a primal approach. Environment and Planning
   B 33, 705–725 (edge betweenness).
 - Conzen (1960): Alnwick, Northumberland: a study in town-plan analysis. Institute of British Geographers 27.
+
+## Feature 4: the fields of every farmstead
+
+Proposal with the sources as Ramon read it: https://claude.ai/artifact/7UtpuRDL3UkES6MA28F8q2 (Ramon, 18 November
+2026: "zuerst felder je hof, dann wahrzeichen"). Agreed with "ok" on 19 November 2026.
+
+Code: `src/sim/settlement/fields.ts` (the arithmetic: lots, furlongs, courses, strips, the crop of a year),
+`src/sim/systems/fields.ts` (`foundFields`: the furlongs into the register; `placeFarmFields`, `farmHarvest`),
+`src/sim/content/tilth.ts` and `public/data/tilth_<year>.json` (the ground round each town a furlong can lie on,
+written by `tools/worldprobe/build_tilth.ts` from the world graphic), state in `src/sim/state.ts` (`field`),
+`src/net/lots.ts` and `tools/sim/write_lots.ts` (the furlongs and the order of the strips in the answer of the server
+and in the file), `src/net/people.ts` and `src/people/economy_rows.ts` (the farm in the family's window), the drawing in
+`src/worldprobe/settle.ts`, `far.ts` and `lots.ts`. Tests: `tests/fields.test.ts`, `tests/worldprobe/hamlets.test.ts`.
+
+Written once when a world is founded, after the farmsteads (feature 2), or by the upgrade 36 → 37 of a running world.
+Nothing changes while the world runs except the crop: which course bears what follows from the year.
+
+| Table | Column | Type | Meaning |
+|---|---|---|---|
+| field | place, site | i16 | place of the map and the town |
+| field | hamlet | i32 | the hamlet whose open field it lies in |
+| field | x, z | f32 | its middle, metres east and south of the town's centre (as the parcels; a block of the world graphic is 2 m) |
+| field | w, d | f32 | metres east-west and north-south: 20 × 14 for a whole furlong, the last of a course shorter |
+| field | zelge | u8 | its course: 0, 1 or 2 |
+| field | courses | u8 | the courses its land is tilled in: 3, or 2 in the Mediterranean kind of land |
+| field | farm | i32 | the farmstead that holds it whole (two courses), −1 in the open field |
+
+The strips are not stored: in the open field every farmstead of the hamlet has one strip in every furlong, in the order
+of `stripOrder`. The crop is `cropOf(zelge, courses, year) = (zelge + year) mod courses`: 0 winter corn, 1 spring
+corn, 2 fallow (two courses: 0 corn, 1 fallow).
+
+### Steps
+
+1. **Land of a farmstead.** Every farmstead of a place gets an equal share of the place's arable (`place.arable`,
+   economy feature 2): the town's share is the place's arable × its farmsteads / the farmsteads of the place. No new
+   number: the economy says how much land a farm has.
+2. **Ground.** The world graphic lays its fields on a grid of lots of 11 × 8 blocks, every other row shifted by 5. A lot
+   can hold a furlong where the ground is dry, without rock, nothing built, level to within two blocks with a balk
+   round it, and not wooded (`build_tilth.ts`, the `room` hook of settle). Lots inside the town and its parcels and
+   streets, or within the gap of a hamlet, are left out.
+3. **Open field of a hamlet.** The hamlets of a town take in turn the nearest free lot each until each has the land of
+   its farmsteads, so that no hamlet goes without. A furlong is 10 × 7 blocks, 109.4 ha (a lot without its balk).
+4. **Courses.** The furlongs of a hamlet are split by their bearing from the hamlet, from the north round by the east,
+   into three runs of equal land: winter corn, spring corn, fallow (HLS Zelgensysteme: three courses "von annähernd
+   gleicher Grösse"). The last furlong of each run is shortened north-south so that the land comes out exact. Each
+   year each course moves one on.
+5. **Strips.** Every furlong is cut into as many strips of equal width as the hamlet has farmsteads, in the order of
+   the farmsteads from the west, the northern row first (sun division, solskifte: Chouquer 2023): every farmstead has
+   the same land in every course and the same share of good and poor ground.
+6. **Mediterranean.** Where the map has the Mediterranean kind of land at the town, two courses and no common field:
+   every furlong belongs whole to one farmstead, the farmsteads taking in turn the nearest free lot, and the courses
+   alternate (Bolòs 2026: farmsteads of a house and the land that depended on it).
+7. **Harvest of a farm.** The harvest of the place stays as calibrated (economy). A farmstead gets the share of its
+   hectares in all furlongs of the place; in a hamlet of the open field that share is the same for all. Computed in
+   the view (`farmHarvest`), not stored.
+
+### Parameters
+
+| Parameter | Value | Source |
+|---|---|---|
+| furlong | 10 × 7 blocks = 1,250 × 875 m of land, 109.4 ha | the field of the world graphic without its balk; a furlong of the world stands for those of 100 families |
+| courses | 3; 2 in the Mediterranean kind of land | HLS Dreifelderwirtschaft, Zelgensysteme; the boundary by the map's kind of land is our own |
+| land of a farmstead | place arable / farmsteads of the place | economy feature 2 (Broadberry et al. 2010, HYDE 3.2) |
+| survey reach | farthest hamlet + 2.5 × the radius of one hamlet's arable, at most 700 blocks | PLACEHOLDER: enough ground for nearly every town |
+| not wooded | woods below 0.5 | as the world graphic lays its fields |
+
+### What the world of 1291 gets (seed 1291)
+
+107,447 furlongs in 1,762 hamlets with fields (of 1,857; the hamlets of the towns without arable, Cairo among them,
+have none). 97.3 % of the arable asked for is laid. 63 furlongs per hamlet in the median (fewest 3, nine in ten at
+most 96, most 162). 460 hamlets till in two courses. The survey finds 698,221 lots with room round 545 towns.
+
+The median furlong lies 8.4 km of land from its hamlet (nine in ten within 14.3 km, at most 48.9 km): one hamlet of
+the world stands for 100, and its open field is theirs together.
+
+Check against history: a farmstead of the world stands for 100 real families, so its land / 100 is the arable of one
+real farming family. Nothing is calibrated to it.
+
+| | Arable per farming family |
+|---|---|
+| world 1291, median of the 545 towns with arable | 9.9 ha (one in ten below 4.2 ha, one in ten above 13.2 ha) |
+| a common Hufe (Lexikon der Geographie) | 7.5 to 15 ha |
+| virgate of Alwalton, Hundred Rolls 1279 | 25 acres = 10.1 ha |
+| virgate in Kent (Witney) | 30 acres = 12.1 ha |
+| Zürich / Bayonne / Limoges | 12.0 / 9.2 / 7.0 ha |
+| London / Barcelona / Florence / Paris / Venice | 5.0 / 5.5 / 1.7 / 1.5 / 0.6 ha: places at the land frontier |
+
+32 towns get less land than asked, where the ground round them is mountain, sea or woods: Trabzon 9 %, Messina 17 %,
+Trento 32 %, Palermo 34 %, Tripoli 48 %, Nice 48 %, Granada 49 %, Novgorod 49 %, Reggio Calabria 52 %, Genova 58 %,
+Candia 59 %, L'Aquila 60 %, Istanbul 65 %, Fez 69 %, Ceuta 70 %, the rest above 75 %.
+
+### Own rules and gaps (no source)
+
+- Equal land for every farmstead and equal courses: the HLS names the ideal but says considerable differences were
+  usual early. Whole and half holdings and cottars without land (Alwalton) are not in: the simulation has no measure
+  that tells them apart.
+- The courses as three sectors round the hamlet; the hamlets choosing in turn; the nearest ground first.
+- Sun division is attested for Scandinavia and the Danelaw, not for all of Europe; it is the simplest attested rule
+  for the order of the strips.
+- The boundary between two and three courses by the map's Mediterranean kind of land; the HLS knows two courses in the
+  Breisgau and the Vaud too.
+- A block of the world graphic is a nominal 125 m of land; a strip of the world (125 m or less × 875 m) stands for
+  the strips of 100 families (real ones about 200 m long and 5 to 20 m wide).
+- The fields do not follow the arable of later years; the fields of neighbouring towns are not held apart from each
+  other; 32 towns are short of ground.
+- No pasture, common, meadow or vineyard; the vines stay a matter of the graphics. No irrigation, terraces or field
+  paths.
+- `tilth_<year>.json` must be written anew when the towns, the hamlets, the forest or the ground change, then
+  `lots_<year>.json` and the far view's tables.
+
+### Sources
+
+- Schnyder & Ineichen (2010): Dreifelderwirtschaft. Historisches Lexikon der Schweiz, version of 7 Jan 2010.
+  https://hls-dhs-dss.ch/de/articles/027644
+- Zelgensysteme. Historisches Lexikon der Schweiz, article 013702, version of 5 Feb 2014.
+  https://hls-dhs-dss.ch/de/articles/013702
+- Hufe. Lexikon der Geographie, Spektrum 2001. https://www.spektrum.de/lexikon/geographie/hufe
+- Hundred Rolls 1279, manor of Alwalton (Huntingdonshire), after Translations and Reprints III (1897).
+- Witney: Kentish land measurements of the thirteenth century. Archaeologia Cantiana 109, 29–39.
+- Chouquer (2023): Qu'est-ce qu'un « partage selon le soleil » (solskifte) en Scandinavie ? Académie d'Agriculture de
+  France, fiche 13.03.Q03.
+- McCloskey (1991): The Prudent Peasant: New Findings on Open Fields. Journal of Economic History 51(2), 343–355
+  (abstract only). https://doi.org/10.1017/S0022050700038985
+- Bolòs (2026): Understanding the Formation of a Mediterranean Landscape. Land 15(2), 225 (abstract only).
+- Hall (2014): The Open Fields of England. Oxford (summary only; its types are not taken over).

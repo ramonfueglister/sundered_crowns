@@ -11,6 +11,8 @@ import { crowd } from '../figures';
 import { type Part, WATER_SHALLOW, sideTopAt } from '../lookprobe/terrain';
 import { type Climate, FIELDS_KNOWN, KIND, Land, WOODS_KNOWN, climateAt, snowLineAt, treeLineAt } from './climate';
 import { type Arable, arableAt } from './arable';
+import { fieldsByLot, lotKey } from './lots';
+import { FIELD_LOT, GEWANN } from '../sim/settlement/fields';
 import { type Forest, WOOD, conifersAt, forestAt, leanOf, stand, tilth } from './forest';
 import { type Rural, ruralAt } from './rural';
 import type { TownParcels } from './lots';
@@ -640,6 +642,25 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     const share = arableOf(x, z);
     return arable && share > 0 ? FIELD_GROUND * tilth(Math.min(1, share / FIELD_GROUND), (x + ox) * cell, (z + oz) * cell, woodsShow, lean ? lean[idx(Math.floor(x), Math.floor(z))] : 0) : share;
   };
+  /**
+   * The furlongs of the land register (lots.ts), by the field lot of the grid they lie on: with them the fields round
+   * the towns are those of the register and no others. A town's furlongs lie from its centre block at the finest step.
+   */
+  const fineOf = (site: number): [number, number] | null => {
+    const p = places[site];
+    if (!p) return null;
+    const at = toGround(...cellOf(region, p.lon, p.lat)), k = 2 ** step;
+    return [Math.floor(Math.round((at[0] + ox) * k * 1e4) / 1e4), Math.floor(Math.round((at[1] + oz) * k * 1e4) / 1e4)];
+  };
+  const registered = parcels && hamlets && [...parcels.values()].some((t) => t.fields?.x.length) ? fieldsByLot(parcels, parcels.year ?? 1291, (site) => {
+    const c = fineOf(site), h = hamlets.get(site);
+    if (!c || !h) return null;
+    // only the towns whose fields can reach this piece: no farther from the town than its hamlets' ring and their
+    // fields beyond it (finest blocks of about 125 m, eight to a kilometre)
+    const k = 2 ** step, far = (2 * h.reachKm + 20) * 8;
+    return c[0] > ox * k - far && c[0] < (ox + N) * k + far && c[1] > oz * k - far && c[1] < (oz + N) * k + far ? c : null;
+  }) : null;
+  const fieldOf = registered ? (lx: number, lz: number) => registered.get(lotKey(lx, lz)) : undefined;
   /** in how many courses the fields at a ground point are tilled */
   const courses = (x: number, z: number) => ((at(land, x, z) & KIND) === Land.Mediterranean ? COURSES_DRY : COURSES);
   /** km² a field lot of the finest step takes at a latitude: a cell of the data is a quarter of a map pixel wide */
@@ -704,7 +725,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   }
   else if (step > 0) {
     // from farther away the towns, the fields and the woods are part of the ground
-    cover = coverLand(g, step, things, sites, { ploughed, laid: arable !== null || hamlets !== null, courses, vines, farm: (x, z) => farm(x, z).style.house, farms, own, clear: (x, z) => stream[idx(x, z)] > 0, woods: (x, z): Woods | null => {
+    cover = coverLand(g, step, things, sites, { ploughed, laid: arable !== null || hamlets !== null, courses, field: fieldOf, vines, farm: (x, z) => farm(x, z).style.house, farms, own, clear: (x, z) => stream[idx(x, z)] > 0, woods: (x, z): Woods | null => {
       const i = idx(x, z), here = land[i] & KIND;
       if (metres[i] > woodsEnd[i]) return null;
       if (oasis(i)) return byWater(x, z, Math.max(1, Math.round(0.75 / cell))) ? { share: 0.8, crowns: PALM, tall: true } : null;
@@ -735,7 +756,12 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
       const here = toGround(...cellOf(region, l.lon, l.lat));
       if (l.built_state !== 'not_yet_built' && onGround(here)) (MONUMENTS[l.id] ?? []).forEach((m, k) => monuments.push({ id: id * 8 + k, at: [here[0] + m.dx, here[1] + m.dz], model: modelOf(m, models) }));
     });
-    const built = settled = settle(g, things, sites, monuments, farm, ploughed, vines, counts, own, farms, courses, survey, told);
+    // the survey of the fields' ground: a furlong lies only where no woods stand (as the fields were laid before the register)
+    const surveyed: Told | undefined = told?.room ? { ...told, room: (fits) => told.room!((lx, lz) => {
+      const x0 = lx * FIELD_LOT.w - ox + (lz & 1 ? Math.floor(FIELD_LOT.w / 2) : 0) + 1, z0 = lz * FIELD_LOT.d - oz + 1, mx = x0 + GEWANN.w / 2, mz = z0 + GEWANN.d / 2;
+      return mx >= 0 && mz >= 0 && mx < N && mz < N && fits(lx, lz) && wooded(mx, mz) < 0.5;
+    }, { centre: fineOf, courses: (site) => { const p = places[site], at = p && toGround(...cellOf(region, p.lon, p.lat)); return at && onGround(at) ? courses(Math.floor(at[0]), Math.floor(at[1])) : null; } }) } : told;
+    const built = settled = settle(g, things, sites, monuments, farm, ploughed, vines, counts, own, farms, courses, survey, surveyed, fieldOf);
     // a survey of the building ground needs no more than the towns' ground
     if (survey || told) return { ground: new Batch(), things, water: new Batch(), cells: [], counts };
 

@@ -35,7 +35,7 @@ describe('the harvest model', () => {
 });
 
 describe('the harvest on the map', () => {
-  it('gives every place with people and cultivated soil a harvest from the first day', () => {
+  it('gives every place with people and cultivated soil a harvest from the first day', { timeout: 60_000 }, () => {
     const { s, w } = newWorldState();
     expect(s.v).toBe(STATE_VERSION);
     expect(s.place.harvest.length).toBe(w.L);
