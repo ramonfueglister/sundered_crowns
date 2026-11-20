@@ -32,7 +32,7 @@ export function lotsFile(s: WorldState, tilth = loadTilth(s.startYear)) {
     // the furlongs of the hamlets' fields: the hamlet (its index in `hamlets`), the middle, the depth, the course and
     // the farmstead that holds it whole (its index among its hamlet's farmsteads, −1 in the open field)
     const q = t.fields, hk = new Map(t.hamlets.id.map((h, k) => [h, k])), within = new Map<number, number>();
-    t.hamlets.id.forEach((h) => t.id.filter((_, i) => t.hamlet[i] === h).forEach((id, k) => within.set(id, k)));
+    for (const h of t.hamlets.id) t.id.filter((_, i) => t.hamlet[i] === h).forEach((id, k) => { within.set(id, k); });
     const fields = { hamlet: q.hamlet.map((h) => hk.get(h)!), x: q.x.map(r1), z: q.z.map(r1), d: q.d.map(r1), zelge: q.zelge, farm: q.farm.map((f) => (f < 0 ? -1 : within.get(f)!)) };
     return { site: t.site, ...of((i) => t.kind[i] === LOT_KIND.parcel), street: st.width.find((v) => v > 0) ? r1(st.width.find((v) => v > 0)!) : 0, streets, hamlets: t.hamlets.id.map((h, k) => ({ east: r1(t.hamlets.x[k]), south: r1(t.hamlets.z[k]), ...of((i) => t.hamlet[i] === h, t.hamlets.x[k], t.hamlets.z[k]), strips: t.hamlets.strips[k].map((id) => within.get(id)!) })), courses: q.courses[0] ?? 0, fieldW: q.w.length ? r1(q.w[0]) : 0, ...(q.x.length && tilth?.centre(t.site) ? { at: tilth.centre(t.site)! } : {}), fields };
   });
@@ -42,6 +42,6 @@ export function lotsFile(s: WorldState, tilth = loadTilth(s.startYear)) {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const year = Number(process.argv[2] ?? 1291);
   const file = lotsFile(newWorldState(year, year).s);
-  writeFileSync(dataPath(`lots_${year}.json`), JSON.stringify(file) + '\n');
+  writeFileSync(dataPath(`lots_${year}.json`), `${JSON.stringify(file)}\n`);
   console.log(`lots_${year}.json: ${file.towns.length} towns, ${file.towns.reduce((n, t) => n + t.x.length, 0)} parcels, ${file.towns.reduce((n, t) => n + t.hamlets.length, 0)} hamlets, ${file.towns.reduce((n, t) => n + t.hamlets.reduce((m, h) => m + h.x.length, 0), 0)} farmsteads, ${file.towns.reduce((n, t) => n + t.fields.x.length, 0)} furlongs`);
 }

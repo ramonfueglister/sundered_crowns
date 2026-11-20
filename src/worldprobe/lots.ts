@@ -46,7 +46,7 @@ export function fieldsByLot(parcels: TownParcels, year: number, centre: (site: n
   const out = new Map<number, FieldShown>();
   for (const [site, t] of parcels) {
     const f = t.fields;
-    if (!f || !f.x.length) continue;
+    if (!f?.x.length) continue;
     const near = centre(site);
     if (!near) continue;
     const c = t.at ?? near;
