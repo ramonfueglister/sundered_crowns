@@ -199,6 +199,10 @@ export interface GroundTraits {
    * only colours the top: `rise` 0).
    */
   cover?(x: number, z: number): { top: readonly [number, number, number]; side: readonly [number, number, number]; rise: number; /** how much of the top the cover colours, 0 … 1 (all of it if left out) */ share?: number; /** false: the cover is the ground's own, bare soil for one, not something that stands on it (terrain.ts `carried`) */ stands?: boolean } | null;
+  /** the houses that stand on the ground as houses where it is seen from afar (worldprobe/houses.ts, HOUSE_NUMBERS numbers each) */
+  readonly houses?: ArrayLike<number>;
+  /** the trees of the finest step where the ground draws them one by one (worldprobe/trees.ts, TREE_NUMBERS to a column, N × N columns) */
+  readonly trees?: ArrayLike<number>;
 }
 export const idx = (x: number, z: number) => z * N + x;
 export const inGrid = (x: number, z: number) => x >= 0 && z >= 0 && x < N && z < N;

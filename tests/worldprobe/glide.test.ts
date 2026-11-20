@@ -6,7 +6,8 @@ import { FACE_COL, FACE_GEO, FACE_STEPS, FLIPPED, RISES, type Faces, glided } fr
 import { SEA_Y, onGrid } from '../../src/lookprobe/layout';
 import { TALLER, glide } from '../../src/worldprobe/glide';
 import { BRIGHTEST, faced, small } from '../../src/worldprobe/small';
-import { type Table, drawBanks, drawLand, drawTable, drawnHeights, tableOf } from '../../src/worldprobe/table';
+import { drawHouses } from '../../src/worldprobe/houses';
+import { type Table, drawBanks, drawLand, drawTable, drawnHeights, housesOf, tableOf } from '../../src/worldprobe/table';
 import { SIDE, land, part } from './land';
 
 const S = FACE_STEPS;
@@ -359,6 +360,45 @@ describe('the glide of a far piece to the coarser one over it', () => {
     }
     expect(down).toBeGreaterThan(600);
     expect(stay).toBeGreaterThan(100);
+  });
+
+  it('takes its houses to where the coarser piece has the same houses, corner by corner, and the others down into their columns', () => {
+    // a house: its corner, width and depth, eaves and rise, and hips (1) or gables (0)
+    const house = (x0: number, z0: number, w: number, d: number, eaves: number, rise: number, hips = 0) => [x0, z0, x0 + w, z0 + d, eaves, rise, 0xd8c8a8, 0xb04a30, hips];
+    const there = (x: number, z: number): [number, number] => [(4000 + x) / 2 - OVER.ox, (-1200 + z) / 2 - OVER.oz];
+    const own = [...house(30.25, 40.5, 1.5, 2, 2.4, 1.1), ...house(50, 33, 2, 1.5, 2, 0.8, 1), ...house(61.5, 28, 1, 1.5, 1.8, 0.7)];
+    // the coarser piece has the first two, a little lower each, and one of its own; not the third
+    const theirs = [...house(...there(50, 33), 1, 0.75, 1.5, 0.6, 1), ...house(40.5, 50.5, 1, 1, 1, 0.5), ...house(...there(30.25, 40.5), 0.75, 1, 1.8, 0.8)];
+    const { fine, parent } = onGrid(SIDE, () => {
+      const a = land(4000, -1200, 0, 60, own), b = land(OVER.ox, OVER.oz, 21, 53, theirs);
+      return { fine: tableOf(a.g, a.t, part), parent: tableOf(b.g, b.t, part) };
+    });
+    // the things as the worker hands them over: a wall, then the houses
+    const drawn = drawTable(fine, true), stands = new Batch();
+    stands.quad([30.2, fine.h[30 * SIDE + 30], 30.5], [30.8, fine.h[30 * SIDE + 30], 30.5], [30.8, fine.h[30 * SIDE + 30] + 2, 30.5], [30.2, fine.h[30 * SIDE + 30] + 2, 30.5], [0.5, 0.4, 0.3], [0, 0, 1]);
+    const walls = stands.pos.length / 3;
+    onGrid(SIDE, () => drawHouses(stands, fine.houses!, fine.h));
+    const things = small(stands);
+    glide({ ground: faced(drawn.ground), carried: faced(drawn.carried!), things, water: small(drawn.water), raised: small(drawn.raised) }, fine, parent, true);
+    const mine = housesOf(fine)!, coarse = housesOf(parent)!, at = (ends: number[], j: number) => [j ? ends[j - 1] : 0, ends[j]];
+    // the first house ends where the coarser piece has its third, the second where it has its first: in place and height
+    for (const [j, q] of [[0, 2], [1, 0]]) {
+      const [v0, v1] = at(mine.ends, j), [w0, w1] = at(coarse.ends, q);
+      expect(v1 - v0).toBe(w1 - w0);
+      for (let v = 0; v < v1 - v0; v++) {
+        const f = (walls + v0 + v) * 3, c = (w0 + v) * 3;
+        expect(things.pos[f]).toBeCloseTo(2 * coarse.batch.pos[c] + 2 * parent.ox - fine.ox, 4);
+        expect(things.pos[f + 2]).toBeCloseTo(2 * coarse.batch.pos[c + 2] + 2 * parent.oz - fine.oz, 4);
+        expect(things.sink![walls + v0 + v]).toBeCloseTo(tall(coarse.batch.pos[c + 1]), 4);
+      }
+    }
+    // the third goes down into its column, and so does the wall
+    const [v0, v1] = at(mine.ends, 2);
+    for (const v of [0, ...Array.from({ length: v1 - v0 }, (_, k) => walls + v0 + k)]) {
+      const c = fate(fine, parent, Math.floor(things.pos[v * 3]), Math.floor(things.pos[v * 3 + 2]));
+      expect(things.sink![v]).toBeLessThan(c.end / S);
+      expect(things.sink![v]).toBeGreaterThan(c.end / S - 0.1);
+    }
   });
 
   it('keeps every mesh within the ball round it, in which the stage looks whether to draw it: where it lies and where it ends up', () => {

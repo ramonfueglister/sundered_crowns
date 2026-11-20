@@ -17,7 +17,9 @@ import { type Ground, type GroundTraits, Mat, N, SUMMIT, idx, onGrid } from '../
 import { buildShore } from '../lookprobe/shore';
 import { type Part, buildTerrain, buildWater, drawnTops } from '../lookprobe/terrain';
 import { pack, unpack } from './pack';
+import { drawHouses, housesBatch, housesIn } from './houses';
 import { FAR_FROM_ROADS, ROAD_SHOWS, roadOn } from './roads';
+import { TREE_NUMBERS, drawTrees } from './trees';
 
 /**
  * The columns round a piece's own that its picture depends on: the sky's share is taken up to 10.5 columns from a
@@ -51,6 +53,10 @@ export interface Table {
    * triangles, colours and all, so a change of how they look needs the tables of that step built again.
    */
   things?: { pos: Float32Array; nor: Float32Array; col: Float32Array };
+  /** the houses drawn as houses whose middle lies in the piece's own columns (houses.ts, HOUSE_NUMBERS numbers each) */
+  houses?: Float32Array;
+  /** the trees drawn one by one at the piece's own columns (trees.ts, TREE_NUMBERS to a column, side × side columns) */
+  trees?: Uint8Array;
   /** blocks to the edge of the nearest way's band at the corners of the columns ((side + 1)², roads.ts `roadOn`), where ways run over the ground; off the piece's own and its rim as far as where no way is near */
   road?: Float32Array;
 }
@@ -100,11 +106,23 @@ export const tabled = (): Table | null => last;
  * Draws a ground: its land, with what it carries as a mesh of its own where `covered`, the sea and the water above
  * it, and the banks of the water.
  */
-export function drawGround(g: Ground, t: GroundTraits, bakedSky: boolean, part: Part, covered: boolean, roads: Float32Array | null = null): { ground: Batch; carried?: Batch; water: Batch; raised: Batch } {
+export function drawGround(g: Ground, t: GroundTraits, bakedSky: boolean, part: Part, covered: boolean, roads: Float32Array | null = null): { ground: Batch; carried?: Batch; water: Batch; raised: Batch; standing?: Batch } {
   if (wanted) last = tableOf(g, t, part, roads);
   const carried = covered ? new Batch() : undefined, ground = buildTerrain(g, t, bakedSky, part, carried), water = buildWater(g, false, part), raised = buildWater(g, true, part);
   buildShore(ground, g, t, bakedSky, part);
-  return { ground, carried, water, raised };
+  return { ground, carried, water, raised, standing: standingOn(g, t.trees, housesIn(t.houses, part), part) };
+}
+
+/**
+ * What stands on a ground drawn from numbers: its trees, then its houses (the glide finds the houses at the end:
+ * glide.ts `housesOver`). The houses as a table keeps them, in floats, so that drawn from it they are the same.
+ */
+function standingOn(g: Ground, trees: ArrayLike<number> | undefined, houses: Float32Array | undefined, part: Part): Batch | undefined {
+  if (!trees && !houses) return undefined;
+  const b = new Batch();
+  if (trees) drawTrees(b, trees, g.h, g.ox ?? 0, g.oz ?? 0, part);
+  if (houses) drawHouses(b, houses, g.h);
+  return b.triangles ? b : undefined;
 }
 
 /** The table of a ground of a far step: its columns as the ground's traits tell them, the piece's own and RIM round them; `roads`: the ways' edges at the corners, as the traits were given them. */
@@ -141,6 +159,13 @@ export function tableOf(g: Ground, t: GroundTraits, part: Part, roads: Float32Ar
     table.top[i] = colourOf(cover.top); table.flank[i] = colourOf(cover.side);
   }
   table.colours = new Float32Array(colours);
+  const houses = housesIn(t.houses, part);
+  if (houses) table.houses = houses;
+  if (t.trees) {
+    const trees = new Uint8Array(n * TREE_NUMBERS);
+    for (let z = part.z0; z < part.z1; z++) for (let x = part.x0; x < part.x1; x++) for (let q = 0; q < TREE_NUMBERS; q++) trees[idx(x, z) * TREE_NUMBERS + q] = t.trees[idx(x, z) * TREE_NUMBERS + q];
+    if (trees.some((v) => v > 0)) table.trees = trees;
+  }
   if (roads) {
     const road = new Float32Array((N + 1) * (N + 1)).fill(FAR_FROM_ROADS);
     for (let z = Math.max(0, part.z0 - RIM); z <= Math.min(N, part.z1 + RIM); z++) for (let x = Math.max(0, part.x0 - RIM); x <= Math.min(N, part.x1 + RIM); x++) road[z * (N + 1) + x] = roads[z * (N + 1) + x];
@@ -155,11 +180,13 @@ export function tableOf(g: Ground, t: GroundTraits, part: Part, roads: Float32Ar
  */
 class TableTraits implements GroundTraits {
   readonly slope: GroundTraits['slope'];
+  readonly houses: GroundTraits['houses'];
+  readonly trees: GroundTraits['trees'];
   private readonly side: number;
   private readonly last: number;
   private readonly pulls: (readonly [RGB, number])[] = [];
   constructor(private readonly table: Table) {
-    this.slope = table.slope; this.side = table.side; this.last = table.side - 1;
+    this.slope = table.slope; this.houses = table.houses; this.trees = table.trees; this.side = table.side; this.last = table.side - 1;
     const tints = table.tints;
     for (let k = 0; k < tints.length; k += 4) this.pulls.push([[tints[k], tints[k + 1], tints[k + 2]], tints[k + 3]]);
   }
@@ -201,8 +228,13 @@ export function drawBanks(table: Table, bakedSky: boolean, part: Part): Batch {
   return onGrid(table.side, () => { const banks = new Batch(); buildShore(banks, g, traitsOf(table), bakedSky, part); return banks; });
 }
 
+/** The houses of a table drawn as its piece draws them, with where each ends among their corners (houses.ts `drawHouses`). */
+export function housesOf(table: Table): { batch: Batch; ends: number[] } | undefined {
+  return onGrid(table.side, () => housesBatch(table.houses, table.h));
+}
+
 /** Draws the piece of a table, as its build drew it. */
-export function drawTable(table: Table, bakedSky: boolean): { ground: Batch; carried?: Batch; water: Batch; raised: Batch } {
+export function drawTable(table: Table, bakedSky: boolean): { ground: Batch; carried?: Batch; water: Batch; raised: Batch; standing?: Batch } {
   const g: Ground = { h: table.h, mat: table.mat, wet: table.wet, shore: table.shore, occ: table.occ, surf: table.surf, ox: table.ox, oz: table.oz };
   const keeping = wanted;
   wanted = false;
