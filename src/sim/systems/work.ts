@@ -46,7 +46,7 @@ export const WORKING_AGE = 15;
 export const K = { works: 30, order: 31 } as const;
 
 /** The persons of a place for its economy. */
-export interface Workforce {
+interface Workforce {
   /** the persons who work, in the order in which the parts are given out: first the owners of the firms, then the
    *  owner of the bank, then the workers */
   working: number[];

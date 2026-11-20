@@ -41,7 +41,7 @@ export const DAY = { work: 0, half: 1, rest: 2 } as const;
 export const WORKED: readonly number[] = [1, 0.5, 0];
 /** The calendars. */
 export const CALENDAR = { latin: 0, orthodox: 1, sunday: 2, muslim: 3, jewish: 4, none: 5 } as const;
-export const CALENDARS = 6;
+const CALENDARS = 6;
 
 /** The calendar of a faith (an index of FAITHS). */
 export function calendarOf(faith: number): number {

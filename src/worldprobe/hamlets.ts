@@ -5,7 +5,7 @@
 // with persons, their hamlets, and the fields round them (world.ts).
 
 /** the file: per town (index of the gazetteer) persons of the world, and km² under the plough */
-export interface HamletLandJson {
+interface HamletLandJson {
   year: number;
   town: number[];
   inside: number[];
@@ -15,7 +15,7 @@ export interface HamletLandJson {
   reach_km: number[];
 }
 /** a town's persons inside it, the persons and families of its hamlets, the km² its farmers till and how many km from the town its fields reach */
-export interface HamletLand {
+interface HamletLand {
   inside: number;
   hamlet: number;
   families: number;

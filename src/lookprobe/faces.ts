@@ -145,7 +145,7 @@ export function unfaced(f: Faces): { pos: Float32Array; nor: Int8Array; col: Uin
 }
 
 /** The axis a face on no grid faces along, by its direction. */
-export const freeAxis = (f: Free, k: number) => (f.nor[k * 4] ? 0 : f.nor[k * 4 + 1] ? 1 : 2);
+const freeAxis = (f: Free, k: number) => (f.nor[k * 4] ? 0 : f.nor[k * 4 + 1] ? 1 : 2);
 
 /** The faces on no grid as the triangles the stage draws of them, in small lists (for the tests). */
 export function unfree(f: Free): { pos: Float32Array; nor: Int8Array; col: Uint8Array } {

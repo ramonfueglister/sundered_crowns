@@ -1,6 +1,6 @@
 // German forms of place names. The map data carries one historical name per place (mostly the English or local form);
 // German players read the established German exonyms instead. Unlisted names stay as they are.
-export const PLACE_DE: Record<string, string> = {
+const PLACE_DE: Record<string, string> = {
   // trade markets named after their fair or with their town (fix-econ)
   'Champagne Fairs (Troyes)': 'Champagnemessen (Troyes)',
   'Hajji Tarkhan (Astrakhan)': 'Hadschi Tarchan (Astrachan)',

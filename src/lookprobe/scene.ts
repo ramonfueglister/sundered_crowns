@@ -66,7 +66,7 @@ import {
 } from './layout';
 import { buildTerrain, buildWater } from './terrain';
 
-export interface ProbeScene {
+interface ProbeScene {
   ground: Batch;
   water: Batch;
   things: Batch;

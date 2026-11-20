@@ -31,7 +31,7 @@ export const MOVING_AGE: readonly [number, number] = [10, 60];
 export const GROWN = 17,
   HOME_UNTIL = 30;
 /** From this age a person who lives away from home changes places as a servant (Dribe & Lundh: servants of 15 on). */
-export const SERVICE_FROM = 15;
+const SERVICE_FROM = 15;
 
 /** The children who left home, as events over person-years (Dribe 2002, tables 3 and 4), and the shares and the
  *  relative risks of the standings of their families against freeholders and tenants of the crown. */

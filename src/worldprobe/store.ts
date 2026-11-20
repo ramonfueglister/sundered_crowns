@@ -6,7 +6,7 @@
 // folders of other builds.
 
 /** the folder all kept pieces lie in, one folder to a build under it */
-export const STORE = 'pieces';
+const STORE = 'pieces';
 
 /** what follows a piece's name in the name of its unzipped file */
 export const RAW = '.raw';

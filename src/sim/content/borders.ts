@@ -40,7 +40,7 @@ export interface BordersJson {
 }
 
 /** On `day` the places go to the realm `to`; or, with `name`, the realm `to` takes that name. */
-export interface BorderEvent {
+interface BorderEvent {
   day: number;
   to: string;
   places: Int32Array;

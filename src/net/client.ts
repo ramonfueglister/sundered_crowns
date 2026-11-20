@@ -14,7 +14,7 @@ import {
 } from './protocol';
 import type { Command, CmdResult } from '../sim/commands';
 
-export type Status = 'idle' | 'connecting' | 'open' | 'lost' | 'refused';
+type Status = 'idle' | 'connecting' | 'open' | 'lost' | 'refused';
 export const status = signal<Status>('idle');
 export const refusal = signal<string | null>(null);
 export const me = signal<Me | null>(null);

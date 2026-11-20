@@ -23,7 +23,7 @@ import { giveGenes } from './people';
 import C1291 from '../content/communities_1291.json';
 import { presentPersons } from '../people/living';
 
-export interface Community {
+interface Community {
   town: string;
   culture: string;
   faith: string;
@@ -78,7 +78,7 @@ export function setRulerCulture(s: WorldState, id: number, realm: number): void 
 }
 
 /** The counted communities of the world's start year, as whole families of their towns. */
-export function setCommunities(s: WorldState): void {
+function setCommunities(s: WorldState): void {
   const P = s.person.cols,
     F = s.family.cols;
   const ruler = new Set(s.named.map((n) => n.person));

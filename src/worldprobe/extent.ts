@@ -4,7 +4,7 @@ import extent from '../../data/content/world_extent.json';
 import type { Projection } from './region';
 
 /** The frame in cells of a projection: its columns from west to east and its rows from north to south. */
-export interface Extent {
+interface Extent {
   west: number;
   east: number;
   north: number;

@@ -80,11 +80,11 @@ export type EconomyPrices = 'costs' | 'demand';
 /** What the crown of a city buys with (economy feature 16, economy/src/clock.rs): 'series' is the rule of the paper,
  *  purchases that follow their own random series whatever the crown takes in; 'revenue': the crown's budget of a
  *  period is what it took in the period before, less the benefits and the interest it paid then. */
-export type EconomyCrown = 'series' | 'revenue';
+type EconomyCrown = 'series' | 'revenue';
 /** Who gets what a firm earns (economy feature 18, economy/src/clock.rs): 'paper' is the rule of the paper, the owner
  *  is paid the profit with the unsold stock at its price and bears no loss; 'household': firm and owner are one
  *  household, the owner's income is the firm's profit without the change of its stock, of either sign. */
-export type EconomyOwner = 'paper' | 'household';
+type EconomyOwner = 'paper' | 'household';
 /** The rules of the cities that the calibration chooses. */
 /** `savings`: the share of what a household holds above its target that it spends per period (economy feature 15,
  *  economy/src/clock.rs); 0 is the port's rule, a household that spends out of its income only. */
@@ -126,7 +126,7 @@ export interface CitySetup {
 
 /** The accounting identities of a city (`Economy::checks`): each of the first five is 0 up to rounding; `gdpSum`
  *  is the amount to judge them by. */
-export interface CityChecks {
+interface CityChecks {
   income: number;
   nominal: number;
   real: number;
@@ -137,7 +137,7 @@ export interface CityChecks {
 /** What must be 0 in a state: the identities of every city, and the books of the merchants (`Cities::checks`): the
  *  change of their worth, then for every product the goods neither in stock nor sold, each with the amount to judge
  *  it by. */
-export interface EconomyChecks {
+interface EconomyChecks {
   cities: CityChecks[];
   merchants: { off: number; scale: number }[];
 }

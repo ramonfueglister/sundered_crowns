@@ -14,13 +14,13 @@ export interface CmdResult {
   err?: string;
 }
 
-export interface CommandDef<C extends Command = Command> {
+interface CommandDef<C extends Command = Command> {
   check(s: WorldState, w: World, c: C): string | null;
   apply(s: WorldState, w: World, c: C): void;
 }
 
 /** The commands of the game by kind (filled as systems are built). */
-export const COMMANDS: Record<string, CommandDef<any>> = {};
+const COMMANDS: Record<string, CommandDef<any>> = {};
 
 export function applyCommand(s: WorldState, w: World, c: Command): CmdResult {
   const def = COMMANDS[c?.t];

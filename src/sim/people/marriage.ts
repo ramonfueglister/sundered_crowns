@@ -27,12 +27,12 @@ export const PREGNANCY = 0.75;
  *  counts 10 % of the housewives as widows; with this rule the world has about 15 %, without it 32 %). */
 export const WIDOW_REMARRIES_BELOW = 45;
 /** Persons per household (La Poutré & Paping 2025: 5.8): a town is founded with this many persons per household. */
-export const HOUSEHOLD = 5.8;
+const HOUSEHOLD = 5.8;
 /** Boys per girl at birth (assumption: the usual biological value; no source opened). */
 export const SEX_RATIO_AT_BIRTH = 1.05;
 
 /** The curve of Coale and McNeil as the program has it: the weight of the age x among the brides. */
-export function coaleMcNeil(x: number): number {
+function coaleMcNeil(x: number): number {
   const k = (BRIDE_AGE.mean - BRIDE_AGE.min) / 11.36,
     z = x - BRIDE_AGE.min - 6.06 * k;
   return Math.exp((-0.174 / k) * z - Math.exp((-0.288 / k) * z));

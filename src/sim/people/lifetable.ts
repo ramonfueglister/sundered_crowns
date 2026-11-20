@@ -5,7 +5,7 @@
 // https://raw.githubusercontent.com/hanase/demogR/master/R/cdmltw.R). Feature 1 of the people uses level 3
 // (docs/PEOPLE_DESIGN.md).
 
-export type Sex = 'f' | 'm';
+type Sex = 'f' | 'm';
 
 /** Life expectancy at age 10 of the levels 1 … 25 (Oeppen's optimisation, demogR). */
 const E10: Record<Sex, number[]> = {

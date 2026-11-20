@@ -18,7 +18,7 @@ const RECHECK = 350;
 const KEEP_MS = 20_000,
   KEEP_MAX = 300;
 
-export interface PersonHover {
+interface PersonHover {
   dispose(): void;
 }
 

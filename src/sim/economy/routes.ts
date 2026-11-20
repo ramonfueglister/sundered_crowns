@@ -22,7 +22,7 @@ import type { CalibrationTable } from './calibration';
 /** What the engine is given (`sce_routes`): per city of origin and of destination the days of travel (0: no way)
  *  and the days of labour that carry a tonne; per product the tonnes of a real unit; and the elasticity of the
  *  stock to keep. */
-export interface CityRoutes {
+interface CityRoutes {
   cities: number;
   days: Uint32Array;
   labour: Float64Array;
@@ -50,7 +50,7 @@ interface Room {
 const LENGTHS = new WeakMap<World, Map<WayNet | null, Float32Array>>();
 /** The kilometres of every edge of the world's net as goods count them (above): the ways' efforts on land, or the
  *  straight line off them; the straight line on rivers and water, and everywhere in a world without ways. */
-export function edgeKm(w: World, net: WayNet | null): Float32Array {
+function edgeKm(w: World, net: WayNet | null): Float32Array {
   let kept = LENGTHS.get(w);
   if (!kept) LENGTHS.set(w, (kept = new Map()));
   const had = kept.get(net);

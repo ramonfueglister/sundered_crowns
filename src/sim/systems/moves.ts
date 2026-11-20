@@ -49,7 +49,7 @@ const draw = (s: WorldState, id: number, day: number, k: number): number =>
 const K = { accept: 0, band: 1, land: 2, host: 3, next: 4, offer: 5 } as const;
 
 /** What the moves of a run of days did, for the checks. */
-export interface Moved {
+interface Moved {
   /** persons who went to another place: from home, and from a place they had moved to before */
   home: number;
   service: number;

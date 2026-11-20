@@ -13,7 +13,7 @@ export function seedRng(seed: number): number[] {
   if (!out.some((v) => v !== 0)) out[0] = 1;
   return out;
 }
-export function nextU32(s: number[]): number {
+function nextU32(s: number[]): number {
   const r = Math.imul(rotl(Math.imul(s[1], 5) >>> 0, 7), 9) >>> 0;
   const t = (s[1] << 9) >>> 0;
   s[2] = (s[2] ^ s[0]) >>> 0;
@@ -31,7 +31,7 @@ function rotl(x: number, k: number) {
 export function rand(s: number[]): number {
   return nextU32(s) / 4294967296;
 }
-export function randInt(s: number[], n: number): number {
+function randInt(s: number[], n: number): number {
   return Math.floor(rand(s) * n);
 }
 export function chance(s: number[], p: number): boolean {

@@ -13,7 +13,7 @@ export type Column =
   | Uint32Array
   | Uint16Array
   | Uint8Array;
-export type ColumnType = 'f64' | 'f32' | 'i32' | 'i16' | 'i8' | 'u32' | 'u16' | 'u8';
+type ColumnType = 'f64' | 'f32' | 'i32' | 'i16' | 'i8' | 'u32' | 'u16' | 'u8';
 const CTOR: Record<ColumnType, new (n: number) => Column> = {
   f64: Float64Array,
   f32: Float32Array,
@@ -42,13 +42,13 @@ type ArrayOf<T extends ColumnType> = T extends 'f64'
 
 /** A column holds one value per row, or a fixed number of values per row ([type, width]: row i owns the values
  *  i·width … i·width + width − 1), e.g. the 68 gene bytes of a person. */
-export type ColumnSpec = ColumnType | readonly [ColumnType, number];
+type ColumnSpec = ColumnType | readonly [ColumnType, number];
 type TypeOf<C extends ColumnSpec> = C extends readonly [infer T extends ColumnType, number]
   ? T
   : C extends ColumnType
     ? C
     : never;
-export type Schema = Record<string, ColumnSpec>;
+type Schema = Record<string, ColumnSpec>;
 export type Columns<S extends Schema> = { [K in keyof S]: ArrayOf<TypeOf<S[K]>> };
 const typeOf = (c: ColumnSpec): ColumnType => (typeof c === 'string' ? c : c[0]);
 const widthOf = (c: ColumnSpec): number => (typeof c === 'string' ? 1 : c[1]);

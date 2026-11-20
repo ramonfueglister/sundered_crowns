@@ -7,9 +7,9 @@ import { type Ground, type GroundTraits, Mat, N, idx } from './layout';
 import { type Part, ROCK_TOP_LOW, skyLight, skyShare, topColor } from './terrain';
 
 /** the land's share round a point is taken over this many columns (the width of a bell curve) */
-export const SHORE_BLUR = 0.7;
+const SHORE_BLUR = 0.7;
 /** the bank reaches as far as this share of land round a point: under a half, so that it stands out before a straight coast too */
-export const SHORE_LEVEL = 0.2;
+const SHORE_LEVEL = 0.2;
 /** from this much over the level on the bank is as high as the land behind it */
 const SHORE_FULL = 0.06,
   SHORE_GENTLE = 0.3;

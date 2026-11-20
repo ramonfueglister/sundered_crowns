@@ -228,7 +228,7 @@ export const TOWNS: readonly { at: P2; r: number; houses: number; towers: number
 /** wheat stands for the winter corn, ripe in the picture's summer; oats for the spring corn, still green then */
 export type Crop = 'wheat' | 'oats' | 'vine';
 /** what a ploughed column carries: a crop, or nothing this year (the fallow, grazed until it is ploughed again) */
-export type Tilled = Crop | 'fallow';
+type Tilled = Crop | 'fallow';
 /** fields as ground rectangles: centre, size along x and z, crop */
 export const FIELDS: readonly { at: P2; w: number; d: number; crop: Crop }[] = [
   { at: toXZ(0.04, 0.3), w: 22, d: 15, crop: 'vine' },
@@ -444,7 +444,7 @@ function pillarAt(cx: number, cz: number): readonly [number, number] {
   return [m, share + (hash2(Math.floor(cx / 2), Math.floor(cz / 2), 9) - 0.5) * 0.16];
 }
 /** how far up its massif the rock column at (x, z) stands (0 … 1); summit above `SUMMIT` */
-export const summitShare = (x: number, z: number): number => pillarAt(...rockPillar(x, z))[1];
+const summitShare = (x: number, z: number): number => pillarAt(...rockPillar(x, z))[1];
 /**
  * Rock comes as bundles of pillars with flat tops, as in the reference: the height is taken once per pillar, at its
  * centre, and pillars of one bundle rise and fall together. The summits step in twos, so that their pillars join into

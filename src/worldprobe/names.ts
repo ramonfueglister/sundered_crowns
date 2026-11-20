@@ -18,7 +18,7 @@ const LIE_LEAST = 0.3;
 /** two names keep this share of their summed heights apart (between points along them) */
 const CLEAR = 0.5;
 
-export interface LaidName {
+interface LaidName {
   realm: number;
   name: string;
   /** SVG path of the curve in pixels of the picture, west to east */

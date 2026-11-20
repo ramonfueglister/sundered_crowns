@@ -45,13 +45,13 @@ export const enum Happening {
   Die = 2,
   Accede = 3,
 }
-export interface ChronicleEvent {
+interface ChronicleEvent {
   day: number;
   what: Happening;
   person: number;
   realm: string;
 }
-export interface ChronicleReignDays {
+interface ChronicleReignDays {
   person: number;
   start: number;
   end: number | null;

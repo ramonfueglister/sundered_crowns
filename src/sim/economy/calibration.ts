@@ -173,7 +173,7 @@ export function roundHalfEven(x: number): number {
 /** `total` whole units split by `shares` (which sum to 1) so that the parts sum to `total`: every part gets the whole
  *  number below its share, and the units left over go to the parts with the largest remainders, the first of equal
  *  ones first (the method of the largest remainder). */
-export function apportion(total: number, shares: readonly number[]): number[] {
+function apportion(total: number, shares: readonly number[]): number[] {
   if (!(Number.isInteger(total) && total >= 0)) throw new Error(`${total} is not a number of units to split`);
   const exact = shares.map((s) => total * s),
     parts = exact.map(Math.floor);
@@ -457,7 +457,7 @@ export function foodNeedCost(t: CalibrationTable): number {
 
 /** The owners of the bank among the active persons of the model: the port has one bank (`n_banks`), and the
  *  calibration counts its owner as the one active person who is neither in a firm nor without work. */
-export const BANK_OWNERS = 1;
+const BANK_OWNERS = 1;
 
 /** The active persons of the model that a calibration asks for (`H_act`): the workers, the owner of every firm and
  *  the owner of the bank. */

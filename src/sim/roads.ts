@@ -38,7 +38,7 @@ export const TRACK = 0,
   ROAD = 1,
   HIGHWAY = 2;
 /** a cart can travel the kinds from this one on */
-export const WHEELS = ROAD;
+const WHEELS = ROAD;
 
 export const MEANS = {
   /** an ox cart (ORBIS) */
@@ -52,12 +52,12 @@ export const MEANS = {
   /** a fast carriage of the state post (ORBIS) */
   post: { kmPerDay: 67, wheels: true },
 } as const;
-export type Means = keyof typeof MEANS;
+type Means = keyof typeof MEANS;
 
 /** in the winter months (December to February) a way of this kind is travelled at this share of its summer speed: an assumption, mud on earth ways */
-export const WINTER: readonly number[] = [0.6, 0.7, 0.8];
+const WINTER: readonly number[] = [0.6, 0.7, 0.8];
 /** the months of winter on the northern half of the globe (0 January) */
-export const isWinter = (month: number) => month === 11 || month <= 1;
+const isWinter = (month: number) => month === 11 || month <= 1;
 
 /**
  * A way from one place of the map to the next: its kind, km and effort (km weighted by the time its slopes take),

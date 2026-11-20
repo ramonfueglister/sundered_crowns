@@ -27,7 +27,7 @@ export const LAND_SHARE = 0.7;
 
 /** Share of the people who live from agriculture: Allen (2000), England 74 % around 1500, as cited by Crafts and
  *  Harley (2002), p. 2. While the share is the same everywhere it cancels out of L_i / L_E. */
-export const FARM_SHARE = 0.74;
+const FARM_SHARE = 0.74;
 
 /** The calibration case: Broadberry, Campbell, Klein, Overton, van Leeuwen (2010), table 19, row 1300/09. */
 export const ENGLAND_1300 = {
@@ -42,7 +42,7 @@ const DAYS_PER_YEAR = 365;
 export const farmers = (people: number): number => FARM_SHARE * people;
 
 /** England's harvest of 1300–09 in kilocalories per year (Y_E). */
-export const ENGLAND_HARVEST = ENGLAND_1300.kcalPerHeadDay * ENGLAND_1300.people * DAYS_PER_YEAR;
+const ENGLAND_HARVEST = ENGLAND_1300.kcalPerHeadDay * ENGLAND_1300.people * DAYS_PER_YEAR;
 
 /** The harvest of one year in kilocalories from `soil` (Σ yield × hectares of the cultivated land), worked by
  *  `labour` people. `englandLand` is T_E (World.landEngland). */

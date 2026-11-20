@@ -40,7 +40,7 @@ export function realmInfos(s: WorldState, rulerName: (uid: string) => string | n
 }
 
 /** The economy of the city of a place; undefined for a place without a city and in a world without economies. */
-export function cityEconomyDetail(s: WorldState, w: World, i: number): CityEconomyDetail | undefined {
+function cityEconomyDetail(s: WorldState, w: World, i: number): CityEconomyDetail | undefined {
   const e = s.economy.cities,
     k = e ? cityAt(e, i) : -1;
   if (!e || k < 0) return undefined;

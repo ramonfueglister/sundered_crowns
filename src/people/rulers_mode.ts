@@ -14,7 +14,7 @@ const REFRESH = 30_000;
 const css = (c: number) => `#${c.toString(16).padStart(6, '0')}`;
 
 /** The dots of the rulers: at the degrees of the place they live in, with their name and crowns for the pointer. */
-export function rulerMarks(
+function rulerMarks(
   list: readonly RulerOnMap[],
   loc: { lon: number[]; lat: number[] },
   open: (uid: number) => void,

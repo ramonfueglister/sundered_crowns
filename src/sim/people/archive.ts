@@ -57,7 +57,7 @@ export function rowOf(s: WorldState, uid: number): number {
 
 /** What the archive keeps of a dead person: who the person was, not what the person did in the economy. About 140
  *  bytes a person. */
-export const ARCHIVE_SCHEMA = {
+const ARCHIVE_SCHEMA = {
   uid: 'i32',
   born: 'i32',
   died: 'i32',
@@ -79,7 +79,7 @@ export const ARCHIVE_SCHEMA = {
   n: 'u8',
   genes: ['u8', 2 * NG],
 } as const;
-export type ArchiveSchema = typeof ARCHIVE_SCHEMA;
+type ArchiveSchema = typeof ARCHIVE_SCHEMA;
 
 /** The persons who went to the archive on one day, in the order of their uids. */
 export interface ArchivedPersons {

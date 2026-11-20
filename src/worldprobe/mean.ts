@@ -397,7 +397,7 @@ export function look(a: Above): Float32Array {
 }
 
 /** numbers a coarser block has in a summary: of the dots that show tops (colour summed, and how many), of those that show sides, the tops' own colours summed, how many finer blocks it has, and their heights above the ground summed */
-export const SUMMED = 13;
+const SUMMED = 13;
 
 /**
  * The finer step's blocks, four to a coarser block: what the camera sees of each four (`look`), their own tops and

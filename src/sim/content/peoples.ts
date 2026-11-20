@@ -114,7 +114,7 @@ export const GROUP_OF: Record<string, string> = {};
 for (const [g, ms] of Object.entries(CULTURE_GROUPS)) for (const m of ms) GROUP_OF[m] = g;
 export const ALL_CULTURES: string[] = Object.values(CULTURE_GROUPS).flat();
 
-export function cultureName(id: string): string {
+function cultureName(id: string): string {
   return id
     .split('_')
     .map((w) => w[0].toUpperCase() + w.slice(1))
@@ -296,7 +296,7 @@ export function cultureLabel(id: string): I18n {
   return { en, de: CULTURE_DE[id] ?? en };
 }
 
-export interface FaithDef {
+interface FaithDef {
   id: string;
   name: I18n;
   family: string;

@@ -41,7 +41,7 @@ const FLIGHT = 1400,
 const HOVER_EVERY = 90;
 
 /** What a click on the ground hit: the point in finest world blocks (y: blocks above the stage's floor as the land was built), the step the view is drawn in, and the place in degrees. */
-export interface WorldClick {
+interface WorldClick {
   x: number;
   y: number;
   z: number;
@@ -55,7 +55,7 @@ export interface WorldHover extends WorldClick {
   py: number;
 }
 
-export interface WorldViewOptions {
+interface WorldViewOptions {
   /** the canvas to draw on (default: the page's first, filling the window) */
   canvas?: HTMLCanvasElement;
   /** the cut of the world to show */

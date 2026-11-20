@@ -41,7 +41,7 @@ export function dateToDay(y: number, m: number, d: number, startYear: number): n
   for (let k = 0; k < m; k++) abs += MDAYS[k] + (k === 1 && isLeap(y) ? 1 : 0);
   return abs + d - 1 - yearStart(startYear);
 }
-export const MONTHS_EN = [
+const MONTHS_EN = [
   'January',
   'February',
   'March',

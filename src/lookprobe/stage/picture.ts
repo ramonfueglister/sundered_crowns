@@ -42,7 +42,7 @@ import type { StageOptions } from './api';
 import type { Materials } from './materials';
 
 /** What the picture is aimed at: the ground it shows (laid out by Stage.aim) and the camera's distance from it. */
-export interface PictureView {
+interface PictureView {
   ground: { x: number; z: number; wide: number; elev: number };
   distance: number;
 }

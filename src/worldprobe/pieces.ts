@@ -195,7 +195,7 @@ interface Spot {
   spare?: boolean;
 }
 
-export interface Pieces {
+interface Pieces {
   /** Brings the stage to the view: asks for what is missing, shows what covers the picture best. Returns the layout and how many pieces of the picture are still to come. */
   look(view: View): Layout & { missing: number };
   /** the first error of a worker, if any */

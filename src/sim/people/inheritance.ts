@@ -27,9 +27,9 @@
 import { ALL_CULTURES, FAITHS } from '../content/peoples';
 
 export const CUSTOM = { none: 0, eldestSon: 1, youngestSon: 2, sons: 3, children: 4, sonsDouble: 5 } as const;
-export type Custom = (typeof CUSTOM)[keyof typeof CUSTOM];
+type Custom = (typeof CUSTOM)[keyof typeof CUSTOM];
 
-export interface CustomRule {
+interface CustomRule {
   custom: Custom;
   grade: 1 | 2;
   cultures: string[];

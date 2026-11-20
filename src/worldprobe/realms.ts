@@ -65,7 +65,7 @@ interface Want {
   age: number;
 }
 
-export interface RealmsMap {
+interface RealmsMap {
   /** Brings the map to the view. Returns how many tiles of what the picture shows of it are still to come. */
   look(view: View, at: Layout): number;
   /** where the realms' names are written; empty until the realms have been near once */

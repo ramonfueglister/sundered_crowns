@@ -17,7 +17,7 @@ export const ROAD_KINDS: readonly { name: string; half: number; until: number }[
 ];
 
 /** the file */
-export interface RoadsJson {
+interface RoadsJson {
   year: number;
   lines: { k: number; p: number[] }[];
   between: [number, number, number][];
@@ -98,7 +98,7 @@ export function smoothLine(p: readonly number[]): Float32Array {
   return Float32Array.from(relaxPoints(pts, LINE_SIGMA, LINE_EVERY).flat());
 }
 
-export const roadsOf = (j: RoadsJson): Road[] =>
+const roadsOf = (j: RoadsJson): Road[] =>
   j.lines.map((l) => {
     const p = smoothLine(l.p);
     let x0 = Infinity,
@@ -134,7 +134,7 @@ export const roadsIn = (roads: readonly Road[], x0: number, y0: number, x1: numb
   roads.filter((r) => r.x1 >= x0 && r.x0 < x1 && r.y1 >= y0 && r.y0 < y1);
 
 /** a way is pinned where its line crosses every PIN-th row and column of world blocks; between pins it finds its own path */
-export const PIN = 24;
+const PIN = 24;
 /** how far a way may stray from the straight line between two pins, in blocks */
 export const STRAY = 9;
 /**

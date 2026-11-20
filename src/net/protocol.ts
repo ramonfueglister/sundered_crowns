@@ -102,7 +102,7 @@ export interface CityEconomyDetail {
   /** why the economies stand still (absent while they run) */
   halted?: string;
 }
-export interface HarvestDetail {
+interface HarvestDetail {
   /** kilocalories of food from arable farming in the year, and per head and day */
   kcal: number;
   perHeadDay: number;
@@ -113,7 +113,7 @@ export interface HarvestDetail {
   /** cultivated land (absent when the server is older than the client) */
   arable?: ArableDetail;
 }
-export interface ArableDetail {
+interface ArableDetail {
   /** arable in hectares and as a share of the place's land */
   hectares: number;
   share: number;

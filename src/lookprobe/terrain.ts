@@ -31,7 +31,7 @@ export const SOIL_WHEAT = rgb(0xc4aa4c),
 /** the fallow: stubble and weeds, grazed, shows through the grass this far */
 export const SOIL_FALLOW = rgb(0xb0a060),
   FALLOW_SHOWS = 0.65;
-export const SHADED_SOIL = rgb(0x6a705c);
+const SHADED_SOIL = rgb(0x6a705c);
 const DIRT = rgb(0xa88a52),
   QUAY = rgb(0xdcc4b4),
   EARTH = rgb(0x9a8450);

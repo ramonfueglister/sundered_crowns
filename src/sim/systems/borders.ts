@@ -60,7 +60,7 @@ export function rankOfName(name: string): number {
 }
 
 /** A colour of its own for a realm that comes in on the way: hue from its key, muted as the map's colours. */
-export function colorOfKey(key: string): number {
+function colorOfKey(key: string): number {
   let h = 0x811c9dc5;
   for (let i = 0; i < key.length; i++) {
     h ^= key.charCodeAt(i);
