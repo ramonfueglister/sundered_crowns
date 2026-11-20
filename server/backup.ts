@@ -70,7 +70,7 @@ export async function restoreFromStore(
 
 /** The world a copy is taken of. Its files, meta and state are read when an upload is made: the world sets them up in
  *  its init(), after the copy is made. */
-export interface BackupSource {
+interface BackupSource {
   readonly id: string;
   /** the world's folder: borders.ndjson lies in it */
   readonly root: string;

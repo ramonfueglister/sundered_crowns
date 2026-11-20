@@ -34,7 +34,7 @@ const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '../..');
 const year = Number(process.argv[2] ?? 1291),
   base = '/',
   name = 'world';
-/** the pieces of the world graphic and the ground a far piece is built on: 200 blocks a side with 32 round them (src/worldprobe/pieces.ts PIECE, NARROW) */
+/** the pieces of the world graphic and the ground a far piece is built on: 200 blocks a side with 32 round them (src/worldprobe/piece_sight.ts PIECE, pieces.ts NARROW) */
 const PIECE = 200,
   MARGIN = 32,
   SIDE = PIECE + 2 * MARGIN,

@@ -23,6 +23,8 @@ import { type Conn, Session, type UserAuth } from './session';
 import { NullStore, type WorldStore } from './store';
 import { BorderHistory } from './history';
 import { type ArchivedPersons, indexIn, takeArchived, yearsWith } from '../src/sim/people/archive';
+import { type Divergence, divergence } from '../src/sim/divergence';
+import type { SetupState } from '../src/sim/setup';
 
 /** at the highest speed, the days of one beat of the clock take this much real time at most before what changed goes out */
 const BATCH_MS = 100;
@@ -99,6 +101,8 @@ export class WorldCore {
   private log: (m: string) => void;
   /** the history of the borders (server/history.ts), for the replay */
   history!: BorderHistory;
+  /** the setup of the start year, read when first needed (`divergence`) */
+  private setup: SetupState | null = null;
   /** the speed of the clock, 1 … SPEEDS.length (not kept over a restart: the world comes back at its own pace) */
   speed = 1;
   /** real time the last beat of the clock took (ms), taken off the wait for the next */
@@ -197,6 +201,12 @@ export class WorldCore {
   }
   /** A dead person of the archive (GET /person/<uid>): the year that holds the person, and the place there; null where
    *  the archive has no such person. */
+  /** How far the world has gone from history on its day (src/sim/divergence.ts). */
+  divergence(): Divergence {
+    this.setup ??= loadSetup(this.cfg.startYear);
+    return divergence(this.s, this.w, this.setup);
+  }
+
   archived(uid: number): { year: ArchivedPersons; k: number } | null {
     for (const y of yearsWith(this.s, uid)) {
       let a = this.deadYears.get(y.day) ?? null;

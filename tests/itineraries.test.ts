@@ -112,4 +112,60 @@ describe('the journeys of the Roman-German kings (Regesta Imperii)', () => {
     // from his first stop to his death the itinerary always names a place
     expect(stayOn(j, day('1347-06-01'))).toBeGreaterThanOrEqual(0);
   });
+  it('put places of issue the Regesta place at a namesake where the regest and the days around show them', () => {
+    const karl = kings.get('Q155669')!;
+    // 'in Arluno' (1346-10-04) is Arlon by Luxembourg, not Arluno by Milan
+    const arlon = stayOn(karl, day('1346-10-04'));
+    expect(w.lat[arlon]).toBeGreaterThan(49);
+    expect(w.lon[arlon]).toBeLessThan(7);
+    // Karl IV.'s Sulzbach (1366-12-16) is in the Upper Palatinate, not in the Hunsrück
+    expect(w.lon[stayOn(karl, day('1366-12-16'))]).toBeGreaterThan(11);
+    // 'Frankenvorde' (1375-11-25), between Berlin and Fürstenberg, is Frankfurt an der Oder
+    expect(w.lon[stayOn(karl, day('1375-11-25'))]).toBeGreaterThan(13.5);
+  });
+  it("leave out what Heinrich VII.'s envoys, the pope and the communes did in his name", () => {
+    const heinrich = kings.get('Q152717')!;
+    // RI VI,4,2 n. 447 (1310-05-26): his envoys at Vercelli, while he was between Kaysersberg and Speyer
+    expect(w.lat[stayOn(heinrich, day('1310-05-26'))]).toBeGreaterThan(47.5);
+    // n. 499 (1310-07-06): Clement V at Carpentras grants his request; he was at Luxembourg
+    expect(w.lat[stayOn(heinrich, day('1310-07-06'))]).toBeGreaterThan(48);
+    // n. 497a (1310-07-04): the commune of Pisa pays his tentmaker
+    expect(w.lat[stayOn(heinrich, day('1310-07-04'))]).toBeGreaterThan(48);
+  });
+  it('leave out the charters whose place the editors note as not where the king was', () => {
+    // RI VII H. 11 n. 208 (Nürnberg, 1329-09-15): dated ahead; Ludwig was in Italy (Pavia) then
+    const ludwig = kings.get('Q57161')!;
+    expect(w.lat[stayOn(ludwig, day('1329-09-15'))]).toBeLessThan(47);
+  });
+});
+
+describe('the journey of Edward I (Gough 1900)', () => {
+  const edward = loadItineraries(1291, w)!.get('Q57798')!;
+  it('put him in his kingdoms, in Gascony and in Flanders on every day the book tells', () => {
+    expect(edward.day.length).toBeGreaterThan(1000);
+    for (const p of edward.place) {
+      expect(w.lat[p]).toBeGreaterThan(42.5);
+      expect(w.lat[p]).toBeLessThan(58);
+      expect(w.lon[p]).toBeGreaterThan(-5);
+      expect(w.lon[p]).toBeLessThan(4);
+    }
+  });
+  it('put him where the chronicles have him', () => {
+    // in Gascony from 1286 to 1289, at Bordeaux in the summer of 1287
+    expect(w.lat[stayOn(edward, day('1287-06-01'))]).toBeLessThan(46);
+    // at Ghent in the winter of 1297-98
+    expect(w.lon[stayOn(edward, day('1297-12-25'))]).toBeGreaterThan(3);
+    // at the battle of Falkirk, 22 July 1298
+    const falkirk = stayOn(edward, day('1298-07-22'));
+    expect(w.lat[falkirk]).toBeGreaterThan(55.7);
+    expect(w.lat[falkirk]).toBeLessThan(56.2);
+  });
+  it('put a name at the place of that name the days around show', () => {
+    // 'St. Andrew' and 'St. Andrew's' (March 1304) are St Andrews in Fife, not a church of that saint in Somerset
+    expect(w.lat[stayOn(edward, day('1304-03-20'))]).toBeGreaterThan(56.2);
+    // 'Oleron' in Béarn (March 1289, between Luc and Bonnegarde) is Oloron, not the Île d'Oléron
+    expect(w.lat[stayOn(edward, day('1289-03-12'))]).toBeLessThan(44);
+    // Jedburgh (2 August 1304), out of reach between Stirling and Perth, is left out, not put at Edinburgh
+    expect(w.lon[stayOn(edward, day('1304-08-02'))]).toBeLessThan(-3.5);
+  });
 });
