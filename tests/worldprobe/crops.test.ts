@@ -7,6 +7,7 @@ import { LAND_Y, Mat, N, SEA_Y, type Ground, idx, onGrid } from '../../src/lookp
 import { styleOf } from '../../src/buildings';
 import { CROPS_AT, CROP_NAMES, FALLOW_FIELD, OATS_FIELD, WHEAT_FIELD, drawCrops } from '../../src/worldprobe/crops';
 import { coverLand } from '../../src/worldprobe/far';
+import { uprightOf } from '../../src/worldprobe/zoom';
 import { drawGround, drawTable, packTable, tableOf, unpackTable } from '../../src/worldprobe/table';
 import { LAND_STEP, SIDE, land, part } from './land';
 
@@ -25,7 +26,7 @@ const sheaves = (b: Batch) => {
 const meadow = (): Ground => ({ h: new Int16Array(N * N).fill(LAND_Y), mat: new Uint8Array(N * N).fill(Mat.Grass), wet: new Uint8Array(N * N), shore: new Uint8Array(N * N), occ: new Float32Array(N * N).fill(LAND_Y), surf: new Float32Array(N * N).fill(SEA_Y), ox: 0, oz: 0 });
 
 describe('the fields of the first far step', () => {
-  it('stand the finest step\'s sheaves on a lot: each where it stands, half as tall in blocks twice as wide, in the colour of its top', () => {
+  it('stand the finest step\'s sheaves on a lot: each where it stands, as tall as the land is built in blocks twice as wide, in the colour of its top', () => {
     onGrid(SIDE, () => {
       for (const [crop, code] of [['wheat', WHEAT_FIELD], ['oats', OATS_FIELD]] as const) {
         // the lot 7, 5 (every other row set off by half a lot): its field from 7 · 11 + 5 + 1 = 83, 5 · 8 + 1 = 41, ten blocks by seven
@@ -42,7 +43,7 @@ describe('the fields of the first far step', () => {
         for (const s of b) {
           const same = a.find((q) => Math.abs(q.x - 2 * s.x) < 1e-9 && Math.abs(q.z - 2 * s.z) < 1e-9);
           expect(same, `${crop} at ${2 * s.x}, ${2 * s.z}`).toBeDefined();
-          expect(s.y1 - s.y0).toBeCloseTo((same!.y1 - same!.y0) / 2, 9);
+          expect(s.y1 - s.y0).toBeCloseTo((same!.y1 - same!.y0) * uprightOf(1), 9);
           expect(s.top).toEqual(same!.top);
         }
       }

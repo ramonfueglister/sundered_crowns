@@ -1,11 +1,13 @@
 // The land from farther away. On the coarser steps of the map a block is two, four, eight … cells wide, and what
 // stands and grows on the land is no longer built house by house and tree by tree: it becomes part of the ground
-// itself, as it would look if the finest world were seen from that far. At the first far step the trees are still
-// the finest step's trees (trees.ts), then woods are a raised green ground; up to the third far step the houses are
-// still the finest step's houses, each under its own roof (houses.ts), then a town is a square of roof-coloured
-// blocks that shrinks to a single block; a field is a flat block of its crop. Only the great buildings stay
-// themselves for two steps, built as small as the step makes them. So the world loses its detail step by step while
-// everything stays where it is and as large as it is, and it is drawn the same way from every distance: from the
+// itself, as it would look if the finest world were seen from that far. At the first far step the trees and the
+// sheaves of the fields are still the finest step's (trees.ts, crops.ts), then woods are a raised green ground and a
+// field a flat block of its crop; up to the third far step the houses are still the finest step's houses, each under
+// its own roof (houses.ts), then a town is a square of roof-coloured blocks that shrinks to a single block. The great
+// buildings and the town walls stay themselves for two steps, built as small as the step makes them. What is still
+// drawn as itself is built as tall as the land of its step is (zoom.ts `uprightOf`). So the world loses its detail
+// step by step while everything stays where it is, as large as it is and as tall against its hills, and it is drawn
+// the same way from every distance: from the
 // second far step on woods are blocks in the colours of their crowns standing out of the open land and fields
 // patches of their crops, however much land a block holds.
 import * as THREE from 'three/webgpu';
@@ -17,6 +19,7 @@ import { FALLOW_SHOWS, SOIL_FALLOW } from '../lookprobe/terrain';
 import { CROPS_AT, FALLOW_FIELD, OATS_FIELD, WHEAT_FIELD } from './crops';
 import { HOUSE_NUMBERS } from './houses';
 import { PALMS, RAINFOREST, SAVANNA, STRAY, TEMPERATE, TREE_NUMBERS, TREE_PITCH, TREE_REACH, TREES_AT, TREES_CLOSED, crownColours, treeHeight, treesCode, treesIn } from './trees';
+import { uprightOf } from './zoom';
 import { blockOf, FALLOW, FIELD_GROUND, PEOPLE_PER_PERSON, PERSONS_PER_FLOOR_BLOCK, POP_OF_SIZE, type Site, SPRING, WALLED_FROM, courseOf } from './settle';
 
 /** What a column carries as part of itself (GroundTraits.cover): where `has` is set, the colours of its top and sides and how far it stands above its ground. */
@@ -182,6 +185,8 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
 }): Cover {
   const c: Cover = { has: new Uint8Array(N * N), rise: new Uint8Array(N * N), top: new Float32Array(N * N * 3), side: new Float32Array(N * N * 3), town: new Uint8Array(N * N), share: new Float32Array(N * N).fill(1), kind: new Uint8Array(N * N) };
   const wider = 2 ** step, ox = g.ox ?? 0, oz = g.oz ?? 0, m = new THREE.Matrix4();
+  /** a finest block of height in blocks of this step: what stands as a model, a house or a tree is built as tall as the land (zoom.ts `uprightOf`), and as wide as it is */
+  const up = uprightOf(step);
   /** the columns a house drawn as a house stands on: no field or wood grows there */
   const taken = new Uint8Array(N * N);
   const free = (x: number, z: number) => inGrid(x, z) && !g.wet[idx(x, z)] && g.mat[idx(x, z)] !== Mat.Rock && !c.has[idx(x, z)] && !c.town[idx(x, z)] && !taken[idx(x, z)];
@@ -211,8 +216,8 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
         g.h[i] = y; c.town[i] = 1; g.mat[i] = Mat.Paved;
       }
       if (step > MODELS_UNTIL) return;
-      if (o.own(x0 + (w >> 1), z0 + (d >> 1))) things.append(model.build(r), m.makeScale(1 / wider, 1 / wider, 1 / wider).setPosition(x0 + w / 2, y, z0 + d / 2));
-      occlude(g, x0, z0, x0 + w, z0 + d, y + model.height / wider);
+      if (o.own(x0 + (w >> 1), z0 + (d >> 1))) things.append(model.build(r), m.makeScale(1 / wider, up, 1 / wider).setPosition(x0 + w / 2, y, z0 + d / 2));
+      occlude(g, x0, z0, x0 + w, z0 + d, y + model.height * up);
       return;
     }
   };
@@ -278,9 +283,9 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
         for (let k = 0; k + 8 < here.houses.length; k += 9) {
           const [hx, hz, w, d, floors, tenths, wall, roof] = here.houses.slice(k, k + 9), x0 = hx / wider - ox, z0 = hz / wider - oz, x1 = (hx + w) / wider - ox, z1 = (hz + d) / wider - oz;
           if (!inGrid(Math.floor((x0 + x1) / 2), Math.floor((z0 + z1) / 2))) continue;
-          // (as tall as it is, as the great buildings and the trees stand: a step's blocks stand for as many finest blocks in height as in width)
+          // (as tall as the land is built, as the great buildings and the trees stand)
           const shape = houseShape(w, d, floors, tenths / 10, hx, hz);
-          houses.push(x0, z0, x1, z1, shape.eaves / wider, shape.rise / wider, wall, roof, shape.hips ? 1 : 0);
+          houses.push(x0, z0, x1, z1, shape.eaves * up, shape.rise * up, wall, roof, shape.hips ? 1 : 0);
           for (let z = Math.max(0, Math.floor(z0)); z < Math.min(N, Math.ceil(z1)); z++) for (let x = Math.max(0, Math.floor(x0)); x < Math.min(N, Math.ceil(x1)); x++) taken[idx(x, z)] = 1;
         }
       } else {
@@ -318,8 +323,8 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
         // the model stands on level, paved ground
         for (let z = z0; z < z1; z++) for (let x = x0; x < x1; x++) if (inGrid(x, z) && !g.wet[idx(x, z)]) { const i = idx(x, z); g.h[i] = y; c.town[i] = 1; c.has[i] = 0; g.mat[i] = Mat.Paved; }
         const mx = (gx + gw / 2) / wider - ox, mz = (gz + gd / 2) / wider - oz;
-        if (o.own(Math.floor(mx), Math.floor(mz))) things.append(model.build(seeded(1000 + id + k)), m.makeScale(1 / wider, 1 / wider, 1 / wider).setPosition(mx, y, mz));
-        occlude(g, x0, z0, x1, z1, y + tenths / 10 / wider);
+        if (o.own(Math.floor(mx), Math.floor(mz))) things.append(model.build(seeded(1000 + id + k)), m.makeScale(1 / wider, up, 1 / wider).setPosition(mx, y, mz));
+        occlude(g, x0, z0, x1, z1, y + (tenths / 10) * up);
       }
     }
     // the towns after all the houses: a town's paving and wall leave the ground of every house free, also of
@@ -366,7 +371,7 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
             if (!g.wet[idx(x, z)]) lo = Math.min(lo, g.h[idx(x, z)]);
           }
           const mx = t.cx / wider - ox, mz = t.cz / wider - oz;
-          if (lo < Infinity && o.own(Math.floor(mx), Math.floor(mz))) things.append(townWall(t.half * 2 + 2, t.half * 2 + 2, t.wall ?? []), m.makeScale(1 / wider, 1 / wider, 1 / wider).setPosition(mx, lo, mz));
+          if (lo < Infinity && o.own(Math.floor(mx), Math.floor(mz))) things.append(townWall(t.half * 2 + 2, t.half * 2 + 2, t.wall ?? []), m.makeScale(1 / wider, up, 1 / wider).setPosition(mx, lo, mz));
         }
       }
     }
@@ -444,7 +449,7 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
     let stand = 0;
     treesIn(x + ox, z + oz, (code - 1) / 254, (px, pz, tx, tz) => {
       const cx = px / wider - ox, cz = pz / wider - oz, reach = TREE_REACH / wider;
-      occlude(g, cx - reach, cz - reach, cx + reach, cz + reach, Math.ceil((g.h[i] + treeHeight(sort, tx, tz) / wider) * 64) / 64);
+      occlude(g, cx - reach, cz - reach, cx + reach, cz + reach, Math.ceil((g.h[i] + treeHeight(sort, tx, tz) * up) * 64) / 64);
       stand++;
     });
     if (!stand) continue;

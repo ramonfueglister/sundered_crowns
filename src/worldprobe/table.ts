@@ -20,7 +20,7 @@ import { pack, unpack } from './pack';
 import { HOUSE_NUMBERS, drawHouses, housesBatch, housesIn } from './houses';
 import { FAR_FROM_ROADS, ROAD_SHOWS, roadOn } from './roads';
 import { CROP_NAMES, drawCrops } from './crops';
-import { TREE_NUMBERS, drawTrees } from './trees';
+import { TREE_NUMBERS, crownTallAt, drawTrees } from './trees';
 
 /**
  * The columns round a piece's own that its picture depends on: the sky's share is taken up to 10.5 columns from a
@@ -195,6 +195,7 @@ export function tableOf(g: Ground, t: GroundTraits, part: Part, roads: Float32Ar
 class TableTraits implements GroundTraits {
   readonly slope: GroundTraits['slope'];
   readonly sideTop: number;
+  readonly crownTall: number;
   readonly houses: GroundTraits['houses'];
   readonly trees: GroundTraits['trees'];
   readonly crops: GroundTraits['crops'];
@@ -202,7 +203,7 @@ class TableTraits implements GroundTraits {
   private readonly last: number;
   private readonly pulls: (readonly [RGB, number])[] = [];
   constructor(private readonly table: Table, step: number) {
-    this.slope = table.slope; this.sideTop = sideTopAt(step); this.houses = table.houses; this.trees = table.trees; this.crops = table.crops; this.side = table.side; this.last = table.side - 1;
+    this.slope = table.slope; this.sideTop = sideTopAt(step); this.crownTall = crownTallAt(step); this.houses = table.houses; this.trees = table.trees; this.crops = table.crops; this.side = table.side; this.last = table.side - 1;
     const tints = table.tints;
     for (let k = 0; k < tints.length; k += 4) this.pulls.push([[tints[k], tints[k + 1], tints[k + 2]], tints[k + 3]]);
   }

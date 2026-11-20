@@ -19,7 +19,7 @@ import { BARE, FINER, FINER_STEPS, SNOW_LINE, TINT, TREE_LINE, WOODS, blockOfCel
 import { type Region, Water, cellOf, latOf, sample, waterAt } from './region';
 import { type Cover, type Woods, coverLand, lotFill } from './far';
 import { drawGround } from './table';
-import { TREE_NUMBERS } from './trees';
+import { TREE_NUMBERS, crownTallAt } from './trees';
 import { unshade } from './mean';
 import { FARMS, FIELD_GROUND, LOT_BLOCKS, LOT_FILL, type Lot, type Monument, PEOPLE_PER_PERSON, type Settled, type Site, type Survey, type Told, farmsFor, firstHalf, raise, settle } from './settle';
 import { type Columns, columnsOf } from './nearground';
@@ -312,11 +312,12 @@ const CROPS = [null, 'wheat', 'vine', 'fallow', 'oats'] as const;
 class WorldTraits implements GroundTraits {
   readonly slope = SLOPE;
   readonly sideTop: number;
+  readonly crownTall: number;
   readonly houses: GroundTraits['houses'];
   readonly trees: GroundTraits['trees'];
   readonly crops: GroundTraits['crops'];
   constructor(step: number, private readonly town: Uint8Array, private readonly field: Uint8Array | null, private readonly mean: Cover | undefined, private readonly land: Uint8Array, private readonly metres: Float32Array, private readonly snow: Float32Array, private readonly massifs: Massifs, private readonly roads: Float32Array | null) {
-    this.sideTop = sideTopAt(step); this.houses = mean?.houses; this.trees = mean?.trees; this.crops = mean?.crops;
+    this.sideTop = sideTopAt(step); this.crownTall = crownTallAt(step); this.houses = mean?.houses; this.trees = mean?.trees; this.crops = mean?.crops;
   }
   city(x: number, z: number) { return fieldAt(this.town, x, z) === 1; }
   plaza() { return Infinity; }

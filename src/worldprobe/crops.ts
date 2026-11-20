@@ -1,5 +1,6 @@
 // The fields of the near view as the first far step draws them: the finest step's sheaves of wheat and oats, each
-// where it stands on its lot, as tall as it is there and in its colours (blocks.ts `crops`), on the soil of its crop.
+// where it stands on its lot, as tall as the land is built (zoom.ts `uprightOf`) and in its colours (blocks.ts `crops`),
+// on the soil of its crop.
 // The finest step cuts the world into lots of LOT_W by LOT_D blocks, every other row set off by half a lot, and sows a
 // field on its lot but for the balk on two sides (settle.ts); a sheaf stands on every block of it, its height and its
 // colour drawn from its row and its place in the row. So the far step can draw the same sheaves from the place of a
@@ -8,10 +9,11 @@ import { type Batch, hash2, shade } from '../lookprobe/batch';
 import { HEDGE_GLOW, OATS, OATS_SIDE, WHEAT, WHEAT_GLOW, WHEAT_SIDE } from '../lookprobe/blocks';
 import { N } from '../lookprobe/layout';
 import type { Part } from '../lookprobe/terrain';
+import { uprightOf } from './zoom';
 
 /** the step whose blocks are as wide as two of the finest, the only one that draws its sheaves one by one */
 export const CROPS_AT = 1;
-const WIDER = 2 ** CROPS_AT;
+const WIDER = 2 ** CROPS_AT, UP = uprightOf(CROPS_AT);
 /** the crop of a column's lot (world.ts CROPS): winter corn, vines, fallow, spring corn; 0 where no field lies */
 export const WHEAT_FIELD = 1, VINES = 2, FALLOW_FIELD = 3, OATS_FIELD = 4;
 /** the crops by those numbers, as the ground colours its soil by them (GroundTraits.crop) */
@@ -50,7 +52,7 @@ export function drawCrops(b: Batch, crops: ArrayLike<number>, tops: ArrayLike<nu
       const ripe = crop === WHEAT_FIELD, colours = ripe ? WHEAT : OATS, side = ripe ? WHEAT_SIDE : OATS_SIDE;
       const tall = (ripe ? 1.35 : 0.8) + 0.5 * hash2(at.row, at.k, 51), top = shade(colours[Math.floor(hash2(at.row, at.k, 53) * colours.length)], ripe ? 1.2 : 1.05);
       const cx = (fx + 0.5) * k - ox, cz = (fz + 0.5) * k - oz;
-      b.box(cx - 0.4 * k, y, cz - 0.4 * k, cx + 0.4 * k, y + tall * k, cz + 0.4 * k, side, { top, foot: 0.85, away: ripe ? WHEAT_GLOW : HEDGE_GLOW });
+      b.box(cx - 0.4 * k, y, cz - 0.4 * k, cx + 0.4 * k, y + tall * UP, cz + 0.4 * k, side, { top, foot: 0.85, away: ripe ? WHEAT_GLOW : HEDGE_GLOW });
     }
   }
 }

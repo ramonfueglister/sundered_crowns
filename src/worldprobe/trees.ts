@@ -1,5 +1,5 @@
-// The trees of the near view as the first far step draws them: each where the finest step has it, as large as it is
-// there and in its colours, with what is smaller than a dot of the far picture left out (the tiers and lumps of a
+// The trees of the near view as the first far step draws them: each where the finest step has it, as wide as it is
+// there, as tall as the land is built (zoom.ts `uprightOf`) and in its colours, with what is smaller than a dot of the far picture left out (the tiers and lumps of a
 // crown: lookprobe/blocks.ts draws those). The finest step puts a tree on a place every TREE_PITCH blocks, set off by
 // chance, if its number is drawn against the woods' share there, and draws the tree from a random source of its own
 // (world.ts); so the far step can draw the same tree from the place alone, with the woods' share and kind at the
@@ -8,6 +8,7 @@ import { type Batch, type RGB, type Rnd, hash2, mix, seeded, shade } from '../lo
 import { ACACIA, CYPRESS, FLANK, FLANK_AWAY, FLANK_AWAY_WARM, JUNGLE, LEAVES, PALM, TREE_TALL, TRUNK } from '../lookprobe/blocks';
 import { N } from '../lookprobe/layout';
 import type { Part } from '../lookprobe/terrain';
+import { uprightOf } from './zoom';
 
 /** the finest step's places for a tree lie this many finest blocks apart (world.ts TREE_PITCH) */
 export const TREE_PITCH = 2.4;
@@ -16,6 +17,8 @@ export const STRAY = 0.01, TREES_CLOSED = 0.88;
 /** the step whose blocks are as wide as two of the finest, the only one that draws its trees one by one */
 export const TREES_AT = 1;
 const WIDER = 2 ** TREES_AT;
+/** a finest block of height in blocks of that step: its trees are built as tall as its land (zoom.ts `uprightOf`) */
+const UP = uprightOf(TREES_AT);
 /** a column's trees are two numbers: the woods' share there (1 + 254 × share, 0: no trees) and their kind (KINDS, and for the temperate woods 4 × 63 × the share of conifers on top) */
 export const TREE_NUMBERS = 2;
 /** the kinds of woods: leafy and conifers mixed, the rain forest, the savanna's flat trees, the palms by the water of the dry lands */
@@ -95,7 +98,6 @@ function tiersOf(sort: ReturnType<typeof sortOf>, r: Rnd, closed: boolean): Tier
 
 /** The trees of the columns of `part` (TREE_NUMBERS each in `trees`, a ground of N × N whose first column is the world's block ox, oz of the step) on the tops `tops`. */
 export function drawTrees(b: Batch, trees: ArrayLike<number>, tops: ArrayLike<number>, ox: number, oz: number, part: Part) {
-  const k = 1 / WIDER;
   for (let z = part.z0; z < part.z1; z++) for (let x = part.x0; x < part.x1; x++) {
     const i = z * N + x, code = trees[i * TREE_NUMBERS], kind = trees[i * TREE_NUMBERS + 1];
     if (!code) continue;
@@ -104,12 +106,16 @@ export function drawTrees(b: Batch, trees: ArrayLike<number>, tops: ArrayLike<nu
       const cx = px / WIDER - ox, cz = pz / WIDER - oz;
       for (const [half, y0, y1, side, top, away] of tiersOf(sortOf(tx, tz, kind), seeded(seedOf(tx, tz, 75)), share > 0.5)) {
         const h = half / WIDER;
-        b.box(cx - h, y + y0 * k, cz - h, cx + h, y + y1 * k, cz + h, side, { top, away, foot: 0.84 });
+        b.box(cx - h, y + y0 * UP, cz - h, cx + h, y + y1 * UP, cz + h, side, { top, away, foot: 0.84 });
       }
     });
   }
 }
 
+/** a tree of the finest step stands this many finest blocks high over its ground in the mean: leafy ones a little less, conifers more (`treeHeight`) */
+export const TREE_SEEN = 2.3;
+/** how many of its blocks high the woods of a step stand as one crown, at least (GroundTraits.crownTall): as tall as the trees of the finest step, built as the land is */
+export const crownTallAt = (step: number) => TREE_SEEN * uprightOf(step);
 /** The height a tree stands over its ground, as it hides the sky round it (world.ts `occlude`): in finest blocks. */
 export function treeHeight(kind: number, tx: number, tz: number): number {
   const sort = sortOf(tx, tz, kind);
