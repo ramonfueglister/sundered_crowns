@@ -9,7 +9,7 @@ import { userData, type vec4 } from 'three/tsl';
 import { LAND_Y, SEA_Y } from '../lookprobe/layout';
 import type { Stage } from '../lookprobe/stage';
 import { blockOfCell, cellOfBlock } from './land';
-import type { RealmName } from './paint';
+import type { RealmName } from './realm_names';
 import type { Layout, View } from './pieces';
 import { cover, keyOf } from './pyramid';
 import type { RealmsDone, RealmsJob, RealmsNow } from './realms.worker';

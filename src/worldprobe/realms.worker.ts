@@ -4,7 +4,8 @@
 // who holds which place now.
 import { rgb } from '../lookprobe/batch';
 import { maybeGunzip } from './gunzip';
-import { type NamesOptions, type RealmName, type Realms, type Rest, paintRealms, placeAt, realmNames } from './paint';
+import { type Realms, type Rest, paintRealms, placeAt } from './paint';
+import { type NamesOptions, type RealmName, realmNames } from './realm_names';
 import { extentOf } from './extent';
 import { indexOf, projectionFrom } from './region';
 

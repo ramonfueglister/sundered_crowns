@@ -1,9 +1,10 @@
 // The names of the realms, written across their lands on the 2D map (realms.ts) as in a printed atlas: in a Garamond
-// (EB Garamond, the face nearest to the EU5 reference's; bundled through view.ts), dark ink without a halo, each along the curve through its realm that paint.ts finds, spread to fill
-// it and as large as the realm's breadth allows. Shown as far as the realms colour the map.
+// (EB Garamond, the face nearest to the EU5 reference's; bundled through view.ts), dark ink without a halo, each along
+// the curve through its realm that realm_names.ts finds, spread to fill it and as large as the realm's breadth allows.
+// Shown as far as the realms colour the map.
 //
 // `layoutNames` is pure (no page): the game and the map's still (tools/map/still.ts) lay the names out the same way.
-import type { RealmName } from './paint';
+import type { RealmName } from './realm_names';
 
 /** a name fills this share of its curve; letters are about this wide for their height (Crimson Pro, mixed case) */
 const FILL = 0.84,
