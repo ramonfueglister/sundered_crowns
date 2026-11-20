@@ -5,9 +5,23 @@
 // with persons, their hamlets, and the fields round them (world.ts).
 
 /** the file: per town (index of the gazetteer) persons of the world, and km² under the plough */
-export interface HamletLandJson { year: number; town: number[]; inside: number[]; hamlet: number[]; families: number[]; km2: number[]; reach_km: number[] }
+interface HamletLandJson {
+  year: number;
+  town: number[];
+  inside: number[];
+  hamlet: number[];
+  families: number[];
+  km2: number[];
+  reach_km: number[];
+}
 /** a town's persons inside it, the persons and families of its hamlets, the km² its farmers till and how many km from the town its fields reach */
-export interface HamletLand { inside: number; hamlet: number; families: number; km2: number; reachKm: number }
+interface HamletLand {
+  inside: number;
+  hamlet: number;
+  families: number;
+  km2: number;
+  reachKm: number;
+}
 export type HamletLands = ReadonlyMap<number, HamletLand>;
 
 /** a hamlet holds about this many families */
@@ -20,16 +34,29 @@ export const HAMLET_TURN = Math.PI * (3 - Math.sqrt(5));
  * Where the `k`th of `n` hamlets lies: its distance from the town between `inner` and `outer`, so that every ring
  * of the ground between holds as many hamlets as it has ground.
  */
-export const hamletAt = (k: number, n: number, inner: number, outer: number) => Math.sqrt(inner * inner + ((k + 0.5) / n) * (outer * outer - inner * inner));
+export const hamletAt = (k: number, n: number, inner: number, outer: number) =>
+  Math.sqrt(inner * inner + ((k + 0.5) / n) * (outer * outer - inner * inner));
 
-export const hamletLandsOf = (j: HamletLandJson): Map<number, HamletLand> => new Map(j.town.map((t, k) => [t, { inside: j.inside[k], hamlet: j.hamlet[k], families: j.families[k], km2: j.km2[k], reachKm: j.reach_km[k] }]));
+export const hamletLandsOf = (j: HamletLandJson): Map<number, HamletLand> =>
+  new Map(
+    j.town.map((t, k) => [
+      t,
+      { inside: j.inside[k], hamlet: j.hamlet[k], families: j.families[k], km2: j.km2[k], reachKm: j.reach_km[k] },
+    ]),
+  );
 
 const loaded = new Map<number, Promise<Map<number, HamletLand> | null>>();
 /** the hamlets and fields of the towns of a start year (once per year); null where the year has no file */
 export function loadHamletLands(base: string, year: number): Promise<Map<number, HamletLand> | null> {
   let p = loaded.get(year);
   if (!p) {
-    p = fetch(`${base}data/hamletland_${year}.json`).then(async (r) => (r.ok && (r.headers.get('content-type') ?? '').includes('json') ? hamletLandsOf(await r.json() as HamletLandJson) : null)).catch(() => null);
+    p = fetch(`${base}data/hamletland_${year}.json`)
+      .then(async (r) =>
+        r.ok && (r.headers.get('content-type') ?? '').includes('json')
+          ? hamletLandsOf((await r.json()) as HamletLandJson)
+          : null,
+      )
+      .catch(() => null);
     loaded.set(year, p);
   }
   return p;

@@ -51,23 +51,31 @@ const stream = (seed: number) => (seed ^ 0x7369636b) >>> 0; // "sick"
 /** The episodes of sickness of the person with `uid`, born on the day `born`, that begin before the day `until`:
  *  pairs of the first and the last day, oldest first. Each begins after the one before has ended. */
 export function sickness(seed: number, uid: number, born: number, until: number): number[] {
-  const out: number[] = [], s = stream(seed);
+  const out: number[] = [],
+    s = stream(seed);
   // the end of the group of the age at day t (the last group has none)
   const edge = (t: number) => {
     const g = ageGroup((t - born) / DAYS_PER_YEAR);
     return g === MORCOTT.events.length - 1 ? Infinity : born + (TABLE_FROM + 5 * (g + 1)) * DAYS_PER_YEAR;
   };
-  let t = born + SICK_FROM * DAYS_PER_YEAR, k = 0;
+  let t = born + SICK_FROM * DAYS_PER_YEAR,
+    k = 0;
   while (t < until) {
     // the onset: an exponential waiting time at the rate of the age, which changes at the edges of the groups
     let need = -Math.log(1 - hash01(s, uid, k++));
     for (;;) {
-      const rate = RATE[ageGroup((t - born) / DAYS_PER_YEAR)], end = edge(t);
-      if (t + need / rate <= end) { t += need / rate; break; }
-      need -= (end - t) * rate; t = end;
+      const rate = RATE[ageGroup((t - born) / DAYS_PER_YEAR)],
+        end = edge(t);
+      if (t + need / rate <= end) {
+        t += need / rate;
+        break;
+      }
+      need -= (end - t) * rate;
+      t = end;
     }
     if (t >= until) break;
-    const first = Math.floor(t), mean = MORCOTT.length[ageGroup((first - born) / DAYS_PER_YEAR)];
+    const first = Math.floor(t),
+      mean = MORCOTT.length[ageGroup((first - born) / DAYS_PER_YEAR)];
     const days = SHORTEST + Math.round(-(mean - SHORTEST) * Math.log(1 - hash01(s, uid, k++)));
     out.push(first, first + days - 1);
     t = first + days;
@@ -84,7 +92,8 @@ export function awayDays(sick: readonly number[], births: readonly number[], fro
   runs.sort((a, b) => a[0] - b[0]);
   const out: number[] = [];
   for (const [a, b] of runs) {
-    const first = Math.max(a, from), last = Math.min(b, to);
+    const first = Math.max(a, from),
+      last = Math.min(b, to);
     if (out.length && first <= out[out.length - 1] + 1) out[out.length - 1] = Math.max(out[out.length - 1], last);
     else out.push(first, last);
   }

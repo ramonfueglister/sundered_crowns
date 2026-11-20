@@ -3,7 +3,12 @@
 // stand in for finer ones that are not there yet, and the picture never shows a hole or changes all at once.
 
 export const keyOf = (level: number, x: number, y: number) => `${level}:${x},${y}`;
-const KIDS = [[0, 0], [1, 0], [0, 1], [1, 1]] as const;
+const KIDS = [
+  [0, 0],
+  [1, 0],
+  [0, 1],
+  [1, 1],
+] as const;
 
 /**
  * What to show of a pyramid so that the picture is covered once, as near to level `want` as what is held allows.
@@ -12,17 +17,25 @@ const KIDS = [[0, 0], [1, 0], [0, 1], [1, 1]] as const;
  * far as `deeper` levels below `want`.
  */
 export function cover<T>(
-  want: number, top: number, roots: Iterable<readonly [number, number]>,
+  want: number,
+  top: number,
+  roots: Iterable<readonly [number, number]>,
   held: (level: number, x: number, y: number) => T | undefined,
-  inView: (level: number, x: number, y: number) => boolean, deeper = 2,
+  inView: (level: number, x: number, y: number) => boolean,
+  deeper = 2,
 ): Set<T> {
   const shown = new Set<T>();
   /** whether the part of a tile that lies in the picture can be covered at level `want`, or by the tile itself */
   const covered = (l: number, x: number, y: number): boolean =>
-    !inView(l, x, y) || held(l, x, y) !== undefined || (l > want && KIDS.every(([dx, dy]) => covered(l - 1, x * 2 + dx, y * 2 + dy)));
+    !inView(l, x, y) ||
+    held(l, x, y) !== undefined ||
+    (l > want && KIDS.every(([dx, dy]) => covered(l - 1, x * 2 + dx, y * 2 + dy)));
   const show = (l: number, x: number, y: number, left: number) => {
     if (!inView(l, x, y)) return;
-    const own = held(l, x, y), kids = () => { if (l > 0) for (const [dx, dy] of KIDS) show(l - 1, x * 2 + dx, y * 2 + dy, l > want ? left : left - 1); };
+    const own = held(l, x, y),
+      kids = () => {
+        if (l > 0) for (const [dx, dy] of KIDS) show(l - 1, x * 2 + dx, y * 2 + dy, l > want ? left : left - 1);
+      };
     if (l > want && KIDS.every(([dx, dy]) => covered(l - 1, x * 2 + dx, y * 2 + dy))) kids();
     else if (own !== undefined) shown.add(own);
     // neither the tile nor all of what lies under it: what there is of the finer levels fills in

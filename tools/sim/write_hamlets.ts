@@ -8,22 +8,36 @@ import { ALIVE } from '../../src/sim/state';
 
 const year = Number(process.argv[2] ?? 1291);
 const { s } = newWorldState(year, year);
-const P = s.person.cols, F = s.family.cols;
-const at = new Map<number, { persons: number; families: Set<number>; hamletPersons: number; hamletFamilies: Set<number> }>();
+const P = s.person.cols,
+  F = s.family.cols;
+const at = new Map<
+  number,
+  { persons: number; families: Set<number>; hamletPersons: number; hamletFamilies: Set<number> }
+>();
 for (let id = 0; id < s.person.size; id++) {
   if (!s.person.alive[id] || P.died[id] !== ALIVE) continue;
-  const f = P.family[id], p = F.place[f];
+  const f = P.family[id],
+    p = F.place[f];
   const o = at.get(p) ?? { persons: 0, families: new Set(), hamletPersons: 0, hamletFamilies: new Set() };
   at.set(p, o);
-  o.persons++; o.families.add(f);
-  if (F.hamlet[f]) { o.hamletPersons++; o.hamletFamilies.add(f); }
+  o.persons++;
+  o.families.add(f);
+  if (F.hamlet[f]) {
+    o.hamletPersons++;
+    o.hamletFamilies.add(f);
+  }
 }
 const places = [...at.keys()].sort((a, b) => a - b);
 const out = {
-  year, source: 'a new world of the year: src/sim/systems/hamlets.ts (tools/sim/write_hamlets.ts)',
+  year,
+  source: 'a new world of the year: src/sim/systems/hamlets.ts (tools/sim/write_hamlets.ts)',
   place: places,
-  persons: places.map((p) => at.get(p)!.persons), families: places.map((p) => at.get(p)!.families.size),
-  hamlet_persons: places.map((p) => at.get(p)!.hamletPersons), hamlet_families: places.map((p) => at.get(p)!.hamletFamilies.size),
+  persons: places.map((p) => at.get(p)!.persons),
+  families: places.map((p) => at.get(p)!.families.size),
+  hamlet_persons: places.map((p) => at.get(p)!.hamletPersons),
+  hamlet_families: places.map((p) => at.get(p)!.hamletFamilies.size),
 };
 writeFileSync(dataPath(`hamlets_${year}.json`), JSON.stringify(out) + '\n');
-console.log(`hamlets_${year}.json: ${places.length} places, ${out.hamlet_families.reduce((a, b) => a + b, 0)} hamlet families`);
+console.log(
+  `hamlets_${year}.json: ${places.length} places, ${out.hamlet_families.reduce((a, b) => a + b, 0)} hamlet families`,
+);

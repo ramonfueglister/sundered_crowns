@@ -9,7 +9,9 @@ import type { Faces, Field, Free } from './faces';
  * `small`, direction and colour as four bytes per corner each (worldprobe/small.ts): 20 bytes to a corner, not 36.
  */
 export interface Shape {
-  pos: ArrayLike<number>; nor: ArrayLike<number>; col: ArrayLike<number>;
+  pos: ArrayLike<number>;
+  nor: ArrayLike<number>;
+  col: ArrayLike<number>;
   /** the ball around all its points, middle and radius, where its builder has worked it out (else the stage does, on the page's thread) */
   ball?: [number, number, number, number];
   small?: boolean;
@@ -29,7 +31,8 @@ export interface Shape {
   sink?: Float32Array;
 }
 export interface StageScene<S extends Shape = Batch> {
-  ground: S; things: S;
+  ground: S;
+  things: S;
   /** the sea, which mirrors what stands beside it */
   water: S;
   /** water above sea level (lakes, rivers): drawn plain, because the mirror lies at sea level */

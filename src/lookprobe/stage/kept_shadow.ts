@@ -29,13 +29,22 @@ export class KeptShadow extends THREE.ShadowNode {
   setupRenderTarget(shadow: THREE.LightShadow, builder: { renderer: THREE.WebGPURenderer }) {
     const depthTexture = new THREE.DepthTexture(shadow.mapSize.width, shadow.mapSize.height);
     depthTexture.name = 'ShadowDepthTexture';
-    depthTexture.compareFunction = builder.renderer.reversedDepthBuffer ? THREE.GreaterEqualCompare : THREE.LessEqualCompare;
+    depthTexture.compareFunction = builder.renderer.reversedDepthBuffer
+      ? THREE.GreaterEqualCompare
+      : THREE.LessEqualCompare;
     const shadowMap = new THREE.RenderTarget(shadow.mapSize.width, shadow.mapSize.height, { count: 0, depthTexture });
     return { shadowMap, depthTexture };
   }
   renderShadow(frame: { renderer: THREE.WebGPURenderer; scene: THREE.Scene }) {
-    const { shadow, light, shadowMap } = this as unknown as { shadow: THREE.LightShadow; light: THREE.DirectionalLight; shadowMap: THREE.RenderTarget };
-    const { renderer, scene } = frame, eye = shadow.camera, w = shadow.mapSize.width, h = shadow.mapSize.height;
+    const { shadow, light, shadowMap } = this as unknown as {
+      shadow: THREE.LightShadow;
+      light: THREE.DirectionalLight;
+      shadowMap: THREE.RenderTarget;
+    };
+    const { renderer, scene } = frame,
+      eye = shadow.camera,
+      w = shadow.mapSize.width,
+      h = shadow.mapSize.height;
     shadow.updateMatrices(light);
     shadowMap.setSize(w, h);
     if (!this.kept) {
@@ -45,7 +54,10 @@ export class KeptShadow extends THREE.ShadowNode {
       const copied = new THREE.NodeMaterial();
       copied.name = 'KeptShadow';
       copied.depthNode = texture(depth).r;
-      copied.depthFunc = THREE.AlwaysDepth; copied.depthTest = true; copied.depthWrite = true; copied.colorWrite = false;
+      copied.depthFunc = THREE.AlwaysDepth;
+      copied.depthTest = true;
+      copied.depthWrite = true;
+      copied.colorWrite = false;
       this.copy = new THREE.QuadMesh(copied);
       this.full = true;
     }
