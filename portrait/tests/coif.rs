@@ -95,7 +95,8 @@ fn one_man_in_ten_wears_a_coif_from_thirty() {
     assert_eq!((count(29.0, false), count(30.0, false), count(68.0, false), count(40.0, true)), (0, 10_000, 10_000, 0));
     // bare-headed otherwise, and with the hair that lies under a hood
     assert!((0..100_000u32).all(|s| !d.coif_of(false, 40.0, s) || d.hood_of(false, 40.0, s) == Hood::None && d.head_covered(false, 40.0, s)));
-    assert!((0..100_000u32).all(|s| d.head_covered(false, 40.0, s) == (d.coif_of(false, 40.0, s) || d.hood_of(false, 40.0, s) == Hood::Up)));
+    // (round 134: or under a hat)
+    assert!((0..100_000u32).all(|s| d.head_covered(false, 40.0, s) == (d.coif_of(false, 40.0, s) || d.hood_of(false, 40.0, s) == Hood::Up || d.hat_of(false, 40.0, s))));
     assert!((0..1000).all(|s| !PLAIN_1356.coif_of(false, 40.0, s)));
 }
 

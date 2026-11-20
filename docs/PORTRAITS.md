@@ -5668,6 +5668,86 @@ its neighbour 42 of 42. `npm run typecheck` and `npm run lint` pass.
 Pictures (project files, `portraits/`): `runde133_vorher_nachher.png` (five men of the sample under seeds
 that draw the cut, round 132 above, now below), `runde133_von_allen_seiten.png`.
 
+**Round 134: a man's felt hat** (2026-11-20). The men's heads again (Ramon: the figure, the hair, the whole
+portrait). A man of England had four heads: bare, a hood on it, a hood thrown back, and since round 132 a
+coif; the reference's men wear hats of many kinds. Read this time (five pages, as quotations fetched from
+them, not the pages in full): Encyclopedia.com's "Peasant Costume" (from Gale's "Arts and Humanities
+Through the Eras"; a list of sources, not footnoted): "Peasant men usually wore a large round felt hat",
+in a costume that "remained fairly fixed from about 800 to about 1375", and from the French shepherd's
+treatise "Le Bon Berger" (the page: written in 1373): "It is proper that the shepherd wear a felt hat,
+round and very large", "On the brim and upper part of the crown fabric ought to be doubled a palm's length
+or more"; History Hit's article on dress in medieval England (popular, the statement undated): "Men wore
+wide-brimmed straw hats, close fitting bonnet-like hoods made from linen or hemp, or a felt cap";
+Medievalists.net, quoting Margaret Scott's "Fashion in the Middle Ages": "straw hats were worn outdoors by
+all ranks in the summer"; Rosalie Gilbert's page on women's hats (straw hats "worn by both men and women
+for protection against the sun", a cocked cap of felt "worn with the brim turned up", written of first in
+1464); Cadw's leaflet "Hats" (a hat with a folded brim of two layers of wool, no date). None of the pages
+has an English man's hat of the 14th century with a date, a measure or a colour.
+
+What is changed. Two men in ten from 15 years wear a felt hat (`DressSet::hat`, `hat_from`, `hats`,
+`hat_tones`, `hat_of`, `hat_tone`): by the seed's last digit one of the three in ten who went bare-headed,
+and one of the three in ten who wear the hood thrown back, over it. It is a round crown, some 12 cm high over
+its line and 4 cm further off the top of the head than off the forehead, with a brim 6 cm broad that falls
+outward by 20 degrees, rises and falls 6 mm round the head and is 6 mm thick: the sheet goes out along
+the brim's top, round its edge and back underneath to the crown. The line lies across the forehead (5.8
+to 6.9 cm over the eyes on the test's men) and nearly level round the head, above the ears. Its colour
+is one of four tones of undyed wool by a digit of the seed (`#6b5a48`, `#7d7870`, `#3f3a36`, `#9a8468`).
+Under it the hair is the one that lies flat under a hood, and shows under the brim as a fringe and round
+the sides and the nape; a man with a bare top keeps his horseshoe (`real_look.rs`). The straw hat, which
+three pages have, is not built.
+
+A new file (`cloth_hat`, 0.12 MB) written by a new script (`tools/portrait/pipeline/hat.py`, on
+`coif.py`'s way of reading the head): a dome that stands in every direction above its line as far out as
+the base head's skin and the two flat heads of hair do (`bob02`, `bob04`), evened over 12 degrees, plus 8
+mm; the brim hangs from the line. Each corner of the crown is bound to the skin in its own direction from
+the head's middle, a corner of the brim to the skin under the place it hangs from, and the builder evens
+twelve times how the head carries it. 3 457 points, 6 816 triangles (3 744 the crown). An image of its
+own (`cloth_hat.webp` and `_n`, 0.18 MB together): `fabric_tex.py` has a third kind, `felt`, matted fibres
+without threads, a tile to 5 cm.
+
+Tried and not kept.
+
+- A crown 2.2 cm further off the top of the head with a brim 4 mm thick that falls 14 degrees, drawn with the wool's weave
+  half hidden and mottled as the gowns are, a tile to 10 cm: an iron hat, hammered, with a rim of sheet
+  metal.
+- A gap of 6 mm with the builder carrying the hat as stiffly as the fillet (300 times evened): on two of
+  five men the fringe's bundles came through the crown over the forehead. With 8 mm and twelve times, on
+  none of 28 (at least 6.4 mm of room on the nearest).
+- The wool's image with its nap at the full (`NAP=1`): the weave still shows as a grid, which felt has not.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line where round 133 left it to the tenth (read with
+this round's builder and stage; nobody of the sample wears the hat).
+
+Honest about it. It reads as a felt hat, and as one hat: every man who wears one has the same crown and
+the same brim at the same angle, in four colours. The form is a guess from two words, "large" and
+"round"; the treatise's "very large" hat with its felt doubled a palm's length at the brim is larger than
+ours and is a shepherd's of France; no picture of the time was looked at, and the pages are an
+encyclopedia with a list of books, a popular article, a blog quoting one book, and a page on women's hats.
+The crown is a smooth dome without a dent, a band, a cord or a seam, the brim's edge is a clean line
+without a turned-up side, and the felt is one even surface: close up a hat of moulded plastic. The brim
+shades nobody's forehead more than a little (looked at, not measured), and the eyes of a man who looks
+down from under it would be in shade, which nobody here does. It sits on hair that lies as flat as under
+a hood, so the fringe under it is the same on every man; a man with curls or with his hair parted has
+neither under the hat. Worn over a thrown-back hood, whose cape lies on the shoulders, and never over a
+hood on the head or a coif, which the pages have under hats. The shares (two in ten), the age and the
+measures are by eye (PLACEHOLDER). Nobody of the sample is drawn with it (its men whose digits draw it
+are boys of 8 and 13 and a small child), so the gauntlet does not see a face under a brim. Looked at on
+five men from the front and on two from five sides.
+
+Tests: `portrait/tests/hat.rs`, new, two: over 100 000 seeds two men in ten from 15 wear it, none at 14,
+no woman, nobody in the plain dress, never with a hood on the head or a coif, one in ten over a hood
+thrown back, and every colour is drawn; of 150 men of 15 to 68 the 28 whom the seed names have it and
+none of the first forty others, on each it is the file's sheet with its own image, the crown's outer side
+faces out, no corner of any other surface lies outside the crown over it (rays from a place inside the
+crown; at least 6.4 mm of room on the nearest man), the line lies 5.8 to 6.9 cm over the eyes, the
+brim's lowest place in front 4.2 to 4.9 cm over them, the hat is 11.8 to 12.9 cm broader than its crown
+(31 to 35 cm), and the hair goes on 10 cm and more under the line behind. `tests/coif.rs`: a covered head is
+one under a hood, a coif or a hat. Cargo: 101, of which one failed in the whole run (the coif's shares,
+which did not know the hat) and was brought in line and run again with its file. `tests/portrait.test.ts`
+and its neighbour 42 of 42. `npm run typecheck` and `npm run lint` pass.
+Pictures (project files, `portraits/`): `runde134_vorher_nachher.png` (five men of the sample under seeds
+that draw the hat, round 133 above, now below), `runde134_von_allen_seiten.png`.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
@@ -5698,7 +5778,8 @@ closed down the front with a lace over linen or with cloth buttons, in the gown'
 are gold and contrast, on a gown that is still a loose sack, since round 131 two in ten of the men's
 with the same buttons (theirs wear belted, layered coats), since round 132 one man in ten from 30 wears
 a plain linen coif (theirs wear caps, hats and hoods of many cuts), since round 133 one man in ten has
-the ends of his hair turned out in rolls (bands side by side, where theirs are locks), and the face still lacks the
+the ends of his hair turned out in rolls (bands side by side, where theirs are locks), since round 134 two
+men in ten wear one felt hat (theirs wear many), and the face still lacks the
 reference's streak of gloss on the nose's flank; the thrown-back hood closes round the neck since round 35, but
 has no folds across its cloth. Since round 111 the people of every part of the world can be drawn, in a plain
 dress that is no people's own, and without a picture of the reference to hold them against.

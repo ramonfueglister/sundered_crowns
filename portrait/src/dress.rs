@@ -333,6 +333,18 @@ pub struct DressSet {
     pub coif: &'static str,
     pub coif_from: f32,
     pub coifs: [bool; 10],
+    /// (round 134) A man's felt hat: a round crown and a broad brim (the file's name, `tools/portrait/pipeline/
+    /// hat.py`, with an image of its own; empty: the table has none), in one of `hat_tones` by the seed (undyed
+    /// wool). Who wears it: the men of `hat_from` years and more whose seed's last digit is set in `hats` (the
+    /// digit that says how the hood is worn) and who have no hood on the head and no coif: bare-headed
+    /// otherwise, or over a hood thrown back. Under it the hair lies flat, as under a hood, and shows below
+    /// the brim; a bare top keeps its horseshoe. England: two men in ten from 15. That peasant men wore a
+    /// large round felt hat is from the pages in `sources`; the shares, the age, the brim's breadth and the
+    /// colours are by eye: PLACEHOLDER.
+    pub hat: &'static str,
+    pub hat_from: f32,
+    pub hats: [bool; 10],
+    pub hat_tones: &'static [&'static str],
     /// The hair of children under seven. Apoleia's `crop01`, cropped short, begins far back on a child's large
     /// skull: half the head a bare forehead, which reads as a shaven head.
     /// England: until round 104 the grown's `bob01`, whose fringe ends 2 cm over the eyes. A small child's face is
@@ -898,6 +910,10 @@ const ENGLAND: DressSet = DressSet {
     coif: "cloth_coif",
     coif_from: 30.0,
     coifs: [false, false, false, false, false, false, false, false, false, true],
+    hat: "cloth_hat",
+    hat_from: 15.0,
+    hats: [false, false, false, false, false, false, true, false, true, false],
+    hat_tones: &["#6b5a48", "#7d7870", "#3f3a36", "#9a8468"],
     hair_small: "bob08",
     coily: Some(Coily { from: 0.86, men: "coil01", women: "coil02", small: "coil03", thin: "coil03", bald: "coil04", image: "hair1356_fleece", under: ["bob01", "bob04"] }),
     boy_skin: 14.0,
@@ -1114,6 +1130,7 @@ const ENGLAND: DressSet = DressSet {
         Source { what: "a woman's gown closed in front from 14 years: laced on five in ten (one lace through eyelets 2 cm apart, the linen showing between the edges), buttoned on two in ten (ball buttons of the gown's own cloth, 11 mm across, 2 cm apart), not opened on three in ten (round 129)", source: "Rosalie Gilbert, Rosalie's Medieval Woman: Buttons and Lacings, Kirtles, and the buttons of her collection (rosaliegilbert.com/buttonsandlacings.html, kirtles.html, thegilbertcollection_buttons.html; read 20.11.2026 as quotations fetched from the pages, not the pages in full; a re-enactor's pages, not a primary source): kirtles and gowns closed with buttons or with lacing, in front or at the side seams; a working woman likely in a front-lacing kirtle; eyelets closely set, around 2 cm; laces of the gown's colour until the 15th century; the lower classes with cloth buttons matching the gown, almost always ball-shaped, set very closely together at the very edge of the opening; a gown buttoned down the front in the Romance of Alexander, c. 1340; English buttons of 9 to 16 mm. The shares, the age, how far the laced edges stand apart, from button to button, and that none is laced at the side are PLACEHOLDER." },
         Source { what: "a man's gown buttoned in front on two in ten from 15 years, with the women's buttons, from under its opening down; the others' pulled over the head (round 131)", source: "The Medieval Combat Society, Male reenactment costume (themcs.org/costume/Male reenactment costume.htm; a re-enactors' page whose paragraphs on these garments have no notes) and Wikipedia, 1300-1400 in European fashion (both read 20.11.2026 as quotations fetched from the pages): the cotehardie, which began to replace the surcote from 1350, fastened at the front by buttons down to the height of the girdle; cheaper, looser cotehardies with no fastening at the front, put on over the head; working men in short or knee-length tunics. Nothing on the buttons' cloth, size or spacing for men (the women's are used). The share and the age are PLACEHOLDER." },
         Source { what: "a man's coif, a close cap of linen over the hair and the ears with two strings tied under the chin, on one man in ten from 30 years, worn alone (round 132)", source: "Wikipedia, Coif; The Medieval Combat Society, Male reenactment costume; Cadw, Hats (a leaflet without dates or notes); Buckingham's Retinue, Coifs (a re-enactment group's guide); Ruth Johnston, All Things Medieval, 13th and 14th centuries: men's hats (a blog without notes); all read 20.11.2026 as quotations fetched from the pages: coifs of unadorned white linen tied under the chin, worn by all classes, out of popularity with men in the fourteenth century; a linen coif covering the hair and ears and tied under the chin under Edward II, coif and hood on effigies of 1354 and 1372; considered underwear and worn under hats by everybody over 12 except those doing physical labour; before 1500 of one or two pieces with ties at the corners. The share, the age, that it is worn alone and its cut are PLACEHOLDER." },
+        Source { what: "a man's felt hat, a round crown with a broad brim, on two men in ten from 15 years, bare-headed otherwise or over a hood thrown back (round 134)", source: "Encyclopedia.com, Peasant Costume (from Gale's Arts and Humanities Through the Eras, with a list of sources, not footnoted): 'Peasant men usually wore a large round felt hat', the costume fixed 'from about 800 to about 1375', and from the French shepherd's treatise Le Bon Berger (the page: written in 1373): 'It is proper that the shepherd wear a felt hat, round and very large', its felt doubled at the brim; History Hit, What Did People Wear in Medieval England (a popular article, undated statement): 'Men wore wide-brimmed straw hats, close fitting bonnet-like hoods made from linen or hemp, or a felt cap'; Medievalists.net, quoting Margaret Scott, Fashion in the Middle Ages: 'straw hats were worn outdoors by all ranks in the summer'; Rosalie Gilbert, Hats and Hennins (a re-enactor's page on women's hats). All read 20.11.2026 as quotations fetched from the pages; no picture of the time was looked at, and none of the pages has an English man's hat of the 14th century with a date. The straw hat is not built. The shares, the age, the crown's and the brim's measures and the colours are PLACEHOLDER." },
         Source { what: "the hair of one man in ten to the jaw with its ends turned out and up in rolls at the sides and behind (round 133)", source: "D. C. Calthrop, English Costume (the page gives the book's edition of 1907), the chapter on Edward III as reprinted at fashion-era.com: nearly every man 'with long hair to his neck, curled at the ears and on the forehead', and of a knight in the height of fashion 'His hair is shorter than is usual, and it is not curled' (a popular book by a painter, without notes); The Medieval Combat Society, Male reenactment costume, under Edward II (1307 to 1327, the reign before): 'Men tended to wear their hair long, almost to the shoulders', 'The hair was bushy, cut round and curled'; Encyclopedia.com, Bowl Haircut (Gale's Fashion, Costume, and Culture): the cut popular from the twelfth through the fifteenth centuries 'with long curls being popular during some decades and shorter lengths coming into style during others'. All read 20.11.2026 as quotations fetched from the pages; no picture of 1356 was looked at. That the curl is a roll turned out and up, its size, the share and the age are PLACEHOLDER; the curls on the forehead were tried and not kept." },
         Source { what: "children under seven: the men's hair to the jaw with a fringe, girls and boys alike", source: "PLACEHOLDER, nothing read on small children's hair. Chosen because Apoleia's cropped hair begins far back on a child's large skull (a shaven head)." },
         Source { what: "men's hair in three lengths (to above the ear, to the ear's lobe, to the jaw), 3 : 3 : 2, and two men in ten from 15 with their hair parted in the middle, over the ears and cut at the jaw, without a fringe (round 125), one of the two in waves (round 130)", source: "PLACEHOLDER: lengths, shares and the age by eye, so that the men of a town do not all have one head. Nothing was read for the parted cut or its waves: to be checked against picture sources as the fringe is (Luttrell Psalter c. 1330, Holkham Bible)." },
@@ -1144,7 +1161,7 @@ pub static ENGLAND_1356: DressSet = ENGLAND;
 /// PLACEHOLDER throughout: nothing read on what the common people of any of these lands wore; it is here so that
 /// their faces, skins and hair can be judged under the same light as England's, not as a statement about their
 /// dress. A dress of their own takes its place land by land.
-pub static PLAIN_1356: DressSet = DressSet { key: "plain1356", origins: &[], hood: [Bare; 10], veil_from: 999.0, wimple_from: 999.0, hair_looped: "", fillet: "", coif: "", fastens: [[crate::fasten::Fasten::None; 10]; 2], ..ENGLAND };
+pub static PLAIN_1356: DressSet = DressSet { key: "plain1356", origins: &[], hood: [Bare; 10], veil_from: 999.0, wimple_from: 999.0, hair_looped: "", fillet: "", coif: "", hat: "", fastens: [[crate::fasten::Fasten::None; 10]; 2], ..ENGLAND };
 
 /// Every dress with a table.
 pub static SETS: [(Dress, &DressSet); 2] = [(Dress::England1356, &ENGLAND_1356), (Dress::Plain1356, &PLAIN_1356)];
@@ -1486,7 +1503,17 @@ impl DressSet {
 
     /// Whether the hair of the head lies under cloth that is close on it: a hood on the head, a coif.
     pub fn head_covered(&self, female: bool, yrs: f32, seed: u32) -> bool {
-        self.hood_of(female, yrs, seed) == Hood::Up || self.coif_of(female, yrs, seed)
+        self.hood_of(female, yrs, seed) == Hood::Up || self.coif_of(female, yrs, seed) || self.hat_of(female, yrs, seed)
+    }
+
+    /// Whether a man wears a hat (`hat`): old enough, his digit set, no hood on the head and no coif.
+    pub fn hat_of(&self, female: bool, yrs: f32, seed: u32) -> bool {
+        !self.hat.is_empty() && !female && yrs >= self.hat_from && self.hats[(seed % 10) as usize] && self.hood_of(female, yrs, seed) != Hood::Up && !self.coif_of(female, yrs, seed)
+    }
+
+    /// The colour of a man's hat: one of `hat_tones` by a digit of the seed of its own.
+    pub fn hat_tone(&self, seed: u32) -> &'static str {
+        self.hat_tones[((seed / 1_000_000) % 10) as usize % self.hat_tones.len()]
     }
 
     pub fn hood_of(&self, female: bool, age: f32, seed: u32) -> Hood {

@@ -1047,6 +1047,13 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
                 out.push(sf);
             }
         }
+        // (round 134) a man's felt hat: a round crown and a broad brim over hair that lies flat, bound and carried
+        // as the fillet is
+        if let Some(d) = garb.filter(|d| d.hat_of(fem, p.age, p.seed)) {
+            if let Some(sf) = mh_rope(dir, d.hat, d.hat, &x.pp, &h.base, &|_| hex(d.hat_tone(p.seed))) {
+                out.push(sf);
+            }
+        }
         // real look: a painted cap of fine hairs under the cards, if there is one
         // (grey and white fuzz is see-through: the cap fades towards the skin as
         // the hair greys, else its soft edge lays a pale band over the forehead)

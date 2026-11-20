@@ -266,6 +266,10 @@
    "bytes": 16223
   },
   {
+   "name": "cloth_hat.txt.zst",
+   "bytes": 117912
+  },
+  {
    "name": "cloth_hood_down.txt.zst",
    "bytes": 89673
   },
@@ -566,6 +570,8 @@
   "cloth_cote_n.webp",
   "cloth_fillet.webp",
   "cloth_fillet_n.webp",
+  "cloth_hat.webp",
+  "cloth_hat_n.webp",
   "cloth_hood_down.webp",
   "cloth_hood_down_n.webp",
   "cloth_hood_up.webp",

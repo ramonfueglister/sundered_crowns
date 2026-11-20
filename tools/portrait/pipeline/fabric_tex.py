@@ -1,8 +1,8 @@
 # A woven cloth as a tileable texture with its normal map: plain weave (one
 # over, one under), every thread a little uneven, wool with a fulled, fuzzy
-# face, linen finer and smoother. Grey around 0.85: the garment's dye comes
+# face, linen finer and smoother; or felt, which has no weave. Grey around 0.85: the garment's dye comes
 # from the vertex colours.
-# usage: python3 -I fabric_tex.py out.png out_n.png wool|linen [threads per tile]
+# usage: python3 -I fabric_tex.py out.png out_n.png wool|linen|felt [threads per tile]
 import os
 import sys
 import numpy as np
@@ -35,6 +35,11 @@ if kind == 'wool':
         hb = (hb + np.roll(hb, 1, 0) + np.roll(hb, -1, 0) + np.roll(hb, 1, 1) + np.roll(hb, -1, 1)) / 5
     h = (1 - NAP) * h + NAP * hb
     h = h + noise(2, 0.10) + noise(8, 0.05)
+    depth, mott, CON = DEPTH, MOTT, 0.035
+elif kind == 'felt':
+    # (round 134) felt has no threads: matted fibres, fine and a little coarser
+    h = noise(2, 0.10) + noise(4, 0.08) + noise(8, 0.05)
+    shade = 1.0
     depth, mott, CON = DEPTH, MOTT, 0.035
 else:
     h = h + noise(2, 0.04)

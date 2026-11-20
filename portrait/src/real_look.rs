@@ -301,7 +301,9 @@ pub(crate) fn mh_pick(p: &Look, long_hair: bool) -> Option<(String, String)> {
             // under a coif the hair lies flat, and a bare top has no cards that could come through the cloth)
             let bare = p.dress.set().filter(|d| !d.head_covered(p.female, p.age, p.seed));
             if bald > 0.75 {
-                bare.map_or("bald01", |d| d.hair_bald)
+                // (round 134) under a hat the horseshoe round a bare top shows below the brim
+                let hatted = p.dress.set().filter(|d| d.hat_of(p.female, p.age, p.seed));
+                hatted.or(bare).map_or("bald01", |d| d.hair_bald)
             } else if bald > 0.4 {
                 p.dress.set().map_or("receding01", |d| bare.map_or(d.hair_hooded, |d| d.hair_receding))
             } else if p.u(CURL) > 0.62 {
