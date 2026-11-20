@@ -13,7 +13,7 @@ export interface DateParts {
 } // m 0..11, d 1..31
 const cache = new Map<number, number>(); // year -> first day index relative to 1300
 function yearStart(y: number): number {
-  let v = cache.get(y);
+  const v = cache.get(y);
   if (v !== undefined) return v;
   let s = 0;
   for (let k = 1300; k < y; k++) s += yearDays(k);
@@ -22,7 +22,7 @@ function yearStart(y: number): number {
   return s;
 }
 export function dayToDate(day: number, startYear: number): DateParts {
-  let abs = day + yearStart(startYear);
+  const abs = day + yearStart(startYear);
   let y = 1300 + Math.floor(abs / 365.25) - 1;
   while (yearStart(y + 1) <= abs) y++;
   while (yearStart(y) > abs) y--;

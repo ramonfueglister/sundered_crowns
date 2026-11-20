@@ -96,7 +96,10 @@ gazetteer.places.forEach((p, id) => {
   const h = lands?.get(id),
     [wx, wz] = blockOfCell(...proj.cellOf(p.lon, p.lat));
   if (lands ? !h : !inhabitants.has(id)) return;
-  if (!h) return want(wx, wz, 90);
+  if (!h) {
+    want(wx, wz, 90);
+    return;
+  }
   const east = blockOfCell(...proj.cellOf(p.lon + 0.1, p.lat)),
     perKm = Math.hypot(east[0] - wx, east[1] - wz) / (0.1 * KM_PER_DEGREE * Math.cos((p.lat * Math.PI) / 180));
   const n = hamletsOf(h.families),
@@ -193,7 +196,7 @@ for (const key of [...wanted].sort()) {
             cx: cx + piece.ox,
             cz: cz + piece.oz,
             half,
-            wall: wall && wall.map((g) => ({ ...g })),
+            wall: wall ? wall.map((g) => ({ ...g })) : null,
           });
         },
         dry: (at) => {

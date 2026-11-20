@@ -40,7 +40,6 @@ import {
   CASTLE_AT,
   CITY,
   FIELDS,
-  type Ground,
   ISLANDS,
   LAND_Y,
   Mat,
@@ -94,7 +93,7 @@ export function buildScene(bakedSky = true, swap: { campanile?: Batch } = {}): P
     z0: number,
     x1: number,
     z1: number,
-    f: (i: number, x: number, z: number) => boolean | void,
+    f: (i: number, x: number, z: number) => boolean | undefined,
   ): boolean => {
     for (let z = Math.floor(z0); z < Math.ceil(z1); z++)
       for (let x = Math.floor(x0); x < Math.ceil(x1); x++) {

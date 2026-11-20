@@ -53,9 +53,9 @@ export function refineNames(names: string[], lon: ArrayLike<number>, lat: ArrayL
   const grid = new Map<string, number[]>();
   for (const i of real) {
     const k = cell(lon[i], lat[i]);
-    let g = grid.get(k);
-    if (!g) grid.set(k, (g = []));
-    g.push(i);
+    const g = grid.get(k);
+    if (g) g.push(i);
+    else grid.set(k, [i]);
   }
   const used = new Set(names.slice(0, L));
   for (let i = 0; i < L; i++) {

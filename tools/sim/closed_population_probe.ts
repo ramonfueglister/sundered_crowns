@@ -85,15 +85,12 @@ function run(
   const hist: number[] = [];
   let marriedShare = 0,
     w1549 = 0,
-    mar = 0,
-    births = 0,
-    deaths = 0;
+    mar = 0;
   for (let t = 0; t < years; t++) {
     // deaths
     for (const i of live)
       if (dies[i] < t + 1) {
         alive[i] = 0;
-        deaths++;
         const sp = spouse[i];
         if (sp >= 0) {
           spouse[sp] = remarry ? -1 : -2;
@@ -145,7 +142,6 @@ function run(
     for (const _ of nb) {
       add(t + rnd(), 0);
       live.push(sex.length - 1);
-      births++;
     }
     hist.push(live.length);
     marriedShare = mar / w1549;

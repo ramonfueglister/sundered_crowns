@@ -94,7 +94,7 @@ export const ORIGINS = [
   'Australia',
   'America',
 ] as const;
-export const enum Origin {
+export enum Origin {
   Italia = 0,
   Gallia = 1,
   Germania = 2,

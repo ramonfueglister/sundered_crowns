@@ -1,7 +1,7 @@
 // A far piece drawn from the table of its columns is the piece its build drew.
 import { describe, expect, it } from 'vitest';
 import type { Batch } from '../../src/lookprobe/batch';
-import { LAND_Y, Mat, N, SEA_Y, SUMMIT, idx, onGrid } from '../../src/lookprobe/layout';
+import { Mat, N, SUMMIT, idx, onGrid } from '../../src/lookprobe/layout';
 import {
   RIM,
   drawGround,
