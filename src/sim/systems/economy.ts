@@ -50,7 +50,8 @@ import {
   type EconomyState,
   type KeptEconomy,
 } from '../economy/engine';
-import { activePersons, cityTable, dailyCalibration, type EconomyCalibration } from '../economy/calibration';
+import { activePersons, cityTable, type EconomyCalibration } from '../economy/calibration';
+import { dailyCalibration } from '../economy/daily';
 import { citiesOf } from '../content/cities';
 import { cityRoutes } from '../economy/routes';
 import { dateToDay, dayToDate, fmtDate, yearDays } from '../calendar';
