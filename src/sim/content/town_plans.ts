@@ -5,8 +5,8 @@
 import P1291 from './town_plans_1291.json';
 import type { Plan } from '../settlement/streets';
 
-const read = (towns: Record<string, { market: number[]; streets: number[][] }>) =>
-  new Map(Object.entries(towns).map(([site, t]): [number, Plan] => [Number(site), { market: [t.market[0], t.market[1]], streets: t.streets }]));
+const read = (towns: Record<string, { market: number[]; streets: number[][]; radius: number }>) =>
+  new Map(Object.entries(towns).map(([site, t]): [number, Plan] => [Number(site), { market: [t.market[0], t.market[1]], streets: t.streets, radius: t.radius }]));
 const BY_YEAR: ReadonlyMap<number, ReadonlyMap<number, Plan>> = new Map([[1291, read(P1291.towns)]]);
 
 /** the real plan of the town `site` in the world of `year`, in radii of the real town; none where no old plan of it is read */

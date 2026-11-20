@@ -309,8 +309,8 @@ keeps its exact ground (feature 1): the step is the parcel's width divided by th
 | street width | 6 × w × (1/√0.76 − 1): 6.6 / 9.3 / 21.1 m (smallest, median, widest of 1291) | as wide as the streets of feature 1's grid: Grenade's share of parcels round a block of two rows of six (Boerefijn 2000) |
 | market | a parcel deep, a lane round it | PLACEHOLDER, no measure of a market read |
 | r_c | 0.5 of the packed radius | calibrated: the blocks of the world of 1291 fall off as A^−1.87 above 200 m² (Dresden: A^−1.9, Lämmer et al. 2006; Barthelemy & Flammini 2008 get it with an exponential density of centres) |
-| join | 5 parcel depths | calibrated against the share of dead ends of medieval Paris (Vasserot, 0.10); more changes nothing |
-| crossing | 2 parcel widths | calibrated against the share of crossings of medieval Paris (0.12): 1 makes 0.07, 2.5 makes 0.15 |
+| join | 3 parcel depths | calibrated against the share of dead ends of medieval Paris (Vasserot, 0.10), with the landmarks of feature 5: 4 gives Paris 0.05 dead ends; 5 before feature 5 |
+| crossing | 2.5 parcel widths | calibrated against the share of crossings of medieval Paris (0.12), with the landmarks of feature 5: 2 makes 0.09, 2.5 makes 0.12; 2 before feature 5 |
 | served | 1 parcel depth | PLACEHOLDER: a spot this near a street takes its parcel there |
 | market search | 3 parcel depths | PLACEHOLDER |
 | ways | 1.5 px near, 3 px on, 30° | PLACEHOLDER: what reads the road map of 1291 as the ways of a town |
@@ -330,6 +330,18 @@ the parcels.
 | 0.5, 10, 2 | 0.13 | 0.77 | 0.11 | 1.87 |
 | 0.5, 5, 1 | 0.13 | 0.81 | 0.07 | 1.86 |
 | 0.5, 5, 2.5 | 0.12 | 0.73 | 0.15 | 1.89 |
+
+Recalibrated with feature 5 (20 Nov 2026): the landmarks laid before the streets, on the building ground surveyed
+without what the world graphic built of its own, Paris's landmarks drawn together as its plan. Paris alone in brackets.
+
+| r_c, join, crossing | dead ends | T-junctions | crossings |
+|---|---|---|---|
+| 0.5, 5, 2 (as before) | 0.14 (0.05) | 0.78 (0.86) | 0.09 (0.08) |
+| 0.5, 5, 2.5 | 0.10 (0.05) | 0.78 (0.84) | 0.11 (0.11) |
+| 0.5, 4, 2.5 | 0.11 (0.05) | 0.78 (0.82) | 0.11 (0.13) |
+| **0.5, 3, 2.5 (chosen)** | 0.11 (0.08) | 0.77 (0.78) | 0.12 (0.15) |
+| 0.5, 5, 3 | 0.10 (0.05) | 0.78 (0.84) | 0.12 (0.11) |
+| 0.45, 5, 2.5 | 0.12 (0.05) | 0.73 (0.84) | 0.15 (0.10) |
 
 ### Real plans
 
@@ -618,6 +630,7 @@ most 30 m. The towers of a town stay a matter of the graphics.
 | sees of 1291 | 48 archbishops, 182 bishops, 19 orthodox, 75 Friday mosques among the 558 towns | Eubel (1913) for the Latin sees; a check of 18 by the sources below; Darrouzès (1981) not read |
 | buildings known by name | 64: 27 abbeys, 12 cathedrals, 10 castles, 7 palaces, 3 monuments, 2 churches, 2 mosques, 1 orthodox; 24 alone | the Wikipedia articles of each, with the years of building as of 1291 |
 | URBAN | √(1/SCALE) = 0.1 | OWN RULE, from the scale |
+| a town with a real plan | as its plan: the walled town as wide as twice the town packed round its market (Paris 0.23), round the church of its see | OWN RULE: the landmarks stand where they stood among its streets |
 | size where not known | cathedral 90 × 32 m (an archbishop's 130 × 45), orthodox 40 × 30, mosque 60 × 45 (a town of 50,000 people of the time 100 × 80), convent 60 × 36, abbey 100 × 60, castle 60 × 50, palace 100 × 70, church 50 × 25, monument 40 × 40 | PLACEHOLDER: the middle of what the buildings known by name measure |
 | mendicant orders | from 2,000 / 4,000 / 10,000 / 15,000 people of the time | PLACEHOLDER: the order in which they came into the towns (Le Goff 1968); the thresholds not read from Le Goff or Emery (1962) |
 | gap, search | 4 m; 80 m in steps of 4 m; edge from 0.7 of the town's reach | PLACEHOLDER |
@@ -634,14 +647,17 @@ Of the 40 buildings known by name in the towns, 17 stand at their spot, 23 moved
 where the water or one laid before took it. Of the 309 churches of a see without a name, 106 stand at the centre of
 their town, the others moved off it (median of all 16 m, nine in ten within 48 m).
 
-Six towns are laid out without regard to their ground (feature 1), but clear of their landmarks: Venice (islands),
-Aberdeen, Baghdad, Dax, Seville and Strasbourg (a river, and the landmarks at their real place, leave too little
-ground on one bank). Before feature 5: Venice and Hormuz.
+Three towns are laid out without regard to their ground (feature 1), but clear of their landmarks: Venice (islands),
+Aberdeen and Seville (a river, and the landmarks at their real place, leave too little ground on one bank). Before
+feature 5: Venice and Hormuz.
 
 The building ground of the towns (`ground_<year>.json`) is surveyed before anything the world graphic builds of its
 own (`build_ground.ts`, settle.ts): before it had the graphic's church and towers at the centre of every town as
 built ground, and a town whose neighbour's houses stood on its middle (Fustat beside Cairo) had none. The streets
-were recalibrated on it (feature 3, crossing 2.5 parcel widths). On it the fields of feature 4 come out at 108,261 furlongs with
+were recalibrated on it, with the landmarks laid before them, against medieval Paris (feature 3: join 3 parcel depths,
+crossing 2.5 parcel widths; the towns of 20 streets and more 0.11, 0.77, 0.12, Paris 0.08, 0.78, 0.15; Vasserot 0.10,
+0.78, 0.12). In a town with a real plan (Paris) the landmarks are drawn together as its plan, round the church of
+its see where the plan has its centre: by URBAN they stood on the main streets of the plan, drawn at 0.23. On it the fields of feature 4 come out at 108,261 furlongs with
 97.9 % of the arable laid, 28 towns short of ground (before 107,447, 97.3 %, 32). Beyond the surveyed ground of a town its dry ground
 counts too (`widened`, from `dry_<year>.json`), so that the landmarks at its edge find room.
 
@@ -654,7 +670,8 @@ counts too (`widened`, from `dry_<year>.json`), so that the landmarks at its edg
   blocked here).
 - A church of a see without a name at the centre, the convents and residences at the edge by a fixed bearing; their
   sizes; the thresholds of the orders (Le Goff and Emery not read); a residence only for the capital of a realm.
-- `URBAN` draws the buildings known by name together as the town is drawn together; their size stays real, so a
+- `URBAN` draws the buildings known by name together as the town is drawn together (a town with a real plan as its
+  plan); their size stays real, so a
   great church takes much of a small town of the world.
 - The models are those of the world graphic, scaled evenly; only some buildings known by name have their own.
 - No parish churches, hospitals, town halls, guild halls, synagogues, bridges or walls; no landmark is built while the

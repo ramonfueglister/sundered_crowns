@@ -21,13 +21,13 @@ import { createTable, spawn } from '../ecs';
 import { citiesOf } from '../content/cities';
 import { SCALE } from '../scale';
 import { townGround, parcelSize, footprint, FRONT, type Parcel, type ParcelSize } from '../settlement/rule';
-import { layTown, type Street, type Town, type Tuning } from '../settlement/streets';
+import { layTown, planDraw, type Street, type Town, type Tuning } from '../settlement/streets';
 import { waysOf } from '../content/town_ways';
 import { planOf } from '../content/town_plans';
 import { FARM, HAMLET_GAP, HAMLET_OFF, METRES_PER_BLOCK, hamletBox, hamletRing, hamletSizes, hamletSpots, layFarms } from '../settlement/hamlets';
 import { widened, type Ground } from '../content/ground';
 import { LANDMARK_GAP, aloneLandmarks, coreLandmarks, edgeLandmarks, latinAt, newLandmarks, residenceAt, writeLandmarks, type Laid, type LandmarkGround } from './landmarks';
-import { LANDMARK_KIND } from '../settlement/landmarks';
+import { LANDMARK_KIND, URBAN } from '../settlement/landmarks';
 import { namedOf } from '../content/landmarks';
 
 /** The families of each town of the start year, in the order of the towns (src/sim/content/cities.ts): those who
@@ -184,6 +184,12 @@ function layStreets(s: WorldState, site: number, count: number, size: ParcelSize
   return town;
 }
 
+/** how a town's landmarks are drawn together: as its real plan, where an old plan of it is read, else by URBAN */
+const drawOf = (year: number, site: number, count: number, size: ParcelSize): number => {
+  const plan = planOf(year, site);
+  return plan?.radius ? planDraw(count, size, plan.radius) : URBAN;
+};
+
 /** the ground of a town for its landmarks, where it was surveyed */
 const landmarkGround = (g: Ground | null, site: number): LandmarkGround | null => (g?.has(site) ? { free: (bx, bz) => g.free(site, bx, bz), m: g.metresPerBlock } : null);
 
@@ -226,9 +232,12 @@ export function relayTowns(s: WorldState, ground?: Ground | null, dry?: Ground |
   s.street = createTable(STREET_SCHEMA, 16384);
   newLandmarks(s);
   const cities = citiesOf(s.startYear), core = new Map<number, Laid[]>();
-  for (const c of cities) core.set(c.site, coreLandmarks(s.startYear, c.site, c.people, landmarkGround(g, c.site)));
   const bySite = new Map<number, number[]>();
   for (let i = 0; i < s.lot.size; i++) if (s.lot.alive[i] && L.kind[i] === LOT_KIND.parcel) { const a = bySite.get(L.site[i]); if (a) a.push(i); else bySite.set(L.site[i], [i]); }
+  for (const c of cities) {
+    const rows = bySite.get(c.site), draw = rows ? drawOf(s.startYear, c.site, rows.length, { w: L.w[rows[0]], d: L.d[rows[0]] }) : URBAN;
+    core.set(c.site, coreLandmarks(s.startYear, c.site, c.people, landmarkGround(g, c.site), draw));
+  }
   // in the order the towns were founded (their first parcel), so that the streets lie in the register as a new world lays them
   for (const [site, rows] of [...bySite].sort((a, b) => a[1][0] - b[1][0])) {
     const size = { w: L.w[rows[0]], d: L.d[rows[0]] };
@@ -275,7 +284,8 @@ export function foundLots(s: WorldState, ground?: Ground | null, dry?: Ground | 
   cities.forEach((city, k) => {
     const { families, persons, farmers, farmPersons } = towns[k];
     // the church of its see and its buildings known by name first: the streets grow round them
-    const core = coreLandmarks(s.startYear, city.site, city.people, landmarkGround(g, city.site));
+    const exact = families.length ? parcelSize(townGround(persons, city.site), families.length) : null;
+    const core = coreLandmarks(s.startYear, city.site, city.people, landmarkGround(g, city.site), exact ? drawOf(s.startYear, city.site, families.length, exact) : URBAN);
     writeLandmarks(s, city.place, city.site, core);
     let half = Math.max(0, ...core.map((b) => Math.max(Math.abs(b.x) + b.w / 2, Math.abs(b.z) + b.d / 2))), reach = 0; // how far the parcels and landmarks reach from the centre, and the streets
     const built = new Map<number, Box[]>(), paved = new Map<number, Box[]>(); // the parcels and the streets of the town by the cells of CELL metres they touch
@@ -287,8 +297,7 @@ export function foundLots(s: WorldState, ground?: Ground | null, dry?: Ground | 
     };
     core.forEach(enter); // and its landmarks
     if (families.length) {
-      const exact = parcelSize(townGround(persons, city.site), families.length);
-      const size = exact;
+      const size = exact!;
       const town = layStreets(s, city.site, families.length, size, g, found, tune, core);
       const parcels: Parcel[] = town.parcels;
       const keep = (b: Box, into = built) => {

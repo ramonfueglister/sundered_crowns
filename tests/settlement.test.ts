@@ -244,7 +244,7 @@ describe('the farmsteads of a world of 1291', () => {
     const found = foundLots(decodeState(encodeState(s)), w.ground, w.dry);
     expect(found.rough).toBe(wet.size);
     expect(found.rough).toBeLessThan(s.hamlets.size / 30);
-    expect(found.crowded).toBeLessThan(s.hamlets.size / 30); // 56 of 1857 in 1291: most whose own spot lies on a street out of the town (feature 3)
+    expect(found.crowded).toBeLessThan(s.hamlets.size / 25); // 62 of 1857 in 1291: most whose own spot lies on a street out of the town (feature 3)
     // by the building ground alone, which ends 96 blocks from the centre and counts every step, more hamlets stay rough
     expect(foundLots(decodeState(encodeState(s)), w.ground, null).rough).toBeGreaterThan(found.rough);
   });
@@ -285,15 +285,15 @@ describe('the land register of a world of 1291', () => {
       for (const a of ids) for (const b of ids) if (a < b) expect(overlap({ x: L.x[a], z: L.z[a], front: L.front[a] }, { x: L.x[b], z: L.z[b], front: L.front[b] }, { w: L.w[a], d: L.d[a] })).toBe(false);
     }
   });
-  it('lays every parcel where its house can stand, by the building ground of the towns, but in six towns cut by water', { timeout: 60_000 }, () => {
+  it('lays every parcel where its house can stand, by the building ground of the towns, but in three towns cut by water', { timeout: 60_000 }, () => {
     const g = w.ground!, gw = widened(g, w.dry)!, house = (t: WorldState, i: number) => { const C = t.lot.cols; return houseGround(gw, C.site[i], { x: C.x[i], z: C.z[i], front: C.front[i] }, { w: C.w[i], d: C.d[i] }); };
     expect(g.year).toBe(1291);
     for (const c of cities) expect(g.has(c.site)).toBe(true);
-    // Venice lies on islands too cut by water for its streets without bridges, and in Aberdeen, Baghdad, Dax, Seville
-    // and Strasbourg the rivers leave too little ground on one bank once the landmarks stand at their real place: they
-    // are laid out without regard to the ground (but clear of the landmarks)
+    // Venice lies on islands too cut by water for its streets without bridges, and in Aberdeen and Seville the rivers
+    // leave too little ground on one bank once the landmarks stand at their real place: they are laid out without
+    // regard to the ground (but clear of the landmarks)
     const bare = decodeState(encodeState(s)), tight = foundLots(bare, g, w.dry).tight;
-    expect(tight.map((x) => cities.find((c) => c.site === x)!.name).sort()).toEqual(['Aberdeen', 'Baghdad', 'Dax', 'Seville', 'Strasbourg', 'Venice']);
+    expect(tight.map((x) => cities.find((c) => c.site === x)!.name).sort()).toEqual(['Aberdeen', 'Seville', 'Venice']);
     let off = 0;
     for (const i of parcels) if (!tight.includes(L.site[i]) && !house(s, i)) off++;
     expect(off).toBe(0);

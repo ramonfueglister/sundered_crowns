@@ -49,21 +49,24 @@ const indexOf = (year: number) => new Map(namedOf(year).map((n, k) => [n, k]));
  * to the nearest spot round it that is (at most SEARCH metres). The cathedral first, then the rest in the order of
  * the file.
  */
-export function coreLandmarks(year: number, site: number, people: number, g: LandmarkGround | null): Laid[] {
+export function coreLandmarks(year: number, site: number, people: number, g: LandmarkGround | null, draw = URBAN): Laid[] {
   const index = indexOf(year), here = namedOf(year).filter((n) => n.site === site), see = seeOf(year, site), out: Laid[] = [];
   const seeKind = see === 'mosque' ? LANDMARK_KIND.mosque : see === 'orthodox' ? LANDMARK_KIND.orthodox : see ? LANDMARK_KIND.cathedral : null;
   const seeSize = see === 'archbishop' ? SIZE_ARCH : see === 'mosque' && people >= BIG_TOWN ? SIZE_GREAT_MOSQUE : seeKind !== null ? SIZE_OF[seeKind] : SIZE_OF[LANDMARK_KIND.church];
   // the building known by name that is the church of the see, where there is one
   const seeNamed = seeKind === null ? undefined : here.find((n) => n.kind === seeKind);
   const wanted: { n?: Named; kind: LandmarkKind; x: number; z: number; w: number; d: number }[] = [];
+  // a town laid by its real plan (draw other than URBAN) is drawn together as its plan, round the church of its see,
+  // where the plan has its centre (src/sim/content/town_plans.ts)
+  const [ox, oz] = draw !== URBAN && seeNamed ? [seeNamed.east, seeNamed.south] : [0, 0];
   if (seeKind !== null) {
     const [l, w] = seeNamed ? realSize(seeNamed, seeSize) : [seeSize[0], seeSize[1]];
-    wanted.push({ n: seeNamed, kind: seeKind, x: seeNamed ? seeNamed.east * URBAN : 0, z: seeNamed ? seeNamed.south * URBAN : 0, w: l, d: w });
+    wanted.push({ n: seeNamed, kind: seeKind, x: seeNamed ? (seeNamed.east - ox) * draw : 0, z: seeNamed ? (seeNamed.south - oz) * draw : 0, w: l, d: w });
   }
   for (const n of here) {
     if (n === seeNamed || n.kind === LANDMARK_KIND.convent) continue;
     const [l, w] = realSize(n, n.kind === LANDMARK_KIND.cathedral && see === 'archbishop' ? SIZE_ARCH : SIZE_OF[n.kind]);
-    wanted.push({ n, kind: n.kind, x: n.east * URBAN, z: n.south * URBAN, w: l, d: w });
+    wanted.push({ n, kind: n.kind, x: (n.east - ox) * draw, z: (n.south - oz) * draw, w: l, d: w });
   }
   for (const q of wanted) {
     const at = placeNear(q, out, g);

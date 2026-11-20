@@ -5,7 +5,7 @@
 import { describe, it, expect } from 'vitest';
 import { BUILT, LANDMARK_KIND, NO_YEAR, ORDERS, URBAN, builtIn, ordersOf } from '../src/sim/settlement/landmarks';
 import { namedOf, seeOf } from '../src/sim/content/landmarks';
-import { LANDMARK_GAP, latinAt } from '../src/sim/systems/landmarks';
+import { LANDMARK_GAP, coreLandmarks, latinAt } from '../src/sim/systems/landmarks';
 import { citiesOf } from '../src/sim/content/cities';
 import { footprint } from '../src/sim/settlement/rule';
 import { STATE_VERSION, LOT_KIND, STREET_KIND, type WorldState } from '../src/sim/state';
@@ -18,6 +18,15 @@ import { m, styleOf } from '../src/buildings';
 import { newWorldState, loadSetup } from '../tools/sim/load';
 
 describe('the rules of the landmarks', () => {
+  it('of a town with a real plan are drawn together as its plan, round the church of its see (Paris)', () => {
+    const paris = citiesOf(1291).find((c) => c.name === 'Paris')!, here = namedOf(1291).filter((n) => n.site === paris.site);
+    const nd = here.find((n) => n.kind === LANDMARK_KIND.cathedral)!, louvre = here.find((n) => n.name.en === 'Louvre Castle')!;
+    const at = (draw: number) => coreLandmarks(1291, paris.site, paris.people, null, draw);
+    const byUrban = at(URBAN), byPlan = at(0.23), i = byPlan.findIndex((l) => l.kind === LANDMARK_KIND.castle);
+    expect(byUrban[0].x).toBeCloseTo(nd.east * URBAN); // the church of the see at its place in the town
+    expect(byPlan[0].x).toBe(0); expect(byPlan[0].z).toBe(0); // at the centre of the plan
+    expect(byPlan[i].x).toBeCloseTo((louvre.east - nd.east) * 0.23);
+  });
   it('build a landmark from its first year to its last, and keep a ruin a ruin', () => {
     expect(builtIn(1220, 1270, NO_YEAR, 1200).state).toBe(BUILT.not_yet);
     expect(builtIn(1220, 1270, NO_YEAR, 1245)).toEqual({ state: BUILT.building, share: 0.5 });
