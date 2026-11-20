@@ -113,7 +113,7 @@ export function drawTrees(b: Batch, trees: ArrayLike<number>, tops: ArrayLike<nu
 }
 
 /** a tree of the finest step stands this many finest blocks high over its ground in the mean: leafy ones a little less, conifers more (`treeHeight`) */
-export const TREE_SEEN = 2.3;
+const TREE_SEEN = 2.3;
 /** how many of its blocks high the woods of a step stand as one crown, at least (GroundTraits.crownTall): as tall as the trees of the finest step, built as the land is */
 export const crownTallAt = (step: number) => TREE_SEEN * uprightOf(step);
 /** The height a tree stands over its ground, as it hides the sky round it (world.ts `occlude`): in finest blocks. */
