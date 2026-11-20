@@ -1066,10 +1066,11 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
         }
         // (round 128) a fillet on the hair: a stiff band of linen, bound and carried as a plait's strands are
         // (round 146) at court a circlet in its place: gilt metal with stones, read as the crown is
-        if let Some(d) = garb.filter(|d| d.fillet_of(fem, p.age, p.seed)) {
-            if !d.circlet.is_empty() {
-                out.extend(crown(dir, d.circlet, d, &x.pp, &h.base));
-            } else if let Some(sf) = mh_rope(dir, d.fillet, "", &x.pp, &h.base, &|_| hex(d.linen)) {
+        // (round 147) and on a lord's head with nothing else on it
+        if let Some((d, file)) = garb.and_then(|d| d.circlet_of(fem, p.age, p.seed).map(|f| (d, f))) {
+            out.extend(crown(dir, file, d, &x.pp, &h.base));
+        } else if let Some(d) = garb.filter(|d| d.fillet_of(fem, p.age, p.seed)) {
+            if let Some(sf) = mh_rope(dir, d.fillet, "", &x.pp, &h.base, &|_| hex(d.linen)) {
                 out.push(sf);
             }
         }

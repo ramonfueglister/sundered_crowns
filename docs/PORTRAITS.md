@@ -17,7 +17,7 @@ one, changes nothing: same people in, same pictures out, measured.
 |---|---|---|
 | Builder | `portrait/` (Rust, WebAssembly) | From a person (100 bytes of genes, sex, age, estate, occupation, origin, food, mourning, wealth, worn clothes) to the triangles of head and shoulders: MakeHuman's head morphed by the genes, skin, eyes, hair, beard, clothes, headwear, jewellery |
 | Genes | `portrait/src/dna.rs` | 50 genes of two alleles, one byte each (Apoleia's 34, and 16 since round 112 that a dress with a table shows); a child takes one allele of each gene from either parent, plus a small mutation; founders draw from one of 23 pools (round 111), which one is the culture's (`src/sim/people/pools.ts`) |
-| Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; a culture without a set wears the plain dress of 1356 (round 111), one of Apoleia's seven regions Apoleia's Roman dress. England's has a table for people of rank and one for a crowned head (round 144), chosen by the person's stand; a crowned head wears a mantle faced with ermine over the gown (round 145, `portrait/src/mantle.rs`); a lady of rank shows her plaits and wears a circlet of gilt metal on them (round 146) |
+| Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; a culture without a set wears the plain dress of 1356 (round 111), one of Apoleia's seven regions Apoleia's Roman dress. England's has a table for people of rank and one for a crowned head (round 144), chosen by the person's stand; a crowned head wears a mantle faced with ermine over the gown (round 145, `portrait/src/mantle.rs`); a lady of rank shows her plaits and wears a circlet of gilt metal on them (round 146), a lord with nothing else on the head wears one too (round 147) |
 | Stage profile | `src/portrait/profile.ts` | Light and materials per set of dress; Apoleia's portraits keep Apoleia's |
 | Pipeline | `tools/portrait/pipeline/` | Blender scripts that wrote the draped clothes and hair (not part of the build) |
 | Files of the real look | `public/portrait/` (41.5 MB) | The head (1.1 MB), data files (15.0 MB since round 111, 13.1 since round 110, 12.7 since round 109, 12.9 since round 105, 10.4 before round 104: the hair's bodies, the beard's locks, draped clothes, skin shading), images (24.8 MB: skin by age and sex, wrinkle maps, hair, cloth, eyes) |
@@ -3729,7 +3729,7 @@ The build (`tools/portrait/pipeline/hair_body.py`; a cut is a table in it):
 
 | cut | what it changes of the bowl cut |
 |---|---|
-| `bob01` | the bowl cut: the fringe at -12.5 degrees, sides and back at -43 (the ear's lower end) |
+| `bob01` | the bowl cut: the fringe at -12.5 degrees (-5 since round 147), sides and back at -43 (the ear's lower end) |
 | `bob06`, `bob07` | sides and back at -31 (over the ear), at -51 (the jaw) |
 | `bob02` (under a hood) | 0.22 as high, its bundles 0.6 as round |
 | `bob03` (gone back at the temples) | the fringe's line rises by 22 degrees at 34 degrees to either side |
@@ -6701,6 +6701,86 @@ that woman), that test again after the change: passes; typecheck and lint pass.
 Pictures (project files, `portraits/`): `runde146_vorher_nachher.png` (the sample's eight grown women at
 court, before and after), `runde146_reif.png` (five ladies with the circlet, hanging and pinned plaits, from
 the front, the side and behind).
+
+**Round 147: a fringe on the middle of the forehead, and a lord's circlet** (2026-11-20). Round 146 left
+the men as they were. Two things beside the reference at one size. Its bowl cuts end on the middle of the
+forehead in a nearly straight line; ours ended two fingers over the eyes, on the brows in a picture, on every
+man and boy who shows his hair and under every hood: a lad's head on every man (round 141's own list: "the
+fringe is as long as it was, to the brows on a grown man"). And a lord of ours is told from a villager by his
+gown's colour alone.
+
+What was read (as an account of the page by a reading tool, not the page itself; not a primary source).
+- The Medieval Combat Society, Male reenactment costume (themcs.org; a re-enactment society's page without
+  notes; the parts on Edward II's and Edward III's reigns word for word), under Edward III: "Headwear was
+  often worn, either a hat or a crown, where headwear is not shown, then a hood is generally present, worn
+  either with cloaks or as seperate garments"; captions of tombs: "Circlet, William of Hatfield, York
+  Cathedral, 1337", "Circlet, Thomas Beauchamp and wife Katherine mortimer weeper 27, Warwick. 1369",
+  "Circlet, weeper of Thomas de Vere, Bures, 1371", "Coif and hood, John de Stonore, Dorchester Abbey, 1354",
+  "Hood, Thomas de Montsorel, Whitelackington, 1350", "Beaver Hat worn over hood ... Warwick. 1369";
+  "Chaplets were made of metal with repoussé decoration or embellished with gemstones and pearls"; the beaver
+  hat "a rounded hat with an oval brim", in royal accounts "for the first time in 1350"; "The Chaperon was a
+  head covering popular among older men from about 1350"; "From about 1350 painted hoods were worn". Under
+  Edward II: "Men tended to wear their hair long, almost to the shoulders", "The hair was bushy, cut round and
+  curled, the face clean shaven". The page does not say which head wear is a lord's and which a villager's,
+  and nothing on how long a fringe was.
+- Nothing was read for the fringe: its length is by eye beside three bowl cuts of the reference.
+
+What is changed.
+- **The fringe** (`tools/portrait/pipeline/hair_body.py`, `BOWL`: `cut` -5 degrees for -12.5): the line a
+  bowl cut's hair is cut at in front of the face lies 7.5 degrees higher round the head. The eight files
+  `bob01` to `bob07` and `bob09` are written anew (5.96 MB together for 6.09); a small child's `bob08`, which
+  has a line of its own, and `page01`, `page02`, `plait01`, `part01` are the same to the byte (checked). The
+  painted layers and scalps under the hair are as they were.
+- **A lord's circlet** (`DressSet::circlet_men`, `circlets_men`, `circlet_of`, `hair_flat`;
+  `metal_circlet_m`, 30 kB): at court a man from 15 years with nothing else on the head (no hood on it, no
+  coif, no hat; the hood thrown back does not count) wears round 146's band by a digit of his seed, five in
+  ten of them, which is two lords in ten until 30 and three in twenty after (a coif takes one). It is the same
+  script's file fitted round the hair that lies flat and a bare top's horseshoe (`bob02`, `bob04`), and his
+  hair lies flat under it as under a hat: a bowl cut's own body stands 2 cm off the skull where the band sits.
+  `DressSet::circlet_of` says which file a person wears, a lady's or a lord's.
+
+Measured.
+
+| | before | now |
+|---|---|---|
+| the fringe's lowest end over the eyes' middle, five men and boys of 8 to 68 (`portrait/tests/hair_body.rs`) | 24 to 32 mm | 42 to 50 mm |
+| the same as a share of the way from the eyes down to the chin | 0.18 to 0.24 | 0.32 to 0.37 |
+| four small children of 2 and 5 (their own cut) | 51 to 57 mm | 51 to 57 mm |
+
+On 80 lords of 17 to 61 years (`portrait/tests/court.rs`): 11 wear the circlet, 69 do not; its foot 4.4 to
+5.3 cm over the eyes; no corner of hair through it. Of 100 000 seeds 20 000 wear it at 25 and 15 000 at 45,
+none at 14, none of the common people, no crowned head.
+
+Tried and not kept. The fringe's line at -1 degree: a broken line on a boy, with the upper locks' points
+standing in it. The circlet was built once, with round 146's measures.
+
+**The gauntlet**: 22 of 22 over the whole sample (read with this round's build), every line as in rounds 138
+to 146 to its last figure: no line reads the forehead under the fringe.
+
+Honest about it. The higher fringe is the gain of the round: a man's forehead shows, his eyes are no longer
+under the hair's edge, and he looks his age. It is one number moved by eye beside three heads; the line is
+still more ragged than the reference's, the hair is the same modelled bands, and under a hood less of the
+fringe shows than did. The crown, the hats and the coif were fitted round the hair as it was and are not made
+anew (their tests, which read the hair under them, pass with the new files). The lord's circlet is round 146's
+ring on another head: the page read names three tombs by their captions and the pictures were not looked at,
+so its form on a man, where it sat and what hair he wore under it are guesses, and that every second
+bare-headed lord wears one in every picture is too. Under it the hair lies as flat as under a hood, the same
+on every man. Four lords in ten still wear the villagers' hood on the head, as the page allows ("a hood is
+generally present"); the beaver hat, the painted hood and the older men's chaperon the page names are not
+built. Round 146's ladies are unchanged. All new values are PLACEHOLDER.
+
+Tests: `portrait/tests/court.rs`, one new (who wears a lord's circlet by his seed; on 80 lords the band with
+its twelve stones over the eyes, nothing else on the head, the hair that lies flat under it, no hair through
+it); round 146's test shares its two measures with it (`front_of`, `hair_through`).
+`portrait/tests/hair_body.rs`: the bound on where a grown head's fringe ends moved with the form (0.27 to
+0.48 of the way from eyes to chin over the eyes, for 0.12 to 0.34; a small child's is as it was).
+Round 144's test of the court's gown asks `circlet_of` whether a person may have stones on the head.
+`cargo test --release` as a whole: 119 of 120 in the full run (that test, which did not know a lord's
+circlet), then `court.rs` again, 5 of 5. `tests/portrait.test.ts` and its neighbour 43 of 43; typecheck and
+lint pass.
+Pictures (project files, `portraits/`): `runde147_vorher_nachher.png` (six villagers and the sample's eight
+grown men at court, before and after), `runde147_herren_reif.png` (five lords with the circlet from the
+front, the side and behind).
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the

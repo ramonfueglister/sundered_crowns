@@ -61,9 +61,11 @@ W = dirs(180, 52)    # the whorl
 # `locks`: a factor on how high its locks' ridges stand and how much they lean (hair that lies flat under a hood or
 # a hat).
 # All PLACEHOLDER by eye, beside the reference's bowl cuts (docs/PORTRAITS.md, round 109).
+# (round 147) `cut` -5 degrees (-12.5 until then): the fringe ends on the middle of the forehead, as the
+# reference's bowl cuts do; at -12.5 it ended two fingers over the eyes, on the brows in a picture.
 _e = lambda k, d: [float(t) for t in os.environ.get(k, d).split(',')]
 BOWL = dict(
-    cut=-12.5, end=-43.0, over=(8, 6, 35, 30), lift=1.0, round=1.0,
+    cut=-5.0, end=-43.0, over=(8, 6, 35, 30), lift=1.0, round=1.0,
     comb=(0.03, 1.6, 0.12, 0.8),
     shell=dict(h=0.085, up=9.0, shade=0.75),
     thin=0.35, thin_over=0.5,

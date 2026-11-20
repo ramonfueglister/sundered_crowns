@@ -270,7 +270,7 @@ pub(crate) fn mh_pick(p: &Look, long_hair: bool) -> Option<(String, String)> {
         let name = if let Some(c) = coily.filter(|_| !(long_hair && p.age >= 7.0 && p.hair_style() == Hair::Veil)) {
             // (round 111) tightly curled hair: one mass, by sex, age and how much of it is left (under a veil that
             // hides all hair there is none, as below; under a hood on the head it is the cut that lies closest)
-            let hooded = p.dress.set().is_some_and(|d| d.head_covered(p.female, p.age, p.seed));
+            let hooded = p.dress.set().is_some_and(|d| d.hair_flat(p.female, p.age, p.seed));
             if p.age < 7.0 {
                 c.small
             } else if long_hair {
@@ -299,18 +299,19 @@ pub(crate) fn mh_pick(p: &Look, long_hair: bool) -> Option<(String, String)> {
         } else {
             // a dress with a table has its own hair for a head that loses it (under the hood on the head and
             // under a coif the hair lies flat, and a bare top has no cards that could come through the cloth)
-            let bare = p.dress.set().filter(|d| !d.head_covered(p.female, p.age, p.seed));
+            let bare = p.dress.set().filter(|d| !d.hair_flat(p.female, p.age, p.seed));
             if bald > 0.75 {
                 // (round 134) under a hat the horseshoe round a bare top shows below the brim
-                let hatted = p.dress.set().filter(|d| d.hat_of(p.female, p.age, p.seed));
-                hatted.or(bare).map_or("bald01", |d| d.hair_bald)
+                // (round 147) and under a circlet: nothing is over the bare top there
+                let hatted = p.dress.set().filter(|d| d.hat_of(p.female, p.age, p.seed) || !d.head_covered(p.female, p.age, p.seed));
+                hatted.map_or("bald01", |d| d.hair_bald)
             } else if bald > 0.4 {
                 p.dress.set().map_or("receding01", |d| bare.map_or(d.hair_hooded, |d| d.hair_receding))
             } else if p.u(CURL) > 0.62 {
                 p.dress.set().map_or("curly01", |d| bare.map_or(d.hair_hooded, |d| d.hair_curly))
             } else if let Some(d) = p.dress.set() {
                 // under the hood on the head, and under a coif, the hair lies flat
-                if d.head_covered(p.female, p.age, p.seed) { d.hair_hooded } else { d.hair_of(p.seed, p.age) }
+                if d.hair_flat(p.female, p.age, p.seed) { d.hair_hooded } else { d.hair_of(p.seed, p.age) }
             } else if p.stand <= 1 && r < 0.6 || p.age < 13.0 && r < 0.5 {
                 // working people and many boys: cropped short
                 "crop01"

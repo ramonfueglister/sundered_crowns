@@ -39,6 +39,27 @@ fn pieces(s: &[Surface]) -> (Vec<&Surface>, Vec<&Surface>, Vec<&Surface>) {
     (plain(&|s| s.mat.metal == 1.0), plain(&|s| s.mat.metal == 0.0 && s.mat.rough < 0.2), plain(&|s| s.mat.metal == 0.0 && s.mat.rough >= 0.2 && s.mat.rough < 0.5))
 }
 
+/// A band's foot and top in front, over the face's middle.
+fn front_of(band: &Surface, cz: f32) -> (f32, f32) {
+    band.pos.iter().filter(|q| q[0].abs() < 0.15 && q[2] > cz).fold((f32::MAX, f32::MIN), |(lo, hi), q| (lo.min(q[1]), hi.max(q[1])))
+}
+
+/// Hair through a band, as the fillet's test counts it: round the band's middle in 72 directions, corners of the
+/// hair's bundles and strands at the band's height there that stand further out than it.
+fn hair_through(surfaces: &[Surface], band: &Surface) -> usize {
+    let range = |a: usize| band.pos.iter().fold((f32::MAX, f32::MIN), |(lo, hi), q| (lo.min(q[a]), hi.max(q[a])));
+    let mid = [(range(0).0 + range(0).1) / 2.0, (range(2).0 + range(2).1) / 2.0];
+    let bin = |q: &V3| (((q[0] - mid[0]).atan2(q[2] - mid[1]).to_degrees() + 180.0) / 5.0).min(71.0) as usize;
+    let far = |q: &V3| (q[0] - mid[0]).hypot(q[2] - mid[1]);
+    let mut ring = [(f32::MAX, f32::MIN, 0f32); 72];
+    for q in &band.pos {
+        let r = &mut ring[bin(q)];
+        *r = (r.0.min(q[1]), r.1.max(q[1]), r.2.max(far(q)));
+    }
+    let strands = surfaces.iter().filter(|s| s.tex.as_deref().is_some_and(|t| t.contains("_body.") || t.contains("_rope.")));
+    strands.flat_map(|s| &s.pos).filter(|q| { let r = ring[bin(q)]; q[1] > r.0 + 0.03 && q[1] < r.1 - 0.03 && far(q) > r.2 }).count()
+}
+
 #[test]
 fn who_is_of_rank_wears_the_courts_dress_and_nobody_else() {
     // Until round 144 England's table knew one estate: a king stood in a villager's russet gown, since the game
@@ -97,9 +118,10 @@ fn the_courts_gown_is_of_strong_cloth_with_buttons_of_metal_and_some_of_two_clot
         assert!(strength(&cb) > 3.0 && (0..3).any(|i| (cb[i] - ca[i]).abs() > 0.02), "person {k}: the court's cloth {cb:?} against {ca:?}");
         (strong.0, strong.1) = (strong.0 + strength(&ca), strong.1 + strength(&cb));
         // buttons of metal: balls of 80 triangles each, in a surface of their own without an image
-        // (round 146: a lady's circlet is metal with stones too, on the head; the buttons lie under the chin)
+        // (round 146: a lady's circlet is metal with stones too, on the head, and since round 147 a lord's; the
+        // buttons lie under the chin)
         let (metal, stones, pearls) = pieces(&b.surfaces);
-        let circlet = usize::from(d.fillet_of(female, age, high.seed));
+        let circlet = usize::from(d.circlet_of(female, age, high.seed).is_some());
         assert!(stones.len() == circlet && pearls.is_empty(), "person {k}: no stones without a crown or a circlet");
         let metal: Vec<&Surface> = metal.into_iter().filter(|s| s.pos.iter().all(|q| q[1] < b.chin)).collect();
         assert!(pieces(&a.surfaces).0.is_empty(), "person {k}: the common people have no metal");
@@ -233,21 +255,9 @@ fn a_lady_shows_her_plaits_until_fifty_and_seven_in_ten_of_those_wear_a_circlet(
         }
         let hair = out.surfaces.iter().find(|s| s.tex.as_deref().is_some_and(|t| t.contains("_body."))).expect("the hair");
         let range = |s: &Surface, a: usize| s.pos.iter().fold((f32::MAX, f32::MIN), |(lo, hi), q| (lo.min(q[a]), hi.max(q[a])));
-        let front = b.pos.iter().filter(|q| q[0].abs() < 0.15 && q[2] > out.cz).fold((f32::MAX, f32::MIN), |(lo, hi), q| (lo.min(q[1]), hi.max(q[1])));
+        let front = front_of(b, out.cz);
         let (crown, (hx0, hx1), (bx0, bx1), (by0, by1)) = (range(hair, 1).1, range(hair, 0), range(b, 0), range(b, 1));
-        // hair through the band, as the fillet's test counts it: round the band's middle in 72 directions, corners
-        // of the hair at the band's height there that stand further out than it
-        let mid = [(bx0 + bx1) / 2.0, (range(b, 2).0 + range(b, 2).1) / 2.0];
-        let bin = |q: &V3| (((q[0] - mid[0]).atan2(q[2] - mid[1]).to_degrees() + 180.0) / 5.0).min(71.0) as usize;
-        let far = |q: &V3| (q[0] - mid[0]).hypot(q[2] - mid[1]);
-        let mut ring = [(f32::MAX, f32::MIN, 0f32); 72];
-        for q in &b.pos {
-            let r = &mut ring[bin(q)];
-            *r = (r.0.min(q[1]), r.1.max(q[1]), r.2.max(far(q)));
-        }
-        let out_of = |q: &&V3| { let r = ring[bin(q)]; q[1] > r.0 + 0.03 && q[1] < r.1 - 0.03 && far(q) > r.2 };
-        let strands = out.surfaces.iter().filter(|s| s.tex.as_deref().is_some_and(|t| t.contains("_body.") || t.contains("_rope.")));
-        let through = strands.flat_map(|s| &s.pos).filter(out_of).count();
+        let through = hair_through(&out.surfaces, b);
         worst = (worst.0.min(front.0 - eyes), worst.1.max(front.0 - eyes), worst.2.max(through));
         if show() {
             println!("person {k} of {}: the band's front {:.1} cm over the eyes, {:.1} cm high, {:.1} cm broad on hair {:.1} cm broad; {through} corners of hair through it", p.age, 10.0 * (front.0 - eyes), 10.0 * (front.1 - front.0), 10.0 * (bx1 - bx0), 10.0 * (hx1 - hx0));
@@ -263,4 +273,53 @@ fn a_lady_shows_her_plaits_until_fifty_and_seven_in_ten_of_those_wear_a_circlet(
         println!("{with} with a circlet, {without} without; its foot {:.1} to {:.1} cm over the eyes; hair through it at most {} corners", 10.0 * worst.0, 10.0 * worst.1, worst.2);
     }
     assert!(show() || (with >= 10 && without >= 10), "{with} with a circlet, {without} without");
+}
+
+#[test]
+fn a_lord_with_nothing_else_on_the_head_wears_a_circlet_five_in_ten_on_hair_that_lies_flat() {
+    // (round 147) Effigies and weepers of 1337, 1369 and 1371 wear a circlet on the hair (the page read names
+    // them). A lord from 15 whose head is bare (no hood on it, no coif, no hat) wears one by a digit of his seed.
+    let (c, e) = (&COURT_1356, &ENGLAND_1356);
+    let count = |d: &sc_portrait::dress::DressSet, age: f32| (0..100_000u32).filter(|&s| d.circlet_of(false, age, s).is_some()).count();
+    // (of ten digits: the hood on the head four, a hat two, a coif one from 30)
+    assert_eq!((count(c, 14.0), count(c, 25.0), count(c, 45.0), count(e, 25.0), count(&CROWNED_1356, 25.0)), (0, 20_000, 15_000, 0, 0));
+    assert!((0..100_000u32).all(|s| c.circlet_of(false, 45.0, s).is_none() || (!c.head_covered(false, 45.0, s) && c.hair_flat(false, 45.0, s))));
+    assert!((0..100_000u32).all(|s| c.circlet_of(true, 25.0, s).is_some() == c.fillet_of(true, 25.0, s)));
+
+    let Some(h) = head() else { return };
+    let (mut with, mut without, mut worst) = (0, 0, (f32::MAX, f32::MIN, 0usize));
+    for k in (1..160).step_by(2) {
+        let p = person_of(k, false, 17.0 + (k % 12) as f32 * 4.0, 3);
+        let out = build(&h, &p, 1);
+        let (metal, stones, _) = pieces(&out.surfaces);
+        let eye = out.surfaces.iter().find(|s| s.tex.as_deref().is_some_and(|t| t.contains("eyeball"))).expect("the eyes");
+        let eyes = eye.pos.iter().map(|q| q[1]).sum::<f32>() / eye.pos.len() as f32;
+        let band = metal.iter().find(|s| s.pos.iter().all(|q| q[1] > eyes));
+        assert_eq!(band.is_some(), c.circlet_of(false, p.age, p.seed).is_some(), "person {k} of {}", p.age);
+        let Some(b) = band else {
+            without += 1;
+            continue;
+        };
+        with += 1;
+        // nothing else on the head, and the hair under it the hair that lies flat (or a bare top's horseshoe)
+        for name in [c.hood_up, c.coif, c.hat, c.hat_cocked] {
+            assert!(!out.surfaces.iter().any(|s| s.tex.as_deref().is_some_and(|t| t.contains(&format!("/{name}.")))), "person {k}: {name} under a circlet");
+        }
+        let flat = [c.hair_hooded, c.hair_bald].iter().any(|n| out.surfaces.iter().any(|s| s.tex.as_deref().is_some_and(|t| t.contains(&format!("/{n}_")))));
+        assert!(flat, "person {k}: the hair under a circlet does not lie flat");
+        let stone = stones.iter().find(|s| s.pos.iter().all(|q| q[1] > eyes)).unwrap_or_else(|| panic!("person {k}: no stones"));
+        assert_eq!(stone.pos.len() / 3, 12 * 64, "person {k}");
+        let (front, through) = (front_of(b, out.cz), hair_through(&out.surfaces, b));
+        worst = (worst.0.min(front.0 - eyes), worst.1.max(front.0 - eyes), worst.2.max(through));
+        if show() {
+            println!("person {k} of {}: the band's front {:.1} cm over the eyes; {through} corners of hair through it", p.age, 10.0 * (front.0 - eyes));
+            continue;
+        }
+        assert!(front.0 - eyes > 0.25 && front.0 - eyes < 0.7, "person {k}: the band's foot {} cm over the eyes", 10.0 * (front.0 - eyes));
+        assert_eq!(through, 0, "person {k}: hair through the band");
+    }
+    if show() {
+        println!("{with} lords with a circlet, {without} without; its foot {:.1} to {:.1} cm over the eyes; hair through it at most {} corners", 10.0 * worst.0, 10.0 * worst.1, worst.2);
+    }
+    assert!(show() || (with >= 8 && without >= 40), "{with} with a circlet, {without} without");
 }
