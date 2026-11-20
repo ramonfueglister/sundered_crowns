@@ -575,20 +575,6 @@ fn on_working_days(m: &AbstractModel<DailyClock>, c: &mut [f64], i: &mut [f64], 
     }
 }
 
-/// EXPERIMENT: per firm the wages (with the employer's contributions) of its workers who are away today, which it
-/// does not pay.
-fn unpaid(m: &AbstractModel<DailyClock>) -> Vec<f64> {
-    let f = &m.firms;
-    if m.ext.absences.is_empty() {
-        return vec![0.0; f.len()];
-    }
-    let t = m.ext.periods_computed(m.agg.t) + 1;
-    let away = m.ext.absences.of_firms(f.len(), &m.w_act.O_h, |id| f.index(id), t);
-    (0..f.len())
-        .map(|i| (1.0 + m.prop.tau_SIF) * f.w_i[i] * away[i] as f64 * m.agg.P_bar_HH)
-        .collect()
-}
-
 impl Extension for DailyClock {
     /// The port's `growth_inflation_expectations` (A.6, A.7, A.10) on windows: expected GDP, growth and inflation of
     /// the next period.
@@ -799,23 +785,6 @@ impl Extension for DailyClock {
         Y
     }
 
-    // EXPERIMENT (not for main): the workers who are away are not paid for the day
-    fn update_workers_wages(m: &mut AbstractModel<Self>) {
-        base::update_workers_wages(m);
-        if !m.ext.absences.is_empty() {
-            let t = m.ext.periods_computed(m.agg.t) + 1;
-            let a = &m.ext.absences;
-            for k in 0..a.worker.len() {
-                if (a.first[k] as usize..=a.last[k] as usize).contains(&t) {
-                    let h = a.worker[k] as usize;
-                    if m.w_act.O_h[h].is_some() {
-                        m.w_act.w_h[h] = 0.0;
-                    }
-                }
-            }
-        }
-    }
-
     /// The port's price index (A.11, A.12), which weights the prices of the firms with what they made in the period.
     /// On a day on which no firm works (economy feature 19) there is nothing to weight with: the price index stays
     /// where it was and the inflation of the day is 0.
@@ -888,9 +857,6 @@ impl Extension for DailyClock {
     /// Catullo 2023, eq. 23). The stock stays in the firm's books in units; it is profit on the day it is sold.
     fn firms_profits(m: &mut AbstractModel<Self>) -> Vec<f64> {
         let mut pi = base::firms_profits(m);
-        for (i, u) in unpaid(m).into_iter().enumerate() {
-            pi[i] += u;
-        }
         if m.ext.owner {
             for i in 0..pi.len() {
                 pi[i] -= m.firms.P_i[i] * m.firms.DS_i[i];
@@ -986,9 +952,6 @@ impl Extension for DailyClock {
     /// of a loss, the other side of [`Extension::households_income_firms`].
     fn firms_deposits(m: &mut AbstractModel<Self>) -> Vec<f64> {
         let mut d = base::firms_deposits(m);
-        for (i, u) in unpaid(m).into_iter().enumerate() {
-            d[i] += u;
-        }
         if m.ext.owner {
             let borne = std::mem::take(&mut m.ext.borne);
             for i in 0..d.len() {
