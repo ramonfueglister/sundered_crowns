@@ -93,81 +93,92 @@ function seatOf(s: WorldState, realm: number): number {
   return -1;
 }
 
+/** A happening of the chronicle, and the index of the realms and the persons of history of a state. */
+type Event = Chronicle['events'][number];
+type Index = ReturnType<typeof indexOf>;
+
 /** What one happening does to the state. Returns false when it could not be applied (the realm is not in this world,
  *  or the person is not in the world). */
-function happen(s: WorldState, w: World, c: Chronicle, e: Chronicle['events'][number]): boolean {
+function happen(s: WorldState, w: World, c: Chronicle, e: Event): boolean {
   const x = indexOf(s),
     P = s.person.cols,
     R = s.realm.cols,
     cp = c.persons[e.person];
   const realm = e.realm ? x.realms.get(e.realm) : undefined;
-  if (e.what === Happening.Enter) {
-    if (realm === undefined) return false;
-    const place = seatOf(s, realm);
-    if (place < 0 || x.persons.has(cp.key)) return false;
-    const id = spawnPerson(s),
-      seed = s.seed >>> 0,
-      kh = keyHash(cp.key);
-    const born = c.bornDay[e.person];
-    P.born[id] = born ?? BORN_UNKNOWN;
-    P.sex[id] = cp.sex;
-    P.mother[id] = -1;
-    P.father[id] = -1;
-    P.role[id] = 0;
-    P.agent[id] = 0; // as the economy leaves every person outside it (src/sim/systems/economy.ts)
-    P.firm[id] = -1;
-    P.died[id] = ALIVE;
-    P.dies[id] = ALIVE;
-    P.bears[id] = ALIVE; // a ruler dies on the day of the chronicle, and bears no child here
-    P.home[id] = -1;
-    P.moves[id] = ALIVE; // and does not move (src/sim/systems/moves.ts)
-    setRulerCulture(s, id, realm); // the culture and faith of the realm the ruler enters the world in
-    const z = (j: number) => normal(seed, kh, K.trait + 2 * j);
-    P.iq[id] = clampU8(100 + 15 * z(0));
-    P.o[id] = clampU8(50 + 10 * z(1));
-    P.c[id] = clampU8(50 + 10 * z(2));
-    P.e[id] = clampU8(50 + 10 * z(3));
-    P.a[id] = clampU8(50 + 10 * z(4));
-    P.n[id] = clampU8(50 + 10 * z(5));
-    giveRulerGenes(s, w, id, cp.key, place);
-    const f = spawn(s.family),
-      F = s.family.cols;
-    F.place[f] = place;
-    F.man[f] = cp.sex === 1 ? id : -1;
-    F.woman[f] = cp.sex === 0 ? id : -1;
-    F.lot[f] = NO_LOT; // a ruler holds no parcel of a town: castles and residences are not built yet
-    P.family[id] = f;
-    const named: NamedPerson = { person: id, key: cp.key, name: cp.name, house: cp.house, qid: cp.qid };
-    s.named.push(named);
-    return true;
-  }
+  if (e.what === Happening.Enter) return realm !== undefined && enter(s, w, c, e, x, realm);
   const id = x.persons.get(cp.key);
   if (id === undefined) return false;
-  /** The crown of `r` that `id` leaves goes to a co-ruler who still reigns that day, else to nobody. */
-  const leave = (r: number) => {
-    let next = -1;
-    for (const g of c.reignsOf.get(s.realmText[r].key) ?? []) {
-      if (g.person === e.person || g.start > e.day || (g.end !== null && g.end <= e.day)) continue;
-      const q = x.persons.get(c.persons[g.person].key);
-      if (q !== undefined && P.died[q] === ALIVE) {
-        next = q;
-        break;
-      }
-    }
-    R.holder[r] = next;
-  };
   if (e.what === Happening.Die) {
     P.died[id] = e.day;
-    for (let r = 0; r < s.realm.size; r++) if (R.holder[r] === id) leave(r);
+    for (let r = 0; r < s.realm.size; r++) if (R.holder[r] === id) passCrown(s, c, e, x, r);
     return true;
   }
   if (realm === undefined || P.died[id] !== ALIVE) return false;
   if (e.what === Happening.End) {
-    if (R.holder[realm] === id) leave(realm);
+    if (R.holder[realm] === id) passCrown(s, c, e, x, realm);
     return true;
   }
   R.holder[realm] = id; // Accede
   return true;
+}
+
+/** The person of history of `e` enters the world in the seat of `realm`, with a family of their own. Returns false
+ *  when the realm has no place, or the person is in the world already. */
+function enter(s: WorldState, w: World, c: Chronicle, e: Event, x: Index, realm: number): boolean {
+  const P = s.person.cols,
+    cp = c.persons[e.person];
+  const place = seatOf(s, realm);
+  if (place < 0 || x.persons.has(cp.key)) return false;
+  const id = spawnPerson(s),
+    seed = s.seed >>> 0,
+    kh = keyHash(cp.key);
+  const born = c.bornDay[e.person];
+  P.born[id] = born ?? BORN_UNKNOWN;
+  P.sex[id] = cp.sex;
+  P.mother[id] = -1;
+  P.father[id] = -1;
+  P.role[id] = 0;
+  P.agent[id] = 0; // as the economy leaves every person outside it (src/sim/systems/economy.ts)
+  P.firm[id] = -1;
+  P.died[id] = ALIVE;
+  P.dies[id] = ALIVE;
+  P.bears[id] = ALIVE; // a ruler dies on the day of the chronicle, and bears no child here
+  P.home[id] = -1;
+  P.moves[id] = ALIVE; // and does not move (src/sim/systems/moves.ts)
+  setRulerCulture(s, id, realm); // the culture and faith of the realm the ruler enters the world in
+  const z = (j: number) => normal(seed, kh, K.trait + 2 * j);
+  P.iq[id] = clampU8(100 + 15 * z(0));
+  P.o[id] = clampU8(50 + 10 * z(1));
+  P.c[id] = clampU8(50 + 10 * z(2));
+  P.e[id] = clampU8(50 + 10 * z(3));
+  P.a[id] = clampU8(50 + 10 * z(4));
+  P.n[id] = clampU8(50 + 10 * z(5));
+  giveRulerGenes(s, w, id, cp.key, place);
+  const f = spawn(s.family),
+    F = s.family.cols;
+  F.place[f] = place;
+  F.man[f] = cp.sex === 1 ? id : -1;
+  F.woman[f] = cp.sex === 0 ? id : -1;
+  F.lot[f] = NO_LOT; // a ruler holds no parcel of a town: castles and residences are not built yet
+  P.family[id] = f;
+  const named: NamedPerson = { person: id, key: cp.key, name: cp.name, house: cp.house, qid: cp.qid };
+  s.named.push(named);
+  return true;
+}
+
+/** The crown of `r` that the person of `e` leaves goes to a co-ruler who still reigns that day, else to nobody. */
+function passCrown(s: WorldState, c: Chronicle, e: Event, x: Index, r: number): void {
+  const P = s.person.cols;
+  let next = -1;
+  for (const g of c.reignsOf.get(s.realmText[r].key) ?? []) {
+    if (g.person === e.person || g.start > e.day || (g.end !== null && g.end <= e.day)) continue;
+    const q = x.persons.get(c.persons[g.person].key);
+    if (q !== undefined && P.died[q] === ALIVE) {
+      next = q;
+      break;
+    }
+  }
+  s.realm.cols.holder[r] = next;
 }
 
 /** Applies every happening of the chronicle from day `from` up to and including day `to`; returns those that could not

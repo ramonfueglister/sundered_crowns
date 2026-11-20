@@ -5,7 +5,8 @@ import { readFileSync } from 'node:fs';
 import { loadWorld, loadSetup, loadItineraries } from '../tools/sim/load';
 import { createWorldState } from '../src/sim/setup';
 import { compileChronicle, dayOf, type ChronicleJson } from '../src/sim/content/chronicle';
-import { compileItineraries, stayOn, staysOf, type ItineraryFile } from '../src/sim/content/itineraries';
+import { compileItineraries, stayOn, staysOf, tracksOf, type ItineraryFile } from '../src/sim/content/itineraries';
+import { Travels } from '../src/sim/content/travel';
 import { placePeople, rulersOnMap } from '../src/net/people';
 import { rowOf } from '../src/sim/people/archive';
 
@@ -82,6 +83,12 @@ describe('a ruler on a journey', () => {
     expect(placePeople(s, home, stays).id).not.toContain(edward.uid);
     // without the itinerary the ruler is at home, as before
     expect(rulersOnMap(s)[0].place).toBe(home);
+    // with the ways the map is told the way ahead: from Paris, the last place named, where he stays
+    const it1 = compileItineraries(file, w.lat, w.lon, 1291),
+      tr = new Travels(w),
+      [going] = rulersOnMap(s, staysOf(s, it1, tr), tracksOf(s, it1, tr, 120));
+    expect(going.place).toBe(PARIS);
+    expect(going.track).toEqual({ day: [day('1291-03-10'), s.day + 120], place: [PARIS, PARIS] });
   }, 60_000); // a fresh world of 1291 founds its economies
 });
 

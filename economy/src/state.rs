@@ -18,9 +18,10 @@ use beforeit::{
 };
 
 use crate::Economy;
-use crate::clock::{Absences, Attendance, DailyClock, OWNER_PLANS, OwnerProfit};
+use crate::clock::{Attendance, DailyClock, OWNER_PLANS, OwnerProfit};
 use crate::past::{Past, Phase, Series};
 use crate::trade::{Cities, Merchants, Routes};
+use crate::workers::{Absences, BY_THE_DAY, Today};
 
 const TAG: &[u8; 4] = b"SCEC";
 /// The tag of cities with their merchants ([`save_cities`]).
@@ -35,13 +36,13 @@ pub const FORMAT_CITIES: u32 = 2;
 /// savings (economy feature 15). 8: the crown that buys with what it took in (economy feature 16). 9: firm and
 /// owner as one household (economy feature 18). 10: the working days of the firms (economy feature 19). 11: the
 /// profits the owners plan their spending on (economy feature 20). 12: the workers who are away and the materials
-/// they left unused (economy feature 22).
-/// States of formats 4 to 11 are still read and become format 12 when they are saved ([`load`]); formats 4 and 5
+/// they left unused (economy feature 22). 13: the contracts of the workers (economy feature 23).
+/// States of formats 4 to 12 are still read and become format 13 when they are saved ([`load`]); formats 4 and 5
 /// keep the whole past, as they had it, none before 7 spends out of savings, none before 8 has a crown that buys with
 /// its revenue, none before 9 has owners who bear losses, none before 10 has working days, none before 11 has the
-/// profits of the owners (they are gathered anew from the first period that is computed), and none before 12 has
-/// workers who are away.
-pub const FORMAT: u32 = 12;
+/// profits of the owners (they are gathered anew from the first period that is computed), none before 12 has
+/// workers who are away, and none before 13 has contracts.
+pub const FORMAT: u32 = 13;
 const NONE: u32 = u32::MAX;
 /// The length of the last state of cities written ([`save_cities`]): how much room the next one is given at once.
 /// It changes no byte of a state.
@@ -975,6 +976,8 @@ fn put_clock(o: &mut Out, c: &DailyClock) {
         absences,
         lost: _,
         unused,
+        contracts,
+        today: _,
     } = c;
     o.n(*plan);
     o.n(*window);
@@ -1066,6 +1069,7 @@ fn put_clock(o: &mut Out, c: &DailyClock) {
         o.u32(last[k]);
     }
     o.f64s(unused);
+    o.bytes(contracts);
 }
 
 fn get_series(i: &mut In, window: usize) -> Res<Series> {
@@ -1241,6 +1245,11 @@ fn get_clock(i: &mut In, format: u32) -> Res<DailyClock> {
         Absences::default()
     };
     let unused = if format >= 12 { i.f64s()? } else { Vec::new() };
+    // formats before 13 know no contracts; the workers of an economy are checked when the state is read ([`load`])
+    let contracts = if format >= 13 { i.bytes()? } else { Vec::new() };
+    if let Some(&x) = contracts.iter().find(|&&x| x > BY_THE_DAY) {
+        return Err(format!("a contract of the kind {x}"));
+    }
     Ok(DailyClock {
         plan,
         window,
@@ -1265,6 +1274,8 @@ fn get_clock(i: &mut In, format: u32) -> Res<DailyClock> {
         absences,
         lost: Vec::new(),
         unused,
+        contracts,
+        today: Today::default(),
     })
 }
 
@@ -1359,6 +1370,13 @@ pub fn load(bytes: &[u8]) -> Result<(AbstractModel<DailyClock>, Xoshiro), String
         .find(|&&h| h as usize >= model.w_act.len())
     {
         return Err(format!("an absence of the worker {h} of {}", model.w_act.len()));
+    }
+    let contracts = model.ext.contracts.len();
+    if contracts != 0 && contracts != model.w_act.len() {
+        return Err(format!(
+            "contracts of {contracts} workers in an economy of {}",
+            model.w_act.len()
+        ));
     }
     let unused = model.ext.unused.len();
     if unused != 0 && unused != model.firms.len() {

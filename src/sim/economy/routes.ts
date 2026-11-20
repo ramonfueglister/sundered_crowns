@@ -36,8 +36,8 @@ const LAND = 0,
 const kind = (flag: number): number =>
   flag & (EDGE_SEA | EDGE_COAST | EDGE_STRAIT) ? WATER : flag & EDGE_RIVER ? RIVER : LAND;
 
-/** The ways from one place to the places wanted: the labour of carrying a tonne (days), and the kilometres of each
- *  kind. The lists of `room` are used again for every search. */
+/** What one search over the net writes: per place the labour of carrying a tonne there (days), the kilometres of
+ *  each kind, whether it is done and whether it is wanted, and the heap of the places to look at. */
 interface Room {
   labour: Float64Array;
   km: Float64Array;
@@ -50,9 +50,12 @@ interface Room {
 const LENGTHS = new WeakMap<World, Map<WayNet | null, Float32Array>>();
 /** The kilometres of every edge of the world's net as goods count them (above): the ways' efforts on land, or the
  *  straight line off them; the straight line on rivers and water, and everywhere in a world without ways. */
-function edgeKm(w: World, net: WayNet | null): Float32Array {
+export function edgeKm(w: World, net: WayNet | null): Float32Array {
   let kept = LENGTHS.get(w);
-  if (!kept) LENGTHS.set(w, (kept = new Map()));
+  if (!kept) {
+    kept = new Map();
+    LENGTHS.set(w, kept);
+  }
   const had = kept.get(net);
   if (had) return had;
   const len = Float32Array.from(w.adjKm);
@@ -67,6 +70,8 @@ function edgeKm(w: World, net: WayNet | null): Float32Array {
   return len;
 }
 
+/** The ways from one place to the places wanted: the labour of carrying a tonne (days), and the kilometres of each
+ *  kind. The lists of `room` are used again for every search. */
 function ways(
   w: World,
   from: number,
@@ -152,24 +157,20 @@ export function cityRoutes(
   t: CalibrationTable,
   net: WayNet | null = null,
 ): CityRoutes {
+  checkRoutes(t);
   const r = t.routes,
     list = Array.from(places),
-    n = list.length,
-    G = t.sectors.length;
+    n = list.length;
   const speed = r.km_per_day.value,
     cost = r.day_wages_per_tonne_km.value,
     weight = r.tonnes_per_pound.value,
     elasticity = r.stock_elasticity.value;
-  for (const v of [speed.land, speed.river_down, speed.river_up, speed.sea])
-    if (!(v > 0)) throw new Error(`the routes of ${t.case} have a speed of ${v} km a day`);
-  for (const v of [cost.land, cost.river_down, cost.river_up, cost.sea, ...weight])
-    if (!(v >= 0)) throw new Error(`the routes of ${t.case} have a labour or a weight of ${v}`);
-  if (weight.length !== G)
-    throw new Error(`the routes of ${t.case} have the weight of ${weight.length} products, the table has ${G} sectors`);
-  if (!(elasticity >= 0)) throw new Error(`the routes of ${t.case} have an elasticity of ${elasticity}`);
   const key = JSON.stringify([list, r, net ? [net.year, net.laid, net.size] : null]);
   let kept = CACHE.get(w);
-  if (!kept) CACHE.set(w, (kept = new Map()));
+  if (!kept) {
+    kept = new Map();
+    CACHE.set(w, kept);
+  }
   const had = kept.get(key);
   if (had) return had;
   // a river: the mean of both directions, of the labour and of the time
@@ -217,4 +218,22 @@ export function cityRoutes(
   const out = { cities: n, days, labour, weight: [...weight], elasticity };
   kept.set(key, out);
   return out;
+}
+
+/** Throws unless every speed of the table's routes is above 0, every labour and weight 0 or more, every sector has a
+ *  weight, and the elasticity is 0 or more. */
+function checkRoutes(t: CalibrationTable): void {
+  const r = t.routes,
+    G = t.sectors.length;
+  const speed = r.km_per_day.value,
+    cost = r.day_wages_per_tonne_km.value,
+    weight = r.tonnes_per_pound.value,
+    elasticity = r.stock_elasticity.value;
+  for (const v of [speed.land, speed.river_down, speed.river_up, speed.sea])
+    if (!(v > 0)) throw new Error(`the routes of ${t.case} have a speed of ${v} km a day`);
+  for (const v of [cost.land, cost.river_down, cost.river_up, cost.sea, ...weight])
+    if (!(v >= 0)) throw new Error(`the routes of ${t.case} have a labour or a weight of ${v}`);
+  if (weight.length !== G)
+    throw new Error(`the routes of ${t.case} have the weight of ${weight.length} products, the table has ${G} sectors`);
+  if (!(elasticity >= 0)) throw new Error(`the routes of ${t.case} have an elasticity of ${elasticity}`);
 }

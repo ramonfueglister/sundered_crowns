@@ -131,16 +131,32 @@ export function rowsThatStay(s: WorldState): Uint8Array {
 /** The dead whom nothing in the running world needs go to the archive, and the rows of the others close up. Returns
  *  the archived persons, null when nobody went (and then nothing changes). */
 export function archiveDead(s: WorldState): ArchivedPersons | null {
-  const t = s.person,
-    P = t.cols,
-    n = t.size,
+  const n = s.person.size,
     keep = rowsThatStay(s);
   let stay = 0;
   for (let id = 0; id < n; id++) stay += keep[id];
   const gone = n - stay;
   if (gone === 0) return null;
-  // the archived persons, in the order of their uids
-  const A = makeColumns(ARCHIVE_SCHEMA, gone),
+  const A = archivedColumns(s, keep, gone);
+  const { next, row } = closeUp(s.person, keep, stay);
+  renumber(s, row);
+  // a new table: what the systems derive from the persons (the lists of events, of the living, of the places) is
+  // kept by table, so it is built anew from it, as for a loaded state
+  s.person = next;
+  const year: ArchiveYear = { day: s.day, persons: gone, first: A.uid[0], last: A.uid[gone - 1] };
+  s.archive.push(year);
+  const out: ArchivedPersons = { day: s.day, persons: gone, cols: A };
+  const box = outbox.get(s);
+  if (box) box.push(out);
+  else outbox.set(s, [out]);
+  return out;
+}
+
+/** The `gone` persons who do not stay, in the order of their uids. */
+function archivedColumns(s: WorldState, keep: Uint8Array, gone: number): ArchivedPersons['cols'] {
+  const P = s.person.cols,
+    n = s.person.size,
+    A = makeColumns(ARCHIVE_SCHEMA, gone),
     F = s.family.cols;
   let k = 0;
   for (let id = 0; id < n; id++) {
@@ -166,7 +182,17 @@ export function archiveDead(s: WorldState): ArchivedPersons | null {
     A.genes.set(P.genes.subarray(id * 2 * NG, (id + 1) * 2 * NG), k * 2 * NG);
     k++;
   }
-  // the rows that stay close up, in their order: runs of rows are copied column by column
+  return A;
+}
+
+/** The `stay` rows that stay close up in a new table, in their order: runs of rows are copied column by column.
+ *  `row` is the new row of every old one, −1 for those that went. */
+function closeUp(
+  t: WorldState['person'],
+  keep: Uint8Array,
+  stay: number,
+): { next: WorldState['person']; row: Int32Array } {
+  const n = t.size;
   const next = createTable(PERSON_SCHEMA, Math.max(1024, Math.ceil(stay * 1.25)));
   const row = new Int32Array(n).fill(-1),
     from = t.cols as Record<string, Column>,
@@ -189,7 +215,13 @@ export function archiveDead(s: WorldState): ArchivedPersons | null {
   }
   next.size = stay;
   next.alive.fill(1, 0, stay);
-  // everything that names a row names the new one
+  return { next, row };
+}
+
+/** Everything that names a row of the persons names its new one (`row`, from `closeUp`). */
+function renumber(s: WorldState, row: Int32Array): void {
+  const n = row.length,
+    F = s.family.cols;
   const re = (id: number) => (id >= 0 && id < n ? row[id] : -1);
   for (let f = 0; f < s.family.size; f++) {
     F.man[f] = re(F.man[f]);
@@ -200,16 +232,6 @@ export function archiveDead(s: WorldState): ArchivedPersons | null {
   const holder = s.realm.cols.holder;
   for (let r = 0; r < s.realm.size; r++) holder[r] = re(holder[r]);
   for (const x of s.named ?? []) x.person = re(x.person);
-  // a new table: what the systems derive from the persons (the lists of events, of the living, of the places) is
-  // kept by table, so it is built anew from it, as for a loaded state
-  s.person = next as typeof s.person;
-  const year: ArchiveYear = { day: s.day, persons: gone, first: A.uid[0], last: A.uid[gone - 1] };
-  s.archive.push(year);
-  const out: ArchivedPersons = { day: s.day, persons: gone, cols: A };
-  const box = outbox.get(s);
-  if (box) box.push(out);
-  else outbox.set(s, [out]);
-  return out;
 }
 
 /** The years of the archive that may hold `uid`, the latest first. */

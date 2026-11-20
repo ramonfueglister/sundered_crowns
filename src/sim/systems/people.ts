@@ -102,117 +102,166 @@ export function foundPeople(s: WorldState): void {
   s.nextUid = 0;
   s.archive = []; // the persons founded anew count from 0: their history goes with the old ones
   if (!hasCities(s.startYear)) return; // the cities of the start year (src/sim/content/cities.ts)
-  const st = stationary(),
-    wifeShare = housewives(),
-    seed = s.seed >>> 0,
-    P = person.cols,
-    F = family.cols,
-    day = s.day;
-  const z: Record<Trait, number[]> = { iq: [], o: [], c: [], e: [], a: [], n: [] };
-  const newFamily = (place: number, man: number, woman: number, seat: number) => {
-    const f = spawn(family);
-    F.place[f] = place;
-    F.man[f] = man;
-    F.woman[f] = woman;
-    F.seat[f] = seat;
-    return f;
+  const P = person.cols;
+  const founding: Founding = {
+    s,
+    family,
+    st: stationary(),
+    wifeShare: housewives(),
+    seed: s.seed >>> 0,
+    P,
+    F: family.cols,
+    day: s.day,
+    z: { iq: [], o: [], c: [], e: [], a: [], n: [] },
   };
-
   for (const city of citiesOf(s.startYear)) {
-    const n = Math.round(city.people / SCALE);
-    const ids: number[] = [],
-      age = new Map<number, number>();
-    // 1. sex and age from the stationary population
-    for (let k = 0; k < n; k++) {
-      const id = spawnPerson(s);
-      ids.push(id); // a founder's uid is the row (the founding counts from 0)
-      const u = u01(seed, id, K.age);
-      let y = 0;
-      while (y < st.cdf.length - 1 && st.cdf[y] <= u) y++;
-      const a = y + u01(seed, id, K.ageInYear);
-      P.sex[id] = u01(seed, id, K.sex) < st.pMale ? 1 : 0;
-      P.born[id] = day - Math.ceil(a * DAYS_PER_YEAR);
-      P.mother[id] = -1;
-      P.father[id] = -1;
-      P.family[id] = -1;
-      P.died[id] = ALIVE;
-      P.dies[id] = ALIVE;
-      P.bears[id] = ALIVE;
-      P.home[id] = -1;
-      P.moves[id] = ALIVE;
-      age.set(id, ageOn(P.born[id], day));
-    }
-    // 2. the households: a woman is a housewife with the share of her age in a population that does not grow
-    // (src/sim/people/marriage.ts), the oldest first. Her husband is the free man of 18 or older whose age is
-    // nearest to hers plus three years, within ten; a housewife past the age at which a widow marries again has
-    // lost him with the chance that a man three years older than she has died since she reached that age.
-    const wives = ids
-      .filter(
-        (id) => P.sex[id] === 0 && u01(seed, id, K.housewife) < wifeShare[Math.min(119, Math.floor(age.get(id)!))],
-      )
-      .sort((x, y) => age.get(y)! - age.get(x)! || x - y);
-    const freeMen = new Set(ids.filter((id) => P.sex[id] === 1 && age.get(id)! >= GROOM_AGE_MIN));
-    for (const w of wives) {
-      const aw = age.get(w)!,
-        target = aw + GROOM_OLDER;
-      const widowed =
-        aw >= WIDOW_REMARRIES_BELOW &&
-        u01(seed, w, K.widow) >= survival(target) / survival(WIDOW_REMARRIES_BELOW + GROOM_OLDER);
-      let best = -1,
-        bestD: number = AGE_WINDOW.groom;
-      if (!widowed)
-        for (const m of freeMen) {
-          const d = Math.abs(age.get(m)! - target);
-          if (d < bestD || (d === bestD && m < best)) {
-            best = m;
-            bestD = d;
-          }
-        }
-      if (best >= 0) freeMen.delete(best);
-      const f = newFamily(city.place, best, w, 1);
-      P.family[w] = f;
-      if (best >= 0) P.family[best] = f;
-    }
-    // 3. everybody else lives in the household of a housewife who was 15 to 45 at their birth: her child, and her
-    // husband's, where she has one (in the household of a widow the parents are not known)
-    for (const id of ids) {
-      if (P.family[id] >= 0) continue;
-      const ca = age.get(id)!;
-      const mothers = wives.filter((w) => {
-        const d = age.get(w)! - ca;
-        return d >= MOTHER_AGE[0] && d <= MOTHER_AGE[1];
-      });
-      if (!mothers.length) continue;
-      const w = mothers[Math.floor(u01(seed, id, K.mother) * mothers.length)],
-        f = P.family[w];
-      P.family[id] = f;
-      if (F.man[f] >= 0) {
-        P.mother[id] = P.uid[w];
-        P.father[id] = P.uid[F.man[f]];
-        P.children[w]++;
-      }
-    }
+    const c = founders(founding, city.place, Math.round(city.people / SCALE));
+    const wives = households(founding, c);
+    children(founding, c, wives);
     // 4. whoever is left is a family of their own, without a seat
-    for (const id of ids) if (P.family[id] < 0) P.family[id] = newFamily(city.place, -1, -1, 0);
-    // 5. IQ and the Big Five: persons without known parents draw from the standard normal; children inherit by the
-    // infinitesimal model, z = h²·(z_mother + z_father)/2 + ε with ε ~ N(0, 1 − h⁴/2), which keeps the variance at 1.
-    // All parents are founders (the heads of the households have no known parents), so the founders are drawn first.
-    for (const id of ids)
-      if (P.mother[id] < 0)
-        TRAITS.forEach((t, j) => {
-          z[t][id] = normal(seed, id, K.trait + 2 * j);
-        });
-    for (const id of ids) {
-      const mo = rowOf(s, P.mother[id]),
-        fa = rowOf(s, P.father[id]);
-      if (mo < 0) continue;
-      TRAITS.forEach((t, j) => {
-        z[t][id] = inherit(t, z[t][mo], z[t][fa], normal(seed, id, K.trait + 2 * j));
-      });
-    }
-    for (const id of ids) writeTraits(P, id, (t) => z[t][id]);
+    for (const id of c.ids) if (P.family[id] < 0) P.family[id] = newFamily(founding, c.place, -1, -1, 0);
+    traits(founding, c.ids);
   }
   // (the genes follow the cultures: `giveGenes`, called by `foundPersonCultures`)
+}
+
+/** What the founding of every city shares: the world and its tables, the draws, and the traits drawn so far. */
+interface Founding {
+  s: WorldState;
+  family: WorldState['family'];
+  st: ReturnType<typeof stationary>;
+  wifeShare: ReturnType<typeof housewives>;
+  seed: number;
+  P: WorldState['person']['cols'];
+  F: WorldState['family']['cols'];
+  day: number;
+  /** IQ and the Big Five of each person as standard normal values, by row */
+  z: Record<Trait, number[]>;
+}
+
+/** The persons founded in one place, and their ages in years on the day of the founding. */
+interface Founders {
+  place: number;
+  ids: number[];
+  age: Map<number, number>;
+}
+
+function newFamily(founding: Founding, place: number, man: number, woman: number, seat: number): number {
+  const F = founding.F,
+    f = spawn(founding.family);
+  F.place[f] = place;
+  F.man[f] = man;
+  F.woman[f] = woman;
+  F.seat[f] = seat;
+  return f;
+}
+
+/** 1. The `n` persons of a place: sex and age from the stationary population. */
+function founders(founding: Founding, place: number, n: number): Founders {
+  const { s, st, seed, P, day } = founding;
+  const ids: number[] = [],
+    age = new Map<number, number>();
+  for (let k = 0; k < n; k++) {
+    const id = spawnPerson(s);
+    ids.push(id); // a founder's uid is the row (the founding counts from 0)
+    const u = u01(seed, id, K.age);
+    let y = 0;
+    while (y < st.cdf.length - 1 && st.cdf[y] <= u) y++;
+    const a = y + u01(seed, id, K.ageInYear);
+    P.sex[id] = u01(seed, id, K.sex) < st.pMale ? 1 : 0;
+    P.born[id] = day - Math.ceil(a * DAYS_PER_YEAR);
+    P.mother[id] = -1;
+    P.father[id] = -1;
+    P.family[id] = -1;
+    P.died[id] = ALIVE;
+    P.dies[id] = ALIVE;
+    P.bears[id] = ALIVE;
+    P.home[id] = -1;
+    P.moves[id] = ALIVE;
+    age.set(id, ageOn(P.born[id], day));
+  }
+  return { place, ids, age };
+}
+
+/** 2. The households: a woman is a housewife with the share of her age in a population that does not grow
+ *  (src/sim/people/marriage.ts), the oldest first. Her husband is the free man of 18 or older whose age is
+ *  nearest to hers plus three years, within ten; a housewife past the age at which a widow marries again has
+ *  lost him with the chance that a man three years older than she has died since she reached that age.
+ *  Returns the housewives, the oldest first. */
+function households(founding: Founding, c: Founders): number[] {
+  const { seed, P, wifeShare } = founding,
+    { ids, age } = c;
+  const wives = ids
+    .filter((id) => P.sex[id] === 0 && u01(seed, id, K.housewife) < wifeShare[Math.min(119, Math.floor(age.get(id)!))])
+    .sort((x, y) => age.get(y)! - age.get(x)! || x - y);
+  const freeMen = new Set(ids.filter((id) => P.sex[id] === 1 && age.get(id)! >= GROOM_AGE_MIN));
+  for (const w of wives) {
+    const aw = age.get(w)!,
+      target = aw + GROOM_OLDER;
+    const widowed =
+      aw >= WIDOW_REMARRIES_BELOW &&
+      u01(seed, w, K.widow) >= survival(target) / survival(WIDOW_REMARRIES_BELOW + GROOM_OLDER);
+    let best = -1,
+      bestD: number = AGE_WINDOW.groom;
+    if (!widowed)
+      for (const m of freeMen) {
+        const d = Math.abs(age.get(m)! - target);
+        if (d < bestD || (d === bestD && m < best)) {
+          best = m;
+          bestD = d;
+        }
+      }
+    if (best >= 0) freeMen.delete(best);
+    const f = newFamily(founding, c.place, best, w, 1);
+    P.family[w] = f;
+    if (best >= 0) P.family[best] = f;
+  }
+  return wives;
+}
+
+/** 3. Everybody else lives in the household of a housewife who was 15 to 45 at their birth: her child, and her
+ *  husband's, where she has one (in the household of a widow the parents are not known). */
+function children(founding: Founding, c: Founders, wives: readonly number[]): void {
+  const { seed, P, F } = founding,
+    { ids, age } = c;
+  for (const id of ids) {
+    if (P.family[id] >= 0) continue;
+    const ca = age.get(id)!;
+    const mothers = wives.filter((w) => {
+      const d = age.get(w)! - ca;
+      return d >= MOTHER_AGE[0] && d <= MOTHER_AGE[1];
+    });
+    if (!mothers.length) continue;
+    const w = mothers[Math.floor(u01(seed, id, K.mother) * mothers.length)],
+      f = P.family[w];
+    P.family[id] = f;
+    if (F.man[f] >= 0) {
+      P.mother[id] = P.uid[w];
+      P.father[id] = P.uid[F.man[f]];
+      P.children[w]++;
+    }
+  }
+}
+
+/** 5. IQ and the Big Five: persons without known parents draw from the standard normal; children inherit by the
+ *  infinitesimal model, z = h²·(z_mother + z_father)/2 + ε with ε ~ N(0, 1 − h⁴/2), which keeps the variance at 1.
+ *  All parents are founders (the heads of the households have no known parents), so the founders are drawn first. */
+function traits(founding: Founding, ids: readonly number[]): void {
+  const { s, seed, P, z } = founding;
+  for (const id of ids)
+    if (P.mother[id] < 0)
+      TRAITS.forEach((t, j) => {
+        z[t][id] = normal(seed, id, K.trait + 2 * j);
+      });
+  for (const id of ids) {
+    const mo = rowOf(s, P.mother[id]),
+      fa = rowOf(s, P.father[id]);
+    if (mo < 0) continue;
+    TRAITS.forEach((t, j) => {
+      z[t][id] = inherit(t, z[t][mo], z[t][fa], normal(seed, id, K.trait + 2 * j));
+    });
+  }
+  for (const id of ids) writeTraits(P, id, (t) => z[t][id]);
 }
 const inherit = (t: Trait, mother: number, father: number, e: number): number => {
   const h2 = t === 'iq' ? HERITABILITY.iq : HERITABILITY.big5;

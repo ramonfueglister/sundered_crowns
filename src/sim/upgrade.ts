@@ -304,11 +304,19 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     if (s.economy.cities) s.economy.cities.workingTo = -1;
     s.v = 35;
   }
-  if (s.v === 35) { // 35 → 36: the fields of the farmsteads (settlement feature 4, src/sim/settlement/fields.ts).
+  if (s.v === 35) { // 35 → 36: service by the year and work by the day (people feature 10, economy feature 23,
+    // economy/src/workers.rs). The economies go on where they are: the engine reads their state of the format before
+    // as one without contracts, and is given the working days of the rest of the year, the absences of the rest of the
+    // month and the contracts before it computes the next day. Nothing of the persons changes: their contracts follow
+    // from their families.
+    if (s.economy.cities) s.economy.cities.workingTo = -1;
+    s.v = 36;
+  }
+  if (s.v === 36) { // 36 → 37: the fields of the farmsteads (settlement feature 4, src/sim/settlement/fields.ts).
     // Every hamlet gets its furlongs as a new world lays them, on the arable its place has on the day the world has
     // reached; nothing else changes.
     foundFields(s, w.tilth);
-    s.v = 36;
+    s.v = 37;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one

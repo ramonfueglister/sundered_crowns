@@ -51,9 +51,12 @@ import type { Table } from './ecs';
  *  35: sickness and childbed (people feature 9, economy feature 22, src/sim/people/absence.ts): a worker who is away
  *  takes nothing from the firm's labour on that day; the engine's state keeps the absences of the month (its format
  *  12).
- *  36: the fields of the farmsteads (settlement feature 4, src/sim/settlement/fields.ts): every hamlet has its furlongs
+ *  36: service by the year and work by the day (people feature 10, economy feature 23, economy/src/workers.rs): a
+ *  worker who heads a family is paid for the days he works, and workers without work stand in for those who are
+ *  away; the engine's state keeps the contracts (its format 13).
+ *  37: the fields of the farmsteads (settlement feature 4, src/sim/settlement/fields.ts): every hamlet has its furlongs
  *  in courses, shared in strips by its farmsteads. */
-export const STATE_VERSION = 36;
+export const STATE_VERSION = 37;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {

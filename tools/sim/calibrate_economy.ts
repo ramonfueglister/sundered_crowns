@@ -27,7 +27,8 @@ let reference: { s: WorldState; w: World } | null = null;
 export function cityCalibrations(
   t?: CalibrationTable,
 ): { place: number; name: string; people: number; working: number[]; idle: number; calibration: EconomyCalibration }[] {
-  const { s, w } = (reference ??= newWorldState(REFERENCE.seed, REFERENCE.year));
+  reference ??= newWorldState(REFERENCE.seed, REFERENCE.year);
+  const { s, w } = reference;
   return calibrationsOf(
     s,
     t
@@ -58,7 +59,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const f = (v: number) => Math.round(v).toLocaleString('en-GB');
   const cities = cityCalibrations(t);
   for (const x of cities) {
-    const a = x.calibration.accounts as Record<string, any>;
+    // (cast: the keys that `accountsOf` writes, src/sim/economy/accounts.ts)
+    const a = x.calibration.accounts as { gdp: number; firms: number[]; exports: number; imports: number };
     console.log(
       `${x.name} (place ${x.place}): ${f(x.people)} people, at 1:${1 / t.scale.value} GDP £${f(a.gdp)}, ${f(x.working.length)} persons who work, firms ${a.firms.join(' / ')}, exports £${f(a.exports)}, imports £${f(a.imports)}`,
     );
