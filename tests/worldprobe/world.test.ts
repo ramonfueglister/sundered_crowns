@@ -243,6 +243,18 @@ describe('a walled town of the plan from farther away', () => {
     expect(open.inside).toBeGreaterThan(42 * 42 * 0.3);
   });
 
+  it('paves the streets of its register at the first far step, as the finest step does, also beyond its square', () => {
+    usePlan({ pieceBlocks: 200, greatKinds: [], pieces: { '1,1': { houses: [], towns: [{ site: 0, cx: 300, cz: 200, half: 40, wall: null }] } } });
+    // a street through its middle from 142 metres west to 142 metres east: 71 finest blocks to each side, where its square reaches 40
+    const site: Site = { id: 0, at: [150.5, 100.5], size: 3, pop: 2000, region: 'italy', style: styleOf('italy'), lots: { w: 8, d: 16, x: [], z: [], front: [], streets: [[-140, 0, 140, 0, 1]], street: 4 } };
+    const c = coverLand(ground(0), 1, new Batch(), [site], { ploughed: () => 0, vines: () => 0, farm: () => styleOf('').house, own: () => true, woods: () => null });
+    // its columns at the first far step: 115 … 184 in the rows 99 and 100 (finest blocks 199 and 200)
+    let street = 0, off = 0;
+    for (let x = 115; x < 185; x++) { street += c.town[99 * N + x] + c.town[100 * N + x]; off += c.town[90 * N + x]; }
+    expect(street).toBe(2 * 70);
+    expect(off).toBe(0);
+  });
+
   it('grows no tree within its wall nor two blocks round it at any far step, where the finest step grows none', () => {
     // all the land under woods; the town's square is 258 … 342 × 158 … 242 with the two blocks round it
     const trees = (step: number, wall: [] | null) => {

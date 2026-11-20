@@ -60,6 +60,8 @@ export interface Table {
   trees?: Uint8Array;
   /** the crops of the lots where the finest step's sheaves are drawn one by one (crops.ts, a byte to a column, side × side columns): the piece's own columns and RIM round them */
   crops?: Uint8Array;
+  /** where the figures are drawn (crowd.ts CROWD_AT): what the finest step has on the four blocks of each column (a byte to a column, side × side columns), the piece's own columns and RIM round them */
+  quarters?: Uint8Array;
   /** blocks to the edge of the nearest way's band at the corners of the columns ((side + 1)², roads.ts `roadOn`), where ways run over the ground; off the piece's own and its rim as far as where no way is near */
   road?: Float32Array;
 }
@@ -180,6 +182,11 @@ export function tableOf(g: Ground, t: GroundTraits, part: Part, roads: Float32Ar
     for (let z = Math.max(0, part.z0 - RIM); z < Math.min(N, part.z1 + RIM); z++) for (let x = Math.max(0, part.x0 - RIM); x < Math.min(N, part.x1 + RIM); x++) crops[idx(x, z)] = t.crops[idx(x, z)];
     if (crops.some((v) => v > 0)) table.crops = crops;
   }
+  if (t.quarters) {
+    const quarters = new Uint8Array(n);
+    for (let z = Math.max(0, part.z0 - RIM); z < Math.min(N, part.z1 + RIM); z++) for (let x = Math.max(0, part.x0 - RIM); x < Math.min(N, part.x1 + RIM); x++) quarters[idx(x, z)] = t.quarters[idx(x, z)];
+    if (quarters.some((v) => v > 0)) table.quarters = quarters;
+  }
   if (roads) {
     const road = new Float32Array((N + 1) * (N + 1)).fill(FAR_FROM_ROADS);
     for (let z = Math.max(0, part.z0 - RIM); z <= Math.min(N, part.z1 + RIM); z++) for (let x = Math.max(0, part.x0 - RIM); x <= Math.min(N, part.x1 + RIM); x++) road[z * (N + 1) + x] = roads[z * (N + 1) + x];
@@ -199,11 +206,12 @@ class TableTraits implements GroundTraits {
   readonly houses: GroundTraits['houses'];
   readonly trees: GroundTraits['trees'];
   readonly crops: GroundTraits['crops'];
+  readonly quarters: GroundTraits['quarters'];
   private readonly side: number;
   private readonly last: number;
   private readonly pulls: (readonly [RGB, number])[] = [];
   constructor(private readonly table: Table, step: number) {
-    this.slope = table.slope; this.sideTop = sideTopAt(step); this.crownTall = crownTallAt(step); this.houses = table.houses; this.trees = table.trees; this.crops = table.crops; this.side = table.side; this.last = table.side - 1;
+    this.slope = table.slope; this.sideTop = sideTopAt(step); this.crownTall = crownTallAt(step); this.houses = table.houses; this.trees = table.trees; this.crops = table.crops; this.quarters = table.quarters; this.side = table.side; this.last = table.side - 1;
     const tints = table.tints;
     for (let k = 0; k < tints.length; k += 4) this.pulls.push([[tints[k], tints[k + 1], tints[k + 2]], tints[k + 3]]);
   }

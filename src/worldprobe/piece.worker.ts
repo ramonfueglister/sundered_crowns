@@ -9,6 +9,7 @@ import { FACE_GEO, FACE_STEPS } from '../lookprobe/faces';
 import { GRID, N, SEA_Y, onGrid } from '../lookprobe/layout';
 import { maybeGunzip } from './gunzip';
 import { buildPiece, warmPieces } from './build';
+import { CROWD_AT, farCrowd } from './crowd';
 import { type Cover, KINDS, laidOut } from './far';
 import { glide } from './glide';
 import { above, lay, meanCover, summary } from './mean';
@@ -143,7 +144,9 @@ async function tableOf(job: PieceJob): Promise<{ scene: WorldScene | null; table
   // (what stands on the piece was drawn with the sky's share baked in, as the tables are built: without it the piece is built)
   if (table.things && !job.bakedSky) return null;
   const drawn = drawTable(table, job.bakedSky, job.step), things = table.things ? Batch.of(table.things.pos, table.things.nor, table.things.col) : new Batch();
-  return { table, scene: { ...drawn, things, cells: [], counts: { triangles: drawn.ground.triangles + (drawn.carried?.triangles ?? 0) + drawn.water.triangles + drawn.raised.triangles + things.triangles + (drawn.standing?.triangles ?? 0) } } };
+  // (the people of the first far step stand on the table's ground as on the ground the piece was built on: crowd.ts)
+  const figures = job.step === CROWD_AT ? onGrid(table.side, () => farCrowd(table, table.ox, table.oz, table.part)) : undefined;
+  return { table, scene: { ...drawn, things, figures, cells: [], counts: { triangles: drawn.ground.triangles + (drawn.carried?.triangles ?? 0) + drawn.water.triangles + drawn.raised.triangles + things.triangles + (drawn.standing?.triangles ?? 0), ...(figures ? { figures: figures.count } : {}) } } };
 }
 /** The table of the piece of the next coarser step over a job's piece, where one was built ahead. */
 async function tableOver(job: PieceJob): Promise<Table | null> {
