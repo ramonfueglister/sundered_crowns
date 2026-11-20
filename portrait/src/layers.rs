@@ -83,21 +83,27 @@ pub fn lift(over: &mut Surface, under: &Surface, below: f32, gap: f32, reach: f3
     let grid = sorted(under, CELL);
     let mut own = vec![[0f32; 3]; over.pos.len()];
     let mut moved = 0;
+    let mut known: Quick<[u32; 6], Option<f32>> = Quick::default();
     for k in 0..over.pos.len() {
         let (p, n) = (over.pos[k], over.nrm[k]);
         if p[1] >= below || (n[0] == 0.0 && n[1] == 0.0 && n[2] == 0.0) {
             continue;
         }
-        // along the corner's direction, `reach` either way: where the gown is met, how far the corner stands
-        // outside it there; the least of these is what counts
-        let crossed = crossings(under, &grid, CELL, p, n, reach);
-        // (round 139) what the line meets behind a place where it went in through the other cloth's outside
-        // does not count: the corner is not under that. A hem's corner looks along the cloth, in over the
-        // shoulder and out again at its back, and was lifted 2.6 cm for it
-        let entered = crossed.iter().filter(|(at, along)| *at > 0.0 && *along < 0.0).map(|c| c.0).fold(f32::MAX, f32::min);
-        let least = crossed.iter().filter(|(at, along)| *along >= ALONG && *at < entered).map(|c| -c.0).fold(None, |m: Option<f32>, o| Some(m.map_or(o, |m| m.min(o))));
-        if let Some(out) = least.filter(|out| *out < gap) {
-            own[k] = std::array::from_fn(|a| n[a] * (gap - out));
+        // (round 145: a corner that several triangles share is looked up once, as in `sunk`; a mantle's 51 000
+        // corners, each for itself, took a third of a second)
+        let way = *known.entry([p[0].to_bits(), p[1].to_bits(), p[2].to_bits(), n[0].to_bits(), n[1].to_bits(), n[2].to_bits()]).or_insert_with(|| {
+            // along the corner's direction, `reach` either way: where the gown is met, how far the corner stands
+            // outside it there; the least of these is what counts
+            let crossed = crossings(under, &grid, CELL, p, n, reach);
+            // (round 139) what the line meets behind a place where it went in through the other cloth's outside
+            // does not count: the corner is not under that. A hem's corner looks along the cloth, in over the
+            // shoulder and out again at its back, and was lifted 2.6 cm for it
+            let entered = crossed.iter().filter(|(at, along)| *at > 0.0 && *along < 0.0).map(|c| c.0).fold(f32::MAX, f32::min);
+            let least = crossed.iter().filter(|(at, along)| *along >= ALONG && *at < entered).map(|c| -c.0).fold(None, |m: Option<f32>, o| Some(m.map_or(o, |m| m.min(o))));
+            least.filter(|out| *out < gap).map(|out| gap - out)
+        });
+        if let Some(by) = way {
+            own[k] = std::array::from_fn(|a| n[a] * by);
             moved += 1;
         }
     }

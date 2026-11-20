@@ -16,6 +16,7 @@ pub mod geo;
 mod hair;
 pub mod head;
 pub mod look;
+pub mod mantle;
 pub mod measure;
 mod morph;
 pub mod person;

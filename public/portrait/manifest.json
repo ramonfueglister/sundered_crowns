@@ -314,6 +314,14 @@
    "bytes": 29370
   },
   {
+   "name": "cloth_mantle.txt.zst",
+   "bytes": 183978
+  },
+  {
+   "name": "cloth_mantle_ao.txt",
+   "bytes": 30768
+  },
+  {
    "name": "cloth_palla.txt.zst",
    "bytes": 122777
   },
@@ -600,6 +608,10 @@
   "cloth_hood_down_n.webp",
   "cloth_hood_up.webp",
   "cloth_hood_up_n.webp",
+  "cloth_mantle.webp",
+  "cloth_mantle_fur.webp",
+  "cloth_mantle_fur_n.webp",
+  "cloth_mantle_n.webp",
   "cloth_palla.webp",
   "cloth_palla_n.webp",
   "cloth_smock.webp",

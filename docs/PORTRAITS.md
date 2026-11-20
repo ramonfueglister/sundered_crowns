@@ -17,7 +17,7 @@ one, changes nothing: same people in, same pictures out, measured.
 |---|---|---|
 | Builder | `portrait/` (Rust, WebAssembly) | From a person (100 bytes of genes, sex, age, estate, occupation, origin, food, mourning, wealth, worn clothes) to the triangles of head and shoulders: MakeHuman's head morphed by the genes, skin, eyes, hair, beard, clothes, headwear, jewellery |
 | Genes | `portrait/src/dna.rs` | 50 genes of two alleles, one byte each (Apoleia's 34, and 16 since round 112 that a dress with a table shows); a child takes one allele of each gene from either parent, plus a small mutation; founders draw from one of 23 pools (round 111), which one is the culture's (`src/sim/people/pools.ts`) |
-| Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; a culture without a set wears the plain dress of 1356 (round 111), one of Apoleia's seven regions Apoleia's Roman dress. England's has a table for people of rank and one for a crowned head (round 144), chosen by the person's stand |
+| Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; a culture without a set wears the plain dress of 1356 (round 111), one of Apoleia's seven regions Apoleia's Roman dress. England's has a table for people of rank and one for a crowned head (round 144), chosen by the person's stand; a crowned head wears a mantle faced with ermine over the gown (round 145, `portrait/src/mantle.rs`) |
 | Stage profile | `src/portrait/profile.ts` | Light and materials per set of dress; Apoleia's portraits keep Apoleia's |
 | Pipeline | `tools/portrait/pipeline/` | Blender scripts that wrote the draped clothes and hair (not part of the build) |
 | Files of the real look | `public/portrait/` (41.5 MB) | The head (1.1 MB), data files (15.0 MB since round 111, 13.1 since round 110, 12.7 since round 109, 12.9 since round 105, 10.4 before round 104: the hair's bodies, the beard's locks, draped clothes, skin shading), images (24.8 MB: skin by age and sex, wrinkle maps, hair, cloth, eyes) |
@@ -6470,6 +6470,136 @@ metal; no metal on the common people); `tests/rulers.test.ts` holds the rank wit
 Pictures (project files, `portraits/`): `runde144_vorher_nachher.png` (six people as the game drew a ruler
 until now, as people of rank, and crowned), `runde144_krone.png` (a king and a queen from the front, the side
 and behind), `runde144_hof.png` (the whole sample as people of rank).
+
+**Round 145: a mantle on the crowned head** (2026-11-20). Round 144's crowned people beside the reference's
+rulers at one size: ours wear a crown on a gown and nothing more, a villager's sack in a strong colour up to the
+neck; the reference's stand in a mantle, broad on the shoulders, with fur at its edges and metal on the chest.
+Round 144's own list had it: "no fur is drawn ... no mantle, no belt, no brooch".
+
+What was read (each as an account of the page by a reading tool, not the page itself; none a primary source).
+- Elspeth Veale, The English Fur Trade in the Later Middle Ages, ch. I "Costly Thy Habit" (London Record
+  Society 38, 2003, british-history.ac.uk/london-record-soc/vol38/pp1-21): "For outdoor wear a cloak was added,
+  or a mantle for ceremonial occasions, often with a hood attached"; a lining "might be turned back at neck or
+  wrist, showing as a collar, revers, or cuffs of fur", "the edges of a long or short gown were turned back to
+  form borders or facings of fur in front"; in 1337 "only the royal family, prelates, earls, barons, knights,
+  and clerks with at least £100 a year could wear them", in 1363 "less prosperous knights and clerks could
+  wear only facings of ermine and lettice on their hoods"; Charles V in 1379 "liked his best robes furred with
+  ermine". Nothing on how a mantle is fastened.
+- La Cotte Simple, a fur primer (cottesimple.com/articles/fur-primer/, after Veale and Newton; the first
+  40 000 characters word for word, the rest as a summary): ermine "was traditionally worn by royals and their
+  family", white "with the well-known exception of a black tip on its tail", the tails "either left in place
+  or removed and powdered on the skins"; "Fur's most common role was as a lining on the inside of garments";
+  "ermine mantles worn by kings" (Richard II, BL Royal MS 20 B vi, c. 1395).
+- Rosalie Gilbert, Cloaks and Mantles (rosaliegilbert.com/cloaksandmantles.html; a re-enactor's page that
+  names no sources and no English example of the 14th century): women's mantles "fastened across the front,
+  with a cord and two brooches of some kind on each side at clavicle height"; Philip IV's effigy of 1327 with
+  "the mantle fastening with a tasseled cord".
+- Stothard's Monumental Effigies (Heidelberg) could not be read: the site refuses a reading tool.
+
+What is changed.
+- **A mantle** (`tools/portrait/pipeline/mantle.py`, new; `cloth_mantle`, 184 kB packed; `DressSet::mantle`,
+  `CROWNED_1356` alone): one sheet round the back of the neck and both shoulders, over the arms and the back,
+  open in front by 36 degrees to either side of the middle, down to the waist. It is laid, not draped:
+  MakeHuman's base stands with its arms spread, and a cloth let fall on it hangs from the arms as a curtain,
+  which the builder then swings into the body. The sheet is a tent: at every height it goes round body, arms
+  and gown as a taut string would (the convex hull of that height's section, 1 cm outside it), and from the
+  shoulders down it never comes in again. Folds are laid on it (three waves round the body that deepen below
+  the shoulders, outward only). 5 128 points, 10 362 triangles. The builder carries it as a hood's cape
+  (`Layer::Over`): laid on the body with its arms spread, calmed, brought down with the arms, lifted off the
+  gown, the gown sunk under it.
+- **Its facing of ermine** (`tools/portrait/pipeline/fur_tex.py`, new; `cloth_mantle_fur`, 20 kB and 28 kB):
+  the eleven columns of the sheet next to either front edge (7 cm on the chest, more below) and the five rings
+  next to the neck (5.5 cm) are fur, standing 5 mm over the cloth. They are the same mesh as the cloth, so
+  there is no seam to come apart: the file marks their triangles by a whole number added to the place across
+  the image (64; 128 where a brooch sits), and the builder takes the sheet apart at the very end
+  (`portrait/src/mantle.rs` `face`, new), when everything stands as it is drawn. The image: light grey hairs
+  lying down the garment, nine black tail tips to a tile of 20 cm, set in staggered rows, and its relief.
+- **Its clasp** (`mantle.rs`): on either front edge, 2 cm in from it at the height of the collar bones, a round
+  boss of gold 3.2 cm across with a blue stone, its rim sunk into the fur; between them a cord 5.6 mm thick,
+  drawn taut over the gown and the linen at its neck (the upper hull of how far they stand in front of the line
+  from brooch to brooch) and hanging 4 mm.
+- **The cloth's image** (`cloth_mantle`): a cloth without a weave (`MOTT=0.03 DEPTH=0.7 fabric_tex.py ... felt
+  160`), dyed red (`#7a1a1f`).
+- **`tunic_bind.py`** takes `BUST=1` (and `YCUT`): the cloth is bound to the bust's body too and kept down to
+  the waist. Without it the binder ends a cloth where the head's own data ends (3.45), as it did the gowns
+  before round 124.
+- **`layers::lift`** looks a corner that several triangles share up once (as `sink` has since round 137). What
+  it returns is the same to the last bit; it is here because the 51 000 corners of the mantle's first, finer
+  sheet, each for itself, took 0.3 to 0.6 s a portrait.
+
+Measured (`portrait/tests/mantle.rs`, new, on 16 people of 5 to 68 years, both sexes).
+
+| | |
+|---|---|
+| the mantle's triangles that are fur | 0.50 |
+| in front, from the brooches to 10 cm below them: the mantle's nearest corner to the body's middle | at least 3.2 cm to either side |
+| a brooch's middle from the fur | at most 3.7 mm |
+| the brooches apart | at least 11.6 cm |
+| the cord's front before the gown and the linen under it | at least 1.05 cm |
+| the cord | 384 triangles |
+
+Built ten times each, three times over, on this machine (ms a portrait; round 144's numbers were taken on
+another day's machine load and are not held against these):
+
+| | common people | at court | crowned |
+|---|---|---|---|
+| a man of 24 | 159 to 170 | 161 to 170 | 134 to 141 |
+| a woman of 24 | 73 to 74 | 71 to 81 | 174 to 181 |
+| a man of 50 | 51 to 55 | 52 to 60 | 151 to 155 |
+| a woman of 68 (veil and wimple) | 92 to 95 | 112 to 117 | 164 to 177 |
+| a boy of 8 | 57 to 65 | 55 to 65 | 174 to 181 |
+
+A mantle costs some 70 to 110 ms and 11 200 triangles (10 362 of the sheet, 360 of gold, 96 of stone, 384 of
+cord). With the first, finer sheet of 17 030 triangles the first build of a crowned head took 416 to 862 ms
+before `lift` looked a shared corner up once and 188 to 331 after (one build each of four people, the files
+read with it).
+
+Tried and not kept. (1) Apoleia's palla as the mantle: a narrow shawl with ragged ends. (2) The fur marked by
+its distance from the edge, a triangle fur when two of its corners were: the fur ended in a saw's teeth. By
+whole columns and rings, a triangle fur when all three are, it ends along a line. (3) The sheet down to 3.5, as
+the binder cut it: on a child of eight, whose picture shows the body further down, the mantle ended 5 cm above
+the picture's foot in teeth, the gown going on under it. (4) Taken for the cause of (3), the mantle lifted off
+the gown from 9 cm inside it: the same picture, and 3 to 6 s a portrait. (5) The sheet at 2.5 degrees and 8 mm
+down to 2.0: 17 030 triangles and 0.4 to 0.9 s. (6) The sheet cut 27.5 cm from the middle on the arm: the cut
+in a child's picture, the sleeve under it. (7) The sheet beginning as far from the axis all round: at the back
+it began a hand below the gown's neck, a V down between the shoulder blades (it begins 6.6 cm from the axis
+there now, 8 in front). (8) Four tails to a tile, hairs 46 pixels long, the relief at 1.0: pleated paper with
+one tail on a band. (9) A brooch of flat bands: a target of light and dark rings.
+
+**The gauntlet**: 22 of 22 over the whole sample (read with this round's build), every line as in rounds 138
+to 144 to its last figure: the sample is the common people's.
+
+Honest about it. A king reads as a king now at the size of a portrait, and it is a costume, not a cloth. The
+mantle is laid as a tent and its folds are three waves: it does not hang, it lies smooth and a little stiff
+over the shoulders as a felt cape would, 1 cm and more off the gown. Seen from behind it has a crease down the
+spine and a notch in the collar (how the builder carries a sheet that spans the shoulder blades); looked at,
+not looked into: the game shows no back. The fur is an image on a raised band: no hair stands over its edge,
+the band is broader below than on the chest because it is counted in columns, and the tails lie where the
+image's tile puts them, some cut in half by the band's edge or under a brooch. The cloth is one red for every
+crowned head, drawn by the stage as wool with no pile's sheen, and its inside is the same red: no lining is
+drawn. The clasp does not hold anything: the cord is a line laid over the gown and the edges do not come
+together under it; its ends go into the brooches' middles, through the stones' feet. A girl's or a woman's
+hanging plaits lie over the fur and across a brooch and the cord. Every crowned head from five years to old
+age wears the same mantle in every picture, a man's fastened as the page read says of a woman's, and by the
+pages a mantle is for ceremony. That no hair and no gown comes through the mantle was looked at on twelve
+people from the front, eight of them a quarter turned, four from the side and behind, and is held by no test. A crowned head's portrait takes
+about as long as a common man's with his own cut of hair and twice as long as it did. The facing's breadth,
+the tails, the brooches' form and stone, a cord without tassels and every colour are PLACEHOLDER. People of
+rank without a crown have no fur and no mantle; the court's gown is still the villagers' sack. In the game
+the mantle comes with the crown, and so only where the world server is of round 144.
+
+Tests: `portrait/tests/mantle.rs`, three new (a crowned head has the mantle's cloth and fur, nobody else has;
+the marks are off the image's places; red cloth, white fur; open in front with the fur along the opening; two
+brooches on the fur with a stone each, the cord from one to the other and in front of the gown).
+`portrait/tests/court.rs`: the crown's test tells the crown's stones from the brooches'.
+`tests/portrait.test.ts`: the crown's test reads the brooches' stones and the mantle's two surfaces as cloth
+on a crowned head and none at court. The test of the eyes builds each person once: it read the heads off a
+second build of all 36 and ran into its 20 seconds on GitHub's machine in the runs of rounds 140 and 142 (both
+logs read; three more failures of that check on 20 November were not; 14.5 s here before, 8.3 after). The
+crown's test builds each stand once (with the mantle 17.4 s of its 20 here, 4.1 after). `cargo test --release` as a whole: 118 of 118 in one run.
+`tests/portrait.test.ts` and its neighbour 43 of 43; typecheck and lint pass.
+Pictures (project files, `portraits/`): `runde145_vorher_nachher.png` (four crowned people before and after),
+`runde145_mantel.png` (four more, and the first four a quarter turned), `runde145_koenig.png` (a king, large).
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the

@@ -347,6 +347,15 @@ pub struct DressSet {
     /// `fasten_from` years and more whose seed's eighth digit from the right is set here; the second cloth is the
     /// table's next wool but one.
     pub parted: [bool; 10],
+    /// (round 145) A mantle: the file of a cloth that lies round the shoulders and the back over the gown, open
+    /// in front (`tools/portrait/pipeline/mantle.py`; empty: the table has none), and the colour of its cloth.
+    /// Its facing of fur along both front edges and round the neck is drawn with the image `mantle_fur`; it is
+    /// held by two brooches and a cord between them (mantle.rs). `mantle_dyes`: the colours of the fur, of the
+    /// brooches' gold, of their stones and of the cord. Everybody of the table wears it.
+    pub mantle: &'static str,
+    pub mantle_cloth: &'static str,
+    pub mantle_fur: &'static str,
+    pub mantle_dyes: [&'static str; 4],
     /// (round 132) A man's coif: a close cap of linen over the hair and the ears, tied under the chin (the file's
     /// name, `tools/portrait/pipeline/coif.py`; empty: the table has none), in the table's linen colour and
     /// drawn with the fillet's image. Who wears it: the men of `coif_from` years and more whose seed's last
@@ -942,6 +951,10 @@ const ENGLAND: DressSet = DressSet {
     buttons: "",
     crown: "",
     crown_gold: "",
+    mantle: "",
+    mantle_cloth: "",
+    mantle_fur: "",
+    mantle_dyes: [""; 4],
     crown_stones: [""; 4],
     parted: [false; 10],
     coif: "cloth_coif",
@@ -1242,6 +1255,10 @@ pub static CROWNED_1356: DressSet = DressSet {
     hair_small: "bob02",
     crown: "metal_crown",
     crown_gold: "#e0b24e",
+    mantle: "cloth_mantle",
+    mantle_cloth: "#7a1a1f",
+    mantle_fur: "cloth_mantle_fur",
+    mantle_dyes: ["#f4f0e6", "#e0b24e", "#1c3fa8", "#c9a13f"],
     crown_stones: ["#1c3fa8", "#b02a4a", "#c22f52", "#efe9dc"],
     parted: [false; 10],
     ..COURT
@@ -1249,10 +1266,11 @@ pub static CROWNED_1356: DressSet = DressSet {
 
 const COURT_SOURCES: &[Source] = &[
     Source { what: "who dresses so: lords and their families, whom the statute of 1363 leaves without restriction (round 144)", source: "Statute concerning diet and apparel 1363 (37 Edw. III), as Rosalie Gilbert's page lists it rank by rank (rosaliegilbert.com/sumptuarylaws.html; read 20.11.2026 as an account of the page, not the page itself; a re-enactor's summary that names no edition of the statute): lords with lands worth 1000 pounds a year and their families 'no restrictions'; cloth of gold, ermine and stones barred from knights of 200 marks down; silk, silver and embroidery from the yeoman down; 'blanket and russet at 12d' for those who work the land. The game knows no ranks between a ruler's house and everybody else: all its persons of history are dressed so." },
-    Source { what: "cloth in strong dyes: reds, blues, a green, a murrey", source: "Wikipedia, 1300-1400 in European fashion (read 20.11.2026 as an account of the page): Edward III's robes of 1351 of 'red velvet' (after Donald King), a bridegroom of the 1350s in a 'red cotehardie', a royal lady in 'a blue mantle'; 'silk was the finest fabric of all', brocades 'for the well-off'. No dye is named there. Green and murrey, every value and that the cloth is drawn as wool with the villagers' weave are PLACEHOLDER: no silk, no velvet, no pattern, no fur is drawn." },
+    Source { what: "cloth in strong dyes: reds, blues, a green, a murrey", source: "Wikipedia, 1300-1400 in European fashion (read 20.11.2026 as an account of the page): Edward III's robes of 1351 of 'red velvet' (after Donald King), a bridegroom of the 1350s in a 'red cotehardie', a royal lady in 'a blue mantle'; 'silk was the finest fabric of all', brocades 'for the well-off'. No dye is named there. Green and murrey, every value and that the cloth is drawn as wool with the villagers' weave are PLACEHOLDER: no silk, no velvet, no pattern and no fur is drawn on a gown." },
     Source { what: "the gown buttoned in front on eight men in ten and six women in ten from 15 and 14 years, laced on three women in ten, with buttons of gilt metal", source: "The same page: 'the cotehardie fits snugly and is buttoned up the front' (a caption of the late 14th century), and noblemen and squires about 1350 in tunics 'so short and tight' (the continuation of Guillaume de Nangis, after Braudel). Rosalie Gilbert, Buttons and Lacings (rosaliegilbert.com/buttonsandlacings.html, read 20.11.2026 as an account of the page): 'the upper classes would have preferred ... metal buttons', the lower classes 'matching cloth buttons'; a tin button with a glass stone of the late 14th century (Museum of London). Which metal is not said: gilt is PLACEHOLDER, and so are the shares." },
     Source { what: "mi-parti: a man's gown of two cloths, one on each side, on three men in ten from 15 years who wear no crown", source: "The same Wikipedia page: 'a fashion for mi-parti or parti-coloured garments made of two contrasting fabrics, one on each side, arose for men in mid-century ... and was especially popular at the English court' (after Black & Garland). The share is PLACEHOLDER." },
     Source { what: "a crown on a king, an emperor and a queen who reigns: a circlet of gold with twelve fleurons, six large and six small in turn, a sapphire or a balas ruby on the circlet under each, a balas ruby and three pearls on each large fleuron; nothing else on the head, a woman's hair in plaits under it", source: "Crowns in the treasure of Richard II (Institute of Historical Research and Royal Holloway, archives.history.ac.uk/richardII/crowns.html; read 20.11.2026 as an account of the page): eleven gold crowns in the inventory of 1399, crowns 'with alternating large and small fleurons', of eight, ten, twelve and fourteen; the one that survives (Munich, Schatzkammer, c. 1380) 'a circlet of twelve hinged plaques and six large and six small fleurons'; 'sapphires, balas rubies and clusters of pearls'. Forty years after 1356 and no measure given: the crown's height, the form of a fleuron (a lily of three leaves, by the page's gloss 'lily-shaped') and the stones' places are PLACEHOLDER; the plaques, their tracery and enamel are not drawn. The plaits under a crown: the Wikipedia page's royal lady of the 1350s, 'her hair is worn in two braids beneath her crown' (Italy)." },
+    Source { what: "a mantle on a crowned head (round 145): a red cloth round the shoulders over the gown, open in front, faced with ermine along both front edges and round the neck, held by two brooches of gold with a stone and a cord between them", source: "Elspeth Veale, The English Fur Trade in the Later Middle Ages, ch. I (London Record Society 38, 2003, british-history.ac.uk/london-record-soc/vol38/pp1-21; read 20.11.2026 as an account of the page): 'For outdoor wear a cloak was added, or a mantle for ceremonial occasions'; a lining 'might be turned back at neck or wrist, showing as a collar, revers, or cuffs of fur', edges 'turned back to form borders or facings of fur in front'; in 1337 'only the royal family, prelates, earls, barons, knights, and clerks with at least 100 pounds a year' could wear furs, in 1363 lesser knights 'only facings of ermine and lettice on their hoods'; Charles V in 1379 'liked his best robes furred with ermine'. La Cotte Simple, fur primer (cottesimple.com/articles/fur-primer/, read the same day, after Veale and Newton): ermine 'traditionally worn by royals and their family', white 'with the well-known exception of a black tip on its tail', the tails 'either left in place or removed and powdered on the skins'; 'ermine mantles worn by kings' (Richard II, BL Royal MS 20 B vi, c. 1395). The fastening: Rosalie Gilbert, Cloaks and Mantles (rosaliegilbert.com/cloaksandmantles.html, read the same day; a re-enactor's page that names no sources and no English example of the 14th century): women's mantles 'fastened across the front, with a cord and two brooches of some kind on each side at clavicle height', Philip IV's effigy of 1327 with 'the mantle fastening with a tasseled cord'. The red: Edward III's robes of 1351 of 'red velvet' (the row above). PLACEHOLDER: that a man's is fastened as a woman's, that a crowned head wears it in every picture (a mantle is for ceremony), the facing's breadth, how many tails and how far apart, the brooches' form and stone, a cord without tassels, every colour value; the cloth has no pile and no lining is drawn: its inside is the same red." },
 ];
 
 /// Every dress with a table.
@@ -1366,6 +1384,12 @@ impl DressSet {
             return crate::fasten::Fasten::None;
         }
         self.fastens[sex][((seed / 100_000) % 10) as usize]
+    }
+
+    /// (round 145) The files of what lies over the gown: the gown is lifted off, left out under and sunk under
+    /// these (an empty name is none).
+    pub fn over_gown(&self) -> [&'static str; 6] {
+        [self.veil, self.veil_back, self.wimple, self.hood_up, self.hood_back, self.mantle]
     }
 
     /// (round 144) Whether a person's gown is of two cloths (`parted`): a man old enough, by a digit of his seed.

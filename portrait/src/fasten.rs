@@ -169,7 +169,7 @@ fn put(out: &mut Surface, a: &At, q: V3, n: V3, by: [f32; 2], shade: f32) {
 }
 
 /// A ball of 80 triangles: the icosahedron, each face divided in four.
-fn ball() -> Vec<[V3; 3]> {
+pub(crate) fn ball() -> Vec<[V3; 3]> {
     let (v, f) = crate::geo::icosahedron();
     let mid = |a: V3, b: V3| norm(add(a, b));
     let mut out = Vec::with_capacity(80);

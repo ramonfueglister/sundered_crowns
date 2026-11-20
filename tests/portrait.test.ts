@@ -344,8 +344,10 @@ describe('portraits', { timeout: 20_000 }, () => {
     // the ball's middle to the camera.
     const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
     const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
-    const offs = (p: PortraitPerson, profile = ENGLAND_1356): [number, number][] => {
-      const built = b.build(p), ball = built.surfaces.find(s => surfaceKind(s) === 'eyeball')!;
+    // (each person is built once: until round 145 the heads below were read off a second build of everybody, and on
+    // GitHub's machine the test ran into its 20 seconds twice in a day)
+    const offs = (p: PortraitPerson, profile = ENGLAND_1356, built = b.build(p)): [number, number][] => {
+      const ball = built.surfaces.find(s => surfaceKind(s) === 'eyeball')!;
       const f = framing(built, profile), stands = standing(built, profile);
       // a point or a direction of the portrait as the stage stands it: turned about the upright axis through the
       // head by the profile's turn and the person's own, tilted about the neck's foot (round 127)
@@ -368,15 +370,17 @@ describe('portraits', { timeout: 20_000 }, () => {
         return [(yaw(sight) - yaw(to)) * 180 / Math.PI, (pitch(sight) - pitch(to)) * 180 / Math.PI] as [number, number];
       });
     };
+    const heads: number[][] = [];
     for (const p of sample) {
-      for (const [beside, above] of offs(p)) {
+      const built = b.build(p);
+      heads.push([...built.head]);
+      for (const [beside, above] of offs(p, ENGLAND_1356, built)) {
         expect(Math.abs(beside), `person ${p.pid}: beside the camera`).toBeLessThan(1.5);
         expect(Math.abs(above), `person ${p.pid}: above the camera`).toBeLessThan(1.5);
       }
     }
     // (round 127) and the heads are carried each its own way: turned further than the stage turns them and tilted,
     // by no more than the dress table says, and not all alike
-    const heads = sample.map(p => b.build(p).head);
     for (const [yaw, tilt] of heads) { expect(Math.abs(yaw)).toBeLessThanOrEqual(0.1001); expect(Math.abs(tilt)).toBeLessThanOrEqual(0.0701); }
     for (const k of [0, 1]) expect(Math.max(...heads.map(h => h[k]!)) - Math.min(...heads.map(h => h[k]!))).toBeGreaterThan(k ? 0.07 : 0.1);
     // on a stage that turns the person the other way the same eyes look past the camera by twice the turn
@@ -1191,7 +1195,9 @@ describe('portraits', { timeout: 20_000 }, () => {
     const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
     const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
     for (const given of sample.filter(p => p.age >= 24).slice(0, 4)) {
-      const built = (stand: number) => b.build({ ...given, ...(stand > 1 ? { stand, job: 'Adel' } : {}) });
+      // (each stand built once: the test asks for them some twenty times, and took 17 of its 20 seconds)
+      const known = new Map<number, ReturnType<typeof b.build>>();
+      const built = (stand: number) => known.get(stand) ?? known.set(stand, b.build({ ...given, ...(stand > 1 ? { stand, job: 'Adel' } : {}) })).get(stand)!;
       const metal = (stand: number) => built(stand).surfaces.filter(s => !s.tex && s.metal === 1);
       const at = `person ${given.pid}`;
       expect(metal(1), `${at}: the common people wear no metal`).toEqual([]);
@@ -1206,8 +1212,17 @@ describe('portraits', { timeout: 20_000 }, () => {
       expect([m.metalness, m.side, m.map], at).toEqual([1, FrontSide, null]);
       expect(m.roughness).toBeGreaterThan(0.2);
       expect(m.roughness).toBeLessThan(0.45);
+      // (round 145: and the stones of the mantle's two brooches, each the upper part of a ball, 48 triangles)
       const stones = king.surfaces.filter(s => !s.tex && s.metal === 0 && s.rough < 0.5);
-      expect(stones.map(s => s.pos.length / 9), `${at}: stones and pearls`).toEqual([24 * 64, 18 * 64]);
+      expect(stones.map(s => s.pos.length / 9).sort((x, y) => y - x), `${at}: stones and pearls`).toEqual([24 * 64, 18 * 64, 2 * 48]);
+      // (round 145) a mantle on the crowned head alone: its cloth and its fur, each cloth to the stage with an image
+      // of its own, the fur's the lighter
+      const mantle = (stand: number) => built(stand).surfaces.filter(s => /cloth_mantle/.test(s.tex)).sort((x, y) => x.tex.length - y.tex.length);
+      expect(mantle(4).map(s => s.tex.replace(/^.*\/|\..*$/g, '')), `${at}: the mantle`).toEqual(['cloth_mantle', 'cloth_mantle_fur']);
+      for (const s of mantle(4)) expect([surfaceKind(s), s.uv.length / 2, s.nrm.length / 3], `${at}: ${s.tex}`).toEqual(['cloth', s.pos.length / 3, s.pos.length / 3]);
+      const light = (s: (typeof king.surfaces)[number]) => s.col.reduce((a, x) => a + x, 0) / s.col.length;
+      expect(light(mantle(4)[1]!), `${at}: the fur against the cloth`).toBeGreaterThan(3 * light(mantle(4)[0]!));
+      expect(mantle(3), `${at}: no mantle without a kingdom`).toEqual([]);
       // and nothing else on a crowned head
       expect(king.surfaces.filter(s => /cloth_(hood|veil|wimple|fillet|coif|hat)/.test(s.tex)), at).toEqual([]);
       // a person of rank without a crown: none, and a gown of another cloth than the common people's

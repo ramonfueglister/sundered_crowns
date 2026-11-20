@@ -1636,6 +1636,13 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
             }
         }
     }
+    // (round 145) a mantle round the shoulders, over the gown
+    if let (Some(d), true) = (garb.filter(|d| !d.mantle.is_empty()), real.is_some()) {
+        // (drawn white: its cloth and its fur are dyed where they are taken apart, at the end)
+        if let Some(s) = crate::real::folder().and_then(|f| mh_cloth_as(&f, d.mantle, "", &x.pp, &h.base, &|_| [1.0; 3], None, Layer::Over, &arms)) {
+            out.push(s);
+        }
+    }
     if !had_tunic {
         let mut s = Surface::new(mat(0.95));
         let off = 0.06 + 0.03 * wt;
@@ -2059,7 +2066,7 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
     if let Some(d) = garb {
         if let Some(g) = merged.iter().position(|s| s.tex.as_deref().is_some_and(|t| t.contains(d.gown))) {
             let gown = std::mem::replace(&mut merged[g], Surface::new(mat(0.0)));
-            for s in merged.iter_mut().filter(|s| s.tex.as_deref().is_some_and(|t| [d.veil, d.veil_back, d.wimple, d.hood_up, d.hood_back].iter().any(|n| t.contains(n)))) {
+            for s in merged.iter_mut().filter(|s| s.tex.as_deref().is_some_and(|t| d.over_gown().iter().any(|n| !n.is_empty() && t.contains(n)))) {
                 crate::layers::lift(s, &gown, y0, crate::layers::GAP, crate::layers::REACH);
             }
             merged[g] = gown;
@@ -2084,7 +2091,7 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
     if let Some(d) = garb.filter(|_| crate::pose::FRONT.iter().all(|&v| v < h.n)) {
         let kind = d.fasten_of(fem, p.age, p.seed);
         if let Some(g) = merged.iter().position(|s| s.tex.as_deref().is_some_and(|t| t.contains(d.gown))).filter(|_| kind != crate::fasten::Fasten::None) {
-            let over: Vec<&Surface> = merged.iter().filter(|s| s.tex.as_deref().is_some_and(|t| [d.veil, d.veil_back, d.wimple, d.hood_up, d.hood_back].iter().any(|n| t.contains(n)))).collect();
+            let over: Vec<&Surface> = merged.iter().filter(|s| s.tex.as_deref().is_some_and(|t| d.over_gown().iter().any(|n| !n.is_empty() && t.contains(n)))).collect();
             let middle = crate::pose::FRONT.iter().map(|&v| x.pp[v][0]).sum::<f32>() / crate::pose::FRONT.len() as f32;
             let behind = crate::pose::FRONT.iter().map(|&v| x.pp[v][2]).fold(f32::MAX, f32::min) - 0.3;
             let under = crate::real::folder().filter(|_| !d.under[0].is_empty()).map(|dir| (crate::real::image(&dir, d.under[0]), linear(hex(d.linen))));
@@ -2093,7 +2100,6 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
             merged.extend(made);
         }
     }
-    let tris = merged.iter().map(|s| s.tris()).sum();
     let range = pose.or(garb.map(|d| d.pose)).unwrap_or([0.0; 3]);
     // how the person carries the head: the stage tilts the whole figure, the shoulders are tipped back by as much
     // (a pose asked for by the caller is taken as it is)
@@ -2134,7 +2140,7 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
         }
         if let Some(g) = merged.iter().position(|s| s.tex.as_deref().is_some_and(|t| t.contains(d.gown))) {
             let mut gown = std::mem::replace(&mut merged[g], Surface::new(mat(0.0)));
-            for s in merged.iter().filter(|s| s.tex.as_deref().is_some_and(|t| [d.veil, d.veil_back, d.wimple, d.hood_up, d.hood_back].iter().any(|n| t.contains(n)))) {
+            for s in merged.iter().filter(|s| s.tex.as_deref().is_some_and(|t| d.over_gown().iter().any(|n| !n.is_empty() && t.contains(n)))) {
                 crate::layers::sink(&mut gown, s, y0, crate::layers::UNDER, crate::layers::THROUGH);
             }
             merged[g] = gown;
@@ -2163,6 +2169,19 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
     let low = body_full.iter().filter(|&&v| h.base[v as usize][0].abs() < 1.0).map(|&v| x.pp[v as usize][1]).fold(f32::MAX, f32::min);
     let fill = (0.86 * (top - y0).max(0.8) / (top - low - 0.1)).max(0.53);
     let young = garb.map_or(0.0, |d| crate::dress::child_share(d.adult[if fem { 0 } else { 1 }], p.age));
+    // (round 145) the mantle's facing of fur and its clasp, on everything as it is drawn (mantle.rs)
+    if let Some(d) = garb.filter(|d| !d.mantle.is_empty()) {
+        if let (Some(m), Some(dir)) = (merged.iter().position(|s| s.tex.as_deref().is_some_and(|t| t.contains(d.mantle))), crate::real::folder()) {
+            let mut sheet = std::mem::replace(&mut merged[m], Surface::new(mat(0.0)));
+            let under: Vec<&Surface> = merged.iter().filter(|s| s.tex.as_deref().is_some_and(|t| t.contains(d.gown) || d.under.iter().any(|n| !n.is_empty() && t.contains(n)))).collect();
+            let dye = d.mantle_dyes.map(|c| linear(hex(c)));
+            let facing = crate::mantle::Facing { image: crate::real::image(&dir, d.mantle_fur), cloth: linear(hex(d.mantle_cloth)), fur: dye[0], gold: dye[1], stone: dye[2], cord: dye[3] };
+            let made = crate::mantle::face(&mut sheet, &under, &facing);
+            merged[m] = sheet;
+            merged.extend(made);
+        }
+    }
+    let tris = merged.iter().map(|s| s.tris()).sum();
     Portrait { surfaces: merged, top, chin: y0, cx: hx / hn.max(1) as f32, cz: hz / hn.max(1) as f32, fill, young, head, neck: [neck[0], neck[1]], tris, targets }
 }
 

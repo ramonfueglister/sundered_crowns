@@ -147,15 +147,17 @@ fn a_crowned_head_wears_a_crown_of_gold_on_the_hair_and_nothing_else_on_it() {
             assert!(!out.surfaces.iter().any(|s| s.tex.as_deref().is_some_and(|t| t.contains(&format!("/{name}.")))), "person {k}: {name} on a crowned head");
         }
         let (metal, stones, pearls) = pieces(&out.surfaces);
-        // the crown's gold is the larger piece of metal (the buttons' the other), its stones and pearls each one surface
+        // the crown's gold is the largest piece of metal (the buttons' and, since round 145, the mantle's brooches'
+        // the others), its stones the larger piece of stone (the brooches' two the other), its pearls one surface
         let gold = metal.iter().max_by_key(|s| s.pos.len()).unwrap_or_else(|| panic!("person {k}: no crown"));
         assert!(gold.pos.len() / 3 > 2500, "person {k}: {} triangles of gold", gold.pos.len() / 3);
-        assert_eq!((stones.len(), pearls.len()), (1, 1), "person {k}");
+        assert_eq!((stones.len(), pearls.len()), (2, 1), "person {k}");
+        let stone = *stones.iter().max_by_key(|s| s.pos.len()).unwrap();
         // 64 triangles a stone: twelve on the circlet, six on the large fleurons, six on the small; three pearls
         // on each large one
-        assert_eq!((stones[0].pos.len() / 3, pearls[0].pos.len() / 3), (24 * 64, 18 * 64), "person {k}");
+        assert_eq!((stone.pos.len() / 3, pearls[0].pos.len() / 3), (24 * 64, 18 * 64), "person {k}");
         // it is one piece on every head: each stone and pearl lies on the gold (its middle within a centimetre of it)
-        for part in stones.iter().chain(&pearls) {
+        for part in [stone].iter().chain(&pearls) {
             for ball in part.pos.chunks_exact(192) {
                 let mid: V3 = std::array::from_fn(|a| ball.iter().map(|q| q[a]).sum::<f32>() / 192.0);
                 let near = gold.pos.iter().map(|q| dist(q, &mid)).fold(f32::MAX, f32::min);
