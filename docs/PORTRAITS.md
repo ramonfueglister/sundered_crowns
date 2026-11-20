@@ -5748,6 +5748,53 @@ and its neighbour 42 of 42. `npm run typecheck` and `npm run lint` pass.
 Pictures (project files, `portraits/`): `runde134_vorher_nachher.png` (five men of the sample under seeds
 that draw the hat, round 133 above, now below), `runde134_von_allen_seiten.png`.
 
+**Round 135: a second hat, its brim turned up behind** (2026-11-20). Round 134's hat was one hat: the same
+crown and the same brim on every man who wears one. Read for it then, on Rosalie Gilbert's page on hats
+(a re-enactor's page, mostly on women's; quotations fetched from it, not the page in full): a cocked cap,
+"a hat, probably felted or made of stiff material, and worn with the brim turned up either before or
+behind", "worn by both men and women in medieval times"; "Many contemporary images show men of all
+classes during the fourteenth and fifteenth centuries wearing this style of hat"; "The brim usually is a
+different colour to the body of the hat"; its first written mention is of 1464. Nothing more was read
+this round, and no picture was looked at.
+
+What is changed. Half of the men who wear a hat (one man in ten from 15 years) wear it with the brim
+turned up behind and drawn out to a point in front (`DressSet::hat_cocked`, `hat_file`: by a digit of the
+seed of its own). It is round 134's crown; from 35 degrees round the head the brim begins to turn up and
+from 95 degrees it stands up 78 degrees against the crown, 5.6 to 6.4 cm over the crown's line behind on
+the test's men; in front it falls as before and is six tenths longer at the middle, 9 to 10 cm in front
+of the crown (the falling brim 5.7 to 6.4), narrowing to its ordinary breadth over some 24 degrees to
+either side. A second file (`cloth_hat_cocked`, 0.12 MB) from the same script (`hat.py`, `HAT_COCK`),
+drawn with the hat's felt and in the same four colours; where the brim is turned up it is as thick
+across itself as the falling brim is straight down. The falling hat's file is written as before, byte
+for byte.
+
+Tried and not kept: the brim turning up from 60 degrees round the head, up in full from 130 and by 70
+degrees, half longer in front: from the front two wings standing off the crown beside the temples.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line where round 134 left it to the tenth (read with
+`tools/portrait/gauntlet.mjs`, before the last build, which added the source's entry to the table and no
+form: two portraits compared byte for byte before and after it). Nobody of the sample wears a hat, so it
+could not have moved.
+
+Honest about it. From the side it reads as the hat of the time's pictures as they are remembered, a cap
+with a beak; that memory is not a source, and the one page read has no measure for it: how far the brim
+is turned up, where it begins, how long the point is are by eye, as is the share (half of the hats). From
+the front the turned-up brim still shows as a flap beside each temple. The page says the brim is usually
+of another colour than the body: ours is of one felt. Where the brim meets the crown the surface's
+evened directions lean in, so the crease behind is lit a little flatter than a crease would be. Crown,
+felt and the hair under it are round 134's, with what is said there. Nobody of the sample is drawn with
+it. Looked at on three men from the front beside two with the falling brim, and on one from five sides.
+
+Tests: `portrait/tests/hat.rs`: of a hundred seeds that differ in the digit, fifty draw the turned-up
+brim; of the 28 men with a hat among the 150, the 13 with it have the brim 5.6 to 6.4 cm over the
+crown's line behind and 9.0 to 10.0 cm in front of the crown, the 15 others not over the line and 5.7 to
+6.4 cm in front; the crown's outer side is read by the triangles' winding now. Cargo: 101 of 101
+in one run. `tests/portrait.test.ts` and its neighbour 42 of 42. `npm run typecheck` and `npm run lint`
+pass.
+Pictures (project files, `portraits/`): `runde135_vorher_nachher.png` (five men of the sample under seeds
+that draw a hat, round 134 above, now below: three of them with the turned-up brim),
+`runde135_von_allen_seiten.png`.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
@@ -5779,7 +5826,7 @@ are gold and contrast, on a gown that is still a loose sack, since round 131 two
 with the same buttons (theirs wear belted, layered coats), since round 132 one man in ten from 30 wears
 a plain linen coif (theirs wear caps, hats and hoods of many cuts), since round 133 one man in ten has
 the ends of his hair turned out in rolls (bands side by side, where theirs are locks), since round 134 two
-men in ten wear one felt hat (theirs wear many), and the face still lacks the
+men in ten wear a felt hat, since round 135 in two forms (theirs wear many), and the face still lacks the
 reference's streak of gloss on the nose's flank; the thrown-back hood closes round the neck since round 35, but
 has no folds across its cloth. Since round 111 the people of every part of the world can be drawn, in a plain
 dress that is no people's own, and without a picture of the reference to hold them against.

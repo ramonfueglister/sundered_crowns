@@ -101,6 +101,9 @@ fn two_men_in_ten_wear_a_hat_from_fifteen() {
     let tones: std::collections::BTreeSet<&str> = (0..100_000_000u32).step_by(1_000_000).map(|s| d.hat_tone(s)).collect();
     assert_eq!(tones.len(), d.hat_tones.len());
     assert!((0..1000).all(|s| !PLAIN_1356.hat_of(false, 40.0, s)));
+    // (round 135) half of the hats have the brim turned up behind, by a digit of the seed of its own
+    let cocked = (0..100u32).filter(|k| d.hat_file(k * 10_000_000 + 6) == d.hat_cocked).count();
+    assert_eq!((cocked, d.hat_file(6), d.hat_file(50_000_006)), (50, d.hat_cocked, d.hat));
 }
 
 #[test]
@@ -109,9 +112,10 @@ fn the_hat_sits_over_the_hair_and_its_brim_stands_clear_of_the_face() {
     // nobody else. It is the file's sheet, seen from both sides, with the hat's own image; nothing of the head
     // comes through the crown (skin, ears, the hair under it: no corner of theirs lies further out than the
     // sheet over it); the crown's line crosses the forehead over the brows; the brim stands out round the head
-    // and stays over the eyes in front; hair shows under it behind.
+    // and stays over the eyes in front; hair shows under it behind. Since round 135 the brim of half the hats is
+    // turned up behind and drawn out to a point in front.
     let Some(h) = head() else { return };
-    let (mut with, mut without) = (0, 0);
+    let (mut with, mut without, mut kinds) = (0, 0, (0, 0));
     for k in 0..150 {
         let p = person(2 * k + 1, false, [15.0, 24.0, 35.0, 50.0, 58.0, 68.0][k as usize % 6]);
         let wears = ENGLAND_1356.hat_of(false, p.age, p.seed);
@@ -135,7 +139,9 @@ fn the_hat_sits_over_the_hair_and_its_brim_stands_clear_of_the_face() {
         // (a place inside the crown a little over its line: every part of the crown is seen from there)
         let c = [(x0 + x1) / 2.0, y0 + 0.15, (z0 + z1) / 2.0];
         let over = Cap::new(s, c);
-        let inward = sheet.chunks_exact(3).zip(s.nrm.chunks_exact(3)).filter(|(t, n)| dot(&sub(&t[0], &c), &n[0]) <= 0.0).count();
+        // (by the triangles' own winding: where a brim is turned up against the crown the corners' evened
+        // directions lean in at the line)
+        let inward = sheet.chunks_exact(3).filter(|t| dot(&sub(&t[0], &c), &cross(&sub(&t[1], &t[0]), &sub(&t[2], &t[0]))) <= 0.0).count();
         assert_eq!(inward, 0, "person {k}: {inward} of the crown's triangles face in");
         // what comes through: corners of the head's other surfaces up to 3 cm outside the crown over them
         let (mut through, mut worst, mut under, mut room) = (0, 0f32, 0, f32::MAX);
@@ -165,9 +171,14 @@ fn the_hat_sits_over_the_hair_and_its_brim_stands_clear_of_the_face() {
         let ((bx0, bx1), _, _) = (range(brim, 0), 0, 0);
         let hair = out.surfaces.iter().filter(|o| o.tex.as_deref().is_some_and(|t| t.contains("_body."))).flat_map(|o| o.pos.iter()).map(|q| q[1]).fold(f32::MAX, f32::min);
         let line_back = low(sheet, &|q| q[0].abs() < 0.1 && q[2] < c[2]);
+        // (round 135) the brim behind against the crown's line there, and how far the brim reaches in front of
+        // the crown: turned up behind and drawn out to a point in front, or falling all round
+        let cocked = ENGLAND_1356.hat_file(p.seed) == ENGLAND_1356.hat_cocked;
+        let up_behind = brim.iter().filter(|q| (q[0] - c[0]).abs() < 0.3 && q[2] < c[2]).map(|q| q[1]).fold(f32::MIN, f32::max) - line_back;
+        let reach = range(brim, 2).1 - z1;
         if show() {
             println!(
-                "person {k:3} of {}: {under} corners under the crown, {through} through it (by {:.1} mm at most) {whose:?}, at least {:.1} mm of room; the line {:.1} cm over the eyes, the brim's lowest in front {:.1} cm over them; the crown {:.1} cm broad and {:.1} high, the hat {:.1} cm broad; hair down to {:.1} cm under the line behind",
+                "person {k:3} of {}: {under} corners under the crown, {through} through it (by {:.1} mm at most) {whose:?}, at least {:.1} mm of room; the line {:.1} cm over the eyes, the brim's lowest in front {:.1} cm over them; the crown {:.1} cm broad and {:.1} high, the hat {:.1} cm broad; hair down to {:.1} cm under the line behind; {}: the brim up to {:.1} cm over the line behind, {:.1} cm in front of the crown",
                 p.age,
                 100.0 * worst,
                 100.0 * room,
@@ -176,7 +187,10 @@ fn the_hat_sits_over_the_hair_and_its_brim_stands_clear_of_the_face() {
                 10.0 * (x1 - x0),
                 10.0 * (y1 - y0),
                 10.0 * (bx1 - bx0),
-                10.0 * (line_back - hair)
+                10.0 * (line_back - hair),
+                if cocked { "turned up" } else { "falling" },
+                10.0 * up_behind,
+                10.0 * reach
             );
             continue;
         }
@@ -184,8 +198,15 @@ fn the_hat_sits_over_the_hair_and_its_brim_stands_clear_of_the_face() {
         assert!(under > 1500, "person {k}: {under} corners under the crown");
         assert!(line - eyes > 0.3 && line - eyes < 0.8, "person {k}: the line {} over the eyes", line - eyes);
         assert!(brim_front - eyes > 0.15, "person {k}: the brim {} over the eyes in front", brim_front - eyes);
-        assert!((bx1 - bx0) - (x1 - x0) > 0.8 && (bx1 - bx0) - (x1 - x0) < 1.4, "person {k}: the hat {} broader than its crown", (bx1 - bx0) - (x1 - x0));
+        assert!((bx1 - bx0) - (x1 - x0) > if cocked { 0.5 } else { 0.8 } && (bx1 - bx0) - (x1 - x0) < 1.4, "person {k}: the hat {} broader than its crown", (bx1 - bx0) - (x1 - x0));
+        if cocked {
+            assert!(up_behind > 0.4 && reach > 0.75, "person {k}: a brim turned up {up_behind} behind and reaching {reach} in front");
+            kinds.0 += 1;
+        } else {
+            assert!(up_behind < 0.1 && reach < 0.7, "person {k}: a falling brim {up_behind} over the line behind, reaching {reach} in front");
+            kinds.1 += 1;
+        }
         assert!(hair == f32::MAX || line_back - hair > 0.2, "person {k}: hair down to {} under the line behind", line_back - hair);
     }
-    assert!(show() || (with >= 15 && without >= 25), "{with} with a hat, {without} without");
+    assert!(show() || (with >= 15 && without >= 25 && kinds.0 >= 5 && kinds.1 >= 5), "{with} with a hat, {without} without; {kinds:?} turned up and falling");
 }

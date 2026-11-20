@@ -14,6 +14,10 @@
 #              than at the line, and over how many degrees it is evened
 #   HAT_BRIM   the brim: how broad, how many degrees it falls outward, how thick, how far its edge rises and falls
 #              round the head (felt that has been rained on), and how often
+#   HAT_COCK   (round 135) a brim turned up behind: by how many degrees it rises there (0: a brim that falls all
+#              round), from how many degrees round the head it begins to turn up and from how many it is up in
+#              full; and in front how much longer it is at the middle (a share), over how many degrees to
+#              either side: a point
 #   HAT_TILE   the length of felt one tile of the image covers
 #   HAT_EVEN   how often the builder evens out how the head carries the hat
 import os
@@ -28,6 +32,7 @@ _e = lambda k, d: [float(t) for t in os.environ.get(k, d).split(',')]
 F, B = _e('HAT_AT', '2,8')
 GAP, DOME, SOFT = _e('HAT_GAP', '0.08,0.4,12')
 BW, FALL, THICK, WAVE, WAVES = _e('HAT_BRIM', '0.6,20,0.06,0.06,2')
+COCK, C0, C1, PEAK, PEAK_W = _e('HAT_COCK', '0,60,130,0,25')
 TILE = _e('HAT_TILE', '0.5')[0]
 
 H = Head(base)
@@ -107,13 +112,18 @@ ring = lambda j, i: 1 + (j - 1) * N + i % N
 # the brim: out and a little down from the line, round its edge, and back underneath
 K = 7
 prof = [(BW * k / K, 0.0) for k in range(1, K + 1)] + [(BW + 0.5 * THICK, -0.5 * THICK), (BW, -THICK)] + [(BW * k / K, -THICK) for k in range(K - 1, -1, -1)]
-fall = np.radians(FALL)
 for s, low in prof:
     for i, t in enumerate(ATH):
         p0 = np.array(verts[ring(M, i)])
         o = unit(np.array([p0[0] - H.hc[0], 0.0, p0[2] - H.hc[2]]))
-        wave = WAVE * np.sin(np.radians(WAVES * t) + 0.7) * (s / BW) ** 2
-        verts.append(p0 + o * s * np.cos(fall) + UP * (low - s * np.sin(fall) + wave)); vdir.append(vdir[ring(M, i)]); rho.append(0.0)
+        # (how far round the head the place is from the front: there the brim falls, behind it may be turned up)
+        up = smooth((abs(t) - C0) / (C1 - C0)) if COCK else 0.0
+        fall = np.radians(FALL * (1 - up) - COCK * up)
+        long = 1 + PEAK * np.exp(-(t / PEAK_W) ** 2)
+        wave = WAVE * np.sin(np.radians(WAVES * t) + 0.7) * (s / BW) ** 2 * (1 - up)
+        # (a brim that falls all round is as thick straight down; one turned up, across itself)
+        along, under = o * np.cos(fall) - UP * np.sin(fall), (-UP * np.cos(fall) - o * np.sin(fall)) if COCK else -UP
+        verts.append(p0 + along * s * long + under * -low + UP * wave); vdir.append(vdir[ring(M, i)]); rho.append(0.0)
 verts, vdir = np.array(verts), np.array(vdir)
 R = len(prof)
 # the image: one sheet laid out round the top (a place's way down from the top, and its direction round the head)
