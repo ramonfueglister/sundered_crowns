@@ -23,8 +23,9 @@
 // The firms work on the working days of their owner's faith (economy feature 19, src/sim/holy_days.ts): on a Sunday
 // or a feast a Latin firm makes nothing and buys no materials, on a working day more than on a mean day, so that over a
 // year it makes what it made before; wages are paid every day (economy/src/clock.rs). A household buys on the working
-// days of its own faith, the owner of a firm, the crown and the merchants every day. The engine is given the days of a
-// year before it computes the year's first day.
+// days of its own faith, the owner of a firm too, on the mean profit of his firm over a year (economy feature 20); the
+// crown and the merchants buy every day. The engine is given the days of a year before it computes the year's first
+// day.
 //
 // The economies are not connected to anything else in the world yet: not to the harvest or the arable, and nothing a
 // player does reaches them. Places without a city have no economy. The year has no seasons.
@@ -42,7 +43,7 @@ import { WORKED, calendarOf, workedDays, yearKinds } from '../holy_days';
 import { hash01 } from '../rng';
 import { uses1356Tables } from '../tables';
 import { ROLE, workforce } from './work';
-import { writeHouseholds } from './household';
+import { citiesByPlace, writeHouseholds } from './household';
 import { presentPersons } from '../people/living';
 
 /** The state of the economies that the engine keeps for a world (economy/src/lib.rs `LAST`): their bytes
@@ -205,13 +206,13 @@ export function writeAgents(s: WorldState, w: World): void {
     }
   }
   if (at !== a.length) throw new Error(`the engine gave ${a.length} numbers for the persons and firms of the cities, ${at} were read`);
-  const cityOf = new Map<number, number>(Array.from(e.places, (p, k) => [p, k]));
+  const cityOf = citiesByPlace(s, e); // a list by place, not a Map: it is read for every person of the world each day
   const seen = new Int32Array(4 * N);
   for (const id of presentPersons(s)) { // the living and the dead who still hold a part (src/sim/people/living.ts)
     const role = P.role[id];
     if (!role) continue;
-    const k = cityOf.get(Fam.place[P.family[id]]), n = P.agent[id];
-    if (k === undefined || n < 0 || n >= count[4 * k + role - 1]) throw new Error(`person ${id} is number ${n} of part ${role} in a city that has no such person`);
+    const k = cityOf[Fam.place[P.family[id]]], n = P.agent[id];
+    if (k < 0 || n < 0 || n >= count[4 * k + role - 1]) throw new Error(`person ${id} is number ${n} of part ${role} in a city that has no such person`);
     seen[4 * k + role - 1]++;
     let r: number; // the row of income, deposits, consumption
     if (role === ROLE.worker) {

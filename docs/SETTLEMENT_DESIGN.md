@@ -15,8 +15,8 @@ computes is in the world: what a town shows must be state of the ECS.
 |---|---|---|
 | 1 | Every family who lives in a town has a parcel (the land register) | agreed by Ramon 16 Nov 2026 as a draft; built in state 20, on main since 17 Nov 2026 (PR #61). The world graphic sets a house on each parcel of `public/data/lots_1291.json` |
 | 2 | Every farming family has a farmstead in a hamlet (hamlets and farmsteads in the land register) | agreed by Ramon 17 Nov 2026 as a draft with the small farmstead ("Ja, mit kleinem Hof"); built in the same state step, on main since 17 Nov 2026 (PR #61). The world graphic sets the hamlets where the register has them and a farmhouse on each farmstead (PR #64) |
-| 3 | The streets and the market of every town grow to its parcels (the street network in the state) | agreed by Ramon 18 Nov 2026 ("ja"); built in state 32 |
-| 4 | Every farmstead has its fields: the furlongs of each hamlet in the courses of its open field, a strip of each farmstead in every furlong | agreed by Ramon 19 Nov 2026 ("ok"); built in state 33. The world graphic draws only these fields round the towns |
+| 3 | The streets and the market of every town grow to its parcels (the street network in the state) | agreed by Ramon 18 Nov 2026 ("ja"); built in state 33 |
+| 4 | Every farmstead has its fields: the furlongs of each hamlet in the courses of its open field, a strip of each farmstead in every furlong | agreed by Ramon 19 Nov 2026 ("ok"); built in state 34. The world graphic draws only these fields round the towns |
 | – | Where a new house arises while the world runs; real plans of the large towns; walls and gates; bridges; landmarks on their ground; building by players | not proposed yet |
 
 ## Feature 1: every family of a town has a parcel
@@ -243,13 +243,14 @@ echte Pläne"; for the smaller places the state of research in generators, and "
 against real towns). Agreed with "ja" the same day.
 
 Code: `src/sim/settlement/streets.ts` (the growth, only arithmetic), `src/sim/systems/lots.ts` (`layStreets`: the
-plan of a town into the register; `relayTowns`: the upgrade 31 → 32), `src/sim/content/town_ways.ts` and
+plan of a town into the register; `relayTowns`: the upgrade 32 → 33), `src/sim/content/town_ways.ts` and
 `town_ways_1291.json` (the ways of the world that leave each town, written by `tools/settlement/town_ways.ts` from
-`public/data/roads_1291.json`), state in `src/sim/state.ts` (`street`), `src/net/lots.ts` and `tools/sim/write_lots.ts`
+`public/data/roads_1291.json`), `src/sim/content/town_plans.ts` and `town_plans_1291.json` (the real plans, written by
+`tools/settlement/cadastre_skeleton.py` from `data/cadastre/`), state in `src/sim/state.ts` (`street`), `src/net/lots.ts` and `tools/sim/write_lots.ts`
 (the streets in the answer of the server and in the file), the calibration `tools/settlement/streets_probe.ts`.
 Tests: `tests/settlement.test.ts`.
 
-Written once when a world is founded, as the parcels (feature 1), or by the upgrade 31 → 32 of a running world:
+Written once when a world is founded, as the parcels (feature 1), or by the upgrade 32 → 33 of a running world:
 every parcel keeps its id, its family and its size and moves to its street. Nothing changes while the world runs.
 
 | Table | Column | Type | Meaning |
@@ -273,7 +274,8 @@ in the direction that shortens the way most. Here the centres are the families' 
 3. **Streets out.** From the market a street runs out along each way, by the nearest of the four directions, as far
    as the parcels would reach packed round the market and a parcel more; it ends where the ground ends (water,
    rock). A town with one way or none is one street through it (Pounds, pp. 23–26: the streets of an unplanned town
-   grew from the paths by which people approached it).
+   grew from the paths by which people approached it). A town with a real plan lays the main streets of its plan
+   instead (below, Real plans).
 4. **Where the families want to live.** Each family draws a spot from a density that falls exponentially from the
    market, P(r) ∝ e^(−r / r_c) (Barthelemy & Flammini 2008 after Clark 1951; Barthelemy & Flammini 2009 derive it from
    households weighing the way to the centre against a rent that rises with density), r_c a share of the radius the
@@ -284,7 +286,9 @@ in the direction that shortens the way most. Here the centres are the families' 
    would run beside another ends on it; one that would end blind runs on to a street ahead or to either side within
    five parcel depths (Emilien et al. 2012, Sec. 4.3: a loop instead of a dead end; Strano et al. 2012,
    densification). A lane leaves from the open side of a T-junction near its spot rather than from the nearest point
-   if that costs at most two parcel widths more, so that it crosses the street there.
+   if that costs at most two parcel widths more, so that it crosses the street there. When every family has its
+   parcel, each dead end left runs on the same way to a street within five parcel depths, straight over ground
+   where no parcel stands.
 6. **Parcels.** Each family, the nearest spot first, takes the parcel nearest its spot that fronts a street with its
    narrow side, lies on building ground with its house (`houseGround`, feature 1) and on no other parcel. Where the
    streets are full, a lane grows to the spot; where none can, a lane runs two parcels deep into the open ground from
@@ -304,31 +308,66 @@ keeps its exact ground (feature 1): the step is the parcel's width divided by th
 | street width | 6 × w × (1/√0.76 − 1): 6.6 / 9.3 / 21.1 m (smallest, median, widest of 1291) | as wide as the streets of feature 1's grid: Grenade's share of parcels round a block of two rows of six (Boerefijn 2000) |
 | market | a parcel deep, a lane round it | PLACEHOLDER, no measure of a market read |
 | r_c | 0.5 of the packed radius | calibrated: the blocks of the world of 1291 fall off as A^−1.87 above 200 m² (Dresden: A^−1.9, Lämmer et al. 2006; Barthelemy & Flammini 2008 get it with an exponential density of centres) |
-| join | 5 parcel depths | calibrated against the share of dead ends (Barthelemy & Boeing 2025); more changes nothing |
-| crossing | 2 parcel widths | calibrated against the share of crossings (Barthelemy & Boeing 2025): 3 makes 0.27 |
+| join | 5 parcel depths | calibrated against the share of dead ends of medieval Paris (Vasserot, 0.10); more changes nothing |
+| crossing | 2 parcel widths | calibrated against the share of crossings of medieval Paris (0.12): 1 makes 0.07, 2.5 makes 0.15 |
 | served | 1 parcel depth | PLACEHOLDER: a spot this near a street takes its parcel there |
 | market search | 3 parcel depths | PLACEHOLDER |
 | ways | 1.5 px near, 3 px on, 30° | PLACEHOLDER: what reads the road map of 1291 as the ways of a town |
 
 Calibration (`npx tsx tools/settlement/streets_probe.ts 1291`, with `TUNE=rc,join,cross`): of the 557 towns with
-families, over those with 20 streets and more (the measure of real cities):
+families, over those with 20 streets and more. Ramon chose medieval Paris as the target on 19 November 2026 ("ja"):
+the street network of the Vasserot cadastre (1810–1836) inside the wall of Philippe Auguste, 256 ha, 62 km of street
+(`tools/settlement/cadastre_paris.py`, `data/cadastre/paris_1291.json`). Before, the target were today's cities
+(Barthelemy & Boeing 2025: 0.18, 0.62, 0.19), which the model met with 0.26, 0.57, 0.17 and no dead end joined after
+the parcels.
 
 | r_c, join, crossing | dead ends | T-junctions | crossings | τ of the blocks |
 |---|---|---|---|---|
-| target (Barthelemy & Boeing 2025; Lämmer et al. 2006) | 0.18 | 0.62 | 0.19 | 1.9 |
-| **0.5, 5, 2 (chosen)** | 0.26 | 0.57 | 0.17 | 1.87 |
-| 0.4, 5, 2 | 0.25 | 0.59 | 0.15 | 1.92 (one town more too tight) |
-| 0.5, 5, 3 | 0.24 | 0.49 | 0.27 | 1.90 |
-| 0.6, 6, 2 | 0.26 | 0.54 | 0.20 | 1.86 |
+| target (medieval Paris; Lämmer et al. 2006) | 0.10 | 0.78 | 0.12 | 1.9 |
+| **0.5, 5, 2 (chosen)** | 0.13 | 0.77 | 0.11 | 1.88 |
+| 0.5, 5, 2, dead ends not joined after the parcels | 0.23 | 0.62 | 0.15 | 1.87 |
+| 0.5, 10, 2 | 0.13 | 0.77 | 0.11 | 1.87 |
+| 0.5, 5, 1 | 0.13 | 0.81 | 0.07 | 1.86 |
+| 0.5, 5, 2.5 | 0.12 | 0.73 | 0.15 | 1.89 |
+
+### Real plans
+
+Ramon, 19 November 2026: "Alte Kataster, Stadt für Stadt" (OpenStreetMap shows today's town, Haussmann's Paris; no
+street in it is dated before 1291). The plan gives the form, not the size: where the market lies and how the main
+streets run. Paris first; Venice (the cadastre of 1808, EPFL) is the next that is open.
+
+1. **The old plan.** Paris: the streets of the Vasserot cadastre (1810–1836, ALPAGE via Stanford EarthWorks, ODbL)
+   inside the convex hull of the wall of Philippe Auguste (1190–1215; ALPAGE walls, Noizet & Lallau 2013). The plan of
+   the streets outlives the houses (Conzen 1960), so the cadastre of 1810 shows the streets of the walled town.
+2. **The main streets.** The network as a graph, ends within 2 m one junction; each street (its name in the cadastre)
+   weighted by the mean edge betweenness of its metres (the share of shortest ways between all junctions that run over
+   it, Porta, Crucitti & Latora 2006); the streets whole, the busiest first, up to 3,500 m.
+3. **Form, not size.** Every length in radii of the walled town (902 m: the radius of a circle of its area), centred
+   on the parvis of Notre-Dame, where the world sets the church. The market: the Rue du Marché aux Poirées at the
+   Halles (the market since Philippe Auguste), 1.08 radii north of the centre. Each street simplified to 0.13 radii
+   and laid in pieces east-west and north-south, the longer axis first.
+4. **In the world.** The plan is laid as wide as twice the town's packed radius (where the density of its families
+   falls to a tenth), its market there, its main streets as roads where their ground lets a street pass (water,
+   rock: the piece goes on beyond). A main street that ends short of another runs on to it within five parcel depths.
+   The lanes grow from them as in any town.
+
+| Parameter | Value | Source |
+|---|---|---|
+| main streets | 3,500 m of the busiest | calibrated: Paris in the world then meets 0.09, 0.80, 0.11 (Vasserot 0.10, 0.78, 0.12); 2,000 m gives 0.22 dead ends, 7,000 m 0.91 T-junctions |
+| size in the world | 2 × the packed radius | OWN RULE: r − half ~ Gamma(2, r_c) holds 90 % of the families within 3.9 r_c ≈ 2 packed radii; the wall held the town |
+| simplified to | 0.13 radii (120 m in Paris) | PLACEHOLDER |
+| shortest piece | 0.02 radii (18 m) | PLACEHOLDER |
+| one junction | ends within 2 m | PLACEHOLDER |
 
 ### What the world of 1291 gets (seed 1291)
 
 5,743 rows in the street table: the 557 markets and 5,186 straight pieces. Streets per town 5 / 7 / 60 (fewest,
 median, most: Cairo), 351 m of street in the median town, 1,854 m in Cairo. The market lies 34 m from the centre in
 the median town (at most 92 m; three towns have it at the centre). The 5,766 parcels front the streets on all four
-sides (1,541 north, 1,471 east, 1,384 south, 1,370 west). The towns with 20 streets and more have 0.26 dead ends,
-0.57 T-junctions and 0.17 crossings (real cities 0.18, 0.62, 0.19); over all towns it is 0.41, 0.53 and 0.06,
-because a small town is one or two streets with their ends. 870 blocks are enclosed by streets, 748 of them of 200 m²
+sides (1,541 north, 1,471 east, 1,384 south, 1,370 west). The towns with 20 streets and more have 0.13 dead ends,
+0.77 T-junctions and 0.11 crossings (medieval Paris 0.10, 0.78, 0.12); over all towns it is 0.32, 0.62 and 0.06,
+because a small town is one or two streets with their ends. (The other counts of this paragraph are those before the
+real plan of Paris and the dead ends joined after the parcels.) 870 blocks are enclosed by streets, 748 of them of 200 m²
 and more, median 578 m², their areas falling off as A^−1.87. 18 towns spread wider (step 7). Two towns are laid out
 without regard to their ground: Venice (islands; it needs bridges) and Hormuz (an island too small for its streets).
 
@@ -338,7 +377,7 @@ without regard to their ground: Venice (islands; it needs bridges) and Hormuz (a
 | Bayonne | 7 | 2 | 6 | 252 m | 11.0 m | 48 m |
 | Zürich | 7 | 3 | 7 | 395 m | 10.9 m | 39 m |
 | Venice | 48 | 1 | 35 | 1,086 m | 7.4 m | 0 m (without its ground) |
-| Paris | 102 | 3 | 57 | 1,441 m | 9.2 m | 0 m |
+| Paris | 102 | real plan | 161 | 2,814 m | 9.2 m | 231 m (the Halles) |
 | Cairo | 148 | 2 | 60 | 1,854 m | 7.4 m | 34 m |
 
 Founding the land register of a world takes about 2.7 s, 0.5 s before the streets.
@@ -352,8 +391,9 @@ Founding the land register of a world takes about 2.7 s, 0.5 s before the street
   cities from OpenStreetMap, not medieval ones. No measure of medieval street networks read.
 - Every street of a town is as wide as every other; a highway is no wider than a lane. The street width follows the
   parcel width, so a town of one large parcel (Limoges) has a 21 m street.
-- Real plans of the large towns (OpenStreetMap, as Ramon asked for where plans exist) are not in yet: the cloud
-  environment cannot reach overpass-api.de. Until then every town grows by the model.
+- Only Paris has a real plan yet; every other town grows by the model, calibrated against Paris. The plan's river
+  is not the world's: where the world's Seine lies elsewhere, the main streets end at it or cross ground the real
+  Seine covered.
 - No bridges: a town cut by water grows on the side of its market, and Venice and Hormuz are laid out without their
   ground.
 - The world graphic paves the streets and the market (`onStreets`, src/worldprobe/settle.ts): every block whose
@@ -380,6 +420,12 @@ Founding the land register of a world takes about 2.7 s, 0.5 s before the street
 - Clauset, Shalizi & Newman (2009): Power-law distributions in empirical data. SIAM Review 51, 661–703, Eq. 3.1 (the
   estimate of τ). https://arxiv.org/abs/0706.1062
 - Pounds (2005): The Medieval City. Greenwood, pp. 12, 23–26.
+- Vasserot cadastre (1810–1836), streets (VASSEROT_VOIES), ALPAGE, via Stanford EarthWorks; ODbL 1.0
+  (`data/cadastre/paris_vasserot/`).
+- Noizet & Lallau (2013): the walls of Paris, ALPAGE; ODbL 1.0 (`data/cadastre/paris_walls/`).
+- Porta, Crucitti & Latora (2006): The network analysis of urban streets: a primal approach. Environment and Planning
+  B 33, 705–725 (edge betweenness).
+- Conzen (1960): Alnwick, Northumberland: a study in town-plan analysis. Institute of British Geographers 27.
 
 ## Feature 4: the fields of every farmstead
 
@@ -394,7 +440,7 @@ written by `tools/worldprobe/build_tilth.ts` from the world graphic), state in `
 and in the file), `src/net/people.ts` and `src/people/economy_rows.ts` (the farm in the family's window), the drawing in
 `src/worldprobe/settle.ts`, `far.ts` and `lots.ts`. Tests: `tests/fields.test.ts`, `tests/worldprobe/hamlets.test.ts`.
 
-Written once when a world is founded, after the farmsteads (feature 2), or by the upgrade 32 → 33 of a running world.
+Written once when a world is founded, after the farmsteads (feature 2), or by the upgrade 33 → 34 of a running world.
 Nothing changes while the world runs except the crop: which course bears what follows from the year.
 
 | Table | Column | Type | Meaning |

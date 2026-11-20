@@ -102,6 +102,8 @@ export interface Stage {
   dispose(): void;
   /** The point of the ground under a point of the page, in the stage's blocks; none where the picture shows no ground. */
   pick(px: number, py: number): [number, number, number] | null;
+  /** The point of the page a point of the stage (in its blocks) is drawn at, as of the last aim; null behind the camera. */
+  toScreen(x: number, y: number, z: number): [number, number] | null;
   /** what the page reports to the tools that take pictures of it; `ready` is set once a picture is drawn while `busy` is false */
   probe: { ready: boolean; counts: Record<string, number>; backend: string; /** pictures drawn in the last second, while figures walk */ fps?: number };
   /** more is still to come onto the stage (true until the page says otherwise) */

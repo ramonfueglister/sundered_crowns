@@ -36,6 +36,11 @@ export const STREET = { lane: 0, track: 1, road: 2, highway: 3 } as const;
 /** a straight piece of street, east-west or north-south: its ends (metres east and south of the town's centre, on the street's middle line) and its kind (STREET) */
 export interface Street { x0: number; z0: number; x1: number; z1: number; kind: number }
 
+/** the real plan of a town where an old plan of it is open (src/sim/content/town_plans_<year>.json): its market and
+ *  the pieces of its main streets [x0, z0, x1, z1], east-west or north-south, east and south of the centre in radii
+ *  of the real town. It gives the form, not the size: layTown lays it as wide as the town it lays. */
+export interface Plan { market: readonly [number, number]; streets: readonly (readonly number[])[] }
+
 export interface Town {
   parcels: Parcel[];
   streets: Street[];
@@ -65,18 +70,21 @@ export const R_C = 0.5;
 
 /** a family's parcel lies at a street if one passes within this many parcel depths of its spot; else a street grows to it */
 const NEAR_DEEP = 1;
-/** a new street ends on another that lies ahead of it or to either side within this many parcel depths. Calibrated
- *  against the share of dead ends (0.18, Barthelemy & Boeing 2025); more than 5 changes nothing */
+/** a new street, and at the end every dead end, runs on to another that lies ahead of it or to either side within this
+ *  many parcel depths. Calibrated against medieval Paris (the Vasserot cadastre inside the wall of Philippe Auguste,
+ *  tools/settlement/cadastre_paris.py: dead ends 0.10, T-junctions 0.78, crossings 0.12): the towns of 20 streets and
+ *  more get 0.13, 0.77, 0.11; more than 5 changes nothing */
 const JOIN_DEEP = 5;
 /** a lane leaves from a T-junction facing its spot rather than from the nearest point if that costs at most this many
- *  parcel widths more. Calibrated against the share of crossings (0.19, Barthelemy & Boeing 2025): 3 makes 0.27 */
+ *  parcel widths more. Calibrated against the share of crossings of medieval Paris (0.12): 1 makes 0.07, 2.5 makes
+ *  0.15 (and 0.73 T-junctions) */
 const CROSS = 2;
 
 const EMPTY = 0, BLOCKED = 1, ROAD = 2, PARCEL = 3, MARKET = 4, UNKNOWN = 5;
 
 /** the calibrated values (R_C, JOIN_DEEP, CROSS); the calibration tries others (tools/settlement/streets_probe.ts) */
 export const DEFAULT_TUNING: Tuning = { rc: R_C, join: JOIN_DEEP, cross: CROSS };
-export interface Tuning { rc: number; join: number; cross: number; /** count the junctions and the blocks (the calibration and the tests; the register does not need them) */ measure?: boolean }
+export interface Tuning { rc: number; join: number; cross: number; /** false: the dead ends left after the parcels stay (the calibration) */ ends?: boolean; /** count the junctions and the blocks (the calibration and the tests; the register does not need them) */ measure?: boolean }
 
 /** the ground a town is laid on: whether a street or a parcel can lie on the metre at (x, z) (metres east and south
  *  of the centre), whether a parcel's house can stand (`stands`, optional), and the metres beyond which nothing is free */
@@ -122,6 +130,10 @@ function marketWithin(size: ParcelSize, free: (x: number, z: number) => boolean,
   return null;
 }
 
+/** the radius the parcels of a town take packed round its market, their streets with them, in its steps */
+const packedRadius = (families: number, size: ParcelSize) =>
+  Math.sqrt((families * Math.max(1, Math.round(size.w)) * Math.max(1, Math.round(size.d))) / PARCEL_SHARE / Math.PI) + dims(size).half;
+
 /** a town's street half-width and market half-side, in its own steps */
 const dims = (size: ParcelSize) => {
   const hw = Math.max(1, Math.round(streetWidth(size) / 2));
@@ -134,17 +146,25 @@ const dims = (size: ParcelSize) => {
  * ways of the world that leave it (src/sim/content/town_ways_<year>.json). `ground` (optional): where the town can
  * build (TownGround). `seed`: the town's own draw. Every coordinate is in steps east and south of the town's centre.
  */
-export function layTown(families: number, size: ParcelSize, ways: readonly Way[], seed: number, ground?: TownGround, tune: Tuning = DEFAULT_TUNING): Town {
+export function layTown(families: number, size: ParcelSize, ways: readonly Way[], seed: number, ground?: TownGround, tune: Tuning = DEFAULT_TUNING, plan?: Plan): Town {
   // the plan is laid round the market, and moved to where it lies; where the ground round it does not hold every
-  // family (a river between it and the rest of the ground: there are no bridges yet), round the centre
-  const [ox, oz] = ground ? marketAt(size, ground.free) : [0, 0];
-  const t = layAround(families, size, ways, seed, ground, tune, ox, oz);
+  // family (a river between it and the rest of the ground: there are no bridges yet), round the centre. A town with
+  // a real plan has its market where the plan has it.
+  // a real plan in steps: the walled town's radius becomes twice the radius of the town packed round its market, about
+  // where the density of the families falls to a tenth (r − half ~ Gamma(2, r_c), r_c = R_C × packed: 90 % lie
+  // within 3.9 r_c ≈ 2 packed). OWN RULE: the wall held the town.
+  const r = 2 * packedRadius(families, size);
+  const real = plan && { market: [plan.market[0] * r, plan.market[1] * r] as const, streets: plan.streets.map((q) => q.map((v) => v * r)) };
+  const [ox, oz] = real ? [Math.round(real.market[0]), Math.round(real.market[1])] : ground ? marketAt(size, ground.free) : [0, 0];
+  const t = layAround(families, size, ways, seed, ground, tune, ox, oz, real);
   if (t.parcels.length >= families || (!ox && !oz)) return t;
-  const c = layAround(families, size, ways, seed, ground, tune, 0, 0);
+  const c = layAround(families, size, ways, seed, ground, tune, 0, 0, real);
   return c.parcels.length > t.parcels.length ? c : t;
 }
 
-function layAround(families: number, size: ParcelSize, ways: readonly Way[], seed: number, ground: TownGround | undefined, tune: Tuning, ox: number, oz: number): Town {
+function layAround(families: number, size: ParcelSize, ways: readonly Way[], seed: number, ground: TownGround | undefined, tune: Tuning, ox: number, oz: number, plan?: Plan): Town {
+  // the pieces of the real plan, round the market as the town is laid
+  const main = plan?.streets.map((q) => [Math.round(q[0]) - ox, Math.round(q[1]) - oz, Math.round(q[2]) - ox, Math.round(q[3]) - oz] as const);
   const g: TownGround | undefined = ground && (ox || oz) ? {
     free: (x, z) => ground.free(x + ox, z + oz),
     stands: ground.stands && ((p) => ground.stands!({ x: p.x + ox, z: p.z + oz, front: p.front })),
@@ -154,7 +174,7 @@ function layAround(families: number, size: ParcelSize, ways: readonly Way[], see
   // by half until they all have one (OWN RULE; counted in `spread`)
   let best: Town | null = null;
   for (let k = 0; k < 8; k++) {
-    const t = layOnce(families, size, ways, seed, g?.free, g?.stands, g?.reach ?? Infinity, tune.rc * Math.pow(1.5, k), tune);
+    const t = layOnce(families, size, ways, seed, g?.free, g?.stands, g?.reach ?? Infinity, tune.rc * Math.pow(1.5, k), tune, main);
     t.spread = k;
     if (!best || t.parcels.length > best.parcels.length) best = t;
     if (t.parcels.length >= families) break;
@@ -175,12 +195,11 @@ const grids8: Uint8Array[] = [], grids32: Int32Array[] = [];
 const scratch8 = (k: number, n: number) => { if (!grids8[k] || grids8[k].length < n) grids8[k] = new Uint8Array(n); const a = grids8[k].subarray(0, n); a.fill(0); return a; };
 const scratch32 = (k: number, n: number) => { if (!grids32[k] || grids32[k].length < n) grids32[k] = new Int32Array(n); const a = grids32[k].subarray(0, n); a.fill(0); return a; };
 
-function layOnce(families: number, size: ParcelSize, ways: readonly Way[], seed: number, free: ((x: number, z: number) => boolean) | undefined, stands: ((p: Parcel) => boolean) | undefined, reach: number, share: number, tune: Tuning): Town {
+function layOnce(families: number, size: ParcelSize, ways: readonly Way[], seed: number, free: ((x: number, z: number) => boolean) | undefined, stands: ((p: Parcel) => boolean) | undefined, reach: number, share: number, tune: Tuning, main?: readonly (readonly number[])[]): Town {
   const JOIN = tune.join, CROSSING = tune.cross;
   const w = Math.max(1, Math.round(size.w)), d = Math.max(1, Math.round(size.d));
   const { hw, half } = dims(size);
-  // the radius the parcels take packed round the market, their streets with them
-  const packed = Math.sqrt((families * w * d) / PARCEL_SHARE / Math.PI) + half;
+  const packed = packedRadius(families, size);
   const R = Math.ceil(Math.min(reach, Math.max(2 * packed, 3 * d) * Math.max(1, share / tune.rc) + 2 * d + 4 * hw)), N = 2 * R + 1;
   const cell = scratch8(0, N * N), line = scratch8(1, N * N), kind = scratch8(2, N * N);
   const at = (x: number, z: number) => (z + R) * N + (x + R);
@@ -229,20 +248,57 @@ function layOnce(families: number, size: ParcelSize, ways: readonly Way[], seed:
   const ring = half + hw;
   for (let k = -ring; k <= ring; k++) { lay(k, -ring, STREET.lane); lay(k, ring, STREET.lane); lay(-ring, k, STREET.lane); lay(ring, k, STREET.lane); }
 
-  // 2. a street out along each way, by the nearest of the four directions; a town with one way or none is one street through it
-  const dirs = new Map<number, number>(); // 0 east, 1 south, 2 west, 3 north -> the street's kind
-  for (const wy of ways) { const q = ((Math.round(wy.a / (Math.PI / 2)) % 4) + 4) % 4; dirs.set(q, Math.max(dirs.get(q) ?? -1, wy.k + 1)); }
-  if (dirs.size === 0) dirs.set(0, STREET.track);
-  if (dirs.size === 1) { const [q, k] = [...dirs][0]; dirs.set((q + 2) % 4, k); }
+  const isLine = (x: number, z: number) => inside(x, z) && line[at(x, z)] === 1;
   const STEP = [[1, 0], [0, 1], [-1, 0], [0, -1]];
-  const armLength = Math.max(packed, 2 * d) + d;
-  for (const [q, k] of dirs) {
-    const [sx, sz] = STEP[q];
-    let x = sx * ring, z = sz * ring;
-    for (let n = 0; n < armLength && inside(x + sx * (hw + 1), z + sz * (hw + 1)); n++) {
-      x += sx; z += sz;
-      if (!passable(x, z)) break; // the way meets water or rock: the street ends there
-      lay(x, z, k);
+  /** every dead end runs on to the nearest street ahead of it or to either side within JOIN parcel depths, straight
+   *  over ground without parcels, as a lane does when it is grown (4b below): a loop instead of a dead end (Emilien
+   *  et al. 2012, Sec. 4.3) */
+  const joinEnds = () => {
+    for (const i of all.slice()) {
+      const x = (i % N) - R, z = Math.floor(i / N) - R, nb = STEP.filter(([dx, dz]) => isLine(x + dx, z + dz));
+      if (nb.length !== 1) continue;
+      const last = STEP.findIndex(([dx, dz]) => dx === -nb[0][0] && dz === -nb[0][1]);
+      let best: [number, number][] | null = null;
+      for (const q of [last, (last + 1) % 4, (last + 3) % 4]) {
+        const [dx, dz] = STEP[q], path: [number, number][] = [];
+        let px = x, pz = z;
+        for (let n = 0; n < JOIN * d + 2 * hw + 2 && (!best || path.length < best.length); n++) {
+          px += dx; pz += dz;
+          if (n > hw && isLine(px, pz)) { best = path.slice(); break; }
+          if (!passable(px, pz)) break;
+          path.push([px, pz]);
+        }
+      }
+      if (best) for (const [qx, qz] of best) lay(qx, qz, STREET.lane);
+    }
+  };
+  // 2. a town with a real plan: its main streets, where their ground lets a street pass (water, rock, the edge of the
+  // town's ground: the piece goes on beyond it, as a bridge or a street round it is not laid). They are the old roads
+  // through the town (Conzen 1960: the plan of the streets outlives the houses), so they are laid as roads.
+  if (main) {
+    for (const [x0, z0, x1, z1] of main) {
+      const n = Math.abs(x1 - x0) + Math.abs(z1 - z0), sx = Math.sign(x1 - x0), sz = Math.sign(z1 - z0);
+      for (let k = 0; k <= n; k++) { const x = x0 + k * sx, z = z0 + k * sz; if (passable(x, z)) lay(x, z, STREET.road); }
+    }
+    // a main street that ends short of another (its real course went on in a street the plan does not keep, or over
+    // water) runs on to the nearest street, as a dead end does at the end (joinEnds)
+    joinEnds();
+  }
+  // otherwise a street out along each way, by the nearest of the four directions; a town with one way or none is one street through it
+  else {
+    const dirs = new Map<number, number>(); // 0 east, 1 south, 2 west, 3 north -> the street's kind
+    for (const wy of ways) { const q = ((Math.round(wy.a / (Math.PI / 2)) % 4) + 4) % 4; dirs.set(q, Math.max(dirs.get(q) ?? -1, wy.k + 1)); }
+    if (dirs.size === 0) dirs.set(0, STREET.track);
+    if (dirs.size === 1) { const [q, k] = [...dirs][0]; dirs.set((q + 2) % 4, k); }
+    const armLength = Math.max(packed, 2 * d) + d;
+    for (const [q, k] of dirs) {
+      const [sx, sz] = STEP[q];
+      let x = sx * ring, z = sz * ring;
+      for (let n = 0; n < armLength && inside(x + sx * (hw + 1), z + sz * (hw + 1)); n++) {
+        x += sx; z += sz;
+        if (!passable(x, z)) break; // the way meets water or rock: the street ends there
+        lay(x, z, k);
+      }
     }
   }
 
@@ -261,7 +317,6 @@ function layOnce(families: number, size: ParcelSize, ways: readonly Way[], seed:
   spots.sort((p, q) => Math.hypot(p[0], p[1]) - Math.hypot(q[0], q[1]) || p[1] - q[1] || p[0] - q[0]);
 
   // a parcel at the street through (x, z), on the side `side` of it; null where it cannot lie
-  const isLine = (x: number, z: number) => inside(x, z) && line[at(x, z)] === 1;
   const slot = (x: number, z: number, side: number): (Parcel & { cx: number; cz: number }) | null => {
     // side: the parcel lies 0 north, 1 east, 2 south, 3 west of the street; it fronts the street on the opposite side
     const across = side === 0 || side === 2, sign = side === 0 || side === 3 ? -1 : 1;
@@ -497,6 +552,8 @@ function layOnce(families: number, size: ParcelSize, ways: readonly Way[], seed:
     if (!p) break; // no ground left within the reach
     take(p); parcels.push(p);
   }
+  // 5. the dead ends that are left run on to the nearest street where no parcel stands in the way
+  if (tune.ends !== false) joinEnds();
 
   // the streets as straight pieces, and what the network looks like
   const streets: Street[] = [];

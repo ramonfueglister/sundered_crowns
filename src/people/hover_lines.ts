@@ -4,10 +4,6 @@ import type { PersonDetail } from '../net/people';
 
 /** The sectors of the calibration table (data/economy/england_1356.json), in its order. */
 const SECTORS = ['Landwirtschaft', 'Gewerbe', 'Dienste'] as const;
-/** The Big Five, each as the word for a person far above and far below the mean (one standard deviation). */
-const BIG5: readonly [string, string][] = [['offen', 'verschlossen'], ['gewissenhaft', 'nachlässig'], ['gesellig', 'zurückhaltend'], ['umgänglich', 'streitbar'], ['ängstlich', 'gelassen']];
-/** A T-score this far from 50 stands out (one standard deviation). */
-const STANDS_OUT = 10;
 /** Below this age a person is a child (as the figures: src/figures/people.ts FIGURE_FROM_AGE). */
 const CHILD_UNTIL = 14;
 
@@ -25,8 +21,8 @@ export function hoverLines(p: PersonDetail): { title: string; rows: [string, str
   const kin = [p.spouse >= 0 ? 'verheiratet' : '', children.length ? `${children.length} ${children.length === 1 ? 'Kind' : 'Kinder'}` : ''].filter(Boolean);
   if (kin.length) rows.push(['Familie', kin.join(', ')]);
   if (p.household && p.household.persons > 1) rows.push(['Haushalt', `${p.household.persons} Personen, ${p.household.working} erwerbstätig`]);
-  const traits = p.big5.flatMap((v, k) => (v >= 50 + STANDS_OUT ? [BIG5[k][0]] : v <= 50 - STANDS_OUT ? [BIG5[k][1]] : []));
-  rows.push(['Merkmale', [`IQ ${p.iq}`, ...traits].join(', ')]);
+  // only the IQ: the Big Five are numbers of the simulation, and no word for them was agreed (Ramon, 19 Nov 2026)
+  rows.push(['Merkmale', `IQ ${p.iq}`]);
   return { title, rows };
 }
 

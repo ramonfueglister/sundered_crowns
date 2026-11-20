@@ -26,6 +26,36 @@ export interface PlacePeople {
   family: number[];
   /** 1: the person's family lives in a hamlet outside the walls (src/sim/systems/hamlets.ts) */
   hamlet: number[];
+  /** the rulers among them (persons who hold a crown) and the colour of the first realm each holds (0xRRGGBB);
+   *  absent from a server older than the client */
+  rulers?: { uid: number; color: number }[];
+}
+
+/** A ruler as the map shows them (GET /rulers): who, where they live, and the crowns they hold. */
+export interface RulerOnMap {
+  uid: number; name: string; house: string; female: boolean;
+  /** the place the ruler lives in (their family's) */
+  place: number;
+  /** the realms whose crown the ruler holds: the id, the German short name and the colour (0xRRGGBB) */
+  crowns: { id: number; name: string; color: number }[];
+}
+
+/** The rulers who live and hold at least one crown, in the order they came into the world. */
+export function rulersOnMap(s: WorldState): RulerOnMap[] {
+  const held = new Map<number, RulerOnMap['crowns']>();
+  for (let r = 0; r < s.realm.size; r++) {
+    const h = s.realm.cols.holder[r];
+    if (h < 0) continue;
+    const t = s.realmText[r];
+    held.set(h, [...(held.get(h) ?? []), { id: r, name: t.name.de ?? t.name.en, color: s.realm.cols.color[r] }]);
+  }
+  const P = s.person.cols, out: RulerOnMap[] = [];
+  for (const n of s.named ?? []) {
+    const id = n.person, crowns = held.get(id);
+    if (!crowns || P.died[id] !== ALIVE) continue;
+    out.push({ uid: P.uid[id], name: n.name, house: n.house, female: P.sex[id] === 0, place: s.family.cols.place[P.family[id]], crowns });
+  }
+  return out;
 }
 
 /** The part of a person in the economy of the city (economy feature 10, src/sim/systems/economy.ts): what the economy
@@ -180,7 +210,11 @@ export function manyPlacesPeople(s: WorldState, places: readonly number[]): Plac
     if (!o) continue;
     o.id.push(P.uid[i]); o.born.push(P.born[i]); o.sex.push(P.sex[i]); o.family.push(P.family[i]); o.hamlet.push(s.family.cols.hamlet[P.family[i]]);
   }
-  return out.map((o) => at.get(o.place)!);
+  for (const r of rulersOnMap(s)) {
+    const o = at.get(r.place);
+    if (o) (o.rulers ??= []).push({ uid: r.uid, color: r.crowns[0].color });
+  }
+  return out.map((o) => ({ ...at.get(o.place)!, rulers: at.get(o.place)!.rulers ?? [] }));
 }
 
 /** The person `uid` in full: from the table of the persons, else from the archive (`archived`: the year of the

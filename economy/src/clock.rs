@@ -70,11 +70,17 @@
 //! 1. The output of the Leontief function (A.13) is `min(Q_s, N α, K κ, M β)`: the planned supply, what the workers,
 //!    the capital and the materials allow in a period. On the day it is `min(a Q_s, a N α, a K κ, M β)`; `M β` is a
 //!    stock and is not scaled.
-//! 2. A firm buys the materials (A.18) and the investment (A.14) for the day's work, `a` times the port's.
-//! 3. A household that owns no firm buys `a` times its budget (A.46, A.49, with the spending out of savings): the
-//!    market of its faith is closed on its days of rest. The crown and the merchants buy every day, and so does the
-//!    owner of a firm, by his own rule (feature 18) on the profit of the day before: after a day of rest, a day of
-//!    wages without sales, he has nothing to spend out of income; after a working day more than on a mean day.
+//! 2. A firm invests (A.14) for the day's work, `a` times the port's. It buys the materials (A.18) for the next day
+//!    it works: in the port the materials bought in a period are used in the next (A.13 reads the stock `M` before
+//!    the market of the period, A.21 adds what was bought), so on a working day a firm buys the port's materials times
+//!    the factor of its next working day, and on a day of rest, when the market of its faith is closed, nothing
+//!    (economy feature 20).
+//! 3. A household buys `a` times its budget (A.46, A.49, with the spending out of savings): the market of its faith
+//!    is closed on its days of rest. The owner of a firm is such a household too (economy feature 20): he plans his
+//!    spending by the rule of feature 18, on the profit he expects, which is the mean profit per period of his firm
+//!    since its twelfth plan before ([`OwnerProfit`]), grown as the port grows the profit of the period before
+//!    (A.28): the profit of the window of the expectations, a year, in the place of the port's period. The crown and
+//!    the merchants buy every day.
 //! 4. In the market the spare capacity of a firm, which records the demand it cannot serve, is that of the day,
 //!    `a K κ − Y`.
 //! 5. A firm plans on the mean demand per worked day: the demand since its last plan over the factors of those days,
@@ -182,6 +188,20 @@ impl Attendance {
         self.of_calendar(self.household[h], t)
     }
 
+    /// The factor of the flows of firm `i` on its next working day after period `t` (economy feature 20): of the
+    /// periods `t + 1` to `t + 31` the first whose factor is above 0, and 1 if there is none (outside the days every
+    /// period is a working day of the factor 1).
+    pub fn next_working(&self, i: usize, t: usize) -> f64 {
+        if self.calendar.is_empty() {
+            return 1.0;
+        }
+        let c = self.calendar[i];
+        (t + 1..=t + 31)
+            .map(|s| self.of_calendar(c, s))
+            .find(|&a| a > 0.0)
+            .unwrap_or(1.0)
+    }
+
     fn of_calendar(&self, c: u8, t: usize) -> f64 {
         if t < self.from || t - self.from >= self.days {
             return 1.0;
@@ -199,6 +219,78 @@ fn effort(f: &Firms, i: usize) -> f64 {
         1.5,
         min(f.Q_s_i[i], min(f.K_i[i] * f.kappa_i[i], f.M_i[i] * f.beta_i[i])) / (f.N_i[i] as f64 * f.alpha_bar_i[i]),
     )
+}
+
+/// The plan periods over which the owner of a firm takes the mean of its profits (economy feature 20): twelve plans
+/// of 30 days, the year of the window of the expectations.
+pub const OWNER_PLANS: usize = 12;
+
+/// With working days and [`DailyClock::owner`] (economy feature 20): per firm the profits its owner plans his spending
+/// on, by the plan periods of the firm. Of the last [`OWNER_PLANS`] plan periods that ended, the profit summed and the
+/// periods (`ended` and `ended_periods`, one row of firms per plan period, the row of the `n`-th period that ended at
+/// `n % OWNER_PLANS`); of the periods since the last plan the same (`open`, `open_periods`); and per firm the plan
+/// periods that ended (`ends`). All empty before the first period with working days; in that period the year before
+/// is taken to be [`OWNER_PLANS`] plan periods of the profit of the period before, as the clock takes the window
+/// before the start to be the starting position.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct OwnerProfit {
+    pub ended: Vec<f64>,
+    pub ended_periods: Vec<f64>,
+    pub open: Vec<f64>,
+    pub open_periods: Vec<f64>,
+    pub ends: Vec<u32>,
+}
+
+impl OwnerProfit {
+    /// For firms whose profit of the period before is `before`: [`OWNER_PLANS`] plan periods of `plan` periods of
+    /// that profit have ended, and none since.
+    pub fn start(before: &[f64], plan: usize) -> OwnerProfit {
+        let firms = before.len();
+        OwnerProfit {
+            ended: before
+                .iter()
+                .map(|p| p * plan as f64)
+                .collect::<Vec<_>>()
+                .repeat(OWNER_PLANS),
+            ended_periods: vec![plan as f64; OWNER_PLANS * firms],
+            open: vec![0.0; firms],
+            open_periods: vec![0.0; firms],
+            ends: vec![OWNER_PLANS as u32; firms],
+        }
+    }
+    pub fn is_empty(&self) -> bool {
+        self.open.is_empty()
+    }
+    pub fn firms(&self) -> usize {
+        self.open.len()
+    }
+    /// The profit `pi` of firm `i` in the period that is computed.
+    fn add(&mut self, i: usize, pi: f64) {
+        self.open[i] += pi;
+        self.open_periods[i] += 1.0;
+    }
+    /// Firm `i` plans: the periods since its last plan end.
+    fn end(&mut self, i: usize) {
+        let I = self.firms();
+        let row = self.ends[i] as usize % OWNER_PLANS;
+        self.ended[row * I + i] = self.open[i];
+        self.ended_periods[row * I + i] = self.open_periods[i];
+        self.ends[i] += 1;
+        self.open[i] = 0.0;
+        self.open_periods[i] = 0.0;
+    }
+    /// The mean profit per period of firm `i` over the last [`OWNER_PLANS`] plan periods that ended and the periods
+    /// since; `None` before a period has been added.
+    fn mean(&self, i: usize) -> Option<f64> {
+        let I = self.firms();
+        let rows = (self.ends[i] as usize).min(OWNER_PLANS);
+        let (mut sum, mut periods) = (self.open[i], self.open_periods[i]);
+        for row in 0..rows {
+            sum += self.ended[row * I + i];
+            periods += self.ended_periods[row * I + i];
+        }
+        (periods > 0.0).then(|| sum / periods)
+    }
 }
 
 /// The model type of the daily clock and the fields it adds to a model.
@@ -255,6 +347,8 @@ pub struct DailyClock {
     pub trade: Option<Trade>,
     /// the working days of the firms (economy feature 19); empty: every period is a working day, as in the port
     pub attendance: Attendance,
+    /// with working days and [`DailyClock::owner`]: the profits the owners plan their spending on (economy feature 20)
+    pub owner_profit: OwnerProfit,
 }
 
 impl DailyClock {
@@ -285,6 +379,7 @@ impl DailyClock {
             past: None,
             trade: None,
             attendance: Attendance::default(),
+            owner_profit: OwnerProfit::default(),
         })
     }
 
@@ -529,6 +624,9 @@ impl Extension for DailyClock {
                 m.ext.demand[i] = 0.0;
                 m.ext.periods[i] = 0;
                 m.ext.worked[i] = 0.0;
+                if m.ext.owner_profit.firms() == I {
+                    m.ext.owner_profit.end(i);
+                }
             } else {
                 d.Q_s_i[i] = m.firms.Q_s_i[i];
                 d.new_P_i[i] = m.firms.P_i[i];
@@ -536,11 +634,13 @@ impl Extension for DailyClock {
         }
         // what follows from the supply, by the port's rule (A.14, A.18, A.22)
         let (mut I_d_i, mut DM_d_i, N_d_i) = Self::desired_capital_material_employment(&m.firms, &d.Q_s_i);
-        // a firm buys the materials the day's work uses and invests on the days it works (economy feature 19)
+        // a firm invests on the days it works (economy feature 19) and buys on them the materials of the next day it
+        // works (feature 20)
         if !m.ext.attendance.is_empty() {
+            let at = &m.ext.attendance;
             for i in 0..I {
-                let a = m.ext.attendance.factor(i, t);
-                DM_d_i[i] *= a;
+                let a = at.factor(i, t);
+                DM_d_i[i] *= if a > 0.0 { at.next_working(i, t) } else { 0.0 };
                 I_d_i[i] *= a;
             }
         }
@@ -643,6 +743,15 @@ impl Extension for DailyClock {
             for i in 0..pi.len() {
                 pi[i] -= m.firms.P_i[i] * m.firms.DS_i[i];
             }
+            // with working days the owner plans on the profits of the year (economy feature 20)
+            if !m.ext.attendance.is_empty() {
+                if m.ext.owner_profit.firms() != pi.len() {
+                    m.ext.owner_profit = OwnerProfit::start(&m.firms.Pi_i, m.ext.plan);
+                }
+                for (i, &p) in pi.iter().enumerate() {
+                    m.ext.owner_profit.add(i, p);
+                }
+            }
         }
         pi
     }
@@ -735,12 +844,34 @@ impl Extension for DailyClock {
     }
     fn households_budget_firms(m: &mut AbstractModel<Self>) -> (Vec<f64>, Vec<f64>) {
         let n = norm(m);
-        let (mut c, mut i) = base::households_budget_firms(m);
+        // with working days the owner expects the mean profit of the year, grown as the port grows the profit of the
+        // period before (A.28), and buys on the days of his calendar (economy feature 20)
+        let year = m.ext.owner && !m.ext.attendance.is_empty() && m.ext.owner_profit.firms() == m.firms.len();
+        let (mut c, mut i) = if year {
+            let grown = (1.0 + m.agg.pi_e) * (1.0 + m.agg.gamma_e);
+            let expected: Vec<f64> = (0..m.firms.len())
+                .map(|f| m.ext.owner_profit.mean(f).map_or(m.firms.Pi_e_i[f], |p| p * grown))
+                .collect();
+            let day = std::mem::replace(&mut m.firms.Pi_e_i, expected);
+            let budget = base::households_budget_firms(m);
+            m.firms.Pi_e_i = day;
+            budget
+        } else {
+            base::households_budget_firms(m)
+        };
         // an owner who expects a loss plans to buy nothing out of income, not less than nothing
         if m.ext.owner {
             c.iter_mut().chain(i.iter_mut()).for_each(|x| *x = x.max(0.0));
         }
         spend_savings(&mut c, &m.firms.D_h, m.ext.savings, n, m.prop.tau_VAT);
+        if !m.ext.attendance.is_empty() && m.ext.owner {
+            let t = m.ext.periods_computed(m.agg.t) + 1;
+            for f in 0..c.len() {
+                let a = m.ext.attendance.factor(f, t);
+                c[f] *= a;
+                i[f] *= a;
+            }
+        }
         (c, i)
     }
     fn households_budget_banks(m: &mut AbstractModel<Self>) -> (Vec<f64>, Vec<f64>) {
