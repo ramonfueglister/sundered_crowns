@@ -11,7 +11,7 @@ import { arableHa, soilOf, ENGLAND_ARABLE, HECTARES_PER_ACRE } from '../../src/s
 import { harvestKcal, kcalPerHeadDay, farmers, LAND_SHARE, ENGLAND_1300 } from '../../src/sim/systems/harvest';
 import type { World, CultivationJson } from '../../src/sim/world';
 
-export interface EnglandAt {
+interface EnglandAt {
   people: number;
   arableHa: number;
   arableAcres: number;
@@ -74,6 +74,6 @@ export function calibrate(w: World, places: readonly number[], pop: ArrayLike<nu
   const landLimit = limitFor(arablePerHead);
   // T_E: with T_E = 1 the places bring in Y_E · T_E^α too much or too little
   const y = englandAt(w, places, pop, ENGLAND_1300.people, { landLimit, arablePerHead, englandLand: 1 });
-  const englandLand = Math.pow(y.perHeadDay / ENGLAND_1300.kcalPerHeadDay, 1 / LAND_SHARE);
+  const englandLand = (y.perHeadDay / ENGLAND_1300.kcalPerHeadDay) ** (1 / LAND_SHARE);
   return { landLimit, arablePerHead, englandLand };
 }

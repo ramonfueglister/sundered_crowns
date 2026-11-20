@@ -22,7 +22,7 @@ import { foundMoves, redrawMoves } from './systems/moves';
 import type { SetupState } from './setup';
 
 /** The fields of a WorldState in the order createWorldState writes them. */
-const STATE_FIELDS = ['v', 'seed', 'startYear', 'day', 'rng', 'place', 'realm', 'realmText', 'ruler', 'economy', 'person', 'family', 'firm', 'named', 'lot', 'hamlets', 'nextUid', 'archive', 'street', 'field'] as const;
+const STATE_FIELDS = ['v', 'seed', 'startYear', 'day', 'rng', 'place', 'realm', 'realmText', 'ruler', 'economy', 'person', 'family', 'firm', 'named', 'lot', 'hamlets', 'nextUid', 'archive', 'street', 'field', 'landmark'] as const;
 
 /**
  * The steps before 11 are gone (2026-11-16): the only world, europa-1291, is at 11 or later, and the worlds before it are
@@ -318,12 +318,22 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     foundFields(s, w.tilth);
     s.v = 37;
   }
-  if (s.v === 37) { // 37 → 38: the family stands in for a worker who is away (economy feature 24,
+  if (s.v === 37) { // 37 → 38: the landmarks (settlement feature 5, src/sim/systems/landmarks.ts). The church of every
+    // town's see and its buildings known by name are laid on the day the world has reached, and the towns laid out
+    // anew round them as relayTowns lays them: every parcel keeps its family and its size and moves to its street. The
+    // convents and the residence stand at the edge, clear of the parcels, streets and hamlets; the hamlets stay where
+    // they are, and get their fields again. The persons of a world that has run are no longer those of its founding,
+    // so the register cannot be founded anew as a new world founds it.
+    relayTowns(s, w.ground, w.dry);
+    foundFields(s, w.tilth);
+    s.v = 38;
+  }
+  if (s.v === 38) { // 38 → 39: the family stands in for a worker who is away (economy feature 24,
     // src/sim/systems/workers.ts). The economies go on where they are: the engine reads their state of the format
     // before as one in which no family stands in, and is given the working days of the rest of the year, the absences
     // of the rest of the month with the family's stand-ins and the contracts before it computes the next day.
     if (s.economy.cities) s.economy.cities.workingTo = -1;
-    s.v = 38;
+    s.v = 39;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one

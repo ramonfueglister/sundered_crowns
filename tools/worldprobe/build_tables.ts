@@ -24,6 +24,7 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { brotliCompressSync, brotliDecompressSync, constants, gunzipSync } from 'node:zlib';
 import { buildPiece } from '../../src/worldprobe/build';
+import { CROWD_AT } from '../../src/worldprobe/crowd';
 import { extentOf } from '../../src/worldprobe/extent';
 import { FINER, blockOfCell, cellOfBlock } from '../../src/worldprobe/land';
 import { projectionOf } from '../../src/worldprobe/region';
@@ -33,7 +34,7 @@ const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '../..');
 const year = Number(process.argv[2] ?? 1291),
   base = '/',
   name = 'world';
-/** the pieces of the world graphic and the ground a far piece is built on: 200 blocks a side with 32 round them (src/worldprobe/pieces.ts PIECE, NARROW) */
+/** the pieces of the world graphic and the ground a far piece is built on: 200 blocks a side with 32 round them (src/worldprobe/piece_sight.ts PIECE, pieces.ts NARROW) */
 const PIECE = 200,
   MARGIN = 32,
   SIDE = PIECE + 2 * MARGIN,
@@ -141,8 +142,10 @@ async function tableOf(w: { step: number; px: number; pz: number }): Promise<Buf
   keepTables(false);
   if (!built) return 'sea';
   if (!table) return 'no table';
-  // (what stands on a piece is kept with its table where it is one mesh: the landmarks, bridges and ribbons of step 2; houses of a cell and people are not)
-  if (built.cells.length || built.figures) return `houses or people on it (${built.cells.length} cells)`;
+  // (what stands on a piece is kept with its table where it is one mesh: the landmarks, bridges and ribbons of step 2; houses of a cell and people are not,
+  // but the people of the first far step, which the worker places on the table's ground again: crowd.ts, piece.worker.ts)
+  if (built.cells.length || (built.figures && w.step !== CROWD_AT))
+    return `houses or people on it (${built.cells.length} cells)`;
   return zipTable(new Uint8Array(packTable(withThings(table, built.things))));
 }
 const fileOf = (w: { step: number; px: number; pz: number }) => resolve(dir, `${w.step}`, `${w.px}_${w.pz}.tab`);
@@ -192,7 +195,7 @@ if (checking) {
     }
   }
   console.log(
-    `${held} pieces held against their tables: ${differ} differ${differ ? ' (build the tables again: npx tsx tools/worldprobe/build_tables.ts ' + year + ')' : ''}`,
+    `${held} pieces held against their tables: ${differ} differ${differ ? ` (build the tables again: npx tsx tools/worldprobe/build_tables.ts ${year})` : ''}`,
   );
   process.exit(differ ? 1 : 0);
 }

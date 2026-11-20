@@ -240,6 +240,8 @@ export function figureMeshes(f: Figures): {
     mesh.castShadow = true;
     mesh.receiveShadow = true;
     mesh.userData.figures = which;
+    // a far step's figures are given in blocks of the finest step, made the step's here (worldprobe/crowd.ts)
+    if (f.scale) mesh.scale.set(f.scale[0], f.scale[1], f.scale[0]);
     return mesh;
   };
   return { near: make('near'), far: make('far') };

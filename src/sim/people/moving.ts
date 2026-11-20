@@ -28,7 +28,7 @@ import { MOVE_FACTOR_TOP } from './traits';
 export const MOVING_AGE: readonly [number, number] = [10, 60];
 /** From this age a child at home counts as grown (Dribe's two tables: 10 to 17, 17 to 30); at `HOME_UNTIL` the
  *  tables of those who live with their parents end. */
-export const GROWN = 17,
+const GROWN = 17,
   HOME_UNTIL = 30;
 /** From this age a person who lives away from home changes places as a servant (Dribe & Lundh: servants of 15 on). */
 const SERVICE_FROM = 15;

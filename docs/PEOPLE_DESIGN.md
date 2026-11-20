@@ -25,7 +25,8 @@ nothing built before Ramon agrees. Proposal with sources (German): https://claud
 | 7 | The living and the dead: the systems go over the living, the dead go to an archive (step 1: the list of the living; step 2: the archive, with a uid for every person) | built 19 Nov 2026 (Ramon, 19 Nov: «weiter» on the proposal of the archive and the day plan, read as «So bauen» for way A: the archive first, then the day plan). Step 1 no new state, step 2 state 30 |
 | 8 | The calendar of the town: the firms work on the working days of their owner's faith (step 3 of the day plan) | built 19 Nov 2026 (Ramon, 19 Nov: way A of the proposal, after the archive the day plan; «vorwärts machen alles mergen comitten und feddich»). Economy feature 19. State 31 |
 | 9 | Sickness and childbed keep a worker from work (step 4 of the day plan) | built 20 Nov 2026 (Ramon, 20 Nov: «So bauen, Lohn läuft weiter» on the proposal https://claude.ai/artifact/QK327U5QQQGWNCnL5JhHV5). Economy feature 22. State 35 |
-| 10 | Service by the year and work by the day: a worker who heads a family works by the day, every other worker serves by the year (step 6 of the day plan) | built 20 Nov 2026 (Ramon, 20 Nov: «Phase A bauen und messen» on the proposal https://claude.ai/artifact/Wyqd64rfmZgJnz9GZ7Wof9). Economy feature 23. State 36. Since economy feature 24 (State 38) the family stands in first |
+| 10 | Service by the year and work by the day: a worker who heads a family works by the day, every other worker serves by the year (step 6 of the day plan) | built 20 Nov 2026 (Ramon, 20 Nov: «Phase A bauen und messen» on the proposal https://claude.ai/artifact/Wyqd64rfmZgJnz9GZ7Wof9). Economy feature 23. State 36. Since economy feature 24 (State 39) the family stands in first |
+| 11 | History where the world is still history: the shadow world, the parents of the persons of history, and the divergence | built 20 Nov 2026 (Ramon, 20 Nov: «ok» on the recommendation to build the shadow world and the graph of persons first, then the death of a ruler as luck). No new state |
 
 ## Feature 1: persons of the 30 largest cities
 
@@ -157,7 +158,7 @@ whose day has come: about 8 persons a day in the world of 1291. The events of a 
 persons, however the list was built.
 
 A death writes `person.died`, and the family loses its head if the dead person was one. A ruler dies on the day of
-the chronicle as before.
+the chronicle, or, where the chronicle gives no day, on a day drawn from the same life table (feature 11).
 
 **Succession in the economy (assumption, no source).** The engine computes a fixed list of persons for every town
 and cannot add or remove one. A dead person's part (worker, owner of a firm, owner of the bank, the person who does
@@ -1131,3 +1132,49 @@ feature 11), and a widow who heads her family works by the day.
   place stays empty for the day.
 - **The day labourer's days are not his own.** He works every day his firm works and he is there; how many days a day
   labourer wanted and found work (a target income) is phase B of the proposal, a choice of its own.
+
+## Feature 11: history where the world is still history
+
+Ramon, 20 November 2026: historical events should happen where the ruler still exists, and not where the simulation
+has discarded them. Step 1 of the recommendation: the world is compared with its shadow, and the chronicle of rulers
+knows who is whose child.
+
+### The rule
+
+- **The shadow** is what the setup and the chronicles of borders and of rulers have on a day (`src/sim/divergence.ts`).
+  It is computed, not kept, so it is no part of the state. The divergence counts the places whose holder differs, the
+  crowns not with a person history has reigning, the persons of history alive in one and dead in the other, and the
+  persons history has born whom the world could not bear. A difference counts only where history knows the answer.
+  The world server gives it at `GET /divergence`.
+- **Parents.** The chronicle carries the father and the mother of a person where Wikidata names them (P22, P25 in
+  `data/history/rulers/wikidata/holders.csv`) and they are persons of the chronicle too: 892 fathers and 44 mothers in
+  the chronicle of 1291 (`tools/history/rulers/build.ts`).
+- **Who is not born.** A person of history does not enter the world when the father died before the conception or the
+  mother before the birth (Parfit 1984, Reasons and Persons, ch. 16, the non-identity problem). The conception lies
+  268 days before the birth, the median of Jukic et al. 2013 (Human Reproduction 28(10), 2848–2855). A parent the world
+  never let be born counts as gone, up to 40 generations.
+- **Death where the chronicle gives none.** A person of history with a known birth and no known death dies on a day of
+  the life table of feature 2 (`drawDeath`), drawn after the last day the chronicle sees them alive: the end of the
+  last reign, the conception of a child as father, the birth of a child as mother. 114 persons of 1291. A person whose
+  birth is unknown leaves at the end of the last reign as before (OWN RULE: no age to draw from).
+- **The crown of a reign dated before the birth** is given on entering, and a reign that ends on or before its first
+  day gives no day to reign (OWN RULE: the sources give only a year for both). Before, 157 such reigns left a crown
+  with nobody to end it, and four accessions dated before the birth (Mary I of Scotland among them) were lost.
+
+The death of a ruler is not drawn instead of the chronicle's day. Pearl's counterfactual (Pearl 2009, Causality,
+ch. 7) keeps the luck of history and lets only causes change the outcome; nothing in the world changes a ruler's
+mortality yet, so the abducted day is the day of the chronicle.
+
+### Measured (`tests/divergence.test.ts`)
+
+The world of 1291 that nothing touches is history every week from 1291 to 1848: no place, crown, life or birth
+differs (the test samples every 91 days). In a world where a king of the fixture dies in 1295, his son and grandson
+are not born, the crown stays with nobody, and the divergence names the king, the son and the realm.
+
+### Limits
+
+- **Nobody takes a crown that history gave to an unborn person.** A succession of the world's own is the next step.
+- **Few mothers, no spouses.** The children of a queen who dies early stay unborn only where the chronicle knows her
+  as their mother (44 persons); weddings are not in the chronicle.
+- **Wikidata could not be read from the cloud** (query.wikidata.org refuses it); the parents are those of the
+  holders.csv already in the repository.

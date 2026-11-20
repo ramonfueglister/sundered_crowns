@@ -15,7 +15,7 @@ const rnd = () => {
 function lpj(beta = 0.064, theta = -6.3): Float64Array {
   const om = Math.max(2.7, 119.3 * beta - 1.01 * theta - 14.5);
   const L = (x: number) =>
-    Math.pow(x + 1.5, 1 - om) / (1 - om) +
+    (x + 1.5) ** (1 - om) / (1 - om) +
     Math.exp(theta) * (x + Math.log(1 + Math.exp(x - 16))) +
     Math.log(1 + Math.exp(beta * (x - 100))) / beta;
   const l = new Float64Array(122);
@@ -270,19 +270,19 @@ for (const [name, o] of rows) {
   console.log(
     name.padEnd(44),
     'growth',
-    (100 * x.r).toFixed(2) + '%',
+    `${(100 * x.r).toFixed(2)}%`,
     'pop',
     x.pop.toFixed(0),
     'filled',
-    (100 * x.filled).toFixed(0) + '%',
+    `${(100 * x.filled).toFixed(0)}%`,
     'size',
     x.size.toFixed(2),
     'u15',
-    (100 * x.u15).toFixed(0) + '%',
+    `${(100 * x.u15).toFixed(0)}%`,
     'never@40',
-    (100 * x.never40).toFixed(0) + '%',
+    `${(100 * x.never40).toFixed(0)}%`,
     'widows',
-    (100 * x.widows).toFixed(0) + '%',
+    `${(100 * x.widows).toFixed(0)}%`,
     'bride',
     x.firstAge.toFixed(1),
     'cbr',

@@ -3,7 +3,7 @@
 // (tests/cultivation.test.ts).
 import { describe, it, expect } from 'vitest';
 import { harvestKcal, kcalPerHeadDay, farmers, LAND_SHARE, ENGLAND_1300 } from '../src/sim/systems/harvest';
-import { hectares, soilOf } from '../src/sim/systems/cultivation';
+import { soilOf } from '../src/sim/systems/cultivation';
 import { newWorldState } from '../tools/sim/load';
 import { advanceDay } from '../src/sim/engine';
 import { encodeState, decodeState } from '../src/sim/snapshot';
@@ -24,8 +24,8 @@ describe('the harvest model', () => {
   });
   it('gives land the share α and labour the share 1 − α', () => {
     const y = harvestKcal(8000 * 120000, 30000, T);
-    expect(harvestKcal(8000 * 120000, 60000, T) / y).toBeCloseTo(Math.pow(2, 1 - LAND_SHARE), 12);
-    expect(harvestKcal(8000 * 240000, 30000, T) / y).toBeCloseTo(Math.pow(2, LAND_SHARE), 12);
+    expect(harvestKcal(8000 * 120000, 60000, T) / y).toBeCloseTo(2 ** (1 - LAND_SHARE), 12);
+    expect(harvestKcal(8000 * 240000, 30000, T) / y).toBeCloseTo(2 ** LAND_SHARE, 12);
   });
   it('is zero without soil, people or data', () => {
     expect(harvestKcal(0, 100, T)).toBe(0);
@@ -59,7 +59,7 @@ describe('the harvest on the map', () => {
     const Q = s.person.cols; // on the first of January the dead go to the archive and the rows close up (a new table)
     let left = 0; for (let id = 0; id < s.person.size; id++) if (F.place[Q.family[id]] === i && F.hamlet[Q.family[id]] && Q.died[id] === ALIVE) left++;
     expect(left).toBeLessThan(L);
-    expect(s.place.harvest[i] / before).toBeCloseTo(Math.pow(left / L, 1 - LAND_SHARE), 6);
+    expect(s.place.harvest[i] / before).toBeCloseTo((left / L) ** (1 - LAND_SHARE), 6);
   }, 30_000); // the economies of the cities compute the 364 days the test jumps over
   it('tells a client the harvest of a place and what it was computed from', () => {
     const { s, w } = newWorldState();
@@ -82,12 +82,12 @@ describe('the harvest on the map', () => {
 describe('a world saved by an older build', () => {
   it('older than the oldest step this build has is refused', () => {
     const { s, w } = newWorldState();
-    const old = decodeState(encodeState(s)) as any; old.v = OLDEST_STATE_VERSION - 1;
+    const old = decodeState(encodeState(s)); old.v = OLDEST_STATE_VERSION - 1;
     expect(() => upgradeState(decodeState(encodeState(old)), w)).toThrow(/older/);
   });
   it('refuses a state from a newer build', () => {
     const { s } = newWorldState();
-    (s as any).v = STATE_VERSION + 1;
+    s.v = STATE_VERSION + 1;
     expect(() => decodeState(encodeState(s))).toThrow();
   });
 });

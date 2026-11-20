@@ -94,9 +94,9 @@ describe('the family stands in (economy feature 24)', () => {
     expect(family + stood).toBeLessThanOrEqual(away);
   }, 300_000);
 
-  it('comes to a world of state 37 with the next day it computes', () => {
+  it('comes to a world of state 38 with the next day it computes', () => {
     const old = decodeState(encodeState(s));
-    old.v = 37;
+    old.v = 38;
     old.economy.cities!.workingTo = 400;
     const up = upgradeState(old, w);
     expect(up.v).toBe(STATE_VERSION);

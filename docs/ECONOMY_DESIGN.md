@@ -3945,7 +3945,7 @@ files, wirtschaft/schritt6/check6_familie.txt.
 ### State and upgrade
 
 The engine's state format 14: per absence one byte after its last day, 1 if the family stands in. A state of format
-13 is read as one in which no family stands in. State version 38. The upgrade 37 → 38 changes nothing of the
+13 is read as one in which no family stands in. State version 39. The upgrade 38 → 39 changes nothing of the
 economies but the day to which they were given working days (`workingTo` = −1), as the upgrade 35 → 36 did: before
 the next day they are given the working days of the rest of the year, the absences of the rest of the month with the
 family's stand-ins, and the contracts.

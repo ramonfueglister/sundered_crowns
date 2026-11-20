@@ -10,7 +10,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '../..');
-export const PORTRAIT_DIR = resolve(ROOT, 'portrait');
+const PORTRAIT_DIR = resolve(ROOT, 'portrait');
 export const PORTRAIT_PUBLIC = resolve(ROOT, 'public/portrait');
 /** Where the tests build to, so that they never run against a stale file and never touch the one in the repository. */
 export const PORTRAIT_TEST_WASM = resolve(ROOT, 'build/portrait/sc_portrait.wasm');

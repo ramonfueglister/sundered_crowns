@@ -27,7 +27,8 @@
 // until somebody is (an estate; looked at again on the first day of every month, and then offered to the towns
 // within reach, `offersOn` of src/sim/systems/moves.ts). These rules of succession are an assumption, no source.
 //
-// A ruler dies on the day of the chronicle (src/sim/systems/rulers.ts), not here.
+// A ruler's death is decided by src/sim/systems/rulers.ts, not here: by the chronicle, or by `drawDeath` where the
+// chronicle gives none.
 //
 // A person who moves to another place (people feature 4, src/sim/systems/moves.ts) leaves the part to a successor
 // in the same way, and the list of the persons of a place kept here follows the move (`changeFamily`).
@@ -97,11 +98,14 @@ export function drawDeath(s: WorldState, id: number, day: number): number {
   return Math.max(day + 1, P.born[id] + Math.ceil(at * DAYS_PER_YEAR));
 }
 
-/** Gives every living person the day of death, on the day the world has reached; a ruler has none here. */
+/** Gives every living person the day of death, on the day the world has reached; a ruler keeps the one
+ *  src/sim/systems/rulers.ts gave. */
 export function foundDeaths(s: WorldState): void {
   const P = s.person.cols,
-    named = namedPersons(s);
+    named = namedPersons(s),
+    kept = [...named].map((id) => [id, P.dies[id]] as const);
   P.dies.fill(ALIVE);
+  for (const [id, day] of kept) P.dies[id] = day;
   for (let id = 0; id < s.person.size; id++) {
     if (!s.person.alive[id] || P.died[id] !== ALIVE || named.has(id)) continue;
     P.dies[id] = drawDeath(s, id, s.day);
