@@ -140,6 +140,7 @@ if (!share) {
     // (a packed step that was not built now is what the index held before)
     if (PACKED[step] && !steps.includes(step)) {
       if (before?.packs?.[step]) { found.land[step] = before.land[step]; packs[step] = before.packs[step]; files += before.land[step].length / 2; for (const f of readdirSync(here)) bytes += readFileSync(resolve(here, f)).length; }
+      if (before?.sea[step]) found.sea[step] = before.sea[step];
       continue;
     }
     const at: number[] = [];
