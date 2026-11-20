@@ -14,9 +14,11 @@
 //   npx tsx tools/worldprobe/build_tables.ts 1291 6,7          (only these steps; the index lists what lies in the folder)
 //   npx tsx tools/worldprobe/build_tables.ts 1291 4 2.35,48.86 (a trial: the pieces of the step round a place)
 //   npx tsx tools/worldprobe/build_tables.ts 1291 check        (builds one piece in fifty again and tells which tables differ)
+//   TABLES_RESUME=1 npx tsx tools/worldprobe/build_tables.ts 1291 1  (goes on with a build of the same steps that was cut
+//                                                                     off: keeps the tables it wrote, builds the rest)
 import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { cpus } from 'node:os';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -108,12 +110,17 @@ if (checking) {
   process.exit(differ ? 1 : 0);
 }
 
-const share = process.env.TABLES_SHARE?.split('/').map(Number);
+const share = process.env.TABLES_SHARE?.split('/').map(Number), resume = process.env.TABLES_RESUME === '1';
 if (!share) {
   // the pieces are shared out among as many processes as the machine has cores; each writes its tables and what it found
   const n = Math.max(1, Math.min(cpus().length, Math.ceil(wanted.length / 4)));
   console.log(`${wanted.length} pieces of steps ${steps.join(', ')} on ${n} processes`);
-  for (const step of steps) { rmSync(resolve(dir, `${step}`), { recursive: true, force: true }); mkdirSync(resolve(dir, `${step}`), { recursive: true }); }
+  // (going on with a build that was cut off: its tables stay, but not one it was writing as it stopped)
+  for (const step of steps) {
+    if (!resume) rmSync(resolve(dir, `${step}`), { recursive: true, force: true });
+    mkdirSync(resolve(dir, `${step}`), { recursive: true });
+    for (const f of readdirSync(resolve(dir, `${step}`))) if (f.endsWith('.part')) rmSync(resolve(dir, `${step}`, f));
+  }
   const codes = await Promise.all(Array.from({ length: n }, (_, k) => new Promise<number>((done) => spawn(process.execPath, [...process.execArgv, ...process.argv.slice(1)], { stdio: 'inherit', env: { ...process.env, TABLES_SHARE: `${k}/${n}` } }).on('exit', (code) => done(code ?? 1)))));
   if (codes.some((c) => c)) { console.error('a process failed: no index written'); process.exit(1); }
   // the index lists what lies in the folder, of all steps
@@ -164,10 +171,12 @@ else {
   let done = 0;
   const mine = wanted.filter((_, i) => i % n === k);
   for (const w of mine) {
+    if (resume && existsSync(fileOf(w))) { if (++done % 25 === 0 && k === 0) console.log(`${done * n} of ${wanted.length} pieces`); continue; }
     const table = await tableOf(w);
     if (table === 'sea') (sea[w.step] ??= []).push(w.px, w.pz);
     else if (typeof table === 'string') odd.push(`step ${w.step} piece ${w.px},${w.pz}: ${table}`);
-    else writeFileSync(fileOf(w), table);
+    // (written whole or not at all, for a build that goes on after it was cut off)
+    else { writeFileSync(`${fileOf(w)}.part`, table); renameSync(`${fileOf(w)}.part`, fileOf(w)); }
     if (++done % 25 === 0 && k === 0) console.log(`${done * n} of ${wanted.length} pieces`);
   }
   writeFileSync(resolve(dir, `found.${k}.json`), JSON.stringify({ land: {}, sea, odd, inputs }));
