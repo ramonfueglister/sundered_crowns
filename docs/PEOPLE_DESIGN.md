@@ -1068,4 +1068,4 @@ health and of the 18th century. What the days away do to the economies of the ci
 - **The wage runs on.** A worker who is away keeps the place and the wage (Ramon's choice); no sick pay of a guild or
   club is booked apart, and a day labourer paid by the day would lose the day's wage. Wages by the day worked are
   the target income of step 6. Without the wage of the days away the economies of the cities slid further in the
-  measurement; with it the firms carry the wages (economy feature 22).
+  measurement (economy feature 22, variants D and G).
