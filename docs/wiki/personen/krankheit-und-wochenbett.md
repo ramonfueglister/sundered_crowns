@@ -39,7 +39,7 @@ In der Welt von 1291 fehlen die Arbeiter an 3,6 % ihrer Tage, etwa 13 Tage im Ja
 
 Die Wirtschaft der Städte macht 1,9 % weniger in den ersten zwei Jahren und 3,4 % weniger im dritten, die Preise bleiben gleich. Die Betriebe tragen den Lohn der Kranken, und ab dem zweiten Jahr stellen sie weniger Leute ein. Nach dem dritten Jahr bleibt das fast stehen: Im sechsten Jahr macht die Wirtschaft 4,2 % weniger und hat 4 % weniger Stellen.
 
-Die Ersparnisse der Betriebe sinken aber jedes Jahr weiter, nach sechs Jahren sind sie 30 % kleiner, und die der Haushalte steigen um gleich viel. Am Lohn der Kranken liegt das nicht: Bekommen die Kranken keinen Lohn, sinken die Ersparnisse der Betriebe genauso schnell, und die Wirtschaft macht im dritten Jahr 6,3 % weniger statt 3,4 %. Woran es liegt, ist noch offen.
+Die Ersparnisse der Betriebe sinken aber jedes Jahr weiter, nach sechs Jahren sind sie 30 % kleiner, und die der Haushalte steigen um gleich viel. Am Lohn der Kranken liegt das nicht: Bekommen die Kranken keinen Lohn, sinken die Ersparnisse der Betriebe genauso schnell, und die Wirtschaft macht im dritten Jahr 6,3 % weniger statt 3,4 %. Der Grund: Ein Betrieb kauft Werkzeug für seinen ganzen Plan, aber Werkzeug nutzt sich nur bei der Arbeit ab, die wirklich getan wird. Fehlen Kranke, kauft er Werkzeug, das niemand braucht, und das Geld geht an die Inhaber der Werkzeugmacher. Eine Gegenregel schliesst das Leck, lässt die Wirtschaft aber jedes Jahr weiter schrumpfen. Darum ist sie nicht gebaut.
 
 ## Massstab 1 : 100
 
@@ -50,9 +50,9 @@ Jede Person ist eine Figur, die Raten gelten je Person.
 - Frauen nehmen die Tabelle der Männer. Die Frauenkasse von Ashborne hatte drei- bis viermal so viele Krankentage.
 - Morcott ist ein Dorf in England im 18. Jahrhundert, die Welt beginnt 1291.
 - Eine arme Frau ging oft vor dem Ende des Monats wieder arbeiten, eine Rate dafür wurde nicht gefunden.
-- Die Ersparnisse der Betriebe sinken jedes Jahr um etwa 5 %, und das hört in sechs Jahren nicht auf. Der Grund ist noch nicht gefunden.
+- Die Ersparnisse der Betriebe sinken jedes Jahr um etwa 5 %, und das hört in sechs Jahren nicht auf. Sie stecken in Werkzeug, das niemand braucht.
 - Die Fehltage werden der Wirtschaft monatlich gegeben. Stirbt ein Arbeiter, übernimmt der Erbe für den Rest des Monats seine Fehltage.
-- Die Regeln, wie ein Betrieb mit Kranken plant und Material kauft, stammen nicht aus einem Paper, sondern sind aus den Regeln des Modells abgeleitet. Sieben Varianten wurden gemessen.
+- Die Regeln, wie ein Betrieb mit Kranken plant und Material kauft, stammen nicht aus einem Paper, sondern sind aus den Regeln des Modells abgeleitet. Acht Varianten wurden gemessen.
 
 ## Quellen
 

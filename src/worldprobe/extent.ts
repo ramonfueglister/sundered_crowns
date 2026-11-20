@@ -4,11 +4,17 @@ import extent from '../../data/content/world_extent.json';
 import type { Projection } from './region';
 
 /** The frame in cells of a projection: its columns from west to east and its rows from north to south. */
-export interface Extent { west: number; east: number; north: number; south: number }
+interface Extent {
+  west: number;
+  east: number;
+  north: number;
+  south: number;
+}
 
 /** The world's frame in the cells of a projection, no taller than the region itself. */
 export function extentOf(p: Pick<Projection, 'cellOf' | 'rows'>): Extent {
-  const [west, north] = p.cellOf(extent.west, extent.north), [east, south] = p.cellOf(extent.east, extent.south);
+  const [west, north] = p.cellOf(extent.west, extent.north),
+    [east, south] = p.cellOf(extent.east, extent.south);
   return { west, east, north: Math.max(0, north), south: Math.min(p.rows, south) };
 }
 
@@ -17,6 +23,7 @@ export function extentOf(p: Pick<Projection, 'cellOf' | 'rows'>): Extent {
  * the frame is held at the frame's middle.
  */
 export function heldIn(e: Extent, u: number, v: number, wide: number, tall: number): [number, number] {
-  const right = Math.min(e.east - e.west, wide) / 2, down = Math.min(e.south - e.north, tall) / 2;
+  const right = Math.min(e.east - e.west, wide) / 2,
+    down = Math.min(e.south - e.north, tall) / 2;
   return [Math.min(e.east - right, Math.max(e.west + right, u)), Math.min(e.south - down, Math.max(e.north + down, v))];
 }
