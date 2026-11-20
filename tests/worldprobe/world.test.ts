@@ -242,6 +242,22 @@ describe('a walled town of the plan from farther away', () => {
     expect(walled.outside).toBeGreaterThan(N * N * 0.3);
     expect(open.inside).toBeGreaterThan(42 * 42 * 0.3);
   });
+
+  it('grows no tree within its wall nor two blocks round it at any far step, where the finest step grows none', () => {
+    // all the land under woods; the town's square is 258 … 342 × 158 … 242 with the two blocks round it
+    const trees = (step: number, wall: [] | null) => {
+      usePlan({ pieceBlocks: 200, greatKinds: [], pieces: { '1,1': { houses: [], towns: [{ site: 0, cx: 300, cz: 200, half: 40, wall }] } } });
+      const c = coverLand(ground(0), step, new Batch(), [], { ploughed: () => 0, vines: () => 0, farm: () => styleOf('').house, own: () => true, woods: () => ({ share: 1, crowns: LEAVES, tall: false }) });
+      const w = 2 ** step, on = (v: number, lo: number, hi: number) => (v + 0.5) * w >= lo && (v + 0.5) * w < hi;
+      let inside = 0;
+      for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) if (on(x, 258, 342) && on(z, 158, 242) && (step === 1 ? c.trees?.[(z * N + x) * 2] : c.kind![z * N + x] >= 8)) inside++;
+      return inside;
+    };
+    for (const step of [1, 2, 3]) {
+      expect(trees(step, []), `step ${step}`).toBe(0);
+      expect(trees(step, null), `step ${step}`).toBeGreaterThan(0);
+    }
+  });
 });
 
 describe('a monument', () => {
