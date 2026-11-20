@@ -3,7 +3,7 @@
 // (tests/cultivation.test.ts).
 import { describe, it, expect } from 'vitest';
 import { harvestKcal, kcalPerHeadDay, farmers, LAND_SHARE, ENGLAND_1300 } from '../src/sim/systems/harvest';
-import { hectares, soilOf } from '../src/sim/systems/cultivation';
+import { soilOf } from '../src/sim/systems/cultivation';
 import { newWorldState } from '../tools/sim/load';
 import { advanceDay } from '../src/sim/engine';
 import { encodeState, decodeState } from '../src/sim/snapshot';
