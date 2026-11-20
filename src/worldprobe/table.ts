@@ -15,7 +15,8 @@
 import { Batch, type RGB } from '../lookprobe/batch';
 import { type Ground, type GroundTraits, Mat, N, SUMMIT, idx, onGrid } from '../lookprobe/layout';
 import { buildShore } from '../lookprobe/shore';
-import { type Part, buildTerrain, buildWater, drawnTops, sideTopAt } from '../lookprobe/terrain';
+import { type Part, buildTerrain, buildWater, sideTopAt } from '../lookprobe/terrain';
+import { drawnTops } from '../lookprobe/terrain_woods';
 import { pack, unpack } from './pack';
 import { HOUSE_NUMBERS, drawHouses, housesBatch, housesIn } from './houses';
 import { FAR_FROM_ROADS, ROAD_SHOWS, roadOn } from './roads';
@@ -24,7 +25,7 @@ import { TREE_NUMBERS, crownTallAt, drawTrees } from './trees';
 
 /**
  * The columns round a piece's own that its picture depends on: the sky's share is taken up to 10.5 columns from a
- * corner (terrain.ts `skyShare`), the shore's line over three (shore.ts). The table holds the piece's own columns
+ * corner (terrain_light.ts `skyShare`), the shore's line over three (shore.ts). The table holds the piece's own columns
  * and this many round them; the rest of its ground is left empty.
  */
 export const RIM = 16;
@@ -408,7 +409,7 @@ export function drawLand(table: Table, bakedSky: boolean, part: Part, step: numb
   });
 }
 
-/** The tops of a table's columns as they are drawn: where trees stand, lower than the table has them (terrain.ts `drawnTops`). */
+/** The tops of a table's columns as they are drawn: where trees stand, lower than the table has them (terrain_woods.ts `drawnTops`). */
 export function drawnHeights(table: Table): ArrayLike<number> {
   const g: Ground = {
     h: table.h,

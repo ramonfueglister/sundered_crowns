@@ -24,8 +24,8 @@
 //  - what stands on the ground as a thing of its own (the landmarks of the finest far step), which the coarser step
 //    does not have: it goes down into its column. The houses drawn as houses (houses.ts) that the coarser step draws
 //    too end where it has them, corner by corner; the others go down into their columns.
-//  - what the columns carry as faces inside a column (the crowns of the woods, lookprobe/terrain.ts `woodsOf`): the
-//    piece's own go down into their column, and those of the coarser piece, which the piece carries too, come up
+//  - what the columns carry as faces inside a column (the crowns of the woods, lookprobe/terrain_woods.ts `woodsOf`):
+//    the piece's own go down into their column, and those of the coarser piece, which the piece carries too, come up
 //    from under it to where that piece has them.
 // What stays as it is and changes at the border, in the short dissolve as before (pieces.ts): the colours of the
 // water, and the sea where the coarser step has water above the sea's level.

@@ -17,7 +17,7 @@ import { type Batch, type RGB, type Rnd, hash2, mix, noise2, rgb, seeded, shade 
 import { ACACIA, CYPRESS, JUNGLE, LEAVES, OATS, OATS_SIDE, PALM, VINE_BODY, WHEAT, WHEAT_SIDE } from '../lookprobe/blocks';
 import { type HouseStyle, type Model, type Style, tower, townWall } from '../buildings';
 import { type Ground, Mat, N, idx, inGrid, occlude } from '../lookprobe/layout';
-import { FALLOW_SHOWS, SOIL_FALLOW } from '../lookprobe/terrain';
+import { FALLOW_SHOWS, SOIL_FALLOW } from '../lookprobe/terrain_colours';
 import { CROPS_AT, FALLOW_FIELD, OATS_FIELD, WHEAT_FIELD } from './crops';
 import { CROWD_AT, builtOn, streetOn } from './crowd';
 import { HOUSE_NUMBERS, houseShape } from './houses';

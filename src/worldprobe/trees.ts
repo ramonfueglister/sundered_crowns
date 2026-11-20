@@ -85,7 +85,7 @@ function sortOf(tx: number, tz: number, kind: number): 'palm' | 'acacia' | 'jung
 /**
  * The colours of a crown of `crowns` (blocks.ts) on top and on its sides, as the finest step's trees show them
  * (blocks.ts `tree`, `cypress`, `acacia`, `palm`): the coarser far steps draw the trees of a column as one crown in
- * them (terrain.ts `woodsOf`), so that the woods keep their colours from step to step.
+ * them (terrain_woods.ts `woodsOf`), so that the woods keep their colours from step to step.
  */
 export function crownColours(g: RGB, crowns: readonly RGB[]): [RGB, RGB] {
   if (crowns === CYPRESS) return [shade(g, 1.25), g];
