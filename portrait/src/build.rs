@@ -137,9 +137,10 @@ impl<'a> Ctx<'a> {
 /// place across its (empty) image, in fifths: gold, the circlet's stones of two kinds, a large fleuron's stone,
 /// pearls. The triangles without area that tie a stone to the gold are left out. Gold is drawn as metal; a stone
 /// is polished, a pearl a little dull (by eye: PLACEHOLDER).
-fn crown(dir: &str, d: &crate::dress::DressSet, pp: &[V3], base: &[V3]) -> Vec<Surface> {
+/// (round 146) A circlet (`DressSet::circlet`) is the same script's file without fleurons, and read the same way.
+fn crown(dir: &str, file: &str, d: &crate::dress::DressSet, pp: &[V3], base: &[V3]) -> Vec<Surface> {
     const KINDS: f32 = 5.0;
-    let Some(all) = mh_rope(dir, d.crown, "", pp, base, &|_| [1.0; 3]) else { return Vec::new() };
+    let Some(all) = mh_rope(dir, file, "", pp, base, &|_| [1.0; 3]) else { return Vec::new() };
     let stone = |rough: f32| Surface::new(Mat { rough, metal: 0.0, double: false });
     let mut parts = [Surface::new(crate::fasten::METAL), stone(0.12), stone(0.3)];
     for t in (0..all.pos.len()).step_by(3) {
@@ -1064,14 +1065,17 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
             }
         }
         // (round 128) a fillet on the hair: a stiff band of linen, bound and carried as a plait's strands are
+        // (round 146) at court a circlet in its place: gilt metal with stones, read as the crown is
         if let Some(d) = garb.filter(|d| d.fillet_of(fem, p.age, p.seed)) {
-            if let Some(sf) = mh_rope(dir, d.fillet, "", &x.pp, &h.base, &|_| hex(d.linen)) {
+            if !d.circlet.is_empty() {
+                out.extend(crown(dir, d.circlet, d, &x.pp, &h.base));
+            } else if let Some(sf) = mh_rope(dir, d.fillet, "", &x.pp, &h.base, &|_| hex(d.linen)) {
                 out.push(sf);
             }
         }
         // (round 144) a crown: gold, its stones and its pearls, bound and carried as the fillet is
         if let Some(d) = garb.filter(|d| !d.crown.is_empty()) {
-            out.extend(crown(dir, d, &x.pp, &h.base));
+            out.extend(crown(dir, d.crown, d, &x.pp, &h.base));
         }
         // (round 132) a man's coif: a close cap of linen over the hair and the ears with its strings under the
         // chin, bound and carried as the fillet is

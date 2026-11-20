@@ -17,7 +17,7 @@ one, changes nothing: same people in, same pictures out, measured.
 |---|---|---|
 | Builder | `portrait/` (Rust, WebAssembly) | From a person (100 bytes of genes, sex, age, estate, occupation, origin, food, mourning, wealth, worn clothes) to the triangles of head and shoulders: MakeHuman's head morphed by the genes, skin, eyes, hair, beard, clothes, headwear, jewellery |
 | Genes | `portrait/src/dna.rs` | 50 genes of two alleles, one byte each (Apoleia's 34, and 16 since round 112 that a dress with a table shows); a child takes one allele of each gene from either parent, plus a small mutation; founders draw from one of 23 pools (round 111), which one is the culture's (`src/sim/people/pools.ts`) |
-| Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; a culture without a set wears the plain dress of 1356 (round 111), one of Apoleia's seven regions Apoleia's Roman dress. England's has a table for people of rank and one for a crowned head (round 144), chosen by the person's stand; a crowned head wears a mantle faced with ermine over the gown (round 145, `portrait/src/mantle.rs`) |
+| Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; a culture without a set wears the plain dress of 1356 (round 111), one of Apoleia's seven regions Apoleia's Roman dress. England's has a table for people of rank and one for a crowned head (round 144), chosen by the person's stand; a crowned head wears a mantle faced with ermine over the gown (round 145, `portrait/src/mantle.rs`); a lady of rank shows her plaits and wears a circlet of gilt metal on them (round 146) |
 | Stage profile | `src/portrait/profile.ts` | Light and materials per set of dress; Apoleia's portraits keep Apoleia's |
 | Pipeline | `tools/portrait/pipeline/` | Blender scripts that wrote the draped clothes and hair (not part of the build) |
 | Files of the real look | `public/portrait/` (41.5 MB) | The head (1.1 MB), data files (15.0 MB since round 111, 13.1 since round 110, 12.7 since round 109, 12.9 since round 105, 10.4 before round 104: the hair's bodies, the beard's locks, draped clothes, skin shading), images (24.8 MB: skin by age and sex, wrinkle maps, hair, cloth, eyes) |
@@ -6600,6 +6600,107 @@ crown's test builds each stand once (with the mantle 17.4 s of its 20 here, 4.1 
 `tests/portrait.test.ts` and its neighbour 43 of 43; typecheck and lint pass.
 Pictures (project files, `portraits/`): `runde145_vorher_nachher.png` (four crowned people before and after),
 `runde145_mantel.png` (four more, and the first four a quarter turned), `runde145_koenig.png` (a king, large).
+
+**Round 146: a lady's plaits and a circlet** (2026-11-20). Round 144's court beside the reference's at one
+size, eight women and eight men of the sample dressed as people of rank: the women of 24 and more wear the
+villagers' linen veil, a sheet over the head and the shoulders, and from 50 the wimple under it; the men the
+hood on the head. Dyed cloth under a peasant's head. The reference's women of rank show their hair, plaited and
+dressed, with a band of metal and stones on it.
+
+What was read (each as an account of the page by a reading tool, not the page itself; none a primary source).
+- The Medieval Combat Society, Female reenactment costume (themcs.org; a re-enactment society's page without
+  notes; its first half word for word, the rest as a summary that was not used), the part on Edward III's
+  reign: "Hair was worn in plaits around the face, the rich having gold or silver or embroided tubes on either
+  side of the face which was suspended from a narrow band worn around the head"; "Ladies wore veils and
+  wimples, those of the rich being made of fine transparent silk"; "Over the 14th century the wimple became
+  less common, being worn by older women and nuns"; "A gilded or jewelled circlet was worn by the nobility, or
+  ornate net was worn. Veils, nets, barbettes and hoods were worn by all"; "From around 1349 the nebulé
+  headdress ... was worn"; captions of brasses: "Cylinder Cauls or Templars, Eleanor Mohun, Atherington, 1349",
+  "Floral coronet over veil with pin, Unknown Lady, Norwell, 1350".
+- Rosalie Gilbert, Headwear (rosaliegilbert.com/headwear.html; a re-enactor's page): "Wealthy women preferred
+  to have their external fillets made from metal and set with metal flowers or sometimes jewels", "These days
+  we usually refer to them collectively as circlets", "Royal and noble ladies favoured them on any important
+  occasion"; a fillet on a Madonna "dated between 1340 and 1360" that "sits up high on her head, almost like a
+  crown"; "The filet and barbette gradually became less popular in the middle part of the 14th century in
+  favour of plaits worn on each side of the face".
+- The same, Crowns, coronets, diadems and circlets (/crownsandcirclets.html): the circlet of the bust of
+  Marie de France, "1327 to 1341", "a one-piece, being worn with a braided hairstyle", with "holes drilled
+  where gemstones probably once were"; "The circlet or coronet returned to fashion among ladies of the nobility
+  and upper classes about 1360", then of hinged plaques in place of "the solid band previously worn"; a
+  coronet of 1370 to 1372 "set at regular intervals with only a few gemstones". No measure, no number of
+  stones, nothing on where on the head it sat.
+- The Fashion Institute of Technology's page on 1350 to 1399 and Wikipedia on the chaperon were read for the
+  men's heads: nothing on what a man of rank wore on the head about 1356 beyond "a hood" (the chaperon wound on
+  the head is later; in the hunting book of about 1400 the hood's old form is worn "by the very
+  highest-ranking figures"). Nothing is changed on the men.
+
+What is changed.
+- **Who shows her hair** (`portrait/src/dress.rs` `COURT_1356`: `veils`, `unveiled_until`): at court six women
+  in ten wear no veil until 50 years (the common people's: three in ten until 30), their hair in plaits as a
+  girl's, hanging or pinned up beside the cheeks (round 126's six in ten). Three in ten wear the veil set back,
+  one in ten the veil on forehead and cheeks, and from 50 every woman the veil with the wimple, as before.
+- **A circlet** (`DressSet::circlet`, `metal_circlet`, 29 kB packed; `tools/portrait/pipeline/crown.py` with
+  `CROWN_PLAIN=1`): of the ladies who show their plaits seven in ten, from 15 years, wear a band of gilt metal
+  round the head on the hair, at the top of the forehead where round 128's linen fillet lies and in its place:
+  1.6 cm high and 2.5 mm thick with a rim raised 0.8 mm at foot and top, twelve stones on it, a sapphire and a
+  balas ruby in turn (domes 1 cm broad, the crown's colours). It is the crown's script without its fleurons,
+  fitted round a woman's plaited hair alone and 2 mm off it; the builder reads it as it reads the crown
+  (`build.rs` `crown`, which takes the file's name now). One mesh of 1 416 points and 3 192 triangles, 408 of
+  them without area. The crown's own file is written byte for byte as before.
+
+Measured (`portrait/tests/court.rs`, one new test).
+
+| | |
+|---|---|
+| of 100 000 seeds, ladies without a veil at 17, 25, 45, 50 | 100 000, 60 000, 60 000, 0 |
+| the same of the common people at 25, 45 | 30 000, 0 |
+| ladies with a circlet at 14, 17, 35, 55 | 0, 70 000, 42 000, 0 |
+| on forty ladies of 17 to 45: with a circlet, without | 20, 20 |
+| the band's foot over the eyes, in front | 4.0 to 5.4 cm |
+| the band's breadth against the hair's with its plaits | 1.5 to 3.6 cm narrower |
+| corners of hair that stand through the band | 0 (6 on one of the twenty with the band 0.8 mm off the hair) |
+
+Tried and not kept. (1) The band 1.1 cm high with stones 7 mm broad: a wire with dots at a portrait's size.
+(2) Fitted round the plaits, the hair under a veil and the pinned plaits' strands together, 1.5 mm off them: a
+hoop standing a centimetre off the temples; round the plaited hair alone it lies on it, and the pinned
+plaits' upper ends go under it. (3) Evened less by the builder (`CROWN_EVEN=40` for 300) and round the head
+(over 6 degrees for 12): no difference to be seen in the picture; the 6 degrees are kept, the 300 too.
+(4) The foot 0.4 cm under the head's middle in front and 0.6 over it behind (the crown's: 0.8 and 1.2): the
+same picture; the crown's values are kept. (5) 0.8 mm off the hair: on one of twenty heads six corners of hair
+stood 0.14 mm through the band.
+
+**The gauntlet**: 22 of 22 over the whole sample (read with this round's build), every line as in rounds 138
+to 145 to its last figure: the sample is the common people's.
+
+Honest about it. Two women of the sample's eight grown ones look like ladies now; the others are as they
+were, and nothing is gained on the men, whose hood on the head is the weakest thing in a picture of the court:
+the pages read say nothing of a lord's head but that he wore a hood. The circlet is a stiff smooth ring: no
+plaques, no flowers of metal, no enamel, no pearls; its stones are twelve small domes that read as dots; it
+lies on the hair like a hoop laid on it and does not press into it, and at a portrait's size its far side
+shows as a dark band behind the temples. It sits where the linen fillet sat, high on the head, by one sentence
+on a Madonna; the reference's bands lie lower, on the forehead. Every lady's is the same, and she wears it in
+every picture where the pages have it for occasions. What the pages do say of the rich is not built: the tubes
+of gold or silver beside the face that hung from the band, a net, a veil of transparent silk (the court's veil
+is the villagers' linen, as coarse as theirs), the frilled veil from 1349. That a lady went without any veil
+is not said by any page read: one has the plaits "around the face", another the circlet "with a braided
+hairstyle" on a bust, a third a coronet "over veil"; the shares, the 50 years, the band's measures and stones
+are by eye, PLACEHOLDER. The plaits themselves are the girls' of the villages: pinned up they run from under
+the ear to the temple, hanging they lie in front of the shoulders and over a buttoned gown's buttons. The gown under it all is
+still the villagers' sack. The sources are two re-enactors' pages, read as accounts; no effigy, brass or
+manuscript was looked at.
+
+Tests: `portrait/tests/court.rs`, one new (who shows her hair at court and among the common people, who wears
+the circlet; on forty ladies the band of metal with its twelve stones over the eyes and under the hair's
+crown, each stone on the band, no hair through it, no linen fillet at court, no metal on a woman of the
+common people). Two older tests moved with it: round 144's test of the court's gown tells
+a gown's buttons (under the chin) from a circlet's metal and allows a lady her stones; in
+`tests/portrait.test.ts` the one woman of rank among the test's people (44 years) need not wear the veil
+before 50. `cargo test --release` as a whole: 118 of 119 in the full run (that test of round 144's), then
+`court.rs` again, 4 of 4. `tests/portrait.test.ts` and its neighbour 42 of 43 in the full run (the veil of
+that woman), that test again after the change: passes; typecheck and lint pass.
+Pictures (project files, `portraits/`): `runde146_vorher_nachher.png` (the sample's eight grown women at
+court, before and after), `runde146_reif.png` (five ladies with the circlet, hanging and pinned plaits, from
+the front, the side and behind).
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the

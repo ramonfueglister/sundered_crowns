@@ -28,6 +28,9 @@
 #   CROWN_LILY   a large fleuron's height and a small one's
 #   CROWN_SOFT   over how many degrees the band's distance from the axis is evened round the head
 #   CROWN_EVEN   how often the builder evens out how the head carries it
+#   CROWN_PLAIN  (round 146) 1: a circlet, the band alone with a stone at each of its twelve places, of the two
+#                kinds in turn, and no fleurons; CROWN_RIM how far the rims at foot and top stand out (with
+#                CROWN_PLAIN), CROWN_STONE a stone's half breadth, half height and how far it stands off the band
 import os
 import sys
 import numpy as np
@@ -40,6 +43,7 @@ AT = _e('CROWN_AT', '-0.08,0.12')
 WIDE, THICK, GAP, FLARE = _e('CROWN_BAND', '0.2,0.03,0.015,0.02')
 LILY = _e('CROWN_LILY', '0.46,0.25')
 EVEN = int(os.environ.get('CROWN_EVEN', '300'))
+PLAIN = os.environ.get('CROWN_PLAIN', '') == '1'
 KINDS = 5
 PLAQUES, STEPS = 12, 12
 N = PLAQUES * STEPS
@@ -81,7 +85,7 @@ def out_of(t):
 
 # The band's rings: outer foot, outer rim under the middle, outer middle, outer rim over it, outer top, inner top,
 # inner foot. The rims stand a little further out than the middle (a raised edge at foot and top).
-RIM = 0.012
+RIM = _e('CROWN_RIM', '0.012')[0] if PLAIN else 0.012
 M = 7
 ring = []
 for t, rr, y in zip(TH, r, foot):
@@ -156,6 +160,11 @@ for pl in range(PLAQUES):
     large = pl % 2 == 0
     t, d = TH[i0], out_of(TH[i0])
     side = np.cross(UP, d)   # (side, UP and d are a right hand's: what runs counter-clockwise in (side, UP) faces out)
+    if PLAIN:
+        mid = ring[i0][2]
+        ball(verts[mid] + d * 0.004, _e('CROWN_STONE', '0.036,0.032,0.02'), 1 + pl % 2, mid, axis=(side, UP, d))
+        stones += 1
+        continue
     # the fleuron: its foot on the band's top between the rings beside i0, front on the outer corners, back on the inner
     lo, hi = ring[(i0 - 1) % N], ring[(i0 + 1) % N]
     c_out, c_in = verts[ring[i0][4]], verts[ring[i0][5]]
@@ -214,4 +223,4 @@ with open(os.path.join(out, name + '_view.obj'), 'w') as f:
 # (every triangle of the gold's faces and of a stone faces out of its own piece: the pieces are closed)
 vol = sum(np.dot(verts[a], np.cross(verts[b], verts[c])) for a, b, c in tri_list) / 6
 assert vol > 0, vol
-print(f'{name}: {len(verts)} points, {len(tri_list)} triangles ({sum(1 for t in tri_list if t[1] == t[2])} without area), {PLAQUES} fleurons, {stones} stones; the foot {AT[0] * 10:.1f} cm over the head\'s middle in front, {AT[1] * 10:.1f} behind')
+print(f'{name}: {len(verts)} points, {len(tri_list)} triangles ({sum(1 for t in tri_list if t[1] == t[2])} without area), {0 if PLAIN else PLAQUES} fleurons, {stones} stones; the foot {AT[0] * 10:.1f} cm over the head\'s middle in front, {AT[1] * 10:.1f} behind')

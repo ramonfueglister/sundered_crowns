@@ -323,6 +323,10 @@ pub struct DressSet {
     pub fillet: &'static str,
     pub fillet_from: f32,
     pub fillets: [bool; 10],
+    /// (round 146) A circlet: a band of gilt metal round the head, on the hair, with stones set in it (the file's
+    /// name, `tools/portrait/pipeline/crown.py` with `CROWN_PLAIN`; empty: the table has none), in `crown_gold`
+    /// and the first two of `crown_stones`. Who wears a fillet (`fillet_of`) wears it in the fillet's place.
+    pub circlet: &'static str,
     /// (round 129) How a gown is closed in front (fasten.rs), a woman's and a man's, by the sixth digit of the
     /// seed from the right, from `fasten_from` years (hers, his); a child's is pulled over the head. Lace and
     /// buttons are of the gown's cloth and colour. England's women: five in ten laced, two in ten buttoned, three
@@ -943,6 +947,7 @@ const ENGLAND: DressSet = DressSet {
     fillet: "cloth_fillet",
     fillet_from: 15.0,
     fillets: [true, false, false, true, false, false, false, true, false, false],
+    circlet: "",
     fastens: {
         use crate::fasten::Fasten::{Buttons, Laced, None as Closed};
         [[Laced, Closed, Buttons, Laced, Laced, Closed, Laced, Buttons, Closed, Laced], [Closed, Closed, Buttons, Closed, Closed, Closed, Closed, Buttons, Closed, Closed]]
@@ -1233,6 +1238,14 @@ const COURT: DressSet = DressSet {
     },
     buttons: "#d9b45a",
     parted: [false, true, false, false, true, false, false, true, false, false],
+    // (round 146) a lady shows her hair in plaits until the wimple's age, six in ten of them, and seven in ten of
+    // those with a circlet on it: PLACEHOLDER, the shares and the age by eye
+    veils: [Veil::None, Veil::Back, Veil::None, Veil::None, Veil::Closed, Veil::None, Veil::Back, Veil::None, Veil::Back, Veil::None],
+    unveiled_until: 50.0,
+    fillets: [true, true, false, true, true, false, true, true, false, true],
+    circlet: "metal_circlet",
+    crown_gold: "#e0b24e",
+    crown_stones: ["#1c3fa8", "#b02a4a", "#c22f52", "#efe9dc"],
     sources: COURT_SOURCES,
     ..ENGLAND
 };
@@ -1244,6 +1257,7 @@ pub static CROWNED_1356: DressSet = DressSet {
     veil_from: 999.0,
     wimple_from: 999.0,
     fillet: "",
+    circlet: "",
     coif: "",
     hat: "",
     // (the hair under a crown lies flat, as under a hat: a cut's own body stands 2 cm off the skull where the
@@ -1270,6 +1284,7 @@ const COURT_SOURCES: &[Source] = &[
     Source { what: "the gown buttoned in front on eight men in ten and six women in ten from 15 and 14 years, laced on three women in ten, with buttons of gilt metal", source: "The same page: 'the cotehardie fits snugly and is buttoned up the front' (a caption of the late 14th century), and noblemen and squires about 1350 in tunics 'so short and tight' (the continuation of Guillaume de Nangis, after Braudel). Rosalie Gilbert, Buttons and Lacings (rosaliegilbert.com/buttonsandlacings.html, read 20.11.2026 as an account of the page): 'the upper classes would have preferred ... metal buttons', the lower classes 'matching cloth buttons'; a tin button with a glass stone of the late 14th century (Museum of London). Which metal is not said: gilt is PLACEHOLDER, and so are the shares." },
     Source { what: "mi-parti: a man's gown of two cloths, one on each side, on three men in ten from 15 years who wear no crown", source: "The same Wikipedia page: 'a fashion for mi-parti or parti-coloured garments made of two contrasting fabrics, one on each side, arose for men in mid-century ... and was especially popular at the English court' (after Black & Garland). The share is PLACEHOLDER." },
     Source { what: "a crown on a king, an emperor and a queen who reigns: a circlet of gold with twelve fleurons, six large and six small in turn, a sapphire or a balas ruby on the circlet under each, a balas ruby and three pearls on each large fleuron; nothing else on the head, a woman's hair in plaits under it", source: "Crowns in the treasure of Richard II (Institute of Historical Research and Royal Holloway, archives.history.ac.uk/richardII/crowns.html; read 20.11.2026 as an account of the page): eleven gold crowns in the inventory of 1399, crowns 'with alternating large and small fleurons', of eight, ten, twelve and fourteen; the one that survives (Munich, Schatzkammer, c. 1380) 'a circlet of twelve hinged plaques and six large and six small fleurons'; 'sapphires, balas rubies and clusters of pearls'. Forty years after 1356 and no measure given: the crown's height, the form of a fleuron (a lily of three leaves, by the page's gloss 'lily-shaped') and the stones' places are PLACEHOLDER; the plaques, their tracery and enamel are not drawn. The plaits under a crown: the Wikipedia page's royal lady of the 1350s, 'her hair is worn in two braids beneath her crown' (Italy)." },
+    Source { what: "a lady's hair in plaits, hanging or pinned up beside the cheeks, shown by six in ten until 50 years, and on seven in ten of those a circlet: a band of gilt metal 1.6 cm high round the head on the hair, set with twelve stones, a sapphire and a balas ruby in turn; the veil on the others, the wimple from 50 (round 146)", source: "The Medieval Combat Society, Female reenactment costume, the part on Edward III's reign (themcs.org/costume/Female reenactment costume.htm; a re-enactment society's page without notes, its first half read 20.11.2026 as an account of the page): 'Hair was worn in plaits around the face, the rich having gold or silver or embroided tubes on either side of the face which was suspended from a narrow band worn around the head'; 'Ladies wore veils and wimples, those of the rich being made of fine transparent silk'; 'Over the 14th century the wimple became less common, being worn by older women and nuns'; 'A gilded or jewelled circlet was worn by the nobility, or ornate net was worn'; a brass of 1350 with a 'floral coronet over veil'. Rosalie Gilbert, Headwear and Crowns, coronets, diadems and circlets (rosaliegilbert.com/headwear.html, /crownsandcirclets.html; a re-enactor's pages, read the same day as accounts of the pages): 'Wealthy women preferred to have their external fillets made from metal and set with metal flowers or sometimes jewels', 'Royal and noble ladies favoured them on any important occasion'; plaits 'worn on each side of the face' in the middle part of the century; a circlet of 1327 to 1341 (the bust of Marie de France) 'a one-piece, being worn with a braided hairstyle', with holes 'where gemstones probably once were'; from about 1360 coronets of hinged plaques in place of 'the solid band previously worn'; a fillet of 1340 to 1360 that 'sits up high on her head, almost like a crown'. No page gives a measure, a number of stones or says where on the head it sat in England; none has it without a veil for certain. PLACEHOLDER: the band's height, its stones and their number, that it lies on the hair at the top of the forehead (where the linen fillet of round 128 lies), the shares, the age to which a lady shows her hair, and that she wears it in every picture (the pages have it for occasions). Not drawn: the tubes of gold beside the face, a net, a veil of transparent silk (the court's veil is the villagers' linen), the frilled veil the same page has from about 1349." },
     Source { what: "a mantle on a crowned head (round 145): a red cloth round the shoulders over the gown, open in front, faced with ermine along both front edges and round the neck, held by two brooches of gold with a stone and a cord between them", source: "Elspeth Veale, The English Fur Trade in the Later Middle Ages, ch. I (London Record Society 38, 2003, british-history.ac.uk/london-record-soc/vol38/pp1-21; read 20.11.2026 as an account of the page): 'For outdoor wear a cloak was added, or a mantle for ceremonial occasions'; a lining 'might be turned back at neck or wrist, showing as a collar, revers, or cuffs of fur', edges 'turned back to form borders or facings of fur in front'; in 1337 'only the royal family, prelates, earls, barons, knights, and clerks with at least 100 pounds a year' could wear furs, in 1363 lesser knights 'only facings of ermine and lettice on their hoods'; Charles V in 1379 'liked his best robes furred with ermine'. La Cotte Simple, fur primer (cottesimple.com/articles/fur-primer/, read the same day, after Veale and Newton): ermine 'traditionally worn by royals and their family', white 'with the well-known exception of a black tip on its tail', the tails 'either left in place or removed and powdered on the skins'; 'ermine mantles worn by kings' (Richard II, BL Royal MS 20 B vi, c. 1395). The fastening: Rosalie Gilbert, Cloaks and Mantles (rosaliegilbert.com/cloaksandmantles.html, read the same day; a re-enactor's page that names no sources and no English example of the 14th century): women's mantles 'fastened across the front, with a cord and two brooches of some kind on each side at clavicle height', Philip IV's effigy of 1327 with 'the mantle fastening with a tasseled cord'. The red: Edward III's robes of 1351 of 'red velvet' (the row above). PLACEHOLDER: that a man's is fastened as a woman's, that a crowned head wears it in every picture (a mantle is for ceremony), the facing's breadth, how many tails and how far apart, the brooches' form and stone, a cord without tassels, every colour value; the cloth has no pile and no lining is drawn: its inside is the same red." },
 ];
 

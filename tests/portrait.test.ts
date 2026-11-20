@@ -116,13 +116,14 @@ describe('portraits', { timeout: 20_000 }, () => {
       for (const t of worn) if (t) expect(images.has(t), `${t} is in the repository`).toBe(true);
       // no man and no girl wears the veil. A woman from the age of the veil wears it one of two ways (round
       // 121): set back over parted hair, which lies on a girl's painted layer, or on forehead and cheeks with
-      // no hair under it; or, until 30, she goes in a girl's plaits. From 30 every woman wears it
+      // no hair under it; or, until 30, she goes in a girl's plaits. From 30 every woman wears it; a lady of rank
+      // from 50 (round 146: at court the hair is shown in plaits)
       const veil = worn.some(t => t.includes('/cloth_veil_linen.')), cap = worn.some(t => t.includes('/plait01_cap.'));
       // the plaits themselves are round strands, a surface of their own (round 86)
       const plaits = worn.some(t => t.includes('/plait01_rope.'));
       const woman = p.female && p.age >= 20;
       expect(veil, `person ${p.pid}: the veil`).toBe(woman && !plaits);
-      if (woman && p.age >= 30) expect(veil, `person ${p.pid}: the veil from 30`).toBe(true);
+      if (woman && p.age >= (p.stand >= 2 ? 50 : 30)) expect(veil, `person ${p.pid}: the veil from 30`).toBe(true);
       if (!woman) expect(plaits, `person ${p.pid}: plaits before the veil`).toBe(p.female && p.age >= 7);
       if (plaits) expect(cap, `person ${p.pid}: the painted layer under the plaits`).toBe(true);
       if (cap) expect(plaits || veil, `person ${p.pid}: a girl's hair on a girl or under a veil`).toBe(true);
