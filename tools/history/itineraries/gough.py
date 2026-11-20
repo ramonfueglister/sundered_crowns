@@ -27,7 +27,6 @@ Rules (nothing is invented):
 - The places are found in GeoNames by the rules of tools/history/itineraries/gazetteer.py.
 """
 
-import difflib
 import json
 import os
 import re
@@ -36,6 +35,7 @@ from collections import Counter
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from gazetteer import Gazetteer, key, place_days  # noqa: E402
+from gough_index import SAME_COUNTY, counties_by_index, index_names, misread  # noqa: E402
 
 MONTHS = [
     'JANUARY',
@@ -54,7 +54,6 @@ MONTHS = [
 MONTH = re.compile(r'^(' + '|'.join(MONTHS) + r')\.?$')
 RUNNING_HEAD = re.compile(r'^A\.\s?D\.\s+(\S{4})(?:\s?-\s?(\S{1,4}))?[,.]')
 END = re.compile(r'^EXPLANATION\s+OF\s+REFERENCES')
-INDEX = re.compile(r'^This\s+Index\s+is\s+in\s+four\s+divisions')
 NOTES = re.compile(r'^\[?\s*Notes\s+to\s+p', re.IGNORECASE)
 #: what the OCR reads for the digits of a day: 1 as i, I, l or ], 0 as o or O
 DIGITS = str.maketrans({'i': '1', 'I': '1', 'l': '1', 'L': '1', ']': '1', '|': '1', '!': '1', 'o': '0', 'O': '0'})
@@ -101,15 +100,14 @@ COUNTIES = {
     'agenais', 'brabant', 'aunis', 'bearn', 'beam', 'brittany', 'britanny', 'aragon', 'valencia', 'navarre', 'bigorre',
     'armagnac', 'perigord', 'limousin', 'quercy', 'cumberld', 'nottham',
 }
-#: one county under two keys
-SAME_COUNTY = {'beam': 'bearn'}
 #: a county the column names: one or two words of letters, not an abbreviation of a record
 COUNTY_SHAPE = re.compile(r"[A-Z][A-Za-z'’]+\.?(?:[ -][A-Z][A-Za-z'’]+\.?)?")
 #: places the book names that GeoNames knows only by the place that grew there or the commune they lie in: the
 #: Cistercian abbey of Holm Cultram (the book's index: Holme-Cultram, Cumberland) at Abbey Town; the Cistercian abbey
-#: of Le Gard on the Somme at Crouy-Saint-Pierre (between Abbeville and Amiens, where the book has it in May 1286 and
-#: August 1289); Oleron, which the book's county column puts in Béarn (the town of Oloron, one with Sainte-Marie since
-#: 1858) and in Aunis (the Île d'Oléron), where GeoNames gives the name only to the island
+#: of Le Gard on the Somme at Crouy-Saint-Pierre (the index: "Gard (Le), Picardy: 1279, June; 1286, May; 1289, July,
+#: Aug.", "Legard: v. Gard", read "Card" by the OCR); Oleron, the town of Oloron (one with Sainte-Marie since 1858;
+#: the index: "Oleron, Bearn: 1287 ... 1289, March") or the Île d'Oléron (the index: "Oleron (Isle of), Aunis: 1286,
+#: Oct."), where GeoNames gives the name only to the island
 NOW_CALLED = {
     'holme cultram': ('Abbey Town',),
     'legard': ('Crouy-Saint-Pierre',),
@@ -375,63 +373,11 @@ def places_of(entry_lines, places, counties, county, report):
     return out, county
 
 
-def index_names(lines):
-    """The names of the book's index of places, by their key, with the variants of inverted names ('Allerton
-    (North-)' is North Allerton), and the counties it names."""
-    start = next((i for i, t in enumerate(lines) if INDEX.match(t.strip())), None)
-    names, counties = {}, set()
-    if start is None:
-        return names, counties
-    head = re.compile(
-        r'^["“]?\s*([A-Z][A-Za-z\'’\- .]+?)\s*(?:\(([A-Za-z\'’\- ]+?)-?\))?\s*["”]?\s*(?:,\s*([^:]{1,30}?))?\s*:'
-    )
-    for t in lines[start + 1 :]:
-        h = head.match(t.strip())
-        if not h:
-            continue
-        name, pre = h.group(1).strip(' .'), h.group(2)
-        forms = [name] if not pre else [f'{pre.strip(" -")} {name}', f'{pre.strip(" -")}{name.lower()}']
-        for f in forms:
-            names.setdefault(key(f), f)
-        for c in (h.group(3) or '').split(','):
-            if key(c):
-                counties.add(key(c))
-    return names, counties
-
-
-def misread(days, gaz, index, report):
-    """Put the names the OCR misread right by the index of places or by the days around (above)."""
-    found = {}
-    for _, names, _ in days:
-        for n, _ in names:
-            if n not in found:
-                found[n] = bool(gaz.lookup(n)[0])
-    for n in [n for n, ok in found.items() if not ok]:
-        close = difflib.get_close_matches(key(n), list(index), n=1, cutoff=0.85)
-        if close and close[0] != key(n) and gaz.lookup(index[close[0]])[0]:
-            found[n] = index[close[0]]
-            report['names_by_index'] += 1
-    for i, (_, names, _) in enumerate(days):
-        for name in names:
-            n = name[0]
-            if isinstance(found[n], str):
-                name[0] = found[n]
-                continue
-            if found[n]:
-                continue
-            near = [m for d in days[max(0, i - 3) : i + 4] for m, _ in d[1] if found.get(m) is True]
-            ratio = {m: difflib.SequenceMatcher(None, key(n), key(m)).ratio() for m in near}
-            best = max(ratio, key=ratio.get, default=None)
-            if best and ratio[best] >= 0.7:
-                name[0] = best
-                report['names_by_neighbour'] += 1
-
-
 def main(text_path, geonames_path, out_path):
     with open(text_path, encoding='utf-8') as f:
         lines = f.read().split('\n')
     days, report, odd = parse(lines)
-    index, counties = index_names(lines)
+    index, counties, county_of = index_names(lines)
     report['index_names'], report['index_counties'] = len(index), len(counties)
     county = ''
     for d in days:
@@ -446,6 +392,7 @@ def main(text_path, geonames_path, out_path):
     report['days_with_a_place'] = sum(1 for d in days if d[1])
     gaz = Gazetteer(geonames_path, NOW_CALLED)
     misread(days, gaz, index, report)
+    counties_by_index(days, county_of, report)
     dated = [(f'{y:04d}-{m:02d}-{d:02d}', julian_day(y, m, d), names) for (y, m, d), names, _ in days]
     stops, unplaced = place_days(dated, gaz, report)
     report['days_placed'] = len(stops)

@@ -130,7 +130,8 @@ class Gazetteer:
                 i = len(self.at)
                 lat, lon = float(c[4]), float(c[5])
                 self.at.append((lat, lon, int(c[11] or 0)))
-                self.settled.append(c[6] in ('P', 'A'))
+                # an island is a place one stays at, like a town (the Île d'Oléron)
+                self.settled.append(c[6] in ('P', 'A') or c[7] == 'ISL')
                 self.church.append(c[7] == 'CH')
                 own = {key(c[1]), key(c[2])}
                 own |= {short for k in own if len(short := QUALIFIED.sub('', k)) >= 3}
@@ -250,6 +251,7 @@ def place_days(days, gaz, report):
         _, own, towns = found[s['name']]
         s['at'] = one_place(towns) if own and towns else None
         s['sure'] = s['known'] = s['at'] is not None
+        s['by'] = 'sure'
     regions = counties(stays)
     for s in [s for s in stays if s['sure'] and not in_county(s['at'], regions.get(s['county'], ()))]:
         for t in stays:
@@ -265,8 +267,8 @@ def place_days(days, gaz, report):
             if not s['sure']:
                 place(s, i, stays, by, found[s['name']][0], regions.get(s['county'], ()), gaz, report)
     one_sense(stays, regions, report)
-    # the itinerary as the game will thin it (src/sim/content/travel.ts reachableStops), so that the file holds no
-    # step the game leaves out
+    # the itinerary thinned as the game thins it (src/sim/content/travel.ts reachableStops), a guess giving way to a
+    # name first, so that the file holds no step the game leaves out
     for s in thin([s for s in stays if s['at']]):
         s['at'], s['why'] = None, 'out of reach of the stays around'
         report['stays_thinned'] += 1
@@ -330,7 +332,7 @@ def place(s, i, stays, by, cands, region, gaz, report):
 
         ok = [c for c in same if fits(c)] or [c for c in cands if fits(c)]
         if ok:
-            s['at'] = min(ok, key=lambda c: detour(c, ends) if ends else -c[2])
+            s['at'], s['by'] = min(ok, key=lambda c: detour(c, ends) if ends else -c[2]), 'name'
             if by == 'at':
                 report['stays_by_nearness'] += 1
             return
@@ -342,7 +344,7 @@ def place(s, i, stays, by, cands, region, gaz, report):
             lambda p, rb=rb, ra=ra: p != s.get('rejected') and reachable(p, rb, ra) and in_county(p, region),
         )
         if near:
-            s['at'] = near
+            s['at'], s['by'] = near, 'like'
             if by == 'at':
                 report['stays_by_like_name_nearby'] += 1
             return
@@ -388,7 +390,10 @@ def thin(sure):
     """The stays of sure (in their order) that src/sim/content/travel.ts reachableStops leaves out: where the king
     could not have gone from one stay to the next at the pace in haste, even on the straight line, the one with fewer
     days, of two with as many the one without which the way from the stay before them to the stay after them is the
-    shorter; a stay at the place of the one before it, once a stay between them is left out, is one stay with it."""
+    shorter; a stay at the place of the one before it, once a stay between them is left out, is one stay with it.
+    Before the days, a stay placed by a like name gives way to one placed by its name, and that to one only one place
+    can be (OWN RULE: a guess must not push out what the book names; 'Bourg-la-Reine' put at Bourg-de-Visa by
+    likeness pushed out Bordeaux in May 1288). The result has no step the game would leave out."""
     groups, out = [[s] for s in sure], []
 
     def km_between(a, b):
@@ -402,7 +407,7 @@ def thin(sure):
             if before and km_between(before, g) > HASTE_KM_PER_DAY * (g[0]['days'][0][1] - before[-1]['days'][-1][1]):
                 changed = True
                 earlier, after = (kept[-2] if len(kept) > 1 else None), (groups[k + 1] if k + 1 < len(groups) else None)
-                nb, ng = sum(len(s['days']) for s in before), sum(len(s['days']) for s in g)
+                nb, ng = weight(before), weight(g)
                 drop_before = (
                     nb < ng
                     if nb != ng
@@ -419,6 +424,15 @@ def thin(sure):
                 kept.append(g)
         groups = kept
     return out
+
+
+#: how sure a stay is of its place, by how it was placed
+CERTAINTY = {'sure': 2, 'name': 1, 'like': 0}
+
+
+def weight(group):
+    """How much a stay at one place (a group of stays) weighs in the thinning: how sure it is, then its days."""
+    return max(CERTAINTY[s['by']] for s in group), sum(len(s['days']) for s in group)
 
 
 def counties(stays):
