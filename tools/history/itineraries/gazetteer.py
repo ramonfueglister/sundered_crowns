@@ -32,6 +32,10 @@ LIKE = 0.8
 #: it)
 COUNTY_KM = 60
 COUNTY_MIN = 3
+#: stays of one name within a month of each other are at one place: one sense per discourse (Gale, Church & Yarowsky
+#: 1992, "One sense per discourse", Proceedings of the DARPA Speech and Natural Language Workshop; OWN RULE: a month is
+#: the discourse)
+SAME_NAME_DAYS = 30
 #: GeoNames features a medieval king stayed at besides places: castles, abbeys and priories, churches, houses, ruins
 FEATURES = {'CSTL', 'MSTY', 'CH', 'RUIN', 'HSEC', 'HSE', 'PAL', 'EST', 'ANS', 'MNMT', 'ISL'}
 #: words GeoNames adds to the name of a house or a ruin that the book leaves out
@@ -66,11 +70,11 @@ def km(a, b):
     return 12742 * math.asin(math.sqrt(h))
 
 
-def like(g, e):
+def like(g, e, words=True):
     """How like a name of the book (key g) is a name of GeoNames (key e): 1 the same, 0.95 where the words of the one
     are among those of the other ('Melford', 'Long Melford'), 0.9 where the book's words begin the other's
-    ('Hav atte B', 'Havering atte Bower'), else the share of letters in common, of the whole name or, for a name of one
-    word, of one word of the other ('Shene', 'East Sheen')."""
+    ('Hav atte B', 'Havering atte Bower'), else the share of letters in common, of the whole name or (where words) for
+    a name of one word, of one word of the other ('Shene', 'East Sheen')."""
     if g == e:
         return 1.0
     gw, ew = g.split(), e.split()
@@ -78,8 +82,8 @@ def like(g, e):
         return 0.95
     if len(gw) == len(ew) > 1 and all(b.startswith(a) for a, b in zip(gw, ew)):
         return 0.9
-    words = ew if len(gw) == 1 < len(ew) and len(g) >= 5 else []
-    return max([ratio(g, e)] + [ratio(g, w) for w in words])
+    one = ew if words and len(gw) == 1 < len(ew) and len(g) >= 5 else []
+    return max([ratio(g, e)] + [ratio(g, w) for w in one])
 
 
 def ratio(a, b):
@@ -92,19 +96,23 @@ class Gazetteer:
     country, admin1, admin2, population), by name and by cell of half a degree."""
 
     def __init__(self, path):
-        self.at, self.names = [], []
+        self.at, self.names, self.own_names, self.settled = [], [], [], []
         self.own, self.other, self.cells = defaultdict(list), defaultdict(list), defaultdict(list)
         with open(path, encoding='utf-8') as f:
             for line in f:
                 c = line.rstrip('\n').split('\t')
-                if len(c) < 12 or (c[6] != 'P' and c[7] not in FEATURES):
+                # OWN RULE: an English civil parish (ADM3) bears the name of the manor or village it grew from, and is
+                # at times the only trace of one (Clarendon Park, the parish of the palace of Clarendon)
+                if len(c) < 12 or not (c[6] == 'P' or c[7] in FEATURES or (c[7] == 'ADM3' and c[8] == 'GB')):
                     continue
                 i = len(self.at)
                 lat, lon = float(c[4]), float(c[5])
                 self.at.append((lat, lon, int(c[11] or 0)))
+                self.settled.append(c[6] in ('P', 'A'))
                 own = {key(c[1]), key(c[2])}
                 other = {key(n) for n in c[3].split(',') if n} - own
                 self.names.append(tuple(own | other))
+                self.own_names.append(tuple(own))
                 for k in own:
                     self.own[k].append(i)
                 for k in other:
@@ -113,20 +121,22 @@ class Gazetteer:
 
     def lookup(self, name):
         """The places that bear a name in any of its forms (variants): those whose own name it is, else those with it
-        as another name; whether it is their own name; and the places of the first of its forms found, which a stay
-        is sure of where they lie together."""
+        as another name; whether it is their own name; and of them the towns, villages and parishes (all of them where
+        none is one), which a stay is sure of where they lie together."""
         for own, table in ((True, self.own), (False, self.other)):
-            forms = [v for v in variants(name) if v in table]
-            if forms:
-                every = sorted({i for v in forms for i in table[v]})
-                return [self.at[i] for i in every], own, [self.at[i] for i in table[forms[0]]]
+            every = sorted({i for v in variants(name) for i in table.get(v, ())})
+            if every:
+                towns = [i for i in every if self.settled[i]] or every
+                return [self.at[i] for i in every], own, [self.at[i] for i in towns]
         return [], False, []
 
     def near(self, name, before, after, fits):
-        """The place within reach of the days around (before, after: (place, days) or None), for which fits(place)
-        holds, whose name is like the name of the book, at least LIKE, and that lies nearest the way between them (the
-        likest of those that lie as near); None where there is none. Where the two lie far apart (a crossing of the
-        sea, a gap of weeks), the way is the nearer of them in days alone."""
+        """The place near the way between the stays around (before, after: (place, days) or None), for which
+        fits(place) holds (within reach, in its county), whose name is like the name of the book, at least LIKE, and
+        that lies nearest the way (the likest of those that lie as near); None where there is none. Where the two lie
+        far apart (a crossing of the sea, a gap of weeks), the way is the nearer of them in days alone. One word of a
+        longer name is compared only with a place's own names: its other names hold transliterations ('sheng zhan mu
+        si', St James's)."""
         ends = [e for e in (before, after) if e]
         if len(ends) == 2 and km(ends[0][0], ends[1][0]) > 3 * DETOUR_KM:
             ends = [min(ends, key=lambda e: e[1])]
@@ -142,9 +152,9 @@ class Gazetteer:
             for cx in range(math.floor(lon0 * 2), math.floor(lon1 * 2) + 1):
                 for i in self.cells.get((cy, cx), ()):
                     p = self.at[i]
-                    if not reachable(p, before, after) or detour(p, ends) > detour_limit or not fits(p):
+                    if detour(p, ends) > detour_limit or not fits(p):
                         continue
-                    s = max(like(g, e) for e in self.names[i])
+                    s = max([like(g, e) for e in self.own_names[i]] + [like(g, e, False) for e in self.names[i]])
                     if s < LIKE:
                         continue
                     d = detour(p, ends)
@@ -186,10 +196,11 @@ def in_county(p, region):
 
 def place_days(days, gaz, report):
     """The place of each day of an itinerary: days are (date, day number, [(name, county key or '') in the order of
-    the day]); returns (date, name, lat, lon) for the days placed, and the days left out. A day goes by the last of its
-    names that is found; days one after the other under one name are one stay and are placed together. First the stays
-    whose name only one place bears (as its own name) are placed, where that place lies in the county the book names
-    and within reach; then the others by the nearest of those, then each again by the stays placed around it."""
+    the day]); returns (date, name, lat, lon) for the days placed, and (date, name, why) for the days left out. A day
+    goes by the last of its names that is found; days one after the other under one name are one stay and are placed
+    together. First the stays whose name only one place bears (as its own name) are placed, where that place lies in
+    the county the book names, and those of them out of each other's reach are thinned as the game thins an
+    itinerary; then the others by the nearest of those, then each again by the stays placed around it."""
     found = {}
     for _, _, names in days:
         for n, _ in names:
@@ -207,56 +218,108 @@ def place_days(days, gaz, report):
             stays[-1]['counties'][county] += 1
     for s in stays:
         s['county'] = s['counties'].most_common(1)[0][0] if s['counties'] else ''
-        _, own, first = found[s['name']]
-        s['at'] = one_place(first) if own and first else None
+        _, own, towns = found[s['name']]
+        s['at'] = one_place(towns) if own and towns else None
         s['sure'] = s['at'] is not None
     regions = counties(stays)
-    for s in stays:
-        if s['sure'] and not in_county(s['at'], regions.get(s['county'], ())):
-            s['at'], s['sure'] = None, False
-            report['stays_out_of_county'] += 1
-    for _ in range(20):
-        sure = [s for s in stays if s['sure']]
-        bad = [
-            s
-            for j, s in enumerate(sure)
-            if 0 < j < len(sure) - 1
-            and not reachable(s['at'], around(s, sure[j - 1], -1), around(s, sure[j + 1], 1))
-            and len(s['days']) <= max(len(sure[j - 1]['days']), len(sure[j + 1]['days']))
-        ]
-        if not bad:
-            break
-        report['stays_out_of_reach'] += len(bad)
-        for s in bad:
-            s['at'], s['sure'] = None, False
+    for s in [s for s in stays if s['sure'] and not in_county(s['at'], regions.get(s['county'], ()))]:
+        for t in stays:
+            if t['sure'] and t['name'] == s['name'] and apart(s, t) <= SAME_NAME_DAYS:
+                t['at'], t['sure'] = None, False
+                report['stays_out_of_county'] += 1
+    for s in thin([s for s in stays if s['sure']]):
+        s['at'], s['sure'], s['why'] = None, False, 'out of reach of the stays around'
+        report['stays_out_of_reach'] += 1
     regions = counties(stays)
     for by in ('sure', 'at'):
         for i, s in enumerate(stays):
-            if s['sure']:
-                continue
-            before = next((around(s, t, -1) for t in reversed(stays[:i]) if t[by]), None)
-            after = next((around(s, t, 1) for t in stays[i + 1 :] if t[by]), None)
-            ends = [e for e in (before, after) if e]
-            region = regions.get(s['county'], ())
-            ok = [c for c in found[s['name']][0] if reachable(c, before, after) and in_county(c, region)]
-            near = None if ok else gaz.near(s['name'], before, after, lambda p, r=region: in_county(p, r))
-            if ok:
-                s['at'] = min(ok, key=lambda c: detour(c, ends) if ends else -c[2])
-            elif near or by == 'sure':
-                s['at'] = near
-            if by == 'at' and s['at']:
-                report['stays_by_nearness' if ok else 'stays_by_like_name_nearby'] += 1
+            if not s['sure']:
+                place(s, i, stays, by, found[s['name']][0], regions.get(s['county'], ()), gaz, report)
     out, unplaced = [], []
     for s in stays:
+        if not s['at'] and 'why' not in s:
+            cands, region = found[s['name']][0], regions.get(s['county'], ())
+            s['why'] = (
+                'no such place, none like it nearby'
+                if not cands
+                else 'out of its county'
+                if not any(in_county(c, region) for c in cands)
+                else 'out of reach'
+            )
         for date, _ in s['days']:
             if s['at']:
                 out.append((date, s['name'], round(s['at'][0], 4), round(s['at'][1], 4)))
             else:
-                unplaced.append(f'{date} {s["name"]}')
+                unplaced.append((date, s['name'], s['why']))
     report['stays'] = len(stays)
     report['stays_by_one_place'] = sum(s['sure'] for s in stays)
     report['days_unplaced'] = len(unplaced)
     return out, unplaced
+
+
+def place(s, i, stays, by, cands, region, gaz, report):
+    """Place stay s (stays[i]) by the stays around it that are placed (by 'sure': only those sure of their place):
+    at the place of a stay of its name within SAME_NAME_DAYS, else at the place of its name nearest the way between
+    them, else at the likest name near it."""
+    prev = next((t for t in reversed(stays[:i]) if t[by]), None)
+    nxt = next((t for t in stays[i + 1 :] if t[by]), None)
+    before, after = prev and around(s, prev, -1), nxt and around(s, nxt, 1)
+    # as src/sim/content/travel.ts reachableStops: a stay that fewer days name gives way where the two contradict
+    rb = before if prev and len(prev['days']) >= len(s['days']) else None
+    ra = after if nxt and len(nxt['days']) >= len(s['days']) else None
+
+    def fits(p):
+        return reachable(p, rb, ra) and in_county(p, region)
+
+    ends = [e for e in (before, after) if e]
+    same = [
+        t['at'] for t in stays if t is not s and t['at'] and t['name'] == s['name'] and apart(s, t) <= SAME_NAME_DAYS
+    ]
+    ok = [c for c in same if fits(c)] or [c for c in cands if fits(c)]
+    near = None if ok else gaz.near(s['name'], before, after, fits)
+    if ok:
+        s['at'] = min(ok, key=lambda c: detour(c, ends) if ends else -c[2])
+    elif near or by == 'sure':
+        s['at'] = near
+    if by == 'at' and s['at']:
+        report['stays_by_nearness' if ok else 'stays_by_like_name_nearby'] += 1
+
+
+def thin(sure):
+    """The stays of sure (in their order) that src/sim/content/travel.ts reachableStops leaves out: where the king
+    could not have gone from one stay to the next at the pace in haste, even on the straight line, the one with fewer
+    days, of two with as many the one without which the way from the stay before them to the stay after them is the
+    shorter; a stay at the place of the one before it, once a stay between them is left out, is one stay with it."""
+    groups, out = [[s] for s in sure], []
+
+    def km_between(a, b):
+        return km(a[0]['at'], b[0]['at']) if a and b else 0
+
+    changed = True
+    while changed:
+        changed, kept = False, []
+        for k, g in enumerate(groups):
+            before = kept[-1] if kept else None
+            if before and km_between(before, g) > HASTE_KM_PER_DAY * (g[0]['days'][0][1] - before[-1]['days'][-1][1]):
+                changed = True
+                earlier, after = (kept[-2] if len(kept) > 1 else None), (groups[k + 1] if k + 1 < len(groups) else None)
+                nb, ng = sum(len(s['days']) for s in before), sum(len(s['days']) for s in g)
+                drop_before = (
+                    nb < ng
+                    if nb != ng
+                    else km_between(earlier, g) + km_between(g, after)
+                    < km_between(earlier, before) + km_between(before, after)
+                )
+                if not drop_before:
+                    out += g
+                    continue
+                out += kept.pop()
+            if kept and kept[-1][0]['at'] == g[0]['at']:
+                kept[-1] += g
+            else:
+                kept.append(g)
+        groups = kept
+    return out
 
 
 def counties(stays):
@@ -266,6 +329,11 @@ def counties(stays):
         if s['sure'] and s['county']:
             regions[s['county']].add(s['at'])
     return regions
+
+
+def apart(s, t):
+    """The days between two stays (0 where they touch)."""
+    return max(t['days'][0][1] - s['days'][-1][1], s['days'][0][1] - t['days'][-1][1], 0)
 
 
 def around(s, t, side):

@@ -60,7 +60,7 @@ NOTES = re.compile(r'^\[?\s*Notes\s+to\s+p', re.IGNORECASE)
 DIGITS = str.maketrans({'i': '1', 'I': '1', 'l': '1', 'L': '1', ']': '1', '|': '1', '!': '1', 'o': '0', 'O': '0'})
 #: the weekday letters of the book (Monday 0); Sunday is a black-letter dominical letter the OCR reads in many ways
 WEEKDAYS = {'M': 0, 'T': 1, 'W': 2, 'Th': 3, 'F': 4, 'S': 5, 's': 5}
-SUNDAY = re.compile(r'^(?:\(S|\(s|\(5|3B|3b|38|jf|Jf|JF|\]f|\[f|J|f|®)$')
+SUNDAY = re.compile(r'^(?:\(S|\(s|\(5|3B|3b|38|3D|2\)|jf|Jf|JF|\]f|\[f|J|f|®|j£|\]£|\(£|£|\(t|B|C)$')
 DAY_ROW = re.compile(r'^(\S{1,3})\s+(\S{1,3})(?:\s{2,}(.*))?$')
 #: the abbreviations of the records (Explanation of references to records), lower case without dots and spaces, and
 #: how the OCR reads some of them
@@ -75,8 +75,8 @@ RECORDS = {
 #: Macaire'), FEAST_LEAD is the feast at its start with its number ('2 in Lent') and its day ('Easter Day')
 FEAST_WORDS = (
     r'(?:after|aft\.?|Circumcision|Epiphany|Purification|Annunciation|Easter|Ascen\w*|Pentecost|Whit[- ]?(?:sun|mon|tues)\w*|'
-    r'Trinity|Corpus|Christmas|Nativity|Assumption|Michaelmas|Advent|Septuagesima|Sexagesima|Quinquagesima|'
-    r'Quadragesima|Lent|Palm|Passion|Midsummer|Lady\s+day|Good\s+Friday|Ash\s+Wednesday|Rogation|Low\s+Sunday|'
+    r'Trinity|Corpus|Xti|Christmas|Nativity|Assumption|Michaelmas|Advent|Septuag\w*|Sexag\w*|Quinquag\w*|'
+    r'Quadrag\w*|Lent|Palm|Passion|Mid-?\s?summer|Lady\s+day|Good\s+Friday|Ash\s+Wednesday|Rogation|Low\s+S(?:unday)?|'
     r'Innocents|All\s+Saints|All\s+Souls|Candlemas|Lammas|Exaltation|Invention|Conversion|Decollation|Translation|'
     r'Sunday|Vigil|begins|Edw)'
 )
@@ -85,20 +85,21 @@ FEAST_LEAD = re.compile(
     r'^(?:[\dil]{1,2}\s+(?:after|aft\.?|in)\s+)?' + FEAST_WORDS + r'(?!\w)(?:\s+(?:Day|Eve|Even|Sunday)(?!\w))?\.?',
     re.IGNORECASE,
 )
-DITTO = {',,', '„', ',', '"'}
+DITTO = {',,', '„', ',', '"', '»'}
 #: the last day of the reign: Edward I died at Burgh by Sands on 7 July 1307; the book's days run on to the end of
 #: that month
 REIGN_END = (1307, 7, 7)
 PROSE = re.compile(r'\b(?:the|was|were|is|had|appears|read|ibid|see|which|that)\b', re.IGNORECASE)
 #: the counties and lands of the county column that are not also the name of a town, as the book writes them in full
-#: or shortened (keys), besides those its index of places names
+#: or shortened (keys), besides those its index of places names; Béarn as the OCR also reads it ('Beam')
 # fmt: off
 COUNTIES = {
     'beds', 'berks', 'bucks', 'buckm', 'cambs', 'cheshire', 'cornwall', 'cumberland', 'devon', 'dorset', 'essex',
     'glouc', 'hants', 'herts', 'hunts', 'kent', 'lanc', 'leic', 'middx', 'norfolk', 'nland', 'nton', 'notts', 'nottm',
     'oxon', 'rutland', 'salop', 'som', 'somerset', 'ston', 'soton', 'staff', 'suffolk', 'surrey', 'sussex', 'warw',
     'westm', 'wilts', 'worc', 'fife', 'guienne', 'gascony', 'flanders', 'ponthieu', 'picardy', 'poitou', 'saintonge',
-    'agenais', 'brabant',
+    'agenais', 'brabant', 'aunis', 'bearn', 'beam', 'brittany', 'britanny', 'aragon', 'valencia', 'navarre', 'bigorre',
+    'armagnac', 'perigord', 'limousin', 'quercy',
 }
 # fmt: on
 
@@ -158,10 +159,26 @@ def is_noise(seg):
 
 
 def clean(seg):
-    """A place as the book writes it: without the note numbers glued to it and stray marks."""
-    s = re.sub(r'\d+$', '', seg.strip())
-    s = s.strip(' \'"“”*.,;:-[]|')
+    """A place as the book writes it: without the note numbers and marks glued to it, the editor's brackets joined
+    ('Chester [-le-Street]' is Chester-le-Street)."""
+    s = re.sub(r'\s*\[\s*-', '-', seg.strip()).replace('[', '').replace(']', '')
+    s = re.sub(r'\s+[a-z]$', '', re.sub(r'\d+$', '', s))
+    s = s.strip(' \'"“”„»*.,;:-|')
     return re.sub(r'\s+', ' ', s)
+
+
+def parts(seg, places, counties):
+    """A column as the columns in it: a place with the county or the ditto the OCR set too close to it ('Saintes
+    Saintonge', 'Ponton „') split off; a county that is also a town only after a place of the index ('Durham
+    Durham')."""
+    words = seg.split()
+    for n in (1, 2):
+        if len(words) > n:
+            rest, tail = ' '.join(words[:-n]), ' '.join(words[-n:])
+            k = key(clean(tail))
+            if tail in DITTO or (k in counties and (k not in places or key(clean(rest)) in places)):
+                return [rest, tail]
+    return [seg]
 
 
 def parse(lines):
@@ -177,7 +194,7 @@ def parse(lines):
     )
     y = m = last = years = None
     page_head = in_notes = False
-    entry = None
+    entry, taken = None, set()
     for n in range(start, len(lines)):
         t = lines[n].strip()
         if not t:
@@ -227,8 +244,9 @@ def parse(lines):
             weekday = WEEKDAYS.get(wd, 6 if SUNDAY.match(wd) else None)
             number = int(num) if num.isdigit() else None
             if number is not None or weekday is not None:
-                date = day_of_row(y, m, last, number, weekday, report)
-                if date:
+                date = day_of_row(y, m, last, number, weekday, taken, report)
+                if date and date not in taken:
+                    taken.add(date)
                     if date[1] != m:
                         report['month_inferred'] += 1
                         y, m = date[0], date[1]
@@ -245,14 +263,17 @@ def parse(lines):
                     continue
         if entry is not None:
             entry[1].append(t)
+    days.sort(key=lambda d: d[0])
     return days, report, odd
 
 
-def day_of_row(y, m, last, number, weekday, report):
-    """The date of a day row after day `last` of month `m`: the next day where the number or the weekday read agree
-    with it, a later day of the month or a day of the next where both agree (the days between are lost)."""
+def day_of_row(y, m, last, number, weekday, taken, report):
+    """The date of a day row after day `last` of month `m`, none of the days taken: the next day where the number or
+    the weekday read agree with it, a later day of the month or a day of the next where both agree (the days between
+    are lost), or an earlier day of the month not yet read where both agree (the OCR read the rows of a page in blocks
+    out of their order: November 1298 as 1-2, 20-30, 3-19)."""
     nxt = last + 1
-    if nxt <= month_days(y, m):
+    if nxt <= month_days(y, m) and (y, m, nxt) not in taken:
         wd = julian_weekday(y, m, nxt)
         if number == nxt and weekday in (wd, None):
             return y, m, nxt
@@ -277,6 +298,15 @@ def day_of_row(y, m, last, number, weekday, report):
         if number > 1:
             report['days_missing'] += number - 1
         return ny, nm, number
+    if (
+        number is not None
+        and 1 <= number < nxt
+        and (y, m, number) not in taken
+        and weekday == julian_weekday(y, m, number)
+    ):
+        report['days_read_back'] += 1
+        report['days_missing'] -= 1
+        return y, m, number
     return None
 
 
@@ -304,24 +334,25 @@ def places_of(entry_lines, places, counties, county, report):
     which the next entry goes on from."""
     out, state = [], 'place'
     for t in entry_lines:
-        for seg in segments(t):
-            seg, had_records = split_records(seg)
-            if not seg:
+        for column in segments(t):
+            column, had_records = split_records(column)
+            if not column:
                 state = 'place'
                 continue
-            k = key(clean(seg))
-            if seg in DITTO:
-                state = 'records'
-            elif not place_in(seg):
-                report['segments_skipped'] += 1
-            elif k in counties and k not in places or state == 'county':
-                county = k
-                if out:
-                    out[-1][1] = k
-                state = 'records'
-            else:
-                out.append([place_in(seg), county])
-                state = 'county'
+            for seg in parts(column, places, counties):
+                k = key(clean(seg))
+                if seg in DITTO:
+                    state = 'records'
+                elif not place_in(seg):
+                    report['segments_skipped'] += 1
+                elif k in counties and k not in places or (state == 'county' and (k in counties or k not in places)):
+                    county = k
+                    if out:
+                        out[-1][1] = k
+                    state = 'records'
+                else:
+                    out.append([place_in(seg), county])
+                    state = 'county'
             if had_records:
                 state = 'place'
     return out, county
@@ -430,9 +461,12 @@ def main(text_path, geonames_path, out_path):
     print(json.dumps(dict(report), indent=1))
     print(f'{len(places)} places; first day {dated[0][0]}, last {dated[-1][0]}')
     print('odd lines (first 60):', *odd[:60], sep='\n  ')
-    names = Counter(n for u in unplaced for n in u.split(' ', 1)[1].split(' / '))
+    print('days left out by why:', dict(Counter(why for _, _, why in unplaced)))
+    names = Counter((n, why) for _, n, why in unplaced)
     print(
-        'names of the days left out (most days first, 80):', *[f'{c} {n}' for n, c in names.most_common(80)], sep='\n  '
+        'names of the days left out (most days first, 80):',
+        *[f'{c} {n} ({why})' for (n, why), c in names.most_common(80)],
+        sep='\n  ',
     )
 
 
