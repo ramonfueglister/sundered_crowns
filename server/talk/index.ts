@@ -81,7 +81,7 @@ export class TalkLimits {
 }
 
 type TalkMsg = Extract<ClientMsg, { type: 'talk' }>;
-export interface TalkSession {
+interface TalkSession {
   user: UserAuth;
   closed: boolean;
   send(m: ServerMsg): void;
