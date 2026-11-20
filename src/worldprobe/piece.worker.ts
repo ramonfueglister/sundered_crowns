@@ -9,6 +9,7 @@ import { FACE_GEO, FACE_STEPS } from '../lookprobe/faces';
 import { GRID, N, SEA_Y, onGrid } from '../lookprobe/layout';
 import { maybeGunzip } from './gunzip';
 import { buildPiece, warmPieces } from './build';
+import { CROWD_AT, farCrowd } from './crowd';
 import { type Cover, KINDS, laidOut } from './far';
 import { glide } from './glide';
 import { above, lay, meanCover, summary } from './mean';
@@ -273,11 +274,15 @@ async function tableOf(job: PieceJob): Promise<{ scene: WorldScene | null; table
   if (table.things && !job.bakedSky) return null;
   const drawn = drawTable(table, job.bakedSky, job.step),
     things = table.things ? Batch.of(table.things.pos, table.things.nor, table.things.col) : new Batch();
+  // (the people of the first far step stand on the table's ground as on the ground the piece was built on: crowd.ts)
+  const figures =
+    job.step === CROWD_AT ? onGrid(table.side, () => farCrowd(table, table.ox, table.oz, table.part)) : undefined;
   return {
     table,
     scene: {
       ...drawn,
       things,
+      figures,
       cells: [],
       counts: {
         triangles:
@@ -287,6 +292,7 @@ async function tableOf(job: PieceJob): Promise<{ scene: WorldScene | null; table
           drawn.raised.triangles +
           things.triangles +
           (drawn.standing?.triangles ?? 0),
+        ...(figures ? { figures: figures.count } : {}),
       },
     },
   };

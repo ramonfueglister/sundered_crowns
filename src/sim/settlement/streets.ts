@@ -39,9 +39,14 @@ export interface Street { x0: number; z0: number; x1: number; z1: number; kind: 
 
 /** the real plan of a town where an old plan of it is open (src/sim/content/town_plans_<year>.json): its market and
  *  the pieces of its main streets [x0, z0, x1, z1], east-west or north-south, east and south of the centre in radii
- *  of the real town. It gives the form, not the size: layTown lays it as wide as the town it lays. `radius`: the real
- *  metres of a radius; `ground`: the plan's land and water, where it draws them (plan_ground.ts). */
-export interface Plan { market: readonly [number, number]; streets: readonly (readonly number[])[]; radius?: number; ground?: PlanGround }
+ *  of the real town. It gives the form, not the size: layTown lays it as wide as the town it lays. */
+export interface Plan {
+  market: readonly [number, number]; streets: readonly (readonly number[])[];
+  /** the real metres of one radius of the walled town (the plans of src/sim/content/town_plans.ts) */
+  radius?: number;
+  /** the plan's land and water, where it draws them (plan_ground.ts) */
+  ground?: PlanGround;
+}
 
 export interface Town {
   parcels: Parcel[];
@@ -74,13 +79,14 @@ export const R_C = 0.5;
 const NEAR_DEEP = 1;
 /** a new street, and at the end every dead end, runs on to another that lies ahead of it or to either side within this
  *  many parcel depths. Calibrated against medieval Paris (the Vasserot cadastre inside the wall of Philippe Auguste,
- *  tools/settlement/cadastre_paris.py: dead ends 0.10, T-junctions 0.78, crossings 0.12): the towns of 20 streets and
- *  more get 0.13, 0.77, 0.11; more than 5 changes nothing */
-const JOIN_DEEP = 5;
+ *  tools/settlement/cadastre_paris.py: dead ends 0.10, T-junctions 0.78, crossings 0.12), recalibrated with the
+ *  landmarks laid before the streets (feature 5): with CROSS the towns of 20 streets and more get 0.11, 0.77, 0.12 and
+ *  Paris 0.08, 0.78, 0.15; 4 gives Paris 0.05 dead ends, 5 (before feature 5) 0.05 */
+const JOIN_DEEP = 3;
 /** a lane leaves from a T-junction facing its spot rather than from the nearest point if that costs at most this many
- *  parcel widths more. Calibrated against the share of crossings of medieval Paris (0.12): 1 makes 0.07, 2.5 makes
- *  0.15 (and 0.73 T-junctions) */
-const CROSS = 2;
+ *  parcel widths more. Calibrated against the share of crossings of medieval Paris (0.12), with the landmarks laid
+ *  before the streets (feature 5): 2 makes 0.09 (and 0.14 dead ends), 2.5 makes 0.12, 3 makes 0.12 */
+const CROSS = 2.5;
 
 const EMPTY = 0, BLOCKED = 1, ROAD = 2, PARCEL = 3, MARKET = 4, UNKNOWN = 5;
 
@@ -111,10 +117,11 @@ const offsetsOf = (q: number) => {
 /** Where the market of a town lies: the middle nearest the centre whose square and the street round it lie on
  *  open ground. In the world graphic the church stands at the centre (src/worldprobe/settle.ts), and the market lies
  *  beside it, as the market of many a medieval town lay at the church (OWN RULE). Without such ground within
- *  MARKET_SEARCH parcel depths, at the centre. */
+ *  MARKET_SEARCH parcel depths, within four times as far (a town whose landmarks take the open ground at its centre,
+ *  feature 5), and without it at all at the centre. */
 function marketAt(size: ParcelSize, free: (x: number, z: number) => boolean): [number, number] {
   // first near (most churches are small), then as far as the search goes: the same answer, the nearest first
-  return marketWithin(size, free, Math.round(size.d)) ?? marketWithin(size, free, Math.round(MARKET_SEARCH * size.d)) ?? [0, 0];
+  return marketWithin(size, free, Math.round(size.d)) ?? marketWithin(size, free, Math.round(MARKET_SEARCH * size.d)) ?? marketWithin(size, free, Math.round(4 * MARKET_SEARCH * size.d)) ?? [0, 0];
 }
 function marketWithin(size: ParcelSize, free: (x: number, z: number) => boolean, q: number): [number, number] | null {
   const { hw, half } = dims(size), k = half + 2 * hw, S = q + k, n = 2 * S + 2;
@@ -136,8 +143,6 @@ function marketWithin(size: ParcelSize, free: (x: number, z: number) => boolean,
 const packedRadius = (families: number, size: ParcelSize) =>
   Math.sqrt((families * Math.max(1, Math.round(size.w)) * Math.max(1, Math.round(size.d))) / PARCEL_SHARE / Math.PI) + dims(size).half;
 
-/** the radius a real plan is laid at, in a town's steps (layTown) */
-export const planRadius = (families: number, size: ParcelSize) => 2 * packedRadius(families, size);
 /** how far a town's streets reach from their middle lines, in its steps: `hw` and the middle line's own half step */
 export const streetReach = (size: ParcelSize) => dims(size).hw + 0.5;
 
@@ -153,6 +158,13 @@ const dims = (size: ParcelSize) => {
  * ways of the world that leave it (src/sim/content/town_ways_<year>.json). `ground` (optional): where the town can
  * build (TownGround). `seed`: the town's own draw. Every coordinate is in steps east and south of the town's centre.
  */
+/** the metres of the world per real metre of a town laid by its real plan: its walled town as wide as twice the town
+ *  packed round its market (layTown) */
+export function planDraw(families: number, size: ParcelSize, radius: number): number {
+  const W = Math.max(1, Math.round(size.w)), u = size.w / W, cells = { w: W, d: Math.max(1, Math.round(size.d / u)) };
+  return (2 * packedRadius(families, cells) * u) / radius;
+}
+
 export function layTown(families: number, size: ParcelSize, ways: readonly Way[], seed: number, ground?: TownGround, tune: Tuning = DEFAULT_TUNING, plan?: Plan): Town {
   // the plan is laid round the market, and moved to where it lies; where the ground round it does not hold every
   // family (a river between it and the rest of the ground: there are no bridges yet), round the centre. A town with
@@ -160,7 +172,7 @@ export function layTown(families: number, size: ParcelSize, ways: readonly Way[]
   // a real plan in steps: the walled town's radius becomes twice the radius of the town packed round its market, about
   // where the density of the families falls to a tenth (r − half ~ Gamma(2, r_c), r_c = R_C × packed: 90 % lie
   // within 3.9 r_c ≈ 2 packed). OWN RULE: the wall held the town.
-  const r = planRadius(families, size);
+  const r = 2 * packedRadius(families, size);
   const real = plan && { market: [plan.market[0] * r, plan.market[1] * r] as const, streets: plan.streets.map((q) => q.map((v) => v * r)) };
   const [ox, oz] = real ? [Math.round(real.market[0]), Math.round(real.market[1])] : ground ? marketAt(size, ground.free) : [0, 0];
   const t = layAround(families, size, ways, seed, ground, tune, ox, oz, real);
@@ -253,7 +265,9 @@ function layOnce(families: number, size: ParcelSize, ways: readonly Way[], seed:
     return true;
   };
   const ring = half + hw;
-  for (let k = -ring; k <= ring; k++) { lay(k, -ring, STREET.lane); lay(k, ring, STREET.lane); lay(-ring, k, STREET.lane); lay(ring, k, STREET.lane); }
+  // the lane round the market, where its ground lets it pass (a town laid round its centre may find a landmark there)
+  const ringLane = (x: number, z: number) => { if (passable(x, z)) lay(x, z, STREET.lane); };
+  for (let k = -ring; k <= ring; k++) { ringLane(k, -ring); ringLane(k, ring); ringLane(-ring, k); ringLane(ring, k); }
 
   const isLine = (x: number, z: number) => inside(x, z) && line[at(x, z)] === 1;
   const STEP = [[1, 0], [0, 1], [-1, 0], [0, -1]];

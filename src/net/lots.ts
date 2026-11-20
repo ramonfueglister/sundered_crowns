@@ -34,9 +34,25 @@ export interface TownLots {
    *  the farmstead that holds it whole (an id of the ground above; −1 in the open field, where every farmstead of the
    *  hamlet has a strip in it, from the west in the order of `hamlets.strips`) */
   fields: { hamlet: number[]; x: number[]; z: number[]; w: number[]; d: number[]; zelge: number[]; courses: number[]; farm: number[] };
+  /** the landmarks of the town (settlement feature 5): what each is (LANDMARK_KIND in src/sim/settlement/landmarks.ts),
+   *  its middle and its metres east-west and north-south, the building known by name it is (its index in
+   *  src/sim/content/landmarks_<year>.json `named`, −1 for none), the order of a convent (255 for none), and the years
+   *  of its building and of its fall (NO_YEAR where none): `builtIn` tells how it stands in a year */
+  landmarks: { kind: number[]; x: number[]; z: number[]; w: number[]; d: number[]; named: number[]; order: number[]; start: number[]; end: number[]; ruined: number[] };
   /** a town laid on a real plan that draws its land and water (src/sim/settlement/plan_ground.ts): the metres of a
    *  radius of the plan and how far its streets reach from their middle lines, for the graphic to draw that ground */
   ground?: { radius: number; half: number };
+}
+
+/** The landmarks that stand alone, outside the towns, at their real place. */
+export interface AloneLandmarks { kind: number[]; lat: number[]; lon: number[]; w: number[]; d: number[]; named: number[]; start: number[]; end: number[]; ruined: number[] }
+
+export function aloneLandmarks(s: WorldState): AloneLandmarks {
+  const C = s.landmark?.cols, o: AloneLandmarks = { kind: [], lat: [], lon: [], w: [], d: [], named: [], start: [], end: [], ruined: [] };
+  for (let i = 0; C && i < s.landmark.size; i++) if (s.landmark.alive[i] && C.site[i] < 0) {
+    o.kind.push(C.kind[i]); o.lat.push(C.lat[i]); o.lon.push(C.lon[i]); o.w.push(C.w[i]); o.d.push(C.d[i]); o.named.push(C.named[i]); o.start.push(C.start[i]); o.end.push(C.end[i]); o.ruined.push(C.ruined[i]);
+  }
+  return o;
 }
 
 /** The most towns one request may ask for (GET /lots?sites=…). */
@@ -50,7 +66,7 @@ export function townLots(s: WorldState, site: number): TownLots {
  *  the persons. A site without ground gets an empty list. */
 export function manyTownsLots(s: WorldState, sites: readonly number[]): TownLots[] {
   const L = s.lot.cols, F = s.family.cols, P = s.person.cols;
-  const out = sites.map((site): TownLots => ({ site, day: s.day, id: [], kind: [], hamlet: [], x: [], z: [], w: [], d: [], front: [], family: [], persons: [], hamlets: { id: [], x: [], z: [], farms: [], strips: [] }, streets: { x0: [], z0: [], x1: [], z1: [], kind: [], width: [] }, fields: { hamlet: [], x: [], z: [], w: [], d: [], zelge: [], courses: [], farm: [] } }));
+  const out = sites.map((site): TownLots => ({ site, day: s.day, id: [], kind: [], hamlet: [], x: [], z: [], w: [], d: [], front: [], family: [], persons: [], hamlets: { id: [], x: [], z: [], farms: [], strips: [] }, streets: { x0: [], z0: [], x1: [], z1: [], kind: [], width: [] }, fields: { hamlet: [], x: [], z: [], w: [], d: [], zelge: [], courses: [], farm: [] }, landmarks: { kind: [], x: [], z: [], w: [], d: [], named: [], order: [], start: [], end: [], ruined: [] } }));
   const at = new Map<number, TownLots>();
   out.forEach((o) => { if (!at.has(o.site)) at.set(o.site, o); });
   const row = new Int32Array(s.lot.size).fill(-1); // the position of a parcel in the list of its town
@@ -74,6 +90,11 @@ export function manyTownsLots(s: WorldState, sites: readonly number[]): TownLots
   for (let k = 0; C && k < s.field.size; k++) {
     const o = s.field.alive[k] ? at.get(C.site[k]) : undefined;
     if (o) { const q = o.fields; q.hamlet.push(C.hamlet[k]); q.x.push(C.x[k]); q.z.push(C.z[k]); q.w.push(C.w[k]); q.d.push(C.d[k]); q.zelge.push(C.zelge[k]); q.courses.push(C.courses[k]); q.farm.push(C.farm[k]); }
+  }
+  const M = s.landmark?.cols;
+  for (let k = 0; M && k < s.landmark.size; k++) {
+    const o = s.landmark.alive[k] ? at.get(M.site[k]) : undefined;
+    if (o) { const q = o.landmarks; q.kind.push(M.kind[k]); q.x.push(M.x[k]); q.z.push(M.z[k]); q.w.push(M.w[k]); q.d.push(M.d[k]); q.named.push(M.named[k]); q.order.push(M.order[k]); q.start.push(M.start[k]); q.end.push(M.end[k]); q.ruined.push(M.ruined[k]); }
   }
   for (const o of at.values()) {
     const parcels = o.id.map((_, i) => i).filter((i) => o.kind[i] === LOT_KIND.parcel);

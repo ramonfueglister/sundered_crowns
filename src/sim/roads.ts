@@ -34,8 +34,7 @@ export function slopeTime(slope: number): number {
 export const OFF_WAY = 0.6;
 
 /** the kinds of way, as in roads_<year>.json: 0 track, 1 road, 2 highway (src/worldprobe/roads.ts ROAD_KINDS) */
-export const TRACK = 0,
-  ROAD = 1,
+export const ROAD = 1,
   HIGHWAY = 2;
 /** a cart can travel the kinds from this one on */
 const WHEELS = ROAD;

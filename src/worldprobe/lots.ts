@@ -4,6 +4,7 @@
 // Since settlement feature 4 the file also holds the furlongs of the hamlets' fields: the fields round the towns are
 // those of the register (settle.ts, far.ts), with the crop each course carries in the year.
 import type { Parcels } from './settle';
+import type { AloneRow, LandmarkRow } from './landmarks';
 import { CROP, GEWANN, cropOf, lotAt, type Crop } from '../sim/settlement/fields';
 
 /** a hamlet of a town in the register: its middle east and south of the town's centre (metres at the scale of the houses), the parcels of its farmsteads round that middle, and its farmsteads in the order of their strips from the west */
@@ -11,17 +12,17 @@ export interface HamletParcels extends Parcels { east: number; south: number; pe
 /** the furlongs of a town's fields: per furlong its hamlet (index in `hamlets`), its middle and its depth (metres from the town's centre, at the scale of the houses), its course, and the farmstead that holds it whole (index among its hamlet's farmsteads, −1 in the open field) */
 export interface TownFields { hamlet: readonly number[]; x: readonly number[]; z: readonly number[]; d: readonly number[]; zelge: readonly number[]; farm: readonly number[] }
 /** the parcels of a town, those of its hamlets where the register holds them, and the furlongs of their fields (`fieldW` metres wide, tilled in `courses` courses) */
-export interface PlaceParcels extends Parcels { hamlets?: readonly HamletParcels[]; fields?: TownFields; fieldW?: number; courses?: number; /** the world block (finest step) of the town's centre the furlongs lie from, as the register's survey had it */ at?: readonly [number, number] }
+export interface PlaceParcels extends Parcels { hamlets?: readonly HamletParcels[]; fields?: TownFields; fieldW?: number; courses?: number; /** the world block (finest step) of the town's centre the furlongs lie from, as the register's survey had it */ at?: readonly [number, number]; /** its landmarks (settlement feature 5; landmarks.ts LandmarkRow); none in a file from before them */ landmarks?: readonly LandmarkRow[]; /** the start year of the register */ year?: number }
 
 /** the file: per town its site (index of the gazetteer) and its parcels */
-export interface LotsJson { year: number; towns: ({ site: number } & PlaceParcels)[] }
-export type TownParcels = ReadonlyMap<number, PlaceParcels> & { year?: number };
+export interface LotsJson { year: number; towns: ({ site: number } & PlaceParcels)[]; alone?: AloneRow[] }
+export type TownParcels = ReadonlyMap<number, PlaceParcels> & { year?: number; /** the landmarks that stand alone */ alone?: readonly AloneRow[] };
 
-export const parcelsOf = (j: LotsJson): Map<number, PlaceParcels> & { year?: number } => Object.assign(new Map(j.towns.map((t) => [t.site, { w: t.w, d: t.d, x: t.x, z: t.z, front: t.front, streets: t.streets, street: t.street, hamlets: t.hamlets, fields: t.fields, fieldW: t.fieldW, courses: t.courses, at: t.at, ground: t.ground }])), { year: j.year });
+export const parcelsOf = (j: LotsJson): Map<number, PlaceParcels> & { year?: number; alone?: readonly AloneRow[] } => Object.assign(new Map(j.towns.map((t) => [t.site, { w: t.w, d: t.d, x: t.x, z: t.z, front: t.front, streets: t.streets, street: t.street, hamlets: t.hamlets, fields: t.fields, fieldW: t.fieldW, courses: t.courses, at: t.at, ground: t.ground, landmarks: t.landmarks, year: j.year }])), { year: j.year, alone: j.alone });
 
-const loaded = new Map<number, Promise<(Map<number, PlaceParcels> & { year?: number }) | null>>();
+const loaded = new Map<number, Promise<(Map<number, PlaceParcels> & { year?: number; alone?: readonly AloneRow[] }) | null>>();
 /** the parcels of the towns of a start year (once per year); null where the year has no file */
-export function loadParcels(base: string, year: number): Promise<(Map<number, PlaceParcels> & { year?: number }) | null> {
+export function loadParcels(base: string, year: number): Promise<(Map<number, PlaceParcels> & { year?: number; alone?: readonly AloneRow[] }) | null> {
   let p = loaded.get(year);
   if (!p) {
     p = fetch(`${base}data/lots_${year}.json`).then(async (r) => (r.ok && (r.headers.get('content-type') ?? '').includes('json') ? parcelsOf(await r.json() as LotsJson) : null)).catch(() => null);

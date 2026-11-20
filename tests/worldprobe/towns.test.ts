@@ -4,7 +4,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { Batch } from '../../src/lookprobe/batch';
-import { LAND_Y, Mat, N, SEA_Y, type Ground } from '../../src/lookprobe/layout';
+import { LAND_Y, Mat, N, SEA_Y, idx, type Ground } from '../../src/lookprobe/layout';
+import { crowd } from '../../src/figures';
 import { styleOf } from '../../src/buildings';
 import { PEOPLE_PER_PERSON, PERSONS_PER_FLOOR_BLOCK, type Site, settle } from '../../src/worldprobe/settle';
 import { inhabitants1356, inhabitantsOf, type TownsJson } from '../../src/worldprobe/towns';
@@ -51,7 +52,7 @@ describe('the towns of a start year', () => {
     expect(towns.people.length).toBe(gazetteer.places.length);
     expect(m.get(venice)).toBe(towns.people[venice]);
     expect(m.get(venice)).toBeGreaterThan(100_000); // Chandler, 1291
-    const unknown = towns.people.findIndex((n) => n === null);
+    const unknown = towns.people.indexOf(null);
     expect(m.has(unknown)).toBe(false);
     // 1356 keeps the cities of 1356
     expect(inhabitants1356().get(venice)).not.toBe(m.get(venice));
@@ -112,7 +113,7 @@ describe('a walled town', () => {
     expect(fieldsIn(30, whole.half).n).toBe(0);
   }, 60000);
 
-  it('keeps its paving as street inside the wall, where the persons of the town walk (src/figures/crowd.ts)', () => {
+  it('keeps its paving as street inside the wall, where the persons of the town walk (src/figures/crowd.ts), but not the ground of its houses', () => {
     const site: Site = {
       id: venice,
       at: [N / 2 + 0.5, N / 2 + 0.5],
@@ -122,25 +123,39 @@ describe('a walled town', () => {
       style: styleOf('italy'),
     };
     const counts: Record<string, number> = {};
-    const { used, town } = settle(
-      meadow(),
-      new Batch(),
-      [site],
-      [],
-      () => ({ region: '', style: styleOf('') }),
-      () => 0,
-      () => 0,
-      counts,
-    );
+    const g = meadow(),
+      settled = settle(
+        g,
+        new Batch(),
+        [site],
+        [],
+        () => ({ region: '', style: styleOf('') }),
+        () => 0,
+        () => 0,
+        counts,
+      ),
+      { used, town, lots } = settled;
     expect(counts.wall).toBe(1);
+    // the paving is street but where a building stands on it
     let paved = 0,
-      street = 0;
+      street = 0,
+      built = 0;
     for (let i = 0; i < N * N; i++)
       if (town[i]) {
         paved++;
         if (used[i] === 2) street++;
+        else if (used[i] === 1) built++;
       }
     expect(paved).toBeGreaterThan(0);
-    expect(street).toBe(paved);
+    expect(street + built).toBe(paved);
+    expect(street).toBeGreaterThan(0);
+    const housed = new Uint8Array(N * N);
+    for (const l of lots)
+      for (let z = l.z; z < l.z + l.d; z++) for (let x = l.x; x < l.x + l.w; x++) housed[idx(x, z)] = 1;
+    for (let i = 0; i < N * N; i++) if (housed[i]) expect(used[i]).toBe(1);
+    // and no figure stands in a house
+    const f = crowd(g, settled, () => true);
+    expect(f.count).toBeGreaterThan(50);
+    for (let k = 0; k < f.count; k++) expect(housed[idx(Math.floor(f.a[k * 4]), Math.floor(f.a[k * 4 + 2]))]).toBe(0);
   }, 60000);
 });

@@ -2,13 +2,13 @@
 // completions of OpenAI, answered as server-sent events. The key stays on the world server (OPENROUTER_API_KEY, a Fly
 // secret, docs/DEPLOY.md); no browser ever sees it.
 
-export const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;
 }
-export interface ChatRequest {
+interface ChatRequest {
   key: string;
   model: string;
   messages: ChatMessage[];

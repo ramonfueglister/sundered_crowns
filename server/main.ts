@@ -1,4 +1,4 @@
-// World server transport: HTTP (health/status) + WebSocket API around one WorldCore.
+// World server transport: HTTP (its answers: routes.ts) + WebSocket API around one WorldCore.
 //   npm run world                      → SECONDS_PER_DAY=240, port 8787, DEV login when Supabase is not configured
 //   SECONDS_PER_DAY=0.05 npm run world → fast mode for testing
 import { createServer, type IncomingMessage } from 'node:http';
@@ -10,17 +10,7 @@ import { WorldCore } from './world';
 import { NullStore, SupabaseStore } from './store';
 import { authConfigFromEnv, authenticate } from './auth';
 import { PROTOCOL_VERSION, type ClientMsg, type ServerMsg } from '../src/net/protocol';
-import {
-  placePeople,
-  manyPlacesPeople,
-  personDetail,
-  rulersOnMap,
-  MAX_PLACES_PER_REQUEST,
-  TRACK_DAYS,
-} from '../src/net/people';
-import { staysOf, tracksOf } from '../src/sim/content/itineraries';
-import { townLots, manyTownsLots, MAX_SITES_PER_REQUEST } from '../src/net/lots';
-import { ALL_CULTURES } from '../src/sim/content/peoples';
+import { answer } from './routes';
 import { Talk, talkConfigFromEnv } from './talk';
 
 // local development: read ./.env if present (production hosts set real environment variables)
@@ -58,95 +48,14 @@ const cors = (req: IncomingMessage) => {
   return ok && o ? { 'access-control-allow-origin': o, vary: 'Origin' } : {};
 };
 const http = createServer((req, res) => {
-  const h = { 'content-type': 'application/json', 'cache-control': 'no-store', ...cors(req) };
-  if (req.url === '/health' || req.url === '/') {
-    res.writeHead(200, h);
-    res.end(
-      JSON.stringify({
-        ok: true,
-        world: core.worldInfo().id,
-        day: core.s.day,
-        players: core.seats().length,
-        stepMs: core.stepMs,
-      }),
-    );
-    return;
-  }
-  if (req.url === '/world') {
-    res.writeHead(200, h);
-    res.end(JSON.stringify(core.worldInfo()));
-    return;
-  }
-  // the history of the borders, for the replay (server/history.ts)
-  if (req.url === '/history') {
-    const { json, gz } = core.history.payload(core.s.startYear),
-      zip = /\bgzip\b/.test(String(req.headers['accept-encoding'] ?? ''));
-    res.writeHead(200, { ...h, vary: 'Origin, Accept-Encoding', ...(zip ? { 'content-encoding': 'gzip' } : {}) });
-    res.end(zip ? gz : json);
-    return;
-  }
-  // the persons (src/net/people.ts): of a place for the figures, one in full for the portrait
-  const people = /^\/people\/(\d+)$/.exec(req.url ?? ''),
-    person = /^\/person\/(\d+)$/.exec(req.url ?? '');
-  if (people && Number(people[1]) < core.s.place.pop.length) {
-    res.writeHead(200, h);
-    res.end(JSON.stringify(placePeople(core.s, Number(people[1]), staysOf(core.s, core.itineraries, core.travels))));
-    return;
-  }
-  // the rulers who hold a crown, for the map mode of the rulers (src/ui/mapmode.ts)
-  if (req.url === '/rulers') {
-    res.writeHead(200, h);
-    res.end(
-      JSON.stringify(
-        rulersOnMap(
-          core.s,
-          staysOf(core.s, core.itineraries, core.travels),
-          tracksOf(core.s, core.itineraries, core.travels, TRACK_DAYS),
-        ),
-      ),
-    );
-    return;
-  }
-  const many = /^\/people\?places=(\d+(?:,\d+)*)$/.exec(req.url ?? '');
-  if (many) {
-    const places = many[1].split(',').map(Number);
-    if (places.length <= MAX_PLACES_PER_REQUEST && places.every((p) => p < core.s.place.pop.length)) {
-      res.writeHead(200, h);
-      res.end(JSON.stringify(manyPlacesPeople(core.s, places, staysOf(core.s, core.itineraries, core.travels))));
-      return;
-    }
-  }
-  if (person) {
-    const d = personDetail(
-      core.s,
-      Number(person[1]),
-      (i) => ALL_CULTURES[i] ?? 'unknown',
-      (uid) => core.archived(uid),
-    );
-    if (d) {
-      res.writeHead(200, h);
-      res.end(JSON.stringify(d));
-      return;
-    }
-  }
-  // the land register (src/net/lots.ts): the parcels of a town, for the houses of the world graphic
-  const lots = /^\/lots\/(\d+)$/.exec(req.url ?? ''),
-    manyLots = /^\/lots\?sites=(\d+(?:,\d+)*)$/.exec(req.url ?? '');
-  if (lots && Number(lots[1]) <= 0x7fff) {
-    res.writeHead(200, h);
-    res.end(JSON.stringify(townLots(core.s, Number(lots[1]))));
-    return;
-  }
-  if (manyLots) {
-    const sites = manyLots[1].split(',').map(Number);
-    if (sites.length <= MAX_SITES_PER_REQUEST && sites.every((x) => x <= 0x7fff)) {
-      res.writeHead(200, h);
-      res.end(JSON.stringify(manyTownsLots(core.s, sites)));
-      return;
-    }
-  }
-  res.writeHead(404, h);
-  res.end('{"error":"not found"}');
+  const a = answer(core, req.url ?? '', /\bgzip\b/.test(String(req.headers['accept-encoding'] ?? '')));
+  res.writeHead(a.status, {
+    'content-type': 'application/json',
+    'cache-control': 'no-store',
+    ...cors(req),
+    ...a.headers,
+  });
+  res.end(a.body);
 });
 
 const wss = new WebSocketServer({ server: http, maxPayload: 64 * 1024, perMessageDeflate: { threshold: 2048 } });

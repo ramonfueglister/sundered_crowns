@@ -2,7 +2,7 @@
 // without end, so every change to the shape of the state needs its step here.
 import type { WorldState } from './state';
 import { STATE_VERSION, PERSON_SCHEMA, FAMILY_SCHEMA, REALM_SCHEMA, ALIVE } from './state';
-import { foundLots, relayTowns, plannedAnew } from './systems/lots';
+import { foundLots, relayTowns } from './systems/lots';
 import { foundFields } from './systems/fields';
 import { foundRulers, rulerCultures, rulerGenes } from './systems/rulers';
 import { foundBorders } from './systems/borders';
@@ -22,7 +22,7 @@ import { foundMoves, redrawMoves } from './systems/moves';
 import type { SetupState } from './setup';
 
 /** The fields of a WorldState in the order createWorldState writes them. */
-const STATE_FIELDS = ['v', 'seed', 'startYear', 'day', 'rng', 'place', 'realm', 'realmText', 'ruler', 'economy', 'person', 'family', 'firm', 'named', 'lot', 'hamlets', 'nextUid', 'archive', 'street', 'field'] as const;
+const STATE_FIELDS = ['v', 'seed', 'startYear', 'day', 'rng', 'place', 'realm', 'realmText', 'ruler', 'economy', 'person', 'family', 'firm', 'named', 'lot', 'hamlets', 'nextUid', 'archive', 'street', 'field', 'landmark'] as const;
 
 /**
  * The steps before 11 are gone (2026-11-16): the only world, europa-1291, is at 11 or later, and the worlds before it are
@@ -318,12 +318,22 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     foundFields(s, w.tilth);
     s.v = 37;
   }
-  if (s.v === 37) { // 37 → 38: Venice on the ground of its land register of 1808 (src/sim/settlement/plan_ground.ts).
-    // A town whose real plan is newer than its streets (Venice, unless the world was founded with it) is laid out anew
-    // along its streets as at 32 → 33: every parcel keeps its id, its family and its size. The other towns, the
-    // hamlets, their fields and everybody's life stay as they are.
-    relayTowns(s, w.ground, (site) => plannedAnew(s, site));
+  if (s.v === 37) { // 37 → 38: the landmarks (settlement feature 5, src/sim/systems/landmarks.ts). The church of every
+    // town's see and its buildings known by name are laid on the day the world has reached, and the towns laid out
+    // anew round them as relayTowns lays them: every parcel keeps its family and its size and moves to its street. The
+    // convents and the residence stand at the edge, clear of the parcels, streets and hamlets; the hamlets stay where
+    // they are, and get their fields again. The persons of a world that has run are no longer those of its founding,
+    // so the register cannot be founded anew as a new world founds it.
+    relayTowns(s, w.ground, w.dry);
+    foundFields(s, w.tilth);
     s.v = 38;
+  }
+  if (s.v === 38) { // 38 → 39: Venice on the land and water of its land register of 1808 (src/sim/settlement/plan_ground.ts).
+    // The towns are laid out anew as at 37 → 38; only Venice's parcels, streets and landmarks move, and the hamlets
+    // get their fields again.
+    relayTowns(s, w.ground, w.dry);
+    foundFields(s, w.tilth);
+    s.v = 39;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one

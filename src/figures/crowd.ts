@@ -71,9 +71,14 @@ export interface Figures {
   c: Float32Array;
   d: Float32Array;
   e: Float32Array;
-  /** the piece's ground in the world */
+  /** the piece's ground in the world, in blocks of the finest step */
   ox?: number;
   oz?: number;
+  /**
+   * where a far step draws them (worldprobe/crowd.ts): how wide and how tall a block of the finest step, in which the
+   * figures are given, is in the piece's blocks; without it the piece's blocks are the finest
+   */
+  scale?: [number, number];
 }
 
 /**
@@ -95,26 +100,124 @@ const DIRS = [
   [0, -1],
 ] as const;
 
+/**
+ * What a figure asks of the ground at a block of the finest step (its x, z in the piece): whether it is free to stand
+ * or walk on (street: the paving of a town that nothing stands on; else ground on which nothing stands, grows or is
+ * paved), whether a house stands within two blocks, the crop that grows on it (0: none), and how high it lies, in
+ * blocks of the figure's height.
+ */
+export interface Where {
+  free(x: number, z: number, street: boolean): boolean;
+  nearHouse(x: number, z: number): boolean;
+  field(x: number, z: number): number;
+  h(x: number, z: number): number;
+}
+/** Figures as lists of numbers, before they are made into the lists of `Figures`. */
+type Gathered = number[][];
+export const gathered = (): Gathered => [[], [], [], [], []];
+
+/**
+ * The figure, if any, at a block of the finest step: x, z in the piece, wx, wz in the world (which draw who it is),
+ * `person` the person of a town who stands there, `inTown` whether the block lies in a town whose street holds its
+ * persons and not chance.
+ */
+export function place(
+  out: Gathered,
+  w: Where,
+  x: number,
+  z: number,
+  wx: number,
+  wz: number,
+  person?: TownPerson,
+  inTown = false,
+) {
+  const lot = hash2(wx, wz, 401);
+  // farmers work from the strip of grass round a field, facing their crop: inside it the crop would hide them
+  const street = w.free(x, z, true),
+    field = !street && w.free(x, z, false) ? DIRS.findIndex(([dx, dz]) => w.field(x + dx, z + dz) > 0) : -1;
+  let kind: 'street' | 'house' | 'field' | null = null;
+  if (street && (person || (!inTown && lot < IN_STREET))) kind = 'street';
+  else if (field >= 0 && lot < IN_FIELD) kind = 'field';
+  else if (!street && lot < ABOUT_HOUSE && w.free(x, z, false) && w.nearHouse(x, z)) kind = 'house';
+  if (!kind) return;
+  const h = (k: number) => hash2(wx, wz, 410 + k);
+  // who: farmers in the fields (vines are tended standing, with a basket), the rest by the share of town or village
+  const crop = field >= 0 ? w.field(x + DIRS[field][0], z + DIRS[field][1]) : 0;
+  const shown = kind === 'street' ? person : undefined;
+  const e =
+    kind === 'field'
+      ? crop === 2
+        ? 1
+        : 3
+      : shown
+        ? pickEstate(h(0), (q) => (FEMALE.has(q.name) === shown.female ? q.townShare : 0))
+        : pickEstate(h(0), (q) => (kind === 'street' ? q.townShare : q.mode === Mode.Work ? 0 : q.villageShare));
+  const estate = ESTATES[e];
+  // a ruler stands on the spot, so that the map mode of the rulers finds them where it says
+  let mode =
+    kind === 'field' ? (crop === 2 ? Mode.Stand : Mode.Work) : shown?.ruler !== undefined ? Mode.Stand : estate.mode;
+  // the way: straight on over free ground of even height, as far as it goes
+  const [dx, dz] = DIRS[Math.floor(h(1) * 4)],
+    want = 2 + Math.floor(h(2) * (LONGEST_WAY - 1));
+  let len = 0;
+  if (mode === Mode.Walk)
+    while (len < want) {
+      const nx = x + dx * (len + 1),
+        nz = z + dz * (len + 1);
+      if (!w.free(nx, nz, kind === 'street') || Math.abs(w.h(nx, nz) - w.h(x + dx * len, z + dz * len)) > 1) break;
+      len++;
+    }
+  if (mode === Mode.Walk && len < 2) mode = Mode.Stand;
+  // the figure keeps to one side of the way, so that two ways in one street do not run into each other
+  const side = (h(3) - 0.5) * 0.7,
+    sx = x + 0.5 + dz * side,
+    sz = z + 0.5 + dx * side,
+    y = w.h(x, z);
+  const ex = sx + dx * len,
+    ez = sz + dz * len,
+    ey = w.h(x + dx * len, z + dz * len);
+  const pick = (list: readonly number[], k: number) => list[Math.floor(h(k) * list.length)];
+  out[0].push(sx, y, sz, h(4) * 100);
+  out[1].push(ex, mode === Mode.Walk ? ey : y, ez, mode === Mode.Walk ? PACE * (0.8 + 0.4 * h(5)) : 0);
+  out[2].push(mode, estate.load, estate.cut, estate.head);
+  out[3].push(pick(SKIN, 6), pick(estate.tunic, 7), pick(HOSE, 8), pick(estate.headwear, 9));
+  out[4].push(
+    estate.load === Load.None ? 0 : pick(LOAD_COLOURS[estate.load], 10),
+    pick(HAIR, 11),
+    kind === 'field' ? Math.atan2(DIRS[field][0], DIRS[field][1]) : h(12) * Math.PI * 2,
+    shown ? shown.id + 1 : 0,
+  );
+}
+/** The lists of a piece's figures from those gathered. */
+export function figuresOf(out: Gathered, ox: number, oz: number, scale?: [number, number]): Figures {
+  const [a, b, c, d, e] = out.map((l) => new Float32Array(l));
+  return { count: a.length / 4, a, b, c, d, e, ox, oz, ...(scale ? { scale } : {}) };
+}
+
 /** Builds the figures of a ground. `own` says whether a column belongs to this piece. */
 export function crowd(g: Ground, s: SettledGround, own: (x: number, z: number) => boolean): Figures {
   const ox = g.ox ?? 0,
     oz = g.oz ?? 0,
-    out: number[][] = [[], [], [], [], []];
-  const free = (x: number, z: number, street: boolean) => {
-    if (x < 1 || z < 1 || x >= N - 1 || z >= N - 1) return false;
-    const i = idx(x, z);
-    return (
-      !g.wet[i] &&
-      (street ? s.town[i] === 1 && s.used[i] === 2 : s.used[i] === 0 && s.town[i] === 0 && g.mat[i] !== Mat.Rock)
-    );
-  };
-  const nearHouse = (x: number, z: number) => {
-    for (let dz = -2; dz <= 2; dz++)
-      for (let dx = -2; dx <= 2; dx++) {
-        const i = idx(x + dx, z + dz);
-        if (s.used[i] === 1 && !s.field[i] && !s.town[i]) return true;
-      }
-    return false;
+    out = gathered();
+  const w: Where = {
+    free(x, z, street) {
+      if (x < 1 || z < 1 || x >= N - 1 || z >= N - 1) return false;
+      const i = idx(x, z);
+      return (
+        !g.wet[i] &&
+        (street ? s.town[i] === 1 && s.used[i] === 2 : s.used[i] === 0 && s.town[i] === 0 && g.mat[i] !== Mat.Rock)
+      );
+    },
+    nearHouse(x, z) {
+      for (let dz = -2; dz <= 2; dz++)
+        for (let dx = -2; dx <= 2; dx++) {
+          const i = idx(x + dx, z + dz);
+          if (s.used[i] === 1 && !s.field[i] && !s.town[i]) return true;
+        }
+      return false;
+    },
+    field: (x, z) => s.field[idx(x, z)],
+    h: (x, z) => g.h[idx(x, z)],
   };
   const towns = (s.towns ?? []).flatMap((t) => {
     const aims = aimsOf(t);
@@ -135,7 +238,7 @@ export function crowd(g: Ground, s: SettledGround, own: (x: number, z: number) =
             if (Math.max(Math.abs(dx), Math.abs(dz)) !== r) continue;
             const x = cx + dx,
               z = cz + dz;
-            if (!free(x, z, true) || !own(x, z) || rulerAt.has(key(x + ox, z + oz))) continue;
+            if (!w.free(x, z, true) || !own(x, z) || rulerAt.has(key(x + ox, z + oz))) continue;
             rulerAt.set(key(x + ox, z + oz), p);
             break search;
           }
@@ -145,85 +248,10 @@ export function crowd(g: Ground, s: SettledGround, own: (x: number, z: number) =
     for (let x = 2; x < N - 2; x++) {
       if (!own(x, z)) continue;
       const wx = x + ox,
-        wz = z + oz,
-        i = idx(x, z),
-        lot = hash2(wx, wz, 401);
+        wz = z + oz;
       // in a town with persons the street holds them, not chance
       const town = towns.find(({ t }) => Math.abs(wx - t.cx) <= t.half && Math.abs(wz - t.cz) <= t.half);
-      const person = rulerAt.get(key(wx, wz)) ?? town?.aims.get(key(wx, wz));
-      // farmers work from the strip of grass round a field, facing their crop: inside it the crop would hide them
-      const street = free(x, z, true),
-        field = !street && free(x, z, false) ? DIRS.findIndex(([dx, dz]) => s.field[idx(x + dx, z + dz)] > 0) : -1;
-      let kind: 'street' | 'house' | 'field' | null = null;
-      if (street && (person || (!town && lot < IN_STREET))) kind = 'street';
-      else if (field >= 0 && lot < IN_FIELD) kind = 'field';
-      else if (!street && lot < ABOUT_HOUSE && free(x, z, false) && nearHouse(x, z)) kind = 'house';
-      if (!kind) continue;
-      const h = (k: number) => hash2(wx, wz, 410 + k);
-      // who: farmers in the fields (vines are tended standing, with a basket), the rest by the share of town or village
-      const crop = field >= 0 ? s.field[idx(x + DIRS[field][0], z + DIRS[field][1])] : 0;
-      const shown = kind === 'street' ? person : undefined;
-      const e =
-        kind === 'field'
-          ? crop === 2
-            ? 1
-            : 3
-          : shown
-            ? pickEstate(h(0), (q) => (FEMALE.has(q.name) === shown.female ? q.townShare : 0))
-            : pickEstate(h(0), (q) => (kind === 'street' ? q.townShare : q.mode === Mode.Work ? 0 : q.villageShare));
-      const estate = ESTATES[e];
-      // a ruler stands on the spot, so that the map mode of the rulers finds them where it says
-      let mode =
-        kind === 'field'
-          ? crop === 2
-            ? Mode.Stand
-            : Mode.Work
-          : shown?.ruler !== undefined
-            ? Mode.Stand
-            : estate.mode;
-      // the way: straight on over free ground of even height, as far as it goes
-      const [dx, dz] = DIRS[Math.floor(h(1) * 4)],
-        want = 2 + Math.floor(h(2) * (LONGEST_WAY - 1));
-      let len = 0;
-      if (mode === Mode.Walk)
-        while (len < want) {
-          const nx = x + dx * (len + 1),
-            nz = z + dz * (len + 1);
-          if (!free(nx, nz, kind === 'street') || Math.abs(g.h[idx(nx, nz)] - g.h[idx(x + dx * len, z + dz * len)]) > 1)
-            break;
-          len++;
-        }
-      if (mode === Mode.Walk && len < 2) mode = Mode.Stand;
-      // the figure keeps to one side of the way, so that two ways in one street do not run into each other
-      const side = (h(3) - 0.5) * 0.7,
-        sx = x + 0.5 + dz * side,
-        sz = z + 0.5 + dx * side,
-        y = g.h[i];
-      const ex = sx + dx * len,
-        ez = sz + dz * len,
-        ey = g.h[idx(x + dx * len, z + dz * len)];
-      const pick = (list: readonly number[], k: number) => list[Math.floor(h(k) * list.length)];
-      out[0].push(sx, y, sz, h(4) * 100);
-      out[1].push(ex, mode === Mode.Walk ? ey : y, ez, mode === Mode.Walk ? PACE * (0.8 + 0.4 * h(5)) : 0);
-      out[2].push(mode, estate.load, estate.cut, estate.head);
-      out[3].push(pick(SKIN, 6), pick(estate.tunic, 7), pick(HOSE, 8), pick(estate.headwear, 9));
-      out[4].push(
-        estate.load === Load.None ? 0 : pick(LOAD_COLOURS[estate.load], 10),
-        pick(HAIR, 11),
-        kind === 'field' ? Math.atan2(DIRS[field][0], DIRS[field][1]) : h(12) * Math.PI * 2,
-        shown ? shown.id + 1 : 0,
-      );
+      place(out, w, x, z, wx, wz, rulerAt.get(key(wx, wz)) ?? town?.aims.get(key(wx, wz)), !!town);
     }
-  const [a, b, c, d, e] = out.map((l) => new Float32Array(l));
-  return { count: a.length / 4, a, b, c, d, e, ox, oz };
+  return figuresOf(out, ox, oz);
 }
-
-/** No figures: for the coarser steps of the map, where a block is wider than a person is tall. */
-export const noFigures = (): Figures => ({
-  count: 0,
-  a: new Float32Array(0),
-  b: new Float32Array(0),
-  c: new Float32Array(0),
-  d: new Float32Array(0),
-  e: new Float32Array(0),
-});

@@ -12,7 +12,9 @@ import type { FieldShown } from './lots';
 import { CROP } from '../sim/settlement/fields';
 
 /** A place of the gazetteer on the ground. */
-export interface Site { /** the same in every ground the place falls on */ id: number; at: P2; /** 1 village … 5 great city */ size: number; /** inhabitants in 1356, where an estimate exists */ pop: number | null; /** the region it builds as (buildings/traditions/regions.ts) */ region: string; style: Style; /** a hamlet of a town's farming families before its walls (hamlets.ts): houses close together, no church */ hamlet?: boolean; /** the parcels of its families in the land register (lots.ts): a house stands on each, at its street */ lots?: Parcels }
+export interface Site { /** the same in every ground the place falls on */ id: number; at: P2; /** 1 village … 5 great city */ size: number; /** inhabitants in 1356, where an estimate exists */ pop: number | null; /** the region it builds as (buildings/traditions/regions.ts) */ region: string; style: Style; /** a hamlet of a town's farming families before its walls (hamlets.ts): houses close together, no church */ hamlet?: boolean; /** the parcels of its families in the land register (lots.ts): a house stands on each, at its street */ lots?: Parcels; /** its landmarks in the land register (landmarks.ts): each at its middle, `x` metres east and `z` south of the town's centre; with them the town has no church of the graphic's own */ marks?: readonly Mark[] }
+/** A landmark of the register as it is built: its middle (metres from the town's centre), its model of w × d blocks, and what it is counted as. */
+export interface Mark { x: number; z: number; model: Model; kind: string }
 /**
  * The parcels of a town as the simulation's land register holds them (src/sim/systems/lots.ts): all `w` metres along
  * the street and `d` metres deep, their middles `x` metres east and `z` metres south of the town's centre, the
@@ -22,6 +24,21 @@ export interface Parcels { w: number; d: number; x: readonly number[]; z: readon
 
 /** the kind of the market among a town's streets (STREET_KIND in src/sim/state.ts) */
 const MARKET = 4;
+/**
+ * The ground of a town's streets and market as blocks from its middle, four numbers to a piece (x0, z0, x1, z1, the
+ * ends not included): a street as wide as the register makes it about its middle line, the market as its corners.
+ * The edges round to blocks as those of the parcels do, so that a street reaches the houses at its side.
+ */
+export function streetsOf(L: Parcels): number[] {
+  const half = (L.street ?? 0) / 2, out: number[] = [];
+  for (const [x0, z0, x1, z1, k] of L.streets ?? []) {
+    const pad = k === MARKET ? 0 : half;
+    const a0 = Math.round(m(Math.min(x0, x1) - pad)), a1 = Math.max(a0 + 1, Math.round(m(Math.max(x0, x1) + pad)));
+    const b0 = Math.round(m(Math.min(z0, z1) - pad)), b1 = Math.max(b0 + 1, Math.round(m(Math.max(z0, z1) + pad)));
+    out.push(a0, b0, a1, b1);
+  }
+  return out;
+}
 /**
  * Asked for every town once its great buildings stand and before its houses: `free` tells whether a block `dx` east
  * and `dz` south of the town's middle can carry a house (dry, no rock, level with its neighbours, nothing built).
@@ -48,7 +65,7 @@ export interface Told {
 }
 export type Survey = (s: Site, free: (dx: number, dz: number) => boolean) => void;
 /** A monument on the ground: one building of it. */
-export interface Monument { id: number; at: P2; model: Model }
+export interface Monument { id: number; at: P2; model: Model; /** stands at its spot on ground levelled for it (a landmark of the register) */ level?: boolean }
 /**
  * A house on its lot: all that is needed to build it, so that the near view can build the houses that have fine
  * blocks again from them (fine.ts). `x`, `z` is the corner of its footprint on the ground, `y` the height it stands at.
@@ -219,10 +236,27 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     return hi;
   };
   /**
+   * A landmark of the register on its own ground: the footprint from (x0, z0) is levelled to the highest of its dry
+   * columns and made dry where it is not (the register gave the landmark this ground: OWN RULE, as a hamlet's ground
+   * is levelled), and the model stands on it.
+   */
+  const stand = (model: Model, r: Rnd, x0: number, z0: number, kind: string) => {
+    const x1 = x0 + model.w, z1 = z0 + model.d;
+    let hi = -Infinity, any = false;
+    for (let z = z0; z < z1; z++) for (let x = x0; x < x1; x++) if (inGrid(x, z) && !g.wet[idx(x, z)]) { hi = Math.max(hi, g.h[idx(x, z)]); any = true; }
+    if (!any) for (let z = z0; z < z1; z++) for (let x = x0; x < x1; x++) if (inGrid(x, z)) hi = Math.max(hi, g.h[idx(x, z)]);
+    if (!Number.isFinite(hi)) return;
+    for (let z = z0; z < z1; z++) for (let x = x0; x < x1; x++) if (inGrid(x, z)) { const i = idx(x, z); g.wet[i] = 0; g.h[i] = hi; g.occ[i] = hi; if (g.mat[i] === Mat.Rock) g.mat[i] = Mat.Paved; }
+    build(model.build(r), x0, z0, model.w, model.d, hi, model.height, kind);
+  };
+  /** the landmarks of a town of the register, each at its place */
+  const marks = (s: Site, r: Rnd, cx: number, cz: number) => { for (const k of s.marks ?? []) stand(k.model, r, cx + Math.round(m(k.x) - k.model.w / 2), cz + Math.round(m(k.z) - k.model.d / 2), k.kind); };
+  /**
    * A monument as near its real place as it can stand: on dry ground there, else on ground made for it at the
    * water's edge, else on the nearest dry ground.
    */
-  const monument = (model: Model, r: Rnd, cx: number, cz: number) => {
+  const monument = (model: Model, r: Rnd, cx: number, cz: number, level = false) => {
+    if (level) { stand(model, r, cx - Math.floor(model.w / 2), cz - Math.floor(model.d / 2), 'monument'); return; }
     for (let k = 0; k <= 3; k++) for (let dz = -k; dz <= k; dz++) for (let dx = -k; dx <= k; dx += Math.abs(dz) === k ? 1 : 2 * k || 1) {
       const x = cx + dx - Math.floor(model.w / 2), z = cz + dz - Math.floor(model.d / 2), y = lot(x, z, x + model.w, z + model.d, 1) ?? madeGround(x, z, x + model.w, z + model.d);
       if (y !== null) { build(model.build(r), x, z, model.w, model.d, y, model.height, 'monument'); return; }
@@ -268,13 +302,10 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
    * round to blocks as those of the parcels do, so that a street reaches the houses at its side.
    */
   const onStreets = (s: Site, cx: number, cz: number, walled: boolean) => {
-    const L = s.lots!, half = (L.street ?? 0) / 2;
+    const rects = streetsOf(s.lots!);
     let paved = 0;
-    for (const q of L.streets ?? []) {
-      const [x0, z0, x1, z1, k] = q, pad = k === MARKET ? 0 : half;
-      const a0 = Math.round(m(Math.min(x0, x1) - pad)), a1 = Math.max(a0 + 1, Math.round(m(Math.max(x0, x1) + pad)));
-      const b0 = Math.round(m(Math.min(z0, z1) - pad)), b1 = Math.max(b0 + 1, Math.round(m(Math.max(z0, z1) + pad)));
-      for (let z = cz + b0; z < cz + b1; z++) for (let x = cx + a0; x < cx + a1; x++) {
+    for (let q = 0; q < rects.length; q += 4) {
+      for (let z = cz + rects[q + 1]; z < cz + rects[q + 3]; z++) for (let x = cx + rects[q]; x < cx + rects[q + 2]; x++) {
         if (!inGrid(x, z)) continue;
         const i = idx(x, z);
         if (g.wet[i] || g.mat[i] === Mat.Rock || used[i] === 1) continue;
@@ -287,17 +318,28 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
   /** whether a house can stand on a column: buildable, and within a step of the columns beside it */
   const bears = (x: number, z: number) => buildable(x, z) && [[1, 0], [-1, 0], [0, 1], [0, -1]].every(([dx, dz]) => Math.abs(g.h[idx(x + dx, z + dz)] - g.h[idx(x, z)]) <= 1);
 
-  for (const mon of monuments) monument(mon.model, seeded(500 + mon.id), Math.floor(mon.at[0]), Math.floor(mon.at[1]));
+  for (const mon of monuments) monument(mon.model, seeded(500 + mon.id), Math.floor(mon.at[0]), Math.floor(mon.at[1]), mon.level);
+
+  /** the site itself may lie in the water or on the rock at this scale: the nearest ground that can be built on */
+  const middleOf = (s: Site): [number, number] | null => {
+    // (a town on a real plan that draws its ground is laid round its site's block, as that ground: plan_ground.ts)
+    if (s.lots?.ground) return [Math.floor(s.at[0]), Math.floor(s.at[1])];
+    for (let k = 0; k <= 10; k++) for (let dz = -k; dz <= k; dz++) for (let dx = -k; dx <= k; dx++) {
+      const x = Math.floor(s.at[0]) + dx, z = Math.floor(s.at[1]) + dz;
+      if (Math.max(Math.abs(dx), Math.abs(dz)) === k && buildable(x, z)) return [x, z];
+    }
+    return null;
+  };
+  // the building ground of every town for the land register, before anything the graphic builds of its own (its
+  // churches, its houses where there is no register): only the water, the rock, the steps and the monuments count
+  // (settlement feature 5: the register lays its landmarks itself, and a town is not cut off by the houses of its
+  // neighbour)
+  if (survey) for (const s of sites) { const at = middleOf(s); if (at) survey(s, (dx, dz) => bears(at[0] + dx, at[1] + dz)); }
 
   [...sites].sort((a, b) => b.size - a.size || (b.pop ?? 0) - (a.pop ?? 0) || a.id - b.id).forEach((s) => {
-    // the site itself may lie in the water or on the rock at this scale: the nearest ground that can be built on
-    // (a town on a real plan that draws its ground is laid round its site's block, as that ground: plan_ground.ts)
-    let cx = s.lots?.ground ? Math.floor(s.at[0]) : -1, cz = s.lots?.ground ? Math.floor(s.at[1]) : -1;
-    for (let k = 0; k <= 10 && cx < 0; k++) for (let dz = -k; dz <= k && cx < 0; dz++) for (let dx = -k; dx <= k; dx++) {
-      const x = Math.floor(s.at[0]) + dx, z = Math.floor(s.at[1]) + dz;
-      if (Math.max(Math.abs(dx), Math.abs(dz)) === k && buildable(x, z)) { cx = x; cz = z; break; }
-    }
-    if (cx < 0) return;
+    const at = middleOf(s);
+    if (!at) return;
+    const [cx, cz] = at;
     const pop = s.pop ?? POP_OF_SIZE[s.size], size = s.size;
     now = s.id; kind = s.hamlet ? 'hamlet' : size < WALLED_FROM ? 'village' : 'town';
     const r = seeded(1000 + s.id), need = pop / PEOPLE_PER_PERSON;
@@ -334,8 +376,8 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     }
     if (size < WALLED_FROM) {
       // a village or small town: a church in the small town, houses scattered round it
-      if (size === 2) landmark(s.style.church, r, cx, cz, 4, 'church');
-      survey?.(s, (dx, dz) => bears(cx + dx, cz + dz));
+      if (s.marks) marks(s, r, cx, cz);
+      else if (size === 2) landmark(s.style.church, r, cx, cz, 4, 'church');
       if (s.lots) { onParcels(s, r, cx, cz, false); onStreets(s, cx, cz, false); if (own(cx, cz)) count('village'); return; }
       const reach = 5 + 2.5 * Math.sqrt(need);
       for (let tries = 0; housed < need && tries < 400; tries++) {
@@ -346,10 +388,12 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
       return;
     }
     // a walled town: its great buildings in the middle, then houses packed in a square that grows until all are housed
-    landmark(size >= 4 ? s.style.great : s.style.church, r, cx, cz, 16, size >= 4 ? 'landmark' : 'church');
-    for (let k = size - 3; k > 0; k--) landmark(s.style.church, r, cx + r.int(-14, 14), cz + r.int(-14, 14), 8, 'church');
+    if (s.marks) marks(s, r, cx, cz);
+    else {
+      landmark(size >= 4 ? s.style.great : s.style.church, r, cx, cz, 16, size >= 4 ? 'landmark' : 'church');
+      for (let k = size - 3; k > 0; k--) landmark(s.style.church, r, cx + r.int(-14, 14), cz + r.int(-14, 14), 8, 'church');
+    }
     if (s.style.towers) for (let k = size - 2; k > 0; k--) landmark({ build: tower, w: 3, d: 3, height: 10 }, r, cx + r.int(-7, 7), cz + r.int(-7, 7), 5, 'tower');
-    survey?.(s, (dx, dz) => bears(cx + dx, cz + dz));
     // straight streets, two blocks wide; a house stands between them
     const street = (x: number, z: number) => (x - cx + 1900) % 19 < 2 || (z - cz + 1700) % 17 < 2;
     const crosses = (x: number, z: number, w: number, d: number) => (x - cx + 1900) % 19 + w > 19 || (z - cz + 1700) % 17 + d > 17;
@@ -393,14 +437,17 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     // paved as far as the houses reach: within three blocks of a building
     const built = (x: number, z: number) => { for (let dz = -3; dz <= 3; dz++) for (let dx = -3; dx <= 3; dx++) if (inGrid(x + dx, z + dz) && used[idx(x + dx, z + dz)] === 1) return true; return false; };
     for (let z = cz - half; z < cz + half; z++) for (let x = cx - half; x < cx + half; x++) if (inGrid(x, z) && !g.wet[idx(x, z)] && g.mat[idx(x, z)] !== Mat.Rock && built(x, z)) { g.mat[idx(x, z)] = Mat.Paved; town[idx(x, z)] = 1; }
-    for (let i = 0; i < N * N; i++) if (town[i]) used[i] = 2;
+    // the paving that nothing stands on is street; the ground of a house or a great building stays its own (used 1),
+    // so that no figure stands or walks in it (src/figures/crowd.ts)
+    const streets: number[] = [];
+    for (let i = 0; i < N * N; i++) if (town[i] && used[i] !== 1) { used[i] = 2; streets.push(i); }
     const walled = carries && hi - lo <= 2;
     if (walled) {
       if (own(cx, cz)) { things.append(townWall(half * 2 + 2, half * 2 + 2, gaps), mat.makeRotationY(0).setPosition(cx, lo + 1, cz)); count('wall'); }
       claim(cx - half - 2, cz - half - 2, cx + half + 2, cz + half + 2);
       // the claim takes the square within the wall too; its paving stays street, where the persons of the town walk
       // (src/figures/crowd.ts: a column is street where it is town and used is 2)
-      for (let i = 0; i < N * N; i++) if (town[i]) used[i] = 2;
+      for (const i of streets) used[i] = 2;
     }
     towns.push({ site: s.id, cx: cx + (g.ox ?? 0), cz: cz + (g.oz ?? 0), half });
     if (own(cx, cz)) told?.town(s.id, cx, cz, half, g.h[idx(cx, cz)], walled ? gaps : null);

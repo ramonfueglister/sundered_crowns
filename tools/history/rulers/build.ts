@@ -1,7 +1,7 @@
 // Builds the chronicle of rulers of 1291 (public/data/rulers_1291.json, src/sim/content/chronicle.ts) from the sourced
 // lists of every realm (data/history/rulers/lists/<realm>.csv, one row per holder of the title from 1 January 1291
 // to 1848, every row with its Wikipedia revision) and the Wikidata fetch (data/history/rulers/wikidata/holders.csv,
-// for the sex of a person). Prints what it could not use.
+// for the sex of a person and the father and mother). Prints what it could not use.
 //
 //   npx tsx tools/history/rulers/build.ts
 //
@@ -14,6 +14,8 @@
 //   a claimant or "not a monarch" (they did not hold the title), unless the note says the claimant was in control.
 // - The sex is that of Wikidata where the person has an id there; else female when the name or note calls the person
 //   queen, empress, duchess, countess, margravine, princess, abbess or lady, else male (counted, so it can be checked).
+// - The father and the mother are those of Wikidata (P22, P25), kept only where they are persons of the chronicle too:
+//   the world knows no other (src/sim/systems/rulers.ts, `unborn`).
 import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { ChronicleJson, ChroniclePerson, ChronicleReign } from '../../../src/sim/content/chronicle';
@@ -24,7 +26,7 @@ const YEAR = 1291,
   UNTIL = '1848-12-31';
 
 /** A CSV with a header row and quoted fields (RFC 4180). */
-export function parseCsv(text: string): Record<string, string>[] {
+function parseCsv(text: string): Record<string, string>[] {
   const rows: string[][] = [];
   let row: string[] = [],
     f = '',
@@ -70,7 +72,7 @@ const date = (s: string) => (/^-?\d{1,4}(-\d{2}(-\d{2})?)?$/.test(s) ? s : null)
 const pad = (d: string) => (d.length === 4 ? `${d}-07-01` : d.length === 7 ? `${d}-15` : d);
 
 /** What the build counted, and the rows it could not use. */
-export interface RulersReport {
+interface RulersReport {
   lists: number;
   rows: number;
   collective: number;
@@ -80,6 +82,9 @@ export interface RulersReport {
   sexByWikidata: number;
   sexByWord: number;
   sexAssumed: number;
+  /** persons whose father, whose mother is a person of the chronicle too */
+  fathers: number;
+  mothers: number;
   problems: string[];
 }
 
@@ -96,6 +101,8 @@ export function build(): { chronicle: ChronicleJson; report: RulersReport } {
     sexByWikidata: 0,
     sexByWord: 0,
     sexAssumed: 0,
+    fathers: 0,
+    mothers: 0,
     problems: [],
   };
   const files = existsSync(LISTS)
@@ -128,7 +135,27 @@ export function build(): { chronicle: ChronicleJson; report: RulersReport } {
       reigns.push({ realm, person, start, end: end && pad(end) <= UNTIL ? end : null, source });
     });
   }
+  addParents(people, report);
   return { chronicle: { year: YEAR, until: UNTIL, persons: people.persons, reigns }, report };
+}
+
+/** Gives every person the father and the mother that Wikidata names, where they are persons of the chronicle too. */
+function addParents(people: People, report: RulersReport): void {
+  const wd = resolve(ROOT, 'data/history/rulers/wikidata/holders.csv');
+  if (!existsSync(wd)) return;
+  const parents = new Map<string, { father: string; mother: string }>();
+  for (const r of parseCsv(readFileSync(wd, 'utf8'))) parents.set(r.person, { father: r.father, mother: r.mother });
+  for (const p of people.persons) {
+    const known = p.qid ? parents.get(p.qid) : undefined;
+    if (known?.father && people.byKey.has(known.father)) {
+      p.father = known.father;
+      report.fathers++;
+    }
+    if (known?.mother && people.byKey.has(known.mother)) {
+      p.mother = known.mother;
+      report.mothers++;
+    }
+  }
 }
 
 /** The persons found so far, counted from 0, the number of each by its key, and the sex of those Wikidata knows. */
