@@ -289,6 +289,13 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     if (!s.street) relayTowns(s, w.ground);
     s.v = 33;
   }
+  if (s.v === 33) { // 33 → 34: a world knows the history only up to its start (economy feature 21,
+    // src/sim/economy/calibration.ts): a world of 1291 on the table of 1356 no longer expects the recovery after the
+    // plague. Its calibration changes, so its economies are founded anew on the day the world has reached, as in the
+    // step to 24. A world that starts in the year of its table keeps its calibration and goes on where it is.
+    if (s.startYear < w.cityEconomies.year) foundEconomy(s, w);
+    s.v = 34;
+  }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one
   const o = s as unknown as Record<string, unknown>;

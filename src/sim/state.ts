@@ -45,8 +45,10 @@ import type { Table } from './ecs';
  *  working day, and the owner of a firm buys on the working days of his faith on the mean profit of his firm over a
  *  year; the engine's state keeps those profits (its format 11).
  *  33: the streets and the market of every town (settlement feature 3, src/sim/settlement/streets.ts): the parcels
- *  lie at streets that grew to them, no longer on a grid; every parcel keeps its family and its size. */
-export const STATE_VERSION = 33;
+ *  lie at streets that grew to them, no longer on a grid; every parcel keeps its family and its size.
+ *  34: a world knows the history only up to its start (economy feature 21): a world of 1291 on the table of 1356 forms
+ *  its expectations from 1281 to 1291, not from the years of the plague; its economies are founded anew. */
+export const STATE_VERSION = 34;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
