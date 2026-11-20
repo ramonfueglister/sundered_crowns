@@ -6,7 +6,7 @@ mod common;
 
 use common::{head, person};
 use sc_portrait::dress::ENGLAND_1356;
-use sc_portrait::layers::{lift, sink, GAP, REACH, THROUGH, UNDER};
+use sc_portrait::layers::{lift, sink, tuck, GAP, PASS, REACH, THROUGH, UNDER};
 use sc_portrait::pose::{hold_bust, BUST_SIDE, FRONT, FRONT_TOP};
 use sc_portrait::{build, Mat, Surface};
 
@@ -134,6 +134,60 @@ fn cloth_over_the_gown_is_lifted_off_it() {
     // a gown that faces the other way at the same place (the inside of a fold) does not count
     let mut over = places(0.02, 1.0, 0.3);
     assert_eq!(lift(&mut over, &square(0.0, -1.0), 2.0, GAP, REACH), 0, "a gown facing against");
+    // (round 139) nor does what the corner's line meets behind a place where it went in through the gown's
+    // outside: the corner is not under that (a hem's corner looks along the cloth, in over the shoulder and out
+    // at its back, and was lifted 2.6 cm). Without the layer it goes in through, it is under it and is lifted
+    let behind = square(0.1, 1.0);
+    let mut both = square(0.05, -1.0);
+    both.pos.extend(&behind.pos);
+    both.nrm.extend(&behind.nrm);
+    let mut over = places(0.0, 1.0, 0.3);
+    assert_eq!(lift(&mut over, &both, 2.0, GAP, REACH), 0, "behind where the line went in");
+    let mut over = places(0.0, 1.0, 0.3);
+    assert_eq!(lift(&mut over, &behind, 2.0, GAP, REACH), 3, "under a layer");
+    assert!(over.pos.iter().all(|q| (q[2] - 0.1 - GAP).abs() < 1e-5), "under a layer: lifted to {:?}", over.pos);
+    // (round 139) a corner beside the lifted ones goes part of the way with them, and the corners at one place
+    // stay together: lifted each for itself, a lone corner stood out of a veil's fall as a crack. Here a second
+    // triangle on the first one's edge, its third corner beside the gown
+    let mut over = places(0.02, 1.0, 0.3);
+    let beside: V3 = [1.3, 0.4, 0.02];
+    over.pos.extend([over.pos[1], over.pos[2], beside]);
+    over.nrm.extend([[0.0, 0.0, 1.0]; 3]);
+    assert_eq!(lift(&mut over, &gown, 2.0, GAP, REACH), 5, "two triangles");
+    assert!(over.pos[..5].iter().all(|q| (q[2] - GAP).abs() < 1e-5), "two triangles: lifted to {:?}", over.pos);
+    assert!(over.pos[3] == over.pos[1] && over.pos[4] == over.pos[2], "the corners at one place stay together");
+    assert!(over.pos[5][2] > 0.02 && over.pos[5][2] < GAP && over.pos[5][0] == beside[0] && over.pos[5][1] == beside[1], "the corner beside went along to {:?}", over.pos[5]);
+}
+
+#[test]
+fn a_rolled_hem_goes_under_the_cloth_with_its_edge() {
+    // (round 139) `sink` moves a corner against its own direction where that leads under the other cloth. Of a
+    // rolled hem only the corners that face that cloth do; the roll's side faces along it and stayed, torn off
+    // its edge: a row of slits where a wimple's hem lay under a veil. `tuck` takes it along. Here under a flat
+    // cloth that faces +z at depth 0: a triangle that stands through it, and on its edge one of a roll's side,
+    // which faces +x.
+    let over = square(0.0, 1.0);
+    let hem = || {
+        let mut s = Surface::new(Mat { rough: 1.0, metal: 0.0, double: true });
+        s.pos = vec![[0.3, 0.3, 0.03], [0.6, 0.3, 0.03], [0.5, 0.5, 0.03], [0.6, 0.3, 0.03], [0.5, 0.5, 0.03], [0.62, 0.42, 0.03]];
+        s.nrm = vec![[0.0, 0.0, 1.0], [0.0, 0.0, 1.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 0.0, 0.0]];
+        s
+    };
+    // sunk each corner for itself, the roll's side stays where it was
+    let mut s = hem();
+    assert_eq!(sink(&mut s, &over, 2.0, UNDER, THROUGH), 3);
+    assert_eq!(s.pos[3..], hem().pos[3..], "sink leaves the roll's side");
+    // tucked, the corners at one place stay together and the roll's own corner goes under the cloth with them
+    let mut s = hem();
+    assert_eq!(tuck(&mut s, &over, 2.0, UNDER, THROUGH, PASS), 3);
+    assert!(s.pos[..3].iter().all(|q| (q[2] + UNDER).abs() < 1e-5), "sunk to {:?}", s.pos);
+    assert!(s.pos[3] == s.pos[1] && s.pos[4] == s.pos[2], "the corners at one place stay together: {:?}", s.pos);
+    assert!(s.pos[5][2] < 0.0 && s.pos[5][2] >= -UNDER - 1e-5, "the roll's corner went under the cloth: {:?}", s.pos[5]);
+    // nothing through the cloth: nothing moved
+    let mut s = hem();
+    s.pos.iter_mut().for_each(|q| q[2] = -0.2);
+    assert_eq!(tuck(&mut s, &over, 2.0, UNDER, THROUGH, PASS), 0);
+    assert!(s.pos.iter().all(|q| q[2] == -0.2));
 }
 
 #[test]
@@ -207,6 +261,44 @@ fn nothing_of_the_gown_comes_through_the_cloth_over_it() {
     }
     assert!(worn >= 80 && under > 100_000, "{worn} cloths over a gown, {under} corners under them");
     assert_eq!(through, 0, "{through} corners of the gown through the cloth over it, {} on person {}", worst.0, worst.1);
+}
+
+#[test]
+fn nothing_of_the_wimple_comes_through_the_veil() {
+    // (round 139) The wimple is worn under the veil. Both were set as far outside the gown, each for itself, and
+    // the wimple's end stood through the veil's fall on the shoulder with a dark slit under it, its rolled hem
+    // in a ridge across the veil's back. On the women of 120 people who wear both, as the builder stands them:
+    // no corner of the wimple stands outside the veil (counted as for the gown above).
+    let Some(h) = head() else { return };
+    let d = &ENGLAND_1356;
+    let (mut through, mut worn, mut under) = (0, 0, 0);
+    let mut worst = (0, 0u32);
+    for k in 0..120u32 {
+        let p = person(k, k % 2 == 0, [15.0, 24.0, 35.0, 50.0, 58.0, 68.0][(k / 2) as usize % 6]);
+        let out = build(&h, &p, 1);
+        let Some(wimple) = out.surfaces.iter().find(|s| s.tex.as_deref().is_some_and(|t| t.contains(d.wimple))) else { continue };
+        for veil in out.surfaces.iter().filter(|s| s.tex.as_deref().is_some_and(|t| [d.veil, d.veil_back].iter().any(|n| t.contains(n)))) {
+            worn += 1;
+            let mut w = wimple.clone();
+            let n = sink(&mut w, veil, out.chin, 0.0, THROUGH);
+            if show() && n > 0 {
+                let far = w.pos.iter().zip(&wimple.pos).map(|(a, b)| dist(*a, *b)).fold(0f32, f32::max);
+                println!("person {k}: {n} corners of the wimple through {}, by up to {:.1} mm", veil.tex.as_deref().unwrap_or(""), 100.0 * far);
+            }
+            let mut w = wimple.clone();
+            under += sink(&mut w, veil, out.chin, REACH, THROUGH);
+            through += n;
+            if n > worst.0 {
+                worst = (n, k);
+            }
+        }
+    }
+    if show() {
+        println!("{worn} wimples under a veil on 120 people; {under} corners of the wimple under the veil, {through} through it (at most {} on person {})", worst.0, worst.1);
+        return;
+    }
+    assert!(worn >= 15 && under > 10_000, "{worn} wimples under a veil, {under} corners under it");
+    assert_eq!(through, 0, "{through} corners of the wimple through the veil, {} on person {}", worst.0, worst.1);
 }
 
 #[test]

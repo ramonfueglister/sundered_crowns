@@ -5969,6 +5969,78 @@ Pictures (project files, `portraits/`): `runde138_vorher_nachher.png` (six men, 
 drawn on a bare head, and six of the sample, round 137 above, now below), `runde138_von_allen_seiten.png`
 (the six from the side and from behind, round 137 above, now below).
 
+**Round 139: the wimple lies under the veil** (2026-11-20). Looked at on the sample's women after round 138:
+the four who wear a wimple under the veil (50 and 68 years) have a dark slit in the veil's fall on a
+shoulder, some 4 cm long, with a shelf of cloth over it; from behind a ridge runs across the veil's
+back at the shoulders' height, with slits along it, and from the side the same. The women of 24 and 35, who
+wear the veil alone, have none.
+
+The cause. A veil, a wimple and a hood's cape are each set a least distance outside the gown, each for
+itself (round 124's `lift`, the same 0.8 cm for all). Nothing set the veil outside the wimple: the two lay
+as far off the gown, and where the wimple ends on the shoulders it stood through the veil's fall, its rolled
+hem first. On the 30 women of the test's 120 people who wear both, 37 260 corners of the wimple stood
+outside the veil, up to 1 428 on one woman and up to 1 cm (measured on round 138's builder with the new
+test's count).
+
+What is changed (`portrait/src/layers.rs`, `portrait/src/build.rs`).
+- The veil is lifted off the wimple as it is off the gown, after both are lifted off the gown.
+- After the pose the wimple is set under the veil (`tuck`), before the gown is set under both as they then
+  stand. `tuck` is `sink` with the cloth beside what is sunk taken along: the corners at one place go the
+  longest of their ways, and a place beside one that is sunk goes part of the way with it, the nearer the
+  more, eight times over (`PASS`, PLACEHOLDER, by eye); what then still stands through is sunk for itself.
+  With `sink` alone the hem's roll stayed where it was: of its corners only those that face the veil are
+  moved, and a row of slits lay across the veil's back where the ridge had been.
+- `lift` passes a lifted corner's way on in the same manner. Lifted each for itself, one corner of the
+  veil's fall that the wimple's end lay under stood out of its neighbours: a crack of 2 to 3 cm at the back
+  of one woman's shoulder, which was not there before the veil was lifted off the wimple.
+- `lift` no longer counts what a corner's line meets behind a place where it went in through the other
+  cloth's outside. A corner of a rolled hem looks along the cloth: its line goes in through the gown over
+  the shoulder and out again at the shoulder's back, and the corner was lifted as if it lay under that
+  (on one woman sixteen corners of her veil's hem by 1.2 cm and more, up to 2.6 cm; that their lines go in
+  and out so is read from what they met and where they point, not drawn). Each for itself that was a spike
+  too thin to see; passed on to its neighbours it bent the hem outward at the veil's lower end (seen from
+  the side on two women with a wimple, with the rule switched off, and gone with it on).
+Men change too where a hood's cape lies on the gown (`lift` is theirs as well): on the sample's hooded men
+a few dozen to 150 pixels of a picture of 300 by 375 differ, all below the face, and nothing was seen to
+change on them from the front or obliquely from behind.
+
+Tried and not kept. Three things, two of them from a wrong reading of the fault. (1) Hair, before this
+round's fault was taken up: flatter bundles with softer furrows between them (the ridge half as high, the
+shade in the furrows no darker than 0.7) on the commonest bowl cut: at a portrait's size nearly the same
+picture, taken back. (2) The slit was first read as a step in the veil itself: the builder holds a cloth
+over the gown off the body corner by corner (`calm`), and that hold was passed on to the neighbours. The
+shelf went and the slit stayed (why the shelf went was not looked into). (3) Then as a hole
+torn by `lift` moving corners singly; with the lift's ways passed on the slit shrank to a speck and stayed.
+Only a picture drawn from the builder's own triangles, each cloth in a colour of its own, showed that the
+speck was the wimple. (2) is taken back whole; of (3) the passing on is kept for the crack named above.
+
+**The gauntlet**: 22 of 22 over the whole sample (read with this round's files), and every line reads
+what it read in round 138 to its last figure: the gauntlet reads skin, and the pictures differ on the cloth
+only, from the height of the jaw down.
+
+Honest about it. A fault mended, not a likeness gained: the veil is as much a flat board as it was, hanging
+from the head in few long triangles (4 to 6 cm long on the shoulder) with no folds of its own, and the
+wimple under it is now simply out of sight there. Nothing was read for this round; that the wimple is worn
+under the veil is the dress table's (Newton 1980, a summary, as before). Seen and left: holes in the veil
+at the ear on all three veiled women, seen from the side and from behind (black, a finger's breadth, there
+before this round); cracks along the veil's hem beside the neck (as before); the gown's white specks at one
+shoulder's back (round 124's). `PASS` is by eye, and so is that a place goes half its neighbours' way each
+time.
+
+Tests: `portrait/tests/bust.rs`. New: on the 30 women of 120 people who wear a wimple under a veil no
+corner of the wimple stands outside the veil (37 260 before, see above; 58 044 of its corners lie close
+under the veil); a rolled hem's side goes under the cloth with its edge and the corners at one place stay
+together (`tuck`; `sink` leaves the side where it was); and in the test of `lift`: a corner behind a place
+where its line went in is left, the same corner under that layer alone is lifted, and a corner beside
+lifted ones goes part of the way. The older test that nothing of the gown comes through the cloth over it
+failed once on the way (20 corners on one woman, when the wimple was tucked after the gown was sunk under
+it: the order above is from that). `cargo test --release` as a whole: 108 of 108 in one run (run before
+the last edit of comments in `layers.rs`; `bust.rs` again after it, 9 of 9). `tests/portrait.test.ts` and
+its neighbour 42 of 42; typecheck and lint pass.
+Pictures (project files, `portraits/`): `runde139_vorher_nachher.png` (three veiled women of the
+sample, of 35, 50 and 50, round 138 above, now below), `runde139_von_allen_seiten.png` (the two of 50 from
+both sides and from behind, round 138 above, now below).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair

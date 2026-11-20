@@ -3,6 +3,8 @@
 //! what lies over it 1.3 cm), and where a fold of the gown stands further off the body than the cloth over it,
 //! the gown came through: specks on a veil's end, a patch of the gown's colour on the shoulder. Here the cloth
 //! over the gown is lifted off the gown itself, and after the pose what of the gown still came through is sunk.
+//! (Round 139) A wimple is worn under the veil: the veil is lifted off the wimple as well, and the wimple tucked
+//! under the veil before the gown is sunk under both.
 
 use crate::geo::{Surface, V3};
 use std::collections::HashMap;
@@ -16,6 +18,9 @@ pub const REACH: f32 = 0.25;
 /// far through at most (further, and the two are not layers of one place). PLACEHOLDER, by eye.
 pub const UNDER: f32 = 0.02;
 pub const THROUGH: f32 = 0.1;
+/// (round 139) How often a corner that is lifted (`lift`) or set under the other cloth (`tuck`) passes its way
+/// on to the corners beside it. PLACEHOLDER, by eye.
+pub const PASS: usize = 8;
 /// The least share of a corner's direction that lies along the gown's for the two to be layers of one place.
 const ALONG: f32 = 0.6;
 /// The side of the cells the gown's triangles are sorted into (base units of 10 cm), and of those the cloth over
@@ -68,12 +73,15 @@ pub(crate) fn meets(o: V3, d: V3, a: V3, b: V3, c: V3) -> Option<f32> {
 /// outward, tools/portrait/pipeline/tunic_bind.py). Only where `under` is met within `reach` of the corner and
 /// faces nearly as the cloth over it does (`ALONG`): further off, or where the two stand across each other, they
 /// are not two layers of one place (a veil's fall beside the neck faces the shoulder a hand's breadth away).
-/// Returns how many corners moved.
+/// (Round 139) What the corner's line meets behind a place where it went in through `under`'s outside does not
+/// count, and a lifted corner takes the cloth beside it along (`passed_on`, `PASS` times).
+/// Returns how many corners were lifted themselves.
 pub fn lift(over: &mut Surface, under: &Surface, below: f32, gap: f32, reach: f32) -> usize {
     if over.nrm.len() != over.pos.len() {
         return 0;
     }
     let grid = sorted(under, CELL);
+    let mut own = vec![[0f32; 3]; over.pos.len()];
     let mut moved = 0;
     for k in 0..over.pos.len() {
         let (p, n) = (over.pos[k], over.nrm[k]);
@@ -82,10 +90,24 @@ pub fn lift(over: &mut Surface, under: &Surface, below: f32, gap: f32, reach: f3
         }
         // along the corner's direction, `reach` either way: where the gown is met, how far the corner stands
         // outside it there; the least of these is what counts
-        let least = met(under, &grid, CELL, p, n, reach).into_iter().map(|at| -at).fold(None, |m: Option<f32>, o| Some(m.map_or(o, |m| m.min(o))));
+        let crossed = crossings(under, &grid, CELL, p, n, reach);
+        // (round 139) what the line meets behind a place where it went in through the other cloth's outside
+        // does not count: the corner is not under that. A hem's corner looks along the cloth, in over the
+        // shoulder and out again at its back, and was lifted 2.6 cm for it
+        let entered = crossed.iter().filter(|(at, along)| *at > 0.0 && *along < 0.0).map(|c| c.0).fold(f32::MAX, f32::min);
+        let least = crossed.iter().filter(|(at, along)| *along >= ALONG && *at < entered).map(|c| -c.0).fold(None, |m: Option<f32>, o| Some(m.map_or(o, |m| m.min(o))));
         if let Some(out) = least.filter(|out| *out < gap) {
-            over.pos[k] = std::array::from_fn(|a| p[a] + n[a] * (gap - out));
+            own[k] = std::array::from_fn(|a| n[a] * (gap - out));
             moved += 1;
+        }
+    }
+    if moved > 0 {
+        let ways = passed_on(&over.pos, &own, PASS);
+        for (p, w) in over.pos.iter_mut().zip(ways) {
+            // (above the height nothing is moved: there the cloth lies on the head)
+            if p[1] < below {
+                *p = std::array::from_fn(|a| p[a] + w[a]);
+            }
         }
     }
     moved
@@ -97,15 +119,96 @@ pub fn lift(over: &mut Surface, under: &Surface, below: f32, gap: f32, reach: f3
 /// stands up between three of them came through all the same, as a speck of the gown's colour on a hood's cape.
 /// What is moved lies under the other cloth and is not seen. Returns how many corners moved.
 pub fn sink(under: &mut Surface, over: &Surface, below: f32, gap: f32, through: f32) -> usize {
-    if under.nrm.len() != under.pos.len() {
+    let ways = sunk(under, over, below, gap, through);
+    for (p, w) in under.pos.iter_mut().zip(&ways) {
+        *p = std::array::from_fn(|a| p[a] + w[a]);
+    }
+    ways.iter().filter(|w| **w != [0.0; 3]).count()
+}
+
+/// (round 139) Tucks `under` beneath `over`: `sink`, and what is sunk takes the cloth beside it along. The
+/// corners at one place go the longest of their ways, and a place beside one that is sunk goes part of the way
+/// with it, the nearer the more, `pass` times over. For a cloth with a rolled hem (a wimple under a veil): of
+/// the hem's corners only those that face the other cloth are sunk, and the rest of the roll stayed where it
+/// was, a row of slits across the veil's back. What then still stands through is sunk as by `sink`. Returns
+/// how many corners were sunk themselves at first.
+pub fn tuck(under: &mut Surface, over: &Surface, below: f32, gap: f32, through: f32, pass: usize) -> usize {
+    let own = sunk(under, over, below, gap, through);
+    let moved = own.iter().filter(|w| **w != [0.0; 3]).count();
+    if moved == 0 {
         return 0;
+    }
+    let ways = passed_on(&under.pos, &own, pass);
+    for (p, w) in under.pos.iter_mut().zip(ways) {
+        // (above the height nothing is moved: there the cloth lies on the head)
+        if p[1] < below {
+            *p = std::array::from_fn(|a| p[a] + w[a]);
+        }
+    }
+    // (a corner that went a neighbour's way and not its own may still stand through: sunk for itself, and the
+    // corners at its place with it)
+    let own = sunk(under, over, below, gap, through);
+    let ways = passed_on(&under.pos, &own, 0);
+    for (p, w) in under.pos.iter_mut().zip(ways) {
+        *p = std::array::from_fn(|a| p[a] + w[a]);
+    }
+    moved
+}
+
+/// (round 139) Ways passed on: `own` is each corner's way (nothing where it has none). The corners at one place
+/// are one corner of the cloth and go the longest of their ways, and a place beside one that moves goes part of
+/// the way with it, the nearer the more (a rolled hem's corners lie 2 mm from the edge they are rolled about),
+/// `times` over. No place goes less far than its own way. Each corner's way after that.
+fn passed_on(pos: &[V3], own: &[V3], times: usize) -> Vec<V3> {
+    let long = |w: &V3| w[0] * w[0] + w[1] * w[1] + w[2] * w[2];
+    let mut place: Quick<[u32; 3], u32> = Quick::default();
+    let ids: Vec<u32> = pos.iter().map(|p| { let n = place.len() as u32; *place.entry(p.map(f32::to_bits)).or_insert(n) }).collect();
+    let mut first = vec![[0f32; 3]; place.len()];
+    let mut at = vec![[0f32; 3]; place.len()];
+    for ((p, w), &id) in pos.iter().zip(own).zip(&ids) {
+        at[id as usize] = *p;
+        if long(w) > long(&first[id as usize]) {
+            first[id as usize] = *w;
+        }
+    }
+    let mut beside: Vec<Vec<(u32, f32)>> = vec![Vec::new(); place.len()];
+    for t in ids.chunks_exact(3) {
+        for (a, b) in [(t[0], t[1]), (t[1], t[2]), (t[2], t[0])] {
+            if a != b && !beside[a as usize].iter().any(|(j, _)| *j == b) {
+                let (p, q) = (at[a as usize], at[b as usize]);
+                let near = 1.0 / ((p[0] - q[0]).powi(2) + (p[1] - q[1]).powi(2) + (p[2] - q[2]).powi(2)).sqrt().max(1e-4);
+                beside[a as usize].push((b, near));
+                beside[b as usize].push((a, near));
+            }
+        }
+    }
+    let mut way = first.clone();
+    for _ in 0..times {
+        way = (0..way.len())
+            .map(|i| {
+                if beside[i].is_empty() {
+                    return way[i];
+                }
+                let k = 0.5 / beside[i].iter().map(|(_, near)| near).sum::<f32>();
+                let passed: V3 = std::array::from_fn(|a| 0.5 * way[i][a] + k * beside[i].iter().map(|&(j, near)| near * way[j as usize][a]).sum::<f32>());
+                if long(&first[i]) > long(&passed) { first[i] } else { passed }
+            })
+            .collect();
+    }
+    ids.iter().map(|&id| way[id as usize]).collect()
+}
+
+/// How `sink` moves each corner of `under` (nothing: not moved).
+fn sunk(under: &Surface, over: &Surface, below: f32, gap: f32, through: f32) -> Vec<V3> {
+    let mut ways = vec![[0f32; 3]; under.pos.len()];
+    if under.nrm.len() != under.pos.len() {
+        return ways;
     }
     let grid = sorted(over, CELL_OVER);
     // (the gown is far larger than what lies over it: nothing is looked for outside that cloth's box, and a
     // corner that several triangles share is looked up once)
     let (lo, hi) = over.pos.iter().fold(([f32::MAX; 3], [f32::MIN; 3]), |(lo, hi), q| (std::array::from_fn(|a| lo[a].min(q[a] - through)), std::array::from_fn(|a| hi[a].max(q[a] + through))));
     let mut known: Quick<[u32; 6], f32> = Quick::default();
-    let mut moved = 0;
     for k in 0..under.pos.len() {
         let (p, n) = (under.pos[k], under.nrm[k]);
         if p[1] >= below || (0..3).any(|a| p[a] < lo[a] || p[a] > hi[a]) || (n[0] == 0.0 && n[1] == 0.0 && n[2] == 0.0) {
@@ -124,12 +227,9 @@ pub fn sink(under: &mut Surface, over: &Surface, below: f32, gap: f32, through: 
             }
             shift
         });
-        if shift != 0.0 {
-            under.pos[k] = std::array::from_fn(|a| p[a] + n[a] * shift);
-            moved += 1;
-        }
+        ways[k] = std::array::from_fn(|a| n[a] * shift);
     }
-    moved
+    ways
 }
 
 /// A surface's triangles by the cells of side `side` they reach into.
@@ -154,6 +254,14 @@ fn sorted(s: &Surface, side: f32) -> Quick<[i32; 3], Vec<u32>> {
 /// Where the line through `p` along `n` meets the surface within `reach` either way, on triangles that face
 /// nearly as `n` does (`ALONG`): how far along `n` each time.
 fn met(s: &Surface, grid: &Quick<[i32; 3], Vec<u32>>, side: f32, p: V3, n: V3, reach: f32) -> Vec<f32> {
+    // (a triangle that faces the other way is the back of a fold or of the neck's rolled hem: counted, it drew
+    // the cloth in under the hem, a row of notches along a neckline)
+    crossings(s, grid, side, p, n, reach).into_iter().filter(|c| c.1 >= ALONG).map(|c| c.0).collect()
+}
+
+/// Where the line through `p` along `n` meets the surface within `reach` either way: how far along `n` each
+/// time, and how much of `n` lies along the triangle's own direction there (1 facing as `n` does, -1 against it).
+fn crossings(s: &Surface, grid: &Quick<[i32; 3], Vec<u32>>, side: f32, p: V3, n: V3, reach: f32) -> Vec<(f32, f32)> {
     let (from, to): (V3, V3) = (std::array::from_fn(|a| p[a] - n[a] * reach), std::array::from_fn(|a| p[a] + n[a] * reach));
     let (c0, c1) = (cell(from, side), cell(to, side));
     let mut out = Vec::new();
@@ -171,12 +279,7 @@ fn met(s: &Surface, grid: &Quick<[i32; 3], Vec<u32>>, side: f32, p: V3, n: V3, r
                     let (e1, e2): (V3, V3) = (std::array::from_fn(|a| q[1][a] - q[0][a]), std::array::from_fn(|a| q[2][a] - q[0][a]));
                     let g = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]];
                     let along = (g[0] * n[0] + g[1] * n[1] + g[2] * n[2]) / (g[0] * g[0] + g[1] * g[1] + g[2] * g[2]).sqrt().max(1e-9);
-                    // (a triangle that faces the other way is the back of a fold or of the neck's rolled hem:
-                    // counted, it drew the cloth in under the hem, a row of notches along a neckline)
-                    if along < ALONG {
-                        continue;
-                    }
-                    out.push(at);
+                    out.push((at, along));
                 }
             }
         }

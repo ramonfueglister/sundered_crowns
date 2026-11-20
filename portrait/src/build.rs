@@ -2029,6 +2029,15 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
             }
             merged[g] = gown;
         }
+        // (round 139) and the veil off the wimple, which is worn under it: both were set as far outside the gown,
+        // and the wimple's end stood through the veil's fall on the shoulder, a dark slit under it
+        if let Some(w) = merged.iter().position(|s| !d.wimple.is_empty() && s.tex.as_deref().is_some_and(|t| t.contains(d.wimple))) {
+            let wimple = std::mem::replace(&mut merged[w], Surface::new(mat(0.0)));
+            for s in merged.iter_mut().filter(|s| s.tex.as_deref().is_some_and(|t| [d.veil, d.veil_back].iter().any(|n| !n.is_empty() && t.contains(n)))) {
+                crate::layers::lift(s, &wimple, y0, crate::layers::GAP, crate::layers::REACH);
+            }
+            merged[w] = wimple;
+        }
     }
     // a woman's bust held by her gown (before the body is turned: the body's middle line is the picture's still)
     if let Some(share) = garb.map(|d| d.bust).filter(|s| fem && *s > 0.0 && crate::pose::FRONT.iter().all(|&v| v < h.n)) {
@@ -2077,6 +2086,16 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
     // through all the same. Done here, where everything stands as it is drawn: the pose shears the layers
     // against each other at the neck
     if let Some(d) = garb {
+        // (round 139) first the wimple under the veil, and with it what lies beside what is sunk (`tuck`): the
+        // veil's fall is of few long triangles, and the wimple's end and its rolled hem came through between
+        // their corners. Before the gown, which is then set under both as they stand
+        if let Some(w) = merged.iter().position(|s| !d.wimple.is_empty() && s.tex.as_deref().is_some_and(|t| t.contains(d.wimple))) {
+            let mut wimple = std::mem::replace(&mut merged[w], Surface::new(mat(0.0)));
+            for s in merged.iter().filter(|s| s.tex.as_deref().is_some_and(|t| [d.veil, d.veil_back].iter().any(|n| !n.is_empty() && t.contains(n)))) {
+                crate::layers::tuck(&mut wimple, s, y0, crate::layers::UNDER, crate::layers::THROUGH, crate::layers::PASS);
+            }
+            merged[w] = wimple;
+        }
         if let Some(g) = merged.iter().position(|s| s.tex.as_deref().is_some_and(|t| t.contains(d.gown))) {
             let mut gown = std::mem::replace(&mut merged[g], Surface::new(mat(0.0)));
             for s in merged.iter().filter(|s| s.tex.as_deref().is_some_and(|t| [d.veil, d.veil_back, d.wimple, d.hood_up, d.hood_back].iter().any(|n| t.contains(n)))) {
