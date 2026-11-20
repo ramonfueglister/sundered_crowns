@@ -106,8 +106,8 @@ SAME_COUNTY = {'beam': 'bearn'}
 #: a county the column names: one or two words of letters, not an abbreviation of a record
 COUNTY_SHAPE = re.compile(r"[A-Z][A-Za-z'’]+\.?(?:[ -][A-Z][A-Za-z'’]+\.?)?")
 #: places the book names that GeoNames knows only by the place that grew there: the Cistercian abbey of Holm Cultram
-#: (the book's index: Holme-Cultram, Cumberland) at Abbeytown
-NOW_CALLED = {'holme cultram': 'Abbeytown'}
+#: (the book's index: Holme-Cultram, Cumberland) at Abbey Town
+NOW_CALLED = {'holme cultram': 'Abbey Town'}
 # fmt: on
 
 
@@ -142,7 +142,7 @@ def segments(line):
 
 def is_record(token):
     t = re.sub(r'[\[\]().,;:\s]', '', token).lower()
-    return t in RECORDS or (bool(re.fullmatch(r'[A-Z][A-Za-z1]?\.[A-Z1]\.?\]?', token.strip('[]()'))))
+    return t in RECORDS or bool(re.fullmatch(r'(?:[A-Z][A-Za-z1]?\.){1,3}[A-Z1][A-Za-z]?\.?\]?', token.strip('[]()')))
 
 
 def split_records(seg):
@@ -433,7 +433,7 @@ def main(text_path, geonames_path, out_path):
         # read apart from its days (February 1288), whose days cannot be told, unless they are all one place
         if len(d[1]) > 2:
             report['entries_read_apart'] += 1
-            d[1] = d[1][:1] if len({n for n, _ in d[1]}) == 1 else []
+            d[1] = d[1][:1] if len({key(n) for n, _ in d[1]}) == 1 else []
     days = [d for d in days if d[0] <= REIGN_END]
     report['days'] = len(days)
     report['days_with_a_place'] = sum(1 for d in days if d[1])

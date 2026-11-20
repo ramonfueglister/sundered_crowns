@@ -14,6 +14,7 @@ spoils letters); a day still without a place is left out and counted.
 """
 
 import difflib
+import functools
 import math
 import re
 import unicodedata
@@ -38,8 +39,10 @@ COUNTY_MIN = 3
 SAME_NAME_DAYS = 30
 #: GeoNames features a medieval king stayed at besides places: castles, abbeys and priories, churches, houses, ruins
 FEATURES = {'CSTL', 'MSTY', 'CH', 'RUIN', 'HSEC', 'HSE', 'PAL', 'EST', 'ANS', 'MNMT', 'ISL'}
-#: words GeoNames adds to the name of a house or a ruin that the book leaves out
+#: words GeoNames adds to the name of a house or a ruin that the book leaves out, and the French words it puts before
+#: one ('Le Gard', the Abbaye du Gard)
 ADDED = ('castle', 'abbey', 'priory', 'manor', 'house', 'park', 'palace', 'hall')
+ADDED_BEFORE = tuple(f'{w} {a}' for w in ('abbaye', 'chateau', 'prieure') for a in ('de', 'du', 'de la', 'des', 'd'))
 
 
 def key(name):
@@ -51,16 +54,27 @@ def key(name):
     return re.sub(r'\s+', ' ', s).strip()
 
 
+@functools.cache
 def variants(name):
-    """The keys a name of the book may have in GeoNames (the book keeps the French article of some English places:
-    'La Rose', Rose Castle)."""
+    """The keys a name of the book may have in GeoNames: the book keeps the French article of some English places
+    ('La Rose', Rose Castle); it writes a saint's place with and without the possessive ('St. Andrew', 'St. Andrew's',
+    Saint Andrews); the OCR sets the first letter apart ('H olme-Cultram')."""
     k = key(name.split(',')[0])
+    k = re.sub(r'^([a-z]) (?=[a-z])', r'\1', k)
     bare = re.sub(r'^(?:the|la|le|les) ', '', k)
     out = [k, re.sub(r'\s*\(.*?\)', '', k), bare, k.replace(' on ', ' upon '), k.replace(' ', '')]
+    if k.startswith('st '):
+        out.append(k[:-1] if k.endswith('s') else k + 's')
     for b in dict.fromkeys((k, bare)):
         out += [b[: -len(w) - 1] for w in ADDED if b.endswith(' ' + w)]
         out += [f'{b} {w}' for w in ADDED]
-    return list(dict.fromkeys(v for v in out if v))
+    out += [f'{w} {bare}' for w in ADDED_BEFORE]
+    return tuple(dict.fromkeys(v for v in out if v))
+
+
+def same_name(a, b):
+    """Whether two names of the book are one name (some form of them is the same)."""
+    return a == b or not set(variants(a)).isdisjoint(variants(b))
 
 
 def km(a, b):
@@ -100,7 +114,7 @@ class Gazetteer:
 
     def __init__(self, path, now_called=None):
         self.now_called = now_called or {}
-        self.at, self.names, self.own_names, self.settled = [], [], [], []
+        self.at, self.names, self.own_names, self.settled, self.church = [], [], [], [], []
         self.own, self.other, self.cells = defaultdict(list), defaultdict(list), defaultdict(list)
         with open(path, encoding='utf-8') as f:
             for line in f:
@@ -113,6 +127,7 @@ class Gazetteer:
                 lat, lon = float(c[4]), float(c[5])
                 self.at.append((lat, lon, int(c[11] or 0)))
                 self.settled.append(c[6] in ('P', 'A'))
+                self.church.append(c[7] == 'CH')
                 own = {key(c[1]), key(c[2])}
                 other = {key(n) for n in c[3].split(',') if n} - own
                 self.names.append(tuple(own | other))
@@ -126,10 +141,14 @@ class Gazetteer:
     def lookup(self, name):
         """The places that bear a name in any of its forms (variants): those whose own name it is, else those with it
         as another name; whether it is their own name; and of them the towns, villages and parishes (all of them where
-        none is one), which a stay is sure of where they lie together."""
-        forms = variants(name) + variants(self.now_called.get(key(name), ''))
+        none is one), which a stay is sure of where they lie together. A church is one of them only where nothing else
+        bears the name (OWN RULE: a church bears the name of its saint, the king lodged in a town, a castle, an abbey or
+        a house; 'St. Andrew's' is the town in Fife, not the church of Cheddar)."""
+        forms = list(variants(name))
+        forms += [v for f in forms if f in self.now_called for v in variants(self.now_called[f])]
         for own, table in ((True, self.own), (False, self.other)):
             every = sorted({i for v in forms for i in table.get(v, ())})
+            every = [i for i in every if not self.church[i]] or every
             if every:
                 towns = [i for i in every if self.settled[i]] or every
                 return [self.at[i] for i in every], own, [self.at[i] for i in towns]
@@ -225,11 +244,11 @@ def place_days(days, gaz, report):
         s['county'] = s['counties'].most_common(1)[0][0] if s['counties'] else ''
         _, own, towns = found[s['name']]
         s['at'] = one_place(towns) if own and towns else None
-        s['sure'] = s['at'] is not None
+        s['sure'] = s['known'] = s['at'] is not None
     regions = counties(stays)
     for s in [s for s in stays if s['sure'] and not in_county(s['at'], regions.get(s['county'], ()))]:
         for t in stays:
-            if t['sure'] and t['name'] == s['name'] and apart(s, t) <= SAME_NAME_DAYS:
+            if t['sure'] and same_name(t['name'], s['name']) and apart(s, t) <= SAME_NAME_DAYS:
                 t['at'], t['sure'] = None, False
                 report['stays_out_of_county'] += 1
     for s in thin([s for s in stays if s['sure']]):
@@ -240,6 +259,7 @@ def place_days(days, gaz, report):
         for i, s in enumerate(stays):
             if not s['sure']:
                 place(s, i, stays, by, found[s['name']][0], regions.get(s['county'], ()), gaz, report)
+    one_sense(stays, regions, report)
     # the itinerary as the game will thin it (src/sim/content/travel.ts reachableStops), so that the file holds no
     # step the game leaves out
     for s in thin([s for s in stays if s['at']]):
@@ -273,7 +293,10 @@ def place(s, i, stays, by, cands, region, gaz, report):
     the place of a stay of its name within SAME_NAME_DAYS, else at the place of its name nearest the way between them,
     else at the likest name near it; each first within reach of both, then within reach of those as many days name
     (as src/sim/content/travel.ts reachableStops, a stay fewer days name gives way where two contradict). A place of
-    the name comes before a like name: the name is the book's word, the likeness a guess."""
+    the name comes before a like name: the name is the book's word, the likeness a guess; and a name only one place
+    bears is never taken for a like name (OWN RULE: the likeness is for names the gazetteer does not know or knows
+    only far off; a day out of reach of the one place of its name is a wrong day, not a wrong name: Jedburgh in
+    August 1304, between Stirling and Perth, is not Edinburgh)."""
     prev = next((t for t in reversed(stays[:i]) if t[by]), None)
     nxt = next((t for t in stays[i + 1 :] if t[by]), None)
     before, after = prev and around(s, prev, -1), nxt and around(s, nxt, 1)
@@ -283,7 +306,9 @@ def place(s, i, stays, by, cands, region, gaz, report):
     )
     ends = [e for e in (before, after) if e]
     same = [
-        t['at'] for t in stays if t is not s and t['at'] and t['name'] == s['name'] and apart(s, t) <= SAME_NAME_DAYS
+        t['at']
+        for t in stays
+        if t is not s and t['at'] and same_name(t['name'], s['name']) and apart(s, t) <= SAME_NAME_DAYS
     ]
     for rb, ra in ((before, after), longer):
 
@@ -296,7 +321,7 @@ def place(s, i, stays, by, cands, region, gaz, report):
             if by == 'at':
                 report['stays_by_nearness'] += 1
             return
-    for rb, ra in ((before, after), longer):
+    for rb, ra in ((before, after), longer) if not s['known'] else ():
         near = gaz.near(s['name'], before, after, lambda p, rb=rb, ra=ra: reachable(p, rb, ra) and in_county(p, region))
         if near:
             s['at'] = near
@@ -305,6 +330,39 @@ def place(s, i, stays, by, cands, region, gaz, report):
             return
     if by == 'sure':
         s['at'] = None
+
+
+def one_sense(stays, regions, report):
+    """One name, one place within SAME_NAME_DAYS (above), whatever the order the stays were placed in: where the
+    placed stays of a name a month apart at most (a discourse) lie at more than one place, all of them go to the one
+    of those places that every one of them can be at, coming from the stays placed around the discourse and going on
+    to them, and in its county; of several, the one nearest the ways ('Oleron' in autumn 1288 is Oloron in Béarn, not
+    the Île d'Oléron)."""
+    placed = [(i, s) for i, s in enumerate(stays) if s['at']]
+    discourses = []
+    for i, s in placed:
+        d = next((d for d in reversed(discourses) if same_name(d[-1][1]['name'], s['name'])), None)
+        if d and apart(d[-1][1], s) <= SAME_NAME_DAYS:
+            d.append((i, s))
+        else:
+            discourses.append([(i, s)])
+    for d in discourses:
+        at = list(dict.fromkeys(s['at'] for _, s in d))
+        if len(at) < 2:
+            continue
+        inside, ends = {i for i, _ in d}, []
+        for i, s in d:
+            prev = next((t for k, t in reversed(placed) if k < i and k not in inside), None)
+            nxt = next((t for k, t in placed if k > i and k not in inside), None)
+            ends.append((prev and around(s, prev, -1), nxt and around(s, nxt, 1), regions.get(s['county'], ())))
+        ok = [p for p in at if all(reachable(p, b, a) and in_county(p, r) for b, a, r in ends)]
+        if not ok:
+            continue
+        best = min(ok, key=lambda p: sum(detour(p, [e for e in (b, a) if e]) for b, a, _ in ends if b or a))
+        for _, s in d:
+            if s['at'] != best:
+                s['at'] = best
+                report['stays_by_one_sense'] += 1
 
 
 def thin(sure):
