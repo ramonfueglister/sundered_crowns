@@ -24,6 +24,7 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { brotliCompressSync, brotliDecompressSync, constants, gunzipSync } from 'node:zlib';
 import { buildPiece } from '../../src/worldprobe/build';
+import { CROWD_AT } from '../../src/worldprobe/crowd';
 import { extentOf } from '../../src/worldprobe/extent';
 import { FINER, blockOfCell, cellOfBlock } from '../../src/worldprobe/land';
 import { projectionOf } from '../../src/worldprobe/region';
@@ -141,8 +142,10 @@ async function tableOf(w: { step: number; px: number; pz: number }): Promise<Buf
   keepTables(false);
   if (!built) return 'sea';
   if (!table) return 'no table';
-  // (what stands on a piece is kept with its table where it is one mesh: the landmarks, bridges and ribbons of step 2; houses of a cell and people are not)
-  if (built.cells.length || built.figures) return `houses or people on it (${built.cells.length} cells)`;
+  // (what stands on a piece is kept with its table where it is one mesh: the landmarks, bridges and ribbons of step 2; houses of a cell and people are not,
+  // but the people of the first far step, which the worker places on the table's ground again: crowd.ts, piece.worker.ts)
+  if (built.cells.length || (built.figures && w.step !== CROWD_AT))
+    return `houses or people on it (${built.cells.length} cells)`;
   return zipTable(new Uint8Array(packTable(withThings(table, built.things))));
 }
 const fileOf = (w: { step: number; px: number; pz: number }) => resolve(dir, `${w.step}`, `${w.px}_${w.pz}.tab`);
