@@ -76,6 +76,31 @@ describe('the chronicle of borders of 1291', () => {
   });
 });
 
+describe('a change no source dates (tools/history/borders/build.py, spread_windows)', () => {
+  it('moves ring by ring, 2 years apart around the middle of its window, or sharing a window too short for that', () => {
+    let rings = 0;
+    for (const e of json.events) {
+      if (e.kind === 'name') continue;
+      const m = / ring (\d+) of (\d+) from the land of /.exec(e.source);
+      if (!m) continue;
+      rings++;
+      const [k, n] = [Number(m[1]), Number(m[2])];
+      const a = dayOf(`${e.window![0]}-01-01`, 1291)!,
+        b = dayOf(`${e.window![1]}-12-31`, 1291)!;
+      const width = b - a;
+      const want =
+        (n - 1) * 730 <= width
+          ? a + Math.floor(width / 2) + (k - 1 - (n - 1) / 2) * 730
+          : a + Math.floor((width * (k - 0.5)) / n);
+      const day = dayOf(e.date, 1291)!;
+      expect(Math.abs(day - want)).toBeLessThanOrEqual(1);
+      expect(day).toBeGreaterThanOrEqual(a);
+      expect(day).toBeLessThanOrEqual(b);
+    }
+    expect(rings).toBeGreaterThan(1000);
+  });
+});
+
 describe('the borders of a world of 1291 played to 1848', () => {
   const s = fresh();
   const constantinople = at(28.98, 41.01),
