@@ -14,15 +14,24 @@
 export const FIGURE = {
   /** periods (days) computed since the starting position */
   periods: 0,
-  realGdp: 1, realGdpStart: 2, nominalGdp: 3, nominalGdpStart: 4,
+  realGdp: 1,
+  realGdpStart: 2,
+  nominalGdp: 3,
+  nominalGdpStart: 4,
   /** real consumption of households, real purchases of the government, real fixed capital formation (firms and dwellings) */
-  consumption: 5, government: 6, investment: 7,
+  consumption: 5,
+  government: 6,
+  investment: 7,
   /** real exports including the export duty (what the merchants bought in the city), real imports (what they sold) */
-  exports: 8, imports: 9,
+  exports: 8,
+  imports: 9,
   /** persons with an employer, owners of firms and of the bank, workers without an employer */
-  employees: 10, owners: 11, unemployed: 12,
+  employees: 10,
+  owners: 11,
+  unemployed: 12,
   /** deposits of all households, deposits of the firms */
-  depositsHouseholds: 13, depositsFirms: 14,
+  depositsHouseholds: 13,
+  depositsFirms: 14,
   /** the price level of the last period: the mean price of the firms weighted by their output, 1 at the start */
   priceLevel: 15,
 } as const;
@@ -36,17 +45,31 @@ export const AGENT = {
   counts: 4,
   /** a worker: the firm that employs the person (its position among the firms of the city, −1 without work), the
    *  wage in money of the day before tax, the disposable income, the deposits, the money spent on consumption */
-  worker: 5, employer: 0, wage: 1, income: 2, deposits: 3, consumption: 4,
+  worker: 5,
+  employer: 0,
+  wage: 1,
+  income: 2,
+  deposits: 3,
+  consumption: 4,
   /** a firm: its sector, its employees, its production, its price, the wage in money it pays a person for the day,
    *  then the income, the deposits and the consumption of its owner */
-  firm: 8, sector: 0, employees: 1, production: 2, price: 3, pay: 4, owner: 5,
+  firm: 8,
+  sector: 0,
+  employees: 1,
+  production: 2,
+  price: 3,
+  pay: 4,
+  owner: 5,
   /** the owner of a bank or a person who does not work: income, deposits, consumption */
   person: 3,
 } as const;
 
 /** The two lengths of the daily clock in periods: a firm plans every `plan` periods, expectations are formed on
  *  windows of `window` periods. With 1 and 1 the engine computes the port as it is. */
-export interface EconomyClock { plan: number; window: number }
+export interface EconomyClock {
+  plan: number;
+  window: number;
+}
 /** How the firms pay wages (economy feature 7, economy/src/clock.rs): 'prices' is the port's rule, a real wage that
  *  never changes, paid times the consumer price level; 'money' is a wage in money that never changes. */
 export type EconomyWage = 'prices' | 'money';
@@ -65,32 +88,65 @@ export type EconomyOwner = 'paper' | 'household';
 /** The rules of the cities that the calibration chooses. */
 /** `savings`: the share of what a household holds above its target that it spends per period (economy feature 15,
  *  economy/src/clock.rs); 0 is the port's rule, a household that spends out of its income only. */
-export interface EconomyRules { wage: EconomyWage; prices: EconomyPrices; savings: number; crown: EconomyCrown; owner: EconomyOwner }
+export interface EconomyRules {
+  wage: EconomyWage;
+  prices: EconomyPrices;
+  savings: number;
+  crown: EconomyCrown;
+  owner: EconomyOwner;
+}
 
 /** The working days of the firms and households of a city (economy feature 19, economy/src/clock.rs `Attendance`)
  *  for its next `days` periods: per calendar and kind of day the factor of the flows of a firm or a household on such
  *  a day (`kinds` numbers a calendar), per calendar the kind of each of the days (`days` numbers a calendar), the
  *  calendar of every firm (and of its owner), and of every other household: the workers, the persons who do not work
  *  and the owners of the bank, in the engine's order. */
-export interface CityWorkingDays { days: number; kinds: number; factor: Float64Array; day: Uint8Array; calendar: Uint8Array; household: Uint8Array }
+export interface CityWorkingDays {
+  days: number;
+  kinds: number;
+  factor: Float64Array;
+  day: Uint8Array;
+  calendar: Uint8Array;
+  household: Uint8Array;
+}
 /** The workers of a city who are away (economy feature 22): per absence the worker (the position in the engine's list
  *  of workers) and the first and the last day of the absence, counted from 0 for the next period. */
-export interface CityAbsences { worker: Uint32Array; first: Uint32Array; last: Uint32Array }
+export interface CityAbsences {
+  worker: Uint32Array;
+  first: Uint32Array;
+  last: Uint32Array;
+}
 /** What the engine is given for a city: the port's parameters and initial conditions (JSON text) and the seed of
  *  the city's random numbers. */
-export interface CitySetup { parameters: string; initialConditions: string; seed: number }
+export interface CitySetup {
+  parameters: string;
+  initialConditions: string;
+  seed: number;
+}
 
 /** The accounting identities of a city (`Economy::checks`): each of the first five is 0 up to rounding; `gdpSum`
  *  is the amount to judge them by. */
-export interface CityChecks { income: number; nominal: number; real: number; centralBank: number; banks: number; gdpSum: number }
+export interface CityChecks {
+  income: number;
+  nominal: number;
+  real: number;
+  centralBank: number;
+  banks: number;
+  gdpSum: number;
+}
 /** What must be 0 in a state: the identities of every city, and the books of the merchants (`Cities::checks`): the
  *  change of their worth, then for every product the goods neither in stock nor sold, each with the amount to judge
  *  it by. */
-export interface EconomyChecks { cities: CityChecks[]; merchants: { off: number; scale: number }[] }
+export interface EconomyChecks {
+  cities: CityChecks[];
+  merchants: { off: number; scale: number }[];
+}
 
 /** The state of the economies after `advance`: kept inside the engine, written as bytes only when they are asked for
  *  (a snapshot, a hash). Writing the 50 MB of a world's economies every day took as long as computing the day. */
-export interface KeptEconomy { bytes(): Uint8Array }
+export interface KeptEconomy {
+  bytes(): Uint8Array;
+}
 /** A state as the engine takes it: its bytes, or the state it keeps. */
 export type EconomyState = Uint8Array | KeptEconomy;
 
@@ -99,7 +155,10 @@ export interface EconomyEngine {
   create(cities: readonly CitySetup[], clock: EconomyClock, rules: EconomyRules): Uint8Array;
   /** The cities of a state that has not computed a period, with distance between them (economy feature 17): the
    *  days of travel and the labour of carrying per pair of cities, and the elasticity of the stock to keep. */
-  routes(state: Uint8Array, routes: { cities: number; days: Uint32Array; labour: Float64Array; weight: readonly number[]; elasticity: number }): Uint8Array;
+  routes(
+    state: Uint8Array,
+    routes: { cities: number; days: Uint32Array; labour: Float64Array; weight: readonly number[]; elasticity: number },
+  ): Uint8Array;
   /** The cities of a state with the working days of their firms from their next period on (economy feature 19), one
    *  entry per city in their order. */
   workingDays(state: EconomyState, cities: readonly CityWorkingDays[]): Uint8Array;
@@ -120,8 +179,19 @@ export interface EconomyEngine {
 
 interface Exports {
   memory: WebAssembly.Memory;
-  sce_alloc(len: number): number; sce_free(ptr: number, len: number): void;
-  sce_create(list: number, len: number, plan: number, window: number, wage: number, prices: number, savings: number, crown: number, owner: number): number;
+  sce_alloc(len: number): number;
+  sce_free(ptr: number, len: number): void;
+  sce_create(
+    list: number,
+    len: number,
+    plan: number,
+    window: number,
+    wage: number,
+    prices: number,
+    savings: number,
+    crown: number,
+    owner: number,
+  ): number;
   sce_routes(state: number, len: number, routes: number, routesLen: number): number;
   sce_working_days(state: number, len: number, days: number, daysLen: number): number;
   sce_absences(state: number, len: number, list: number, listLen: number): number;
@@ -129,9 +199,15 @@ interface Exports {
   sce_figures(state: number, len: number): number;
   sce_checks(state: number, len: number): number;
   sce_agents(state: number, len: number): number;
-  sce_step_last(periods: number): number; sce_figures_last(): number; sce_agents_last(): number;
-  sce_advance_last(periods: number): number; sce_save_last(): number;
-  sce_out_ptr(): number; sce_out_len(): number; sce_panic_ptr(): number; sce_panic_len(): number;
+  sce_step_last(periods: number): number;
+  sce_figures_last(): number;
+  sce_agents_last(): number;
+  sce_advance_last(periods: number): number;
+  sce_save_last(): number;
+  sce_out_ptr(): number;
+  sce_out_len(): number;
+  sce_panic_ptr(): number;
+  sce_panic_len(): number;
 }
 
 /** The engine from the bytes of the WebAssembly file (build/economy/sc_economy.wasm, see tools/sim/load.ts). */
@@ -148,25 +224,39 @@ export function wasmEconomyEngine(wasm: Uint8Array): EconomyEngine {
 
   /** Copies the inputs into the instance, calls `f` with their addresses and lengths, and returns a copy of the result. */
   function call(inputs: Uint8Array[], f: (e: Exports, args: number[]) => number): Uint8Array {
-    const e = instance(), held: [number, number][] = [], args: number[] = [];
+    const e = instance(),
+      held: [number, number][] = [],
+      args: number[] = [];
     let ok: number;
     try {
       for (const b of inputs) {
         const p = e.sce_alloc(b.length);
-        held.push([p, b.length]); args.push(p, b.length);
+        held.push([p, b.length]);
+        args.push(p, b.length);
         new Uint8Array(e.memory.buffer, p, b.length).set(b); // the buffer is looked up anew: memory may have grown
       }
       ok = f(e, args);
     } catch (err) {
       // a rule of the port failed and stopped the instance: read its message and start with a fresh instance next time
       let why = String(err);
-      try { const n = e.sce_panic_len(); if (n) why = text.decode(new Uint8Array(e.memory.buffer, e.sce_panic_ptr(), n)); } catch { /* keep the error of the runtime */ }
-      x = null; last = null; current = null;
+      try {
+        const n = e.sce_panic_len();
+        if (n) why = text.decode(new Uint8Array(e.memory.buffer, e.sce_panic_ptr(), n));
+      } catch {
+        /* keep the error of the runtime */
+      }
+      x = null;
+      last = null;
+      current = null;
       throw new Error(`the economy engine stopped: ${why}`);
     }
     for (const [p, n] of held) e.sce_free(p, n);
     const out = new Uint8Array(e.memory.buffer, e.sce_out_ptr(), e.sce_out_len()).slice();
-    if (!ok) { last = null; current = null; throw new Error(`economy engine: ${text.decode(out)}`); }
+    if (!ok) {
+      last = null;
+      current = null;
+      throw new Error(`economy engine: ${text.decode(out)}`);
+    }
     return out;
   }
   /** The state `advance` left in the instance without its bytes (null: none, or its bytes are written). */
@@ -175,16 +265,27 @@ export function wasmEconomyEngine(wasm: Uint8Array): EconomyEngine {
    *  the one the instance keeps, its bytes are written from there; otherwise (another state was computed in between,
    *  or the instance stopped) they are computed again from the earlier bytes: the engine is deterministic. */
   class Kept implements KeptEconomy {
-    constructor(readonly base: Uint8Array, readonly periods: number, public written: Uint8Array | null = null) {}
+    constructor(
+      readonly base: Uint8Array,
+      readonly periods: number,
+      public written: Uint8Array | null = null,
+    ) {}
     bytes(): Uint8Array {
       if (this.written) return this.written;
-      if (this === current && x) { this.written = last = call([], (e) => e.sce_save_last()); current = null; return this.written; }
+      if (this === current && x) {
+        this.written = last = call([], (e) => e.sce_save_last());
+        current = null;
+        return this.written;
+      }
       return (this.written = step(this.base, this.periods));
     }
   }
   /** Before the instance computes or reads another state: the bytes of the one it keeps without them are written,
    *  so that they are not lost. */
-  const flush = () => { if (current && !current.written && x) current.bytes(); current = null; };
+  const flush = () => {
+    if (current && !current.written && x) current.bytes();
+    current = null;
+  };
   /** A call that hands out a state the instance keeps (create, routes, step). */
   const keeps = (out: Uint8Array): Uint8Array => (last = out);
   /** Whether the instance keeps this state (see `last`), with its bytes or without (see `current`). */
@@ -194,7 +295,10 @@ export function wasmEconomyEngine(wasm: Uint8Array): EconomyEngine {
   function step(state: EconomyState, periods: number): Uint8Array {
     if (!Number.isInteger(periods) || periods < 0) throw new Error(`${periods} is not a number of periods`);
     // (a state kept without its bytes is given up: its bytes are computed again from its earlier ones if asked for)
-    if (kept(state)) { current = null; return keeps(call([], (e) => e.sce_step_last(periods))); }
+    if (kept(state)) {
+      current = null;
+      return keeps(call([], (e) => e.sce_step_last(periods)));
+    }
     const b = bytesOf(state);
     flush();
     return keeps(call([b], (e, a) => e.sce_step(a[0], a[1], periods)));
@@ -206,36 +310,70 @@ export function wasmEconomyEngine(wasm: Uint8Array): EconomyEngine {
    *  its length in 32 bits before it; little endian. */
   function list(cities: readonly CitySetup[]): Uint8Array {
     const texts = cities.map((c) => [utf8.encode(c.parameters), utf8.encode(c.initialConditions)]);
-    const out = new Uint8Array(texts.reduce((n, [p, ic]) => n + 16 + p.length + ic.length, 0)), dv = new DataView(out.buffer);
+    const out = new Uint8Array(texts.reduce((n, [p, ic]) => n + 16 + p.length + ic.length, 0)),
+      dv = new DataView(out.buffer);
     let at = 0;
     cities.forEach((c, k) => {
-      if (!Number.isSafeInteger(c.seed) || c.seed < 0) throw new Error(`economy seed ${c.seed} is not a whole number from 0`);
+      if (!Number.isSafeInteger(c.seed) || c.seed < 0)
+        throw new Error(`economy seed ${c.seed} is not a whole number from 0`);
       const lo = c.seed % 0x100000000;
-      dv.setUint32(at, lo, true); dv.setUint32(at + 4, (c.seed - lo) / 0x100000000, true); at += 8;
-      for (const t of texts[k]) { dv.setUint32(at, t.length, true); out.set(t, at + 4); at += 4 + t.length; }
+      dv.setUint32(at, lo, true);
+      dv.setUint32(at + 4, (c.seed - lo) / 0x100000000, true);
+      at += 8;
+      for (const t of texts[k]) {
+        dv.setUint32(at, t.length, true);
+        out.set(t, at + 4);
+        at += 4 + t.length;
+      }
     });
     return out;
   }
 
   return {
     create(cities, clock, { wage, prices, savings, crown, owner }) {
-      for (const n of [clock.plan, clock.window]) if (!Number.isInteger(n) || n < 1 || n > 0xffff) throw new Error(`${n} is not a length of the economy's clock`);
-      if (wage !== 'prices' && wage !== 'money') throw new Error(`${wage} is not a way to pay wages: 'prices' or 'money'`);
-      if (prices !== 'costs' && prices !== 'demand') throw new Error(`${prices} is not a way to set prices: 'costs' or 'demand'`);
+      for (const n of [clock.plan, clock.window])
+        if (!Number.isInteger(n) || n < 1 || n > 0xffff) throw new Error(`${n} is not a length of the economy's clock`);
+      if (wage !== 'prices' && wage !== 'money')
+        throw new Error(`${wage} is not a way to pay wages: 'prices' or 'money'`);
+      if (prices !== 'costs' && prices !== 'demand')
+        throw new Error(`${prices} is not a way to set prices: 'costs' or 'demand'`);
       if (!(savings >= 0 && savings <= 1)) throw new Error(`${savings} is not a share of the savings spent per period`);
-      if (crown !== 'series' && crown !== 'revenue') throw new Error(`${crown} is not a way for the crown to buy: 'series' or 'revenue'`);
-      if (owner !== 'paper' && owner !== 'household') throw new Error(`${owner} is not a way for an owner to hold a firm: 'paper' or 'household'`);
+      if (crown !== 'series' && crown !== 'revenue')
+        throw new Error(`${crown} is not a way for the crown to buy: 'series' or 'revenue'`);
+      if (owner !== 'paper' && owner !== 'household')
+        throw new Error(`${owner} is not a way for an owner to hold a firm: 'paper' or 'household'`);
       flush();
-      return keeps(call([list(cities)], (e, a) => e.sce_create(a[0], a[1], clock.plan, clock.window, wage === 'money' ? 1 : 0, prices === 'demand' ? 1 : 0, savings, crown === 'revenue' ? 1 : 0, owner === 'household' ? 1 : 0)));
+      return keeps(
+        call([list(cities)], (e, a) =>
+          e.sce_create(
+            a[0],
+            a[1],
+            clock.plan,
+            clock.window,
+            wage === 'money' ? 1 : 0,
+            prices === 'demand' ? 1 : 0,
+            savings,
+            crown === 'revenue' ? 1 : 0,
+            owner === 'household' ? 1 : 0,
+          ),
+        ),
+      );
     },
     routes(state, { cities: n, days, labour, weight, elasticity }) {
-      if (days.length !== n * n || labour.length !== n * n) throw new Error(`routes of ${days.length} ways and ${labour.length} labours do not fit ${n} cities`);
+      if (days.length !== n * n || labour.length !== n * n)
+        throw new Error(`routes of ${days.length} ways and ${labour.length} labours do not fit ${n} cities`);
       // as `sce_routes` reads them: the elasticity, the weight per product, then per pair of cities the days and the labour
-      const G = weight.length, out = new Uint8Array(8 + 8 * G + 12 * n * n), dv = new DataView(out.buffer);
+      const G = weight.length,
+        out = new Uint8Array(8 + 8 * G + 12 * n * n),
+        dv = new DataView(out.buffer);
       dv.setFloat64(0, elasticity, true);
       weight.forEach((v, g) => dv.setFloat64(8 + 8 * g, v, true));
       let at = 8 + 8 * G;
-      for (let k = 0; k < n * n; k++) { dv.setUint32(at, days[k], true); dv.setFloat64(at + 4, labour[k], true); at += 12; }
+      for (let k = 0; k < n * n; k++) {
+        dv.setUint32(at, days[k], true);
+        dv.setFloat64(at + 4, labour[k], true);
+        at += 12;
+      }
       const b = bytesOf(state);
       flush();
       return keeps(call([b, out], (e, a) => e.sce_routes(a[0], a[1], a[2], a[3])));
@@ -246,19 +384,34 @@ export function wasmEconomyEngine(wasm: Uint8Array): EconomyEngine {
       let size = 0;
       for (const c of cities) {
         const calendars = c.factor.length / c.kinds;
-        if (!Number.isInteger(calendars) || c.day.length !== calendars * c.days) throw new Error(`working days of ${c.factor.length} factors and ${c.day.length} days do not fit ${c.kinds} kinds and ${c.days} days`);
+        if (!Number.isInteger(calendars) || c.day.length !== calendars * c.days)
+          throw new Error(
+            `working days of ${c.factor.length} factors and ${c.day.length} days do not fit ${c.kinds} kinds and ${c.days} days`,
+          );
         size += 20 + 8 * c.factor.length + c.day.length + c.calendar.length + c.household.length;
       }
-      const out = new Uint8Array(size), dv = new DataView(out.buffer);
+      const out = new Uint8Array(size),
+        dv = new DataView(out.buffer);
       let at = 0;
       for (const c of cities) {
-        dv.setUint32(at, c.factor.length / c.kinds, true); dv.setUint32(at + 4, c.kinds, true); dv.setUint32(at + 8, c.days, true); at += 12;
-        for (const f of c.factor) { dv.setFloat64(at, f, true); at += 8; }
-        out.set(c.day, at); at += c.day.length;
-        dv.setUint32(at, c.calendar.length, true); at += 4;
-        out.set(c.calendar, at); at += c.calendar.length;
-        dv.setUint32(at, c.household.length, true); at += 4;
-        out.set(c.household, at); at += c.household.length;
+        dv.setUint32(at, c.factor.length / c.kinds, true);
+        dv.setUint32(at + 4, c.kinds, true);
+        dv.setUint32(at + 8, c.days, true);
+        at += 12;
+        for (const f of c.factor) {
+          dv.setFloat64(at, f, true);
+          at += 8;
+        }
+        out.set(c.day, at);
+        at += c.day.length;
+        dv.setUint32(at, c.calendar.length, true);
+        at += 4;
+        out.set(c.calendar, at);
+        at += c.calendar.length;
+        dv.setUint32(at, c.household.length, true);
+        at += 4;
+        out.set(c.household, at);
+        at += c.household.length;
       }
       const b = bytesOf(state);
       flush();
@@ -267,13 +420,21 @@ export function wasmEconomyEngine(wasm: Uint8Array): EconomyEngine {
     absences(state, cities) {
       // as `sce_absences` reads them: per city the number of its absences, then per absence the worker, the first and
       // the last day
-      const out = new Uint8Array(cities.reduce((n, c) => n + 4 + 12 * c.worker.length, 0)), dv = new DataView(out.buffer);
+      const out = new Uint8Array(cities.reduce((n, c) => n + 4 + 12 * c.worker.length, 0)),
+        dv = new DataView(out.buffer);
       let at = 0;
       for (const c of cities) {
-        if (c.first.length !== c.worker.length || c.last.length !== c.worker.length) throw new Error(`absences of ${c.worker.length} workers with ${c.first.length} first and ${c.last.length} last days`);
-        dv.setUint32(at, c.worker.length, true); at += 4;
+        if (c.first.length !== c.worker.length || c.last.length !== c.worker.length)
+          throw new Error(
+            `absences of ${c.worker.length} workers with ${c.first.length} first and ${c.last.length} last days`,
+          );
+        dv.setUint32(at, c.worker.length, true);
+        at += 4;
         for (let k = 0; k < c.worker.length; k++) {
-          dv.setUint32(at, c.worker[k], true); dv.setUint32(at + 4, c.first[k], true); dv.setUint32(at + 8, c.last[k], true); at += 12;
+          dv.setUint32(at, c.worker[k], true);
+          dv.setUint32(at + 4, c.first[k], true);
+          dv.setUint32(at + 8, c.last[k], true);
+          at += 12;
         }
       }
       const b = bytesOf(state);
@@ -286,16 +447,31 @@ export function wasmEconomyEngine(wasm: Uint8Array): EconomyEngine {
       if (!kept(state)) step(state, 0); // the state into the instance, with its bytes
       const from = state instanceof Kept ? state : null;
       // what the new state is computed again from if need be: the last bytes written and the periods since
-      const next = from && !from.written ? new Kept(from.base, from.periods + periods) : new Kept(from?.written ?? bytesOf(state), periods);
+      const next =
+        from && !from.written
+          ? new Kept(from.base, from.periods + periods)
+          : new Kept(from?.written ?? bytesOf(state), periods);
       call([], (e) => e.sce_advance_last(periods));
-      last = null; current = next;
+      last = null;
+      current = next;
       return next;
     },
-    figures(state) { return floats(kept(state) ? call([], (e) => e.sce_figures_last()) : call([bytesOf(state)], (e, a) => e.sce_figures(a[0], a[1]))); },
-    agents(state) { return floats(kept(state) ? call([], (e) => e.sce_agents_last()) : call([bytesOf(state)], (e, a) => e.sce_agents(a[0], a[1]))); },
+    figures(state) {
+      return floats(
+        kept(state)
+          ? call([], (e) => e.sce_figures_last())
+          : call([bytesOf(state)], (e, a) => e.sce_figures(a[0], a[1])),
+      );
+    },
+    agents(state) {
+      return floats(
+        kept(state) ? call([], (e) => e.sce_agents_last()) : call([bytesOf(state)], (e, a) => e.sce_agents(a[0], a[1])),
+      );
+    },
     checks(state) {
       // the cities are counted by their figures: six numbers a city come first, then the pairs of the merchants
-      const v = floats(call([bytesOf(state)], (e, a) => e.sce_checks(a[0], a[1]))), n = this.figures(state).length / FIGURES;
+      const v = floats(call([bytesOf(state)], (e, a) => e.sce_checks(a[0], a[1]))),
+        n = this.figures(state).length / FIGURES;
       const cities = Array.from({ length: n }, (_, c) => {
         const [income, nominal, real, centralBank, banks, gdpSum] = v.subarray(6 * c, 6 * c + 6);
         return { income, nominal, real, centralBank, banks, gdpSum };

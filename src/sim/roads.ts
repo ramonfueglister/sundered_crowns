@@ -34,7 +34,9 @@ export function slopeTime(slope: number): number {
 export const OFF_WAY = 0.6;
 
 /** the kinds of way, as in roads_<year>.json: 0 track, 1 road, 2 highway (src/worldprobe/roads.ts ROAD_KINDS) */
-export const TRACK = 0, ROAD = 1, HIGHWAY = 2;
+export const TRACK = 0,
+  ROAD = 1,
+  HIGHWAY = 2;
 /** a cart can travel the kinds from this one on */
 export const WHEELS = ROAD;
 
@@ -62,10 +64,19 @@ export const isWinter = (month: number) => month === 11 || month <= 1;
  * and the km of the straight line between its ends (0 where the file does not say), so that the way's windings are
  * effort / straight.
  */
-export interface Way { a: number; b: number; kind: number; km: number; effort: number; straight: number }
+export interface Way {
+  a: number;
+  b: number;
+  kind: number;
+  km: number;
+  effort: number;
+  straight: number;
+}
 
 export function waysOf(between: readonly (readonly number[])[]): Way[] {
-  return between.filter((e) => e.length >= 5).map(([a, b, kind, km, effort, straight = 0]) => ({ a, b, kind, km, effort, straight }));
+  return between
+    .filter((e) => e.length >= 5)
+    .map(([a, b, kind, km, effort, straight = 0]) => ({ a, b, kind, km, effort, straight }));
 }
 
 /**
@@ -77,7 +88,8 @@ export function waysOf(between: readonly (readonly number[])[]): Way[] {
 export function stretchOf(way: Way | undefined, km: number, rise: number): number {
   const across = km > 0 ? slopeTime(rise / (km * 1000)) / OFF_WAY : 1 / OFF_WAY;
   if (!way) return across;
-  const winds = way.straight > 0 ? Math.max(1, way.effort / way.straight) : Math.max(1, way.effort / Math.max(way.km, 1e-9));
+  const winds =
+    way.straight > 0 ? Math.max(1, way.effort / way.straight) : Math.max(1, way.effort / Math.max(way.km, 1e-9));
   return Math.min(winds, across);
 }
 
@@ -93,15 +105,31 @@ export function daysOn(way: Way, means: Means, month = 6): number {
 }
 
 /** The ways of a year as the file has them (public/data/roads_<year>.json). */
-export interface RoadsFile { year: number; between: readonly (readonly number[])[] }
+export interface RoadsFile {
+  year: number;
+  between: readonly (readonly number[])[];
+}
 
 /** The ways of the map as a lookup from a pair of places (smaller index first). */
 export class WayNet {
   private byPair = new Map<number, Way>();
   /** `year`: the start year the net serves; `laid`: the year of the file it comes from (the latest at or before it) */
-  constructor(ways: readonly Way[], private places: number, readonly year = 0, readonly laid = year) { for (const w of ways) this.byPair.set(this.key(w.a, w.b), w); }
-  private key(a: number, b: number) { return a < b ? a * this.places + b : b * this.places + a; }
+  constructor(
+    ways: readonly Way[],
+    private places: number,
+    readonly year = 0,
+    readonly laid = year,
+  ) {
+    for (const w of ways) this.byPair.set(this.key(w.a, w.b), w);
+  }
+  private key(a: number, b: number) {
+    return a < b ? a * this.places + b : b * this.places + a;
+  }
   /** the way between two neighbouring places, or undefined where none runs */
-  between(a: number, b: number): Way | undefined { return this.byPair.get(this.key(a, b)); }
-  get size() { return this.byPair.size; }
+  between(a: number, b: number): Way | undefined {
+    return this.byPair.get(this.key(a, b));
+  }
+  get size() {
+    return this.byPair.size;
+  }
 }

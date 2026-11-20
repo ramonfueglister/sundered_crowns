@@ -18,16 +18,23 @@ export const FINER_STEPS = 2;
 export const FINER = 2 ** FINER_STEPS;
 
 /** Whole-map cell of a world block: the cells counted on the map are as large as the finest blocks, only turned against them. */
-export const cellOfBlock = (wx: number, wz: number): [number, number] => [wx * RIGHT[0] + wz * RIGHT[1], wx * NEAR[0] + wz * NEAR[1]];
+export const cellOfBlock = (wx: number, wz: number): [number, number] => [
+  wx * RIGHT[0] + wz * RIGHT[1],
+  wx * NEAR[0] + wz * NEAR[1],
+];
 /** World block of a whole-map cell. */
-export const blockOfCell = (u: number, v: number): [number, number] => [u * RIGHT[0] + v * NEAR[0], u * RIGHT[1] + v * NEAR[1]];
+export const blockOfCell = (u: number, v: number): [number, number] => [
+  u * RIGHT[0] + v * NEAR[0],
+  u * RIGHT[1] + v * NEAR[1],
+];
 
 /**
  * above this no trees grow and the heights are stretched; above the snow line (of the raised rock) the rock is pale.
  * Where the climate of a place is known, the trees end and the rock is pale by its own lines (woodsUntil, paleFrom);
  * these stand in elsewhere, and the heights are stretched by them everywhere.
  */
-export const TREE_LINE = 1900, SNOW_LINE = 2530;
+export const TREE_LINE = 1900,
+  SNOW_LINE = 2530;
 /**
  * These heights hold in the Alps, at 46° north. Towards the pole the tree line sinks by about 60 m a degree (some
  * 1000 m in southern Norway, 500 m in the far north), towards the equator it rises to about 3900 m; the snow line
@@ -45,14 +52,16 @@ const ROCK_FROM = 1500;
  */
 const ROCK_RISE = 400;
 /** Whether a massif of this height (m) is rock, over a valley floor of that height and with the lines shifted by `shift` for its latitude. */
-export const rockAt = (massif: number, floor: number, shift: number) => massif > Math.max(300, ROCK_FROM + Math.min(ROCK_SHIFT_MOST, shift), floor + ROCK_RISE);
+export const rockAt = (massif: number, floor: number, shift: number) =>
+  massif > Math.max(300, ROCK_FROM + Math.min(ROCK_SHIFT_MOST, shift), floor + ROCK_RISE);
 /**
  * Where the snow line of the place is known (climate.ts), the summits are pale from some way below it: as in the
  * Alps, where the snow line lies at 3090 m and the look draws the raised rock pale from SNOW_LINE. Never more than a
  * fifth of the line's own height, though: at the ocean's edge (Norway's coast, Iceland, Scotland) the snow line lies
  * so low that the Alps' margin would whiten hills.
  */
-const SNOW_BELOW = 3090 - SNOW_LINE, BELOW_MOST = 0.2;
+const SNOW_BELOW = 3090 - SNOW_LINE,
+  BELOW_MOST = 0.2;
 /** The height from which the raised rock is pale, for the snow line of a place. */
 export const paleFrom = (snowLine: number) => snowLine - Math.min(SNOW_BELOW, BELOW_MOST * snowLine);
 /**
@@ -65,12 +74,26 @@ const TREES_BELOW = 2220 - TREE_LINE;
 export const woodsUntil = (treeLine: number) => treeLine - Math.min(TREES_BELOW, BELOW_MOST * treeLine);
 /** the ground of the lands that are not green: the colour the meadow is pulled towards, and how far */
 export const TINT: Record<number, readonly [RGB, number]> = {
-  [Land.Mediterranean]: [rgb(0xd2c444), 0.2], [Land.Steppe]: [rgb(0xd0c264), 0.7], [Land.Desert]: [rgb(0xe8d096), 1], [Land.Savanna]: [rgb(0xc6bc52), 0.55],
-  [Land.Rainforest]: [rgb(0x74a630), 0.6], [Land.Boreal]: [rgb(0x90aa3a), 0.35], [Land.Tundra]: [rgb(0xaaa87c), 0.8], [Land.Ice]: [rgb(0xf4f6f8), 1],
+  [Land.Mediterranean]: [rgb(0xd2c444), 0.2],
+  [Land.Steppe]: [rgb(0xd0c264), 0.7],
+  [Land.Desert]: [rgb(0xe8d096), 1],
+  [Land.Savanna]: [rgb(0xc6bc52), 0.55],
+  [Land.Rainforest]: [rgb(0x74a630), 0.6],
+  [Land.Boreal]: [rgb(0x90aa3a), 0.35],
+  [Land.Tundra]: [rgb(0xaaa87c), 0.8],
+  [Land.Ice]: [rgb(0xf4f6f8), 1],
   // prairie, pampas and the grass of the high plateaus: green, but drier than the meadows between the woods
   [Land.Grassland]: [rgb(0xc4c458), 0.4],
 };
 /** the share of woods the climate grows where the forest layer of 1356 does not reach (estimates) */
-export const WOODS: Record<number, number> = { [Land.Temperate]: 0.6, [Land.Mediterranean]: 0.3, [Land.Steppe]: 0.02, [Land.Savanna]: 0.1, [Land.Rainforest]: 0.95, [Land.Boreal]: 0.7, [Land.Grassland]: 0.05 };
+export const WOODS: Record<number, number> = {
+  [Land.Temperate]: 0.6,
+  [Land.Mediterranean]: 0.3,
+  [Land.Steppe]: 0.02,
+  [Land.Savanna]: 0.1,
+  [Land.Rainforest]: 0.95,
+  [Land.Boreal]: 0.7,
+  [Land.Grassland]: 0.05,
+};
 /** lands without a single tree away from the water */
 export const BARE: readonly number[] = [Land.Desert, Land.Tundra, Land.Ice];

@@ -37,19 +37,30 @@ export function landLimitHa(w: World, i: number, landLimit = w.landLimit): numbe
 }
 
 /** Arable of a place with `people` in hectares (X). */
-export function arableHa(w: World, i: number, people: number, arablePerHead = w.arablePerHead, landLimit = w.landLimit): number {
+export function arableHa(
+  w: World,
+  i: number,
+  people: number,
+  arablePerHead = w.arablePerHead,
+  landLimit = w.landLimit,
+): number {
   if (!(people > 0)) return 0;
   return Math.min(arablePerHead * people, landLimitHa(w, i, landLimit));
 }
 
 /** Σ A · x over the best `ha` hectares of a place: the soil the harvest counts with. */
 export function soilOf(w: World, i: number, ha: number): number {
-  const F = hectares(w, i), fertile = w.landFertile[i];
-  let left = Math.min(ha, fertile * F), lo = 0, soil = 0;
+  const F = hectares(w, i),
+    fertile = w.landFertile[i];
+  let left = Math.min(ha, fertile * F),
+    lo = 0,
+    soil = 0;
   for (let k = w.landStepStart[i], e = 0; k < w.landStepStart[i + 1] && left > 0; k++, e++) {
     const hi = Math.min(w.landEdges[e], fertile);
     const take = Math.min(left, (hi - lo) * F);
-    soil += take * w.landSteps[k]; left -= take; lo = hi;
+    soil += take * w.landSteps[k];
+    left -= take;
+    lo = hi;
   }
   return soil;
 }
@@ -57,7 +68,8 @@ export function soilOf(w: World, i: number, ha: number): number {
 /** Sets the arable of every place from the people who live there now. The land is not scaled (src/sim/scale.ts): the
  *  people of a place cultivate what the real people of the time they are derived from cultivated. */
 export function cultivate(s: WorldState, w: World): void {
-  const a = s.place.arable, pop = s.place.pop;
+  const a = s.place.arable,
+    pop = s.place.pop;
   for (let i = 0; i < a.length; i++) a[i] = arableHa(w, i, ofTime(pop[i]));
 }
 
@@ -65,5 +77,10 @@ export function cultivate(s: WorldState, w: World): void {
  *  people of every place are counted (its persons), then the arable is set. */
 export const cultivation: System = {
   id: 'cultivation',
-  run(s, w, t) { if (t.newYear) { countPeople(s); cultivate(s, w); } },
+  run(s, w, t) {
+    if (t.newYear) {
+      countPeople(s);
+      cultivate(s, w);
+    }
+  },
 };

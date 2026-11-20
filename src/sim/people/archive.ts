@@ -43,11 +43,14 @@ export function spawnPerson(s: WorldState): number {
 export function rowOf(s: WorldState, uid: number): number {
   if (uid < 0) return -1;
   const U = s.person.cols.uid;
-  let lo = 0, hi = s.person.size - 1;
+  let lo = 0,
+    hi = s.person.size - 1;
   while (lo <= hi) {
-    const m = (lo + hi) >> 1, u = U[m];
+    const m = (lo + hi) >> 1,
+      u = U[m];
     if (u === uid) return m;
-    if (u < uid) lo = m + 1; else hi = m - 1;
+    if (u < uid) lo = m + 1;
+    else hi = m - 1;
   }
   return -1;
 }
@@ -55,13 +58,25 @@ export function rowOf(s: WorldState, uid: number): number {
 /** What the archive keeps of a dead person: who the person was, not what the person did in the economy. About 140
  *  bytes a person. */
 export const ARCHIVE_SCHEMA = {
-  uid: 'i32', born: 'i32', died: 'i32', sex: 'u8',
+  uid: 'i32',
+  born: 'i32',
+  died: 'i32',
+  sex: 'u8',
   /** uids, as in the table of the persons */
-  mother: 'i32', father: 'i32',
+  mother: 'i32',
+  father: 'i32',
   /** the family the person last lived in, and its place */
-  family: 'i32', place: 'i16',
-  home: 'i32', culture: 'u16', faith: 'u8',
-  iq: 'u8', o: 'u8', c: 'u8', e: 'u8', a: 'u8', n: 'u8',
+  family: 'i32',
+  place: 'i16',
+  home: 'i32',
+  culture: 'u16',
+  faith: 'u8',
+  iq: 'u8',
+  o: 'u8',
+  c: 'u8',
+  e: 'u8',
+  a: 'u8',
+  n: 'u8',
   genes: ['u8', 2 * NG],
 } as const;
 export type ArchiveSchema = typeof ARCHIVE_SCHEMA;
@@ -87,14 +102,26 @@ export function takeArchived(s: WorldState): ArchivedPersons[] {
 /** Which rows stay in the running world: the living, the dead who hold a part in the economy, the persons of history
  *  and the dead parents of a living person whose mother or father belongs to a household. */
 export function rowsThatStay(s: WorldState): Uint8Array {
-  const t = s.person, P = t.cols, F = s.family.cols, n = t.size, keep = new Uint8Array(n);
-  const seated = (row: number) => { if (row < 0) return false; const f = P.family[row]; return f >= 0 && f < s.family.size && F.seat[f] === 1; };
+  const t = s.person,
+    P = t.cols,
+    F = s.family.cols,
+    n = t.size,
+    keep = new Uint8Array(n);
+  const seated = (row: number) => {
+    if (row < 0) return false;
+    const f = P.family[row];
+    return f >= 0 && f < s.family.size && F.seat[f] === 1;
+  };
   for (let id = 0; id < n; id++) {
     if (!t.alive[id]) continue;
     if (P.died[id] === ALIVE) {
       keep[id] = 1;
-      const m = rowOf(s, P.mother[id]), f = rowOf(s, P.father[id]);
-      if (seated(m) || seated(f)) { if (m >= 0) keep[m] = 1; if (f >= 0) keep[f] = 1; }
+      const m = rowOf(s, P.mother[id]),
+        f = rowOf(s, P.father[id]);
+      if (seated(m) || seated(f)) {
+        if (m >= 0) keep[m] = 1;
+        if (f >= 0) keep[f] = 1;
+      }
     } else if (P.role[id] !== 0) keep[id] = 1;
   }
   for (const x of s.named ?? []) if (x.person >= 0 && x.person < n) keep[x.person] = 1;
@@ -104,41 +131,70 @@ export function rowsThatStay(s: WorldState): Uint8Array {
 /** The dead whom nothing in the running world needs go to the archive, and the rows of the others close up. Returns
  *  the archived persons, null when nobody went (and then nothing changes). */
 export function archiveDead(s: WorldState): ArchivedPersons | null {
-  const t = s.person, P = t.cols, n = t.size, keep = rowsThatStay(s);
+  const t = s.person,
+    P = t.cols,
+    n = t.size,
+    keep = rowsThatStay(s);
   let stay = 0;
   for (let id = 0; id < n; id++) stay += keep[id];
   const gone = n - stay;
   if (gone === 0) return null;
   // the archived persons, in the order of their uids
-  const A = makeColumns(ARCHIVE_SCHEMA, gone), F = s.family.cols;
+  const A = makeColumns(ARCHIVE_SCHEMA, gone),
+    F = s.family.cols;
   let k = 0;
   for (let id = 0; id < n; id++) {
     if (keep[id]) continue;
-    A.uid[k] = P.uid[id]; A.born[k] = P.born[id]; A.died[k] = P.died[id]; A.sex[k] = P.sex[id];
-    A.mother[k] = P.mother[id]; A.father[k] = P.father[id];
+    A.uid[k] = P.uid[id];
+    A.born[k] = P.born[id];
+    A.died[k] = P.died[id];
+    A.sex[k] = P.sex[id];
+    A.mother[k] = P.mother[id];
+    A.father[k] = P.father[id];
     const f = P.family[id];
-    A.family[k] = f; A.place[k] = f >= 0 && f < s.family.size ? F.place[f] : -1;
-    A.home[k] = P.home[id]; A.culture[k] = P.culture[id]; A.faith[k] = P.faith[id];
-    A.iq[k] = P.iq[id]; A.o[k] = P.o[id]; A.c[k] = P.c[id]; A.e[k] = P.e[id]; A.a[k] = P.a[id]; A.n[k] = P.n[id];
+    A.family[k] = f;
+    A.place[k] = f >= 0 && f < s.family.size ? F.place[f] : -1;
+    A.home[k] = P.home[id];
+    A.culture[k] = P.culture[id];
+    A.faith[k] = P.faith[id];
+    A.iq[k] = P.iq[id];
+    A.o[k] = P.o[id];
+    A.c[k] = P.c[id];
+    A.e[k] = P.e[id];
+    A.a[k] = P.a[id];
+    A.n[k] = P.n[id];
     A.genes.set(P.genes.subarray(id * 2 * NG, (id + 1) * 2 * NG), k * 2 * NG);
     k++;
   }
   // the rows that stay close up, in their order: runs of rows are copied column by column
   const next = createTable(PERSON_SCHEMA, Math.max(1024, Math.ceil(stay * 1.25)));
-  const row = new Int32Array(n).fill(-1), from = t.cols as Record<string, Column>, to = next.cols as Record<string, Column>;
+  const row = new Int32Array(n).fill(-1),
+    from = t.cols as Record<string, Column>,
+    to = next.cols as Record<string, Column>;
   const widths = Object.keys(from).map((c) => [c, from[c].length / t.alive.length] as const);
   let j = 0;
-  for (let id = 0; id < n;) {
-    if (!keep[id]) { id++; continue; }
+  for (let id = 0; id < n; ) {
+    if (!keep[id]) {
+      id++;
+      continue;
+    }
     let end = id;
-    while (end < n && keep[end]) { row[end] = j + end - id; end++; }
+    while (end < n && keep[end]) {
+      row[end] = j + end - id;
+      end++;
+    }
     for (const [c, w] of widths) to[c].set(from[c].subarray(id * w, end * w) as never, j * w);
-    j += end - id; id = end;
+    j += end - id;
+    id = end;
   }
-  next.size = stay; next.alive.fill(1, 0, stay);
+  next.size = stay;
+  next.alive.fill(1, 0, stay);
   // everything that names a row names the new one
   const re = (id: number) => (id >= 0 && id < n ? row[id] : -1);
-  for (let f = 0; f < s.family.size; f++) { F.man[f] = re(F.man[f]); F.woman[f] = re(F.woman[f]); }
+  for (let f = 0; f < s.family.size; f++) {
+    F.man[f] = re(F.man[f]);
+    F.woman[f] = re(F.woman[f]);
+  }
   const owner = s.firm.cols.owner;
   for (let f = 0; f < s.firm.size; f++) owner[f] = re(owner[f]);
   const holder = s.realm.cols.holder;
@@ -151,7 +207,8 @@ export function archiveDead(s: WorldState): ArchivedPersons | null {
   s.archive.push(year);
   const out: ArchivedPersons = { day: s.day, persons: gone, cols: A };
   const box = outbox.get(s);
-  if (box) box.push(out); else outbox.set(s, [out]);
+  if (box) box.push(out);
+  else outbox.set(s, [out]);
   return out;
 }
 
@@ -163,11 +220,14 @@ export function yearsWith(s: WorldState, uid: number): ArchiveYear[] {
 /** The place of `uid` among the persons of an archived year, −1 where it is not there. */
 export function indexIn(a: ArchivedPersons, uid: number): number {
   const U = a.cols.uid;
-  let lo = 0, hi = a.persons - 1;
+  let lo = 0,
+    hi = a.persons - 1;
   while (lo <= hi) {
-    const m = (lo + hi) >> 1, u = U[m];
+    const m = (lo + hi) >> 1,
+      u = U[m];
     if (u === uid) return m;
-    if (u < uid) lo = m + 1; else hi = m - 1;
+    if (u < uid) lo = m + 1;
+    else hi = m - 1;
   }
   return -1;
 }
@@ -177,13 +237,15 @@ const MAGIC = 0x53434131; // "SCA1"
 export const encodeArchived = (a: ArchivedPersons): Uint8Array => encodeData(MAGIC, a);
 export function decodeArchived(bytes: Uint8Array): ArchivedPersons {
   const a = decodeData(MAGIC, bytes) as ArchivedPersons;
-  if (!a || typeof a.day !== 'number' || !a.cols || a.cols.uid.length !== a.persons) throw new Error('not a year of the archive');
+  if (!a || typeof a.day !== 'number' || !a.cols || a.cols.uid.length !== a.persons)
+    throw new Error('not a year of the archive');
   return a;
 }
 
 /** On the first day of every year, before the deaths of the day: the dead whom nothing needs go to the archive. */
 export const archive: System = {
   id: 'archive',
-  run(s, _w, t) { if (t.newYear) archiveDead(s); },
+  run(s, _w, t) {
+    if (t.newYear) archiveDead(s);
+  },
 };
-

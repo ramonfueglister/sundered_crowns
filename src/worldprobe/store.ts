@@ -15,12 +15,17 @@ export const RAW = '.raw';
 export const nameOf = (build: string) => build.replace(/[^\w.-]/g, '_');
 
 /** The folder of a build's pieces; null where the browser has no such file system (or does not let the page at it). */
-export async function folderOf(build: string, others?: (all: FileSystemDirectoryHandle) => Promise<void>): Promise<FileSystemDirectoryHandle | null> {
+export async function folderOf(
+  build: string,
+  others?: (all: FileSystemDirectoryHandle) => Promise<void>,
+): Promise<FileSystemDirectoryHandle | null> {
   try {
     const all = await (await navigator.storage.getDirectory()).getDirectoryHandle(STORE, { create: true });
     await others?.(all);
     return await all.getDirectoryHandle(nameOf(build), { create: true });
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 /** The bytes of a kept piece, unzipped; null where there is none, or it is being written, or it cannot be read. */
@@ -28,8 +33,15 @@ export async function kept(folder: FileSystemDirectoryHandle, name: string): Pro
   try {
     const file = await (await folder.getFileHandle(name)).getFile();
     return await new Response(file.stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
-  } catch { /* not zipped yet, or the zipped file is being written: its unzipped file is there until that is whole */ }
-  try { return await (await (await folder.getFileHandle(name + RAW)).getFile()).arrayBuffer(); } catch { return null; }
+  } catch {
+    /* not zipped yet, or the zipped file is being written: its unzipped file is there until that is whole */
+  }
+  try {
+    return await (await (await folder.getFileHandle(name + RAW)).getFile()).arrayBuffer();
+  } catch {
+    return null;
+  }
 }
 
-export const zipped = (bytes: ArrayBuffer): Promise<ArrayBuffer> => new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer();
+export const zipped = (bytes: ArrayBuffer): Promise<ArrayBuffer> =>
+  new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer();

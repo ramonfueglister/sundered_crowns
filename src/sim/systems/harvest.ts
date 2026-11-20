@@ -23,7 +23,7 @@ import { residents } from './hamlets';
 import { ofTime, toHeads } from '../scale';
 
 /** α, the share of land: Bouscasse, Nakamura, Steinsson (2025), Quarterly Journal of Economics 140(2), p. 847. */
-export const LAND_SHARE = 0.70;
+export const LAND_SHARE = 0.7;
 
 /** Share of the people who live from agriculture: Allen (2000), England 74 % around 1500, as cited by Crafts and
  *  Harley (2002), p. 2. While the share is the same everywhere it cancels out of L_i / L_E. */
@@ -48,22 +48,31 @@ export const ENGLAND_HARVEST = ENGLAND_1300.kcalPerHeadDay * ENGLAND_1300.people
  *  `labour` people. `englandLand` is T_E (World.landEngland). */
 export function harvestKcal(soil: number, labour: number, englandLand: number, landShare = LAND_SHARE): number {
   if (!(soil > 0) || !(labour > 0)) return 0; // also covers places without data (NaN)
-  return ENGLAND_HARVEST * Math.pow(soil / englandLand, landShare) * Math.pow(labour / farmers(ENGLAND_1300.people), 1 - landShare);
+  return (
+    ENGLAND_HARVEST *
+    Math.pow(soil / englandLand, landShare) *
+    Math.pow(labour / farmers(ENGLAND_1300.people), 1 - landShare)
+  );
 }
 
 /** Kilocalories per head and day that a year's harvest gives the people of a place. */
-export const kcalPerHeadDay = (kcal: number, people: number): number => (people > 0 ? kcal / people / DAYS_PER_YEAR : 0);
+export const kcalPerHeadDay = (kcal: number, people: number): number =>
+  people > 0 ? kcal / people / DAYS_PER_YEAR : 0;
 
 /** Brings in the harvest of every place from its arable and the persons of its hamlets, who live from agriculture.
  *  The rule is fitted in people of the time; the harvest is what the people of the world have (src/sim/scale.ts), so
  *  a person gets as many kilocalories a day as a person of the time. */
 export function bringInHarvest(s: WorldState, w: World): void {
-  const h = s.place.harvest, arable = s.place.arable, { farmers: L } = residents(s);
+  const h = s.place.harvest,
+    arable = s.place.arable,
+    { farmers: L } = residents(s);
   for (let i = 0; i < h.length; i++) h[i] = toHeads(harvestKcal(soilOf(w, i, arable[i]), ofTime(L[i]), w.landEngland));
 }
 
 /** One harvest a year, on the first day of the year. */
 export const harvest: System = {
   id: 'harvest',
-  run(s, w, t) { if (t.newYear) bringInHarvest(s, w); },
+  run(s, w, t) {
+    if (t.newYear) bringInHarvest(s, w);
+  },
 };

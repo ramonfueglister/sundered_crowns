@@ -12,21 +12,49 @@ export const UPSAMPLE_REACH = 0.25;
  */
 export const LOOK = {
   distance: 3000,
-  sun: RIG.sun as number, sunElevation: RIG.sunElevation, sunTurn: RIG.sunTurn, sunColor: 0xffe9c8,
-  side: RIG.side as number, sideColor: 0xfff0dc,
-  sky: RIG.sky as number, skyColor: 0xa8c4ff, bounce: RIG.bounce as number, bounceColor: 0xffe2c0, fill: RIG.fill as number, fillColor: 0xffe0c4,
-  mirror: 0.38, mirrorTint: 0x73c0cc, mirrorBlur: 0.003,
-  creaseReach: CREASES.reach as number, creaseDepth: CREASES.depth as number, creaseColor: CREASES.colour as number,
-  focusRange: 150, blur: 2.6,
+  sun: RIG.sun as number,
+  sunElevation: RIG.sunElevation,
+  sunTurn: RIG.sunTurn,
+  sunColor: 0xffe9c8,
+  side: RIG.side as number,
+  sideColor: 0xfff0dc,
+  sky: RIG.sky as number,
+  skyColor: 0xa8c4ff,
+  bounce: RIG.bounce as number,
+  bounceColor: 0xffe2c0,
+  fill: RIG.fill as number,
+  fillColor: 0xffe0c4,
+  mirror: 0.38,
+  mirrorTint: 0x73c0cc,
+  mirrorBlur: 0.003,
+  creaseReach: CREASES.reach as number,
+  creaseDepth: CREASES.depth as number,
+  creaseColor: CREASES.colour as number,
+  focusRange: 150,
+  blur: 2.6,
 };
 
 /** The strengths and colours of the light that a page may set for itself. */
-export type Light = Pick<typeof LOOK, 'sun' | 'sunColor' | 'side' | 'sky' | 'skyColor' | 'bounce' | 'fill' | 'mirror' | 'mirrorTint'>;
+export type Light = Pick<
+  typeof LOOK,
+  'sun' | 'sunColor' | 'side' | 'sky' | 'skyColor' | 'bounce' | 'fill' | 'mirror' | 'mirrorTint'
+>;
 /**
  * The light of the near view: softer than the far view's, so that the shaded sides keep about two thirds of the sunlit
  * ones, as in the reference class image of the near view; and the softness of its cast shadows (the look's is 2).
  */
-export const NEAR_LIGHT: Light = { sun: 1.05, sunColor: 0xfff2e4, side: 0.7, sky: 0.4, skyColor: 0xc8d4f0, bounce: 0.26, fill: 0.26, mirror: 0.3, mirrorTint: 0x1898a8 }, NEAR_SHADOW = 6;
+export const NEAR_LIGHT: Light = {
+    sun: 1.05,
+    sunColor: 0xfff2e4,
+    side: 0.7,
+    sky: 0.4,
+    skyColor: 0xc8d4f0,
+    bounce: 0.26,
+    fill: 0.26,
+    mirror: 0.3,
+    mirrorTint: 0x1898a8,
+  },
+  NEAR_SHADOW = 6;
 export const FAR_SHADOW = 2;
 /** how the picture's light is taken (see the curve before the map's paper below) */
 export const TONE = { way: 'agx', exposure: 1.15, saturation: 1.3 };

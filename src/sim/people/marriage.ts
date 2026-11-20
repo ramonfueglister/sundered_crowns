@@ -33,16 +33,21 @@ export const SEX_RATIO_AT_BIRTH = 1.05;
 
 /** The curve of Coale and McNeil as the program has it: the weight of the age x among the brides. */
 export function coaleMcNeil(x: number): number {
-  const k = (BRIDE_AGE.mean - BRIDE_AGE.min) / 11.36, z = x - BRIDE_AGE.min - 6.06 * k;
+  const k = (BRIDE_AGE.mean - BRIDE_AGE.min) / 11.36,
+    z = x - BRIDE_AGE.min - 6.06 * k;
   return Math.exp((-0.174 / k) * z - Math.exp((-0.288 / k) * z));
 }
 /** The share of the brides at each whole year of age (0 outside BRIDE_YEARS), and its running sum. */
 export const BRIDES: { share: Float64Array; cdf: Float64Array } = (() => {
-  const share = new Float64Array(BRIDE_YEARS[1] + 1), cdf = new Float64Array(BRIDE_YEARS[1] + 1);
+  const share = new Float64Array(BRIDE_YEARS[1] + 1),
+    cdf = new Float64Array(BRIDE_YEARS[1] + 1);
   let sum = 0;
   for (let a = BRIDE_YEARS[0]; a <= BRIDE_YEARS[1]; a++) sum += share[a] = coaleMcNeil(a);
   let run = 0;
-  for (let a = 0; a <= BRIDE_YEARS[1]; a++) { share[a] /= sum; cdf[a] = run += share[a]; }
+  for (let a = 0; a <= BRIDE_YEARS[1]; a++) {
+    share[a] /= sum;
+    cdf[a] = run += share[a];
+  }
   return { share, cdf };
 })();
 /** The age of a bride for the draw u in [0, 1): a year of the curve and a place within the year. */
@@ -55,21 +60,26 @@ export function brideAge(u: number): number {
 
 /** How fertile a wife of the age a is against her most fertile (the program: 1 − e^(4.6·((a − 15)/30 − 1)), nothing
  *  from 45 on). */
-export const fertility = (a: number): number => (a < 15 || a >= FERTILE_TO ? 0 : 1 - Math.exp(4.6 * ((a - 15) / (FERTILE_TO - 15) - 1)));
+export const fertility = (a: number): number =>
+  a < 15 || a >= FERTILE_TO ? 0 : 1 - Math.exp(4.6 * ((a - 15) / (FERTILE_TO - 15) - 1));
 
 /** Years until the next birth of a wife of the age `age`, for the draw u in [0, 1); Infinity when she bears no more.
  *  The births of a wife come at the rate fertility(a) / BIRTH_INTERVAL a year. `pregnancy`: the first nine months
  *  are free of births and the rate after them is as much higher (after a birth or a wedding); without it the plain
  *  rate from today (a wife of the founding, who is somewhere between two births). */
 export function yearsToBirth(age: number, u: number, pregnancy = true): number {
-  let need = -Math.log(1 - u), t = pregnancy ? PREGNANCY : 0;
+  let need = -Math.log(1 - u),
+    t = pregnancy ? PREGNANCY : 0;
   for (;;) {
     const a = age + t;
     if (a >= FERTILE_TO) return Infinity;
-    const f = fertility(a), mean = BIRTH_INTERVAL / f - (pregnancy ? PREGNANCY : 0), rate = 1 / mean;
+    const f = fertility(a),
+      mean = BIRTH_INTERVAL / f - (pregnancy ? PREGNANCY : 0),
+      rate = 1 / mean;
     const step = Math.min(1 / 12, FERTILE_TO - a); // the rate is taken as constant over a month
     if (rate * step >= need) return t + need / rate;
-    need -= rate * step; t += step;
+    need -= rate * step;
+    t += step;
   }
 }
 
@@ -78,11 +88,18 @@ export function yearsToBirth(age: number, u: number, pregnancy = true): number {
  *  curve of the brides), over the women of that age of the stationary population, with HOUSEHOLD persons a
  *  household. */
 export function housewives(): Float64Array {
-  const l = lifeTable(), L = yearsLived(), out = new Float64Array(120), rr = new Float64Array(120);
-  let sumRR = 0, sumL = 0;
-  for (let a = BRIDE_YEARS[0]; a < 120; a++) { rr[a] = (l[a + 1] / l[a] || 0) * rr[a - 1] + (a <= BRIDE_YEARS[1] ? coaleMcNeil(a) : 0); sumRR += rr[a]; }
+  const l = lifeTable(),
+    L = yearsLived(),
+    out = new Float64Array(120),
+    rr = new Float64Array(120);
+  let sumRR = 0,
+    sumL = 0;
+  for (let a = BRIDE_YEARS[0]; a < 120; a++) {
+    rr[a] = (l[a + 1] / l[a] || 0) * rr[a - 1] + (a <= BRIDE_YEARS[1] ? coaleMcNeil(a) : 0);
+    sumRR += rr[a];
+  }
   for (let a = 0; a < 120; a++) sumL += L[a];
   const women = 1 / (1 + SEX_RATIO_AT_BIRTH);
-  for (let a = BRIDE_YEARS[0]; a < 120; a++) out[a] = Math.min(1, (rr[a] / sumRR / HOUSEHOLD) / (women * L[a] / sumL));
+  for (let a = BRIDE_YEARS[0]; a < 120; a++) out[a] = Math.min(1, rr[a] / sumRR / HOUSEHOLD / ((women * L[a]) / sumL));
   return out;
 }

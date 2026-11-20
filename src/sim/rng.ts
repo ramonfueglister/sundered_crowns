@@ -24,15 +24,30 @@ export function nextU32(s: number[]): number {
   s[3] = rotl(s[3], 11);
   return r;
 }
-function rotl(x: number, k: number) { return ((x << k) | (x >>> (32 - k))) >>> 0; }
+function rotl(x: number, k: number) {
+  return ((x << k) | (x >>> (32 - k))) >>> 0;
+}
 /** uniform in [0,1) */
-export function rand(s: number[]): number { return nextU32(s) / 4294967296; }
-export function randInt(s: number[], n: number): number { return Math.floor(rand(s) * n); }
-export function chance(s: number[], p: number): boolean { return rand(s) < p; }
-export function pick<T>(s: number[], arr: T[]): T { return arr[randInt(s, arr.length)]; }
+export function rand(s: number[]): number {
+  return nextU32(s) / 4294967296;
+}
+export function randInt(s: number[], n: number): number {
+  return Math.floor(rand(s) * n);
+}
+export function chance(s: number[], p: number): boolean {
+  return rand(s) < p;
+}
+export function pick<T>(s: number[], arr: T[]): T {
+  return arr[randInt(s, arr.length)];
+}
 /** Deterministic hash of integers -> [0,1), for stateless per-entity randomness. */
 export function hash01(a: number, b = 0, c = 0): number {
-  let h = Math.imul(a ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul(b + 0x7f4a7c15, 0xc2b2ae35) ^ Math.imul(c + 0x165667b1, 0x27d4eb2f);
-  h = Math.imul(h ^ (h >>> 15), 0x2c1b3c6d); h = Math.imul(h ^ (h >>> 12), 0x297a2d39); h ^= h >>> 15;
+  let h =
+    Math.imul(a ^ 0x9e3779b9, 0x85ebca6b) ^
+    Math.imul(b + 0x7f4a7c15, 0xc2b2ae35) ^
+    Math.imul(c + 0x165667b1, 0x27d4eb2f);
+  h = Math.imul(h ^ (h >>> 15), 0x2c1b3c6d);
+  h = Math.imul(h ^ (h >>> 12), 0x297a2d39);
+  h ^= h >>> 15;
   return (h >>> 0) / 4294967296;
 }

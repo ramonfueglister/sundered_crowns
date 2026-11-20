@@ -23,7 +23,16 @@ import { giveGenes } from './people';
 import C1291 from '../content/communities_1291.json';
 import { presentPersons } from '../people/living';
 
-export interface Community { town: string; culture: string; faith: string; people?: number; families?: number; count: string; year: number; source: string }
+export interface Community {
+  town: string;
+  culture: string;
+  faith: string;
+  people?: number;
+  families?: number;
+  count: string;
+  year: number;
+  source: string;
+}
 
 const COMMUNITIES: ReadonlyMap<number, readonly Community[]> = new Map([[1291, C1291.communities as Community[]]]);
 
@@ -42,11 +51,14 @@ export const communitiesOf = (year: number): readonly Community[] => COMMUNITIES
  *  communities, and with their culture their genes. A new world does it before the borders, whose realms take theirs from their capitals; the rulers take
  *  theirs from the realm they enter the world in (src/sim/systems/rulers.ts). */
 export function foundPersonCultures(s: WorldState, setup: SetupState): void {
-  const P = s.person.cols, F = s.family.cols, ruler = new Set(s.named.map((n) => n.person));
+  const P = s.person.cols,
+    F = s.family.cols,
+    ruler = new Set(s.named.map((n) => n.person));
   for (let id = 0; id < s.person.size; id++) {
     if (!s.person.alive[id] || ruler.has(id)) continue;
     const place = F.place[P.family[id]];
-    P.culture[id] = cultureIndex(setup.culture[place]); P.faith[id] = faithIndex(setup.faith[place]);
+    P.culture[id] = cultureIndex(setup.culture[place]);
+    P.faith[id] = faithIndex(setup.faith[place]);
   }
   setCommunities(s);
   giveGenes(s); // a founder's looks are those of the people they come from (src/sim/people/pools.ts)
@@ -54,14 +66,21 @@ export function foundPersonCultures(s: WorldState, setup: SetupState): void {
 
 /** A ruler takes the culture and faith of the realm `realm` (none known: those of the setup's unknown). */
 export function setRulerCulture(s: WorldState, id: number, realm: number): void {
-  const P = s.person.cols, R = s.realm.cols;
-  if (realm >= 0 && realm < s.realm.size) { P.culture[id] = R.culture[realm]; P.faith[id] = R.faith[realm]; }
-  else { P.culture[id] = cultureIndex(null); P.faith[id] = faithIndex(null); }
+  const P = s.person.cols,
+    R = s.realm.cols;
+  if (realm >= 0 && realm < s.realm.size) {
+    P.culture[id] = R.culture[realm];
+    P.faith[id] = R.faith[realm];
+  } else {
+    P.culture[id] = cultureIndex(null);
+    P.faith[id] = faithIndex(null);
+  }
 }
 
 /** The counted communities of the world's start year, as whole families of their towns. */
 export function setCommunities(s: WorldState): void {
-  const P = s.person.cols, F = s.family.cols;
+  const P = s.person.cols,
+    F = s.family.cols;
   const ruler = new Set(s.named.map((n) => n.person));
   for (const c of communitiesOf(s.startYear)) {
     const city = citiesOf(s.startYear).find((x) => x.name === c.town);
@@ -71,26 +90,49 @@ export function setCommunities(s: WorldState): void {
       if (P.died[id] !== ALIVE) continue;
       const f = P.family[id];
       if (F.place[f] !== city.place) continue;
-      const m = members.get(f) ?? []; m.push(id); members.set(f, m);
+      const m = members.get(f) ?? [];
+      m.push(id);
+      members.set(f, m);
     }
     for (const [f, m] of members) if (m.some((id) => ruler.has(id))) members.delete(f);
-    const order = [...members.keys()].sort((a, b) => hash01(s.seed >>> 0, a, 7001) - hash01(s.seed >>> 0, b, 7001) || a - b);
-    const culture = cultureIndex(c.culture), faith = faithIndex(c.faith);
-    const take = (f: number) => { for (const id of members.get(f)!) { P.culture[id] = culture; P.faith[id] = faith; } };
-    if (c.families !== undefined) { order.slice(0, c.families).forEach(take); continue; }
+    const order = [...members.keys()].sort(
+      (a, b) => hash01(s.seed >>> 0, a, 7001) - hash01(s.seed >>> 0, b, 7001) || a - b,
+    );
+    const culture = cultureIndex(c.culture),
+      faith = faithIndex(c.faith);
+    const take = (f: number) => {
+      for (const id of members.get(f)!) {
+        P.culture[id] = culture;
+        P.faith[id] = faith;
+      }
+    };
+    if (c.families !== undefined) {
+      order.slice(0, c.families).forEach(take);
+      continue;
+    }
     let left = Math.round((c.people ?? 0) / SCALE);
     for (const f of order) {
       if (left <= 0) break;
       const n = members.get(f)!.length;
-      if (n <= left) { take(f); left -= n; }
+      if (n <= left) {
+        take(f);
+        left -= n;
+      }
     }
   }
 }
 
 /** The living persons of every place by culture and by faith: index of the culture or faith → persons (without the
  *  persons of `without`). */
-export function placeCultures(s: WorldState, place: number, without?: ReadonlySet<number>): { culture: Map<number, number>; faith: Map<number, number>; persons: number } {
-  const P = s.person.cols, F = s.family.cols, culture = new Map<number, number>(), faith = new Map<number, number>();
+export function placeCultures(
+  s: WorldState,
+  place: number,
+  without?: ReadonlySet<number>,
+): { culture: Map<number, number>; faith: Map<number, number>; persons: number } {
+  const P = s.person.cols,
+    F = s.family.cols,
+    culture = new Map<number, number>(),
+    faith = new Map<number, number>();
   const known = P.culture !== undefined; // a world from before state 19 counts only the persons
   let persons = 0;
   for (const id of presentPersons(s)) {
@@ -105,7 +147,12 @@ export function placeCultures(s: WorldState, place: number, without?: ReadonlySe
 
 /** The key with the most persons (the lowest index on a tie), −1 for none. */
 export function majority(m: Map<number, number>): number {
-  let best = -1, most = 0;
-  for (const [k, n] of m) if (n > most || (n === most && k < best)) { best = k; most = n; }
+  let best = -1,
+    most = 0;
+  for (const [k, n] of m)
+    if (n > most || (n === most && k < best)) {
+      best = k;
+      most = n;
+    }
   return best;
 }

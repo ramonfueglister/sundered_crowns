@@ -28,7 +28,8 @@ import { MOVE_FACTOR_TOP } from './traits';
 export const MOVING_AGE: readonly [number, number] = [10, 60];
 /** From this age a child at home counts as grown (Dribe's two tables: 10 to 17, 17 to 30); at `HOME_UNTIL` the
  *  tables of those who live with their parents end. */
-export const GROWN = 17, HOME_UNTIL = 30;
+export const GROWN = 17,
+  HOME_UNTIL = 30;
 /** From this age a person who lives away from home changes places as a servant (Dribe & Lundh: servants of 15 on). */
 export const SERVICE_FROM = 15;
 
@@ -38,14 +39,41 @@ const LEFT = {
   young: { men: 407 / 6190, women: 382 / 6348 },
   grown: { men: 327 / 2874, women: 505 / 3313 },
 } as const;
-const STANDING = { // [share, relative risk]: semi-landless, landless, tenants of nobles; the rest is the reference
-  young: { men: [[0.18, 4.64], [0.44, 3.43], [0.17, 1.07]], women: [[0.17, 9.17], [0.48, 8.46], [0.17, 1.81]] },
-  grown: { men: [[0.15, 1.45], [0.35, 1.43], [0.19, 1.15]], women: [[0.18, 2.49], [0.42, 2.06], [0.16, 1.11]] },
+const STANDING = {
+  // [share, relative risk]: semi-landless, landless, tenants of nobles; the rest is the reference
+  young: {
+    men: [
+      [0.18, 4.64],
+      [0.44, 3.43],
+      [0.17, 1.07],
+    ],
+    women: [
+      [0.17, 9.17],
+      [0.48, 8.46],
+      [0.17, 1.81],
+    ],
+  },
+  grown: {
+    men: [
+      [0.15, 1.45],
+      [0.35, 1.43],
+      [0.19, 1.15],
+    ],
+    women: [
+      [0.18, 2.49],
+      [0.42, 2.06],
+      [0.16, 1.11],
+    ],
+  },
 } as const;
 /** The rate a year of the reference group and of the landless: the rate of all, divided by the mean relative risk. */
 function split(rate: number, groups: readonly (readonly [number, number])[]): { landed: number; landless: number } {
-  let share = 0, mean = 0;
-  for (const [s, r] of groups) { share += s; mean += s * r; }
+  let share = 0,
+    mean = 0;
+  for (const [s, r] of groups) {
+    share += s;
+    mean += s * r;
+  }
   const landed = rate / (mean + (1 - share));
   return { landed, landless: landed * groups[1][1] };
 }
@@ -53,8 +81,14 @@ function split(rate: number, groups: readonly (readonly [number, number])[]): { 
  *  sons of 10 to 16: 2.4 % and 8.2 %, daughters 1.0 % and 8.3 %; sons of 17 to 29: 9.1 % and 13.1 %, daughters
  *  8.8 % and 18.1 %. `all`: where no place has an economy, nobody owns a firm and the rate of all families holds. */
 export const LEAVES_HOME = {
-  young: { men: { ...split(LEFT.young.men, STANDING.young.men), all: LEFT.young.men }, women: { ...split(LEFT.young.women, STANDING.young.women), all: LEFT.young.women } },
-  grown: { men: { ...split(LEFT.grown.men, STANDING.grown.men), all: LEFT.grown.men }, women: { ...split(LEFT.grown.women, STANDING.grown.women), all: LEFT.grown.women } },
+  young: {
+    men: { ...split(LEFT.young.men, STANDING.young.men), all: LEFT.young.men },
+    women: { ...split(LEFT.young.women, STANDING.young.women), all: LEFT.young.women },
+  },
+  grown: {
+    men: { ...split(LEFT.grown.men, STANDING.grown.men), all: LEFT.grown.men },
+    women: { ...split(LEFT.grown.women, STANDING.grown.women), all: LEFT.grown.women },
+  },
 } as const;
 /** A dead parent, against both alive (Dribe 2002, tables 3 and 4, model I; 1 where the table has no clear effect). */
 export const ORPHAN = {
@@ -69,12 +103,14 @@ export const SERVICE = {
 
 /** What the rate of a person hangs on. */
 export interface Mover {
-  age: number; man: boolean;
+  age: number;
+  man: boolean;
   /** lives in the place the person comes from */
   home: boolean;
   /** somebody of the family owns a firm; undefined where the world has no economies */
   landed: boolean | undefined;
-  fatherDead: boolean; motherDead: boolean;
+  fatherDead: boolean;
+  motherDead: boolean;
 }
 /** Changes of place a year of an unmarried person without a household, near and far: leaving home by Dribe, and
  *  from one place of service to the next by Dribe & Lundh. 0 outside the ages of the tables. */
@@ -83,9 +119,13 @@ export function movesAYear(m: Mover): number {
   if (m.age < MOVING_AGE[0] || m.age >= MOVING_AGE[1]) return 0;
   if (!m.home) return m.age < SERVICE_FROM ? 0 : m.age < HOME_UNTIL ? SERVICE[sex].young : SERVICE[sex].later;
   if (m.age >= HOME_UNTIL) return 0;
-  const stage = m.age < GROWN ? 'young' : 'grown', r = LEAVES_HOME[stage][sex];
-  return (m.landed === undefined ? r.all : m.landed ? r.landed : r.landless) *
-    (m.fatherDead ? ORPHAN.father[stage][sex] : 1) * (m.motherDead ? ORPHAN.mother[stage][sex] : 1);
+  const stage = m.age < GROWN ? 'young' : 'grown',
+    r = LEAVES_HOME[stage][sex];
+  return (
+    (m.landed === undefined ? r.all : m.landed ? r.landed : r.landless) *
+    (m.fatherDead ? ORPHAN.father[stage][sex] : 1) *
+    (m.motherDead ? ORPHAN.mother[stage][sex] : 1)
+  );
 }
 
 /** The share of the changes of place that go further than 16 km (Dribe & Lundh 2002, table 3: towns of the region,
@@ -94,11 +134,19 @@ export function movesAYear(m: Mover): number {
 export const FAR_SHARE = 0.09;
 /** How far a far move goes, in km, each band with its share (Raven 2024, table 2: 5, 4 and 2 of the 11 who went
  *  further than ten miles). */
-export const BANDS: readonly (readonly [from: number, to: number, share: number])[] = [[16, 32, 5 / 11], [32, 64, 4 / 11], [64, 115, 2 / 11]];
+export const BANDS: readonly (readonly [from: number, to: number, share: number])[] = [
+  [16, 32, 5 / 11],
+  [32, 64, 4 / 11],
+  [64, 115, 2 / 11],
+];
 /** The band of the draw `u` in [0, 1). */
 export function bandOf(u: number): number {
-  let b = 0, x = u;
-  while (b < BANDS.length - 1 && x >= BANDS[b][2]) { x -= BANDS[b][2]; b++; }
+  let b = 0,
+    x = u;
+  while (b < BANDS.length - 1 && x >= BANDS[b][2]) {
+    x -= BANDS[b][2];
+    b++;
+  }
   return b;
 }
 
