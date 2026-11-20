@@ -6269,6 +6269,87 @@ Pictures (project files, `portraits/`): `runde142_vorher_nachher.png` (three chi
 from the front and turned, round 141 above, now below), `runde142_alle_kinder.png` (the sample's twelve
 children of two to eight, round 141 above, now below).
 
+**Round 143: no points and no stains on a gown's chest** (2026-11-20). The whole sample beside the reference
+at one size, looking at the figure again: every gown, a man's and a child's as well, had a point on either
+side of the chest and dark patches between and under them, where the reference's cloth lies in one smooth
+plane over a chest. Two causes, neither the one round 142 named (it had the points for the bust of the base
+in the gown's own shape).
+
+1. The points. With the gown's folds left out altogether the points stood as before; with the gown not held
+   off the body they were gone, and the linen and the skin came through the gown there. The body's breast is
+   a coarse pyramid with its tip as one corner (drawn bare from the side: on a boy of 8 and a man as well as
+   on a woman), and the calmed gown, which is evened out, cuts through it. The hold then set each place of the
+   gown 7 to 9 mm off its own body triangle, along that triangle's direction: round a pyramid's tip each place
+   another way.
+2. The patches. The shade in a gown's folds came from a file (`cloth_<name>_ao.txt`): how far each place of
+   the gown as it was draped lies under the gown's own shape evened 30 times, 9 % darker for each millimetre.
+   The gown was draped on the base, which has a bust: its shade lay between two breasts on everyone. And the
+   measure takes a broad shallow dip for a fold of its depth: 3 mm under the evened shape is 27 % darker,
+   whether the dip is 1 cm broad or 8.
+
+What is changed (`portrait/src/real_look.rs` `calm`, `fold_shade`; no file of the pipeline, no image, nothing
+on the stage).
+- Below the neck the cloth round a place that is held off goes with it, as a tent: the ways the places have
+  to go are evened out over the cloth as the shift is (24 times, each place half its own way and half the
+  mean of its neighbours'), and a place that would then stand nearer its body triangle than it has to goes
+  the rest by itself. For the gown, the linen under it (which still goes no further off the skin than the
+  gown's least) and the cloth over the gown; on the head the hold is round 140's.
+- A calmed garment's shade is read off the garment as it lies on the person, by the pipeline's measure with
+  its numbers (`FOLD_EVEN` 30, `FOLD_SHADE` 9), and a place less than 3 mm under or over its evened shape has
+  none (`FOLD_FLAT`). The file's column now says only that the garment has a shade; the linen under the gown
+  has none as before, and Apoleia's garments, which are not calmed, keep the file's.
+
+Measured (`portrait/tests/bust.rs`, round 142's 48 people of 2 to 50, as much of the gown as the picture
+shows; the middle one of eight, round 142 against now).
+
+| age | edges turned over 90 degrees, % | corners of the gown's front darker than 0.8 of the middle one, % | the same of the whole gown, % |
+|---|---|---|---|
+| 2 | 2.44, now 1.83 | 5.3, now 0.5 | 8.3, now 0.8 |
+| 5 | 2.19, now 1.75 | 4.7, now 0.5 | 8.6, now 1.0 |
+| 8 | 1.87, now 1.63 | 4.9, now 0.6 | 9.5, now 1.3 |
+| 13 | 1.33, now 1.23 | 4.6, now 1.7 | 8.8, now 2.6 |
+| 24 | 0.90, now 0.90 | 2.2, now 0.8 | 8.5, now 3.0 |
+| 50 | 1.01, now 0.90 | 1.4, now 0.2 | 8.7, now 3.5 |
+
+A corner stands as far off the mean of its neighbours as it did or a little less (8.61, 8.93 and 8.95
+thousandths of the head's height at 2, 5 and 8 for 8.63, 9.04 and 9.04; 8.61 and 8.79 at 24 and 50 for 8.57
+and 8.79). Built ten times each, three times over and that twice, four people took 47 to 66, 143 to 210,
+229 to 284 and 48 to 58 ms a portrait, and 49 to 52, 160 to 226, 232 to 276 and 52 to 59 before, on this
+machine: no difference to be read from it, though each calmed garment's shape is evened 30 times more for
+its shade and its way off the body 24 times.
+
+Tried and not kept. (1) The way evened out as a length, each place along its own body triangle's direction
+(the first way built): 1.97, 1.69 and 1.64 % of the edges turned over at 2, 5 and 8, but a corner stood
+further off its neighbours than before (8.91, 9.27 and 9.26 thousandths): neighbours went apart. (2) Every
+place held off along the cloth's own direction, as on the head: a spike of cloth stood out behind a small
+child's sleeve, where the cloth in the armpit folds over itself and has no direction to speak of. (3) The way
+evened out 96 times for 24: nothing more to see on the chest, and a crease more in the armpit. (4) The shade
+read off the gown as it lies, with no place left out: the picture was the file's, patch for patch (the gown
+has the dips; that the file was of another body was not what showed). (5) The same against the shape evened 8
+times for 30, twice as dark for each millimetre: the same patches. (6) No shade at all: a clean chest and
+nothing in the folds under the arm.
+
+**The gauntlet**: 22 of 22 over the whole sample (read with this round's build), and every line reads
+what it read in rounds 138 to 142 to its last figure: the skin is not touched.
+
+Honest about it. In the picture the gain is small: beside round 142's the chests are cleaner and the points
+softer, not gone. A boy's and a man's gown still shows a mound on either side of the chest, since the body
+under it has one and the gown follows the body; a real gown hangs from the shoulders and the chest's highest
+places and spans what lies between, and nothing here drapes. The gown is the loose sack it was, without belt
+or weight. Of the shade in the folds less is left than the stains that went: a child's gown, whose folds
+round 142 made as small as the child, has hardly any (0.8 % of its corners at two), and the 3 mm are by eye
+on four people, one number for every size of body. The shade is read before the gown is lifted, held, posed
+and sunk, which move it a little. Hoods, veils and wimples go through the same code: their shade is their
+own now and they are not looked at one by one beyond the tests and the sample's wall. Nothing was read for
+this round. PLACEHOLDER: `CLOTH_TENT`, `FOLD_FLAT`.
+
+Tests: `portrait/tests/bust.rs`, one new (the table's third column: under 1.5, 1.5, 1.6, 2.7, 1.6 and 1.0 %,
+and over 1.5 % of a grown person's whole gown still dark), and round 142's bounds drawn in (the children's
+edges turned over under 2.2, 2.1 and 1.9 %, the grown's under 1.0 %). `cargo test --release` as a whole: 112 of 112 in one run.
+`tests/portrait.test.ts` and its neighbour 42 of 42; typecheck and lint pass.
+Pictures (project files, `portraits/`): `runde143_vorher_nachher.png` (a boy of 8, a man, a woman and a child
+of 5, the chest, round 142 above, now below), `runde143_alle.png` (the sample's wall, now).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair

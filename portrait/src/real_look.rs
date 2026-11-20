@@ -428,7 +428,9 @@ fn calm(refs: &[([usize; 3], [f32; 3], [f32; 3])], tris: &[([usize; 3], [[f32; 2
             out[i] = add(out[i], g);
         }
     }
-    (0..nv)
+    // Held off the body: how far each place has to go to stand off its body triangle, along what, and how far it
+    // may go at most
+    let held: Vec<(V3, f32, f32)> = (0..nv)
         .map(|i| {
             let v = calmed[i];
             let (r, w, o) = &refs[i];
@@ -447,20 +449,50 @@ fn calm(refs: &[([usize; 3], [f32; 3], [f32; 3])], tris: &[([usize; 3], [[f32; 2
                 _ => CLOTH_OFF_HEAD,
             };
             let want = (o[0] * k).min(hi).max(lo);
+            // what is worn under the gown stays under it: no further off the skin than the gown's least
+            let most = if layer == Layer::Under { hi - d } else { f32::MAX };
             if want > 0.0 && d < want && layer == Layer::Over && rest[i][1] >= CLOTH_NECK_Y {
                 // (round 140) on the head, along the cloth's own direction: a vertex over an ear is bound to a
                 // triangle of the ear's folds, which faces anywhere, and held off along that the cloth over
                 // the ear was crumpled, with triangles turned over
                 let along = dot(n, norm(out[i]));
-                if along >= CLOTH_ALONG { madd(v, norm(out[i]), (want - d) / along) } else { v }
+                if along >= CLOTH_ALONG { (norm(out[i]), (want - d) / along, most) } else { (n, 0.0, most) }
             } else if want > 0.0 && d < want {
-                madd(v, n, want - d)
-            } else if layer == Layer::Under && d > hi {
-                // what is worn under the gown stays under it: no further off the skin than the gown's least
-                madd(v, n, hi - d)
+                (n, want - d, most)
             } else {
-                v
+                (n, 0.0, most)
             }
+        })
+        .collect();
+    // (Round 143) Below the neck the cloth round a place that is held off goes with it, as a tent: the ways are
+    // evened out over the cloth, each place half its own and half the mean of its neighbours', and a place that
+    // would then stand nearer its body triangle than it has to goes the rest by itself. The body's breast is a
+    // coarse pyramid with the tip as one corner, on a man and a child as well, and the calmed gown cuts through
+    // it: held off place by place, each along its own triangle of the pyramid's sides, the gown had a point on
+    // either side of the chest on everyone, and a crumple between them (tests/bust.rs: fewer of the gown's edges
+    // turned over).
+    let mut way: Vec<V3> = held.iter().map(|h| madd([0.0; 3], h.0, h.1)).collect();
+    for _ in 0..CLOTH_TENT {
+        way = (0..nv)
+            .map(|i| {
+                if nbr[i].is_empty() || rest[i][1] >= CLOTH_NECK_Y {
+                    return way[i];
+                }
+                let mut m = [0f32; 3];
+                for &j in &nbr[i] {
+                    m = add(m, way[j as usize]);
+                }
+                let k = 0.5 / nbr[i].len() as f32;
+                let w: V3 = std::array::from_fn(|q| 0.5 * way[i][q] + m[q] * k);
+                let (n, need, _) = held[i];
+                madd(w, n, (need - dot(w, n)).max(0.0))
+            })
+            .collect();
+    }
+    (0..nv)
+        .map(|i| {
+            let (n, _, most) = held[i];
+            madd(add(calmed[i], way[i]), n, (most - dot(way[i], n)).min(0.0))
         })
         .collect()
 }
@@ -492,8 +524,67 @@ const CLOTH_OFF_HEAD: [f32; 2] = [0.0, 0.05];
 /// (round 140) The least share of the cloth's own direction that lies along its body triangle's for the cloth to
 /// be held off that triangle on the head. PLACEHOLDER, by eye.
 const CLOTH_ALONG: f32 = 0.5;
+/// (round 143) How often the way a calmed garment is held off the body is evened out over the garment. The
+/// calming's number: PLACEHOLDER.
+const CLOTH_TENT: usize = 24;
 /// Below this height (base units) a garment over the gown lies on the gown, above it on the head.
 const CLOTH_NECK_Y: f32 = 5.9;
+
+/// The shade in a garment's folds, read off the garment as it lies on this body (round 143): how far a place lies
+/// under the garment's own evened shape, as `tunic_bind.py` reads it off the garment as it was draped (`AOIT`,
+/// `AO`), and nothing for a place less than `FOLD_FLAT` under or over it. The file's shade was of the gown on the
+/// base, which has a bust: a dark patch between two breasts, on a man and a child as well. And the measure takes a
+/// broad shallow dip for a fold of its depth: 3 mm under the evened shape is 27 % darker, whether the dip is 1 cm
+/// broad or 8, and the calmed gown's chest was stained with them (tests/bust.rs). A hem's roll has no shade.
+fn fold_shade(tris: &[([usize; 3], [[f32; 2]; 3])], vs: &[V3], vn: &[V3]) -> Vec<f32> {
+    let nv = vs.len();
+    let mut nbr: Vec<Vec<u32>> = vec![Vec::new(); nv];
+    for (t, _) in tris {
+        for k in 0..3 {
+            let (i, j) = (t[k], t[(k + 1) % 3]);
+            if !nbr[i].contains(&(j as u32)) {
+                nbr[i].push(j as u32);
+            }
+            if !nbr[j].contains(&(i as u32)) {
+                nbr[j].push(i as u32);
+            }
+        }
+    }
+    let mut even: Vec<V3> = vs.to_vec();
+    for _ in 0..FOLD_EVEN {
+        even = (0..nv)
+            .map(|i| {
+                if nbr[i].is_empty() {
+                    return even[i];
+                }
+                let mut m = [0f32; 3];
+                for &j in &nbr[i] {
+                    m = add(m, even[j as usize]);
+                }
+                let k = 0.5 / nbr[i].len() as f32;
+                std::array::from_fn(|q| 0.5 * even[i][q] + m[q] * k)
+            })
+            .collect();
+    }
+    let mut deep: Vec<f32> = (0..nv).map(|i| dot(sub(vs[i], even[i]), norm(vn[i]))).collect();
+    for _ in 0..2 {
+        deep = (0..nv).map(|i| if nbr[i].is_empty() { deep[i] } else { 0.5 * deep[i] + 0.5 * nbr[i].iter().map(|&j| deep[j as usize]).sum::<f32>() / nbr[i].len() as f32 }).collect();
+    }
+    let mut shade: Vec<f32> = deep.iter().map(|d| (1.0 + FOLD_SHADE * (d.abs() - FOLD_FLAT).max(0.0) * d.signum()).clamp(0.5, 1.1)).collect();
+    for (t, _) in tris.iter().filter(|(_, uv)| uv.iter().all(|c| c[1].abs() <= 0.05)) {
+        for &i in t {
+            shade[i] = 1.0;
+        }
+    }
+    shade
+}
+/// How often the garment's shape is evened out for its folds' shade, and how much darker a place is for each base
+/// unit (10 cm) it lies under that shape: the pipeline's `AOIT` and `AO`.
+const FOLD_EVEN: usize = 30;
+const FOLD_SHADE: f32 = 9.0;
+/// How far under or over its evened shape a place has no shade or light for it, in base units. PLACEHOLDER, by eye
+/// on four people of the sample.
+const FOLD_FLAT: f32 = 0.03;
 
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn mh_cloth(dir: &str, name: &str, pp: &[V3], base: &[V3], color: &dyn Fn(V3) -> Rgb, cells: Option<&dyn Fn(V3) -> [f32; 2]>, layer: Layer, arms: &Arms) -> Option<Surface> {
@@ -565,6 +656,9 @@ pub(crate) fn mh_cloth_as(dir: &str, name: &str, image: &str, pp: &[V3], base: &
     s.tex = Some(if image.is_empty() || crate::real::has(&own) { own } else { crate::real::image(dir, image) });
     // shade in the folds per vertex (name_ao.txt), if there is one
     let ao: Vec<f32> = crate::real::column(&format!("{dir}/{name}_ao.txt"), 1.0);
+    // (round 143) a calmed garment's is read off the garment as it lies on this body; the file's is of the garment
+    // as it was draped, on a body with a bust, and says only that the garment has a shade
+    let ao = if ao.is_empty() || !matches!(layer, Layer::Gown | Layer::Over) { ao } else { fold_shade(&tris, &vs, &vn) };
     // a corner: position, uv, normal, cell coordinates, fold shade
     type Cn = (V3, [f32; 2], V3, [f32; 2], f32);
     let lerp_cn = |a: &Cn, b: &Cn, t: f32| -> Cn {

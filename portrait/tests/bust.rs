@@ -404,6 +404,8 @@ fn a_childs_gown_has_folds_as_large_against_the_child_as_a_grown_ones_and_no_she
     // eight, against 1.02 % at 24; and a corner stood 10.44, 9.96 and 10.18 thousandths of the head's height off
     // the mean of its neighbours, against 8.62 at 24. Now 2.44, 2.19 and 1.87 % (0.90 % at 24), and 8.63, 9.04 and
     // 9.04 thousandths against 8.57.
+    // (Round 143, the way the gown is held off the body evened out over it: 1.83, 1.75 and 1.63 %, 0.90 % at 24 and
+    // at 50, and 8.61, 8.93 and 8.95 thousandths against 8.61. The bounds are drawn in for it.)
     use std::collections::HashMap;
     let Some(h) = head() else { return };
     let ages = [2.0f32, 5.0, 8.0, 13.0, 24.0, 50.0];
@@ -460,10 +462,75 @@ fn a_childs_gown_has_folds_as_large_against_the_child_as_a_grown_ones_and_no_she
         }
     }
     let grown = middle(4, 1).max(middle(5, 1));
-    for (a, most) in [(0, 2.8), (1, 2.5), (2, 2.1)] {
+    for (a, most) in [(0, 2.2), (1, 2.1), (2, 1.9)] {
         assert!(middle(a, 0) < most, "at {}: {:.2} % of the gown's edges turned over", ages[a], middle(a, 0));
         assert!(middle(a, 1) < 1.06 * grown, "at {}: a corner {:.2} off the mean of its neighbours, on the grown {grown:.2}", ages[a], middle(a, 1));
     }
-    // (and the grown are not rougher for it: 1.02 and 1.09 % before)
-    assert!(middle(4, 0) < 1.0 && middle(5, 0) < 1.05, "the grown: {:.2} and {:.2} % of the gown's edges turned over", middle(4, 0), middle(5, 0));
+    // (and the grown are not rougher for it: 1.02 and 1.09 % before round 142)
+    assert!(middle(4, 0) < 1.0 && middle(5, 0) < 1.0, "the grown: {:.2} and {:.2} % of the gown's edges turned over", middle(4, 0), middle(5, 0));
+}
+
+#[test]
+fn a_flat_chest_has_no_stain_on_its_gown() {
+    // Round 143, on round 142's 48 people. Every gown had dark patches on the chest, a man's and a child's as
+    // well. The shade in a gown's folds came from a file: how far each place of the gown as it was draped lay
+    // under the gown's own evened shape. The gown was draped on the base, which has a bust, and the measure takes
+    // a broad shallow dip for a fold of its depth. Of the corners of the gown's front in the picture 5.3 % were
+    // darker than 0.8 of the middle one on the children of two (the middle one of eight people), 4.7 % at five,
+    // 4.9 % at eight, 4.6 % at 13, 2.2 % at 24 and 1.4 % at 50. The shade is now read off the gown as it lies on
+    // the person, and a place less than 3 mm under its evened shape has none: 0.5, 0.5, 0.6, 1.7, 0.8 and 0.2 %.
+    // Of the whole gown's corners 8.3 to 9.5 % were as dark, now 0.8 % on a child of two and 3.0 and 3.5 % on
+    // the grown: the folds that are left keep their shade, and a child's, which are small, hardly have any.
+    use std::collections::HashMap;
+    let Some(h) = head() else { return };
+    let ages = [2.0f32, 5.0, 8.0, 13.0, 24.0, 50.0];
+    let key = |q: V3| -> [i32; 3] { std::array::from_fn(|a| (q[a] * 2000.0).round() as i32) };
+    let mut by_age: Vec<Vec<[f32; 3]>> = vec![Vec::new(); ages.len()];
+    for k in 0..48u32 {
+        let a = (k / 2) as usize % ages.len();
+        let out = build(&h, &person(k, k % 2 == 0, ages[a]), 1);
+        let gown = out.surfaces.iter().find(|s| s.tex.as_deref().is_some_and(|t| t.contains("/cloth_cote."))).unwrap_or_else(|| panic!("person {k}: no gown"));
+        let high = out.top - out.chin;
+        let foot = out.top - FOOT * high.max(0.8) / (out.fill * CLOSE);
+        // (a corner: its place, its direction, the sum of its neighbours' places, their number, its light)
+        let mut corners: HashMap<[i32; 3], (V3, V3, V3, f32, f32)> = HashMap::new();
+        for t in 0..gown.pos.len() / 3 {
+            for e in 0..3 {
+                let (i, j) = (3 * t + e, 3 * t + (e + 1) % 3);
+                for (i, j) in [(i, j), (j, i)] {
+                    let (q, other) = (gown.pos[i], gown.pos[j]);
+                    let light = 0.2126 * gown.col[i][0] + 0.7152 * gown.col[i][1] + 0.0722 * gown.col[i][2];
+                    let c = corners.entry(key(q)).or_insert((q, gown.nrm[i], [0.0; 3], 0.0, light));
+                    (c.2, c.3) = ([c.2[0] + other[0], c.2[1] + other[1], c.2[2] + other[2]], c.3 + 1.0);
+                }
+            }
+        }
+        // the front of the gown in the picture
+        let front: Vec<&(V3, V3, V3, f32, f32)> = corners.values().filter(|c| c.0[1] >= foot && c.1[2] > 0.7 * (c.1[0] * c.1[0] + c.1[1] * c.1[1] + c.1[2] * c.1[2]).sqrt()).collect();
+        assert!(front.len() > 400, "person {k} of {}: {} corners of the gown's front in the picture", ages[a], front.len());
+        // (the whole gown, for what is left of the shade in its folds)
+        let mut all: Vec<f32> = corners.values().map(|c| c.4).collect();
+        all.sort_by(|x, y| x.partial_cmp(y).unwrap());
+        let folds = all.iter().filter(|&&l| l < 0.8 * all[all.len() / 2]).count();
+        let mut lights: Vec<f32> = front.iter().map(|c| c.4).collect();
+        lights.sort_by(|x, y| x.partial_cmp(y).unwrap());
+        let mid = lights[lights.len() / 2];
+        let dark = lights.iter().filter(|&&l| l < 0.8 * mid).count();
+        let very = lights.iter().filter(|&&l| l < 0.65 * mid).count();
+        by_age[a].push([100.0 * folds as f32 / all.len() as f32, 100.0 * dark as f32 / lights.len() as f32, 100.0 * very as f32 / lights.len() as f32]);
+    }
+    let middle = |a: usize, what: usize| -> f32 {
+        let mut v: Vec<f32> = by_age[a].iter().map(|t| t[what]).collect();
+        v.sort_by(|x, y| x.partial_cmp(y).unwrap());
+        v[v.len() / 2]
+    };
+    if show() {
+        for (a, age) in ages.iter().enumerate() {
+            println!("age {age:2}: of the corners of the gown's front in the picture {:.1} % are darker than 0.8 of the middle one, {:.1} % than 0.65; of the whole gown's {:.1} %", middle(a, 1), middle(a, 2), middle(a, 0));
+        }
+    }
+    for (a, most) in [(0, 1.5), (1, 1.5), (2, 1.6), (3, 2.7), (4, 1.6), (5, 1.0)] {
+        assert!(middle(a, 1) < most, "at {}: {:.1} % of the corners of the gown's front are dark", ages[a], middle(a, 1));
+    }
+    assert!(middle(4, 0) > 1.5 && middle(5, 0) > 1.5, "a grown person's gown has shade in its folds: {:.1} and {:.1} % of its corners", middle(4, 0), middle(5, 0));
 }
