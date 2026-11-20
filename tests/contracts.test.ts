@@ -1,4 +1,4 @@
-// People feature 10 (src/sim/systems/economy.ts `contracts`): a worker who heads a family works by the day, every
+// People feature 10 (src/sim/systems/workers.ts `contracts`): a worker who heads a family works by the day, every
 // other worker serves by the year, and the world gives the economy the contracts with the absences (economy feature
 // 23). On a day on which workers are away, workers without work stand in for them. The engine's side has its own
 // tests in economy/tests/contracts.rs.
@@ -7,7 +7,8 @@ import { advanceDay } from '../src/sim/engine';
 import { createWorldState } from '../src/sim/setup';
 import { decodeState, encodeState } from '../src/sim/snapshot';
 import { ALIVE, STATE_VERSION, type WorldState } from '../src/sim/state';
-import { computeTo, contracts } from '../src/sim/systems/economy';
+import { computeTo } from '../src/sim/systems/economy';
+import { contracts } from '../src/sim/systems/workers';
 import { ROLE } from '../src/sim/systems/work';
 import { presentPersons } from '../src/sim/people/living';
 import { upgradeState } from '../src/sim/upgrade';
@@ -59,9 +60,9 @@ describe('service by the year and work by the day (people feature 10, economy fe
     for (let d = 0; d < 20; d++) {
       advanceDay(a, w);
       const n = w.economyEngine.standIns();
-      for (let k = 0; k < n.length; k += 2) {
+      for (let k = 0; k < n.length; k += 3) {
         away += n[k];
-        stood += n[k + 1];
+        stood += n[k + 1] + n[k + 2];
       }
       advanceDay(b, wb);
     }

@@ -318,6 +318,13 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     foundFields(s, w.tilth);
     s.v = 37;
   }
+  if (s.v === 37) { // 37 → 38: the family stands in for a worker who is away (economy feature 24,
+    // src/sim/systems/workers.ts). The economies go on where they are: the engine reads their state of the format
+    // before as one in which no family stands in, and is given the working days of the rest of the year, the absences
+    // of the rest of the month with the family's stand-ins and the contracts before it computes the next day.
+    if (s.economy.cities) s.economy.cities.workingTo = -1;
+    s.v = 38;
+  }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one
   const o = s as unknown as Record<string, unknown>;
