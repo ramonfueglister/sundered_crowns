@@ -5587,6 +5587,87 @@ Pictures (project files, `portraits/`): `runde132_vorher_nachher.png` (a woman w
 men, round 131 above, now below; three of the men are the sample's under seeds that draw the coif),
 `runde132_von_allen_seiten.png`.
 
+**Round 133: a man's hair with its ends turned out** (2026-11-20). The men's hair (Ramon: the figure, the
+hair, the whole portrait). Seven men in ten wore the one bowl cut in three lengths, all of them straight to
+the end. Read this time, as quotations fetched from the pages, not the pages in full. On the hood first,
+because a man's gown is buttoned since round 131: Rosalie Gilbert's page on hoods (women's hoods "often
+buttoned"); a blog on the London hood no. 247 (the plain hood "sewn up the front" "seemed to be more
+masculine", "Women's hoods were more often buttoned"); another, that a woman's open hood buttons up the
+front "rather than pulling on over the head as earlier and men's versions do"; a handout of the Society
+for Creative Anachronism (hoods of the upper class "usually contoured at the neck (often fitting closely
+enough to require buttons)"). Nothing in them has a common man's hood buttoned, so none is. On the hair:
+D. C. Calthrop's "English Costume" (the page gives the book's edition of 1907; a popular book by a
+painter, without notes), the chapter on Edward III as reprinted at fashion-era.com: nearly every man "with
+long hair to his neck, curled at the ears and on the forehead", and of a knight in the height of fashion
+"His hair is shorter than is usual, and it is not curled"; the Medieval Combat Society's page on men's
+costume, under Edward II (1307 to 1327, the reign before): "Men tended to wear their hair long, almost to
+the shoulders", "The hair was bushy, cut round and curled"; Encyclopedia.com's "Bowl Haircut" (from Gale's
+"Fashion, Costume, and Culture"): the cut "especially popular among European men from the twelfth through
+the fifteenth centuries", "with long curls being popular during some decades and shorter lengths coming
+into style during others". Wikipedia's article on fashion from 1300 to 1400 says nothing on men's hair.
+No picture of the time was looked at.
+
+What is changed. Of the two men in ten whose bowl cut reaches the jaw, one now has its ends turned out and
+up in rolls at the sides and behind (`hair_body.py`, cut `bob09`; `DressSet::hair_lengths`, and
+`hair_dressed`, new: a cut that is another cut with its ends dressed). It is `bob07`'s cut, the fringe as
+it is, the sides and back cut 11 degrees lower (`end` -62 for -51), so that the rolls lie where the plain
+cut ends: the hair ends 0.84 to 0.86 of the head's height below the crown on the test's men, the plain
+cut's 0.77 to 0.82. From 45 degrees round the head (in full from 70) the end of every bundle leaves the
+skin and turns through 140 to 220 degrees round a middle that lies 7 to 9 mm outside the topmost layer;
+the layers under it turn round the same middle, so a lower layer's roll is the wider (up to 1.4 cm) and
+the rolls lie in one another. A roll runs up to 3 mm to the side for each radian (a corkscrew, not a
+hoop), keeps half the bundle's breadth to its end, and has a ring every 1.2 mm. The band's arch turns
+over as it rolls, so that its ridge stays on the side that is seen, and the turned part gets back 85 in
+100 of the shade the bake takes from it (Blender reads a band that shows its underside as facing the
+head). 37 472 points and 63 372 triangles (`bob07`: 29 905 and 50 400), 0.80 MB packed. It has no painted
+layer and no scalp of its own: the builder takes `bob07`'s (`DressSet::under_of`). A boy under 15 whose
+seed draws it wears `bob07`, as he did; under a hood on the head or a coif the hair is the one that lies
+flat, as everyone's; a head that loses its hair or has curls wears those cuts, as before.
+
+`hair_body.py`: a cut's `turn` (eight numbers, in the comment over `BOWL`), `lay(rolled=)`. The other
+cuts come out as they were: `bob07` and `page02` written again are the repository's files byte for byte.
+
+Tried and not kept.
+
+- Every bundle with a roll of its own radius (5.5 to 8.5 mm, through 150 to 250 degrees), the layers'
+  rolls one over the other: a row of ringlets three deep round the head, a judge's wig, and dark.
+- The band rolled as it lies (its arch not turned over): from 90 degrees on one looks into the trough of
+  its underside.
+- The bundle narrowing to its point within the roll, as a straight end does: claws.
+- Curls on the forehead, which the page has: the fringe cut 3.5 degrees lower and rolled at 0.45 of the
+  sides' radius. At a portrait's size a row of dark blocks over the brows, like battlements. The fringe
+  hangs as it is cut.
+- The bundle keeping 0.8 of its breadth and its slanted end a fifth of the roll (for 0.5 and three
+  tenths): nothing to see of it.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line where round 132 left it to the tenth (read with
+this round's builder and stage; nobody of the sample wears the new cut).
+
+Honest about it. It reads as hair to the jaw whose ends flick out, and from the side and behind as a row
+of single curls: each bundle's roll is a band with an edge, and where the bundles are narrow (behind) they
+stand side by side like hooks. Every roll turns the same way, out and up; none turns in, and none hangs
+as a ringlet. The page says "curled at the ears and on the forehead"; the forehead's curls are not built
+(tried, see above), and the ears are covered. The sources are thin: a painter's popular book of 1907
+without notes, a re-enactment society's page on the reign before, and an encyclopedia's sentence about
+"some decades"; no manuscript, effigy or brass was looked at, and that a curl of 1356 was a roll turned
+out and up, its size, the share (one man in ten) and the age (from 15) are by eye (PLACEHOLDER). Nobody
+of the sample is drawn with it: two of its men draw the cut and both wear the hood on the head, so the
+gauntlet does not see it. Looked at on five men from the front (two with the hood thrown back, where the
+rolls lie over the hood's cape) and on two from five sides. Seen on the way and left: from behind, a few
+white specks on a gown's back at the right shoulder (round 132's builder has them too).
+
+Tests: `portrait/tests/hair_body.rs`, one new: of the men of 29 among 200 whose seed draws `bob07` or
+`bob09` and who wear it (bare-headed or the hood thrown back, a full head of straight hair), the 6 with
+`bob09` have `bob07`'s painted layer under it, are a boy of 10 with `bob07`, and their head of hair is
+broadest in its lowest quarter (2.3 to 5.5 mm a side over anything above it), where the 18 with `bob07`
+are 2.4 to 4.9 mm narrower than above; their fringe stands no further off the forehead than a plain
+one's, and the hair ends 0.6 to 0.9 of the head's height below the crown. `portrait/src/lib.rs`: the
+shares (of 1000 seeds 100 draw `bob09`, 100 `bob07`; no boy draws `bob09`). Cargo: 99 of 99 in one run;
+after the source was written into the table the library's 28 again. `tests/portrait.test.ts` and
+its neighbour 42 of 42. `npm run typecheck` and `npm run lint` pass.
+Pictures (project files, `portraits/`): `runde133_vorher_nachher.png` (five men of the sample under seeds
+that draw the cut, round 132 above, now below), `runde133_von_allen_seiten.png`.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
@@ -5616,7 +5697,8 @@ linen where theirs wear a narrow jewelled band, since round 129 seven in ten of 
 closed down the front with a lace over linen or with cloth buttons, in the gown's own colour where theirs
 are gold and contrast, on a gown that is still a loose sack, since round 131 two in ten of the men's
 with the same buttons (theirs wear belted, layered coats), since round 132 one man in ten from 30 wears
-a plain linen coif (theirs wear caps, hats and hoods of many cuts), and the face still lacks the
+a plain linen coif (theirs wear caps, hats and hoods of many cuts), since round 133 one man in ten has
+the ends of his hair turned out in rolls (bands side by side, where theirs are locks), and the face still lacks the
 reference's streak of gloss on the nose's flank; the thrown-back hood closes round the neck since round 35, but
 has no folds across its cloth. Since round 111 the people of every part of the world can be drawn, in a plain
 dress that is no people's own, and without a picture of the reference to hold them against.

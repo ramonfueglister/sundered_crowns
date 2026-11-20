@@ -283,6 +283,11 @@ pub struct DressSet {
     /// The age from which a man wears it; a boy whose seed draws it wears `hair` until then (on a boy of 8 parted
     /// hair to the jaw is a girl's head). PLACEHOLDER, by eye.
     pub hair_parted_from: f32,
+    /// (round 133) Cuts of `hair_lengths` that are another cut with its ends dressed (tools/portrait/pipeline/
+    /// hair_body.py `bob09`: `bob07` with its ends turned out and up in rolls), each with that other cut: they
+    /// have no painted layer and no scalp of their own, and the builder takes the other's (`under_of`); a boy
+    /// under `hair_parted_from` whose seed draws one wears the other.
+    pub hair_dressed: &'static [(&'static str, &'static str)],
     /// The same on a head that loses its hair: gone back at the temples, and a horseshoe round a bare top.
     /// The same on a head with curls (wavy, standing off the head).
     pub hair_curly: &'static str,
@@ -869,9 +874,10 @@ const ENGLAND: DressSet = DressSet {
     veil_back: "cloth_veil_back",
     wimple: "cloth_wimple",
     hair: "bob01",
-    hair_lengths: &[("bob06", 3), ("bob07", 2), ("page01", 1), ("page02", 1)],
+    hair_lengths: &[("bob06", 3), ("bob07", 1), ("bob09", 1), ("page01", 1), ("page02", 1)],
     hair_parted: &["page01", "page02"],
     hair_parted_from: 15.0,
+    hair_dressed: &[("bob09", "bob07")],
     hair_curly: "bob05",
     hair_receding: "bob03",
     hair_bald: "bob04",
@@ -1108,6 +1114,7 @@ const ENGLAND: DressSet = DressSet {
         Source { what: "a woman's gown closed in front from 14 years: laced on five in ten (one lace through eyelets 2 cm apart, the linen showing between the edges), buttoned on two in ten (ball buttons of the gown's own cloth, 11 mm across, 2 cm apart), not opened on three in ten (round 129)", source: "Rosalie Gilbert, Rosalie's Medieval Woman: Buttons and Lacings, Kirtles, and the buttons of her collection (rosaliegilbert.com/buttonsandlacings.html, kirtles.html, thegilbertcollection_buttons.html; read 20.11.2026 as quotations fetched from the pages, not the pages in full; a re-enactor's pages, not a primary source): kirtles and gowns closed with buttons or with lacing, in front or at the side seams; a working woman likely in a front-lacing kirtle; eyelets closely set, around 2 cm; laces of the gown's colour until the 15th century; the lower classes with cloth buttons matching the gown, almost always ball-shaped, set very closely together at the very edge of the opening; a gown buttoned down the front in the Romance of Alexander, c. 1340; English buttons of 9 to 16 mm. The shares, the age, how far the laced edges stand apart, from button to button, and that none is laced at the side are PLACEHOLDER." },
         Source { what: "a man's gown buttoned in front on two in ten from 15 years, with the women's buttons, from under its opening down; the others' pulled over the head (round 131)", source: "The Medieval Combat Society, Male reenactment costume (themcs.org/costume/Male reenactment costume.htm; a re-enactors' page whose paragraphs on these garments have no notes) and Wikipedia, 1300-1400 in European fashion (both read 20.11.2026 as quotations fetched from the pages): the cotehardie, which began to replace the surcote from 1350, fastened at the front by buttons down to the height of the girdle; cheaper, looser cotehardies with no fastening at the front, put on over the head; working men in short or knee-length tunics. Nothing on the buttons' cloth, size or spacing for men (the women's are used). The share and the age are PLACEHOLDER." },
         Source { what: "a man's coif, a close cap of linen over the hair and the ears with two strings tied under the chin, on one man in ten from 30 years, worn alone (round 132)", source: "Wikipedia, Coif; The Medieval Combat Society, Male reenactment costume; Cadw, Hats (a leaflet without dates or notes); Buckingham's Retinue, Coifs (a re-enactment group's guide); Ruth Johnston, All Things Medieval, 13th and 14th centuries: men's hats (a blog without notes); all read 20.11.2026 as quotations fetched from the pages: coifs of unadorned white linen tied under the chin, worn by all classes, out of popularity with men in the fourteenth century; a linen coif covering the hair and ears and tied under the chin under Edward II, coif and hood on effigies of 1354 and 1372; considered underwear and worn under hats by everybody over 12 except those doing physical labour; before 1500 of one or two pieces with ties at the corners. The share, the age, that it is worn alone and its cut are PLACEHOLDER." },
+        Source { what: "the hair of one man in ten to the jaw with its ends turned out and up in rolls at the sides and behind (round 133)", source: "D. C. Calthrop, English Costume (the page gives the book's edition of 1907), the chapter on Edward III as reprinted at fashion-era.com: nearly every man 'with long hair to his neck, curled at the ears and on the forehead', and of a knight in the height of fashion 'His hair is shorter than is usual, and it is not curled' (a popular book by a painter, without notes); The Medieval Combat Society, Male reenactment costume, under Edward II (1307 to 1327, the reign before): 'Men tended to wear their hair long, almost to the shoulders', 'The hair was bushy, cut round and curled'; Encyclopedia.com, Bowl Haircut (Gale's Fashion, Costume, and Culture): the cut popular from the twelfth through the fifteenth centuries 'with long curls being popular during some decades and shorter lengths coming into style during others'. All read 20.11.2026 as quotations fetched from the pages; no picture of 1356 was looked at. That the curl is a roll turned out and up, its size, the share and the age are PLACEHOLDER; the curls on the forehead were tried and not kept." },
         Source { what: "children under seven: the men's hair to the jaw with a fringe, girls and boys alike", source: "PLACEHOLDER, nothing read on small children's hair. Chosen because Apoleia's cropped hair begins far back on a child's large skull (a shaven head)." },
         Source { what: "men's hair in three lengths (to above the ear, to the ear's lobe, to the jaw), 3 : 3 : 2, and two men in ten from 15 with their hair parted in the middle, over the ears and cut at the jaw, without a fringe (round 125), one of the two in waves (round 130)", source: "PLACEHOLDER: lengths, shares and the age by eye, so that the men of a town do not all have one head. Nothing was read for the parted cut or its waves: to be checked against picture sources as the fringe is (Luttrell Psalter c. 1330, Holkham Bible)." },
         Source { what: "men's hair to the jaw with a fringe", source: "PLACEHOLDER, to be checked against picture sources (Luttrell Psalter c. 1330, Holkham Bible)." },
@@ -1364,6 +1371,10 @@ impl DressSet {
     /// The cut whose painted layer and scalp lie under the hair `name`: its own, or for tightly curled hair the
     /// table's (`Coily::under`).
     pub fn under_of<'a>(&'a self, name: &'a str) -> &'a str {
+        // (round 133) a cut with dressed ends has the hairline of the cut it is
+        if let Some(h) = self.hair_dressed.iter().find(|h| h.0 == name) {
+            return h.1;
+        }
         match &self.coily {
             Some(c) if name == c.bald => c.under[1],
             Some(c) if self.is_coily(name) => c.under[0],
@@ -1388,12 +1399,21 @@ impl DressSet {
     }
 
     /// The hair of the head of a person with this seed at this age: one of `hair_lengths` by its share, else
-    /// `hair` (and `hair` in place of parted hair on a boy, `hair_parted_from`).
+    /// `hair` (and `hair` in place of parted hair on a boy, `hair_parted_from`; in place of a cut with dressed
+    /// ends the cut it is).
     pub fn hair_of(&self, seed: u32, age: f32) -> &'static str {
         let mut r = (seed / 10) % 10;
         for &(name, share) in self.hair_lengths {
             if r < share {
-                return if age < self.hair_parted_from && self.hair_parted.contains(&name) { self.hair } else { name };
+                if age < self.hair_parted_from {
+                    if self.hair_parted.contains(&name) {
+                        return self.hair;
+                    }
+                    if let Some(h) = self.hair_dressed.iter().find(|h| h.0 == name) {
+                        return h.1;
+                    }
+                }
+                return name;
             }
             r -= share;
         }

@@ -346,6 +346,69 @@ fn two_men_in_ten_wear_their_hair_parted_and_cut_at_the_jaw() {
 }
 
 #[test]
+fn one_man_in_ten_wears_his_hair_to_the_jaw_with_its_ends_turned_out() {
+    // Round 133. Of the two men in ten whose bowl cut reaches the jaw, one has its ends turned out and up in rolls
+    // at the sides and behind (`hair_body.py` `bob09`, `turn`; `DressSet::hair_dressed`): the cut `bob07` with
+    // its hairline (that cut's painted layer is under it), a little longer, so that the rolls lie where the plain
+    // cut ends. The head of hair is broadest at its ends, where the plain cut is narrower than above them; the
+    // fringe hangs as the plain cut's. A boy with the same seed wears the plain cut.
+    let Some(h) = head() else { return };
+    let d = &sc_portrait::dress::ENGLAND_1356;
+    // the hair's greatest breadth to one side in the lowest quarter of its height against that above it, how far its fringe stands in front of the skin of the forehead, and how far below the
+    // crown it ends (in the head's height)
+    let measures = |out: &Portrait| {
+        let hair = body(out).expect("a body of hair");
+        let (skin, crown) = skin(out);
+        let height = crown - out.chin;
+        let (low, top) = hair.pos.iter().fold((f32::MAX, f32::MIN), |(lo, hi), p| (lo.min(p[1]), hi.max(p[1])));
+        let wide = |from: f32, to: f32| hair.pos.iter().filter(|p| p[1] >= low + from * (top - low) && p[1] <= low + to * (top - low)).map(|p| (p[0] - out.cx).abs()).fold(0f32, f32::max);
+        let broad = skin.pos.iter().filter(|p| p[1] > crown - 0.3 * height).map(|p| (p[0] - out.cx).abs()).fold(0f32, f32::max);
+        let middle = |p: &&V3| (p[0] - out.cx).abs() < 0.25 * broad && p[2] > out.cz && p[1] > crown - 0.45 * height;
+        let fringe = hair.pos.iter().filter(middle).map(|p| p[2]).fold(f32::MIN, f32::max) - skin.pos.iter().filter(middle).map(|p| p[2]).fold(f32::MIN, f32::max);
+        (wide(0.0, 0.25) - wide(0.3, 1.0), fringe, (crown - low) / height)
+    };
+    let (mut turned, mut plain) = (Vec::new(), Vec::new());
+    for k in (1..400u32).step_by(2) {
+        // (men of 29: from 30 one man in ten wears a coif, round 132)
+        let p = person(k, false, 29.0);
+        let name = d.hair_of(p.seed, p.age);
+        if name != "bob09" && name != "bob07" || d.head_covered(false, p.age, p.seed) {
+            continue;
+        }
+        let out = build(&h, &p, 1);
+        // (a head that loses its hair, or has curls, wears those cuts whatever its seed draws)
+        if !out.surfaces.iter().any(|s| s.tex.as_deref().is_some_and(|t| t.contains("/bob07_cap."))) {
+            continue;
+        }
+        let who = format!("man {k}");
+        let (out_at_ends, fringe, ends) = measures(&out);
+        if show() {
+            println!("{who}: {name}, {:.1} mm broader a side in its lowest quarter than above it, the fringe {:.1} mm in front of the forehead, ends {ends:.3} of the head's height below the crown", 100.0 * out_at_ends, 100.0 * fringe);
+        }
+        if name == "bob09" {
+            assert_eq!(d.under_of(name), "bob07");
+            // a boy with the same seed: the plain cut
+            let boy = person(k, false, 10.0);
+            assert_eq!(d.hair_of(boy.seed, boy.age), "bob07", "{who} as a boy of 10");
+            turned.push((out_at_ends, fringe, ends));
+        } else {
+            plain.push((out_at_ends, fringe, ends));
+        }
+    }
+    if show() {
+        println!("{} men with turned ends, {} with the plain cut to the jaw", turned.len(), plain.len());
+        return;
+    }
+    assert!(turned.len() >= 5 && plain.len() >= 5, "{} men with turned ends, {} with the plain cut to the jaw", turned.len(), plain.len());
+    // (measured on 6 and 18 men: the rolls 2.3 to 5.5 mm broader a side than anything above them, the plain cut's
+    // ends 2.4 to 4.9 mm narrower)
+    assert!(turned.iter().all(|m| m.0 > 0.01) && plain.iter().all(|m| m.0 < -0.01), "broader at the ends than above them: turned {turned:?}, plain {plain:?}");
+    let most = plain.iter().map(|m| m.1).fold(f32::MIN, f32::max);
+    assert!(turned.iter().all(|m| m.1 < most + 0.03), "the fringe of a head with turned ends stands further off the forehead than any plain one ({most}): {turned:?}");
+    assert!(turned.iter().all(|m| (0.6..0.9).contains(&m.2)), "where the turned hair ends: {turned:?}");
+}
+
+#[test]
 fn hair_that_is_cut_runs_to_the_cut_and_wears_the_image_along_its_length() {
     // The image of a bundle is laid along it at one scale, whatever its length (it goes on at its lower edge),
     // and the fringe is several bundles deep: the layers lie over each other where the hair is cut.

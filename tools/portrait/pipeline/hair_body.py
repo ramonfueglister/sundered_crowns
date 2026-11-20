@@ -42,7 +42,12 @@ W = dirs(180, 52)    # the whorl
 # degrees: least, greatest); the length of its slanted end (`tip`); how far it swings to the side by itself
 # (least, greatest) and the length of that swing as a share of its own (least, greatest): a bow; how much it
 # leans over to one flank (`roll`); its tone against the hair's colour. `curl` (a cut's): how far a bundle swings
-# to the side and off the head, and the length of a wave: curly hair.
+# to the side and off the head, and the length of a wave: curly hair. `turn` (a cut's, round 133): at the
+# sides and behind each bundle's end is turned out and up into a roll (not over the forehead: from 45 degrees
+# round, in full from 70): through how many degrees (least, greatest), the roll's radius (least, greatest: of the
+# roll's middle over the topmost layer), how far at most it runs to the side for each radian turned (a corkscrew,
+# not a hoop), how much of the shade the bake gives the turned band's underside is taken back, how much of the
+# roll's length the bundle's slanted end may take, and how much of its breadth the bundle has left where it ends.
 # All PLACEHOLDER by eye, beside the reference's bowl cuts (docs/PORTRAITS.md, round 109).
 BOWL = dict(
     cut=-12.5, end=-43.0, over=(8, 6, 35, 30), lift=1.0, round=1.0,
@@ -56,6 +61,7 @@ BOWL = dict(
     ],
 )
 
+_e = lambda k, d: [float(t) for t in os.environ.get(k, d).split(',')]
 # The cuts by the name of their file: England's men, boys and small children (`portrait/src/dress.rs`
 # `ENGLAND_1356`)
 CUTS = {
@@ -67,6 +73,8 @@ CUTS = {
     'bob04': dict(BOWL, lift=0.25, round=0.6, bare=True),    # a horseshoe round a bare top
     'bob05': dict(BOWL, curl=(0.04, 0.03, 0.65)),          # curls
     'bob08': dict(BOWL, cut=2.0, end=-38.0, lift=0.75),     # a small child's: the fringe cut high
+    # to the jaw, its ends turned out and up (round 133); all PLACEHOLDER by eye
+    'bob09': dict(BOWL, end=_e('TURN_END', '-62')[0], turn=tuple(_e('TURN', '140,220,0.07,0.09,0.003,0.85,0.3,0.5'))),
 }
 # A girl's and a young woman's hair: parted in the middle, drawn down over the ears to the place below each ear
 # where her plait begins (`styles.py`, style `plait`: `to` that place, `by` the temple the front hair goes by,
@@ -98,7 +106,6 @@ CUTS['plait01'] = PARTED
 # (`veil`: the veil's rim as a table like `line`, read off the draped veil `cloth_veil_back` in this script's
 # angles; over how many degrees in front of the rim the hair comes to its full height; how much of the lift is
 # left under the cloth). The painted layer and the scalp under it are the girl's. All PLACEHOLDER by eye.
-_e = lambda k, d: [float(t) for t in os.environ.get(k, d).split(',')]
 VEIL_RIM = [(0, 50.6), (33, 47.5), (45, 40.4), (53, 21), (60, 8), (68, -14), (77, -34), (85, -45), (120, -45)]
 CUTS['part01'] = dict(
     PARTED, to=tuple(_e('PART_TO', '130,-58')), by=tuple(_e('PART_BY', '64,-14')), lift=_e('PART_LIFT', '1.5')[0],
@@ -271,7 +278,7 @@ def bundles(L, rng):
     # how many bundles of the layer there are at a distance from the whorl: there a bundle has that share of the
     # way round the whorl for itself, and is no broader
     begun = np.sort([np.arccos(np.clip(w[0] @ W, -1, 1)) for w in ways])
-    curl = C.get('curl')
+    curl, turn = C.get('curl'), C.get('turn')
     out_ = []
     for k, D in enumerate(ways):
         if len(D) < 12:
@@ -283,12 +290,25 @@ def bundles(L, rng):
         rl = min(0.3, 0.3 * total)
         # rings: one every 5 mm along its length (curly hair: every 3), closer in its end
         run = np.concatenate([np.arange(0, total - tl, 0.03 if curl else 0.05), total - tl + tl * np.linspace(0, 1, 9) ** 0.8])
+        rolled = None
+        # (a turned end: not over the forehead, where the fringe hangs as it is cut; the rolls of all layers lie
+        # in one another, round one middle `turn[2..3]` over the topmost layer, so a lower layer's is the wider;
+        # a ring every 1.2 mm of it, and it begins before the bundle narrows to its point)
+        deg = rng.uniform(turn[0], turn[1]) * smooth((abs(th_end[k]) - 45) / 25) if turn else 0.0
+        if deg > 20:
+            R = rng.uniform(turn[2], turn[3]) + 0.88 * LIFT * (max(l['h'] for l in C['layers']) - L['h'])
+            lf = min(R * np.radians(deg), 0.4 * total)
+            tl = min(tl, turn[6] * lf)
+            before = np.arange(0, total - lf - 0.02, 0.05)
+            run = np.concatenate([before, total - lf + np.linspace(0, lf, max(int(lf / 0.012) + 1, 8))])
+            rolled = (len(before), np.clip((run - (total - lf)) / R, 0, None), R, rng.uniform(-turn[4], turn[4]))
         d = unit(np.stack([np.interp(run, run0, D[:, i]) for i in range(3)], -1))
         a = np.arccos(np.clip(d @ W, -1, 1))
         fan = np.inf if C.get('bare') else 1.15 * 2 * np.pi * np.sin(np.minimum(a, np.pi / 2)) * OVER.skin(d) / np.maximum(np.searchsorted(begun, a, side='right'), 1)
         e = np.clip((run - (total - tl)) / tl, 0, 1)                 # 0..1 along its end
         r = np.clip(run / rl, 0, 1)                                   # 0..1 along its beginning
-        hw = 0.5 * np.minimum(width, fan) * (0.25 + 0.75 * smooth(r)) * (1 - e)
+        # (a turned end keeps `turn`'s eighth number of its breadth: a roll does not end in a claw)
+        hw = 0.5 * np.minimum(width, fan) * (0.25 + 0.75 * smooth(r)) * (1 - (1 - turn[7] if rolled else 1) * e)
         # its way: a swing to either side as long as the bundle and longer (a bow, not a wave), and its end cut
         # at a slant, the point on one flank's line
         side = unit(np.cross(d, unit(np.gradient(d, axis=0))))
@@ -315,7 +335,7 @@ def bundles(L, rng):
         ht = ROUND * L['flat'] * hw
         h = np.maximum(h, ht + 0.004)                                 # its flanks stay off the skin
         roll = L['roll'] * rng.uniform(-1, 1) * ROUND
-        out_.append(lay(d, h, hw, ht, roll, run, L['tone'] * float(np.clip(rng.lognormal(0, 0.1), 0.78, 1.25)) * (0.7 + 0.3 * smooth(run / 0.3)), rng))
+        out_.append(lay(d, h, hw, ht, roll, run, L['tone'] * float(np.clip(rng.lognormal(0, 0.1), 0.78, 1.25)) * (0.7 + 0.3 * smooth(run / 0.3)), rng, rolled=rolled))
     return out_
 
 
@@ -427,9 +447,13 @@ def parted(L, rng):
     return out_
 
 
-def lay(d, h, hw, ht, roll, run, shade, rng, m=7):
+def lay(d, h, hw, ht, roll, run, shade, rng, m=7, rolled=None):
     """A band laid over the skin: its middle's directions, its height, half breadth and half thickness ring by
-    ring, how much it leans to one flank; its rings, their places in the image, the points they are bound by."""
+    ring, how much it leans to one flank; its rings, their places in the image, the points they are bound by,
+    and for each ring how far it is turned off the head (0: not).
+    `rolled`: from that ring on the band leaves the skin and turns out and up in a roll (each ring's angle, the
+    radius, the way to the side for a radian): the ring where it begins, carried round, as broad as the band is
+    there; the roll is bound by the place it begins at."""
     turn = np.linspace(-np.pi / 2, np.pi / 2, m)
     c = OVER.at(d, h)
     n0 = unit(c - hc)
@@ -438,9 +462,28 @@ def lay(d, h, hw, ht, roll, run, shade, rng, m=7):
     q = c[:, None, :] + b[:, None, :] * lat[..., None]
     dd = unit(q - hc)
     rings = hc + dd * (OVER.skin(dd) + h[:, None] + ht[:, None] * (2 * np.cos(turn)[None, :] - 1) + roll * lat)[..., None]
+    out = np.zeros(len(c))
+    if rolled is not None:
+        i0, phi, R, drift = rolled
+        t0 = unit(c[i0] - c[i0 - 1])
+        n = unit(c[i0] - hc)
+        n = unit(n - t0 * (n @ t0))
+        b0 = np.cross(t0, n)
+        rel = rings[i0] - c[i0]
+        lt, ln, lb = rel @ t0, rel @ n, rel @ b0
+        # (the band's arch turns over as it rolls: its ridge stays on the side that is seen)
+        out = smooth((phi - 0.8) / 1.4)
+        lit = smooth(phi / 1.0)
+        for k in range(i0 + 1, len(c)):
+            s, cp, sp = hw[k] / hw[i0], np.cos(phi[k]), np.sin(phi[k])
+            cen = c[i0] + t0 * R * sp + n * R * (1 - cp) + b0 * drift * phi[k]
+            rings[k] = cen + s * (lb[:, None] * b0 + lt[:, None] * (t0 * cp + n * sp) + (1 - 2 * out[k]) * ln[:, None] * (n * cp - t0 * sp))
+        c = c.copy()
+        c[i0 + 1:] = c[i0]
+        out = lit
     u = np.linspace(0, 1, m) if rng.random() < 0.5 else np.linspace(1, 0, m)
     uv = np.stack(np.broadcast_arrays(u[None, :], (rng.random() + run * VSCALE)[:, None]), -1)
-    return rings, uv, c, shade
+    return rings, uv, c, shade, out
 
 
 def shell():
@@ -568,15 +611,16 @@ def fleece():
     return V, tuv, tris, C['shade']
 
 
-verts, anchors, shades, tris, tri_uv = [], [], [], [], []
+verts, anchors, shades, tris, tri_uv, turned = [], [], [], [], [], []
 if C.get('coily'):
     sv, stuv, stris, sshade = fleece()
     verts, anchors, shades = list(sv), list(sv), [sshade] * len(sv)
     tris, tri_uv = list(stris), list(stuv)
 for L in C.get('layers', []):
-    for rings, uv, anc, shade in (parted if C.get('parted') else bundles)(L, np.random.default_rng(L['seed'] + 100 * SEED)):
+    for rings, uv, anc, shade, over in (parted if C.get('parted') else bundles)(L, np.random.default_rng(L['seed'] + 100 * SEED)):
         n, m = rings.shape[:2]
         o = len(verts)
+        turned += [(o + i * m + j, w) for i, w in enumerate(over) if w > 0 for j in range(m)]
         verts += list(rings.reshape(-1, 3))
         anchors += list(np.repeat(anc, m, axis=0))
         shades += list(np.repeat(shade, m))
@@ -633,6 +677,10 @@ if AO[0] > 0:
     bpy.ops.object.bake(type='AO', target='VERTEX_COLORS')
     ao = np.array([c.color[0] for c in me.color_attributes['ao'].data])
     print('shade: mean', round(float(ao.mean()), 3), 'lowest tenth', round(float(np.quantile(ao, 0.1)), 3), 'highest tenth', round(float(np.quantile(ao, 0.9)), 3))
+    # (a band that is turned over shows its underside, which the bake reads as facing the head: `turn`'s sixth
+    # number of the way to an open place's shade is given back to it)
+    for i, w in turned:
+        ao[i] += (1 - ao[i]) * w * C['turn'][5]
     shades = shades * (AO[2] + (1 - AO[2]) * np.clip(ao, 0, 1) ** AO[3])
 if os.environ.get('BLEND'):
     bpy.ops.wm.save_as_mainfile(filepath=os.path.abspath(os.environ['BLEND']))
