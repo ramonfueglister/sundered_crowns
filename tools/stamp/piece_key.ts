@@ -18,7 +18,7 @@ export const PIECE_ROOTS = [
   'src/worldprobe/small.ts',
 ];
 /** the data the pieces are built from (folders are taken whole) */
-export const PIECE_DATA = ['public/map', 'public/data'];
+const PIECE_DATA = ['public/map', 'public/data'];
 /** where the versions of the libraries are read */
 const LOCK = 'package-lock.json';
 

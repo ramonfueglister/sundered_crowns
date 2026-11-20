@@ -15,7 +15,7 @@ import {
 import type { UserAuth } from './session';
 import type { WorldStore } from './store';
 
-export interface AuthConfig {
+interface AuthConfig {
   jwtSecret?: string;
   jwksUrl?: string;
   devMode: boolean;
@@ -36,7 +36,7 @@ export function authConfigFromEnv(env: Record<string, string | undefined> = proc
 }
 
 const b64url = (s: string) => Buffer.from(s.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
-export interface JwtClaims {
+interface JwtClaims {
   sub: string;
   exp?: number;
   nbf?: number;

@@ -6,7 +6,7 @@
 // lays the fields of the farmsteads on it (src/sim/systems/fields.ts).
 import { COURSES, COURSES_DRY, lotCorner, type Slot } from '../settlement/fields';
 
-export interface TilthJson {
+interface TilthJson {
   year: number;
   /** per town: `site` (index of the gazetteer), `wx`, `wz` (the world block of its centre, as the world graphic has it),
    *  `dry` (1: the Mediterranean kind of land, two courses), and the field lots from (`lx0`, `lz0`) in a box of `cols`

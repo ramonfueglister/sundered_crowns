@@ -37,11 +37,22 @@ function lotOf(fx: number, fz: number): { lx: number; lz: number; row: number; k
 }
 
 /**
+ * The crop on a block of the finest step (fx, fz in the world) that lies `dx` blocks into the column x, z: that of
+ * its lot, which is laid down on the column whose middle lies on the lot (its own, or for the last block of a row
+ * whose next block is the balk, the column before); 0 on the balk, or where no field lies.
+ */
+export function cropAt(crops: ArrayLike<number>, x: number, z: number, dx: number, fx: number, fz: number): number {
+  const at = lotOf(fx, fz);
+  if (at.row < 0 || at.row >= LOT_W - 1 || at.k < 0 || at.k >= LOT_D - 1) return 0;
+  const own = dx === WIDER - 1 || lotOf(fx + 1, fz).row >= 0 ? x : x - 1;
+  return own < 0 ? 0 : crops[z * N + own];
+}
+
+/**
  * The sheaves of the columns of `part` (a byte each in `crops`, a ground of N × N whose first column is the world's
  * block ox, oz of the step) on the tops `tops`, where `bare` says nothing else stands on a column (a farmhouse at
- * the end of its field). A column holds two blocks of the finest step each way; a block takes the crop of its own lot,
- * which is that of the column whose middle lies on the lot: its own, or for the last block of a row whose next block
- * is the balk, the column before.
+ * the end of its field). A column holds two blocks of the finest step each way; a block takes the crop of its own lot
+ * (`cropAt`).
  */
 export function drawCrops(
   b: Batch,
@@ -63,13 +74,9 @@ export function drawCrops(
         for (let dx = 0; dx < WIDER; dx++) {
           const fx = (x + ox) * WIDER + dx,
             fz = (z + oz) * WIDER + dz,
-            at = lotOf(fx, fz);
-          if (at.row < 0 || at.row >= LOT_W - 1 || at.k < 0 || at.k >= LOT_D - 1) continue;
-          // the column whose middle lies on this block's lot
-          const own = dx === WIDER - 1 || lotOf(fx + 1, fz).row >= 0 ? x : x - 1;
-          if (own < 0) continue;
-          const crop = crops[z * N + own];
+            crop = cropAt(crops, x, z, dx, fx, fz);
           if (crop !== WHEAT_FIELD && crop !== OATS_FIELD) continue;
+          const at = lotOf(fx, fz);
           // blocks.ts `crops`, as the finest step stands a sheaf on the block
           const ripe = crop === WHEAT_FIELD,
             colours = ripe ? WHEAT : OATS,

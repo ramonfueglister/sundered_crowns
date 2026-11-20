@@ -48,7 +48,7 @@ export function weld(pos: ArrayLike<number>): { place: Int32Array; places: numbe
 }
 
 /** What a corner carries besides its place: `size` numbers per corner. */
-export interface CornerData { data: Float32Array; size: number }
+interface CornerData { data: Float32Array; size: number }
 
 /** A net: its triangles by the numbers of their corners' places, and around them who neighbours whom. */
 interface Net {

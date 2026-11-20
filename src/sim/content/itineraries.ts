@@ -7,6 +7,8 @@
 // regesta_imperii.json, built by tools/history/itineraries/regesta.py). A day of a regest is a day the king's chancery
 // issued a charter at a place: as a rule where the king was (Müller-Crepon, Neupert-Wentz, Kokkonen, Møller, "Rulers
 // on the road", AJPS 2025, reconstruct the emperors' journeys from 72,665 dated and placed documents the same way).
+// Edward I's is Gough's itinerary from the records of his chancery and household (Gough 1900, vol. II;
+// data/history/itineraries/gough_edward_i.json, built by tools/history/itineraries/gough.py).
 import { dayOf } from './chronicle';
 import type { WorldState } from '../state';
 import { km, lastStop, reachableStops, type Track, type Travels } from './travel';

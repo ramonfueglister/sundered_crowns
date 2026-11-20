@@ -20,8 +20,9 @@ import type { TownParcels } from './lots';
 import { HAMLET_TURN, type HamletLands, hamletAt, hamletsOf } from './hamlets';
 import { BARE, FINER, FINER_STEPS, SNOW_LINE, TINT, TREE_LINE, WOODS, blockOfCell, cellOfBlock, lineShift, paleFrom, rockAt, woodsUntil } from './land';
 import { type Region, Water, cellOf, latOf, sample, waterAt } from './region';
-import { type Cover, type Woods, coverLand, lotFill } from './far';
+import { type Cover, HOUSES_UNTIL, type Woods, coverLand, lotFill } from './far';
 import { drawGround } from './table';
+import { CROWD_AT, farCrowd } from './crowd';
 import { TREE_NUMBERS, crownTallAt } from './trees';
 import { unshade } from './mean';
 import { FARMS, FIELD_GROUND, LOT_BLOCKS, LOT_FILL, type Lot, type Monument, PEOPLE_PER_PERSON, type Settled, type Site, type Survey, type Told, farmsFor, firstHalf, raise, settle } from './settle';
@@ -321,8 +322,9 @@ class WorldTraits implements GroundTraits {
   readonly houses: GroundTraits['houses'];
   readonly trees: GroundTraits['trees'];
   readonly crops: GroundTraits['crops'];
+  readonly quarters: GroundTraits['quarters'];
   constructor(step: number, private readonly town: Uint8Array, private readonly field: Uint8Array | null, private readonly mean: Cover | undefined, private readonly land: Uint8Array, private readonly metres: Float32Array, private readonly snow: Float32Array, private readonly massifs: Massifs, private readonly roads: Float32Array | null) {
-    this.sideTop = sideTopAt(step); this.crownTall = crownTallAt(step); this.houses = mean?.houses; this.trees = mean?.trees; this.crops = mean?.crops;
+    this.sideTop = sideTopAt(step); this.crownTall = crownTallAt(step); this.houses = mean?.houses; this.trees = mean?.trees; this.crops = mean?.crops; this.quarters = mean?.quarters;
   }
   city(x: number, z: number) { return fieldAt(this.town, x, z) === 1; }
   plaza() { return Infinity; }
@@ -585,7 +587,8 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     // with the hamlets of the simulation only the places it holds persons for stand in the world
     if (hamlets && !h) return;
     const at = toGround(...cellOf(region, p.lon, p.lat));
-    const site: Site = { id, at, size: p.size, pop: h ? h.inside * PEOPLE_PER_PERSON : inhabitants.get(id) ?? p.pop1356, region: p.region, style: styleOf(p.region), lots: step === 0 ? parcels?.get(id) : undefined };
+    // (with the parcels of its register: the finest step builds on them, the far steps that draw houses pave its streets)
+    const site: Site = { id, at, size: p.size, pop: h ? h.inside * PEOPLE_PER_PERSON : inhabitants.get(id) ?? p.pop1356, region: p.region, style: styleOf(p.region), lots: step <= HOUSES_UNTIL ? parcels?.get(id) : undefined };
     // its landmarks, where the register has them: then they are its great buildings and churches
     const marks = step === 0 ? parcels?.get(id)?.landmarks : undefined;
     if (marks) site.marks = marks.flatMap(([kind, x, z, w, d, named, , start, end, ruined]) => {
@@ -857,8 +860,9 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     cells.push({ x: x0 + CELL / 2, z: z0 + CELL / 2, far, lots, ground });
   }
   counts.triangles = ground.triangles + (carried?.triangles ?? 0) + water.triangles + raised.triangles + things.triangles + (standing?.triangles ?? 0) + cells.reduce((n, c) => n + c.far.triangles, 0);
-  // the people of the towns, villages and fields; on the coarser steps a block is wider than a person is tall
-  const figures = settled ? crowd(g, settled, own) : undefined;
+  // the people of the towns, villages and fields: the finest step's, at the first far step too (crowd.ts); on the
+  // coarser steps a block is wider than a person is tall
+  const figures = settled ? crowd(g, settled, own) : cover && step === CROWD_AT ? farCrowd({ ...g, town: cover.town, has: cover.has, quarters: cover.quarters, crops: cover.crops }, ox, oz, part) : undefined;
   if (figures) counts.figures = figures.count;
   return { ground, carried, things, water, raised, figures, cells, counts, standing };
 }
