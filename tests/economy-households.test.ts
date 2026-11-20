@@ -11,7 +11,7 @@ import { FIGURE, FIGURES } from '../src/sim/economy/engine';
 import { ROLE, WORKING_AGE, rateOfOtherWomen, workforce } from '../src/sim/systems/work';
 import { BASKET_AGE, FOOD_SECTOR, basketsOf, foodPrices, writeHouseholds } from '../src/sim/systems/household';
 import { calibrateEconomy, foodNeedCost } from '../src/sim/economy/calibration';
-import { foundEconomy, workingDays } from '../src/sim/systems/economy';
+import { absences, foundEconomy, workingDays } from '../src/sim/systems/economy';
 import { calendarOf, dayFactor } from '../src/sim/holy_days';
 import { dateToDay, dayToDate } from '../src/sim/calendar';
 import { ageOn } from '../src/sim/systems/people';
@@ -276,9 +276,14 @@ describe('the purse of a family', () => {
     expect(X.role[next]).toBe(ROLE.none); // who turns 15 works only when the economies are founded again
   });
   it('is a booking of the world: the engine computes the same days without it', () => {
-    // with the working days of the firms (economy feature 19), which the economies are given before their first day
-    const days = w.economyEngine.workingDays(start.economy.cities!.model, workingDays(start, start.economy.cities!));
-    const model = w.economyEngine.step(days, 20);
+    // with the working days of the firms (economy feature 19) and the workers who are away in the rest of January
+    // (economy feature 22), which the economies are given before their first day
+    const e = start.economy.cities!,
+      days = w.economyEngine.workingDays(e.model, workingDays(start, e));
+    const model = w.economyEngine.step(
+      w.economyEngine.absences(days, absences(start, e, dateToDay(start.startYear, 1, 1, start.startYear) - 1)),
+      20,
+    );
     expect(Buffer.from(model).equals(Buffer.from(s.economy.cities!.model))).toBe(true);
     // and writing it again changes nothing
     const hash = hashState(s);
@@ -385,13 +390,17 @@ describe('the state', () => {
     }
     expect(hashState(decodeState(encodeState(a)))).toBe(hashState(b));
   });
-  it('of a world that starts in the year of its table goes on where it is through the step to 34 (economy feature 21)', () => {
+  it('of a world that starts in the year of its table goes on where it is through the steps to 34 and 35 (economy features 21 and 22)', () => {
     // biome-ignore lint/suspicious/noExplicitAny: a state of an older version, which no type of today describes
     const old = decodeState(encodeState(s)) as any;
     old.v = 33;
     const up = upgradeState(old, w);
     expect(up.v).toBe(STATE_VERSION);
-    expect(hashState(up)).toBe(hashState(s));
+    // the step to 35 only has the engine given the working days and the absences again before the next day
+    const same = decodeState(encodeState(s));
+    same.economy.cities!.workingTo = -1;
+    expect(up.economy.cities!.workingTo).toBe(-1);
+    expect(hashState(up)).toBe(hashState(same));
   });
   it('of a world from before feature 11 gets them by the upgrade: the economies are founded anew with the women without a husband at work', () => {
     // version 13: no purse, no consumption (who works there was drawn by the rule before; the upgrade draws again)

@@ -25,16 +25,19 @@
 // year it makes what it made before; wages are paid every day (economy/src/clock.rs). A household buys on the working
 // days of its own faith, the owner of a firm too, on the mean profit of his firm over a year (economy feature 20); the
 // crown and the merchants buy every day. The engine is given the days of a year before it computes the year's first
-// day.
+// day. A worker who is sick or in childbed is away (people feature 9, economy feature 22, src/sim/people/absence.ts):
+// the firm works with those who are there, pays everybody, does not buy again the materials they left unused and,
+// when it sold all it had, plans as if they had all been there (economy/src/clock.rs); the engine is given the
+// absences of a month before it computes the month's first day.
 //
 // The economies are not connected to anything else in the world yet: not to the harvest or the arable, and nothing a
 // player does reaches them. Places without a city have no economy. The year has no seasons.
 import type { System } from '../schedule';
 import type { CityEconomies, WorldState } from '../state';
-import { FIRM_SCHEMA } from '../state';
+import { ALIVE, FIRM_SCHEMA } from '../state';
 import type { World } from '../world';
 import { createTable, spawn } from '../ecs';
-import { AGENT, FIGURE, FIGURES, type CitySetup, type CityWorkingDays, type EconomyState, type KeptEconomy } from '../economy/engine';
+import { AGENT, FIGURE, FIGURES, type CityAbsences, type CitySetup, type CityWorkingDays, type EconomyState, type KeptEconomy } from '../economy/engine';
 import { activePersons, cityTable, dailyCalibration, type EconomyCalibration } from '../economy/calibration';
 import { citiesOf } from '../content/cities';
 import { cityRoutes } from '../economy/routes';
@@ -45,6 +48,7 @@ import { uses1356Tables } from '../tables';
 import { ROLE, workforce } from './work';
 import { citiesByPlace, writeHouseholds } from './household';
 import { presentPersons } from '../people/living';
+import { CHILDBED_DAYS, awayDays, sickness } from '../people/absence';
 
 /** The state of the economies that the engine keeps for a world (economy/src/lib.rs `LAST`): their bytes
  *  (`CityEconomies.model`) are written only when something reads them, a snapshot or a hash. */
@@ -108,6 +112,34 @@ export function workingDays(s: WorldState, e: CityEconomies): CityWorkingDays[] 
   }
   return out;
 }
+/** The workers of every city who are away on the days from the day after `e.day` to the day `to` (people feature 9,
+ *  economy feature 22, src/sim/people/absence.ts): every living worker on the days of the worker's sickness, and a
+ *  mother for 30 days from the birth of a child, of the children born and of the birth that is due. Absences are by
+ *  the worker's place in the engine's list, which keeps the firm: a part that passes to another person keeps the days
+ *  of the one before until the absences are given again. */
+export function absences(s: WorldState, e: CityEconomies, to: number): CityAbsences[] {
+  const from = e.day + 1, P = s.person.cols, Fam = s.family.cols, t = s.person, seed = s.seed >>> 0;
+  // the births whose childbed reaches the days, by the uid of the mother
+  const births = new Map<number, number[]>();
+  for (let id = 0; id < t.size; id++) {
+    const b = P.born[id], mother = P.mother[id];
+    if (!t.alive[id] || mother < 0 || b <= from - CHILDBED_DAYS || b > to) continue;
+    const list = births.get(mother);
+    if (list) list.push(b); else births.set(mother, [b]);
+  }
+  const cityOf = citiesByPlace(s, e), runs: number[][][] = Array.from({ length: e.places.length }, () => [[], [], []]);
+  for (const id of presentPersons(s)) {
+    if (P.role[id] !== ROLE.worker || P.died[id] !== ALIVE) continue;
+    const k = cityOf[Fam.place[P.family[id]]];
+    if (k < 0) continue;
+    const childbeds = births.get(P.uid[id]) ?? [];
+    if (P.bears[id] !== ALIVE && P.bears[id] >= from && P.bears[id] <= to) childbeds.push(P.bears[id]);
+    const days = awayDays(sickness(seed, P.uid[id], P.born[id], to + 1), childbeds, from, to), [worker, first, last] = runs[k];
+    for (let r = 0; r < days.length; r += 2) { worker.push(P.agent[id]); first.push(days[r] - from); last.push(days[r + 1] - from); }
+  }
+  return runs.map(([worker, first, last]) => ({ worker: Uint32Array.from(worker), first: Uint32Array.from(first), last: Uint32Array.from(last) }));
+}
+
 /** Numbers of a row of `CityEconomies.years` in a world with `cities` cities: the year, then the key figures of
  *  every city at its end. */
 export const yearRow = (cities: number): number => 1 + cities * FIGURES;
@@ -248,8 +280,9 @@ function compute(e: CityEconomies, s: WorldState, w: World, days: number): void 
 }
 
 /** Computes the economies up to the day `day` of the world: one period for each day. Before the first day of a year
- *  is computed, the figures of the year that has ended are kept as a row of `years`. Many days at once give what the
- *  same days give one by one. */
+ *  is computed, the figures of the year that has ended are kept as a row of `years`, and the engine is given the
+ *  working days of the year; before the first day of a month, the workers who are away in it. Many days at once give
+ *  what the same days give one by one. */
 export function computeTo(s: WorldState, w: World, day: number): void {
   const e = s.economy.cities;
   if (!e) return;
@@ -261,12 +294,17 @@ export function computeTo(s: WorldState, w: World, day: number): void {
       e.years = years;
     }
     const lastOfYear = dateToDay(next.y + 1, 0, 1, s.startYear) - 1;
-    if (e.workingTo < e.day + 1) { // the working days of the year, from its next day on
-      try { hold(e, w.economyEngine.workingDays(stateOf(e), workingDays(s, e))); }
-      catch (err) { e.halted = `${fmtDate(e.day + 1, s.startYear)}: ${err instanceof Error ? err.message : String(err)}`; return; }
-      e.workingTo = lastOfYear;
-    }
-    compute(e, s, w, Math.min(day, lastOfYear) - e.day);
+    const lastOfMonth = (next.m === 11 ? lastOfYear + 1 : dateToDay(next.y, next.m + 1, 1, s.startYear)) - 1;
+    const given = e.workingTo < e.day + 1;
+    try {
+      if (given) { // the working days of the year, from its next day on
+        hold(e, w.economyEngine.workingDays(stateOf(e), workingDays(s, e)));
+        e.workingTo = lastOfYear;
+      }
+      // the workers who are away in the month, from its next day on (economy feature 22)
+      if (given || next.d === 1) hold(e, w.economyEngine.absences(stateOf(e), absences(s, e, lastOfMonth)));
+    } catch (err) { e.halted = `${fmtDate(e.day + 1, s.startYear)}: ${err instanceof Error ? err.message : String(err)}`; return; }
+    compute(e, s, w, Math.min(day, lastOfMonth) - e.day);
   }
 }
 
