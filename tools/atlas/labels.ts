@@ -7,7 +7,7 @@ import { createRequire } from 'node:module';
 import { gunzipSync } from 'node:zlib';
 import { rgb } from '../../src/lookprobe/batch';
 import { layoutNames, nameSvg } from '../../src/worldprobe/names';
-import { realmNames } from '../../src/worldprobe/paint';
+import { realmNames } from '../../src/worldprobe/realm_names';
 import { extentOf } from '../../src/worldprobe/extent';
 import { projectionFrom, type Index } from '../../src/worldprobe/region';
 

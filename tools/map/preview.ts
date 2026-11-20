@@ -1,5 +1,6 @@
-// A still of the realms' map as the game paints it (src/worldprobe/paint.ts) with the realms' names as the game lays
-// them out (names.ts), without the world below it: for checking the look against the reference.
+// A still of the realms' map as the game paints it (src/worldprobe/paint.ts) with the realms' names as the game finds
+// them (realm_names.ts) and lays them out (names.ts), without the world below it: for checking the look against the
+// reference.
 // Run: npx tsx tools/map/preview.ts <out.png> <x0> <y0> <x1> <y1> <level> [setup.json]
 // x0 … y1 are map pixels of the world frame (the game map, then round the globe to the east); level as in zoom.ts (its dots are 2^level / 4 map pixels).
 // Writes <out>.rgba (the map alone), <out>.html (map and names) and, through the browser of Playwright, <out>.png.
@@ -8,7 +9,8 @@ import { createRequire } from 'node:module';
 import { gunzipSync } from 'node:zlib';
 import { rgb } from '../../src/lookprobe/batch';
 import { NAME_STYLE, layoutNames, nameSvg } from '../../src/worldprobe/names';
-import { paintRealms, placeAt, realmNames } from '../../src/worldprobe/paint';
+import { paintRealms, placeAt } from '../../src/worldprobe/paint';
+import { realmNames } from '../../src/worldprobe/realm_names';
 import { extentOf } from '../../src/worldprobe/extent';
 import { projectionFrom, type Index } from '../../src/worldprobe/region';
 

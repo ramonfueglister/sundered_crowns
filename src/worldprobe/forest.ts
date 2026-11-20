@@ -7,9 +7,17 @@
 import { maybeGunzip } from './gunzip';
 import { noise2, smooth } from '../lookprobe/batch';
 
-export interface Forest { w: number; h: number; /** share of the land under trees */ share: Uint8Array; /** share of conifers among the trees */ conifers: Uint8Array | null }
+export interface Forest {
+  w: number;
+  h: number;
+  /** share of the land under trees */
+  share: Uint8Array;
+  /** share of conifers among the trees */
+  conifers: Uint8Array | null;
+}
 /** a byte of the layers: 0 … FULL is a share of 0 … 1, UNKNOWN no value */
-const FULL = 250, UNKNOWN = 255;
+const FULL = 250,
+  UNKNOWN = 255;
 /** the start years a forest was made for */
 const YEARS: ReadonlySet<number> = new Set([1291]);
 
@@ -19,7 +27,8 @@ export function loadForest(base: string, year: number | undefined, mapW: number,
   if (year === undefined || !YEARS.has(year)) return Promise.resolve(null);
   let p = loaded.get(year);
   if (!p) {
-    const w = mapW >> 1, h = mapH >> 1;
+    const w = mapW >> 1,
+      h = mapH >> 1;
     const layer = async (name: string) => {
       const r = await fetch(`${base}map/${name}${year}.bin.gz`);
       if (!r.ok) throw new Error(`${name}${year}.bin.gz: HTTP ${r.status}`);
@@ -35,11 +44,21 @@ export function loadForest(base: string, year: number | undefined, mapW: number,
 
 /** A layer's share at map pixel (px, py), between the cells that hold one; null where none of the four round it does. */
 function shareAt(f: Forest, layer: Uint8Array, px: number, py: number): number | null {
-  const fx = px / 2 - 0.5, fy = Math.max(0, Math.min(f.h - 1, py / 2 - 0.5)), x0 = Math.floor(fx), y0 = Math.min(f.h - 2, Math.floor(fy)), tx = fx - x0, ty = fy - y0;
-  let sum = 0, weight = 0;
+  const fx = px / 2 - 0.5,
+    fy = Math.max(0, Math.min(f.h - 1, py / 2 - 0.5)),
+    x0 = Math.floor(fx),
+    y0 = Math.min(f.h - 2, Math.floor(fy)),
+    tx = fx - x0,
+    ty = fy - y0;
+  let sum = 0,
+    weight = 0;
   for (let k = 0; k < 4; k++) {
-    const v = layer[(y0 + (k >> 1)) * f.w + ((((x0 + (k & 1)) % f.w) + f.w) % f.w)], part = (k & 1 ? tx : 1 - tx) * (k >> 1 ? ty : 1 - ty);
-    if (v !== UNKNOWN) { sum += v * part; weight += part; }
+    const v = layer[(y0 + (k >> 1)) * f.w + ((((x0 + (k & 1)) % f.w) + f.w) % f.w)],
+      part = (k & 1 ? tx : 1 - tx) * (k >> 1 ? ty : 1 - ty);
+    if (v !== UNKNOWN) {
+      sum += v * part;
+      weight += part;
+    }
   }
   return weight > 0 ? sum / weight / FULL : null;
 }
@@ -56,18 +75,29 @@ export const WOOD = 10;
 /** the edge of a wood is this wide, as a share of the smaller of woods and open land */
 const EDGE = 0.15;
 /** where the woods lie: a field that is the same at every step, 0 … 1 */
-const lie = (wx: number, wz: number) => (noise2(wx / WOOD, wz / WOOD, 81) * 4 + noise2(wx / WOOD * 2.3, wz / WOOD * 2.3, 82) * 2 + noise2(wx / WOOD * 5.1, wz / WOOD * 5.1, 83) * 0.5) / 6.5;
+const lie = (wx: number, wz: number) =>
+  (noise2(wx / WOOD, wz / WOOD, 81) * 4 +
+    noise2((wx / WOOD) * 2.3, (wz / WOOD) * 2.3, 82) * 2 +
+    noise2((wx / WOOD) * 5.1, (wz / WOOD) * 5.1, 83) * 0.5) /
+  6.5;
 /** the share of the land on which `lie` is below k / RANKS: makes of it a rank spread evenly over 0 … 1 */
 const RANKS = 512;
 let ranks: Float32Array | undefined;
 function rankOf(v: number): number {
   if (!ranks) {
-    const seen = new Uint32Array(RANKS + 1), side = 400;
-    for (let z = 0; z < side; z++) for (let x = 0; x < side; x++) seen[Math.min(RANKS, Math.ceil(lie(x * 0.731 * WOOD, z * 0.731 * WOOD) * RANKS))]++;
+    const seen = new Uint32Array(RANKS + 1),
+      side = 400;
+    for (let z = 0; z < side; z++)
+      for (let x = 0; x < side; x++)
+        seen[Math.min(RANKS, Math.ceil(lie(x * 0.731 * WOOD, z * 0.731 * WOOD) * RANKS))]++;
     ranks = new Float32Array(RANKS + 1);
-    for (let k = 1, below = 0; k <= RANKS; k++) { below += seen[k]; ranks[k] = below / (side * side); }
+    for (let k = 1, below = 0; k <= RANKS; k++) {
+      below += seen[k];
+      ranks[k] = below / (side * side);
+    }
   }
-  const at = Math.max(0, Math.min(1, v)) * RANKS, k = Math.min(RANKS - 1, Math.floor(at));
+  const at = Math.max(0, Math.min(1, v)) * RANKS,
+    k = Math.min(RANKS - 1, Math.floor(at));
   return ranks[k] + (ranks[k + 1] - ranks[k]) * (at - k);
 }
 /** how far the lie of the land moves the woods: on its heights up to this much more of the land is wooded than the share, on its floors as much less (as a share of the smaller of woods and open land) */
@@ -93,7 +123,8 @@ export function tilth(share: number, wx: number, wz: number, fine = 1, lean = 0)
 /** `share` of the land laid out where its rank is lowest, with a frayed edge */
 function laid(share: number, rank: number, fine: number, lean: number): number {
   if (fine <= 0 || share <= 0 || share >= 1) return Math.max(0, Math.min(1, share));
-  const here = share + LEAN * lean * Math.min(share, 1 - share), edge = EDGE * Math.min(here, 1 - here);
+  const here = share + LEAN * lean * Math.min(share, 1 - share),
+    edge = EDGE * Math.min(here, 1 - here);
   return share + (smooth(here + edge, here - edge, rank) - share) * fine;
 }
 
@@ -108,20 +139,33 @@ const PLAIN = 25;
  */
 export function leanOf(heights: Float32Array, land: Uint8Array, n: number, reach: number): Float32Array {
   // sums over the rectangle from the corner: of the land's columns, of their heights and of the heights' squares
-  const m = n + 1, count = new Float64Array(m * m), sum = new Float64Array(m * m), squares = new Float64Array(m * m);
-  for (let z = 0; z < n; z++) for (let x = 0; x < n; x++) {
-    const i = z * n + x, k = (z + 1) * m + x + 1, on = land[i] ? 1 : 0, h = on ? heights[i] : 0;
-    count[k] = on + count[k - 1] + count[k - m] - count[k - m - 1];
-    sum[k] = h + sum[k - 1] + sum[k - m] - sum[k - m - 1];
-    squares[k] = h * h + squares[k - 1] + squares[k - m] - squares[k - m - 1];
-  }
+  const m = n + 1,
+    count = new Float64Array(m * m),
+    sum = new Float64Array(m * m),
+    squares = new Float64Array(m * m);
+  for (let z = 0; z < n; z++)
+    for (let x = 0; x < n; x++) {
+      const i = z * n + x,
+        k = (z + 1) * m + x + 1,
+        on = land[i] ? 1 : 0,
+        h = on ? heights[i] : 0;
+      count[k] = on + count[k - 1] + count[k - m] - count[k - m - 1];
+      sum[k] = h + sum[k - 1] + sum[k - m] - sum[k - m - 1];
+      squares[k] = h * h + squares[k - 1] + squares[k - m] - squares[k - m - 1];
+    }
   const lean = new Float32Array(n * n);
-  for (let z = 0; z < n; z++) for (let x = 0; x < n; x++) {
-    if (!land[z * n + x]) continue;
-    const x0 = Math.max(0, x - reach), z0 = Math.max(0, z - reach), x1 = Math.min(n, x + reach + 1), z1 = Math.min(n, z + reach + 1);
-    const over = (of: Float64Array) => of[z1 * m + x1] - of[z1 * m + x0] - of[z0 * m + x1] + of[z0 * m + x0];
-    const c = over(count), mean = over(sum) / c, spread = Math.sqrt(Math.max(0, over(squares) / c - mean * mean));
-    lean[z * n + x] = Math.tanh((heights[z * n + x] - mean) / (spread + PLAIN));
-  }
+  for (let z = 0; z < n; z++)
+    for (let x = 0; x < n; x++) {
+      if (!land[z * n + x]) continue;
+      const x0 = Math.max(0, x - reach),
+        z0 = Math.max(0, z - reach),
+        x1 = Math.min(n, x + reach + 1),
+        z1 = Math.min(n, z + reach + 1);
+      const over = (of: Float64Array) => of[z1 * m + x1] - of[z1 * m + x0] - of[z0 * m + x1] + of[z0 * m + x0];
+      const c = over(count),
+        mean = over(sum) / c,
+        spread = Math.sqrt(Math.max(0, over(squares) / c - mean * mean));
+      lean[z * n + x] = Math.tanh((heights[z * n + x] - mean) / (spread + PLAIN));
+    }
   return lean;
 }

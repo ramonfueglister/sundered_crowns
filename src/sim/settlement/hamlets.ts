@@ -22,23 +22,30 @@ export const LANE = 2 * FARM.d * (1 / Math.sqrt(PARCEL_SHARE) - 1);
 
 /** How far a hamlet keeps from the outermost parcels of its town, and hamlets from each other, in metres at the
  *  scale of the houses. PLACEHOLDER: no source. */
-export const HAMLET_OFF = 20, HAMLET_GAP = 4;
+export const HAMLET_OFF = 20,
+  HAMLET_GAP = 4;
 
 /** A block of the houses (2 m) is shown as about this many metres of land (src/worldprobe/land.ts: a quarter of a
  *  cell of the map's data, some 130 m in middle Europe; nominal). The land is not scaled, the houses are. */
-export const LAND_PER_BLOCK = 125, METRES_PER_BLOCK = 2;
+export const LAND_PER_BLOCK = 125,
+  METRES_PER_BLOCK = 2;
 
 /** The hamlets of a town with so many farming families: the fewest that hold them, HAMLET_FARMS at most each. */
 export const hamletsOf = (families: number): number => (families > 0 ? Math.ceil(families / HAMLET_FARMS) : 0);
 
 /** The farmsteads of each hamlet of a town: the families shared out evenly, the first hamlets one more. */
 export function hamletSizes(families: number): number[] {
-  const n = hamletsOf(families), each = n ? Math.floor(families / n) : 0, more = n ? families % n : 0;
+  const n = hamletsOf(families),
+    each = n ? Math.floor(families / n) : 0,
+    more = n ? families % n : 0;
   return Array.from({ length: n }, (_, k) => each + (k < more ? 1 : 0));
 }
 
 /** The ground a hamlet of `farms` farmsteads takes: metres east-west and north-south. */
-export const hamletBox = (farms: number): { w: number; d: number } => ({ w: Math.ceil(farms / 2) * FARM.w, d: 2 * FARM.d + LANE });
+export const hamletBox = (farms: number): { w: number; d: number } => ({
+  w: Math.ceil(farms / 2) * FARM.w,
+  d: 2 * FARM.d + LANE,
+});
 
 /**
  * Where the farmsteads of a hamlet lie round its middle (0, 0): in two rows at a lane that runs east-west, the
@@ -47,7 +54,10 @@ export const hamletBox = (farms: number): { w: number; d: number } => ({ w: Math
  * The northern row has the odd one.
  */
 export function layFarms(farms: number): Parcel[] {
-  const out: Parcel[] = [], north = Math.ceil(farms / 2), south = farms - north, z = (LANE + FARM.d) / 2;
+  const out: Parcel[] = [],
+    north = Math.ceil(farms / 2),
+    south = farms - north,
+    z = (LANE + FARM.d) / 2;
   for (let i = 0; i < north; i++) out.push({ x: (i - (north - 1) / 2) * FARM.w, z: -z, front: FRONT.south });
   for (let i = 0; i < south; i++) out.push({ x: (i - (south - 1) / 2) * FARM.w, z, front: FRONT.north });
   return out.sort((a, b) => Math.abs(a.x) - Math.abs(b.x) || a.z - b.z || a.x - b.x);
@@ -66,19 +76,23 @@ export const HAMLET_TURN = Math.PI * (3 - Math.sqrt(5));
 export function hamletSpots(n: number, inner: number, outer: number): { x: number; z: number }[] {
   const snap = (v: number) => Math.round(v / METRES_PER_BLOCK) * METRES_PER_BLOCK;
   return Array.from({ length: n }, (_, k) => {
-    const r = Math.sqrt(inner * inner + ((k + 0.5) / n) * (outer * outer - inner * inner)), a = k * HAMLET_TURN;
+    const r = Math.sqrt(inner * inner + ((k + 0.5) / n) * (outer * outer - inner * inner)),
+      a = k * HAMLET_TURN;
     return { x: snap(r * Math.cos(a)), z: snap(r * Math.sin(a)) };
   });
 }
 
 /** The radius of the disc that holds `hectares` of arable, in metres at the scale of the houses: how far the fields
  *  of a town reach when all the land round it is under its plough. */
-export const fieldReach = (hectares: number): number => (Math.sqrt((hectares * 10000) / Math.PI) / LAND_PER_BLOCK) * METRES_PER_BLOCK;
+export const fieldReach = (hectares: number): number =>
+  (Math.sqrt((hectares * 10000) / Math.PI) / LAND_PER_BLOCK) * METRES_PER_BLOCK;
 
 /** The ring the hamlets of a town lie in: from the edge of the town (`half`: how far its parcels reach from its
  *  centre) to the edge of its fields, and never so narrow that the hamlets have no room beside each other. */
 export function hamletRing(half: number, sizes: readonly number[], hectares: number): { inner: number; outer: number } {
   if (!sizes.length) return { inner: 0, outer: 0 };
-  const box = hamletBox(Math.max(...sizes)), inner = half + HAMLET_OFF + Math.max(box.w, box.d) / 2, room = box.w * box.w + box.d * box.d;
+  const box = hamletBox(Math.max(...sizes)),
+    inner = half + HAMLET_OFF + Math.max(box.w, box.d) / 2,
+    room = box.w * box.w + box.d * box.d;
   return { inner, outer: Math.max(fieldReach(hectares), Math.sqrt(inner * inner + (sizes.length * room) / Math.PI)) };
 }

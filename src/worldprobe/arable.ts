@@ -9,7 +9,12 @@ export type Arable = PlaceLayer;
 const FULL = 250;
 
 /** The land under the plough of a start year on the game map of mapW × mapH pixels, once per year; null for a year without the layer: the fields then lie as the game's layer of 1356 has them. */
-export const loadArable = (base: string, year: number | undefined, mapW: number, mapH: number): Promise<Arable | null> => loadPlaceLayer('arable', base, year, mapW, mapH);
+export const loadArable = (
+  base: string,
+  year: number | undefined,
+  mapW: number,
+  mapH: number,
+): Promise<Arable | null> => loadPlaceLayer('arable', base, year, mapW, mapH);
 /** The share of its land the place at pixel (px, py) of the game map has under the plough, 0 … 1; null where no place is (water, beyond the game map). */
 export function arableAt(a: Arable, px: number, py: number): number | null {
   const v = byteAt(a, px, py);

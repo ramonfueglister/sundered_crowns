@@ -49,6 +49,7 @@ players and the AI of realms without a player act through the same commands.
 | 20 | The days of rest without a leak | after feature 19 Ramon wrote "naja jetzt sind wir aber nicht fertig" (19 Nov 2026), chose to damp the firms' price rule first, "nur literaturkonform"; Calvo held the prices but cost work, and he chose "Zuerst Leck an Ruhetagen schliessen" (card, 19 Nov 2026). Built: materials for the next working day, the owner on his working days on the profit of the year; with tests and numbers from the game (section 20) |
 | 21 | A world knows the history only up to its start | the open gap of feature 20, found to come from the history of the placeholder tables: a world of 1291 expected the recovery after the plague of 1348. Under Ramon's "nur literaturkonform" (19 Nov 2026) and his order to clear the open questions of the economy first; the port's window (data up to the date of the calibration). Built, with tests and numbers from the game (section 21). The gap of 1.5 % that remained, cleared at Ramon's choice ("Erst Restlücke 1,5 % klären", 20 Nov 2026): the owners' rule of the run it was measured against, not the days of rest; nothing built |
 | 22 | The workers who are away: sickness and childbed | step 4 of way A of the proposal «Personen: Archiv der Toten und Tagesplan», proposed 20 Nov 2026 (https://claude.ai/artifact/QK327U5QQQGWNCnL5JhHV5) and chosen by Ramon the same day («So bauen, Lohn läuft weiter»): a firm works with the workers who are there, and everybody keeps the place and the wage. Built, with tests and numbers from the game (section 22); people feature 9 holds the sicknesses and the childbeds |
+| 23 | Service by the year, work by the day, and who stands in | step 6 of way A: after section 22 Ramon chose to solve the drain of the firms' deposits in step 6 («So lassen, in Schritt 6 lösen», 20 Nov 2026), and phase A of the proposal «Vorschlag: Schritt 6, Jahresdienst und Tagelohn» the same day (https://claude.ai/artifact/Wyqd64rfmZgJnz9GZ7Wof9, «Phase A bauen und messen»): two contracts, a day labourer paid for the days he works, workers without work who stand in for those who are away. Built, with tests and numbers from the game (section 23); people feature 10 gives the contracts |
 
 ## 1. Grain harvest per place
 
@@ -669,7 +670,7 @@ numbers bit for bit (tested).
 - Without a source and marked as our own: the window of 365 days as such, the plan day by the order of the firms,
   all firms planning on the first day, and three of the seven conversions below.
 
-**From the year to the day** (`dailyEconomy` in `src/sim/economy/calibration.ts`; the table of sources
+**From the year to the day** (`dailyEconomy` in `src/sim/economy/daily.ts`; the table of sources
 `data/economy/england_1356.json` is unchanged but for the two entries of the clock: 365 days a year, an assumption,
 and 30 days between two plans, from Eurace@Unibi).
 
@@ -1705,7 +1706,7 @@ person without work, so the share they consume of it (`psi`) and the share they 
 higher (London 0.18 %, Cairo 0.03 %). No other number of a city changes; a test compares every parameter.
 
 The calibration tool still computes the benefit of the original code when the table asks for it
-(`unemploymentBenefit` in `src/sim/economy/calibration.ts`), and the engine still computes such cities.
+(`unemploymentBenefit` in `src/sim/economy/accounts.ts`), and the engine still computes such cities.
 
 ### Why the cities hold without it
 
@@ -3489,7 +3490,8 @@ months from 60 on (people feature 9); a mother lay in for a month.
    employees. With nobody away it is the rule of section 19, number for number.
 2. **The worker keeps the place and the wage.** The firm pays its `N` employees as before (A.26), the worker's
    household has the income it had, and the firm hires nobody for a worker who is away. That is how the wage runs on
-   the days of rest of section 19 too. Wages by the day worked are the target income of step 6.
+   the days of rest of section 19 too. Since section 23 that holds for a servant; a day labourer is paid for the days
+   he works, and workers without work stand in for those who are away.
 3. **A firm that sold all it had plans as if its workers had been there.** In the paper a firm's supply is the
    demand it met (section 8), and the port measures that demand by what the firm sold of its output and its stock
    (`Q_d_i` in the port's goods market). On a day on which the firm sold all it had, the output that its workers
@@ -3508,8 +3510,9 @@ supply of the demand met and the materials of what is made, on days when a firm 
 
 ### The rules that were measured and not kept
 
-Six combinations were built and run (`npm run absence:check -- 3`: the world of 1291 against the same world in which
-everybody is there, real GDP, and those without work at the end of the third year):
+Eight combinations were built and run (`npm run absence:check -- 3`: the world of 1291 against the same world in which
+everybody is there, real GDP, and those without work at the end of the third year). G and H were run after F was
+built, G for step 6 of the day plan and H to close the drain of the firms' deposits (below):
 
 | | the plan | the wage of a day away | the materials | real GDP, years 1 / 2 / 3 | without work in year 3 |
 |---|---|---|---|---|---|
@@ -3519,6 +3522,8 @@ everybody is there, real GDP, and those without work at the end of the third yea
 | D | rule 3 | none | for those who are there | −4.0 / −5.1 / −6.8 % | 2,936 against 1,036 |
 | E | rule 3 | paid | for those who are there | −2.2 / −2.4 / −4.1 % | 2,015 against 1,036 |
 | **F** | **rule 3** | **paid** | **not bought again (rule 4)** | **−1.9 / −1.9 / −3.4 %** | **2,215 against 1,036** |
+| G | rule 3 | none | rule 4 | −3.7 / −4.6 / −6.3 % | 3,274 against 1,036 |
+| H | rule 3 | paid | rule 4, and the capital not worn is not replaced | −2.2 / −3.0 / −5.3 % | 3,002 against 1,036 |
 
 - **A**, the first build: a firm short of hands reads the output it could not make as a fall in demand, plans less,
   lets workers go, and does so again at its next plan. It had the rule for the day without anybody because without
@@ -3538,10 +3543,19 @@ everybody is there, real GDP, and those without work at the end of the third yea
   D takes the wage of the days away from the households on top, and the slide is the steepest.
 - **F**, the rule built: the effort and the wage stay those of all the firm's employees, the output that rule 3
   counts is what all would have made, and the stock of materials does not grow. GDP falls by 1.9 % in the first two
-  years and by 3.4 % in the third, about the share of the days lost (3.6 %), and the price level stays. The firms
-  pay the wages of the days away out of their deposits (6, 11 and 16 % below the comparison), their owners have
-  less to spend, and from the second year on the firms take on fewer workers: those without work are twice as many
-  in the third year (6.0 % of the workers against 2.8 %).
+  years and by 3.4 % in the third, about the share of the days lost (3.6 %), and the price level stays. The firms'
+  deposits fall (6, 11 and 16 % below the comparison) and the households' deposits rise by about as much; G shows
+  that this is not the wage of the days away. From the second year on the firms take on fewer workers: those
+  without work are twice as many in the third year (6.0 % of the workers against 2.8 %).
+- **G** is F without the wage of the days away. The firms' deposits fall just as in F (5.9, 11.0 and 15.8 % below
+  the comparison) and the households' deposits rise just as much (+1.4, +2.7 and +3.8 %): who pays the worker who
+  is away does not move the money between firms and households. GDP falls twice as fast as in F, and three times as
+  many are without work in the third year. Our reading, not measured apart: what the firm does not pay is profit,
+  the profit goes to its owner, who is a household too (feature 18) and spends on the mean profit of the year
+  (feature 20), so the households hold as much but spend it later than the worker would have.
+- **H** is F with a fifth rule of the same kind as rule 4, for capital: a firm does not replace the capital that its
+  workers who were away did not wear. It closes the drain (below), but the economies shrink further every year; it
+  is not built.
 
 ### How the world gives it
 
@@ -3557,9 +3571,9 @@ The world computes at most to the end of a month at a time (`computeTo`), so tha
 are given before its first day; many days at once give what the same days give one by one (tests in
 `tests/absence.test.ts`).
 
-Code: `economy/src/clock.rs` (`Absences`, `firms_production`, `firms_expectations_and_decisions`,
-`search_and_matching`), `economy/src/lib.rs` (`absences`,
-`sce_absences`), `src/sim/systems/economy.ts` (`absences`, `computeTo`), `src/sim/people/absence.ts`; tests in
+Code: `economy/src/workers.rs` (`Absences`, `absences`), `economy/src/clock.rs` (`firms_production`,
+`firms_expectations_and_decisions`, `search_and_matching`), `economy/src/lib.rs` (`sce_absences`),
+`src/sim/systems/economy.ts` (`absences`, `computeTo`), `src/sim/people/absence.ts`; tests in
 `economy/tests/absences.rs` and `tests/absence.test.ts`.
 
 ### The numbers
@@ -3586,10 +3600,52 @@ employs 34,300 to 34,400 from year 3 to year 6, while the comparison grows by ab
 real GDP in year 6, is a little more than the 3.6 % of the days away.
 
 The firms' deposits do not settle. They fall by about 400 a year (6,039 against 8,666 in year 6), and the
-households' deposits grow by about as much. That is the wage of the days away: the firms pay it and get no output
-for it, and the households who are paid find no more goods to buy. The transfer does not slow within six years. A
-wage by the day worked (step 6 of the day plan) would end it; a club's sick pay would be paid by its members, not by
-the firms.
+households' deposits grow by about as much. The transfer does not slow within six years. It is not the wage of the
+days away: without that wage (G) the firms' deposits fall just as fast, so a wage by the day worked does not end it.
+Where the money goes is the next section.
+
+### Where the firms' money goes
+
+The cash flows of the firms of all cities were added up day by day over two years, in the world with the absences
+and in the comparison (a diagnostic of the port's terms of A.33 and A.34 that is not kept in the engine; patch,
+probe and outputs in the project files, wirtschaft/leck-der-betriebe/). A firm pays out all its profit: its owner
+takes the whole profit and bears the whole loss (feature 18; τ_FIRM is 0 in src/sim/economy/calibration.ts, and
+in the measurement the dividends less the losses the owners bore are the profits: 72,594 − 19,677 = 52,917 in year 1).
+So its deposits change only by what it spends on stocks: the change of its deposits is its depreciation less its
+investment plus the materials it used less those it bought.
+
+| change against the comparison | year 1 | year 2 |
+|---|---|---|
+| investment above depreciation | −473 | −455 |
+| materials bought above those used | −66 | −51 |
+| new credit and interest | +10 | +46 |
+| the firms' deposits | −529 | −460 |
+
+Nine tenths of the drain is investment. A firm invests what the capital of its planned supply wears (A.14:
+δ/κ · min(Q_s, K κ)), and its capital wears with what it makes (A.3: δ/κ · Y). On a day on which workers are away
+the firm makes less than it planned, so it replaces capital that was not worn: its capital grows beyond its use, and
+the money it pays goes to the firms that make the capital goods and from them to their owners as profit. The money
+is not lost: it is in capital that nobody uses, and in the households' deposits.
+
+Rule H closes it the way rule 4 closes the materials: the capital that the workers who were away did not wear
+(δ/κ times the output lost) is kept per firm and invested less at the next purchases, an own rule from A.3 and
+A.14 as rule 4 is. Measured over six years against F:
+
+| | year 1 | year 2 | year 3 | year 4 | year 5 | year 6 |
+|---|---|---|---|---|---|---|
+| real GDP, F | −1.9 % | −1.9 % | −3.4 % | −3.8 % | −4.0 % | −4.2 % |
+| real GDP, H | −2.2 % | −3.0 % | −5.3 % | −6.5 % | −7.3 % | −8.3 % |
+| employees, F | −0.1 % | −2.0 % | −3.3 % | −3.5 % | −3.8 % | −4.0 % |
+| employees, H | −0.5 % | −3.3 % | −5.5 % | −6.4 % | −7.5 % | −8.3 % |
+| firms' deposits, F | −6.1 % | −11.4 % | −16.4 % | −21.2 % | −25.7 % | −30.3 % |
+| firms' deposits, H | −0.9 % | −1.5 % | −2.1 % | −2.7 % | −3.3 % | −3.8 % |
+
+With H the deposits hold, but output and employment fall by about one per cent of the comparison a year and do not
+settle within six years (3,866 without work in year 6 against 904). The capital that was not needed was also demand:
+in F it keeps the makers of capital goods busy. Without it the owners have less to spend, and the economies shrink.
+Neither is right: F builds capital nobody uses out of the firms' deposits, which would be gone in about 15 years at
+this pace; H lets the economies shrink without end. In both the firm makes less on a day on which workers are away
+and finds nobody to stand in for them. Section 23 brings the stand-ins, and the drain falls to a quarter.
 
 ### Limits
 
@@ -3597,11 +3653,14 @@ the firms.
   the place to an heir (people feature 2), and the heir keeps the days away of the dead worker for the rest of the
   month; a worker who joins later in the month has none until the next.
 - **No sick pay and no lost wage.** The wage of a worker who is away is paid by the firm as on any day. A club's or
-  a guild's sick pay is not booked apart, and a day labourer would have lost the day's wage (step 6). The firms
-  carry it: their deposits fall year by year (above).
+  a guild's sick pay is not booked apart. Since section 23 a day labourer loses the day's wage, and workers without
+  work stand in. Without the wage of the days away for everybody (G) the economies slide further.
+- **The firms' deposits fall.** F replaces capital the workers who were away did not wear (above); the drain is
+  about 5 % of the comparison a year and does not slow within six years. With the stand-ins of section 23 it is
+  about 1 % a year from the fourth year.
 - **Rules 3 and 4 are ours.** No paper read has workers who are away in a model of this kind; the rules take the
   port's own (the supply of the demand met, the materials of what is made) to the days a firm cannot make what it
-  planned, and were chosen among the six combinations measured above.
+  planned, and were chosen among the combinations measured above.
 - **The owners are not away.** The owner of a firm is not one of its workers in the model.
 
 ### State and upgrade
@@ -3612,3 +3671,157 @@ owners' profits of format 11. A state of an earlier format is read as one in whi
 they were given working days (`workingTo` = −1): before the next day they are given the working days of the rest of
 the year again and the absences of the rest of the month. The persons stay as they are; their days away follow from
 them.
+
+## 23. Service by the year, work by the day, and who stands in
+
+Step 6 of way A of the proposal «Personen: Archiv der Toten und Tagesplan». After section 22 Ramon chose to leave the
+drain of the firms' deposits as it was and to solve it in step 6 («So lassen, in Schritt 6 lösen», 20 November
+2026). The proposal «Vorschlag: Schritt 6, Jahresdienst und Tagelohn»
+(https://claude.ai/artifact/Wyqd64rfmZgJnz9GZ7Wof9) followed the same day, and he chose its phase A («Phase A bauen
+und messen»): two contracts, a wage by contract, and workers without work who stand in for those who are away. Who
+has which contract is people feature 10 (docs/PEOPLE_DESIGN.md).
+
+### Why
+
+Until section 22 every worker had the port's contract: the wage of the firm in every period, worked or not
+(section 19, rule 6), and since section 22 also on the days of sickness and childbed. Nobody worked in the place of a
+worker who was away, so the firm made less than it planned, invested for its plan and replaced capital that was not
+worn (section 22, where the firms' money goes). The sources know two contracts, and they know men hired in the place
+of the sick.
+
+### What the sources say
+
+| Question | Finding | Source |
+|---|---|---|
+| two contracts | the famuli were hired "most commonly for the whole agricultural year"; day labour "especially at times of peak demand such as harvest" | Claridge, Delabastita & Gibbs 2024, p. 13 |
+| two contracts | Meopham 1307–75: 8 to 15 servants on the manor all year; hired men "particularly at harvest and lambing times" | Goose, Archaeologia Cantiana 92, pp. 204–206 |
+| the share in service by the year | the famuli did "at least a third and up to a half of all labour" on the demesnes | Claridge & Langdon 2015, cited in Claridge, Delabastita & Gibbs 2024, p. 13 |
+| the share in service by the year | about 40 % of the labour force in annual service; 46 % in the late 13th century after Campbell 2016, table 3.4 (from a machine summary, not checked word for word) | Humphries & Weisdorf 2019, p. 22 of the manuscript |
+| who has which contract | unmarried women in annual service, married women by the day | Humphries & Weisdorf 2015 |
+| who has which contract | day labourers were often "smallholding tenants who used temporary employment to supplement the incomes" of their land | Claridge, Delabastita & Gibbs 2024, p. 13 |
+| the day wage | day labourers worked as many days as it took to earn the annual pay of a servant | Humphries & Weisdorf 2019, p. 6 |
+| the wage of a sick servant | none found; ploughmen dismissed in the year had "cash and food payments reduced accordingly", which is dismissal, not sickness | Goose, p. 207 |
+| a man in the place of the sick | a sick tenant found "a family member or even a hired laborer" | Owen, Brown & Skinner 2025, p. 5 |
+| a man in the place of the sick | Battle Abbey 1420/21: "in the absence of the ploughman who was sick for 84 days, a man was hired to drive the wagon and plough" | Owen, Brown & Skinner 2025, p. 7 |
+| a man in the place of the sick | but "little evidence" of one man hired for another at Ramsey, where the monks had labour services in plenty | Owen, Brown & Skinner 2025, p. 7 |
+
+### The rules
+
+1. **The contract follows the household** (people feature 10). A worker who heads a family, as its man or its
+   woman, works by the day; every other worker, who lives in the family of another, serves by the year. The world
+   gives the engine the workers who work by the day.
+2. **A servant is paid in every period**, as before: the port's wage of the firm (A.26), worked or not, on the days of
+   rest (section 19, rule 6) and the days away (section 22, Ramon's choice «Lohn läuft weiter»). No source read says
+   what a sick famulus was paid; an annual wage is a wage for the year.
+3. **A day labourer is paid for the periods he works**: the wage of his firm times the factor `a` of its day
+   (section 19), nothing on a day of rest or a day he is away. The factors of a year add up to its days, so over a
+   year without days away he earns what a servant earns: the arbitrage of Humphries & Weisdorf (2019, p. 6) on the
+   working days of the game's calendar.
+4. **Workers without work stand in for those who are away.** On a day on which workers of a firm that works (`a` > 0)
+   are away, the firm takes for each of them a worker without work of its city who is not away himself, for that
+   day, and pays him as a day labourer, `a` times its wage. The stand-ins are chosen by the port's rule for
+   vacancies (A.1.1, `search_and_matching_labour`): the workers without work in random order, one to each firm with
+   places open, the firms in random order, round after round, while workers without work are left. A stand-in works
+   at the firm's productivity and effort, so the labour of the day is `a (N − away + stand-ins) α` (A.13). He stays
+   without an employer in the port's books, and keeps nothing of the day but his pay.
+5. **The books.** What a firm pays its day labourers and stand-ins more or less than the port's wages
+   (`(1 + τ_SIF) w_i P_HH` times the sum of `paid − 1` over its pays) comes off its profit (A.27) and so off its
+   deposits (A.34) and its owner's income (feature 18). The worker's realised income (A.53) has it, net of the taxes
+   on wages; the crown takes those taxes (A.59); the national accounts count it as compensation of employees, not
+   operating surplus. A household plans its spending on the wage of its contract per mean day, as the port plans on
+   the wage of the period (A.46 on the expected A.53): the factor of the day is already in what it spends on the day
+   (section 19), and counting it in the planned income too would take it twice.
+
+Without contracts the economy computes as before, number for number; with contracts and every day a mean day and
+nobody away it computes the same (tests in `economy/tests/contracts.rs`).
+
+**OWN RULE**, two parts: that every place of the day is filled while a worker without work is there (the sources show
+the practice, not how often), and that the stand-ins are chosen by the port's rule for vacancies applied to the day
+(the port knows no stand-ins).
+
+### How the world gives it
+
+The world gives the engine, city by city, the workers who work by the day, by their position in the port's list of
+workers (`person.agent`): every living worker of the city (the present persons, people feature 7) who is the man or
+the woman of a family. It gives them with the absences of the month (section 22), on the first day of every month and
+when it gives the working days of the year. A place that passes to an heir in the month keeps the contract of the one
+before until the next month.
+
+Code: `economy/src/workers.rs` (`today`, `wages_more`, `add_pays`, `taxes_on_pays`, `Economy::with_contracts`,
+`contracts`), `economy/src/clock.rs` (`firms_production`, `search_and_matching_labour`, `firms_profits`,
+`firms_deposits`, `households_income_act`, `gov_revenues`, `update_data_step`), `economy/src/lib.rs`
+(`sce_contracts`, `sce_stand_ins_last`), `src/sim/systems/economy.ts` (`contracts`, `computeTo`); tests in
+`economy/tests/contracts.rs` and `tests/contracts.test.ts`.
+
+### The numbers
+
+`npm run absence:check -- 6`, the world of 1291 with the absences against the same world in which everybody is
+there, both with their contracts; F is the rule of section 22 without contracts, measured the same way (section 22,
+the numbers). Output in the project files, wirtschaft/schritt6/check6_phase_a.txt.
+
+| | year 1 | year 2 | year 3 | year 4 | year 5 | year 6 |
+|---|---|---|---|---|---|---|
+| days the workers are away (sick or in childbed) | 3.57 % | 3.50 % | 3.59 % | 3.53 % | 3.52 % | 3.57 % |
+| workers who serve by the year (at the start of the year) | 53.8 % | 52.6 % | 51.8 % | 51.0 % | 50.2 % | 49.5 % |
+| days away at firms that worked on which a worker without work stood in | 55.0 % | 63.8 % | 73.7 % | 82.4 % | 85.0 % | 79.3 % |
+| real GDP | −1.0 % | −0.8 % | −1.5 % | −2.0 % | −2.2 % | −2.1 % |
+| real GDP, F | −1.9 % | −1.9 % | −3.4 % | −3.8 % | −4.0 % | −4.2 % |
+| real GDP with the absences | 176,249 | 177,957 | 176,636 | 176,448 | 176,913 | 177,891 |
+| consumption | −1.0 % | −1.1 % | −1.8 % | −2.2 % | −2.3 % | −2.1 % |
+| investment | +0.5 % | +0.3 % | −0.7 % | −1.5 % | −1.7 % | −1.4 % |
+| employees | −0.5 % | −1.5 % | −2.3 % | −2.9 % | −2.8 % | −2.5 % |
+| employees, F | −0.1 % | −2.0 % | −3.3 % | −3.5 % | −3.8 % | −4.0 % |
+| without work at the end of the year | 1,215 / 1,031 | 1,581 / 1,054 | 1,908 / 1,073 | 1,995 / 964 | 1,910 / 917 | 1,797 / 917 |
+| without work, F | 971 / 944 | 1,705 / 998 | 2,215 / 1,036 | 2,192 / 938 | 2,278 / 913 | 2,349 / 904 |
+| households' deposits | +0.7 % | +1.2 % | +1.6 % | +1.9 % | +2.3 % | +2.8 % |
+| households' deposits, F | +1.3 % | +2.7 % | +3.8 % | +4.9 % | +6.2 % | +7.5 % |
+| firms' deposits | −2.9 % | −4.8 % | −6.1 % | −7.0 % | −7.9 % | −9.1 % |
+| firms' deposits, F | −6.1 % | −11.4 % | −16.4 % | −21.2 % | −25.7 % | −30.3 % |
+| mean price level | 1.0017 / 1.0017 | 0.9937 / 0.9962 | 0.9936 / 0.9977 | 0.9933 / 0.9969 | 0.9910 / 0.9933 | 0.9931 / 0.9926 |
+
+- **The stand-ins halve the loss.** Real GDP settles from the fourth year at about 2 % below the comparison, against
+  4 % in F and the 3.6 % of the days away; employment at 2.5 to 2.9 % below, against 4 % in F.
+- **A reserve of workers without work.** With the absences about 900 more are without work at the end of a year
+  than in the comparison, from the third year on (in F about 1,200 to 1,450 more). They stand in on most of the days
+  away, 55 % in the first year and 79 to 85 % from the fourth: the pool grows until it covers most of the absences.
+  At the founding the cities have about 940 without work against about 1,270 workers away on a mean day.
+- **The drain of the firms' deposits is a quarter of F's and slows, but does not stop.** The gap to the comparison
+  grows by 254, 165, 111, 77, 76 and 104 a year, against about 400 to 530 a year in F; after six years the firms hold
+  9 % less, against 30 % in F. Our reading, not measured apart: what remains is the investment above the wear of
+  section 22 on the days on which nobody stood in, 15 to 45 % of the days away: F's drain of the same year times that
+  share is 238, 166, 113, 72, 60 and 82. The pay of the day labourers and the stand-ins comes off the profit, and so
+  off the owners, not off the firms' deposits (section 22: a firm pays out all its profit, and its owner bears its
+  loss).
+- **The contracts alone change little.** The comparison with contracts against the comparison of F without them, in
+  which everybody is there too: real GDP −0.2 % in the first year and +0.1 % in the sixth (181,667 against 181,571),
+  without work 1,031 against 944 and 917 against 904.
+- **Fewer serve by the year as the years pass**, 53.8 % at the founding and 49.5 % after six years: more of the
+  workers head a family of their own.
+
+### Limits
+
+- **54 % serve by the year, the sources 40 to 46 %.** The contract follows the household; the gap is not tuned
+  (people feature 10).
+- **Stand-ins come only from the workers without work of the city.** The sources also know a member of the family
+  in the place of the sick (Owen, Brown & Skinner 2025, p. 5); the persons of a family who do not work are not
+  households of the engine. Where no worker without work is left, the place stays empty for the day and the firm
+  makes less, as in section 22.
+- **Every place is filled while there is somebody** (OWN RULE). The sources show the practice, not how often; at
+  Ramsey there is "little evidence" of it.
+- **The firms' deposits still fall**, by about 1 % of the comparison a year from the fourth year, on the days on
+  which nobody stood in (above).
+- **A servant who is away is paid, and so is the stand-in.** No source read says what a sick famulus was paid; the
+  wage runs on by Ramon's choice for section 22.
+- **The day labourer's days are not his own.** He works every day his firm works and he is there. How many days he
+  wanted and found work, a target income of 150 to 200 days, is phase B of the proposal, a choice of its own.
+- **A stand-in is no employee.** He works one day at a time and stays without work in the port's books; the port's
+  firms hire by their plans as before, for both contracts alike.
+
+### State and upgrade
+
+The engine's state format 13: the clock keeps the contract of every worker, one byte each (0 by the year, 1 by the
+day), after the materials left unused of format 12; none, a count of 0, for an economy without contracts. A state of
+format 12 is read as one without contracts. Who stands in and who is paid what is computed anew in every period and
+is not saved. State version 36. The upgrade 35 → 36 changes nothing of the economies but the day to which they were
+given working days (`workingTo` = −1), as the upgrade 34 → 35 did: before the next day they are given the working
+days of the rest of the year, the absences of the rest of the month and the contracts.

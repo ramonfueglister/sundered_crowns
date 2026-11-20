@@ -16,117 +16,20 @@
 // as long as ten times its width: so ways gather at a few crossings, as they gathered at bridges and fords.
 //
 //   npx tsx tools/roads/build_roads.ts 1291
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { brotliDecompressSync, gunzipSync } from 'node:zlib';
+import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import gazetteer from '../../data/content/gazetteer.json';
 import { MinHeap } from '../../src/sim/minheap';
-import { type Index, fromDifferences } from '../../src/worldprobe/region';
 import { ROAD_KINDS } from '../../src/worldprobe/roads';
-import { slopeTime } from '../../src/sim/roads';
+import { waysBetween } from './between';
+import { DX, DY, direction, readLand } from './land';
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '../..');
 const year = Number(process.argv[2] ?? 1291);
 
-// ---- the map, a pixel at a time -------------------------------------------------------------------------------------
-const geo = JSON.parse(readFileSync(resolve(ROOT, 'public/data/geo.json'), 'utf8')) as {
-  W: number;
-  H: number;
-  L: number;
-  lon0: number;
-  lon1: number;
-  latN: number;
-  latS: number;
-  loc: { x: number[]; y: number[] };
-};
-const index = JSON.parse(readFileSync(resolve(ROOT, 'public/map/regions/world/index.json'), 'utf8')) as Pick<
-  Index,
-  'tile' | 'cells' | 'mapW' | 'mapH' | 'tiles' | 'coding'
->;
-const W = geo.W,
-  H = geo.H,
-  C = index.cells,
-  T = index.tile,
-  PT = T / C;
-const merc = (deg: number) => Math.asinh(Math.tan((deg * Math.PI) / 180));
-const latOfRow = (y: number) =>
-  (Math.atan(Math.sinh(merc(geo.latN) - (y / H) * (merc(geo.latN) - merc(geo.latS)))) * 180) / Math.PI;
-const pixelOf = (lon: number, lat: number): [number, number] => [
-  ((lon - geo.lon0) / (geo.lon1 - geo.lon0)) * W,
-  ((merc(geo.latN) - merc(lat)) / (merc(geo.latN) - merc(geo.latS))) * H,
-];
-/** km along a pixel at a row (the map is a Mercator map: a pixel is as tall as it is wide) */
-const kmRow = new Float32Array(H);
-for (let y = 0; y < H; y++)
-  kmRow[y] = ((geo.lon1 - geo.lon0) / W) * 111.32 * Math.cos((latOfRow(y + 0.5) * Math.PI) / 180);
-
-// the towns of the world graphic: those the simulation holds persons for
-const land = JSON.parse(readFileSync(resolve(ROOT, `public/data/hamletland_${year}.json`), 'utf8')) as {
-  town: number[];
-  inside: number[];
-  hamlet: number[];
-};
-const places = gazetteer.places as { name: string; lon: number; lat: number }[];
-const towns = land.town.map((t, k) => {
-  const [x, y] = pixelOf(places[t].lon, places[t].lat);
-  return {
-    site: t,
-    name: places[t].name,
-    x: Math.floor(x),
-    y: Math.floor(y),
-    people: (land.inside[k] + land.hamlet[k]) * 100,
-  };
-});
-
-// the window of the map the towns need, with a margin
-const MARGIN = 200;
-const X0 = Math.max(0, Math.min(...towns.map((t) => t.x)) - MARGIN),
-  Y0 = Math.max(0, Math.min(...towns.map((t) => t.y)) - MARGIN);
-const X1 = Math.min(W, Math.max(...towns.map((t) => t.x)) + MARGIN),
-  Y1 = Math.min(H, Math.max(...towns.map((t) => t.y)) + MARGIN);
-const w = X1 - X0,
-  h = Y1 - Y0,
-  n = w * h;
-/** mean height (m), whether the pixel is water (sea or lake), and the largest drainage area (km²) of its cells */
-const height = new Float32Array(n),
-  wet = new Uint8Array(n),
-  drains = new Float32Array(n);
-{
-  const has = new Set(index.tiles),
-    sum = new Float32Array(n),
-    cnt = new Uint8Array(n),
-    water = new Uint8Array(n);
-  for (let ty = Math.floor(Y0 / PT); ty * PT < Y1; ty++)
-    for (let tx = Math.floor(X0 / PT); tx * PT < X1; tx++) {
-      const file = resolve(ROOT, `public/map/regions/world/${tx}_${ty}.${index.coding === 'br' ? 'bin' : 'bin.gz'}`);
-      if (!has.has(`${tx}_${ty}`) || !existsSync(file)) continue;
-      const raw =
-          index.coding === 'br'
-            ? fromDifferences(brotliDecompressSync(readFileSync(file)), T)
-            : gunzipSync(readFileSync(file)),
-        t = T * T;
-      const shaped = new Int16Array(raw.buffer.slice(raw.byteOffset, raw.byteOffset + t * 2)),
-        drainage = raw.subarray(t * 2, t * 3),
-        wat = raw.subarray(t * 3, t * 4);
-      for (let cy = 0; cy < T; cy++)
-        for (let cx = 0; cx < T; cx++) {
-          const px = tx * PT + Math.floor(cx / C) - X0,
-            py = ty * PT + Math.floor(cy / C) - Y0;
-          if (px < 0 || py < 0 || px >= w || py >= h) continue;
-          const i = py * w + px,
-            c = cy * T + cx;
-          sum[i] += shaped[c];
-          cnt[i]++;
-          if (wat[c] !== 0) water[i]++;
-          drains[i] = Math.max(drains[i], 2 ** (drainage[c] / 16) - 1);
-        }
-    }
-  for (let i = 0; i < n; i++) {
-    height[i] = cnt[i] ? sum[i] / cnt[i] : 0;
-    wet[i] = !cnt[i] || water[i] * 2 > cnt[i] ? 1 : 0;
-  }
-}
+// ---- the map, a pixel at a time (tools/roads/land.ts) ----------------------------------------------------------------
+const land = readLand(ROOT, year),
+  { geo, H, kmRow, towns, X0, Y0, X1, Y1, w, h, n, height, wet, drains } = land;
 
 // ---- what a step costs ----------------------------------------------------------------------------------------------
 /** a slope of this much (rise over run) doubles the cost of a step; carts take about 5 % without trouble (an assumption after Galin et al. 2010, who weigh slope by a power above a limit) */
@@ -157,8 +60,6 @@ for (let y = 0; y + 1 < h; y++)
     }
   }
 const road = new Uint8Array(n);
-const DX = [1, -1, 0, 0, 1, 1, -1, -1],
-  DY = [0, 0, 1, -1, 1, -1, 1, -1];
 /** the cost of a step from pixel i to its neighbour j in direction d (km of level road) */
 function stepCost(i: number, j: number, d: number, y: number): number {
   const km = kmRow[y + Y0] * (d < 4 ? 1 : Math.SQRT2),
@@ -334,12 +235,7 @@ traffic.fill(0);
     order = new Int32Array(m),
     flow = new Float64Array(m),
     townAt = new Float64Array(m);
-  const dirOf = (a: number, b: number) => {
-    const dx = (b % w) - (a % w),
-      dy = Math.floor(b / w) - Math.floor(a / w);
-    for (let d = 0; d < 8; d++) if (DX[d] === dx && DY[d] === dy) return d;
-    return 0;
-  };
+  const dirOf = (a: number, b: number) => direction(w, a, b);
   const edgeCost = (a: number, b: number) => stepCost(a, b, dirOf(a, b), Math.floor(a / w));
   const sites = towns.map((t) => id.get(at(t)) ?? -1);
   const q = new MinHeap();
@@ -430,96 +326,8 @@ for (const [a, list] of nbr)
 // rings without a junction
 for (const [a, list] of nbr) for (const b of list) if (!used.has(a < b ? a * n + b : b * n + a)) walk(a, b);
 
-// ---- the ways between the places of the map, for the simulation --------------------------------------------------
-const ids = new Uint16Array(gunzipSync(readFileSync(resolve(ROOT, 'public/map/ids.bin.gz'))).buffer.slice(0));
-/** the place of the map a pixel of the window lies in (-1: none, or sea) */
-const placeOf = (i: number) => {
-  const l = ids[(Math.floor(i / w) + Y0) * W + (i % w) + X0] - 1;
-  return l >= 0 && l < geo.L ? l : -1;
-};
-const between = new Map<string, { a: number; b: number; k: number; km: number; effort: number; straight: number }>();
-for (const key of links) {
-  const a = Math.floor(key / n),
-    b = key % n,
-    la = placeOf(a),
-    lb = placeOf(b);
-  if (la === lb || la < 0 || lb < 0) continue;
-  const id = la < lb ? `${la},${lb}` : `${lb},${la}`,
-    k = Math.min(kind[a], kind[b]);
-  const e =
-    between.get(id) ??
-    between.set(id, { a: Math.min(la, lb), b: Math.max(la, lb), k, km: 0, effort: 0, straight: 0 }).get(id)!;
-  e.k = Math.max(e.k, k);
-}
-/**
- * How long the way from one place to the next is, its effort, and the straight line between its ends: from the pixel of the way nearest the first
- * place's middle to the pixel nearest the second's, along the way as it was laid (the cheapest to build), over the
- * way's pixels in the two places, or over all of them where the way leaves the two places between them. Effort is
- * the km weighted by the time their slopes take (src/sim/roads.ts slopeTime, Tobler's hiking function): the
- * simulation's days come from it.
- */
-{
-  const near = new Map<number, number>();
-  for (const i of nbr.keys()) {
-    const l = placeOf(i);
-    if (l < 0) continue;
-    const d = Math.hypot((i % w) + X0 + 0.5 - geo.loc.x[l], Math.floor(i / w) + Y0 + 0.5 - geo.loc.y[l]),
-      best = near.get(l);
-    if (
-      best === undefined ||
-      d < Math.hypot((best % w) + X0 + 0.5 - geo.loc.x[l], Math.floor(best / w) + Y0 + 0.5 - geo.loc.y[l])
-    )
-      near.set(l, i);
-  }
-  const dirOf = (a: number, b: number) => {
-    const dx = (b % w) - (a % w),
-      dy = Math.floor(b / w) - Math.floor(a / w);
-    for (let d = 0; d < 8; d++) if (DX[d] === dx && DY[d] === dy) return d;
-    return 0;
-  };
-  const q = new MinHeap(),
-    dist = new Map<number, [number, number, number]>();
-  const measure = (e: { a: number; b: number; km: number; effort: number; straight: number }, within: boolean) => {
-    const s = near.get(e.a)!,
-      t = near.get(e.b)!,
-      straight =
-        Math.hypot((s % w) - (t % w), Math.floor(s / w) - Math.floor(t / w)) * kmRow[Math.floor((s + t) / 2 / w) + Y0],
-      far = 6 * straight + 20;
-    q.clear();
-    dist.clear();
-    dist.set(s, [0, 0, 0]);
-    q.push(0, s);
-    while (q.size) {
-      const d = q.peekKey(),
-        u = q.popVal(),
-        [du, ku, tu] = dist.get(u)!;
-      if (d > du) continue;
-      if (u === t) {
-        e.km = ku;
-        e.effort = tu;
-        e.straight = straight;
-        return;
-      }
-      if (ku > far) return;
-      for (const v of nbr.get(u)!) {
-        const pl = placeOf(v);
-        if (within && pl !== e.a && pl !== e.b) continue;
-        const dir = dirOf(u, v),
-          step = kmRow[Math.floor(u / w) + Y0] * (dir < 4 ? 1 : Math.SQRT2),
-          c = du + stepCost(u, v, dir, Math.floor(u / w)) / REUSE;
-        const had = dist.get(v);
-        if (!had || c < had[0]) {
-          dist.set(v, [c, ku + step, tu + step * slopeTime((height[v] - height[u]) / (step * 1000))]);
-          q.push(c, v);
-        }
-      }
-    }
-  };
-  for (const e of between.values()) {
-    measure(e, true);
-    if (!(e.km > 0)) measure(e, false);
-  }
-}
+// ---- the ways between the places of the map, for the simulation (tools/roads/between.ts) ---------------------------
+const between = waysBetween(ROOT, land, { links, nbr, kind, stepCost, REUSE });
 
 const km = { all: 0, byKind: [0, 0, 0] };
 for (const key of links) {

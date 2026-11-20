@@ -25,6 +25,7 @@ nothing built before Ramon agrees. Proposal with sources (German): https://claud
 | 7 | The living and the dead: the systems go over the living, the dead go to an archive (step 1: the list of the living; step 2: the archive, with a uid for every person) | built 19 Nov 2026 (Ramon, 19 Nov: «weiter» on the proposal of the archive and the day plan, read as «So bauen» for way A: the archive first, then the day plan). Step 1 no new state, step 2 state 30 |
 | 8 | The calendar of the town: the firms work on the working days of their owner's faith (step 3 of the day plan) | built 19 Nov 2026 (Ramon, 19 Nov: way A of the proposal, after the archive the day plan; «vorwärts machen alles mergen comitten und feddich»). Economy feature 19. State 31 |
 | 9 | Sickness and childbed keep a worker from work (step 4 of the day plan) | built 20 Nov 2026 (Ramon, 20 Nov: «So bauen, Lohn läuft weiter» on the proposal https://claude.ai/artifact/QK327U5QQQGWNCnL5JhHV5). Economy feature 22. State 35 |
+| 10 | Service by the year and work by the day: a worker who heads a family works by the day, every other worker serves by the year (step 6 of the day plan) | built 20 Nov 2026 (Ramon, 20 Nov: «Phase A bauen und messen» on the proposal https://claude.ai/artifact/Wyqd64rfmZgJnz9GZ7Wof9). Economy feature 23. State 36 |
 
 ## Feature 1: persons of the 30 largest cities
 
@@ -867,7 +868,8 @@ rest, the firms of the cities work on the working days of their owner's faith, a
 days of its own faith (the owner of a firm too since economy feature 20). The calendars are a pure function
 of the faith and the date (`src/sim/holy_days.ts`): nothing of them is saved, the same year always gives the same
 days. The economy reads them (economy feature 19, docs/ECONOMY_DESIGN.md, section 19); the persons' own day follows:
-step 4, sickness and childbed, is feature 9; templates and places (step 5) and a target income (step 6) are open.
+step 4, sickness and childbed, is feature 9; the contracts of step 6 (phase A) are feature 10; templates and
+places (step 5) and a target income (phase B of step 6) are open.
 
 ### The calendars
 
@@ -910,7 +912,7 @@ today (1 Ramaḍān 1445 = 11 March 2024, Rosh Hashanah 5784 and 5785, Easter 20
   day; our 250.5 lie below, because the Saturdays and eves of the Flemish cloth towns are half days everywhere.
   The days a day labourer was actually employed, 150 to 200 in the wage histories (the research of feature 7,
   recherche/tagesplaner/ in the project files),
-  are a target for step 6, not for the calendar.
+  are a target for phase B of step 6 (a target income), not for the calendar.
 - **Orthodox: 292.** The constitution of Manuel Komnenos of 1166 had 66 whole and 27 half holy days besides the
   Sundays (Holweck, same article), about 233 days; their names were not found, so the list of 1909 stands in.
 - **Muslim: 363.** How many days the two festivals lasted, and how much less was worked by day in Ramaḍān, were
@@ -1065,7 +1067,64 @@ health and of the 18th century. What the days away do to the economies of the ci
   worker for the rest of the month; a worker who comes later in the month has none until the next.
 - **Only the workers are away.** The owners of the firms and of the bank are not workers of the model, so their
   sicknesses and childbeds keep nothing from work; their firm works with its workers.
-- **The wage runs on.** A worker who is away keeps the place and the wage (Ramon's choice); no sick pay of a guild or
-  club is booked apart, and a day labourer paid by the day would lose the day's wage. Wages by the day worked are
-  the target income of step 6. Without the wage of the days away the economies of the cities slid further in the
-  measurement; with it the firms carry the wages (economy feature 22).
+- **The wage runs on for a servant.** A worker who serves by the year keeps the place and the wage on the days away
+  (Ramon's choice); no sick pay of a guild or club is booked apart. Since feature 10 a worker who works by the day
+  loses the day's wage, and a worker without work of the city stands in. Without the wage of the days away for
+  everybody the economies of the cities slid further in the measurement (economy feature 22, variants D and G).
+
+## Feature 10: service by the year and work by the day
+
+Step 6 of way A of the proposal «Personen: Archiv der Toten und Tagesplan» (feature 7), after the proposal of
+20 November 2026 (https://claude.ai/artifact/Wyqd64rfmZgJnz9GZ7Wof9), of which Ramon chose phase A the same day
+(«Phase A bauen und messen»). Every worker has one of two contracts: service by the year, as the famuli, servants and
+maids of the manors, or work by the day. A servant is paid every day, as every worker was before; a day labourer is
+paid for the days he works, and nothing on a day he is away. On a day on which workers are away, workers without work
+of the city stand in for them. The rules of the economy, the sources and the numbers are economy feature 23
+(docs/ECONOMY_DESIGN.md, section 23).
+
+### Who has which contract
+
+The contract follows the household. A worker who heads a family, as its man or its woman, works by the day; every
+other worker, a son, a daughter, a brother or a parent who lives in the family of another, serves by the year. Day
+labourers were often "smallholding tenants who used temporary employment to supplement the incomes" of their land,
+while the famuli were hired "most commonly for the whole agricultural year" (Claridge, Delabastita & Gibbs 2024,
+(In-kind) Wages and labour relations in the Middle Ages, working paper, p. 13); unmarried women served by the year,
+married women worked by the day (Humphries & Weisdorf 2015, The wages of women in England, 1260–1850, Journal of
+Economic History 75). The contract is a function of the person's place in the family on the day it is given
+(`contracts` in `src/sim/systems/economy.ts`): nothing of it is saved.
+
+The workers of the world of 1291 at its founding (seed 1291):
+
+| Age | Men by the year | Women by the year | Men (by the year / by the day) | Women (by the year / by the day) |
+|---|---|---|---|---|
+| 15–19 | 99.2 % | 96.2 % | 3,553 / 27 | 1,231 / 48 |
+| 20–24 | 86.4 % | 70.9 % | 3,076 / 484 | 908 / 373 |
+| 25–29 | 55.5 % | 43.7 % | 1,853 / 1,483 | 512 / 659 |
+| 30–39 | 35.8 % | 34.3 % | 2,079 / 3,726 | 706 / 1,352 |
+| 40–49 | 31.0 % | 30.6 % | 1,416 / 3,159 | 576 / 1,309 |
+| 50–59 | 46.8 % | 31.1 % | 1,380 / 1,570 | 546 / 1,212 |
+| 60+ | 74.2 % | 34.9 % | 1,323 / 459 | 556 / 1,039 |
+| all | 57.4 % | 45.7 % | 14,680 / 10,908 | 5,035 / 5,992 |
+
+Of all workers 53.8 % serve by the year, against about 40 % of the labour force in annual service and 46 % in the
+late 13th century in Humphries & Weisdorf (2019, Unreal wages?, Economic Journal 129, p. 22 of the manuscript, after
+Campbell 2016), and a third to a half of the labour of the demesnes done by famuli (Claridge & Langdon 2015, cited by
+Claridge, Delabastita & Gibbs 2024, p. 13). The gap is not tuned. The young serve by the year, as the life-cycle
+servants of the sources did. The old men who serve by the year are, in our reading (not counted apart), fathers who
+passed the household to an heir (feature 3) and work on in the heir's family. The women who work are mostly women without a husband (economy
+feature 11), and a widow who heads her family works by the day.
+
+### Limits
+
+- **54 % instead of 40 to 46 %.** An age limit for service, or a share of the children who stay at home, would need a
+  source; none was read.
+- **One contract a person, given a month at a time.** A worker who marries or takes over a household in the month
+  keeps the contract until the next month, and an heir keeps the contract of the one before for the rest of it.
+- **No servant leaves at Michaelmas.** The famuli were hired mostly for the year, but at Meopham ploughmen were
+  dismissed in the year (Goose, Archaeologia Cantiana 92, p. 207); the firms hire and dismiss by the port's rule, the
+  same for both contracts.
+- **Stand-ins come only from the workers without work of the city.** A sick tenant also found "a family member"
+  (Owen, Brown & Skinner 2025, Journal of British Studies 64, e92, p. 5); the persons of a family who do not work are
+  not households of the engine. Where no worker without work is left, the place stays empty for the day.
+- **The day labourer's days are not his own.** He works every day his firm works and he is there; how many days a day
+  labourer wanted and found work (a target income) is phase B of the proposal, a choice of its own.

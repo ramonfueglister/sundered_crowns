@@ -10,6 +10,7 @@ import type { WorldState } from '../../src/sim/state';
 import { compileChronicle, type Chronicle } from '../../src/sim/content/chronicle';
 import { compileBorders, type Borders } from '../../src/sim/content/borders';
 import { compileGround, type Ground } from '../../src/sim/content/ground';
+import { compileItineraries, type ItineraryFile, type Itineraries } from '../../src/sim/content/itineraries';
 import { cityPeopleByPlace } from '../../src/sim/systems/people';
 import { toHeads } from '../../src/sim/scale';
 import { WayNet, waysOf, type RoadsFile } from '../../src/sim/roads';
@@ -67,6 +68,16 @@ export function loadSetup(year = 1356): SetupState { return read(`setup_${year}.
 export function loadChronicle(year: number): Chronicle | null {
   const f = dataPath(`rulers_${year}.json`);
   return existsSync(f) ? compileChronicle(JSON.parse(readFileSync(f, 'utf8'))) : null;
+}
+/** The journeys of the persons of history that the sources tell day by day (data/history/itineraries/*.json, one
+ *  file per source), as days of a world of `year` on the places of the map of `w`; null when there are none. */
+export function loadItineraries(year: number, w: World): Itineraries | null {
+  const dir = resolve(ROOT, 'data/history/itineraries');
+  if (!existsSync(dir)) return null;
+  const files = readdirSync(dir).filter((n) => n.endsWith('.json')).sort();
+  // a file read from disk has the shape the tool writes (tools/history/itineraries/regesta.py)
+  const all = new Map(files.flatMap((f) => [...compileItineraries(JSON.parse(readFileSync(resolve(dir, f), 'utf8')) as ItineraryFile, w.lat, w.lon, year)]));
+  return all.size ? all : null;
 }
 /** The chronicle of borders of a start year (public/data/borders_<year>.json), compiled; null when there is none. */
 export function loadBorders(year: number): Borders | null {

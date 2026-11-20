@@ -22,7 +22,7 @@ Eine eigene Anzeige gibt es noch nicht. Zu sehen ist es an der Wirtschaft der St
 2. **Wie lange.** Eine Krankheit dauert im Mittel so lange, wie die Kasse für das Alter beim Beginn zählte, mindestens 3 Tage (die Kasse zahlte erst ab 3 Tagen). Die Verteilung um das Mittel ist eine Annahme, die Quelle nennt nur das Mittel.
 3. **Wieder gesund.** Erst danach kann die Person wieder krank werden.
 4. **Wochenbett.** Eine Mutter fehlt 30 Tage ab der Geburt, in jedem Glauben. Die religiösen Fristen (Levitikus 12, die Nifās im Islam) regeln Reinheit und Gebet, keine gelesene Quelle sagt, dass sie von der Arbeit abhielten.
-5. **Im Betrieb.** Der Betrieb macht an dem Tag, was die Anwesenden machen können. Er zahlt allen den Lohn. Hat er alles verkauft, plant er so, als wären die Kranken da gewesen. Das Material, das die Kranken nicht verbraucht haben, kauft er nicht noch einmal.
+5. **Im Betrieb.** Der Betrieb macht an dem Tag, was die Anwesenden machen können. Er zahlt allen den Lohn (seit [Jahresdienst und Tagelohn](jahresdienst-und-tagelohn.md) nur den Knechten; für Fehlende springen Arbeitslose ein). Hat er alles verkauft, plant er so, als wären die Kranken da gewesen. Das Material, das die Kranken nicht verbraucht haben, kauft er nicht noch einmal.
 
 ## Daten und Parameter
 
@@ -39,7 +39,7 @@ In der Welt von 1291 fehlen die Arbeiter an 3,6 % ihrer Tage, etwa 13 Tage im Ja
 
 Die Wirtschaft der Städte macht 1,9 % weniger in den ersten zwei Jahren und 3,4 % weniger im dritten, die Preise bleiben gleich. Die Betriebe tragen den Lohn der Kranken, und ab dem zweiten Jahr stellen sie weniger Leute ein. Nach dem dritten Jahr bleibt das fast stehen: Im sechsten Jahr macht die Wirtschaft 4,2 % weniger und hat 4 % weniger Stellen.
 
-Die Ersparnisse der Betriebe sinken aber jedes Jahr weiter, nach sechs Jahren sind sie 30 % kleiner. Die Betriebe zahlen den Lohn der Kranken, ohne Ware dafür zu bekommen, und das Geld bleibt bei den Haushalten liegen. Ein Lohn pro Arbeitstag (Schritt 6) würde das beenden.
+Die Ersparnisse der Betriebe sinken aber jedes Jahr weiter, nach sechs Jahren sind sie 30 % kleiner, und die der Haushalte steigen um gleich viel. Am Lohn der Kranken liegt das nicht: Bekommen die Kranken keinen Lohn, sinken die Ersparnisse der Betriebe genauso schnell, und die Wirtschaft macht im dritten Jahr 6,3 % weniger statt 3,4 %. Der Grund: Ein Betrieb kauft Werkzeug für seinen ganzen Plan, aber Werkzeug nutzt sich nur bei der Arbeit ab, die wirklich getan wird. Fehlen Kranke, kauft er Werkzeug, das niemand braucht, und das Geld geht an die Inhaber der Werkzeugmacher. Eine Gegenregel schliesst das Leck, lässt die Wirtschaft aber jedes Jahr weiter schrumpfen. Darum ist sie nicht gebaut.
 
 ## Massstab 1 : 100
 
@@ -50,9 +50,9 @@ Jede Person ist eine Figur, die Raten gelten je Person.
 - Frauen nehmen die Tabelle der Männer. Die Frauenkasse von Ashborne hatte drei- bis viermal so viele Krankentage.
 - Morcott ist ein Dorf in England im 18. Jahrhundert, die Welt beginnt 1291.
 - Eine arme Frau ging oft vor dem Ende des Monats wieder arbeiten, eine Rate dafür wurde nicht gefunden.
-- Die Betriebe zahlen den Lohn der Kranken. Ihre Ersparnisse sinken darum jedes Jahr um etwa 5 %, und das hört in sechs Jahren nicht auf.
+- Die Ersparnisse der Betriebe sinken jedes Jahr um etwa 5 %, und das hört in sechs Jahren nicht auf. Sie stecken in Werkzeug, das niemand braucht. Seit [Jahresdienst und Tagelohn](jahresdienst-und-tagelohn.md) springen Arbeitslose für Fehlende ein, und das Leck ist kleiner (dort die Zahlen).
 - Die Fehltage werden der Wirtschaft monatlich gegeben. Stirbt ein Arbeiter, übernimmt der Erbe für den Rest des Monats seine Fehltage.
-- Die Regeln, wie ein Betrieb mit Kranken plant und Material kauft, stammen nicht aus einem Paper, sondern sind aus den Regeln des Modells abgeleitet. Sechs Varianten wurden gemessen.
+- Die Regeln, wie ein Betrieb mit Kranken plant und Material kauft, stammen nicht aus einem Paper, sondern sind aus den Regeln des Modells abgeleitet. Acht Varianten wurden gemessen.
 
 ## Quellen
 
