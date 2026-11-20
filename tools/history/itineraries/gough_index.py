@@ -1,9 +1,8 @@
 """The book's index of places in Gough's itinerary of Edward I (used by tools/history/itineraries/gough.py): the names
-it gives, by which the OCR's misreadings are put right, and the county it puts each name in."""
+it gives, by which the OCR's misreadings are put right, and the counties it names."""
 
 import difflib
 import re
-from collections import defaultdict
 
 from gazetteer import key
 
@@ -14,13 +13,11 @@ SAME_COUNTY = {'beam': 'bearn'}
 
 def index_names(lines):
     """The names of the book's index of places, by their key, with the variants of inverted names ('Allerton
-    (North-)' is North Allerton) and of names given two ways ('Harleston or Harleton'); the counties it names; and
-    the counties each name is in, by the name's key, also under the name without its addition ('Oleron (Isle of),
-    Aunis' and 'Oleron, Beam' make Oleron a name of two counties)."""
+    (North-)' is North Allerton), and the counties it names."""
     start = next((i for i, t in enumerate(lines) if INDEX.match(t.strip())), None)
-    names, counties, county_of = {}, set(), defaultdict(set)
+    names, counties = {}, set()
     if start is None:
-        return names, counties, county_of
+        return names, counties
     head = re.compile(
         r'^["“]?\s*([A-Z][A-Za-z\'’\- .]+?)\s*(?:\(([A-Za-z\'’\- ]+?)-?\))?\s*["”]?\s*(?:,\s*([^:]{1,30}?))?\s*:'
     )
@@ -32,12 +29,10 @@ def index_names(lines):
         forms = [name] if not pre else [f'{pre.strip(" -")} {name}', f'{pre.strip(" -")}{name.lower()}']
         for f in forms:
             names.setdefault(key(f), f)
-        cs = [key(c) for c in (h.group(3) or '').split(',') if key(c)]
-        counties.update(cs)
-        if cs:
-            for f in [*forms, name, *re.split(r'\.?\s+or\s+', name)]:
-                county_of[key(f)].add(SAME_COUNTY.get(cs[0], cs[0]))
-    return names, counties, county_of
+        for c in (h.group(3) or '').split(','):
+            if key(c):
+                counties.add(key(c))
+    return names, counties
 
 
 def misread(days, gaz, index, report):
@@ -66,15 +61,3 @@ def misread(days, gaz, index, report):
             if best and ratio[best] >= 0.7:
                 name[0] = best
                 report['names_by_neighbour'] += 1
-
-
-def counties_by_index(days, county_of, report):
-    """The county the index gives a name, where it gives it one, over the county column, whose dittos the OCR and
-    the inheritance of the column carry too far at times (Paris under Picardy in June 1286; the index: Paris,
-    France)."""
-    for d in days:
-        for name in d[1]:
-            c = county_of.get(key(name[0]), ())
-            if len(c) == 1:
-                name[1] = next(iter(c))
-                report['counties_by_index'] += 1

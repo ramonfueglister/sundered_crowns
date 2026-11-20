@@ -35,7 +35,7 @@ from collections import Counter
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from gazetteer import Gazetteer, key, place_days  # noqa: E402
-from gough_index import SAME_COUNTY, counties_by_index, index_names, misread  # noqa: E402
+from gough_index import SAME_COUNTY, index_names, misread  # noqa: E402
 
 MONTHS = [
     'JANUARY',
@@ -377,7 +377,7 @@ def main(text_path, geonames_path, out_path):
     with open(text_path, encoding='utf-8') as f:
         lines = f.read().split('\n')
     days, report, odd = parse(lines)
-    index, counties, county_of = index_names(lines)
+    index, counties = index_names(lines)
     report['index_names'], report['index_counties'] = len(index), len(counties)
     county = ''
     for d in days:
@@ -392,7 +392,6 @@ def main(text_path, geonames_path, out_path):
     report['days_with_a_place'] = sum(1 for d in days if d[1])
     gaz = Gazetteer(geonames_path, NOW_CALLED)
     misread(days, gaz, index, report)
-    counties_by_index(days, county_of, report)
     dated = [(f'{y:04d}-{m:02d}-{d:02d}', julian_day(y, m, d), names) for (y, m, d), names, _ in days]
     stops, unplaced = place_days(dated, gaz, report)
     report['days_placed'] = len(stops)
