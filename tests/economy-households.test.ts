@@ -11,7 +11,7 @@ import { FIGURE, FIGURES } from '../src/sim/economy/engine';
 import { ROLE, WORKING_AGE, rateOfOtherWomen, workforce } from '../src/sim/systems/work';
 import { BASKET_AGE, FOOD_SECTOR, basketsOf, foodPrices, writeHouseholds } from '../src/sim/systems/household';
 import { calibrateEconomy, foodNeedCost } from '../src/sim/economy/calibration';
-import { absences, foundEconomy, workingDays } from '../src/sim/systems/economy';
+import { absences, contracts, foundEconomy, workingDays } from '../src/sim/systems/economy';
 import { calendarOf, dayFactor } from '../src/sim/holy_days';
 import { dateToDay, dayToDate } from '../src/sim/calendar';
 import { ageOn } from '../src/sim/systems/people';
@@ -276,14 +276,15 @@ describe('the purse of a family', () => {
     expect(X.role[next]).toBe(ROLE.none); // who turns 15 works only when the economies are founded again
   });
   it('is a booking of the world: the engine computes the same days without it', () => {
-    // with the working days of the firms (economy feature 19) and the workers who are away in the rest of January
-    // (economy feature 22), which the economies are given before their first day
+    // with the working days of the firms (economy feature 19), the workers who are away in the rest of January
+    // (economy feature 22) and the contracts (economy feature 23), which the economies are given before their first day
     const e = start.economy.cities!,
       days = w.economyEngine.workingDays(e.model, workingDays(start, e));
-    const model = w.economyEngine.step(
-      w.economyEngine.absences(days, absences(start, e, dateToDay(start.startYear, 1, 1, start.startYear) - 1)),
-      20,
+    const away = w.economyEngine.absences(
+      days,
+      absences(start, e, dateToDay(start.startYear, 1, 1, start.startYear) - 1),
     );
+    const model = w.economyEngine.step(w.economyEngine.contracts(away, contracts(start, e)), 20);
     expect(Buffer.from(model).equals(Buffer.from(s.economy.cities!.model))).toBe(true);
     // and writing it again changes nothing
     const hash = hashState(s);

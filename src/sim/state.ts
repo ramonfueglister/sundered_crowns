@@ -50,8 +50,11 @@ import type { Table } from './ecs';
  *  its expectations from 1281 to 1291, not from the years of the plague; its economies are founded anew.
  *  35: sickness and childbed (people feature 9, economy feature 22, src/sim/people/absence.ts): a worker who is away
  *  takes nothing from the firm's labour on that day; the engine's state keeps the absences of the month (its format
- *  12). */
-export const STATE_VERSION = 35;
+ *  12).
+ *  36: service by the year and work by the day (people feature 10, economy feature 23, economy/src/workers.rs): a
+ *  worker who heads a family is paid for the days he works, and workers without work stand in for those who are
+ *  away; the engine's state keeps the contracts (its format 13). */
+export const STATE_VERSION = 36;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
