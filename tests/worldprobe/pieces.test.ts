@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { glideOf, settleOf } from '../../src/worldprobe/pieces';
+import { glideOf, settleOf } from '../../src/worldprobe/piece_show';
 import { stepOf } from '../../src/worldprobe/zoom';
 
 describe('the glide of a far piece', () => {
