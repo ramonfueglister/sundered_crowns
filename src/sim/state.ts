@@ -41,13 +41,16 @@ import type { Table } from './ecs';
  *  others close up.
  *  31: the firms of the cities work on the working days of their owner's faith (economy feature 19,
  *  src/sim/holy_days.ts): the economies keep the last day of the working days they have.
- *  32: the streets and the market of every town (settlement feature 3, src/sim/settlement/streets.ts): the parcels lie
- *  at streets that grew to them, no longer on a grid; every parcel keeps its family and its size.
- *  33: the fields of the farmsteads (settlement feature 4, src/sim/settlement/fields.ts): every hamlet has its furlongs
+ *  32: the days of rest without a leak (economy feature 20): a firm buys on a working day the materials of its next
+ *  working day, and the owner of a firm buys on the working days of his faith on the mean profit of his firm over a
+ *  year; the engine's state keeps those profits (its format 11).
+ *  33: the streets and the market of every town (settlement feature 3, src/sim/settlement/streets.ts): the parcels
+ *  lie at streets that grew to them, no longer on a grid; every parcel keeps its family and its size.
+ *  34: the fields of the farmsteads (settlement feature 4, src/sim/settlement/fields.ts): every hamlet has its furlongs
  *  in courses, shared in strips by its farmsteads.
- *  34: the landmarks (settlement feature 5, src/sim/systems/landmarks.ts): the church of every town's see, the
+ *  35: the landmarks (settlement feature 5, src/sim/systems/landmarks.ts): the church of every town's see, the
  *  convents, the rulers' residences and the buildings known by name stand on their ground; the streets grow round them. */
-export const STATE_VERSION = 34;
+export const STATE_VERSION = 35;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {

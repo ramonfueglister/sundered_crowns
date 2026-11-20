@@ -185,6 +185,50 @@ describe('the persons of a town', () => {
   });
 });
 
+describe('the rulers of a town', () => {
+  // London (not Paris above): 300 persons, two of them rulers, one a child
+  const london = CITIES.find((c) => c.name === 'London')!;
+  setPlacePeople({
+    place: london.place,
+    day: 0,
+    id: Array.from({ length: 300 }, (_, k) => 70000 + k),
+    born: Array.from({ length: 300 }, (_, k) => (k === 0 ? -365 : -365 * 30)),
+    sex: Array.from({ length: 300 }, (_, k) => k % 2),
+    rulers: [
+      { uid: 70000, color: 0xaa2222 },
+      { uid: 70001, color: 0x2222aa },
+    ],
+  });
+  const withTown = (ox: number) => {
+    const t = testGround(ox, 0);
+    t.s.towns = [{ site: london.site, cx: 180, cz: 180, half: 80 }];
+    return t;
+  };
+  const rulers = (f: Figures) =>
+    Array.from({ length: f.count }, (_, k) => k).filter((k) => [70001, 70002].includes(f.e[k * 4 + 3]));
+  it('always stand in its street, a child ruler too, each once and on the spot', () => {
+    const { g, s } = withTown(0),
+      f = crowd(g, s, all),
+      ks = rulers(f);
+    expect(ks.map((k) => f.e[k * 4 + 3] - 1).sort()).toEqual([70000, 70001]);
+    for (const k of ks) {
+      expect(f.c[k * 4]).toBe(Mode.Stand);
+      const x = Math.floor(f.a[k * 4]),
+        z = Math.floor(f.a[k * 4 + 2]);
+      expect(s.town[idx(x, z)]).toBe(1);
+      expect(s.used[idx(x, z)]).toBe(2);
+    }
+  });
+  it('stand in exactly one of two pieces that share the town', () => {
+    const l = withTown(0),
+      r = withTown(100);
+    const n =
+      rulers(crowd(l.g, l.s, (x) => x >= 100 && x < 200)).length +
+      rulers(crowd(r.g, r.s, (x) => x >= 100 && x < 200)).length;
+    expect(n).toBe(2);
+  });
+});
+
 describe('the figure code that runs in a web worker', () => {
   const dir = join(__dirname, '../../src/figures');
   for (const file of readdirSync(dir).filter((n) => n.endsWith('.ts')))

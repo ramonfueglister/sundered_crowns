@@ -16,7 +16,7 @@ describe('the card of the person under the pointer', () => {
     expect(hoverLines(base).title).toBe('Frau');
     expect(rows(base)).toEqual({
       Alter: '32 Jahre', Erwerb: 'Arbeiterin, Gewerbe', Wohnt: 'Parzelle in London', Familie: 'verheiratet, 2 Kinder',
-      Haushalt: '4 Personen, 2 erwerbstätig', Merkmale: 'IQ 104, offen, zurückhaltend',
+      Haushalt: '4 Personen, 2 erwerbstätig', Merkmale: 'IQ 104',
     });
   });
   it('names a ruler and the crown, and marks the dead', () => {
@@ -26,7 +26,7 @@ describe('the card of the person under the pointer', () => {
   });
   it('leaves out what is not known', () => {
     const r = rows({ ...base, economy: null, household: null, spouse: -1, children: [], town: null, age: null });
-    expect(r).toEqual({ Alter: 'unbekannt', Merkmale: 'IQ 104, offen, zurückhaltend' });
+    expect(r).toEqual({ Alter: 'unbekannt', Merkmale: 'IQ 104' });
   });
 });
 

@@ -36,8 +36,8 @@
 //
 // Since economy feature 19 a person buys on the working days of the calendar of its faith (src/sim/holy_days.ts):
 // nothing on a day of rest, and on a working day the share of the day that is worked times the days of the year over
-// its working days. The family of the owner of a firm buys every day, as the owner does in the economy
-// (economy/src/clock.rs). The need of a day stays what the family eats; what it has to buy of it that day is the need
+// its working days. So does the family of the owner of a firm, as the owner does in the economy since economy
+// feature 20 (economy/src/clock.rs). The need of a day stays what the family eats; what it has to buy of it that day is the need
 // of each member times that member's factor, and `fed` is what it spent over that. On a day on which the family buys
 // nothing it needs to buy nothing: `fed` is 1.
 import type { WorldState } from '../state';
@@ -48,11 +48,19 @@ import { ageOn } from './people';
 import { presentPersons } from '../people/living';
 import { calendarOf, dayFactor } from '../holy_days';
 import { dateToDay, dayToDate } from '../calendar';
+import type { CityEconomies } from '../state';
 
 /** From this age a person consumes a whole basket (Horrell, Humphries and Weisdorf 2022, pp. 538 and 540). */
 export const BASKET_AGE = 15;
 /** The baskets a person consumes: a whole one, a child half of one. */
 export const basketsOf = (age: number): number => (age >= BASKET_AGE ? 1 : 0.5);
+
+/** The city of the economies of every place (its number in `e.places`), −1 for a place without one. */
+export function citiesByPlace(s: WorldState, e: CityEconomies): Int32Array {
+  const out = new Int32Array(s.place.owner.length).fill(-1);
+  for (let k = 0; k < e.places.length; k++) out[e.places[k]] = k;
+  return out;
+}
 
 /** The price of agriculture in every city of the economies, 1 at the start: the mean price of the city's firms of
  *  that sector, weighted by what they made on the last day (by their number on a day on which none made anything). */
@@ -91,24 +99,22 @@ export function writeHouseholds(s: WorldState, w: World): void {
   };
   // the living and the dead who still hold a part (src/sim/people/living.ts); a dead person without a part has no money
   const persons = presentPersons(s).slice(), own = new Float32Array(persons.length);
-  const owners = new Set<number>();
-  for (const id of persons) if (P.died[id] === ALIVE && P.role[id] === ROLE.owner) owners.add(P.family[id]);
   for (let k = 0; k < persons.length; k++) {
     const id = persons[k], f = P.family[id], role = P.role[id];
     // the dead are no members; the money of a dead person whose part nobody has taken yet (src/sim/systems/deaths.ts)
     // stays with the family
     if (P.died[id] === ALIVE) {
       own[k] = basketsOf(ageOn(P.born[id], e.day));
-      F.persons[f]++; baskets[f] += own[k]; toBuy[f] += own[k] * (owners.has(f) ? 1 : factorOf(P.faith[id]));
+      F.persons[f]++; baskets[f] += own[k]; toBuy[f] += own[k] * factorOf(P.faith[id]);
       if (role === ROLE.worker || role === ROLE.owner || role === ROLE.banker) F.working[f]++;
     }
     income[f] += P.income[id]; spent[f] += P.spent[id]; savings[f] += P.savings[id];
   }
-  const price = foodPrices(s), city = new Map<number, number>(Array.from(e.places, (p, k) => [p, k])), cost = w.cityEconomies.foodNeed;
+  const price = foodPrices(s), city = citiesByPlace(s, e), cost = w.cityEconomies.foodNeed;
   for (let f = 0; f < n; f++) {
     F.baskets[f] = baskets[f]; F.income[f] = income[f]; F.spent[f] = spent[f]; F.savings[f] = savings[f];
-    const k = city.get(F.place[f]);
-    if (k === undefined || !(baskets[f] > 0)) continue;
+    const k = city[F.place[f]];
+    if (k < 0 || !(baskets[f] > 0)) continue;
     const need = baskets[f] * cost * price[k], today = toBuy[f] * cost * price[k];
     F.need[f] = need; F.fed[f] = today > 0 ? Math.min(1, Math.max(0, spent[f]) / today) : 1;
   }

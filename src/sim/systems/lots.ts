@@ -23,6 +23,7 @@ import { SCALE } from '../scale';
 import { townGround, parcelSize, footprint, FRONT, type Parcel, type ParcelSize } from '../settlement/rule';
 import { layTown, type Street, type Town, type Tuning } from '../settlement/streets';
 import { waysOf } from '../content/town_ways';
+import { planOf } from '../content/town_plans';
 import { FARM, HAMLET_GAP, HAMLET_OFF, METRES_PER_BLOCK, hamletBox, hamletRing, hamletSizes, hamletSpots, layFarms } from '../settlement/hamlets';
 import { widened, type Ground } from '../content/ground';
 import { LANDMARK_GAP, aloneLandmarks, coreLandmarks, edgeLandmarks, latinAt, newLandmarks, residenceAt, writeLandmarks, type Laid, type LandmarkGround } from './landmarks';
@@ -133,6 +134,7 @@ function layStreets(s: WorldState, site: number, count: number, size: ParcelSize
   // the plan of the town is laid in steps of `u` metres, about one, so that a parcel is a whole number of steps wide
   // and deep and keeps its exact ground (feature 1)
   const W = Math.max(1, Math.round(size.w)), u = size.w / W, cells = { w: W, d: Math.max(1, Math.round(size.d / u)) };
+  const plan = planOf(s.startYear, site); // a real plan, where an old plan of the town is read
   let town: Town | null = null;
   // the landmarks laid before the streets (src/sim/systems/landmarks.ts): no street on them, and no parcel nearer than
   // LANDMARK_GAP; a street may run in that gap, round the landmark, as a street runs round a church (OWN RULE)
@@ -151,14 +153,14 @@ function layStreets(s: WorldState, site: number, count: number, size: ParcelSize
       free: (x, z) => block(Math.round((x * u) / m), Math.round((z * u) / m)),
       stands: (p) => { const q = { x: p.x * u, z: p.z * u, front: p.front }; return houseGround(g, site, q, size) && clearOf(q); },
       reach: (g.reach(site) * m) / u,
-    }, tune);
+    }, tune, plan);
     if (town.parcels.length < count) { town = null; found.tight.push(site); }
   }
   if (!town && blocked.length) { // without ground, or where it does not hold the town: clear of the landmarks at least
-    town = layTown(count, cells, ways, seed, { free: (x, z) => !onLandmark(x * u, z * u), stands: (p) => clearOf({ x: p.x * u, z: p.z * u, front: p.front }), reach: Infinity }, tune);
+    town = layTown(count, cells, ways, seed, { free: (x, z) => !onLandmark(x * u, z * u), stands: (p) => clearOf({ x: p.x * u, z: p.z * u, front: p.front }), reach: Infinity }, tune, plan);
     if (town.parcels.length < count) town = null;
   }
-  town ??= layTown(count, cells, ways, seed, undefined, tune);
+  town ??= layTown(count, cells, ways, seed, undefined, tune, plan);
   if (town.parcels.length < count) throw new Error(`the streets of town ${site} hold ${town.parcels.length} of its ${count} families`);
   // into metres
   const at = (v: number) => v * u;
@@ -214,7 +216,7 @@ function layEdge(s: WorldState, city: { place: number; site: number; people: num
 }
 
 /**
- * Lays the towns of a running world out anew along their streets (the upgrade 29 → 30): each town keeps its parcels,
+ * Lays the towns of a running world out anew along their streets (the upgrade 32 → 33): each town keeps its parcels,
  * their families and their size; the parcels move to the streets that grow to them, the lowest id
  * the first, as a new world lays them. The hamlets stay where they are.
  */

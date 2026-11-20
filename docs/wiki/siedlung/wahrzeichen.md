@@ -4,7 +4,7 @@
 
 > Jede Stadt hat ihre grossen Bauten von 1291: die Kirche ihres Bischofssitzes, die Bauwerke, die man beim Namen kennt, die Konvente der Bettelorden und die Residenz ihres Herrschers. Sie stehen mit Lage, Grösse und Baujahren im Grundbuch der Welt, in echter Grösse und, wo bekannt, an ihrem echten Ort.
 
-Ramon hat den Vorschlag am 19. November 2026 angenommen («Ja, alles wie vorgeschlagen»). Gebaut in Zustand 34.
+Ramon hat den Vorschlag am 19. November 2026 angenommen («Ja, alles wie vorgeschlagen»). Gebaut in Zustand 35.
 
 ## Das Feature
 
