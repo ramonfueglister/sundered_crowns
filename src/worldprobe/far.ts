@@ -382,11 +382,21 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
   // width round it, is dry ground without rock on which nothing is built, and it is level to within two blocks of
   // the finest step. In hill country most lots are not, and the land stays grass.
   const built = Uint8Array.from(c.has, (has, i) => (has || c.town[i] || taken[i] || g.wet[i] || g.mat[i] === Mat.Rock ? 1 : 0)), slack = Math.floor(2 / FLATTER ** step), rooms = new Map<number, boolean>();
+  // A walled town keeps the ground within its wall to itself and two blocks round it (settle.ts claims the square):
+  // no lot of the finest step touches that, so none does here. In finest world blocks, four numbers to a town.
+  const walls: number[] = [];
+  if (plan) {
+    const fine = (v: number) => Math.floor((v * wider) / plan!.pieceBlocks);
+    for (let pz = fine(oz) - 1; pz <= fine(oz + N) + 1; pz++) for (let px = fine(ox) - 1; px <= fine(ox + N) + 1; px++) for (const t of plan.pieces[`${px},${pz}`]?.towns ?? []) if (t.wall !== null) walls.push(t.cx - t.half - 2, t.cz - t.half - 2, t.cx + t.half + 2, t.cz + t.half + 2);
+  }
   const room = (lx: number, lz: number, shift: number) => {
     const key = (lx + 32768) * 65536 + lz + 32768, known = rooms.get(key);
     if (known !== undefined) return known;
     const x0 = Math.floor(((lx * LOT_W + shift) * grown) / wider) - ox, x1 = Math.floor(((lx * LOT_W + shift + LOT_W + 1) * grown - 1) / wider) - ox, z0 = Math.floor((lz * LOT_D * grown) / wider) - oz, z1 = Math.floor(((lz * LOT_D + LOT_D + 1) * grown - 1) / wider) - oz;
+    // the lot with the balk round it, in finest world blocks
+    const fx0 = (lx * LOT_W + shift) * grown, fx1 = fx0 + (LOT_W + 1) * grown, fz0 = lz * LOT_D * grown, fz1 = fz0 + (LOT_D + 1) * grown;
     let lo = Infinity, hi = -Infinity, fits = true;
+    for (let k = 0; k < walls.length && fits; k += 4) if (fx0 < walls[k + 2] && walls[k] < fx1 && fz0 < walls[k + 3] && walls[k + 1] < fz1) fits = false;
     for (let z = z0; z <= z1 && fits; z++) for (let x = x0; x <= x1; x++) {
       if (!inGrid(x, z)) continue;
       if (built[idx(x, z)]) { fits = false; break; }

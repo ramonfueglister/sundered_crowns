@@ -202,22 +202,45 @@ describe('a walled town of the plan from farther away', () => {
     // a town of 80 finest blocks about (300, 200) with one house of 8 by 6 in its north-west
     usePlan({ pieceBlocks: 200, greatKinds: [], pieces: { '1,1': { houses: [270, 170, 8, 6, 2, 60, 0xffffff, 0xff0000, 0], towns: [{ site: 0, cx: 300, cz: 200, half: 40, wall: null }] } } });
     const g = ground(0), c = coverLand(g, 1, new Batch(), [], { ploughed: () => 0, vines: () => 0, farm: () => styleOf('').house, own: () => true, woods: () => null });
-    // the house, in blocks two finest blocks wide
-    for (let z = 85; z < 88; z++) for (let x = 135; x < 139; x++) expect([c.kind![z * N + x], g.mat[z * N + x]], `${x}, ${z}`).toEqual([1, Mat.Paved]);
+    // the house, as a house on paved ground, in blocks two finest blocks wide
+    expect(c.houses!.slice(0, 4)).toEqual([135, 85, 139, 88]);
+    for (let z = 85; z < 88; z++) for (let x = 135; x < 139; x++) expect([c.has[z * N + x], g.mat[z * N + x]], `${x}, ${z}`).toEqual([0, Mat.Paved]);
     // three finest blocks round it are paved: the blocks of which half lies that near, so not those at its corners
     let paved = 0;
     for (let z = 80; z < 120; z++) for (let x = 130; x < 170; x++) {
       const i = z * N + x, near = x >= 133 && x <= 140 && z >= 83 && z <= 89 && !((x === 133 || x === 140) && (z === 83 || z === 89));
       paved += c.town[i];
-      expect(c.kind![i] === 1 || c.town[i] === 1, `${x}, ${z}`).toBe(near);
+      expect(c.town[i] === 1, `${x}, ${z}`).toBe(near);
       if (!near) expect(g.mat[i], `${x}, ${z}`).toBe(Mat.Grass);
     }
-    expect(paved).toBe(8 * 7 - 4 - 4 * 3);
+    expect(paved).toBe(8 * 7 - 4);
   });
   it('keeps the houses that the plan lists in a piece after the town\'s', () => {
     usePlan({ pieceBlocks: 200, greatKinds: [], pieces: { '1,0': { houses: [], towns: [{ site: 0, cx: 300, cz: 190, half: 40, wall: null }] }, '1,1': { houses: [290, 204, 8, 6, 2, 60, 0xffffff, 0xff0000, 0] } } });
-    const c = coverLand(ground(0), 1, new Batch(), [], { ploughed: () => 0, vines: () => 0, farm: () => styleOf('').house, own: () => true, woods: () => null });
-    for (let z = 102; z < 105; z++) for (let x = 145; x < 149; x++) expect(c.kind![z * N + x], `${x}, ${z}`).toBe(1);
+    const cover = (step: number) => coverLand(ground(0), step, new Batch(), [], { ploughed: () => 0, vines: () => 0, farm: () => styleOf('').house, own: () => true, woods: () => null });
+    // as a house where houses are drawn as houses
+    expect(cover(1).houses!.slice(0, 4)).toEqual([145, 102, 149, 105]);
+    // as the block it lies on farther out
+    expect(cover(4).kind![12 * N + 18]).toBe(1);
+  });
+  it('lays no field within its wall nor two blocks round it, where the finest step lays none, and one without a wall has them', () => {
+    // all the land under the plough; the town's square is 258 … 342 × 158 … 242 with the two blocks round it, the columns 129 … 170 × 79 … 120
+    const fields = (wall: [] | null) => {
+      usePlan({ pieceBlocks: 200, greatKinds: [], pieces: { '1,1': { houses: [], towns: [{ site: 0, cx: 300, cz: 200, half: 40, wall }] } } });
+      const c = coverLand(ground(0), 1, new Batch(), [], { ploughed: () => 1, vines: () => 0, farm: () => styleOf('').house, own: () => true, woods: () => null });
+      let inside = 0, outside = 0;
+      for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
+        const kind = c.kind![z * N + x];
+        if (kind < 4 || kind > 7) continue;
+        if (x >= 129 && x <= 170 && z >= 79 && z <= 120) inside++;
+        else outside++;
+      }
+      return { inside, outside };
+    };
+    const walled = fields([]), open = fields(null);
+    expect(walled.inside).toBe(0);
+    expect(walled.outside).toBeGreaterThan(N * N * 0.3);
+    expect(open.inside).toBeGreaterThan(42 * 42 * 0.3);
   });
 });
 
