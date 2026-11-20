@@ -3,13 +3,25 @@
 // terrace. Every size comes from the tradition (a measure file with sources); the grammar draws from the random
 // source in a fixed order, so a house is the same for the same seed. Fine blocks (VOXEL) are the unit of every part.
 import { Batch, type RGB, type Rnd, shade } from '../../lookprobe/batch';
-import { gableRoof, roofAt } from '../core/roofs';
+import { gableRoof, hipRoof, roofAt } from '../core/roofs';
 import { SIDES, type Side, wallOf } from '../core/wall';
 import { WINDOW_WARM } from '../palette';
 import type { Tradition } from '../traditions/tradition';
 import { awning, jar } from './clutter';
-import { type Materials, ashlar, corbels, door, gate, jointOf, shop, shutters, washing, window } from './parts';
-import { altana, chimney, tiledGable } from './roof_parts';
+import {
+  type Materials,
+  ashlar,
+  corbels,
+  door,
+  gate,
+  jointOf,
+  rounded,
+  shop,
+  shutters,
+  washing,
+  window,
+} from './parts';
+import { altana, chimney, tiledGable, tiledHip } from './roof_parts';
 import { VOXEL as V } from './style';
 
 export interface HouseOptions {
@@ -64,12 +76,15 @@ export function fineHouse(w: number, d: number, floors: number, tr: Tradition, r
   const wallC = drawnWall(tr, r),
     mt: Materials = { stone: tr.stone, wood: tr.wood, glass: shade(WINDOW_WARM, r.range(0.4, 0.65)) };
   // in the near view the body shows in the joint colour between the ashlar panes, from afar in the wall colour
-  const bodyC = detail ? jointOf(wallC) : wallC;
+  const bodyC = detail && !tr.plaster ? jointOf(wallC) : wallC;
   const arched = r.chance(tr.arched),
     jetty = detail && floors > tr.jetty.from && r.chance(tr.jetty.share) ? tr.jetty.out * V : 0;
   const altanaOn = r.chance(tr.altana),
     seed = r.int(0, 1e6),
     pitch = r.range(tr.pitch[0], tr.pitch[1]);
+  // drawn only when the tradition has them, so that a tradition without them builds the same houses as before
+  const hipped = tr.hipped !== undefined && r.chance(tr.hipped),
+    arcade = tr.arcade !== undefined && r.chance(tr.arcade);
   // storeys: the ground floor, the hall storey of a great house, the upper storeys; the last block of each is its band
   const hs = [
     tr.ground,
@@ -109,6 +124,7 @@ export function fineHouse(w: number, d: number, floors: number, tr: Tradition, r
         shop: !!o.shop,
         great: !!o.great,
         arched,
+        arcade,
         detail,
         seed,
         wallC,
@@ -122,7 +138,10 @@ export function fineHouse(w: number, d: number, floors: number, tr: Tradition, r
     rz0 = f.z0 - ov,
     rx1 = f.x1 + ov,
     rz1 = f.z1 + ov;
-  if (detail) tiledGable(b, rx0, rz0, rx1, rz1, top, rise, tr.roof, wallC, seed);
+  if (hipped) {
+    if (detail) tiledHip(b, rx0, rz0, rx1, rz1, top, rise, tr.roof, seed);
+    else hipRoof(b, rx0, rz0, rx1, rz1, top, rise, tr.roof, 3);
+  } else if (detail) tiledGable(b, rx0, rz0, rx1, rz1, top, rise, tr.roof, wallC, seed);
   else gableRoof(b, rx0, rz0, rx1, rz1, top, rise, tr.roof, wallC, 3);
   if (altanaOn && detail) {
     const s = Math.min(W, D) * 0.25;
@@ -137,7 +156,7 @@ export function fineHouse(w: number, d: number, floors: number, tr: Tradition, r
       b,
       cx,
       cz,
-      top + roofAt(rx0, rz0, rx1, rz1, rise, true, cx, cz) - V * 0.5,
+      top + roofAt(rx0, rz0, rx1, rz1, rise, !hipped, cx, cz) - V * 0.5,
       hv,
       tr.chimneyC,
       shade(mt.glass, 0.6),
@@ -152,6 +171,7 @@ interface Facade {
   shop: boolean;
   great: boolean;
   arched: boolean;
+  arcade: boolean;
   detail: number;
   seed: number;
   wallC: RGB;
@@ -175,12 +195,22 @@ function facade(
     n = Math.max(1, Math.floor((wl.len + V) / bay));
   const axes = Array.from({ length: n }, (_, i) => wl.len / 2 + (i - (n - 1) / 2) * bay),
     [ww, wh] = tr.window;
-  if (o.detail) ashlar(b, wl, y + V, y + (h - 1) * V, o.wallC, o.seed + k * 7 + SIDES.indexOf(s));
+  if (o.detail && !tr.plaster) ashlar(b, wl, y + V, y + (h - 1) * V, o.wallC, o.seed + k * 7 + SIDES.indexOf(s));
   const win = (t: number, hv = wh) => {
     window(b, wl, t, y + tr.sill * V, ww, hv, mt, o.arched, o.detail);
     if (o.detail && !o.arched && r.chance(tr.shutters))
-      shutters(b, wl, t, y + tr.sill * V, ww, hv, tr.wood, o.seed + Math.round(t * 100));
+      shutters(b, wl, t, y + tr.sill * V, ww, hv, tr.shutterC ?? tr.wood, o.seed + Math.round(t * 100));
   };
+  if (k === 0 && s === o.front && o.arcade) {
+    // an arcade: every axis a round arch in a stone surround, dark under the vault (OWN RULE for the prototype)
+    const half = (bay - 2 * V) / 2,
+      spring = y + (h - 1) * V - half - V;
+    for (const t of axes) {
+      rounded(b, wl, t, y, half + V * 0.5, spring, tr.stone, 0.05);
+      rounded(b, wl, t, y, half, spring, shade(mt.glass, 0.55), 0.06);
+    }
+    return;
+  }
   if (k === 0 && s === o.front) {
     // the ground floor of the front: a shop at one end, the door beside it or in the middle, windows elsewhere
     const di = o.shop ? Math.min(1, n - 1) : Math.floor(n / 2);

@@ -76,6 +76,17 @@ export function pointed(b: Batch, w: Wall, tc: number, y0: number, half: number,
   b.fan(on(w, tc, spring, lift), pointedRim(w, tc, spring, half, lift), c, w.n);
 }
 
+/** A round-arched opening on a wall, as the arcades of an Italian street: straight up to `spring`, then a half circle. */
+export function rounded(b: Batch, w: Wall, tc: number, y0: number, half: number, spring: number, c: RGB, lift: number) {
+  pane(b, w, tc - half, y0, tc + half, spring, c, lift);
+  const rim: V3[] = [];
+  for (let k = 0; k <= 8; k++) {
+    const a = Math.PI * (1 - k / 8);
+    rim.push(on(w, tc + Math.cos(a) * half, spring + Math.sin(a) * half, lift));
+  }
+  b.fan(on(w, tc, spring, lift), rim, c, w.n);
+}
+
 export interface Materials {
   stone: RGB;
   wood: RGB;

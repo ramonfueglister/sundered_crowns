@@ -4,18 +4,20 @@
 import * as THREE from 'three/webgpu';
 import { Batch, type RGB, type Rnd, hash2, rgb, seeded, shade } from './batch';
 import { boat } from './blocks';
-import { type Column, LAGOON, VENICE, VOXEL as V, cloth, crate, fineGround, fineHouse, jar, jetty, waterColourAt, waterFlecks, wallOf } from '../buildings';
+import { COAST, type Column, LAGOON, VENICE, VOXEL as V, cloth, crate, fineGround, fineHouse, jar, jetty, waterColourAt, waterFlecks, wallOf } from '../buildings';
 import { LAND_Y, N, SEA_Y } from './layout';
 import { NEAR_LIGHT, NEAR_SHADOW, type StageScene, showError, stage } from './stage';
 
 /** the quay's edge lies this many blocks before the fronts, rounded to a whole block, since the ground kit builds by columns */
 const QUAY = 3.2, STONE = VENICE.quay.wall, PAVING = VENICE.quay.paving, WOOD = rgb(0xa9744a);
 const q = new URLSearchParams(location.search);
+/** ?tr=coast: the prototype of the Italian coast town (traditions/coast.ts) instead of Venice */
+const TR = q.get('tr') === 'coast' ? COAST : VENICE;
 const GOODS: readonly RGB[] = [rgb(0xe8a030), rgb(0xd04030), rgb(0x8ab040), rgb(0xf0e0c0), rgb(0x3f5f8a), rgb(0xe8c050)];
 
 /** A row of houses along z with their fronts at x = `xf`, from z0 on, one plot after the other with a lane now and then. */
 function row(things: Batch, xf: number, z0: number, z1: number, r: Rnd, great: boolean) {
-  const mat = new THREE.Matrix4(), tr = VENICE;
+  const mat = new THREE.Matrix4(), tr = TR;
   let z = z0, k = 0, before = 1;
   while (z < z1) {
     const big = great && k === 2, w = big ? r.range(...tr.plot.greatWidth) : r.range(...tr.plot.width), d = r.range(...tr.plot.depth);
@@ -24,6 +26,18 @@ function row(things: Batch, xf: number, z0: number, z1: number, r: Rnd, great: b
     const house = fineHouse(d, w, floors, tr, r, { front: 'px', shop: !big && r.chance(0.35), great: big, blind: [...(before ? [] : ['nz' as const]), ...(lane ? [] : ['pz' as const])] });
     things.append(house, mat.identity().setPosition(xf - d / 2, LAND_Y, z + w / 2));
     z += w + lane; k++; before = lane;
+  }
+}
+
+const CYPRESS = rgb(0x2c5a2e);
+
+/** A cypress: a slim column of dark green cubes narrowing to a point (scenery of the coast prototype). */
+function cypress(b: Batch, x: number, y: number, z: number, r: Rnd) {
+  const h = r.range(3.4, 4.8), w = r.range(0.3, 0.4), n = 10;
+  b.box(x - 0.08, y, z - 0.08, x + 0.08, y + 0.4, z + 0.08, TRUNK);
+  for (let k = 0; k < n; k++) {
+    const t = k / n, e = w * Math.max(0.15, (1 - t) ** 0.6) * Math.min(1, 0.7 + t * 3);
+    b.box(x - e, y + 0.3 + t * h, z - e, x + e, y + 0.3 + (t + 1 / n) * h + 0.05, z + e, shade(CYPRESS, r.range(0.85, 1.1)), { top: shade(CYPRESS, 1.15) });
   }
 }
 
@@ -72,6 +86,11 @@ async function build(): Promise<StageScene> {
   row(things, xf, z0, z1, r, true);
   row(things, xf - 10, z0 - 6, z1 + 4, seeded(8), false);
   row(things, xf - 19, z0 - 8, z1 + 6, seeded(9), false);
+  if (TR === COAST) {
+    // cypresses on the quay before the fronts and in the lanes, as in the reference picture
+    const rc = seeded(11);
+    for (let z = z0 + 1; z < z1; z += rc.range(5, 9)) cypress(things, xf + rc.range(1.8, 2.6), LAND_Y, z, rc);
+  }
   orti(ground, things, xf - 44, xf - 29, z0 - 30, z1 + 30, seeded(10));
   // the quay's posts and steps come from the ground kit; two landing stages and boats besides
   jetty(things, xq, SEA_Y, c - 11, 5, 1.1, LAND_Y - 0.15, WOOD);

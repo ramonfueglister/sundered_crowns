@@ -48,4 +48,10 @@ export interface Tradition {
   chimney: { height: readonly [number, number]; perHouse: number };
   /** plots in blocks: width and depth of small houses, width of great houses */
   plot: { width: readonly [number, number]; depth: readonly [number, number]; greatWidth: readonly [number, number] };
+  /** share of houses under a hip roof instead of a gable; share of fronts with an arcade of round arches on the ground floor */
+  hipped?: number;
+  arcade?: number;
+  /** smooth plaster walls instead of the ashlar grid; the paint of the shutters, if not the wood */
+  plaster?: boolean;
+  shutterC?: RGB;
 }

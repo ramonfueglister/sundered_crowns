@@ -16,10 +16,10 @@ const lerp3 = (a: V3, b: V3, t: number): V3 => [
  * r0 → r1: the plate of tile cubes of the reference class. Every cube reaches down under the slope and stands a
  * little higher or lower on it, a touch lighter or darker; the cubes along the eaves, the verges and the ridge stand
  * a block higher: the raised rim of the plate. Only the faces that can be seen are drawn: the top and the downhill
- * face of every cube (the step to the row below), and all four sides of the rim cubes; an inner cube's other sides
+ * face of every cube (the step to the row below), and all four sides of the rim cubes (`verges` false: no rim at the sides); an inner cube's other sides
  * are hidden by its neighbours, since the gap between them is a twentieth of a block.
  */
-export function tiles(b: Batch, e0: V3, e1: V3, r0: V3, r1: V3, c: RGB, seed: number) {
+export function tiles(b: Batch, e0: V3, e1: V3, r0: V3, r1: V3, c: RGB, seed: number, verges = true) {
   const cols = Math.max(1, Math.round(Math.hypot(e1[0] - e0[0], e1[2] - e0[2]) / V)),
     rows = Math.max(1, Math.round(Math.hypot(r0[0] - e0[0], r0[2] - e0[2]) / V));
   const at = (u: number, t: number): V3 => lerp3(lerp3(e0, e1, u), lerp3(r0, r1, u), t);
@@ -33,7 +33,7 @@ export function tiles(b: Batch, e0: V3, e1: V3, r0: V3, r1: V3, c: RGB, seed: nu
         d = at((j + 1) / cols, (k + 1) / rows),
         h = hash2(j, k, seed),
         col = shade(c, 0.88 + 0.2 * hash2(j, k, seed + 5));
-      const rim = j === 0 || j === cols - 1 || k === 0 || k === rows - 1,
+      const rim = (verges && (j === 0 || j === cols - 1)) || k === 0 || k === rows - 1,
         top = Math.max(a[1], d[1]) + V * (0.15 + 0.2 * h) + (rim ? V * 0.7 : 0),
         g = V * 0.05;
       const x0 = Math.min(a[0], d[0]) + g,
@@ -89,6 +89,54 @@ export function tiledGable(
     b.tri([x0, y, z1], [x1, y, z1], [xc, top, z1], ...w3, [0, 0, 1]);
     b.tri([x1, y, z0], [x0, y, z0], [xc, top, z0], ...w3, [0, 0, -1]);
   }
+}
+
+/**
+ * A hip roof of fine-block tiles over x0 … z1 at height y rising by `rise`: four slopes of tile cubes over dark
+ * undersides, the ridge along the longer side; a square gives a pyramid.
+ */
+export function tiledHip(
+  b: Batch,
+  x0: number,
+  z0: number,
+  x1: number,
+  z1: number,
+  y: number,
+  rise: number,
+  c: RGB,
+  seed: number,
+) {
+  const s = Math.min(x1 - x0, z1 - z0) / 2,
+    top = y + rise,
+    under = shade(c, 0.68),
+    xc = (x0 + x1) / 2,
+    zc = (z0 + z1) / 2,
+    alongX = x1 - x0 >= z1 - z0;
+  const ra: V3 = alongX ? [x0 + s, top, zc] : [xc, top, z0 + s],
+    rb: V3 = alongX ? [x1 - s, top, zc] : [xc, top, z1 - s];
+  const c00: V3 = [x0, y, z0],
+    c10: V3 = [x1, y, z0],
+    c11: V3 = [x1, y, z1],
+    c01: V3 = [x0, y, z1];
+  // each slope: eaves from left to right seen from outside, the ridge points above them
+  const slopes: [V3, V3, V3, V3, V3][] = alongX
+    ? [
+        [c01, c11, ra, rb, [0, 1, 1]],
+        [c10, c00, rb, ra, [0, 1, -1]],
+        [c11, c10, rb, rb, [1, 1, 0]],
+        [c00, c01, ra, ra, [-1, 1, 0]],
+      ]
+    : [
+        [c11, c10, rb, ra, [1, 1, 0]],
+        [c00, c01, ra, rb, [-1, 1, 0]],
+        [c01, c11, rb, rb, [0, 1, 1]],
+        [c10, c00, ra, ra, [0, 1, -1]],
+      ];
+  slopes.forEach(([e0, e1, r0, r1, n], i) => {
+    b.quad(e0, e1, r1, r0, under, n);
+    // a hip has no verges: the slopes meet along the hips, where a raised rim would stand as a comb
+    tiles(b, e0, e1, r0, r1, c, seed + i, false);
+  });
 }
 
 /** A square frustum round (cx, cz): half width s0 at y0, s1 at y1, with its top face. */
