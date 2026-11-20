@@ -1,29 +1,37 @@
 // World server core: one authoritative, persistent world that runs without end. No sockets here (server/main.ts is
 // the transport), so tests can drive it in-process. Its parts: the log entries and their replay (log.ts), the files
-// on disk (files.ts), the settings (config.ts) and the connections (session.ts).
+// on disk (files.ts), the copy in the store (backup.ts), the settings (config.ts) and the connections (session.ts).
 import { mkdirSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { gzipSync, gunzipSync } from 'node:zlib';
 import type { WorldState } from '../src/sim/state';
 import type { World } from '../src/sim/world';
 import type { CmdResult, Command } from '../src/sim/commands';
 import { advanceDay } from '../src/sim/engine';
-import { decodeState, hashState } from '../src/sim/snapshot';
+import { hashState } from '../src/sim/snapshot';
 import { createWorldState } from '../src/sim/setup';
 import { upgradeState } from '../src/sim/upgrade';
-import { loadWorldFor, loadSetup } from '../tools/sim/load';
+import { loadWorldFor, loadSetup, loadItineraries } from '../tools/sim/load';
+import type { Itineraries } from '../src/sim/content/itineraries';
+import { Travels } from '../src/sim/content/travel';
 import { realmInfos, placeDetail } from '../src/net/views';
 import { encodeOwners, SPEEDS, type ClientMsg, type WorldInfo, type Me } from '../src/net/protocol';
 import type { WorldConfig } from './config';
+import { type BackupMarks, restoreFromStore, StoreBackup } from './backup';
 import { WorldFiles, writeFileDurable } from './files';
-import { applyEntry, type LogEntry, replayLines, parseLog } from './log';
+import { applyEntry, type LogEntry, replayLines } from './log';
 import { type Conn, Session, type UserAuth } from './session';
 import { NullStore, type WorldStore } from './store';
-import { RulerCopy } from './rulers_copy';
 import { BorderHistory } from './history';
+import { type ArchivedPersons, indexIn, takeArchived, yearsWith } from '../src/sim/people/archive';
+import { type Divergence, divergence } from '../src/sim/divergence';
+import type { SetupState } from '../src/sim/setup';
 
 /** at the highest speed, the days of one beat of the clock take this much real time at most before what changed goes out */
 const BATCH_MS = 100;
+/** at the highest speed a snapshot falls due every snapshotEveryDays days, but this much real time at least lies
+ *  between two: at several days a second one every 30 days would cost a tenth of the time, and a restart after a
+ *  crash replays the log since the last one, which is then this many seconds of days at most */
+const FAST_SNAPSHOT_MS = 20_000;
 /** smoothed real time of the parts of a day */
 const ema = (a: number, b: number) => a * 0.9 + b * 0.1;
 
@@ -34,15 +42,13 @@ interface Seat {
   joinedAt: number;
   lastSeen: number;
 }
-interface Meta {
+interface Meta extends BackupMarks {
   id: string;
   name: string;
   seed: number;
   startedAt: number;
   paused: boolean;
   seats: Record<string, Seat>;
-  /** the day of the last snapshot sent to the store (Supabase Storage); absent while none was */
-  uploaded?: number;
 }
 interface Queued {
   e: LogEntry;
@@ -74,6 +80,10 @@ export class WorldCore {
   readonly store: WorldStore;
   w!: World;
   s!: WorldState;
+  /** the journeys of the rulers the sources tell day by day (src/sim/content/itineraries.ts) */
+  itineraries!: Itineraries | null;
+  /** the ways the rulers travel between the places of their itineraries (src/sim/content/travel.ts) */
+  travels!: Travels | null;
   meta!: Meta;
   private files!: WorldFiles;
   private queue: Queued[] = [];
@@ -82,17 +92,17 @@ export class WorldCore {
   private timer: ReturnType<typeof setTimeout> | null = null;
   private running = false;
   private prevOwner!: Int16Array;
-  /** the uploads to the store, one after the other (a log never overtakes the snapshot it follows) */
-  private uploads: Promise<void> = Promise.resolve();
-  /** what is queued or on its way; a kind already on its way is not queued again (the next one sends what this one
-   *  would have, so nothing is lost when the clock runs faster than the uploads) */
-  private pending = { snapshot: false, log: false, rulers: false };
-  private lastSnapshotUpload = -Infinity;
-  /** the readable copy of the rulers in Supabase (null without a store) */
-  private rulerCopy: RulerCopy | null = null;
+  /** the copy of the world in the store */
+  private readonly backup: StoreBackup;
+  /** the years of the archive of the dead read from the disk lately (a browser that opens the ancestors asks often) */
+  private deadYears = new Map<number, ArchivedPersons>();
+  /** real time of the last snapshot (FAST_SNAPSHOT_MS) */
+  private lastSnapshotAt = Date.now();
   private log: (m: string) => void;
   /** the history of the borders (server/history.ts), for the replay */
   history!: BorderHistory;
+  /** the setup of the start year, read when first needed (`divergence`) */
+  private setup: SetupState | null = null;
   /** the speed of the clock, 1 … SPEEDS.length (not kept over a restart: the world comes back at its own pace) */
   speed = 1;
   /** real time the last beat of the clock took (ms), taken off the wait for the next */
@@ -104,49 +114,31 @@ export class WorldCore {
     this.cfg = cfg;
     this.store = store;
     this.log = cfg.log ?? ((m) => console.log(`[world ${cfg.id}] ${m}`));
+    this.backup = new StoreBackup({
+      id: cfg.id,
+      root: this.root,
+      store,
+      files: () => this.files,
+      meta: () => this.meta,
+      saveMeta: () => this.saveMeta(),
+      state: () => ({ s: this.s, w: this.w }),
+    });
   }
   get root() {
     return join(this.cfg.dataDir, this.cfg.id);
   }
 
-  /** When the disk holds no world (a new or a lost volume) and the store holds a copy of it, puts that copy on the
-   *  disk, so that init() resumes it instead of founding a new world that would then overwrite the copy. Throws when
-   *  the store cannot be read: better no world server than a new world over the old one. */
-  async restoreIfEmpty(): Promise<boolean> {
-    if (!this.store.enabled) return false;
-    const files = new WorldFiles(join(this.root, 'world'));
-    if (files.latest()) {
-      files.close();
-      return false;
-    }
-    const b = await this.store.downloadBackup(this.cfg.id);
-    if (!b) return false;
-    const s = decodeState(gunzipSync(b.bin)),
-      day = s.day,
-      hash = hashState(s);
-    // the log lines after the snapshot, if they follow it without a gap
-    const lines = parseLog(b.log).filter((l) => l.d >= day);
-    const usable = lines.length > 0 && lines[0].d === day;
-    files.putSnapshot(day, hash, b.bin);
-    if (usable) for (const l of lines) files.append(l);
-    files.sync();
-    files.close();
-    if (b.history && !existsSync(join(this.root, 'borders.ndjson')))
-      writeFileDurable(join(this.root, 'borders.ndjson'), gunzipSync(b.history));
-    if (b.meta && !existsSync(join(this.root, 'meta.json'))) {
-      const meta: Meta = JSON.parse(b.meta);
-      meta.uploaded = day;
-      writeFileDurable(join(this.root, 'meta.json'), JSON.stringify(meta));
-    }
-    this.log(
-      `restored from the store: snapshot of day ${day} + ${usable ? lines.length : 0} log lines${lines.length && !usable ? ' (log does not follow the snapshot, left out)' : ''}`,
-    );
-    return true;
+  /** When the disk holds no world and the store holds a copy of it, puts that copy on the disk, so that init() resumes
+   *  it (restoreFromStore, server/backup.ts). Throws when the store cannot be read. */
+  restoreIfEmpty(): Promise<boolean> {
+    return restoreFromStore(this.store, this.cfg.id, this.root, this.log);
   }
 
   /** Creates the world, or resumes it from its latest snapshot and the log after it. */
   init(): this {
     this.w = loadWorldFor(this.cfg.startYear);
+    this.itineraries = loadItineraries(this.cfg.startYear, this.w);
+    this.travels = this.itineraries ? new Travels(this.w) : null;
     mkdirSync(this.root, { recursive: true });
     const metaPath = join(this.root, 'meta.json');
     this.meta = existsSync(metaPath)
@@ -162,6 +154,7 @@ export class WorldCore {
       this.s = upgradeState(this.files.readSnapshot(latest.day), this.w, () => loadSetup(this.cfg.startYear));
       const lines = this.files.readLines(latest.day);
       replayLines(this.s, this.w, lines);
+      this.keepArchived();
       this.files.openSegment(latest.day);
       this.log(
         `resumed at day ${this.s.day} (snapshot ${latest.day} + ${lines.length} log lines), hash ${hashState(this.s)}`,
@@ -179,81 +172,66 @@ export class WorldCore {
     // a world the store has no copy of yet sends its latest snapshot right away
     const now = this.files.latest()!;
     if (this.store.enabled && this.meta.uploaded === undefined)
-      this.uploadSnapshot(now.day, readFileSync(join(this.files.dir, `snap-${now.day}.bin`)));
+      this.backup.sendSnapshot(now.day, readFileSync(join(this.files.dir, `snap-${now.day}.bin`)));
     this.saveMeta();
     const info = this.worldInfo();
-    this.queueUpload(() => this.store.upsertWorld(info)); // the row the copy of the rulers points at comes first
+    this.backup.queue(() => this.store.upsertWorld(info)); // the row the copy of the rulers points at comes first
     if (this.store.enabled) {
-      this.rulerCopy = new RulerCopy(this.cfg.id);
-      this.copyRulers();
+      this.backup.startRulerCopy();
+      this.backup.sendArchive();
     }
     return this;
+  }
+  /** Puts the years that went to the archive of the dead on this day (or in a replay) on the disk, before anything
+   *  else is written: a snapshot after the first of January no longer holds them. */
+  private keepArchived() {
+    let any = false;
+    for (const a of takeArchived(this.s)) {
+      this.files.putArchived(a);
+      this.deadYears.set(a.day, a);
+      any = true;
+    }
+    if (any) {
+      this.trimDeadYears();
+      this.backup.sendArchive();
+    }
+  }
+  private trimDeadYears() {
+    while (this.deadYears.size > 8) this.deadYears.delete(this.deadYears.keys().next().value!);
+  }
+  /** A dead person of the archive (GET /person/<uid>): the year that holds the person, and the place there; null where
+   *  the archive has no such person. */
+  /** How far the world has gone from history on its day (src/sim/divergence.ts). */
+  divergence(): Divergence {
+    this.setup ??= loadSetup(this.cfg.startYear);
+    return divergence(this.s, this.w, this.setup);
+  }
+
+  archived(uid: number): { year: ArchivedPersons; k: number } | null {
+    for (const y of yearsWith(this.s, uid)) {
+      let a = this.deadYears.get(y.day) ?? null;
+      if (!a) {
+        try {
+          a = this.files.readArchived(y.day);
+        } catch (e) {
+          this.log(`the year of the archive of day ${y.day} cannot be read: ${(e as Error).message}`);
+        }
+      }
+      if (!a) continue;
+      this.deadYears.delete(y.day);
+      this.deadYears.set(y.day, a);
+      this.trimDeadYears();
+      const k = indexIn(a, uid);
+      if (k >= 0) return { year: a, k };
+    }
+    return null;
   }
   private saveMeta() {
     writeFileDurable(join(this.root, 'meta.json'), JSON.stringify(this.meta));
   }
-  /** Queues an upload behind the ones before it; a failed upload is logged by the store and does not stop the world. */
-  private queueUpload(f: () => Promise<unknown>) {
-    this.uploads = this.uploads.then(f).then(
-      () => {},
-      () => {},
-    );
-  }
-  /** Resolves when every upload queued so far has ended. */
+  /** Resolves when every upload to the store queued so far has ended. */
   flushUploads(): Promise<void> {
-    return this.uploads;
-  }
-  private uploadSnapshot(day: number, bin: Uint8Array) {
-    if (this.pending.snapshot) return;
-    this.pending.snapshot = true;
-    this.lastSnapshotUpload = Date.now();
-    const meta = JSON.stringify({ ...this.meta, uploaded: day });
-    const historyFile = join(this.root, 'borders.ndjson');
-    const history = existsSync(historyFile) ? gzipSync(readFileSync(historyFile)) : null;
-    this.queueUpload(async () => {
-      // only a snapshot that arrived whole counts: until then the log goes on from the one before
-      try {
-        if (await this.store.uploadSnapshot(this.cfg.id, day, bin, meta, history)) {
-          this.meta.uploaded = day;
-          this.saveMeta();
-        }
-      } finally {
-        this.pending.snapshot = false;
-      }
-    });
-  }
-  /** Sends the log since the last snapshot sent: with it and that snapshot the store can rebuild today's world. */
-  private uploadLog() {
-    if (this.pending.log || this.meta.uploaded === undefined) return;
-    this.pending.log = true;
-    this.queueUpload(async () => {
-      try {
-        // read when its turn comes: behind a snapshot that just arrived, the log starts at that snapshot
-        const from = this.meta.uploaded!;
-        const text = this.files
-          .segments()
-          .filter((d) => d >= from)
-          .map((d) => this.files.segmentText(d))
-          .join('');
-        if (text) await this.store.uploadLog(this.cfg.id, text);
-      } finally {
-        this.pending.log = false;
-      }
-    });
-  }
-  /** Sends the rows of the readable copy of the rulers that changed (server/rulers_copy.ts). */
-  private copyRulers() {
-    if (!this.rulerCopy || this.pending.rulers) return;
-    const ch = this.rulerCopy.changes(this.s, this.w);
-    if (!ch.persons.length && !ch.reigns.length) return;
-    this.pending.rulers = true;
-    this.queueUpload(async () => {
-      try {
-        if (await this.store.upsertRulers(ch.persons, ch.reigns)) this.rulerCopy!.sentOk(ch.keys);
-      } finally {
-        this.pending.rulers = false;
-      }
-    });
+    return this.backup.flush();
   }
   /** Applies an entry and logs it (only accepted entries change the state, but every one is logged in order). */
   private apply(e: LogEntry): CmdResult {
@@ -293,8 +271,10 @@ export class WorldCore {
     try {
       if (!this.meta.paused) {
         const fast = this.msPerDay() === 0;
-        do this.runDay();
+        do this.runDay(fast);
         while (fast && !this.meta.paused && performance.now() - t0 < BATCH_MS);
+        // at the highest speed the log goes onto the disk once a beat, not once a day
+        if (fast) this.files.sync();
         this.broadcastDay();
       }
     } catch (e) {
@@ -335,7 +315,7 @@ export class WorldCore {
   }
 
   /** One in-game day: queued entries, the day, persistence. */
-  private runDay() {
+  private runDay(fast = false) {
     const t0 = performance.now();
     this.releaseInactive();
     const q = this.queue;
@@ -347,13 +327,18 @@ export class WorldCore {
     }
     const t1 = performance.now();
     this.files.append({ d: this.s.day, adv: 1 });
-    this.files.sync();
+    if (!fast) this.files.sync();
     advanceDay(this.s, this.w);
+    this.keepArchived();
     const t2 = performance.now();
     this.history.record(this.s);
-    if (this.s.day % this.cfg.snapshotEveryDays === 0) this.snapshot();
-    else if (this.store.enabled && this.s.day % this.cfg.logUploadEveryDays === 0) this.uploadLog();
-    this.copyRulers();
+    if (
+      this.s.day % this.cfg.snapshotEveryDays === 0 &&
+      (!fast || Date.now() - this.lastSnapshotAt >= FAST_SNAPSHOT_MS)
+    )
+      this.snapshot();
+    else if (this.store.enabled && this.s.day % this.cfg.logUploadEveryDays === 0) this.backup.sendLog();
+    this.backup.sendRulers();
     const t3 = performance.now();
     this.stepMs = {
       ...this.stepMs,
@@ -365,15 +350,13 @@ export class WorldCore {
 
   snapshot(forceUpload = false) {
     const { day, bin } = this.files.writeSnapshot(this.s);
+    this.lastSnapshotAt = Date.now();
     if (this.store.enabled) {
-      const due =
-        this.meta.uploaded === undefined ||
-        (day - this.meta.uploaded >= this.cfg.uploadEveryDays &&
-          Date.now() - this.lastSnapshotUpload >= this.cfg.uploadMinMinutes * 60_000);
-      if (forceUpload || due) {
-        this.uploadSnapshot(day, bin);
+      if (forceUpload || this.backup.snapshotDue(day, this.cfg)) {
+        this.backup.sendSnapshot(day, bin);
         this.store.upsertWorld(this.worldInfo()).catch(() => {});
-      } else this.uploadLog();
+      } else this.backup.sendLog();
+      this.backup.sendArchive();
     }
     this.saveMeta();
   }

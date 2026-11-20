@@ -1,0 +1,129 @@
+/* The conversation with a person, left of the person panel (panel.css), in the same navy and gold HUD. */
+@import "../ui/tokens.css";
+
+.person-talk {
+  position: absolute;
+  top: 16px;
+  right: 360px;
+  z-index: 20;
+  width: min(340px, calc(100% - 32px));
+  height: min(480px, calc(100% - 32px));
+  display: flex;
+  flex-direction: column;
+  padding: 12px 14px;
+  color: var(--tx);
+  font: 500 16px / 1.35 var(--serif);
+  background: linear-gradient(var(--panel), var(--panel2));
+  border: 2px solid var(--edge);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+.person-talk[hidden] {
+  display: none;
+}
+.person-talk button {
+  font-family: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.person-talk .head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.person-talk .head b {
+  font-size: 1.1em;
+  font-weight: 600;
+  color: var(--gold);
+}
+.person-talk .close {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  line-height: 1;
+  background: linear-gradient(var(--btn), var(--btn2));
+}
+.person-talk .log {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 2px;
+}
+.person-talk .log p {
+  margin: 0;
+  padding: 6px 9px;
+  border-radius: 9px;
+  max-width: 88%;
+  white-space: pre-wrap;
+}
+.person-talk .log .player {
+  align-self: flex-end;
+  background: rgba(54, 97, 138, 0.55);
+}
+.person-talk .log .person {
+  align-self: flex-start;
+  background: rgba(166, 194, 208, 0.14);
+  border: 1px solid rgba(201, 170, 90, 0.35);
+}
+.person-talk .log .note {
+  align-self: center;
+  color: var(--tx2);
+  font-size: 0.9em;
+  font-style: italic;
+}
+.person-talk .say {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.person-talk .say input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 9px;
+  border-radius: 7px;
+  border: 1px solid var(--gold2);
+  color: var(--tx);
+  background: rgba(8, 24, 38, 0.6);
+  font: inherit;
+}
+.person-talk .btn {
+  border: 0;
+  border-radius: 7px;
+  padding: 3px 12px;
+  font-size: 0.95em;
+  font-weight: 600;
+  background: linear-gradient(var(--btn), var(--btn2));
+  box-shadow:
+    inset 0 0 0 1px rgba(170, 200, 220, 0.3),
+    0 2px 4px rgba(0, 0, 0, 0.25);
+}
+.person-talk .btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.person-talk .close:hover,
+.person-talk .btn:hover:not(:disabled) {
+  background: linear-gradient(#36618a, #2a536f);
+}
+
+/* inside the game (the HUD's .app), beside the person panel under the top bar */
+.app .person-talk {
+  top: 64px;
+  right: 354px;
+  height: min(480px, calc(100% - 150px));
+}
+/* a narrow window has no room beside the panel: the conversation covers it */
+@media (max-width: 720px) {
+  .person-talk,
+  .app .person-talk {
+    right: 16px;
+  }
+}

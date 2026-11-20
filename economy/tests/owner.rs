@@ -9,8 +9,24 @@ fn city(seed: u64) -> Economy {
     let file: serde_json::Value = serde_json::from_str(CITIES).unwrap();
     let city = &file["cities"].as_array().unwrap()[0];
     let clock = &file["clock"];
-    let (plan, window) = (clock["plan"].as_u64().unwrap() as usize, clock["window"].as_u64().unwrap() as usize);
-    Economy::new(&city["parameters"].to_string(), &city["initial_conditions"].to_string(), seed, plan, window).unwrap().with_wages_in_money().with_demand_pull().unwrap().with_savings_spent(0.4 / 365.0).unwrap().with_crown_spending_revenue()
+    let (plan, window) = (
+        clock["plan"].as_u64().unwrap() as usize,
+        clock["window"].as_u64().unwrap() as usize,
+    );
+    Economy::new(
+        &city["parameters"].to_string(),
+        &city["initial_conditions"].to_string(),
+        seed,
+        plan,
+        window,
+    )
+    .unwrap()
+    .with_wages_in_money()
+    .with_demand_pull()
+    .unwrap()
+    .with_savings_spent(0.4 / 365.0)
+    .unwrap()
+    .with_crown_spending_revenue()
 }
 
 /// What the firms hold less what they owe.
@@ -32,7 +48,11 @@ fn the_profit_of_the_first_day_is_the_papers_without_the_stock_that_was_built() 
     assert!(p.DS_i.iter().any(|d| *d != 0.0));
     for i in 0..p.len() {
         let want = p.Pi_i[i] - p.P_i[i] * p.DS_i[i];
-        assert!((o.Pi_i[i] - want).abs() <= 1e-9 * want.abs().max(1.0), "firm {i}: {} for {want}", o.Pi_i[i]);
+        assert!(
+            (o.Pi_i[i] - want).abs() <= 1e-9 * want.abs().max(1.0),
+            "firm {i}: {} for {want}",
+            o.Pi_i[i]
+        );
     }
 }
 
@@ -53,7 +73,10 @@ fn an_owner_bears_a_loss_as_he_holds_a_profit_and_the_firm_gets_it() {
             losses += 1;
             // the income of the owner is what the crown gives him less the loss
             let (bore, want) = (other - f.Y_h[i], -k * f.Pi_i[i]);
-            assert!((bore - want).abs() <= 1e-9 * want.max(1.0), "firm {i}: bore {bore} for {want}");
+            assert!(
+                (bore - want).abs() <= 1e-9 * want.max(1.0),
+                "firm {i}: bore {bore} for {want}"
+            );
         }
     }
     assert!(losses > 100, "{losses} days with a loss");
@@ -70,7 +93,10 @@ fn the_firms_keep_their_money_where_the_papers_firms_lose_it() {
     let (p, o) = ((net(&paper) - start) / gdp, (net(&owner) - start) / gdp);
     println!("firms' money after three years, in a year's output: paper {p}, one household {o}");
     assert!(p < -0.0005, "the firms of the paper lost {p}");
-    assert!(o.abs() < p.abs() / 10.0, "the firms of feature 18 moved by {o}, the paper's by {p}");
+    assert!(
+        o.abs() < p.abs() / 10.0,
+        "the firms of feature 18 moved by {o}, the paper's by {p}"
+    );
 }
 
 #[test]

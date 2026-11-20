@@ -35,7 +35,7 @@ describe('the harvest model', () => {
 });
 
 describe('the harvest on the map', () => {
-  it('gives every place with people and cultivated soil a harvest from the first day', () => {
+  it('gives every place with people and cultivated soil a harvest from the first day', { timeout: 60_000 }, () => {
     const { s, w } = newWorldState();
     expect(s.v).toBe(STATE_VERSION);
     expect(s.place.harvest.length).toBe(w.L);
@@ -49,14 +49,15 @@ describe('the harvest on the map', () => {
     const { s, w } = newWorldState();
     // the capital of France is at its land limit: half the families of its hamlets leave, the others work the same arable
     const i = s.realm.cols.capital[s.realmText.findIndex((r) => r.key === 'france')], before = s.place.harvest[i], arable = s.place.arable[i];
-    const P = s.person.cols, F = s.family.cols, L = residents(s).farmers[i];
+    const F = s.family.cols, L = residents(s).farmers[i];
     for (let f = 0; f < s.family.size; f++) if (F.place[f] === i && F.hamlet[f] && f % 2 === 0) F.hamlet[f] = 0;
     advanceDay(s, w);
     expect(s.place.harvest[i]).toBe(before);
     s.day = 366 - 1; // 31 December 1356, a leap year
     advanceDay(s, w);
     expect(s.place.arable[i]).toBe(arable);
-    let left = 0; for (let id = 0; id < s.person.size; id++) if (F.place[P.family[id]] === i && F.hamlet[P.family[id]] && P.died[id] === ALIVE) left++;
+    const Q = s.person.cols; // on the first of January the dead go to the archive and the rows close up (a new table)
+    let left = 0; for (let id = 0; id < s.person.size; id++) if (F.place[Q.family[id]] === i && F.hamlet[Q.family[id]] && Q.died[id] === ALIVE) left++;
     expect(left).toBeLessThan(L);
     expect(s.place.harvest[i] / before).toBeCloseTo(Math.pow(left / L, 1 - LAND_SHARE), 6);
   }, 30_000); // the economies of the cities compute the 364 days the test jumps over

@@ -17,6 +17,7 @@ round(250 · share).
 
     python3 tools/worldprobe/build_arable.py 1291
 """
+
 import gzip
 import json
 import subprocess
@@ -33,14 +34,19 @@ HECTARES_PER_KM2 = 100
 def main(year: int) -> None:
     data = ROOT / 'public/data'
     geo = json.loads((data / 'geo.json').read_text())
-    land, cultivation = json.loads((data / 'land.json').read_text()), json.loads((data / 'cultivation.json').read_text())
+    land, cultivation = (
+        json.loads((data / 'land.json').read_text()),
+        json.loads((data / 'cultivation.json').read_text()),
+    )
     w, h, places = geo['W'], geo['H'], geo['L']
-    ids = np.frombuffer(gzip.open(ROOT / 'public/map/ids.bin.gz').read(), dtype='<u2').reshape(h, w)
+    ids = np.frombuffer(gzip.decompress(Path(ROOT / 'public/map/ids.bin.gz').read_bytes()), dtype='<u2').reshape(h, w)
     hectares = np.array(geo['loc']['area'][:places], float) * HECTARES_PER_KM2
-    run = subprocess.run(['npx', 'tsx', 'tools/sim/place_people.ts', str(year)], cwd=ROOT, check=True, capture_output=True, text=True)
+    run = subprocess.run(
+        ['npx', 'tsx', 'tools/sim/place_people.ts', str(year)], cwd=ROOT, check=True, capture_output=True, text=True
+    )
     people = np.zeros(places)
     counted = np.array(json.loads(run.stdout.strip().splitlines()[-1]), float)
-    people[:min(places, len(counted))] = counted[:places]
+    people[: min(places, len(counted))] = counted[:places]
     limit = np.minimum(cultivation['landLimit'], np.array(land['curve']['fertile'][:places], float))
     arable = np.minimum(cultivation['arablePerHead'] * people, limit * hectares)
     share = np.where(hectares > 0, arable / np.maximum(hectares, 1e-9), 0)
@@ -52,8 +58,10 @@ def main(year: int) -> None:
     with gzip.GzipFile(out, 'wb', compresslevel=9, mtime=0) as f:
         f.write(layer.tobytes())
     known = layer[layer != 255] / FULL
-    print(f'{out.relative_to(ROOT)}: {layer.shape[1]} x {layer.shape[0]}, {out.stat().st_size} bytes; share of the land under the '
-          f'plough, by map area: mean {known.mean():.3f}, median {np.median(known):.3f}, most {known.max():.3f}')
+    print(
+        f'{out.relative_to(ROOT)}: {layer.shape[1]} x {layer.shape[0]}, {out.stat().st_size} bytes; share of the land under the '
+        f'plough, by map area: mean {known.mean():.3f}, median {np.median(known):.3f}, most {known.max():.3f}'
+    )
 
 
 if __name__ == '__main__':

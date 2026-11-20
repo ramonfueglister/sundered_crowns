@@ -142,7 +142,11 @@ impl Routes {
     /// The real units at the stall of city `d` that one real unit of product `g` bought in city `c` makes: 1 plus
     /// what carrying it cost at the start over its price at the start.
     pub fn unit(&self, c: usize, d: usize, g: usize) -> f64 {
-        if self.price0[c][g] > 0.0 { 1.0 + self.labour[c][d] * self.weight[g] * self.wage0[c] / self.price0[c][g] } else { 1.0 }
+        if self.price0[c][g] > 0.0 {
+            1.0 + self.labour[c][d] * self.weight[g] * self.wage0[c] / self.price0[c][g]
+        } else {
+            1.0
+        }
     }
 
     /// The days of the longest way of `days`, at least 1.
@@ -173,7 +177,13 @@ fn wage(e: &Economy) -> f64 {
         return 0.0;
     }
     // the port's base wage: what a firm pays is set in its first period only
-    let paid = |i: usize| if w.len() == f.len() { w[i] } else { f.w_bar_i[i] * e.model.agg.P_bar_HH };
+    let paid = |i: usize| {
+        if w.len() == f.len() {
+            w[i]
+        } else {
+            f.w_bar_i[i] * e.model.agg.P_bar_HH
+        }
+    };
     (0..f.len()).map(|i| paid(i) * f.N_i[i] as f64).sum::<f64>() / n
 }
 
@@ -212,39 +222,73 @@ pub fn origins_with(cities: &[Economy], d: usize, g: usize, carry: &[f64]) -> Ve
 /// a city. Before, every order of every city went through every firm of every city (550 cities, 12,000 firms: four
 /// fifths of the time of a day of the economies).
 pub struct Sellers {
-    cheap: Vec<Vec<f64>>,
-    size: Vec<Vec<f64>>,
+    /// per product, then per city (product by product, so that an order reads one run of memory)
+    cheap: Vec<f64>,
+    size: Vec<f64>,
+    n: usize,
 }
 
 impl Sellers {
     pub fn of(cities: &[Economy]) -> Sellers {
         let G = cities.first().map_or(0, |e| e.model.prop.G);
-        let (mut cheap, mut size) = (vec![vec![0.0; G]; cities.len()], vec![vec![0.0; G]; cities.len()]);
+        let n = cities.len();
+        let (mut cheap, mut size) = (vec![0.0; G * n], vec![0.0; G * n]);
         for (c, e) in cities.iter().enumerate() {
             let f = &e.model.firms;
             for i in 0..f.len() {
                 let g = f.G_i[i];
                 if g < G {
-                    cheap[c][g] += libm::exp(-2.0 * f.P_i[i]);
-                    size[c][g] += f.Y_i[i] + f.S_i[i];
+                    cheap[g * n + c] += libm::exp(-2.0 * f.P_i[i]);
+                    size[g * n + c] += f.Y_i[i] + f.S_i[i];
                 }
             }
         }
-        Sellers { cheap, size }
+        Sellers { cheap, size, n }
     }
 
     /// The parts of an order of city `d` for product `g` that go to each city of origin, with what carrying a unit
     /// from each costs (infinite: no way, no part).
     pub fn parts(&self, d: usize, g: usize, carry: &[f64]) -> Vec<f64> {
-        let n = self.cheap.len();
-        let cheap: Vec<f64> = (0..n).map(|c| if carry[c].is_finite() { libm::exp(-2.0 * carry[c]) * self.cheap[c][g] } else { 0.0 }).collect();
-        let size: Vec<f64> = (0..n).map(|c| if carry[c].is_finite() { self.size[c][g] } else { 0.0 }).collect();
-        let others = |v: &[f64]| (0..v.len()).filter(|&c| c != d).map(|c| v[c]).sum::<f64>();
-        let (cheap_sum, size_sum) = (others(&cheap), others(&size));
-        if cheap_sum <= 0.0 || size_sum <= 0.0 {
-            return vec![0.0; n]; // no firm of the other cities makes the product
+        let mut out = Vec::new();
+        self.parts_into(d, g, carry, &mut out);
+        out
+    }
+
+    /// [`Sellers::parts`] into a list that is used again for every order of a period (the merchants place 550 · G
+    /// orders a period: a new list for each, and three more inside, were a third of the time of their orders).
+    /// The same sums in the same order, so the parts are the same to the last bit.
+    pub fn parts_into(&self, d: usize, g: usize, carry: &[f64], out: &mut Vec<f64>) {
+        let n = self.n;
+        let (cheap, size) = (&self.cheap[g * n..(g + 1) * n], &self.size[g * n..(g + 1) * n]);
+        out.clear();
+        out.resize(n, 0.0);
+        let (mut cheap_sum, mut size_sum) = (-0.0, -0.0); // as Iterator::sum begins
+        for c in 0..n {
+            if carry[c].is_finite() {
+                // exp(−0) is 1 to the last bit: carrying that costs nothing (a weightless product) needs no exp
+                out[c] = if carry[c] == 0.0 {
+                    cheap[c]
+                } else {
+                    libm::exp(-2.0 * carry[c]) * cheap[c]
+                };
+                if c != d {
+                    cheap_sum += out[c];
+                    size_sum += size[c];
+                }
+            }
         }
-        (0..n).map(|c| if c == d { 0.0 } else { 0.5 * cheap[c] / cheap_sum + 0.5 * size[c] / size_sum }).collect()
+        if cheap_sum <= 0.0 || size_sum <= 0.0 {
+            out.fill(0.0); // no firm of the other cities makes the product
+            return;
+        }
+        for c in 0..n {
+            out[c] = if c == d {
+                0.0
+            } else {
+                let size = if carry[c].is_finite() { size[c] } else { 0.0 };
+                0.5 * out[c] / cheap_sum + 0.5 * size / size_sum
+            };
+        }
     }
 }
 
@@ -275,13 +319,29 @@ impl Cities {
                 return Err(format!("city {c} sets prices in another way than city 0"));
             }
         }
-        let stock: Vec<Vec<f64>> = cities.iter().map(|e| e.model.prop.c_I_g.iter().map(|c| c * e.model.rotw.Y_I).collect()).collect();
-        let value: Vec<Vec<f64>> = cities.iter().zip(&stock).map(|(e, s)| (0..G).map(|g| s[g] * e.model.agg.P_bar_g[g]).collect()).collect();
+        let stock: Vec<Vec<f64>> = cities
+            .iter()
+            .map(|e| e.model.prop.c_I_g.iter().map(|c| c * e.model.rotw.Y_I).collect())
+            .collect();
+        let value: Vec<Vec<f64>> = cities
+            .iter()
+            .zip(&stock)
+            .map(|(e, s)| (0..G).map(|g| s[g] * e.model.agg.P_bar_g[g]).collect())
+            .collect();
         let share = cities.iter().map(|e| e.model.rotw.Y_I / output(e)).collect();
         let start_stock = (0..G).map(|g| stock.iter().map(|s| s[g]).sum()).collect();
         let n = cities.len();
-        let merchants =
-            Merchants { stock, value, orders: vec![vec![vec![0.0; G]; n]; n], share, bought: vec![0.0; G], sold: vec![0.0; G], start: 0.0, start_stock, routes: None };
+        let merchants = Merchants {
+            stock,
+            value,
+            orders: vec![vec![vec![0.0; G]; n]; n],
+            share,
+            bought: vec![0.0; G],
+            sold: vec![0.0; G],
+            start: 0.0,
+            start_stock,
+            routes: None,
+        };
         let mut all = Cities { cities, merchants };
         all.merchants.start = all.worth();
         all.merchants.order(&all.cities);
@@ -292,15 +352,31 @@ impl Cities {
     /// destination the days of travel (0: no way) and the days of labour that carry a tonne; per product the tonnes
     /// of a real unit; and the elasticity of the stock to keep. The cities have not computed a period yet; the
     /// merchants order anew.
-    pub fn with_routes(mut self, days: Vec<Vec<usize>>, labour: Vec<Vec<f64>>, weight: Vec<f64>, elasticity: f64) -> Result<Cities, String> {
+    pub fn with_routes(
+        mut self,
+        days: Vec<Vec<usize>>,
+        labour: Vec<Vec<f64>>,
+        weight: Vec<f64>,
+        elasticity: f64,
+    ) -> Result<Cities, String> {
         let (n, G) = (self.cities.len(), self.merchants.bought.len());
         if self.cities.iter().any(|e| e.periods() != 0) || self.merchants.routes.is_some() {
             return Err("routes are given to cities that have not computed a period and have none".into());
         }
-        if days.len() != n || days.iter().any(|d| d.len() != n) || labour.len() != n || labour.iter().any(|l| l.len() != n) || weight.len() != G {
+        if days.len() != n
+            || days.iter().any(|d| d.len() != n)
+            || labour.len() != n
+            || labour.iter().any(|l| l.len() != n)
+            || weight.len() != G
+        {
             return Err(format!("the routes do not fit {n} cities with {G} products"));
         }
-        if labour.iter().flatten().chain(&weight).any(|l| !(l.is_finite() && *l >= 0.0)) {
+        if labour
+            .iter()
+            .flatten()
+            .chain(&weight)
+            .any(|l| !(l.is_finite() && *l >= 0.0))
+        {
             return Err("the labour of carrying and the weight of the goods are numbers, 0 or more".into());
         }
         if !(elasticity.is_finite() && elasticity >= 0.0) {
@@ -308,7 +384,20 @@ impl Cities {
         }
         let horizon = Routes::longest(&days);
         let on_way = vec![0.0; horizon * n * G];
-        let mut rt = Routes { days, labour, weight, elasticity, horizon, on_way_cost: on_way.clone(), on_way, carrying: vec![vec![0.0; n]; n], period: 0, paid: 0.0, wage0: Vec::new(), price0: Vec::new() };
+        let mut rt = Routes {
+            days,
+            labour,
+            weight,
+            elasticity,
+            horizon,
+            on_way_cost: on_way.clone(),
+            on_way,
+            carrying: vec![vec![0.0; n]; n],
+            period: 0,
+            paid: 0.0,
+            wage0: Vec::new(),
+            price0: Vec::new(),
+        };
         // The starting position: the merchants have ordered every day before the first as they do from now on, so
         // what a stall sells in a day is on the way to it for every day an order travels, from each city of origin
         // in its part of the order, at the price the stall's goods have. Without that the first order would be
@@ -322,8 +411,20 @@ impl Cities {
             let keep = m.share[d] * output(&self.cities[d]);
             for g in 0..G {
                 let daily = self.cities[d].model.prop.c_I_g[g] * keep;
-                let price = if m.stock[d][g] > 0.0 { m.value[d][g] / m.stock[d][g] } else { self.cities[d].model.agg.P_bar_g[g] };
-                let carry: Vec<f64> = (0..n).map(|c| if rt.days[c][d] == 0 { f64::INFINITY } else { rt.labour[c][d] * rt.weight[g] * wages[c] }).collect();
+                let price = if m.stock[d][g] > 0.0 {
+                    m.value[d][g] / m.stock[d][g]
+                } else {
+                    self.cities[d].model.agg.P_bar_g[g]
+                };
+                let carry: Vec<f64> = (0..n)
+                    .map(|c| {
+                        if rt.days[c][d] == 0 {
+                            f64::INFINITY
+                        } else {
+                            rt.labour[c][d] * rt.weight[g] * wages[c]
+                        }
+                    })
+                    .collect();
                 for (c, part) in sellers.parts(d, g, &carry).into_iter().enumerate() {
                     // bought on the day j before the first, the goods arrive with the settling of period days − 1 − j
                     for arrives in 0..rt.days[c][d].saturating_sub(1) {
@@ -349,13 +450,29 @@ impl Cities {
             let Cities { cities, merchants: m } = self;
             for (c, e) in cities.iter_mut().enumerate() {
                 let prices = (0..m.stock[c].len())
-                    .map(|g| if m.stock[c][g] > 0.0 { m.value[c][g] / m.stock[c][g] } else { e.model.agg.P_bar_g[g] })
+                    .map(|g| {
+                        if m.stock[c][g] > 0.0 {
+                            m.value[c][g] / m.stock[c][g]
+                        } else {
+                            e.model.agg.P_bar_g[g]
+                        }
+                    })
                     .collect();
-                let mut orders: Vec<f64> = (0..m.stock[c].len()).map(|g| m.orders[c].iter().map(|o| o[g]).sum()).collect();
+                // all products in one pass over the cities it ordered for, each summed in the order of the cities
+                let mut orders = vec![-0.0; m.stock[c].len()]; // as Iterator::sum begins
+                for o in &m.orders[c] {
+                    for (sum, x) in orders.iter_mut().zip(o) {
+                        *sum += x;
+                    }
+                }
                 if let Some(r) = &m.routes {
                     *orders.last_mut().unwrap() += r.carrying[c].iter().sum::<f64>();
                 }
-                e.model.ext.trade = Some(Trade { orders, supply: m.stock[c].clone(), prices });
+                e.model.ext.trade = Some(Trade {
+                    orders,
+                    supply: m.stock[c].clone(),
+                    prices,
+                });
                 e.step(1);
                 e.model.ext.trade = None;
             }
@@ -366,7 +483,13 @@ impl Cities {
     /// The worth of the merchants: their money in all cities and their stock at cost.
     pub fn worth(&self) -> f64 {
         let money: f64 = self.cities.iter().map(|e| e.model.rotw.D_RoW).sum();
-        money + self.merchants.value.iter().flatten().sum::<f64>() + self.merchants.routes.as_ref().map_or(0.0, |r| r.on_way_cost.iter().sum::<f64>())
+        money
+            + self.merchants.value.iter().flatten().sum::<f64>()
+            + self
+                .merchants
+                .routes
+                .as_ref()
+                .map_or(0.0, |r| r.on_way_cost.iter().sum::<f64>())
     }
 
     /// What must be 0 up to rounding, each with the amount to judge it by: the change of the merchants' worth since
@@ -378,7 +501,10 @@ impl Cities {
         let mut v = vec![[self.worth() - m.start, money + m.value.iter().flatten().sum::<f64>()]];
         for g in 0..m.bought.len() {
             let stock: f64 = m.stock.iter().map(|s| s[g]).sum::<f64>() + m.routes.as_ref().map_or(0.0, |r| r.of(g));
-            v.push([m.start_stock[g] + m.bought[g] - m.sold[g] - stock, m.start_stock[g] + m.bought[g]]);
+            v.push([
+                m.start_stock[g] + m.bought[g] - m.sold[g] - stock,
+                m.start_stock[g] + m.bought[g],
+            ]);
         }
         v
     }
@@ -404,7 +530,11 @@ impl Merchants {
             let r = &e.model.rotw;
             for g in 0..r.Q_m.len() {
                 let left = self.stock[c][g] - r.Q_m[g];
-                self.value[c][g] = if left > 0.0 { self.value[c][g] * (left / self.stock[c][g]) } else { 0.0 };
+                self.value[c][g] = if left > 0.0 {
+                    self.value[c][g] * (left / self.stock[c][g])
+                } else {
+                    0.0
+                };
                 self.stock[c][g] = left.max(0.0);
                 self.sold[g] += r.Q_m[g];
             }
@@ -426,26 +556,46 @@ impl Merchants {
         for (c, e) in cities.iter().enumerate() {
             let (r, p) = (&e.model.rotw, &e.model.prop);
             let carrying: f64 = self.routes.as_ref().map_or(0.0, |rt| rt.carrying[c].iter().sum());
-            let ordered: f64 = self.orders[c].iter().flatten().sum::<f64>() + carrying;
+            // the orders of the city in the order of the cities and products they are for, summed as Iterator::sum
+            // does (a flattening iterator over 550 lists a city was a sixth of the time of a day in WebAssembly)
+            let mut ordered = -0.0;
+            for o in &self.orders[c] {
+                for x in o {
+                    ordered += x;
+                }
+            }
+            let ordered = ordered + carrying;
             if r.C_l <= 0.0 || ordered <= 0.0 {
                 continue;
             }
             let (goods, cost) = (r.C_l / r.P_l, (1.0 + p.tau_EXPORT) * r.C_l);
             for d in 0..n {
                 // what carrying to this city cost, laid on the goods bought for it by what carrying each asked for
-                let carry_cost = self.routes.as_ref().map_or(0.0, |rt| rt.carrying[c][d] / ordered * cost);
+                let carry_cost = self
+                    .routes
+                    .as_ref()
+                    .map_or(0.0, |rt| rt.carrying[c][d] / ordered * cost);
                 let lines: f64 = self.orders[c][d].iter().sum();
                 // nothing ordered from this city for that one (most pairs of 550 cities): nothing to book
                 if lines == 0.0 && carry_cost == 0.0 {
                     continue;
                 }
                 for g in 0..self.bought.len() {
-                    asked[g] = self.routes.as_ref().map_or(0.0, |rt| self.orders[c][d][g] * rt.labour[c][d] * rt.weight[g]);
+                    asked[g] = self
+                        .routes
+                        .as_ref()
+                        .map_or(0.0, |rt| self.orders[c][d][g] * rt.labour[c][d] * rt.weight[g]);
                 }
                 let asked_sum: f64 = asked.iter().sum();
                 for g in 0..self.bought.len() {
                     let part = self.orders[c][d][g] / ordered;
-                    let on = if asked_sum > 0.0 { asked[g] / asked_sum } else if lines > 0.0 { self.orders[c][d][g] / lines } else { 0.0 };
+                    let on = if asked_sum > 0.0 {
+                        asked[g] / asked_sum
+                    } else if lines > 0.0 {
+                        self.orders[c][d][g] / lines
+                    } else {
+                        0.0
+                    };
                     // in the units of the stall it is for
                     let got = part * goods * self.routes.as_ref().map_or(1.0, |rt| rt.unit(c, d, g));
                     let paid = part * cost + on * carry_cost;
@@ -456,17 +606,25 @@ impl Merchants {
                             rt.on_way[at] += got;
                             rt.on_way_cost[at] += paid;
                         }
-                        _ => { self.stock[d][g] += got; self.value[d][g] += paid; }
+                        _ => {
+                            self.stock[d][g] += got;
+                            self.value[d][g] += paid;
+                        }
                     }
                 }
                 if let Some(rt) = &mut self.routes {
                     // carrying is only ever ordered with goods
-                    assert!(lines > 0.0 || carry_cost == 0.0, "carrying from city {c} to city {d} without goods");
+                    assert!(
+                        lines > 0.0 || carry_cost == 0.0,
+                        "carrying from city {c} to city {d} without goods"
+                    );
                     rt.paid += carry_cost;
                 }
             }
         }
-        if let Some(rt) = &mut self.routes { rt.period += 1; }
+        if let Some(rt) = &mut self.routes {
+            rt.period += 1;
+        }
         self.order(cities);
     }
 
@@ -477,32 +635,92 @@ impl Merchants {
         for row in self.orders.iter_mut().flatten() {
             row.fill(0.0);
         }
-        if let Some(rt) = &mut self.routes { for row in rt.carrying.iter_mut() { row.fill(0.0); } }
+        if let Some(rt) = &mut self.routes {
+            for row in rt.carrying.iter_mut() {
+                row.fill(0.0);
+            }
+        }
         let G = self.bought.len();
-        let wages: Vec<f64> = if self.routes.is_some() { cities.iter().map(wage).collect() } else { Vec::new() };
+        let wages: Vec<f64> = if self.routes.is_some() {
+            cities.iter().map(wage).collect()
+        } else {
+            Vec::new()
+        };
         let sellers = Sellers::of(cities);
-        for d in 0..cities.len() {
+        let n = cities.len();
+        // Read once a period what every order reads of every city of origin. The books hold per city of origin a
+        // list of the cities of destination, so the column of one city of destination lies across n lists: read
+        // for every order and every product, those were n cache misses each (550 · 3 orders, 550 cities).
+        let last_price: Vec<f64> = cities.iter().map(|e| e.model.agg.P_bar_g[G - 1]).collect();
+        // the goods on the way to every city and product, the days in the order of the ring as Routes::to sums them
+        let way: Vec<f64> = match &self.routes {
+            Some(rt) => {
+                let mut way = vec![-0.0; n * G];
+                for t in 0..rt.horizon {
+                    for (sum, x) in way
+                        .iter_mut()
+                        .zip(&rt.on_way[rt.slot(t, 0, 0)..rt.slot(t, 0, 0) + n * G])
+                    {
+                        *sum += x;
+                    }
+                }
+                way
+            }
+            None => Vec::new(),
+        };
+        // the lists of an order, used again for every order of the period: carrying, parts, the column of the
+        // routes to the city of destination, and its orders and carrying before they go into the books
+        let (mut carry, mut parts) = (vec![0.0; n], Vec::with_capacity(n));
+        let (mut days, mut labour) = (vec![0usize; n], vec![0.0; n]);
+        let (mut ordered, mut carried) = (vec![0.0; n * G], vec![0.0; n]);
+        for d in 0..n {
             let (r, keep) = (&cities[d].model.rotw, self.share[d] * output(&cities[d]));
+            if let Some(rt) = &self.routes {
+                for c in 0..n {
+                    days[c] = rt.days[c][d];
+                    labour[c] = rt.labour[c][d];
+                }
+            }
+            ordered.fill(0.0);
+            carried.fill(0.0);
             for g in 0..G {
                 let sells = if r.Y_m[g] > 0.0 { r.Q_m[g] / r.Y_m[g] } else { 1.0 };
                 // what carrying a unit from each city costs in money there (infinite: no way), and the parts of the order
-                let carry: Vec<f64> = match &self.routes {
-                    Some(rt) => (0..cities.len()).map(|c| if rt.days[c][d] == 0 { f64::INFINITY } else { rt.labour[c][d] * rt.weight[g] * wages[c] }).collect(),
-                    None => vec![0.0; cities.len()],
-                };
-                let parts = sellers.parts(d, g, &carry);
+                match &self.routes {
+                    Some(rt) => {
+                        for c in 0..n {
+                            carry[c] = if days[c] == 0 {
+                                f64::INFINITY
+                            } else {
+                                labour[c] * rt.weight[g] * wages[c]
+                            };
+                        }
+                    }
+                    None => carry.fill(0.0),
+                }
+                sellers.parts_into(d, g, &carry, &mut parts);
                 // goods on the way count as stock; the stall also needs what it sells while an order travels
                 let (on_way, lead) = match &self.routes {
-                    Some(rt) => (
-                        rt.to(d, g),
-                        (0..cities.len()).map(|c| parts[c] * (rt.days[c][d].max(1) - 1) as f64).sum::<f64>(),
-                    ),
+                    Some(_) => {
+                        let mut lead = -0.0;
+                        for c in 0..n {
+                            lead += parts[c] * (days[c].max(1) - 1) as f64;
+                        }
+                        (way[d * G + g], lead)
+                    }
                     None => (0.0, 0.0),
                 };
                 let target = match &self.routes {
                     Some(rt) => {
                         // the stock to keep falls with the price at the stall against that of the city's own firms
-                        let (stall, own) = (if self.stock[d][g] > 0.0 { self.value[d][g] / self.stock[d][g] } else { 0.0 }, cities[d].model.agg.P_bar_g[g]);
+                        let (stall, own) = (
+                            if self.stock[d][g] > 0.0 {
+                                self.value[d][g] / self.stock[d][g]
+                            } else {
+                                0.0
+                            },
+                            cities[d].model.agg.P_bar_g[g],
+                        );
                         let rel = if stall > 0.0 && own > 0.0 { stall / own } else { 1.0 };
                         cities[d].model.prop.c_I_g[g] * keep * libm::pow(rel, -rt.elasticity)
                     }
@@ -510,15 +728,31 @@ impl Merchants {
                 };
                 let missing = target * (1.0 + lead * sells) - (1.0 - sells) * self.stock[d][g] - on_way;
                 if missing > 0.0 {
-                    for (c, w) in parts.into_iter().enumerate() {
-                        // what is missing at the stall, in the units of the city of origin
-                        let order = w * missing / self.routes.as_ref().map_or(1.0, |rt| rt.unit(c, d, g));
-                        self.orders[c][d][g] = order;
-                        if let Some(rt) = &mut self.routes {
-                            let price = cities[c].model.agg.P_bar_g[G - 1];
-                            if w > 0.0 && price > 0.0 { rt.carrying[c][d] += order * carry[c] / price; }
+                    for (c, &w) in parts.iter().enumerate() {
+                        // what is missing at the stall, in the units of the city of origin (Routes::unit)
+                        let unit = match &self.routes {
+                            Some(rt) if rt.price0[c][g] > 0.0 => {
+                                1.0 + labour[c] * rt.weight[g] * rt.wage0[c] / rt.price0[c][g]
+                            }
+                            _ => 1.0,
+                        };
+                        let order = w * missing / unit;
+                        ordered[c * G + g] = order;
+                        if self.routes.is_some() {
+                            let price = last_price[c];
+                            if w > 0.0 && price > 0.0 {
+                                carried[c] += order * carry[c] / price;
+                            }
                         }
                     }
+                }
+            }
+            for c in 0..n {
+                self.orders[c][d].copy_from_slice(&ordered[c * G..(c + 1) * G]);
+            }
+            if let Some(rt) = &mut self.routes {
+                for c in 0..n {
+                    rt.carrying[c][d] = carried[c];
                 }
             }
         }

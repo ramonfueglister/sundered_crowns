@@ -6,11 +6,24 @@ import { cornerOf, faced, small } from '../../src/worldprobe/small';
 /** a list of corners: places within a piece of the world, directions of length one, colours up to `bright` */
 function corners(n: number, bright: number) {
   let seed = 7;
-  const next = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  const pos: number[] = [], nor: number[] = [], col: number[] = [];
+  const next = () => {
+    seed = (seed * 16807) % 2147483647;
+    return seed / 2147483647;
+  };
+  const pos: number[] = [],
+    nor: number[] = [],
+    col: number[] = [];
   for (let v = 0; v < n; v++) {
     pos.push(98 + next() * 225, 2 + next() * 30, 98 + next() * 204);
-    const axis = v % 4 !== 0, d = axis ? [[1, 0, 0], [0, -1, 0], [0, 0, 1]][v % 3] : [next() - 0.5, next() - 0.5, next() - 0.5], l = Math.hypot(d[0], d[1], d[2]);
+    const axis = v % 4 !== 0,
+      d = axis
+        ? [
+            [1, 0, 0],
+            [0, -1, 0],
+            [0, 0, 1],
+          ][v % 3]
+        : [next() - 0.5, next() - 0.5, next() - 0.5],
+      l = Math.hypot(d[0], d[1], d[2]);
     nor.push(d[0] / l, d[1] / l, d[2] / l);
     const dim = v % 5 === 0 ? 0.03 : 1;
     col.push(next() * bright * dim, next() * bright * dim, next() * bright * dim);
@@ -20,15 +33,20 @@ function corners(n: number, bright: number) {
 
 describe('small', () => {
   it('takes 20 bytes to a corner and leaves its place as it is', () => {
-    const b = corners(300, 1), s = small(b);
-    expect((s.pos as Float32Array).byteLength + (s.nor as Int8Array).byteLength + (s.col as Uint8Array).byteLength).toBe(300 * 20);
+    const b = corners(300, 1),
+      s = small(b);
+    expect(
+      (s.pos as Float32Array).byteLength + (s.nor as Int8Array).byteLength + (s.col as Uint8Array).byteLength,
+    ).toBe(300 * 20);
     expect(Array.from(s.pos)).toEqual(Array.from(new Float32Array(b.pos)));
   });
 
   it('keeps a direction within a 254th and a colour within a 510th of its brightest part', () => {
-    const b = corners(3000, 1.7), s = small(b);
+    const b = corners(3000, 1.7),
+      s = small(b);
     for (let v = 0; v < 3000; v++) {
-      const c = cornerOf(s, v), most = Math.max(b.col[v * 3], b.col[v * 3 + 1], b.col[v * 3 + 2]);
+      const c = cornerOf(s, v),
+        most = Math.max(b.col[v * 3], b.col[v * 3 + 1], b.col[v * 3 + 2]);
       for (let k = 0; k < 3; k++) {
         expect(Math.abs(c.nor[k] - b.nor[v * 3 + k])).toBeLessThanOrEqual(0.5 / 127 + 1e-9);
         // (the brightest part is rounded up by a 127th at most)
@@ -38,12 +56,19 @@ describe('small', () => {
   });
 
   it('keeps the directions along the axes as they are', () => {
-    const b = corners(600, 1), s = small(b);
-    for (let v = 0; v < 600; v++) if (v % 4 !== 0) expect(cornerOf(s, v).nor.map((x) => x + 0)).toEqual(b.nor.slice(v * 3, v * 3 + 3).map((x) => x + 0));
+    const b = corners(600, 1),
+      s = small(b);
+    for (let v = 0; v < 600; v++)
+      if (v % 4 !== 0)
+        expect(cornerOf(s, v).nor.map((x) => x + 0)).toEqual(b.nor.slice(v * 3, v * 3 + 3).map((x) => x + 0));
   });
 
   it('never gives a colour the mark of a colour of floats', () => {
-    const s = small({ pos: [0, 0, 0, 1, 0, 0, 0, 0, 1], nor: [0, 1, 0, 0, 1, 0, 0, 1, 0], col: [5, 5, 5, 2, 2, 2, 0, 0, 0] });
+    const s = small({
+      pos: [0, 0, 0, 1, 0, 0, 0, 0, 1],
+      nor: [0, 1, 0, 0, 1, 0, 0, 1, 0],
+      col: [5, 5, 5, 2, 2, 2, 0, 0, 0],
+    });
     expect([s.col[3], s.col[7], s.col[11]]).toEqual([254, 254, 0]);
     expect(cornerOf(s, 1).col).toEqual([2, 2, 2]);
     expect(cornerOf(s, 2).col).toEqual([0, 0, 0]);
@@ -53,7 +78,17 @@ describe('small', () => {
 /** the triangles of small lists, each as a word of its three corners in their order, sorted */
 function triangles(...lists: { pos: ArrayLike<number>; nor: ArrayLike<number>; col: ArrayLike<number> }[]): string[] {
   const words: string[] = [];
-  for (const s of lists) for (let t = 0; t < s.pos.length / 9; t++) words.push([...Array.from(s.pos).slice(t * 9, t * 9 + 9), '|', ...Array.from(s.nor).slice(t * 12, t * 12 + 12), '|', ...Array.from(s.col).slice(t * 12, t * 12 + 12)].join(' '));
+  for (const s of lists)
+    for (let t = 0; t < s.pos.length / 9; t++)
+      words.push(
+        [
+          ...Array.from(s.pos).slice(t * 9, t * 9 + 9),
+          '|',
+          ...Array.from(s.nor).slice(t * 12, t * 12 + 12),
+          '|',
+          ...Array.from(s.col).slice(t * 12, t * 12 + 12),
+        ].join(' '),
+      );
   return words.sort();
 }
 
@@ -62,10 +97,20 @@ describe('faced', () => {
   const mixed = () => {
     const b = new Batch();
     // blocks on the grid, with darker feet and a top of their own
-    b.box(100, 3, 100, 101, 5, 101, [0.4, 0.5, 0.2], { top: [0.5, 0.6, 0.3], foot: 0.7, bottom: true, away: [0.2, 0.3, 0.3] });
+    b.box(100, 3, 100, 101, 5, 101, [0.4, 0.5, 0.2], {
+      top: [0.5, 0.6, 0.3],
+      foot: 0.7,
+      bottom: true,
+      away: [0.2, 0.3, 0.3],
+    });
     b.box(101.5, 3, 100, 102, 4.25, 100.5, [0.6, 0.6, 0.6], { foot: 0.8 });
     // a level top with a colour to each corner, turned both ways round and split along either diagonal
-    const four = [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6], [0.7, 0.8, 0.9], [1.2, 1.1, 1.0]] as const;
+    const four = [
+      [0.1, 0.2, 0.3],
+      [0.4, 0.5, 0.6],
+      [0.7, 0.8, 0.9],
+      [1.2, 1.1, 1.0],
+    ] as const;
     b.quad([110, 6, 110], [110, 6, 111], [111, 6, 111], [111, 6, 110], four, [0, 1, 0]);
     b.quad([110, 6, 111], [111, 6, 111], [111, 6, 110], [110, 6, 110], four, [0, 1, 0]);
     b.quad([110, 6, 110], [111, 6, 110], [111, 6, 111], [110, 6, 111], four, [0, 1, 0]);
@@ -87,9 +132,11 @@ describe('faced', () => {
   };
 
   it('takes every rectangle on the grid out of the lists and leaves the rest', () => {
-    const b = mixed(), rects = b.triangles / 2;
+    const b = mixed(),
+      rects = b.triangles / 2;
     loose(b);
-    const all = b.triangles, f = faced(b);
+    const all = b.triangles,
+      f = faced(b);
     expect(f.faces!.geo.length / FACE_GEO).toBe(rects);
     expect(f.pos.length / 9).toBe(all - rects * 2);
     expect(f.small).toBe(true);
@@ -115,8 +162,24 @@ describe('faced', () => {
 
   it('takes the sea as faces on a grid lifted to its level, and gives back its very triangles', () => {
     // the sea's level is on no 64th of a block: its faces lie this far above the 64th under it
-    const SEA = 2.7, lift = SEA - Math.floor(SEA * 64) / 64, b = new Batch();
-    for (let z = 100; z < 110; z++) for (let x = 100; x < 110; x++) b.quad([x, SEA, z], [x, SEA, z + 1], [x + 1, SEA, z + 1], [x + 1, SEA, z], [[0.1, 0.3, 0.5], [0.1, 0.32, 0.5], [0.12, 0.3, 0.5], [0.1, 0.3, 0.52]], [0, 1, 0]);
+    const SEA = 2.7,
+      lift = SEA - Math.floor(SEA * 64) / 64,
+      b = new Batch();
+    for (let z = 100; z < 110; z++)
+      for (let x = 100; x < 110; x++)
+        b.quad(
+          [x, SEA, z],
+          [x, SEA, z + 1],
+          [x + 1, SEA, z + 1],
+          [x + 1, SEA, z],
+          [
+            [0.1, 0.3, 0.5],
+            [0.1, 0.32, 0.5],
+            [0.12, 0.3, 0.5],
+            [0.1, 0.3, 0.52],
+          ],
+          [0, 1, 0],
+        );
     // (and one sheet that is on that grid without the lift: it is none of the sea's and stays a list)
     b.quad([120, 3, 120], [120, 3, 121], [121, 3, 121], [121, 3, 120], [0.3, 0.3, 0.3], [0, 1, 0]);
     expect(faced(b).faces!.geo.length / FACE_GEO).toBe(1);
@@ -132,15 +195,27 @@ describe('faced', () => {
   });
 
   it('takes the upright and level rectangles on no grid as faces of floats where asked, and gives back the very triangles', () => {
-    const b = mixed(), rects = b.triangles / 2;
+    const b = mixed(),
+      rects = b.triangles / 2;
     loose(b);
     // a house as the builder's floats put it, with darker feet, a top of its own and a shaded side; and a top with a colour to each corner, turned both ways
-    b.box(130.07, 3.3, 130.13, 130.56, 4.11, 130.9, [0.4, 0.5, 0.2], { top: [0.5, 0.6, 0.3], foot: 0.7, bottom: true, away: [0.2, 0.3, 0.3] });
-    const four = [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6], [0.7, 0.8, 0.9], [1.2, 1.1, 1.0]] as const;
+    b.box(130.07, 3.3, 130.13, 130.56, 4.11, 130.9, [0.4, 0.5, 0.2], {
+      top: [0.5, 0.6, 0.3],
+      foot: 0.7,
+      bottom: true,
+      away: [0.2, 0.3, 0.3],
+    });
+    const four = [
+      [0.1, 0.2, 0.3],
+      [0.4, 0.5, 0.6],
+      [0.7, 0.8, 0.9],
+      [1.2, 1.1, 1.0],
+    ] as const;
     b.quad([140.1, 6.2, 140.3], [140.1, 6.2, 141.7], [141.9, 6.2, 141.7], [141.9, 6.2, 140.3], four, [0, 1, 0]);
     b.quad([140.1, 6.2, 141.7], [141.9, 6.2, 141.7], [141.9, 6.2, 140.3], [140.1, 6.2, 140.3], four, [0, 1, 0]);
     b.quad([141.9, 2.2, 140.3], [140.1, 2.2, 140.3], [140.1, 2.2, 141.7], [141.9, 2.2, 141.7], four, [0, -1, 0]);
-    const all = b.triangles, f = faced(b, 0, true);
+    const all = b.triangles,
+      f = faced(b, 0, true);
     // the rectangles on the grid are faces as before; of what was left the sea's sheet, the quad off the grid, the one too far and the new ones are faces of floats
     expect(f.faces!.geo.length / FACE_GEO).toBe(rects);
     expect(f.free!.geo.length / FREE_GEO).toBe(3 + 6 + 3);

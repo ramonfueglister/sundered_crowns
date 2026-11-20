@@ -1,0 +1,9 @@
+per 5 years: {'parcels_to_new': 9.54, 'new_polities': 2.04, 'main_source_survives': 1.63, 'm5_new_polities': 6.85}
+secession events 52 new polities in them 88
+break-ups by number of successors {np.int64(1): np.int64(27), np.int64(2): np.int64(4)}
+ 5 years data  polities  70.8  new  2.06  gone  2.30  places changed 0.032
+ 5 years M5    polities  76.1  new  7.44  gone  2.33  places changed 0.036
+ 5 years M5b   polities  70.8  new  1.88  gone  2.11  places changed 0.039
+25 years data  polities  70.0  new  8.80  gone  9.72  places changed 0.130
+25 years M5    polities  92.6  new 32.56  gone 10.90  places changed 0.170
+25 years M5b   polities  67.8  new  7.83  gone 11.02  places changed 0.181

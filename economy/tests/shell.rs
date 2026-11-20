@@ -7,7 +7,14 @@ use sc_economy::Economy;
 
 /// Austria with a plan every `plan` periods and windows of `window` periods.
 fn austria_with(seed: u64, plan: usize, window: usize) -> Economy {
-    Economy::new(&AUSTRIA2010Q1.parameters.to_json(), &AUSTRIA2010Q1.initial_conditions.to_json(), seed, plan, window).unwrap()
+    Economy::new(
+        &AUSTRIA2010Q1.parameters.to_json(),
+        &AUSTRIA2010Q1.initial_conditions.to_json(),
+        seed,
+        plan,
+        window,
+    )
+    .unwrap()
 }
 
 /// Austria as the port computes it: every firm plans in every period, expectations on single periods.
@@ -67,8 +74,16 @@ fn a_firm_sets_supply_and_price_only_on_its_plan_day() {
                 assert_eq!(e.model.ext.demand[i], 0.0);
             } else {
                 kept += 1;
-                assert_eq!(e.model.firms.Q_s_i[i].to_bits(), supply[i].to_bits(), "firm {i} in period {t}");
-                assert_eq!(e.model.firms.P_i[i].to_bits(), price[i].to_bits(), "firm {i} in period {t}");
+                assert_eq!(
+                    e.model.firms.Q_s_i[i].to_bits(),
+                    supply[i].to_bits(),
+                    "firm {i} in period {t}"
+                );
+                assert_eq!(
+                    e.model.firms.P_i[i].to_bits(),
+                    price[i].to_bits(),
+                    "firm {i} in period {t}"
+                );
                 assert!(e.model.ext.periods[i] >= 1 && e.model.ext.periods[i] < 5);
             }
         }
@@ -79,7 +94,13 @@ fn a_firm_sets_supply_and_price_only_on_its_plan_day() {
     assert_eq!(kept, 8 * I);
     // the books of the port balance under the clock as well
     let [income, nominal, real, central_bank, banks, gdp] = e.checks();
-    for (name, v) in [("income", income), ("nominal", nominal), ("real", real), ("central bank", central_bank), ("banks", banks)] {
+    for (name, v) in [
+        ("income", income),
+        ("nominal", nominal),
+        ("real", real),
+        ("central bank", central_bank),
+        ("banks", banks),
+    ] {
         assert!((v / gdp).abs() < 1e-9, "{name}: {v} against a GDP of {gdp}");
     }
 }
@@ -100,7 +121,11 @@ fn a_planning_firm_supplies_the_mean_demand_since_its_last_plan() {
     // the expected growth per period is that of period 7, compounded over the four periods of the plan
     let growth = (1.0 + e.model.agg.gamma_e).powi(4);
     let supply = demand / 4.0 * growth;
-    assert!((e.model.firms.Q_s_i[i] / supply - 1.0).abs() < 1e-12, "{} against {supply}", e.model.firms.Q_s_i[i]);
+    assert!(
+        (e.model.firms.Q_s_i[i] / supply - 1.0).abs() < 1e-12,
+        "{} against {supply}",
+        e.model.firms.Q_s_i[i]
+    );
 }
 
 #[test]
@@ -129,10 +154,18 @@ fn the_clock_keeps_one_window_of_the_series_that_the_figures_sum() {
     assert_eq!(d.nominal_sector_gva.len(), 1);
     assert_eq!(d.roe_per_bank.len(), 1);
     assert_eq!(e.model.ext.accounts.len(), 4);
-    assert_eq!(e.model.ext.accounts[3], [
-        d.real_gdp[0], d.nominal_gdp[0], d.real_household_consumption[0], d.real_government_consumption[0],
-        d.real_fixed_capitalformation[0], d.real_exports[0], d.real_imports[0],
-    ]);
+    assert_eq!(
+        e.model.ext.accounts[3],
+        [
+            d.real_gdp[0],
+            d.nominal_gdp[0],
+            d.real_household_consumption[0],
+            d.real_government_consumption[0],
+            d.real_fixed_capitalformation[0],
+            d.real_exports[0],
+            d.real_imports[0],
+        ]
+    );
     let f = e.figures();
     assert_eq!(f[0], 10.0);
     assert_eq!(f[2], start[2]); // the starting position is remembered
@@ -236,7 +269,16 @@ fn broken_bytes_are_refused() {
     let mut huge_list = bytes.clone();
     huge_list[45..49].copy_from_slice(&0xffff_fff0u32.to_le_bytes()); // a length far beyond the state
     assert!(Economy::load(&huge_list).is_err());
-    assert!(Economy::new(&AUSTRIA2010Q1.parameters.to_json(), &AUSTRIA2010Q1.initial_conditions.to_json(), 1, 0, 1).is_err());
+    assert!(
+        Economy::new(
+            &AUSTRIA2010Q1.parameters.to_json(),
+            &AUSTRIA2010Q1.initial_conditions.to_json(),
+            1,
+            0,
+            1
+        )
+        .is_err()
+    );
 }
 
 #[test]
@@ -244,7 +286,13 @@ fn the_books_balance() {
     let mut e = austria(1);
     e.step(8);
     let [income, nominal, real, central_bank, banks, gdp] = e.checks();
-    for (name, v) in [("income", income), ("nominal", nominal), ("real", real), ("central bank", central_bank), ("banks", banks)] {
+    for (name, v) in [
+        ("income", income),
+        ("nominal", nominal),
+        ("real", real),
+        ("central bank", central_bank),
+        ("banks", banks),
+    ] {
         assert!((v / gdp).abs() < 1e-9, "{name}: {v} against a GDP of {gdp}");
     }
 }
@@ -283,10 +331,21 @@ fn a_state_of_format_4_is_read_and_computes_on_bit_for_bit() {
     // persons and firms then.
     let bytes = include_bytes!("data/format4_city.bin");
     let mut lines = include_str!("data/format4_city.txt").lines().skip(1);
-    let mut figures = || lines.next().unwrap().split(' ').map(|x| u64::from_str_radix(x, 16).unwrap()).collect::<Vec<u64>>();
+    let mut figures = || {
+        lines
+            .next()
+            .unwrap()
+            .split(' ')
+            .map(|x| u64::from_str_radix(x, 16).unwrap())
+            .collect::<Vec<u64>>()
+    };
     let (then, later, agents) = (figures(), figures(), figures()[0]);
     let bits = |e: &Economy| e.figures().iter().map(|x| x.to_bits()).collect::<Vec<u64>>();
-    let mix = |v: &[f64]| v.iter().fold(0u64, |h, x| (h.rotate_left(5) ^ x.to_bits()).wrapping_mul(0x9E37_79B9_7F4A_7C15));
+    let mix = |v: &[f64]| {
+        v.iter().fold(0u64, |h, x| {
+            (h.rotate_left(5) ^ x.to_bits()).wrapping_mul(0x9E37_79B9_7F4A_7C15)
+        })
+    };
 
     let mut e = Economy::load(bytes).unwrap();
     assert_eq!(e.periods(), 5);

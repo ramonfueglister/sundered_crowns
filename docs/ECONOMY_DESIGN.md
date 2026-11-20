@@ -45,6 +45,11 @@ players and the AI of realms without a player act through the same commands.
 | 15 | Households spend out of their savings, and a family has a need of food | order changed by Ramon 17 Nov 2026 ("Verbrauch und Hunger zuerst", 19:27 UTC) after the slump of remote cities in the trials of the distance was traced to the households' consumption; he asked for "einfach möglichst genau nach beforeit" (20:02 UTC) and chose "BeforeIT plus Erspartes" (20:06 UTC): the market stays the port's, only the budget gets the spending out of savings, need and hunger are a booking of the family purse. Built, with tests and numbers from the game; not yet in the running world (section 15) |
 | 16 | The crown of a city buys with what it took in | after feature 15 the distance in trade was tried again and one city still sank steadily; Ramon chose to clear that first ("Erst den Geldabfluss klären", 17 Nov 2026, 20:45 UTC). The money lay with the crown of the city, whose purchases follow a random series of their own. He chose "Krone gibt aus, was sie einnimmt" (18 Nov 2026, 02:36 UTC). Built, with tests and numbers; not yet in the running world (section 16) |
 | 17 | Distance in trade: goods travel for days, and carrying costs labour | proposed 17 Nov 2026 (https://claude.ai/artifact/9Gt22ijoL8Xdqx4cfLM7NV), variant B agreed by Ramon ("ok"); held back until the money drain was cleared (features 15 and 16); built after his choice of 18 Nov 2026 ("Krone gibt aus, was sie einnimmt": then the distance). How the Americas stay apart in 1356 is asked of him (card of 18 Nov 2026). Built, with tests and numbers; not yet in the running world (section 17) |
+| 19 | The firms and households keep the working days of their faith | step 3 of way A of the proposal «Personen: Archiv der Toten und Tagesplan» (https://claude.ai/artifact/8UqSxP49CfvpPfX1UCDULc), chosen by Ramon 19 Nov 2026, with merge and deploy ("vorwärts machen alles mergren comitten und feddich", "du darfst deployen"). Built, with tests and numbers from the game (section 19); people feature 8 holds the calendars |
+| 20 | The days of rest without a leak | after feature 19 Ramon wrote "naja jetzt sind wir aber nicht fertig" (19 Nov 2026), chose to damp the firms' price rule first, "nur literaturkonform"; Calvo held the prices but cost work, and he chose "Zuerst Leck an Ruhetagen schliessen" (card, 19 Nov 2026). Built: materials for the next working day, the owner on his working days on the profit of the year; with tests and numbers from the game (section 20) |
+| 21 | A world knows the history only up to its start | the open gap of feature 20, found to come from the history of the placeholder tables: a world of 1291 expected the recovery after the plague of 1348. Under Ramon's "nur literaturkonform" (19 Nov 2026) and his order to clear the open questions of the economy first; the port's window (data up to the date of the calibration). Built, with tests and numbers from the game (section 21). The gap of 1.5 % that remained, cleared at Ramon's choice ("Erst Restlücke 1,5 % klären", 20 Nov 2026): the owners' rule of the run it was measured against, not the days of rest; nothing built |
+| 22 | The workers who are away: sickness and childbed | step 4 of way A of the proposal «Personen: Archiv der Toten und Tagesplan», proposed 20 Nov 2026 (https://claude.ai/artifact/QK327U5QQQGWNCnL5JhHV5) and chosen by Ramon the same day («So bauen, Lohn läuft weiter»): a firm works with the workers who are there, and everybody keeps the place and the wage. Built, with tests and numbers from the game (section 22); people feature 9 holds the sicknesses and the childbeds |
+| 23 | Service by the year, work by the day, and who stands in | step 6 of way A: after section 22 Ramon chose to solve the drain of the firms' deposits in step 6 («So lassen, in Schritt 6 lösen», 20 Nov 2026), and phase A of the proposal «Vorschlag: Schritt 6, Jahresdienst und Tagelohn» the same day (https://claude.ai/artifact/Wyqd64rfmZgJnz9GZ7Wof9, «Phase A bauen und messen»): two contracts, a day labourer paid for the days he works, workers without work who stand in for those who are away. Built, with tests and numbers from the game (section 23); people feature 10 gives the contracts |
 
 ## 1. Grain harvest per place
 
@@ -665,7 +670,7 @@ numbers bit for bit (tested).
 - Without a source and marked as our own: the window of 365 days as such, the plan day by the order of the firms,
   all firms planning on the first day, and three of the seven conversions below.
 
-**From the year to the day** (`dailyEconomy` in `src/sim/economy/calibration.ts`; the table of sources
+**From the year to the day** (`dailyEconomy` in `src/sim/economy/daily.ts`; the table of sources
 `data/economy/england_1356.json` is unchanged but for the two entries of the clock: 365 days a year, an assumption,
 and 30 days between two plans, from Eurace@Unibi).
 
@@ -1701,7 +1706,7 @@ person without work, so the share they consume of it (`psi`) and the share they 
 higher (London 0.18 %, Cairo 0.03 %). No other number of a city changes; a test compares every parameter.
 
 The calibration tool still computes the benefit of the original code when the table asks for it
-(`unemploymentBenefit` in `src/sim/economy/calibration.ts`), and the engine still computes such cities.
+(`unemploymentBenefit` in `src/sim/economy/accounts.ts`), and the engine still computes such cities.
 
 ### Why the cities hold without it
 
@@ -2988,3 +2993,835 @@ Nobody is without work after the tenth year. The owners' debts were not read out
 
 State version 26, together with feature 17. Engine format 9: whether the rule holds. The upgrade founds the
 economies anew.
+
+## 19. The firms and households keep the working days of their faith
+
+Step 3 of way A of the proposal «Personen: Archiv der Toten und Tagesplan»
+(https://claude.ai/artifact/8UqSxP49CfvpPfX1UCDULc), chosen by Ramon on 19 November 2026; with it his order to build
+on to the end, merge and deploy ("vorwärts machen alles mergren comitten und feddich", "du darfst deployen"). The
+calendars, their sources and their days in 1291 are people feature 8 (docs/PEOPLE_DESIGN.md).
+
+### Why
+
+With a day as the period every day of the port is a working day: a Latin firm works on Easter Sunday as on any
+Tuesday. A medieval town did not. The Latin Church kept 52 Sundays and 31 feasts on other days in 1291, and the cloth
+towns of Flanders stopped at noon on Saturdays and the eves of feasts; the Jews kept the Sabbath, the Muslims two
+festivals (people feature 8).
+
+### The rule
+
+A firm keeps the calendar of its owner's faith, a household that owns no firm the calendar of its own faith. A day of
+a calendar is a working day, a half day or a day of rest. On a day with the factor `a`, the share of the day that is
+worked (1, ½ or 0) times the days of the year over the days worked in that year (`src/sim/holy_days.ts`,
+`dayFactor`), the flows are `a` times those of a mean day: nothing on a day of rest, more on a working day, and over a
+year as much as in as many periods of the port. A Latin working day of 1291 has the factor 365 / 250.5 = 1.457.
+
+1. **Production** (A.13) is `min(a Q_s, a N α, a K κ, M β)`: the planned supply, the workers and the capital of the
+   day; the stock of materials `M` is what it is and is not scaled.
+2. **Materials and investment** (A.18, A.14): a firm buys `a` times the port's, for the day's work. (Since feature 20
+   the materials are those of the firm's next working day, bought on a working day: section 20.)
+3. **A household that owns no firm** (workers, those without work, the banker) buys `a` times its budget (A.46, A.49,
+   with the spending out of savings, feature 15): the market of its faith is closed on its days of rest. In the game
+   a family books its food in the same way (`src/sim/systems/household.ts`).
+4. **The crown, the merchants and the owners of the firms buy every day.** The owner by his rule of feature 18, on
+   the profit of the day before: after a day of rest, a day of wages without sales, he has nothing to spend out of
+   income; after a working day more than on a mean day. His family books its food every day. (Since feature 20 the
+   owner buys on the working days of his faith, on the mean profit of the year: section 20.)
+5. **The spare capacity** in the market, which records the demand a firm cannot serve, is that of the day:
+   `a K κ − Y`.
+6. **A firm plans on the mean demand per worked day**: the demand since its last plan over the factors of those days
+   (`DailyClock::worked`). A firm that has not worked since its last plan keeps its supply and its price until it has.
+7. **Wages are paid every day**, worked or not, as the proposal has it: a holy day costs a firm its output, not its
+   workers' pay.
+8. **The price indices** that weight with what was made, sold or bought, and the mean prices paid, are 0 / 0 on a
+   day without any: they keep the value of the day before.
+
+Without a calendar, and with the factor 1 on every day, the economy computes as before, number for number (test
+`with_the_factor_1_on_every_day_the_economy_computes_as_without_working_days`).
+
+Code: `economy/src/clock.rs` (`Attendance`, `DailyClock::worked` and the overrides named there),
+`Economy::with_working_days`, `working_days` and `sce_working_days` (`economy/src/lib.rs`); in the game
+`workingDays` in `src/sim/systems/economy.ts`, which gives the engine the days of a year before it computes the
+year's first day.
+
+### The numbers
+
+The world of 1291 (550 cities), its first year computed once with the working days and once without, the owners'
+rule of feature 18 in both. Outside the game (native build, `Cities::step`), sums over the cities, with over without:
+
+| | after 90 days | after 180 days | after 360 days |
+|---|---|---|---|
+| output, summed since the start | +7.3 % | +4.0 % | +4.9 % |
+| consumption of the workers, summed | +3.6 % | +0.6 % | +1.9 % |
+| consumption of the owners, summed | +20.5 % | +13.8 % | +13.8 % |
+| employed, on the day | +1.1 % | +1.3 % | +1.3 % |
+| the crowns' purchases, summed | +0.9 % | −1.1 % | +1.5 % |
+| price level weighted by output, on the day | 1.020 / 1.011 | 1.022 / 1.012 | 1.011 / 1.003 |
+
+From day 30 to day 360, read every 15 days, the price level weighted by output lies within 1.006 and 1.026 with the
+working days and within 0.993 and 1.015 without. The first quarter of a Latin year has more working days than the mean (the mean factor of
+its first 90 days is 1.085, of the first 180 days 1.020), which is the most of the output's lead after 90 days.
+
+In the game (`npm run workdays:check -- 3`: the world of 1291 founded, three years computed with the working days and
+again with every day a working day, the figures of each year):
+
+| | year 1 | year 2 | year 3 |
+|---|---|---|---|
+| real GDP | 190,433 / 183,025 (+4.0 %) | 203,713 / 188,506 (+8.1 %) | 206,777 / 192,054 (+7.7 %) |
+| consumption | +4.0 % | +8.2 % | +7.8 % |
+| investment | +4.1 % | +7.9 % | +7.5 % |
+| without work, at the end of the year | 61 / 528 | 6 / 333 | 0 / 193 |
+| households' deposits | −1.2 % | −2.8 % | −4.8 % |
+| firms' deposits | −0.9 % | −0.9 % | −1.0 % |
+| mean price level | 1.012 / 1.003 | 1.003 / 1.001 | 1.003 / 1.001 |
+| output of the Latin firms | +4.4 % | +8.5 % | +7.8 % |
+| output of the Muslim firms | +3.6 % | +7.6 % | +7.2 % |
+| output of the Orthodox firms | +0.9 % | +3.8 % | +5.0 % |
+
+The Latin firms make 6 units of output on all days of rest of the first year together (39,640 without the
+working days), the Orthodox none. The lead of the output stops at the work there is: from the second year nearly
+everybody works. The households' deposits fall by the owners' overspending (below).
+
+The world of 1356 (30 cities), its first 150 days: the price of food and the price level of Venice, London, Paris
+and Cairo lie within 0.96 and 1.05 with the working days (0.95 to 1.03 without), the largest gap 4.8 % (Venice's food
+on day 110, 1.048 against 1.010).
+
+### Tried and dropped
+
+Measured in the same way over the first year of 1291 (output and the owners' consumption summed, with over without,
+after 360 days; the price level weighted by output, its range from day 30 to 360 read every 15 days, 0.993 to 1.015
+without):
+
+| the owner | output | owners' consumption | price level | cities 20 % off in price on one day |
+|---|---|---|---|---|
+| **on the profit of the day before, every day (built)** | +4.9 % | +13.8 % | 1.006 to 1.026 | 0 |
+| on the mean profit of the last 7 days, on his working days | +1.5 % | +1.6 % | 0.910 to 1.064 (to day 270) | 0 |
+| on the mean profit of the last 7 days, every day | −2.1 % | −7.0 % | 0.930 to 1.059 | 0 |
+| on the mean profit of the last 30 days, on his working days | −0.9 % | −11.0 % | 0.878 to 1.043 | 116 (day 180) |
+| on the mean profit of the last 30 days, every day | −4.5 % | −15.2 % | 0.897 to 1.032 | 22 (day 165) |
+| on the profit of the day before, the loss of a day carried to the next, every day | −5.9 % | −19.7 % | 0.859 to 1.154 | 174 (day 330) |
+
+On the profit of the day before and on his working days the owner buys `a` times a budget that is itself high after a
+working day: in the game the real GDP of 1291 was 8.2 % above the run without working days in the first year and
+10.2 % in the second, nobody was without work. Every rule that takes away the one-sidedness of feature 18 (an owner
+cannot take back a loss) leaves goods unsold, and the firms of the demand pull cut their prices by the gap: the price
+level falls by up to a tenth in the weeks of feasts and comes back. The same was found in feature 18 without working
+days ("the owner plans on the mean profit of 30 days", dropped): the owners' overspending fills a leak that is not
+found yet. With the working days the leak is larger: on a day of rest of its city what the crown, the merchants and
+the households of other faiths want of its firms is not made.
+
+Before, the spare capacity was tried: the port's `K κ − Y` (on a working day a firm could sell more than its day's
+capacity; real GDP +3.9 % in the first year of 1291, the price level 1.032 against 1.003) and `max(a, 1) K κ − Y`
+(+3.8 %, the price levels of 1356 swung by a fifth around Easter).
+
+### Deviations and what stays open
+
+- **The owners spend more than they earn**, the one-sidedness of feature 18, larger: after a day of rest the profit
+  of the day before is a loss, which the owner cannot take back. Their consumption is 13.8 % above the run without
+  working days, the output 4.9 %, and fewer are without work. That a rule without the one-sidedness leaves goods
+  unsold (table) is measured; that the cause is the demand not served on days of rest is a reading.
+- **Rule 1 scales the planned supply, the workers and the capital**, not only the work as the proposal has it
+  (`N α a`): with only the work scaled the firms bound by their supply or their capital would make on a working day
+  what they make on any day and lose the days of rest.
+- **The stock of materials is not scaled.** It holds 1.18 mean days of materials at the start; on the first working
+  day after a day of rest the stock binds a firm that needs 1.457 of them; it buys for the day's work and the stock
+  follows.
+- **The crown and the merchants buy every day**, also on a day on which every firm of a city rests: then they buy
+  from the firms' stocks and from the merchants. Neither has a calendar of its own. So the merchants buy more where
+  firms work more: in the first year of 1356 the Muslim cities sell 3.1 to 4.4 % of their output to the merchants
+  (Tlemcen the most), the Latin cities 1.8 to 2.7 % (Prague the least); without the working days the ports sold the
+  most (Venice 3.95 %) and the cities inland the least (Sarai 2.54 %). That the merchants buy on the working days of
+  the cities they buy from, and in bulk before a feast, is open.
+- **A firm without an owner works every day**, and a firm keeps its owner's calendar for all its workers, whatever
+  their faith (people feature 8).
+- **No seasons, no hours of the day**: those are steps 5 and 6 of way A.
+
+### State and upgrade
+
+State version 31. Engine format 10: the working days of the run of days the engine was given and per firm the factors
+of the days since its last plan (`worked`). A state of the format before is read as one without working days, every
+day since the last plan counting as one; the game gives the working days of the year before it computes the next day
+(`cities.workingTo`, −1 after the upgrade). The calendars themselves are not saved: they are a function of the faith
+and the date.
+
+## 20. The days of rest without a leak
+
+After feature 19 Ramon wrote "naja jetzt sind wir aber nicht fertig" (19 November 2026): the questions of the economy
+that feature 19 left open come before steps 4 to 6 of way A. He chose "Zuerst Preisregel der Firmen dämpfen" and
+added "wichtig: alles nur literaturkonform wir machen keine deluklul änderungen". The damping that the literature has
+(Calvo, below) holds the prices but costs work; on the card that followed he chose "Zuerst Leck an Ruhetagen
+schliessen" (19 November 2026): find where the money stays on the days of rest and close it with rules from the
+literature.
+
+### Where the money stayed
+
+Feature 19 left two leaks, found in the first year of 1291 outside the game (550 cities, `Cities::step`, with the
+working days against without, as in section 19):
+
+1. **Materials for the wrong day.** In the port the materials a firm buys in a period are used in the next: the
+   output (A.13) is computed from the stock `M` before the market of the period, and the stock (A.21) gets what was
+   bought after it. Feature 19 had a firm buy `a` times the port's materials on day `t` "for the day's work", which
+   arrive for day `t + 1`: on a Latin Friday a firm bought for a full working day and worked half a day on the
+   Saturday; on the Saturday it bought for half a day and rested on the Sunday; and on the Monday, with 1.457 mean days
+   to make, its stock held what the Saturday had bought. The stock bound the firms after every day of rest, and the
+   goods they did not make were demand that went unserved.
+2. **The owner on the profit of the day before, every day.** After a day of rest, a day of wages without sales, the
+   profit of the day before is a loss and the owner has nothing to spend out of income; after a working day he has
+   more than on a mean day, and he spent it every day, on days of rest too. As an owner cannot take back a loss
+   (feature 18) he spent 13.8 % more than without working days, and the firms of the demand pull raised their prices
+   by the gap (section 19: the price level 1.006 to 1.026 against 0.993 to 1.015). Every rule that took the
+   one-sidedness away (section 19, "Tried and dropped") left goods unsold, because the first leak was still open.
+
+### What was read
+
+- Poledna, Miess, Hommes, Rabitsch (2023), appendix A, as the port has it: the output from the stock of materials
+  before the market (A.13, `firms_production`), the stock after it (A.21, `firms_stocks`:
+  `M − Y / β + DM`), the materials wanted for the planned supply (A.18), the expected profit the profit of the period
+  before grown by the expected inflation and growth (A.28, `firms_expectations_and_decisions`), the owner's budget out
+  of the expected profit (A.46, A.49).
+- Gonzalez-Navarro, M., Lee, J., Lee, S. Restricting Large Firms to Protect Small Businesses: Evidence from Retail
+  Operating-Day Restrictions. Working paper (card payments in Seoul, 2019; the text has no year, its references were
+  read in September 2025). https://sujinhome.github.io/assets/papers/Mandatory_closure.pdf Word for word: "larger
+  shares are recouped by restricted chains on other shopping days or diverted to other unrestricted retail formats",
+  and "we find no significant differences in total expenditure between non-closure weeks that follow a closure week
+  and those that follow another non-closure week": what a closed day takes is bought on the open days, and the week
+  spends what it spends. This is the reading under rule 3 of feature 19 (a household buys `a` times its budget on the
+  days its market is open), and it holds for the owner as for any household.
+- For the damping of the prices (tried, dropped): CANVAS (Bank of Canada staff working paper 2022-51; JEDC 172
+  (2025) 104986, equations 3 to 6) has none, the firm closes the whole gap every quarter; the code of BeforeIT.jl
+  has `theta_calvo` (`init_CANVAS.jl`, lines 66 to 69), 1 by default, with no value published for it; Dhyne et al.
+  (2005, ECB working paper 524): 15.1 % of the consumer prices of the euro area change in a month; Assenza, Delli Gatti
+  and Grazzini (2015): ρ = 0.9 and a step of the price drawn from U(0, 0.1).
+
+### The rule
+
+1. **A firm buys on a working day the materials of its next working day**: the port's materials (A.18) times the
+   factor of the first day after `t` on which it works (`Attendance::next_working`, within 31 days; 1 outside the
+   days the engine was given). On a day of rest, when the market of its faith is closed, it buys none. So on a Latin
+   Friday it buys for the half day of Saturday, on the Saturday for the Monday. This is the port's timing (A.13, A.21)
+   kept on a calendar; the investment (A.14) stays `a` times the port's.
+2. **The owner of a firm buys on the working days of his faith**, `a` times his budget, as every other household
+   (rule 3 of feature 19), and his family books its food the same way (`src/sim/systems/household.ts`). The crown and
+   the merchants buy every day, as before.
+3. **The owner plans on the profit of the year**: in the place of the profit of the period before, the mean profit
+   per period of his firm since its twelfth plan before (`OwnerProfit`, `OWNER_PLANS` = 12 plans of 30 days), grown
+   as the port grows the profit of the period before (A.28). The rest is the rule of feature 18: the profit without
+   the change of the stock, a budget not below 0. The paper's period is a quarter of working days and holidays alike;
+   on the daily clock the owner's period is taken to be the window of the expectations, a year, which the clock
+   already uses for the expected growth and inflation. **The length of the window is the clock's, not a paper's**: the
+   30 days of a plan were measured in feature 19 and left goods unsold (section 19, "Tried and dropped"). In the first
+   period with working days the year before is taken to be twelve plans of the profit of the period before, as the
+   clock takes the window before the start to be the starting position.
+
+Without a calendar nothing changes. With a calendar of the factor 1 on every day the materials are the port's and
+the owner plans on the profit of the year (rule 3 holds with working days, whatever their factors).
+
+Code: `economy/src/clock.rs` (`Attendance::next_working`, `OwnerProfit`, the overrides
+`firms_expectations_and_decisions`, `firms_profits`, `households_budget_firms`); tests in
+`economy/tests/working_days.rs`.
+
+### The numbers
+
+The first year of 1291 outside the game, as in section 19 (sums over the cities, with over without working days; the
+price level weighted by output, its range from day 30 to day 360 read every 15 days):
+
+| | after 90 days | after 180 days | after 360 days |
+|---|---|---|---|
+| output, summed since the start | +5.3 % | +0.6 % | −0.7 % |
+| consumption of the workers, summed | +5.0 % | +0.4 % | −1.0 % |
+| consumption of the owners, summed | +3.8 % | −2.6 % | −2.6 % |
+| employed, on the day | −0.2 % | −0.7 % | −0.7 % |
+| the crowns' purchases, summed | +6.5 % | +4.1 % | +4.6 % |
+| price level weighted by output, on the day | 1.001 / 1.011 | 1.003 / 1.012 | 1.006 / 1.003 |
+
+| | feature 19 | feature 20 | without working days |
+|---|---|---|---|
+| price level from day 30 to 360 | 1.006 to 1.026 | **0.993 to 1.006** | 0.993 to 1.015 |
+| output after 360 days | +4.9 % | −0.7 % | |
+| owners' consumption after 360 days | +13.8 % | −2.6 % | |
+
+The lead of the first quarter is its working days (the mean factor of its first 90 days is 1.085, section 19). A
+mean of exactly 365 days in the place of the twelve plans gave 0.993 to 1.008, output −0.7 %, the owners −2.6 %
+(below): the plans are as good as a year of days and keep 26 numbers per firm in place of 365.
+
+In the game (`npm run workdays:check -- 3`: the world of 1291 founded, three years computed with the working days and
+again with every day a working day, which the engine is then never given, so that its owners keep the rule of feature
+18, on the profit of the day before):
+
+| | year 1 | year 2 | year 3 |
+|---|---|---|---|
+| real GDP | 180,211 / 183,025 (−1.5 %) | 183,446 / 188,506 (−2.7 %) | 183,665 / 192,054 (−4.4 %) |
+| consumption | −1.9 % | −3.3 % | −4.9 % |
+| investment | −1.4 % | −2.6 % | −4.3 % |
+| without work, at the end of the year | 748 / 528 | 855 / 333 | 875 / 193 |
+| households' deposits | −0.5 % | −0.7 % | −0.8 % |
+| firms' deposits | −0.3 % | −0.5 % | −0.6 % |
+| mean price level | 1.004 / 1.003 | 0.993 / 1.001 | 0.995 / 1.001 |
+| output of the Latin firms | −2.0 % | −3.6 % | −5.6 % |
+| output of the Muslim firms | −0.4 % | −0.4 % | −1.3 % |
+
+With feature 19 the same check gave a real GDP of +4.0, +8.1 and +7.7 %, hardly anybody without work from the second
+year, and the households' deposits −1.2, −2.8 and −4.8 % (section 19): that lead was the owners' overspending. Now
+the households keep their deposits and the prices stay where they are, but the economy grows less than the run
+without working days, and about 2.4 % of the workers are without work from the second year.
+
+That the days of rest are no longer the cause shows the same economy against a calendar with the factor 1 on every
+day, under which the owners plan on the year too (outside the game, as above, two years): output +0.8 %, the owners'
+consumption +1.5 %, the employed equal on day 720, the price level 0.990 to 1.006 against 0.996 to 1.000. The gap to
+the run without working days is the owners' rule: on the profit of the day before an owner spends more than his firm
+earns (feature 18, "Deviations": a third of the owners in the red), and that overspending fills a gap in the demand
+that is found in neither feature 18 nor here. Without it the goods stay unsold: the firms' stock grows from 0.65 days
+of output on day 360 to 2.46 on day 720, and the price level comes down to 0.990.
+
+In the tests (Austria, the port's data set; eight weeks of five working days, a half day and a day of rest against
+every day a working day of the factor 1; seeds 1 to 6) the price level moves by −7.4 to +6.1 %, with the rules of
+feature 19 by −13.7 to +13.4 %; the output −1.7 to −3.3 %, with those of feature 19 −0.1 to −1.3 %. On the day after
+a day of rest an owner buys what he buys after a working day (−0.8 %), with the profit of the day before less than
+half.
+
+### Tried and dropped
+
+The two parts of the rule were measured one by one and the window of the owner at several lengths, in the first year
+of 1291 outside the game as above (the price level from day 30 to day 360; output and the owners' consumption summed,
+with over without working days, after 360 days):
+
+| materials | the owner | price level | output | owners' consumption |
+|---|---|---|---|---|
+| for the day (feature 19) | on the profit of the day before, every day (feature 19) | 1.006 to 1.026 | +4.9 % | +13.8 % |
+| for the next working day | on the profit of the day before, every day | 0.999 to 1.024 | +3.8 % | +12.4 % |
+| for the next working day | on the mean of 7 days, every day | 0.932 to 1.058 | −2.6 % | −7.6 % |
+| for the next working day | on the mean of 7 days, on his working days | 0.910 to 1.095 | +0.9 % | +1.5 % |
+| for the next working day | on the mean of 30 days, on his working days | 0.884 to 1.047, 95 cities 20 % off | −1.4 % | −10.8 % |
+| for the next working day | on the mean of 91 days, on his working days | 0.990 to 1.022 | −0.2 % | −2.4 % |
+| for the day (feature 19) | on the mean of 365 days, every day | 0.978 to 1.016 | −2.4 % | −7.2 % |
+| for the next working day | on the mean of 365 days, every day | 0.969 to 1.015 | −2.8 % | −7.6 % |
+| for the next working day | on the mean of 365 days, on his working days | 0.993 to 1.008 | −0.7 % | −2.6 % |
+| **for the next working day** | **on the mean of twelve plans, on his working days (built)** | **0.993 to 1.006** | **−0.7 %** | **−2.6 %** |
+
+Neither part alone is enough: with the materials fixed and the owner of feature 19 the prices stay high, with the
+owner on the year and the materials of feature 19 they swing. The shorter the window, the more a week of feasts
+weighs in it.
+
+- **Calvo** (each planning firm changes its price with the probability θ, as in the code of BeforeIT.jl): with θ =
+  0.151 per plan (Dhyne et al.) the price levels of the 30 cities of 1356 stayed within 0.96 and 1.04 over ten years
+  (seeds 1356 to 1359; 0.92 to 1.01 with θ = 1), but work fell: in seed 1356 London had 13.3 % without work in year 10,
+  and the most of any city in a year was 14.2 %; with θ = 1 (every firm, as built) at most 1.7 %. A firm that may not
+  lower its price sells less and hires fewer. Ramon chose to close the leak first; Calvo is not built.
+- **The offered goods as CANVAS has them** (the gap against `Y + S`, the stock counted), with the materials and the
+  owner of feature 19: the price level 1.012 to 1.034, no better than feature 19.
+- **Materials for the next day, whatever it is** (`a(t + 1)`): on a Saturday a firm bought nothing for the Monday,
+  as the Sunday has the factor 0, and the output of day 15 fell by a tenth. Hence the next *working* day.
+
+### Deviations and what stays open
+
+- **The window of the year is ours**, as said under rule 3: no paper gives the period over which an owner on a daily
+  clock expects his profit. It is the window the clock uses for every other expectation, and the 30 days of a plan
+  were measured and failed.
+- **The crown and the merchants still buy every day**, also on a day on which every firm of a city rests (section 19).
+  The crowns' purchases are 4.6 % above the run without working days after a year: the crown buys out of its revenue
+  (feature 16), and the revenue follows the output of the working days.
+- **The Muslim cities still sell more to the merchants than the Latin ones** (section 19): that the merchants buy on
+  the working days of the cities they buy from is open.
+- **The gap in the demand of feature 18 is open, and now it shows.** Feature 18 measured it without working days:
+  with the owner on the mean profit of 30 days 0.9 % of the goods stayed unsold and the price level fell to 0.97;
+  the owners' overspending on the profit of the day before filled it. Feature 20 takes that overspending away with
+  the days of rest, and the gap is what holds the economy of the game 4.4 % below the run without working days in
+  the third year. Where the money of that demand stays is the next question; no rule is built for it here. (Feature
+  21 found the cause: no money leaks, the firms expected the recovery after the plague, section 21.)
+
+### State and upgrade
+
+State version 32. Engine format 11: the clock keeps the owners' profits of the last twelve plans and since the last
+(`OwnerProfit`: 26 numbers and a count per firm). A state of format 10 is read without them, and they are gathered
+from the next day on, the year before taken to be the profit of the day before (test
+`a_state_of_format_10_gathers_the_profits_of_the_owners_anew`). The upgrade 31 → 32 changes nothing else: the
+economies go on where they are.
+
+## 21. A world knows the history only up to its start
+
+### Why
+
+Feature 20 left the gap in the demand open (section 20, "Deviations"): in the game the world of 1291 with working
+days fell 1.5, 2.7 and 4.4 % behind the run without them, and its firms' stock grew year by year. Outside the game
+(550 cities of 1291, two years, `Cities::step`) the money did not leak: the deposits hardly changed. The firms made
+more than was asked. Under the demand pull of CANVAS (section 8) the supply grows by the expected growth in every
+case, and the firms expected about 1 to 3 % a year (γ_e read every 60 days), while the demand hardly grew once the owners
+no longer spent beyond their profit. With working days the planned supply stood 0.2 to 0.8 % above the demand from
+day 480 on, and the stock grew from 446 on day 60 to 1,729 on day 720. Without working days it stayed near 150:
+there the owners, on the profit of the day before, spent 878 more than their firms earned in two years, on credit,
+and that made the expected growth come true.
+
+### Where the expected growth came from
+
+The firms expect growth and inflation by an AR(1) on the history of output and prices (A.6, A.7; on the daily clock
+on sums of 365 days, section 4), and the calibration hands them the years before the start. The world of 1291 has no
+tables of its own: it takes those of 1356 as a placeholder (`src/sim/tables.ts`), and with them the history 1281 to
+1356, scaled to 1356. That history has the plague: real GDP £3,879 m in 1345, £2,841 m in 1350, £2,686 m in 1356
+(2013 prices; Bank of England workbook, sheet A1, Broadberry et al.). An AR(1) on its logarithms has α = 0.845 and a
+long-run mean 27.7 % above the start: it expects 3.86 % growth in the first year, the recovery after the plague. A
+world of 1291 knows nothing of the plague, which comes 57 years after its start.
+
+### What was read
+
+- The port, `get_params_and_initial_conditions` (`src/calibration.rs` of the port, `economy/vendor/port-beforeit`):
+  every series of the years before the start (real GDP, the deflator, the government's consumption, exports,
+  imports) runs from `estimation_date` to `calibration_date` (`range(key, Te, Tx)`) and is scaled to its value at
+  `calibration_date`; the AR(1) rules of the government's consumption, of exports and of imports are estimated on
+  that window, and `T_prime = Tx − Te + 1`. The port calibrates the model at any quarter of its data (Italy 2010 to
+  2016 in its tests), each time with the data up to that quarter: the model of a start knows the years before it and
+  none after.
+- The history of the table (Bank of England, A millennium of macroeconomic data, sheets A1 and A26) runs from 1280.
+  The years 1281 to 1291 are part of it, from the same sources as the rest.
+
+### The rule
+
+A world calibrates its cities on the history up to its own start year (`calibrateEconomy(table, until)`, `until`
+the start year; `cityCalibrations` passes the smaller of the start year and the table's year). For a world of 1291 on
+the table of 1356: the series of output, inflation, the crown's purchases, exports and imports run from 1281 to 1291
+(11 years, `T_prime` = 11), each scaled to 1291, and the rule of exports is estimated on them. The accounts stay the
+table's, the placeholder of 1356. On 1281 to 1291 the AR(1) on output has α = 0.195 and a long-run mean 1.3 % above
+the start: 1.07 % growth expected in the first year. England's real GDP grew 0.2 % a year from 1281 to 1345 (£3,390 m
+to £3,879 m).
+
+A world that starts in the year of its table (1356) is calibrated as before, bit for bit (test: the file of the
+reference world).
+
+In the game two of the rules of the rest of the world do not enter: the merchants replace the series of exports and
+imports in every city (feature 5, `economy/src/trade.rs`), and since feature 16 the crown buys with what it took in,
+so its series sets only its first day. What changes is the history of output and prices, from which the firms form
+their expectations.
+
+Code: `src/sim/economy/calibration.ts` (`calibrateEconomy`), `src/sim/systems/economy.ts` (`cityCalibrations`);
+tests in `tests/economy.test.ts` (the calibration, the world of 1291, its upgrade) and
+`tests/economy-households.test.ts` (the upgrade of a world of 1356).
+
+### The numbers
+
+In the game (`npm run workdays:check -- 3`, as in section 20: the world of 1291 with the working days against every
+day a working day):
+
+| | year 1 | year 2 | year 3 |
+|---|---|---|---|
+| real GDP | 178,367 / 180,955 (−1.4 %) | 180,280 / 182,915 (−1.4 %) | 179,635 / 182,486 (−1.6 %) |
+| consumption | −1.7 % | −1.9 % | −1.9 % |
+| investment | −1.3 % | −1.4 % | −1.5 % |
+| without work, at the end of the year | 944 / 685 | 998 / 693 | 1,036 / 717 |
+| households' deposits | −0.5 % | −0.8 % | −0.8 % |
+| firms' deposits | −0.3 % | −0.4 % | −0.5 % |
+| mean price level | 1.004 / 1.002 | 0.996 / 1.001 | 0.999 / 1.001 |
+| output of the Latin firms | −1.9 % | −2.4 % | −2.6 % |
+| output of the Muslim firms | −0.1 % | +1.1 % | +1.1 % |
+
+| real GDP | year 1 | year 2 | year 3 |
+|---|---|---|---|
+| with working days, history to 1356 (section 20) | 180,211 | 183,446 | 183,665 |
+| with working days, history to 1291 | 178,367 | 180,280 | 179,635 |
+| without working days, history to 1356 (section 20) | 183,025 | 188,506 | 192,054 |
+| without working days, history to 1291 | 180,955 | 182,915 | 182,486 |
+
+The run without working days no longer grows 2.4 % a year: it is flat, as England was before the plague, and the gap
+between the two runs stays at about 1.5 % instead of widening to 4.4 %.
+
+### The gap: the owners of the run it is measured against
+
+After this feature Ramon chose to clear the gap of about 1.5 % first ("Erst Restlücke 1,5 % klären", card of
+20 November 2026). The run without working days is not the same economy without days of rest. It is never given
+working days, so its owners keep the rule of feature 18 and plan on the profit of the day before, while with working
+days they plan on the profit of the year (feature 20). A third run separates the two: the same world given a calendar
+with the factor 1 on every day, which has the rules of feature 20 and no day of rest (`npm run workdays:check -- 3
+factor1`):
+
+| | year 1 | year 2 | year 3 |
+|---|---|---|---|
+| real GDP, the calendars of the faiths | 178,367 | 180,280 | 179,635 |
+| real GDP, the factor 1 on every day | 178,258 | 178,655 | 179,521 |
+| real GDP, without working days | 180,955 | 182,915 | 182,486 |
+| without work at the end of the year (calendars / factor 1 / none) | 2.6 / 3.4 / 1.9 % | 2.7 / 3.3 / 1.9 % | 2.8 / 3.2 / 2.0 % |
+| mean price level (calendars / factor 1 / none) | 1.004 / 0.997 / 1.002 | 0.996 / 0.997 / 1.001 | 0.999 / 0.997 / 1.001 |
+
+- **The days of rest cost nothing.** The world with the calendars of the faiths makes 0.1, 0.9 and 0.1 % more than
+  the same world without a day of rest, and fewer of its workers are without work.
+- **The whole gap is the owner's rule.** The factor 1 on every day and no working days differ only in the profit the
+  owner plans on, and they differ by 1.5, 2.3 and 1.6 %, the gap itself.
+- **On the profit of the day before the owners take more.** Over the three years their income is 4.3 % above the run
+  with the factor 1 while GDP is 1.9 % above: 31.2 % of GDP against 30.5 %. The owner's budget comes out of the
+  expected profit and is not below 0 (A.46, A.49 with the rule of feature 18). Cut day by day, a firm that loses on some days gives
+  its owner 0 on those days and the full profit on the others, more than the cut of the profit of the year (feature
+  18 found a third of the owners in the red on a day). That surplus is demand; the profit of the year (feature 20)
+  takes most of it away.
+
+Nothing is built for the gap: the world of the game has the rule of feature 20, and the run it was measured against
+has the larger bias. The paper's period over which the owner expects his profit is a quarter (Poledna et al. 2023,
+A.28 on quarterly profit), closer to a year than to a day.
+
+### What stays open
+
+- **Who is without work.** About 3 % of the workers in the world with the factor 1 on every day and 2.6 to 2.8 % with
+  the calendars, against one person per city at the start: what share of the workers of a medieval town was without
+  work is not set by any source used here.
+- **The tables of 1291 are still those of 1356.** Only the history is cut at the start; the accounts (people, output,
+  coin, the crown's revenue) are post-plague numbers for a pre-plague world (`src/sim/tables.ts`).
+
+### State and upgrade
+
+State version 34. The upgrade 33 → 34 founds the economies of a world that starts before the year of its table anew
+on the day the world has reached, as the step to 24: their days and yearly figures are gone, the firms and the parts
+of the persons are given out again, and the first period is the next day of the world. The persons stay who they
+are. A world that starts in the year of its table goes on where it is: its calibration has not changed.
+
+## 22. The workers who are away
+
+Step 4 of way A of the proposal «Personen: Archiv der Toten und Tagesplan», proposed on 20 November 2026
+(https://claude.ai/artifact/QK327U5QQQGWNCnL5JhHV5) and chosen by Ramon the same day («So bauen, Lohn läuft
+weiter»). The sicknesses and the childbeds, their sources and how they are drawn are people feature 9
+(docs/PEOPLE_DESIGN.md).
+
+### Why
+
+In the port every employee works in every period (A.13: the labour of a firm is `N α`). With a day as the period a
+sick worker and a mother a week after a birth are at work like everybody else. The sick club of Morcott counted on
+average a new sickness every four to five years for a man of working age, of three to five weeks from 25 on and of
+months from 60 on (people feature 9); a mother lay in for a month.
+
+### The rule
+
+1. **Production** (A.13) is `min(a Q_s, a (N − n) α, a K κ, M β)`, with `n` the firm's employees who are away on the
+   day and `a` the factor of its day (section 19). The work effort in α (A.25, A.26) stays that of the firm's
+   employees. With nobody away it is the rule of section 19, number for number.
+2. **The worker keeps the place and the wage.** The firm pays its `N` employees as before (A.26), the worker's
+   household has the income it had, and the firm hires nobody for a worker who is away. That is how the wage runs on
+   the days of rest of section 19 too. Since section 23 that holds for a servant; a day labourer is paid for the days
+   he works, and workers without work stand in for those who are away.
+3. **A firm that sold all it had plans as if its workers had been there.** In the paper a firm's supply is the
+   demand it met (section 8), and the port measures that demand by what the firm sold of its output and its stock
+   (`Q_d_i` in the port's goods market). On a day on which the firm sold all it had, the output that its workers
+   who were away would have made counts to the demand of its next plan: its buyers took all there was, and what
+   was not made for want of hands is not a smaller demand. On a day on which it did not sell all it had, what it
+   sold is the demand, and the absences took nothing from it. The day counts to the days the firm worked as any
+   other (section 19, number 6).
+4. **A firm does not buy again the materials that its workers who were away left unused.** The port buys the
+   materials of the planned supply every period (A.18), since feature 20 those of the next working day, and uses
+   `1 / β` of them per unit made (A.13). The materials of the output the firm did not make for want of hands stay in
+   its stock, and it buys that much less at its next purchases. Bought again, they would lie in the stock day after
+   day and draw goods from the market.
+
+Rules 3 and 4 are ours: the port has no workers who are away. They follow from what the port's rules mean, the
+supply of the demand met and the materials of what is made, on days when a firm cannot make what it planned.
+
+### The rules that were measured and not kept
+
+Eight combinations were built and run (`npm run absence:check -- 3`: the world of 1291 against the same world in which
+everybody is there, real GDP, and those without work at the end of the third year). G and H were run after F was
+built, G for step 6 of the day plan and H to close the drain of the firms' deposits (below):
+
+| | the plan | the wage of a day away | the materials | real GDP, years 1 / 2 / 3 | without work in year 3 |
+|---|---|---|---|---|---|
+| A | what was sold; a day on which none of the firm's workers is there left out | paid | for the plan | −4.1 / −5.4 % / (not run) | 2,951 against 998 (year 2) |
+| B | as if they had been there, if sold out (rule 3) | paid | for the plan | +0.1 / +3.8 / +5.4 % | 145 against 1,036 |
+| C | rule 3 | none | for the plan | −1.6 / +1.5 / +3.6 % | 298 against 1,036 |
+| D | rule 3 | none | for those who are there | −4.0 / −5.1 / −6.8 % | 2,936 against 1,036 |
+| E | rule 3 | paid | for those who are there | −2.2 / −2.4 / −4.1 % | 2,015 against 1,036 |
+| **F** | **rule 3** | **paid** | **not bought again (rule 4)** | **−1.9 / −1.9 / −3.4 %** | **2,215 against 1,036** |
+| G | rule 3 | none | rule 4 | −3.7 / −4.6 / −6.3 % | 3,274 against 1,036 |
+| H | rule 3 | paid | rule 4, and the capital not worn is not replaced | −2.2 / −3.0 / −5.3 % | 3,002 against 1,036 |
+
+- **A**, the first build: a firm short of hands reads the output it could not make as a fall in demand, plans less,
+  lets workers go, and does so again at its next plan. It had the rule for the day without anybody because without
+  it a firm of one worker who fell sick made nothing and sold nothing for weeks, planned on a demand of 0, the demand
+  pull took its supply or its price to 0, and the next day divided by that price (the engine stopped on 2 February
+  1291 with "N_d_i: cannot round NaN to an integer"). Rule 3 gives such a firm a plan on what it would have made.
+- **B and C** buy the materials of the whole plan every day while making less: the stock of materials grows, the
+  firms pay for it and lose money (their deposits 59 % below the comparison in year 3 in C), the money goes to the
+  households, who find too few goods and put it on deposit (18 to 27 % more), and the demand of those deposits
+  drives a boom.
+- **D and E** buy the port's materials times the share of the firm's workers who are there on the day they are
+  used. The port's work effort counts the materials (A.25: what supply, capital and materials allow over what the
+  employees make), so the effort and the wage (A.26) of those who are there fell with them, and so did the output
+  that rule 3 counts: the firms read part of the absences as a fall in demand again. With all its workers away a
+  firm bought nothing, and on the next day its effort and its wage were 0 (the tests of the world of 1356: a firm
+  paid 0, and the economies stopped on day 120).
+  D takes the wage of the days away from the households on top, and the slide is the steepest.
+- **F**, the rule built: the effort and the wage stay those of all the firm's employees, the output that rule 3
+  counts is what all would have made, and the stock of materials does not grow. GDP falls by 1.9 % in the first two
+  years and by 3.4 % in the third, about the share of the days lost (3.6 %), and the price level stays. The firms'
+  deposits fall (6, 11 and 16 % below the comparison) and the households' deposits rise by about as much; G shows
+  that this is not the wage of the days away. From the second year on the firms take on fewer workers: those
+  without work are twice as many in the third year (6.0 % of the workers against 2.8 %).
+- **G** is F without the wage of the days away. The firms' deposits fall just as in F (5.9, 11.0 and 15.8 % below
+  the comparison) and the households' deposits rise just as much (+1.4, +2.7 and +3.8 %): who pays the worker who
+  is away does not move the money between firms and households. GDP falls twice as fast as in F, and three times as
+  many are without work in the third year. Our reading, not measured apart: what the firm does not pay is profit,
+  the profit goes to its owner, who is a household too (feature 18) and spends on the mean profit of the year
+  (feature 20), so the households hold as much but spend it later than the worker would have.
+- **H** is F with a fifth rule of the same kind as rule 4, for capital: a firm does not replace the capital that its
+  workers who were away did not wear. It closes the drain (below), but the economies shrink further every year; it
+  is not built.
+
+### How the world gives it
+
+The world gives the engine, city by city, the runs of days on which a worker is away: the worker (the position in
+the port's list of workers, `person.agent`), the first and the last day. It gives them for a month on the first day
+of the month, and for the rest of the month when it gives the working days of the year (at the founding of the
+economies and after an upgrade). They are the days of people feature 9 of the living workers of the city (the
+present persons, people feature 7): the episodes of sickness of the person and the 30 days of childbed from each
+birth whose month reaches into the month given, the births already in the world and the next child of a woman
+(`person.bears`) if it is due in the month. Runs that meet are one run.
+
+The world computes at most to the end of a month at a time (`computeTo`), so that the days away of the next month
+are given before its first day; many days at once give what the same days give one by one (tests in
+`tests/absence.test.ts`).
+
+Code: `economy/src/workers.rs` (`Absences`, `absences`), `economy/src/clock.rs` (`firms_production`,
+`firms_expectations_and_decisions`, `search_and_matching`), `economy/src/lib.rs` (`sce_absences`),
+`src/sim/systems/economy.ts` (`absences`, `computeTo`), `src/sim/people/absence.ts`; tests in
+`economy/tests/absences.rs` and `tests/absence.test.ts`.
+
+### The numbers
+
+The rule built (F), `npm run absence:check -- 6`, the world of 1291 against the same world in which everybody is
+there:
+
+| | year 1 | year 2 | year 3 | year 4 | year 5 | year 6 |
+|---|---|---|---|---|---|---|
+| days the workers are away (sick or in childbed) | 3.57 % | 3.50 % | 3.59 % | 3.53 % | 3.52 % | 3.57 % |
+| real GDP | −1.9 % | −1.9 % | −3.4 % | −3.8 % | −4.0 % | −4.2 % |
+| real GDP with the absences | 174,974 | 176,883 | 173,461 | 173,487 | 173,856 | 174,025 |
+| consumption | −2.2 % | −2.2 % | −3.6 % | −4.0 % | −4.1 % | −4.3 % |
+| investment | +1.6 % | +1.4 % | −0.1 % | −0.6 % | −0.7 % | −0.9 % |
+| employees | −0.1 % | −2.0 % | −3.3 % | −3.5 % | −3.8 % | −4.0 % |
+| employees with the absences | 35,644 | 34,910 | 34,400 | 34,423 | 34,337 | 34,266 |
+| without work at the end of the year | 971 / 944 | 1,705 / 998 | 2,215 / 1,036 | 2,192 / 938 | 2,278 / 913 | 2,349 / 904 |
+| households' deposits | +1.3 % | +2.7 % | +3.8 % | +4.9 % | +6.2 % | +7.5 % |
+| firms' deposits | −6.1 % | −11.4 % | −16.4 % | −21.2 % | −25.7 % | −30.3 % |
+| mean price level | 1.0049 / 1.0042 | 0.9920 / 0.9956 | 0.9983 / 0.9993 | 0.9991 / 0.9986 | 0.9988 / 0.9967 | 1.0015 / 0.9973 |
+
+Output and employment settle after the third year. With the absences the world makes 173,500 to 174,000 a year and
+employs 34,300 to 34,400 from year 3 to year 6, while the comparison grows by about 0.4 % a year; the gap, −4.2 % of
+real GDP in year 6, is a little more than the 3.6 % of the days away.
+
+The firms' deposits do not settle. They fall by about 400 a year (6,039 against 8,666 in year 6), and the
+households' deposits grow by about as much. The transfer does not slow within six years. It is not the wage of the
+days away: without that wage (G) the firms' deposits fall just as fast, so a wage by the day worked does not end it.
+Where the money goes is the next section.
+
+### Where the firms' money goes
+
+The cash flows of the firms of all cities were added up day by day over two years, in the world with the absences
+and in the comparison (a diagnostic of the port's terms of A.33 and A.34 that is not kept in the engine; patch,
+probe and outputs in the project files, wirtschaft/leck-der-betriebe/). A firm pays out all its profit: its owner
+takes the whole profit and bears the whole loss (feature 18; τ_FIRM is 0 in src/sim/economy/calibration.ts, and
+in the measurement the dividends less the losses the owners bore are the profits: 72,594 − 19,677 = 52,917 in year 1).
+So its deposits change only by what it spends on stocks: the change of its deposits is its depreciation less its
+investment plus the materials it used less those it bought.
+
+| change against the comparison | year 1 | year 2 |
+|---|---|---|
+| investment above depreciation | −473 | −455 |
+| materials bought above those used | −66 | −51 |
+| new credit and interest | +10 | +46 |
+| the firms' deposits | −529 | −460 |
+
+Nine tenths of the drain is investment. A firm invests what the capital of its planned supply wears (A.14:
+δ/κ · min(Q_s, K κ)), and its capital wears with what it makes (A.3: δ/κ · Y). On a day on which workers are away
+the firm makes less than it planned, so it replaces capital that was not worn: its capital grows beyond its use, and
+the money it pays goes to the firms that make the capital goods and from them to their owners as profit. The money
+is not lost: it is in capital that nobody uses, and in the households' deposits.
+
+Rule H closes it the way rule 4 closes the materials: the capital that the workers who were away did not wear
+(δ/κ times the output lost) is kept per firm and invested less at the next purchases, an own rule from A.3 and
+A.14 as rule 4 is. Measured over six years against F:
+
+| | year 1 | year 2 | year 3 | year 4 | year 5 | year 6 |
+|---|---|---|---|---|---|---|
+| real GDP, F | −1.9 % | −1.9 % | −3.4 % | −3.8 % | −4.0 % | −4.2 % |
+| real GDP, H | −2.2 % | −3.0 % | −5.3 % | −6.5 % | −7.3 % | −8.3 % |
+| employees, F | −0.1 % | −2.0 % | −3.3 % | −3.5 % | −3.8 % | −4.0 % |
+| employees, H | −0.5 % | −3.3 % | −5.5 % | −6.4 % | −7.5 % | −8.3 % |
+| firms' deposits, F | −6.1 % | −11.4 % | −16.4 % | −21.2 % | −25.7 % | −30.3 % |
+| firms' deposits, H | −0.9 % | −1.5 % | −2.1 % | −2.7 % | −3.3 % | −3.8 % |
+
+With H the deposits hold, but output and employment fall by about one per cent of the comparison a year and do not
+settle within six years (3,866 without work in year 6 against 904). The capital that was not needed was also demand:
+in F it keeps the makers of capital goods busy. Without it the owners have less to spend, and the economies shrink.
+Neither is right: F builds capital nobody uses out of the firms' deposits, which would be gone in about 15 years at
+this pace; H lets the economies shrink without end. In both the firm makes less on a day on which workers are away
+and finds nobody to stand in for them. Section 23 brings the stand-ins, and the drain falls to a quarter.
+
+### Limits
+
+- **Given a month ahead.** The days away of a month follow from the workers at its start. A worker who dies passes
+  the place to an heir (people feature 2), and the heir keeps the days away of the dead worker for the rest of the
+  month; a worker who joins later in the month has none until the next.
+- **No sick pay and no lost wage.** The wage of a worker who is away is paid by the firm as on any day. A club's or
+  a guild's sick pay is not booked apart. Since section 23 a day labourer loses the day's wage, and workers without
+  work stand in. Without the wage of the days away for everybody (G) the economies slide further.
+- **The firms' deposits fall.** F replaces capital the workers who were away did not wear (above); the drain is
+  about 5 % of the comparison a year and does not slow within six years. With the stand-ins of section 23 it is
+  about 1 % a year from the fourth year.
+- **Rules 3 and 4 are ours.** No paper read has workers who are away in a model of this kind; the rules take the
+  port's own (the supply of the demand met, the materials of what is made) to the days a firm cannot make what it
+  planned, and were chosen among the combinations measured above.
+- **The owners are not away.** The owner of a firm is not one of its workers in the model.
+
+### State and upgrade
+
+The engine's state format 12: the clock keeps the absences of the month, a count and per absence the worker and the
+first and last period, and then per firm the materials its workers who were away left unused (rule 4), after the
+owners' profits of format 11. A state of an earlier format is read as one in which everybody is there. State version 35. The upgrade 34 → 35 changes nothing of the economies but the day to which
+they were given working days (`workingTo` = −1): before the next day they are given the working days of the rest of
+the year again and the absences of the rest of the month. The persons stay as they are; their days away follow from
+them.
+
+## 23. Service by the year, work by the day, and who stands in
+
+Step 6 of way A of the proposal «Personen: Archiv der Toten und Tagesplan». After section 22 Ramon chose to leave the
+drain of the firms' deposits as it was and to solve it in step 6 («So lassen, in Schritt 6 lösen», 20 November
+2026). The proposal «Vorschlag: Schritt 6, Jahresdienst und Tagelohn»
+(https://claude.ai/artifact/Wyqd64rfmZgJnz9GZ7Wof9) followed the same day, and he chose its phase A («Phase A bauen
+und messen»): two contracts, a wage by contract, and workers without work who stand in for those who are away. Who
+has which contract is people feature 10 (docs/PEOPLE_DESIGN.md).
+
+### Why
+
+Until section 22 every worker had the port's contract: the wage of the firm in every period, worked or not
+(section 19, rule 6), and since section 22 also on the days of sickness and childbed. Nobody worked in the place of a
+worker who was away, so the firm made less than it planned, invested for its plan and replaced capital that was not
+worn (section 22, where the firms' money goes). The sources know two contracts, and they know men hired in the place
+of the sick.
+
+### What the sources say
+
+| Question | Finding | Source |
+|---|---|---|
+| two contracts | the famuli were hired "most commonly for the whole agricultural year"; day labour "especially at times of peak demand such as harvest" | Claridge, Delabastita & Gibbs 2024, p. 13 |
+| two contracts | Meopham 1307–75: 8 to 15 servants on the manor all year; hired men "particularly at harvest and lambing times" | Goose, Archaeologia Cantiana 92, pp. 204–206 |
+| the share in service by the year | the famuli did "at least a third and up to a half of all labour" on the demesnes | Claridge & Langdon 2015, cited in Claridge, Delabastita & Gibbs 2024, p. 13 |
+| the share in service by the year | about 40 % of the labour force in annual service; 46 % in the late 13th century after Campbell 2016, table 3.4 (from a machine summary, not checked word for word) | Humphries & Weisdorf 2019, p. 22 of the manuscript |
+| who has which contract | unmarried women in annual service, married women by the day | Humphries & Weisdorf 2015 |
+| who has which contract | day labourers were often "smallholding tenants who used temporary employment to supplement the incomes" of their land | Claridge, Delabastita & Gibbs 2024, p. 13 |
+| the day wage | day labourers worked as many days as it took to earn the annual pay of a servant | Humphries & Weisdorf 2019, p. 6 |
+| the wage of a sick servant | none found; ploughmen dismissed in the year had "cash and food payments reduced accordingly", which is dismissal, not sickness | Goose, p. 207 |
+| a man in the place of the sick | a sick tenant found "a family member or even a hired laborer" | Owen, Brown & Skinner 2025, p. 5 |
+| a man in the place of the sick | Battle Abbey 1420/21: "in the absence of the ploughman who was sick for 84 days, a man was hired to drive the wagon and plough" | Owen, Brown & Skinner 2025, p. 7 |
+| a man in the place of the sick | but "little evidence" of one man hired for another at Ramsey, where the monks had labour services in plenty | Owen, Brown & Skinner 2025, p. 7 |
+
+### The rules
+
+1. **The contract follows the household** (people feature 10). A worker who heads a family, as its man or its
+   woman, works by the day; every other worker, who lives in the family of another, serves by the year. The world
+   gives the engine the workers who work by the day.
+2. **A servant is paid in every period**, as before: the port's wage of the firm (A.26), worked or not, on the days of
+   rest (section 19, rule 6) and the days away (section 22, Ramon's choice «Lohn läuft weiter»). No source read says
+   what a sick famulus was paid; an annual wage is a wage for the year.
+3. **A day labourer is paid for the periods he works**: the wage of his firm times the factor `a` of its day
+   (section 19), nothing on a day of rest or a day he is away. The factors of a year add up to its days, so over a
+   year without days away he earns what a servant earns: the arbitrage of Humphries & Weisdorf (2019, p. 6) on the
+   working days of the game's calendar.
+4. **Workers without work stand in for those who are away.** On a day on which workers of a firm that works (`a` > 0)
+   are away, the firm takes for each of them a worker without work of its city who is not away himself, for that
+   day, and pays him as a day labourer, `a` times its wage. The stand-ins are chosen by the port's rule for
+   vacancies (A.1.1, `search_and_matching_labour`): the workers without work in random order, one to each firm with
+   places open, the firms in random order, round after round, while workers without work are left. A stand-in works
+   at the firm's productivity and effort, so the labour of the day is `a (N − away + stand-ins) α` (A.13). He stays
+   without an employer in the port's books, and keeps nothing of the day but his pay.
+5. **The books.** What a firm pays its day labourers and stand-ins more or less than the port's wages
+   (`(1 + τ_SIF) w_i P_HH` times the sum of `paid − 1` over its pays) comes off its profit (A.27) and so off its
+   deposits (A.34) and its owner's income (feature 18). The worker's realised income (A.53) has it, net of the taxes
+   on wages; the crown takes those taxes (A.59); the national accounts count it as compensation of employees, not
+   operating surplus. A household plans its spending on the wage of its contract per mean day, as the port plans on
+   the wage of the period (A.46 on the expected A.53): the factor of the day is already in what it spends on the day
+   (section 19), and counting it in the planned income too would take it twice.
+
+Without contracts the economy computes as before, number for number; with contracts and every day a mean day and
+nobody away it computes the same (tests in `economy/tests/contracts.rs`).
+
+**OWN RULE**, two parts: that every place of the day is filled while a worker without work is there (the sources show
+the practice, not how often), and that the stand-ins are chosen by the port's rule for vacancies applied to the day
+(the port knows no stand-ins).
+
+### How the world gives it
+
+The world gives the engine, city by city, the workers who work by the day, by their position in the port's list of
+workers (`person.agent`): every living worker of the city (the present persons, people feature 7) who is the man or
+the woman of a family. It gives them with the absences of the month (section 22), on the first day of every month and
+when it gives the working days of the year. A place that passes to an heir in the month keeps the contract of the one
+before until the next month.
+
+Code: `economy/src/workers.rs` (`today`, `wages_more`, `add_pays`, `taxes_on_pays`, `Economy::with_contracts`,
+`contracts`), `economy/src/clock.rs` (`firms_production`, `search_and_matching_labour`, `firms_profits`,
+`firms_deposits`, `households_income_act`, `gov_revenues`, `update_data_step`), `economy/src/lib.rs`
+(`sce_contracts`, `sce_stand_ins_last`), `src/sim/systems/economy.ts` (`contracts`, `computeTo`); tests in
+`economy/tests/contracts.rs` and `tests/contracts.test.ts`.
+
+### The numbers
+
+`npm run absence:check -- 6`, the world of 1291 with the absences against the same world in which everybody is
+there, both with their contracts; F is the rule of section 22 without contracts, measured the same way (section 22,
+the numbers). Output in the project files, wirtschaft/schritt6/check6_phase_a.txt.
+
+| | year 1 | year 2 | year 3 | year 4 | year 5 | year 6 |
+|---|---|---|---|---|---|---|
+| days the workers are away (sick or in childbed) | 3.57 % | 3.50 % | 3.59 % | 3.53 % | 3.52 % | 3.57 % |
+| workers who serve by the year (at the start of the year) | 53.8 % | 52.6 % | 51.8 % | 51.0 % | 50.2 % | 49.5 % |
+| days away at firms that worked on which a worker without work stood in | 55.0 % | 63.8 % | 73.7 % | 82.4 % | 85.0 % | 79.3 % |
+| real GDP | −1.0 % | −0.8 % | −1.5 % | −2.0 % | −2.2 % | −2.1 % |
+| real GDP, F | −1.9 % | −1.9 % | −3.4 % | −3.8 % | −4.0 % | −4.2 % |
+| real GDP with the absences | 176,249 | 177,957 | 176,636 | 176,448 | 176,913 | 177,891 |
+| consumption | −1.0 % | −1.1 % | −1.8 % | −2.2 % | −2.3 % | −2.1 % |
+| investment | +0.5 % | +0.3 % | −0.7 % | −1.5 % | −1.7 % | −1.4 % |
+| employees | −0.5 % | −1.5 % | −2.3 % | −2.9 % | −2.8 % | −2.5 % |
+| employees, F | −0.1 % | −2.0 % | −3.3 % | −3.5 % | −3.8 % | −4.0 % |
+| without work at the end of the year | 1,215 / 1,031 | 1,581 / 1,054 | 1,908 / 1,073 | 1,995 / 964 | 1,910 / 917 | 1,797 / 917 |
+| without work, F | 971 / 944 | 1,705 / 998 | 2,215 / 1,036 | 2,192 / 938 | 2,278 / 913 | 2,349 / 904 |
+| households' deposits | +0.7 % | +1.2 % | +1.6 % | +1.9 % | +2.3 % | +2.8 % |
+| households' deposits, F | +1.3 % | +2.7 % | +3.8 % | +4.9 % | +6.2 % | +7.5 % |
+| firms' deposits | −2.9 % | −4.8 % | −6.1 % | −7.0 % | −7.9 % | −9.1 % |
+| firms' deposits, F | −6.1 % | −11.4 % | −16.4 % | −21.2 % | −25.7 % | −30.3 % |
+| mean price level | 1.0017 / 1.0017 | 0.9937 / 0.9962 | 0.9936 / 0.9977 | 0.9933 / 0.9969 | 0.9910 / 0.9933 | 0.9931 / 0.9926 |
+
+- **The stand-ins halve the loss.** Real GDP settles from the fourth year at about 2 % below the comparison, against
+  4 % in F and the 3.6 % of the days away; employment at 2.5 to 2.9 % below, against 4 % in F.
+- **A reserve of workers without work.** With the absences about 900 more are without work at the end of a year
+  than in the comparison, from the third year on (in F about 1,200 to 1,450 more). They stand in on most of the days
+  away, 55 % in the first year and 79 to 85 % from the fourth: the pool grows until it covers most of the absences.
+  At the founding the cities have about 940 without work against about 1,270 workers away on a mean day.
+- **The drain of the firms' deposits is a quarter of F's and slows, but does not stop.** The gap to the comparison
+  grows by 254, 165, 111, 77, 76 and 104 a year, against about 400 to 530 a year in F; after six years the firms hold
+  9 % less, against 30 % in F. Our reading, not measured apart: what remains is the investment above the wear of
+  section 22 on the days on which nobody stood in, 15 to 45 % of the days away: F's drain of the same year times that
+  share is 238, 166, 113, 72, 60 and 82. The pay of the day labourers and the stand-ins comes off the profit, and so
+  off the owners, not off the firms' deposits (section 22: a firm pays out all its profit, and its owner bears its
+  loss).
+- **The contracts alone change little.** The comparison with contracts against the comparison of F without them, in
+  which everybody is there too: real GDP −0.2 % in the first year and +0.1 % in the sixth (181,667 against 181,571),
+  without work 1,031 against 944 and 917 against 904.
+- **Fewer serve by the year as the years pass**, 53.8 % at the founding and 49.5 % after six years: more of the
+  workers head a family of their own.
+
+### Limits
+
+- **54 % serve by the year, the sources 40 to 46 %.** The contract follows the household; the gap is not tuned
+  (people feature 10).
+- **Stand-ins come only from the workers without work of the city.** The sources also know a member of the family
+  in the place of the sick (Owen, Brown & Skinner 2025, p. 5); the persons of a family who do not work are not
+  households of the engine. Where no worker without work is left, the place stays empty for the day and the firm
+  makes less, as in section 22.
+- **Every place is filled while there is somebody** (OWN RULE). The sources show the practice, not how often; at
+  Ramsey there is "little evidence" of it.
+- **The firms' deposits still fall**, by about 1 % of the comparison a year from the fourth year, on the days on
+  which nobody stood in (above).
+- **A servant who is away is paid, and so is the stand-in.** No source read says what a sick famulus was paid; the
+  wage runs on by Ramon's choice for section 22.
+- **The day labourer's days are not his own.** He works every day his firm works and he is there. How many days he
+  wanted and found work, a target income of 150 to 200 days, is phase B of the proposal, a choice of its own.
+- **A stand-in is no employee.** He works one day at a time and stays without work in the port's books; the port's
+  firms hire by their plans as before, for both contracts alike.
+
+### State and upgrade
+
+The engine's state format 13: the clock keeps the contract of every worker, one byte each (0 by the year, 1 by the
+day), after the materials left unused of format 12; none, a count of 0, for an economy without contracts. A state of
+format 12 is read as one without contracts. Who stands in and who is paid what is computed anew in every period and
+is not saved. State version 36. The upgrade 35 → 36 changes nothing of the economies but the day to which they were
+given working days (`workingTo` = −1), as the upgrade 34 → 35 did: before the next day they are given the working
+days of the rest of the year, the absences of the rest of the month and the contracts.

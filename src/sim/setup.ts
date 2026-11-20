@@ -2,7 +2,7 @@
 // who owns which place, the realms with their capitals, colours, cultures and faiths, and how many people live where.
 import type { World } from './world';
 import type { WorldState, RealmText } from './state';
-import { STATE_VERSION, REALM_SCHEMA, RANKS, PERSON_SCHEMA, FAMILY_SCHEMA, FIRM_SCHEMA, LOT_SCHEMA, HAMLET_SCHEMA } from './state';
+import { STATE_VERSION, REALM_SCHEMA, RANKS, PERSON_SCHEMA, FAMILY_SCHEMA, FIRM_SCHEMA, LOT_SCHEMA, HAMLET_SCHEMA, STREET_SCHEMA, FIELD_SCHEMA } from './state';
 import { createTable, spawn } from './ecs';
 import { seedRng } from './rng';
 import { cultureIndex, faithIndex, foundPersonCultures } from './systems/cultures';
@@ -15,6 +15,7 @@ import { countPeople, settleHamlets } from './systems/hamlets';
 import { foundRulers } from './systems/rulers';
 import { foundBorders } from './systems/borders';
 import { foundLots } from './systems/lots';
+import { foundFields } from './systems/fields';
 import { foundDeaths } from './systems/deaths';
 import { foundBirths } from './systems/families';
 import { foundMoves } from './systems/moves';
@@ -48,7 +49,7 @@ export function createWorldState(w: World, setup: SetupState, seed: number): Wor
   const s: WorldState = {
     v: STATE_VERSION, seed, startYear: setup.year, day: 0, rng: seedRng(seed),
     place, realm, realmText: [], ruler: [],
-    economy: { cities: null }, person: createTable(PERSON_SCHEMA), family: createTable(FAMILY_SCHEMA), firm: createTable(FIRM_SCHEMA), named: [], lot: createTable(LOT_SCHEMA), hamlets: createTable(HAMLET_SCHEMA), // in the order
+    economy: { cities: null }, person: createTable(PERSON_SCHEMA), family: createTable(FAMILY_SCHEMA), firm: createTable(FIRM_SCHEMA), named: [], lot: createTable(LOT_SCHEMA), hamlets: createTable(HAMLET_SCHEMA), nextUid: 0, archive: [], street: createTable(STREET_SCHEMA), field: createTable(FIELD_SCHEMA), // in the order
     // the fields were added (src/sim/upgrade.ts), so an upgraded world encodes as a new one
   };
   addRealms(s, setup, 0, L);
@@ -68,6 +69,7 @@ export function createWorldState(w: World, setup: SetupState, seed: number): Wor
   countPeople(s); // the people of a place are its persons (the setup's numbers are only the start of the persons)
   cultivate(s, w); bringInHarvest(s, w); // the arable and the harvest of the year before the start
   foundLots(s, w.ground, w.dry); // the parcels of the families who live in the towns (after the hamlets: their families have none)
+  foundFields(s, w.tilth); // the fields of the farmsteads, on the arable of the year before the start
   return s;
 }
 

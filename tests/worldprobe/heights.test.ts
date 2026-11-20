@@ -50,7 +50,13 @@ describe('the height up to which the woods grow', () => {
 
 describe('the snow line of a place', () => {
   // a layer of 4 by 2 points, 64 by 32 map pixels: the points lie in the middle of their 16 pixels
-  const climate: Climate = { w: 32, h: 16, cells: new Uint8Array(32 * 16), snow: Uint8Array.from([10, 20, 30, 40, 50, 60, 70, 80]), trees: Uint8Array.from([1, 2, 3, 4, 5, 6, 7, 8]) };
+  const climate: Climate = {
+    w: 32,
+    h: 16,
+    cells: new Uint8Array(32 * 16),
+    snow: Uint8Array.from([10, 20, 30, 40, 50, 60, 70, 80]),
+    trees: Uint8Array.from([1, 2, 3, 4, 5, 6, 7, 8]),
+  };
 
   it('is that of the layer at its points and lies between them elsewhere', () => {
     expect(snowLineAt(climate, 8, 8)).toBe(320);
@@ -77,15 +83,33 @@ describe('the snow line of a place', () => {
 describe('the lines of the world', () => {
   let line: (lon: number, lat: number) => number, trees: (lon: number, lat: number) => number;
   beforeAll(async () => {
-    vi.stubGlobal('fetch', async (url: string) => new Response(readFileSync(join(__dirname, '../../public', url))));
-    const p = await projectionOf('world'), climate = await loadClimate('/', p.round / p.cells, p.rows / p.cells);
-    line = (lon, lat) => { const [u, v] = p.cellOf(lon, lat); return snowLineAt(climate, u / p.cells, v / p.cells); };
-    trees = (lon, lat) => { const [u, v] = p.cellOf(lon, lat); return treeLineAt(climate, u / p.cells, v / p.cells); };
+    vi.stubGlobal(
+      'fetch',
+      async (url: string) => new Response(readFileSync(join(__dirname, '../../public', url.replace(/\?.*$/, '')))),
+    );
+    const p = await projectionOf('world'),
+      climate = await loadClimate('/', p.round / p.cells, p.rows / p.cells);
+    line = (lon, lat) => {
+      const [u, v] = p.cellOf(lon, lat);
+      return snowLineAt(climate, u / p.cells, v / p.cells);
+    };
+    trees = (lon, lat) => {
+      const [u, v] = p.cellOf(lon, lat);
+      return treeLineAt(climate, u / p.cells, v / p.cells);
+    };
   });
-  afterAll(() => { vi.unstubAllGlobals(); });
+  afterAll(() => {
+    vi.unstubAllGlobals();
+  });
 
   it('has the snow in the Alps where their glaciers begin', () => {
-    for (const [lon, lat] of [[6.9, 45.8], [8, 46.5], [9.5, 46.5], [10.9, 46.8], [12.7, 47.1]]) {
+    for (const [lon, lat] of [
+      [6.9, 45.8],
+      [8, 46.5],
+      [9.5, 46.5],
+      [10.9, 46.8],
+      [12.7, 47.1],
+    ]) {
       expect(line(lon, lat)).toBeGreaterThan(2800);
       expect(line(lon, lat)).toBeLessThan(3350);
     }
@@ -103,13 +127,18 @@ describe('the lines of the world', () => {
   });
 
   it('has the last trees of the Alps and the Pyrenees where they stand', () => {
-    for (const [lon, lat] of [[8, 46.5], [9.5, 46.5], [10.9, 46.8], [0.5, 42.6]]) {
+    for (const [lon, lat] of [
+      [8, 46.5],
+      [9.5, 46.5],
+      [10.9, 46.8],
+      [0.5, 42.6],
+    ]) {
       expect(trees(lon, lat)).toBeGreaterThan(2000);
       expect(trees(lon, lat)).toBeLessThan(2600);
     }
   });
 
-  it('has the trees end far lower on the ocean\'s edge than the latitude says', () => {
+  it("has the trees end far lower on the ocean's edge than the latitude says", () => {
     // Scotland and Iceland: by the latitude alone the woods would climb to 1240 m and to 800 m
     expect(woodsUntil(trees(-4, 57.1))).toBeLessThan(700);
     expect(woodsUntil(trees(-19, 64.2))).toBeLessThan(450);
@@ -118,6 +147,8 @@ describe('the lines of the world', () => {
 
   it('has the trees end below the snow everywhere', () => {
     // both lie at the sea's level in the far south, where the bytes hold nothing lower
-    for (let lat = -55; lat <= 71; lat += 3) for (let lon = -180; lon < 180; lon += 3) if (line(lon, lat) > 0) expect(trees(lon, lat), `${lon} ${lat}`).toBeLessThan(line(lon, lat));
+    for (let lat = -55; lat <= 71; lat += 3)
+      for (let lon = -180; lon < 180; lon += 3)
+        if (line(lon, lat) > 0) expect(trees(lon, lat), `${lon} ${lat}`).toBeLessThan(line(lon, lat));
   });
 });

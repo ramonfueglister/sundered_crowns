@@ -9,5 +9,17 @@ import { borders } from './borders';
 import { deaths } from './deaths';
 import { families } from './families';
 import { moves } from './moves';
+import { archive } from '../people/archive';
 
-export const SYSTEMS: readonly System[] = [deaths, moves, families, cultivation, harvest, cityEconomies, borders, rulers];
+// the archive first: on the first of January the dead whom nothing needs leave the table before the day reads it
+export const SYSTEMS: readonly System[] = [
+  archive,
+  deaths,
+  moves,
+  families,
+  cultivation,
+  harvest,
+  cityEconomies,
+  borders,
+  rulers,
+];

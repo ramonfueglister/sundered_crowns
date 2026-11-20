@@ -1,12 +1,15 @@
-// Feature 1 of the settlement (docs/SETTLEMENT_DESIGN.md): the ground of a town, the parcels of its families, the
-// land register in the state, the snapshot, the upgrade of an older world and what the world server tells of it.
+// Features 1 to 3 of the settlement (docs/SETTLEMENT_DESIGN.md): the ground of a town, the parcels of its families,
+// the hamlets, the streets and the market, the land register in the state, the snapshot, the upgrade of an older
+// world and what the world server tells of it.
 import { describe, it, expect } from 'vitest';
-import { AREA_LAW, PARCEL_SHARE, DEPTH_PER_WIDTH, PARCELS_PER_ROW, NARROWEST_FRONT, FRONT, settledHectares, townGround, parcelSize, layParcels, measuredTown } from '../src/sim/settlement/rule';
+import { AREA_LAW, PARCEL_SHARE, DEPTH_PER_WIDTH, NARROWEST_FRONT, FRONT, settledHectares, townGround, parcelSize, measuredTown, footprint, type Parcel } from '../src/sim/settlement/rule';
+import { layTown, streetWidth, DEFAULT_TUNING, STREET, type Town } from '../src/sim/settlement/streets';
+import { planOf } from '../src/sim/content/town_plans';
 import { foundLots, houseGround, townFamilies } from '../src/sim/systems/lots';
 import { compileGround } from '../src/sim/content/ground';
 import { townLots, manyTownsLots } from '../src/net/lots';
 import { citiesOf } from '../src/sim/content/cities';
-import { STATE_VERSION, LOT_KIND, NO_LOT, NO_HAMLET, type WorldState } from '../src/sim/state';
+import { STATE_VERSION, LOT_KIND, NO_LOT, NO_HAMLET, STREET_KIND, type WorldState } from '../src/sim/state';
 import { FARM, LANE, HAMLET_FARMS, HAMLET_GAP, HAMLET_OFF, LAND_PER_BLOCK, hamletsOf, hamletSizes, hamletBox, layFarms, hamletSpots, hamletRing, fieldReach } from '../src/sim/settlement/hamlets';
 import { encodeState, decodeState, hashState } from '../src/sim/snapshot';
 import { upgradeState } from '../src/sim/upgrade';
@@ -17,9 +20,21 @@ import { lotsFile } from '../tools/sim/write_lots';
 
 const { s, w } = newWorldState(1291, 1291);
 const cities = citiesOf(1291), site = (name: string) => cities.find((c) => c.name === name)!.site;
-/** Whether two parcels (middle, size) share ground: more than a millimetre (the register stores 32-bit floats). */
-const overlap = (a: { x: number; z: number }, b: { x: number; z: number }, p: { w: number; d: number }) =>
-  Math.abs(a.x - b.x) < p.w - 1e-3 && Math.abs(a.z - b.z) < p.d - 1e-3;
+/** Whether two parcels (middle, the side of their street, size) share ground: more than a millimetre (the register
+ *  stores 32-bit floats). A parcel at a street to its east or west lies the other way round. */
+const overlap = (a: Parcel, b: Parcel, p: { w: number; d: number }) => {
+  const fa = footprint(a, p), fb = footprint(b, p);
+  return Math.abs(a.x - b.x) < (fa.w + fb.w) / 2 - 1e-3 && Math.abs(a.z - b.z) < (fa.d + fb.d) / 2 - 1e-3;
+};
+/** Whether a parcel fronts a street of its town: the middle of its front edge lies at the edge of a street. */
+const fronts = (t: Town, p: Parcel, size: { w: number; d: number }) => {
+  const f = footprint(p, size), ex = p.x + (p.front === FRONT.east ? f.w / 2 : p.front === FRONT.west ? -f.w / 2 : 0), ez = p.z + (p.front === FRONT.south ? f.d / 2 : p.front === FRONT.north ? -f.d / 2 : 0);
+  return t.streets.some((q) => {
+    // across the street half its width; along it within its ends (a parcel's middle may lie half a step of the plan, about half a metre, off its cell)
+    const across = q.z0 === q.z1 ? Math.abs(ez - q.z0) : Math.abs(ex - q.x0), along = q.z0 === q.z1 ? Math.max(q.x0 - ex, 0, ex - q.x1) : Math.max(q.z0 - ez, 0, ez - q.z1);
+    return Math.abs(across - t.width / 2) < 1e-3 && along <= 0.6;
+  });
+};
 
 describe('the settled area of a town', () => {
   it('follows the line through the 173 towns of Cesaretti et al. (2016)', () => {
@@ -53,29 +68,61 @@ describe('the parcels of a town', () => {
     expect(p.d).toBeCloseTo(DEPTH_PER_WIDTH * p.w, 9);
     expect(28 * p.w * p.d).toBeCloseTo(PARCEL_SHARE * 9183, 6);
   });
-  it('lie on a grid of blocks around the centre without sharing ground, the innermost first', () => {
-    const p = parcelSize(84156, 570), lots = layParcels(570, p);
-    expect(lots.length).toBe(570);
-    for (let i = 0; i < lots.length; i++) for (let j = i + 1; j < lots.length; j++) expect(overlap(lots[i], lots[j], p)).toBe(false);
-    const far = lots.map((l) => Math.max(Math.abs(l.x), Math.abs(l.z)));
-    for (let i = 1; i < far.length; i++) expect(far[i]).toBeGreaterThanOrEqual(far[i - 1] - 1e-9);
-    for (const l of lots) expect([FRONT.north, FRONT.south]).toContain(l.front);
+});
+
+describe('the streets of a town', () => {
+  const size = { w: 9, d: 27 }, ways = [{ a: 0, k: 1 }, { a: Math.PI / 2, k: 0 }, { a: Math.PI, k: 2 }];
+  it('are as wide as the streets of the grid of feature 1 were, and the market is a parcel deep', () => {
+    expect(streetWidth(size)).toBeCloseTo(6 * 9 * (1 / Math.sqrt(PARCEL_SHARE) - 1), 9); // 7.9 m
+    const t = layTown(10, size, ways, 1);
+    expect(t.width).toBe(2 * Math.round(streetWidth(size) / 2) + 1);
+    expect(t.market).toEqual({ x: 0, z: 0, half: Math.round(27 / 2) });
   });
-  it('take 76 % of a town of whole blocks, the streets the rest', () => {
-    const n = 25 * 2 * PARCELS_PER_ROW, p = { w: 9, d: 27 }, lots = layParcels(n, p); // five by five blocks
-    const pitch = (PARCELS_PER_ROW * p.w) / Math.sqrt(PARCEL_SHARE);
-    const xs = lots.map((l) => l.x), width = Math.max(...xs) - Math.min(...xs) + p.w;
-    expect(width).toBeCloseTo(4 * pitch + PARCELS_PER_ROW * p.w, 6);
-    expect((n * p.w * p.d) / (5 * pitch) ** 2).toBeCloseTo(PARCEL_SHARE, 9); // with half a street around
+  it('give every family a parcel of its own at a street, no two on the same ground, the street square to the parcel', () => {
+    for (const n of [1, 12, 150]) {
+      const t = layTown(n, size, ways, 7);
+      expect(t.parcels.length).toBe(n);
+      for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) expect(overlap(t.parcels[i], t.parcels[j], size)).toBe(false);
+      for (const p of t.parcels) expect(fronts(t, p, size)).toBe(true);
+      for (const q of t.streets) expect(q.x0 === q.x1 || q.z0 === q.z1).toBe(true); // east-west or north-south
+    }
   });
-  it('are fewer than asked when the ground within reach does not hold them', () => {
-    const lots = layParcels(1000, { w: 9, d: 27 }, () => true, 100); // the blocks within 100 m of the centre: 25
-    expect(lots.length).toBe(25 * 2 * PARCELS_PER_ROW);
+  it('run out along the ways of the world: one street through a town that has one way or none', () => {
+    const one = layTown(1, size, [], 3), out = (t: Town, x: number, z: number) => t.streets.some((q) => (x ? q.z0 === q.z1 && (x > 0 ? q.x1 : -q.x0) > 30 : q.x0 === q.x1 && (z > 0 ? q.z1 : -q.z0) > 30));
+    expect(out(one, 1, 0) && out(one, -1, 0)).toBe(true);
+    expect(out(one, 0, 1) || out(one, 0, -1)).toBe(false);
+    const three = layTown(1, size, ways, 3);
+    expect(out(three, 1, 0) && out(three, 0, 1) && out(three, -1, 0)).toBe(true);
   });
-  it('leave out ground a town cannot build on', () => {
-    const p = { w: 9, d: 27 }, lots = layParcels(40, p, (x) => x <= 0); // nothing east of the centre
-    expect(lots.length).toBe(40);
-    for (const l of lots) expect(l.x).toBeLessThanOrEqual(0);
+  it('are the same from the same seed, and another seed lays another town', () => {
+    expect(layTown(60, size, ways, 11)).toEqual(layTown(60, size, ways, 11));
+    expect(layTown(60, size, ways, 12).parcels).not.toEqual(layTown(60, size, ways, 11).parcels);
+  });
+  it('keep off ground a town cannot build on, and hold fewer families than asked where the ground within reach does not hold them', () => {
+    const west = layTown(40, size, ways, 5, { free: (x) => x <= 0, reach: Infinity }); // nothing east of the centre
+    expect(west.parcels.length).toBe(40);
+    for (const p of west.parcels) expect(p.x + footprint(p, size).w / 2).toBeLessThanOrEqual(0.5); // (the metres are steps of 1 m round their middle)
+    for (const q of west.streets) expect(Math.max(q.x0, q.x1) + west.width / 2).toBeLessThanOrEqual(0.5);
+    expect(layTown(1000, size, ways, 5, { free: () => true, reach: 100 }).parcels.length).toBeLessThan(1000);
+  });
+  it('of a town with a real plan lay its market and its main streets where the plan has them, scaled to the town', () => {
+    // one street north-south through the town and a market a radius north of the centre
+    const plan = { market: [0, -1] as const, streets: [[0.5, -1, 0.5, 1]] };
+    const t = layTown(40, size, ways, 5, undefined, DEFAULT_TUNING, plan), main = t.streets.filter((q) => q.kind === STREET.road);
+    expect(t.market.x).toBe(0);
+    expect(t.market.z).toBeLessThan(-2 * size.d); // twice the packed radius of the town: far beyond a parcel
+    expect(main.length).toBeGreaterThan(0);
+    for (const q of main) { expect(q.x0).toBe(q.x1); expect(q.x0).toBeGreaterThan(0); } // north-south, east of the centre
+    expect(t.parcels.length).toBe(40);
+    for (const p of t.parcels) expect(fronts(t, p, size)).toBe(true);
+    // the arms along the ways are not laid: the plan's streets are the town's roads
+    expect(t.streets.some((q) => q.kind === STREET.track || q.kind === STREET.highway)).toBe(false);
+  });
+  it('lay the market on open ground, beside the ground at the centre that is not', () => {
+    const church = (x: number, z: number) => Math.abs(x) > 6 || Math.abs(z) > 6; // the centre is taken
+    const t = layTown(20, size, ways, 5, { free: church, reach: Infinity });
+    expect(Math.max(Math.abs(t.market.x), Math.abs(t.market.z))).toBeGreaterThan(6 + t.market.half);
+    expect(t.parcels.length).toBe(20);
   });
 });
 
@@ -169,18 +216,25 @@ describe('the farmsteads of a world of 1291', () => {
   });
   it('lie round the middle of their hamlet, clear of the town and of every other hamlet', () => {
     const boxes = Array.from({ length: s.hamlets.size }, (_, h) => ({ x: H.x[h], z: H.z[h], ...hamletBox(H.farms[h]) }));
-    for (const i of farms) { const b = boxes[L.hamlet[i]]; expect(Math.abs(L.x[i] - b.x) + L.w[i] / 2).toBeLessThanOrEqual(b.w / 2 + 1e-3); expect(Math.abs(L.z[i] - b.z) + L.d[i] / 2).toBeLessThanOrEqual(b.d / 2 + 1e-3); }
+    for (const i of farms) { const b = boxes[L.hamlet[i]]; expect(Math.abs(L.x[i] - b.x) + L.w[i] / 2).toBeLessThanOrEqual(b.w / 2 + 1e-3); expect(Math.abs(L.z[i] - b.z) + L.d[i] / 2).toBeLessThanOrEqual(b.d / 2 + 1e-3); } // (farmsteads front north or south)
     const near = (a: typeof boxes[number], b: typeof boxes[number], gap: number) => Math.abs(a.x - b.x) < (a.w + b.w) / 2 + gap - 1e-3 && Math.abs(a.z - b.z) < (a.d + b.d) / 2 + gap - 1e-3;
     const of = new Map<number, number[]>();
     for (let h = 0; h < s.hamlets.size; h++) of.set(H.site[h], [...(of.get(H.site[h]) ?? []), h]);
     const built = new Map<number, typeof boxes>();
-    for (let i = 0; i < s.lot.size; i++) if (L.kind[i] === LOT_KIND.parcel) built.set(L.site[i], [...(built.get(L.site[i]) ?? []), { x: L.x[i], z: L.z[i], w: L.w[i], d: L.d[i] }]);
+    for (let i = 0; i < s.lot.size; i++) if (L.kind[i] === LOT_KIND.parcel) built.set(L.site[i], [...(built.get(L.site[i]) ?? []), { x: L.x[i], z: L.z[i], ...footprint({ front: L.front[i] }, { w: L.w[i], d: L.d[i] }) }]);
     for (const [town, hs] of of) {
       hs.forEach((h, a) => { for (const g of hs.slice(0, a)) expect(near(boxes[h], boxes[g], HAMLET_GAP)).toBe(false); });
       for (const h of hs) for (const p of built.get(town) ?? []) expect(near(boxes[h], p, HAMLET_OFF)).toBe(false);
     }
+    // and off the streets and the market of their town (beside them they may lie)
+    const S = s.street.cols;
+    for (let i = 0; i < s.street.size; i++) {
+      const pad = S.kind[i] === STREET_KIND.market ? 0 : S.width[i] / 2;
+      const q = { x: (S.x0[i] + S.x1[i]) / 2, z: (S.z0[i] + S.z1[i]) / 2, w: Math.abs(S.x1[i] - S.x0[i]) + 2 * pad, d: Math.abs(S.z1[i] - S.z0[i]) + 2 * pad };
+      for (const h of of.get(S.site[i]) ?? []) expect(near(boxes[h], q, 0)).toBe(false);
+    }
   });
-  it('stand on dry ground in all but a few hamlets: a hamlet whose own spot is wet lies on the nearest ground that carries it', () => {
+  it('stand on dry ground in all but a few hamlets: a hamlet whose own spot is wet lies on the nearest ground that carries it', { timeout: 60_000 }, () => {
     const dry = w.dry!, C = s.lot.cols, wet = new Set<number>();
     for (let i = 0; i < s.lot.size; i++) {
       if (C.kind[i] !== LOT_KIND.farmstead) continue;
@@ -190,7 +244,7 @@ describe('the farmsteads of a world of 1291', () => {
     const found = foundLots(decodeState(encodeState(s)), w.ground, w.dry);
     expect(found.rough).toBe(wet.size);
     expect(found.rough).toBeLessThan(s.hamlets.size / 30);
-    expect(found.crowded).toBeLessThan(s.hamlets.size / 50);
+    expect(found.crowded).toBeLessThan(s.hamlets.size / 30); // 56 of 1857 in 1291: most whose own spot lies on a street out of the town (feature 3)
     // by the building ground alone, which ends 96 blocks from the centre and counts every step, more hamlets stay rough
     expect(foundLots(decodeState(encodeState(s)), w.ground, null).rough).toBeGreaterThan(found.rough);
   });
@@ -228,19 +282,21 @@ describe('the land register of a world of 1291', () => {
     for (const i of parcels) expect(L.w[i]).toBeGreaterThan(NARROWEST_FRONT);
     for (const name of ['Paris', 'Zürich', 'Limoges']) {
       const ids = towns[cities.findIndex((c) => c.name === name)].families.map((f) => F.lot[f]);
-      for (const a of ids) for (const b of ids) if (a < b) expect(overlap({ x: L.x[a], z: L.z[a] }, { x: L.x[b], z: L.z[b] }, { w: L.w[a], d: L.d[a] })).toBe(false);
+      for (const a of ids) for (const b of ids) if (a < b) expect(overlap({ x: L.x[a], z: L.z[a], front: L.front[a] }, { x: L.x[b], z: L.z[b], front: L.front[b] }, { w: L.w[a], d: L.d[a] })).toBe(false);
     }
   });
-  it('lays every parcel where its house can stand, by the building ground of the towns', () => {
+  it('lays every parcel where its house can stand, by the building ground of the towns, but in two island towns', { timeout: 60_000 }, () => {
     const g = w.ground!, house = (t: WorldState, i: number) => { const C = t.lot.cols; return houseGround(g, C.site[i], { x: C.x[i], z: C.z[i], front: C.front[i] }, { w: C.w[i], d: C.d[i] }); };
     expect(g.year).toBe(1291);
     for (const c of cities) expect(g.has(c.site)).toBe(true);
+    // Venice and Hormuz lie on islands too small or too cut by water for their streets without bridges: they are
+    // laid out without regard to the ground
+    const bare = decodeState(encodeState(s)), tight = foundLots(bare, g).tight;
+    expect(tight).toEqual([site('Venice'), site('Hormuz')]);
     let off = 0;
-    for (const i of parcels) if (!house(s, i)) off++;
+    for (const i of parcels) if (!tight.includes(L.site[i]) && !house(s, i)) off++;
     expect(off).toBe(0);
     // laid out without the ground, the houses of many parcels stand in the water, on rock or under a church
-    const bare = decodeState(encodeState(s));
-    expect(foundLots(bare, g).tight).toEqual([]); // no town is too tight for its families
     foundLots(bare, null);
     for (let i = 0; i < bare.lot.size; i++) if (bare.lot.cols.kind[i] === LOT_KIND.parcel && !house(bare, i)) off++;
     expect(off).toBeGreaterThan(1000);
@@ -249,8 +305,71 @@ describe('the land register of a world of 1291', () => {
     const t = decodeState(encodeState(s));
     expect(hashState(t)).toBe(hashState(s));
     expect(Array.from(t.lot.cols.x.subarray(0, t.lot.size))).toEqual(Array.from(L.x.subarray(0, s.lot.size)));
+    expect(Array.from(t.street.cols.x0.subarray(0, t.street.size))).toEqual(Array.from(s.street.cols.x0.subarray(0, s.street.size)));
     foundLots(t, w.ground, w.dry);
     expect(hashState(t)).toBe(hashState(s));
+  }, 60_000); // lays out every town of the world again: 4 s alone, more beside the other test files
+});
+
+describe('the streets of a world of 1291', () => {
+  const t = decodeState(encodeState(s)), found = foundLots(t, w.ground, w.dry, { ...DEFAULT_TUNING, measure: true });
+  const S = s.street.cols, L = s.lot.cols, rows = Array.from({ length: s.street.size }, (_, i) => i);
+  it('are the streets of a new world, measured or not, and every town has one market', () => {
+    expect(hashState(t)).toBe(hashState(s));
+    const towns = cities.filter((c, k) => townFamilies(s)[k].families.length);
+    expect(found.streets.size).toBe(towns.length);
+    for (const c of towns) expect(rows.filter((i) => S.site[i] === c.site && S.kind[i] === STREET_KIND.market).length).toBe(1);
+  }, 60_000); // hashes two worlds and counts the families of every town: 4 s alone
+  it('front every parcel of the register', () => {
+    for (let i = 0; i < s.lot.size; i++) if (L.kind[i] === LOT_KIND.parcel) expect(fronts(found.streets.get(L.site[i])! as Town, { x: L.x[i], z: L.z[i], front: L.front[i] }, { w: L.w[i], d: L.d[i] })).toBe(true);
+  });
+  it('meet as the streets of medieval Paris: the shares of dead ends, T-junctions and crossings (the Vasserot cadastre inside the wall of Philippe Auguste: 0.10, 0.78, 0.12) and the areas of the blocks (Lämmer et al. 2006: P(A) ~ A^−1.9)', () => {
+    let ends = 0, tees = 0, crosses = 0;
+    const blocks: number[] = [], real = JSON.parse(readFileSync('data/cadastre/paris_1291.json', 'utf8'));
+    for (const v of found.streets.values()) {
+      if (v.streets.length >= 20) { ends += v.nodes.ends; tees += v.nodes.tees; crosses += v.nodes.crosses; }
+      blocks.push(...v.blocks);
+    }
+    const n = ends + tees + crosses;
+    expect(Math.abs(ends / n - real.dead)).toBeLessThan(0.05); // 0.13
+    expect(Math.abs(tees / n - real.T)).toBeLessThan(0.05); // 0.77
+    expect(Math.abs(crosses / n - real.X)).toBeLessThan(0.05); // 0.11
+    // the exponent by maximum likelihood over the blocks of 200 m² and more (Clauset et al. 2009, Eq. 3.1)
+    const big = blocks.filter((a) => a >= 200), tau = 1 + big.length / big.reduce((m, a) => m + Math.log(a / 200), 0);
+    expect(big.length).toBeGreaterThan(500);
+    expect(Math.abs(tau - 1.9)).toBeLessThan(0.15);
+  });
+  it('of Paris follow the Vasserot cadastre: the market at the Halles north of Notre-Dame, and the streets meet as Paris\'s did within 0.05 (data/cadastre/paris_1291.json)', () => {
+    const paris = site('Paris'), v = found.streets.get(paris)!, real = JSON.parse(readFileSync('data/cadastre/paris_1291.json', 'utf8'));
+    expect(planOf(1291, paris)).toBeDefined();
+    const c = cities.find((x) => x.site === paris)!;
+    expect(v.market.z).toBeLessThan(0); // north of the centre, where the world sets the church
+    expect(Math.abs(v.market.x)).toBeLessThan(Math.abs(v.market.z) / 2);
+    expect(c.name).toBe('Paris');
+    const n = v.nodes.ends + v.nodes.tees + v.nodes.crosses;
+    expect(Math.abs(v.nodes.ends / n - real.dead)).toBeLessThan(0.05);
+    expect(Math.abs(v.nodes.tees / n - real.T)).toBeLessThan(0.05);
+    expect(Math.abs(v.nodes.crosses / n - real.X)).toBeLessThan(0.05);
+  });
+});
+
+describe('a world of 1291 saved before the streets', () => {
+  it('lays its towns out along streets: every family keeps its parcel and its size, and the parcels front the streets', { timeout: 60_000 }, () => {
+    const old = decodeState(encodeState(s)) as WorldState, L = old.lot.cols;
+    old.v = 32;
+    delete (old as Partial<WorldState>).street;
+    for (let i = 0; i < old.lot.size; i++) if (L.kind[i] === LOT_KIND.parcel) { L.x[i] = 0; L.z[i] = 0; L.front[i] = FRONT.north; } // where they were does not count
+    const up = upgradeState(decodeState(encodeState(old)), w, () => loadSetup(1291)), U = up.lot.cols, F = s.family.cols;
+    expect(up.v).toBe(STATE_VERSION);
+    expect(up.street.size).toBe(s.street.size);
+    for (let f = 0; f < s.family.size; f++) expect(up.family.cols.lot[f]).toBe(F.lot[f]);
+    for (let i = 0; i < up.lot.size; i++) {
+      expect(U.w[i]).toBe(s.lot.cols.w[i]); expect(U.d[i]).toBe(s.lot.cols.d[i]);
+      if (U.kind[i] !== LOT_KIND.parcel) { expect(U.x[i]).toBe(s.lot.cols.x[i]); continue; } // the hamlets stay
+      // as a new world lays it, but for the size read back from the register's 32-bit floats
+      expect(Math.abs(U.x[i] - s.lot.cols.x[i]) + Math.abs(U.z[i] - s.lot.cols.z[i])).toBeLessThan(0.01);
+    }
+    expect(encodeState(decodeState(encodeState(up))).byteLength).toBe(encodeState(up).byteLength);
   });
 });
 

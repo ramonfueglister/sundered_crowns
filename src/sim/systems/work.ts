@@ -46,7 +46,7 @@ export const WORKING_AGE = 15;
 export const K = { works: 30, order: 31 } as const;
 
 /** The persons of a place for its economy. */
-export interface Workforce {
+interface Workforce {
   /** the persons who work, in the order in which the parts are given out: first the owners of the firms, then the
    *  owner of the bank, then the workers */
   working: number[];
@@ -64,10 +64,10 @@ export const participation = { men: NaN, women: NaN };
 
 /** Whether a person of working age wants a part in the economy, by the rule of the founding below: a man at the rate
  *  of men, a woman without a husband always, another woman at the rate `others` of her town (`rateOfOtherWomen`).
- *  The draw is the person's own and the same for life. */
-export function wantsWork(seed: number, id: number, man: boolean, withoutHusband: boolean, others: number): boolean {
+ *  The draw is the person's own (by the uid) and the same for life. */
+export function wantsWork(seed: number, uid: number, man: boolean, withoutHusband: boolean, others: number): boolean {
   if (!(participation.men >= 0)) throw new Error('no world has been built: the participation rates are not known');
-  return man ? hash01(seed, id, K.works) < participation.men : withoutHusband || hash01(seed, id, K.works) < others;
+  return man ? hash01(seed, uid, K.works) < participation.men : withoutHusband || hash01(seed, uid, K.works) < others;
 }
 
 export const rateOfOtherWomen = (rate: number, women: number, alone: number): number =>
@@ -77,28 +77,45 @@ export const rateOfOtherWomen = (rate: number, women: number, alone: number): nu
  *  and of women of working age who work. A woman without a husband works in any case: the woman at the head of a
  *  family without a man at its head, and a woman who lives on her own; the other women of the city are drawn at
  *  `rateOfOtherWomen`. */
-export function workforce(s: WorldState, places: readonly number[], participation: { men: number; women: number }): Workforce[] {
-  const P = s.person.cols, F = s.family.cols, seed = s.seed >>> 0;
+export function workforce(
+  s: WorldState,
+  places: readonly number[],
+  participation: { men: number; women: number },
+): Workforce[] {
+  const P = s.person.cols,
+    F = s.family.cols,
+    seed = s.seed >>> 0;
   const at = new Map<number, number>(places.map((p, k) => [p, k]));
   const out: Workforce[] = places.map(() => ({ working: [], idle: -1 }));
-  const order = (id: number) => hash01(seed, id, K.order);
+  const order = (id: number) => hash01(seed, P.uid[id], K.order); // the person's own draws, by the uid
   // the persons of working age of each city, and the women among them who have no husband
   const members = new Int32Array(s.family.size);
   for (let id = 0; id < s.person.size; id++) if (s.person.alive[id]) members[P.family[id]]++;
-  const adults: number[][] = places.map(() => []), women = new Int32Array(places.length), alone = new Int32Array(places.length);
-  const withoutHusband = (id: number) => { const f = P.family[id]; return F.man[f] < 0 && (F.woman[f] === id || members[f] === 1); };
+  const adults: number[][] = places.map(() => []),
+    women = new Int32Array(places.length),
+    alone = new Int32Array(places.length);
+  const withoutHusband = (id: number) => {
+    const f = P.family[id];
+    return F.man[f] < 0 && (F.woman[f] === id || members[f] === 1);
+  };
   const named = namedPersons(s); // the rulers have no part in the economy (src/sim/systems/rulers.ts)
   for (let id = 0; id < s.person.size; id++) {
     if (!s.person.alive[id] || named.has(id) || P.died[id] !== ALIVE) continue;
     const k = at.get(F.place[P.family[id]]);
     if (k === undefined || ageOn(P.born[id], s.day) < WORKING_AGE) continue;
     adults[k].push(id);
-    if (P.sex[id] !== 1) { women[k]++; if (withoutHusband(id)) alone[k]++; }
+    if (P.sex[id] !== 1) {
+      women[k]++;
+      if (withoutHusband(id)) alone[k]++;
+    }
   }
   adults.forEach((ids, k) => {
     const others = rateOfOtherWomen(participation.women, women[k], alone[k]);
     for (const id of ids) {
-      const works = P.sex[id] === 1 ? hash01(seed, id, K.works) < participation.men : withoutHusband(id) || hash01(seed, id, K.works) < others;
+      const works =
+        P.sex[id] === 1
+          ? hash01(seed, P.uid[id], K.works) < participation.men
+          : withoutHusband(id) || hash01(seed, P.uid[id], K.works) < others;
       if (works) out[k].working.push(id);
       else if (out[k].idle < 0 || order(id) < order(out[k].idle)) out[k].idle = id;
     }

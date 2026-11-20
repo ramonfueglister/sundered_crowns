@@ -10,9 +10,18 @@ import { WorldCore } from './world';
 import { NullStore, SupabaseStore } from './store';
 import { authConfigFromEnv, authenticate } from './auth';
 import { PROTOCOL_VERSION, type ClientMsg, type ServerMsg } from '../src/net/protocol';
-import { placePeople, manyPlacesPeople, personDetail, MAX_PLACES_PER_REQUEST } from '../src/net/people';
+import {
+  placePeople,
+  manyPlacesPeople,
+  personDetail,
+  rulersOnMap,
+  MAX_PLACES_PER_REQUEST,
+  TRACK_DAYS,
+} from '../src/net/people';
+import { staysOf, tracksOf } from '../src/sim/content/itineraries';
 import { townLots, manyTownsLots, MAX_SITES_PER_REQUEST } from '../src/net/lots';
 import { ALL_CULTURES } from '../src/sim/content/peoples';
+import { Talk, talkConfigFromEnv } from './talk';
 
 // local development: read ./.env if present (production hosts set real environment variables)
 if (existsSync('.env') && typeof process.loadEnvFile === 'function') process.loadEnvFile('.env');
@@ -37,6 +46,8 @@ const core = new WorldCore(cfg, store);
 await core.restoreIfEmpty();
 core.init();
 core.start();
+// conversations with the persons through a language model (server/talk, docs/TALK.md)
+const talk = new Talk(talkConfigFromEnv(env), () => ({ s: core.s, w: core.w }));
 console.log(
   `[world] ${cfg.id} day ${core.s.day}, ${cfg.secondsPerDay}s per day, store ${store.enabled ? 'supabase' : 'local only'}`,
 );
@@ -74,12 +85,32 @@ const http = createServer((req, res) => {
     res.end(zip ? gz : json);
     return;
   }
+  // how far the world has gone from history (src/sim/divergence.ts)
+  if (req.url === '/divergence') {
+    res.writeHead(200, h);
+    res.end(JSON.stringify(core.divergence()));
+    return;
+  }
   // the persons (src/net/people.ts): of a place for the figures, one in full for the portrait
   const people = /^\/people\/(\d+)$/.exec(req.url ?? ''),
     person = /^\/person\/(\d+)$/.exec(req.url ?? '');
   if (people && Number(people[1]) < core.s.place.pop.length) {
     res.writeHead(200, h);
-    res.end(JSON.stringify(placePeople(core.s, Number(people[1]))));
+    res.end(JSON.stringify(placePeople(core.s, Number(people[1]), staysOf(core.s, core.itineraries, core.travels))));
+    return;
+  }
+  // the rulers who hold a crown, for the map mode of the rulers (src/ui/mapmode.ts)
+  if (req.url === '/rulers') {
+    res.writeHead(200, h);
+    res.end(
+      JSON.stringify(
+        rulersOnMap(
+          core.s,
+          staysOf(core.s, core.itineraries, core.travels),
+          tracksOf(core.s, core.itineraries, core.travels, TRACK_DAYS),
+        ),
+      ),
+    );
     return;
   }
   const many = /^\/people\?places=(\d+(?:,\d+)*)$/.exec(req.url ?? '');
@@ -87,12 +118,17 @@ const http = createServer((req, res) => {
     const places = many[1].split(',').map(Number);
     if (places.length <= MAX_PLACES_PER_REQUEST && places.every((p) => p < core.s.place.pop.length)) {
       res.writeHead(200, h);
-      res.end(JSON.stringify(manyPlacesPeople(core.s, places)));
+      res.end(JSON.stringify(manyPlacesPeople(core.s, places, staysOf(core.s, core.itineraries, core.travels))));
       return;
     }
   }
   if (person) {
-    const d = personDetail(core.s, Number(person[1]), (i) => ALL_CULTURES[i] ?? 'unknown');
+    const d = personDetail(
+      core.s,
+      Number(person[1]),
+      (i) => ALL_CULTURES[i] ?? 'unknown',
+      (uid) => core.archived(uid),
+    );
     if (d) {
       res.writeHead(200, h);
       res.end(JSON.stringify(d));
@@ -160,7 +196,8 @@ wss.on('connection', (ws, req) => {
       return;
     }
     if (session) {
-      session.handle(m);
+      if (m?.type === 'talk') void talk.handle(session, m);
+      else session.handle(m);
       return;
     }
     if (m?.type !== 'hello' || authing) return;

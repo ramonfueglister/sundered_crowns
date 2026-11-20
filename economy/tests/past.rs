@@ -8,7 +8,14 @@ use sc_economy::Economy;
 use sc_economy::state::FORMAT;
 
 fn austria(seed: u64, plan: usize, window: usize) -> Economy {
-    Economy::new(&AUSTRIA2010Q1.parameters.to_json(), &AUSTRIA2010Q1.initial_conditions.to_json(), seed, plan, window).unwrap()
+    Economy::new(
+        &AUSTRIA2010Q1.parameters.to_json(),
+        &AUSTRIA2010Q1.initial_conditions.to_json(),
+        seed,
+        plan,
+        window,
+    )
+    .unwrap()
 }
 
 fn close(a: f64, b: f64, tolerance: f64, what: &str) {
@@ -26,7 +33,10 @@ fn an_economy_with_a_past_of_a_fixed_size_expects_what_the_whole_past_gives() {
             assert_eq!(fixed.periods(), t);
             let (w, f) = (&whole.model, &fixed.model);
             // the port's count of periods and its lists stay where they were at the start
-            assert_eq!((f.agg.t, f.agg.Y.len(), f.agg.pi_.len()), (1, f.prop.T_prime, f.prop.T_prime));
+            assert_eq!(
+                (f.agg.t, f.agg.Y.len(), f.agg.pi_.len()),
+                (1, f.prop.T_prime, f.prop.T_prime)
+            );
             assert_eq!(f.agg.Y[..], w.agg.Y[..w.prop.T_prime]);
             // The expectations and the economy they lead to are the same up to rounding. Sooner or later a last
             // digit decides a single hiring or purchase; from then on the two draw other random numbers and are
@@ -46,7 +56,10 @@ fn an_economy_with_a_past_of_a_fixed_size_expects_what_the_whole_past_gives() {
             let planned = |e: &Economy| e.model.ext.periods.iter().filter(|&&p| p == 0).count();
             assert_eq!(planned(&fixed), planned(&whole), "{what}");
         }
-        assert!(compared >= 4, "plan {plan}, window {window}: only {compared} periods before the two runs part");
+        assert!(
+            compared >= 4,
+            "plan {plan}, window {window}: only {compared} periods before the two runs part"
+        );
     }
 }
 
@@ -88,8 +101,18 @@ fn an_economy_that_kept_the_whole_past_goes_over_on_any_day() {
     whole.step(1);
     fixed.step(1);
     assert_eq!(fixed.periods(), 12);
-    close(fixed.model.agg.Y_e, whole.model.agg.Y_e, 1e-9, "expected GDP of the first period after");
-    close(fixed.model.agg.pi_e, whole.model.agg.pi_e, 1e-9, "expected inflation of the first period after");
+    close(
+        fixed.model.agg.Y_e,
+        whole.model.agg.Y_e,
+        1e-9,
+        "expected GDP of the first period after",
+    );
+    close(
+        fixed.model.agg.pi_e,
+        whole.model.agg.pi_e,
+        1e-9,
+        "expected inflation of the first period after",
+    );
     // the same again changes nothing
     let twice = Economy::load(&fixed.save()).unwrap().with_bounded_past();
     assert_eq!(twice.save(), fixed.save());
@@ -97,13 +120,21 @@ fn an_economy_that_kept_the_whole_past_goes_over_on_any_day() {
 
 #[test]
 fn a_state_of_format_5_is_read_and_keeps_the_whole_past() {
-    // format 5 is format 9 without the owners' rule at its end (a byte), without the crown's rule and outlays before it
-    // (a byte and a number), without the two
-    // numbers of the spending out of savings before them and without the byte before those, which says whether the
-    // past has a fixed size
+    // format 5 is format 13 without the workers who are away, the materials they left unused and the contracts at its
+    // end (for none, three numbers of 0), without the owners' profits before them (for none, five numbers of 0),
+    // without the working
+    // days before them (for none, seven numbers of 0 and then the days worked by every firm since its last plan),
+    // without the owners' rule before them (a byte), without the crown's rule and outlays before it (a byte and a
+    // number), without the two numbers of the spending out of savings before them and without the byte before those,
+    // which says whether the past has a fixed size
     let mut e = austria(6, 5, 4);
     e.step(3);
     let mut bytes = e.save();
+    let firms = e.model.firms.len();
+    assert_eq!(bytes.split_off(bytes.len() - 32), [0u8; 32]);
+    let worked = bytes.split_off(bytes.len() - 4 - 8 * firms);
+    assert_eq!(worked[..4], (firms as u32).to_le_bytes());
+    assert_eq!(bytes.split_off(bytes.len() - 28), [0u8; 28]);
     assert_eq!(bytes.pop(), Some(0));
     let crown = bytes.split_off(bytes.len() - 9);
     assert_eq!(crown, [&[0u8][..], &0f64.to_le_bytes()].concat());

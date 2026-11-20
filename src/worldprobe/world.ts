@@ -4,13 +4,15 @@
 // On it stand the towns and villages (see settle.ts) and the fields the simulation has cultivated (arable.ts). North is at the top of the picture. The ways of the
 // world's start year run over it (roads.ts).
 import { Batch, hash2, noise2, rgb, seeded, shade, smooth } from '../lookprobe/batch';
-import { ACACIA, CYPRESS, JUNGLE, LEAVES, PALM, acacia, cypress, palm, tree } from '../lookprobe/blocks';
+import { ACACIA, CYPRESS, JUNGLE, LEAVES, PALM, TREE_TALL, acacia, cypress, palm, tree } from '../lookprobe/blocks';
 import { type Ground, type GroundTraits, LAND_Y, Mat, N, SEA_Y, SUMMIT, idx, inGrid, measureShore, occlude, rockPillar } from '../lookprobe/layout';
 import type { Shape, StageScene } from '../lookprobe/shape';
 import { crowd } from '../figures';
-import { type Part, WATER_SHALLOW } from '../lookprobe/terrain';
+import { type Part, WATER_SHALLOW, sideTopAt } from '../lookprobe/terrain';
 import { type Climate, FIELDS_KNOWN, KIND, Land, WOODS_KNOWN, climateAt, snowLineAt, treeLineAt } from './climate';
 import { type Arable, arableAt } from './arable';
+import { fieldsByLot, lotKey } from './lots';
+import { FIELD_LOT, GEWANN } from '../sim/settlement/fields';
 import { type Forest, WOOD, conifersAt, forestAt, leanOf, stand, tilth } from './forest';
 import { type Rural, ruralAt } from './rural';
 import type { TownParcels } from './lots';
@@ -19,6 +21,7 @@ import { BARE, FINER, FINER_STEPS, SNOW_LINE, TINT, TREE_LINE, WOODS, blockOfCel
 import { type Region, Water, cellOf, latOf, sample, waterAt } from './region';
 import { type Cover, type Woods, coverLand, lotFill } from './far';
 import { drawGround } from './table';
+import { TREE_NUMBERS, crownTallAt } from './trees';
 import { unshade } from './mean';
 import { FARMS, FIELD_GROUND, LOT_BLOCKS, LOT_FILL, type Lot, type Monument, PEOPLE_PER_PERSON, type Settled, type Site, type Survey, type Told, farmsFor, firstHalf, raise, settle } from './settle';
 import { type Columns, columnsOf } from './nearground';
@@ -40,7 +43,15 @@ export const CELL = 25;
 /** A cell of a town: its middle on the ground, its houses as the far view shows them and their lots, and the columns of its paved ground. */
 export interface Cell<S extends Shape = Batch> { x: number; z: number; far: S; lots: Lot[]; ground?: Columns }
 /** A piece of the world for the stage, with the cells of its towns. */
-export interface WorldScene<S extends Shape = Batch> extends StageScene<S> { cells: Cell<S>[] }
+export interface WorldScene<S extends Shape = Batch> extends StageScene<S> {
+  cells: Cell<S>[];
+  /**
+   * what a far step draws from numbers, the trees of the first far step (trees.ts) and the houses drawn as houses
+   * (houses.ts), apart from the other things: a table keeps them as numbers, not as the drawn triangles it keeps of
+   * those (table.ts `withThings`). The worker adds them to the things.
+   */
+  standing?: S;
+}
 /** The window of whole-map cells that the ground starting at world block (ox, oz) needs, and `beyond` blocks more on every side. */
 export function windowOf(ox: number, oz: number, beyond = 0): { gx0: number; gy0: number; w: number; h: number } {
   const us: number[] = [], vs: number[] = [], lo = -beyond, hi = N + beyond;
@@ -117,29 +128,65 @@ const RIVER_UNDER = 0.22;
 const seedOf = (a: number, b: number, salt: number) => Math.floor(hash2(a, b, salt) * 4294967296);
 
 /**
+ * The overgrown land is terraced from its heights averaged over this many columns to each side of a column (over the
+ * dry land only), and a step of it stays only where it is 2 · TERRACE_REACH + 1 columns wide (`terrace`). Rounded
+ * column by column from the heights as they are, every rise of a few dozen metres on the rolling high plains (the
+ * Meseta, the Bavarian and Swiss plateaus, Anatolia) became an edge or a patch of its own: some 85 patches of less
+ * than 50 columns to a piece of step 2, 170 of step 3, which made the map restless and bore no shape of the land.
+ * Measured on eight such landscapes over steps 0 to 4, averaging over 9 × 9 columns with steps of 7 columns took 41
+ * to 53 % of the grass steps' sides and 80 to 90 % of the patches away; 13 × 13 with steps of 11 (some 1.4 km at
+ * the finest step) takes another 22 to 28 % of the sides and 40 to 55 % of the patches left. The rock keeps its shape.
+ */
+const SMOOTH_REACH = 6, TERRACE_REACH = 5;
+/** the heights of the dry land averaged over a square reaching `reach` columns to each side, of the dry columns in it; water keeps its own */
+export function landAveraged(metres: Float32Array, kind: Uint8Array, reach = SMOOTH_REACH) {
+  const n = N, rowSum = new Float32Array(n * n), rowCount = new Uint16Array(n * n), out = new Float32Array(metres);
+  for (let z = 0; z < n; z++) for (let x = 0; x < n; x++) {
+    let sum = 0, count = 0;
+    for (let u = Math.max(0, x - reach), end = Math.min(n - 1, x + reach); u <= end; u++) { const j = z * n + u; if (kind[j] === Water.Land) { sum += metres[j]; count++; } }
+    rowSum[z * n + x] = sum; rowCount[z * n + x] = count;
+  }
+  for (let z = 0; z < n; z++) for (let x = 0; x < n; x++) {
+    const i = z * n + x;
+    if (kind[i] !== Water.Land) continue;
+    let sum = 0, count = 0;
+    for (let v = Math.max(0, z - reach), end = Math.min(n - 1, z + reach); v <= end; v++) { sum += rowSum[v * n + x]; count += rowCount[v * n + x]; }
+    out[i] = sum / count;
+  }
+  return out;
+}
+
+/**
  * Makes clean terraces of the overgrown land: heights rounded column by column leave single columns standing a step
  * up or down and fray every edge where the land lies near a step. A step of the grass land stays only where it is
- * three columns wide: first what stands out narrower than that is taken down to the ground round it, then what
- * lies in narrower than that is filled up to it (an opening and a closing of the heights, each over a column and
- * its eight neighbours). The rock and the water keep their heights and count for nothing.
+ * 2 · `reach` + 1 columns wide: first what stands out narrower than that is taken down to the ground round it, then
+ * what lies in narrower than that is filled up to it (an opening and a closing of the heights, each over a square
+ * reaching `reach` columns to each side). The rock and the water keep their heights and count for nothing.
  */
-export function terrace(level: Int16Array, mat: Uint8Array) {
-  level.set(terracePass(terracePass(terracePass(terracePass(level, mat, false), mat, true), mat, true), mat, false));
+export function terrace(level: Int16Array, mat: Uint8Array, reach = TERRACE_REACH) {
+  level.set(terracePass(terracePass(terracePass(terracePass(level, mat, false, reach), mat, true, reach), mat, true, reach), mat, false, reach));
 }
-/** one pass of `terrace`: every column of the grass land takes the lowest (`up`: the highest) of itself and its eight neighbours */
-function terracePass(from: Int16Array, mat: Uint8Array, up: boolean) {
-  const to = new Int16Array(from);
-  // (the neighbours by their places in the lists, in the order of rows and columns: the walk over the eight of them
-  // through `inGrid` and `idx` was a twentieth of what a worker takes for a piece of the nearest step)
-  const n = N;
+/** one pass of `terrace`: every column of the grass land takes the lowest (`up`: the highest) of the grass in the square round it */
+function terracePass(from: Int16Array, mat: Uint8Array, up: boolean, reach: number) {
+  // (in two runs, along the rows and then along the columns: the square of 11 × 11 walked at once took several times as
+  // long; a column with no grass in its run of the row holds a height that loses against every other)
+  const n = N, none = up ? -32768 : 32767, row = new Int16Array(n * n), to = new Int16Array(from);
+  for (let z = 0; z < n; z++) for (let x = 0; x < n; x++) {
+    let v = none;
+    for (let u = Math.max(0, x - reach), end = Math.min(n - 1, x + reach); u <= end; u++) {
+      const j = z * n + u;
+      if (mat[j] !== Mat.Grass) continue;
+      const o = from[j];
+      if (up ? o > v : o < v) v = o;
+    }
+    row[z * n + x] = v;
+  }
   for (let z = 0; z < n; z++) for (let x = 0; x < n; x++) {
     const i = z * n + x;
     if (mat[i] !== Mat.Grass) continue;
     let v = from[i];
-    const x0 = x > 0 ? -1 : 0, x1 = x + 1 < n ? 1 : 0;
-    for (let dz = z > 0 ? -1 : 0, z1 = z + 1 < n ? 1 : 0; dz <= z1; dz++) for (let j = i + dz * n + x0, end = i + dz * n + x1; j <= end; j++) {
-      if (mat[j] !== Mat.Grass) continue;
-      const o = from[j];
+    for (let w = Math.max(0, z - reach), end = Math.min(n - 1, z + reach); w <= end; w++) {
+      const o = row[w * n + x];
       if (up ? o > v : o < v) v = o;
     }
     to[i] = v;
@@ -239,14 +286,14 @@ function pillarOf(m: Massifs, x: number, z: number): [number, boolean, number] {
   const [px, pz] = rockPillar(x + m.ox, z + m.oz), bx = Math.floor(px / 2) * 2 + 1, cx = bx * 2 - m.ox, cz = (Math.floor(pz / 2) * 2 + 1) * 2 - bx - m.oz;
   return [raisedAt(m, cx, cz), rockAt(fieldAt(m.massif, cx, cz), fieldAt(m.base, cx, cz), fieldAt(m.shift, cx, cz)) && fieldAt(m.away, cx, cz) >= m.rockFoot, raisedAt(m, (px + 0.5) * 2 - m.ox, (pz + 0.5) * 2 - px - m.oz)];
 }
-/** Fills `level`, the blocks above the plain of every column's own ground (water: of its surface), and the rock and the grass of `mat`. */
+/** Fills `level`, the blocks above the plain of every column's own ground (water: of its surface; grass: of its heights averaged, `landAveraged`), and the rock and the grass of `mat`. */
 function levels(m: Massifs, metres: Float32Array, kind: Uint8Array, flatter: number, level: Int16Array, mat: Uint8Array) {
-  const { shift, ox, oz } = m;
+  const { shift, ox, oz } = m, smooth = landAveraged(metres, kind);
   for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
     const i = idx(x, z);
     if (kind[i] !== Water.Land) { level[i] = kind[i] === Water.Lake ? Math.round(levelFor(metres[i], shift[i], flatter)) : 0; continue; }
     const [high, rock, mine] = pillarOf(m, x, z);
-    if (!rock) { level[i] = Math.round(levelFor(metres[i], shift[i], flatter)); mat[i] = Mat.Grass; continue; }
+    if (!rock) { level[i] = Math.round(levelFor(smooth[i], shift[i], flatter)); mat[i] = Mat.Grass; continue; }
     // the rock stands in walls, as the massifs of the reference do: a bundle of pillars is one block of rock with one
     // height, so that the faces between bundles are large; the pillars of a bundle lean a step with the slope, one here and there stands a step lower, and
     // single columns stand back as the fine grooves of the walls
@@ -266,11 +313,18 @@ const CROPS = [null, 'wheat', 'vine', 'fallow', 'oats'] as const;
  */
 class WorldTraits implements GroundTraits {
   readonly slope = SLOPE;
-  constructor(private readonly town: Uint8Array, private readonly field: Uint8Array | null, private readonly mean: Cover | undefined, private readonly land: Uint8Array, private readonly metres: Float32Array, private readonly snow: Float32Array, private readonly massifs: Massifs, private readonly roads: Float32Array | null) {}
+  readonly sideTop: number;
+  readonly crownTall: number;
+  readonly houses: GroundTraits['houses'];
+  readonly trees: GroundTraits['trees'];
+  readonly crops: GroundTraits['crops'];
+  constructor(step: number, private readonly town: Uint8Array, private readonly field: Uint8Array | null, private readonly mean: Cover | undefined, private readonly land: Uint8Array, private readonly metres: Float32Array, private readonly snow: Float32Array, private readonly massifs: Massifs, private readonly roads: Float32Array | null) {
+    this.sideTop = sideTopAt(step); this.crownTall = crownTallAt(step); this.houses = mean?.houses; this.trees = mean?.trees; this.crops = mean?.crops;
+  }
   city(x: number, z: number) { return fieldAt(this.town, x, z) === 1; }
   plaza() { return Infinity; }
   road(x: number, z: number) { return this.roads ? roadOn(this.roads, x, z) + ROAD_SHOWS : Infinity; }
-  crop(x: number, z: number) { return this.field ? CROPS[fieldAt(this.field, x, z)] : null; }
+  crop(x: number, z: number) { const field = this.field ?? this.mean?.crops; return field ? CROPS[fieldAt(field, x, z)] : null; }
   cover(x: number, z: number) {
     const cover = this.mean;
     if (!cover) return null;
@@ -585,6 +639,25 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     const share = arableOf(x, z);
     return arable && share > 0 ? FIELD_GROUND * tilth(Math.min(1, share / FIELD_GROUND), (x + ox) * cell, (z + oz) * cell, woodsShow, lean ? lean[idx(Math.floor(x), Math.floor(z))] : 0) : share;
   };
+  /**
+   * The furlongs of the land register (lots.ts), by the field lot of the grid they lie on: with them the fields round
+   * the towns are those of the register and no others. A town's furlongs lie from its centre block at the finest step.
+   */
+  const fineOf = (site: number): [number, number] | null => {
+    const p = places[site];
+    if (!p) return null;
+    const at = toGround(...cellOf(region, p.lon, p.lat)), k = 2 ** step;
+    return [Math.floor(Math.round((at[0] + ox) * k * 1e4) / 1e4), Math.floor(Math.round((at[1] + oz) * k * 1e4) / 1e4)];
+  };
+  const registered = parcels && hamlets && [...parcels.values()].some((t) => t.fields?.x.length) ? fieldsByLot(parcels, parcels.year ?? 1291, (site) => {
+    const c = fineOf(site), h = hamlets.get(site);
+    if (!c || !h) return null;
+    // only the towns whose fields can reach this piece: no farther from the town than its hamlets' ring and their
+    // fields beyond it (finest blocks of about 125 m, eight to a kilometre)
+    const k = 2 ** step, far = (2 * h.reachKm + 20) * 8;
+    return c[0] > ox * k - far && c[0] < (ox + N) * k + far && c[1] > oz * k - far && c[1] < (oz + N) * k + far ? c : null;
+  }) : null;
+  const fieldOf = registered ? (lx: number, lz: number) => registered.get(lotKey(lx, lz)) : undefined;
   /** in how many courses the fields at a ground point are tilled */
   const courses = (x: number, z: number) => ((at(land, x, z) & KIND) === Land.Mediterranean ? COURSES_DRY : COURSES);
   /** km² a field lot of the finest step takes at a latitude: a cell of the data is a quarter of a map pixel wide */
@@ -649,7 +722,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   }
   else if (step > 0) {
     // from farther away the towns, the fields and the woods are part of the ground
-    cover = coverLand(g, step, things, sites, { ploughed, laid: arable !== null || hamlets !== null, courses, vines, farm: (x, z) => farm(x, z).style.house, farms, own, clear: (x, z) => stream[idx(x, z)] > 0, woods: (x, z): Woods | null => {
+    cover = coverLand(g, step, things, sites, { ploughed, laid: arable !== null || hamlets !== null, courses, field: fieldOf, vines, farm: (x, z) => farm(x, z).style.house, farms, own, clear: (x, z) => stream[idx(x, z)] > 0, woods: (x, z): Woods | null => {
       const i = idx(x, z), here = land[i] & KIND;
       if (metres[i] > woodsEnd[i]) return null;
       if (oasis(i)) return byWater(x, z, Math.max(1, Math.round(0.75 / cell))) ? { share: 0.8, crowns: PALM, tall: true } : null;
@@ -666,6 +739,8 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   // (no woods stand on them: a stream shows as a line through a wood, as a river does)
   if (cover) for (let i = 0; i < N * N; i++) {
     const wet = stream[i];
+    if (wet && cover.trees) cover.trees.fill(0, i * TREE_NUMBERS, (i + 1) * TREE_NUMBERS);
+    if (wet && cover.crops?.[i]) { cover.crops[i] = 0; g.mat[i] = Mat.Grass; }
     if (!wet || g.wet[i] || g.mat[i] === Mat.Rock || cover.town[i]) continue;
     const was = cover.has[i] ? cover.share[i] * (1 - wet) : 0, all = wet + was;
     for (let k = 0; k < 3; k++) cover.top[i * 3 + k] = (WATER_SHALLOW[k] * wet + cover.top[i * 3 + k] * was) / all;
@@ -678,7 +753,12 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
       const here = toGround(...cellOf(region, l.lon, l.lat));
       if (l.built_state !== 'not_yet_built' && onGround(here)) (MONUMENTS[l.id] ?? []).forEach((m, k) => monuments.push({ id: id * 8 + k, at: [here[0] + m.dx, here[1] + m.dz], model: modelOf(m, models) }));
     });
-    const built = settled = settle(g, things, sites, monuments, farm, ploughed, vines, counts, own, farms, courses, survey, told);
+    // the survey of the fields' ground: a furlong lies only where no woods stand (as the fields were laid before the register)
+    const surveyed: Told | undefined = told?.room ? { ...told, room: (fits) => told.room!((lx, lz) => {
+      const x0 = lx * FIELD_LOT.w - ox + (lz & 1 ? Math.floor(FIELD_LOT.w / 2) : 0) + 1, z0 = lz * FIELD_LOT.d - oz + 1, mx = x0 + GEWANN.w / 2, mz = z0 + GEWANN.d / 2;
+      return mx >= 0 && mz >= 0 && mx < N && mz < N && fits(lx, lz) && wooded(mx, mz) < 0.5;
+    }, { centre: fineOf, courses: (site) => { const p = places[site], at = p && toGround(...cellOf(region, p.lon, p.lat)); return at && onGround(at) ? courses(Math.floor(at[0]), Math.floor(at[1])) : null; } }) } : told;
+    const built = settled = settle(g, things, sites, monuments, farm, ploughed, vines, counts, own, farms, courses, survey, surveyed, fieldOf);
     // a survey of the building ground needs no more than the towns' ground
     if (survey || told) return { ground: new Batch(), things, water: new Batch(), cells: [], counts };
 
@@ -698,11 +778,11 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
       const palms = oasis(i) && byWater(Math.floor(x), Math.floor(z), 3), lot = hash2(tx, tz, 73);
       if (palms ? lot > 0.3 : lot > (BARE.includes(here) ? 0 : STRAY_TREES) + CLOSED * wooded(x, z)) continue;
       const mine = own(Math.floor(x), Math.floor(z)), r = seeded(seedOf(tx, tz, 75)), sort = hash2(tx, tz, 74);
-      if (palms || (here === Land.Rainforest && sort < 0.1)) { if (mine) palm(things, x, g.h[i], z, r); occlude(g, x - 0.8, z - 0.8, x + 0.8, z + 0.8, g.h[i] + 4.5); }
+      if (palms || (here === Land.Rainforest && sort < 0.1)) { if (mine) palm(things, x, g.h[i], z, r); occlude(g, x - 0.8, z - 0.8, x + 0.8, z + 0.8, g.h[i] + 4.5 * TREE_TALL); }
       else if (here === Land.Savanna) { if (mine) acacia(things, x, g.h[i], z, r); occlude(g, x - 1.1, z - 1.1, x + 1.1, z + 1.1, g.h[i] + 2.4); }
-      else if (here === Land.Rainforest) { if (mine) tree(things, x, g.h[i], z, r, r.range(1.1, 1.6), JUNGLE); occlude(g, x - 1.05, z - 1.05, x + 1.05, z + 1.05, g.h[i] + 4); }
-      else if (sort < conifers(i)) { if (mine) cypress(things, x, g.h[i], z, r); occlude(g, x - 0.6, z - 0.6, x + 0.6, z + 0.6, g.h[i] + 4.2); }
-      else { if (mine) tree(things, x, g.h[i], z, r, wooded(x, z) > 0.5 ? r.range(0.9, 1.4) : r.range(0.85, 1.15)); occlude(g, x - 1.05, z - 1.05, x + 1.05, z + 1.05, g.h[i] + 3.4); }
+      else if (here === Land.Rainforest) { if (mine) tree(things, x, g.h[i], z, r, r.range(1.1, 1.6), JUNGLE); occlude(g, x - 1.05, z - 1.05, x + 1.05, z + 1.05, g.h[i] + 4 * TREE_TALL); }
+      else if (sort < conifers(i)) { if (mine) cypress(things, x, g.h[i], z, r); occlude(g, x - 0.6, z - 0.6, x + 0.6, z + 0.6, g.h[i] + 4.2 * TREE_TALL); }
+      else { if (mine) tree(things, x, g.h[i], z, r, wooded(x, z) > 0.5 ? r.range(0.9, 1.4) : r.range(0.85, 1.15)); occlude(g, x - 1.05, z - 1.05, x + 1.05, z + 1.05, g.h[i] + 3.4 * TREE_TALL); }
       if (mine) counts.tree++;
     }
   }
@@ -738,13 +818,15 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   // (terrain.ts colours it from the corners, a soft line rather than a row of blocks); far.ts raised the ground by it
   if (cover && roadEdge && step > 0) for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
     const i = idx(x, z);
+    if (cover.trees?.[i * TREE_NUMBERS] && roadAt(x + 0.5, z + 0.5) < FAR_CLEAR) cover.trees.fill(0, i * TREE_NUMBERS, (i + 1) * TREE_NUMBERS);
+    if (cover.crops?.[i] && roadAt(x + 0.5, z + 0.5) < FAR_CLEAR) { cover.crops[i] = 0; g.mat[i] = Mat.Grass; }
     if (!cover.has[i] || g.wet[i] || cover.town[i] || roadAt(x + 0.5, z + 0.5) >= FAR_CLEAR) continue;
     if (cover.rise[i] > 0) { g.h[i] -= cover.rise[i]; g.occ[i] = g.h[i]; cover.rise[i] = 0; }
     cover.has[i] = 0;
   }
-  const traits = new WorldTraits((settled ?? cover!).town, settled ? settled.field : null, cover, land, metres, snow, massifs, roadEdge);
+  const traits = new WorldTraits(step, (settled ?? cover!).town, settled ? settled.field : null, cover, land, metres, snow, massifs, roadEdge);
   // (drawn by table.ts, which can keep the table of the columns: a far piece is drawn again from that alone)
-  const { ground, carried, water, raised } = drawGround(g, traits, bakedSky, part, !!cover, roadEdge);
+  const { ground, carried, water, raised, standing } = drawGround(g, traits, bakedSky, part, !!cover, roadEdge);
   // the houses that have fine blocks and the paved ground stand in cells of their own (the part is whole cells), so
   // that the near view can build them again cell by cell
   const cells: Cell[] = [], across = Math.ceil((part.x1 - part.x0) / CELL), down = Math.ceil((part.z1 - part.z0) / CELL), byCell = new Map<number, Lot[]>();
@@ -760,9 +842,9 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     for (const l of lots) raise(far, l, 0);
     cells.push({ x: x0 + CELL / 2, z: z0 + CELL / 2, far, lots, ground });
   }
-  counts.triangles = ground.triangles + (carried?.triangles ?? 0) + water.triangles + raised.triangles + things.triangles + cells.reduce((n, c) => n + c.far.triangles, 0);
+  counts.triangles = ground.triangles + (carried?.triangles ?? 0) + water.triangles + raised.triangles + things.triangles + (standing?.triangles ?? 0) + cells.reduce((n, c) => n + c.far.triangles, 0);
   // the people of the towns, villages and fields; on the coarser steps a block is wider than a person is tall
   const figures = settled ? crowd(g, settled, own) : undefined;
   if (figures) counts.figures = figures.count;
-  return { ground, carried, things, water, raised, figures, cells, counts };
+  return { ground, carried, things, water, raised, figures, cells, counts, standing };
 }

@@ -95,16 +95,30 @@ export interface Stage {
    * point (x, z) of the stage lies on it, after how many of its widths it comes round, how many finest blocks a block of
    * the stage is, and the stage's (0, 0) in finest blocks.
    */
-  sea(depths: THREE.Texture | null, toMap: readonly number[], round: number, blocks: number, homeX: number, homeZ: number): void;
+  sea(
+    depths: THREE.Texture | null,
+    toMap: readonly number[],
+    round: number,
+    blocks: number,
+    homeX: number,
+    homeZ: number,
+  ): void;
   /** Asks for a new picture. */
   redraw(): void;
   /** Stops drawing and lets go of the renderer; the stage is not used after that. */
   dispose(): void;
   /** The point of the ground under a point of the page, in the stage's blocks; none where the picture shows no ground. */
   pick(px: number, py: number): [number, number, number] | null;
+  /** The point of the page a point of the stage (in its blocks) is drawn at, as of the last aim; null behind the camera. */
+  toScreen(x: number, y: number, z: number): [number, number] | null;
   /** what the page reports to the tools that take pictures of it; `ready` is set once a picture is drawn while `busy` is false */
-  probe: { ready: boolean; counts: Record<string, number>; backend: string; /** pictures drawn in the last second, while figures walk */ fps?: number };
+  probe: {
+    ready: boolean;
+    counts: Record<string, number>;
+    backend: string;
+    /** pictures drawn in the last second, while figures walk */
+    fps?: number;
+  };
   /** more is still to come onto the stage (true until the page says otherwise) */
   busy: boolean;
 }
-

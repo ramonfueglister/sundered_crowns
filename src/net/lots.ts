@@ -1,8 +1,9 @@
-// What the world server tells a browser about the land register (src/sim/systems/lots.ts): the parcels of a town
-// and the farmsteads of its hamlets, for the houses the world graphic sets on them. Read-only HTTP: GET /lots/<site> and GET /lots?sites=<a>,<b>,…
+// What the world server tells a browser about the land register (src/sim/systems/lots.ts): the parcels of a town,
+// its streets and market, the farmsteads of its hamlets and their fields, for the houses and fields the world graphic sets on them. Read-only HTTP: GET /lots/<site> and GET /lots?sites=<a>,<b>,…
 // (server/main.ts). A town is named by its site: its index into data/content/gazetteer.json.
 import type { WorldState } from '../sim/state';
-import { ALIVE, NO_LOT } from '../sim/state';
+import { ALIVE, NO_LOT, LOT_KIND } from '../sim/state';
+import { stripOrder } from '../sim/settlement/fields';
 import { presentPersons } from '../sim/people/living';
 
 /** The ground of a town and of its hamlets in the land register, as columns of equal length (JSON). Metres at the
@@ -21,8 +22,17 @@ export interface TownLots {
   /** the family that lives on it (the lowest id when several do), −1 when nobody does, and the living persons of
    *  all families on it */
   family: number[]; persons: number[];
-  /** the hamlets of the town: their ids, their middles and the farmsteads laid out in each */
-  hamlets: { id: number[]; x: number[]; z: number[]; farms: number[] };
+  /** the hamlets of the town: their ids, their middles, the farmsteads laid out in each, and the farmsteads in the order
+   *  of their strips in the furlongs of the open field, from the west (ids of the ground above) */
+  hamlets: { id: number[]; x: number[]; z: number[]; farms: number[]; strips: number[][] };
+  /** the streets and the market of the town (settlement feature 3): the ends of each straight piece on its middle
+   *  line, or the corners of the market; what it is (STREET_KIND in src/sim/state.ts) and its width in metres */
+  streets: { x0: number[]; z0: number[]; x1: number[]; z1: number[]; kind: number[]; width: number[] };
+  /** the furlongs of the fields of its hamlets (settlement feature 4): the hamlet each belongs to (an id of
+   *  `hamlets`), its middle, metres east-west and north-south, its course and the courses its land is tilled in, and
+   *  the farmstead that holds it whole (an id of the ground above; −1 in the open field, where every farmstead of the
+   *  hamlet has a strip in it, from the west in the order of `hamlets.strips`) */
+  fields: { hamlet: number[]; x: number[]; z: number[]; w: number[]; d: number[]; zelge: number[]; courses: number[]; farm: number[] };
 }
 
 /** The most towns one request may ask for (GET /lots?sites=…). */
@@ -36,7 +46,7 @@ export function townLots(s: WorldState, site: number): TownLots {
  *  the persons. A site without ground gets an empty list. */
 export function manyTownsLots(s: WorldState, sites: readonly number[]): TownLots[] {
   const L = s.lot.cols, F = s.family.cols, P = s.person.cols;
-  const out = sites.map((site): TownLots => ({ site, day: s.day, id: [], kind: [], hamlet: [], x: [], z: [], w: [], d: [], front: [], family: [], persons: [], hamlets: { id: [], x: [], z: [], farms: [] } }));
+  const out = sites.map((site): TownLots => ({ site, day: s.day, id: [], kind: [], hamlet: [], x: [], z: [], w: [], d: [], front: [], family: [], persons: [], hamlets: { id: [], x: [], z: [], farms: [], strips: [] }, streets: { x0: [], z0: [], x1: [], z1: [], kind: [], width: [] }, fields: { hamlet: [], x: [], z: [], w: [], d: [], zelge: [], courses: [], farm: [] } }));
   const at = new Map<number, TownLots>();
   out.forEach((o) => { if (!at.has(o.site)) at.set(o.site, o); });
   const row = new Int32Array(s.lot.size).fill(-1); // the position of a parcel in the list of its town
@@ -50,7 +60,21 @@ export function manyTownsLots(s: WorldState, sites: readonly number[]): TownLots
   const H = s.hamlets.cols;
   for (let h = 0; h < s.hamlets.size; h++) {
     const o = s.hamlets.alive[h] ? at.get(H.site[h]) : undefined;
-    if (o) { o.hamlets.id.push(h); o.hamlets.x.push(H.x[h]); o.hamlets.z.push(H.z[h]); o.hamlets.farms.push(H.farms[h]); }
+    if (o) { o.hamlets.id.push(h); o.hamlets.x.push(H.x[h]); o.hamlets.z.push(H.z[h]); o.hamlets.farms.push(H.farms[h]); o.hamlets.strips.push([]); }
+  }
+  // the farmsteads of each hamlet, in the order of their strips (src/sim/settlement/fields.ts stripOrder)
+  const farmsteads = new Map<number, number[]>();
+  for (let i = 0; i < s.lot.size; i++) if (s.lot.alive[i] && L.kind[i] === LOT_KIND.farmstead && at.has(L.site[i])) { const f = farmsteads.get(L.hamlet[i]); if (f) f.push(i); else farmsteads.set(L.hamlet[i], [i]); }
+  for (const o of at.values()) o.hamlets.id.forEach((h, k) => { const f = farmsteads.get(h) ?? []; o.hamlets.strips[k] = stripOrder(f.map((i) => ({ x: L.x[i], z: L.z[i] }))).map((j) => f[j]); });
+  const C = s.field?.cols;
+  for (let k = 0; C && k < s.field.size; k++) {
+    const o = s.field.alive[k] ? at.get(C.site[k]) : undefined;
+    if (o) { const q = o.fields; q.hamlet.push(C.hamlet[k]); q.x.push(C.x[k]); q.z.push(C.z[k]); q.w.push(C.w[k]); q.d.push(C.d[k]); q.zelge.push(C.zelge[k]); q.courses.push(C.courses[k]); q.farm.push(C.farm[k]); }
+  }
+  const S = s.street.cols;
+  for (let k = 0; k < s.street.size; k++) {
+    const o = s.street.alive[k] ? at.get(S.site[k]) : undefined;
+    if (o) { o.streets.x0.push(S.x0[k]); o.streets.z0.push(S.z0[k]); o.streets.x1.push(S.x1[k]); o.streets.z1.push(S.z1[k]); o.streets.kind.push(S.kind[k]); o.streets.width.push(S.width[k]); }
   }
   for (let f = 0; f < s.family.size; f++) {
     const l = s.family.alive[f] ? F.lot[f] : NO_LOT;

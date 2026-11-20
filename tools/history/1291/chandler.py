@@ -13,7 +13,11 @@ towns whose persons the simulation founds (src/sim/content/cities_<year>.json): 
     curl -L -o chandlerV2.csv https://s3-eu-west-1.amazonaws.com/pfigshare-u-files/5407640/chandlerV2.csv
     python3 tools/history/1291/chandler.py chandlerV2.csv [year]
 """
-import csv, hashlib, json, sys
+
+import csv
+import hashlib
+import json
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -42,14 +46,27 @@ def main(csv_path, year=1291):
         if not v or v[0] <= 0:
             continue
         k = build_cities.site(gaz, r['City'], lat, lon)
-        out.append({'name': r['City'], 'country': r['Country'], 'people': round(v[0]), 'years': v[1],
-                    'certainty': int(r['Certainty']), 'lat': lat, 'lon': lon, 'site': k, 'siteName': gaz[k]['name']})
+        out.append(
+            {
+                'name': r['City'],
+                'country': r['Country'],
+                'people': round(v[0]),
+                'years': v[1],
+                'certainty': int(r['Certainty']),
+                'lat': lat,
+                'lon': lon,
+                'site': k,
+                'siteName': gaz[k]['name'],
+            }
+        )
     out.sort(key=lambda c: (-c['people'], c['name']))
-    doc = {'year': year,
-           'source': 'Reba, Reitsma & Seto (2016), Scientific Data 3, 160034, chandlerV2.csv (CC BY 4.0), after Chandler (1987)',
-           'note': 'written by tools/history/1291/chandler.py; people of the time, interpolated between the nearest years '
-                   'within 60 years; site = index of the nearest place in data/content/gazetteer.json',
-           'cities': out}
+    doc = {
+        'year': year,
+        'source': 'Reba, Reitsma & Seto (2016), Scientific Data 3, 160034, chandlerV2.csv (CC BY 4.0), after Chandler (1987)',
+        'note': 'written by tools/history/1291/chandler.py; people of the time, interpolated between the nearest years '
+        'within 60 years; site = index of the nearest place in data/content/gazetteer.json',
+        'cities': out,
+    }
     dst = ROOT / 'data' / 'history' / str(year) / f'chandler_{year}.json'
     dst.write_text(json.dumps(doc, ensure_ascii=False, indent=1) + '\n')
     print(f'{len(out)} cities in the frame, {sum(c["people"] for c in out)} people -> {dst.relative_to(ROOT)}')

@@ -13,13 +13,15 @@ use std::collections::HashMap;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use beforeit::{
-    AbstractModel, Aggregates, Banks, CentralBank, Data, Firms, Government, Properties, RestOfTheWorld, Workers, Xoshiro,
+    AbstractModel, Aggregates, Banks, CentralBank, Data, Firms, Government, Properties, RestOfTheWorld, Workers,
+    Xoshiro,
 };
 
 use crate::Economy;
-use crate::clock::DailyClock;
+use crate::clock::{Attendance, DailyClock, OWNER_PLANS, OwnerProfit};
 use crate::past::{Past, Phase, Series};
 use crate::trade::{Cities, Merchants, Routes};
+use crate::workers::{Absences, BY_THE_DAY, Today};
 
 const TAG: &[u8; 4] = b"SCEC";
 /// The tag of cities with their merchants ([`save_cities`]).
@@ -32,10 +34,15 @@ pub const FORMAT_CITIES: u32 = 2;
 /// 4: the demand pull. 5: of the national accounts the clock keeps the series that the key figures sum, the port
 /// keeps its last row. 6: the clock can keep the past in a fixed size ([`crate::past`]). 7: the spending out of
 /// savings (economy feature 15). 8: the crown that buys with what it took in (economy feature 16). 9: firm and
-/// owner as one household (economy feature 18). States of formats 4 to 8 are still read and become format 9 when they
-/// are saved ([`load`]); formats 4 and 5 keep the whole past, as they had it, none before 7 spends out of savings,
-/// none before 8 has a crown that buys with its revenue, and none before 9 has owners who bear losses.
-pub const FORMAT: u32 = 9;
+/// owner as one household (economy feature 18). 10: the working days of the firms (economy feature 19). 11: the
+/// profits the owners plan their spending on (economy feature 20). 12: the workers who are away and the materials
+/// they left unused (economy feature 22). 13: the contracts of the workers (economy feature 23).
+/// States of formats 4 to 12 are still read and become format 13 when they are saved ([`load`]); formats 4 and 5
+/// keep the whole past, as they had it, none before 7 spends out of savings, none before 8 has a crown that buys with
+/// its revenue, none before 9 has owners who bear losses, none before 10 has working days, none before 11 has the
+/// profits of the owners (they are gathered anew from the first period that is computed), none before 12 has
+/// workers who are away, and none before 13 has contracts.
+pub const FORMAT: u32 = 13;
 const NONE: u32 = u32::MAX;
 /// The length of the last state of cities written ([`save_cities`]): how much room the next one is given at once.
 /// It changes no byte of a state.
@@ -77,6 +84,10 @@ impl Out {
         for &x in v {
             self.f64(x);
         }
+    }
+    fn bytes(&mut self, v: &[u8]) {
+        self.n(v.len());
+        self.0.extend_from_slice(v);
     }
     fn i64s(&mut self, v: &[i64]) {
         self.n(v.len());
@@ -133,7 +144,11 @@ impl In<'_> {
     fn take(&mut self, n: usize) -> Res<&[u8]> {
         let end = self.at.checked_add(n).filter(|&e| e <= self.b.len());
         let Some(end) = end else {
-            return Err(format!("the state ends at byte {}, {n} more are needed at {}", self.b.len(), self.at));
+            return Err(format!(
+                "the state ends at byte {}, {n} more are needed at {}",
+                self.b.len(),
+                self.at
+            ));
         };
         let s = &self.b[self.at..end];
         self.at = end;
@@ -175,12 +190,19 @@ impl In<'_> {
     fn len(&mut self, size: usize) -> Res<usize> {
         let n = self.n()?;
         if n.saturating_mul(size) > self.b.len() - self.at {
-            return Err(format!("a list of {n} entries does not fit the rest of the state (byte {})", self.at - 4));
+            return Err(format!(
+                "a list of {n} entries does not fit the rest of the state (byte {})",
+                self.at - 4
+            ));
         }
         Ok(n)
     }
     fn f64s(&mut self) -> Res<Vec<f64>> {
         (0..self.len(8)?).map(|_| self.f64()).collect()
+    }
+    fn bytes(&mut self) -> Res<Vec<u8>> {
+        let n = self.len(1)?;
+        Ok(self.take(n)?.to_vec())
     }
     fn i64s(&mut self) -> Res<Vec<i64>> {
         (0..self.len(8)?).map(|_| self.i64()).collect()
@@ -211,7 +233,22 @@ impl In<'_> {
 // ---- the parts of the model
 
 fn put_workers(o: &mut Out, w: &Workers) {
-    let Workers { del, lastid, id_to_index, ID, Y_h, D_h, K_h, w_h, O_h, C_d_h, I_d_h, C_h, I_h, B_h } = w;
+    let Workers {
+        del,
+        lastid,
+        id_to_index,
+        ID,
+        Y_h,
+        D_h,
+        K_h,
+        w_h,
+        O_h,
+        C_d_h,
+        I_d_h,
+        C_h,
+        I_h,
+        B_h,
+    } = w;
     o.bool(*del);
     o.opt(*lastid);
     o.map(id_to_index);
@@ -247,9 +284,55 @@ fn get_workers(i: &mut In) -> Res<Workers> {
 
 fn put_firms(o: &mut Out, f: &Firms) {
     let Firms {
-        del, lastid, id_to_index, ID, G_i, alpha_bar_i, beta_i, kappa_i, w_i, w_bar_i, delta_i, tau_Y_i, tau_K_i, N_i,
-        Y_i, Q_i, Q_d_i, P_i, S_i, K_i, M_i, L_i, pi_bar_i, D_i, Pi_i, V_i, I_i, E_i, P_bar_i, P_CF_i, DS_i, DM_i, DL_i,
-        DL_d_i, K_e_i, L_e_i, Q_s_i, I_d_i, DM_d_i, N_d_i, Pi_e_i, B_i, Y_h, C_d_h, I_d_h, C_h, I_h, K_h, D_h,
+        del,
+        lastid,
+        id_to_index,
+        ID,
+        G_i,
+        alpha_bar_i,
+        beta_i,
+        kappa_i,
+        w_i,
+        w_bar_i,
+        delta_i,
+        tau_Y_i,
+        tau_K_i,
+        N_i,
+        Y_i,
+        Q_i,
+        Q_d_i,
+        P_i,
+        S_i,
+        K_i,
+        M_i,
+        L_i,
+        pi_bar_i,
+        D_i,
+        Pi_i,
+        V_i,
+        I_i,
+        E_i,
+        P_bar_i,
+        P_CF_i,
+        DS_i,
+        DM_i,
+        DL_i,
+        DL_d_i,
+        K_e_i,
+        L_e_i,
+        Q_s_i,
+        I_d_i,
+        DM_d_i,
+        N_d_i,
+        Pi_e_i,
+        B_i,
+        Y_h,
+        C_d_h,
+        I_d_h,
+        C_h,
+        I_h,
+        K_h,
+        D_h,
     } = f;
     o.bool(*del);
     o.opt(*lastid);
@@ -264,7 +347,9 @@ fn put_firms(o: &mut Out, f: &Firms) {
         o.f64s(v);
     }
     o.i64s(V_i);
-    for v in [I_i, E_i, P_bar_i, P_CF_i, DS_i, DM_i, DL_i, DL_d_i, K_e_i, L_e_i, Q_s_i, I_d_i, DM_d_i] {
+    for v in [
+        I_i, E_i, P_bar_i, P_CF_i, DS_i, DM_i, DL_i, DL_d_i, K_e_i, L_e_i, Q_s_i, I_d_i, DM_d_i,
+    ] {
         o.f64s(v);
     }
     o.i64s(N_d_i);
@@ -331,7 +416,24 @@ fn get_firms(i: &mut In) -> Res<Firms> {
 
 fn put_banks(o: &mut Out, b: &Banks) {
     let Banks {
-        del, lastid, id_to_index, ID, E_k, Pi_k, Pi_e_k, D_k, r, Y_h, C_d_h, I_d_h, C_h, I_h, K_h, D_h, firms, w_act,
+        del,
+        lastid,
+        id_to_index,
+        ID,
+        E_k,
+        Pi_k,
+        Pi_e_k,
+        D_k,
+        r,
+        Y_h,
+        C_d_h,
+        I_d_h,
+        C_h,
+        I_h,
+        K_h,
+        D_h,
+        firms,
+        w_act,
         w_inact,
     } = b;
     o.bool(*del);
@@ -371,7 +473,16 @@ fn get_banks(i: &mut In) -> Res<Banks> {
 }
 
 fn put_central_bank(o: &mut Out, c: &CentralBank) {
-    let CentralBank { r_bar, r_G, rho, r_star, pi_star, xi_pi, xi_gamma, E_CB } = c;
+    let CentralBank {
+        r_bar,
+        r_G,
+        rho,
+        r_star,
+        pi_star,
+        xi_pi,
+        xi_gamma,
+        E_CB,
+    } = c;
     for v in [r_bar, r_G, rho, r_star, pi_star, xi_pi, xi_gamma, E_CB] {
         o.f64(*v);
     }
@@ -391,7 +502,19 @@ fn get_central_bank(i: &mut In) -> Res<CentralBank> {
 }
 
 fn put_government(o: &mut Out, g: &Government) {
-    let Government { alpha_G, beta_G, sigma_G, Y_G, C_G, L_G, sb_inact, sb_other, C_d_j, C_j, P_j } = g;
+    let Government {
+        alpha_G,
+        beta_G,
+        sigma_G,
+        Y_G,
+        C_G,
+        L_G,
+        sb_inact,
+        sb_other,
+        C_d_j,
+        C_j,
+        P_j,
+    } = g;
     for v in [alpha_G, beta_G, sigma_G, Y_G, C_G, L_G, sb_inact, sb_other] {
         o.f64(*v);
     }
@@ -418,12 +541,51 @@ fn get_government(i: &mut In) -> Res<Government> {
 
 fn put_rest_of_the_world(o: &mut Out, r: &RestOfTheWorld) {
     let RestOfTheWorld {
-        alpha_E, beta_E, sigma_E, alpha_I, beta_I, sigma_I, Y_EA, gamma_EA, pi_EA, alpha_pi_EA, beta_pi_EA,
-        sigma_pi_EA, alpha_Y_EA, beta_Y_EA, sigma_Y_EA, D_RoW, Y_I, C_E, C_d_l, C_l, Y_m, Q_m, Q_d_m, P_m, P_l,
+        alpha_E,
+        beta_E,
+        sigma_E,
+        alpha_I,
+        beta_I,
+        sigma_I,
+        Y_EA,
+        gamma_EA,
+        pi_EA,
+        alpha_pi_EA,
+        beta_pi_EA,
+        sigma_pi_EA,
+        alpha_Y_EA,
+        beta_Y_EA,
+        sigma_Y_EA,
+        D_RoW,
+        Y_I,
+        C_E,
+        C_d_l,
+        C_l,
+        Y_m,
+        Q_m,
+        Q_d_m,
+        P_m,
+        P_l,
     } = r;
     for v in [
-        alpha_E, beta_E, sigma_E, alpha_I, beta_I, sigma_I, Y_EA, gamma_EA, pi_EA, alpha_pi_EA, beta_pi_EA,
-        sigma_pi_EA, alpha_Y_EA, beta_Y_EA, sigma_Y_EA, D_RoW, Y_I, C_E,
+        alpha_E,
+        beta_E,
+        sigma_E,
+        alpha_I,
+        beta_I,
+        sigma_I,
+        Y_EA,
+        gamma_EA,
+        pi_EA,
+        alpha_pi_EA,
+        beta_pi_EA,
+        sigma_pi_EA,
+        alpha_Y_EA,
+        beta_Y_EA,
+        sigma_Y_EA,
+        D_RoW,
+        Y_I,
+        C_E,
     ] {
         o.f64(*v);
     }
@@ -467,14 +629,38 @@ fn get_rest_of_the_world(i: &mut In) -> Res<RestOfTheWorld> {
 
 fn put_aggregates(o: &mut Out, a: &Aggregates) {
     let Aggregates {
-        Y, pi_, P_bar, P_bar_g, P_bar_HH, P_bar_CF, P_bar_h, P_bar_CF_h, Y_e, gamma_e, pi_e, epsilon_Y_EA, epsilon_E,
-        epsilon_I, t,
+        Y,
+        pi_,
+        P_bar,
+        P_bar_g,
+        P_bar_HH,
+        P_bar_CF,
+        P_bar_h,
+        P_bar_CF_h,
+        Y_e,
+        gamma_e,
+        pi_e,
+        epsilon_Y_EA,
+        epsilon_E,
+        epsilon_I,
+        t,
     } = a;
     o.f64s(Y);
     o.f64s(pi_);
     o.f64(*P_bar);
     o.f64s(P_bar_g);
-    for v in [P_bar_HH, P_bar_CF, P_bar_h, P_bar_CF_h, Y_e, gamma_e, pi_e, epsilon_Y_EA, epsilon_E, epsilon_I] {
+    for v in [
+        P_bar_HH,
+        P_bar_CF,
+        P_bar_h,
+        P_bar_CF_h,
+        Y_e,
+        gamma_e,
+        pi_e,
+        epsilon_Y_EA,
+        epsilon_E,
+        epsilon_I,
+    ] {
         o.f64(*v);
     }
     o.n(*t);
@@ -502,10 +688,49 @@ fn get_aggregates(i: &mut In) -> Res<Aggregates> {
 
 fn put_properties(o: &mut Out, p: &Properties) {
     let Properties {
-        G, T_prime, H_act, H_inact, J, L, I_s, I, H, tau_INC, tau_FIRM, tau_VAT, tau_SIF, tau_SIW, tau_EXPORT, tau_CF,
-        tau_G, theta_UB, psi, psi_H, mu, theta_DIV, theta, zeta, zeta_LTV, zeta_b, omega_pi, theta_calvo,
-        overdrafts_in_capital_ratio, b_CF_g, b_CFH_g, b_HH_g, c_G_g, c_E_g, c_I_g, a_sg, C, D_H, K_H, sb_other, E_k,
-        r_bar, n_banks,
+        G,
+        T_prime,
+        H_act,
+        H_inact,
+        J,
+        L,
+        I_s,
+        I,
+        H,
+        tau_INC,
+        tau_FIRM,
+        tau_VAT,
+        tau_SIF,
+        tau_SIW,
+        tau_EXPORT,
+        tau_CF,
+        tau_G,
+        theta_UB,
+        psi,
+        psi_H,
+        mu,
+        theta_DIV,
+        theta,
+        zeta,
+        zeta_LTV,
+        zeta_b,
+        omega_pi,
+        theta_calvo,
+        overdrafts_in_capital_ratio,
+        b_CF_g,
+        b_CFH_g,
+        b_HH_g,
+        c_G_g,
+        c_E_g,
+        c_I_g,
+        a_sg,
+        C,
+        D_H,
+        K_H,
+        sb_other,
+        E_k,
+        r_bar,
+        n_banks,
     } = p;
     for v in [G, T_prime, H_act, H_inact, J, L] {
         o.n(*v);
@@ -514,8 +739,25 @@ fn put_properties(o: &mut Out, p: &Properties) {
     o.n(*I);
     o.n(*H);
     for v in [
-        tau_INC, tau_FIRM, tau_VAT, tau_SIF, tau_SIW, tau_EXPORT, tau_CF, tau_G, theta_UB, psi, psi_H, mu, theta_DIV,
-        theta, zeta, zeta_LTV, zeta_b, omega_pi, theta_calvo,
+        tau_INC,
+        tau_FIRM,
+        tau_VAT,
+        tau_SIF,
+        tau_SIW,
+        tau_EXPORT,
+        tau_CF,
+        tau_G,
+        theta_UB,
+        psi,
+        psi_H,
+        mu,
+        theta_DIV,
+        theta,
+        zeta,
+        zeta_LTV,
+        zeta_b,
+        omega_pi,
+        theta_calvo,
     ] {
         o.f64(*v);
     }
@@ -593,28 +835,78 @@ fn get_properties(i: &mut In) -> Res<Properties> {
 
 fn put_data(o: &mut Out, d: &Data) {
     let Data {
-        collection_time, nominal_gdp, real_gdp, nominal_gva, real_gva, nominal_household_consumption,
-        real_household_consumption, nominal_government_consumption, real_government_consumption,
-        nominal_capitalformation, real_capitalformation, nominal_fixed_capitalformation, real_fixed_capitalformation,
-        nominal_fixed_capitalformation_dwellings, real_fixed_capitalformation_dwellings, nominal_exports, real_exports,
-        nominal_imports, real_imports, operating_surplus, compensation_employees, wages, taxes_production,
-        gdp_deflator_growth_ea, real_gdp_ea, euribor, nominal_sector_gva, real_sector_gva, credit_new_per_bank,
-        credit_stock_per_bank, equity_per_bank, reserves_per_bank, roe_per_bank,
+        collection_time,
+        nominal_gdp,
+        real_gdp,
+        nominal_gva,
+        real_gva,
+        nominal_household_consumption,
+        real_household_consumption,
+        nominal_government_consumption,
+        real_government_consumption,
+        nominal_capitalformation,
+        real_capitalformation,
+        nominal_fixed_capitalformation,
+        real_fixed_capitalformation,
+        nominal_fixed_capitalformation_dwellings,
+        real_fixed_capitalformation_dwellings,
+        nominal_exports,
+        real_exports,
+        nominal_imports,
+        real_imports,
+        operating_surplus,
+        compensation_employees,
+        wages,
+        taxes_production,
+        gdp_deflator_growth_ea,
+        real_gdp_ea,
+        euribor,
+        nominal_sector_gva,
+        real_sector_gva,
+        credit_new_per_bank,
+        credit_stock_per_bank,
+        equity_per_bank,
+        reserves_per_bank,
+        roe_per_bank,
     } = d;
     o.ns(collection_time);
     for v in [
-        nominal_gdp, real_gdp, nominal_gva, real_gva, nominal_household_consumption, real_household_consumption,
-        nominal_government_consumption, real_government_consumption, nominal_capitalformation, real_capitalformation,
-        nominal_fixed_capitalformation, real_fixed_capitalformation, nominal_fixed_capitalformation_dwellings,
-        real_fixed_capitalformation_dwellings, nominal_exports, real_exports, nominal_imports, real_imports,
-        operating_surplus, compensation_employees, wages, taxes_production, gdp_deflator_growth_ea, real_gdp_ea,
+        nominal_gdp,
+        real_gdp,
+        nominal_gva,
+        real_gva,
+        nominal_household_consumption,
+        real_household_consumption,
+        nominal_government_consumption,
+        real_government_consumption,
+        nominal_capitalformation,
+        real_capitalformation,
+        nominal_fixed_capitalformation,
+        real_fixed_capitalformation,
+        nominal_fixed_capitalformation_dwellings,
+        real_fixed_capitalformation_dwellings,
+        nominal_exports,
+        real_exports,
+        nominal_imports,
+        real_imports,
+        operating_surplus,
+        compensation_employees,
+        wages,
+        taxes_production,
+        gdp_deflator_growth_ea,
+        real_gdp_ea,
         euribor,
     ] {
         o.f64s(v);
     }
     for v in [
-        nominal_sector_gva, real_sector_gva, credit_new_per_bank, credit_stock_per_bank, equity_per_bank,
-        reserves_per_bank, roe_per_bank,
+        nominal_sector_gva,
+        real_sector_gva,
+        credit_new_per_bank,
+        credit_stock_per_bank,
+        equity_per_bank,
+        reserves_per_bank,
+        roe_per_bank,
     ] {
         o.f64ss(v);
     }
@@ -660,7 +952,33 @@ fn get_data(i: &mut In) -> Res<Data> {
 
 fn put_clock(o: &mut Out, c: &DailyClock) {
     // `trade` is set for the length of a period only (src/trade.rs): a saved economy has none
-    let DailyClock { plan, window, demand, periods, start, accounts, wage, real_wage, demand_pull, savings, norm, crown_revenue, crown_outlays, owner, borne: _, past, trade: _ } = c;
+    let DailyClock {
+        plan,
+        window,
+        demand,
+        periods,
+        worked,
+        start,
+        accounts,
+        wage,
+        real_wage,
+        demand_pull,
+        savings,
+        norm,
+        crown_revenue,
+        crown_outlays,
+        owner,
+        borne: _,
+        past,
+        trade: _,
+        attendance,
+        owner_profit,
+        absences,
+        lost: _,
+        unused,
+        contracts,
+        today: _,
+    } = c;
     o.n(*plan);
     o.n(*window);
     o.f64s(demand);
@@ -682,7 +1000,16 @@ fn put_clock(o: &mut Out, c: &DailyClock) {
     o.bool(past.is_some());
     if let Some(Past { periods, Y, pi }) = past {
         o.n(*periods);
-        for Series { log, origin, history, early, days, sum, phases } in [Y, pi] {
+        for Series {
+            log,
+            origin,
+            history,
+            early,
+            days,
+            sum,
+            phases,
+        } in [Y, pi]
+        {
             o.bool(*log);
             o.f64(*origin);
             o.n(*history);
@@ -702,24 +1029,84 @@ fn put_clock(o: &mut Out, c: &DailyClock) {
     o.bool(*crown_revenue);
     o.f64(*crown_outlays);
     o.bool(*owner);
+    let Attendance {
+        from,
+        days,
+        kinds,
+        factor,
+        day,
+        calendar,
+        household,
+    } = attendance;
+    o.n(*from);
+    o.n(*days);
+    o.n(*kinds);
+    o.f64s(factor);
+    o.bytes(day);
+    o.bytes(calendar);
+    o.bytes(household);
+    o.f64s(worked);
+    let OwnerProfit {
+        ended,
+        ended_periods,
+        open,
+        open_periods,
+        ends,
+    } = owner_profit;
+    o.f64s(ended);
+    o.f64s(ended_periods);
+    o.f64s(open);
+    o.f64s(open_periods);
+    o.n(ends.len());
+    for &x in ends {
+        o.u32(x);
+    }
+    let Absences { worker, first, last } = absences;
+    o.n(worker.len());
+    for k in 0..worker.len() {
+        o.u32(worker[k]);
+        o.u32(first[k]);
+        o.u32(last[k]);
+    }
+    o.f64s(unused);
+    o.bytes(contracts);
 }
 
 fn get_series(i: &mut In, window: usize) -> Res<Series> {
-    let (log, origin, history, early, days, sum) = (i.bool()?, i.f64()?, i.n()?, [i.f64()?, i.f64()?], i.f64s()?, i.f64()?);
+    let (log, origin, history, early, days, sum) =
+        (i.bool()?, i.f64()?, i.n()?, [i.f64()?, i.f64()?], i.f64s()?, i.f64()?);
     if days.len() != window || history < 2 {
-        return Err(format!("a past of {} periods with {history} entries of history and windows of {window} periods", days.len()));
+        return Err(format!(
+            "a past of {} periods with {history} entries of history and windows of {window} periods",
+            days.len()
+        ));
     }
     let mut phases = Vec::with_capacity(window);
     for _ in 0..window {
-        phases.push(Phase { last: i.f64()?, x: i.f64()?, xx: i.f64()?, xy: i.f64()? });
+        phases.push(Phase {
+            last: i.f64()?,
+            x: i.f64()?,
+            xx: i.f64()?,
+            xy: i.f64()?,
+        });
     }
-    Ok(Series { log, origin, history, early, days, sum, phases })
+    Ok(Series {
+        log,
+        origin,
+        history,
+        early,
+        days,
+        sum,
+        phases,
+    })
 }
 
 fn get_clock(i: &mut In, format: u32) -> Res<DailyClock> {
     let (plan, window) = (i.n()?, i.n()?);
     if plan == 0 || window == 0 {
-        return Err(format!("a clock with a plan every {plan} periods and windows of {window} periods"));
+        return Err(format!(
+            "a clock with a plan every {plan} periods and windows of {window} periods"
+        ));
     }
     let demand = i.f64s()?;
     let n = i.len(4)?;
@@ -730,7 +1117,12 @@ fn get_clock(i: &mut In, format: u32) -> Res<DailyClock> {
     let start = [i.f64()?, i.f64()?];
     let (wage, real_wage) = (i.f64s()?, i.f64s()?);
     if wage.len() != real_wage.len() || (!wage.is_empty() && wage.len() != demand.len()) {
-        return Err(format!("a clock with wages in money of {} firms, real wages of {} and {} firms", wage.len(), real_wage.len(), demand.len()));
+        return Err(format!(
+            "a clock with wages in money of {} firms, real wages of {} and {} firms",
+            wage.len(),
+            real_wage.len(),
+            demand.len()
+        ));
     }
     let demand_pull = i.bool()?;
     // format 4 has no rows of the clock: `load` takes them from the port's rows
@@ -738,7 +1130,9 @@ fn get_clock(i: &mut In, format: u32) -> Res<DailyClock> {
     if format >= 5 {
         let n = i.len(8 * crate::SUMMED)?;
         if n == 0 || n > window {
-            return Err(format!("a clock with {n} rows of the national accounts and windows of {window} periods"));
+            return Err(format!(
+                "a clock with {n} rows of the national accounts and windows of {window} periods"
+            ));
         }
         for _ in 0..n {
             let mut row = [0.0; crate::SUMMED];
@@ -749,16 +1143,140 @@ fn get_clock(i: &mut In, format: u32) -> Res<DailyClock> {
         }
     }
     // formats before 6 keep the whole past in the port's lists
-    let past = if format >= 6 && i.bool()? { Some(Past { periods: i.n()?, Y: get_series(i, window)?, pi: get_series(i, window)? }) } else { None };
+    let past = if format >= 6 && i.bool()? {
+        Some(Past {
+            periods: i.n()?,
+            Y: get_series(i, window)?,
+            pi: get_series(i, window)?,
+        })
+    } else {
+        None
+    };
     // formats before 7 know no spending out of savings
     let (savings, norm) = if format >= 7 { (i.f64()?, i.f64()?) } else { (0.0, -1.0) };
     if !(0.0..=1.0).contains(&savings) {
-        return Err(format!("a clock with a share of {savings} of the savings spent per period"));
+        return Err(format!(
+            "a clock with a share of {savings} of the savings spent per period"
+        ));
     }
     // formats before 8 know the paper's series of the crown's purchases only
-    let (crown_revenue, crown_outlays) = if format >= 8 { (i.bool()?, i.f64()?) } else { (false, 0.0) };
+    let (crown_revenue, crown_outlays) = if format >= 8 {
+        (i.bool()?, i.f64()?)
+    } else {
+        (false, 0.0)
+    };
     let owner = format >= 9 && i.bool()?;
-    Ok(DailyClock { plan, window, demand, periods, start, accounts, wage, real_wage, demand_pull, savings, norm, crown_revenue, crown_outlays, owner, borne: Vec::new(), past, trade: None })
+    // formats before 10 know no working days: every period is one
+    // and before 10 the factors of the days since a firm's last plan are their number, with the starting position
+    let (attendance, worked) = if format >= 10 {
+        let (from, days, kinds, factor, day, calendar, household) =
+            (i.n()?, i.n()?, i.n()?, i.f64s()?, i.bytes()?, i.bytes()?, i.bytes()?);
+        let worked = i.f64s()?;
+        if worked.len() != demand.len() || worked.iter().any(|w| !(w.is_finite() && *w >= 0.0)) {
+            return Err(format!(
+                "a clock with the worked days of {} firms and {} firms",
+                worked.len(),
+                demand.len()
+            ));
+        }
+        let attendance = if calendar.is_empty() {
+            Attendance::default()
+        } else {
+            if calendar.len() != demand.len() {
+                return Err(format!(
+                    "working days of {} firms in a clock of {} firms",
+                    calendar.len(),
+                    demand.len()
+                ));
+            }
+            Attendance::new(from, days, kinds, factor, day, calendar, household)?
+        };
+        (attendance, worked)
+    } else {
+        (Attendance::default(), periods.iter().map(|&p| p as f64 + 1.0).collect())
+    };
+    // formats before 11 know no profits of the owners: they are gathered anew
+    let owner_profit = if format >= 11 {
+        let (ended, ended_periods, open, open_periods) = (i.f64s()?, i.f64s()?, i.f64s()?, i.f64s()?);
+        let n = i.len(4)?;
+        let mut ends = Vec::with_capacity(n);
+        for _ in 0..n {
+            ends.push(i.u32()?);
+        }
+        let firms = open.len();
+        if (firms != 0 && firms != demand.len())
+            || open_periods.len() != firms
+            || ends.len() != firms
+            || ended.len() != OWNER_PLANS * firms
+            || ended_periods.len() != OWNER_PLANS * firms
+            || ended.iter().chain(&open).any(|x| !x.is_finite())
+            || ended_periods
+                .iter()
+                .chain(&open_periods)
+                .any(|x| !(x.is_finite() && *x >= 0.0))
+        {
+            return Err(format!(
+                "a clock with the profits of the owners of {firms} firms and {} firms",
+                demand.len()
+            ));
+        }
+        OwnerProfit {
+            ended,
+            ended_periods,
+            open,
+            open_periods,
+            ends,
+        }
+    } else {
+        OwnerProfit::default()
+    };
+    // formats before 12 know no workers who are away; the workers of an economy are checked when it is given
+    // absences ([`crate::Economy::with_absences`])
+    let absences = if format >= 12 {
+        let n = i.len(12)?;
+        let (mut worker, mut first, mut last) = (Vec::with_capacity(n), Vec::with_capacity(n), Vec::with_capacity(n));
+        for _ in 0..n {
+            worker.push(i.u32()?);
+            first.push(i.u32()?);
+            last.push(i.u32()?);
+        }
+        Absences::new(usize::MAX, worker, first, last)?
+    } else {
+        Absences::default()
+    };
+    let unused = if format >= 12 { i.f64s()? } else { Vec::new() };
+    // formats before 13 know no contracts; the workers of an economy are checked when the state is read ([`load`])
+    let contracts = if format >= 13 { i.bytes()? } else { Vec::new() };
+    if let Some(&x) = contracts.iter().find(|&&x| x > BY_THE_DAY) {
+        return Err(format!("a contract of the kind {x}"));
+    }
+    Ok(DailyClock {
+        plan,
+        window,
+        demand,
+        periods,
+        worked,
+        start,
+        accounts,
+        wage,
+        real_wage,
+        demand_pull,
+        savings,
+        norm,
+        crown_revenue,
+        crown_outlays,
+        owner,
+        borne: Vec::new(),
+        past,
+        trade: None,
+        attendance,
+        owner_profit,
+        absences,
+        lost: Vec::new(),
+        unused,
+        contracts,
+        today: Today::default(),
+    })
 }
 
 /// The model and its random number generator as bytes. The same model always gives the same bytes.
@@ -769,7 +1287,19 @@ pub fn save(model: &AbstractModel<DailyClock>, rng: &Xoshiro) -> Vec<u8> {
 }
 
 fn put(o: &mut Out, model: &AbstractModel<DailyClock>, rng: &Xoshiro) {
-    let AbstractModel { w_act, w_inact, firms, banks, cb, gov, rotw, agg, prop, data, ext } = model;
+    let AbstractModel {
+        w_act,
+        w_inact,
+        firms,
+        banks,
+        cb,
+        gov,
+        rotw,
+        agg,
+        prop,
+        data,
+        ext,
+    } = model;
     o.0.extend_from_slice(TAG);
     o.u32(FORMAT);
     for word in rng.state() {
@@ -796,7 +1326,9 @@ pub fn load(bytes: &[u8]) -> Result<(AbstractModel<DailyClock>, Xoshiro), String
     }
     let format = i.u32()?;
     if !(4..=FORMAT).contains(&format) {
-        return Err(format!("state format {format}, this engine reads formats 4 to {FORMAT}"));
+        return Err(format!(
+            "state format {format}, this engine reads formats 4 to {FORMAT}"
+        ));
     }
     let rng = Xoshiro::from_state([i.u64()?, i.u64()?, i.u64()?, i.u64()?])?;
     let mut model = AbstractModel {
@@ -820,6 +1352,39 @@ pub fn load(bytes: &[u8]) -> Result<(AbstractModel<DailyClock>, Xoshiro), String
         model.ext.accounts = vec![crate::summed(&model.data, 0)];
         crate::take_rows(&mut model);
     }
+    let (a, households) = (
+        &model.ext.attendance,
+        model.w_act.len() + model.w_inact.len() + model.banks.len(),
+    );
+    if !a.is_empty() && a.household.len() != households {
+        return Err(format!(
+            "working days of {} households in a model of {households} households that own no firm",
+            a.household.len()
+        ));
+    }
+    if let Some(h) = model
+        .ext
+        .absences
+        .worker
+        .iter()
+        .find(|&&h| h as usize >= model.w_act.len())
+    {
+        return Err(format!("an absence of the worker {h} of {}", model.w_act.len()));
+    }
+    let contracts = model.ext.contracts.len();
+    if contracts != 0 && contracts != model.w_act.len() {
+        return Err(format!(
+            "contracts of {contracts} workers in an economy of {}",
+            model.w_act.len()
+        ));
+    }
+    let unused = model.ext.unused.len();
+    if unused != 0 && unused != model.firms.len() {
+        return Err(format!(
+            "unused materials of {unused} firms in an economy of {}",
+            model.firms.len()
+        ));
+    }
     if i.at != bytes.len() {
         return Err(format!("{} bytes are left over after the state", bytes.len() - i.at));
     }
@@ -833,7 +1398,17 @@ pub fn load(bytes: &[u8]) -> Result<(AbstractModel<DailyClock>, Xoshiro), String
 /// bytes.
 pub fn save_cities(all: &Cities) -> Vec<u8> {
     let Cities { cities, merchants } = all;
-    let Merchants { stock, value, orders, share, bought, sold, start, start_stock, routes } = merchants;
+    let Merchants {
+        stock,
+        value,
+        orders,
+        share,
+        bought,
+        sold,
+        start,
+        start_stock,
+        routes,
+    } = merchants;
     // the bytes are written into one list that is as long as the state of the call before, with a little room: the
     // state of a world is tens of megabytes, and a list that grows by doubling would hold it twice over
     let hint = SIZE.load(Ordering::Relaxed);
@@ -863,7 +1438,21 @@ pub fn save_cities(all: &Cities) -> Vec<u8> {
     o.f64s(start_stock);
     o.bool(routes.is_some());
     // the length of the ring follows from the days
-    if let Some(Routes { days, labour, weight, elasticity, horizon: _, on_way, on_way_cost, carrying, period, paid, wage0, price0 }) = routes {
+    if let Some(Routes {
+        days,
+        labour,
+        weight,
+        elasticity,
+        horizon: _,
+        on_way,
+        on_way_cost,
+        carrying,
+        period,
+        paid,
+        wage0,
+        price0,
+    }) = routes
+    {
         for row in days {
             o.n(row.len());
             for d in row {
@@ -893,7 +1482,9 @@ pub fn load_cities(bytes: &[u8]) -> Result<Cities, String> {
     }
     let format = i.u32()?;
     if !(1..=FORMAT_CITIES).contains(&format) {
-        return Err(format!("state format {format} of cities, this engine reads formats 1 to {FORMAT_CITIES}"));
+        return Err(format!(
+            "state format {format} of cities, this engine reads formats 1 to {FORMAT_CITIES}"
+        ));
     }
     let n = i.len(4)?;
     let mut cities = Vec::with_capacity(n);
@@ -913,11 +1504,34 @@ pub fn load_cities(bytes: &[u8]) -> Result<Cities, String> {
             days.push((0..len).map(|_| i.n()).collect::<Res<Vec<_>>>()?);
         }
         let horizon = Routes::longest(&days);
-        Some(Routes { days, horizon, labour: i.f64ss()?, weight: i.f64s()?, elasticity: i.f64()?, on_way: i.f64s()?, on_way_cost: i.f64s()?, carrying: i.f64ss()?, period: i.n()?, paid: i.f64()?, wage0: i.f64s()?, price0: i.f64ss()? })
+        Some(Routes {
+            days,
+            horizon,
+            labour: i.f64ss()?,
+            weight: i.f64s()?,
+            elasticity: i.f64()?,
+            on_way: i.f64s()?,
+            on_way_cost: i.f64s()?,
+            carrying: i.f64ss()?,
+            period: i.n()?,
+            paid: i.f64()?,
+            wage0: i.f64s()?,
+            price0: i.f64ss()?,
+        })
     } else {
         None
     };
-    let merchants = Merchants { stock, value, orders, share, bought, sold, start, start_stock, routes };
+    let merchants = Merchants {
+        stock,
+        value,
+        orders,
+        share,
+        bought,
+        sold,
+        start,
+        start_stock,
+        routes,
+    };
     if i.at != bytes.len() {
         return Err(format!("{} bytes are left over after the state", bytes.len() - i.at));
     }
@@ -947,7 +1561,9 @@ pub fn load_cities(bytes: &[u8]) -> Result<Cities, String> {
                 && r.elasticity.is_finite()
         });
     if !fits {
-        return Err(format!("the books of the merchants do not fit {n} cities with {G} products"));
+        return Err(format!(
+            "the books of the merchants do not fit {n} cities with {G} products"
+        ));
     }
     Ok(Cities { cities, merchants })
 }
