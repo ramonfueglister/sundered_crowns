@@ -14,9 +14,12 @@ export function createSender(
   camera: THREE.Camera,
   fixedW: number,
   mesh: MakeMesh,
-  m: Pick<Materials, 'solid' | 'faced' | 'fieldFaced' | 'seaFaced' | 'gliding' | 'freed' | 'smallLists'>,
+  m: Pick<
+    Materials,
+    'solid' | 'faced' | 'fieldFaced' | 'fieldGliding' | 'seaFaced' | 'gliding' | 'freed' | 'smallLists'
+  >,
 ) {
-  const { solid, faced, fieldFaced, seaFaced, gliding, freed, smallLists } = m;
+  const { solid, faced, fieldFaced, fieldGliding, seaFaced, gliding, freed, smallLists } = m;
   // A mesh's lists go to the graphics card in the picture that first draws it, and that takes the page's thread a
   // millisecond or two for every megabyte and more for every list (measured on a Mac: the 49 meshes of one piece
   // of a town 77 ms; 27 meshes that came into the picture together, one picture of 247 ms). So the lists are sent
@@ -107,6 +110,7 @@ export function createSender(
           ? faced
           : made.material === faced ||
               made.material === fieldFaced ||
+              made.material === fieldGliding ||
               made.material === gliding ||
               made.material === freed
             ? made.material

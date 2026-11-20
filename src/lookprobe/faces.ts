@@ -69,6 +69,10 @@ export interface Field {
   /** the first column the field holds, in the mesh's own blocks */
   x0: number;
   z0: number;
+  /** Of tops that glide to the shape of the coarser step (worldprobe/glide.ts): the level each ends up at, two numbers to a face as `Faces.aim` has them */
+  aim?: Int16Array;
+  /** and the colours of the columns' corners there, as `tones` holds those of now */
+  aimTones?: Uint8Array;
 }
 /** the columns a field holds along each side: those of a piece of the world (worldprobe/pieces.ts PIECE) */
 export const FIELD_COLUMNS = 200;

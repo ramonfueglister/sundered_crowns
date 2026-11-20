@@ -46,7 +46,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   const scene = new THREE.Scene();
   let pending = 3;
   scene.background = new THREE.Color(...OPEN_WATER);
-  const { smallLists, solid, water, faced, fieldFaced, fields, seaFaced, freed, gliding, sinking, surface, mirrored, tint, mirrorShare, shareCode, inkOf, marked } = createMaterials(scene);
+  const { smallLists, solid, water, faced, fieldFaced, fieldGliding, fields, seaFaced, freed, gliding, sinking, surface, mirrored, tint, mirrorShare, shareCode, inkOf, marked } = createMaterials(scene);
 
   // light step 1: sun, side light and sky; strengths are multiplied by π because a Lambert surface returns light / π
   const rad = THREE.MathUtils.degToRad;
@@ -166,9 +166,10 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
    * layer of the texture all such meshes share is taken here (`own`: a pilot takes none) and given back as it goes.
    */
   const fieldMesh = (shape: Shape, casts: boolean, own = true) => {
-    const f = shape.tops!, made = new THREE.Mesh(fieldGeometry(shape), fieldFaced);
-    made.castShadow = casts; made.receiveShadow = true; made.userData.dots = new THREE.Vector2(0, 1); made.userData.ink = 1;
+    const f = shape.tops!, ends = !!(f.aim && f.aimTones), made = new THREE.Mesh(fieldGeometry(shape), ends ? fieldGliding : fieldFaced);
+    made.castShadow = casts; made.receiveShadow = true; made.userData.dots = new THREE.Vector2(0, 1); made.userData.ink = 1; made.userData.glide = 0;
     made.userData.field = new THREE.Vector3(f.x0, f.z0, own ? fields.take(f.tones) : 0); made.userData.ownField = own;
+    made.userData.fieldEnd = ends && own ? fields.take(f.aimTones!) : 0;
     made.raycast = (ray, hits) => {
       const local = ray.ray.clone().applyMatrix4(new THREE.Matrix4().copy(made.matrixWorld).invert()), t = faceHit(f, local.origin.toArray(), local.direction.toArray());
       if (t === null) return;
@@ -211,7 +212,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     const none: Shape = { pos: new Float32Array(0), nor: new Int8Array(0), col: new Uint8Array(0), small: true, ball: [0, 0, 0, 0] };
     const face = (aimed = false): Shape => ({ ...none, faces: { geo: new Int16Array(FACE_GEO), col: new Uint8Array(FACE_COL), nor: new Int8Array(4), ...(aimed ? { aim: new Int16Array(2), aimCol: new Uint8Array(FACE_COL) } : {}) } });
     const sea = [...(water !== solid ? [mesh(lists(), water, false)] : []), faceMesh(face(), false, true)];
-    for (const pilot of [mesh(lists(), solid, true), mesh(lists(true), sinking, true), faceMesh(face(), true), faceMesh(face(true), true), fieldMesh({ ...none, tops: { geo: new Int16Array(FACE_GEO), nor: new Int8Array(4), tones: new Uint8Array(0), x0: 0, z0: 0 } }, true, false), freeMesh({ ...none, free: { geo: new Float32Array(FREE_GEO), col: new Uint8Array(FACE_COL), nor: new Int8Array(4) } }, true), ...sea]) {
+    for (const pilot of [mesh(lists(), solid, true), mesh(lists(true), sinking, true), faceMesh(face(), true), faceMesh(face(true), true), fieldMesh({ ...none, tops: { geo: new Int16Array(FACE_GEO), nor: new Int8Array(4), tones: new Uint8Array(0), x0: 0, z0: 0 } }, true, false), fieldMesh({ ...none, tops: { geo: new Int16Array(FACE_GEO), nor: new Int8Array(4), tones: new Uint8Array(0), x0: 0, z0: 0, aim: new Int16Array(2), aimTones: new Uint8Array(0) } }, true, false), freeMesh({ ...none, free: { geo: new Float32Array(FREE_GEO), col: new Uint8Array(FACE_COL), nor: new Int8Array(4) } }, true), ...sea]) {
       (pilot.userData.dots as THREE.Vector2).set(0, 0); pilot.userData.glide = 0; pilot.frustumCulled = false;
       // (the sea's lie where the sea's meshes lie: on the layer the mirror does not draw)
       if (sea.includes(pilot)) pilot.layers.set(FIGURES_LAYER);
@@ -224,8 +225,8 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   // The renderer keeps a record of every mesh it has drawn, and each record hangs on the material, which all pieces
   // share and which is never let go: only the mesh's own 'dispose' takes the record, and with it the mesh and its
   // numbers, out of the renderer. Letting go of the geometry alone leaves them held for good.
-  const gone = (made: THREE.Mesh) => { warm(made); partial.delete(made); if (made.userData.ownField) { fields.give((made.userData.field as THREE.Vector3).z); made.userData.ownField = false; } made.dispatchEvent({ type: 'dispose' } as never); made.geometry.dispose(); };
-  const sender = createSender(scene, camera, fixedW, mesh, { solid, faced, fieldFaced, seaFaced, gliding, freed, smallLists }), { staged, cold, cool, warm, parts } = sender;
+  const gone = (made: THREE.Mesh) => { warm(made); partial.delete(made); if (made.userData.ownField) { fields.give((made.userData.field as THREE.Vector3).z); if (made.material === fieldGliding) fields.give(made.userData.fieldEnd as number); made.userData.ownField = false; } made.dispatchEvent({ type: 'dispose' } as never); made.geometry.dispose(); };
+  const sender = createSender(scene, camera, fixedW, mesh, { solid, faced, fieldFaced, fieldGliding, seaFaced, gliding, freed, smallLists }), { staged, cold, cool, warm, parts } = sender;
   const stage: Stage = {
     canvas, aim, soften, busy: true, staged,
     probe: { ready: false, counts: {}, backend: flag('webgl', false) ? 'webgl2' : 'webgpu' },

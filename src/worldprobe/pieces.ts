@@ -234,7 +234,7 @@ export function createPieces(
     tables?: boolean;
     /** false: the far steps change at their borders as they are, their land does not glide to the coarser step's shape (glide.ts) */
     glide?: boolean;
-    /** false: the level tops of a near piece's columns stay a face to each column (tops.ts) */
+    /** false: the level tops of a piece's columns stay a face to each column (tops.ts) */
     tops?: boolean;
     /** true: the first far step as the mean of the finest step (mean.ts: exact, but it builds four finest pieces for each far piece); 'compare': as far.ts lays it out, and measured against that mean (the counts `cmp …`); else as far.ts lays it out */
     mean?: boolean | 'compare';
@@ -326,7 +326,7 @@ export function createPieces(
   }
   /** the name of a piece's file: all that the piece depends on, beside the build */
   const fileOf = (p: Spot) =>
-    `${o.region}_${o.year ?? 0}_${p.step}_${p.px}_${p.pz}_${o.bakedSky ? 1 : 0}${o.mean ? 1 : 0}_${marginOf(p.step)}${o.small ? (o.faces ? (o.free === false ? '_f' : '_e') : '_s') : ''}${o.tables === false ? '_b' : ''}${o.glide === false || !o.small || !o.faces ? '' : '_g'}${o.tops === false && p.step === 0 ? '_t' : ''}`;
+    `${o.region}_${o.year ?? 0}_${p.step}_${p.px}_${p.pz}_${o.bakedSky ? 1 : 0}${o.mean ? 1 : 0}_${marginOf(p.step)}${o.small ? (o.faces ? (o.free === false ? '_f' : '_e') : '_s') : ''}${o.tables === false ? '_b' : ''}${o.glide === false || !o.small || !o.faces ? '' : '_g'}${o.tops === false ? '_t' : ''}`;
   const put = ({ spot, scene }: (typeof arrived)[number]) => {
     const group = stage.add(scene);
     group.visible = false;

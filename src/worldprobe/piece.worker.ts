@@ -65,7 +65,7 @@ export interface PieceJob {
   tables?: boolean;
   /** the piece's land as faces that glide to the shape of the coarser piece over it, where that has a table (glide.ts) */
   glide?: boolean;
-  /** false: the level tops of a near piece's columns stay a face to each column, not joined (tops.ts) */
+  /** false: the level tops of the piece's columns stay a face to each column, not joined (tops.ts) */
   tops?: boolean;
 }
 /** Asks a worker to load the map's data of the finest step before its first piece of that step (build.ts `warmPieces`); no answer comes. */
@@ -397,20 +397,9 @@ async function build(job: PieceJob) {
       solid = job.small && job.faces ? faced : flat,
       sea = job.small && job.faces ? (b: Batch) => faced(b, SEA_LIFT) : flat;
     const loose = job.small && job.faces && job.free !== false ? (b: Batch) => faced(b, 0, true) : solid;
-    // (the tops of a near piece's columns joined where they lie at one height: tops.ts)
-    // (the counts `ground faces` and `ground faces joined`: the faces of its ground before and after)
-    const ground = (b: Batch) => {
-      const own = solid(b);
-      if (!(step === 0 && job.small && job.faces && job.tops !== false) || !built) return own;
-      const joined = joinTops(own, piece.part.x0, piece.part.z0),
-        faces = (s: Shape) => (s.faces?.geo.length ?? 0) / FACE_GEO + (s.tops?.geo.length ?? 0) / FACE_GEO;
-      built.counts['ground faces'] = faces(own);
-      built.counts['ground faces joined'] = faces(joined);
-      return joined;
-    };
     const scene: WorldScene<Shape> = built
       ? {
-          ground: ground(built.ground),
+          ground: solid(built.ground),
           carried: built.carried && solid(built.carried),
           things: (glides ? flat : loose)(built.things),
           water: sea(built.water),
@@ -435,6 +424,15 @@ async function build(job: PieceJob) {
         built.counts['ms glide'] = Math.round(performance.now() - before);
       }
     }
+    // the level tops of the piece's columns joined where they lie at one height (and, where it glides, end at one: tops.ts);
+    // the counts `ground faces` and `ground faces joined` tell the faces of its ground before and after
+    if (built && job.small && job.faces && job.tops !== false) {
+      const own = scene.ground,
+        faces = (s: Shape) => ((s.faces?.geo.length ?? 0) + (s.tops?.geo.length ?? 0)) / FACE_GEO;
+      scene.ground = joinTops(own, piece.part.x0, piece.part.z0);
+      built.counts[`ground faces step ${step}`] = faces(own);
+      built.counts[`ground faces joined step ${step}`] = faces(scene.ground);
+    }
     const lists = [
       scene.ground,
       scene.carried ?? nothing,
@@ -457,7 +455,14 @@ async function build(job: PieceJob) {
             ]
           : []),
         ...(s.free ? [s.free.geo, s.free.col, s.free.nor] : []),
-        ...(s.tops ? [s.tops.geo, s.tops.nor, s.tops.tones] : []),
+        ...(s.tops
+          ? [
+              s.tops.geo,
+              s.tops.nor,
+              s.tops.tones,
+              ...(s.tops.aim && s.tops.aimTones ? [s.tops.aim, s.tops.aimTones] : []),
+            ]
+          : []),
       ])
       .concat(
         scene.figures ? [scene.figures.a, scene.figures.b, scene.figures.c, scene.figures.d, scene.figures.e] : [],
