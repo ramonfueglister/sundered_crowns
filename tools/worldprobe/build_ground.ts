@@ -27,39 +27,87 @@ import { inhabitantsOf, type TownsJson } from '../../src/worldprobe/towns';
 import { buildWorld, windowOf } from '../../src/worldprobe/world';
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '../..');
-const year = Number(process.argv[2] ?? 1291), base = '/';
+const year = Number(process.argv[2] ?? 1291),
+  base = '/';
 // the loaders of the world graphic fetch the map's data from the page's base: here they read the files of public/
 globalThis.fetch = (async (url: string | URL | Request) => {
   const file = resolve(ROOT, 'public', String(url).replace(/^\//, ''));
   if (!existsSync(file)) return new Response(null, { status: 404 });
-  return new Response(readFileSync(file), { headers: { 'content-type': file.endsWith('.json') ? 'application/json' : 'application/octet-stream' } });
+  return new Response(readFileSync(file), {
+    headers: { 'content-type': file.endsWith('.json') ? 'application/json' : 'application/octet-stream' },
+  });
 }) as typeof fetch;
 /** the pieces of the world graphic: 200 blocks a side with 100 round them (src/worldprobe/pieces.ts) */
-const PIECE = 200, MARGIN = (N - PIECE) / 2;
+const PIECE = 200,
+  MARGIN = (N - PIECE) / 2;
 /** how far from its middle a town is surveyed, in blocks: wider the more people it has, never beyond its piece's margin */
 const reachOf = (people: number) => Math.min(MARGIN - 4, Math.round(24 + 0.9 * Math.sqrt(people / 100)) * 2);
 
 const towns = JSON.parse(readFileSync(resolve(ROOT, `public/data/towns_${year}.json`), 'utf8')) as TownsJson;
-const inhabitants = inhabitantsOf(towns), proj = await projectionOf('world', base, FINER);
+const inhabitants = inhabitantsOf(towns),
+  proj = await projectionOf('world', base, FINER);
 const pieces = new Map<string, { px: number; pz: number; sites: number[] }>();
 for (const site of inhabitants.keys()) {
-  const p = gazetteer.places[site], [wx, wz] = blockOfCell(...proj.cellOf(p.lon, p.lat)), px = Math.floor(wx / PIECE), pz = Math.floor(wz / PIECE), key = `${px},${pz}`;
+  const p = gazetteer.places[site],
+    [wx, wz] = blockOfCell(...proj.cellOf(p.lon, p.lat)),
+    px = Math.floor(wx / PIECE),
+    pz = Math.floor(wz / PIECE),
+    key = `${px},${pz}`;
   pieces.set(key, { px, pz, sites: [...(pieces.get(key)?.sites ?? []), site] });
 }
 const out: { site: number; w: number; d: number; cells: string }[] = [];
 let done = 0;
 for (const { px, pz, sites } of pieces.values()) {
-  const piece = { ox: px * PIECE - MARGIN, oz: pz * PIECE - MARGIN, part: { x0: MARGIN, z0: MARGIN, x1: MARGIN + PIECE, z1: MARGIN + PIECE } }, w = windowOf(piece.ox, piece.oz);
-  const region = await loadWindow('world', w.gx0, w.gy0, w.w, w.h, base, FINER), mapW = region.worldW ?? region.mapW, mapH = region.worldH ?? region.mapH;
-  buildWorld(region, piece, gazetteer.places, [], true, 0, await loadClimate(base, mapW, mapH), inhabitants, await loadModels(base), await loadForest(base, year, mapW, mapH), null, null, null, null, (s, free) => {
-    if (!sites.includes(s.id)) return;
-    const reach = reachOf(inhabitants.get(s.id)!), side = 2 * reach + 1, bits = new Uint8Array(Math.ceil((side * side) / 8));
-    for (let dz = -reach; dz <= reach; dz++) for (let dx = -reach; dx <= reach; dx++) if (free(dx, dz)) { const k = (dz + reach) * side + dx + reach; bits[k >> 3] |= 1 << (k & 7); }
-    out.push({ site: s.id, w: side, d: side, cells: Buffer.from(bits).toString('base64') });
-  });
+  const piece = {
+      ox: px * PIECE - MARGIN,
+      oz: pz * PIECE - MARGIN,
+      part: { x0: MARGIN, z0: MARGIN, x1: MARGIN + PIECE, z1: MARGIN + PIECE },
+    },
+    w = windowOf(piece.ox, piece.oz);
+  const region = await loadWindow('world', w.gx0, w.gy0, w.w, w.h, base, FINER),
+    mapW = region.worldW ?? region.mapW,
+    mapH = region.worldH ?? region.mapH;
+  buildWorld(
+    region,
+    piece,
+    gazetteer.places,
+    [],
+    true,
+    0,
+    await loadClimate(base, mapW, mapH),
+    inhabitants,
+    await loadModels(base),
+    await loadForest(base, year, mapW, mapH),
+    null,
+    null,
+    null,
+    null,
+    (s, free) => {
+      if (!sites.includes(s.id)) return;
+      const reach = reachOf(inhabitants.get(s.id)!),
+        side = 2 * reach + 1,
+        bits = new Uint8Array(Math.ceil((side * side) / 8));
+      for (let dz = -reach; dz <= reach; dz++)
+        for (let dx = -reach; dx <= reach; dx++)
+          if (free(dx, dz)) {
+            const k = (dz + reach) * side + dx + reach;
+            bits[k >> 3] |= 1 << (k & 7);
+          }
+      out.push({ site: s.id, w: side, d: side, cells: Buffer.from(bits).toString('base64') });
+    },
+  );
   if (++done % 20 === 0) console.log(`${done} of ${pieces.size} pieces`);
 }
 out.sort((a, b) => a.site - b.site);
 const path = resolve(ROOT, `public/data/ground_${year}.json`);
-writeFileSync(path, JSON.stringify({ year, about: 'Building ground of the towns of the world graphic, per site of the gazetteer: w x d blocks of 2 m round the centre, rows north to south, bit 1 = a house can stand. Written by tools/worldprobe/build_ground.ts.', metresPerBlock: 2, sites: out }) + '\n');
+writeFileSync(
+  path,
+  `${JSON.stringify({
+    year,
+    about:
+      'Building ground of the towns of the world graphic, per site of the gazetteer: w x d blocks of 2 m round the centre, rows north to south, bit 1 = a house can stand. Written by tools/worldprobe/build_ground.ts.',
+    metresPerBlock: 2,
+    sites: out,
+  })}\n`,
+);
 console.log(`ground_${year}.json: ${out.length} of ${inhabitants.size} towns`);
