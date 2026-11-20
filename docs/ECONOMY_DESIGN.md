@@ -47,7 +47,8 @@ players and the AI of realms without a player act through the same commands.
 | 17 | Distance in trade: goods travel for days, and carrying costs labour | proposed 17 Nov 2026 (https://claude.ai/artifact/9Gt22ijoL8Xdqx4cfLM7NV), variant B agreed by Ramon ("ok"); held back until the money drain was cleared (features 15 and 16); built after his choice of 18 Nov 2026 ("Krone gibt aus, was sie einnimmt": then the distance). How the Americas stay apart in 1356 is asked of him (card of 18 Nov 2026). Built, with tests and numbers; not yet in the running world (section 17) |
 | 19 | The firms and households keep the working days of their faith | step 3 of way A of the proposal «Personen: Archiv der Toten und Tagesplan» (https://claude.ai/artifact/8UqSxP49CfvpPfX1UCDULc), chosen by Ramon 19 Nov 2026, with merge and deploy ("vorwärts machen alles mergren comitten und feddich", "du darfst deployen"). Built, with tests and numbers from the game (section 19); people feature 8 holds the calendars |
 | 20 | The days of rest without a leak | after feature 19 Ramon wrote "naja jetzt sind wir aber nicht fertig" (19 Nov 2026), chose to damp the firms' price rule first, "nur literaturkonform"; Calvo held the prices but cost work, and he chose "Zuerst Leck an Ruhetagen schliessen" (card, 19 Nov 2026). Built: materials for the next working day, the owner on his working days on the profit of the year; with tests and numbers from the game (section 20) |
-| 21 | A world knows the history only up to its start | the open gap of feature 20, found to come from the history of the placeholder tables: a world of 1291 expected the recovery after the plague of 1348. Under Ramon's "nur literaturkonform" (19 Nov 2026) and his order to clear the open questions of the economy first; the port's window (data up to the date of the calibration). Built, with tests and numbers from the game (section 21) |
+| 21 | A world knows the history only up to its start | the open gap of feature 20, found to come from the history of the placeholder tables: a world of 1291 expected the recovery after the plague of 1348. Under Ramon's "nur literaturkonform" (19 Nov 2026) and his order to clear the open questions of the economy first; the port's window (data up to the date of the calibration). Built, with tests and numbers from the game (section 21). The gap of 1.5 % that remained, cleared at Ramon's choice ("Erst Restlücke 1,5 % klären", 20 Nov 2026): the owners' rule of the run it was measured against, not the days of rest; nothing built |
+| 22 | The workers who are away: sickness and childbed | step 4 of way A of the proposal «Personen: Archiv der Toten und Tagesplan», proposed 20 Nov 2026 (https://claude.ai/artifact/QK327U5QQQGWNCnL5JhHV5) and chosen by Ramon the same day («So bauen, Lohn läuft weiter»): a firm works with the workers who are there, and everybody keeps the place and the wage. Built, with tests and numbers from the game (section 22); people feature 9 holds the sicknesses and the childbeds |
 
 ## 1. Grain harvest per place
 
@@ -3420,12 +3421,43 @@ day a working day):
 The run without working days no longer grows 2.4 % a year: it is flat, as England was before the plague, and the gap
 between the two runs stays at about 1.5 % instead of widening to 4.4 %.
 
+### The gap: the owners of the run it is measured against
+
+After this feature Ramon chose to clear the gap of about 1.5 % first ("Erst Restlücke 1,5 % klären", card of
+20 November 2026). The run without working days is not the same economy without days of rest. It is never given
+working days, so its owners keep the rule of feature 18 and plan on the profit of the day before, while with working
+days they plan on the profit of the year (feature 20). A third run separates the two: the same world given a calendar
+with the factor 1 on every day, which has the rules of feature 20 and no day of rest (`npm run workdays:check -- 3
+factor1`):
+
+| | year 1 | year 2 | year 3 |
+|---|---|---|---|
+| real GDP, the calendars of the faiths | 178,367 | 180,280 | 179,635 |
+| real GDP, the factor 1 on every day | 178,258 | 178,655 | 179,521 |
+| real GDP, without working days | 180,955 | 182,915 | 182,486 |
+| without work at the end of the year (calendars / factor 1 / none) | 2.6 / 3.4 / 1.9 % | 2.7 / 3.3 / 1.9 % | 2.8 / 3.2 / 2.0 % |
+| mean price level (calendars / factor 1 / none) | 1.004 / 0.997 / 1.002 | 0.996 / 0.997 / 1.001 | 0.999 / 0.997 / 1.001 |
+
+- **The days of rest cost nothing.** The world with the calendars of the faiths makes 0.1, 0.9 and 0.1 % more than
+  the same world without a day of rest, and fewer of its workers are without work.
+- **The whole gap is the owner's rule.** The factor 1 on every day and no working days differ only in the profit the
+  owner plans on, and they differ by 1.5, 2.3 and 1.6 %, the gap itself.
+- **On the profit of the day before the owners take more.** Over the three years their income is 4.3 % above the run
+  with the factor 1 while GDP is 1.9 % above: 31.2 % of GDP against 30.5 %. The owner's budget comes out of the
+  expected profit and is not below 0 (A.46, A.49 with the rule of feature 18). Cut day by day, a firm that loses on some days gives
+  its owner 0 on those days and the full profit on the others, more than the cut of the profit of the year (feature
+  18 found a third of the owners in the red on a day). That surplus is demand; the profit of the year (feature 20)
+  takes most of it away.
+
+Nothing is built for the gap: the world of the game has the rule of feature 20, and the run it was measured against
+has the larger bias. The paper's period over which the owner expects his profit is a quarter (Poledna et al. 2023,
+A.28 on quarterly profit), closer to a year than to a day.
+
 ### What stays open
 
-- **The gap of about 1.5 % to the run without working days.** It no longer widens, but in year 3 about 2.8 % of the
-  workers are without work against 2.0 % without working days. The two runs do not have the same owners: without
-  working days the owner plans on the profit of the day before (feature 18), with them on the profit of the year
-  (feature 20). Whether the gap is that difference or the days of rest themselves is the next question.
+- **Who is without work.** About 3 % of the workers in the world with the factor 1 on every day and 2.6 to 2.8 % with
+  the calendars, against one person per city at the start: what share of the workers of a medieval town was without
+  work is not set by any source used here.
 - **The tables of 1291 are still those of 1356.** Only the history is cut at the start; the accounts (people, output,
   coin, the crown's revenue) are post-plague numbers for a pre-plague world (`src/sim/tables.ts`).
 
@@ -3435,3 +3467,148 @@ State version 34. The upgrade 33 → 34 founds the economies of a world that sta
 on the day the world has reached, as the step to 24: their days and yearly figures are gone, the firms and the parts
 of the persons are given out again, and the first period is the next day of the world. The persons stay who they
 are. A world that starts in the year of its table goes on where it is: its calibration has not changed.
+
+## 22. The workers who are away
+
+Step 4 of way A of the proposal «Personen: Archiv der Toten und Tagesplan», proposed on 20 November 2026
+(https://claude.ai/artifact/QK327U5QQQGWNCnL5JhHV5) and chosen by Ramon the same day («So bauen, Lohn läuft
+weiter»). The sicknesses and the childbeds, their sources and how they are drawn are people feature 9
+(docs/PEOPLE_DESIGN.md).
+
+### Why
+
+In the port every employee works in every period (A.13: the labour of a firm is `N α`). With a day as the period a
+sick worker and a mother a week after a birth are at work like everybody else. The sick club of Morcott counted on
+average a new sickness every four to five years for a man of working age, of three to five weeks from 25 on and of
+months from 60 on (people feature 9); a mother lay in for a month.
+
+### The rule
+
+1. **Production** (A.13) is `min(a Q_s, a (N − n) α, a K κ, M β)`, with `n` the firm's employees who are away on the
+   day and `a` the factor of its day (section 19). The work effort in α (A.25, A.26) stays that of the firm's
+   employees. With nobody away it is the rule of section 19, number for number.
+2. **The worker keeps the place and the wage.** The firm pays its `N` employees as before (A.26), the worker's
+   household has the income it had, and the firm hires nobody for a worker who is away. That is how the wage runs on
+   the days of rest of section 19 too. Wages by the day worked are the target income of step 6.
+3. **A firm that sold all it had plans as if its workers had been there.** In the paper a firm's supply is the
+   demand it met (section 8), and the port measures that demand by what the firm sold of its output and its stock
+   (`Q_d_i` in the port's goods market). On a day on which the firm sold all it had, the output that its workers
+   who were away would have made counts to the demand of its next plan: its buyers took all there was, and what
+   was not made for want of hands is not a smaller demand. On a day on which it did not sell all it had, what it
+   sold is the demand, and the absences took nothing from it. The day counts to the days the firm worked as any
+   other (section 19, number 6).
+4. **A firm does not buy again the materials that its workers who were away left unused.** The port buys the
+   materials of the planned supply every period (A.18), since feature 20 those of the next working day, and uses
+   `1 / β` of them per unit made (A.13). The materials of the output the firm did not make for want of hands stay in
+   its stock, and it buys that much less at its next purchases. Bought again, they would lie in the stock day after
+   day and draw goods from the market.
+
+Rules 3 and 4 are ours: the port has no workers who are away. They follow from what the port's rules mean, the
+supply of the demand met and the materials of what is made, on days when a firm cannot make what it planned.
+
+### The rules that were measured and not kept
+
+Six combinations were built and run (`npm run absence:check -- 3`: the world of 1291 against the same world in which
+everybody is there, real GDP, and those without work at the end of the third year):
+
+| | the plan | the wage of a day away | the materials | real GDP, years 1 / 2 / 3 | without work in year 3 |
+|---|---|---|---|---|---|
+| A | what was sold; a day on which none of the firm's workers is there left out | paid | for the plan | −4.1 / −5.4 % / (not run) | 2,951 against 998 (year 2) |
+| B | as if they had been there, if sold out (rule 3) | paid | for the plan | +0.1 / +3.8 / +5.4 % | 145 against 1,036 |
+| C | rule 3 | none | for the plan | −1.6 / +1.5 / +3.6 % | 298 against 1,036 |
+| D | rule 3 | none | for those who are there | −4.0 / −5.1 / −6.8 % | 2,936 against 1,036 |
+| E | rule 3 | paid | for those who are there | −2.2 / −2.4 / −4.1 % | 2,015 against 1,036 |
+| **F** | **rule 3** | **paid** | **not bought again (rule 4)** | **−1.9 / −1.9 / −3.4 %** | **2,215 against 1,036** |
+
+- **A**, the first build: a firm short of hands reads the output it could not make as a fall in demand, plans less,
+  lets workers go, and does so again at its next plan. It had the rule for the day without anybody because without
+  it a firm of one worker who fell sick made nothing and sold nothing for weeks, planned on a demand of 0, the demand
+  pull took its supply or its price to 0, and the next day divided by that price (the engine stopped on 2 February
+  1291 with "N_d_i: cannot round NaN to an integer"). Rule 3 gives such a firm a plan on what it would have made.
+- **B and C** buy the materials of the whole plan every day while making less: the stock of materials grows, the
+  firms pay for it and lose money (their deposits 59 % below the comparison in year 3 in C), the money goes to the
+  households, who find too few goods and put it on deposit (18 to 27 % more), and the demand of those deposits
+  drives a boom.
+- **D and E** buy the port's materials times the share of the firm's workers who are there on the day they are
+  used. The port's work effort counts the materials (A.25: what supply, capital and materials allow over what the
+  employees make), so the effort and the wage (A.26) of those who are there fell with them, and so did the output
+  that rule 3 counts: the firms read part of the absences as a fall in demand again. With all its workers away a
+  firm bought nothing, and on the next day its effort and its wage were 0 (the tests of the world of 1356: a firm
+  paid 0, and the economies stopped on day 120).
+  D takes the wage of the days away from the households on top, and the slide is the steepest.
+- **F**, the rule built: the effort and the wage stay those of all the firm's employees, the output that rule 3
+  counts is what all would have made, and the stock of materials does not grow. GDP falls by 1.9 % in the first two
+  years and by 3.4 % in the third, about the share of the days lost (3.6 %), and the price level stays. The firms
+  pay the wages of the days away out of their deposits (6, 11 and 16 % below the comparison), their owners have
+  less to spend, and from the second year on the firms take on fewer workers: those without work are twice as many
+  in the third year (6.0 % of the workers against 2.8 %).
+
+### How the world gives it
+
+The world gives the engine, city by city, the runs of days on which a worker is away: the worker (the position in
+the port's list of workers, `person.agent`), the first and the last day. It gives them for a month on the first day
+of the month, and for the rest of the month when it gives the working days of the year (at the founding of the
+economies and after an upgrade). They are the days of people feature 9 of the living workers of the city (the
+present persons, people feature 7): the episodes of sickness of the person and the 30 days of childbed from each
+birth whose month reaches into the month given, the births already in the world and the next child of a woman
+(`person.bears`) if it is due in the month. Runs that meet are one run.
+
+The world computes at most to the end of a month at a time (`computeTo`), so that the days away of the next month
+are given before its first day; many days at once give what the same days give one by one (tests in
+`tests/absence.test.ts`).
+
+Code: `economy/src/clock.rs` (`Absences`, `firms_production`, `firms_expectations_and_decisions`,
+`search_and_matching`), `economy/src/lib.rs` (`absences`,
+`sce_absences`), `src/sim/systems/economy.ts` (`absences`, `computeTo`), `src/sim/people/absence.ts`; tests in
+`economy/tests/absences.rs` and `tests/absence.test.ts`.
+
+### The numbers
+
+The rule built (F), `npm run absence:check -- 6`, the world of 1291 against the same world in which everybody is
+there:
+
+| | year 1 | year 2 | year 3 | year 4 | year 5 | year 6 |
+|---|---|---|---|---|---|---|
+| days the workers are away (sick or in childbed) | 3.57 % | 3.50 % | 3.59 % | 3.53 % | 3.52 % | 3.57 % |
+| real GDP | −1.9 % | −1.9 % | −3.4 % | −3.8 % | −4.0 % | −4.2 % |
+| real GDP with the absences | 174,974 | 176,883 | 173,461 | 173,487 | 173,856 | 174,025 |
+| consumption | −2.2 % | −2.2 % | −3.6 % | −4.0 % | −4.1 % | −4.3 % |
+| investment | +1.6 % | +1.4 % | −0.1 % | −0.6 % | −0.7 % | −0.9 % |
+| employees | −0.1 % | −2.0 % | −3.3 % | −3.5 % | −3.8 % | −4.0 % |
+| employees with the absences | 35,644 | 34,910 | 34,400 | 34,423 | 34,337 | 34,266 |
+| without work at the end of the year | 971 / 944 | 1,705 / 998 | 2,215 / 1,036 | 2,192 / 938 | 2,278 / 913 | 2,349 / 904 |
+| households' deposits | +1.3 % | +2.7 % | +3.8 % | +4.9 % | +6.2 % | +7.5 % |
+| firms' deposits | −6.1 % | −11.4 % | −16.4 % | −21.2 % | −25.7 % | −30.3 % |
+| mean price level | 1.0049 / 1.0042 | 0.9920 / 0.9956 | 0.9983 / 0.9993 | 0.9991 / 0.9986 | 0.9988 / 0.9967 | 1.0015 / 0.9973 |
+
+Output and employment settle after the third year. With the absences the world makes 173,500 to 174,000 a year and
+employs 34,300 to 34,400 from year 3 to year 6, while the comparison grows by about 0.4 % a year; the gap, −4.2 % of
+real GDP in year 6, is a little more than the 3.6 % of the days away.
+
+The firms' deposits do not settle. They fall by about 400 a year (6,039 against 8,666 in year 6), and the
+households' deposits grow by about as much. That is the wage of the days away: the firms pay it and get no output
+for it, and the households who are paid find no more goods to buy. The transfer does not slow within six years. A
+wage by the day worked (step 6 of the day plan) would end it; a club's sick pay would be paid by its members, not by
+the firms.
+
+### Limits
+
+- **Given a month ahead.** The days away of a month follow from the workers at its start. A worker who dies passes
+  the place to an heir (people feature 2), and the heir keeps the days away of the dead worker for the rest of the
+  month; a worker who joins later in the month has none until the next.
+- **No sick pay and no lost wage.** The wage of a worker who is away is paid by the firm as on any day. A club's or
+  a guild's sick pay is not booked apart, and a day labourer would have lost the day's wage (step 6). The firms
+  carry it: their deposits fall year by year (above).
+- **Rules 3 and 4 are ours.** No paper read has workers who are away in a model of this kind; the rules take the
+  port's own (the supply of the demand met, the materials of what is made) to the days a firm cannot make what it
+  planned, and were chosen among the six combinations measured above.
+- **The owners are not away.** The owner of a firm is not one of its workers in the model.
+
+### State and upgrade
+
+The engine's state format 12: the clock keeps the absences of the month, a count and per absence the worker and the
+first and last period, and then per firm the materials its workers who were away left unused (rule 4), after the
+owners' profits of format 11. A state of an earlier format is read as one in which everybody is there. State version 35. The upgrade 34 → 35 changes nothing of the economies but the day to which
+they were given working days (`workingTo` = −1): before the next day they are given the working days of the rest of
+the year again and the absences of the rest of the month. The persons stay as they are; their days away follow from
+them.

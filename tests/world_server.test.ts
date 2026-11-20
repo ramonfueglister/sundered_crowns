@@ -35,7 +35,7 @@ describe('world server', () => {
     const fr = welcome.realms.find((r) => r.key === 'france')!;
     sa.handle({ type: 'claim', realm: fr.id });
     expect(core.s.ruler[fr.id]).toBe('dev-anna');
-    expect((a.msgs.filter((m) => m.type === 'me').pop() as any).me.realm).toBe(fr.id);
+    expect((a.msgs.filter((m) => m.type === 'me').pop() as Extract<ServerMsg, { type: 'me' }>).me.realm).toBe(fr.id);
     // a second player cannot take the same realm
     const b = conn();
     const sb = core.attach(b.c, { uid: 'dev-ben', name: 'Ben', admin: false });

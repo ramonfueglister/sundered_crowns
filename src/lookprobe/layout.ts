@@ -193,12 +193,18 @@ export interface GroundTraits {
   tint?(x: number, z: number): readonly [readonly [number, number, number], number] | null;
   /** linear RGB of the sides of meadow steps where hills are overgrown; bare earth if left out */
   slope?: readonly [number, number, number];
+  /** how far (0 … 1) the sides of meadow steps take the colour of the meadow above them, and their foot its light: from afar a step is to show as relief, not as a line drawn across the land (0 if left out) */
+  sideTop?: number;
   /**
    * What stands or grows on a column as part of the ground itself, where the land is seen from so far that a house or
    * a tree is a single block: the colour of its top, and of its sides down to `rise` blocks below the top (a field
    * only colours the top: `rise` 0).
    */
   cover?(x: number, z: number): { top: readonly [number, number, number]; side: readonly [number, number, number]; rise: number; /** how much of the top the cover colours, 0 … 1 (all of it if left out) */ share?: number; /** false: the cover is the ground's own, bare soil for one, not something that stands on it (terrain.ts `carried`) */ stands?: boolean } | null;
+  /** the houses that stand on the ground as houses where it is seen from afar (worldprobe/houses.ts, HOUSE_NUMBERS numbers each) */
+  readonly houses?: ArrayLike<number>;
+  /** the trees of the finest step where the ground draws them one by one (worldprobe/trees.ts, TREE_NUMBERS to a column, N × N columns) */
+  readonly trees?: ArrayLike<number>;
 }
 export const idx = (x: number, z: number) => z * N + x;
 export const inGrid = (x: number, z: number) => x >= 0 && z >= 0 && x < N && z < N;

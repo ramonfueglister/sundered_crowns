@@ -35,6 +35,8 @@
       "includes": [
         "server/**",
         "src/audio/**",
+        "src/buildings/**",
+        "src/figures/**",
         "src/ui/**",
         "tests/buildings/**",
         "tests/figures/**",
@@ -78,6 +80,7 @@
         "tools/lookprobe/**",
         "tools/map/**",
         "tools/roads/**",
+        "tools/settlement/**",
         "tools/stamp/**",
         "tools/zoom/**",
         "vite.config.ts"

@@ -23,6 +23,7 @@ import {
 } from '../src/sim/economy/calibration';
 import { FIGURE, FIGURES, type CitySetup, type EconomyEngine, type EconomyRules } from '../src/sim/economy/engine';
 import {
+  absences,
   cityAt,
   cityCalibrations as foundFrom,
   cityPlaces,
@@ -40,6 +41,7 @@ import { encodeState, decodeState, hashState } from '../src/sim/snapshot';
 import { STATE_VERSION, type WorldState } from '../src/sim/state';
 import { createWorldState } from '../src/sim/setup';
 import { placeDetail } from '../src/net/views';
+import { dateToDay, dayToDate } from '../src/sim/calendar';
 import { World } from '../src/sim/world';
 import { configFromEnv } from '../server/config';
 import { WorldCore } from '../server/world';
@@ -52,10 +54,15 @@ const days = (s: WorldState, w: World, n: number) => {
  *  read here in the shape the port gives it. */
 // biome-ignore lint/suspicious/noExplicitAny: the port's tables are JSON; a key's shape is the port's, not a type here
 type PortJson = Record<string, any>;
-/** The state of the economies of a world with the working days of the firms that the world gives them before its
- *  next day (economy feature 19): what the engine starts that day from. */
-const withWorkingDays = (s: WorldState, w: World) =>
-  w.economyEngine.workingDays(s.economy.cities!.model, workingDays(s, s.economy.cities!));
+/** The state of the economies of a new world with what the world gives them before its first day: the working days
+ *  of the firms (economy feature 19) and the workers who are away in the rest of the month (economy feature 22).
+ *  What the engine starts that day from. */
+const withWorkingDays = (s: WorldState, w: World) => {
+  const e = s.economy.cities!,
+    next = dayToDate(e.day + 1, s.startYear);
+  const lastOfMonth = dateToDay(next.y + (next.m === 11 ? 1 : 0), (next.m + 1) % 12, 1, s.startYear) - 1;
+  return w.economyEngine.absences(w.economyEngine.workingDays(e.model, workingDays(s, e)), absences(s, e, lastOfMonth));
+};
 const bits = (v: Float64Array) =>
   Array.from(new BigUint64Array(v.buffer, v.byteOffset, v.length), (x) => x.toString(16).padStart(16, '0')).join(' ');
 
@@ -704,7 +711,7 @@ describe('the economies of the cities in the world', () => {
   beforeAll(() => {
     for (let d = 1; d <= 400; d++) {
       advanceDay(run.s, run.w);
-      if ([45, 75, 365, 366, 367].includes(d))
+      if ([45, 75, 365, 366, 367, 396].includes(d))
         at[d] = {
           hash: hashState(run.s),
           state: encodeState(run.s),
@@ -780,9 +787,10 @@ describe('the economies of the cities in the world', () => {
     expect(e.years[0]).toBe(1356);
     expect(bits(e.years.slice(1))).toBe(bits(at[365].figures));
     // from the 366th day on the accounts hold 365 days, and the past of the expectations has a fixed size from the
-    // first day: the state of the economies no longer grows
+    // first day: the state of the economies no longer grows within a month (the workers who are away in a month,
+    // economy feature 22, are 12 bytes each, given on its first day)
     expect(at[367].model - at[366].model).toBe(0);
-    expect(e.model.length - at[367].model).toBe(0);
+    expect(at[396].model - at[367].model).toBe(0);
   });
   it('keep the books of every city and of the merchants after a year of the world', () => {
     const k = run.w.economyEngine.checks(run.s.economy.cities!.model);
@@ -824,13 +832,16 @@ describe('the economies of the cities in the world', () => {
     expect(all[largest]).toBeGreaterThan(0.65 * Math.max(...share));
   });
   it('give for many days at once what the same days give one by one', () => {
-    const { s, w } = newWorldState();
+    // the persons stay as they are in both: the workers who are away in a month follow from the persons at its
+    // start (economy feature 22), and the world's own days change them
+    const { s, w } = newWorldState(),
+      one = newWorldState();
     computeTo(s, w, 400);
-    s.day = 400;
+    for (let d = 1; d <= 400; d++) computeTo(one.s, one.w, d);
     expect(s.economy.cities!.years.length).toBe(yearRow(N));
-    expect(Buffer.compare(s.economy.cities!.model, run.s.economy.cities!.model)).toBe(0);
-    expect(bits(s.economy.cities!.years)).toBe(bits(run.s.economy.cities!.years));
-    expect(bits(s.economy.cities!.figures)).toBe(bits(run.s.economy.cities!.figures));
+    expect(Buffer.compare(s.economy.cities!.model, one.s.economy.cities!.model)).toBe(0);
+    expect(bits(s.economy.cities!.years)).toBe(bits(one.s.economy.cities!.years));
+    expect(bits(s.economy.cities!.figures)).toBe(bits(one.s.economy.cities!.figures));
   }, 120_000);
   it('are in the snapshot and in its hash: save in the middle of a month, load and go on equals going straight on', () => {
     const loaded = decodeState(at[45].state);

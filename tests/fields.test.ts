@@ -150,7 +150,7 @@ describe('the fields of a world of 1291', () => {
 describe('a world of 1291 saved before the fields', () => {
   it('gets the fields a new world has, and encodes as one', { timeout: 60_000 }, () => {
     const old = decodeState(encodeState(s)) as WorldState;
-    old.v = 34;
+    old.v = 35;
     delete (old as Partial<WorldState>).field;
     const up = upgradeState(decodeState(encodeState(old)), w, () => loadSetup(1291));
     expect(up.v).toBe(STATE_VERSION);

@@ -24,6 +24,7 @@ nothing built before Ramon agrees. Proposal with sources (German): https://claud
 | 6 | Who wants work looks for a part in the economy, in the own town and within 115 km | built 18 Nov 2026 (Ramon, 18 Nov: «weiter» on the proposal, read as «So bauen»). No new state |
 | 7 | The living and the dead: the systems go over the living, the dead go to an archive (step 1: the list of the living; step 2: the archive, with a uid for every person) | built 19 Nov 2026 (Ramon, 19 Nov: «weiter» on the proposal of the archive and the day plan, read as «So bauen» for way A: the archive first, then the day plan). Step 1 no new state, step 2 state 30 |
 | 8 | The calendar of the town: the firms work on the working days of their owner's faith (step 3 of the day plan) | built 19 Nov 2026 (Ramon, 19 Nov: way A of the proposal, after the archive the day plan; «vorwärts machen alles mergen comitten und feddich»). Economy feature 19. State 31 |
+| 9 | Sickness and childbed keep a worker from work (step 4 of the day plan) | built 20 Nov 2026 (Ramon, 20 Nov: «So bauen, Lohn läuft weiter» on the proposal https://claude.ai/artifact/QK327U5QQQGWNCnL5JhHV5). Economy feature 22. State 35 |
 
 ## Feature 1: persons of the 30 largest cities
 
@@ -865,8 +866,8 @@ Step 3 of way A of the proposal «Personen: Archiv der Toten und Tagesplan» (fe
 rest, the firms of the cities work on the working days of their owner's faith, and a household buys on the working
 days of its own faith (the owner of a firm too since economy feature 20). The calendars are a pure function
 of the faith and the date (`src/sim/holy_days.ts`): nothing of them is saved, the same year always gives the same
-days. The economy reads them (economy feature 19, docs/ECONOMY_DESIGN.md, section 19); the persons' own day (steps 4
-to 6: sickness and childbed, templates and places, a target income) follows.
+days. The economy reads them (economy feature 19, docs/ECONOMY_DESIGN.md, section 19); the persons' own day follows:
+step 4, sickness and childbed, is feature 9; templates and places (step 5) and a target income (step 6) are open.
 
 ### The calendars
 
@@ -925,3 +926,146 @@ today (1 Ramaḍān 1445 = 11 March 2024, Rosh Hashanah 5784 and 5785, Easter 20
   from the firms that work then or hold stock.
 - A firm without an owner works every day; a household of a faith without days of rest buys every day.
 - No seasons and no hours of the day yet: those are the templates of step 5.
+
+## Feature 9: sickness and childbed
+
+Step 4 of way A of the proposal «Personen: Archiv der Toten und Tagesplan» (feature 7), after the proposal of
+20 November 2026 (https://claude.ai/artifact/QK327U5QQQGWNCnL5JhHV5), which Ramon chose the same day («So bauen,
+Lohn läuft weiter»). A worker who is sick, or a mother in the month after a birth, is away from work. The firm works
+with the workers who are there and pays everybody (economy feature 22, docs/ECONOMY_DESIGN.md, section 22). Both are
+a pure function of the person and the date (`src/sim/people/absence.ts`), as the calendars of feature 8 are: nothing
+of them is saved, and the same person always has the same days.
+
+### Sickness: the sick club of Morcott
+
+The oldest source read that counts how often a person fell sick in a year is the friendly society of Morcott,
+Rutland, 1725 to 1799: men, 2,808 sickness events and 222 deaths (Riley & Alter 1996, "The sick and the well: adult
+health in Britain during the health transition", Health Transition Review 6, supplement, 19–44, tables 2 and 3). The
+manor accounts of Ramsey in the 14th century give lengths of the same size ("three or four weeks" most often; Owen,
+Brown & Skinner 2025, Journal of British Studies 64) but no rate: they count the cases, not the persons at risk.
+
+| Age | New events in five years (table 2, net incidence) | Sick time (table 2) | Mean length in days by the age at onset (table 3) |
+|---|---|---|---|
+| 20–24 | 0.77 | 0.25 % | 6.00 |
+| 25–29 | 1.33 | 1.72 % | 23.36 |
+| 30–34 | 0.96 | 1.46 % | 27.56 |
+| 35–39 | 1.31 | 2.01 % | 33.71 |
+| 40–44 | 0.97 | 1.76 % | 27.32 |
+| 45–49 | 1.16 | 1.58 % | 24.81 |
+| 50–54 | 1.50 | 3.12 % | 44.82 |
+| 55–59 | 1.43 | 3.57 % | 71.36 |
+| 60–64 | 1.90 | 7.45 % | 134.20 |
+| 65–69 | 2.22 | 15.14 % | 148.58 |
+| 70–74 | 2.77 | 24.59 % | 140.96 |
+| 75+ | 3.74 | 53.91 % | 508.77 |
+
+The rule:
+
+- A person of 15 or more who is well falls sick at the rate of the age: the club's new events per year of survival
+  over the share of the year its members were well, `(events / 5) / (1 − sick) / 365.25` a day, since a member who
+  is sick cannot fall sick anew. The persons of 15 to 19 take the values of 20 to 24: the table has no younger.
+- An episode lasts `3 + Exp(mean − 3)` days, rounded, with the mean of table 3 for the age at its onset. The club
+  paid only for bouts of three days and more (p. 20), so the table's mean is that of the bouts of three days and
+  more, and a shorter sickness does not keep a person away here either. The exponential is an assumption: the
+  source gives only the mean.
+- The next onset is drawn from the day after the episode ends.
+- The draws come from a stream of their own, by the person's uid (feature 7): the same person has the same
+  sicknesses in every run, whatever else happens in the world.
+- Women take the same table. The women's club of Ashborne in the same paper had three to four times the sick time
+  of the men, and the paper does not say whether its sickness holds the lying-in; a woman's month of childbed comes
+  on top (below).
+
+### Childbed
+
+A mother is away for 30 days from the day of the birth, the month of lying-in of 17th-century England (Astbury
+2017, "Being Well, Looking Ill: Childbirth and the Return to Health in Seventeenth-Century England", Social History
+of Medicine 30(3), 500–519), whatever her faith. The periods of the faiths, the 33 and 66 days of Leviticus 12 and
+the nifās of Islam (at most 40 days), rule purity, prayer and fasting; no source read says that they kept a woman
+from work. The world knows the day of a woman's next child in advance (`person.bears`, feature 2), so the childbed
+of a birth in the coming month is known when the month is given to the economy.
+
+### The persons against the table
+
+20,000 persons born on one day and followed to 85, without death (`tests/absence.test.ts` checks 4,000 of them: the
+rates below 75 and all lengths within 10 % of the table):
+
+| Age | New events a year (model / table) | Mean length (model / table) | Sick time (model / table) |
+|---|---|---|---|
+| 15–19 | 0.152 / – | 6.0 / – | 0.25 % / – |
+| 20–24 | 0.153 / 0.154 | 6.0 / 6.0 | 0.25 / 0.25 % |
+| 25–29 | 0.266 / 0.266 | 23.5 / 23.4 | 1.69 / 1.72 % |
+| 30–34 | 0.190 / 0.192 | 27.4 / 27.6 | 1.42 / 1.46 % |
+| 35–39 | 0.262 / 0.262 | 33.7 / 33.7 | 2.40 / 2.01 % |
+| 40–44 | 0.195 / 0.194 | 27.0 / 27.3 | 1.47 / 1.76 % |
+| 45–49 | 0.233 / 0.232 | 25.0 / 24.8 | 1.59 / 1.58 % |
+| 50–54 | 0.299 / 0.300 | 45.0 / 44.8 | 3.63 / 3.12 % |
+| 55–59 | 0.280 / 0.286 | 71.4 / 71.4 | 5.36 / 3.57 % |
+| 60–64 | 0.359 / 0.380 | 135.5 / 134.2 | 12.58 / 7.45 % |
+| 65–69 | 0.437 / 0.444 | 149.3 / 148.6 | 17.41 / 15.14 % |
+| 70–74 | 0.573 / 0.554 | 141.1 / 141.0 | 21.88 / 24.59 % |
+| 75+ (to 85) | 0.542 / 0.748 | 510.8 / 508.8 | 66.79 / 53.91 % |
+
+The rates and the lengths are the club's. Below 50 the sick time is too, within the noise of a few percent of the
+episodes. From 50 on the three columns of the source do not fit together: at 60 to 64 its rate times its length
+gives 51 days a year, 14 % of the time, against the 7.45 % of its own column. The table counts the length by the
+age at the onset and the sick time by the age on the day, and a few very long sicknesses carry the mean of the old
+(the club's sick of 75 and more were sick 54 % of their years). The rule keeps the rate and the length, so the old
+are sick more often than in the club's sick time: 12.6 against 7.5 % at 60 to 64, 67 against 54 % from 75 on, where
+being sick two thirds of the time also leaves fewer new events (0.54 against 0.75 a year).
+
+### Measured in the game (`npm run absence:check -- 3`, world of 1291, seed 1291)
+
+The workers of the world's cities in the first year: days sick a year per worker, by age, against the club's sick
+time (table 2 times 365):
+
+| Age | Women | Men | Morcott (men) | Worker-years (women / men) |
+|---|---|---|---|---|
+| 15–19 | 1.0 | 0.9 | – | 1,253 / 3,459 |
+| 20–24 | 0.9 | 0.9 | 0.9 | 1,283 / 3,542 |
+| 25–29 | 6.6 | 6.4 | 6.3 | 1,178 / 3,378 |
+| 30–34 | 5.1 | 5.1 | 5.3 | 1,120 / 3,057 |
+| 35–39 | 9.4 | 8.9 | 7.3 | 972 / 2,741 |
+| 40–44 | 5.1 | 5.6 | 6.4 | 973 / 2,510 |
+| 45–49 | 6.4 | 5.8 | 5.8 | 929 / 2,054 |
+| 50–54 | 13.7 | 13.0 | 11.4 | 922 / 1,677 |
+| 55–59 | 18.6 | 20.8 | 13.0 | 827 / 1,282 |
+| 60–64 | 50.7 | 44.2 | 27.2 | 656 / 873 |
+| 65–69 | 65.9 | 53.4 | 55.3 | 487 / 502 |
+| 70–74 | 87.2 | 67.7 | 89.8 | 252 / 250 |
+| 75+ | 224.6 | 253.2 | 196.8 | 177 / 159 |
+
+| | Year 1 | Year 2 | Year 3 |
+|---|---|---|---|
+| Days the workers are sick | 3.42 % (12.5 a year) | 3.36 % (12.3) | 3.43 % (12.5) |
+| Days they are away, sick or in childbed | 3.57 % | 3.50 % | 3.59 % |
+| Days of childbed a year per woman who works | 1.8 | 1.7 | 2.0 |
+| New sicknesses of the persons of 20 or more per death of one of them | 7.3 | 7.3 | 7.4 |
+
+A worker of the world is away about 13 days a year. The women who work are mostly women without a husband (economy
+feature 11), so few of them bear children: 2 days of childbed a year each. The world has 7.3 sicknesses per death
+against the club's 12.6 and Ramsey's 17.5: its persons fall sick at the club's rate, but die at the rate of the
+English tenants-in-chief of the 13th century (feature 1, e0 35), and the club's members were men who were admitted in
+health and of the 18th century. What the days away do to the economies of the cities is economy feature 22.
+
+### Limits
+
+- **No seasons and no epidemics.** The club's rate is a mean over 75 years; the sicknesses of winter, the summer
+  fluxes and the years of plague or famine are not in it. Steps 5 (templates with seasons) and a later feature of
+  epidemics would add them.
+- **Sickness and death are apart.** The day of death is drawn by feature 2, the sicknesses by this feature; a person
+  who dies need not have been sick, and a long sickness does not raise the risk of death. The club had 12.6 sicknesses per
+  death, Ramsey 17.5 (5.7 % of its cases fatal).
+- **One table for all.** Women take the men's table (Ashborne had three to four times the sick time); the traits
+  (feature 5), the trade, the place and the region do not shift it; accidents at work are not apart; Morcott is a
+  village of the 18th century, our world is Europe and the lands around it from 1291.
+- **Childbed is the same for every mother.** The month of lying-in is that of the English middling and better sort
+  in Astbury's sources; a poor woman will often have gone back to work sooner, and no rate of that was found.
+- **The economy is given a month at a time.** The days away of a month are given on its first day (economy feature
+  22). A worker who dies passes the place to an heir (feature 2), and the heir keeps the days away of the dead
+  worker for the rest of the month; a worker who comes later in the month has none until the next.
+- **Only the workers are away.** The owners of the firms and of the bank are not workers of the model, so their
+  sicknesses and childbeds keep nothing from work; their firm works with its workers.
+- **The wage runs on.** A worker who is away keeps the place and the wage (Ramon's choice); no sick pay of a guild or
+  club is booked apart, and a day labourer paid by the day would lose the day's wage. Wages by the day worked are
+  the target income of step 6. Without the wage of the days away the economies of the cities slid further in the
+  measurement; with it the firms carry the wages (economy feature 22).

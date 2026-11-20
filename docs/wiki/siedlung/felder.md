@@ -4,7 +4,7 @@
 
 > Jeder Hof eines Weilers hat seine eigenen Äcker. Die Fläche kommt aus der Wirtschaft, Lage und Form aus der Flurverfassung um 1291. Die Gewanne stehen mit Lage, Grösse und Zelge im Grundbuch der Welt.
 
-Ramon hat den Vorschlag am 19. November 2026 angenommen. Gebaut in Zustand 35.
+Ramon hat den Vorschlag am 19. November 2026 angenommen. Gebaut in Zustand 36.
 
 ## Das Feature
 

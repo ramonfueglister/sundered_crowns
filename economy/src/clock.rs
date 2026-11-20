@@ -92,6 +92,12 @@
 //!    on a day without any: they keep the value of the day before.
 //!
 //! Without a calendar, and on every day of the factor 1, the economy computes as before, number for number.
+//!
+//! And it carries the workers who are away (economy feature 22, [`Absences`]: sickness and childbed in the game). On a
+//! day a worker is away the labour of the firm is that of the workers who are there, `a (N − away) α` in the Leontief
+//! function; the worker keeps the place and the wage. A firm that sold all it had counts the output its workers who
+//! were away would have made to the demand of its next plan, and it does not buy again the materials they left
+//! unused. Without absences the economy computes as before, number for number.
 #![allow(non_snake_case)] // the fields of the port carry the names of the paper's appendix
 
 use beforeit::julia::min;
@@ -208,6 +214,65 @@ impl Attendance {
         }
         let c = c as usize;
         self.factor[c * self.kinds + self.day[c * self.days + t - self.from] as usize]
+    }
+}
+
+/// The workers who are away (people feature 9, economy feature 22: sickness and childbed): per absence the worker,
+/// in the port's order of the workers, and the first and the last period (counted from 1) of the run of days on which
+/// that worker is away. On such a day the worker's firm works with the workers who are there; the worker keeps the
+/// place and the wage. Empty: everybody is there, as in the port.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct Absences {
+    pub worker: Vec<u32>,
+    pub first: Vec<u32>,
+    pub last: Vec<u32>,
+}
+
+impl Absences {
+    /// Absences of `workers` workers: per absence the worker and the first and last period. Each worker is one of
+    /// them, and no run of days ends before it begins.
+    pub fn new(workers: usize, worker: Vec<u32>, first: Vec<u32>, last: Vec<u32>) -> Result<Absences, String> {
+        if first.len() != worker.len() || last.len() != worker.len() {
+            return Err(format!(
+                "absences of {} workers with {} first and {} last days",
+                worker.len(),
+                first.len(),
+                last.len()
+            ));
+        }
+        if let Some(h) = worker.iter().find(|&&h| h as usize >= workers) {
+            return Err(format!("an absence of the worker {h} of {workers}"));
+        }
+        if let Some(k) = (0..worker.len()).find(|&k| first[k] == 0 || last[k] < first[k]) {
+            return Err(format!("an absence from period {} to {}", first[k], last[k]));
+        }
+        Ok(Absences { worker, first, last })
+    }
+
+    /// Whether nobody is away.
+    pub fn is_empty(&self) -> bool {
+        self.worker.is_empty()
+    }
+
+    /// Per firm the workers it employs who are away in period `t`: `employer` is the firm of every worker (the
+    /// port's `O_h`), `index` the position of a firm by its id.
+    pub fn of_firms(
+        &self,
+        firms: usize,
+        employer: &[Option<usize>],
+        index: impl Fn(usize) -> usize,
+        t: usize,
+    ) -> Vec<u32> {
+        let mut away = vec![0; firms];
+        for k in 0..self.worker.len() {
+            if !(self.first[k] as usize..=self.last[k] as usize).contains(&t) {
+                continue;
+            }
+            if let Some(id) = employer[self.worker[k] as usize] {
+                away[index(id)] += 1;
+            }
+        }
+        away
     }
 }
 
@@ -349,6 +414,14 @@ pub struct DailyClock {
     pub attendance: Attendance,
     /// with working days and [`DailyClock::owner`]: the profits the owners plan their spending on (economy feature 20)
     pub owner_profit: OwnerProfit,
+    /// the workers who are away (economy feature 22); empty: everybody is there, as in the port
+    pub absences: Absences,
+    /// per firm, the output that its workers who are away kept it from making in the period (economy feature 22):
+    /// set by the production and read by the market of the same period, so it is not part of the state
+    pub lost: Vec<f64>,
+    /// per firm, the materials that its workers who were away left unused and that it has not yet bought less of
+    /// (economy feature 22); empty while nobody has been away
+    pub unused: Vec<f64>,
 }
 
 impl DailyClock {
@@ -380,6 +453,9 @@ impl DailyClock {
             trade: None,
             attendance: Attendance::default(),
             owner_profit: OwnerProfit::default(),
+            absences: Absences::default(),
+            lost: Vec::new(),
+            unused: Vec::new(),
         })
     }
 
@@ -572,6 +648,9 @@ impl Extension for DailyClock {
     /// times cost push times expected inflation times (1 + gap or 0). Every planning firm adjusts (the port's
     /// `theta_calvo` of 1; the port's random draw for it is not made).
     ///
+    /// With workers who are away (economy feature 22) a firm buys the port's materials (A.18) less those its workers
+    /// who were away left unused in the stock.
+    ///
     /// # Panics
     ///
     /// If the model has gained or lost firms: the clock does not follow that.
@@ -644,6 +723,14 @@ impl Extension for DailyClock {
                 I_d_i[i] *= a;
             }
         }
+        // a firm does not buy again the materials that its workers who were away left unused (economy feature 22)
+        if m.ext.unused.len() == I {
+            for i in 0..I {
+                let take = min(m.ext.unused[i], DM_d_i[i]);
+                DM_d_i[i] -= take;
+                m.ext.unused[i] -= take;
+            }
+        }
         d.I_d_i = I_d_i;
         d.DM_d_i = DM_d_i;
         d.N_d_i = N_d_i;
@@ -653,27 +740,49 @@ impl Extension for DailyClock {
     /// The port's `firms_production` (A.13, A.25); with working days ([`Attendance`]) the flows of the Leontief
     /// function are those of the day: `min(a Q_s, a N α, a K κ, M β)` with the factor `a` of the firm's day, α the
     /// productivity times the port's work effort. With the factor 1 it is the port's number for number. Every firm adds
-    /// the factor of the day to the days it worked since its last plan ([`DailyClock::worked`]).
+    /// the factor of the day to the days it worked since its last plan ([`DailyClock::worked`]). With workers who are
+    /// away ([`Absences`], economy feature 22) the labour of the day is that of the workers who are there:
+    /// `a (N − away) α`; the effort stays the one the firm's employees give. What the firm would have made with all
+    /// its workers is kept as the output lost ([`DailyClock::lost`]) for the market of the period.
     fn firms_production(m: &mut AbstractModel<Self>) -> Vec<f64> {
-        if m.ext.attendance.is_empty() {
+        if m.ext.attendance.is_empty() && m.ext.absences.is_empty() {
             m.ext.worked.iter_mut().for_each(|w| *w += 1.0);
             return base::firms_production(m);
         }
         let t = m.ext.periods_computed(m.agg.t) + 1;
         let (f, c) = (&m.firms, &mut m.ext);
-        (0..f.len())
+        let away = c.absences.of_firms(f.len(), &m.w_act.O_h, |id| f.index(id), t);
+        let mut lost = Vec::with_capacity(if c.absences.is_empty() { 0 } else { f.len() });
+        let Y = (0..f.len())
             .map(|i| {
                 let (a, alpha) = (c.attendance.factor(i, t), f.alpha_bar_i[i] * effort(f, i));
                 c.worked[i] += a;
-                min(
-                    a * f.Q_s_i[i],
+                let made = |n: i64| {
                     min(
-                        a * f.N_i[i] as f64 * alpha,
-                        min(a * f.K_i[i] * f.kappa_i[i], f.M_i[i] * f.beta_i[i]),
-                    ),
-                )
+                        a * f.Q_s_i[i],
+                        min(
+                            a * n as f64 * alpha,
+                            min(a * f.K_i[i] * f.kappa_i[i], f.M_i[i] * f.beta_i[i]),
+                        ),
+                    )
+                };
+                let y = made((f.N_i[i] - away[i] as i64).max(0));
+                if !c.absences.is_empty() {
+                    let l = made(f.N_i[i]) - y;
+                    // the materials the workers who are away did not use stay in the stock (A.13: M β per unit)
+                    if l > 0.0 {
+                        if c.unused.len() != f.len() {
+                            c.unused = vec![0.0; f.len()];
+                        }
+                        c.unused[i] += l / f.beta_i[i];
+                    }
+                    lost.push(l);
+                }
+                y
             })
-            .collect()
+            .collect();
+        c.lost = lost;
+        Y
     }
 
     /// The port's price index (A.11, A.12), which weights the prices of the firms with what they made in the period.
@@ -719,6 +828,15 @@ impl Extension for DailyClock {
         if let Some(kappa) = kappa {
             m.firms.kappa_i = kappa;
         }
+        // a firm that sold all it had would have sold what its workers who are away kept it from making: that output
+        // counts to the demand of its next plan, which the port measures by what it sold (economy feature 22)
+        let (f, c) = (&m.firms, &mut m.ext);
+        for (i, &lost) in c.lost.iter().enumerate() {
+            if lost > 0.0 && f.Q_d_i[i] >= (f.Y_i[i] + f.S_i[i]) * (1.0 - 1e-12) {
+                c.demand[i] += lost;
+            }
+        }
+        c.lost.clear();
         let keep = |now: &mut f64, before: f64| {
             if !(now.is_finite() && *now > 0.0) {
                 *now = if before.is_finite() && before > 0.0 {

@@ -22,7 +22,11 @@
 //  - the beds of such water, which are not drawn: the sides of the land that stand in the water follow them, so
 //    they reach under the water at whatever level it ends.
 //  - what stands on the ground as a thing of its own (the landmarks of the finest far step), which the coarser step
-//    does not have: it goes down into its column.
+//    does not have: it goes down into its column. The houses drawn as houses (houses.ts) that the coarser step draws
+//    too end where it has them, corner by corner; the others go down into their columns.
+//  - what the columns carry as faces inside a column (the crowns of the woods, lookprobe/terrain.ts `woodsOf`): the
+//    piece's own go down into their column, and those of the coarser piece, which the piece carries too, come up
+//    from under it to where that piece has them.
 // What stays as it is and changes at the border, in the short dissolve as before (pieces.ts): the colours of the
 // water, and the sea where the coarser step has water above the sea's level.
 //
@@ -35,7 +39,8 @@ import type { Shape } from '../lookprobe/shape';
 import { buildWater } from '../lookprobe/terrain';
 import { ballOf } from './ball';
 import { BRIGHTEST, faced, small } from './small';
-import { type Table, drawBanks, drawLand } from './table';
+import { HOUSE_NUMBERS } from './houses';
+import { type Table, drawBanks, drawLand, drawnHeights, housesOf } from './table';
 import { reliefOf } from './zoom';
 
 /**
@@ -83,7 +88,9 @@ function read(above: Above, f: Faces | undefined, ink: number) {
       above.has[i] = 1; above.ink[i] = ink;
       continue;
     }
-    // a side: the column behind it, the way it faces, its span along the edge and in height
+    // a side: the column behind it, the way it faces, its span along the edge and in height (a side inside a column,
+    // of what stands on it, is none of the column's)
+    if (level % S) continue;
     const us = [u0, u1, u1, u0], vs = [v0, v0, v1, v1], ys = axis === 0 ? us : vs, as = axis === 0 ? vs : us, a0 = Math.min(...as), a1 = Math.max(...as), y0 = Math.min(...ys), y1 = Math.max(...ys);
     const along = Math.floor(a0 / S), across = level / S - (way > 0 ? 1 : 0), x = axis === 0 ? across : along, z = axis === 0 ? along : across;
     const at = (low: boolean, first: boolean): RGB => { for (let c = 0; c < 4; c++) if ((ys[c] === y0) === low && (as[c] === a0) === first) return shown(f.col, k * FACE_COL + c * 4); return [0, 0, 0]; };
@@ -155,13 +162,16 @@ const coarse = (y: number) => (SEA_Y + (y / S - SEA_Y) / TALLER) * S;
  * a walk over a piece's columns and their neighbours took 30 ms where it now takes a few.)
  */
 interface Columns {
-  n: number; fine: Table; parent: Table; above: Above;
+  /** `h`, `theirH`: the tops of the piece's columns and of the coarser piece's as they are drawn, which is lower than their tables have them where trees stand (table.ts `drawnHeights`) */
+  n: number; fine: Table; parent: Table; above: Above; h: ArrayLike<number>; theirH: ArrayLike<number>;
   over: Int32Array; from: Int32Array; aim: Int32Array; way: Uint8Array; surface: Float32Array;
   gliding: number; coast: boolean; water: boolean; theirs: boolean;
 }
 function columnsOf(fine: Table, parent: Table, above: Above): Columns {
+  // (the heights the two pieces draw: where trees stand, those are lower than their tables have them)
+  const h = drawnHeights(fine), theirH = drawnHeights(parent);
   const n = fine.side, pn = parent.side, own = fine.part, fox = fine.ox, foz = fine.oz, pox = parent.ox, poz = parent.oz;
-  const h = fine.h, wet = fine.wet, surf = fine.surf, theirH = parent.h, theirWet = parent.wet, theirSurf = parent.surf;
+  const wet = fine.wet, surf = fine.surf, theirWet = parent.wet, theirSurf = parent.surf;
   const over = new Int32Array(n * n).fill(-1), from = new Int32Array(n * n), aim = new Int32Array(n * n), way = new Uint8Array(n * n), surface = new Float32Array(n * n).fill(NaN);
   let gliding = 0, coast = false, water = false, theirs = false;
   for (let z = Math.max(0, own.z0 - 1); z < Math.min(n, own.z1 + 1); z++) for (let x = Math.max(0, own.x0 - 1); x < Math.min(n, own.x1 + 1); x++) {
@@ -180,7 +190,7 @@ function columnsOf(fine: Table, parent: Table, above: Above): Columns {
     if (way[i] !== LAND) coast = true;
     if (x >= own.x0 && x < own.x1 && z >= own.z0 && z < own.z1) gliding++;
   }
-  return { n, fine, parent, above, over, from, aim, way, surface, gliding, coast, water, theirs };
+  return { n, fine, parent, above, h, theirH, over, from, aim, way, surface, gliding, coast, water, theirs };
 }
 
 /** The colour the coarser piece's side of a column shows at a height and a place along its edge, into `tone`; false where it has no side there. */
@@ -210,17 +220,50 @@ function topsTo(tops: Float32Array, cols: Uint8Array, o: number, p: number, wx: 
   for (let c = 0; c < 4; c++) { topAt(tops, p, (sx + ((c === 1 || c === 2 ? u1 : u0) > x * S ? 1 : 0)) / 2, (sz + ((c >= 2 ? v1 : v0) > z * S ? 1 : 0)) / 2); write(tone, cols, o + c * 4); }
 }
 
-/** The faces of a mesh get where they end up and what they show there; `ink`: what the fourth byte of their direction says where the coarser step does not say otherwise. */
-function aimFaces(c: Columns, shape: Shape | undefined, ink: number) {
+/** what goes down into a column ends this many 64ths under its top */
+const SUNK = Math.round(UNDER_LAND * S);
+/**
+ * The column a face lies inside, of a ground `n` columns a side, where it is a face of what stands on the column and
+ * none of the column's own: a level face smaller than the column's top, an upright face off the edges of the columns.
+ * -1 where it is none, or off the ground.
+ */
+function insideOf(n: number, axis: number, level: number, u0: number, u1: number, v0: number, v1: number): number {
+  let x: number, z: number;
+  if (axis === 1) {
+    if (Math.abs(u1 - u0) === S && Math.abs(v1 - v0) === S && u0 % S === 0 && v0 % S === 0) return -1;
+    x = Math.floor(Math.min(u0, u1) / S); z = Math.floor(Math.min(v0, v1) / S);
+    if (Math.max(u0, u1) > (x + 1) * S || Math.max(v0, v1) > (z + 1) * S) return -1;
+  }
+  else {
+    if (level % S === 0) return -1;
+    const a0 = axis === 0 ? v0 : u0, a1 = axis === 0 ? v1 : u1, along = Math.floor(Math.min(a0, a1) / S);
+    if (Math.max(a0, a1) > (along + 1) * S) return -1;
+    x = axis === 0 ? Math.floor(level / S) : along; z = axis === 0 ? along : Math.floor(level / S);
+  }
+  return x < 0 || z < 0 || x >= n || z >= n ? -1 : z * n + x;
+}
+
+/**
+ * The faces of a mesh get where they end up and what they show there; `ink`: what the fourth byte of their direction
+ * says where the coarser step does not say otherwise. Where the mesh is what the columns carry (`standing`), the faces
+ * that lie inside a column, above its top (the crowns of a wood), go down into it: they end under its top, with no height.
+ */
+function aimFaces(c: Columns, shape: Shape | undefined, ink: number, standing = false) {
   const f: Faces | undefined = shape?.faces;
   if (!f) return;
-  const n = c.n, over = c.over, aim = c.aim, way = c.way, above = c.above, has = above.has, inked = above.ink, tops = above.tops, h = c.fine.h, fox = c.fine.ox, foz = c.fine.oz, pox = c.parent.ox, poz = c.parent.oz;
+  const n = c.n, over = c.over, aim = c.aim, way = c.way, above = c.above, has = above.has, inked = above.ink, tops = above.tops, h = c.h, fox = c.fine.ox, foz = c.fine.oz, pox = c.parent.ox, poz = c.parent.oz;
   const geo = f.geo, nor = f.nor, count = geo.length / FACE_GEO, aims = new Int16Array(count * 2), cols = new Uint8Array(f.col);
   for (let k = 0, g = 0; k < count; k++, g += FACE_GEO) {
     const axis: number = geo[g] % FLIPPED, level: number = geo[g + 1], u0 = geo[g + 2], u1 = geo[g + 3], v0 = geo[g + 4], v1 = geo[g + 5], facing = nor[k * 4 + axis];
     // (a face that does not glide aims at where it is)
     aims[k * 2] = axis === 1 ? level : axis === 0 ? u0 : v0; aims[k * 2 + 1] = axis === 1 ? 0 : axis === 0 ? u1 : v1;
     nor[k * 4 + 3] = ink;
+    const inner = standing ? insideOf(n, axis, level, u0, u1, v0, v1) : -1;
+    if (inner >= 0) {
+      if (way[inner] && (axis === 1 ? facing > 0 && level > h[inner] * S : Math.min(aims[k * 2], aims[k * 2 + 1]) >= h[inner] * S)) aims[k * 2] = aims[k * 2 + 1] = aim[inner] - SUNK;
+      if (axis === 1) aims[k * 2 + 1] = 0;
+      continue;
+    }
     if (axis === 1) {
       // the top of a column
       if (facing <= 0 || Math.abs(u1 - u0) !== S || Math.abs(v1 - v0) !== S) continue;
@@ -277,7 +320,7 @@ const BLANK: RGB = [1, 1, 1];
  *  - the sides of such a top to come, between two beds, which the water hides until they come up.
  */
 function comingFaces(c: Columns, land: Shape) {
-  const ground = land.faces!, n = c.n, over = c.over, from = c.from, aim = c.aim, way = c.way, above = c.above, tints = above.tops, own = c.fine.part, wet = c.fine.wet, h = c.fine.h, fox = c.fine.ox, foz = c.fine.oz, pox = c.parent.ox, poz = c.parent.oz;
+  const ground = land.faces!, n = c.n, over = c.over, from = c.from, aim = c.aim, way = c.way, above = c.above, tints = above.tops, own = c.fine.part, wet = c.fine.wet, h = c.h, fox = c.fine.ox, foz = c.fine.oz, pox = c.parent.ox, poz = c.parent.oz;
   const more = new Batch(), tops: number[] = [], spans: { foot: number; top: number; footAim: number; topAim: number; /** the coarser column over the side's own, and that where the coarser step has a side here */ owner: number; p: number; dir: number }[] = [];
   for (let z = own.z0; z < own.z1; z++) for (let x = own.x0; x < own.x1; x++) {
     const i = z * n + x;
@@ -345,6 +388,59 @@ function comingFaces(c: Columns, land: Shape) {
   land.ball = both(land.ball as Ball | undefined, ballOf(span));
 }
 
+/**
+ * The crowns of the coarser piece over this piece (`theirs`, the faces of what that piece's columns carry: those that
+ * lie inside a column, above its top) are added to what the piece's columns carry: they come up to where that piece
+ * has them, from under the lowest top of the columns they stand over, in their own colours all the way.
+ */
+function comingCrowns(c: Columns, carried: Shape, theirs: Faces) {
+  const n = c.n, h = c.h, theirH = c.theirH, pn = c.parent.side, shiftX = (2 * c.parent.ox - c.fine.ox) * S, shiftZ = (2 * c.parent.oz - c.fine.oz) * S;
+  const X = (u: number) => 2 * u + shiftX, Z = (v: number) => 2 * v + shiftZ, Y = (y: number) => Math.round(tall(y / S) * S);
+  const picked: number[] = [], starts: number[] = [];
+  for (let k = 0, g = 0; g < theirs.geo.length; k++, g += FACE_GEO) {
+    const kind = theirs.geo[g], axis = kind % FLIPPED, level = theirs.geo[g + 1], u0 = theirs.geo[g + 2], u1 = theirs.geo[g + 3], v0 = theirs.geo[g + 4], v1 = theirs.geo[g + 5];
+    const p = kind < RISES ? insideOf(pn, axis, level, u0, u1, v0, v1) : -1;
+    if (p < 0) continue;
+    // (a crown's sides run upwards from its foot, as terrain.ts draws them)
+    const y0 = axis === 0 ? u0 : v0, y1 = axis === 0 ? u1 : v1;
+    if (axis === 1 ? theirs.nor[k * 4 + 1] <= 0 || level <= theirH[p] * S : y0 < theirH[p] * S || y1 <= y0) continue;
+    // the columns of this piece it stands over (an upright face may lie on the edge between two)
+    const xa = axis === 0 ? X(level) : Math.min(X(u0), X(u1)), xb = axis === 0 ? X(level) : Math.max(X(u0), X(u1)), za = axis === 2 ? Z(level) : Math.min(Z(v0), Z(v1)), zb = axis === 2 ? Z(level) : Math.max(Z(v0), Z(v1));
+    const cx0 = Math.floor((xa - (axis === 0 ? 1 : 0)) / S), cx1 = Math.floor((xb - (axis === 0 ? 0 : 1)) / S), cz0 = Math.floor((za - (axis === 2 ? 1 : 0)) / S), cz1 = Math.floor((zb - (axis === 2 ? 0 : 1)) / S);
+    if (cx0 < 0 || cz0 < 0 || cx1 >= n || cz1 >= n) continue;
+    let under = Infinity;
+    for (let z = cz0; z <= cz1; z++) for (let x = cx0; x <= cx1; x++) under = Math.min(under, h[z * n + x] * S);
+    picked.push(k); starts.push(Math.round(under) - SUNK);
+  }
+  if (!picked.length) return;
+  const had = carried.faces, count = had ? had.geo.length / FACE_GEO : 0, extra = picked.length;
+  const geo = new Int16Array((count + extra) * FACE_GEO), col = new Uint8Array((count + extra) * FACE_COL), nor = new Int8Array((count + extra) * 4), aims = new Int16Array((count + extra) * 2), aimCol = new Uint8Array((count + extra) * FACE_COL);
+  if (had) { geo.set(had.geo); col.set(had.col); nor.set(had.nor); aims.set(had.aim!); aimCol.set(had.aimCol!); }
+  /** two corners of each, where it starts and where it ends, for the ball round the mesh */
+  const span: number[] = [];
+  for (let m = 0; m < extra; m++) {
+    const k = picked[m], g = k * FACE_GEO, at = count + m, o = at * FACE_GEO, start = starts[m];
+    const kind = theirs.geo[g], axis = kind % FLIPPED, level = theirs.geo[g + 1], u0 = theirs.geo[g + 2], u1 = theirs.geo[g + 3], v0 = theirs.geo[g + 4], v1 = theirs.geo[g + 5];
+    if (axis === 1) {
+      geo.set([kind, start, X(u0), X(u1), Z(v0), Z(v1)], o); aims[at * 2] = Y(level);
+      span.push(X(u0) / S, start / S, Z(v0) / S, X(u1) / S, Y(level) / S, Z(v1) / S);
+    }
+    else if (axis === 0) {
+      geo.set([kind + RISES, X(level), start, start, Z(v0), Z(v1)], o); aims[at * 2] = Y(u0); aims[at * 2 + 1] = Y(u1);
+      span.push(X(level) / S, start / S, Z(v0) / S, X(level) / S, Y(u1) / S, Z(v1) / S);
+    }
+    else {
+      geo.set([kind + RISES, Z(level), X(u0), X(u1), start, start], o); aims[at * 2] = Y(v0); aims[at * 2 + 1] = Y(v1);
+      span.push(X(u0) / S, start / S, Z(level) / S, X(u1) / S, Y(v1) / S, Z(level) / S);
+    }
+    for (let q = 0; q < FACE_COL; q++) col[at * FACE_COL + q] = aimCol[at * FACE_COL + q] = theirs.col[k * FACE_COL + q];
+    for (let q = 0; q < 3; q++) nor[at * 4 + q] = theirs.nor[k * 4 + q];
+    nor[at * 4 + 3] = 0;
+  }
+  carried.faces = { geo, col, nor, aim: aims, aimCol };
+  carried.ball = both(had || carried.pos.length ? carried.ball as Ball | undefined : undefined, ballOf(span));
+}
+
 /** The column a triangle of a list lies on: that of its middle; `back`: taken a little against its direction (a sheet of falling water stands on its column's edge). */
 function columnOf(n: number, pos: ArrayLike<number>, nor: ArrayLike<number>, t: number, back: number) {
   const o = t * 9, q = t * 12;
@@ -371,7 +467,7 @@ function ownBanks(c: Columns, land: Shape) {
  * them: from under the land or the water that lies there now.
  */
 function theirBanks(c: Columns, land: Shape, banked: Shape) {
-  const n = c.n, fine = c.fine, parent = c.parent, h = fine.h, wet = fine.wet, surf = fine.surf, pos = banked.pos as Float32Array, to = new Float32Array(pos.length / 3);
+  const n = c.n, fine = c.fine, parent = c.parent, h = c.h, wet = fine.wet, surf = fine.surf, pos = banked.pos as Float32Array, to = new Float32Array(pos.length / 3);
   for (let t = 0; t < to.length / 3; t++) {
     const o = t * 9;
     for (let q = 0; q < 3; q++) { pos[o + q * 3] = (pos[o + q * 3] + parent.ox) * 2 - fine.ox; pos[o + q * 3 + 2] = (pos[o + q * 3 + 2] + parent.oz) * 2 - fine.oz; to[t * 3 + q] = tall(pos[o + q * 3 + 1]); }
@@ -422,14 +518,16 @@ function sinkingWater(c: Columns, sea: Shape, raised: Shape) {
     const pos = sheets.pos as Float32Array, to = new Float32Array(pos.length / 3);
     for (let t = 0; t < to.length / 3; t++) {
       const o = t * 9, i = Math.floor((pos[o + 2] + pos[o + 5] + pos[o + 8]) / 3) * n + Math.floor((pos[o] + pos[o + 3] + pos[o + 6]) / 3);
-      for (let q = 0; q < 3; q++) { to[t * 3 + q] = pos[o + q * 3 + 1]; pos[o + q * 3 + 1] = Math.min(pos[o + q * 3 + 1], fine.h[i] - UNDER_LAND); }
+      for (let q = 0; q < 3; q++) { to[t * 3 + q] = pos[o + q * 3 + 1]; pos[o + q * 3 + 1] = Math.min(pos[o + q * 3 + 1], c.h[i] - UNDER_LAND); }
     }
     join(shape, sheets, to);
   }
 }
 /**
  * What stands on the ground as a thing of its own goes with the top of its column and loses its height on the way:
- * the coarser step has no such things.
+ * the coarser step has no such things. A house drawn as a house that the coarser step draws too ends where that step
+ * has it, corner by corner: houses.ts draws the same house with the same corners at every step, the coarser ones
+ * half as wide in their own blocks, and the worker adds the houses to the things last.
  */
 function thingsDown(c: Columns, things: Shape) {
   const n = c.n, aim = c.aim, way = c.way, pos = things.pos, sink = new Float32Array(pos.length / 3);
@@ -437,7 +535,27 @@ function thingsDown(c: Columns, things: Shape) {
     const x = Math.max(0, Math.min(n - 1, Math.floor(pos[v * 3]))), z = Math.max(0, Math.min(n - 1, Math.floor(pos[v * 3 + 2])));
     sink[v] = way[z * n + x] ? aim[z * n + x] / S - UNDER_LAND : pos[v * 3 + 1];
   }
+  housesOver(c, pos, sink);
   things.sink = sink; wider(things, reach(pos, sink));
+}
+/** The heights the corners of the piece's houses end at where the coarser piece has the same houses (see `thingsDown`). */
+function housesOver(c: Columns, pos: ArrayLike<number>, sink: Float32Array) {
+  const own = c.fine.houses, theirs = c.parent.houses;
+  if (!own || !theirs) return;
+  const mine = housesOf(c.fine)!, there = housesOf(c.parent)!, from = sink.length - mine.batch.pos.length / 3, drawn = mine.batch.pos;
+  // (the houses are the last of the things, drawn as the table draws them, or they are not glided)
+  if (from < 0 || !mine.ends.length || Math.abs(pos[from * 3] - drawn[0]) > 1e-3 || Math.abs(pos[from * 3 + 1] - drawn[1]) > 1e-3 || Math.abs(pos[from * 3 + 2] - drawn[2]) > 1e-3) return;
+  // a house of the coarser piece by its corner in this piece's step, counted from the world's first block
+  const at = new Map<string, number>();
+  for (let k = 0, j = 0; k < theirs.length; k += HOUSE_NUMBERS, j++) at.set(`${2 * (theirs[k] + c.parent.ox)},${2 * (theirs[k + 1] + c.parent.oz)}`, j);
+  const theirPos = there.batch.pos;
+  for (let k = 0, j = 0; k < own.length; k += HOUSE_NUMBERS, j++) {
+    const q = at.get(`${own[k] + c.fine.ox},${own[k + 1] + c.fine.oz}`);
+    if (q === undefined) continue;
+    const v0 = j ? mine.ends[j - 1] : 0, v1 = mine.ends[j], w0 = q ? there.ends[q - 1] : 0, w1 = there.ends[q];
+    if (v1 - v0 !== w1 - w0) continue;
+    for (let v = 0; v < v1 - v0; v++) sink[from + v0 + v] = tall(theirPos[(w0 + v) * 3 + 1]);
+  }
 }
 
 /**
@@ -446,24 +564,26 @@ function thingsDown(c: Columns, things: Shape) {
  * `parent` that of the coarser piece. The faces of the land get `aim` and `aimCol`, and the fourth byte of their
  * direction says whether the column they end up on is ground to the map's paper; the ground gets the tops and sides
  * that are to come and the coarser piece's banks, the water what is to stand where land sinks; the lists that move
- * get `sink`. Returns how many columns glide.
+ * get `sink`. `step`: the piece's step of the map. Returns how many columns glide.
  */
-export function glide(shapes: { ground: Shape; carried?: Shape; things?: Shape; water?: Shape; raised?: Shape }, fine: Table, parent: Table, bakedSky: boolean): number {
+export function glide(shapes: { ground: Shape; carried?: Shape; things?: Shape; water?: Shape; raised?: Shape }, fine: Table, parent: Table, bakedSky: boolean, step: number): number {
   const pn = parent.side, own = fine.part;
   // the coarser piece's own columns over this piece, drawn for their colours
   const qx = Math.floor((fine.ox + own.x0) / 2) - parent.ox, qz = Math.floor((fine.oz + own.z0) / 2) - parent.oz, wide = (own.x1 - own.x0) / 2, deep = (own.z1 - own.z0) / 2;
   if (qx < 1 || qz < 1 || qx + wide >= pn || qz + deep >= pn) return 0;
-  const quarter = { x0: qx, z0: qz, x1: qx + wide, z1: qz + deep }, drawn = drawLand(parent, bakedSky, quarter);
+  const quarter = { x0: qx, z0: qz, x1: qx + wide, z1: qz + deep }, drawn = drawLand(parent, bakedSky, quarter, step + 1);
   const above: Above = { side: pn, tops: new Float32Array(pn * pn * 12), has: new Uint8Array(pn * pn), ink: new Uint8Array(pn * pn), sides: new Map() };
   read(above, faced(drawn.ground).faces, 1);
-  if (drawn.carried) read(above, faced(drawn.carried).faces, 0);
+  const theirCarried = drawn.carried ? faced(drawn.carried).faces : undefined;
+  read(above, theirCarried, 0);
 
   const c = columnsOf(fine, parent, above);
   if (!c.gliding) return 0;
   aimFaces(c, shapes.ground, 127);
-  aimFaces(c, shapes.carried, 0);
+  aimFaces(c, shapes.carried, 0, true);
   if (!shapes.ground.faces?.aim) return c.gliding;
   comingFaces(c, shapes.ground);
+  if (shapes.carried && theirCarried) comingCrowns(c, shapes.carried, theirCarried);
 
   // The lists: what is no face moves by the height each of its corners ends up at.
   if (c.water) {
