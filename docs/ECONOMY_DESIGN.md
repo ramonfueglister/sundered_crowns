@@ -670,7 +670,7 @@ numbers bit for bit (tested).
 - Without a source and marked as our own: the window of 365 days as such, the plan day by the order of the firms,
   all firms planning on the first day, and three of the seven conversions below.
 
-**From the year to the day** (`dailyEconomy` in `src/sim/economy/calibration.ts`; the table of sources
+**From the year to the day** (`dailyEconomy` in `src/sim/economy/daily.ts`; the table of sources
 `data/economy/england_1356.json` is unchanged but for the two entries of the clock: 365 days a year, an assumption,
 and 30 days between two plans, from Eurace@Unibi).
 
@@ -1706,7 +1706,7 @@ person without work, so the share they consume of it (`psi`) and the share they 
 higher (London 0.18 %, Cairo 0.03 %). No other number of a city changes; a test compares every parameter.
 
 The calibration tool still computes the benefit of the original code when the table asks for it
-(`unemploymentBenefit` in `src/sim/economy/calibration.ts`), and the engine still computes such cities.
+(`unemploymentBenefit` in `src/sim/economy/accounts.ts`), and the engine still computes such cities.
 
 ### Why the cities hold without it
 
