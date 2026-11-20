@@ -19,7 +19,6 @@ const names = new Map(citiesOf(year).map((c) => [c.site, c.name]));
 let ends = 0,
   tees = 0,
   crosses = 0,
-  bends = 0,
   bigE = 0,
   bigT = 0,
   bigC = 0,
@@ -27,7 +26,7 @@ let ends = 0,
 const blocks: number[] = [];
 const rows: string[] = [];
 for (const [site, t] of found.streets) {
-  spread += (t as any).spread ? 1 : 0;
+  spread += 'spread' in t && t.spread ? 1 : 0;
   if (t.streets.length >= 20) {
     bigE += t.nodes.ends;
     bigT += t.nodes.tees;
@@ -36,7 +35,6 @@ for (const [site, t] of found.streets) {
   ends += t.nodes.ends;
   tees += t.nodes.tees;
   crosses += t.nodes.crosses;
-  bends += t.nodes.bends;
   blocks.push(...t.blocks);
   const len = t.streets.reduce((n, q) => n + Math.abs(q.x1 - q.x0) + Math.abs(q.z1 - q.z0), 0);
   rows.push(
@@ -59,6 +57,6 @@ console.log(
   `blocks ${blocks.length}, of 200 m² and more ${big.length}: median ${big[big.length >> 1]} m², tau ${tau.toFixed(2)} (Lämmer et al. 2006: 1.9)`,
 );
 for (const name of ['Paris', 'Venice', 'Zürich', 'Bayonne', 'Limoges', 'Cairo']) {
-  const r = rows.find((q) => q.startsWith(name + '\t'));
+  const r = rows.find((q) => q.startsWith(`${name}\t`));
   if (r) console.log(r);
 }

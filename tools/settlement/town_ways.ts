@@ -47,14 +47,13 @@ const lines = roads.lines.map((l) => {
 });
 const grid = new Map<number, { l: number; i: number }[]>();
 const key = (x: number, y: number) => Math.floor(y) * 65536 + Math.floor(x);
-lines.forEach((l, li) =>
+for (const [li, l] of lines.entries())
   l.pts.forEach(([x, y], i) => {
     const k = key(x, y),
       a = grid.get(k);
     if (a) a.push({ l: li, i });
     else grid.set(k, [{ l: li, i }]);
-  }),
-);
+  });
 
 const out: { site: number; ways: { a: number; k: number }[] }[] = [];
 for (const site of [...new Set(land.town)].sort((a, b) => a - b)) {
@@ -94,7 +93,7 @@ const file = {
   source: `the ways of public/data/roads_${year}.json that leave each town (tools/settlement/town_ways.ts): a the direction (radians, east 0, south positive), k the kind (0 track, 1 road, 2 highway)`,
   towns: out,
 };
-writeFileSync(resolve(ROOT, `src/sim/content/town_ways_${year}.json`), JSON.stringify(file) + '\n');
+writeFileSync(resolve(ROOT, `src/sim/content/town_ways_${year}.json`), `${JSON.stringify(file)}\n`);
 const counts = out.map((t) => t.ways.length).sort((a, b) => a - b);
 console.log(
   `town_ways_${year}.json: ${out.length} towns; ways per town ${counts[0]} / ${counts[counts.length >> 1]} / ${counts[counts.length - 1]}; without a way ${counts.filter((c) => c === 0).length}`,

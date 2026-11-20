@@ -15,7 +15,7 @@ export const MICRO = 0.1;
 export const HEIGHT = 1.2;
 
 /** Which instance colour a part takes. */
-export const enum Slot {
+export enum Slot {
   Skin = 0,
   Tunic = 1,
   Legs = 2,
@@ -26,7 +26,7 @@ export const enum Slot {
   Hair = 7,
 }
 /** Which way a part moves. */
-export const enum Joint {
+export enum Joint {
   Body = 0,
   LegL = 1,
   LegR = 2,
@@ -35,7 +35,7 @@ export const enum Joint {
   Head = 5,
 }
 /** What a figure carries (0: nothing). */
-export const enum Load {
+export enum Load {
   None = 0,
   Sack = 1,
   Basket = 2,
@@ -45,12 +45,12 @@ export const enum Load {
   Bundle = 6,
 }
 /** The cut of the body garment. */
-export const enum Cut {
+export enum Cut {
   Short = 0,
   Long = 1,
 }
 /** What a figure wears on the head. */
-export const enum Head {
+export enum Head {
   Hood = 10,
   Veil = 11,
   StrawHat = 12,

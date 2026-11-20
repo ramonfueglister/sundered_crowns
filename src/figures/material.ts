@@ -72,7 +72,8 @@ const STRIDE = 2 * Math.PI * 0.92;
 export function interleave(lists: readonly Float32Array[], count: number): Float32Array {
   const w = lists.length * 4,
     out = new Float32Array(Math.max(count, 1) * w);
-  for (let i = 0; i < count; i++) lists.forEach((l, k) => out.set(l.subarray(i * 4, i * 4 + 4), i * w + k * 4));
+  for (let i = 0; i < count; i++)
+    for (let k = 0; k < lists.length; k++) out.set(lists[k].subarray(i * 4, i * 4 + 4), i * w + k * 4);
   return out;
 }
 
@@ -198,7 +199,8 @@ function geometry(which: 'near' | 'far', numbers: THREE.InstancedInterleavedBuff
   // The five numbers per figure go to the graphics card as ONE interleaved vertex buffer: five separate ones with the
   // three of the kit made more than WebGPU's eight by default (maxVertexBuffers), so the pipeline failed and no
   // figure was drawn on a real WebGPU device (Chrome on a Mac, 15 November 2026).
-  NUMBERS.forEach((name, k) => g.setAttribute(name, new THREE.InterleavedBufferAttribute(numbers, 4, k * 4)));
+  for (const [k, name] of NUMBERS.entries())
+    g.setAttribute(name, new THREE.InterleavedBufferAttribute(numbers, 4, k * 4));
   return g;
 }
 /** Lets a mesh's geometry go: the numbers of its figures, not the kit's shape, which all meshes share. */
@@ -226,7 +228,8 @@ export function figureMeshes(f: Figures): {
   near: THREE.Mesh<THREE.InstancedBufferGeometry>;
   far: THREE.Mesh<THREE.InstancedBufferGeometry>;
 } {
-  const m = (shared ??= material()),
+  shared ??= material();
+  const m = shared,
     numbers = new THREE.InstancedInterleavedBuffer(interleave([f.a, f.b, f.c, f.d, f.e], f.count), 20);
   const make = (which: 'near' | 'far') => {
     const mesh = new THREE.Mesh(geometry(which, numbers, f.count), m);

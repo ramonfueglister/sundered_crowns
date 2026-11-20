@@ -12,7 +12,7 @@
 import { Cut, Head, Load } from './kit';
 
 /** What a figure does: stands about, walks a way back and forth, or works on the spot. */
-export const enum Mode {
+export enum Mode {
   Stand = 0,
   Walk = 1,
   Work = 2,

@@ -211,7 +211,10 @@ function facade(
   }
   if (k === 0 && s === o.canal) {
     // the canal front: the water gate in the middle, where the goods come in (Venetian Gothic: the portico on the canal)
-    axes.forEach((t, i) => (i === Math.floor(n / 2) ? gate(b, wl, t, y, 3, 6, mt) : win(t)));
+    axes.forEach((t, i) => {
+      if (i === Math.floor(n / 2)) gate(b, wl, t, y, 3, 6, mt);
+      else win(t);
+    });
     return;
   }
   if (k === 0) {
