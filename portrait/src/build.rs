@@ -2072,6 +2072,19 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
         crate::pose::pose(&mut merged, stand, axis, foot, y0);
         neck = [axis[0], foot, axis[1]];
     }
+    // (round 137) What of the gown still stands through the cloth over it is set under that cloth (layers.rs
+    // `sink`): the lift above moved that cloth's corners, and a fold of the gown between three of them came
+    // through all the same. Done here, where everything stands as it is drawn: the pose shears the layers
+    // against each other at the neck
+    if let Some(d) = garb {
+        if let Some(g) = merged.iter().position(|s| s.tex.as_deref().is_some_and(|t| t.contains(d.gown))) {
+            let mut gown = std::mem::replace(&mut merged[g], Surface::new(mat(0.0)));
+            for s in merged.iter().filter(|s| s.tex.as_deref().is_some_and(|t| [d.veil, d.veil_back, d.wimple, d.hood_up, d.hood_back].iter().any(|n| t.contains(n)))) {
+                crate::layers::sink(&mut gown, s, y0, crate::layers::UNDER, crate::layers::THROUGH);
+            }
+            merged[g] = gown;
+        }
+    }
     // the bust leaning back, where the dress asks for it
     let lean = garb.map_or(0.0, |d| crate::dress::by_sex(d.lean[0], d.lean[1], fem, p.grown()));
     if lean != 0.0 {

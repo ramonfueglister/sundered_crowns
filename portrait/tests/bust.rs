@@ -5,7 +5,8 @@
 mod common;
 
 use common::{head, person};
-use sc_portrait::layers::{lift, GAP, REACH};
+use sc_portrait::dress::ENGLAND_1356;
+use sc_portrait::layers::{lift, sink, GAP, REACH, THROUGH, UNDER};
 use sc_portrait::pose::{hold_bust, BUST_SIDE, FRONT, FRONT_TOP};
 use sc_portrait::{build, Mat, Surface};
 
@@ -133,6 +134,79 @@ fn cloth_over_the_gown_is_lifted_off_it() {
     // a gown that faces the other way at the same place (the inside of a fold) does not count
     let mut over = places(0.02, 1.0, 0.3);
     assert_eq!(lift(&mut over, &square(0.0, -1.0), 2.0, GAP, REACH), 0, "a gown facing against");
+}
+
+#[test]
+fn what_of_the_gown_still_came_through_is_sunk_under_the_cloth_over_it() {
+    // `lift` moves the corners of the cloth over the gown; a fold of the gown that stands up between three of
+    // them came through all the same (round 137: specks of the gown's colour on a hood's cape). Such a place of
+    // the gown is set a little inside the cloth over it (src/layers.rs `sink`): here under a flat cloth that
+    // faces +z at depth 0.
+    let over = square(0.0, 1.0);
+    let places = |z: f32, way: f32, y: f32| {
+        let mut s = Surface::new(Mat { rough: 1.0, metal: 0.0, double: true });
+        s.pos = vec![[0.3, y, z], [0.6, y, z], [0.5, y + 0.2, z]];
+        s.nrm = vec![[0.0, 0.0, way]; 3];
+        s
+    };
+    // through the cloth, and close inside it: set to the gap inside
+    for z in [0.03, THROUGH - 0.01, -0.01] {
+        let mut gown = places(z, 1.0, 0.3);
+        assert_eq!(sink(&mut gown, &over, 2.0, UNDER, THROUGH), 3, "at {z}");
+        assert!(gown.pos.iter().all(|q| (q[2] + UNDER).abs() < 1e-5), "at {z}: sunk to {:?}", gown.pos);
+        assert!(gown.pos.iter().zip(&places(z, 1.0, 0.3).pos).all(|(a, b)| a[0] == b[0] && a[1] == b[1]), "at {z}: against its own direction");
+    }
+    // far enough inside, further through than counts, beside the cloth, above the height, and where the gown
+    // faces against the cloth: left as it is
+    for (z, way, y, below, what) in [(-UNDER - 0.01, 1.0, 0.3, 2.0, "inside the gap"), (THROUGH + 0.05, 1.0, 0.3, 2.0, "too far through"), (0.03, 1.0, 1.3, 2.0, "beside the cloth"), (0.03, 1.0, 0.3, 0.2, "above the height"), (0.03, -1.0, 0.3, 2.0, "facing against")] {
+        let mut gown = places(z, way, y);
+        assert_eq!(sink(&mut gown, &over, below, UNDER, THROUGH), 0, "{what}");
+        assert_eq!(gown.pos, places(z, way, y).pos, "{what}");
+    }
+}
+
+#[test]
+fn nothing_of_the_gown_comes_through_the_cloth_over_it() {
+    // On 120 people of 15 to 68 as the builder stands them: under a hood's cape, a veil's fall and a wimple no
+    // corner of the gown stands outside that cloth (counted below the frame's chin, as the builder lifts and
+    // sinks there; a corner that is further through than `THROUGH` is not one of that place's layers).
+    let Some(h) = head() else { return };
+    let d = &ENGLAND_1356;
+    let (mut through, mut worn, mut under) = (0, 0, 0);
+    let mut worst = (0, 0u32);
+    let mut spent = 0f32;
+    for k in 0..120u32 {
+        let p = person(k, k % 2 == 0, [15.0, 24.0, 35.0, 50.0, 58.0, 68.0][(k / 2) as usize % 6]);
+        let out = build(&h, &p, 1);
+        let Some(gown) = out.surfaces.iter().find(|s| s.tex.as_deref().is_some_and(|t| t.contains(d.gown))) else { panic!("person {k}: no gown") };
+        for over in out.surfaces.iter().filter(|s| s.tex.as_deref().is_some_and(|t| [d.veil, d.veil_back, d.wimple, d.hood_up, d.hood_back].iter().any(|n| t.contains(n)))) {
+            worn += 1;
+            let mut g = gown.clone();
+            // (with no gap: only what stands outside the cloth is moved, and so counted)
+            let t0 = std::time::Instant::now();
+            let n = sink(&mut g, over, out.chin, 0.0, THROUGH);
+            spent += t0.elapsed().as_secs_f32();
+            if show() && n > 0 {
+                let moved: Vec<(f32, f32)> = g.pos.iter().zip(&gown.pos).filter(|(a, b)| a != b).map(|(a, b)| (dist(*a, *b), out.chin - b[1])).collect();
+                let deep = |lo: f32, hi: f32| moved.iter().filter(|m| m.0 >= lo && m.0 < hi).count();
+                let high = |lo: f32, hi: f32| moved.iter().filter(|m| m.1 >= lo && m.1 < hi).count();
+                println!("person {k} {}: {n} through {}; by under 1 mm {}, 1 to 3 mm {}, 3 mm and more {}; under the chin by under 0.2: {}, 0.2 to 1: {}, more: {}", if p.female { "woman" } else { "man" }, over.tex.as_deref().unwrap_or(""), deep(0.0, 0.01), deep(0.01, 0.03), deep(0.03, 9.0), high(-9.0, 0.2), high(0.2, 1.0), high(1.0, 99.0));
+            }
+            // (and how much of the gown lies close under that cloth at all)
+            let mut g = gown.clone();
+            under += sink(&mut g, over, out.chin, REACH, THROUGH);
+            through += n;
+            if n > worst.0 {
+                worst = (n, k);
+            }
+        }
+    }
+    if show() {
+        println!("{worn} cloths over a gown on 120 people; {under} corners of the gown under them, {through} through them (at most {} on person {}); looking takes {:.1} ms a cloth", worst.0, worst.1, 1000.0 * spent / worn as f32);
+        return;
+    }
+    assert!(worn >= 80 && under > 100_000, "{worn} cloths over a gown, {under} corners under them");
+    assert_eq!(through, 0, "{through} corners of the gown through the cloth over it, {} on person {}", worst.0, worst.1);
 }
 
 #[test]

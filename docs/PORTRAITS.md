@@ -5860,6 +5860,52 @@ the last. `npm run typecheck` and `npm run lint` pass.
 Pictures (project files, `portraits/`): `runde136_vorher_nachher.png` (five men, round 135 above, now
 below; three as the sample has them, two of its men under other numbers), `runde136_von_allen_seiten.png`.
 
+**Round 137: the gown no longer comes through the cloth over it** (2026-11-20). Seen in round 136 on a man
+of the sample (940009): pale specks on his hood's cape at the shoulder, from the front and from behind.
+With the linen left out of the picture they stay, with the gown left out they are gone: the gown's colour.
+Round 124 lifts the cloth over the gown off it (`layers.rs` `lift`: a corner of a cape, a veil's fall or
+a wimple that lies inside the gown or less than 8 mm outside it is set 8 mm outside). That moves the
+corners of the cloth over the gown; a fold of the gown that stands up between three of them came through
+all the same.
+
+What is changed. After the lift, and after the figure is turned into its pose, what of the gown still
+stands through the cloth over it is set 2 mm under that cloth (`layers.rs` `sink`, the lift's mirror: a
+corner of the gown that stands outside a cape, a veil or a wimple by up to 1 cm, or less than 2 mm inside
+it, goes in against its own direction; from where it then lies it is looked at again, up to three times,
+for a rolled hem has a far side). What is moved lies under the other cloth and is not seen. It is done
+after the pose because the pose shears the layers against each other at the neck: done before it, a
+sixth of the corners stood through again (1 096 of 6 577 on the test's people), nearly all by less than
+3 mm.
+
+Counted on 120 people of 15 to 68, of whom 118 wear a cloth over the gown: 6 577 corners of the gown stood
+outside the cape, veil or wimple over them (up to 370 on one person), now none. The pass looks at the
+gown's corners inside the other cloth's box only, each shared corner once, and takes 5 to 6 ms for each
+cloth over the gown (a woman in veil and wimple has two) of some 105 to 110 ms a portrait, on this
+machine and not in the browser (the cells and corners are kept by a quick hash of this file's own: with
+the standard one it took 9 ms).
+
+**The gauntlet**: 22 of 22 over the whole sample, every line where round 136 left it to the tenth (read with
+this round's builder and stage). The gauntlet reads skin; the gown under a cape is not in it.
+
+Honest about it. A fault mended, nothing new to see where there was no speck. Counted along the gown's
+own directions, which is how the pass looks too: a place where the gown shows past the cloth over it
+seen from the camera, at a hem or between two tongues of a dagged cape, is no fault and is not counted,
+and a fold more than 1 cm through would be left (none was found). The gown's surface under the cloth is
+dented where it was sunk; its directions are not made anew, which does not show under the cloth. The
+linen under the gown is not treated: the white specks of the smock at a shoulder from behind that round
+124 left were not looked at again. Seen and left, on veiled women from behind: creases across the veil
+at the shoulders' height, and on one a small dark hole in the veil at the head. The 2 mm and the 1 cm
+are by eye. Looked at on two hooded men of the sample
+from three sides, before and after.
+
+Tests: `portrait/tests/bust.rs`, two more: a corner through a flat cloth or close inside it is set 2 mm
+inside, one far enough inside, too far through, beside the cloth, above the height or facing against it
+is left; and on the 120 people no corner of the gown stands through the cloth over it. `cargo test
+--release` as a whole: 105 of 105 in one run. `tests/portrait.test.ts` and its neighbour 42 of 42; typecheck
+and lint pass.
+Pictures (project files, `portraits/`): `runde137_vorher_nachher.png` (two hooded men of the sample from
+three sides, round 136 above, now below).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
