@@ -34,7 +34,7 @@ const CROWN_PART = [0.4, 0.86] as const;
 const CROWN_INSET = 1,
   CROWN_LEAST = 8;
 /**
- * the share of a column that its trees cover, as a table keeps it (a byte: worldprobe/table.ts `packTable`), so that a
+ * the share of a column that its trees cover, as a table keeps it (a byte: worldprobe/table_pack.ts `packTable`), so that a
  * column drawn from its table has the crown it had where it was built
  */
 export const coveredBy = (cover: NonNullable<Cover>) =>

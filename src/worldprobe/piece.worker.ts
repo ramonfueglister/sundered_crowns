@@ -19,16 +19,8 @@ import { bytesOf, pack, unpack } from './pack';
 import { folderOf, kept } from './store';
 import { unbrotli } from './brotli';
 import { stamped } from './stamp';
-import {
-  type Table,
-  type TablesIndex,
-  drawTable,
-  keepTables,
-  keyOfTable,
-  tabled,
-  unpackTable,
-  whereTable,
-} from './table';
+import { type Table, type TablesIndex, drawTable, keepTables, keyOfTable, tabled, whereTable } from './table';
+import { unpackTable } from './table_pack';
 import type { Piece, WorldScene } from './world';
 
 /** a matrix that moves nothing */

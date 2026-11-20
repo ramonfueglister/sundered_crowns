@@ -542,7 +542,7 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
     if (c.rise[i]) { g.h[i] += c.rise[i]; g.occ[i] = Math.max(g.occ[i], g.h[i]); }
   }
   // a house drawn as a house hides the sky of the ground round it up to its eaves, as at the finest step (on a 64th
-  // of a block, so that a table keeps it to the bit: table.ts `packTable`)
+  // of a block, so that a table keeps it to the bit: table_pack.ts `packTable`)
   for (let k = 0; c.houses && k < c.houses.length; k += HOUSE_NUMBERS) {
     const [x0, z0, x1, z1, eaves] = c.houses.slice(k, k + 5);
     let base = -Infinity;
