@@ -138,3 +138,34 @@ describe('the journeys of the Roman-German kings (Regesta Imperii)', () => {
     expect(w.lat[stayOn(ludwig, day('1329-09-15'))]).toBeLessThan(47);
   });
 });
+
+describe('the journey of Edward I (Gough 1900)', () => {
+  const edward = loadItineraries(1291, w)!.get('Q57798')!;
+  it('put him in his kingdoms, in Gascony and in Flanders on every day the book tells', () => {
+    expect(edward.day.length).toBeGreaterThan(1000);
+    for (const p of edward.place) {
+      expect(w.lat[p]).toBeGreaterThan(42.5);
+      expect(w.lat[p]).toBeLessThan(58);
+      expect(w.lon[p]).toBeGreaterThan(-5);
+      expect(w.lon[p]).toBeLessThan(4);
+    }
+  });
+  it('put him where the chronicles have him', () => {
+    // in Gascony from 1286 to 1289, at Bordeaux in the summer of 1287
+    expect(w.lat[stayOn(edward, day('1287-06-01'))]).toBeLessThan(46);
+    // at Ghent in the winter of 1297-98
+    expect(w.lon[stayOn(edward, day('1297-12-25'))]).toBeGreaterThan(3);
+    // at the battle of Falkirk, 22 July 1298
+    const falkirk = stayOn(edward, day('1298-07-22'));
+    expect(w.lat[falkirk]).toBeGreaterThan(55.7);
+    expect(w.lat[falkirk]).toBeLessThan(56.2);
+  });
+  it('put a name at the place of that name the days around show', () => {
+    // 'St. Andrew' and 'St. Andrew's' (March 1304) are St Andrews in Fife, not a church of that saint in Somerset
+    expect(w.lat[stayOn(edward, day('1304-03-20'))]).toBeGreaterThan(56.2);
+    // 'Oleron' in Béarn (March 1289, between Luc and Bonnegarde) is Oloron, not the Île d'Oléron
+    expect(w.lat[stayOn(edward, day('1289-03-12'))]).toBeLessThan(44);
+    // Jedburgh (2 August 1304), out of reach between Stirling and Perth, is left out, not put at Edinburgh
+    expect(w.lon[stayOn(edward, day('1304-08-02'))]).toBeLessThan(-3.5);
+  });
+});
