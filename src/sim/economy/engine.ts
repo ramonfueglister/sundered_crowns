@@ -73,6 +73,9 @@ export interface EconomyRules { wage: EconomyWage; prices: EconomyPrices; saving
  *  calendar of every firm (and of its owner), and of every other household: the workers, the persons who do not work
  *  and the owners of the bank, in the engine's order. */
 export interface CityWorkingDays { days: number; kinds: number; factor: Float64Array; day: Uint8Array; calendar: Uint8Array; household: Uint8Array }
+/** The workers of a city who are away (economy feature 22): per absence the worker (the position in the engine's list
+ *  of workers) and the first and the last day of the absence, counted from 0 for the next period. */
+export interface CityAbsences { worker: Uint32Array; first: Uint32Array; last: Uint32Array }
 /** What the engine is given for a city: the port's parameters and initial conditions (JSON text) and the seed of
  *  the city's random numbers. */
 export interface CitySetup { parameters: string; initialConditions: string; seed: number }
@@ -100,6 +103,9 @@ export interface EconomyEngine {
   /** The cities of a state with the working days of their firms from their next period on (economy feature 19), one
    *  entry per city in their order. */
   workingDays(state: EconomyState, cities: readonly CityWorkingDays[]): Uint8Array;
+  /** The cities of a state with the workers who are away from their next period on (economy feature 22), one entry
+   *  per city in their order; they take the place of the absences the cities had. */
+  absences(state: EconomyState, cities: readonly CityAbsences[]): Uint8Array;
   /** The state after `periods` more periods. */
   step(state: EconomyState, periods: number): Uint8Array;
   /** The state after `periods` more periods, kept inside the engine: the same state as `step` gives, without
@@ -118,6 +124,7 @@ interface Exports {
   sce_create(list: number, len: number, plan: number, window: number, wage: number, prices: number, savings: number, crown: number, owner: number): number;
   sce_routes(state: number, len: number, routes: number, routesLen: number): number;
   sce_working_days(state: number, len: number, days: number, daysLen: number): number;
+  sce_absences(state: number, len: number, list: number, listLen: number): number;
   sce_step(state: number, len: number, periods: number): number;
   sce_figures(state: number, len: number): number;
   sce_checks(state: number, len: number): number;
@@ -256,6 +263,22 @@ export function wasmEconomyEngine(wasm: Uint8Array): EconomyEngine {
       const b = bytesOf(state);
       flush();
       return keeps(call([b, out], (e, a) => e.sce_working_days(a[0], a[1], a[2], a[3])));
+    },
+    absences(state, cities) {
+      // as `sce_absences` reads them: per city the number of its absences, then per absence the worker, the first and
+      // the last day
+      const out = new Uint8Array(cities.reduce((n, c) => n + 4 + 12 * c.worker.length, 0)), dv = new DataView(out.buffer);
+      let at = 0;
+      for (const c of cities) {
+        if (c.first.length !== c.worker.length || c.last.length !== c.worker.length) throw new Error(`absences of ${c.worker.length} workers with ${c.first.length} first and ${c.last.length} last days`);
+        dv.setUint32(at, c.worker.length, true); at += 4;
+        for (let k = 0; k < c.worker.length; k++) {
+          dv.setUint32(at, c.worker[k], true); dv.setUint32(at + 4, c.first[k], true); dv.setUint32(at + 8, c.last[k], true); at += 12;
+        }
+      }
+      const b = bytesOf(state);
+      flush();
+      return keeps(call([b, out], (e, a) => e.sce_absences(a[0], a[1], a[2], a[3])));
     },
     step,
     advance(state, periods) {

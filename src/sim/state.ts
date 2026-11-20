@@ -47,8 +47,11 @@ import type { Table } from './ecs';
  *  33: the streets and the market of every town (settlement feature 3, src/sim/settlement/streets.ts): the parcels
  *  lie at streets that grew to them, no longer on a grid; every parcel keeps its family and its size.
  *  34: a world knows the history only up to its start (economy feature 21): a world of 1291 on the table of 1356 forms
- *  its expectations from 1281 to 1291, not from the years of the plague; its economies are founded anew. */
-export const STATE_VERSION = 34;
+ *  its expectations from 1281 to 1291, not from the years of the plague; its economies are founded anew.
+ *  35: sickness and childbed (people feature 9, economy feature 22, src/sim/people/absence.ts): a worker who is away
+ *  takes nothing from the firm's labour on that day; the engine's state keeps the absences of the month (its format
+ *  12). */
+export const STATE_VERSION = 35;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {

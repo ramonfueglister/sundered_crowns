@@ -296,6 +296,13 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     if (s.startYear < w.cityEconomies.year) foundEconomy(s, w);
     s.v = 34;
   }
+  if (s.v === 34) { // 34 → 35: sickness and childbed (people feature 9, economy feature 22, src/sim/people/absence.ts).
+    // The economies go on where they are: the engine reads their state of the format before as one in which everybody
+    // is there, and is given the working days of the rest of the year and the absences of the rest of the month
+    // before it computes the next day. Nothing of the persons changes: their days away follow from them.
+    if (s.economy.cities) s.economy.cities.workingTo = -1;
+    s.v = 35;
+  }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one
   const o = s as unknown as Record<string, unknown>;
