@@ -291,6 +291,14 @@ pub struct DressSet {
     pub hair_hooded: &'static str,
     pub hair_veiled: &'static str,
     pub hair_girl: &'static str,
+    /// (round 126) A woman's plaits pinned up: each laid from below the ear forward under the lobe and up in front
+    /// of the ear to the temple, a loop beside the cheek (tools/portrait/pipeline/styles.py `PLAIT_LOOP`; empty:
+    /// the table has none). The hair of the head, its painted layer and its scalp are `hair_girl`'s, and so is the
+    /// strands' image (`under_of`). Who wears them: of those who wear plaits, the ones of `hair_looped_from` years
+    /// and more whose seed's digit is set in `looped`; girls wear their plaits hanging.
+    pub hair_looped: &'static str,
+    pub hair_looped_from: f32,
+    pub looped: [bool; 10],
     /// The hair of children under seven. Apoleia's `crop01`, cropped short, begins far back on a child's large
     /// skull: half the head a bare forehead, which reads as a shaven head.
     /// England: until round 104 the grown's `bob01`, whose fringe ends 2 cm over the eyes. A small child's face is
@@ -831,6 +839,9 @@ const ENGLAND: DressSet = DressSet {
     hair_hooded: "bob02",
     hair_veiled: "part01",
     hair_girl: "plait01",
+    hair_looped: "loop01",
+    hair_looped_from: 15.0,
+    looped: [true, false, true, true, false, true, false, true, true, false],
     hair_small: "bob08",
     coily: Some(Coily { from: 0.86, men: "coil01", women: "coil02", small: "coil03", thin: "coil03", bald: "coil04", image: "hair1356_fleece", under: ["bob01", "bob04"] }),
     boy_skin: 14.0,
@@ -1041,6 +1052,7 @@ const ENGLAND: DressSet = DressSet {
         Source { what: "hood with a short cape for men, worn on the head or thrown back", source: "Østergård 2004 (Herjolfsnes hoods); Newton 1980. Summaries only. Shares 4:3:3 PLACEHOLDER (unsourced)." },
         Source { what: "wool colours: undyed greys and browns, cheap dyes (russet, a dull blue)", source: "Statute concerning diet and apparel 1363 (russet and blanket for the poorest), read from a summary. Hex values PLACEHOLDER." },
         Source { what: "married women's hair covered by a linen veil, a wimple round the throat on older women and widows; girls in braids", source: "Newton 1980. Summary only. Ages 20 and 50 PLACEHOLDER (the simulation has no marriages yet). How the veil is worn (its rim on the forehead and on the cheeks in front of the ears, falling to the shoulders, no hair to be seen; the wimple under it, showing under the chin and round the throat): PLACEHOLDER, by eye against one veiled figure of the reference pictures (round 70). Since round 121 that is one of three ways (`veils`): the veil set back on the head over parted hair that covers the ears, the veil on forehead and cheeks, and a girl's plaits on three women in ten until 30, as unmarried. The shares, the age and the cut of the hair under the veil: PLACEHOLDER, by eye; nothing was read for them." },
+        Source { what: "plaits pinned up beside the cheeks, each from below the ear up in front of it to the temple, on six in ten of the women of 15 and more who wear plaits (round 126)", source: "PLACEHOLDER. Nothing was read for the form, the share or the age: by eye; to be checked against picture sources." },
         Source { what: "children under seven: the men's hair to the jaw with a fringe, girls and boys alike", source: "PLACEHOLDER, nothing read on small children's hair. Chosen because Apoleia's cropped hair begins far back on a child's large skull (a shaven head)." },
         Source { what: "men's hair in three lengths (to above the ear, to the ear's lobe, to the jaw), 3 : 3 : 2, and two men in ten from 15 with their hair parted in the middle, over the ears and cut at the jaw, without a fringe (round 125)", source: "PLACEHOLDER: lengths, shares and the age by eye, so that the men of a town do not all have one head. Nothing was read for the parted cut: to be checked against picture sources as the fringe is (Luttrell Psalter c. 1330, Holkham Bible)." },
         Source { what: "men's hair to the jaw with a fringe", source: "PLACEHOLDER, to be checked against picture sources (Luttrell Psalter c. 1330, Holkham Bible)." },
@@ -1070,7 +1082,7 @@ pub static ENGLAND_1356: DressSet = ENGLAND;
 /// PLACEHOLDER throughout: nothing read on what the common people of any of these lands wore; it is here so that
 /// their faces, skins and hair can be judged under the same light as England's, not as a statement about their
 /// dress. A dress of their own takes its place land by land.
-pub static PLAIN_1356: DressSet = DressSet { key: "plain1356", origins: &[], hood: [Bare; 10], veil_from: 999.0, wimple_from: 999.0, ..ENGLAND };
+pub static PLAIN_1356: DressSet = DressSet { key: "plain1356", origins: &[], hood: [Bare; 10], veil_from: 999.0, wimple_from: 999.0, hair_looped: "", ..ENGLAND };
 
 /// Every dress with a table.
 pub static SETS: [(Dress, &DressSet); 2] = [(Dress::England1356, &ENGLAND_1356), (Dress::Plain1356, &PLAIN_1356)];
@@ -1290,11 +1302,22 @@ impl DressSet {
             _ if !self.hair_veiled.is_empty() && name == self.hair_veiled => self.hair_girl,
             // (round 125) a man's parted hair has her hairline
             _ if self.hair_parted.contains(&name) => self.hair_girl,
+            // (round 126) plaits pinned up are laid on her hair
+            _ if !self.hair_looped.is_empty() && name == self.hair_looped => self.hair_girl,
             _ => name,
         }
     }
 
     /// What a man wears on the head.
+    /// The plaits of one who wears plaits: hanging (`hair_girl`), or pinned up beside the cheeks (`hair_looped`).
+    pub fn plaits_of(&self, seed: u32, age: f32) -> &'static str {
+        if !self.hair_looped.is_empty() && age >= self.hair_looped_from && self.looped[((seed / 1000) % 10) as usize] {
+            self.hair_looped
+        } else {
+            self.hair_girl
+        }
+    }
+
     /// The hair of the head of a person with this seed at this age: one of `hair_lengths` by its share, else
     /// `hair` (and `hair` in place of parted hair on a boy, `hair_parted_from`).
     pub fn hair_of(&self, seed: u32, age: f32) -> &'static str {
@@ -1354,6 +1377,18 @@ impl DressSet {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn six_in_ten_of_those_in_plaits_pin_them_up_from_fifteen() {
+        let d = &ENGLAND_1356;
+        let count = |age: f32, set: &DressSet| (0..10_000).filter(|&s| set.plaits_of(s, age) == set.hair_looped).count();
+        assert_eq!((count(14.9, d), count(15.0, d), count(25.0, d)), (0, 6000, 6000));
+        // a girl's hair, her painted layer and her scalp are under them
+        assert_eq!(d.under_of(d.hair_looped), d.hair_girl);
+        // the plain dress of the world's people, and a table without them: every plait hangs
+        assert_eq!(count(25.0, &PLAIN_1356), 0);
+        assert!((0..100).all(|s| PLAIN_1356.plaits_of(s, 25.0) == PLAIN_1356.hair_girl));
+    }
 
     #[test]
     fn women_of_england_wear_the_veil_three_ways() {

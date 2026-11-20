@@ -1012,10 +1012,13 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
         // (England's `plait01_rope`), drawn with their own
         // (tightly curled hair, round 111: one mass, drawn with the image of its coils)
         let body_image = garb.map_or("", |d| d.coily.as_ref().filter(|_| d.is_coily(name)).map_or(d.body_image, |c| c.image));
-        if let Some(sf) = mh_rope(dir, &format!("{name}_body"), body_image, &x.pp, &h.base, &|_| hair) {
+        // (round 126: plaits pinned up are laid on a girl's hair: her body of hair, and her strands' image)
+        let under = garb.map_or(name.as_str(), |g| g.under_of(name));
+        let body = if crate::real::exists(&format!("{dir}/{name}_body.txt")) { name.as_str() } else { under };
+        if let Some(sf) = mh_rope(dir, &format!("{body}_body"), body_image, &x.pp, &h.base, &|_| hair) {
             out.push(sf);
         }
-        if let Some(sf) = mh_rope(dir, &format!("{name}_rope"), "", &x.pp, &h.base, &|_| hair) {
+        if let Some(sf) = mh_rope(dir, &format!("{name}_rope"), &format!("{under}_rope"), &x.pp, &h.base, &|_| hair) {
             out.push(sf);
         }
         // real look: a painted cap of fine hairs under the cards, if there is one

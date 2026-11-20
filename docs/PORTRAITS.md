@@ -5125,6 +5125,58 @@ bowl cut). `lib.rs`: the shares, and that each cut's files are there. Cargo: 88 
 numbers that draw the parted hair, as round 124 drew them and now), `runde125_von_allen_seiten.png` (one of
 them from five sides).
 
+**Round 126: plaits pinned up beside the cheeks** (2026-11-20). The hair again, now the women's. The
+reference's women wear their plaits looped beside the face, from the temple down along the cheek and up
+again, under a band round the head (on one sheet of two couples). Ours wore
+plaits one way: hanging in front of the shoulders, on girls and on grown women alike.
+
+What is changed. Six in ten of the women of 15 and more who wear plaits pin them up
+(`DressSet::hair_looped`, `looped`, `hair_looped_from`, `plaits_of`): each plait is laid from the place
+below the ear where it begins, forward under the lobe and up in front of the ear to the temple, where its
+end goes under the hair: a loop of plait beside each cheek, from the jaw's corner to the temple. It is the
+plait that was there on another way (`tools/portrait/pipeline/styles.py` `PLAIT_LOOP`: the way as places on
+the head), 2.5 cm broad instead of 2.9, in a file of the strands alone (`loop01_rope`, 52 kB). The hair of
+the head, its painted layer, its scalp and the strands' image are the girl's (`under_of`; the builder takes
+another cut's body of hair where a cut has none of its own). Girls under 15 wear their plaits hanging, as
+do four in ten of the grown; the world's people in the plain dress wear them hanging. In the sample two of
+the women who showed plaits now wear them pinned up (17 and 24 years).
+
+A pinned plait lies above the chin, where the pose of round 123 moves nothing: it is not drawn aslant as a
+hanging plait is, and it does not hang over the gown.
+
+Tried and not kept.
+
+- The way evened as little as a short way seems to need (`PLAIT_EVEN` 40, then 100 to 400; a hanging plait
+  has 600). The way's points lie 0.3 mm apart on 12 cm, the turn under the ear stayed a corner, and the
+  strands folded over themselves there: 95 triangles of 4700 with a corner facing away from its triangle,
+  33 at 400, 9 at 3000 with the plait's full breadth. With 3000 and the narrower plait none.
+- The turn laid lower, round under the ear on the neck: the way dips in from the jaw to the neck and comes
+  out again, and more folded (74 to 115).
+- The strands' direction off the head carried along the way from its beginning instead of taken anew at
+  each place: more folded (40 for 9).
+
+**The gauntlet**: 22 of 22 over the whole sample, every line where round 124 left it (one of the grown
+women it reads now wears the pinned plaits; the lines are the same to the tenth).
+
+Honest about it. It is one more way to wear the same plaits, and the nearest of ours to what the
+reference's women wear, not the same: theirs hang as a loop from the temple, ours run up from under the ear,
+because the hair of the head is drawn to the place under the ear and was left as it is. There is no band
+round the head, no net and no veil behind the plaits, which theirs have. The plait is the hanging plait's
+strands, as thick at the temple as at the ear until its last centimetre; its end simply stops under the
+hair. Under the ear the plait's beginning is a knob. The form was looked at on one head from five sides and
+on the sample's women from the front. The share of six in ten, the age of 15 and the way are by eye (PLACEHOLDER):
+nothing was read on how women pinned their plaits in 1356. Grown women under a veil set back show no
+plaits. The men's hair is as round 125 left it, and the head is still not tipped from person to person.
+
+Tests: `portrait/tests/plait.rs`: the test of the hanging plait's bend tells pinned plaits apart (they end
+above the chin) and holds them to their place instead: no strand folded on any of 40 bodies, none on a girl
+under 15, between the chin's height and the forehead's, within 2.5 cm of the skin, not moved by the pose;
+13 of the 20 who are 15 and older wear them. The test of the round strands takes a pinned pair's smaller
+volume. `dress.rs`: the share and the age, and that the plain dress has none. Cargo: 89 of 89.
+`tests/portrait.test.ts` and its neighbour 42 of 42. `npx tsc --noEmit` and `npm run lint` pass. Pictures
+(project files, `portraits/`): `runde126_vorher_nachher_frauen.png` (the sample's five who wear plaits,
+round 125 above, now below), `runde126_von_allen_seiten.png`.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
@@ -5146,7 +5198,8 @@ since round 123 the light is softer (held to five of their women's faces instead
 are turned further than the head, each person's by another angle, since round 124 the picture is a bust
 that ends under the chest on cloth, as theirs does, in a plain gown without the belts, clasps, cloaks and
 layered cuts theirs wear, and without hands, since round 125 two men in ten wear their hair parted and cut at
-the jaw beside the bowl cut, straight where theirs is waved, and the face still lacks the
+the jaw beside the bowl cut, straight where theirs is waved, since round 126 six in ten of the grown women in
+plaits wear them pinned up beside the cheeks, without the band theirs wear over them, and the face still lacks the
 reference's streak of gloss on the nose's flank; the thrown-back hood closes round the neck since round 35, but
 has no folds across its cloth. Since round 111 the people of every part of the world can be drawn, in a plain
 dress that is no people's own, and without a picture of the reference to hold them against.

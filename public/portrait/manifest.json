@@ -394,6 +394,10 @@
    "bytes": 20765
   },
   {
+   "name": "loop01_rope.txt.zst",
+   "bytes": 48531
+  },
+  {
    "name": "page01_body.txt.zst",
    "bytes": 683201
   },
