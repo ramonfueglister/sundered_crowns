@@ -3564,23 +3564,32 @@ Code: `economy/src/clock.rs` (`Absences`, `firms_production`, `firms_expectation
 
 ### The numbers
 
-The rule built (F), `npm run absence:check -- 3`, the world of 1291 against the same world in which everybody is
+The rule built (F), `npm run absence:check -- 6`, the world of 1291 against the same world in which everybody is
 there:
 
-| | year 1 | year 2 | year 3 |
-|---|---|---|---|
-| days the workers are away (sick or in childbed) | 3.57 % | 3.50 % | 3.59 % |
-| real GDP | 174,974 / 178,367 (−1.9 %) | 176,883 / 180,280 (−1.9 %) | 173,461 / 179,635 (−3.4 %) |
-| consumption | −2.2 % | −2.2 % | −3.6 % |
-| investment | +1.6 % | +1.4 % | −0.1 % |
-| employees | −0.1 % | −2.0 % | −3.3 % |
-| without work at the end of the year | 971 / 944 | 1,705 / 998 | 2,215 / 1,036 |
-| households' deposits | +1.3 % | +2.7 % | +3.8 % |
-| firms' deposits | −6.1 % | −11.4 % | −16.4 % |
-| mean price level | 1.0049 / 1.0042 | 0.9920 / 0.9956 | 0.9983 / 0.9993 |
+| | year 1 | year 2 | year 3 | year 4 | year 5 | year 6 |
+|---|---|---|---|---|---|---|
+| days the workers are away (sick or in childbed) | 3.57 % | 3.50 % | 3.59 % | 3.53 % | 3.52 % | 3.57 % |
+| real GDP | −1.9 % | −1.9 % | −3.4 % | −3.8 % | −4.0 % | −4.2 % |
+| real GDP with the absences | 174,974 | 176,883 | 173,461 | 173,487 | 173,856 | 174,025 |
+| consumption | −2.2 % | −2.2 % | −3.6 % | −4.0 % | −4.1 % | −4.3 % |
+| investment | +1.6 % | +1.4 % | −0.1 % | −0.6 % | −0.7 % | −0.9 % |
+| employees | −0.1 % | −2.0 % | −3.3 % | −3.5 % | −3.8 % | −4.0 % |
+| employees with the absences | 35,644 | 34,910 | 34,400 | 34,423 | 34,337 | 34,266 |
+| without work at the end of the year | 971 / 944 | 1,705 / 998 | 2,215 / 1,036 | 2,192 / 938 | 2,278 / 913 | 2,349 / 904 |
+| households' deposits | +1.3 % | +2.7 % | +3.8 % | +4.9 % | +6.2 % | +7.5 % |
+| firms' deposits | −6.1 % | −11.4 % | −16.4 % | −21.2 % | −25.7 % | −30.3 % |
+| mean price level | 1.0049 / 1.0042 | 0.9920 / 0.9956 | 0.9983 / 0.9993 | 0.9991 / 0.9986 | 0.9988 / 0.9967 | 1.0015 / 0.9973 |
 
-The firms' deposits fall by about 5 % of the comparison a year: they carry the wages of the days away. Whether the
-fall of employment stops is not known from three years.
+Output and employment settle after the third year. With the absences the world makes 173,500 to 174,000 a year and
+employs 34,300 to 34,400 from year 3 to year 6, while the comparison grows by about 0.4 % a year; the gap, −4.2 % of
+real GDP in year 6, is a little more than the 3.6 % of the days away.
+
+The firms' deposits do not settle. They fall by about 400 a year (6,039 against 8,666 in year 6), and the
+households' deposits grow by about as much. That is the wage of the days away: the firms pay it and get no output
+for it, and the households who are paid find no more goods to buy. The transfer does not slow within six years. A
+wage by the day worked (step 6 of the day plan) would end it; a club's sick pay would be paid by its members, not by
+the firms.
 
 ### Limits
 
