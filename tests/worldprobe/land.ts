@@ -10,11 +10,12 @@ export const SIDE = 96, part = { x0: 24, z0: 24, x1: 72, z1: 72 };
  * Hills with a massif of rock, a lake above the sea's level and the sea along one side; woods, fields and a town as
  * part of the ground. The land differs from column to column everywhere, also beyond the rim. `seed` makes another
  * land of the same kinds; the lake lies at the same columns of the ground in all of them, the sea from row `sea` on.
+ * `houses`: houses drawn as houses that stand on it (worldprobe/houses.ts).
  */
 /** the step of the map the test land is drawn at: its meadow steps take that step's share of the meadow's colour */
 export const LAND_STEP = 2;
 
-export function land(ox = 4000, oz = -1200, seed = 0, sea = 60): { g: Ground; t: GroundTraits } {
+export function land(ox = 4000, oz = -1200, seed = 0, sea = 60, houses?: readonly number[]): { g: Ground; t: GroundTraits } {
   const n = N * N, g: Ground = { h: new Int16Array(n), mat: new Uint8Array(n), wet: new Uint8Array(n), shore: new Uint8Array(n), occ: new Float32Array(n), surf: new Float32Array(n).fill(SEA_Y), ox, oz };
   const has = new Uint8Array(n), rise = new Uint8Array(n), share = new Float32Array(n), town = new Uint8Array(n), top = new Float32Array(n * 3), side = new Float32Array(n * 3);
   for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
@@ -41,6 +42,7 @@ export function land(ox = 4000, oz = -1200, seed = 0, sea = 60): { g: Ground; t:
     bleach: (x, z) => noise2(Math.floor(x) / 20, Math.floor(z) / 20, 8 + seed), summit: (x, z) => 0.3 + 0.7 * hash2(Math.floor(x) >> 2, Math.floor(z) >> 2, 9 + seed),
     tint: (x) => (Math.floor(x) < 40 ? dry : null), slope: [0.3, 0.35, 0.1], sideTop: sideTopAt(LAND_STEP),
     cover: (x, z) => { const i = idx(x, z); return has[i] ? { top: [top[i * 3], top[i * 3 + 1], top[i * 3 + 2]], side: [side[i * 3], side[i * 3 + 1], side[i * 3 + 2]], rise: rise[i], share: share[i], stands: has[i] === 1 } : null; },
+    houses,
   };
   return { g, t };
 }
