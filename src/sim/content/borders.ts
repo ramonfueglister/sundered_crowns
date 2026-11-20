@@ -14,8 +14,9 @@ export interface BordersJson {
    *  event gives a realm the name of the polity it has become (Moscow, Tsardom of Russia from 1547) */
   events: ({
     date: string;
-    /** day, month or year: the date as a source gives it; window: no source gives it, the date is the middle of the
-     *  years `window` in which the maps show the change */
+    /** day, month or year: the date as a source gives it; window: no source gives it, the date lies in the years
+     *  `window` in which the maps show the change (its middle, or the day of its ring when the change spreads from the
+     *  new owner's land outward province by province: tools/history/borders/build.py, spread_windows) */
     precision: 'day' | 'month' | 'year' | 'window';
     window?: [string, string];
     from: string | null;
