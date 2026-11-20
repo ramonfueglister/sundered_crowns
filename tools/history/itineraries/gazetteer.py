@@ -52,12 +52,14 @@ def key(name):
 
 
 def variants(name):
-    """The keys a name of the book may have in GeoNames."""
-    first = name.split(',')[0]
-    k = key(first)
-    out = [k, re.sub(r'\s*\(.*?\)', '', k), re.sub(r'^the ', '', k), k.replace(' on ', ' upon '), k.replace(' ', '')]
-    out += [k[: -len(w) - 1] for w in ADDED if k.endswith(' ' + w)]
-    out += [f'{k} {w}' for w in ADDED]
+    """The keys a name of the book may have in GeoNames (the book keeps the French article of some English places:
+    'La Rose', Rose Castle)."""
+    k = key(name.split(',')[0])
+    bare = re.sub(r'^(?:the|la|le|les) ', '', k)
+    out = [k, re.sub(r'\s*\(.*?\)', '', k), bare, k.replace(' on ', ' upon '), k.replace(' ', '')]
+    for b in dict.fromkeys((k, bare)):
+        out += [b[: -len(w) - 1] for w in ADDED if b.endswith(' ' + w)]
+        out += [f'{b} {w}' for w in ADDED]
     return list(dict.fromkeys(v for v in out if v))
 
 
@@ -93,9 +95,11 @@ def ratio(a, b):
 
 class Gazetteer:
     """The places of GeoNames (a cut of the dumps: id, name, asciiname, alternatenames, lat, lon, class, code,
-    country, admin1, admin2, population), by name and by cell of half a degree."""
+    country, admin1, admin2, population), by name and by cell of half a degree; now_called gives a place the book
+    names (by its key) under the name GeoNames knows it by."""
 
-    def __init__(self, path):
+    def __init__(self, path, now_called=None):
+        self.now_called = now_called or {}
         self.at, self.names, self.own_names, self.settled = [], [], [], []
         self.own, self.other, self.cells = defaultdict(list), defaultdict(list), defaultdict(list)
         with open(path, encoding='utf-8') as f:
@@ -123,8 +127,9 @@ class Gazetteer:
         """The places that bear a name in any of its forms (variants): those whose own name it is, else those with it
         as another name; whether it is their own name; and of them the towns, villages and parishes (all of them where
         none is one), which a stay is sure of where they lie together."""
+        forms = variants(name) + variants(self.now_called.get(key(name), ''))
         for own, table in ((True, self.own), (False, self.other)):
-            every = sorted({i for v in variants(name) for i in table.get(v, ())})
+            every = sorted({i for v in forms for i in table.get(v, ())})
             if every:
                 towns = [i for i in every if self.settled[i]] or every
                 return [self.at[i] for i in every], own, [self.at[i] for i in towns]
@@ -235,14 +240,20 @@ def place_days(days, gaz, report):
         for i, s in enumerate(stays):
             if not s['sure']:
                 place(s, i, stays, by, found[s['name']][0], regions.get(s['county'], ()), gaz, report)
+    # the itinerary as the game will thin it (src/sim/content/travel.ts reachableStops), so that the file holds no
+    # step the game leaves out
+    for s in thin([s for s in stays if s['at']]):
+        s['at'], s['why'] = None, 'out of reach of the stays around'
+        report['stays_thinned'] += 1
     out, unplaced = [], []
     for s in stays:
         if not s['at'] and 'why' not in s:
             cands, region = found[s['name']][0], regions.get(s['county'], ())
+            nearest = min((km(c, q) for c in cands for q in region), default=0)
             s['why'] = (
                 'no such place, none like it nearby'
                 if not cands
-                else 'out of its county'
+                else f'out of its county {s["county"]!r} ({len(region)} places, nearest {nearest:.0f} km)'
                 if not any(in_county(c, region) for c in cands)
                 else 'out of reach'
             )
@@ -258,31 +269,42 @@ def place_days(days, gaz, report):
 
 
 def place(s, i, stays, by, cands, region, gaz, report):
-    """Place stay s (stays[i]) by the stays around it that are placed (by 'sure': only those sure of their place):
-    at the place of a stay of its name within SAME_NAME_DAYS, else at the place of its name nearest the way between
-    them, else at the likest name near it."""
+    """Place stay s (stays[i]) by the stays around it that are placed (by 'sure': only those sure of their place): at
+    the place of a stay of its name within SAME_NAME_DAYS, else at the place of its name nearest the way between them,
+    else at the likest name near it; each first within reach of both, then within reach of those as many days name
+    (as src/sim/content/travel.ts reachableStops, a stay fewer days name gives way where two contradict). A place of
+    the name comes before a like name: the name is the book's word, the likeness a guess."""
     prev = next((t for t in reversed(stays[:i]) if t[by]), None)
     nxt = next((t for t in stays[i + 1 :] if t[by]), None)
     before, after = prev and around(s, prev, -1), nxt and around(s, nxt, 1)
-    # as src/sim/content/travel.ts reachableStops: a stay that fewer days name gives way where the two contradict
-    rb = before if prev and len(prev['days']) >= len(s['days']) else None
-    ra = after if nxt and len(nxt['days']) >= len(s['days']) else None
-
-    def fits(p):
-        return reachable(p, rb, ra) and in_county(p, region)
-
+    longer = (
+        before if prev and len(prev['days']) >= len(s['days']) else None,
+        after if nxt and len(nxt['days']) >= len(s['days']) else None,
+    )
     ends = [e for e in (before, after) if e]
     same = [
         t['at'] for t in stays if t is not s and t['at'] and t['name'] == s['name'] and apart(s, t) <= SAME_NAME_DAYS
     ]
-    ok = [c for c in same if fits(c)] or [c for c in cands if fits(c)]
-    near = None if ok else gaz.near(s['name'], before, after, fits)
-    if ok:
-        s['at'] = min(ok, key=lambda c: detour(c, ends) if ends else -c[2])
-    elif near or by == 'sure':
-        s['at'] = near
-    if by == 'at' and s['at']:
-        report['stays_by_nearness' if ok else 'stays_by_like_name_nearby'] += 1
+    for rb, ra in ((before, after), longer):
+
+        def fits(p, rb=rb, ra=ra):
+            return reachable(p, rb, ra) and in_county(p, region)
+
+        ok = [c for c in same if fits(c)] or [c for c in cands if fits(c)]
+        if ok:
+            s['at'] = min(ok, key=lambda c: detour(c, ends) if ends else -c[2])
+            if by == 'at':
+                report['stays_by_nearness'] += 1
+            return
+    for rb, ra in ((before, after), longer):
+        near = gaz.near(s['name'], before, after, lambda p, rb=rb, ra=ra: reachable(p, rb, ra) and in_county(p, region))
+        if near:
+            s['at'] = near
+            if by == 'at':
+                report['stays_by_like_name_nearby'] += 1
+            return
+    if by == 'sure':
+        s['at'] = None
 
 
 def thin(sure):

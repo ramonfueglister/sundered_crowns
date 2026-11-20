@@ -99,8 +99,15 @@ COUNTIES = {
     'oxon', 'rutland', 'salop', 'som', 'somerset', 'ston', 'soton', 'staff', 'suffolk', 'surrey', 'sussex', 'warw',
     'westm', 'wilts', 'worc', 'fife', 'guienne', 'gascony', 'flanders', 'ponthieu', 'picardy', 'poitou', 'saintonge',
     'agenais', 'brabant', 'aunis', 'bearn', 'beam', 'brittany', 'britanny', 'aragon', 'valencia', 'navarre', 'bigorre',
-    'armagnac', 'perigord', 'limousin', 'quercy',
+    'armagnac', 'perigord', 'limousin', 'quercy', 'cumberld', 'nottham',
 }
+#: one county under two keys
+SAME_COUNTY = {'beam': 'bearn'}
+#: a county the column names: one or two words of letters, not an abbreviation of a record
+COUNTY_SHAPE = re.compile(r"[A-Z][A-Za-z'’]+\.?(?:[ -][A-Z][A-Za-z'’]+\.?)?")
+#: places the book names that GeoNames knows only by the place that grew there: the Cistercian abbey of Holm Cultram
+#: (the book's index: Holme-Cultram, Cumberland) at Abbeytown
+NOW_CALLED = {'holme cultram': 'Abbeytown'}
 # fmt: on
 
 
@@ -139,7 +146,9 @@ def is_record(token):
 
 
 def split_records(seg):
-    """A column without the abbreviations of records at its end ('Hertford P.S'), and whether it had any."""
+    """A column without the abbreviations of records at its end ('Hertford P.S', also as the OCR spaces them: 'Cl R'),
+    and whether it had any."""
+    seg = re.sub(r'\b(Ch|Cl|C1|Ci|F|L|P|R|S|V|W)\.?\s+([RAS])\b\.?', r'\1.\2.', seg)
     words = re.sub(r'\bW\.?\s+A\.', 'W.A.', seg).split()
     n = len(words)
     while n and is_record(words[n - 1]):
@@ -341,12 +350,13 @@ def places_of(entry_lines, places, counties, county, report):
                 continue
             for seg in parts(column, places, counties):
                 k = key(clean(seg))
+                no_county = state == 'county' and k not in counties and not COUNTY_SHAPE.fullmatch(clean(seg))
                 if seg in DITTO:
                     state = 'records'
-                elif not place_in(seg):
+                elif not place_in(seg) or no_county:
                     report['segments_skipped'] += 1
                 elif k in counties and k not in places or (state == 'county' and (k in counties or k not in places)):
-                    county = k
+                    county = k = SAME_COUNTY.get(k, k)
                     if out:
                         out[-1][1] = k
                     state = 'records'
@@ -420,14 +430,14 @@ def main(text_path, geonames_path, out_path):
     for d in days:
         d[1], county = places_of(d[1], index, counties | COUNTIES, county, report)
         # OWN RULE: the book names one place a day, two where the king moved on; more are a column of places the OCR
-        # read apart from its days (February 1288), whose days cannot be told
+        # read apart from its days (February 1288), whose days cannot be told, unless they are all one place
         if len(d[1]) > 2:
             report['entries_read_apart'] += 1
-            d[1] = []
+            d[1] = d[1][:1] if len({n for n, _ in d[1]}) == 1 else []
     days = [d for d in days if d[0] <= REIGN_END]
     report['days'] = len(days)
     report['days_with_a_place'] = sum(1 for d in days if d[1])
-    gaz = Gazetteer(geonames_path)
+    gaz = Gazetteer(geonames_path, NOW_CALLED)
     misread(days, gaz, index, report)
     dated = [(f'{y:04d}-{m:02d}-{d:02d}', julian_day(y, m, d), names) for (y, m, d), names, _ in days]
     stops, unplaced = place_days(dated, gaz, report)

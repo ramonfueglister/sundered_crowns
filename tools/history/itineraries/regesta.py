@@ -18,6 +18,8 @@ Rules (nothing is invented):
   king's name ('Karl IV.', 'Karl IV. Nachträge.', but not 'Karls IV. Gemahlinnen.' or 'Clemens VI.'). Within the
   king's part, a letter dated by the year of the pontificate ("pontificatus nostri anno", the dating of papal
   letters) is the pope's and is left out, and so is a forgery (a regest number with "†" or "Fälschung").
+- In RI VI,4 (Heinrich VII.), only the regesta whose summary begins with the king (`OWN_ACT`): the volume also
+  calendars the acts of his envoys, of the pope and of communes under his name.
 - A regest whose day is a range, or whose place is missing or unknown ("...."), is left out.
 - A regest whose place of issue the editors mark in a footnote as not where the king was (the charter dated ahead or
   back, or given a made-up place: "passt nicht ins Itinerar", "vordatiert", "fiktiv") is left out, and so is one that
@@ -133,6 +135,18 @@ ON_ITINERARY = {'222423'}
 OFF_ITINERARY = re.compile(r'nicht ins Itinerar|vordatiert|rückdatiert|vorausdatiert|Vorausdatierung|fiktiv', re.I)
 FOOTNOTE_MARK = re.compile(r'<sup>\s*(\d+)\s*\)?\s*</sup>')
 FOOTNOTE = re.compile(r'<li>\s*<sup>\s*(\d+)\s*</sup>(.*?)</li>', re.S)
+#: RI VI,4 (Heinrich VII.) calendars under the king's name also what others did for him or wrote to him: the acts of
+#: his envoys in Italy (n. 444 "König Heinrichs Gesandte ... in der Lombardei", at Ivrea; n. 447, whose commentary
+#: dates it by "den übrigen Stationen des Reiseweges der Gesandten"), letters of Clement V (n. 443, Avignon), decisions
+#: of communes (n. 497a, Pisa pays his tentmaker). Its summaries name first the one who acts, so there a regest is the
+#: king's where the summary begins with him ("König Heinrich gibt ...", "[König Heinrich begeht] das Pfingstfest",
+#: n. 456; "Kaiser Heinrich" after the coronation), not with his envoys ("König Heinrichs Gesandte") nor as the one
+#: a letter is sent to ("König Heinrich wird von Papst Clemens V. brieflich aufgefordert", n. 487)
+OWN_ACT = {
+    'Heinrich VII.': re.compile(
+        r'^(?:\[[\dIVX]+\]\s*)?\[?(?:Römerkönig|Römerkaiser|König|Kaiser)(?:\s+und\s+Kaiser)?\s+Heinrich\b(?!\]?\s+wird\b)'
+    ),
+}
 UNKNOWN_PLACE = {'', '-', '?', '....'}
 PAPAL_DATING = re.compile(r'pontificatus', re.IGNORECASE)
 QID = re.compile(r'Q\d+')
@@ -233,6 +247,10 @@ def main(data, out_path):
                     count['no_place'] += 1
                     continue
                 uid = (row.get('uid') or '').strip()
+                summary = re.sub(r'<[^>]+>', '', html.unescape(row.get('summary') or '')).strip()
+                if name in OWN_ACT and not OWN_ACT[name].match(summary):
+                    count['not_his_act'] += 1
+                    continue
                 if uid in NOT_THE_KINGS:
                     count['not_the_king'] += 1
                     continue

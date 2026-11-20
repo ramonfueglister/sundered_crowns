@@ -123,6 +123,15 @@ describe('the journeys of the Roman-German kings (Regesta Imperii)', () => {
     // 'Frankenvorde' (1375-11-25), between Berlin and Fürstenberg, is Frankfurt an der Oder
     expect(w.lon[stayOn(karl, day('1375-11-25'))]).toBeGreaterThan(13.5);
   });
+  it("leave out what Heinrich VII.'s envoys, the pope and the communes did in his name", () => {
+    const heinrich = kings.get('Q152717')!;
+    // RI VI,4,2 n. 447 (1310-05-26): his envoys at Vercelli, while he was between Kaysersberg and Speyer
+    expect(w.lat[stayOn(heinrich, day('1310-05-26'))]).toBeGreaterThan(47.5);
+    // n. 499 (1310-07-06): Clement V at Carpentras grants his request; he was at Luxembourg
+    expect(w.lat[stayOn(heinrich, day('1310-07-06'))]).toBeGreaterThan(48);
+    // n. 497a (1310-07-04): the commune of Pisa pays his tentmaker
+    expect(w.lat[stayOn(heinrich, day('1310-07-04'))]).toBeGreaterThan(48);
+  });
   it('leave out the charters whose place the editors note as not where the king was', () => {
     // RI VII H. 11 n. 208 (Nürnberg, 1329-09-15): dated ahead; Ludwig was in Italy (Pavia) then
     const ludwig = kings.get('Q57161')!;
