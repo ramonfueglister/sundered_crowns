@@ -195,6 +195,25 @@ function bestOnWay(search: Search, own: number, best: Best): Best {
   return { name: pick, score };
 }
 
+/** A name's curve in the terms of its way: a quadratic Bézier from `t0` to `t1` along the way, its ends `e0` and `e1`
+ *  off it and its control point `ctrl`; `em` is how far off the way it passes the middle `tm`. */
+interface Curve {
+  t0: number;
+  t1: number;
+  tm: number;
+  e0: number;
+  em: number;
+  ctrl: number;
+  e1: number;
+}
+/** a curve walked in samples: its length as names.ts measures it (8 chords) and as walked, and at a distance along it
+ *  the point and the normal towards its right */
+interface Walk {
+  chord: number;
+  total: number;
+  pointAt: (s: number) => [number, number, number, number];
+}
+
 /** the name's curve through slices `first` … `last` (straight: no bend) and the largest size its letters all keep to the land at */
 function curveOf(
   search: Search,
@@ -203,12 +222,26 @@ function curveOf(
   straight: boolean,
   need = 0,
 ): { name: RealmName; size: number } {
-  const { every } = search.g,
-    { realm, mx, my, long, broad } = search.p,
-    { along, ux, uy, vx, vy, span, mids, thick } = search.way,
-    { count: letters, above, below } = search.letters,
-    free = search.free,
-    step = STEP_PX / every;
+  const curve = curveThrough(search.way, first, last, straight),
+    name = nameAlong(search, curve),
+    walk = walkAlong(search, curve);
+  const span0 = walk.chord * NAME_FILL,
+    most = Math.min(
+      SIZE_OVER * Math.max(...search.way.thick.slice(first, last + 1)),
+      span0 / (search.letters.count * NAME_ASPECT),
+    ),
+    fits = fitsOn(search, walk, span0);
+  // (a curve that cannot carry the name at `need` is not measured further)
+  const least = Math.max(Math.min(most, 0.25), need);
+  if (!(most > least) || !fits(least)) return { name, size: 0 };
+  const size = largest(fits, least, most);
+  name.size = size * search.g.every;
+  return { name, size };
+}
+
+/** the curve fitted through the ridge of slices `first` … `last` of a way, tilted and bent no further than allowed */
+function curveThrough(way: Way, first: number, last: number, straight: boolean): Curve {
+  const { span, mids, thick } = way;
   const pts: [number, number, number][] = [];
   for (let k = first; k <= last; k++)
     if (thick[k] > 0) pts.push([((k + 0.5) / SLICES) * 2 * span - span, mids[k], thick[k]]);
@@ -231,27 +264,42 @@ function curveOf(
   em = (e0 + e1) / 2 + capped;
   // the quadratic Bézier through both ends and the middle has this control point
   const ctrl = 2 * em - (e0 + e1) / 2;
+  return { t0, t1, tm, e0, em, ctrl, e1 };
+}
+
+/** the name on a curve, in map pixels, at no size yet */
+function nameAlong(search: Search, c: Curve): RealmName {
+  const { every } = search.g,
+    { realm, mx, my, long, broad } = search.p,
+    { along, ux, uy, vx, vy } = search.way;
+  const at = (t: number, off: number): [number, number] => [
+    (mx + ux * t + vx * off + 0.5) * every,
+    (my + uy * t + vy * off + 0.5) * every,
+  ];
+  return {
+    realm,
+    ...pointOf(at(c.tm, c.em)),
+    long: long * every,
+    broad: broad * every,
+    turn: along,
+    from: at(c.t0, c.e0),
+    bend: at(c.tm, c.ctrl),
+    to: at(c.t1, c.e1),
+    size: 0,
+  };
+}
+const pointOf = ([x, y]: [number, number]) => ({ x, y });
+
+/** the curve in samples, measured as names.ts measures it (8 chords), and finer for walking along it */
+function walkAlong(search: Search, c: Curve): Walk {
+  const { mx, my } = search.p,
+    { ux, uy, vx, vy } = search.way,
+    { t0, t1, e0, ctrl, e1 } = c;
   const local = (q: number): [number, number] => {
     const t = t0 + (t1 - t0) * q,
       off = (1 - q) ** 2 * e0 + 2 * (1 - q) * q * ctrl + q * q * e1;
     return [mx + ux * t + vx * off, my + uy * t + vy * off];
   };
-  const at = (t: number, off: number): [number, number] => [
-    (mx + ux * t + vx * off + 0.5) * every,
-    (my + uy * t + vy * off + 0.5) * every,
-  ];
-  const name = {
-    realm,
-    ...pointOf(at(tm, em)),
-    long: long * every,
-    broad: broad * every,
-    turn: along,
-    from: at(t0, e0),
-    bend: at(tm, ctrl),
-    to: at(t1, e1),
-    size: 0,
-  };
-  // the curve as names.ts measures it (8 chords), and finer for walking along it
   let chord = 0;
   for (let k = 1; k <= 8; k++) {
     const p = local((k - 1) / 8),
@@ -278,10 +326,17 @@ function curveOf(
       ty = (b[1] - a[1]) / d;
     return [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, -ty, tx];
   };
-  const span0 = chord * NAME_FILL,
-    most = Math.min(SIZE_OVER * Math.max(...thick.slice(first, last + 1)), span0 / (letters * NAME_ASPECT));
-  /** whether every letter at this size lies on the piece, from its top to its lowest reach (towards the curve's right, down the page) */
-  const fits = (size: number) => {
+  return { chord, total, pointAt };
+}
+
+/** whether every letter at a size lies on the piece, from its top to its lowest reach (towards the curve's right, down
+ *  the page), spread from the middle of the curve over `span0` at most */
+function fitsOn(search: Search, walk: Walk, span0: number): (size: number) => boolean {
+  const { count: letters, above, below } = search.letters,
+    { total, pointAt } = walk,
+    free = search.free,
+    step = STEP_PX / search.g.every;
+  return (size: number) => {
     const spread = Math.min(span0, letters * size * (NAME_ASPECT + SPREAD_MOST)),
       from = total / 2 - spread / 2 - size * MARGIN,
       to = total / 2 + spread / 2 + size * MARGIN;
@@ -298,9 +353,10 @@ function curveOf(
     }
     return true;
   };
-  // (a curve that cannot carry the name at `need` is not measured further)
-  const least = Math.max(Math.min(most, 0.25), need);
-  if (!(most > least) || !fits(least)) return { name, size: 0 };
+}
+
+/** the largest size from `least` (which fits) to `most` at which the name fits, found to 2 % */
+function largest(fits: (size: number) => boolean, least: number, most: number): number {
   let lo = least,
     hi = most;
   if (fits(hi)) lo = hi;
@@ -310,10 +366,8 @@ function curveOf(
       if (fits(m)) lo = m;
       else hi = m;
     }
-  name.size = lo * every;
-  return { name, size: lo };
+  return lo;
 }
-const pointOf = ([x, y]: [number, number]) => ({ x, y });
 
 /** a + b t + c t², fitted by weighted least squares to points (t, value, weight) */
 function fitQuadratic(pts: [number, number, number][]): [number, number, number] {
