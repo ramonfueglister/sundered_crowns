@@ -41,7 +41,7 @@ pub const FORMAT_CITIES: u32 = 2;
 /// its revenue, none before 9 has owners who bear losses, none before 10 has working days, none before 11 has the
 /// profits of the owners (they are gathered anew from the first period that is computed), and none before 12 has
 /// workers who are away.
-pub const FORMAT: u32 = 12;
+pub const FORMAT: u32 = 13;
 const NONE: u32 = u32::MAX;
 /// The length of the last state of cities written ([`save_cities`]): how much room the next one is given at once.
 /// It changes no byte of a state.
@@ -975,6 +975,7 @@ fn put_clock(o: &mut Out, c: &DailyClock) {
         absences,
         lost: _,
         unused,
+        unworn,
     } = c;
     o.n(*plan);
     o.n(*window);
@@ -1066,6 +1067,7 @@ fn put_clock(o: &mut Out, c: &DailyClock) {
         o.u32(last[k]);
     }
     o.f64s(unused);
+    o.f64s(unworn);
 }
 
 fn get_series(i: &mut In, window: usize) -> Res<Series> {
@@ -1241,6 +1243,7 @@ fn get_clock(i: &mut In, format: u32) -> Res<DailyClock> {
         Absences::default()
     };
     let unused = if format >= 12 { i.f64s()? } else { Vec::new() };
+    let unworn = if format >= 13 { i.f64s()? } else { Vec::new() };
     Ok(DailyClock {
         plan,
         window,
@@ -1265,6 +1268,7 @@ fn get_clock(i: &mut In, format: u32) -> Res<DailyClock> {
         absences,
         lost: Vec::new(),
         unused,
+        unworn,
     })
 }
 
