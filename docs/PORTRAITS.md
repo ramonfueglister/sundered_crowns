@@ -6162,6 +6162,113 @@ Pictures (project files, `portraits/`): `runde141_vorher_nachher.png` (four bare
 the sample, round 140 above, now below), `runde141_von_allen_seiten.png` (six men, one of each cut, from
 the front, the side and behind, round 140 above, now below).
 
+**Round 142: a small child's gown lies smooth** (2026-11-20). The whole sample beside the reference at
+one size, looking at the figure: of the 36 people the eight children of two and five stood out. Their
+gown was crumpled, with a shelf of cloth across the chest that ended in a spike at either side, a dark
+slit beside it, and from the side a ragged row of triangles down the back of the sleeve; the children
+of eight had the two points on the chest. A child's head is large against its trunk, so the picture of
+a child of two shows the gown to under the armpits, where a grown person's ends at the chest: what was
+wrong lay in the picture only on the small.
+
+What was looked at first. The body under the gown is smooth on every one of them (drawn bare, with
+the part that carries the cloth). The gown alone, drawn as a grey surface from the front, the side and
+behind, was crumpled all over with the calming left out and had the shelf and the spikes with it, and
+with it 400 times over for 24: more of the same evening does not take them away. Two causes.
+
+1. The arms. The gown is draped on MakeHuman's base, which stands with its arms spread, and the builder
+   brings the arms down (0.66 radians about the shoulder's joint, softly weighted from 13 to 18 cm from
+   the middle). A garment's points were set on the body with its arms down, each with its own triangle:
+   a sleeve's points went by the whole of the arm's turn, the points of the cloth in the armpit, bound
+   to the trunk, by none of it, and the calming, which evens out how far points have moved, made of a
+   turn of 38 degrees beside none a shelf.
+2. The folds. A calmed garment is its own shape, as draped on the base, moved by the evened shift. What
+   that shape has beyond its own evened shape, its folds and the bust of the base it was draped on, stood
+   on every body as large as draped: on a child of two, 0.58 of the base's size, a fold 2 cm deep on a
+   chest half as broad.
+
+What is changed (`portrait/src/real_look.rs` `calm` and `mh_cloth_as`, `portrait/src/morph.rs`
+`Arms`; no file of the pipeline, no image, nothing on the stage).
+- The arms' way down is a thing of its own (`Arms`: the two joints, the share of the turn by a place's
+  distance from the middle, the turn itself, down or back up). The body comes down by it as before: the
+  skin is the same to the last bit on the nine people it was compared on.
+- A calmed garment (gown, linen under it, hood, veil, wimple) is set on the body as it stood with its
+  arms spread (read back from the body with its arms down), calmed there, and then comes down with the
+  arms: each point by the share of the turn that the body takes where the point is bound, evened out
+  over the cloth as the shift is (24 times). A sleeve goes all the way, the gown's side under the arm
+  stays with the flank, and the cloth between them turns by a share that changes evenly along it.
+- The folds are as large against the base's as the body is where the point is bound (the root of the
+  bound triangle's area against the base's, evened out likewise), and never larger than draped. A hem's
+  roll keeps its thickness: it is no fold.
+- `portrait/src/fasten.rs`: the edge beside a lace or a row of buttons is left out between two places
+  where the gown faces opposite ways (the underside of the neck's rolled edge and the cloth under it).
+  On one woman of 140 the first piece of the edge lay across them after this round's change and was
+  wound against its corners; the test of the fastening said so.
+
+Measured (`portrait/tests/bust.rs`, new: 48 people of 2 to 50, eight of each age, as much of the gown
+as the picture shows; the middle one of eight, round 141 against now).
+
+| age | edges turned over 90 degrees, % | a corner off the mean of its neighbours, thousandths of the head's height |
+|---|---|---|
+| 2 | 3.32, now 2.44 | 10.44, now 8.63 |
+| 5 | 2.72, now 2.19 | 9.96, now 9.04 |
+| 8 | 2.48, now 1.87 | 10.18, now 9.04 |
+| 13 | 1.54, now 1.33 | 9.02, now 8.78 |
+| 24 | 1.02, now 0.90 | 8.62, now 8.57 |
+| 50 | 1.09, now 1.01 | 8.85, now 8.79 |
+
+A child's gown is as rough against the child as a grown person's is against the grown (within a
+twentieth), where it was a sixth to a fifth rougher, and a sixth to a quarter fewer of its edges are
+turned over. A portrait has 150 to 2 700
+triangles fewer (the gown is cut along its patches' borders after it is laid, and a smoother gown is cut
+into fewer pieces). Built ten times each, three times over, four people took 55 to 78, 174 to 204, 243
+to 280 and 51 to 61 ms a portrait, and 66 to 87, 185 to 210, 232 to 271 and 56 to 65 before, on this
+machine: no difference to be read from it, though five more numbers a point are evened out.
+
+Tried and not kept. (1) The cloth brought down with the arms by where its own shape lies from the
+middle, as the skin is (the first way built): the spikes went, but the gown's side under the arm, which
+hangs further than 13 cm from the middle in places, was turned in towards the flank with it, and the
+hold pushed it out again. In the trial outside the builder (the V-necked gown, binding, calming and
+hold alone) 325 of the gown's triangles were turned over against their own shape on a man for 170 as
+it was, and 462 for 380 on the child of two; with the share of the bound place, evened out, 86 and 324
+(evened 8 and 60 times: 93 and 76, 312 and 311: it hardly matters how often). (2) The seam under the arm closed again
+(`bust_bind.py` `SEAM=closed`; the script still writes the repository's `cloth_cote_v` byte for byte as
+it is, so it could be tried): no difference to see, 330 edges turned over in the gown's own shape for
+292. Left open. (3) The turned edges of the gown's own shape round the armpit evened out in the file
+(207 of them in `cloth_cote_v`, where round 124 sewed the piece below the old cut to it; 6 after): on
+the child of two little to see, and points of the file moved by up to 7 cm. Not written. (4) The folds
+larger than draped where the body is larger than the base (a man is 1.05 of its size, up to 1.23 over
+the shoulders): 918 of a man's gown's edges turned over for 769. Hence never larger. (5) The body's
+own way at the bound place evened out less than the rest (8, 3 and 0 times for 24): the gown followed
+a child better and showed a man's chest and belly through the cloth, muscle for muscle.
+
+**The gauntlet**: 22 of 22 over the whole sample (read with this round's build), and every line reads
+what it read in rounds 138 to 141 to its last figure: the skin is not touched.
+
+Honest about it. The gown is calm on the small, not right. It is still the loose sack of the rounds
+before, with no belt and no weight in it, and on the children of five and eight a rest of the two
+points stands on the chest: the base's bust in the gown's evened shape, which is not brought down. In
+the armpit the cloth still folds over itself when the arm comes down (the arm's turn folds the space
+there, for the skin as well); it is hidden behind the arm from the front and shows as an uneven edge
+from behind. Grown people's gowns are hardly changed in the picture and by the whole gown's count a
+man's is a little rougher than it was (769 of some 73 000 edges turned over for 712, counted before the
+hem was kept: in the picture fewer are, so the more lie below it, at the sleeves' ends and the hem). The scale is by similarity, not by cloth: real folds have the size
+the cloth's stiffness gives them, whoever wears it, and a child's gown of the same wool would have
+fewer folds, not smaller ones. Nothing was read for this round; that a garment's folds go with the
+wearer's size is my assumption, and the 24 rounds of evening are the old PLACEHOLDER used for two more
+things. Hoods, veils and wimples go through the same code and are not looked at one by one beyond the
+tests and the sample's wall.
+
+Tests: `portrait/tests/bust.rs`, one new (the table above: the children's middle values under 2.8,
+2.5 and 2.1 % and within 1.06 of the grown's roughness; the grown not rougher than 1.0 and 1.05 %);
+`portrait/src/lib.rs`, one new (a vertex brought back up and down again lies within a hundredth of a
+millimetre of where it lay). The first full run failed in one test of the stage (`tests/portrait.test.ts`, the hems wound
+outward: on the girl of two 0.77 of the gown's hem for the 0.8 asked, the roll brought down with the
+folds and pressed flat), hence the hem's roll kept. `cargo test --release` as a whole: 111 of 111 in
+one run. `tests/portrait.test.ts` and its neighbour 42 of 42; typecheck and lint pass.
+Pictures (project files, `portraits/`): `runde142_vorher_nachher.png` (three children of two and five
+from the front and turned, round 141 above, now below), `runde142_alle_kinder.png` (the sample's twelve
+children of two to eight, round 141 above, now below).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair

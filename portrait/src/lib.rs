@@ -450,6 +450,24 @@ mod tests {
     }
 
     #[test]
+    fn the_arms_way_down_is_gone_back_to_where_it_began() {
+        // (round 142) A garment is set on the body as it stood with its arms spread, which the builder reads back
+        // from the body with its arms down (`morph::Arms::moved`, way -1): to a hundredth of a millimetre.
+        let Some(h) = head() else { return };
+        let (down, _, arms) = crate::morph::morph(&h, &look(false, 30.0, 1, 7));
+        let (mut moved, mut most) = (0, 0f32);
+        for i in 0..h.n {
+            let up = arms.moved(down[i], h.base[i][0], -1.0);
+            let again = arms.moved(up, h.base[i][0], 1.0);
+            moved += usize::from(crate::geo::len(crate::geo::sub(up, down[i])) > 0.5);
+            most = most.max(crate::geo::len(crate::geo::sub(again, down[i])));
+        }
+        // (the arms' vertices come up by 5 cm and more; the trunk's and the head's stay)
+        assert!(moved > 300 && moved < h.n / 2, "{moved} of {} vertices move by 5 cm and more", h.n);
+        assert!(most < 1e-4, "down again {most} from where it lay");
+    }
+
+    #[test]
     fn same_person_same_portrait() {
         let Some(h) = head() else { return };
         let p = look(false, 38.0, 5, 42);

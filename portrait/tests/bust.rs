@@ -390,3 +390,80 @@ fn the_sleeves_cover_the_arms() {
         assert!(share < 0.05, "{} {k} of {age}: {} of the arms' skin with no cloth over it", if fem { "woman" } else { "man" }, share);
     }
 }
+
+#[test]
+fn a_childs_gown_has_folds_as_large_against_the_child_as_a_grown_ones_and_no_shelf_across_the_chest() {
+    // Round 142, on 48 people of 2 to 50, eight of each age, as much of the gown as the picture shows. A child's
+    // head is large against its trunk, so the picture of a child of two shows the gown to under the armpits, where
+    // a grown person's ends at the chest.
+    // The gown was set on the body with its arms down, each point with its own triangle: a sleeve swung down by the
+    // whole of the arm's turn, the cloth in the armpit stayed with the trunk, and the calming made a shelf of the
+    // two, across the chest, with a spike at either end. And the gown's own folds stood on every body as large as
+    // they were draped, on a chest half as broad as the base's as well. Of the gown's edges in the picture 3.32 %
+    // were turned over 90 degrees on the children of two (the middle one of eight), 2.72 % at five, 2.48 % at
+    // eight, against 1.02 % at 24; and a corner stood 10.44, 9.96 and 10.18 thousandths of the head's height off
+    // the mean of its neighbours, against 8.62 at 24. Now 2.44, 2.19 and 1.87 % (0.90 % at 24), and 8.63, 9.04 and
+    // 9.04 thousandths against 8.57.
+    use std::collections::HashMap;
+    let Some(h) = head() else { return };
+    let ages = [2.0f32, 5.0, 8.0, 13.0, 24.0, 50.0];
+    let key = |q: V3| -> [i32; 3] { std::array::from_fn(|a| (q[a] * 2000.0).round() as i32) };
+    let sub = |a: V3, b: V3| -> V3 { [a[0] - b[0], a[1] - b[1], a[2] - b[2]] };
+    let faces = |t: &[V3]| -> V3 {
+        let (u, v) = (sub(t[1], t[0]), sub(t[2], t[0]));
+        [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]]
+    };
+    let mut by_age: Vec<Vec<[f32; 2]>> = vec![Vec::new(); ages.len()];
+    for k in 0..48u32 {
+        let a = (k / 2) as usize % ages.len();
+        let out = build(&h, &person(k, k % 2 == 0, ages[a]), 1);
+        let gown = out.surfaces.iter().find(|s| s.tex.as_deref().is_some_and(|t| t.contains("/cloth_cote."))).unwrap_or_else(|| panic!("person {k}: no gown"));
+        let high = out.top - out.chin;
+        let foot = out.top - FOOT * high.max(0.8) / (out.fill * CLOSE);
+        let tris: Vec<&[V3]> = gown.pos.chunks_exact(3).collect();
+        let mut edges: HashMap<([i32; 3], [i32; 3]), Vec<usize>> = HashMap::new();
+        // (a corner: its place, the sum of its neighbours' places, their number)
+        let mut corners: HashMap<[i32; 3], (V3, V3, f32)> = HashMap::new();
+        for (ti, t) in tris.iter().enumerate() {
+            for e in 0..3 {
+                let (p0, p1) = (t[e], t[(e + 1) % 3]);
+                let (a, b) = (key(p0), key(p1));
+                edges.entry(if a < b { (a, b) } else { (b, a) }).or_default().push(ti);
+                for (at, q, other) in [(a, p0, p1), (b, p1, p0)] {
+                    let c = corners.entry(at).or_insert((q, [0.0; 3], 0.0));
+                    (c.1, c.2) = ([c.1[0] + other[0], c.1[1] + other[1], c.1[2] + other[2]], c.2 + 1.0);
+                }
+            }
+        }
+        let (mut n, mut over) = (0, 0);
+        for v in edges.values().filter(|v| v.len() == 2 && tris[v[0]][0][1] >= foot) {
+            let (f, g) = (faces(tris[v[0]]), faces(tris[v[1]]));
+            n += 1;
+            over += usize::from(f[0] * g[0] + f[1] * g[1] + f[2] * g[2] < 0.0);
+        }
+        let (mut off, mut m) = (0f32, 0);
+        for (q, sum, c) in corners.values().filter(|c| c.0[1] >= foot) {
+            off += dist(*q, [sum[0] / c, sum[1] / c, sum[2] / c]);
+            m += 1;
+        }
+        assert!(n > 2000 && m > 1000, "person {k} of {}: {n} edges and {m} corners of the gown in the picture", ages[a]);
+        by_age[a].push([100.0 * over as f32 / n as f32, 1000.0 * off / m as f32 / high]);
+    }
+    let middle = |a: usize, what: usize| -> f32 {
+        let mut v: Vec<f32> = by_age[a].iter().map(|t| t[what]).collect();
+        v.sort_by(|x, y| x.partial_cmp(y).unwrap());
+        v[v.len() / 2]
+    };
+    if show() {
+        for (a, age) in ages.iter().enumerate() {
+            println!("age {age:2}: {:.2} % of the gown's edges in the picture turned over 90 degrees; a corner {:.2} thousandths of the head's height off the mean of its neighbours (the middle one of {})", middle(a, 0), middle(a, 1), by_age[a].len());
+        }
+    }
+    let grown = middle(4, 1).max(middle(5, 1));
+    for (a, most) in [(0, 2.8), (1, 2.5), (2, 2.1)] {
+        assert!(middle(a, 0) < most, "at {}: {:.2} % of the gown's edges turned over", ages[a], middle(a, 0));
+        assert!(middle(a, 1) < 1.06 * grown, "at {}: a corner {:.2} off the mean of its neighbours, on the grown {grown:.2}", ages[a], middle(a, 1));
+    }
+    // (and the grown are not rougher for it: 1.02 and 1.09 % before)
+    assert!(middle(4, 0) < 1.0 && middle(5, 0) < 1.05, "the grown: {:.2} and {:.2} % of the gown's edges turned over", middle(4, 0), middle(5, 0));
+}

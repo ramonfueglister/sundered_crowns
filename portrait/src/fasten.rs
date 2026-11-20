@@ -215,7 +215,9 @@ fn band(out: &mut Surface, f: &Front, line: &[(f32, At)], s0: f32, s1: f32, asid
     while s <= s1 {
         let Some(a) = along(line, s) else { break };
         let here = (!f.covered(&a)).then_some(a);
-        if let (Some(p), Some(q)) = (last, here) {
+        // (round 142: and left out between two places where the gown faces opposite ways, the underside of the
+        // neck's rolled edge and the cloth under it: a piece laid across them was wound against its corners)
+        if let (Some(p), Some(q)) = (last, here.filter(|q| last.is_none_or(|p| crate::geo::dot(p.n, q.n) > 0.0))) {
             for (a, side) in [(&p, -1.0), (&q, -1.0), (&q, 1.0), (&p, -1.0), (&q, 1.0), (&p, 1.0)] {
                 let c = add(madd(a.q, a.n, EDGE_OFF), [aside + side * wide / 2.0, 0.0, 0.0]);
                 match linen {

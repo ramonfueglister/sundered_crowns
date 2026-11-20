@@ -425,14 +425,71 @@ fn fullness(p: &Look, f: &crate::dress::Fullness) -> f32 {
     ((p.phen(WEIGHT) - 0.5) * f.spread).tanh() * (0.35 + 0.65 * p.grown())
 }
 
-pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
+/// How the arms come down from the spread pose MakeHuman's base stands in: about each shoulder's joint, softly
+/// weighted around it. The joints (x, y) of the side towards +x and of the side towards -x, as they lie on the
+/// morphed body; none where the head file has no shoulder.
+#[derive(Clone, Copy)]
+pub(crate) struct Arms {
+    joint: [Option<[f32; 2]>; 2],
+}
+
+/// How far the arms come down (radians), and between which distances from the middle on the base body a place
+/// takes none of it and all of it.
+const ARM_DOWN: f32 = 0.66;
+const ARM_FROM: [f32; 2] = [1.3, 1.8];
+
+impl Arms {
+    /// The joints of the body `pp`, which stands with its arms spread.
+    fn of(h: &Head, pp: &[V3]) -> Arms {
+        let joint = [1.0f32, -1.0].map(|sg| {
+            let (mut px, mut py, mut n) = (0f32, 0f32, 0);
+            for i in 0..h.n {
+                let (bx, by) = (h.base[i][0] * sg, h.base[i][1]);
+                if bx > 1.58 && bx < 1.78 && by > 4.95 && by < 5.55 {
+                    px += pp[i][0];
+                    py += pp[i][1];
+                    n += 1;
+                }
+            }
+            (n > 0).then(|| [px / n as f32, py / n as f32])
+        });
+        Arms { joint }
+    }
+
+    /// How much of the arms' way a place takes whose x on the base body is `bx`, counted outward on its own side.
+    pub(crate) fn share(bx: f32) -> f32 {
+        let t = c01((bx.abs() - ARM_FROM[0]) / (ARM_FROM[1] - ARM_FROM[0]));
+        t * t * (3.0 - 2.0 * t)
+    }
+
+    /// Where the place `q` goes that takes the share `w` of the way of the arm on the side `sg` (1: towards +x,
+    /// -1: towards -x): down with the arm (`way` 1), or from where it lies with the arm down back to the spread
+    /// pose (`way` -1).
+    pub(crate) fn turned(&self, q: V3, sg: f32, w: f32, way: f32) -> V3 {
+        let Some([px, py]) = self.joint[if sg > 0.0 { 0 } else { 1 }] else { return q };
+        let ang = -sg * ARM_DOWN * way;
+        let (cs, sn) = ((ang * w).cos(), (ang * w).sin());
+        let (dx, dy) = (q[0] - px, q[1] - py);
+        [px + dx * cs - dy * sn, py + dx * sn + dy * cs, q[2]]
+    }
+
+    /// Where a vertex of the body goes whose x on the base body is `bx`: by its share of its side's arm.
+    pub(crate) fn moved(&self, q: V3, bx: f32, way: f32) -> V3 {
+        if bx.abs() < ARM_FROM[0] {
+            return q;
+        }
+        self.turned(q, bx.signum(), Arms::share(bx), way)
+    }
+}
+
+pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize, Arms) {
     morph_as(h, p, None, None, None, None, None, None, true)
 }
 
 #[allow(clippy::too_many_arguments)]
 /// (`drawn`: with the drawing of a dress with a table, `DressSet::style`, as a portrait shows the head; without
 /// it the face as it is measured)
-fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, skull: Option<[f32; 3]>, wide: Option<f32>, nose: Option<f32>, mut list: Option<&mut Vec<(String, f32)>>, drawn: bool) -> (Vec<V3>, usize) {
+fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, skull: Option<[f32; 3]>, wide: Option<f32>, nose: Option<f32>, mut list: Option<&mut Vec<(String, f32)>>, drawn: bool) -> (Vec<V3>, usize, Arms) {
     let mut pp = h.base.clone();
     let mut used = 0;
     // targets a dress with a table takes nothing of (`DressSet::without`)
@@ -807,36 +864,11 @@ fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, s
         jaw_soften(h, &mut pp, k);
     }
     // arms down from the A pose, softly weighted around the shoulder joint
-    for sg in [1.0f32, -1.0] {
-        let (mut px, mut py, mut n) = (0f32, 0f32, 0);
-        for i in 0..h.n {
-            let (bx, by) = (h.base[i][0] * sg, h.base[i][1]);
-            if bx > 1.58 && bx < 1.78 && by > 4.95 && by < 5.55 {
-                px += pp[i][0];
-                py += pp[i][1];
-                n += 1;
-            }
-        }
-        if n == 0 {
-            continue;
-        }
-        px /= n as f32;
-        py /= n as f32;
-        let ang = -sg * 0.66;
-        for i in 0..h.n {
-            let bx = h.base[i][0] * sg;
-            if bx < 1.3 {
-                continue;
-            }
-            let t = c01((bx - 1.3) / 0.5);
-            let w = t * t * (3.0 - 2.0 * t);
-            let (cs, sn) = ((ang * w).cos(), (ang * w).sin());
-            let (dx, dy) = (pp[i][0] - px, pp[i][1] - py);
-            pp[i][0] = px + dx * cs - dy * sn;
-            pp[i][1] = py + dx * sn + dy * cs;
-        }
+    let arms = Arms::of(h, &pp);
+    for i in 0..h.n {
+        pp[i] = arms.moved(pp[i], h.base[i][0], 1.0);
     }
-    (pp, used)
+    (pp, used, arms)
 }
 
 /// The field in which the mouth is moved down (`mouth_set`), on the base head (1 unit = 10 cm). By height: in

@@ -141,7 +141,7 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
 pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Portrait {
     let real = crate::real::folder();
     let lod = if real.is_some() { LODS - 1 } else { lod.min(LODS - 1) };
-    let (pp, targets) = morph(h, p);
+    let (pp, targets, arms) = morph(h, p);
     let mut x = Ctx { h, pp, rng: Rng::new(p.seed ^ 0x5bd1_e995) };
     let body_full = h.body_full();
     let mut uniq = Vec::new();
@@ -1438,11 +1438,11 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
                 Some(t) => (t.veil, ""),
                 None => ("cloth_veil", ""),
             };
-            let real_veil = if real.is_some() { crate::real::folder().and_then(|d| mh_cloth_as(&d, cloth, image, &x.pp, &h.base, &|_| vcol, None, if garb.is_some() { Layer::Over } else { Layer::Bound })) } else { None };
+            let real_veil = if real.is_some() { crate::real::folder().and_then(|d| mh_cloth_as(&d, cloth, image, &x.pp, &h.base, &|_| vcol, None, if garb.is_some() { Layer::Over } else { Layer::Bound }, &arms)) } else { None };
             if let Some(s) = real_veil {
                 // the wimple under the veil of older women
                 if let Some(t) = garb.filter(|t| p.age >= t.wimple_from) {
-                    if let Some(w) = crate::real::folder().and_then(|d| mh_cloth(&d, t.wimple, &x.pp, &h.base, &|_| vcol, None, Layer::Over)) {
+                    if let Some(w) = crate::real::folder().and_then(|d| mh_cloth(&d, t.wimple, &x.pp, &h.base, &|_| vcol, None, Layer::Over, &arms)) {
                         out.push(w);
                     }
                 }
@@ -1571,7 +1571,7 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
                 Some(t) => (t.gown, ""),
                 None => ("cloth_tunic", ""),
             };
-            mh_cloth_as(&d, name, image, &x.pp, &h.base, &col, Some(&cell), if garb.is_some() { Layer::Gown } else { Layer::Bound })
+            mh_cloth_as(&d, name, image, &x.pp, &h.base, &col, Some(&cell), if garb.is_some() { Layer::Gown } else { Layer::Bound }, &arms)
         })
     } else {
         None
@@ -1584,7 +1584,7 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
             let (name, image) = if wimpled { ("", "") } else { (t.under[cut], if cut == 0 { "" } else { t.under[0] }) };
             if !name.is_empty() {
                 let linen = hex(t.linen);
-                if let Some(u) = crate::real::folder().and_then(|d| mh_cloth_as(&d, name, image, &x.pp, &h.base, &|_| linen, None, Layer::Under)) {
+                if let Some(u) = crate::real::folder().and_then(|d| mh_cloth_as(&d, name, image, &x.pp, &h.base, &|_| linen, None, Layer::Under, &arms)) {
                     out.push(u);
                 }
             }
@@ -1596,7 +1596,7 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
         // (round 136: plain, or with the cape's hem dagged; the dagged file is drawn with the plain one's image)
         if let Some((name, image)) = d.hood_file(hood, p.seed) {
             let hc = hex(d.wool[((p.seed / 10) as usize + 3) % d.wool.len()]);
-            if let Some(s) = crate::real::folder().and_then(|f| mh_cloth_as(&f, name, image, &x.pp, &h.base, &|v| cloth_col(hc, v), None, Layer::Over)) {
+            if let Some(s) = crate::real::folder().and_then(|f| mh_cloth_as(&f, name, image, &x.pp, &h.base, &|v| cloth_col(hc, v), None, Layer::Over, &arms)) {
                 out.push(s);
             }
         }
@@ -1633,7 +1633,7 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
     }
     // real look: the toga draped in Blender
     let real_toga = if st.toga && !fem && !swaddled && real.is_some() {
-        crate::real::folder().and_then(|d| mh_cloth(&d, "cloth_toga", &x.pp, &h.base, &|v| cloth_col(toga_dye, v), Some(&cell), Layer::Bound))
+        crate::real::folder().and_then(|d| mh_cloth(&d, "cloth_toga", &x.pp, &h.base, &|v| cloth_col(toga_dye, v), Some(&cell), Layer::Bound, &arms))
     } else {
         None
     };
@@ -1668,7 +1668,7 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
     let real_palla = match (cloak, swaddled) {
         (Some(c), false) if fem && real.is_some() => {
             let dye = hex(c);
-            crate::real::folder().and_then(|d| mh_cloth(&d, "cloth_palla", &x.pp, &h.base, &|v| cloth_col(dye, v), Some(&cell), Layer::Bound))
+            crate::real::folder().and_then(|d| mh_cloth(&d, "cloth_palla", &x.pp, &h.base, &|v| cloth_col(dye, v), Some(&cell), Layer::Bound, &arms))
         }
         _ => None,
     };

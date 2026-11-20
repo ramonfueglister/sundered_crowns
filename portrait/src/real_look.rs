@@ -3,7 +3,7 @@
 
 use crate::geo::*;
 use crate::look::*;
-use crate::morph::vnormals;
+use crate::morph::{vnormals, Arms};
 use crate::settings;
 
 /// Builds the portrait of `p` at level of detail `lod` (0..LODS).
@@ -341,7 +341,7 @@ pub(crate) const CLOTH_CUTS: [f32; 5] = [0.0, 0.1, 0.14, 0.86, 0.9];
 /// the garment's own shape (the same binding on the unmorphed body) is
 /// averaged over the cloth's neighbours.
 #[allow(clippy::type_complexity)]
-fn calm(refs: &[([usize; 3], [f32; 3], [f32; 3])], tris: &[([usize; 3], [[f32; 2]; 3])], vs: Vec<V3>, pp: &[V3], base: &[V3], layer: Layer) -> Vec<V3> {
+fn calm(refs: &[([usize; 3], [f32; 3], [f32; 3])], tris: &[([usize; 3], [[f32; 2]; 3])], vs: Vec<V3>, pp: &[V3], base: &[V3], layer: Layer, arms: &Arms) -> Vec<V3> {
     let nv = vs.len();
     let rest: Vec<V3> = refs
         .iter()
@@ -366,26 +366,60 @@ fn calm(refs: &[([usize; 3], [f32; 3], [f32; 3])], tris: &[([usize; 3], [[f32; 2
             }
         }
     }
-    let mut shift: Vec<V3> = (0..nv).map(|i| sub(vs[i], rest[i])).collect();
+    // What is evened out over the cloth, each place half itself and half the mean of its neighbours: the shift
+    // (three numbers), and since round 142 the garment's own shape (three), how large the body is against the
+    // base's where the place is bound (one) and the share of the arms' way down the body takes there (one)
+    let mut even: Vec<[f32; 8]> = (0..nv)
+        .map(|i| {
+            let (d, (r, w, _)) = (sub(vs[i], rest[i]), &refs[i]);
+            let size = (len(cross(sub(pp[r[1]], pp[r[0]]), sub(pp[r[2]], pp[r[0]]))) / len(cross(sub(base[r[1]], base[r[0]]), sub(base[r[2]], base[r[0]]))).max(1e-9)).sqrt();
+            let share: f32 = (0..3).map(|k| w[k] * Arms::share(base[r[k]][0])).sum();
+            [d[0], d[1], d[2], rest[i][0], rest[i][1], rest[i][2], size, share]
+        })
+        .collect();
     for _ in 0..CLOTH_CALM {
-        let next: Vec<V3> = (0..nv)
+        even = (0..nv)
             .map(|i| {
                 if nbr[i].is_empty() {
-                    return shift[i];
+                    return even[i];
                 }
-                let mut m = [0f32; 3];
+                let mut m = [0f32; 8];
                 for &j in &nbr[i] {
-                    m = add(m, shift[j as usize]);
+                    for (a, b) in m.iter_mut().zip(even[j as usize]) {
+                        *a += b;
+                    }
                 }
-                let k = 1.0 / nbr[i].len() as f32;
-                [0.5 * shift[i][0] + 0.5 * m[0] * k, 0.5 * shift[i][1] + 0.5 * m[1] * k, 0.5 * shift[i][2] + 0.5 * m[2] * k]
+                let k = 0.5 / nbr[i].len() as f32;
+                std::array::from_fn(|q| 0.5 * even[i][q] + m[q] * k)
             })
             .collect();
-        shift = next;
     }
-    // the calmed cloth must not sink into the body: each vertex a little off its
-    // own triangle (along the triangle's normal), if it was bound that far off
-    let calmed: Vec<V3> = (0..nv).map(|i| add(rest[i], shift[i])).collect();
+    // The calmed cloth: the garment's own shape, moved by the evened shift. (Round 142) What that shape has
+    // beyond its own evened shape, its folds, is as large against the base's as the body is: on a child of two,
+    // 0.58 of the base's size, a fold 2 cm deep stood 2 cm deep on a chest half as broad, and the bust of the
+    // body the gown was draped on stood on it as two points. Never larger than draped: on a man, 1.05 of the
+    // base's size and up to 1.23 over the shoulders, larger folds turned 918 of the gown's edges over 90 degrees
+    // for 769 (tests/bust.rs counts what the picture shows). And then the arms come down, and the cloth with them
+    // (see `mh_cloth_as`): each place by the share of the arm's way that the body takes where the place is bound,
+    // evened out over the cloth, so that a sleeve goes all the way, the gown's side under the arm stays with the
+    // flank and the cloth between them turns by a share that changes evenly along it
+    // (A hem's roll is not a fold: it is as thick on a child's gown as on a grown person's, and brought down to
+    // half its 2 mm it was pressed flat by the hold below. A hem's triangles are known by their place in the
+    // image, a twentieth of it round the roll: `tunic_bind.py`.)
+    let mut hem = vec![false; nv];
+    for (t, _) in tris.iter().filter(|(_, uv)| uv.iter().all(|c| c[1].abs() <= 0.05)) {
+        for &i in t {
+            hem[i] = true;
+        }
+    }
+    let calmed: Vec<V3> = (0..nv)
+        .map(|i| {
+            let e = &even[i];
+            let folds = if hem[i] { 1.0 } else { e[6].min(1.0) };
+            let q: V3 = std::array::from_fn(|a| rest[i][a] + e[a] + (folds - 1.0) * (rest[i][a] - e[3 + a]));
+            arms.turned(q, if rest[i][0] < 0.0 { -1.0 } else { 1.0 }, e[7], 1.0)
+        })
+        .collect();
     // (round 140) the cloth's own direction at each vertex, from its triangles as they lie calmed
     let mut out = vec![[0f32; 3]; nv];
     for (t, _) in tris {
@@ -461,14 +495,15 @@ const CLOTH_ALONG: f32 = 0.5;
 /// Below this height (base units) a garment over the gown lies on the gown, above it on the head.
 const CLOTH_NECK_Y: f32 = 5.9;
 
-pub(crate) fn mh_cloth(dir: &str, name: &str, pp: &[V3], base: &[V3], color: &dyn Fn(V3) -> Rgb, cells: Option<&dyn Fn(V3) -> [f32; 2]>, layer: Layer) -> Option<Surface> {
-    mh_cloth_as(dir, name, "", pp, base, color, cells, layer)
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn mh_cloth(dir: &str, name: &str, pp: &[V3], base: &[V3], color: &dyn Fn(V3) -> Rgb, cells: Option<&dyn Fn(V3) -> [f32; 2]>, layer: Layer, arms: &Arms) -> Option<Surface> {
+    mh_cloth_as(dir, name, "", pp, base, color, cells, layer, arms)
 }
 
 /// `mh_cloth` for a garment that may have no image of its own beside it: it is drawn with `image`'s then (a second
 /// cut of one cloth: a woman's gown with the men's image, a shirt with the smock's).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn mh_cloth_as(dir: &str, name: &str, image: &str, pp: &[V3], base: &[V3], color: &dyn Fn(V3) -> Rgb, cells: Option<&dyn Fn(V3) -> [f32; 2]>, layer: Layer) -> Option<Surface> {
+pub(crate) fn mh_cloth_as(dir: &str, name: &str, image: &str, pp: &[V3], base: &[V3], color: &dyn Fn(V3) -> Rgb, cells: Option<&dyn Fn(V3) -> [f32; 2]>, layer: Layer, arms: &Arms) -> Option<Surface> {
     let rows = crate::real::rows(&format!("{dir}/{name}.txt"))?;
     let mut it = rows.iter();
     let head = it.next()?;
@@ -489,12 +524,18 @@ pub(crate) fn mh_cloth_as(dir: &str, name: &str, image: &str, pp: &[V3], base: &
         refs.push((r, [f[3], f[4], f[5]], [f[6], f[7], f[8]]));
     }
     let _ = (lo0, hi0, lo1, hi1);
+    // (round 142) A calmed garment is set on the body as it stands with its arms spread, as the garment was
+    // draped, and comes down with the arms after it is calmed (`calm`). Set on the body with its arms down, each
+    // point went with its own triangle by the whole of the arm's turn or by none of it: a sleeve swung down, the
+    // cloth in the armpit stayed with the trunk, and what the calming made of the two was a shelf of cloth across
+    // the chest with a spike at either end, through the sleeve (tests/bust.rs)
+    let at = |i: usize| -> V3 { if layer == Layer::Bound { pp[i] } else { arms.moved(pp[i], base[i][0], -1.0) } };
     // the offset is in the bound triangle's frame (normal, first edge, across),
     // scaled with the triangle's size
     let vs: Vec<V3> = refs
         .iter()
         .map(|(r, w, o)| {
-            let (a, b, c) = (pp[r[0]], pp[r[1]], pp[r[2]]);
+            let (a, b, c) = (at(r[0]), at(r[1]), at(r[2]));
             let (a0, b0, c0) = (base[r[0]], base[r[1]], base[r[2]]);
             let cr = cross(sub(b, a), sub(c, a));
             let cr0 = cross(sub(b0, a0), sub(c0, a0));
@@ -511,7 +552,7 @@ pub(crate) fn mh_cloth_as(dir: &str, name: &str, image: &str, pp: &[V3], base: &
         let f = it.next()?;
         tris.push(([f[0] as usize, f[1] as usize, f[2] as usize], [[f[3], 1.0 - f[4]], [f[5], 1.0 - f[6]], [f[7], 1.0 - f[8]]]));
     }
-    let vs = if layer == Layer::Bound { vs } else { calm(&refs, &tris, vs, pp, base, layer) };
+    let vs = if layer == Layer::Bound { vs } else { calm(&refs, &tris, vs, pp, base, layer, arms) };
     let mut vn = vec![[0f32; 3]; nv];
     for (t, _) in &tris {
         let n = cross(sub(vs[t[1]], vs[t[0]]), sub(vs[t[2]], vs[t[0]]));
