@@ -181,9 +181,12 @@ def parse(lines):
                 continue
         if NOTES.match(t):
             in_notes = True
-        if in_notes:
-            continue
+            report['notes'] += 1
         mo = MONTH.match(t)
+        # the notes run to the next page of the itinerary, or to its next month or day where the OCR lost the head
+        if in_notes and not mo and not continues(t, y, m, last):
+            continue
+        in_notes = False
         if mo:
             month = MONTHS.index(mo.group(1)) + 1
             if month == m:
@@ -230,7 +233,7 @@ def parse(lines):
 
 def day_of_row(y, m, last, number, weekday, report):
     """The date of a day row after day `last` of month `m`: the next day where the number or the weekday read agree
-    with it, a day a few days on where both agree, or the first days of the next month."""
+    with it, a later day of the month or a day of the next where both agree (the days between are lost)."""
     nxt = last + 1
     if nxt <= month_days(y, m):
         wd = julian_weekday(y, m, nxt)
@@ -242,18 +245,33 @@ def day_of_row(y, m, last, number, weekday, report):
         if weekday == wd and number is not None and not (nxt < number <= month_days(y, m)):
             report['day_number_misread'] += 1
             return y, m, nxt
-    if (
-        number is not None
-        and nxt < number <= min(nxt + 6, month_days(y, m))
-        and weekday == julian_weekday(y, m, number)
-    ):
+    if number is not None and nxt < number <= month_days(y, m) and weekday == julian_weekday(y, m, number):
         report['days_missing'] += number - nxt
         return y, m, number
-    if number is not None and number <= 3 and last >= 26:
-        ny, nm = (y + 1, 1) if m == 12 else (y, m + 1)
-        if weekday == julian_weekday(ny, nm, number):
-            return ny, nm, number
+    ny, nm = (y + 1, 1) if m == 12 else (y, m + 1)
+    if (
+        number is not None
+        and number < nxt
+        and number <= month_days(ny, nm)
+        and weekday == julian_weekday(ny, nm, number)
+    ):
+        if number > 1:
+            report['days_missing'] += number - 1
+        return ny, nm, number
     return None
+
+
+def continues(t, y, m, last):
+    """Whether a line is the day row of the next day, number and weekday both read right."""
+    row = DAY_ROW.match(t)
+    if not row or m is None:
+        return False
+    num, wd = row.group(1).translate(DIGITS), row.group(2)
+    weekday = WEEKDAYS.get(wd, 6 if SUNDAY.match(wd) else None)
+    nxt = last + 1
+    if nxt > month_days(y, m):
+        y, m, nxt = (y + 1, 1, 1) if m == 12 else (y, m + 1, 1)
+    return num == str(nxt) and weekday == julian_weekday(y, m, nxt)
 
 
 def places_of(entry_lines, places, counties, report):
@@ -310,10 +328,10 @@ def misread(days, gaz, index, report):
     for _, names, _ in days:
         for n in names:
             if n not in found:
-                found[n] = bool(gaz.lookup(n))
+                found[n] = bool(gaz.lookup(n)[0])
     for n in [n for n, ok in found.items() if not ok]:
         close = difflib.get_close_matches(key(n), list(index), n=1, cutoff=0.85)
-        if close and close[0] != key(n) and gaz.lookup(index[close[0]]):
+        if close and close[0] != key(n) and gaz.lookup(index[close[0]])[0]:
             found[n] = index[close[0]]
             report['names_by_index'] += 1
     for i, (_, names, _) in enumerate(days):

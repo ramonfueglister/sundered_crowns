@@ -99,12 +99,13 @@ class Gazetteer:
                 self.cells[(math.floor(lat * 2), math.floor(lon * 2))].append(i)
 
     def lookup(self, name):
-        """The places that bear a name: those whose own name it is, else those with it as another name."""
-        for table in (self.own, self.other):
+        """The places that bear a name: those whose own name it is, else those with it as another name; and whether
+        it is their own name."""
+        for own, table in ((True, self.own), (False, self.other)):
             for v in variants(name):
                 if v in table:
-                    return [self.at[i] for i in table[v]]
-        return []
+                    return [self.at[i] for i in table[v]], own
+        return [], False
 
     def near(self, name, before, after):
         """The place within reach of the days around (before, after: (place, days) or None) whose name is likest the
@@ -124,7 +125,7 @@ class Gazetteer:
                     if not within(p, before, after):
                         continue
                     s = max(like(g, e) for e in self.names[i])
-                    if s > best_like or (s == best_like and best and detour(p, ends) < detour(best, ends)):
+                    if s > best_like or (s == best_like and (not best or detour(p, ends) < detour(best, ends))):
                         best, best_like = p, s
         return best
 
@@ -139,9 +140,19 @@ def detour(p, ends):
     return km(p, ends[0][0])
 
 
+def reachable(p, before, after):
+    """Whether the king can be at p coming from the stay before or going on to the stay after (where the two
+    contradict each other, src/sim/content/travel.ts reachableStops keeps the stay more days name)."""
+    return (
+        (before is None and after is None)
+        or (before is not None and reach(p, before))
+        or (after is not None and reach(p, after))
+    )
+
+
 def within(p, before, after):
     ends = [e for e in (before, after) if e]
-    return reach(p, before) and reach(p, after) and detour(p, ends) <= (DETOUR_KM if len(ends) == 2 else DETOUR_KM / 2)
+    return reachable(p, before, after) and detour(p, ends) <= (DETOUR_KM if len(ends) == 2 else DETOUR_KM / 2)
 
 
 def one_place(cands):
@@ -152,64 +163,71 @@ def one_place(cands):
 
 def place_days(days, gaz, report):
     """The place of each day of an itinerary: days are (date, day number, [names in the order of the day]); returns
-    (date, name, lat, lon) for the days placed, and the days left out. The day goes to the last of its names that can
-    be placed."""
-    cands, unplaced = {}, []
+    (date, name, lat, lon) for the days placed, and the days left out. A day goes by the last of its names that is
+    found; days one after the other under one name are one stay and are placed together. First the stays whose name
+    only one place bears (as its own name) are placed, then the others by the nearest of those, then each again by the
+    stays placed around it."""
+    found = {}
     for _, _, names in days:
         for n in names:
-            if n not in cands:
-                cands[n] = gaz.lookup(n)
-    # the days whose last name found only one place can bear, while each is within reach of the one before or after
-    anchor = []
-    for _, _, names in days:
-        found = [n for n in names if cands[n]]
-        anchor.append(one_place(cands[found[-1]]) if found else None)
+            if n not in found:
+                found[n] = gaz.lookup(n)
+    stays = []
+    for date, day, names in days:
+        if not names:
+            continue
+        name = ([n for n in names if found[n][0]] or names)[-1]
+        if stays and stays[-1]['name'] == name:
+            stays[-1]['days'].append((date, day))
+        else:
+            stays.append({'name': name, 'days': [(date, day)], 'at': None, 'sure': False})
+    for s in stays:
+        cands, own = found[s['name']]
+        s['at'] = one_place(cands) if own and cands else None
+        s['sure'] = s['at'] is not None
     for _ in range(20):
-        idx = [i for i, a in enumerate(anchor) if a]
+        sure = [s for s in stays if s['sure']]
         bad = [
-            i
-            for j, i in enumerate(idx)
-            if j > 0
-            and j + 1 < len(idx)
-            and not reach(anchor[i], (anchor[idx[j - 1]], days[i][1] - days[idx[j - 1]][1]))
-            and not reach(anchor[i], (anchor[idx[j + 1]], days[idx[j + 1]][1] - days[i][1]))
+            s
+            for j, s in enumerate(sure)
+            if 0 < j < len(sure) - 1
+            and not reachable(s['at'], around(s, sure[j - 1], -1), around(s, sure[j + 1], 1))
+            and len(s['days']) <= max(len(sure[j - 1]['days']), len(sure[j + 1]['days']))
         ]
         if not bad:
             break
-        report['anchors_out_of_reach'] += len(bad)
-        for i in bad:
-            anchor[i] = None
-    idx = [i for i, a in enumerate(anchor) if a]
-    out, k = [], 0
-    for i, (date, day, names) in enumerate(days):
-        while k < len(idx) and idx[k] < i:
-            k += 1
-        if anchor[i]:
-            out.append((date, last_found(names, cands), round(anchor[i][0], 4), round(anchor[i][1], 4)))
-            continue
-        b = idx[k - 1] if k > 0 else None
-        a = idx[k] if k < len(idx) else None
-        before = (anchor[b], day - days[b][1]) if b is not None else None
-        after = (anchor[a], days[a][1] - day) if a is not None else None
-        ends = [e for e in (before, after) if e]
-        for n in reversed(names):
-            ok = [c for c in cands[n] if reach(c, before) and reach(c, after)]
+        report['stays_out_of_reach'] += len(bad)
+        for s in bad:
+            s['at'], s['sure'] = None, False
+    for by in ('sure', 'at'):
+        for i, s in enumerate(stays):
+            if s['sure']:
+                continue
+            before = next((around(s, t, -1) for t in reversed(stays[:i]) if t[by]), None)
+            after = next((around(s, t, 1) for t in stays[i + 1 :] if t[by]), None)
+            ends = [e for e in (before, after) if e]
+            ok = [c for c in found[s['name']][0] if reachable(c, before, after)]
+            near = None if ok else gaz.near(s['name'], before, after)
             if ok:
-                p = min(ok, key=lambda c: detour(c, ends) if ends else -c[2])
-                report['days_by_nearness'] += 1
-                break
-            p = gaz.near(n, before, after)
-            if p:
-                report['days_by_like_name_nearby'] += 1
-                break
-        else:
-            if names:
-                unplaced.append(f'{date} {" / ".join(names)}')
-            continue
-        out.append((date, n, round(p[0], 4), round(p[1], 4)))
+                s['at'] = min(ok, key=lambda c: detour(c, ends) if ends else -c[2])
+            elif near or by == 'sure':
+                s['at'] = near
+            if by == 'at' and s['at']:
+                report['stays_by_nearness' if ok else 'stays_by_like_name_nearby'] += 1
+    out, unplaced = [], []
+    for s in stays:
+        for date, _ in s['days']:
+            if s['at']:
+                out.append((date, s['name'], round(s['at'][0], 4), round(s['at'][1], 4)))
+            else:
+                unplaced.append(f'{date} {s["name"]}')
+    report['stays'] = len(stays)
+    report['stays_by_one_place'] = sum(s['sure'] for s in stays)
     report['days_unplaced'] = len(unplaced)
     return out, unplaced
 
 
-def last_found(names, cands):
-    return [n for n in names if cands[n]][-1]
+def around(s, t, side):
+    """The stay t before (side -1) or after (side 1) the stay s, as (its place, the days between)."""
+    gap = s['days'][0][1] - t['days'][-1][1] if side < 0 else t['days'][0][1] - s['days'][-1][1]
+    return (t['at'], gap)
