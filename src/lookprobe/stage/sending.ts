@@ -99,8 +99,8 @@ export function createSender(
     }
     // (the time since the last picture counts only from one sending picture to the next, not across a rest)
     const since = sentAt ? now - sentAt : 0;
-    let room = (share =
-      (now - movedAt < RESTS_AFTER ? SEND_MOVING : SEND_RESTING) * (since > SLOW ? since / (1000 / 60) : 1));
+    share = (now - movedAt < RESTS_AFTER ? SEND_MOVING : SEND_RESTING) * (since > SLOW ? since / (1000 / 60) : 1);
+    let room = share;
     for (const made of cold) {
       const bytes = weight(made.geometry);
       if (sending.length && bytes > room) break;
