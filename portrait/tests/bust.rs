@@ -4,7 +4,7 @@
 
 mod common;
 
-use common::{head, person};
+use common::{head, person, person_of};
 use sc_portrait::dress::ENGLAND_1356;
 use sc_portrait::layers::{lift, sink, tuck, GAP, PASS, REACH, THROUGH, UNDER};
 use sc_portrait::pose::{hold_bust, BUST_SIDE, FRONT, FRONT_TOP};
@@ -223,14 +223,17 @@ fn what_of_the_gown_still_came_through_is_sunk_under_the_cloth_over_it() {
 fn nothing_of_the_gown_comes_through_the_cloth_over_it() {
     // On 120 people of 15 to 68 as the builder stands them: under a hood's cape, a veil's fall and a wimple no
     // corner of the gown stands outside that cloth (counted below the frame's chin, as the builder lifts and
-    // sinks there; a corner that is further through than `THROUGH` is not one of that place's layers).
+    // sinks there; a corner that is further through than `THROUGH` is not one of that place's layers). And on
+    // the same 120 as people of rank (round 151: the court's gown is a drape of its own, which the hoods, the
+    // veil and the wimple were not draped over).
     let Some(h) = head() else { return };
     let d = &ENGLAND_1356;
     let (mut through, mut worn, mut under) = (0, 0, 0);
     let mut worst = (0, 0u32);
     let mut spent = 0f32;
-    for k in 0..120u32 {
-        let p = person(k, k % 2 == 0, [15.0, 24.0, 35.0, 50.0, 58.0, 68.0][(k / 2) as usize % 6]);
+    for k in 0..240u32 {
+        let (k, stand) = (k % 120, if k < 120 { 1 } else { 3 });
+        let p = person_of(k, k % 2 == 0, [15.0, 24.0, 35.0, 50.0, 58.0, 68.0][(k / 2) as usize % 6], stand);
         let out = build(&h, &p, 1);
         let Some(gown) = out.surfaces.iter().find(|s| s.tex.as_deref().is_some_and(|t| t.contains(d.gown))) else { panic!("person {k}: no gown") };
         for over in out.surfaces.iter().filter(|s| s.tex.as_deref().is_some_and(|t| [d.veil, d.veil_back, d.wimple, d.hood_up, d.hood_back].iter().any(|n| t.contains(n)))) {
@@ -256,10 +259,10 @@ fn nothing_of_the_gown_comes_through_the_cloth_over_it() {
         }
     }
     if show() {
-        println!("{worn} cloths over a gown on 120 people; {under} corners of the gown under them, {through} through them (at most {} on person {}); looking takes {:.1} ms a cloth", worst.0, worst.1, 1000.0 * spent / worn as f32);
+        println!("{worn} cloths over a gown on 120 people, each as a villager and as a person of rank; {under} corners of the gown under them, {through} through them (at most {} on person {}); looking takes {:.1} ms a cloth", worst.0, worst.1, 1000.0 * spent / worn as f32);
         return;
     }
-    assert!(worn >= 80 && under > 100_000, "{worn} cloths over a gown, {under} corners under them");
+    assert!(worn >= 140 && under > 180_000, "{worn} cloths over a gown, {under} corners under them");
     assert_eq!(through, 0, "{through} corners of the gown through the cloth over it, {} on person {}", worst.0, worst.1);
 }
 

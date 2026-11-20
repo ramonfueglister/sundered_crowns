@@ -1608,6 +1608,8 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
             // (a dress with a table cuts the gown's neck by who wears it; the cuts are of the gown's cloth)
             let (name, image) = match garb {
                 Some(t) if !t.gown_cut[cut].is_empty() && !wimpled => (t.gown_cut[cut], t.gown),
+                // (round 151: the round gown from a file of its own where the table has one, with the gown's image)
+                Some(t) if !t.gown_file.is_empty() => (t.gown_file, t.gown),
                 Some(t) => (t.gown, ""),
                 None => ("cloth_tunic", ""),
             };

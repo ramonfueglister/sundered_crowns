@@ -308,7 +308,7 @@ fn a_ladys_gown_at_court_is_cut_wider_and_lower_than_a_village_womans_and_shows_
     let Some(h) = head() else { return };
     let (e, c) = (&sc_portrait::dress::ENGLAND_1356, &sc_portrait::dress::COURT_1356);
     assert_ne!(c.gown_cut[0], e.gown_cut[0], "the court's ladies have a cut of their own");
-    assert_eq!((c.gown_cut[1], c.gown, c.under[1], c.under_image, c.wimple_from), (e.gown_cut[1], e.gown, e.under[1], e.under_image, e.wimple_from));
+    assert_eq!((c.gown, c.under[1], c.under_image, c.wimple_from), (e.gown, e.under[1], e.under_image, e.wimple_from));
     assert!(c.under[0].is_empty(), "no smock shows in a lady's neck");
     let linen = |out: &Portrait| out.surfaces.iter().filter(|s| s.tex.as_deref().is_some_and(|t| t.contains("/cloth_smock."))).map(|s| s.pos.len() / 3).collect::<Vec<_>>();
     let mut laces = 0;
@@ -327,11 +327,24 @@ fn a_ladys_gown_at_court_is_cut_wider_and_lower_than_a_village_womans_and_shows_
         let (broad, lower) = (breadth(&l) - breadth(&v), low(&l, &court) - low(&v, &village));
         let shown = linen(&court);
         laces += usize::from(laced);
-        // held under the round gown, as the village's cut is (the test above: on the same body, the day before
-        // the wimple's age)
+        // held under the village's round gown, as the village's cut is (the test above: on the same body, the
+        // day before the wimple's age), and so is the round gown she wears from that day (round 151: the
+        // court's own, closer on the body)
         let before = stiff(c.wimple_from - 0.01, 3);
         let (last, sk) = (gown(&before), skin(&before));
         assert!((breadth(&last) - breadth(&l)).abs() < 1.0, "lady {k}: the wide cut until the wimple's age");
+        let (own, round) = (round, gown(&stiff(c.wimple_from, 1)));
+        let within = |g: &Cloth| g.pos.iter().enumerate().filter(|(i, q)| !g.hem[*i] && q[0].abs() < 1.0 && q[1] > before.chin - 2.0).filter_map(|(_, q)| beyond(q, &sk, &round)).fold((0, 0, 0.0f32), |(n, over, most), out| (n + 1, over + usize::from(out > 0.02), most.max(10.0 * out)));
+        let (n_own, over_own, most_own) = within(&own);
+        // (measured on eight ladies: none on five, 42, 466 and 1 879 of some 4 600 on three, all from 12 cm
+        // under the chin down, by up to 0.64 cm: where the village's gown has its folds the court's lies smooth
+        // over them. A drape that is not held under the round gown stood up to 2.2 cm outside it, round 110.
+        // That nothing of the gown comes through the cloth over it: tests/bust.rs, at court as in the village)
+        if show() {
+            println!("lady {k}: {over_own} of {n_own} points of the court's round gown more than 2 mm outside the village's, by up to {most_own:.2} cm");
+        } else {
+            assert!(n_own > 2000 && most_own < 1.0, "lady {k}: {over_own} of {n_own} points of the court's round gown outside the village's, by up to {most_own} cm");
+        }
         let (mut n, mut over, mut most) = (0, 0, 0.0f32);
         for (i, g) in last.pos.iter().enumerate() {
             if last.hem[i] || g[0].abs() > 1.0 || g[1] < before.chin - 2.0 {
@@ -351,20 +364,103 @@ fn a_ladys_gown_at_court_is_cut_wider_and_lower_than_a_village_womans_and_shows_
                 low(&l, &court),
                 low(&v, &village),
                 breadth(&q),
-                breadth(&round),
+                breadth(&own),
             );
             continue;
         }
         assert!(broad > 5.0 && lower > 2.0, "lady {k}: the neck {broad} cm broader and {lower} cm lower than the village's");
         assert!((breadth(&q) - breadth(&l)).abs() < 0.5, "lady {k}: a queen's gown {} cm broad at the neck, a lady's {}", breadth(&q), breadth(&l));
-        assert!(breadth(&round) < breadth(&v) - 2.5 && cloth(&old, "/cloth_wimple.").is_some(), "lady {k}: the round gown under the wimple, {} cm broad", breadth(&round));
+        assert!(breadth(&own) < breadth(&v) - 2.5 && cloth(&old, "/cloth_wimple.").is_some(), "lady {k}: the round gown under the wimple, {} cm broad", breadth(&own));
         assert!(shown.len() == usize::from(laced) && shown.iter().all(|&t| t < 300), "lady {k}: linen in the gown's neck, {shown:?} triangles (laced: {laced})");
-        // (measured: 4 to 12 of some 2 800, by up to 0.3 cm)
+        // (round 149, the village's drape with the wide neck: 4 to 12 of some 2 800, by up to 0.3 cm. Round
+        // 151, the court's own drape: as its round gown above, more of them over the village's folds, and no
+        // further out. The share is not held any more, the distance is)
         assert!(n > 2000, "lady {k}: {n} points of the wide cut where the round gown lies");
-        assert!((over as f32) < 0.04 * n as f32 && most < 1.2, "lady {k}: {over} of {n} points of the wide cut outside the round gown, by up to {most} cm");
+        assert!(most < 1.0, "lady {k}: {over} of {n} points of the wide cut outside the round gown, by up to {most} cm");
     }
     assert!(laces == 2, "{laces} ladies of forty with a laced gown");
     // a lord's shirt shows in his gown as before
     let lord = build(&h, &person_of(1, false, 34.0, 3), 1);
     assert!(linen(&lord).iter().any(|&t| t > 300), "a lord's shirt: {:?}", linen(&lord));
+}
+
+/// How deep a gown is from front to back in the middle of the trunk, 1 cm to either side of `cx`, between `from`
+/// and `to` under the chin (the builder's units; the result in centimetres).
+fn depth(c: &Cloth, cx: f32, chin: f32, from: f32, to: f32) -> f32 {
+    let z = (0..c.pos.len()).filter(|&i| !c.hem[i] && (c.pos[i][0] - cx).abs() < 0.1 && c.pos[i][1] < chin - from && c.pos[i][1] > chin - to).map(|i| c.pos[i][2]).fold((f32::MAX, f32::MIN), |r, z| (r.0.min(z), r.1.max(z)));
+    10.0 * (z.1 - z.0)
+}
+
+/// How uneven a gown's cloth is: the angle between a triangle's face and the mean face of the triangles within
+/// 3 cm of it, on average over every seventh triangle (degrees). A sheet without a fold has little, a crumpled
+/// one much.
+fn folds(c: &Cloth) -> f32 {
+    let of: Vec<(V3, V3)> = c
+        .tris
+        .iter()
+        .filter(|t| !t.hem)
+        .map(|t| {
+            let n = cross(&sub(&t.at[1], &t.at[0]), &sub(&t.at[2], &t.at[0]));
+            let l = dot(&n, &n).sqrt().max(1e-12);
+            (t.at[0], n.map(|v| v / l))
+        })
+        .collect();
+    let (mut sum, mut m) = (0.0f32, 0);
+    for (at, n) in of.iter().step_by(7) {
+        let mean = of.iter().filter(|(q, _)| dist(at, q) < 0.3).fold([0f32; 3], |a, (_, f)| [a[0] + f[0], a[1] + f[1], a[2] + f[2]]);
+        sum += (dot(n, &mean) / dot(&mean, &mean).sqrt().max(1e-12)).clamp(-1.0, 1.0).acos().to_degrees();
+        m += 1;
+    }
+    sum / m as f32
+}
+
+#[test]
+fn the_courts_gown_lies_smoother_than_the_villages_and_no_deeper() {
+    // (round 151) The court's gown was the village's drape, laid 4.5 cm off the body from the chest down before
+    // it was let fall: a sack whose folds and dents a smooth silk shows. The court's files are draped from 1.2
+    // cm. On the same body, as draped and in no pose, a person of rank's gown is less uneven than the
+    // villager's, with every cut (a lady's, a lord's, the round one under a wimple). It is not narrower: a
+    // cloth that is let fall lies on the body where the body carries it, and from front to back in the middle
+    // of the trunk the two gowns are as deep as each other, at the chest and at the waist. A lord's shirt still
+    // lies under his gown.
+    let Some(h) = head() else { return };
+    let none = (f32::MAX, f32::MIN);
+    let wide = |r: &mut (f32, f32), v: f32| *r = (r.0.min(v), r.1.max(v));
+    let (mut even, mut chest, mut waist) = ([(none, none); 3], [none; 3], [none; 3]);
+    for k in 0..6 {
+        for (who, female, age) in [(0, true, 30.0), (1, false, 34.0), (2, true, 60.0)] {
+            let stiff = |stand: u8| build_posed(&h, &person_of(2 * k + u32::from(!female), female, age, stand), 1, Some([0.0; 3]));
+            let (village, court) = (stiff(1), stiff(3));
+            let (v, c) = (cloth(&village, "/cloth_cote").expect("the gown"), cloth(&court, "/cloth_cote").expect("the gown"));
+            // (13 to 17 cm under the chin: the chest under the neck's opening; 27 to 31 cm: the waist)
+            let at = |from: f32, to: f32| depth(&c, court.cx, court.chin, from, to) - depth(&v, village.cx, village.chin, from, to);
+            let (high, low, uneven) = (at(1.3, 1.7), at(2.7, 3.1), (folds(&v), folds(&c)));
+            wide(&mut chest[who], high);
+            wide(&mut waist[who], low);
+            wide(&mut even[who].0, uneven.0);
+            wide(&mut even[who].1, uneven.1);
+            if show() {
+                continue;
+            }
+            let name = ["lady", "lord", "lady with a wimple"][who];
+            assert!(uneven.1 < 0.85 * uneven.0, "{name} {k}: the gown's folds {:.1} degrees at court, {:.1} in the village", uneven.1, uneven.0);
+            assert!(high.abs() < 2.0 && low.abs() < 3.0, "{name} {k}: the gown at court {high:.1} cm deeper at the chest and {low:.1} at the waist than in the village");
+            if !female {
+                let (under, sk) = (cloth(&court, "/cloth_smock.").expect("his shirt"), skin(&court));
+                let (mut n, mut inside) = (0, 0);
+                for q in &under.pos {
+                    if let Some(over) = beyond(q, &sk, &c) {
+                        n += 1;
+                        inside += usize::from(over < 0.0);
+                    }
+                }
+                assert!(n > 300 && inside as f32 > 0.97 * n as f32, "lord {k}: {inside} of {n} points of the shirt nearer to the skin than the gown");
+            }
+        }
+    }
+    if show() {
+        for (who, name) in ["a lady", "a lord", "a lady with a wimple"].iter().enumerate() {
+            println!("{name}: folds {:.1} to {:.1} degrees in the village, {:.1} to {:.1} at court; the court's gown {:.1} to {:.1} cm deeper at the chest, {:.1} to {:.1} cm at the waist", even[who].0 .0, even[who].0 .1, even[who].1 .0, even[who].1 .1, chest[who].0, chest[who].1, waist[who].0, waist[who].1);
+        }
+    }
 }

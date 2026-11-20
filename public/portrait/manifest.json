@@ -254,12 +254,28 @@
    "bytes": 26574
   },
   {
+   "name": "cloth_cote_court.txt.zst",
+   "bytes": 201915
+  },
+  {
+   "name": "cloth_cote_court_ao.txt",
+   "bytes": 26862
+  },
+  {
    "name": "cloth_cote_v.txt.zst",
    "bytes": 211624
   },
   {
    "name": "cloth_cote_v_ao.txt",
    "bytes": 28836
+  },
+  {
+   "name": "cloth_cote_v_court.txt.zst",
+   "bytes": 211583
+  },
+  {
+   "name": "cloth_cote_v_court_ao.txt",
+   "bytes": 28872
   },
   {
    "name": "cloth_fillet.txt.zst",
@@ -315,11 +331,11 @@
   },
   {
    "name": "cloth_kirtle_court.txt.zst",
-   "bytes": 198083
+   "bytes": 196092
   },
   {
    "name": "cloth_kirtle_court_ao.txt",
-   "bytes": 27270
+   "bytes": 26970
   },
   {
    "name": "cloth_mantle.txt.zst",

@@ -17,7 +17,7 @@ one, changes nothing: same people in, same pictures out, measured.
 |---|---|---|
 | Builder | `portrait/` (Rust, WebAssembly) | From a person (100 bytes of genes, sex, age, estate, occupation, origin, food, mourning, wealth, worn clothes) to the triangles of head and shoulders: MakeHuman's head morphed by the genes, skin, eyes, hair, beard, clothes, headwear, jewellery |
 | Genes | `portrait/src/dna.rs` | 50 genes of two alleles, one byte each (Apoleia's 34, and 16 since round 112 that a dress with a table shows); a child takes one allele of each gene from either parent, plus a small mutation; founders draw from one of 23 pools (round 111), which one is the culture's (`src/sim/people/pools.ts`) |
-| Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; a culture without a set wears the plain dress of 1356 (round 111), one of Apoleia's seven regions Apoleia's Roman dress. England's has a table for people of rank and one for a crowned head (round 144), chosen by the person's stand; a crowned head wears a mantle faced with ermine over the gown (round 145, `portrait/src/mantle.rs`); a lady of rank shows her plaits and wears a circlet of gilt metal on them (round 146), a lord with nothing else on the head wears one too (round 147); a lord's hood is faced with white fur along the edge of its opening (round 148, `portrait/src/facing.rs`); a lady's gown is cut wide and low at the neck, with no linen in it (round 149, `cloth_kirtle_court`); the court's gown is of silk (round 150, `DressSet::gown_image`) |
+| Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; a culture without a set wears the plain dress of 1356 (round 111), one of Apoleia's seven regions Apoleia's Roman dress. England's has a table for people of rank and one for a crowned head (round 144), chosen by the person's stand; a crowned head wears a mantle faced with ermine over the gown (round 145, `portrait/src/mantle.rs`); a lady of rank shows her plaits and wears a circlet of gilt metal on them (round 146), a lord with nothing else on the head wears one too (round 147); a lord's hood is faced with white fur along the edge of its opening (round 148, `portrait/src/facing.rs`); a lady's gown is cut wide and low at the neck, with no linen in it (round 149, `cloth_kirtle_court`); the court's gown is of silk (round 150, `DressSet::gown_image`) and draped closer, so that it lies smooth (round 151, `DressSet::gown_file`) |
 | Stage profile | `src/portrait/profile.ts` | Light and materials per set of dress; Apoleia's portraits keep Apoleia's |
 | Pipeline | `tools/portrait/pipeline/` | Blender scripts that wrote the draped clothes and hair (not part of the build) |
 | Files of the real look | `public/portrait/` (41.5 MB) | The head (1.1 MB), data files (15.0 MB since round 111, 13.1 since round 110, 12.7 since round 109, 12.9 since round 105, 10.4 before round 104: the hair's bodies, the beard's locks, draped clothes, skin shading), images (24.8 MB: skin by age and sex, wrinkle maps, hair, cloth, eyes) |
@@ -7000,6 +7000,71 @@ the silk's (and one holds the gown's image by stand now) and passed when run aga
 Typecheck and lint pass, no new warning. The module is 754 kB.
 Pictures (project files, `portraits/`): `runde150_vorher_nachher.png` (six ladies at court, before above and
 after below), `runde150_herren_und_gekroente.png` (five lords, and five crowned heads under the mantle).
+
+**Round 151: the court's gown lies smooth** (2026-11-20). Round 150's own paragraph: "the smooth cloth also
+shows what the wool's weave hid: the small dents and facets of the drape on the chest, and the gown as loose
+as before". Ten people of rank beside the reference: the reference's gowns lie on the body, ours hung as the
+village's sack, and on silk every crease of it shone.
+
+What was read. Nothing new. Round 144's reading of Wikipedia, 1300-1400 in European fashion (as an account of
+the page): noblemen and squires about 1350 in tunics "so short and tight" (the continuation of Guillaume de
+Nangis, after Braudel), "the cotehardie fits snugly" (a caption of the late 14th century); round 149's of the
+Fashion History Timeline: "low-necked fitted dresses" at 1380.
+
+What is changed.
+- **Three drapes of the court's own** (`cloth_cote_court`, `cloth_kirtle_court`, `cloth_cote_v_court`; 196 to
+  212 kB each, and their `_ao.txt`): the gown with the round neck, a lady's cut and a lord's, each simulated
+  anew with the cloth laid 1.2 cm off the body from the chest down before it is let fall, where the village's
+  is laid 4.5 cm off, and 15 in a hundred wider than the body below the chest for 50 (`LOOSE=0.12 WIDE=0.15`).
+  Held under the village's round gown, bound, and the part below the old cut sewn on from the court's own
+  drape. Round 149's file of the lady's cut is replaced by this one.
+- **The table** (`DressSet::gown_file`, new: the file of the round gown where it is not `gown`'s; the court's
+  `gown_cut`): a person of rank wears these in every cut. The gown's name, its image and the linen are what
+  they were.
+
+Measured, on six ladies of 30, six lords of 34 and six ladies of 60 (with the wimple), each on the same body
+as a villager and as a person of rank, as draped and in no pose (`portrait/tests/clothes.rs`):
+
+| | village | court |
+|---|---|---|
+| how uneven the cloth is (a triangle's face against the mean face within 3 cm of it), a lady | 24.2 to 25.4 degrees | 17.6 to 20.3 |
+| a lord | 18.9 to 19.8 | 13.4 to 14.6 |
+| a lady with a wimple | 24.6 to 25.4 | 15.0 to 17.8 |
+| the gown from front to back in the middle of the trunk, at the chest | | 1.2 cm less to 0.9 cm more than the village's |
+| at the waist | | 2.4 cm less to 1.1 cm more |
+| points of the court's round gown more than 2 mm outside the village's (eight ladies) | | none on five, 42, 466 and 1 879 of some 4 600 on three, by up to 0.64 cm |
+| corners of the gown through a hood's cape, a veil or a wimple (120 people, as villagers and as people of rank) | 0 | 0 |
+
+So the gown is smoother by a quarter to a third, and it is not narrower: a cloth that is let fall lies on
+the body where the body carries it, however far off it began, and what the looseness left were the folds.
+
+**A bound moved, and why.** Round 149's test held the lady's wide cut within the round gown as the village's
+cut is held (fewer than 4 in a hundred of its points more than 2 mm outside it). The court's drapes lie smooth
+over the places where the village's round gown has its folds: on some bodies many of their points lie 2 to 6
+mm outside it there (the table). The share is not held any more for the court's cuts; the distance is (under 1
+cm; a drape that is not held under the round gown stood up to 2.2 cm outside it, round 110), and the test
+that nothing of the gown comes through the cloth over it (`portrait/tests/bust.rs`) runs on people of rank
+too. The village's own test is as it was.
+
+**The gauntlet**: 22 of 22 over the whole sample (read with this round's build), every line as in rounds 138
+to 150 to its last figure: the sample is of the common people, whose gown is not touched.
+
+Honest about it. The dents are gone from the silk, and from the side a lady's gown follows her body (no
+picture from the side was taken before). But this is not the reference's fitted gown: it is as wide as the village's, has no waist, no
+seams, no belt and no tight sleeve, and the measure says so. "Close" in this round's files means how the
+cloth is laid before it falls, not a cut. With fewer folds the plain silk is a plainer surface still: a
+smooth coloured shape under the head, where the reference has a pattern, a belt and trimmings. On a lady the
+form of the bust shows more, which is the body's and not a tailor's. The values are by eye: PLACEHOLDER.
+
+Tests: `portrait/tests/clothes.rs`, one new (the court's gown less uneven than the village's on the same body
+in every cut, no deeper, a lord's shirt under his gown); round 149's test holds the court's round gown and
+the lady's cut to the village's round gown by distance (above). `portrait/tests/bust.rs`: nothing of the gown
+through the cloth over it, on the 120 people as villagers and as people of rank. `portrait/tests/court.rs`:
+the court's table has files of its own for every cut.
+`cargo test --release` as a whole: 124 of 124. `tests/portrait.test.ts` and its neighbour 44 of 44; typecheck
+and lint pass, no new warning. The module is 755 kB.
+Pictures (project files, `portraits/`): `runde151_vorher_nachher.png` (five people of rank, before above and
+after below), `runde151_von_der_seite.png` (five from the side).
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
