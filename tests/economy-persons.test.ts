@@ -11,6 +11,7 @@ import { cityCalibrations, cityPlaces } from '../src/sim/systems/economy';
 import { ageOn } from '../src/sim/systems/people';
 import { encodeState, decodeState, hashState } from '../src/sim/snapshot';
 import { upgradeState } from '../src/sim/upgrade';
+import type { World } from '../src/sim/world';
 import { ALIVE, STATE_VERSION, PERSON_SCHEMA, type WorldState } from '../src/sim/state';
 import { personDetail, personEconomy } from '../src/net/people';
 import { economyRows, lsd, pence } from '../src/people/economy_rows';
@@ -145,8 +146,19 @@ describe('what the engine computes', () => {
     }
   });
   it('is written to the persons and firms every day: their sums are the figures of the city', () => {
+    // the places of the workers who work by the day (economy feature 23), as the engine was last given them
+    let byTheDay: Set<number>[] = [];
+    const engine: World['economyEngine'] = {
+      ...w.economyEngine,
+      contracts: (state, list) => {
+        byTheDay = list.map((c) => new Set(c));
+        return w.economyEngine.contracts(state, list);
+      },
+    };
+    // a copy of the world with that engine: Object.create gives `any`, the cast names what the copy is
+    const wx = Object.assign(Object.create(Object.getPrototypeOf(w)), w, { economyEngine: engine }) as World;
     for (let day = 1; day <= 45; day++) {
-      advanceDay(s, w);
+      advanceDay(s, wx);
       expect(e.halted).toBe('');
       const by = parts(s);
       const staff = new Int32Array(s.firm.size);
@@ -166,6 +178,13 @@ describe('what the engine computes', () => {
           expect(f).toBeLessThan(e.firm0[k + 1]); // a firm of the person's own city
           expect(P.wage[id]).toBe(F.pay[f]);
           expect(P.wage[id]).toBeGreaterThan(0);
+          if (byTheDay[k].has(P.agent[id])) {
+            // a day labourer is paid the wage times the factor of his firm's day: nothing on a day of rest or a day
+            // away (0 up to rounding), more than a mean day's wage on a working day
+            expect(P.income[id]).toBeGreaterThanOrEqual(-1e-12 * P.wage[id]);
+            expect(P.income[id]).toBeLessThan(2 * P.wage[id]);
+            continue;
+          }
           expect(P.income[id]).toBeGreaterThan(0);
           expect(P.income[id]).toBeLessThan(P.wage[id]); // the wage after the tax on income
         }

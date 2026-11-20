@@ -14,18 +14,29 @@ const factors = (new URLSearchParams(location.search).get('scales') ?? '1,0.7,0.
 
 async function build(): Promise<StageScene> {
   const campanile = glbToBatch(await (await fetch('/models/landmarks/campanile_san_marco_1356.glb')).arrayBuffer());
-  const ground = new Batch(), things = new Batch(), m = new THREE.Matrix4(), c = N / 2;
+  const ground = new Batch(),
+    things = new Batch(),
+    m = new THREE.Matrix4(),
+    c = N / 2;
   ground.box(c - 80, LAND_Y - 3, c - 80, c + 80, LAND_Y, c + 80, rgb(0xa4a532));
   /** world position of a point `u` blocks to the right of the picture's centre and `v` blocks towards its back */
-  const at = (u: number, v: number): [number, number] => [c + u * RIGHT[0] - v * NEAR[0], c + u * RIGHT[1] - v * NEAR[1]];
-  const put = (model: Batch, u: number, v: number, scale = 1, y = LAND_Y) => { const [x, z] = at(u, v); things.append(model, m.makeScale(scale, scale, scale).setPosition(x, y, z)); };
+  const at = (u: number, v: number): [number, number] => [
+    c + u * RIGHT[0] - v * NEAR[0],
+    c + u * RIGHT[1] - v * NEAR[1],
+  ];
+  const put = (model: Batch, u: number, v: number, scale = 1, y = LAND_Y) => {
+    const [x, z] = at(u, v);
+    things.append(model, m.makeScale(scale, scale, scale).setPosition(x, y, z));
+  };
   const span = 24;
   factors.forEach((f, k) => {
-    const u0 = (k - (factors.length - 1) / 2) * span, r = seeded(11);
+    const u0 = (k - (factors.length - 1) / 2) * span,
+      r = seeded(11);
     put(campanile, u0 - 6, -4);
     put(townHouse(10, 6, 3, WALLS[2], ROOFS[0], r), u0 + 2, -6, f);
     put(house(5, 5, 2, WALLS[5], ROOFS[1], r), u0 + 4, -14, f);
-    const figures = new Batch(), fr = seeded(3);
+    const figures = new Batch(),
+      fr = seeded(3);
     for (let i = 0; i < 4; i++) person(figures, i * 0.9, 0, 0, fr);
     put(figures, u0 - 3, -18, FIGURE);
   });

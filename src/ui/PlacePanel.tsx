@@ -1,8 +1,10 @@
 // The panel of the selected place: owner, people, land, harvest, the city's economy and its realm.
+import type { ComponentChildren } from 'preact';
 import { useEffect } from 'preact/hooks';
 import { askPlace, claim, me, placeInfo, world } from '../net/client';
+import type { CityEconomyDetail, Me, PlaceDetail, RealmInfo } from '../net/protocol';
 import { fmtDate } from '../sim/calendar';
-import { heads, index, kcalText, L, lang, num, pct, pounds, resourceName, t, terrainName } from './i18n';
+import { heads, index, kcalText, L, lang, num, pct, pounds, resourceName, t, type TextKey, terrainName } from './i18n';
 import { IconClose } from './icons';
 import { selectedPlace } from './mapstate';
 import { realmById } from './realms';
@@ -14,6 +16,22 @@ const share = (n: number, of: number) => {
   const p = (100 * n) / Math.max(1, of);
   return (p < 1 ? p.toFixed(1) : Math.round(p).toString()).replace('.', lang.value === 'de' ? ',' : '.');
 };
+
+/** the rows of a city's economy: the text of their label and how their value is written */
+const ECONOMY_ROWS: [TextKey, (e: CityEconomyDetail) => string][] = [
+  ['economy_gdp', (e) => pounds(e.realGdp)],
+  ['economy_level', (e) => index(e.realGdpIndex)],
+  ['economy_prices_today', (e) => index(e.priceToday)],
+  ['economy_consumption', (e) => pounds(e.consumption)],
+  ['economy_crown', (e) => pounds(e.crown)],
+  ['economy_investment', (e) => pounds(e.investment)],
+  ['economy_exports', (e) => pounds(e.exports)],
+  ['economy_imports', (e) => pounds(e.imports)],
+  ['economy_employed', (e) => num(e.employed)],
+  ['economy_unemployed', (e) => num(e.unemployed)],
+  ['economy_coin_households', (e) => pounds(e.coinHouseholds)],
+  ['economy_coin_firms', (e) => pounds(e.coinFirms)],
+];
 
 export function PlacePanel() {
   const p = selectedPlace.value;
@@ -29,7 +47,6 @@ export function PlacePanel() {
     if (placeInfo.value?.id === p && placeInfo.value.cityEconomy) askPlace(p);
   }, [day]);
   const r = d && d.owner >= 0 ? realmById.value.get(d.owner) : undefined;
-  const m = me.value;
   return (
     <aside class="side pnl">
       <div class="side-head">
@@ -46,187 +63,124 @@ export function PlacePanel() {
           <IconClose />
         </button>
       </div>
-      {d && (
-        <table class="facts">
-          <tbody>
-            <tr>
-              <th>{t('owner')}</th>
-              <td>
-                {r ? (
-                  <>
-                    <i class="swatch" style={{ background: hex(r.color) }} />
-                    {L(r.name)}
-                  </>
-                ) : (
-                  t('nobody')
-                )}
-              </td>
-            </tr>
-            <tr>
-              <th>{t('population')}</th>
-              <td>{heads(d.pop)}</td>
-            </tr>
-            {d.peoples && d.peoples.length > 1 ? (
-              <tr>
-                <th>{t('culture')}</th>
-                <td>
-                  {d.peoples.map((x) => `${L(x.culture)}, ${L(x.faith)} ${share(x.persons, d.pop)} %`).join(' · ')}
-                </td>
-              </tr>
-            ) : (
-              <>
-                <tr>
-                  <th>{t('culture')}</th>
-                  <td>{L(d.culture)}</td>
-                </tr>
-                <tr>
-                  <th>{t('faith')}</th>
-                  <td>{L(d.faith)}</td>
-                </tr>
-              </>
-            )}
-            <tr>
-              <th>{t('terrain')}</th>
-              <td>{terrainName(d.terrain)}</td>
-            </tr>
-            <tr>
-              <th>{t('resource')}</th>
-              <td>{resourceName(d.resource)}</td>
-            </tr>
-          </tbody>
-        </table>
-      )}
-      {d?.harvest && (
-        <div class="section">
-          <h3>{t('harvest')}</h3>
-          <table class="facts">
-            <tbody>
-              <tr>
-                <th>{t('harvest_year')}</th>
-                <td>{kcalText(d.harvest.kcal)}</td>
-              </tr>
-              <tr>
-                <th>{t('harvest_head')}</th>
-                <td>{num(d.harvest.perHeadDay)} kcal</td>
-              </tr>
-              <tr>
-                <th>{t('harvest_land')}</th>
-                <td>{num(d.harvest.hectares)} ha</td>
-              </tr>
-              {d.harvest.arable ? (
-                <>
-                  <tr>
-                    <th>{t('arable')}</th>
-                    <td>
-                      {num(d.harvest.arable.hectares)} ha ({pct(d.harvest.arable.share)})
-                    </td>
-                  </tr>
-                  <tr>
-                    <th>{t('arable_state')}</th>
-                    <td>
-                      {t(
-                        d.harvest.arable.hectares <= 0
-                          ? 'arable_none'
-                          : d.harvest.arable.atLimit
-                            ? 'arable_limit'
-                            : 'arable_free',
-                      )}
-                    </td>
-                  </tr>
-                  <tr>
-                    <th>{t('arable_yield')}</th>
-                    <td>{d.harvest.arable.landYield === null ? '–' : num(d.harvest.arable.landYield)}</td>
-                  </tr>
-                </>
-              ) : (
-                <tr>
-                  <th>{t('harvest_yield')}</th>
-                  <td>{d.harvest.landYield === null ? t('no_data') : num(d.harvest.landYield)}</td>
-                </tr>
-              )}
-              <tr>
-                <th>{t('harvest_farmers')}</th>
-                <td>{heads(d.harvest.farmers)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      )}
-      {d?.cityEconomy && wi && (
-        <div class="section">
-          <h3>{t('economy_city')}</h3>
-          <p class="muted">{t('economy_note_city', { date: fmtDate(d.cityEconomy.day, wi.startYear, lang.value) })}</p>
-          {d.cityEconomy.halted && <p class="muted">{t('economy_halted', { why: d.cityEconomy.halted })}</p>}
-          <table class="facts">
-            <tbody>
-              <tr>
-                <th>{t('economy_gdp')}</th>
-                <td>{pounds(d.cityEconomy.realGdp)}</td>
-              </tr>
-              <tr>
-                <th>{t('economy_level')}</th>
-                <td>{index(d.cityEconomy.realGdpIndex)}</td>
-              </tr>
-              <tr>
-                <th>{t('economy_prices_today')}</th>
-                <td>{index(d.cityEconomy.priceToday)}</td>
-              </tr>
-              <tr>
-                <th>{t('economy_consumption')}</th>
-                <td>{pounds(d.cityEconomy.consumption)}</td>
-              </tr>
-              <tr>
-                <th>{t('economy_crown')}</th>
-                <td>{pounds(d.cityEconomy.crown)}</td>
-              </tr>
-              <tr>
-                <th>{t('economy_investment')}</th>
-                <td>{pounds(d.cityEconomy.investment)}</td>
-              </tr>
-              <tr>
-                <th>{t('economy_exports')}</th>
-                <td>{pounds(d.cityEconomy.exports)}</td>
-              </tr>
-              <tr>
-                <th>{t('economy_imports')}</th>
-                <td>{pounds(d.cityEconomy.imports)}</td>
-              </tr>
-              <tr>
-                <th>{t('economy_employed')}</th>
-                <td>{num(d.cityEconomy.employed)}</td>
-              </tr>
-              <tr>
-                <th>{t('economy_unemployed')}</th>
-                <td>{num(d.cityEconomy.unemployed)}</td>
-              </tr>
-              <tr>
-                <th>{t('economy_coin_households')}</th>
-                <td>{pounds(d.cityEconomy.coinHouseholds)}</td>
-              </tr>
-              <tr>
-                <th>{t('economy_coin_firms')}</th>
-                <td>{pounds(d.cityEconomy.coinFirms)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      )}
-      {r && (
-        <div class="section">
-          <h3>{L(r.name)}</h3>
-          <p>
-            {t('places')}: {num(r.places)}
-          </p>
-          <p>
-            {t('ruled_by')}: {r.ruler ?? <span class="muted">{t('no_player')}</span>}
-          </p>
-          {!r.ruler && m && m.realm < 0 && !m.observer && (
-            <button type="button" class="btn big gold" onClick={() => claim(r.id)}>
-              {t('claim')}
-            </button>
-          )}
-        </div>
-      )}
+      {d && <Facts d={d} r={r} />}
+      {d?.harvest && <Harvest h={d.harvest} />}
+      {d?.cityEconomy && wi && <CityEconomy e={d.cityEconomy} startYear={wi.startYear} />}
+      {r && <Realm r={r} m={me.value} />}
     </aside>
+  );
+}
+
+/** A row of a table of facts. */
+function Row({ label, children }: { label: string; children: ComponentChildren }) {
+  return (
+    <tr>
+      <th>{label}</th>
+      <td>{children}</td>
+    </tr>
+  );
+}
+
+/** Owner, people, terrain and resource of the place. */
+function Facts({ d, r }: { d: PlaceDetail; r: RealmInfo | undefined }) {
+  return (
+    <table class="facts">
+      <tbody>
+        <Row label={t('owner')}>
+          {r ? (
+            <>
+              <i class="swatch" style={{ background: hex(r.color) }} />
+              {L(r.name)}
+            </>
+          ) : (
+            t('nobody')
+          )}
+        </Row>
+        <Row label={t('population')}>{heads(d.pop)}</Row>
+        {d.peoples && d.peoples.length > 1 ? (
+          <Row label={t('culture')}>
+            {d.peoples.map((x) => `${L(x.culture)}, ${L(x.faith)} ${share(x.persons, d.pop)} %`).join(' · ')}
+          </Row>
+        ) : (
+          <>
+            <Row label={t('culture')}>{L(d.culture)}</Row>
+            <Row label={t('faith')}>{L(d.faith)}</Row>
+          </>
+        )}
+        <Row label={t('terrain')}>{terrainName(d.terrain)}</Row>
+        <Row label={t('resource')}>{resourceName(d.resource)}</Row>
+      </tbody>
+    </table>
+  );
+}
+
+/** The place's harvest, and its cultivated land where the land register knows it. */
+function Harvest({ h }: { h: NonNullable<PlaceDetail['harvest']> }) {
+  const arable = h.arable;
+  return (
+    <div class="section">
+      <h3>{t('harvest')}</h3>
+      <table class="facts">
+        <tbody>
+          <Row label={t('harvest_year')}>{kcalText(h.kcal)}</Row>
+          <Row label={t('harvest_head')}>{num(h.perHeadDay)} kcal</Row>
+          <Row label={t('harvest_land')}>{num(h.hectares)} ha</Row>
+          {arable ? (
+            <>
+              <Row label={t('arable')}>
+                {num(arable.hectares)} ha ({pct(arable.share)})
+              </Row>
+              <Row label={t('arable_state')}>
+                {t(arable.hectares <= 0 ? 'arable_none' : arable.atLimit ? 'arable_limit' : 'arable_free')}
+              </Row>
+              <Row label={t('arable_yield')}>{arable.landYield === null ? '–' : num(arable.landYield)}</Row>
+            </>
+          ) : (
+            <Row label={t('harvest_yield')}>{h.landYield === null ? t('no_data') : num(h.landYield)}</Row>
+          )}
+          <Row label={t('harvest_farmers')}>{heads(h.farmers)}</Row>
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/** The city as an economy of its own, over the last year up to the day it was reckoned. */
+function CityEconomy({ e, startYear }: { e: CityEconomyDetail; startYear: number }) {
+  return (
+    <div class="section">
+      <h3>{t('economy_city')}</h3>
+      <p class="muted">{t('economy_note_city', { date: fmtDate(e.day, startYear, lang.value) })}</p>
+      {e.halted && <p class="muted">{t('economy_halted', { why: e.halted })}</p>}
+      <table class="facts">
+        <tbody>
+          {ECONOMY_ROWS.map(([label, value]) => (
+            <Row key={label} label={t(label)}>
+              {value(e)}
+            </Row>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/** The realm that holds the place, and the button to take up its crown where nobody plays it. */
+function Realm({ r, m }: { r: RealmInfo; m: Me | null }) {
+  return (
+    <div class="section">
+      <h3>{L(r.name)}</h3>
+      <p>
+        {t('places')}: {num(r.places)}
+      </p>
+      <p>
+        {t('ruled_by')}: {r.ruler ?? <span class="muted">{t('no_player')}</span>}
+      </p>
+      {!r.ruler && m && m.realm < 0 && !m.observer && (
+        <button type="button" class="btn big gold" onClick={() => claim(r.id)}>
+          {t('claim')}
+        </button>
+      )}
+    </div>
   );
 }

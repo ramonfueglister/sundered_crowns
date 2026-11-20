@@ -17,7 +17,8 @@ const YEAR = 365.25;
 
 describe('sickness (Morcott 1725–1799)', () => {
   // 4000 persons born on day 0, followed to 85: the episodes that begin in each group of age
-  const persons = 4000, until = 85 * YEAR;
+  const persons = 4000,
+    until = 85 * YEAR;
   const all = Array.from({ length: persons }, (_, uid) => sickness(1291, uid, 0, until));
   it('is the same for the same person and another for another seed', () => {
     expect(sickness(1291, 7, 0, until)).toEqual(all[7]);
@@ -36,7 +37,9 @@ describe('sickness (Morcott 1725–1799)', () => {
     }
   });
   it("has the club's new episodes per year of life and mean lengths in every group of age", () => {
-    const groups = MORCOTT.events.length, onsets = new Array(groups).fill(0), length = new Array(groups).fill(0);
+    const groups = MORCOTT.events.length,
+      onsets = new Array(groups).fill(0),
+      length = new Array(groups).fill(0);
     const lived = new Array(groups).fill(0); // the years of the persons in each group, from 20 on
     for (const e of all) {
       for (let k = 0; k < e.length; k += 2) {
@@ -78,15 +81,19 @@ describe('the workers who are away in the world (economy feature 22)', () => {
     s = createWorldState(w, loadSetup(1291), 1291);
   }, 120_000);
   it('are the living workers, each on the days of the sickness and the childbed of the person who holds the place', () => {
-    const e = s.economy.cities!, to = e.day + 30, list = absences(s, e, to);
+    const e = s.economy.cities!,
+      to = e.day + 30,
+      list = absences(s, e, to);
     expect(list.length).toBe(e.places.length);
-    const P = s.person.cols, workers = Array.from(e.places, () => new Map<number, number>());
+    const P = s.person.cols,
+      workers = Array.from(e.places, () => new Map<number, number>());
     for (const id of presentPersons(s)) {
       if (P.role[id] !== ROLE.worker || P.died[id] !== ALIVE) continue;
       const k = e.places.indexOf(s.family.cols.place[P.family[id]]);
       workers[k].set(P.agent[id], id);
     }
-    let away = 0, childbed = 0;
+    let away = 0,
+      childbed = 0;
     list.forEach((c, k) => {
       for (let r = 0; r < c.worker.length; r++) {
         const id = workers[k].get(c.worker[r])!;
@@ -104,7 +111,8 @@ describe('the workers who are away in the world (economy feature 22)', () => {
     expect(childbed).toBeGreaterThan(0);
   });
   it('are given a month at a time: many days at once give what the same days give one by one, and a saved world goes on the same', () => {
-    const a = decodeState(encodeState(s)), b = decodeState(encodeState(s));
+    const a = decodeState(encodeState(s)),
+      b = decodeState(encodeState(s));
     // across the end of a month: from day 0 to day 40
     computeTo(a, w, 40);
     for (let d = 1; d <= 40; d++) computeTo(b, w, d);
@@ -116,8 +124,12 @@ describe('the workers who are away in the world (economy feature 22)', () => {
     expect(hashState(c)).toBe(hashState(b));
   }, 300_000);
   it('take labour from the firms: the output of the cities falls against a world in which everybody is there', () => {
-    const a = decodeState(encodeState(s)), b = decodeState(encodeState(s));
-    const there: World['economyEngine'] = { ...w.economyEngine, absences: (state) => (state instanceof Uint8Array ? state : state.bytes()) };
+    const a = decodeState(encodeState(s)),
+      b = decodeState(encodeState(s));
+    const there: World['economyEngine'] = {
+      ...w.economyEngine,
+      absences: (state) => (state instanceof Uint8Array ? state : state.bytes()),
+    };
     const wb = Object.assign(Object.create(Object.getPrototypeOf(w)), w, { economyEngine: there }) as World;
     for (let d = 0; d < 20; d++) {
       advanceDay(a, w);

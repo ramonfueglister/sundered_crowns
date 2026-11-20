@@ -9,7 +9,8 @@ export type Rural = PlaceLayer;
 const STEPS = 25;
 
 /** The people on the land of a start year on the game map of mapW × mapH pixels, once per year; null for a year without the layer: the farmhouses then stand as everywhere alike. */
-export const loadRural = (base: string, year: number | undefined, mapW: number, mapH: number): Promise<Rural | null> => loadPlaceLayer('rural', base, year, mapW, mapH);
+export const loadRural = (base: string, year: number | undefined, mapW: number, mapH: number): Promise<Rural | null> =>
+  loadPlaceLayer('rural', base, year, mapW, mapH);
 /** The people per km² on the land of the place at pixel (px, py) of the game map; null where no place is (water, beyond the game map). Places have borders: nothing is blended between them. */
 export function ruralAt(r: Rural, px: number, py: number): number | null {
   const v = byteAt(r, px, py);

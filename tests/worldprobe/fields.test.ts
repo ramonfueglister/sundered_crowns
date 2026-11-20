@@ -26,8 +26,15 @@ describe('the land under the plough of a place', () => {
 });
 
 describe('the shipped land under the plough of 1291', () => {
-  const index = JSON.parse(readFileSync('public/map/regions/world/index.json', 'utf8')) as { mapW: number; mapH: number };
-  const arable: Arable = { w: index.mapW >> 1, h: index.mapH >> 1, cells: new Uint8Array(gunzipSync(readFileSync('public/map/arable_1291.bin.gz'))) };
+  const index = JSON.parse(readFileSync('public/map/regions/world/index.json', 'utf8')) as {
+    mapW: number;
+    mapH: number;
+  };
+  const arable: Arable = {
+    w: index.mapW >> 1,
+    h: index.mapH >> 1,
+    cells: new Uint8Array(gunzipSync(readFileSync('public/map/arable_1291.bin.gz'))),
+  };
   const ids = new Uint16Array(new Uint8Array(gunzipSync(readFileSync('public/map/ids.bin.gz'))).buffer);
   const { s, w } = newWorldState(1291, 1291);
 
@@ -37,15 +44,22 @@ describe('the shipped land under the plough of 1291', () => {
   });
 
   it('is what the simulation has cultivated in every place at its start', () => {
-    let places = 0, most = 0;
+    let places = 0,
+      most = 0;
     // every 37th cell of the layer, at the pixel in its middle
     for (let k = 0; k < arable.cells.length; k += 37) {
-      const x = (k % arable.w) * 2 + 1, y = Math.floor(k / arable.w) * 2 + 1, place = ids[y * index.mapW + x] - 1;
+      const x = (k % arable.w) * 2 + 1,
+        y = Math.floor(k / arable.w) * 2 + 1,
+        place = ids[y * index.mapW + x] - 1;
       const share = arableAt(arable, x, y);
-      if (place < 0 || place >= s.place.arable.length) { expect(share, `at ${x}, ${y}`).toBeNull(); continue; }
+      if (place < 0 || place >= s.place.arable.length) {
+        expect(share, `at ${x}, ${y}`).toBeNull();
+        continue;
+      }
       const cultivated = hectares(w, place) > 0 ? s.place.arable[place] / hectares(w, place) : 0;
       expect(Math.abs(share! - cultivated), `place ${place}`).toBeLessThan(0.003);
-      places++; most = Math.max(most, share!);
+      places++;
+      most = Math.max(most, share!);
     }
     expect(places).toBeGreaterThan(20000);
     // no place has more of its land under the plough than the simulation's land limit

@@ -21,7 +21,9 @@ export const AGRICULTURE = 0;
 /** Settles every family: in a hamlet when a member works for a firm of agriculture or owns one, else in the town.
  *  Done when the persons and the economies are founded; the families stay where they were settled. */
 export function settleHamlets(s: WorldState): void {
-  const P = s.person.cols, hamlet = s.family.cols.hamlet, sector = s.firm.cols.sector;
+  const P = s.person.cols,
+    hamlet = s.family.cols.hamlet,
+    sector = s.firm.cols.sector;
   hamlet.fill(0);
   for (const i of presentPersons(s)) {
     if (P.died[i] !== ALIVE) continue;
@@ -33,11 +35,15 @@ export function settleHamlets(s: WorldState): void {
 
 /** The living persons of every place and those of them who live in hamlets (the people who live from agriculture). */
 export function residents(s: WorldState): { people: Float64Array; farmers: Float64Array } {
-  const L = s.place.pop.length, people = new Float64Array(L), farmers = new Float64Array(L);
-  const P = s.person.cols, F = s.family.cols;
+  const L = s.place.pop.length,
+    people = new Float64Array(L),
+    farmers = new Float64Array(L);
+  const P = s.person.cols,
+    F = s.family.cols;
   for (const i of presentPersons(s)) {
     if (P.died[i] !== ALIVE) continue;
-    const f = P.family[i], p = F.place[f];
+    const f = P.family[i],
+      p = F.place[f];
     if (p < 0 || p >= L) continue;
     people[p]++;
     if (F.hamlet[f]) farmers[p]++;
@@ -47,7 +53,8 @@ export function residents(s: WorldState): { people: Float64Array; farmers: Float
 
 /** The living persons of the hamlets of one place. */
 export function farmersOf(s: WorldState, place: number): number {
-  const P = s.person.cols, F = s.family.cols;
+  const P = s.person.cols,
+    F = s.family.cols;
   let n = 0;
   for (const i of presentPersons(s)) {
     if (P.died[i] !== ALIVE) continue;

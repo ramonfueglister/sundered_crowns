@@ -33,12 +33,7 @@ export function whereOn(r: RulerOnMap, loc: Loc, day: number | undefined): [numb
 
 /** The dots of the rulers: where they are on `day` (where the server names, without a day), with their name and
  *  crowns for the pointer. */
-export function rulerMarks(
-  list: readonly RulerOnMap[],
-  loc: Loc,
-  open: (uid: number) => void,
-  day?: number,
-): WorldMark[] {
+function rulerMarks(list: readonly RulerOnMap[], loc: Loc, open: (uid: number) => void, day?: number): WorldMark[] {
   return list.flatMap((r) => {
     if (r.place < 0 || r.place >= loc.lon.length) return [];
     const [lon, lat] = whereOn(r, loc, day);
