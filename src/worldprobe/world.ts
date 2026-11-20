@@ -11,12 +11,11 @@ import { crowd } from '../figures';
 import { type Part, WATER_SHALLOW, sideTopAt } from '../lookprobe/terrain';
 import { type Climate, FIELDS_KNOWN, KIND, Land, WOODS_KNOWN, climateAt, snowLineAt, treeLineAt } from './climate';
 import { type Arable, arableAt } from './arable';
-import { fieldsByLot, lotKey } from './lots';
+import { fieldsByLot, layPlanGrounds, lotKey, type TownParcels } from './lots';
 import { shownOf } from './landmarks';
 import { FIELD_LOT, GEWANN } from '../sim/settlement/fields';
 import { type Forest, WOOD, conifersAt, forestAt, leanOf, stand, tilth } from './forest';
 import { type Rural, ruralAt } from './rural';
-import type { TownParcels } from './lots';
 import { HAMLET_TURN, type HamletLands, hamletAt, hamletsOf } from './hamlets';
 import { BARE, FINER, FINER_STEPS, SNOW_LINE, TINT, TREE_LINE, WOODS, blockOfCell, cellOfBlock, lineShift, paleFrom, rockAt, woodsUntil } from './land';
 import { type Region, Water, cellOf, latOf, sample, waterAt } from './region';
@@ -374,7 +373,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   const own = (x: number, z: number) => x >= part.x0 && x < part.x1 && z >= part.z0 && z < part.z1;
 
   // real height, water class and latitude of every column, taken at its centre; the tree line, the snow line and the
-  // foot of the rock follow the latitude
+  // foot of the rock follow the latitude; a town on a real plan that draws its ground has the plan's land and water (lots.ts)
   const metres = new Float32Array(N * N), kind = new Uint8Array(N * N), shift = new Float32Array(N * N), lat = new Float32Array(N * N);
   // the height from which the raised rock is pale and the height up to which the woods grow: by the lines of the
   // place's climate, by its latitude without it
@@ -385,6 +384,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   // frayed by a few kilometres, the same at every step
   const land = new Uint8Array(N * N).fill(Land.Temperate | WOODS_KNOWN | FIELDS_KNOWN);
   readColumns(region, climate, forest, ox, oz, cell, { metres, kind, shift, lat, snow, woodsEnd, dark, land });
+  if (parcels) layPlanGrounds(parcels, step, (site) => { const p = places[site]; return p ? toGround(...cellOf(region, p.lon, p.lat)) : null; }, kind, metres);
   const levelBy = (m: number, by: number) => levelFor(m, by, flatter);
   const levelOf = (m: number, i: number) => levelBy(m, shift[i]);
   // the massifs, read from the drainage network (`massifsOf`)

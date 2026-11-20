@@ -1,0 +1,20 @@
+{
+ "source": "Venice 1808 Land Registers v1.1 (EPFL DHLAB, DOI 10.5281/zenodo.20715172, CC BY 4.0); streets and sottoportici; tools/settlement/cadastre_venice.py",
+ "land_ha": 399.8,
+ "street_km": 150.4,
+ "junctions": {
+  "1": 1365,
+  "2": 224,
+  "3": 1991,
+  "4": 298,
+  "5": 25,
+  "6": 11,
+  "7": 9,
+  "8": 1,
+  "9": 4,
+  "10": 1
+ },
+ "dead": 0.368,
+ "T": 0.537,
+ "X": 0.094
+}

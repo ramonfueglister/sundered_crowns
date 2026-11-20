@@ -1,6 +1,6 @@
 # Gassen und Markt
 
-**Status:** Entwurf · **Bereich:** Siedlung · **Stand:** 2026-11-19
+**Status:** Entwurf · **Bereich:** Siedlung · **Stand:** 2026-11-20
 
 > Jede Stadt hat einen Markt und Gassen, die zu den Parzellen ihrer Familien wachsen. Die Gassen stehen mit Lage, Art und Breite im Grundbuch der Welt.
 
@@ -10,7 +10,7 @@ Ramon hat den Vorschlag am 18. November 2026 angenommen. Gebaut in Zustand 33. A
 
 Bisher lagen die Parzellen einer Stadt in einem Raster aus gleichen Blöcken, ein Platzhalter. Jetzt wächst jede Stadt wie eine gewachsene mittelalterliche Stadt: Vom Markt laufen Strassen hinaus, dorthin, wo die Wege der Welt die Stadt verlassen, und von ihnen wachsen Gassen zu den Familien, die sich ansiedeln. Das Modell stammt aus der Forschung zu Strassennetzen (Barthelemy und Flammini 2008) und ist am mittelalterlichen Paris geprüft: am Anteil der Sackgassen, Einmündungen und Kreuzungen im Vasserot-Kataster innerhalb der Mauer von Philippe Auguste, und an der Grösse der Blöcke (Dresden). Paris selbst legt die Hauptstrassen seines echten Plans an.
 
-Nicht dabei: echte Pläne für andere Städte als Paris (Venedig ist der nächste offene Kataster), Brücken, Mauern und Tore, das Wachsen der Stadt, während die Welt läuft.
+Nicht dabei: echte Pläne für andere Städte als Paris und Venedig, Brücken ausser in Venedig, Mauern und Tore, das Wachsen der Stadt, während die Welt läuft.
 
 ## Im Spiel
 
@@ -43,6 +43,16 @@ Der Plan gibt die Form, nicht die Grösse: wo der Markt liegt und wie die Haupts
 
 Paris in der Welt: 161 Gassenstücke, 2'814 m, Markt 231 m nördlich der Mitte. Sackgassen, Einmündungen und Kreuzungen 0,09 / 0,80 / 0,11, im Kataster 0,10 / 0,78 / 0,12.
 
+## Echte Pläne: Venedig, mit Land, Wasser und Brücken
+
+Ramon hat am 20. November 2026 «Zuerst Boden und Brücken» gewählt und mit «weiter» bestätigt. Quelle ist der napoleonische Kataster von Venedig (1808, EPFL DHLAB, CC BY 4.0). Er zeichnet jedes Gebäude, jeden Hof, jeden Sottoportico und jede Gasse als Fläche.
+
+1. **Die Hauptstrassen.** Die Mittellinien der Gassen des Katasters, 150 km. Die meistbegangenen Strassenzüge werden behalten, so viele Meter pro Hektar wie in Paris: 5'474 m. Die Mitte ist San Marco, der Markt der Campo San Giacomo di Rialto.
+2. **Land und Wasser.** Wasser ist, was der Kataster nicht als Land zeichnet, wenn es breiter ist als die längste Brücke Venedigs spannt: der Rialto mit 28,80 m (Structurae). Über einen schmaleren Kanal (Rio) führte überall eine Brücke, wo eine Gasse auf ihn traf. In der Welt ist er darum Land. Es bleiben der Canal Grande, die Becken des Arsenals und die Lagune.
+3. **In der Welt.** Der Boden des Katasters wird im Massstab des Plans gelegt. Ein Block von 2 m ist Wasser, wo er mehr als zur Hälfte Wasser ist. Das Grundbuch legt Parzellen, Gassen und Wahrzeichen von Venedig auf dieses Land, und die 3D-Welt zeichnet dasselbe Land anstelle der Karte. Quert eine Hauptstrasse Wasser, das nicht breiter ist als die Spannweite des Rialto, wird ihr Streifen Land: eine Brücke. Am Rialto ist der Canal Grande selbst nicht breiter, darum ist dort schon Land, ein flacher Übergang an der Stelle der Brücke.
+
+Venedig in der Welt: Alle 48 Familien haben auf dem Land des Katasters Platz. Vorher war Venedig ohne Rücksicht auf den Boden angelegt. 238 Gassenstücke, 1'868 m, Markt 64 m von der Mitte. Die Gassen treffen sich wie in Paris, nicht wie in Venedig: Sackgassen, Einmündungen und Kreuzungen 0,03 / 0,83 / 0,14, im Kataster 0,37 / 0,54 / 0,09. Das am mittelalterlichen Paris eingestellte Wachstum schliesst fast jede Sackgasse. In Venedig enden die Sackgassen an Kanälen, und die macht die Welt zu Land. Nicht nachgestellt, weil keine eigene Regel für Venedig gelesen ist.
+
 ## Daten und Parameter
 
 | Grösse | Wert | Herkunft |
@@ -71,7 +81,7 @@ Kleine Städte sind eine oder zwei Strassen mit ihren Enden; über alle Städte 
 | Limoges | 1 | 3 | 7 | 497 m | 21,1 m | 82 m |
 | Bayonne | 7 | 2 | 6 | 252 m | 11,0 m | 48 m |
 | Zürich | 7 | 3 | 7 | 395 m | 10,9 m | 39 m |
-| Venedig | 48 | 1 | 35 | 1'086 m | 7,4 m | ohne Baugrund angelegt |
+| Venedig | 48 | echter Plan | 238 | 1'868 m | 7,4 m | 64 m (Rialto) |
 | Paris | 102 | echter Plan | 161 | 2'814 m | 9,2 m | 231 m (Halles) |
 | Kairo | 148 | 2 | 60 | 1'854 m | 7,4 m | 34 m |
 
@@ -85,9 +95,9 @@ Die Stadt der Welt hat ein Hundertstel des Bodens der echten Stadt, die Häuser 
 
 - Alle Gassen laufen von Ost nach West oder von Nord nach Süd und biegen im rechten Winkel ab, weil die Welt aus Blöcken gebaut ist und ein Haus gerade zu ihnen steht.
 - Alle Gassen einer Stadt sind gleich breit, eine Fernstrasse so breit wie eine Gasse. Die Breite folgt der Parzelle: Limoges mit einer einzigen grossen Parzelle hat eine 21 m breite Gasse.
-- Es gibt noch keine Brücken. Eine Stadt am Fluss wächst auf der Seite ihres Markts. Venedig (Inseln) und Hormuz (eine zu kleine Insel) haben auf ihrem Baugrund keinen Platz und sind ohne Rücksicht auf ihn angelegt.
+- Brücken gibt es nur in Venedig, flach und ohne Bogen. Eine andere Stadt am Fluss wächst auf der Seite ihres Markts.
 - Ohne Quelle: der Markt neben der Kirche und seine Grösse, wo eine Familie wohnen will, welche Familie zuerst kommt (nach Nummer).
-- Nur Paris hat einen echten Plan. Die Seine der Welt liegt nicht genau wie die echte, darum enden manche Hauptstrassen an ihr.
+- Nur Paris und Venedig haben einen echten Plan. Die Seine der Welt liegt nicht genau wie die echte, darum enden manche Hauptstrassen an ihr.
 - Solange die Welt läuft, wächst keine Gasse.
 
 ## Quellen
@@ -101,6 +111,8 @@ Die Stadt der Welt hat ein Hundertstel des Bodens der echten Stadt, die Häuser 
 - Lämmer, Gehlsen und Helbing (2006): Scaling laws in the spatial structure of urban road networks. Physica A 363, 89–95 (nach Barthelemy und Flammini 2008)
 - Pounds (2005): The Medieval City, S. 12, 23–26
 - Vasserot-Kataster (1810–1836), ALPAGE, über Stanford EarthWorks, ODbL 1.0
+- Di Lenardo, Viaccoz, Guhennec, Musso und Kaplan: Venice 1808 Land Registers, Version 1.1 (2026), EPFL DHLAB, CC BY 4.0. https://doi.org/10.5281/zenodo.20715172
+- Structurae: Rialto-Brücke, Hauptspannweite 28,80 m. https://structurae.net/en/structures/rialto-bridge
 - Noizet und Lallau (2013): die Mauern von Paris, ALPAGE, ODbL 1.0
 - Porta, Crucitti und Latora (2006): The network analysis of urban streets: a primal approach. Environment and Planning B 33, 705–725
 - Conzen (1960): Alnwick, Northumberland: a study in town-plan analysis. Institute of British Geographers 27

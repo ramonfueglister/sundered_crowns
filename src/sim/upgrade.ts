@@ -335,6 +335,13 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     if (s.economy.cities) s.economy.cities.workingTo = -1;
     s.v = 39;
   }
+  if (s.v === 39) { // 39 → 40: Venice on the land and water of its land register of 1808 (src/sim/settlement/plan_ground.ts).
+    // The towns are laid out anew as at 37 → 38; only Venice's parcels, streets and landmarks move, and the hamlets
+    // get their fields again.
+    relayTowns(s, w.ground, w.dry);
+    foundFields(s, w.tilth);
+    s.v = 40;
+  }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one
   const o = s as unknown as Record<string, unknown>;
