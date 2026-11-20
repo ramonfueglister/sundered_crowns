@@ -22,7 +22,7 @@ const out = {
   targets: { arable: ENGLAND_ARABLE, harvest: ENGLAND_1300 },
   ...c,
 };
-writeFileSync(dataPath('cultivation.json'), JSON.stringify(out, null, 1) + '\n');
+writeFileSync(dataPath('cultivation.json'), `${JSON.stringify(out, null, 1)}\n`);
 const at = (people: number) => englandAt(w, places, pop, people, c);
 const e1300 = at(ENGLAND_ARABLE.y1300.people),
   e1380 = at(ENGLAND_ARABLE.y1380.people);

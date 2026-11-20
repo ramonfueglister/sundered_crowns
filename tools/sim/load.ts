@@ -27,7 +27,8 @@ export const dataPath = (name: string): string => resolve(ROOT, 'public/data', n
 const read = (name: string) => JSON.parse(readFileSync(dataPath(name), 'utf8'));
 let world: World | null = null;
 export function loadWorld(): World {
-  return (world ??= buildWorld(loadCultivation()));
+  world ??= buildWorld(loadCultivation());
+  return world;
 }
 /** A world with the given calibration of cultivated land (the calibration itself starts from one without). */
 export function buildWorld(cultivation: CultivationJson): World {
@@ -93,7 +94,8 @@ export function loadEconomyEngine(): EconomyEngine {
     throw new Error(
       `${ECONOMY_WASM} is missing: build the economy engine with "npm run economy:build" (needs the Rust toolchain, https://rustup.rs)`,
     );
-  return (engine = wasmEconomyEngine(readFileSync(ECONOMY_WASM)));
+  engine = wasmEconomyEngine(readFileSync(ECONOMY_WASM));
+  return engine;
 }
 export function loadSetup(year = 1356): SetupState {
   return read(`setup_${year}.json`);

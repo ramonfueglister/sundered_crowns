@@ -52,7 +52,7 @@ describe('the towns of a start year', () => {
     expect(towns.people.length).toBe(gazetteer.places.length);
     expect(m.get(venice)).toBe(towns.people[venice]);
     expect(m.get(venice)).toBeGreaterThan(100_000); // Chandler, 1291
-    const unknown = towns.people.findIndex((n) => n === null);
+    const unknown = towns.people.indexOf(null);
     expect(m.has(unknown)).toBe(false);
     // 1356 keeps the cities of 1356
     expect(inhabitants1356().get(venice)).not.toBe(m.get(venice));
