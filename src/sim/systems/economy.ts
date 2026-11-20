@@ -23,8 +23,9 @@
 // The firms work on the working days of their owner's faith (economy feature 19, src/sim/holy_days.ts): on a Sunday
 // or a feast a Latin firm makes nothing and buys no materials, on a working day more than on a mean day, so that over a
 // year it makes what it made before; wages are paid every day (economy/src/clock.rs). A household buys on the working
-// days of its own faith, the owner of a firm, the crown and the merchants every day. The engine is given the days of a
-// year before it computes the year's first day.
+// days of its own faith, the owner of a firm too, on the mean profit of his firm over a year (economy feature 20); the
+// crown and the merchants buy every day. The engine is given the days of a year before it computes the year's first
+// day.
 //
 // The economies are not connected to anything else in the world yet: not to the harvest or the arable, and nothing a
 // player does reaches them. Places without a city have no economy. The year has no seasons.
@@ -133,7 +134,8 @@ export const cityAt = (e: CityEconomies, place: number): number => e.places.inde
 
 /** What the economy of each city of a world is founded from: its place, its people, its persons who work
  *  (src/sim/systems/work.ts) and its calibration, which has as many active persons as the city has persons who
- *  work. A world whose start year has no cities, or no calibration table, has none. */
+ *  work. A world whose start year has no cities, or no calibration table, has none. A world that starts before the
+ *  year of its table knows the history only up to its start (economy feature 21, `calibrateEconomy`). */
 export function cityCalibrations(s: WorldState, w: World): { place: number; name: string; people: number; working: number[]; idle: number; calibration: EconomyCalibration }[] {
   const c = w.cityEconomies;
   if (s.startYear !== c.year && !(c.year === 1356 && uses1356Tables(s.startYear))) return [];
@@ -142,7 +144,7 @@ export function cityCalibrations(s: WorldState, w: World): { place: number; name
   return cities.map((x, k) => {
     const { working, idle } = force[k];
     if (idle < 0) throw new Error(`every adult of ${x.name} works: the model needs a person who does not`);
-    const calibration = dailyCalibration(cityTable(c.table, x.people, working.length));
+    const calibration = dailyCalibration(cityTable(c.table, x.people, working.length), Math.min(c.year, s.startYear));
     if (activePersons(calibration) !== working.length) throw new Error(`${x.name} has ${working.length} persons who work, its calibration ${activePersons(calibration)} active persons`);
     return { ...x, working, idle, calibration };
   });

@@ -863,7 +863,7 @@ the cloud); the first of January costs 55 to 90 ms more (the years 1 to 3, the c
 
 Step 3 of way A of the proposal «Personen: Archiv der Toten und Tagesplan» (feature 7): every faith has its days of
 rest, the firms of the cities work on the working days of their owner's faith, and a household buys on the working
-days of its own faith. The calendars are a pure function
+days of its own faith (the owner of a firm too since economy feature 20). The calendars are a pure function
 of the faith and the date (`src/sim/holy_days.ts`): nothing of them is saved, the same year always gives the same
 days. The economy reads them (economy feature 19, docs/ECONOMY_DESIGN.md, section 19); the persons' own day (steps 4
 to 6: sickness and childbed, templates and places, a target income) follows.

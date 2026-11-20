@@ -2,7 +2,7 @@
 // without end, so every change to the shape of the state needs its step here.
 import type { WorldState } from './state';
 import { STATE_VERSION, PERSON_SCHEMA, FAMILY_SCHEMA, REALM_SCHEMA, ALIVE } from './state';
-import { foundLots } from './systems/lots';
+import { foundLots, relayTowns } from './systems/lots';
 import { foundRulers, rulerCultures, rulerGenes } from './systems/rulers';
 import { foundBorders } from './systems/borders';
 import { type Column, makeColumns } from './ecs';
@@ -21,7 +21,7 @@ import { foundMoves, redrawMoves } from './systems/moves';
 import type { SetupState } from './setup';
 
 /** The fields of a WorldState in the order createWorldState writes them. */
-const STATE_FIELDS = ['v', 'seed', 'startYear', 'day', 'rng', 'place', 'realm', 'realmText', 'ruler', 'economy', 'person', 'family', 'firm', 'named', 'lot', 'hamlets', 'nextUid', 'archive'] as const;
+const STATE_FIELDS = ['v', 'seed', 'startYear', 'day', 'rng', 'place', 'realm', 'realmText', 'ruler', 'economy', 'person', 'family', 'firm', 'named', 'lot', 'hamlets', 'nextUid', 'archive', 'street'] as const;
 
 /**
  * The steps before 11 are gone (2026-11-16): the only world, europa-1291, is at 11 or later, and the worlds before it are
@@ -275,6 +275,26 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     // as one without working days and is given them before it computes the next day.
     if (s.economy.cities) s.economy.cities.workingTo = -1;
     s.v = 31;
+  }
+  if (s.v === 31) { // 31 → 32: the days of rest without a leak (economy feature 20, economy/src/clock.rs). The economies
+    // go on where they are: the engine reads their state of the format before without the profits of the owners and
+    // gathers them from the next day on, taking the year before to be the profit of the day before.
+    s.v = 32;
+  }
+  if (s.v === 32) { // 32 → 33: the streets and the market of every town (settlement feature 3,
+    // src/sim/settlement/streets.ts). Each town is laid out along streets that grow to its parcels, as a new world
+    // lays it: every parcel keeps its id, its family and its size and moves to its street, the lowest id first. The
+    // hamlets and everybody's life stay as they are. (A world older than the land register got it at 19 → 20, already
+    // with its streets.)
+    if (!s.street) relayTowns(s, w.ground);
+    s.v = 33;
+  }
+  if (s.v === 33) { // 33 → 34: a world knows the history only up to its start (economy feature 21,
+    // src/sim/economy/calibration.ts): a world of 1291 on the table of 1356 no longer expects the recovery after the
+    // plague. Its calibration changes, so its economies are founded anew on the day the world has reached, as in the
+    // step to 24. A world that starts in the year of its table keeps its calibration and goes on where it is.
+    if (s.startYear < w.cityEconomies.year) foundEconomy(s, w);
+    s.v = 34;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one

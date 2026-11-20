@@ -17,5 +17,7 @@ export default defineConfig({
     rollupOptions: { input: ['index.html', 'look-probe.html', 'world-probe.html', 'near-probe.html'] },
   },
   server: { port: 5173, host: true },
-  test: { globalSetup: ['tests/setup/economy.ts', 'tests/setup/portrait.ts'] },
+  // A test that builds a world takes 3 to 4 s alone (with the streets of every town since #85), and more beside the
+  // other test files in CI, where vitest's 5 s began to cut such tests off. A heavier test still gives its own limit.
+  test: { globalSetup: ['tests/setup/economy.ts', 'tests/setup/portrait.ts'], testTimeout: 30_000 },
 });

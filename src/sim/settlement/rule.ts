@@ -28,8 +28,8 @@ export const PARCEL_SHARE = 0.76;
  *  (Boerefijn 2000); the Hofstätte of Freiburg im Breisgau is 50 by 100 feet, half as slender (Löbbecke). */
 export const DEPTH_PER_WIDTH = 3;
 /** Parcels side by side in a row of a block. A block is two rows back to back, so with parcels three times as deep as
- *  wide it is square, as the blocks of Grenade are (55.05 m; six lots of 9.175 m). PLACEHOLDER: the even grid stands
- *  in until streets grow by a rule of their own. */
+ *  wide it is square, as the blocks of Grenade are (55.05 m; six lots of 9.175 m). The streets of feature 3 are as
+ *  wide as the streets round such a block (src/sim/settlement/streets.ts, streetWidth). */
 export const PARCELS_PER_ROW = 6;
 /** The narrowest parcel front the sources know, in metres: three quarters of the Edinburgh unit of 5.5 m (Stell &
  *  Tait 2016). Below it one parcel a family would no longer hold: no town of 1291 comes near it (the narrowest
@@ -63,38 +63,8 @@ export const FRONT = { north: 0, east: 1, south: 2, west: 3 } as const;
 
 export interface Parcel { /** the middle of the parcel: metres east and south of the town's centre */ x: number; z: number; front: number }
 
-/**
- * Where `count` parcels of size `p` lie around the centre of a town (0, 0): on a grid of blocks, each two rows of
- * PARCELS_PER_ROW parcels back to back, the northern row fronting the street to its north, the southern the street
- * to its south. The streets between the blocks are as wide as leaves the parcels PARCEL_SHARE of the ground. The
- * town fills from the centre outwards as a square (the outline of a town laid out on a grid, as Grenade's is): of
- * all parcels of the grid the `count` nearest to the centre, by the larger of their distances east-west and
- * north-south, then by the straight distance. So the first parcel of the list is the innermost and the last the
- * outermost, and the town is about as wide as the square root of its ground.
- * `free` (optional) tells whether a parcel can stand at a spot, by its middle and the side of its street: the ground
- * a town cannot build on (water, rock, steep slopes, the church). With `reach` (metres from the centre beyond which
- * nothing is free) the list is shorter than `count` when the ground within it does not hold them all.
- */
-export function layParcels(count: number, p: ParcelSize, free?: (x: number, z: number, front: number) => boolean, reach = Infinity): Parcel[] {
-  const out: Parcel[] = [];
-  if (count <= 0) return out;
-  const bw = PARCELS_PER_ROW * p.w, bd = 2 * p.d, k = 1 / Math.sqrt(PARCEL_SHARE), px = bw * k, pz = bd * k;
-  const square = (s: Parcel) => Math.max(Math.abs(s.x), Math.abs(s.z)), straight = (s: Parcel) => s.x * s.x + s.z * s.z;
-  // ring by ring of blocks around the central block: every parcel of a ring lies farther out than every parcel of
-  // the ring before (the streets are wider than the parcels are off the middle of their block)
-  for (let ring = 0; out.length < count; ring++) {
-    if (ring * Math.min(px, pz) - Math.max(bw, bd) / 2 > reach) break; // every parcel from here on lies beyond the reach
-    if (ring > 4096) throw new Error('no ground for the parcels of a town');
-    const slots: Parcel[] = [];
-    for (let bz = -ring; bz <= ring; bz++) for (let bx = -ring; bx <= ring; bx++) {
-      if (Math.max(Math.abs(bx), Math.abs(bz)) !== ring) continue;
-      for (const row of [0, 1]) for (let i = 0; i < PARCELS_PER_ROW; i++) {
-        const s = { x: bx * px + (i - (PARCELS_PER_ROW - 1) / 2) * p.w, z: bz * pz + (row === 0 ? -0.5 : 0.5) * p.d, front: row === 0 ? FRONT.north : FRONT.south };
-        if (!free || free(s.x, s.z, s.front)) slots.push(s);
-      }
-    }
-    slots.sort((a, b) => square(a) - square(b) || straight(a) - straight(b) || a.z - b.z || a.x - b.x);
-    for (const s of slots) if (out.length < count) out.push(s);
-  }
-  return out;
-}
+/** The ground a parcel covers, east-west (`w`) and north-south (`d`): its width runs along its street, so a parcel
+ *  that fronts a street to its east or west lies the other way round. */
+export const footprint = (p: { front: number }, size: ParcelSize): ParcelSize =>
+  p.front === FRONT.north || p.front === FRONT.south ? size : { w: size.d, d: size.w };
+

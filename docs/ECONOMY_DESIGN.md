@@ -46,6 +46,8 @@ players and the AI of realms without a player act through the same commands.
 | 16 | The crown of a city buys with what it took in | after feature 15 the distance in trade was tried again and one city still sank steadily; Ramon chose to clear that first ("Erst den Geldabfluss klären", 17 Nov 2026, 20:45 UTC). The money lay with the crown of the city, whose purchases follow a random series of their own. He chose "Krone gibt aus, was sie einnimmt" (18 Nov 2026, 02:36 UTC). Built, with tests and numbers; not yet in the running world (section 16) |
 | 17 | Distance in trade: goods travel for days, and carrying costs labour | proposed 17 Nov 2026 (https://claude.ai/artifact/9Gt22ijoL8Xdqx4cfLM7NV), variant B agreed by Ramon ("ok"); held back until the money drain was cleared (features 15 and 16); built after his choice of 18 Nov 2026 ("Krone gibt aus, was sie einnimmt": then the distance). How the Americas stay apart in 1356 is asked of him (card of 18 Nov 2026). Built, with tests and numbers; not yet in the running world (section 17) |
 | 19 | The firms and households keep the working days of their faith | step 3 of way A of the proposal «Personen: Archiv der Toten und Tagesplan» (https://claude.ai/artifact/8UqSxP49CfvpPfX1UCDULc), chosen by Ramon 19 Nov 2026, with merge and deploy ("vorwärts machen alles mergren comitten und feddich", "du darfst deployen"). Built, with tests and numbers from the game (section 19); people feature 8 holds the calendars |
+| 20 | The days of rest without a leak | after feature 19 Ramon wrote "naja jetzt sind wir aber nicht fertig" (19 Nov 2026), chose to damp the firms' price rule first, "nur literaturkonform"; Calvo held the prices but cost work, and he chose "Zuerst Leck an Ruhetagen schliessen" (card, 19 Nov 2026). Built: materials for the next working day, the owner on his working days on the profit of the year; with tests and numbers from the game (section 20) |
+| 21 | A world knows the history only up to its start | the open gap of feature 20, found to come from the history of the placeholder tables: a world of 1291 expected the recovery after the plague of 1348. Under Ramon's "nur literaturkonform" (19 Nov 2026) and his order to clear the open questions of the economy first; the port's window (data up to the date of the calibration). Built, with tests and numbers from the game (section 21) |
 
 ## 1. Grain harvest per place
 
@@ -3014,13 +3016,15 @@ year as much as in as many periods of the port. A Latin working day of 1291 has 
 
 1. **Production** (A.13) is `min(a Q_s, a N α, a K κ, M β)`: the planned supply, the workers and the capital of the
    day; the stock of materials `M` is what it is and is not scaled.
-2. **Materials and investment** (A.18, A.14): a firm buys `a` times the port's, for the day's work.
+2. **Materials and investment** (A.18, A.14): a firm buys `a` times the port's, for the day's work. (Since feature 20
+   the materials are those of the firm's next working day, bought on a working day: section 20.)
 3. **A household that owns no firm** (workers, those without work, the banker) buys `a` times its budget (A.46, A.49,
    with the spending out of savings, feature 15): the market of its faith is closed on its days of rest. In the game
    a family books its food in the same way (`src/sim/systems/household.ts`).
 4. **The crown, the merchants and the owners of the firms buy every day.** The owner by his rule of feature 18, on
    the profit of the day before: after a day of rest, a day of wages without sales, he has nothing to spend out of
-   income; after a working day more than on a mean day. His family books its food every day.
+   income; after a working day more than on a mean day. His family books its food every day. (Since feature 20 the
+   owner buys on the working days of his faith, on the mean profit of the year: section 20.)
 5. **The spare capacity** in the market, which records the demand a firm cannot serve, is that of the day:
    `a K κ − Y`.
 6. **A firm plans on the mean demand per worked day**: the demand since its last plan over the factors of those days
@@ -3137,3 +3141,297 @@ of the days since its last plan (`worked`). A state of the format before is read
 day since the last plan counting as one; the game gives the working days of the year before it computes the next day
 (`cities.workingTo`, −1 after the upgrade). The calendars themselves are not saved: they are a function of the faith
 and the date.
+
+## 20. The days of rest without a leak
+
+After feature 19 Ramon wrote "naja jetzt sind wir aber nicht fertig" (19 November 2026): the questions of the economy
+that feature 19 left open come before steps 4 to 6 of way A. He chose "Zuerst Preisregel der Firmen dämpfen" and
+added "wichtig: alles nur literaturkonform wir machen keine deluklul änderungen". The damping that the literature has
+(Calvo, below) holds the prices but costs work; on the card that followed he chose "Zuerst Leck an Ruhetagen
+schliessen" (19 November 2026): find where the money stays on the days of rest and close it with rules from the
+literature.
+
+### Where the money stayed
+
+Feature 19 left two leaks, found in the first year of 1291 outside the game (550 cities, `Cities::step`, with the
+working days against without, as in section 19):
+
+1. **Materials for the wrong day.** In the port the materials a firm buys in a period are used in the next: the
+   output (A.13) is computed from the stock `M` before the market of the period, and the stock (A.21) gets what was
+   bought after it. Feature 19 had a firm buy `a` times the port's materials on day `t` "for the day's work", which
+   arrive for day `t + 1`: on a Latin Friday a firm bought for a full working day and worked half a day on the
+   Saturday; on the Saturday it bought for half a day and rested on the Sunday; and on the Monday, with 1.457 mean days
+   to make, its stock held what the Saturday had bought. The stock bound the firms after every day of rest, and the
+   goods they did not make were demand that went unserved.
+2. **The owner on the profit of the day before, every day.** After a day of rest, a day of wages without sales, the
+   profit of the day before is a loss and the owner has nothing to spend out of income; after a working day he has
+   more than on a mean day, and he spent it every day, on days of rest too. As an owner cannot take back a loss
+   (feature 18) he spent 13.8 % more than without working days, and the firms of the demand pull raised their prices
+   by the gap (section 19: the price level 1.006 to 1.026 against 0.993 to 1.015). Every rule that took the
+   one-sidedness away (section 19, "Tried and dropped") left goods unsold, because the first leak was still open.
+
+### What was read
+
+- Poledna, Miess, Hommes, Rabitsch (2023), appendix A, as the port has it: the output from the stock of materials
+  before the market (A.13, `firms_production`), the stock after it (A.21, `firms_stocks`:
+  `M − Y / β + DM`), the materials wanted for the planned supply (A.18), the expected profit the profit of the period
+  before grown by the expected inflation and growth (A.28, `firms_expectations_and_decisions`), the owner's budget out
+  of the expected profit (A.46, A.49).
+- Gonzalez-Navarro, M., Lee, J., Lee, S. Restricting Large Firms to Protect Small Businesses: Evidence from Retail
+  Operating-Day Restrictions. Working paper (card payments in Seoul, 2019; the text has no year, its references were
+  read in September 2025). https://sujinhome.github.io/assets/papers/Mandatory_closure.pdf Word for word: "larger
+  shares are recouped by restricted chains on other shopping days or diverted to other unrestricted retail formats",
+  and "we find no significant differences in total expenditure between non-closure weeks that follow a closure week
+  and those that follow another non-closure week": what a closed day takes is bought on the open days, and the week
+  spends what it spends. This is the reading under rule 3 of feature 19 (a household buys `a` times its budget on the
+  days its market is open), and it holds for the owner as for any household.
+- For the damping of the prices (tried, dropped): CANVAS (Bank of Canada staff working paper 2022-51; JEDC 172
+  (2025) 104986, equations 3 to 6) has none, the firm closes the whole gap every quarter; the code of BeforeIT.jl
+  has `theta_calvo` (`init_CANVAS.jl`, lines 66 to 69), 1 by default, with no value published for it; Dhyne et al.
+  (2005, ECB working paper 524): 15.1 % of the consumer prices of the euro area change in a month; Assenza, Delli Gatti
+  and Grazzini (2015): ρ = 0.9 and a step of the price drawn from U(0, 0.1).
+
+### The rule
+
+1. **A firm buys on a working day the materials of its next working day**: the port's materials (A.18) times the
+   factor of the first day after `t` on which it works (`Attendance::next_working`, within 31 days; 1 outside the
+   days the engine was given). On a day of rest, when the market of its faith is closed, it buys none. So on a Latin
+   Friday it buys for the half day of Saturday, on the Saturday for the Monday. This is the port's timing (A.13, A.21)
+   kept on a calendar; the investment (A.14) stays `a` times the port's.
+2. **The owner of a firm buys on the working days of his faith**, `a` times his budget, as every other household
+   (rule 3 of feature 19), and his family books its food the same way (`src/sim/systems/household.ts`). The crown and
+   the merchants buy every day, as before.
+3. **The owner plans on the profit of the year**: in the place of the profit of the period before, the mean profit
+   per period of his firm since its twelfth plan before (`OwnerProfit`, `OWNER_PLANS` = 12 plans of 30 days), grown
+   as the port grows the profit of the period before (A.28). The rest is the rule of feature 18: the profit without
+   the change of the stock, a budget not below 0. The paper's period is a quarter of working days and holidays alike;
+   on the daily clock the owner's period is taken to be the window of the expectations, a year, which the clock
+   already uses for the expected growth and inflation. **The length of the window is the clock's, not a paper's**: the
+   30 days of a plan were measured in feature 19 and left goods unsold (section 19, "Tried and dropped"). In the first
+   period with working days the year before is taken to be twelve plans of the profit of the period before, as the
+   clock takes the window before the start to be the starting position.
+
+Without a calendar nothing changes. With a calendar of the factor 1 on every day the materials are the port's and
+the owner plans on the profit of the year (rule 3 holds with working days, whatever their factors).
+
+Code: `economy/src/clock.rs` (`Attendance::next_working`, `OwnerProfit`, the overrides
+`firms_expectations_and_decisions`, `firms_profits`, `households_budget_firms`); tests in
+`economy/tests/working_days.rs`.
+
+### The numbers
+
+The first year of 1291 outside the game, as in section 19 (sums over the cities, with over without working days; the
+price level weighted by output, its range from day 30 to day 360 read every 15 days):
+
+| | after 90 days | after 180 days | after 360 days |
+|---|---|---|---|
+| output, summed since the start | +5.3 % | +0.6 % | −0.7 % |
+| consumption of the workers, summed | +5.0 % | +0.4 % | −1.0 % |
+| consumption of the owners, summed | +3.8 % | −2.6 % | −2.6 % |
+| employed, on the day | −0.2 % | −0.7 % | −0.7 % |
+| the crowns' purchases, summed | +6.5 % | +4.1 % | +4.6 % |
+| price level weighted by output, on the day | 1.001 / 1.011 | 1.003 / 1.012 | 1.006 / 1.003 |
+
+| | feature 19 | feature 20 | without working days |
+|---|---|---|---|
+| price level from day 30 to 360 | 1.006 to 1.026 | **0.993 to 1.006** | 0.993 to 1.015 |
+| output after 360 days | +4.9 % | −0.7 % | |
+| owners' consumption after 360 days | +13.8 % | −2.6 % | |
+
+The lead of the first quarter is its working days (the mean factor of its first 90 days is 1.085, section 19). A
+mean of exactly 365 days in the place of the twelve plans gave 0.993 to 1.008, output −0.7 %, the owners −2.6 %
+(below): the plans are as good as a year of days and keep 26 numbers per firm in place of 365.
+
+In the game (`npm run workdays:check -- 3`: the world of 1291 founded, three years computed with the working days and
+again with every day a working day, which the engine is then never given, so that its owners keep the rule of feature
+18, on the profit of the day before):
+
+| | year 1 | year 2 | year 3 |
+|---|---|---|---|
+| real GDP | 180,211 / 183,025 (−1.5 %) | 183,446 / 188,506 (−2.7 %) | 183,665 / 192,054 (−4.4 %) |
+| consumption | −1.9 % | −3.3 % | −4.9 % |
+| investment | −1.4 % | −2.6 % | −4.3 % |
+| without work, at the end of the year | 748 / 528 | 855 / 333 | 875 / 193 |
+| households' deposits | −0.5 % | −0.7 % | −0.8 % |
+| firms' deposits | −0.3 % | −0.5 % | −0.6 % |
+| mean price level | 1.004 / 1.003 | 0.993 / 1.001 | 0.995 / 1.001 |
+| output of the Latin firms | −2.0 % | −3.6 % | −5.6 % |
+| output of the Muslim firms | −0.4 % | −0.4 % | −1.3 % |
+
+With feature 19 the same check gave a real GDP of +4.0, +8.1 and +7.7 %, hardly anybody without work from the second
+year, and the households' deposits −1.2, −2.8 and −4.8 % (section 19): that lead was the owners' overspending. Now
+the households keep their deposits and the prices stay where they are, but the economy grows less than the run
+without working days, and about 2.4 % of the workers are without work from the second year.
+
+That the days of rest are no longer the cause shows the same economy against a calendar with the factor 1 on every
+day, under which the owners plan on the year too (outside the game, as above, two years): output +0.8 %, the owners'
+consumption +1.5 %, the employed equal on day 720, the price level 0.990 to 1.006 against 0.996 to 1.000. The gap to
+the run without working days is the owners' rule: on the profit of the day before an owner spends more than his firm
+earns (feature 18, "Deviations": a third of the owners in the red), and that overspending fills a gap in the demand
+that is found in neither feature 18 nor here. Without it the goods stay unsold: the firms' stock grows from 0.65 days
+of output on day 360 to 2.46 on day 720, and the price level comes down to 0.990.
+
+In the tests (Austria, the port's data set; eight weeks of five working days, a half day and a day of rest against
+every day a working day of the factor 1; seeds 1 to 6) the price level moves by −7.4 to +6.1 %, with the rules of
+feature 19 by −13.7 to +13.4 %; the output −1.7 to −3.3 %, with those of feature 19 −0.1 to −1.3 %. On the day after
+a day of rest an owner buys what he buys after a working day (−0.8 %), with the profit of the day before less than
+half.
+
+### Tried and dropped
+
+The two parts of the rule were measured one by one and the window of the owner at several lengths, in the first year
+of 1291 outside the game as above (the price level from day 30 to day 360; output and the owners' consumption summed,
+with over without working days, after 360 days):
+
+| materials | the owner | price level | output | owners' consumption |
+|---|---|---|---|---|
+| for the day (feature 19) | on the profit of the day before, every day (feature 19) | 1.006 to 1.026 | +4.9 % | +13.8 % |
+| for the next working day | on the profit of the day before, every day | 0.999 to 1.024 | +3.8 % | +12.4 % |
+| for the next working day | on the mean of 7 days, every day | 0.932 to 1.058 | −2.6 % | −7.6 % |
+| for the next working day | on the mean of 7 days, on his working days | 0.910 to 1.095 | +0.9 % | +1.5 % |
+| for the next working day | on the mean of 30 days, on his working days | 0.884 to 1.047, 95 cities 20 % off | −1.4 % | −10.8 % |
+| for the next working day | on the mean of 91 days, on his working days | 0.990 to 1.022 | −0.2 % | −2.4 % |
+| for the day (feature 19) | on the mean of 365 days, every day | 0.978 to 1.016 | −2.4 % | −7.2 % |
+| for the next working day | on the mean of 365 days, every day | 0.969 to 1.015 | −2.8 % | −7.6 % |
+| for the next working day | on the mean of 365 days, on his working days | 0.993 to 1.008 | −0.7 % | −2.6 % |
+| **for the next working day** | **on the mean of twelve plans, on his working days (built)** | **0.993 to 1.006** | **−0.7 %** | **−2.6 %** |
+
+Neither part alone is enough: with the materials fixed and the owner of feature 19 the prices stay high, with the
+owner on the year and the materials of feature 19 they swing. The shorter the window, the more a week of feasts
+weighs in it.
+
+- **Calvo** (each planning firm changes its price with the probability θ, as in the code of BeforeIT.jl): with θ =
+  0.151 per plan (Dhyne et al.) the price levels of the 30 cities of 1356 stayed within 0.96 and 1.04 over ten years
+  (seeds 1356 to 1359; 0.92 to 1.01 with θ = 1), but work fell: in seed 1356 London had 13.3 % without work in year 10,
+  and the most of any city in a year was 14.2 %; with θ = 1 (every firm, as built) at most 1.7 %. A firm that may not
+  lower its price sells less and hires fewer. Ramon chose to close the leak first; Calvo is not built.
+- **The offered goods as CANVAS has them** (the gap against `Y + S`, the stock counted), with the materials and the
+  owner of feature 19: the price level 1.012 to 1.034, no better than feature 19.
+- **Materials for the next day, whatever it is** (`a(t + 1)`): on a Saturday a firm bought nothing for the Monday,
+  as the Sunday has the factor 0, and the output of day 15 fell by a tenth. Hence the next *working* day.
+
+### Deviations and what stays open
+
+- **The window of the year is ours**, as said under rule 3: no paper gives the period over which an owner on a daily
+  clock expects his profit. It is the window the clock uses for every other expectation, and the 30 days of a plan
+  were measured and failed.
+- **The crown and the merchants still buy every day**, also on a day on which every firm of a city rests (section 19).
+  The crowns' purchases are 4.6 % above the run without working days after a year: the crown buys out of its revenue
+  (feature 16), and the revenue follows the output of the working days.
+- **The Muslim cities still sell more to the merchants than the Latin ones** (section 19): that the merchants buy on
+  the working days of the cities they buy from is open.
+- **The gap in the demand of feature 18 is open, and now it shows.** Feature 18 measured it without working days:
+  with the owner on the mean profit of 30 days 0.9 % of the goods stayed unsold and the price level fell to 0.97;
+  the owners' overspending on the profit of the day before filled it. Feature 20 takes that overspending away with
+  the days of rest, and the gap is what holds the economy of the game 4.4 % below the run without working days in
+  the third year. Where the money of that demand stays is the next question; no rule is built for it here. (Feature
+  21 found the cause: no money leaks, the firms expected the recovery after the plague, section 21.)
+
+### State and upgrade
+
+State version 32. Engine format 11: the clock keeps the owners' profits of the last twelve plans and since the last
+(`OwnerProfit`: 26 numbers and a count per firm). A state of format 10 is read without them, and they are gathered
+from the next day on, the year before taken to be the profit of the day before (test
+`a_state_of_format_10_gathers_the_profits_of_the_owners_anew`). The upgrade 31 → 32 changes nothing else: the
+economies go on where they are.
+
+## 21. A world knows the history only up to its start
+
+### Why
+
+Feature 20 left the gap in the demand open (section 20, "Deviations"): in the game the world of 1291 with working
+days fell 1.5, 2.7 and 4.4 % behind the run without them, and its firms' stock grew year by year. Outside the game
+(550 cities of 1291, two years, `Cities::step`) the money did not leak: the deposits hardly changed. The firms made
+more than was asked. Under the demand pull of CANVAS (section 8) the supply grows by the expected growth in every
+case, and the firms expected about 1 to 3 % a year (γ_e read every 60 days), while the demand hardly grew once the owners
+no longer spent beyond their profit. With working days the planned supply stood 0.2 to 0.8 % above the demand from
+day 480 on, and the stock grew from 446 on day 60 to 1,729 on day 720. Without working days it stayed near 150:
+there the owners, on the profit of the day before, spent 878 more than their firms earned in two years, on credit,
+and that made the expected growth come true.
+
+### Where the expected growth came from
+
+The firms expect growth and inflation by an AR(1) on the history of output and prices (A.6, A.7; on the daily clock
+on sums of 365 days, section 4), and the calibration hands them the years before the start. The world of 1291 has no
+tables of its own: it takes those of 1356 as a placeholder (`src/sim/tables.ts`), and with them the history 1281 to
+1356, scaled to 1356. That history has the plague: real GDP £3,879 m in 1345, £2,841 m in 1350, £2,686 m in 1356
+(2013 prices; Bank of England workbook, sheet A1, Broadberry et al.). An AR(1) on its logarithms has α = 0.845 and a
+long-run mean 27.7 % above the start: it expects 3.86 % growth in the first year, the recovery after the plague. A
+world of 1291 knows nothing of the plague, which comes 57 years after its start.
+
+### What was read
+
+- The port, `get_params_and_initial_conditions` (`src/calibration.rs` of the port, `economy/vendor/port-beforeit`):
+  every series of the years before the start (real GDP, the deflator, the government's consumption, exports,
+  imports) runs from `estimation_date` to `calibration_date` (`range(key, Te, Tx)`) and is scaled to its value at
+  `calibration_date`; the AR(1) rules of the government's consumption, of exports and of imports are estimated on
+  that window, and `T_prime = Tx − Te + 1`. The port calibrates the model at any quarter of its data (Italy 2010 to
+  2016 in its tests), each time with the data up to that quarter: the model of a start knows the years before it and
+  none after.
+- The history of the table (Bank of England, A millennium of macroeconomic data, sheets A1 and A26) runs from 1280.
+  The years 1281 to 1291 are part of it, from the same sources as the rest.
+
+### The rule
+
+A world calibrates its cities on the history up to its own start year (`calibrateEconomy(table, until)`, `until`
+the start year; `cityCalibrations` passes the smaller of the start year and the table's year). For a world of 1291 on
+the table of 1356: the series of output, inflation, the crown's purchases, exports and imports run from 1281 to 1291
+(11 years, `T_prime` = 11), each scaled to 1291, and the rule of exports is estimated on them. The accounts stay the
+table's, the placeholder of 1356. On 1281 to 1291 the AR(1) on output has α = 0.195 and a long-run mean 1.3 % above
+the start: 1.07 % growth expected in the first year. England's real GDP grew 0.2 % a year from 1281 to 1345 (£3,390 m
+to £3,879 m).
+
+A world that starts in the year of its table (1356) is calibrated as before, bit for bit (test: the file of the
+reference world).
+
+In the game two of the rules of the rest of the world do not enter: the merchants replace the series of exports and
+imports in every city (feature 5, `economy/src/trade.rs`), and since feature 16 the crown buys with what it took in,
+so its series sets only its first day. What changes is the history of output and prices, from which the firms form
+their expectations.
+
+Code: `src/sim/economy/calibration.ts` (`calibrateEconomy`), `src/sim/systems/economy.ts` (`cityCalibrations`);
+tests in `tests/economy.test.ts` (the calibration, the world of 1291, its upgrade) and
+`tests/economy-households.test.ts` (the upgrade of a world of 1356).
+
+### The numbers
+
+In the game (`npm run workdays:check -- 3`, as in section 20: the world of 1291 with the working days against every
+day a working day):
+
+| | year 1 | year 2 | year 3 |
+|---|---|---|---|
+| real GDP | 178,367 / 180,955 (−1.4 %) | 180,280 / 182,915 (−1.4 %) | 179,635 / 182,486 (−1.6 %) |
+| consumption | −1.7 % | −1.9 % | −1.9 % |
+| investment | −1.3 % | −1.4 % | −1.5 % |
+| without work, at the end of the year | 944 / 685 | 998 / 693 | 1,036 / 717 |
+| households' deposits | −0.5 % | −0.8 % | −0.8 % |
+| firms' deposits | −0.3 % | −0.4 % | −0.5 % |
+| mean price level | 1.004 / 1.002 | 0.996 / 1.001 | 0.999 / 1.001 |
+| output of the Latin firms | −1.9 % | −2.4 % | −2.6 % |
+| output of the Muslim firms | −0.1 % | +1.1 % | +1.1 % |
+
+| real GDP | year 1 | year 2 | year 3 |
+|---|---|---|---|
+| with working days, history to 1356 (section 20) | 180,211 | 183,446 | 183,665 |
+| with working days, history to 1291 | 178,367 | 180,280 | 179,635 |
+| without working days, history to 1356 (section 20) | 183,025 | 188,506 | 192,054 |
+| without working days, history to 1291 | 180,955 | 182,915 | 182,486 |
+
+The run without working days no longer grows 2.4 % a year: it is flat, as England was before the plague, and the gap
+between the two runs stays at about 1.5 % instead of widening to 4.4 %.
+
+### What stays open
+
+- **The gap of about 1.5 % to the run without working days.** It no longer widens, but in year 3 about 2.8 % of the
+  workers are without work against 2.0 % without working days. The two runs do not have the same owners: without
+  working days the owner plans on the profit of the day before (feature 18), with them on the profit of the year
+  (feature 20). Whether the gap is that difference or the days of rest themselves is the next question.
+- **The tables of 1291 are still those of 1356.** Only the history is cut at the start; the accounts (people, output,
+  coin, the crown's revenue) are post-plague numbers for a pre-plague world (`src/sim/tables.ts`).
+
+### State and upgrade
+
+State version 34. The upgrade 33 → 34 founds the economies of a world that starts before the year of its table anew
+on the day the world has reached, as the step to 24: their days and yearly figures are gone, the firms and the parts
+of the persons are given out again, and the first period is the next day of the world. The persons stay who they
+are. A world that starts in the year of its table goes on where it is: its calibration has not changed.

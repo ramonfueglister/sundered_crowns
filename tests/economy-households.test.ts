@@ -335,19 +335,14 @@ describe('the need of food (economy feature 15)', () => {
   it('is the baskets of the family at that cost, and the family is fed by the part of it that it spent', () => {
     const price = foodPrices(s);
     // what a family has to buy on the day: each member's baskets times the factor of the calendar of its faith
-    // (economy feature 19), in the family of an owner of a firm every day
+    // (economy feature 19), in the family of an owner of a firm too (economy feature 20)
     const { y, m, d } = dayToDate(e.day, s.startYear),
       doy = dateToDay(y, m, d, y),
       toBuy = new Float64Array(s.family.size);
-    const P = s.person.cols,
-      owners = new Set<number>();
-    for (let id = 0; id < s.person.size; id++)
-      if (s.person.alive[id] && P.died[id] === ALIVE && P.role[id] === ROLE.owner) owners.add(P.family[id]);
+    const P = s.person.cols;
     for (let id = 0; id < s.person.size; id++) {
       if (s.person.alive[id] && P.died[id] === ALIVE)
-        toBuy[P.family[id]] +=
-          basketsOf(ageOn(P.born[id], e.day)) *
-          (owners.has(P.family[id]) ? 1 : dayFactor(calendarOf(P.faith[id]), y, doy));
+        toBuy[P.family[id]] += basketsOf(ageOn(P.born[id], e.day)) * dayFactor(calendarOf(P.faith[id]), y, doy);
     }
     let families = 0,
       short = 0,
@@ -389,6 +384,14 @@ describe('the state', () => {
       advanceDay(b, w);
     }
     expect(hashState(decodeState(encodeState(a)))).toBe(hashState(b));
+  });
+  it('of a world that starts in the year of its table goes on where it is through the step to 34 (economy feature 21)', () => {
+    // biome-ignore lint/suspicious/noExplicitAny: a state of an older version, which no type of today describes
+    const old = decodeState(encodeState(s)) as any;
+    old.v = 33;
+    const up = upgradeState(old, w);
+    expect(up.v).toBe(STATE_VERSION);
+    expect(hashState(up)).toBe(hashState(s));
   });
   it('of a world from before feature 11 gets them by the upgrade: the economies are founded anew with the women without a husband at work', () => {
     // version 13: no purse, no consumption (who works there was drawn by the rule before; the upgrade draws again)

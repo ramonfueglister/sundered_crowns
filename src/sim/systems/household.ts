@@ -36,8 +36,8 @@
 //
 // Since economy feature 19 a person buys on the working days of the calendar of its faith (src/sim/holy_days.ts):
 // nothing on a day of rest, and on a working day the share of the day that is worked times the days of the year over
-// its working days. The family of the owner of a firm buys every day, as the owner does in the economy
-// (economy/src/clock.rs). The need of a day stays what the family eats; what it has to buy of it that day is the need
+// its working days. So does the family of the owner of a firm, as the owner does in the economy since economy
+// feature 20 (economy/src/clock.rs). The need of a day stays what the family eats; what it has to buy of it that day is the need
 // of each member times that member's factor, and `fed` is what it spent over that. On a day on which the family buys
 // nothing it needs to buy nothing: `fed` is 1.
 import type { WorldState } from '../state';
@@ -99,15 +99,13 @@ export function writeHouseholds(s: WorldState, w: World): void {
   };
   // the living and the dead who still hold a part (src/sim/people/living.ts); a dead person without a part has no money
   const persons = presentPersons(s).slice(), own = new Float32Array(persons.length);
-  const owners = new Uint8Array(n); // the families of a living owner of a firm
-  for (const id of persons) if (P.died[id] === ALIVE && P.role[id] === ROLE.owner) owners[P.family[id]] = 1;
   for (let k = 0; k < persons.length; k++) {
     const id = persons[k], f = P.family[id], role = P.role[id];
     // the dead are no members; the money of a dead person whose part nobody has taken yet (src/sim/systems/deaths.ts)
     // stays with the family
     if (P.died[id] === ALIVE) {
       own[k] = basketsOf(ageOn(P.born[id], e.day));
-      F.persons[f]++; baskets[f] += own[k]; toBuy[f] += own[k] * (owners[f] ? 1 : factorOf(P.faith[id]));
+      F.persons[f]++; baskets[f] += own[k]; toBuy[f] += own[k] * factorOf(P.faith[id]);
       if (role === ROLE.worker || role === ROLE.owner || role === ROLE.banker) F.working[f]++;
     }
     income[f] += P.income[id]; spent[f] += P.spent[id]; savings[f] += P.savings[id];
