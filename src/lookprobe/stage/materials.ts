@@ -1,13 +1,14 @@
 // The stage's materials: every mesh on the stage is drawn with one of these, by the kind of lists it comes as (lists of
 // floats or of bytes, faces on the grid of blocks, faces on no grid, the sea's, and those that glide to the next step).
 import * as THREE from 'three/webgpu';
-import { Fn, If, attribute, dot, float, fract, materialColor, max, mix, positionGeometry, reflector, screenCoordinate, select, uniform, userData, vec2, vec3, vec4, vertexColor } from 'three/tsl';
+import { Fn, If, attribute, dot, float, fract, int, ivec2, materialColor, max, min, mix, positionGeometry, reflector, screenCoordinate, select, uniform, userData, vec2, vec3, vec4, vertexColor } from 'three/tsl';
 import { hashBlur } from 'three/addons/tsl/display/hashBlur.js';
 import { SEA_Y } from '../layout';
 import { OPEN_WATER } from '../terrain';
 import { type Sea, createSea } from '../sea';
 import { FLIPPED, FACE_STEPS, RISES } from '../faces';
 import { flag } from './address';
+import { createFields } from './fields';
 import { LOOK } from './look';
 
 /** Makes the materials, and the water's mirror where it is drawn (it lies on `scene`). */
@@ -83,6 +84,8 @@ export function createMaterials(scene: THREE.Scene) {
   const kind = whole(lie.x), flipped = kind.greaterThanEqual(FLIPPED), axis = kind.sub(select(flipped, float(FLIPPED), float(0)));
   const corner = select(flipped, positionGeometry.y, positionGeometry.x);
   const level = whole(lie.y).div(FACE_STEPS), alongU = whole(select(corner.greaterThan(0.5).and(corner.lessThan(2.5)), lie.w, lie.z)).div(FACE_STEPS), alongV = whole(select(corner.greaterThan(1.5), reach.y, reach.x)).div(FACE_STEPS);
+  // (both ends of a face's spans, whichever corner this is)
+  const alongUOther = () => whole(select(corner.greaterThan(0.5).and(corner.lessThan(2.5)), lie.z, lie.w)).div(FACE_STEPS), alongVOther = () => whole(select(corner.greaterThan(1.5), reach.x, reach.y)).div(FACE_STEPS);
   const tones = [0, 1, 2, 3].map((k) => attribute(`tone${k}`, 'vec4') as unknown as ReturnType<typeof vec4>);
   const toneOf = select(corner.lessThan(0.5), tones[0], select(corner.lessThan(1.5), tones[1], select(corner.lessThan(2.5), tones[2], tones[3])));
   const faced = new THREE.MeshLambertNodeMaterial(), placed = select(axis.lessThan(0.5), vec3(level, alongU, alongV), select(axis.lessThan(1.5), vec3(alongU, level, alongV), vec3(alongU, alongV, level)));
@@ -90,6 +93,20 @@ export function createMaterials(scene: THREE.Scene) {
   // (a face's colours are always bytes: see `toned`)
   faced.colorNode = materialColor.mul(toneOf.rgb.mul(toneOf.a.mul((2 * 255) / 254)).toVarying().clamp(0, MOST));
   faced.maskNode = solid.maskNode;
+  // The joined tops of a near piece's columns (faces.ts `Field`): placed as the faces are, but a face may span many
+  // columns, so its colour is read from the mesh's field, its layer of the texture all such meshes share
+  // (`userData.field`: the field's first column x0, z0 and its layer). Each column's four corners are mixed across
+  // it as its own face's two triangles did. (A dot on a face's edge is kept to the face's own columns: its place
+  // between the corners can come out a hair beyond the edge, and the face reaches a hair over it, worldprobe/tops.ts.)
+  const fields = createFields(), fieldAt = userData('field', 'vec3') as unknown as ReturnType<typeof vec3>;
+  const spot = vec2(placed.x, placed.z).toVarying(), bounds = vec4(min(alongU, alongUOther()), min(alongV, alongVOther()), max(alongU, alongUOther()), max(alongV, alongVOther())).toVarying();
+  const within = spot.sub(fieldAt.xy), column = within.floor().clamp(bounds.xy.sub(fieldAt.xy).ceil(), bounds.zw.sub(fieldAt.xy).floor().sub(1)), across = within.sub(column).clamp(0, 1);
+  const layer = int(fieldAt.z), first = ivec2(column.mul(2));
+  const read = (dx: number, dz: number) => { const t = fields.node.load(first.add(ivec2(dx, dz))).depth(layer); return t.rgb.mul(t.a.mul((2 * 255) / 254)); };
+  const fieldFaced = new THREE.MeshLambertNodeMaterial();
+  fieldFaced.positionNode = placed;
+  fieldFaced.colorNode = materialColor.mul(mix(mix(read(0, 0), read(1, 0), across.x), mix(read(0, 1), read(1, 1), across.x), across.y).clamp(0, MOST));
+  fieldFaced.maskNode = solid.maskNode;
   // The sea's faces: its level is on no 64th of a block, so the mesh says how far above their numbers its faces lie
   // (faces.ts `lift`); and they mirror as the sea's lists do.
   const seaFaced = new THREE.MeshLambertNodeMaterial();
@@ -138,6 +155,6 @@ export function createMaterials(scene: THREE.Scene) {
   const sinking = coloured();
   sinking.maskNode = solid.maskNode;
   sinking.positionNode = vec3(positionGeometry.x, mix(positionGeometry.y, attribute('sink', 'float') as unknown as ReturnType<typeof float>, glided), positionGeometry.z);
-  return { smallLists, solid, water, faced, seaFaced, freed, gliding, sinking, surface, mirrored, tint, mirrorShare, shareCode, inkOf, marked };
+  return { smallLists, solid, water, faced, fieldFaced, fields, seaFaced, freed, gliding, sinking, surface, mirrored, tint, mirrorShare, shareCode, inkOf, marked };
 }
 export type Materials = ReturnType<typeof createMaterials>;
