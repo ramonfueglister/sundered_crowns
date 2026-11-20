@@ -112,4 +112,20 @@ describe('the journeys of the Roman-German kings (Regesta Imperii)', () => {
     // from his first stop to his death the itinerary always names a place
     expect(stayOn(j, day('1347-06-01'))).toBeGreaterThanOrEqual(0);
   });
+  it('put places of issue the Regesta place at a namesake where the regest and the days around show them', () => {
+    const karl = kings.get('Q155669')!;
+    // 'in Arluno' (1346-10-04) is Arlon by Luxembourg, not Arluno by Milan
+    const arlon = stayOn(karl, day('1346-10-04'));
+    expect(w.lat[arlon]).toBeGreaterThan(49);
+    expect(w.lon[arlon]).toBeLessThan(7);
+    // Karl IV.'s Sulzbach (1366-12-16) is in the Upper Palatinate, not in the Hunsrück
+    expect(w.lon[stayOn(karl, day('1366-12-16'))]).toBeGreaterThan(11);
+    // 'Frankenvorde' (1375-11-25), between Berlin and Fürstenberg, is Frankfurt an der Oder
+    expect(w.lon[stayOn(karl, day('1375-11-25'))]).toBeGreaterThan(13.5);
+  });
+  it('leave out the charters whose place the editors note as not where the king was', () => {
+    // RI VII H. 11 n. 208 (Nürnberg, 1329-09-15): dated ahead; Ludwig was in Italy (Pavia) then
+    const ludwig = kings.get('Q57161')!;
+    expect(w.lat[stayOn(ludwig, day('1329-09-15'))]).toBeLessThan(47);
+  });
 });
