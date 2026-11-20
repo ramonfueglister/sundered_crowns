@@ -11,6 +11,7 @@ import { NG } from '../sim/people/genes';
 import { ROLE } from '../sim/systems/work';
 import { presentPersons } from '../sim/people/living';
 import { type ArchivedPersons, rowOf } from '../sim/people/archive';
+import type { Track } from '../sim/content/travel';
 
 /** The living persons of a place, as columns of equal length (JSON). */
 export interface PlacePeople {
@@ -38,11 +39,19 @@ export interface RulerOnMap {
   place: number;
   /** the realms whose crown the ruler holds: the id, the German short name and the colour (0xRRGGBB) */
   crowns: { id: number; name: string; color: number }[];
+  /** for a ruler whose itinerary places them: the way ahead from the place the sources last name, as the places
+   *  reached and the day (to a hundredth) each is reached, for TRACK_DAYS (src/sim/content/travel.ts) */
+  track?: Track;
 }
 
+/** How many days ahead GET /rulers tells a ruler's way. OWN RULE: the map asks again when a way runs out
+ *  (src/people/rulers_mode.ts); some four months of a journey are a few hundred places. */
+export const TRACK_DAYS = 120;
+
 /** The rulers who live and hold at least one crown, in the order they came into the world; `stays`: where the persons
- *  of history are staying today, by row (staysOf, src/sim/content/itineraries.ts), the others are at home. */
-export function rulersOnMap(s: WorldState, stays: ReadonlyMap<number, number> = new Map()): RulerOnMap[] {
+ *  of history are staying today, by row (staysOf, src/sim/content/itineraries.ts), the others are at home; `tracks`:
+ *  their ways ahead, by row (tracksOf). */
+export function rulersOnMap(s: WorldState, stays: ReadonlyMap<number, number> = new Map(), tracks: ReadonlyMap<number, Track> = new Map()): RulerOnMap[] {
   const held = new Map<number, RulerOnMap['crowns']>();
   for (let r = 0; r < s.realm.size; r++) {
     const h = s.realm.cols.holder[r];
@@ -54,7 +63,9 @@ export function rulersOnMap(s: WorldState, stays: ReadonlyMap<number, number> = 
   for (const n of s.named ?? []) {
     const id = n.person, crowns = held.get(id);
     if (!crowns || P.died[id] !== ALIVE) continue;
-    out.push({ uid: P.uid[id], name: n.name, house: n.house, female: P.sex[id] === 0, place: stays.get(id) ?? s.family.cols.place[P.family[id]], crowns });
+    const t = tracks.get(id),
+      track = t && { day: t.day.map((d) => Math.round(d * 100) / 100), place: t.place };
+    out.push({ uid: P.uid[id], name: n.name, house: n.house, female: P.sex[id] === 0, place: stays.get(id) ?? s.family.cols.place[P.family[id]], crowns, ...(track ? { track } : {}) });
   }
   return out;
 }

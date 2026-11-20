@@ -50,7 +50,7 @@ interface Room {
 const LENGTHS = new WeakMap<World, Map<WayNet | null, Float32Array>>();
 /** The kilometres of every edge of the world's net as goods count them (above): the ways' efforts on land, or the
  *  straight line off them; the straight line on rivers and water, and everywhere in a world without ways. */
-function edgeKm(w: World, net: WayNet | null): Float32Array {
+export function edgeKm(w: World, net: WayNet | null): Float32Array {
   let kept = LENGTHS.get(w);
   if (!kept) {
     kept = new Map();
