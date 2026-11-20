@@ -64,11 +64,16 @@ CORRECTED = {
     # Karl IV.'s Sulzbach is the seat of his lands in the Upper Palatinate (the register of the Regesta,
     # indexes/combined_all.csv: 'Sulzbach(-Rosenberg), Kr. Amberg-Sulzbach'), between Nuremberg, Lauf and Prague;
     # RI-Places puts it at Sulzbach in the Hunsrück (49.83, 7.33)
+    # (all the spellings RI-Places gives for that Sulzbach)
     'Sulzbach': 'Q503633',
     'Sulzpach': 'Q503633',
     'Sulczbach': 'Q503633',
     'Sulczpach': 'Q503633',
     'Sultzbach': 'Q503633',
+    'Sultzpach': 'Q503633',
+    'Solzpach': 'Q503633',
+    'Soltzbach': 'Q503633',
+    'Salzbach': 'Q503633',
     # Karl IV.'s 'Laufen' (1361-1366) lies between his stays at Nuremberg and Sulzbach, as 'Lauff' on the days next to
     # it (1362-03-27 and 03-31): Lauf an der Pegnitz, not Laufen by Basel (Q68363)
     'Laufen': 'Q504334',
