@@ -91,7 +91,13 @@ export type ClientMsg =
   | { type: 'cmd'; id: number; cmd: Command }
   | { type: 'place'; place: number }
   /** pauses or runs the world, or sets its speed (1 … SPEEDS.length); only for whom `Me.time` allows */
-  | { type: 'time'; paused?: boolean; speed?: number };
+  | { type: 'time'; paused?: boolean; speed?: number }
+  /** says something to the living person `person` (a uid): the conversation so far, the player's newest line last
+   *  (server/talk, docs/TALK.md). The answer comes in pieces as `talk` messages with the same id. */
+  | { type: 'talk'; id: number; person: number; lines: TalkLine[] };
+
+/** A line of a conversation with a person: said by the player or by the person. */
+export interface TalkLine { who: 'player' | 'person'; text: string }
 
 export type ServerMsg =
   | { type: 'welcome'; me: Me; world: WorldInfo; realms: RealmInfo[] }
@@ -102,6 +108,8 @@ export type ServerMsg =
   | { type: 'owners'; changes: [number, number][] }
   | { type: 'result'; id: number; ok: boolean; err?: string }
   | { type: 'place'; detail: PlaceDetail }
+  /** a piece of the person's answer to the `talk` with that id; `done` with the last piece, `err` when there is none */
+  | { type: 'talk'; id: number; text?: string; done?: boolean; err?: string }
   | { type: 'error'; code: string; message: string };
 
 /** Binary frames: the first byte says what follows. */

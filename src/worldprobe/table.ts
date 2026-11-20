@@ -17,9 +17,10 @@ import { type Ground, type GroundTraits, Mat, N, SUMMIT, idx, onGrid } from '../
 import { buildShore } from '../lookprobe/shore';
 import { type Part, buildTerrain, buildWater, drawnTops, sideTopAt } from '../lookprobe/terrain';
 import { pack, unpack } from './pack';
-import { drawHouses, housesBatch, housesIn } from './houses';
+import { HOUSE_NUMBERS, drawHouses, housesBatch, housesIn } from './houses';
 import { FAR_FROM_ROADS, ROAD_SHOWS, roadOn } from './roads';
-import { TREE_NUMBERS, drawTrees } from './trees';
+import { CROP_NAMES, drawCrops } from './crops';
+import { TREE_NUMBERS, crownTallAt, drawTrees } from './trees';
 
 /**
  * The columns round a piece's own that its picture depends on: the sky's share is taken up to 10.5 columns from a
@@ -57,6 +58,8 @@ export interface Table {
   houses?: Float32Array;
   /** the trees drawn one by one at the piece's own columns (trees.ts, TREE_NUMBERS to a column, side × side columns) */
   trees?: Uint8Array;
+  /** the crops of the lots where the finest step's sheaves are drawn one by one (crops.ts, a byte to a column, side × side columns): the piece's own columns and RIM round them */
+  crops?: Uint8Array;
   /** blocks to the edge of the nearest way's band at the corners of the columns ((side + 1)², roads.ts `roadOn`), where ways run over the ground; off the piece's own and its rim as far as where no way is near */
   road?: Float32Array;
 }
@@ -110,17 +113,23 @@ export function drawGround(g: Ground, t: GroundTraits, bakedSky: boolean, part: 
   if (wanted) last = tableOf(g, t, part, roads);
   const carried = covered ? new Batch() : undefined, ground = buildTerrain(g, t, bakedSky, part, carried), water = buildWater(g, false, part), raised = buildWater(g, true, part);
   buildShore(ground, g, t, bakedSky, part);
-  return { ground, carried, water, raised, standing: standingOn(g, t.trees, housesIn(t.houses, part), part) };
+  return { ground, carried, water, raised, standing: standingOn(g, t.trees, t.crops, housesIn(t.houses, part), part) };
 }
 
 /**
- * What stands on a ground drawn from numbers: its trees, then its houses (the glide finds the houses at the end:
- * glide.ts `housesOver`). The houses as a table keeps them, in floats, so that drawn from it they are the same.
+ * What stands on a ground drawn from numbers: its trees, the sheaves of its fields, then its houses (the glide finds
+ * the houses at the end: glide.ts `housesOver`). The houses as a table keeps them, in floats, so that drawn from it
+ * they are the same. No sheaf stands on a column a house stands on (a farmhouse at the end of its field).
  */
-function standingOn(g: Ground, trees: ArrayLike<number> | undefined, houses: Float32Array | undefined, part: Part): Batch | undefined {
-  if (!trees && !houses) return undefined;
+function standingOn(g: Ground, trees: ArrayLike<number> | undefined, crops: ArrayLike<number> | undefined, houses: Float32Array | undefined, part: Part): Batch | undefined {
+  if (!trees && !crops && !houses) return undefined;
   const b = new Batch();
   if (trees) drawTrees(b, trees, g.h, g.ox ?? 0, g.oz ?? 0, part);
+  if (crops) {
+    const housed = new Uint8Array(N * N);
+    for (let k = 0; houses && k + HOUSE_NUMBERS <= houses.length; k += HOUSE_NUMBERS) for (let z = Math.max(0, Math.floor(houses[k + 1])); z < Math.min(N, Math.ceil(houses[k + 3])); z++) for (let x = Math.max(0, Math.floor(houses[k])); x < Math.min(N, Math.ceil(houses[k + 2])); x++) housed[idx(x, z)] = 1;
+    drawCrops(b, crops, g.h, g.wet, g.ox ?? 0, g.oz ?? 0, part, (x, z) => !housed[idx(x, z)]);
+  }
   if (houses) drawHouses(b, houses, g.h);
   return b.triangles ? b : undefined;
 }
@@ -166,6 +175,11 @@ export function tableOf(g: Ground, t: GroundTraits, part: Part, roads: Float32Ar
     for (let z = part.z0; z < part.z1; z++) for (let x = part.x0; x < part.x1; x++) for (let q = 0; q < TREE_NUMBERS; q++) trees[idx(x, z) * TREE_NUMBERS + q] = t.trees[idx(x, z) * TREE_NUMBERS + q];
     if (trees.some((v) => v > 0)) table.trees = trees;
   }
+  if (t.crops) {
+    const crops = new Uint8Array(n);
+    for (let z = Math.max(0, part.z0 - RIM); z < Math.min(N, part.z1 + RIM); z++) for (let x = Math.max(0, part.x0 - RIM); x < Math.min(N, part.x1 + RIM); x++) crops[idx(x, z)] = t.crops[idx(x, z)];
+    if (crops.some((v) => v > 0)) table.crops = crops;
+  }
   if (roads) {
     const road = new Float32Array((N + 1) * (N + 1)).fill(FAR_FROM_ROADS);
     for (let z = Math.max(0, part.z0 - RIM); z <= Math.min(N, part.z1 + RIM); z++) for (let x = Math.max(0, part.x0 - RIM); x <= Math.min(N, part.x1 + RIM); x++) road[z * (N + 1) + x] = roads[z * (N + 1) + x];
@@ -181,13 +195,15 @@ export function tableOf(g: Ground, t: GroundTraits, part: Part, roads: Float32Ar
 class TableTraits implements GroundTraits {
   readonly slope: GroundTraits['slope'];
   readonly sideTop: number;
+  readonly crownTall: number;
   readonly houses: GroundTraits['houses'];
   readonly trees: GroundTraits['trees'];
+  readonly crops: GroundTraits['crops'];
   private readonly side: number;
   private readonly last: number;
   private readonly pulls: (readonly [RGB, number])[] = [];
   constructor(private readonly table: Table, step: number) {
-    this.slope = table.slope; this.sideTop = sideTopAt(step); this.houses = table.houses; this.trees = table.trees; this.side = table.side; this.last = table.side - 1;
+    this.slope = table.slope; this.sideTop = sideTopAt(step); this.crownTall = crownTallAt(step); this.houses = table.houses; this.trees = table.trees; this.crops = table.crops; this.side = table.side; this.last = table.side - 1;
     const tints = table.tints;
     for (let k = 0; k < tints.length; k += 4) this.pulls.push([[tints[k], tints[k + 1], tints[k + 2]], tints[k + 3]]);
   }
@@ -197,7 +213,7 @@ class TableTraits implements GroundTraits {
   city(x: number, z: number) { return this.table.town[this.cell(x, z)] === 1; }
   plaza() { return Infinity; }
   road(x: number, z: number) { const road = this.table.road; return road ? roadOn(road, x, z) + ROAD_SHOWS : Infinity; }
-  crop() { return null; }
+  crop(x: number, z: number) { const crops = this.table.crops; return crops ? CROP_NAMES[crops[this.cell(x, z)]] : null; }
   bleach(x: number, z: number) { return this.table.bleach[this.cell(x, z)]; }
   summit(x: number, z: number) { return this.table.summit[this.cell(x, z)]; }
   tint(x: number, z: number) { return this.pulls[this.table.tint[this.cell(x, z)] - 1] ?? null; }
