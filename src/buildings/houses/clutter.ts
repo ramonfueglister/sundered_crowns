@@ -2,7 +2,8 @@
 // and the paving of the quay. Sizes in fine blocks, as listed under "beiwerk" in the reference class measure file.
 import { type Batch, type RGB, hash2, shade } from '../../lookprobe/batch';
 import { type Wall, on } from '../core/wall';
-import { boxOn, frustum } from './parts';
+import { boxOn } from './parts';
+import { frustum } from './roof_parts';
 import { VOXEL as V } from './style';
 
 /** A striped awning before a shop: `wv` stripes a fine block wide from the wall at `y`, reaching `dv` out and `fall` down, on two posts. */

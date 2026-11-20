@@ -8,21 +8,8 @@ import { SIDES, type Side, wallOf } from '../core/wall';
 import { WINDOW_WARM } from '../palette';
 import type { Tradition } from '../traditions/tradition';
 import { awning, jar } from './clutter';
-import {
-  type Materials,
-  altana,
-  ashlar,
-  chimney,
-  corbels,
-  door,
-  gate,
-  jointOf,
-  shop,
-  shutters,
-  tiledGable,
-  washing,
-  window,
-} from './parts';
+import { type Materials, ashlar, corbels, door, gate, jointOf, shop, shutters, washing, window } from './parts';
+import { altana, chimney, tiledGable } from './roof_parts';
 import { VOXEL as V } from './style';
 
 export interface HouseOptions {
