@@ -128,9 +128,11 @@ export function createMaterials(scene: THREE.Scene) {
   // same nodes, so that the sea does not change where the view passes from one step to the next.
   let surface: Sea | null = null;
   if (water !== solid && flag('sea', true)) {
-    surface = createSea(water.emissiveNode);
-    water.colorNode = surface.colour(water.colorNode!);
-    seaFaced.colorNode = surface.colour(faced.colorNode!);
+    // (the material's fields are typed for every kind of node: the mirror image is the tinted vec3 above, and a corner's
+    // colour is materialColor times a vec3, in `coloured` and in face_materials.ts)
+    surface = createSea(water.emissiveNode as THREE.Node<'vec3'>);
+    water.colorNode = surface.colour(water.colorNode as THREE.Node<'vec3'>);
+    seaFaced.colorNode = surface.colour(faced.colorNode as THREE.Node<'vec3'>);
     water.normalNode = seaFaced.normalNode = surface.normal;
     water.emissiveNode = seaFaced.emissiveNode = surface.mirror;
   }
