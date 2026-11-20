@@ -29,6 +29,12 @@ wasser/referenz_eu5/zoomstufen, each cut to its water without the panels):
 The first round (19 November 2026) held the water at every distance to EU5's nearest (a fine natural chop, a muted
 blue): 30 of 30 rows of its own bar, but it looked like a photograph laid into the model. The second round (20
 November) holds each distance to its own kind, and the colour to the land's.
+
+Where the water moves (MOVES: from near, as EU5's does), the scene is also taken a frame (1/30 s) and half a second
+later (MOMENTS, water_frames.mjs), and two more rows hold the motion: the water moves (the mean change of its
+lightness in half a second) and does not flicker (few dots change much from one frame to the next: a fleck that
+pops up or vanishes at once, or glitter that jumps). These two bars are not read off EU5 (no moving pictures of it
+were at hand) but set by what they are for: a change one can see in half a second, and none that jumps.
 """
 
 import sys
@@ -171,6 +177,22 @@ FLECKS = {'diorama': (0.05, 1), 'nah': (0.03, 0.5), 'mittel': (0, 0.05), 'fern':
 FULL = 0.85
 HUE = (215, 275)
 GREENER = 5
+# the kinds whose water moves, the moments they are taken at (s), and the motion's bars: the mean change of the
+# water's lightness in half a second (least), and the share of the water (%) whose lightness changes by more than
+# FLICKER_L from one frame to the next (most)
+MOVES = ('diorama', 'nah')
+MOMENTS = (0, 0.0333, 0.5)
+MOTION = 0.8
+FLICKER, FLICKER_L = 0.3, 20
+
+
+def motion(folder, name):
+    """the motion of a scene's water: the mean change of its lightness in half a second, and the share (%) of it that
+    changes by more than FLICKER_L from one frame to the next (pictures <name>.png, <name>_1.png, <name>_2.png)"""
+    lum = [srgb_to_lab(np.asarray(Image.open(f'{folder}/{name}{k}.png').convert('RGB')).astype(float))[..., 0] for k in ('', '_1', '_2')]
+    m = water_mask(np.asarray(Image.open(f'{folder}/{name}.png').convert('RGB')))
+    inner = ndi.distance_transform_edt(m) >= 4
+    return float(np.abs(lum[2] - lum[0])[inner].mean()), float(100 * (np.abs(lum[1] - lum[0])[inner] > FLICKER_L).mean())
 
 
 def rows(r, kind):
@@ -193,7 +215,11 @@ def gauntlet(folder):
     green = total = 0
     for name, _, kind in SCENES:
         r = measure(f'{folder}/{name}.png')
-        for row, v, ok in rows(r, kind):
+        more = []
+        if kind in MOVES:
+            move, flicker = motion(folder, name)
+            more = [(f'Bewegung >= {MOTION}', move, move >= MOTION), (f'Flimmern <= {FLICKER} %', flicker, flicker <= FLICKER)]
+        for row, v, ok in rows(r, kind) + more:
             total += 1
             green += bool(ok)
             print(f'{"GRÜN" if ok else "ROT "}  {name:16s} {row:26s} {v:7.2f}')

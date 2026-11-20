@@ -8,6 +8,7 @@
 // colours come as floats, not as bytes (worldprobe/small.ts). ?faces=0: their rectangles on the grid of blocks come as
 // triangles in those lists, not as faces (faces.ts); ?free=0: the rectangles on no grid of what stands on them do.
 // ?pilots=0: the shaders of a kind of mesh are made when its first mesh is drawn, not at the start (see there).
+// ?seatime=<seconds>: the moment a still of fixed size shows the moving water at (../sea.ts, 0).
 import * as THREE from 'three/webgpu';
 import { MapControls } from 'three/addons/controls/MapControls.js';
 import { FRAME_W, LAND_Y, N, NEAR, RIGHT, SEA_Y, VIEW } from '../layout';
@@ -311,7 +312,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     // walking figures keep the picture moving; a picture of fixed size is a still, so that a tool's picture comes
     // (a picture that something other than the walking figures asks for draws the shadows of all that stands still anew: see KeptShadow)
     const full = pending > 0 || cold.size > 0;
-    if (!fixedW && (anyFigures() || cold.size)) pending = Math.max(pending, 1);
+    if (!fixedW && (anyFigures() || cold.size || surface?.moving(frameW, renderer.domElement.width))) pending = Math.max(pending, 1);
     if (pending <= 0 || (fixedW && stage.busy)) return;
     shade.full ||= full; sun.shadow.needsUpdate = true;
     sender.beforePicture();
