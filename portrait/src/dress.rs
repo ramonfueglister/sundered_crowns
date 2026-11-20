@@ -15,6 +15,10 @@ pub enum Dress {
     England1356,
     /// Common people of 1356 whose own dress is not drawn yet (`PLAIN_1356`).
     Plain1356,
+    /// (round 144) People of rank in England's dress: a lord, a lady and their families (`COURT_1356`).
+    Court1356,
+    /// (round 144) Who wears a crown in it: a king, an emperor, a queen who reigns (`CROWNED_1356`).
+    Crowned1356,
 }
 
 /// How men from `HoodRule::from` years wear the hood, by the last digit of the person's seed.
@@ -329,6 +333,20 @@ pub struct DressSet {
     /// a fastening. The share and the age are by eye: PLACEHOLDER.
     pub fastens: [[crate::fasten::Fasten; 10]; 2],
     pub fasten_from: [f32; 2],
+    /// (round 144) What a gown's buttons are of: empty, the gown's own cloth (the common people's: `fastens`);
+    /// else a metal's colour, and the buttons are of that metal, drawn as metal (fasten.rs `fasten`).
+    pub buttons: &'static str,
+    /// (round 144) A crown: a circlet of gold round the head, on the hair, with fleurons standing on it and
+    /// stones set in it (the file's name, `tools/portrait/pipeline/crown.py`: the gold, and beside it
+    /// `<name>_stones`; empty: the table has none), and the colours of its gold and of its stones (the stones of
+    /// the circlet in turn, the stone of a large fleuron, the pearls). Everybody of the table wears it.
+    pub crown: &'static str,
+    pub crown_gold: &'static str,
+    pub crown_stones: [&'static str; 4],
+    /// (round 144) Mi-parti: a man's gown of two cloths, one on each side of the body. Who wears it: the men of
+    /// `fasten_from` years and more whose seed's eighth digit from the right is set here; the second cloth is the
+    /// table's next wool but one.
+    pub parted: [bool; 10],
     /// (round 132) A man's coif: a close cap of linen over the hair and the ears, tied under the chin (the file's
     /// name, `tools/portrait/pipeline/coif.py`; empty: the table has none), in the table's linen colour and
     /// drawn with the fillet's image. Who wears it: the men of `coif_from` years and more whose seed's last
@@ -921,6 +939,11 @@ const ENGLAND: DressSet = DressSet {
         [[Laced, Closed, Buttons, Laced, Laced, Closed, Laced, Buttons, Closed, Laced], [Closed, Closed, Buttons, Closed, Closed, Closed, Closed, Buttons, Closed, Closed]]
     },
     fasten_from: [14.0, 15.0],
+    buttons: "",
+    crown: "",
+    crown_gold: "",
+    crown_stones: [""; 4],
+    parted: [false; 10],
     coif: "cloth_coif",
     coif_from: 30.0,
     coifs: [false, false, false, false, false, false, false, false, false, true],
@@ -1180,8 +1203,60 @@ pub static ENGLAND_1356: DressSet = ENGLAND;
 /// dress. A dress of their own takes its place land by land.
 pub static PLAIN_1356: DressSet = DressSet { key: "plain1356", origins: &[], hood: [Bare; 10], veil_from: 999.0, wimple_from: 999.0, hair_looped: "", fillet: "", coif: "", hat: "", hood_dagged: ["", ""], fastens: [[crate::fasten::Fasten::None; 10]; 2], ..ENGLAND };
 
+/// (round 144) What people of rank wear in England's dress: until then a king stood in a villager's russet gown,
+/// since the table knew one estate. It is England's table with the cloth, the buttons and the gown's closing of
+/// those whom the statute of 1363 leaves free to dress as they will (`sources`); head wear, hair, linen, the
+/// gown's cut and everything of the face are the common people's. PLACEHOLDER beyond what the sources name: the
+/// colours' values, green among them, and every share.
+pub static COURT_1356: DressSet = COURT;
+const COURT: DressSet = DressSet {
+    origins: &[],
+    // (a red, a blue, a green, a deep red, a lighter blue, a murrey: the stage draws wool lighter than its own
+    // colour, as the common people's)
+    wool: &["#6e171b", "#1c2f62", "#27502f", "#5a1428", "#34496e", "#522650"],
+    fastens: {
+        use crate::fasten::Fasten::{Buttons, Laced, None as Closed};
+        [[Buttons, Laced, Buttons, Buttons, Laced, Buttons, Closed, Buttons, Laced, Buttons], [Buttons, Buttons, Buttons, Closed, Buttons, Buttons, Buttons, Buttons, Closed, Buttons]]
+    },
+    buttons: "#d9b45a",
+    parted: [false, true, false, false, true, false, false, true, false, false],
+    sources: COURT_SOURCES,
+    ..ENGLAND
+};
+
+/// (round 144) The court's table for a crowned head: nothing on the head but the crown, on the hair (a woman's in
+/// plaits), and no mi-parti.
+pub static CROWNED_1356: DressSet = DressSet {
+    hood: [Bare; 10],
+    veil_from: 999.0,
+    wimple_from: 999.0,
+    fillet: "",
+    coif: "",
+    hat: "",
+    // (the hair under a crown lies flat, as under a hat: a cut's own body stands 2 cm off the skull where the
+    // circlet sits, and a circlet round all of them was a hand broader than the head)
+    hair: "bob02",
+    hair_lengths: &[],
+    hair_curly: "bob02",
+    hair_receding: "bob02",
+    hair_small: "bob02",
+    crown: "metal_crown",
+    crown_gold: "#e0b24e",
+    crown_stones: ["#1c3fa8", "#b02a4a", "#c22f52", "#efe9dc"],
+    parted: [false; 10],
+    ..COURT
+};
+
+const COURT_SOURCES: &[Source] = &[
+    Source { what: "who dresses so: lords and their families, whom the statute of 1363 leaves without restriction (round 144)", source: "Statute concerning diet and apparel 1363 (37 Edw. III), as Rosalie Gilbert's page lists it rank by rank (rosaliegilbert.com/sumptuarylaws.html; read 20.11.2026 as an account of the page, not the page itself; a re-enactor's summary that names no edition of the statute): lords with lands worth 1000 pounds a year and their families 'no restrictions'; cloth of gold, ermine and stones barred from knights of 200 marks down; silk, silver and embroidery from the yeoman down; 'blanket and russet at 12d' for those who work the land. The game knows no ranks between a ruler's house and everybody else: all its persons of history are dressed so." },
+    Source { what: "cloth in strong dyes: reds, blues, a green, a murrey", source: "Wikipedia, 1300-1400 in European fashion (read 20.11.2026 as an account of the page): Edward III's robes of 1351 of 'red velvet' (after Donald King), a bridegroom of the 1350s in a 'red cotehardie', a royal lady in 'a blue mantle'; 'silk was the finest fabric of all', brocades 'for the well-off'. No dye is named there. Green and murrey, every value and that the cloth is drawn as wool with the villagers' weave are PLACEHOLDER: no silk, no velvet, no pattern, no fur is drawn." },
+    Source { what: "the gown buttoned in front on eight men in ten and six women in ten from 15 and 14 years, laced on three women in ten, with buttons of gilt metal", source: "The same page: 'the cotehardie fits snugly and is buttoned up the front' (a caption of the late 14th century), and noblemen and squires about 1350 in tunics 'so short and tight' (the continuation of Guillaume de Nangis, after Braudel). Rosalie Gilbert, Buttons and Lacings (rosaliegilbert.com/buttonsandlacings.html, read 20.11.2026 as an account of the page): 'the upper classes would have preferred ... metal buttons', the lower classes 'matching cloth buttons'; a tin button with a glass stone of the late 14th century (Museum of London). Which metal is not said: gilt is PLACEHOLDER, and so are the shares." },
+    Source { what: "mi-parti: a man's gown of two cloths, one on each side, on three men in ten from 15 years who wear no crown", source: "The same Wikipedia page: 'a fashion for mi-parti or parti-coloured garments made of two contrasting fabrics, one on each side, arose for men in mid-century ... and was especially popular at the English court' (after Black & Garland). The share is PLACEHOLDER." },
+    Source { what: "a crown on a king, an emperor and a queen who reigns: a circlet of gold with twelve fleurons, six large and six small in turn, a sapphire or a balas ruby on the circlet under each, a balas ruby and three pearls on each large fleuron; nothing else on the head, a woman's hair in plaits under it", source: "Crowns in the treasure of Richard II (Institute of Historical Research and Royal Holloway, archives.history.ac.uk/richardII/crowns.html; read 20.11.2026 as an account of the page): eleven gold crowns in the inventory of 1399, crowns 'with alternating large and small fleurons', of eight, ten, twelve and fourteen; the one that survives (Munich, Schatzkammer, c. 1380) 'a circlet of twelve hinged plaques and six large and six small fleurons'; 'sapphires, balas rubies and clusters of pearls'. Forty years after 1356 and no measure given: the crown's height, the form of a fleuron (a lily of three leaves, by the page's gloss 'lily-shaped') and the stones' places are PLACEHOLDER; the plaques, their tracery and enamel are not drawn. The plaits under a crown: the Wikipedia page's royal lady of the 1350s, 'her hair is worn in two braids beneath her crown' (Italy)." },
+];
+
 /// Every dress with a table.
-pub static SETS: [(Dress, &DressSet); 2] = [(Dress::England1356, &ENGLAND_1356), (Dress::Plain1356, &PLAIN_1356)];
+pub static SETS: [(Dress, &DressSet); 4] = [(Dress::England1356, &ENGLAND_1356), (Dress::Plain1356, &PLAIN_1356), (Dress::Court1356, &COURT_1356), (Dress::Crowned1356, &CROWNED_1356)];
 
 impl Dress {
     /// The dress of a person whose family comes from `origin`: the table that names it; Apoleia's Roman dress
@@ -1194,6 +1269,16 @@ impl Dress {
             Dress::Roman
         } else {
             Dress::Plain1356
+        }
+    }
+
+    /// (round 144) The dress of a person of that dress and of the look `stand` (look.rs `STANDS`): England's
+    /// from the town's council up the court's, with the crown for the highest. Every other dress knows one estate.
+    pub fn ranked(self, stand: usize) -> Dress {
+        match (self, stand) {
+            (Dress::England1356, crate::look::KAISER) => Dress::Crowned1356,
+            (Dress::England1356, crate::look::DECURIO | crate::look::SENATOR) => Dress::Court1356,
+            _ => self,
         }
     }
 
@@ -1281,6 +1366,11 @@ impl DressSet {
             return crate::fasten::Fasten::None;
         }
         self.fastens[sex][((seed / 100_000) % 10) as usize]
+    }
+
+    /// (round 144) Whether a person's gown is of two cloths (`parted`): a man old enough, by a digit of his seed.
+    pub fn parted_of(&self, female: bool, yrs: f32, seed: u32) -> bool {
+        !female && yrs >= self.fasten_from[1] && self.parted[((seed / 10_000_000) % 10) as usize]
     }
 
     /// Whether a person wears a veil, either way.

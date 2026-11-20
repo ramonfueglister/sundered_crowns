@@ -10,7 +10,7 @@ import { DoubleSide, FrontSide, ShaderLib } from 'three';
 import { LOCK_OPAQUE, drawOrder, portraitSkinTone, skinTone, surfaceKind, surfaceMaterials } from '../src/portrait/materials';
 import { APOLEIA, ENGLAND_1356, profileOf } from '../src/portrait/profile';
 import { CURVE, toneCurve } from '../src/portrait/finish';
-import { decodePortrait, encodePerson, type Portrait, type PortraitPerson } from '../src/portrait/wire';
+import { decodePortrait, encodePerson, rankOfHistory, type Portrait, type PortraitPerson } from '../src/portrait/wire';
 import { framing, keyPlaces, standing } from '../src/portrait/stage';
 
 interface GoldenSurface { rough: number; metal: number; double: boolean; tex: string; nmap: string; verts: number; pos: number; col: number; uv: number; nrm: number }
@@ -1176,5 +1176,45 @@ describe('portraits', { timeout: 20_000 }, () => {
     expect(keyPlaces(from, 10, 1)).toEqual([[...from]]);
     expect(APOLEIA.shadow).toEqual({ map: 512, strength: 0.7, radius: 1, spread: 0, lights: 1, reach: 0.9 });
     expect(keyPlaces(APOLEIA.lights.key.from, APOLEIA.shadow.spread, APOLEIA.shadow.lights)).toEqual([[-3.5, 4.5, 5.0]]);
+  });
+
+  it('a person of history is dressed as people of rank are, and who holds a kingdom wears a crown of gold', () => {
+    // (round 144) Until then the game handed over every person as one of the common people, and England's table knew
+    // one estate: Edward III stood in a villager's russet gown. A person of history is of a ruler's house; with a
+    // kingdom or an empire among the realms held on the day the portrait wears a crown (src/people/panel.ts).
+    expect(rankOfHistory([])).toEqual({ stand: 3, job: 'Adel' });
+    expect(rankOfHistory([{ rank: 'duchy' }, { rank: 'prince_bishopric' }])).toEqual({ stand: 3, job: 'Adel' });
+    expect(rankOfHistory([{ rank: 'county' }, { rank: 'kingdom' }])).toEqual({ stand: 4, job: 'Adel' });
+    expect(rankOfHistory([{ rank: 'empire' }]).stand).toBe(4);
+    // (a world server older than this round names no rank: no crown then)
+    expect(rankOfHistory([{}]).stand).toBe(3);
+    const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
+    const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
+    for (const given of sample.filter(p => p.age >= 24).slice(0, 4)) {
+      const built = (stand: number) => b.build({ ...given, ...(stand > 1 ? { stand, job: 'Adel' } : {}) });
+      const metal = (stand: number) => built(stand).surfaces.filter(s => !s.tex && s.metal === 1);
+      const at = `person ${given.pid}`;
+      expect(metal(1), `${at}: the common people wear no metal`).toEqual([]);
+      // the look's name is England's whatever the estate: the stage lights by it
+      for (const stand of [1, 3, 4]) expect(profileOf(built(stand).look), `${at}, stand ${stand}`).toBe(ENGLAND_1356);
+      // the crown: gold (the larger piece of metal: the gown's buttons are the other), stones and pearls, drawn as
+      // the builder says: metal that shines, without an image and seen from outside only
+      const king = built(4), gold = metal(4).sort((x, y) => y.pos.length - x.pos.length)[0]!;
+      expect(gold.pos.length / 9, `${at}: the crown's gold`).toBeGreaterThan(2500);
+      expect(surfaceKind(gold)).toBe('plain');
+      const m = surfaceMaterials(gold, null, null, ENGLAND_1356)[0]!;
+      expect([m.metalness, m.side, m.map], at).toEqual([1, FrontSide, null]);
+      expect(m.roughness).toBeGreaterThan(0.2);
+      expect(m.roughness).toBeLessThan(0.45);
+      const stones = king.surfaces.filter(s => !s.tex && s.metal === 0 && s.rough < 0.5);
+      expect(stones.map(s => s.pos.length / 9), `${at}: stones and pearls`).toEqual([24 * 64, 18 * 64]);
+      // and nothing else on a crowned head
+      expect(king.surfaces.filter(s => /cloth_(hood|veil|wimple|fillet|coif|hat)/.test(s.tex)), at).toEqual([]);
+      // a person of rank without a crown: none, and a gown of another cloth than the common people's
+      expect(metal(3).every(s => s.pos.length / 9 < 2500), `${at}: no crown without a kingdom`).toBe(true);
+      const gown = (stand: number) => built(stand).surfaces.find(s => /cloth_(cote|kirtle)\./.test(s.tex))!;
+      const red = (stand: number) => { const c = gown(stand).col; let r = 0, g = 0; for (let i = 0; i < c.length; i += 3) { r += c[i]!; g += c[i + 1]!; } return r / g; };
+      expect(Math.abs(Math.log(red(3) / red(1))), `${at}: the court's cloth`).toBeGreaterThan(0.15);
+    }
   });
 });

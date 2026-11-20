@@ -132,6 +132,35 @@ impl<'a> Ctx<'a> {
     }
 }
 
+/// (round 144) The crown of a dress with a table (`DressSet::crown`, tools/portrait/pipeline/crown.py): read and
+/// carried as a fillet is, then taken apart by what each triangle is of, which the file says by the triangle's
+/// place across its (empty) image, in fifths: gold, the circlet's stones of two kinds, a large fleuron's stone,
+/// pearls. The triangles without area that tie a stone to the gold are left out. Gold is drawn as metal; a stone
+/// is polished, a pearl a little dull (by eye: PLACEHOLDER).
+fn crown(dir: &str, d: &crate::dress::DressSet, pp: &[V3], base: &[V3]) -> Vec<Surface> {
+    const KINDS: f32 = 5.0;
+    let Some(all) = mh_rope(dir, d.crown, "", pp, base, &|_| [1.0; 3]) else { return Vec::new() };
+    let stone = |rough: f32| Surface::new(Mat { rough, metal: 0.0, double: false });
+    let mut parts = [Surface::new(crate::fasten::METAL), stone(0.12), stone(0.3)];
+    for t in (0..all.pos.len()).step_by(3) {
+        if all.pos[t + 1] == all.pos[t + 2] {
+            continue;
+        }
+        let (part, col) = match (all.uv[t][0] * KINDS) as usize {
+            0 => (0, d.crown_gold),
+            4 => (2, d.crown_stones[3]),
+            k => (1, d.crown_stones[(k - 1).min(2)]),
+        };
+        let col = linear(hex(col));
+        for i in t..t + 3 {
+            parts[part].pos.push(all.pos[i]);
+            parts[part].nrm.push(all.nrm[i]);
+            parts[part].col.push(col);
+        }
+    }
+    parts.into_iter().filter(|s| !s.pos.is_empty()).collect()
+}
+
 pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
     build_posed(h, p, lod, None)
 }
@@ -1040,6 +1069,10 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
                 out.push(sf);
             }
         }
+        // (round 144) a crown: gold, its stones and its pearls, bound and carried as the fillet is
+        if let Some(d) = garb.filter(|d| !d.crown.is_empty()) {
+            out.extend(crown(dir, d, &x.pp, &h.base));
+        }
         // (round 132) a man's coif: a close cap of linen over the hair and the ears with its strings under the
         // chin, bound and carried as the fillet is
         if let Some(d) = garb.filter(|_| coifed) {
@@ -1556,6 +1589,7 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
     };
     // which cut of a dress's gown: a woman's or a man's, and whether a wimple covers its neck
     let cut = if fem { 0 } else { 1 };
+    let tc2 = garb.filter(|d| d.parted_of(fem, p.age, p.seed)).map(|d| hex(d.wool[(p.seed as usize + 2) % d.wool.len()]));
     let wimpled = garb.is_some_and(|t| fem && p.age >= t.wimple_from);
     let real_tunic = if real.is_some() && !swaddled {
         crate::real::folder().and_then(|d| {
@@ -1563,7 +1597,8 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
                 if st.stripe > 0.0 && !fem && !st.toga && v[2] > 0.3 && (v[0].abs() - 0.4).abs() < st.stripe && v[1] < ym(5.35) {
                     return hex("#5e1a44");
                 }
-                cloth_col(tc, v)
+                // (round 144) mi-parti: a man's gown of two cloths, one on each side of the body
+                cloth_col(if v[0] < 0.0 { tc2.unwrap_or(tc) } else { tc }, v)
             };
             // (a dress with a table cuts the gown's neck by who wears it; the cuts are of the gown's cloth)
             let (name, image) = match garb {
@@ -2053,7 +2088,8 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
             let middle = crate::pose::FRONT.iter().map(|&v| x.pp[v][0]).sum::<f32>() / crate::pose::FRONT.len() as f32;
             let behind = crate::pose::FRONT.iter().map(|&v| x.pp[v][2]).fold(f32::MAX, f32::min) - 0.3;
             let under = crate::real::folder().filter(|_| !d.under[0].is_empty()).map(|dir| (crate::real::image(&dir, d.under[0]), linear(hex(d.linen))));
-            let made = crate::fasten::fasten(&merged[g], &over, under, kind, middle, y0, behind);
+            let metal = Some(d.buttons).filter(|m| !m.is_empty()).map(|m| linear(hex(m)));
+            let made = crate::fasten::fasten(&merged[g], &over, under, kind, metal, middle, y0, behind);
             merged.extend(made);
         }
     }

@@ -113,6 +113,8 @@ describe('the rulers of a world of 1291', () => {
     until(t, '1305-01-01');
     const p = s.named.find((n) => n.name === 'Philip IV')!.key, id = t.named.find((n) => n.key === p)!.person;
     expect(personHistory(t, id)!.crowns.map((c) => c.key).sort()).toEqual(['brittany', 'france']);
+    // (portrait round 144: the rank of each realm goes with it, by which a king's portrait wears a crown)
+    expect(personHistory(t, id)!.crowns.map((c) => `${c.key} ${c.rank}`).sort()).toEqual(['brittany duchy', 'france kingdom']);
     until(t, '1315-01-01');
     expect(personHistory(t, id)!.crowns).toEqual([]);
     expect(personHistory(t, id)!.died).toBe(dayOf('1314-11-29', 1291));

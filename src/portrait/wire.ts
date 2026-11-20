@@ -13,7 +13,8 @@ export interface PortraitPerson {
   female: boolean;
   /** Years. */
   age: number;
-  /** 0..3, with `job` the look worn (portrait/src/person.rs look_stand). */
+  /** 0..4, with `job` the look worn (portrait/src/person.rs look_stand): 2 and 3 are people of rank, 4 a crowned head
+   *  (round 144: a dress with a table for them dresses them so, portrait/src/dress.rs `Dress::ranked`). */
   stand: number;
   job: string;
   /** Where the founders of the family came from; "Graecia", "Syria" and "Aegyptus" wear full beards. */
@@ -28,6 +29,20 @@ export interface PortraitPerson {
   rank?: number;
   /** Clothing held of the need in per cent. */
   clothes_pct?: number;
+}
+
+/** The ranks of realm (src/sim/state.ts RANKS) whose holder wears a crown in the portrait. */
+const CROWNED: ReadonlySet<string> = new Set(['empire', 'kingdom']);
+
+/**
+ * (round 144) The `stand` and `job` of a person of history (a ruler, src/sim/systems/rulers.ts), by the realms
+ * whose crown the person holds on the day: of a ruler's house and dressed as people of rank are, with a crown while
+ * they hold a kingdom or an empire (where the person's dress has a table for it: portrait/src/dress.rs
+ * `Dress::ranked`). The game knows no ranks between a ruler's house and everybody else, and no dress of the clergy:
+ * a prince-bishop is dressed as a lord.
+ */
+export function rankOfHistory(crowns: readonly { rank?: string }[]): { stand: number; job: string } {
+  return { stand: crowns.some((c) => CROWNED.has(c.rank ?? '')) ? 4 : 3, job: 'Adel' };
 }
 
 /** One material's triangles, three vertices each, counter-clockwise seen from outside. */

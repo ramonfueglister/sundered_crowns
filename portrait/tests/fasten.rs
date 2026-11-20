@@ -193,7 +193,7 @@ fn what_lies_over_the_gown_hides_the_fastening() {
     let (gown, over) = (sheet(1.0, 0.0), sheet(1.1, 3.0));
     for kind in [Fasten::Buttons, Fasten::Laced] {
         let top = |over: &[&Surface]| {
-            let made = sc_portrait::fasten::fasten(&gown, over, Some(("real/cloth_smock.webp".to_string(), [0.8; 3])), kind, 0.0, 6.0, 0.0);
+            let made = sc_portrait::fasten::fasten(&gown, over, Some(("real/cloth_smock.webp".to_string(), [0.8; 3])), kind, None, 0.0, 6.0, 0.0);
             assert_eq!(made.len(), if kind == Fasten::Laced { 2 } else { 1 });
             (made.iter().flat_map(|s| s.pos.iter()).map(|q| q[1]).fold(f32::MIN, f32::max), made[0].pos.len() / 3)
         };
@@ -203,5 +203,5 @@ fn what_lies_over_the_gown_hides_the_fastening() {
         }
         assert!(bare > 4.9 && bare <= 5.0 && covered > 2.75 && covered <= 3.0 && some < all, "{kind:?}: up to {bare:.2}, covered up to {covered:.2}");
     }
-    assert!(sc_portrait::fasten::fasten(&gown, &[], None, Fasten::None, 0.0, 6.0, 0.0).is_empty());
+    assert!(sc_portrait::fasten::fasten(&gown, &[], None, Fasten::None, None, 0.0, 6.0, 0.0).is_empty());
 }

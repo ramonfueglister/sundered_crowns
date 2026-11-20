@@ -9,7 +9,7 @@ import { personAt } from '../figures/stage';
 import { httpOf } from '../figures/people';
 import type { PersonDetail } from '../net/people';
 import type { PortraitAssets } from '../portrait/assets';
-import type { PortraitPerson } from '../portrait/wire';
+import { rankOfHistory, type PortraitPerson } from '../portrait/wire';
 import '../ui/fonts';
 import './panel.css';
 import { economyRows, householdRows } from './economy_rows';
@@ -20,8 +20,10 @@ const NEUTRAL = { stand: 1, job: 'Bauern', health: 1000, fed: 1000 } as const;
 const BIG5 = ['Offenheit', 'Gewissenhaftigkeit', 'Extraversion', 'Verträglichkeit', 'Neurotizismus'] as const;
 /** The portrait input of a person. */
 export function portraitPerson(p: PersonDetail): PortraitPerson {
+  // (portrait round 144) a person of history is dressed as people of rank are
+  const rank = p.history ? rankOfHistory(p.history.crowns) : {};
   // a ruler whose birthday no source gives is drawn as a grown person of 40 (the portrait needs an age)
-  return { pid: p.id, dna: p.genes, female: p.female, age: Math.floor(p.age ?? 40), origin: dressOf(p.culture), ...NEUTRAL };
+  return { pid: p.id, dna: p.genes, female: p.female, age: Math.floor(p.age ?? 40), origin: dressOf(p.culture), ...NEUTRAL, ...rank };
 }
 
 export interface PersonPanel {

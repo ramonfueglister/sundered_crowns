@@ -30,8 +30,15 @@ pub fn head() -> Option<Head> {
     Some(Head::load(&bytes).expect("the head"))
 }
 
-/// A founder of the pool England draws from, as examples/sample.rs founds them (SplitMix64).
+/// A founder of the pool England draws from, as examples/sample.rs founds them (SplitMix64): one of the common
+/// people.
 pub fn person(k: u32, female: bool, age: f32) -> Look {
+    person_of(k, female, age, 1)
+}
+
+/// The same founder as the game hands over a person of the simulation's stand `stand` (src/portrait/wire.ts): 1
+/// one of the common people, 3 a person of rank, 4 a crowned head (round 144).
+pub fn person_of(k: u32, female: bool, age: f32, stand: u8) -> Look {
     let r: Vec<u64> = (0..2 * sc_portrait::NG as u64)
         .map(|i| {
             let mut z = (8000 + k as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15).wrapping_add(i.wrapping_mul(0xBF58_476D_1CE4_E5B9)).wrapping_add(1);
@@ -42,5 +49,5 @@ pub fn person(k: u32, female: bool, age: f32) -> Look {
         .collect();
     let pool = ORIGINS.iter().position(|o| *o == "Gallia").unwrap() as u8;
     let genes = founder(pool, |i| r[i as usize]).bytes();
-    look_of(&genes, female, age, 1, "Bauern", 1000.0, 1000.0, 940000 + k, "England", Lived { loss_days: None, rank: Some(0.5), clothes_pct: Some(100.0) })
+    look_of(&genes, female, age, stand, if stand > 1 { "Adel" } else { "Bauern" }, 1000.0, 1000.0, 940000 + k, "England", Lived { loss_days: None, rank: Some(0.5), clothes_pct: Some(100.0) })
 }

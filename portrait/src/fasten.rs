@@ -40,6 +40,9 @@ pub const GAP: f32 = 0.05;
 /// button (the source: "set very closely together", without a measure; by eye: PLACEHOLDER).
 pub const BUTTON: f32 = 0.055;
 pub const BUTTONS: f32 = 0.2;
+/// (round 144) Metal as the builder hands it to the stage: polished, not a mirror (a cast and gilt button, a
+/// crown's gold). By eye: PLACEHOLDER.
+pub const METAL: crate::geo::Mat = crate::geo::Mat { rough: 0.32, metal: 1.0, double: false };
 /// The line where the edge with the buttonholes ends beside the buttons, and the shade at each laced edge: its
 /// breadth, how far it lies over the gown, and how dark it is (the shade between two layers of cloth).
 const EDGE: f32 = 0.018;
@@ -242,7 +245,7 @@ fn band(out: &mut Surface, f: &Front, line: &[(f32, At)], s0: f32, s1: f32, asid
 /// `gown`: its triangles as they lie on the person; `over`: the cloths that may lie over it; `behind`: a depth
 /// behind the chest's skin and in front of the nape (the rolled edge of the neckline at the nape faces the front
 /// too); `under`: the image and the colour of the linen worn under the gown.
-pub fn fasten(gown: &Surface, over: &[&Surface], under: Option<(String, Rgb)>, kind: Fasten, x: f32, from: f32, behind: f32) -> Vec<Surface> {
+pub fn fasten(gown: &Surface, over: &[&Surface], under: Option<(String, Rgb)>, kind: Fasten, metal: Option<Rgb>, x: f32, from: f32, behind: f32) -> Vec<Surface> {
     if kind == Fasten::None {
         return Vec::new();
     }
@@ -266,6 +269,8 @@ pub fn fasten(gown: &Surface, over: &[&Surface], under: Option<(String, Rgb)>, k
     let mut out = Surface::new(gown.mat);
     (out.tex, out.nmap) = (gown.tex.clone(), gown.nmap.clone());
     let mut linen = Surface::new(gown.mat);
+    // (round 144) buttons of metal: a surface of their own, without an image, in the metal's colour
+    let mut balls = Surface::new(METAL);
     match kind {
         Fasten::None => {}
         Fasten::Laced => {
@@ -312,7 +317,14 @@ pub fn fasten(gown: &Surface, over: &[&Surface], under: Option<(String, Rgb)>, k
                             let round = crate::geo::dot(*n, a.n).clamp(-1.0, 1.0).acos();
                             let (px, py) = (crate::geo::dot(*n, e1), crate::geo::dot(*n, e2));
                             let k = BUTTON * round / px.hypot(py).max(1e-6);
-                            put(&mut out, &a, madd(c, *n, BUTTON), *n, [px * k, py * k], 1.0);
+                            match metal {
+                                Some(col) => {
+                                    balls.pos.push(madd(c, *n, BUTTON));
+                                    balls.nrm.push(*n);
+                                    balls.col.push(col);
+                                }
+                                None => put(&mut out, &a, madd(c, *n, BUTTON), *n, [px * k, py * k], 1.0),
+                            }
                         }
                     }
                 }
@@ -321,5 +333,5 @@ pub fn fasten(gown: &Surface, over: &[&Surface], under: Option<(String, Rgb)>, k
             band(&mut out, &f, &mid, TOP, end, BUTTON + EDGE, EDGE, EDGE_DARK, None);
         }
     }
-    [out, linen].into_iter().filter(|s| !s.pos.is_empty()).collect()
+    [out, linen, balls].into_iter().filter(|s| !s.pos.is_empty()).collect()
 }

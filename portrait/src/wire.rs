@@ -52,7 +52,7 @@ pub fn person(bytes: &[u8]) -> Result<Asked, String> {
     let mut r = Reader { b: bytes, o: 0 };
     let lod = r.u8()?.min(3) as usize;
     let female = r.u8()? != 0;
-    let stand = r.u8()?.min(3);
+    let stand = r.u8()?.min(4);
     let known = r.u8()?;
     let pid = r.u32()?;
     let (age, health, fed) = (r.f32()?, r.f32()?, r.f32()?);

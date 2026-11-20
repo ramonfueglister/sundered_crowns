@@ -17,7 +17,7 @@ one, changes nothing: same people in, same pictures out, measured.
 |---|---|---|
 | Builder | `portrait/` (Rust, WebAssembly) | From a person (100 bytes of genes, sex, age, estate, occupation, origin, food, mourning, wealth, worn clothes) to the triangles of head and shoulders: MakeHuman's head morphed by the genes, skin, eyes, hair, beard, clothes, headwear, jewellery |
 | Genes | `portrait/src/dna.rs` | 50 genes of two alleles, one byte each (Apoleia's 34, and 16 since round 112 that a dress with a table shows); a child takes one allele of each gene from either parent, plus a small mutation; founders draw from one of 23 pools (round 111), which one is the culture's (`src/sim/people/pools.ts`) |
-| Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; a culture without a set wears the plain dress of 1356 (round 111), one of Apoleia's seven regions Apoleia's Roman dress |
+| Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; a culture without a set wears the plain dress of 1356 (round 111), one of Apoleia's seven regions Apoleia's Roman dress. England's has a table for people of rank and one for a crowned head (round 144), chosen by the person's stand |
 | Stage profile | `src/portrait/profile.ts` | Light and materials per set of dress; Apoleia's portraits keep Apoleia's |
 | Pipeline | `tools/portrait/pipeline/` | Blender scripts that wrote the draped clothes and hair (not part of the build) |
 | Files of the real look | `public/portrait/` (41.5 MB) | The head (1.1 MB), data files (15.0 MB since round 111, 13.1 since round 110, 12.7 since round 109, 12.9 since round 105, 10.4 before round 104: the hair's bodies, the beard's locks, draped clothes, skin shading), images (24.8 MB: skin by age and sex, wrinkle maps, hair, cloth, eyes) |
@@ -6349,6 +6349,127 @@ edges turned over under 2.2, 2.1 and 1.9 %, the grown's under 1.0 %). `cargo tes
 `tests/portrait.test.ts` and its neighbour 42 of 42; typecheck and lint pass.
 Pictures (project files, `portraits/`): `runde143_vorher_nachher.png` (a boy of 8, a man, a woman and a child
 of 5, the chest, round 142 above, now below), `runde143_alle.png` (the sample's wall, now).
+
+**Round 144: who rules is dressed for it** (2026-11-20). The whole sample beside the reference at one size,
+looking at the whole portrait: every one of the reference's people is a lord or a lady, in strong cloth with
+metal on it and something on the head that says who they are; every one of ours is a villager in undyed or
+dull wool. That is not the sample's choice. England's table, which the seven western groups of peoples wear,
+knew one estate, and the game hands over every person as one of the common people (`src/people/panel.ts`
+`NEUTRAL`: stand 1, "Bauern"): Edward III, a person of history in the game, stood in a villager's russet gown
+with a hood.
+
+What was read (each as an account of the page by a reading tool, not the page itself; none a primary source).
+- The statute on diet and apparel of 1363, as Rosalie Gilbert's page lists it rank by rank
+  (rosaliegilbert.com/sumptuarylaws.html; a re-enactor's summary that names no edition; Wikipedia's page on
+  the statute has no rank's rules): lords with lands of 1000 pounds a year and their families "no
+  restrictions"; cloth of gold, ermine and stones barred from the knights of 200 marks down, silk, silver and
+  embroidery from the yeoman down, and "blanket and russet at 12d" for those who work the land.
+- Wikipedia, 1300-1400 in European fashion: "the cotehardie fits snugly and is buttoned up the front";
+  noblemen and squires about 1350 in tunics "so short and tight"; "a fashion for mi-parti or parti-coloured
+  garments made of two contrasting fabrics, one on each side, arose for men in mid-century ... and was
+  especially popular at the English court"; Edward III's robes of 1351 of "red velvet", a "red cotehardie",
+  a royal lady in "a blue mantle", "her hair is worn in two braids beneath her crown" (Italy, 1350s). No dye
+  is named there, and nothing on how a mantle is fastened.
+- Rosalie Gilbert, Buttons and Lacings: "the upper classes would have preferred ... metal buttons", the lower
+  classes "matching cloth buttons"; a tin button with a glass stone of the late 14th century. No metal is
+  named for the rich.
+- Crowns in the treasure of Richard II (Institute of Historical Research and Royal Holloway,
+  archives.history.ac.uk/richardII/crowns.html): eleven gold crowns in the inventory of 1399, crowns "with
+  alternating large and small fleurons", of eight, ten, twelve and fourteen; the one that survives (Munich,
+  c. 1380) "a circlet of twelve hinged plaques and six large and six small fleurons"; "sapphires, balas rubies
+  and clusters of pearls". No height and no breadth is given.
+
+What is changed.
+- **Two tables beside England's** (`portrait/src/dress.rs` `COURT_1356`, `CROWNED_1356`, `Dress::ranked`;
+  `person.rs`, `wire.rs`: the stand handed over may be 4). A person of England's dress whose stand is the
+  council's or higher wears the court's: England's table with six strongly dyed cloths (two reds, two blues,
+  a green, a murrey) for the villagers' six, the gown buttoned in front on eight men in ten and six women in
+  ten (laced on three women), the buttons of gilt metal, and on three men in ten a gown of two cloths, one on
+  each side. Head wear, hair, linen, the gown's cut and all of the face are the common people's. The plain
+  dress of 1356 and Apoleia's Roman dress know one estate as before.
+- **A crown** on the highest stand (`tools/portrait/pipeline/crown.py`, new; `metal_crown`, 49 kB;
+  `build.rs` `crown`): a circlet of gold 2 cm high round the head, on the hair, with a raised rim at foot and
+  top and twelve fleurons standing on it, six of 4.6 cm cut as a lily of three leaves and six of 2.5 cm, in
+  turn, one large one over the forehead; a sapphire or a balas ruby on the circlet under each fleuron, a balas
+  ruby and three pearls on each large fleuron, a small stone on each small one. 2 796 points, 5 448 triangles
+  (2 760 of gold). It is one mesh, bound to the skin and carried as the fillet is: the circlet stands where
+  the hair under it does plus 1.5 mm, evened round the head over 12 degrees, its foot 0.8 cm under the head's
+  middle in front and 1.2 cm over it behind (level on a bust that leans back); fleurons stand on the band's
+  own corners, and a stone is tied to a corner of the gold by triangles without area, so that the builder's
+  evening carries all of it as one piece. Under a crown there is nothing else on the head: no hood, coif, hat,
+  veil, wimple or fillet; a man's hair is the cut that lies flat under a hat (`bob02`), a woman's is in plaits.
+- **Metal** (`fasten.rs` `METAL`): buttons and gold are surfaces without an image, handed to the stage as
+  metal of roughness 0.32; stones as polished (0.12), pearls a little dull (0.3). The stage needed no change:
+  it draws a surface without an image by what the builder says of it, under its own lamps.
+- **The game** (`src/portrait/wire.ts` `rankOfHistory`, `src/people/panel.ts`, `src/net/people.ts`): a person
+  of history is handed over as a person of rank, and with a kingdom or an empire among the realms held on the
+  day as a crowned head. The world server now sends each realm's rank with a person's crowns.
+- The test page takes `stand=<0..4>` (`src/portrait/test.ts`).
+
+Measured (`portrait/tests/court.rs`, new).
+
+| | the common people | the court | a crowned head |
+|---|---|---|---|
+| a gown's colour, its strongest part over its weakest (linear light, 40 grown people) | 3.02 | 7.39 | as the court's |
+| buttons of metal showing, of 40 | 0 | 28 | |
+| men in a gown of two cloths, of 20 | 0 | 11 | 0 |
+| the crown against the head's height (24 people of 5 to 68) | | | at most 0.89 broad, 1.03 deep |
+| a stone's middle from the nearest corner of the gold | | | at most 7.8 mm (the test's bound: 1 cm) |
+
+Built ten times each, three times over, on this machine: a man of 24 took 179 to 191 ms a portrait as one of
+the common people, 177 to 181 at court and 64 to 74 crowned (his own cut of hair is the costly part, and under
+a crown he wears the flat one); a woman of 24 took 64 to 76, 69 to 72 and 77 to 82; a man of 50 in a coif 43
+to 50, 44 to 47 and 70 to 74. A crown costs some 10 to 25 ms and 5 400 triangles.
+
+Tried and not kept. (1) The circlet round the body of every cut of hair that could lie under it (eleven): it stood
+10.9 to 12.3 cm from the head's axis, a hand broader than the head, since a cut's body stands 2 cm off the
+skull where the circlet sits. Hence the flat cut under a crown: 8.7 to 10.5 cm. (2) The foot 1 cm over the
+head's middle in front and 3 cm behind: a ring floating over the forehead with the hairline under it, as the
+fillet's first tries were. (3) The circlet evened round the head as the fillet is (twice over 25 degrees) and
+3 mm off the hair: an oval a centimetre off the hair at the temples. (4) The cloths as first
+written (`#8c1c22`, `#1f3f86`, `#2c6a3c`, `#6a1430`, `#2f6f93`, `#5c2a5e`): the stage draws wool lighter than
+its own colour, and they were sweets, a turquoise and a bright purple among them. Darker by a quarter to a
+third; the deep red and the murrey were then near black and are a little lighter again. (5) Before any of
+this, the shoulders, which I took for narrow beside the reference's: measured on ten bodies drawn bare, a man
+of 24 is 46 cm across the shoulders on a head 15.5 cm broad, a woman 41 on 14.6, a child of eight 29 to 31 on
+14. Nothing was read to hold that against in this round, the numbers do not look wrong, and nothing was
+changed.
+
+**The gauntlet**: 22 of 22 over the whole sample (read with this round's build), and every line reads what
+it read in rounds 138 to 143 to its last figure: the sample is the common people's, and nothing of theirs is
+touched.
+
+Honest about it. It is the first thing a portrait says of a ruler and it now says it; it is not the
+reference's lord. The court's gown is the villagers' gown in another colour: the same loose sack with the
+villagers' coarse weave, where the pages read have a cotehardie cut close to the body. No silk, no velvet, no
+woven pattern, no embroidery and no fur is drawn, though the statute is about exactly those; no mantle, no
+belt, no brooch, no chain. Hoods, coifs, hats and veils are the common people's in the court's colours, and a
+lady's veil is the same plain linen. The crown is one crown for every king, queen and emperor of the west;
+what it is made after is forty years younger than 1356 and gives no measure, so its height, the lily's cut
+and the stones' places are mine, and the plaques with their hinges, tracery and enamel are not made. The gold
+is lit by the stage's lamps alone: there is nothing round it to mirror, which a polished metal would show.
+Under the crown a man wears the cut made to lie under a hood, with its fringe to the brows. That no hair
+comes through the circlet was looked at on twelve heads from three sides and is held by no test. A crown's
+tips stand up to 3 mm over the height the picture is framed by; the picture has that room. Green and murrey,
+gilt for the buttons, every colour's value and every share are PLACEHOLDER, as are `METAL` and the stones'
+polish.
+In the game every person of history is dressed as a lord: the game knows no rank between a ruler's house and
+everybody else and no dress of the clergy, so a prince-bishop and a doge wear the court's gown, and three in
+ten of them mi-parti. Only who holds a kingdom or an empire on the day wears the crown, and only where the
+world server is of this round (an older one names no rank: the court's dress without a crown). Peoples
+outside the seven western groups wear the plain dress whatever their stand: their rulers are villagers still.
+The sample of the gauntlet and of the walls is the common people's as before.
+
+Tests: `portrait/tests/court.rs`, three new (who wears which table, and that the other dresses know one
+estate; the court's cloth, metal buttons and mi-parti on 40 people; the crown on 24: gold, 24 stones and 18
+pearls, each on the gold, nothing else on the head, where it sits and how broad it is).
+`tests/portrait.test.ts`, one new (a person of history's stand by the realms held; the crown's gold drawn as
+metal; no metal on the common people); `tests/rulers.test.ts` holds the rank with a person's crowns.
+`cargo test --release` as a whole: 115 of 115 in one run. `tests/portrait.test.ts` and its neighbour 43 of
+43; `tests/rulers.test.ts` 9 of 9; typecheck and lint pass.
+Pictures (project files, `portraits/`): `runde144_vorher_nachher.png` (six people as the game drew a ruler
+until now, as people of rank, and crowned), `runde144_krone.png` (a king and a queen from the front, the side
+and behind), `runde144_hof.png` (the whole sample as people of rank).
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the

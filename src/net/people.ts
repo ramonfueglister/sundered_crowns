@@ -2,7 +2,7 @@
 // for the figures that walk its streets, and one person in full, for the portrait and the panel a click opens.
 // Read-only HTTP: GET /people/<place>, GET /people?places=<a>,<b>,… and GET /person/<id> (server/main.ts).
 import type { WorldState } from '../sim/state';
-import { ALIVE, BORN_UNKNOWN } from '../sim/state';
+import { ALIVE, BORN_UNKNOWN, RANKS } from '../sim/state';
 import { genesOf } from '../sim/systems/people';
 import { NG } from '../sim/people/genes';
 import { ROLE } from '../sim/systems/work';
@@ -78,8 +78,9 @@ export interface PersonDetail {
  *  person holds on the day, and the day of death (null while the person lives). */
 export interface PersonHistory {
   name: string; house: string; qid: string;
-  /** the realms: the key (the id of the setup) and the German short name */
-  crowns: { key: string; name: string }[];
+  /** the realms: the key (the id of the setup), the German short name and the rank (one of RANKS, src/sim/state.ts;
+   *  not sent by a server older than portrait round 144) */
+  crowns: { key: string; name: string; rank?: string }[];
   died: number | null;
 }
 
@@ -90,7 +91,7 @@ export function personHistory(s: WorldState, id: number): PersonHistory | null {
   for (let r = 0; r < s.realm.size; r++) {
     if (s.realm.cols.holder[r] !== id) continue;
     const t = s.realmText[r];
-    crowns.push({ key: t.key, name: t.name.de ?? t.name.en });
+    crowns.push({ key: t.key, name: t.name.de ?? t.name.en, rank: RANKS[s.realm.cols.rank[r]] });
   }
   const d = s.person.cols.died[id];
   return { name: n.name, house: n.house, qid: n.qid, crowns, died: d === ALIVE ? null : d };

@@ -62,6 +62,7 @@ async function main(): Promise<void> {
       ...(origin ? { origin } : {}),
       ...(q.has('female') ? { female: q.get('female') === '1' } : {}),
       ...(q.has('age') ? { age: Number(q.get('age')) } : {}),
+      ...(q.has('stand') ? { stand: Number(q.get('stand')), job: 'Adel' } : {}),
       ...(pids.has(given.pid) ? { pid: pids.get(given.pid)! } : {}),
     };
     if (genes.length) {
