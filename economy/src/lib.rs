@@ -236,6 +236,21 @@ impl Economy {
         Ok(self)
     }
 
+    /// The same economy with the workers who are away from its next period on (economy feature 22, [`clock::Absences`]):
+    /// per absence the worker, in the port's order of the workers, and the first and the last day of the absence,
+    /// counted from 0 for the next period. They take the place of the absences it had.
+    pub fn with_absences(mut self, worker: Vec<u32>, first: Vec<u32>, last: Vec<u32>) -> Result<Economy, String> {
+        let next = self.periods() + 1;
+        let periods = |days: Vec<u32>| -> Result<Vec<u32>, String> {
+            days.into_iter()
+                .map(|d| u32::try_from(next + d as usize).map_err(|_| format!("an absence on the day {d}")))
+                .collect()
+        };
+        let (first, last) = (periods(first)?, periods(last)?);
+        self.model.ext.absences = clock::Absences::new(self.model.w_act.len(), worker, first, last)?;
+        Ok(self)
+    }
+
     /// The same economy with a past of a fixed size from now on ([`past`]): for the expectations of growth and
     /// inflation it keeps, instead of the real GDP and the inflation of every period since the start, the values of
     /// the last window and the sums that the port's estimate is made of. The rule is the port's; its results agree
@@ -508,6 +523,39 @@ pub fn working_days(all: &mut trade::Cities, mut r: &[u8]) -> Result<(), String>
             "{} bytes of working days are left over after the cities",
             r.len()
         ));
+    }
+    all.cities = cities;
+    Ok(())
+}
+
+/// The cities with the workers who are away (economy feature 22) as bytes: per city the number of its absences (32
+/// bits), then per absence the worker, the first and the last day, counted from 0 for the next period (32 bits each,
+/// [`Economy::with_absences`]).
+pub fn absences(all: &mut trade::Cities, mut r: &[u8]) -> Result<(), String> {
+    let mut u32_ = || -> Result<u32, String> {
+        if r.len() < 4 {
+            return Err(format!("the absences end after {} more bytes, 4 were read", r.len()));
+        }
+        let (head, rest) = r.split_at(4);
+        r = rest;
+        Ok(u32::from_le_bytes(head.try_into().unwrap()))
+    };
+    let mut cities = Vec::with_capacity(all.cities.len());
+    for (c, e) in std::mem::take(&mut all.cities).into_iter().enumerate() {
+        let n = u32_()? as usize;
+        let (mut worker, mut first, mut last) = (Vec::new(), Vec::new(), Vec::new());
+        for _ in 0..n {
+            worker.push(u32_()?);
+            first.push(u32_()?);
+            last.push(u32_()?);
+        }
+        cities.push(
+            e.with_absences(worker, first, last)
+                .map_err(|e| format!("city {c}: {e}"))?,
+        );
+    }
+    if !r.is_empty() {
+        return Err(format!("{} bytes of absences are left over after the cities", r.len()));
     }
     all.cities = cities;
     Ok(())
@@ -834,6 +882,22 @@ pub mod abi {
         answer((|| {
             let mut all = take(unsafe { bytes(state, len) })?;
             crate::working_days(&mut all, unsafe { bytes(days, days_len) })?;
+            Ok(keep(all))
+        })())
+    }
+
+    /// The cities of a state with the workers who are away from their next period on, as [`crate::absences`] reads
+    /// them (economy feature 22). Result: their state.
+    ///
+    /// # Safety
+    ///
+    /// As [`sce_create`], for both pairs of pointer and length.
+    #[unsafe(no_mangle)]
+    pub unsafe extern "C" fn sce_absences(state: *const u8, len: usize, list: *const u8, list_len: usize) -> u32 {
+        hook();
+        answer((|| {
+            let mut all = take(unsafe { bytes(state, len) })?;
+            crate::absences(&mut all, unsafe { bytes(list, list_len) })?;
             Ok(keep(all))
         })())
     }
