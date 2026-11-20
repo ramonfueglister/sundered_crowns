@@ -83,11 +83,14 @@ CORRECTED = {
     'Gundelfingen': 'Q509648',
     # Karl IV. at Frankfurt an der Oder, not am Main: 'Frankenvorde' (RI VIII n. 5528, 1375-11-25) between Berlin and
     # Fürstenberg an der Oder, on a matter of Königsberg in the Neumark; 'vor Frankfurt' (n. 5215a, 1373-07-13) in the
-    # field between Luckau and Fürstenwalde; 'bei Frankfurt' (n. 767, 1348-10-11) in the field between Spremberg and
-    # Bautzen
+    # field between Luckau and Fürstenwalde; 'bei Frankfurt' (n. 766a-769, October 1348: the siege of the town, the
+    # marches of Brandenburg) in the field between Spremberg and Bautzen
     '63350': 'Q4024',
     '63021': 'Q4024',
+    '58242': 'Q4024',
     '58243': 'Q4024',
+    '58244': 'Q4024',
+    '58245': 'Q4024',
     # 'Grätz' (RI VIII n. 1331, 1350-08-29): the king called the reeves to 'Gretz super Albea', between two stays at
     # Brno: Königgrätz (Hradec Králové), not Graz
     '58842': 'Q180139',
@@ -135,7 +138,7 @@ def number(text):
 
 
 def norm(name):
-    return re.sub(r'\s+', ' ', (name or '').strip().lower())
+    return re.sub(r'\s+', ' ', html.unescape(name or '').strip().lower())
 
 
 def coordinates(data):
