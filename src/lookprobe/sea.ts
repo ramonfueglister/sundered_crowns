@@ -7,12 +7,14 @@
 //    are the sea bed of the game map's height data (public/map/height.bin.gz), kept as a small picture
 //    (public/map/depth.png, made by tools/worldprobe/build_depth.py) that every step of the view reads alike, so the
 //    sea's colour does not change from one step to the next. By the coast the water is lighter still: within a few
-//    columns of the land by the colours of the water's own corners (terrain.ts, which this reads back), wider out
-//    within some dots of the coast as the depth picture has it (`withCoast`).
+//    columns of the land by the colours of the water's own corners (terrain.ts, which this reads back by their hue,
+//    which their patches of light and shade leave alone), wider out within some dots of the coast as the depth
+//    picture has it (`withCoast`).
 //  - its surface changes with the distance, as EU5's does: from near and in the middle distance a calm swell, a few
-//    long soft waves in which the sky and what stands by the water are mirrored, and small white flecks where the
-//    wind breaks a crest; from farther out (a dot some blocks wide) the sea lies smooth, its colour the depth's alone.
-//    The flecks are always a few dots large, so that they read as flecks of paint and never as a fine grey chop.
+//    long soft waves in which the sky and what stands by the water are mirrored, and white strokes where the wind
+//    breaks a crest, short and a little bent, across the wind and in groups; from farther out (a dot some blocks
+//    wide) the sea lies smooth, its colour the depth's alone. The strokes are always some dots large, so that they
+//    read as strokes of paint and never as a fine grey chop or as specks.
 //    (The first round laid a natural wind sea of fine ripples over the water at every distance: it was measured
 //    close to EU5's numbers, but looked like a photograph of the sea and did not belong to the model.)
 //    Both come from one picture made once at the start (`waveTexture`): random waves worked out by the inverse
@@ -44,6 +46,8 @@ const COAST = new THREE.Color(0x48c3cb);
  * too coarse for it, wholly at the second
  */
 const HALO = 40, HALO_SHARE = 0.55, HALO_UNTIL: readonly [number, number] = [110, 220];
+/** the corners' band: how near the coast its colour begins and is full (in shares of the corners' mix: 0 some 8 columns out, 1 at the coast) */
+const RIM: readonly [number, number] = [0.1, 0.8];
 /** how much darker the water's colour is in the nearest views, against their brighter light */
 const NEAREST_DARKER = 0.74;
 /** the sky as the water gives it back where a wave turns towards it (linear light, at the share Fresnel gives) */
@@ -52,8 +56,12 @@ const SKY = new THREE.Color(0xd8ecf6);
 const TEX = 256, DOTS_PER_TEXEL = 1.4;
 /** from near the picture spans at least this many finest blocks, so that the flecks are as large as a part of a house, not specks */
 const SPAN_LEAST = 32;
-/** the swell's waves (2 to SWELL_K across the picture: 18 to 128 texels long) and the flecks' (FLECK_K, 3 to 8 texels) */
-const SWELL_K = 14, FLECK_K: readonly [number, number] = [32, 80];
+/**
+ * the swell's waves (2 to SWELL_K across the picture: 18 to 128 texels long) and the flecks' (FLECK_K, 4 to 11 texels,
+ * within FLECK_SPREAD of the wind's direction as the power of the cosine: their crests are long and narrow), and how
+ * the flecks' picture is bent (by up to BEND texels, in waves BEND_K across the picture: the strokes curve)
+ */
+const SWELL_K = 14, FLECK_K: readonly [number, number] = [24, 64], FLECK_SPREAD = 12, BEND = 2.5, BEND_K: readonly [number, number] = [5, 12];
 /** the swell's slope, as the root of the mean square of rise over run: from afar, and from nearest (where the view is steeper and sees less of the sky) */
 const SWELL = 0.022, SWELL_NEAR = 0.05;
 /** the wind's direction in the wave picture (radians from its u axis); the flecks' crests stand across it */
@@ -62,9 +70,12 @@ const WIND = 0.55;
 const PATCHY: readonly [number, number] = [0.6, 1.3];
 /**
  * the flecks: from which height of the flecks' waves (in spreads) a crest breaks white where the wind is at its usual
- * strength, how much lower where it is strongest, and how white they are (a share of FOAM)
+ * strength and the swell level, how much lower where the wind is strongest, how much lower for each spread of the
+ * swell's height (on its crests), and how white they are (a share of FOAM)
  */
-const FLECK = 2.35, FLECK_GUST = 0.45, FLECK_WHITE = 0.85;
+const FLECK = 2.6, FLECK_GUST = 0.45, FLECK_CREST = 0.5, FLECK_WHITE = 0.8;
+/** how far every other octave of the flecks is turned (radians) */
+const FLECK_TURN = 0.45;
 const FOAM = new THREE.Color(0xf2f8f6);
 /**
  * how far the swell and the flecks reach: they show fully up to the first many finest blocks to a dot of the picture
@@ -138,10 +149,12 @@ function inverse2(re: Float64Array, im: Float64Array): Float64Array {
 
 /**
  * The wave picture: the swell's slopes along u and v (red, green: rise over run in shares of four times their
- * spread, about 0.5 level), and the height of the flecks' waves (alpha: in shares of eight times its spread about
- * 0.5). The swell is a height field of random phases whose power falls as the fourth power of the wavenumber, from 2
- * to SWELL_K waves across the picture; the flecks' waves are short (FLECK_K) and run with the wind, so that their
- * crests, where they rise high enough to break, are short strokes across it.
+ * spread, about 0.5 level), the swell's height (blue: in shares of four times its spread about 0.5) and the height
+ * of the flecks' waves (alpha: in shares of eight times its spread about 0.5). The swell is a height field of
+ * random phases whose power falls as the fourth power of the wavenumber, from 2 to SWELL_K waves across the
+ * picture; the flecks' waves are short (FLECK_K) and run with the wind, so that their crests, where they rise high
+ * enough to break, are short strokes across it, and the picture of them is bent (`curved`), so that the strokes
+ * curve a little.
  */
 export function waveTexture(): THREE.DataTexture {
   const n = TEX, random = seeded(1291);
@@ -158,7 +171,9 @@ export function waveTexture(): THREE.DataTexture {
   };
   const along = (kx: number, ky: number) => Math.cos(Math.atan2(ky, kx) - WIND);
   const [sr, si] = field((kx, ky) => { const k = Math.hypot(kx, ky); return k < 2 || k > SWELL_K ? 0 : (0.6 + 0.4 * along(kx, ky) ** 2) / k ** 4; });
-  const [fr, fi] = field((kx, ky) => { const k = Math.hypot(kx, ky); return k < FLECK_K[0] || k > FLECK_K[1] ? 0 : along(kx, ky) ** 8 / k ** 2; });
+  const [fr, fi] = field((kx, ky) => { const k = Math.hypot(kx, ky); return k < FLECK_K[0] || k > FLECK_K[1] ? 0 : along(kx, ky) ** FLECK_SPREAD / k ** 2; });
+  const bent = (k: number) => (k < BEND_K[0] || k > BEND_K[1] ? 0 : 1 / k ** 2);
+  const [br, bi] = field((kx, ky) => bent(Math.hypot(kx, ky))), [cr, ci] = field((kx, ky) => bent(Math.hypot(kx, ky)));
   // the slopes are the transforms of i·k times the heights' (k in radians per texel)
   const slope = (axis: 0 | 1) => {
     const re = new Float64Array(n * n), im = new Float64Array(n * n);
@@ -168,13 +183,23 @@ export function waveTexture(): THREE.DataTexture {
     }
     return inverse2(re, im);
   };
-  const su = slope(0), sv = slope(1), f = inverse2(fr, fi);
   const spread = (v: Float64Array) => Math.sqrt(v.reduce((s, x) => s + x * x, 0) / v.length);
-  const s = Math.sqrt((spread(su) ** 2 + spread(sv) ** 2) / 2), fs = spread(f);
+  const su = slope(0), sv = slope(1), h = inverse2(sr.slice(), si.slice()), f = curved(inverse2(fr, fi), inverse2(br, bi), inverse2(cr, ci));
+  /** the flecks' picture read (between its texels, repeating) at each texel moved by `bu`, `bv` (BEND texels a spread) */
+  function curved(straight: Float64Array, bu: Float64Array, bv: Float64Array) {
+    const out = new Float64Array(n * n), ku = BEND / spread(bu), kv = BEND / spread(bv), wrap = (i: number) => ((i % n) + n) % n;
+    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+      const u = i + bu[j * n + i] * ku, v = j + bv[j * n + i] * kv, u0 = Math.floor(u), v0 = Math.floor(v), fu = u - u0, fv = v - v0;
+      const at = (x: number, y: number) => straight[wrap(y) * n + wrap(x)];
+      out[j * n + i] = (at(u0, v0) * (1 - fu) + at(u0 + 1, v0) * fu) * (1 - fv) + (at(u0, v0 + 1) * (1 - fu) + at(u0 + 1, v0 + 1) * fu) * fv;
+    }
+    return out;
+  }
+  const s = Math.sqrt((spread(su) ** 2 + spread(sv) ** 2) / 2), hs = spread(h), fs = spread(f);
   const byte = (v: number) => Math.max(0, Math.min(255, Math.round(127.5 + 127.5 * v)));
   const data = new Uint8Array(n * n * 4);
   for (let i = 0; i < n * n; i++) {
-    data[i * 4] = byte(su[i] / (4 * s)); data[i * 4 + 1] = byte(sv[i] / (4 * s)); data[i * 4 + 2] = 128; data[i * 4 + 3] = byte(f[i] / (8 * fs));
+    data[i * 4] = byte(su[i] / (4 * s)); data[i * 4 + 1] = byte(sv[i] / (4 * s)); data[i * 4 + 2] = byte(h[i] / (4 * hs)); data[i * 4 + 3] = byte(f[i] / (8 * fs));
   }
   const t = new THREE.DataTexture(data, n, n);
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
@@ -257,9 +282,7 @@ export function createSea(mirror: Nd): Sea {
   /** 1 where the swell and the flecks show, 0 where the sea lies smooth */
   const surface = float(1).sub(smoothstep(SURFACE_UNTIL[0], SURFACE_UNTIL[1], acrossDot));
   const lin = (c: THREE.Color) => vec3(c.r, c.g, c.b);
-  const lum = (c: Nd) => dot(c, vec3(0.2126, 0.7152, 0.0722));
-  const deep = new THREE.Color(...WATER_DEEP), shallow = new THREE.Color(...WATER_SHALLOW);
-  const ratioShallow = (0.2126 * shallow.r + 0.7152 * shallow.g + 0.0722 * shallow.b) / (0.2126 * deep.r + 0.7152 * deep.g + 0.0722 * deep.b);
+  const [, gs, bs] = WATER_SHALLOW, [, gd, bd] = WATER_DEEP;
   /** the colour of the depth's share t, through the stops of RAMP */
   const ramp = (t: Nd) => {
     let c: Nd = lin(new THREE.Color(RAMP[0][1]));
@@ -267,10 +290,15 @@ export function createSea(mirror: Nd): Sea {
     return c;
   };
   const colour = (corners: Nd) => {
-    // how light the corners are against the open water's colour: up to ratioShallow by the coast (terrain.ts), and
-    // a tenth lighter or darker in broad patches everywhere
-    const ratio = lum(corners).div(lum(materialColor.rgb.mul(lin(deep))).max(1e-4));
-    const corner = smoothstep(1.08, ratioShallow * 0.97, ratio);
+    // how far from the coast the corners are, as their colour has it (terrain.ts: WATER_SHALLOW at the coast, mixed
+    // towards WATER_DEEP by k = 0 … 1 within some 8 columns, and the mix a tenth lighter or darker in broad patches
+    // everywhere): by the ratio of their green to their blue, which the patches leave as it is (k worked back from
+    // the ratio q of the mix: q = (gs + k (gd - gs)) / (bs + k (bd - bs))). By the corners' lightness the band was
+    // as uneven as the patches; and their shade, again, from their blue against the mix's
+    const tone = corners.div(materialColor.rgb.max(1e-4)), q = tone.g.div(tone.b.max(1e-4));
+    const k = clamp(float(gs).sub(q.mul(bs)).div(q.mul(bd - bs).sub(gd - gs).max(1e-4)), 0, 1);
+    const shade = tone.b.div(mix(float(bs), float(bd), k));
+    const corner = smoothstep(RIM[0], RIM[1], k.oneMinus());
     // the sea is lighter, too, within HALO dots of the coast as the depth picture has it (its dots are some 36 finest
     // blocks wide: the corners' band is but a few columns wide, as wide as a sandbank from near and a hair from afar);
     // from near, where a dot of the depth picture is wider than HALO_UNTIL dots of the picture, it would not follow the
@@ -280,7 +308,7 @@ export function createSea(mirror: Nd): Sea {
     const halo = float(1).sub(smoothstep(0, HALO, coastDots.max(0))).mul(sea);
     // (from near the corners' band is the only one, a column or two wide, and shows fully: a light rim along the coast)
     const coast = max(corner.mul(mix(float(0.7), float(1), coarse)), halo.mul(halo).mul(HALO_SHARE));
-    const patches = clamp(ratio.div(mix(float(1), float(ratioShallow), corner)), 0.9, 1.1);
+    const patches = clamp(shade, 0.9, 1.1);
     // from near, all the picture lies within a dot or two of the depth picture, which runs down to the coast's depth
     // across them: there the water beyond the corners' band is the shelf's (and the band the shallows')
     const t = mix(share, max(share, float(RAMP[1][0]).mul(float(1).sub(corner))), coarse);
@@ -303,7 +331,15 @@ export function createSea(mirror: Nd): Sea {
     const s = waves.sample(uv).grad(dx, dy);
     // the slope back in the world's axes (a turned picture's u runs along the world's z)
     const su = s.r.mul(2).sub(1).mul(4), sv = s.g.mul(2).sub(1).mul(4);
-    return { slope: select(odd, vec2(sv, su.negate()), vec2(su, sv)), fleck: s.a.mul(2).sub(1).mul(8) };
+    return { slope: select(odd, vec2(sv, su.negate()), vec2(su, sv)), height: s.b.mul(2).sub(1).mul(4) };
+  };
+  // the flecks' octave n likewise, but every other one turned by FLECK_TURN alone: their strokes stand across the
+  // wind in every octave (turned a quarter round, two octaves faded into each other cross), and not all alike
+  const flecksAt = (n: Nd) => {
+    const size = exp2(n), p = select(size.greaterThan(PERIOD), pCoarse, pFine), c = Math.cos(FLECK_TURN), s = Math.sin(FLECK_TURN);
+    const turned = (q: Nd) => select(fract(n.mul(0.5)).greaterThan(0.25), vec2(q.x.mul(c).sub(q.y.mul(s)), q.x.mul(s).add(q.y.mul(c))), q);
+    const uv = turned(p).div(size).add(vec2(0.53, 0.29).mul(n)), dx = turned(dFdx(pFine)).div(size), dy = turned(dFdy(pFine)).div(size);
+    return waves.sample(uv).grad(dx, dy).a.mul(2).sub(1).mul(8);
   };
   const a = octaveAt(o0), b = octaveAt(o0.add(1)), w0 = float(1).sub(f), w1 = f, keep = float(1).div(w0.mul(w0).add(w1.mul(w1)).sqrt());
   const p = pFine, gust = mix(float(PATCHY[0]), float(PATCHY[1]), sin(dot(p, vec2(3, 2).mul(TURN)).add(0.7)).mul(sin(dot(p, vec2(-2, 5).mul(TURN)).add(2.1))).mul(0.5).add(0.5));
@@ -313,11 +349,13 @@ export function createSea(mirror: Nd): Sea {
   const eye = normalize(cameraPosition.sub(positionWorld));
   const fresnel = (n: Nd) => float(0.02).add(pow(float(1).sub(max(dot(n, eye), 0)), 5).mul(0.98));
   const level = fresnel(vec3(0, 1, 0)), waved = fresnel(facing);
-  // the flecks: where a crest of the flecks' waves rises above the line (lower where the wind is strong), with an
-  // edge a dot wide; each octave's own, faded as the octaves are
-  const line = float(FLECK).sub(gust.sub(1).mul(FLECK_GUST / (PATCHY[1] - 1)));
+  // the flecks: where a crest of the flecks' waves rises above the line (lower where the wind is strong, and on the
+  // swell's crests, so that they come in groups along them and the troughs between lie calm), with an edge a dot
+  // wide; each octave's own, faded as the octaves are
+  const swell = a.height.mul(w0).add(b.height.mul(w1)).mul(keep);
+  const line = float(FLECK).sub(gust.sub(1).mul(FLECK_GUST / (PATCHY[1] - 1))).sub(swell.mul(FLECK_CREST));
   const broken = (h: Nd) => smoothstep(line.sub(fwidth(h)), line.add(fwidth(h)), h);
-  const fleck = broken(octaveAt(oF).fleck).mul(float(1).sub(fF)).add(broken(octaveAt(oF.add(1)).fleck).mul(fF)).mul(surface);
+  const fleck = broken(flecksAt(oF)).mul(float(1).sub(fF)).add(broken(flecksAt(oF.add(1))).mul(fF)).mul(surface);
   return {
     colour,
     normal: transformNormalToView(facing),

@@ -47,6 +47,37 @@ python3 tools/lookprobe/gauntlet_water.py --gauntlet /tmp/water
 python3 tools/lookprobe/gauntlet_water.py some.png[:x0,y0,x1,y1]                # the measurements of any picture
 ```
 
+## Round 3 (20 November 2026): the near view
+
+Round 2 was right from the middle distance on; from near three things were still off: the white flecks were small
+specks strewn evenly over the water and read as snow, the light rim along the coast was as uneven as the patches of
+light and shade of the water's corners, and the coast had no surf line.
+
+- **The rim by the corners' hue:** the corners' colours (terrain.ts, prebuilt in the tables) are WATER_SHALLOW at the
+  coast, mixed towards WATER_DEEP within some 8 columns, and each mix made a tenth lighter or darker in broad
+  patches. Round 2 read how near the coast a point lies from the corners' lightness, so the patches went into the
+  rim; now it is read from their green over their blue, which a lighter or darker shade leaves as it is (the mix's
+  share worked back exactly from that ratio; the corners are bytes, which leaves it some 6 % uncertain). The rim
+  is now as wide along the whole coast as the mix is, and the patches come from the corners' blue against the
+  mix's.
+- **The strokes:** the flecks' waves are longer (4 to 11 texels instead of 3 to 8) and run within a narrower spread
+  of the wind (the cosine's 12th power instead of its 8th), so that a crest breaks white as a short stroke across
+  the wind, not as a speck; the picture of them is bent by a smooth field of up to 2.5 texels, so that the strokes
+  curve a little. The flecks' octaves are no longer turned a quarter round against each other (two octaves faded
+  into each other crossed as small X's), only by 0.45 radians; they are a little less white (0.8) and a little more
+  frequent. A narrower band of waves made the strokes longer still, but its crests came in groups of parallel
+  strokes, which the stripes row caught (0.064 at `d60_valencia`); with the band from 24 to 64 waves across the
+  picture and the stronger bend it is 0.02.
+- **No surf line:** a line of foam along the coast would need to know a beach from a quay: the water's corners carry
+  only how far the coast is, and in Venice's canals, a column or two wide, such a line would cover the water. It
+  would need a field of its own in the tables (and a rebuild of them).
+
+The gauntlet was 35 of 35 before (round 2 on today's main) and is after; this round's changes are in what it does
+not hold: weighted by their size, the white flecks are now 13 to 22 dots long from near (5 to 7 before; EU5's
+nearest view: 5 to 11, in clusters of many small flecks, which ours are not), and the rim is as wide along the whole
+coast. Before and after: project files `wasser/runden/runde3_vorher_nachher.jpg`; the gauntlet's rows
+`runde3_gauntlet_vorher.txt` and `runde3_gauntlet_nachher.txt`.
+
 ## Round 2 (20 November 2026): each distance its own water, in the model's colours
 
 Round 1 had been measured close to EU5's nearest view at every distance, and Ramon found it looked neither like EU5
@@ -104,7 +135,8 @@ the middle distance on the sea was smooth (0.2), and nothing glinted.
 
 Before and after: project files `wasser/runden/vorher_nachher.jpg` and `nah_vorher_nachher_eu5.jpg`.
 
-**What was still open** after round 1 (and is after round 2, but for the colour): the waves stand still (EU5's
-move; moving them needs pictures drawn by the clock, which the on-demand stage avoids); rivers keep the coast's light
-turquoise all along; the coast's band from the depth picture is soft and can stand a few dots off the blocky coast
-at the middle distance; no surf line at the beach (from near the corners' rim stands in for it).
+**What was still open** after round 1 (and is after round 3, but for the colour and the coast's rim from near): the
+waves stand still (EU5's move; moving them needs pictures drawn by the clock, which the on-demand stage avoids);
+rivers keep the coast's light turquoise all along; the coast's band from the depth picture is soft and can stand a
+few dots off the blocky coast at the middle distance; no surf line at the beach (from near the corners' rim stands
+in for it).
