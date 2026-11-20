@@ -31,6 +31,7 @@ export {
 export type { Quay, Tradition } from './traditions/tradition';
 export { VENICE } from './traditions/venice';
 export { COAST } from './traditions/coast';
+export { PARIS } from './traditions/paris';
 export { house, townHouse } from './houses/house';
 export { NORTH, SOUTH, TERRACE, TIMBER } from './traditions/house-styles';
 export { type Style, styleOf } from './traditions/regions';

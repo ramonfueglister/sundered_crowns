@@ -173,6 +173,15 @@ export function chimney(b: Batch, cx: number, cz: number, y: number, hv: number,
   b.box(cx - V * 0.6, top, cz - V * 0.6, cx + V * 0.6, top + V * 0.12, cz + V * 0.6, dark);
 }
 
+/** A plain chimney `hv` fine blocks high: a square shaft with a capping slab and the dark opening on top. */
+export function stack(b: Batch, cx: number, cz: number, y: number, hv: number, c: RGB, dark: RGB) {
+  const s = V * 0.75,
+    top = y + hv * V;
+  b.box(cx - s, y - V, cz - s, cx + s, top, cz + s, c, { foot: 0.88 });
+  b.box(cx - s - V * 0.15, top, cz - s - V * 0.15, cx + s + V * 0.15, top + V * 0.35, cz + s + V * 0.15, shade(c, 1.05));
+  b.box(cx - s * 0.6, top + V * 0.35, cz - s * 0.6, cx + s * 0.6, top + V * 0.4, cz + s * 0.6, dark);
+}
+
 /** A roof terrace (altana) of wood over the ridge: a deck on four posts, a rail round it, as in Carpaccio's Venice. */
 export function altana(b: Batch, x0: number, z0: number, x1: number, z1: number, y: number, c: RGB) {
   const p = V * 0.3,

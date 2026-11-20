@@ -4,15 +4,15 @@
 import * as THREE from 'three/webgpu';
 import { Batch, type RGB, type Rnd, hash2, rgb, seeded, shade } from './batch';
 import { boat } from './blocks';
-import { COAST, type Column, LAGOON, VENICE, VOXEL as V, cloth, crate, fineGround, fineHouse, jar, jetty, waterColourAt, waterFlecks, wallOf } from '../buildings';
+import { COAST, PARIS, type Column, LAGOON, VENICE, VOXEL as V, cloth, crate, fineGround, fineHouse, jar, jetty, waterColourAt, waterFlecks, wallOf } from '../buildings';
 import { LAND_Y, N, SEA_Y } from './layout';
 import { NEAR_LIGHT, NEAR_SHADOW, type StageScene, showError, stage } from './stage';
 
 /** the quay's edge lies this many blocks before the fronts, rounded to a whole block, since the ground kit builds by columns */
 const QUAY = 3.2, STONE = VENICE.quay.wall, PAVING = VENICE.quay.paving, WOOD = rgb(0xa9744a);
 const q = new URLSearchParams(location.search);
-/** ?tr=coast: the prototype of the Italian coast town (traditions/coast.ts) instead of Venice */
-const TR = q.get('tr') === 'coast' ? COAST : VENICE;
+/** ?tr=coast or ?tr=paris: the prototypes of the Italian coast town and of Paris (traditions/) instead of Venice */
+const TR = q.get('tr') === 'coast' ? COAST : q.get('tr') === 'paris' ? PARIS : VENICE;
 const GOODS: readonly RGB[] = [rgb(0xe8a030), rgb(0xd04030), rgb(0x8ab040), rgb(0xf0e0c0), rgb(0x3f5f8a), rgb(0xe8c050)];
 
 /** A row of houses along z with their fronts at x = `xf`, from z0 on, one plot after the other with a lane now and then. */

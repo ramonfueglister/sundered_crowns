@@ -54,4 +54,9 @@ export interface Tradition {
   /** smooth plaster walls instead of the ashlar grid; the paint of the shutters, if not the wood */
   plaster?: boolean;
   shutterC?: RGB;
+  /** roof coverings to draw one per house, instead of the one `roof`; share of houses with a timber frame on their upper storeys, its colour */
+  roofs?: readonly RGB[];
+  timber?: { share: number; c: RGB };
+  /** plain square chimneys instead of the Venetian bell */
+  plainChimney?: boolean;
 }

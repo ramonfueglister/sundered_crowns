@@ -4,24 +4,13 @@
 // source in a fixed order, so a house is the same for the same seed. Fine blocks (VOXEL) are the unit of every part.
 import { Batch, type RGB, type Rnd, shade } from '../../lookprobe/batch';
 import { gableRoof, hipRoof, roofAt } from '../core/roofs';
-import { SIDES, type Side, wallOf } from '../core/wall';
+import { SIDES, type Side, arch, wallOf } from '../core/wall';
 import { WINDOW_WARM } from '../palette';
 import type { Tradition } from '../traditions/tradition';
 import { awning, jar } from './clutter';
-import {
-  type Materials,
-  ashlar,
-  corbels,
-  door,
-  gate,
-  jointOf,
-  rounded,
-  shop,
-  shutters,
-  washing,
-  window,
-} from './parts';
-import { altana, chimney, tiledGable, tiledHip } from './roof_parts';
+import { type Materials, ashlar, corbels, door, gate, jointOf, shop, shutters, washing, window } from './parts';
+import { altana, chimney, stack, tiledGable, tiledHip } from './roof_parts';
+import { gableFrame, timberFrame } from './timber';
 import { VOXEL as V } from './style';
 
 export interface HouseOptions {
@@ -84,7 +73,9 @@ export function fineHouse(w: number, d: number, floors: number, tr: Tradition, r
     pitch = r.range(tr.pitch[0], tr.pitch[1]);
   // drawn only when the tradition has them, so that a tradition without them builds the same houses as before
   const hipped = tr.hipped !== undefined && r.chance(tr.hipped),
-    arcade = tr.arcade !== undefined && r.chance(tr.arcade);
+    arcade = tr.arcade !== undefined && r.chance(tr.arcade),
+    roofC = tr.roofs ? r.pick(tr.roofs) : tr.roof,
+    frame = tr.timber !== undefined && r.chance(tr.timber.share) ? tr.timber.c : null;
   // storeys: the ground floor, the hall storey of a great house, the upper storeys; the last block of each is its band
   const hs = [
     tr.ground,
@@ -125,6 +116,7 @@ export function fineHouse(w: number, d: number, floors: number, tr: Tradition, r
         great: !!o.great,
         arched,
         arcade,
+        frame,
         detail,
         seed,
         wallC,
@@ -139,10 +131,14 @@ export function fineHouse(w: number, d: number, floors: number, tr: Tradition, r
     rx1 = f.x1 + ov,
     rz1 = f.z1 + ov;
   if (hipped) {
-    if (detail) tiledHip(b, rx0, rz0, rx1, rz1, top, rise, tr.roof, seed);
-    else hipRoof(b, rx0, rz0, rx1, rz1, top, rise, tr.roof, 3);
-  } else if (detail) tiledGable(b, rx0, rz0, rx1, rz1, top, rise, tr.roof, wallC, seed);
-  else gableRoof(b, rx0, rz0, rx1, rz1, top, rise, tr.roof, wallC, 3);
+    if (detail) tiledHip(b, rx0, rz0, rx1, rz1, top, rise, roofC, seed);
+    else hipRoof(b, rx0, rz0, rx1, rz1, top, rise, roofC, 3);
+  } else if (detail) tiledGable(b, rx0, rz0, rx1, rz1, top, rise, roofC, wallC, seed);
+  else gableRoof(b, rx0, rz0, rx1, rz1, top, rise, roofC, wallC, 3);
+  // the gable ends of a timber-framed house show their frame too (on the short sides, where tiledGable fills the gable)
+  if (frame && detail && !hipped)
+    for (const sd of (rx1 - rx0 >= rz1 - rz0 ? ['px', 'nx'] : ['pz', 'nz']) as Side[])
+      gableFrame(b, wallOf(rx0, rz0, rx1, rz1, sd), top, rise, frame);
   if (altanaOn && detail) {
     const s = Math.min(W, D) * 0.25;
     altana(b, -s, -s, s, s, top + rise, tr.wood);
@@ -152,7 +148,7 @@ export function fineHouse(w: number, d: number, floors: number, tr: Tradition, r
     const cx = Math.round(r.range(f.x0 + V, f.x1 - V) / V) * V,
       cz = Math.round(r.range(f.z0 + V, f.z1 - V) / V) * V,
       hv = r.int(tr.chimney.height[0], tr.chimney.height[1]);
-    chimney(
+    (tr.plainChimney ? stack : chimney)(
       b,
       cx,
       cz,
@@ -172,6 +168,7 @@ interface Facade {
   great: boolean;
   arched: boolean;
   arcade: boolean;
+  frame: RGB | null;
   detail: number;
   seed: number;
   wallC: RGB;
@@ -196,6 +193,7 @@ function facade(
   const axes = Array.from({ length: n }, (_, i) => wl.len / 2 + (i - (n - 1) / 2) * bay),
     [ww, wh] = tr.window;
   if (o.detail && !tr.plaster) ashlar(b, wl, y + V, y + (h - 1) * V, o.wallC, o.seed + k * 7 + SIDES.indexOf(s));
+  if (o.detail && o.frame && k >= 1) timberFrame(b, wl, y - V, h * V, axes, tr.window[0], o.frame);
   const win = (t: number, hv = wh) => {
     window(b, wl, t, y + tr.sill * V, ww, hv, mt, o.arched, o.detail);
     if (o.detail && !o.arched && r.chance(tr.shutters))
@@ -206,8 +204,8 @@ function facade(
     const half = (bay - 2 * V) / 2,
       spring = y + (h - 1) * V - half - V;
     for (const t of axes) {
-      rounded(b, wl, t, y, half + V * 0.5, spring, tr.stone, 0.05);
-      rounded(b, wl, t, y, half, spring, shade(mt.glass, 0.55), 0.06);
+      arch(b, wl, t, y, half + V * 0.5, spring, tr.stone, 0.05);
+      arch(b, wl, t, y, half, spring, shade(mt.glass, 0.55), 0.06);
     }
     return;
   }
