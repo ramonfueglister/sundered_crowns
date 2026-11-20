@@ -19,7 +19,8 @@ EU5's water changes with the distance it is seen from, and the gauntlet holds ea
 From some 36000 blocks across on the realms' paper map takes over (its sea: `src/worldprobe/paint.ts`).
 
 `tools/lookprobe/gauntlet_water.py` finds the water in a picture (blue to cyan, not grey; foam and boats inside it
-count as water, small islands do not) and measures, by each dot's distance from the shore, seven rows per scene:
+count as water, small islands do not) and measures, by each dot's distance from the shore, seven rows per scene, and
+two more where the water moves (diorama and nah: pictures at 0, 1/30 and 0.5 seconds, `water_frames.mjs`):
 
 | row | what | bar | EU5 |
 | --- | --- | --- | --- |
@@ -30,6 +31,8 @@ count as water, small islands do not) and measures, by each dot's distance from 
 | Ufer grüner | how much greener the water 4 to 20 dots out is than the open water | ≥ 5° | 0–29° |
 | Flachwasser | how much lighter the water by the shore is than the open water | 3–15 L diorama, 4–15 nah, 5–25 farther | 5–12 nearest, 8–23 middle, 9 far |
 | Flocken | share of the water at least 14 lighter than its surroundings (white strokes, glints) | 0.05–1 % diorama, 0.03–0.5 % nah, ≤ 0.05 % farther | 0.07–0.39 % nearest, 0 farther |
+| Bewegung | mean change of the water's lightness in half a second | ≥ 0.8 | none (no moving pictures) |
+| Flimmern | share of the water whose lightness changes by more than 20 from one picture to the next (1/30 s) | ≤ 0.3 % | none |
 
 The saturation row holds the water to the rest of the world: the land of the model is far fuller in colour than
 EU5's, so its water must be too (EU5's water is about as full as its land, or fuller). It counts HSV's saturation,
@@ -45,7 +48,44 @@ npx vite --port 5199 &
 PROBE_URL=http://localhost:5199 tools/lookprobe/water_shots.sh /tmp/water     # ~4 min, all five at once
 python3 tools/lookprobe/gauntlet_water.py --gauntlet /tmp/water
 python3 tools/lookprobe/gauntlet_water.py some.png[:x0,y0,x1,y1]                # the measurements of any picture
+PROBE_URL=http://localhost:5199 node tools/lookprobe/water_frames.mjs /tmp/w/d60 "lon=-0.33&lat=39.45&wide=60" 36x0.0833
+                                                                   # a row of stills of the moving water (3 s)
 ```
+
+## Round 4 (20 November 2026): the water moves
+
+Ramon found round 3 still not really beautiful, and asked for the water to move. The surface is still drawn from the
+one wave picture; it now drifts, and two things were added that only show from near.
+
+- **Motion:** each octave of the swell is read twice, the second time turned by 0.8 radians, and both drift with the
+  wind, the second at two thirds the pace: the two cross and the swell changes as it runs, rather than sliding by as
+  one sheet. A wider octave drifts fewer of its spans a second, by the fourth root of its span (on the sea longer
+  waves run faster by the square root; by that, the water from EU5's nearest distance looked all but still). The
+  flecks' waves drift 1.6 times as fast, and each fleck lives some 3.5 seconds: its line rises and falls by up to 1.1
+  spreads, in each patch of the swell at another time, so that the flecks come and go in groups. Nothing of the mesh
+  moves (the pictures' motion vectors stay nil). The stage draws every picture while the swell shows in the middle
+  of the picture (and half as far again, for the nearer bottom of it), as it does for walking figures and without
+  redrawing the shadows of what stands still (KeptShadow); a still of fixed size (`?w=`) shows the water at
+  `?seatime=` seconds (0).
+- **The swell reaches farther:** it shows fully up to 0.8 finest blocks to a dot and is gone from 1.8 (0.7 and 1.6
+  before), and it is a little stronger (slopes of 0.028 instead of 0.022), so that the water from EU5's nearest
+  distance moves too; the flecks and the glitter keep the old reach (to 0.5 and 1.3), or they grow more than EU5's
+  nearest view shows.
+- **Light on the bed of the shallows:** from nearest, within the light rim along the coast, thin light lines where
+  either of two pictures of the swell at half its span, drifting apart, crosses its middle: the light the shallows'
+  waves gather on the sand, as a network that shifts.
+- **Glitter:** small points where two of the flecks' pictures an octave finer than the swell, turned apart and
+  drifting against each other, both peak: they meet and part again, so the points twinkle; more at a slant.
+- **No surf line from the depth behind the water:** a line of foam where the water meets the land could be read from
+  the scene's depth behind the water, but the scene's pass draws with 4 samples (MSAA), and a copy of its depth
+  under WebGPU cannot be tried in the cloud. It stays open.
+
+The gauntlet has two new rows, where the water moves (above); their bars are not read off EU5, of which no moving
+pictures were at hand. It was 38 of 41 before (round 3 on today's main: the water stood still, its motion 0 in the
+three near scenes) and is 41 of 41 after: motion 1.14 and 1.32 in the dioramas, 0.88 from EU5's nearest distance,
+flicker at most 0.01 %; the flecks stay within their bars (0.47, 0.67, 0.13 %). Before and after, and the water
+moving: project files `wasser/runden/runde4_*`; the gauntlet's rows `runde4_gauntlet_vorher.txt` and
+`runde4_gauntlet_nachher.txt`.
 
 ## Round 3 (20 November 2026): the near view
 
