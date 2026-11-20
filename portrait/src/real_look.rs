@@ -385,9 +385,18 @@ fn calm(refs: &[([usize; 3], [f32; 3], [f32; 3])], tris: &[([usize; 3], [[f32; 2
     }
     // the calmed cloth must not sink into the body: each vertex a little off its
     // own triangle (along the triangle's normal), if it was bound that far off
+    let calmed: Vec<V3> = (0..nv).map(|i| add(rest[i], shift[i])).collect();
+    // (round 140) the cloth's own direction at each vertex, from its triangles as they lie calmed
+    let mut out = vec![[0f32; 3]; nv];
+    for (t, _) in tris {
+        let g = cross(sub(calmed[t[1]], calmed[t[0]]), sub(calmed[t[2]], calmed[t[0]]));
+        for &i in t {
+            out[i] = add(out[i], g);
+        }
+    }
     (0..nv)
         .map(|i| {
-            let v = add(rest[i], shift[i]);
+            let v = calmed[i];
             let (r, w, o) = &refs[i];
             let (a, b, c) = (pp[r[0]], pp[r[1]], pp[r[2]]);
             let (a0, b0, c0) = (base[r[0]], base[r[1]], base[r[2]]);
@@ -404,7 +413,13 @@ fn calm(refs: &[([usize; 3], [f32; 3], [f32; 3])], tris: &[([usize; 3], [[f32; 2
                 _ => CLOTH_OFF_HEAD,
             };
             let want = (o[0] * k).min(hi).max(lo);
-            if want > 0.0 && d < want {
+            if want > 0.0 && d < want && layer == Layer::Over && rest[i][1] >= CLOTH_NECK_Y {
+                // (round 140) on the head, along the cloth's own direction: a vertex over an ear is bound to a
+                // triangle of the ear's folds, which faces anywhere, and held off along that the cloth over
+                // the ear was crumpled, with triangles turned over
+                let along = dot(n, norm(out[i]));
+                if along >= CLOTH_ALONG { madd(v, norm(out[i]), (want - d) / along) } else { v }
+            } else if want > 0.0 && d < want {
                 madd(v, n, want - d)
             } else if layer == Layer::Under && d > hi {
                 // what is worn under the gown stays under it: no further off the skin than the gown's least
@@ -440,6 +455,9 @@ const CLOTH_OFF_GOWN: [f32; 2] = [0.07, 0.09];
 const CLOTH_OFF_UNDER: [f32; 2] = [0.015, 0.045];
 const CLOTH_OFF_OVER: [f32; 2] = [0.13, 0.17];
 const CLOTH_OFF_HEAD: [f32; 2] = [0.0, 0.05];
+/// (round 140) The least share of the cloth's own direction that lies along its body triangle's for the cloth to
+/// be held off that triangle on the head. PLACEHOLDER, by eye.
+const CLOTH_ALONG: f32 = 0.5;
 /// Below this height (base units) a garment over the gown lies on the gown, above it on the head.
 const CLOTH_NECK_Y: f32 = 5.9;
 

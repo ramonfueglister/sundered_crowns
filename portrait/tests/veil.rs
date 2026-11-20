@@ -201,3 +201,83 @@ fn a_veil_set_back_shows_the_hair_over_the_forehead_and_keeps_it_under_the_cloth
         }
     }
 }
+
+#[test]
+fn the_cloth_over_an_ear_lies_the_right_way_up_and_no_hair_comes_through_it() {
+    // (round 140) A veil or a hood over an ear is bound to triangles of the ear's folds, which face anywhere.
+    // Held off them along their own directions (real_look.rs `calm`) the cloth over the ear was crumpled and
+    // some of its triangles lay turned over: black holes at the ear, seen from the side and, on the near side,
+    // from the front. On the head the cloth is held off along its own direction now. On 120 people of 15 to
+    // 68, over each ear (within 7 cm of the tragion and behind it, where the veil's rolled rim does not reach):
+    // how many triangles of a veil or of a hood on the head face against their corners' directions (288 before,
+    // up to 9 on a person; none now); and above the chin, how many corners of the skin stand through that
+    // cloth, counted as `sink` counts, with no gap (84 before, 72 now: not what this round mends).
+    // And the hair under it: over the ears a strand of a man's hair stood through his hood, a finger long
+    // (17 954 corners of the hair's bundles through the hoods of 26 men, up to 1 356 on one; 1 318 through
+    // women's veils, where none was seen). The builder sets the hair under the cloth now: none.
+    use sc_portrait::dress::ENGLAND_1356;
+    use sc_portrait::layers::{sink, THROUGH};
+    use sc_portrait::measure::TRAGION;
+    let Some(h) = head() else { return };
+    let d = &ENGLAND_1356;
+    let show = std::env::var("SHOW").is_ok();
+    let idx = &h.parts["body"][LODS - 1];
+    let ears: Vec<usize> = [TRAGION.0, TRAGION.1].iter().map(|v| idx.iter().position(|i| *i as usize == *v).expect("the tragion is drawn")).collect();
+    let (mut worn, mut turned, mut through, mut triangles, mut hairs) = (0, 0, 0, 0, 0);
+    let mut worst = (0, 0u32);
+    for k in 0..120u32 {
+        let p = person(k, k % 2 == 0, [15.0, 24.0, 35.0, 50.0, 58.0, 68.0][(k / 2) as usize % 6]);
+        let out = build(&h, &p, 1);
+        let skin = out.surfaces.iter().find(|s| s.pos.len() >= idx.len() && s.tex.as_deref().is_some_and(|t| t.contains("skin"))).expect("the skin");
+        for cloth in out.surfaces.iter().filter(|s| s.tex.as_deref().is_some_and(|t| [d.veil, d.veil_back, d.hood_up].iter().any(|n| t.contains(n)))) {
+            worn += 1;
+            let mut n = 0;
+            for (q, m) in cloth.pos.chunks_exact(3).zip(cloth.nrm.chunks_exact(3)) {
+                let c: V3 = std::array::from_fn(|a| (q[0][a] + q[1][a] + q[2][a]) / 3.0);
+                if !ears.iter().any(|&e| dist(&c, &skin.pos[e]) < 0.7 && c[2] < skin.pos[e][2] - 0.1) {
+                    continue;
+                }
+                triangles += 1;
+                let (e1, e2): (V3, V3) = (std::array::from_fn(|a| q[1][a] - q[0][a]), std::array::from_fn(|a| q[2][a] - q[0][a]));
+                let g = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]];
+                let mean: V3 = std::array::from_fn(|a| m[0][a] + m[1][a] + m[2][a]);
+                // (of 5 mm2 and more: where the cloth turns in under the skull its file has slivers of a tenth
+                // of that which lie so on every head; and only where the three corners face one way: on the
+                // veil's rolled rim a triangle joins the outside to the inside, and has no way up)
+                let agree = (0..3).all(|a| (0..3).map(|b| m[a][b] * m[(a + 1) % 3][b]).sum::<f32>() > 0.0);
+                if agree && g[0] * mean[0] + g[1] * mean[1] + g[2] * mean[2] < 0.0 && (g[0] * g[0] + g[1] * g[1] + g[2] * g[2]).sqrt() / 2.0 >= 0.0005 {
+                    n += 1;
+                }
+            }
+            turned += n;
+            if n > worst.0 {
+                worst = (n, k);
+            }
+            // (the skin above the chin that stands outside the cloth: `sink` counts below a height, so both
+            // are stood on their heads)
+            let mut s = skin.clone();
+            s.pos.iter_mut().for_each(|q| q[1] = -q[1]);
+            s.nrm.iter_mut().for_each(|q| q[1] = -q[1]);
+            s.pos.chunks_exact_mut(3).for_each(|t| t.swap(1, 2));
+            s.nrm.chunks_exact_mut(3).for_each(|t| t.swap(1, 2));
+            let mut c = cloth.clone();
+            c.pos.iter_mut().for_each(|q| q[1] = -q[1]);
+            c.pos.chunks_exact_mut(3).for_each(|t| t.swap(1, 2));
+            through += sink(&mut s, &c, -out.chin, 0.0, THROUGH);
+            if let Some(hair) = out.surfaces.iter().find(|s| s.tex.as_deref().is_some_and(|t| t.contains(d.body_image))) {
+                hairs += sink(&mut hair.clone(), cloth, f32::MAX, 0.0, THROUGH);
+            }
+            if show && n > 0 {
+                println!("person {k}: {n} triangles of {} turned over at the ears", cloth.tex.as_deref().unwrap_or(""));
+            }
+        }
+    }
+    if show {
+        println!("{worn} cloths on a head on 120 people, {triangles} triangles over the ears; {turned} turned over (at most {} on person {}); {through} corners of the skin through the cloth above the chin; {hairs} of hair", worst.0, worst.1);
+        return;
+    }
+    assert!(worn >= 60 && triangles > 30_000, "{worn} cloths on a head, {triangles} triangles over the ears");
+    assert_eq!(turned, 0, "{turned} triangles over the ears turned over, {} on person {}", worst.0, worst.1);
+    assert!(through <= 100, "{through} corners of the skin through the cloth on a head");
+    assert_eq!(hairs, 0, "{hairs} corners of the hair through the cloth on a head");
+}

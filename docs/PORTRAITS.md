@@ -6041,6 +6041,56 @@ Pictures (project files, `portraits/`): `runde139_vorher_nachher.png` (three vei
 sample, of 35, 50 and 50, round 138 above, now below), `runde139_von_allen_seiten.png` (the two of 50 from
 both sides and from behind, round 138 above, now below).
 
+**Round 140: no holes in the cloth over the ears** (2026-11-20). Round 139 left it seen: black holes in the
+veil at the ear, a finger's breadth, on the veiled women from the side and from behind. Looked at from both
+sides on four veiled women and four hooded men of the sample: a hole or a row of dark specks with a crumple
+round it over the ear of three of the four women (the fourth has a ridge there), on one of them dark
+specks beside the cheek from the front as well, and on another a crack beside the neck; and on two of the four men a strand of hair standing
+through the hood over the ear, a finger long, from either side.
+
+The causes, two. (1) A cloth on the head is bound to the body corner by corner, each to a triangle of the
+skin, and after it is calmed each corner is held a least distance off its triangle, along that triangle's
+direction (`calm`, real_look.rs). Over an ear the triangles are those of the ear's folds, which face
+anywhere: neighbouring corners of the cloth were pushed apart and across each other, and triangles of the
+cloth lay turned over, their dark inside out. On the test's 120 people 288 triangles of 5 mm² and more
+over the ears lay so, up to 9 on one person (measured on round 139's builder with the new test's count).
+(2) The hair under a hood is a cut of bundles bound to the skull as the hood is, each for itself, and
+nothing set the one under the other: 17 954 corners of the bundles stood outside the hoods of 26 men, up
+to 1 356 on one (and 1 318 outside women's veils, where nothing was seen in a picture).
+
+What is changed (`portrait/src/real_look.rs`, `portrait/src/build.rs`).
+- On the head a cloth worn over the gown (a veil, a wimple, a hood) is held off its triangle along the
+  cloth's own direction at that corner (from its triangles as they lie calmed), as far as takes it the same
+  distance off the triangle; and not at all where the two directions differ by more than 60 degrees
+  (`CLOTH_ALONG` 0.5, PLACEHOLDER, by eye). Below the neck, and for the gown and what is under it, nothing
+  changes.
+- After the pose, where the gown is set under the cloth over it, the hair's bundles are set under a veil
+  or a hood on the head in the same way (`layers::sink`, the same 0.2 mm under).
+
+**The gauntlet**: 22 of 22 over the whole sample (read with this round's files), and every line reads
+what it read in round 139 to its last figure: the gauntlet reads skin, and of the sample's 36 only those in
+a veil or a hood differ at all, on the cloth (at most 100 pixels each of a picture of 300 by 375 from the
+front, at most 143 from obliquely behind).
+
+Honest about it. Two faults mended, not a likeness gained. Where the ear is, the cloth has a soft bump now,
+on one woman with a light speck on it from one side; no ear is modelled under the cloth, and the bump is
+what the hold-off leaves, not a shape that was meant. The skin that stands through a cloth on the head by
+the new test's count is hardly fewer (84 corners before, 72 now, on 78 cloths; none of it was seen in a
+picture). The hair set under a hood is moved corner by corner along its own direction: under the cloth
+nobody sees it, and in front of the hood's rim the fringe reads as it did (looked at on the sample from the
+front). Nothing was read for this round. The veil is as much a flat board as it was, and the cracks along
+its hem beside the neck are as before. `CLOTH_ALONG` is by eye.
+
+Tests: `portrait/tests/veil.rs`. New: over the ears of the 120 people's 78 veils and hoods (within 7 cm of
+the tragion and behind it) no triangle of 5 mm² and more faces against its corners (288 before; counted
+where the three corners face one way, which leaves out the veil's rolled rim, where a triangle joins the
+outside to the inside: counted without that, 604 before and 17 now, all 17 such rim triangles); the skin
+through the cloth above the chin stays under 100 corners; and no corner of the hair's bundles stands
+outside the cloth (19 272 before). `cargo test --release` as a whole: 109 of 109 in one
+run. `tests/portrait.test.ts` and its neighbour 42 of 42; typecheck and lint pass.
+Pictures (project files, `portraits/`): `runde140_vorher_nachher.png` (four veiled women and four hooded
+men of the sample from the left and from the right, round 139 above, now below).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair

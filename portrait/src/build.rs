@@ -2103,6 +2103,15 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
             }
             merged[g] = gown;
         }
+        // (round 140) and the hair under a veil or a hood on the head: its bundles are bound to the skull as the
+        // cloth is, each for itself, and over the ears a strand of them stood through a hood, a finger long
+        if let Some(b) = merged.iter().position(|s| !d.body_image.is_empty() && s.tex.as_deref().is_some_and(|t| t.contains(d.body_image))) {
+            let mut hair = std::mem::replace(&mut merged[b], Surface::new(mat(0.0)));
+            for s in merged.iter().filter(|s| s.tex.as_deref().is_some_and(|t| [d.veil, d.veil_back, d.hood_up].iter().any(|n| !n.is_empty() && t.contains(n)))) {
+                crate::layers::sink(&mut hair, s, f32::MAX, crate::layers::UNDER, crate::layers::THROUGH);
+            }
+            merged[b] = hair;
+        }
     }
     // the bust leaning back, where the dress asks for it
     let lean = garb.map_or(0.0, |d| crate::dress::by_sex(d.lean[0], d.lean[1], fem, p.grown()));
