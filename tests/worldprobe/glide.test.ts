@@ -4,7 +4,8 @@ import { describe, expect, it } from 'vitest';
 import { Batch } from '../../src/lookprobe/batch';
 import { FACE_COL, FACE_GEO, FACE_STEPS, FLIPPED, RISES, type Faces, glided } from '../../src/lookprobe/faces';
 import { SEA_Y, onGrid } from '../../src/lookprobe/layout';
-import { TALLER, glide } from '../../src/worldprobe/glide';
+import { glide } from '../../src/worldprobe/glide';
+import { TALLER } from '../../src/worldprobe/glide_columns';
 import { BRIGHTEST, faced, small } from '../../src/worldprobe/small';
 import { drawHouses } from '../../src/worldprobe/houses';
 import {
