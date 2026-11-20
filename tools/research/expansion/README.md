@@ -52,6 +52,41 @@ changed places move with their whole province. Land does tend to go from the new
 change year vs steps to the new owner's land: 0.40 in 1000–1225, 0.16 in 1291–1475; `order_check.py`).
 Raw numbers: `results/`.
 
+## Round 2 (20 Nov 2026): two levels, new split
+
+Round 1 showed that most changes are events of whole states and that land moves in blocks. Round 2 tests a model on
+two levels on a period nobody had looked at. New split: fitting starts 1000–1265 (maps up to 1290), selection
+1291–1475 (up to 1500), test 1501–1823 (up to 1848), run once. Scores (`evaluate2.py`): place Brier skill (main, 25
+years), Brier skill on land edges (does the map stay in one piece), and Bennett's patterns after 50 years (number of
+polities, share of the three largest, KS distance of the size distribution). Second source: borders after 100 years
+against Euratlas 1400/1500 (selection) and 1600/1700/1800 (test).
+
+| model | file | what |
+|---|---|---|
+| M1-P | `bennett_p.py` | Bennett 2022 on provinces (≈ his 25,000 km² regions) with his own 2-year step; s estimated on the fitting years |
+| M5 | `m5.py` | per state and 5 years: absorption by a neighbour (conditional logit), break-up into two (logistic; Turchin et al. 2013, Bennett 2022 create_factions), then whole-province transfers with the M3 features |
+| M5b | `m5b.py` | M5 after the plan amendment (`diagnose_m5.py`): secession is a state event whose blocks are drawn from the 52 observed secessions; the number of successors of a break-up is drawn from the observed 27 × 1, 4 × 2 (Bennett's faction_odds, estimated) |
+
+Fitting: `fit_round2.py` (M3, M5), `fit_round2b.py` (M5b, s of M1-P) → `coef_round2.json` (hash `64db843c` before the test).
+
+| test 1501–1848 | place 25 y | edges 25 y | polities off, 50 y | KS, 50 y | Euratlas 1600 / 1700 / 1800 |
+|---|---|---|---|---|---|
+| M0 | 0 | 0 | 6.7 | 0.11 | 0 / 0 / 0 |
+| Zufall | **+2.0 %** | −36 % | 6.8 | 0.12 | +4.5 / +3.2 / −0.4 % |
+| M1 Bennett | −5.2 % | −76 % | 32.3 | 0.33 | +7.1 / +3.4 / +17.9 % |
+| M1-P Bennett, provinces | −303 % | −225 % | 8.1 | 0.30 | +14.3 / −2.9 / +27.6 % |
+| M3 | −16.9 % | −762 % | 358 | 0.63 | −361 / −480 / −517 % |
+| M5 | −14.8 % | −74 % | 46.1 | 0.32 | −24 / −49 / −56 % |
+| M5b | −22.5 % | **−32 %** | 9.1 | 0.16 | −1.8 / −13.2 / −9.0 % |
+
+The round-2 success criterion (M5 beats Zufall on the main score in the test and is closer on the patterns) is not
+met. After 1500 every model with a mechanism is worse than on the selection years: the early-modern map is calmer and
+rates learnt on the Middle Ages change too much (the risk named in the plan, Gennaioli & Voth 2015). What holds in
+both periods: M5b's structure (state events plus whole provinces) keeps the number of polities near the real one and
+the map most coherent; Bennett's war (M1, M1-P) is the only mechanism that predicts Euratlas borders after 100 years
+better than the start map, i.e. it gets the consolidation of the map, not which state wins. Raw numbers:
+`results/round2_*`.
+
 ## Run
 
 ```
@@ -61,4 +96,10 @@ python3 fit_transitions.py <out>                                        # writes
 python3 select_models.py <out>                                          # ~15 min on 4 cores
 python3 test_models.py <out>                                            # ~1 h on 4 cores
 python3 order_check.py <out>
+# round 2
+python3 fit_round2.py <out> && python3 fit_round2b.py <out>              # writes coef_round2.json
+python3 diagnose_m5.py <out>                                            # why M5 makes too many polities
+python3 select_round2.py <out> select2                                  # ~50 min on 4 cores (M3 is the slow one)
+python3 euratlas_round2.py <out> select2
+python3 select_round2.py <out> test2 && python3 euratlas_round2.py <out> test2   # run once, ~1.5 h
 ```
