@@ -19,7 +19,6 @@ import {
   userData,
   vec2,
   vec3,
-  type vec4,
   vertexColor,
 } from 'three/tsl';
 import { hashBlur } from 'three/addons/tsl/display/hashBlur.js';
@@ -40,7 +39,7 @@ export function createMaterials(scene: THREE.Scene) {
   // both. (`?small=0`: all lists are floats, and a corner's colour is its three floats.) What a triangle shows
   // between its corners is kept within MOST (tones.ts).
   const smallLists = flag('small', true);
-  const tone = attribute('color', 'vec4') as unknown as ReturnType<typeof vec4>;
+  const tone = attribute('color', 'vec4');
   const toned = () =>
     materialColor.mul(
       tone.rgb
@@ -56,6 +55,7 @@ export function createMaterials(scene: THREE.Scene) {
   const solid = coloured();
   // every mesh is drawn on the dots of the picture whose value lies between its two marks (see `dissolve`); the
   // pattern is interleaved gradient noise, which has no stripes or clumps
+  // (three's types give a userData node no kind of value: here and below each is cast to the kind it is read as)
   const dots = fract(fract(dot(screenCoordinate.xy, vec2(0.06711056, 0.00583715))).mul(52.9829189)),
     marks = userData('dots', 'vec2') as unknown as ReturnType<typeof vec2>,
     drawn = dots.greaterThanEqual(marks.x).and(dots.lessThan(marks.y));
@@ -77,10 +77,8 @@ export function createMaterials(scene: THREE.Scene) {
   const glided = userData('glide', 'float') as unknown as ReturnType<typeof float>;
   const inkOf = Fn((builder: { geometry: THREE.BufferGeometry }) => {
     const own = userData('ink', 'float') as unknown as ReturnType<typeof float>;
-    return builder.geometry.hasAttribute('aim')
-      ? mix(own, (attribute('normal', 'vec4') as unknown as ReturnType<typeof vec4>).w, glided)
-      : own;
-  })() as unknown as ReturnType<typeof float>;
+    return builder.geometry.hasAttribute('aim') ? mix(own, attribute('normal', 'vec4').w, glided) : own;
+  })();
   // water: a soft mirror image of piers, hulls and houses is laid over the water colour
   let water = solid;
   const tint = uniform(new THREE.Color());
@@ -142,7 +140,7 @@ export function createMaterials(scene: THREE.Scene) {
   sinking.maskNode = drawn;
   sinking.positionNode = vec3(
     positionGeometry.x,
-    mix(positionGeometry.y, attribute('sink', 'float') as unknown as ReturnType<typeof float>, glided),
+    mix(positionGeometry.y, attribute('sink', 'float'), glided),
     positionGeometry.z,
   );
   return {
