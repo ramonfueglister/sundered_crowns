@@ -2,6 +2,7 @@
 // renderer will be: level neighbours form one smooth surface, steps show only where heights differ.
 import { Batch, type RGB, fbm2, hash2, mix, noise2, rgb, shade, smooth } from './batch';
 import { type Ground, type GroundTraits, Mat, N, SEA_Y, SUMMIT, idx, rockPillar } from './layout';
+import { SUN, litness } from './light';
 
 export const GRASS_A = rgb(0xb0c83c), GRASS_B = rgb(0xbcca3e), GRASS_DRY = rgb(0xd2c444), GRASS_DEEP = rgb(0x98b638);
 const MEADOW_MID = rgb(0x9abf3d), MEADOW_DEEP = rgb(0x82ac37), TUFT = rgb(0x5f9030);
@@ -209,6 +210,56 @@ function drawCrown(on: Batch, c: Corners, crowns: Float32Array, i: number, groun
   on.quadAt(x0, ground, z1, x1, ground, z1, x1, top, z1, x0, top, z1, low, low, high, high, 0, 0, 1);
   on.quadAt(x1, ground, z0, x0, ground, z0, x0, top, z0, x1, top, z0, low, low, high, high, 0, 0, -1);
 }
+/**
+ * How far the sides of meadow steps take the colour of the meadow above them at each step of the map
+ * (GroundTraits.sideTop), lifted so that a side would be as bright as the meadow above it (`LIFT`): less at the
+ * finest step, where a step is a bank one sees up close, and more the farther out, where the sides drew a dark line
+ * along every step across the land.
+ */
+const SIDE_TOP = [0.45, 0.6, 0.7, 0.8, 0.85, 0.9, 0.9, 0.9];
+/**
+ * A side lies in less light than a top: the colour that makes a side facing each way (east, west, south, north) as
+ * bright as the top above it under the stage's lights, as a factor of the top's colour (no more than SIDE_MOST allows).
+ */
+const LIFT = [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]].map((n) => litness([0, 1, 0]) / litness(n as [number, number, number]));
+/** the brightest a side's colour may become (below worldprobe/small.ts BRIGHTEST, 2) */
+const SIDE_MOST = 1.9;
+export const sideTopAt = (step: number) => SIDE_TOP[Math.max(0, Math.min(SIDE_TOP.length - 1, step))];
+/**
+ * The relief of the land shown by its colour: the tops of the land are a touch lighter where the ground, averaged
+ * over RELIEF_REACH columns to each side, rises towards the sun, and a touch darker where it falls away from it. The
+ * steps of the land are wide and few (world.ts `terrace`), so a hill would read only at its few edges: this lets its
+ * slopes read as well, as a shaded relief map does. RELIEF_MOST: the most a top is lightened or darkened; at a rise
+ * of RELIEF_FULL blocks to a column towards the sun it is reached.
+ */
+const RELIEF_REACH = 4, RELIEF_MOST = 0.12, RELIEF_FULL = 0.12;
+const SUN_FLAT = Math.hypot(SUN[0], SUN[2]), SUN_X = SUN[0] / SUN_FLAT, SUN_Z = SUN[2] / SUN_FLAT;
+/** the brightness of every corner of the grid by the relief of the tops as drawn (`drawnTops`; (N + 1)² numbers, about 1), see RELIEF_MOST */
+function reliefOf(g: Ground, tops: ArrayLike<number>): Float32Array {
+  const n = N, side = n + 1, ground = new Float32Array(n * n), dry = new Uint8Array(n * n);
+  for (let i = 0; i < n * n; i++) if (!g.wet[i]) { ground[i] = tops[i]; dry[i] = 1; }
+  // the dry ground averaged over a square (in two runs, along the rows and then the columns); water counts for nothing
+  const rowSum = new Float32Array(n * n), rowCount = new Uint16Array(n * n), mean = new Float32Array(n * n), r = RELIEF_REACH;
+  for (let z = 0; z < n; z++) for (let x = 0; x < n; x++) {
+    let sum = 0, count = 0;
+    for (let u = Math.max(0, x - r), end = Math.min(n - 1, x + r); u <= end; u++) { const j = z * n + u; if (dry[j]) { sum += ground[j]; count++; } }
+    rowSum[z * n + x] = sum; rowCount[z * n + x] = count;
+  }
+  for (let z = 0; z < n; z++) for (let x = 0; x < n; x++) {
+    let sum = 0, count = 0;
+    for (let v = Math.max(0, z - r), end = Math.min(n - 1, z + r); v <= end; v++) { sum += rowSum[v * n + x]; count += rowCount[v * n + x]; }
+    mean[z * n + x] = count ? sum / count : 0;
+  }
+  // at a corner of the grid the slope of the averaged ground over the four columns round it
+  const out = new Float32Array(side * side).fill(1), at = (x: number, z: number) => mean[Math.max(0, Math.min(n - 1, z)) * n + Math.max(0, Math.min(n - 1, x))];
+  for (let z = 0; z <= n; z++) for (let x = 0; x <= n; x++) {
+    const east = (at(x, z - 1) + at(x, z) - at(x - 1, z - 1) - at(x - 1, z)) / 2, south = (at(x - 1, z) + at(x, z) - at(x - 1, z - 1) - at(x, z - 1)) / 2;
+    const towards = east * SUN_X + south * SUN_Z;
+    out[z * side + x] = 1 + RELIEF_MOST * Math.max(-1, Math.min(1, towards / RELIEF_FULL));
+  }
+  return out;
+}
+
 /** the four columns beside a column: east, west, south, north */
 const NB_X = [1, -1, 0, 0], NB_Z = [0, 0, 1, -1];
 /**
@@ -230,6 +281,7 @@ export function buildTerrain(g: Ground, t: GroundTraits, baked = true, part: Par
   // are of one kind of ground the answer is the same (a ninth of a near piece's building time went into it).
   const side = N + 1, woods = woodsOf(g, t), tops = woods ? woods.tops : g.h;
   const c: Corners = { g: woods ? { ...g, occ: woods.occ } : g, t, ox, oz, side, askedAt: baked ? new Float64Array(side * side).fill(NaN) : null, answer: baked ? new Float64Array(side * side) : null, groundAt: new Array(side * side), kindAt: new Int8Array(side * side).fill(-1) };
+  const relief = reliefOf(g, tops), towardsTop = t.sideTop ?? 0;
   for (let z = part.z0; z < part.z1; z++) for (let x = part.x0; x < part.x1; x++) {
     const i = idx(x, z), h = tops[i], mat = g.mat[i], wx = x + ox, wz = z + oz;
     // every cell is a touch lighter or darker than its neighbours: the fine grain of the reference's ground
@@ -245,8 +297,10 @@ export function buildTerrain(g: Ground, t: GroundTraits, baked = true, part: Par
     const part = !!carries && coveredBy(carries) < 1, cover = !woods || !wooded(carries) || (!crowned && part) ? carries : crowned && part ? null : { ...carries!, top: shade(carries!.top, FLOOR) };
     // the tiled meadow belongs to green land
     const patch = !cover && mat === Mat.Grass && t.road(x + 0.5, z + 0.5) > 2.2 && !t.city(x + 0.5, z + 0.5) && !(tint && tint[1] > 0.4) ? meadowPatch(wx, wz) : null;
-    const c00 = cornerColour(c, x, z, h, mat, grain, cover, rockTop, patch), c10 = cornerColour(c, x + 1, z, h, mat, grain, cover, rockTop, patch);
-    const c11 = cornerColour(c, x + 1, z + 1, h, mat, grain, cover, rockTop, patch), c01 = cornerColour(c, x, z + 1, h, mat, grain, cover, rockTop, patch);
+    const r00 = cornerColour(c, x, z, h, mat, grain, cover, rockTop, patch), r10 = cornerColour(c, x + 1, z, h, mat, grain, cover, rockTop, patch);
+    const r11 = cornerColour(c, x + 1, z + 1, h, mat, grain, cover, rockTop, patch), r01 = cornerColour(c, x, z + 1, h, mat, grain, cover, rockTop, patch);
+    // (the relief lightens or darkens the tops alone: the sides keep the light of their own direction)
+    const q = z * side + x, c00 = shade(r00, relief[q]), c10 = shade(r10, relief[q + 1]), c11 = shade(r11, relief[q + side + 1]), c01 = shade(r01, relief[q + side]);
     const on = carried && cover && cover.stands !== false && !(cover.share! < CARRIED_FROM) ? carried : b;
     // (a wooded column is drawn at its ground: what it carries has no sides of its own but its crown's)
     const rise = woods && wooded(carries) ? 0 : cover ? cover.rise : 0;
@@ -269,12 +323,22 @@ export function buildTerrain(g: Ground, t: GroundTraits, baked = true, part: Par
       else if (mat === Mat.Paved && !t.city(x + 0.5, z + 0.5)) side = shade(ISLE_STONE, 0.9 + 0.12 * hash2(Math.floor(wx / 2), Math.floor(wz / 2), 37));
       else if (wetSide || mat === Mat.Paved) side = shade(QUAY, 0.9 + 0.2 * hash2(wx, wz, 37));
       else side = t.slope ? shade(t.slope, 0.9 + 0.2 * hash2(wx, wz, 37)) : EARTH;
+      // from afar a meadow step takes the colour of the meadow above it (GroundTraits.sideTop)
+      const meadowSide = towardsTop > 0 && !wetSide && (mat === Mat.Grass || mat === Mat.Soil);
+      if (meadowSide) {
+        // (no brighter than a corner's colour can be told: worldprobe/small.ts BRIGHTEST)
+        const r = r00[0] + r10[0] + r11[0] + r01[0], gr = r00[1] + r10[1] + r11[1] + r01[1], bl = r00[2] + r10[2] + r11[2] + r01[2];
+        const lift = Math.min(LIFT[k], (4 * SIDE_MOST) / Math.max(r, gr, bl, 1e-6)) / 4;
+        side = mix(side, [r * lift, gr * lift, bl * lift], towardsTop);
+      }
       if (tint && !wetSide) side = mix(side, shade(tint[0], 0.8), tint[1]);
       // the two top corners of this side, in the order that keeps the face turned outwards
       const ax = dx === 1 ? x + 1 : dx === -1 ? x : dz === 1 ? x : x + 1, az = dz === 1 ? z + 1 : dz === -1 ? z : dx === 1 ? z : z + 1;
       const bx = dx === 1 ? x + 1 : dx === -1 ? x : dz === 1 ? x + 1 : x, bz = dz === 1 ? z + 1 : dz === -1 ? z : dx === 1 ? z + 1 : z;
-      const la = lightAt(c, ax + dx * 0.3, az + dz * 0.3, h - 0.2), lb = lightAt(c, bx + dx * 0.3, bz + dz * 0.3, h - 0.2);
-      const foot = 0.7;
+      let la = lightAt(c, ax + dx * 0.3, az + dz * 0.3, h - 0.2), lb = lightAt(c, bx + dx * 0.3, bz + dz * 0.3, h - 0.2);
+      // (and where it takes the meadow's colour, the sky's light of the meadow too: in the corner under a step the sky's share was what drew the line)
+      if (meadowSide) { la += (1 - la) * towardsTop; lb += (1 - lb) * towardsTop; }
+      const foot = meadowSide ? 0.7 + 0.3 * towardsTop : 0.7;
       if (mat === Mat.Rock) {
         // cliffs: flat faces without a gradient, pale for the upper two or four blocks of a pale pillar, grey below
         const [sx, sz] = rockPillar(wx, wz), split = pale ? Math.max(nh, h - 2 - 2 * Math.floor(hash2(sx, sz, 38) * 2)) : h, la2 = 0.5 + 0.5 * la, lb2 = 0.5 + 0.5 * lb;
@@ -300,8 +364,12 @@ export function buildTerrain(g: Ground, t: GroundTraits, baked = true, part: Par
   return b;
 }
 
-/** the colour of open water; the picture uses it as its backdrop so that mirrored sky leaves the water as it is */
-export const OPEN_WATER = WATER_DEEP;
+/**
+ * the colour of open water as the picture shows it (the blue of the sea's shelf in sea.ts, as lit); the picture uses
+ * it as its backdrop so that mirrored sky leaves the water as it is, and beyond the farthest pieces the backdrop does
+ * not stand out against the sea
+ */
+export const OPEN_WATER = rgb(0x006c96);
 
 /** The water as level sheets. `raised` picks the water above sea level (lakes, rivers) instead of the sea. */
 export function buildWater(g: Ground, raised = false, part: Part = whole()): Batch {

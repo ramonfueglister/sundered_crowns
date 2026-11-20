@@ -11,6 +11,10 @@ NEW = 1 << 20
 SPLITS = {'fit': range(1000, 1226, 5), 'select': range(1226, 1266, 5), 'test': range(1291, 1476, 5)}
 # the last year whose map a split may look at: no fit run sees the selection years, no selection run the test years
 END = {'fit': 1250, 'select': 1290, 'test': 1500}
+# round 2 (plan section "Runde 2", 20 Nov 2026): 1291-1500 was seen in round 1, so it becomes the selection; the test
+# moves to 1501-1848, which no model of the study has been scored on
+SPLITS.update({'fit2': range(1000, 1266, 5), 'select2': range(1291, 1476, 5), 'test2': range(1501, 1824, 5)})
+END.update({'fit2': 1290, 'select2': 1500, 'test2': 1848})
 
 
 def score(world, model, split, horizon, runs=20, level='top', seed=1, europe_only=False):

@@ -1,6 +1,7 @@
 // Builds pieces of the world off the page's own thread: one message asks for a piece, the answer carries its meshes
 // as flat lists that are handed over, not copied. A piece of a coarse step whose table was built ahead is drawn from
 // that (table.ts), which takes a third of the time and none of the map's data.
+import * as THREE from 'three/webgpu';
 import { Batch } from '../lookprobe/batch';
 import type { Shape } from '../lookprobe/shape';
 import { buildOpenSea } from '../lookprobe/terrain';
@@ -18,6 +19,9 @@ import { unbrotli } from './brotli';
 import { stamped } from './stamp';
 import { type Table, type TablesIndex, drawTable, keepTables, keyOfTable, tabled, unpackTable, whereTable } from './table';
 import type { Piece, WorldScene } from './world';
+
+/** a matrix that moves nothing */
+const AS_IT_IS = new THREE.Matrix4();
 
 export interface PieceJob { id: number; piece: Piece; region: string; /** step of the map: blocks 2^step cells wide */ step: number; base: string; bakedSky: boolean; /** the piece is kept on disk under this name, in the folder of this build (store.ts); `kept`: it is there, or may be (the store has not yet said what it holds), and is read if so, not built */ keep?: { build: string; name: string; kept: boolean }; /** the world's start year, whose towns are built, whose forest stands and whose people live on the land (default 1356) */ year?: number; /** false: a far step as far.ts lays it out, not as the mean of the finer step */ mean?: boolean | 'compare'; /** for a piece of the first far step: the summaries of the four finest pieces under it that the page holds (mean.ts), in rows */ under?: (Float32Array | undefined)[]; /** side of the ground the piece is built on, where it is not the usual one (layout.ts: GRID); the piece's ox, oz and part are given on that ground */ grid?: number; /** the piece's lists as small numbers (small.ts), not as floats */ small?: boolean; /** and of those the rectangles on the grid of blocks as faces (lookprobe/faces.ts) */ faces?: boolean; /** false: the rectangles on no grid of what stands on the piece stay triangles (faces.ts `Free`) */ free?: boolean; /** false: the piece is built even where its table was built ahead (table.ts) */ tables?: boolean; /** the piece's land as faces that glide to the shape of the coarser piece over it, where that has a table (glide.ts) */ glide?: boolean }
 /** Asks a worker to load the map's data of the finest step before its first piece of that step (build.ts `warmPieces`); no answer comes. */
@@ -137,8 +141,8 @@ async function tableOf(job: PieceJob): Promise<{ scene: WorldScene | null; table
   if (!table || table.ox !== job.piece.ox || table.oz !== job.piece.oz) return null;
   // (what stands on the piece was drawn with the sky's share baked in, as the tables are built: without it the piece is built)
   if (table.things && !job.bakedSky) return null;
-  const drawn = drawTable(table, job.bakedSky), things = table.things ? Batch.of(table.things.pos, table.things.nor, table.things.col) : new Batch();
-  return { table, scene: { ...drawn, things, cells: [], counts: { triangles: drawn.ground.triangles + (drawn.carried?.triangles ?? 0) + drawn.water.triangles + drawn.raised.triangles + things.triangles } } };
+  const drawn = drawTable(table, job.bakedSky, job.step), things = table.things ? Batch.of(table.things.pos, table.things.nor, table.things.col) : new Batch();
+  return { table, scene: { ...drawn, things, cells: [], counts: { triangles: drawn.ground.triangles + (drawn.carried?.triangles ?? 0) + drawn.water.triangles + drawn.raised.triangles + things.triangles + (drawn.standing?.triangles ?? 0) } } };
 }
 /** The table of the piece of the next coarser step over a job's piece, where one was built ahead. */
 async function tableOver(job: PieceJob): Promise<Table | null> {
@@ -207,6 +211,8 @@ async function build(job: PieceJob) {
     if (!ahead && glides) keepTables(true);
     const built = ahead ? ahead.scene : await buildPiece(job, step, piece, job.mean === 'compare' ? null : mean), own = ahead ? ahead.table : glides ? tabled() : null;
     keepTables(false);
+    // the trees and houses drawn from numbers stand among the other things, after them (the glide finds the houses there)
+    if (built?.standing) { built.things.append(built.standing, AS_IT_IS); built.standing = undefined; }
     if (built && mean && job.mean === 'compare') compare(built.counts, mean, piece.part, built.ground, built.carried);
     // how long the piece took to build, and of that the finer step under it (a tool reads the sums)
     if (built) { built.counts[`ms step ${step}`] = Math.round(performance.now() - began); built.counts[`pieces step ${step}`] = 1; if (mean) built.counts['ms mean'] = Math.round(meant - began); if (ahead) built.counts[`pieces from tables step ${step}`] = 1; }
@@ -221,7 +227,7 @@ async function build(job: PieceJob) {
     // the piece glides to the shape of the coarser piece over it, where that has a table
     if (built && glides && own && !built.cells.length && !built.figures) {
       const before = performance.now(), over = await tableOver(job);
-      if (over) { built.counts[`pieces gliding step ${step}`] = glide(scene, own, over, job.bakedSky) ? 1 : 0; built.counts['ms glide'] = Math.round(performance.now() - before); }
+      if (over) { built.counts[`pieces gliding step ${step}`] = glide(scene, own, over, job.bakedSky, step) ? 1 : 0; built.counts['ms glide'] = Math.round(performance.now() - before); }
     }
     const lists = [scene.ground, scene.carried ?? nothing, scene.things, scene.water, scene.raised ?? nothing, ...scene.cells.map((c) => c.far)].flatMap((s) => [s.pos, s.nor, s.col, ...(s.sink ? [s.sink] : []), ...(s.faces ? [s.faces.geo, s.faces.col, s.faces.nor, ...(s.faces.aim && s.faces.aimCol ? [s.faces.aim, s.faces.aimCol] : [])] : []), ...(s.free ? [s.free.geo, s.free.col, s.free.nor] : [])]).concat(scene.figures ? [scene.figures.a, scene.figures.b, scene.figures.c, scene.figures.d, scene.figures.e] : []).map((a) => (a as Float32Array).buffer).filter((buf) => buf.byteLength > 0);
     // (summed before the lists are handed over)

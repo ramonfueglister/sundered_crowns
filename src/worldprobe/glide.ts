@@ -22,7 +22,8 @@
 //  - the beds of such water, which are not drawn: the sides of the land that stand in the water follow them, so
 //    they reach under the water at whatever level it ends.
 //  - what stands on the ground as a thing of its own (the landmarks of the finest far step), which the coarser step
-//    does not have: it goes down into its column.
+//    does not have: it goes down into its column. The houses drawn as houses (houses.ts) that the coarser step draws
+//    too end where it has them, corner by corner; the others go down into their columns.
 //  - what the columns carry as faces inside a column (the crowns of the woods, lookprobe/terrain.ts `woodsOf`): the
 //    piece's own go down into their column, and those of the coarser piece, which the piece carries too, come up
 //    from under it to where that piece has them.
@@ -38,7 +39,8 @@ import type { Shape } from '../lookprobe/shape';
 import { buildWater } from '../lookprobe/terrain';
 import { ballOf } from './ball';
 import { BRIGHTEST, faced, small } from './small';
-import { type Table, drawBanks, drawLand, drawnHeights } from './table';
+import { HOUSE_NUMBERS } from './houses';
+import { type Table, drawBanks, drawLand, drawnHeights, housesOf } from './table';
 import { reliefOf } from './zoom';
 
 /**
@@ -523,7 +525,9 @@ function sinkingWater(c: Columns, sea: Shape, raised: Shape) {
 }
 /**
  * What stands on the ground as a thing of its own goes with the top of its column and loses its height on the way:
- * the coarser step has no such things.
+ * the coarser step has no such things. A house drawn as a house that the coarser step draws too ends where that step
+ * has it, corner by corner: houses.ts draws the same house with the same corners at every step, the coarser ones
+ * half as wide in their own blocks, and the worker adds the houses to the things last.
  */
 function thingsDown(c: Columns, things: Shape) {
   const n = c.n, aim = c.aim, way = c.way, pos = things.pos, sink = new Float32Array(pos.length / 3);
@@ -531,7 +535,27 @@ function thingsDown(c: Columns, things: Shape) {
     const x = Math.max(0, Math.min(n - 1, Math.floor(pos[v * 3]))), z = Math.max(0, Math.min(n - 1, Math.floor(pos[v * 3 + 2])));
     sink[v] = way[z * n + x] ? aim[z * n + x] / S - UNDER_LAND : pos[v * 3 + 1];
   }
+  housesOver(c, pos, sink);
   things.sink = sink; wider(things, reach(pos, sink));
+}
+/** The heights the corners of the piece's houses end at where the coarser piece has the same houses (see `thingsDown`). */
+function housesOver(c: Columns, pos: ArrayLike<number>, sink: Float32Array) {
+  const own = c.fine.houses, theirs = c.parent.houses;
+  if (!own || !theirs) return;
+  const mine = housesOf(c.fine)!, there = housesOf(c.parent)!, from = sink.length - mine.batch.pos.length / 3, drawn = mine.batch.pos;
+  // (the houses are the last of the things, drawn as the table draws them, or they are not glided)
+  if (from < 0 || !mine.ends.length || Math.abs(pos[from * 3] - drawn[0]) > 1e-3 || Math.abs(pos[from * 3 + 1] - drawn[1]) > 1e-3 || Math.abs(pos[from * 3 + 2] - drawn[2]) > 1e-3) return;
+  // a house of the coarser piece by its corner in this piece's step, counted from the world's first block
+  const at = new Map<string, number>();
+  for (let k = 0, j = 0; k < theirs.length; k += HOUSE_NUMBERS, j++) at.set(`${2 * (theirs[k] + c.parent.ox)},${2 * (theirs[k + 1] + c.parent.oz)}`, j);
+  const theirPos = there.batch.pos;
+  for (let k = 0, j = 0; k < own.length; k += HOUSE_NUMBERS, j++) {
+    const q = at.get(`${own[k] + c.fine.ox},${own[k + 1] + c.fine.oz}`);
+    if (q === undefined) continue;
+    const v0 = j ? mine.ends[j - 1] : 0, v1 = mine.ends[j], w0 = q ? there.ends[q - 1] : 0, w1 = there.ends[q];
+    if (v1 - v0 !== w1 - w0) continue;
+    for (let v = 0; v < v1 - v0; v++) sink[from + v0 + v] = tall(theirPos[(w0 + v) * 3 + 1]);
+  }
 }
 
 /**
@@ -540,14 +564,14 @@ function thingsDown(c: Columns, things: Shape) {
  * `parent` that of the coarser piece. The faces of the land get `aim` and `aimCol`, and the fourth byte of their
  * direction says whether the column they end up on is ground to the map's paper; the ground gets the tops and sides
  * that are to come and the coarser piece's banks, the water what is to stand where land sinks; the lists that move
- * get `sink`. Returns how many columns glide.
+ * get `sink`. `step`: the piece's step of the map. Returns how many columns glide.
  */
-export function glide(shapes: { ground: Shape; carried?: Shape; things?: Shape; water?: Shape; raised?: Shape }, fine: Table, parent: Table, bakedSky: boolean): number {
+export function glide(shapes: { ground: Shape; carried?: Shape; things?: Shape; water?: Shape; raised?: Shape }, fine: Table, parent: Table, bakedSky: boolean, step: number): number {
   const pn = parent.side, own = fine.part;
   // the coarser piece's own columns over this piece, drawn for their colours
   const qx = Math.floor((fine.ox + own.x0) / 2) - parent.ox, qz = Math.floor((fine.oz + own.z0) / 2) - parent.oz, wide = (own.x1 - own.x0) / 2, deep = (own.z1 - own.z0) / 2;
   if (qx < 1 || qz < 1 || qx + wide >= pn || qz + deep >= pn) return 0;
-  const quarter = { x0: qx, z0: qz, x1: qx + wide, z1: qz + deep }, drawn = drawLand(parent, bakedSky, quarter);
+  const quarter = { x0: qx, z0: qz, x1: qx + wide, z1: qz + deep }, drawn = drawLand(parent, bakedSky, quarter, step + 1);
   const above: Above = { side: pn, tops: new Float32Array(pn * pn * 12), has: new Uint8Array(pn * pn), ink: new Uint8Array(pn * pn), sides: new Map() };
   read(above, faced(drawn.ground).faces, 1);
   const theirCarried = drawn.carried ? faced(drawn.carried).faces : undefined;
