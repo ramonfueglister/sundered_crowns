@@ -2,7 +2,7 @@
 // reference class image (traditions/measures/referenzklasse_nahsicht.json). The row of houses runs along z with the
 // fronts towards +x, the sunlit side of the stage, so the probe is compared with the reference mirrored left to right.
 import * as THREE from 'three/webgpu';
-import { Batch, type RGB, type Rnd, hash2, rgb, seeded, shade } from './batch';
+import { Batch, type RGB, type Rnd, rgb, seeded, shade } from './batch';
 import { boat } from './blocks';
 import {
   type Column,
@@ -126,8 +126,7 @@ async function build(): Promise<StageScene> {
     things = new Batch(),
     water = new Batch(),
     c = N / 2,
-    r = seeded(7),
-    mat = new THREE.Matrix4();
+    r = seeded(7);
   const xf = c + 0.8,
     xq = Math.round(xf + QUAY),
     z0 = c - 22,
