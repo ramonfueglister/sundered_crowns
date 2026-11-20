@@ -13,8 +13,13 @@ const OUT = resolve(ROOT, 'build/economy/sc_economy.wasm');
 
 /** Runs cargo inside economy/, so that its rust-toolchain.toml picks the compiler. Quiet: only a failure is shown. */
 export function cargo(args: string[], quiet = false): void {
-  try { execFileSync('cargo', args, { cwd: ECONOMY_DIR, stdio: quiet ? 'pipe' : 'inherit' }); }
-  catch (e: any) { throw new Error(`cargo ${args.join(' ')} failed${e?.stderr ? `:\n${e.stderr}` : ''}`); }
+  try {
+    execFileSync('cargo', args, { cwd: ECONOMY_DIR, stdio: quiet ? 'pipe' : 'inherit' });
+  } catch (e) {
+    // the error of execFileSync carries what the child wrote to stderr (node:child_process)
+    const stderr = (e as { stderr?: Buffer | string } | null)?.stderr;
+    throw new Error(`cargo ${args.join(' ')} failed${stderr ? `:\n${stderr}` : ''}`);
+  }
 }
 
 export function buildEconomy(quiet = false): string {

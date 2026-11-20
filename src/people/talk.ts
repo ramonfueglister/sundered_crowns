@@ -5,7 +5,7 @@ import type { TalkLine } from '../net/protocol';
 import { talk } from '../net/client';
 import './talk.css';
 
-export interface TalkBox {
+interface TalkBox {
   /** opens the conversation with the person `uid`, titled `name`; a conversation with another person ends */
   open(uid: number, name: string): void;
   close(): void;

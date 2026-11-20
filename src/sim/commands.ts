@@ -4,21 +4,29 @@
 import type { WorldState } from './state';
 import type { World } from './world';
 
-export interface Command { t: string; realm: number; [k: string]: unknown }
-export interface CmdResult { ok: boolean; err?: string }
+export interface Command {
+  t: string;
+  realm: number;
+  [k: string]: unknown;
+}
+export interface CmdResult {
+  ok: boolean;
+  err?: string;
+}
 
-export interface CommandDef<C extends Command = Command> {
+interface CommandDef<C extends Command = Command> {
   check(s: WorldState, w: World, c: C): string | null;
   apply(s: WorldState, w: World, c: C): void;
 }
 
 /** The commands of the game by kind (filled as systems are built). */
-export const COMMANDS: Record<string, CommandDef<any>> = {};
+const COMMANDS: Record<string, CommandDef> = {};
 
 export function applyCommand(s: WorldState, w: World, c: Command): CmdResult {
   const def = COMMANDS[c?.t];
   if (!def) return { ok: false, err: 'unknown command' };
-  if (!Number.isInteger(c.realm) || c.realm < 0 || c.realm >= s.realm.size || !s.realm.alive[c.realm]) return { ok: false, err: 'no such realm' };
+  if (!Number.isInteger(c.realm) || c.realm < 0 || c.realm >= s.realm.size || !s.realm.alive[c.realm])
+    return { ok: false, err: 'no such realm' };
   const why = def.check(s, w, c);
   if (why) return { ok: false, err: why };
   def.apply(s, w, c);

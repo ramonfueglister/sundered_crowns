@@ -16,7 +16,10 @@ export const AREA_LAW = { a: AREA.law.a_ha as number, beta: AREA.law.beta as num
 
 /** The towns the data measured, by their site: the inhabitants and the settled hectares the data gives. */
 const MEASURED: ReadonlyMap<number, { people: number; hectares: number }> = new Map(
-  (AREA.towns as { site: number; people: number; area_ha: number }[]).map((t) => [t.site, { people: t.people, hectares: t.area_ha }]),
+  (AREA.towns as { site: number; people: number; area_ha: number }[]).map((t) => [
+    t.site,
+    { people: t.people, hectares: t.area_ha },
+  ]),
 );
 export const measuredTown = (site: number) => MEASURED.get(site);
 
@@ -47,9 +50,15 @@ export function settledHectares(people: number, site = -1): number {
 
 /** The ground of a town of the world in square metres, for `persons` persons of the world who live in it: the
  *  settled area of the real town they were derived from, divided by SCALE (a hectare is 10,000 m²). */
-export const townGround = (persons: number, site = -1): number => (settledHectares(persons * SCALE, site) * 10000) / SCALE;
+export const townGround = (persons: number, site = -1): number =>
+  (settledHectares(persons * SCALE, site) * 10000) / SCALE;
 
-export interface ParcelSize { /** metres at the street */ w: number; /** metres deep */ d: number }
+export interface ParcelSize {
+  /** metres at the street */
+  w: number;
+  /** metres deep */
+  d: number;
+}
 
 /** The parcel of each of `families` families on `ground` square metres of town: they share the parcels' part of the
  *  ground equally (OWN RULE: no source read on how unequal parcels were within a town). */
@@ -61,10 +70,14 @@ export function parcelSize(ground: number, families: number): ParcelSize {
 /** The sides a parcel can front: the street lies to its north, east, south or west. */
 export const FRONT = { north: 0, east: 1, south: 2, west: 3 } as const;
 
-export interface Parcel { /** the middle of the parcel: metres east and south of the town's centre */ x: number; z: number; front: number }
+export interface Parcel {
+  /** the middle of the parcel: metres east and south of the town's centre */
+  x: number;
+  z: number;
+  front: number;
+}
 
 /** The ground a parcel covers, east-west (`w`) and north-south (`d`): its width runs along its street, so a parcel
  *  that fronts a street to its east or west lies the other way round. */
 export const footprint = (p: { front: number }, size: ParcelSize): ParcelSize =>
   p.front === FRONT.north || p.front === FRONT.south ? size : { w: size.d, d: size.w };
-

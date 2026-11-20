@@ -14,7 +14,12 @@
 import type { WorldState } from '../state';
 import { ALIVE } from '../state';
 
-interface List { ids: Int32Array; n: number; /** the rows of the table looked at so far */ seen: number }
+interface List {
+  ids: Int32Array;
+  n: number;
+  /** the rows of the table looked at so far */
+  seen: number;
+}
 /** By table: a world founds its persons anew in a new table (src/sim/systems/people.ts). */
 const lists = new WeakMap<object, List>();
 
@@ -22,13 +27,27 @@ const lists = new WeakMap<object, List>();
  *  src/sim/systems/work.ts), in the order of their ids. The array is the list's own and changes when the list is
  *  next read: go over it, do not keep it. */
 export function presentPersons(s: WorldState): Int32Array {
-  const t = s.person, alive = t.alive, died = t.cols.died, role = t.cols.role;
+  const t = s.person,
+    alive = t.alive,
+    died = t.cols.died,
+    role = t.cols.role;
   let l = lists.get(t);
-  if (!l || l.seen > t.size) { l = { ids: new Int32Array(Math.max(1024, t.size)), n: 0, seen: 0 }; lists.set(t, l); }
-  let ids = l.ids, k = 0;
-  for (let i = 0; i < l.n; i++) { const id = ids[i]; if (alive[id] && (died[id] === ALIVE || role[id] !== 0)) ids[k++] = id; }
+  if (!l || l.seen > t.size) {
+    l = { ids: new Int32Array(Math.max(1024, t.size)), n: 0, seen: 0 };
+    lists.set(t, l);
+  }
+  let ids = l.ids,
+    k = 0;
+  for (let i = 0; i < l.n; i++) {
+    const id = ids[i];
+    if (alive[id] && (died[id] === ALIVE || role[id] !== 0)) ids[k++] = id;
+  }
   if (l.seen < t.size) {
-    if (k + t.size - l.seen > ids.length) { const more = new Int32Array(Math.max(2 * ids.length, k + t.size - l.seen)); more.set(ids.subarray(0, k)); ids = l.ids = more; }
+    if (k + t.size - l.seen > ids.length) {
+      const more = new Int32Array(Math.max(2 * ids.length, k + t.size - l.seen));
+      more.set(ids.subarray(0, k));
+      ids = l.ids = more;
+    }
     for (let id = l.seen; id < t.size; id++) if (alive[id] && (died[id] === ALIVE || role[id] !== 0)) ids[k++] = id;
     l.seen = t.size;
   }

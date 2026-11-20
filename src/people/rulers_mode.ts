@@ -14,16 +14,33 @@ const REFRESH = 30_000;
 const css = (c: number) => `#${c.toString(16).padStart(6, '0')}`;
 
 /** The dots of the rulers: at the degrees of the place they live in, with their name and crowns for the pointer. */
-export function rulerMarks(list: readonly RulerOnMap[], loc: { lon: number[]; lat: number[] }, open: (uid: number) => void): WorldMark[] {
+function rulerMarks(
+  list: readonly RulerOnMap[],
+  loc: { lon: number[]; lat: number[] },
+  open: (uid: number) => void,
+): WorldMark[] {
   return list.flatMap((r) =>
     r.place >= 0 && r.place < loc.lon.length
-      ? [{ lon: loc.lon[r.place], lat: loc.lat[r.place], color: css(r.crowns[0].color), title: `${r.name} (${r.crowns.map((c) => c.name).join(', ')})`, open: () => open(r.uid) }]
+      ? [
+          {
+            lon: loc.lon[r.place],
+            lat: loc.lat[r.place],
+            color: css(r.crowns[0].color),
+            title: `${r.name} (${r.crowns.map((c) => c.name).join(', ')})`,
+            open: () => open(r.uid),
+          },
+        ]
       : [],
   );
 }
 
 /** Shows the rulers on the view until the returned function is called; without a world server nothing is shown. */
-export function showRulers(view: Pick<WorldView, 'setMarks' | 'redraw'>, loc: Promise<{ lon: number[]; lat: number[] }>, open: (uid: number) => void, worldUrl: string | undefined): () => void {
+export function showRulers(
+  view: Pick<WorldView, 'setMarks' | 'redraw'>,
+  loc: Promise<{ lon: number[]; lat: number[] }>,
+  open: (uid: number) => void,
+  worldUrl: string | undefined,
+): () => void {
   let stopped = false;
   const ask = async () => {
     if (!worldUrl) return;
