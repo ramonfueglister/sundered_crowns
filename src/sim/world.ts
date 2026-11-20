@@ -8,6 +8,7 @@ import { foodNeedCost, type CalibrationTable } from './economy/calibration';
 import type { Chronicle } from './content/chronicle';
 import type { Borders } from './content/borders';
 import type { Ground } from './content/ground';
+import type { Tilth } from './content/tilth';
 import type { WayNet } from './roads';
 
 export interface GeoJson {
@@ -98,6 +99,10 @@ export class World {
    *  than the building ground and nothing said of steps and buildings), null without one: then the land register
    *  lays its hamlets by the building ground, as far as that reaches */
   dry: Ground | null = null;
+  /** the ground round the towns of the start year that the fields can lie on (public/data/tilth_<year>.json,
+   *  src/sim/content/tilth.ts), null without one: then the land register lays the fields round the hamlets without
+   *  regard to the ground */
+  tilth: Tilth | null = null;
   /** the ways between the places of the map in the start year (public/data/roads_<year>.json, the latest year at or
    *  before it; src/sim/roads.ts), null without any: then goods go over land on the straight line between places.
    *  Set by the loader (tools/sim/load.ts) */

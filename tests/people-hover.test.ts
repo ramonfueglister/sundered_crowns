@@ -5,7 +5,7 @@ import type { PersonDetail } from '../src/net/people';
 
 const base: PersonDetail = {
   id: 7, alive: true, day: 0, female: true, born: -12000, age: 32.9, mother: -1, father: -1, family: 3, place: 1, culture: 'english',
-  iq: 104, big5: [63, 50, 38, 50, 50], genes: [], history: null, spouse: 8, children: [9, 10], town: 'London', dwelling: 'parcel',
+  iq: 104, big5: [63, 50, 38, 50, 50], genes: [], history: null, spouse: 8, children: [9, 10], town: 'London', dwelling: 'parcel', farm: null,
   economy: { role: 'worker', firm: 2, sector: 1, firmOwner: 5, employees: 4, wage: 0.01, income: 0.01, spent: 0.01, savings: 1 },
   household: { persons: 4, working: 2, baskets: 3, income: 0.02, spent: 0.02, savings: 2, consumed: 0.005, need: 0, fed: 0 },
 };

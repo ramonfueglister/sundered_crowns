@@ -5,7 +5,9 @@ import { describe, expect, it } from 'vitest';
 import { Batch } from '../../src/lookprobe/batch';
 import { LAND_Y, Mat, N, SEA_Y, type Ground } from '../../src/lookprobe/layout';
 import { styleOf, townWall } from '../../src/buildings';
-import { PEOPLE_PER_PERSON, type Site, blockOf, settle } from '../../src/worldprobe/settle';
+import { PEOPLE_PER_PERSON, SPRING, type Site, blockOf, settle } from '../../src/worldprobe/settle';
+import { fieldsByLot, lotKey, type TownParcels } from '../../src/worldprobe/lots';
+import { CROP, GEWANN, cropOf, lotCorner } from '../../src/sim/settlement/fields';
 import { HAMLET_FAMILIES, hamletAt, hamletLandsOf, hamletsOf } from '../../src/worldprobe/hamlets';
 
 const meadow = (): Ground => ({ h: new Int16Array(N * N).fill(LAND_Y), mat: new Uint8Array(N * N).fill(Mat.Grass), wet: new Uint8Array(N * N), shore: new Uint8Array(N * N), occ: new Float32Array(N * N).fill(LAND_Y), surf: new Float32Array(N * N).fill(SEA_Y), ox: 0, oz: 0 });
@@ -146,5 +148,37 @@ describe('the fields', () => {
     expect(blockOf(32, 15)).toEqual([0, 0]);
     expect(blockOf(33, 16)).toEqual([1, 1]);
     expect(blockOf(-1, -1)).toEqual([-1, -1]);
+  });
+});
+
+describe('the fields of the land register (settlement feature 4)', () => {
+  it('are found by the field lot each furlong lies on, with the crop of its course this year, its depth and its strips', () => {
+    // a town whose centre is the world block (0, 0), one hamlet of four farmsteads, two furlongs: one of the open field, one shortened and held whole
+    const [x0, z0] = lotCorner(3, 2), [x1, z1] = lotCorner(-4, 5);
+    const parcels: TownParcels = Object.assign(new Map([[7, { w: 0, d: 0, x: [], z: [], front: [], hamlets: [{ east: 0, south: 0, w: 10, d: 17.5, x: [0, 10, 0, 10], z: [-11, -11, 11, 11], front: [2, 2, 0, 0] }], courses: 3, fieldW: 20, fields: { hamlet: [0, 0], x: [x0 * 2 + 10, x1 * 2 + 10], z: [z0 * 2 + 7, z1 * 2 + 3], d: [14, 6], zelge: [0, 2], farm: [-1, 1] } }]]), { year: 1291 });
+    const by = fieldsByLot(parcels, 1291, () => [0, 0]);
+    expect(by.size).toBe(2);
+    expect(by.get(lotKey(3, 2))).toEqual({ crop: cropOf(0, 3, 1291), rows: 7, strips: 4 });
+    expect(by.get(lotKey(-4, 5))).toEqual({ crop: cropOf(2, 3, 1291), rows: 3, strips: 1 });
+    expect(fieldsByLot(parcels, 1291, () => null).size).toBe(0);
+  });
+  it('are the only fields round the towns: a furlong in strips, its crop, as deep as the register has it, nothing else ploughed', () => {
+    const counts: Record<string, number> = {}, [cx, cz] = lotCorner(10, 10);
+    const furlong = { crop: CROP.spring, rows: 4, strips: 5 } as const;
+    const { field } = settle(meadow(), new Batch(), [], [], () => ({ region: '', style: styleOf('') }), () => 1, () => 0, counts, undefined, undefined, () => 3, undefined, undefined, (lx, lz) => (lx === 10 && lz === 10 ? furlong : undefined));
+    let tilled = 0;
+    for (let i = 0; i < N * N; i++) if (field[i]) { tilled++; expect(field[i]).toBe(SPRING); }
+    expect(tilled).toBe(GEWANN.w * furlong.rows);
+    for (let z = cz; z < cz + furlong.rows; z++) for (let x = cx; x < cx + GEWANN.w; x++) expect(field[z * N + x]).toBe(SPRING);
+    expect(field[(cz + furlong.rows) * N + cx]).toBe(0);
+    expect(counts.field).toBe(1);
+    expect(counts.spring).toBe(1);
+  });
+  it('are surveyed for room before they are laid: dry, free and level lots', () => {
+    const g = meadow(), [cx, cz] = lotCorner(10, 10);
+    for (let x = cx; x < cx + 3; x++) g.wet[(cz + 2) * N + x] = 1;
+    const asked: boolean[] = [];
+    settle(g, new Batch(), [], [], () => ({ region: '', style: styleOf('') }), () => 0, () => 0, {}, undefined, undefined, undefined, undefined, { house: () => {}, great: () => {}, town: () => {}, room: (fits) => { asked.push(fits(10, 10), fits(12, 10)); } });
+    expect(asked).toEqual([false, true]);
   });
 });

@@ -94,9 +94,9 @@ export function acacia(b: Batch, x: number, y: number, z: number, r: Rnd) {
  * A field. Wheat stands as single sheaves in rows; vines come as single plants on a grid (a green body under a head
  * with a yellow top) or, every other field, as green hedges along x with yellow tips. The crops of the reference glow more than
  * the light allows: their sides turned from the sun are as bright as the lit ones. The `GLOW` colours (above 1) give
- * those sides that brightness.
+ * those sides that brightness. `tone` lightens or darkens the tops of the corn: a strip sown by a farmstead of its own.
  */
-export function crops(b: Batch, g: Ground, at: P2, w: number, d: number, crop: Crop, r: Rnd) {
+export function crops(b: Batch, g: Ground, at: P2, w: number, d: number, crop: Crop, r: Rnd, tone = 1) {
   const x0 = Math.round(at[0] - w / 2), z0 = Math.round(at[1] - d / 2);
   if (crop !== 'vine') {
     const ripe = crop === 'wheat', tops = ripe ? WHEAT : OATS, side = ripe ? WHEAT_SIDE : OATS_SIDE;
@@ -104,7 +104,7 @@ export function crops(b: Batch, g: Ground, at: P2, w: number, d: number, crop: C
       const x = x0 + row + 0.5, z = z0 + k + 0.5;
       if (isWet(g, x, z)) continue;
       const y = groundY(g, x, z), top = y + (ripe ? 1.35 : 0.8) + 0.5 * hash2(row, k, 51);
-      b.box(x - 0.4, y, z - 0.4, x + 0.4, top, z + 0.4, side, { top: shade(tops[Math.floor(hash2(row, k, 53) * tops.length)], ripe ? 1.2 : 1.05), foot: 0.85, away: ripe ? WHEAT_GLOW : HEDGE_GLOW });
+      b.box(x - 0.4, y, z - 0.4, x + 0.4, top, z + 0.4, side, { top: shade(tops[Math.floor(hash2(row, k, 53) * tops.length)], (ripe ? 1.2 : 1.05) * tone), foot: 0.85, away: ripe ? WHEAT_GLOW : HEDGE_GLOW });
     }
     return;
   }
