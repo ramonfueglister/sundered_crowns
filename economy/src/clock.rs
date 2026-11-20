@@ -422,9 +422,6 @@ pub struct DailyClock {
     /// per firm, the materials that its workers who were away left unused and that it has not yet bought less of
     /// (economy feature 22); empty while nobody has been away
     pub unused: Vec<f64>,
-    /// EXPERIMENT: per firm, the capital that its workers who were away did not wear (A.3: δ/κ per unit made) and
-    /// that it has not yet invested less of; empty while nobody has been away
-    pub unworn: Vec<f64>,
 }
 
 impl DailyClock {
@@ -459,7 +456,6 @@ impl DailyClock {
             absences: Absences::default(),
             lost: Vec::new(),
             unused: Vec::new(),
-            unworn: Vec::new(),
         })
     }
 
@@ -735,14 +731,6 @@ impl Extension for DailyClock {
                 m.ext.unused[i] -= take;
             }
         }
-        // EXPERIMENT: a firm does not replace the capital that its workers who were away did not wear (A.3, A.14)
-        if m.ext.unworn.len() == I {
-            for i in 0..I {
-                let take = min(m.ext.unworn[i], I_d_i[i]);
-                I_d_i[i] -= take;
-                m.ext.unworn[i] -= take;
-            }
-        }
         d.I_d_i = I_d_i;
         d.DM_d_i = DM_d_i;
         d.N_d_i = N_d_i;
@@ -787,10 +775,6 @@ impl Extension for DailyClock {
                             c.unused = vec![0.0; f.len()];
                         }
                         c.unused[i] += l / f.beta_i[i];
-                        if c.unworn.len() != f.len() {
-                            c.unworn = vec![0.0; f.len()];
-                        }
-                        c.unworn[i] += l * f.delta_i[i] / f.kappa_i[i];
                     }
                     lost.push(l);
                 }
