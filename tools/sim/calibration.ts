@@ -11,7 +11,7 @@ import { arableHa, soilOf, ENGLAND_ARABLE, HECTARES_PER_ACRE } from '../../src/s
 import { harvestKcal, kcalPerHeadDay, farmers, LAND_SHARE, ENGLAND_1300 } from '../../src/sim/systems/harvest';
 import type { World, CultivationJson } from '../../src/sim/world';
 
-export interface EnglandAt {
+interface EnglandAt {
   people: number;
   arableHa: number;
   arableAcres: number;
