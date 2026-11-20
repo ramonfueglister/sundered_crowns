@@ -254,6 +254,10 @@
    "bytes": 28836
   },
   {
+   "name": "cloth_fillet.txt.zst",
+   "bytes": 15899
+  },
+  {
    "name": "cloth_hood_down.txt.zst",
    "bytes": 89673
   },
@@ -548,6 +552,8 @@
   "bun01_n.webp",
   "cloth_cote.webp",
   "cloth_cote_n.webp",
+  "cloth_fillet.webp",
+  "cloth_fillet_n.webp",
   "cloth_hood_down.webp",
   "cloth_hood_down_n.webp",
   "cloth_hood_up.webp",

@@ -1029,6 +1029,12 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
         if let Some(sf) = mh_rope(dir, &format!("{name}_rope"), &format!("{under}_rope"), &x.pp, &h.base, &|_| hair) {
             out.push(sf);
         }
+        // (round 128) a fillet on the hair: a stiff band of linen, bound and carried as a plait's strands are
+        if let Some(d) = garb.filter(|d| d.fillet_of(fem, p.age, p.seed)) {
+            if let Some(sf) = mh_rope(dir, d.fillet, "", &x.pp, &h.base, &|_| hex(d.linen)) {
+                out.push(sf);
+            }
+        }
         // real look: a painted cap of fine hairs under the cards, if there is one
         // (grey and white fuzz is see-through: the cap fades towards the skin as
         // the hair greys, else its soft edge lays a pale band over the forehead)

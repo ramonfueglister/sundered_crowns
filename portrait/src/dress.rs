@@ -299,6 +299,14 @@ pub struct DressSet {
     pub hair_looped: &'static str,
     pub hair_looped_from: f32,
     pub looped: [bool; 10],
+    /// (round 128) A fillet: a stiffened band of linen round the head, standing on the hair like a low crown
+    /// (the file's name, `tools/portrait/pipeline/fillet.py`; empty: the table has none), in the table's linen
+    /// colour. Who wears it: of the women who show their plaits (`Veil::None`), the ones of `fillet_from` years
+    /// and more whose seed's fifth digit from the right is set in `fillets`. The band's form is from one
+    /// secondary page (`sources`); the share and the age are by eye: PLACEHOLDER.
+    pub fillet: &'static str,
+    pub fillet_from: f32,
+    pub fillets: [bool; 10],
     /// The hair of children under seven. Apoleia's `crop01`, cropped short, begins far back on a child's large
     /// skull: half the head a bare forehead, which reads as a shaven head.
     /// England: until round 104 the grown's `bob01`, whose fringe ends 2 cm over the eyes. A small child's face is
@@ -852,6 +860,9 @@ const ENGLAND: DressSet = DressSet {
     hair_looped: "loop01",
     hair_looped_from: 15.0,
     looped: [true, false, true, true, false, true, false, true, true, false],
+    fillet: "cloth_fillet",
+    fillet_from: 15.0,
+    fillets: [true, false, false, true, false, false, false, true, false, false],
     hair_small: "bob08",
     coily: Some(Coily { from: 0.86, men: "coil01", women: "coil02", small: "coil03", thin: "coil03", bald: "coil04", image: "hair1356_fleece", under: ["bob01", "bob04"] }),
     boy_skin: 14.0,
@@ -1064,6 +1075,7 @@ const ENGLAND: DressSet = DressSet {
         Source { what: "wool colours: undyed greys and browns, cheap dyes (russet, a dull blue)", source: "Statute concerning diet and apparel 1363 (russet and blanket for the poorest), read from a summary. Hex values PLACEHOLDER." },
         Source { what: "married women's hair covered by a linen veil, a wimple round the throat on older women and widows; girls in braids", source: "Newton 1980. Summary only. Ages 20 and 50 PLACEHOLDER (the simulation has no marriages yet). How the veil is worn (its rim on the forehead and on the cheeks in front of the ears, falling to the shoulders, no hair to be seen; the wimple under it, showing under the chin and round the throat): PLACEHOLDER, by eye against one veiled figure of the reference pictures (round 70). Since round 121 that is one of three ways (`veils`): the veil set back on the head over parted hair that covers the ears, the veil on forehead and cheeks, and a girl's plaits on three women in ten until 30, as unmarried. The shares, the age and the cut of the hair under the veil: PLACEHOLDER, by eye; nothing was read for them." },
         Source { what: "plaits pinned up beside the cheeks, each from below the ear up in front of it to the temple, on six in ten of the women of 15 and more who wear plaits (round 126)", source: "PLACEHOLDER. Nothing was read for the form, the share or the age: by eye; to be checked against picture sources." },
+        Source { what: "a fillet, a stiffened band of linen 5 cm high round the head, on three in ten of the women of 15 and more who show their plaits (round 128)", source: "Rosalie Gilbert, Rosalie's Medieval Woman, Headwear (rosaliegilbert.com/headwear.html, read 20.11.2026; a re-enactor's page, not a primary source): the fillet often a stiffened linen band of about 2 to 2.5 inches, worn to hold the veil, shown high on the head on a Madonna of 1340 to 1360; fillet and barbette going out of use in the middle of the 14th century in favour of plaits beside the face. The share, the age and that it is worn with plaits and without a veil are PLACEHOLDER." },
         Source { what: "children under seven: the men's hair to the jaw with a fringe, girls and boys alike", source: "PLACEHOLDER, nothing read on small children's hair. Chosen because Apoleia's cropped hair begins far back on a child's large skull (a shaven head)." },
         Source { what: "men's hair in three lengths (to above the ear, to the ear's lobe, to the jaw), 3 : 3 : 2, and two men in ten from 15 with their hair parted in the middle, over the ears and cut at the jaw, without a fringe (round 125)", source: "PLACEHOLDER: lengths, shares and the age by eye, so that the men of a town do not all have one head. Nothing was read for the parted cut: to be checked against picture sources as the fringe is (Luttrell Psalter c. 1330, Holkham Bible)." },
         Source { what: "men's hair to the jaw with a fringe", source: "PLACEHOLDER, to be checked against picture sources (Luttrell Psalter c. 1330, Holkham Bible)." },
@@ -1093,7 +1105,7 @@ pub static ENGLAND_1356: DressSet = ENGLAND;
 /// PLACEHOLDER throughout: nothing read on what the common people of any of these lands wore; it is here so that
 /// their faces, skins and hair can be judged under the same light as England's, not as a statement about their
 /// dress. A dress of their own takes its place land by land.
-pub static PLAIN_1356: DressSet = DressSet { key: "plain1356", origins: &[], hood: [Bare; 10], veil_from: 999.0, wimple_from: 999.0, hair_looped: "", ..ENGLAND };
+pub static PLAIN_1356: DressSet = DressSet { key: "plain1356", origins: &[], hood: [Bare; 10], veil_from: 999.0, wimple_from: 999.0, hair_looped: "", fillet: "", ..ENGLAND };
 
 /// Every dress with a table.
 pub static SETS: [(Dress, &DressSet); 2] = [(Dress::England1356, &ENGLAND_1356), (Dress::Plain1356, &PLAIN_1356)];
@@ -1182,6 +1194,11 @@ impl DressSet {
             _ if self.veil_back.is_empty() || self.hair_veiled.is_empty() => Veil::Closed,
             _ => Veil::Back,
         }
+    }
+
+    /// Whether a person wears a fillet (`fillet`): a woman in plaits, old enough, by a digit of her seed.
+    pub fn fillet_of(&self, female: bool, yrs: f32, seed: u32) -> bool {
+        !self.fillet.is_empty() && female && yrs >= self.fillet_from && self.veil_of(female, yrs, seed) == Veil::None && self.fillets[((seed / 10_000) % 10) as usize]
     }
 
     /// Whether a person wears a veil, either way.

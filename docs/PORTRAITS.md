@@ -5238,6 +5238,70 @@ Cargo: 91 of 91. `tests/portrait.test.ts` and its neighbour 42 of 42. `npx tsc -
 `npm run lint` pass. Pictures (project files, `portraits/`): `runde127_vorher_nachher_frauen.png`,
 `runde127_vorher_nachher_maenner.png` (the sample's grown women and men, round 126 above, now below).
 
+**Round 128: a fillet on the hair** (2026-11-20). The women's heads again. The reference's women wear a band
+round the head over their hair (jewelled, on the sheet of two couples); ours had hair or a veil and nothing
+between. What was read this time (one page, a re-enactor's, not a primary source: Rosalie Gilbert, Headwear,
+rosaliegilbert.com/headwear.html): the fillet was often a stiffened band of linen about 2 to 2.5 inches
+wide, worn to hold the veil, also by working women; a Madonna of 1340 to 1360 wears it high on the head,
+"almost like a crown"; and fillet and barbette were going out of use in the middle of the 14th century in
+favour of plaits beside the face. A second page (Tasha Kelly, cottesimple.com, 14th-century braids) shows
+the plaits beside the face from French pictures of 1350 to 1398 and names no band.
+
+What is changed. Three in ten of the women of 15 and more who show their plaits wear a fillet
+(`DressSet::fillet`, `fillets`, `fillet_from`, `fillet_of`): one stiff band of linen, 5 cm high (the low
+end of what was read), round the head at the top of the forehead, on the hair, with the crown's hair
+showing over it. It is a new file (`cloth_fillet`, 16 kB, with a linen image of its own, 0.17 MB) written
+by a new script (`tools/portrait/pipeline/fillet.py`): a wall of 120 rings round the head's upright axis
+that stands 4 mm outside the hair under it at every place, evened round the head so that it is one oval,
+its top 8 mm further in than its foot. The builder reads it as it reads a plait's strand (`mh_rope`): bound
+to the skin, carried by the head and evened along itself, so that it keeps its form on every head. It is
+in the table's linen colour. A minority wears it because the page read says it was going out of use by
+1356. Veiled women do not wear it, nor the world's people in the plain dress.
+
+Tried and not kept.
+
+- The band's foot 3 to 5.5 cm over the head's middle: a ring floating over the crown, then a pillbox on
+  top of the head. I took the head's middle (the pipeline's `hc`) for the eyes' height; the eyes lie
+  some 2 cm under it (the skull's top is 7.4 cm over it on the base's head and 9.6 cm over the eyes on a
+  built one).
+- The foot level on the base's head or higher in front (`FILLET_AT=0.12,0` and `0.02,0`): tipped up in
+  front in the picture, since a portrait's bust leans back by 0.12. The foot is now 2 cm lower in front
+  than behind.
+- Every ring bound to the one place of skin under its middle, instead of every corner to the skin in its
+  own direction: no difference to speak of (the band's top within 2 mm on the bodies measured); the second
+  kept, as it follows a skull's height.
+- 2 mm between hair and band: hair came through at a temple on one of the seven test bodies that wear it
+  (6 corners) and on one of four pictures. With 4 mm none.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line where round 127 left it to the tenth. No
+person of the sample wears the band (below), so this says only that nothing else moved. It was read before
+the band's last file (the wider gap) and the sources' text were written; neither is in a picture of the
+sample.
+
+Honest about it. It is a plain ring of stiff linen and reads as one: no fold, no seam, no pin, no tie
+behind, the same on every head but for its size, and its weave hardly shows at the picture's size. It
+sits on the hair like a paper crown; the reference's bands are narrow, jewelled and lie in the hair. It
+is the 13th century's fillet more than what the reference's women wear, kept because it is what the one
+page read describes for linen; a narrower band would look nearer the reference and has no source here.
+That it is worn with plaits and without a veil, the three in ten and the age of 15 are by eye
+(PLACEHOLDER): the page has it with a veil or a barbette, which ours have not. One secondary page is thin
+ground; no effigy, brass or manuscript was looked at. No woman of the sample draws it (three of the
+sample's women are in plaits, none with the digit), so the sample's sheet does not show the round; the
+pictures draw four of the sample's women under other numbers. Looked at on those four from the front and
+on one from five sides. The band's top stands clear of the hair where the head runs in; from above one
+looks into the gap.
+
+Tests: `portrait/tests/fillet.rs`, new: over 100 000 seeds three in ten of the girls of 15 to 19 and nine
+in a hundred of the women of 20 to 29 wear it, nobody under 15, from 30 or veiled, no man, nobody in the
+plain dress; on forty young women the ones the table names have the band and nobody else (7 of 40), it is
+one closed surface seen from outside, its foot 2.5 to 7 cm over the eyes in front (measured 3.3 to 4.7),
+its top not more than 1 cm over the hair's crown, about as broad as the hair, and no corner of the hair
+stands further out than the band at the band's height, anywhere round the head. Cargo: 93 of 93 (the
+whole suite with the band 2 mm off the hair; the band's tests and the library's again with the last file).
+`tests/portrait.test.ts` and its neighbour 42 of 42. `npm run lint` passes. Pictures (project files,
+`portraits/`): `runde128_vorher_nachher_frauen.png` (four of the sample's women under seeds that draw the
+band, round 127 above, now below), `runde128_von_allen_seiten.png`.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
@@ -5262,7 +5326,8 @@ layered cuts theirs wear, and without hands, since round 125 two men in ten wear
 the jaw beside the bowl cut, straight where theirs is waved, since round 126 six in ten of the grown women in
 plaits wear them pinned up beside the cheeks, without the band theirs wear over them, since round 127 each
 person carries the head turned and tilted by angles of their own (small ones, and nobody lifts or lowers
-the chin), and the face still lacks the
+the chin), since round 128 three in ten of the young women in plaits wear a fillet, a plain broad ring of
+linen where theirs wear a narrow jewelled band, and the face still lacks the
 reference's streak of gloss on the nose's flank; the thrown-back hood closes round the neck since round 35, but
 has no folds across its cloth. Since round 111 the people of every part of the world can be drawn, in a plain
 dress that is no people's own, and without a picture of the reference to hold them against.
