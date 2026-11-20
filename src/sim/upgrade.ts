@@ -318,12 +318,13 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     foundFields(s, w.tilth);
     s.v = 37;
   }
-  if (s.v === 37) { // 37 → 38: the landmarks (settlement feature 5, src/sim/systems/landmarks.ts). The land register
-    // is founded anew, as a new world founds it on the day the world has reached: the church of every town's see and
-    // its buildings known by name first, the streets and parcels of the town round them, its hamlets clear of them,
-    // the convents and the residence at its edge, and the fields of the hamlets. (The hamlets cannot stay where they
-    // were: a landmark may stand on them.) Nothing else changes.
-    foundLots(s, w.ground, w.dry);
+  if (s.v === 37) { // 37 → 38: the landmarks (settlement feature 5, src/sim/systems/landmarks.ts). The church of every
+    // town's see and its buildings known by name are laid on the day the world has reached, and the towns laid out
+    // anew round them as relayTowns lays them: every parcel keeps its family and its size and moves to its street. The
+    // convents and the residence stand at the edge, clear of the parcels, streets and hamlets; the hamlets stay where
+    // they are, and get their fields again. The persons of a world that has run are no longer those of its founding,
+    // so the register cannot be founded anew as a new world founds it.
+    relayTowns(s, w.ground, w.dry);
     foundFields(s, w.tilth);
     s.v = 38;
   }

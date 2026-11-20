@@ -284,8 +284,11 @@ export function foundLots(s: WorldState, ground?: Ground | null, dry?: Ground | 
   cities.forEach((city, k) => {
     const { families, persons, farmers, farmPersons } = towns[k];
     // the church of its see and its buildings known by name first: the streets grow round them
+    // the size of its parcels as the register keeps it (f32), so that a town laid out anew from the register
+    // (relayTowns, the upgrade to the landmarks) gets the same streets and parcels
     const exact = families.length ? parcelSize(townGround(persons, city.site), families.length) : null;
-    const core = coreLandmarks(s.startYear, city.site, city.people, landmarkGround(g, city.site), exact ? drawOf(s.startYear, city.site, families.length, exact) : URBAN);
+    const kept = exact && { w: Math.fround(exact.w), d: Math.fround(exact.d) };
+    const core = coreLandmarks(s.startYear, city.site, city.people, landmarkGround(g, city.site), kept ? drawOf(s.startYear, city.site, families.length, kept) : URBAN);
     writeLandmarks(s, city.place, city.site, core);
     let half = Math.max(0, ...core.map((b) => Math.max(Math.abs(b.x) + b.w / 2, Math.abs(b.z) + b.d / 2))), reach = 0; // how far the parcels and landmarks reach from the centre, and the streets
     const built = new Map<number, Box[]>(), paved = new Map<number, Box[]>(); // the parcels and the streets of the town by the cells of CELL metres they touch
@@ -297,7 +300,7 @@ export function foundLots(s: WorldState, ground?: Ground | null, dry?: Ground | 
     };
     core.forEach(enter); // and its landmarks
     if (families.length) {
-      const size = exact!;
+      const size = kept!;
       const town = layStreets(s, city.site, families.length, size, g, found, tune, core);
       const parcels: Parcel[] = town.parcels;
       const keep = (b: Box, into = built) => {

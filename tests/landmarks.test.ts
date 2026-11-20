@@ -70,6 +70,30 @@ describe('the landmarks of 1291', () => {
 
 const { s, w } = newWorldState(1291, 1291);
 
+type Box = { x: number; z: number; w: number; d: number };
+const hit = (a: Box, b: Box, gap: number) => Math.abs(a.x - b.x) < (a.w + b.w) / 2 + gap && Math.abs(a.z - b.z) < (a.d + b.d) / 2 + gap;
+
+/** how many landmarks of the towns of `t` overlap one another, and how many parcels, streets and farmsteads of
+ *  their town a landmark overlaps */
+function clashesOf(t: WorldState): { landmarks: number; parcels: number; streets: number; farmsteads: number } {
+  const M = t.landmark.cols, L = t.lot.cols, S = t.street.cols, box = (i: number): Box => ({ x: M.x[i], z: M.z[i], w: M.w[i], d: M.d[i] });
+  const bySite = new Map<number, number[]>();
+  for (let i = 0; i < t.landmark.size; i++) if (t.landmark.alive[i] && M.site[i] >= 0) bySite.set(M.site[i], [...(bySite.get(M.site[i]) ?? []), i]);
+  const out = { landmarks: 0, parcels: 0, streets: 0, farmsteads: 0 };
+  for (const [site, mine] of bySite) {
+    for (const a of mine) for (const b of mine) if (a < b && hit(box(a), box(b), 0)) out.landmarks++;
+    for (let i = 0; i < t.lot.size; i++) if (t.lot.alive[i] && L.site[i] === site && (L.kind[i] === LOT_KIND.parcel || L.kind[i] === LOT_KIND.farmstead)) {
+      const f = footprint({ front: L.front[i] }, { w: L.w[i], d: L.d[i] }), p = { x: L.x[i], z: L.z[i], w: f.w, d: f.d };
+      if (mine.some((a) => hit(box(a), p, 0))) out[L.kind[i] === LOT_KIND.parcel ? 'parcels' : 'farmsteads']++;
+    }
+    for (let k = 0; k < t.street.size; k++) if (t.street.alive[k] && S.site[k] === site && S.kind[k] !== STREET_KIND.market) {
+      const q = { x: (S.x0[k] + S.x1[k]) / 2, z: (S.z0[k] + S.z1[k]) / 2, w: Math.abs(S.x1[k] - S.x0[k]), d: Math.abs(S.z1[k] - S.z0[k]) };
+      if (mine.some((a) => hit(box(a), q, -1))) out.streets++; // the line of a street, a metre into the landmark at most
+    }
+  }
+  return out;
+}
+
 describe('the landmarks in the register of a world of 1291', () => {
   const M = s.landmark.cols, rows = Array.from({ length: s.landmark.size }, (_, i) => i), cities = citiesOf(1291);
   it('give every town with a see the church of its see, and every building known by name its place', () => {
@@ -91,24 +115,7 @@ describe('the landmarks in the register of a world of 1291', () => {
     }
   });
   it('lie clear of each other, of the parcels and of the streets of their town', () => {
-    const L = s.lot.cols, S = s.street.cols, box = (i: number) => ({ x: M.x[i], z: M.z[i], w: M.w[i], d: M.d[i] });
-    const hit = (a: { x: number; z: number; w: number; d: number }, b: { x: number; z: number; w: number; d: number }, gap: number) => Math.abs(a.x - b.x) < (a.w + b.w) / 2 + gap && Math.abs(a.z - b.z) < (a.d + b.d) / 2 + gap;
-    const bySite = new Map<number, number[]>();
-    for (const i of rows) if (M.site[i] >= 0) bySite.set(M.site[i], [...(bySite.get(M.site[i]) ?? []), i]);
-    let parcels = 0, streets = 0;
-    for (const [site, mine] of bySite) {
-      for (const a of mine) for (const b of mine) if (a < b) expect(hit(box(a), box(b), 0)).toBe(false);
-      for (let i = 0; i < s.lot.size; i++) if (L.site[i] === site && L.kind[i] === LOT_KIND.parcel) {
-        const f = footprint({ front: L.front[i] }, { w: L.w[i], d: L.d[i] }), p = { x: L.x[i], z: L.z[i], w: f.w, d: f.d };
-        if (mine.some((a) => hit(box(a), p, 0))) parcels++;
-      }
-      for (let k = 0; k < s.street.size; k++) if (S.site[k] === site && S.kind[k] !== STREET_KIND.market) {
-        const q = { x: (S.x0[k] + S.x1[k]) / 2, z: (S.z0[k] + S.z1[k]) / 2, w: Math.abs(S.x1[k] - S.x0[k]), d: Math.abs(S.z1[k] - S.z0[k]) };
-        if (mine.some((a) => hit(box(a), q, -1))) streets++; // the line of a street, a metre into the landmark at most
-      }
-    }
-    expect(parcels).toBe(0);
-    expect(streets).toBe(0);
+    expect(clashesOf(s)).toEqual({ landmarks: 0, parcels: 0, streets: 0, farmsteads: 0 });
     expect(LANDMARK_GAP).toBeGreaterThan(0);
   });
   it('are the same from the same seed, survive a snapshot, and stand alone where they stood', () => {
@@ -127,13 +134,17 @@ describe('the landmarks in the register of a world of 1291', () => {
 });
 
 describe('a world of 1291 saved before the landmarks', () => {
-  it('gets the landmarks a new world has, and encodes as one', { timeout: 60_000 }, () => {
+  it('gets the landmarks of a new world round its towns laid anew, every family keeping its parcel', { timeout: 60_000 }, () => {
     const old = decodeState(encodeState(s)) as WorldState;
     old.v = 37;
     delete (old as Partial<WorldState>).landmark;
-    const up = upgradeState(decodeState(encodeState(old)), w, () => loadSetup(1291));
+    const before = decodeState(encodeState(old)), up = upgradeState(decodeState(encodeState(old)), w, () => loadSetup(1291));
     expect(up.v).toBe(STATE_VERSION);
-    expect(hashState(up)).toBe(hashState(s));
+    expect(up.landmark.size).toBe(s.landmark.size);
+    expect(clashesOf(up)).toEqual({ landmarks: 0, parcels: 0, streets: 0, farmsteads: 0 });
+    expect(Array.from(up.family.cols.lot.subarray(0, up.family.size))).toEqual(Array.from(before.family.cols.lot.subarray(0, before.family.size)));
+    expect(Array.from(up.lot.cols.w.subarray(0, up.lot.size))).toEqual(Array.from(before.lot.cols.w.subarray(0, before.lot.size)));
+    expect(hashState(up)).toBe(hashState(s)); // a world that has not run gets them as a new world has them
   });
 });
 

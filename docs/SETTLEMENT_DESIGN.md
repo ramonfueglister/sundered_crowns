@@ -578,7 +578,8 @@ by name), `src/sim/systems/landmarks.ts` (`coreLandmarks`, `edgeLandmarks`, `alo
 `src/worldprobe/landmarks.ts`, `settle.ts` and `world.ts`. Tests: `tests/landmarks.test.ts`.
 
 Written once when a world is founded, with the land register, or by the upgrade 37 → 38 of a running world, which
-founds the register anew (the hamlets of an old world may stand where a landmark now stands). Nothing changes while the
+lays its towns out anew round the landmarks (`relayTowns`: every parcel keeps its family and size, the hamlets stay
+where they are). Nothing changes while the
 world runs; how far a building is built follows from the year.
 
 | Table | Column | Type | Meaning |
@@ -676,7 +677,7 @@ counts too (`widened`, from `dry_<year>.json`), so that the landmarks at its edg
 - The models are those of the world graphic, scaled evenly; only some buildings known by name have their own.
 - No parish churches, hospitals, town halls, guild halls, synagogues, bridges or walls; no landmark is built while the
   world runs; the list is of 1291 only.
-- The upgrade 37 → 38 founds the land register anew: who lives on which parcel follows the rule of a new world.
+- The upgrade 37 → 38 lays the towns of a running world out anew round their landmarks (relayTowns): every family keeps its parcel, the hamlets stay where they are, and a world that has not run gets them exactly as a new world. The register cannot be founded anew in a world that has run: its persons are no longer those of its founding.
 - `ground_<year>.json` must be written anew when the world graphic's ground changes, then `lots_<year>.json`, the tilth
   survey, `lots_<year>.json` again, the plan and the far view's tables.
 
