@@ -199,9 +199,25 @@ function pieceOf(realm: number, s: Spread, cells: number[]): Piece {
   return { realm, cells, mx, my, long, broad, prefer: turn * lean };
 }
 
+/** the bounding box of a piece, padded by PAD samples */
+type Box = Pick<Room, 'bx0' | 'by0' | 'bw' | 'bh' | 'pad'>;
+
 function roomOf(g: Samples, cells: number[]): Room {
-  const { w, h, of } = g;
+  const box = boxOf(g, cells),
+    { bw, bh } = box,
+    outside = outsideOf(g, cells, box),
+    blocked = blockedOf(g, box, outside, openOf(outside, bw, bh));
   // the distance of every point of the piece to its outline (Felzenszwalb & Huttenlocher), on its bounding box
+  const inside = distance(
+    Uint8Array.from(blocked, (v) => (v === 1 || v === 3 ? 1 : 0)),
+    bw,
+    bh,
+  );
+  return { ...box, blocked, inside };
+}
+
+function boxOf(g: Samples, cells: number[]): Box {
+  const { w, h } = g;
   let bx0 = w,
     by0 = h,
     bx1 = 0,
@@ -214,16 +230,26 @@ function roomOf(g: Samples, cells: number[]): Room {
     bx1 = Math.max(bx1, x);
     by1 = Math.max(by1, y);
   }
-  const pad = PAD,
-    bw = bx1 - bx0 + 1 + 2 * pad,
-    bh = by1 - by0 + 1 + 2 * pad,
+  const pad = PAD;
+  return { bx0, by0, bw: bx1 - bx0 + 1 + 2 * pad, bh: by1 - by0 + 1 + 2 * pad, pad };
+}
+
+/** 1 on the box outside the piece, 0 on it */
+function outsideOf(g: Samples, cells: number[], box: Box): Uint8Array {
+  const { w } = g,
+    { bx0, by0, bw, bh, pad } = box,
     outside = new Uint8Array(bw * bh).fill(1);
   for (const i of cells) {
     const x = i % w,
       y = (i - x) / w;
     outside[(y - by0 + pad) * bw + x - bx0 + pad] = 0;
   }
-  // lands of others that the piece encloses (enclaves, lakes) do not stop its name: only what reaches its outline does
+  return outside;
+}
+
+/** 1 where the land outside the piece reaches the box's edge: lands of others that the piece encloses (enclaves, lakes)
+ *  do not stop its name, only what reaches its outline does */
+function openOf(outside: Uint8Array, bw: number, bh: number): Uint8Array {
   const open = new Uint8Array(bw * bh),
     flood: number[] = [];
   for (let x = 0; x < bw; x++) {
@@ -242,8 +268,14 @@ function roomOf(g: Samples, cells: number[]): Room {
     if (i >= bw) flood.push(i - bw);
     if (i < (bh - 1) * bw) flood.push(i + bw);
   }
-  // what the name may not be written over: everything outside the piece but its lakes, land without a realm that it
-  // encloses, and enclaves of others too small to read (a few sampled pixels)
+  return open;
+}
+
+/** what the name may not be written over (Room's `blocked`): everything outside the piece but its lakes, land without
+ *  a realm that it encloses, and enclaves of others too small to read (a few sampled pixels) */
+function blockedOf(g: Samples, box: Box, outside: Uint8Array, open: Uint8Array): Uint8Array {
+  const { w, h, of } = g,
+    { bx0, by0, bw, bh, pad } = box;
   const blocked = Uint8Array.from(open),
     hole: number[] = [];
   for (let start = 0; start < bw * bh; start++) {
@@ -271,10 +303,5 @@ function roomOf(g: Samples, cells: number[]): Room {
     }
     if (hole.length > (others ? ENCLAVE : LAKE)) for (const i of hole) blocked[i] = 3;
   }
-  const inside = distance(
-    Uint8Array.from(blocked, (v) => (v === 1 || v === 3 ? 1 : 0)),
-    bw,
-    bh,
-  );
-  return { bx0, by0, bw, bh, pad, blocked, inside };
+  return blocked;
 }
