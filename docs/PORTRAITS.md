@@ -5391,6 +5391,55 @@ Pictures (project files, `portraits/`): `runde129_vorher_nachher_frauen.png` (fo
 round 128 above, now below), `runde129_nah.png` (buttons and lace close up),
 `runde129_von_allen_seiten.png` (a buttoned and a laced woman from five sides).
 
+**Round 130: a man's parted hair in waves** (2026-11-20). The men's hair again (round 125 left it "straight
+as a helmet where theirs is waved"). On the reference's sheet of men's heads most wear the bowl cut, as
+ours do, and one wears his hair in loose waves to the collar. Nothing was read this time: no source for a
+common man's waved hair in 1356 (PLACEHOLDER, as the parted cut itself is).
+
+What is changed. Of the two men in ten who wear their hair parted and cut at the jaw, one now wears it in
+waves (`page02`; `DressSet::hair_lengths` has `page01` and `page02` with one tenth each, `hair_parted`
+both). It is round 125's cut with one thing more (`tools/portrait/pipeline/hair_body.py`, `waves`): from 3
+cm after its beginning a bundle swings 5.5 mm to the side and 4 mm off the head, a wave 7 cm long. The
+wave's place goes by the way a bundle still has to go to the cut, so that bundles side by side wave
+together, wherever they began, each a little off its neighbours. A new file (`page02_body`, 0.69 MB); the
+painted layer and the scalp are the girl's, as the straight cut's are. The seed's digit that drew the
+parted cut draws the same or the waved one: nobody else's hair changed, and a boy keeps the bowl cut until
+15 as before.
+
+Tried and not kept.
+
+- A wave 5.5 cm long, 5 mm to the side and 3 mm off the head, each bundle's wave up to 0.4 radians and 4 %
+  of its length off its neighbours': every bundle a snake of its own, crossing the next ("a head of
+  worms"). With the bundles nearer in step (0.2 radians, 2 %) and a longer wave the hair lies in waves.
+- To tell waved from straight hair in a test by how much the hair's surface tips up and down at the back
+  of the head: 0.30 to 0.34 on the waved, 0.31 to 0.32 on the straight; the bundles' flanks and ends
+  tip as much as a wave does. The test reads the bundles' middle lines instead (below).
+
+**The gauntlet**: 22 of 22 over the whole sample, every line where round 129 left it to the tenth. No man
+of the sample draws parted hair (round 125), so this says only that nothing else moved.
+
+Honest about it. It is one cut more, and the same cut: parted in the middle, to the jaw, on one man in
+ten, with the same hairline and no fringe; the waves are even, the same on every head that wears them, and
+each bundle is still a thick smooth band, so it reads as a wig in soft waves, not as the reference's loose
+locks, which also fall to the collar (ours ends at the jaw, since hair below the chin would be turned
+with the shoulders). From the front the waves show mostly as the outline beside the cheeks; from the side
+and from behind they read. The bowl cut, which seven men in ten wear, is as it was. The share (one in
+ten), the wave's measures and that it goes with nothing about the person (no gene: a man's curls are
+`hair_curly`, another cut) are by eye (PLACEHOLDER). No man of the sample draws it, so the sample's sheet
+does not show the round; the pictures draw men of the sample under other numbers. Looked at on three
+heads from the front and on one from five sides.
+
+Tests: `portrait/tests/hair_body.rs`, the parted men's test: of 80 men with hair on the head nine wear it
+parted, three straight and six in waves, and every one passes what round 125 asked of the cut; the
+bundles' middle lines (through the middles of their cross-sections, over the middle half of each) turn
+by 0.83 to 1.00 radians in 10 cm on the straight (as the head under them is round) and by 1.62 to 2.14 on
+the waved, the test's line between them at 1.3. The library's test of the shares: three, three, two, one
+and one tenth. Cargo: 96 of 96, in one run.
+`tests/portrait.test.ts` and its neighbour 42 of 42. `npm run lint` passes (`tools/portrait` is left out of
+`ruff`). Pictures (project
+files, `portraits/`): `runde130_vorher_nachher_maenner.png` (three of the sample's men under seeds that
+draw the waved cut, round 129 above, now below), `runde130_von_allen_seiten.png`.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
@@ -5412,7 +5461,7 @@ since round 123 the light is softer (held to five of their women's faces instead
 are turned further than the head, each person's by another angle, since round 124 the picture is a bust
 that ends under the chest on cloth, as theirs does, in a plain gown without the belts, clasps, cloaks and
 layered cuts theirs wear, and without hands, since round 125 two men in ten wear their hair parted and cut at
-the jaw beside the bowl cut, straight where theirs is waved, since round 126 six in ten of the grown women in
+the jaw beside the bowl cut, since round 130 one of the two in even waves where theirs falls in loose locks, since round 126 six in ten of the grown women in
 plaits wear them pinned up beside the cheeks, without the band theirs wear over them, since round 127 each
 person carries the head turned and tilted by angles of their own (small ones, and nobody lifts or lowers
 the chin), since round 128 three in ten of the young women in plaits wear a fillet, a plain broad ring of

@@ -118,6 +118,9 @@ CUTS['page01'] = dict(
     end=_e('PAGE_END', '-50')[0], ends=tuple(_e('PAGE_ENDS', '-2.5,2.5')), comb=tuple(_e('PAGE_COMB', '0.025,0.9,0,1')),
     layers=[dict(L, gather=(0.05, 0.1, 1.0)) for L in PARTED['layers']],
 )
+# The same in waves (round 130): `waves`: how far the bundles swing to the side and off the head, the length of a
+# wave, and how far from a bundle's beginning the waves begin. All PLACEHOLDER by eye.
+CUTS['page02'] = dict(CUTS['page01'], waves=tuple(_e('PAGE_WAVES', '0.055,0.04,0.7,0.3')))
 # Tightly curled hair (round 111): no bundles and no strands that run anywhere. Each hair is a coil of a few
 # millimetres, and a head of them is one springy mass that stands off the skull the same height all round, its
 # surface small tufts side by side, its edge the hairline itself. `h`: how high the mass stands over the skin;
@@ -404,9 +407,19 @@ def parted(L, rng):
             cb = C['comb']
             off = A * np.sin(2 * np.pi * run / lam + rng.uniform(0, 2 * np.pi)) * smooth(run / 0.4)
             off = off + cb[0] * np.sin(2 * np.pi * run / cb[1] + 2.5 * np.sin(1.3 * key[k] + SEED)) * smooth(run / 0.3) * smooth((a - near[k]) / 0.4)
+            up = 0.0
+            if 'waves' in C:
+                # waved hair: the bundles of a side swing together, to the side and off the head, by the way still
+                # to go to the cut (bundles side by side have the same, wherever they began), each a little off
+                # its neighbours
+                ws, wu, wl, w0 = C['waves']
+                ph = 2 * np.pi * (total - run) / (wl * rng.uniform(0.98, 1.02)) + 1.2 * np.sin(1.3 * key[k] + SEED) + rng.uniform(-0.2, 0.2)
+                ramp = smooth((run - w0) / 0.4)
+                off = off + ws * ramp * np.sin(ph)
+                up = wu * ramp * (0.5 + 0.5 * np.sin(ph + 1.3))
             d = unit(d + side * (off / OVER.skin(d))[:, None])
             lift = free(d)
-            h = lift * (L['h'] + L['rise'] * run) * (0.2 + 0.8 * smooth(r)) + lift * rng.uniform(-0.004, 0.004)
+            h = lift * (L['h'] + L['rise'] * run) * (0.2 + 0.8 * smooth(r)) + lift * rng.uniform(-0.004, 0.004) + up
             ht = ROUND * L['flat'] * hw
             h = np.maximum(h, ht + 0.004)
             roll = L['roll'] * rng.uniform(-1, 1) * ROUND

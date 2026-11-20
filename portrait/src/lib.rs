@@ -164,8 +164,9 @@ mod tests {
             *boys.entry(set.hair_of(seed, 10.0)).or_insert(0) += 1;
         }
         // the shares are tenths of the people, and the same person keeps the same hair
-        // (round 125: two men in ten wear it parted and cut at the jaw; a boy who will, wears the bowl cut still)
-        assert_eq!(n.into_iter().collect::<Vec<_>>(), vec![("bob01", 300), ("bob06", 300), ("bob07", 200), ("page01", 200)]);
+        // (round 125: two men in ten wear it parted and cut at the jaw; a boy who will, wears the bowl cut still;
+        // round 130: one of the two in waves)
+        assert_eq!(n.into_iter().collect::<Vec<_>>(), vec![("bob01", 300), ("bob06", 300), ("bob07", 200), ("page01", 100), ("page02", 100)]);
         assert_eq!(boys.into_iter().collect::<Vec<_>>(), vec![("bob01", 500), ("bob06", 300), ("bob07", 200)]);
         assert_eq!(set.hair_of(4711, 30.0), set.hair_of(4711, 30.0));
         // each length is a hair the repository has

@@ -277,7 +277,7 @@ pub struct DressSet {
     pub hair_lengths: &'static [(&'static str, u32)],
     /// (round 125) Those of `hair` and `hair_lengths` that are parted hair, not a cut round the whorl
     /// (tools/portrait/pipeline/hair_body.py `page01`: parted in the middle, falling over the ears, cut at the
-    /// jaw): they have no painted layer and no scalp of their own, and the builder takes `hair_girl`'s
+    /// jaw; round 130 `page02`: the same in waves): they have no painted layer and no scalp of their own, and the builder takes `hair_girl`'s
     /// (`under_of`), whose hairline theirs is.
     pub hair_parted: &'static [&'static str],
     /// The age from which a man wears it; a boy whose seed draws it wears `hair` until then (on a boy of 8 parted
@@ -855,8 +855,8 @@ const ENGLAND: DressSet = DressSet {
     veil_back: "cloth_veil_back",
     wimple: "cloth_wimple",
     hair: "bob01",
-    hair_lengths: &[("bob06", 3), ("bob07", 2), ("page01", 2)],
-    hair_parted: &["page01"],
+    hair_lengths: &[("bob06", 3), ("bob07", 2), ("page01", 1), ("page02", 1)],
+    hair_parted: &["page01", "page02"],
     hair_parted_from: 15.0,
     hair_curly: "bob05",
     hair_receding: "bob03",
@@ -1090,7 +1090,7 @@ const ENGLAND: DressSet = DressSet {
         Source { what: "a fillet, a stiffened band of linen 5 cm high round the head, on three in ten of the women of 15 and more who show their plaits (round 128)", source: "Rosalie Gilbert, Rosalie's Medieval Woman, Headwear (rosaliegilbert.com/headwear.html, read 20.11.2026; a re-enactor's page, not a primary source): the fillet often a stiffened linen band of about 2 to 2.5 inches, worn to hold the veil, shown high on the head on a Madonna of 1340 to 1360; fillet and barbette going out of use in the middle of the 14th century in favour of plaits beside the face. The share, the age and that it is worn with plaits and without a veil are PLACEHOLDER." },
         Source { what: "a woman's gown closed in front from 14 years: laced on five in ten (one lace through eyelets 2 cm apart, the linen showing between the edges), buttoned on two in ten (ball buttons of the gown's own cloth, 11 mm across, 2 cm apart), not opened on three in ten (round 129)", source: "Rosalie Gilbert, Rosalie's Medieval Woman: Buttons and Lacings, Kirtles, and the buttons of her collection (rosaliegilbert.com/buttonsandlacings.html, kirtles.html, thegilbertcollection_buttons.html; read 20.11.2026 as quotations fetched from the pages, not the pages in full; a re-enactor's pages, not a primary source): kirtles and gowns closed with buttons or with lacing, in front or at the side seams; a working woman likely in a front-lacing kirtle; eyelets closely set, around 2 cm; laces of the gown's colour until the 15th century; the lower classes with cloth buttons matching the gown, almost always ball-shaped, set very closely together at the very edge of the opening; a gown buttoned down the front in the Romance of Alexander, c. 1340; English buttons of 9 to 16 mm. The shares, the age, how far the laced edges stand apart, from button to button, and that none is laced at the side are PLACEHOLDER." },
         Source { what: "children under seven: the men's hair to the jaw with a fringe, girls and boys alike", source: "PLACEHOLDER, nothing read on small children's hair. Chosen because Apoleia's cropped hair begins far back on a child's large skull (a shaven head)." },
-        Source { what: "men's hair in three lengths (to above the ear, to the ear's lobe, to the jaw), 3 : 3 : 2, and two men in ten from 15 with their hair parted in the middle, over the ears and cut at the jaw, without a fringe (round 125)", source: "PLACEHOLDER: lengths, shares and the age by eye, so that the men of a town do not all have one head. Nothing was read for the parted cut: to be checked against picture sources as the fringe is (Luttrell Psalter c. 1330, Holkham Bible)." },
+        Source { what: "men's hair in three lengths (to above the ear, to the ear's lobe, to the jaw), 3 : 3 : 2, and two men in ten from 15 with their hair parted in the middle, over the ears and cut at the jaw, without a fringe (round 125), one of the two in waves (round 130)", source: "PLACEHOLDER: lengths, shares and the age by eye, so that the men of a town do not all have one head. Nothing was read for the parted cut or its waves: to be checked against picture sources as the fringe is (Luttrell Psalter c. 1330, Holkham Bible)." },
         Source { what: "men's hair to the jaw with a fringe", source: "PLACEHOLDER, to be checked against picture sources (Luttrell Psalter c. 1330, Holkham Bible)." },
         Source { what: "beards short or full; no long philosopher's beard, no beard on the chin alone", source: "PLACEHOLDER, to be checked against picture sources (Luttrell Psalter c. 1330). Apoleia's chin beard hangs as a tuft of long strands, which also reads badly." },
         Source { what: "no trimmings, belts' fittings or jewels on common people", source: "Not built: nothing read that shows them; rather none than invented ones." },

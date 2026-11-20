@@ -71,6 +71,50 @@ fn pieces(s: &Surface) -> Vec<(usize, f32)> {
     found.values().map(|&(n, lo, hi)| (n, (hi - lo) / VSCALE)).collect()
 }
 
+/// How much the bundles of a hair turn along their way (round 130): for each bundle (a piece, as above) the line
+/// through the middles of its cross-sections (the corners that share a place along the image), and on it the
+/// sum of the angles between one step and the next, by the line's length (radians per 10 cm). The middle one
+/// of all bundles with eight cross-sections and more. Straight hair turns as the head under it is round.
+fn turning(s: &Surface) -> f32 {
+    fn root(of: &mut [usize], mut i: usize) -> usize {
+        while of[i] != i {
+            of[i] = of[of[i]];
+            i = of[i];
+        }
+        i
+    }
+    let mut place: HashMap<[u32; 3], usize> = HashMap::new();
+    let ids: Vec<usize> = s.pos.iter().map(|p| { let n = place.len(); *place.entry(p.map(f32::to_bits)).or_insert(n) }).collect();
+    let mut of: Vec<usize> = (0..place.len()).collect();
+    for t in ids.chunks_exact(3) {
+        let a = root(&mut of, t[0]);
+        for &k in &t[1..] {
+            let b = root(&mut of, k);
+            of[b] = a;
+        }
+    }
+    // (per piece and place along the image: the corners there, each once)
+    let mut rows: HashMap<usize, std::collections::BTreeMap<i32, HashMap<usize, V3>>> = HashMap::new();
+    for (k, &id) in ids.iter().enumerate() {
+        rows.entry(root(&mut of, id)).or_default().entry((s.uv[k][1] * 2000.0).round() as i32).or_default().insert(id, s.pos[k]);
+    }
+    let mut turns: Vec<f32> = Vec::new();
+    for piece in rows.values().filter(|p| p.len() >= 8) {
+        let line: Vec<V3> = piece.values().map(|row| { let n = row.len() as f32; row.values().fold([0.0; 3], |a, p| [a[0] + p[0] / n, a[1] + p[1] / n, a[2] + p[2] / n]) }).collect();
+        // (its middle half: a bundle begins across the parting in a sharp bow and ends in a slanted point)
+        let line = &line[line.len() / 4..line.len() - line.len() / 4];
+        let step: Vec<V3> = line.windows(2).map(|w| [w[1][0] - w[0][0], w[1][1] - w[0][1], w[1][2] - w[0][2]]).collect();
+        let len = |v: &V3| (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).sqrt();
+        let long: f32 = step.iter().map(len).sum();
+        let turned: f32 = step.windows(2).map(|w| ((w[0][0] * w[1][0] + w[0][1] * w[1][1] + w[0][2] * w[1][2]) / (len(&w[0]) * len(&w[1])).max(1e-9)).clamp(-1.0, 1.0).acos()).sum();
+        if long > 0.3 {
+            turns.push(turned / long);
+        }
+    }
+    turns.sort_by(|a, b| a.partial_cmp(b).expect("a number"));
+    turns.get(turns.len() / 2).copied().unwrap_or(0.0)
+}
+
 fn show() -> bool {
     std::env::var("SHOW").is_ok()
 }
@@ -240,12 +284,14 @@ fn a_girl_wears_her_hair_parted_and_drawn_to_her_plaits() {
 #[test]
 fn two_men_in_ten_wear_their_hair_parted_and_cut_at_the_jaw() {
     // Round 125. Until then every man of England wore the one bowl cut, in three lengths. Two in ten now wear
-    // their hair parted in the middle, falling over the ears and cut at the jaw (`hair_body.py` `page01`,
+    // their hair parted in the middle, falling over the ears and cut at the jaw (`hair_body.py` `page01`; since
+    // round 130 one of the two in waves, `page02`: the same cut, its bundles swinging to the side and off the head,
     // `DressSet::hair_parted`): a girl's parting and hairline (her painted layer is under it), no plaits, the hair
     // standing as high off the head as a bowl cut does and ending level, above the neck.
     let Some(h) = head() else { return };
     let parted = |out: &Portrait| out.surfaces.iter().any(|s| s.tex.as_deref().is_some_and(|t| t.contains("/plait01_cap.")));
     let (mut found, mut with_hair) = (0, 0);
+    let mut names = std::collections::BTreeMap::new();
     for k in (1..160u32).step_by(2) {
         let out = build(&h, &person(k, false, 30.0), 1);
         let Some(hair) = body(&out) else { continue };
@@ -273,7 +319,14 @@ fn two_men_in_ten_wear_their_hair_parted_and_cut_at_the_jaw() {
         // beside the face it stands off the head: the hair's breadth at the height of the mouth against the skin's
         let band = |p: &&V3| (p[1] - (out.chin + 0.3 * height)).abs() < 0.04 * height;
         let (wide_hair, wide_skin) = (hair.pos.iter().filter(band).map(|p| (p[0] - out.cx).abs()).fold(0f32, f32::max), skin.pos.iter().filter(band).map(|p| (p[0] - out.cx).abs()).fold(0f32, f32::max));
+        // waved or straight (round 130): how much its bundles turn along their way
+        let name = sc_portrait::dress::ENGLAND_1356.hair_of(person(k, false, 30.0).seed, 30.0);
+        let turns = turning(hair);
+        *names.entry(name).or_insert(0) += 1;
+        // (measured on nine men: straight 0.83 to 1.00, waved 1.62 to 2.14)
+        assert!(sc_portrait::dress::ENGLAND_1356.hair_parted.contains(&name) && (turns > 1.3) == (name == "page02"), "{who}: {name}, its bundles turn by {turns} radians in 10 cm");
         if show() {
+            println!("{who}: {name}, its bundles turn by {turns:.2} radians in 10 cm");
             println!("{who}: top {:.3} over the crown, forehead free down to {:.3}, {across} across the parting, ends {:.3} below the crown (lowest tenth from {:.3}), {:.3} broader than the skin a side at the mouth's height", top - crown, (crown - front) / height, (crown - low) / height, (crown - tenth) / height, wide_hair - wide_skin);
         }
         assert!((0.08..0.3).contains(&(top - crown)), "{who}: the hair's top lies {} over the crown (1 is 10 cm)", top - crown);
@@ -287,6 +340,8 @@ fn two_men_in_ten_wear_their_hair_parted_and_cut_at_the_jaw() {
         println!("{found} of {with_hair} men with hair on the head wear it parted");
     }
     assert!(found >= 4, "{found} of {with_hair} men wear their hair parted");
+    // (round 130) one in ten straight, one in ten in waves: both are worn
+    assert!(names.len() == 2 && names.values().all(|&n| n >= 2), "{names:?}");
 }
 
 #[test]
