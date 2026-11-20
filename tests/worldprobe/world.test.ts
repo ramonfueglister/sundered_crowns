@@ -29,7 +29,7 @@ describe('round the globe', () => {
   };
   beforeAll(() => {
     vi.stubGlobal('fetch', async (url: string) => {
-      const name = url.split('/').pop()!, tx = Number(name.split('_')[0]);
+      const name = url.replace(/\?.*$/, '').split('/').pop()!, tx = Number(name.split('_')[0]);
       const body = name === 'index.json' ? JSON.stringify(index) : name.endsWith('.json') ? JSON.stringify([{ name: 'river', rank: 1, pts: [[tx * T, 0.5], [tx * T + 3, 0.5]] }]) : tile(tx);
       return new Response(body);
     });

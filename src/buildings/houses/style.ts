@@ -22,7 +22,14 @@ export const FLOOR = m(3.0);
  * up to `maxRise` blocks, given as m(metres)), and how many of them end in gables instead of hips. `flat` houses
  * have a terrace roof.
  */
-export interface HouseStyle { walls: readonly RGB[]; roofs: readonly RGB[]; pitch: readonly [number, number]; maxRise: number; gables: number; flat?: boolean }
+export interface HouseStyle {
+  walls: readonly RGB[];
+  roofs: readonly RGB[];
+  pitch: readonly [number, number];
+  maxRise: number;
+  gables: number;
+  flat?: boolean;
+}
 
 /**
  * The fine block of the near view: an eighth of a storey, 0.375 m. Measured on Ramon's reference image of

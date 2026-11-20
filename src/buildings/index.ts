@@ -16,7 +16,18 @@ export { type HouseOptions, fineHouse } from './houses/grammar';
 export { type Chosen, heightOf, houseOf, shownOf } from './houses/choose';
 export { type Side, type Wall, pane, wallOf } from './core/wall';
 export { awning, bollard, cloth, crate, jar, jetty, paving, stairs } from './houses/clutter';
-export { type Column, type ColumnAt, type GroundCell, DEEP, LAGOON, PLAIN_QUAY, RIPPLE, fineGround, waterColourAt, waterFlecks } from './ground';
+export {
+  type Column,
+  type ColumnAt,
+  type GroundCell,
+  DEEP,
+  LAGOON,
+  PLAIN_QUAY,
+  RIPPLE,
+  fineGround,
+  waterColourAt,
+  waterFlecks,
+} from './ground';
 export type { Quay, Tradition } from './traditions/tradition';
 export { VENICE } from './traditions/venice';
 export { house, townHouse } from './houses/house';
