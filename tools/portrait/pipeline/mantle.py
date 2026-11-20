@@ -22,8 +22,13 @@
 #   MANTLE_FUR   the facing: how broad along the front edges; how broad round the neck; how far the fur stands
 #                over the cloth; how far off the axis the sheet stands where the first is measured
 #   MANTLE_CLASP where a brooch sits on either front edge: at which height, how far in from the edge
+#   MANTLE_TAILS how much of the cloth the fur's image covers across the facing and down it, and how far down from
+#                the neck's edge its upper edge lies
 # The triangles of the facing are marked in the image's coordinates, which repeat with every whole number: 64 is
-# added to the first (the builder draws them with the fur's image), and 128 where a brooch sits.
+# added to the first (the builder draws them with the fur's image), and 128 where a brooch sits. Their place in the
+# fur's image is the facing's own (round 152): across it how far a corner lies in from the front edge, down it how
+# far down the cloth from the neck, so that the ermine's tails stand in rows along the edge and round the neck and
+# the facing's border cuts none (`fur_tex.py` sets them in the image). The rolled hems' triangles keep their own.
 import os
 import subprocess
 import sys
@@ -40,6 +45,7 @@ DPH, DS = _e('MANTLE_GRID', '3,0.11')
 F_DEEP, F_Y, F_LEN, F_N = _e('MANTLE_FOLD', '0.16,5.45,0.8,9')
 FUR_EDGE, FUR_NECK, FUR_UP, FUR_R = _e('MANTLE_FUR', '0.7,0.6,0.05,1.25')
 CL_Y, CL_IN = _e('MANTLE_CLASP', '5.42,0.2')
+T_ACROSS, T_DOWN, T_AT = _e('MANTLE_TAILS', '0.7,1.0,0.041')
 AX = np.array([0.0, 0.1])
 smooth = lambda t: np.clip(t, 0, 1) ** 2 * (3 - 2 * np.clip(t, 0, 1))
 
@@ -173,6 +179,11 @@ col = np.round((np.abs(np.degrees(ph_of)) - OPEN) / DPH)
 ring = np.round(meta[:, 1] / DS)
 K, M = round(FUR_EDGE / (np.radians(DPH) * FUR_R)), round(FUR_NECK / DS)
 fur = (col <= K) | (ring <= M)
+# a corner's place in the fur's image: by its column (as far in from the edge as the column lies where the sheet
+# stands `FUR_R` off the axis: the same all the way down, so that a tail hangs down the cloth and not askew) and by
+# how far down the cloth it lies, from the image's upper edge down (the file holds one less that, as `tunic_bind.py`
+# writes it and the builder takes it back; a whole number more or less is the same place in the image)
+fur_uv = np.stack([np.radians(col * DPH) * FUR_R / T_ACROSS, -(meta[:, 1] - T_AT) / T_DOWN], -1)
 vn = np.zeros_like(G)
 for t in T:
     vn[t] += np.cross(G[t[1]] - G[t[0]], G[t[2]] - G[t[0]])
@@ -204,6 +215,13 @@ src = out
 P, BT, UV = laid(name)
 near = np.array([np.argmin(((G - p) ** 2).sum(1)) for p in P])
 is_fur, is_clasp = fur[near], clasp[near]
+# a triangle of the sheet's fur gets its corners' places in the fur's image (the sheet's corners come first in the
+# bound file, in their order). A rolled hem's triangles keep theirs, a twentieth of the image round the roll from
+# its upper edge: the builder knows a hem by that (`real_look.rs`, `calm`), and `fur_tex.py` leaves that strip of
+# the image without a tail. Tried and dropped: the hems' corners in the facing's image too, beyond the sheet's edge
+# by as much as they lie off the corner they hang on (the builder no longer knew the roll for a hem, and where a hem
+# is evened round the sheet's corner at the neck its triangles had no area in the image: the stage finds the
+# relief's direction by that area and drew them black)
 rows = open(os.path.join(out, name + '.txt')).read().split('\n')
 nv, nt = map(int, rows[0].split())
 n_fur = n_clasp = 0
@@ -213,8 +231,11 @@ for i in range(nt):
     add = 128 if is_clasp[t].sum() >= 2 else 64 if is_fur[t].all() else 0
     n_fur += add > 0; n_clasp += add == 128
     if add:
-        for c in (3, 5, 7):
-            f[c] = '%.6f' % (float(f[c]) + add)
+        for c in range(3):
+            if max(t) < len(used):
+                f[3 + 2 * c], f[4 + 2 * c] = '%.6f' % (fur_uv[used[t[c]], 0] + add), '%.6f' % fur_uv[used[t[c]], 1]
+            else:
+                f[3 + 2 * c] = '%.6f' % (float(f[3 + 2 * c]) + add)
         rows[1 + nv + i] = ' '.join(f)
 open(os.path.join(out, name + '.txt'), 'w').write('\n'.join(rows))
 with open(os.path.join(out, name + '_view.obj'), 'w') as f:

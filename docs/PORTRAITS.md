@@ -17,7 +17,7 @@ one, changes nothing: same people in, same pictures out, measured.
 |---|---|---|
 | Builder | `portrait/` (Rust, WebAssembly) | From a person (100 bytes of genes, sex, age, estate, occupation, origin, food, mourning, wealth, worn clothes) to the triangles of head and shoulders: MakeHuman's head morphed by the genes, skin, eyes, hair, beard, clothes, headwear, jewellery |
 | Genes | `portrait/src/dna.rs` | 50 genes of two alleles, one byte each (Apoleia's 34, and 16 since round 112 that a dress with a table shows); a child takes one allele of each gene from either parent, plus a small mutation; founders draw from one of 23 pools (round 111), which one is the culture's (`src/sim/people/pools.ts`) |
-| Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; a culture without a set wears the plain dress of 1356 (round 111), one of Apoleia's seven regions Apoleia's Roman dress. England's has a table for people of rank and one for a crowned head (round 144), chosen by the person's stand; a crowned head wears a mantle faced with ermine over the gown (round 145, `portrait/src/mantle.rs`); a lady of rank shows her plaits and wears a circlet of gilt metal on them (round 146), a lord with nothing else on the head wears one too (round 147); a lord's hood is faced with white fur along the edge of its opening (round 148, `portrait/src/facing.rs`); a lady's gown is cut wide and low at the neck, with no linen in it (round 149, `cloth_kirtle_court`); the court's gown is of silk (round 150, `DressSet::gown_image`) and draped closer, so that it lies smooth (round 151, `DressSet::gown_file`) |
+| Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; a culture without a set wears the plain dress of 1356 (round 111), one of Apoleia's seven regions Apoleia's Roman dress. England's has a table for people of rank and one for a crowned head (round 144), chosen by the person's stand; a crowned head wears a mantle faced with ermine over the gown (round 145, `portrait/src/mantle.rs`); a lady of rank shows her plaits and wears a circlet of gilt metal on them (round 146), a lord with nothing else on the head wears one too (round 147); a lord's hood is faced with white fur along the edge of its opening (round 148, `portrait/src/facing.rs`); a lady's gown is cut wide and low at the neck, with no linen in it (round 149, `cloth_kirtle_court`); the court's gown is of silk (round 150, `DressSet::gown_image`) and draped closer, so that it lies smooth (round 151, `DressSet::gown_file`); the ermine's tails stand in rows on the mantle's facing (round 152, `tools/portrait/pipeline/mantle.py`) |
 | Stage profile | `src/portrait/profile.ts` | Light and materials per set of dress; Apoleia's portraits keep Apoleia's |
 | Pipeline | `tools/portrait/pipeline/` | Blender scripts that wrote the draped clothes and hair (not part of the build) |
 | Files of the real look | `public/portrait/` (41.5 MB) | The head (1.1 MB), data files (15.0 MB since round 111, 13.1 since round 110, 12.7 since round 109, 12.9 since round 105, 10.4 before round 104: the hair's bodies, the beard's locks, draped clothes, skin shading), images (24.8 MB: skin by age and sex, wrinkle maps, hair, cloth, eyes) |
@@ -7065,6 +7065,89 @@ the court's table has files of its own for every cut.
 and lint pass, no new warning. The module is 755 kB.
 Pictures (project files, `portraits/`): `runde151_vorher_nachher.png` (five people of rank, before above and
 after below), `runde151_von_der_seite.png` (five from the side).
+
+**Round 152: the ermine's tails in rows** (2026-11-20). The crowned heads beside the reference, large: the
+mantle's fur had a few black shapes on it where they happened to fall, some cut off where the fur ends at the
+red cloth, drawn out long over the shoulders, and each standing on its point; a black tick sat on the hem at
+either corner of the neck. They read as holes in the fur, not as ermine.
+
+What was found. Round 145 gave the fur the cloth's own place in the image: round the body and up it, one
+image to some 30 cm by 20 cm as drawn. So the nine tails of the image fell wherever the facing's 7 cm cut
+through that; the image ran up the cloth where the stage draws it downwards (the tails' points were up); and
+the rolled hems, which have a strip of the image of their own (its upper twentieth), took their colour from
+whatever tail lay in that strip.
+
+What was read.
+- Elspeth Veale, The English Fur Trade in the Later Middle Ages, ch. II, Ars Pelliparii (London Record
+  Society 38, 2003, british-history.ac.uk/london-record-soc/vol38/pp22-35; read 20.11.2026 as an account of
+  the page): "the custom of adorning it here and there with black tails, a technique known as powdering";
+  "The white skins were pynked or slit, and little pieces of fur from the legs of black lambs, usually used
+  instead of ermine tails, were stitched into the fur"; note 44: "Illuminated manuscripts which portray royal
+  and ducal personages show the familiar rows of black tails early in the Middle Ages, but surviving accounts
+  rarely make special provision for them before the fifteenth century". No size of a tail and no distance
+  between two is given.
+- The Mammal Society, Stoat (mammal.org.uk, species hub; the same day, as an account of the page): "tail
+  length 9-14cm", a "distinctive bushy black tip"; how long the tip is, it does not say.
+- The Academy of Saint Gabriel's page on ermine tails in English and French sources of the 14th century
+  (s-gabriel.org/armory/ermine) is of pictures, which were not read: nothing is taken from it.
+
+What is changed.
+- **The facing's own place in the fur's image** (`tools/portrait/pipeline/mantle.py`, `MANTLE_TAILS`; the
+  file `cloth_mantle` written anew): across the image how far a corner's column lies in from the front edge,
+  one image to the facing's 7 cm; down it how far down the cloth from the neck's edge the corner lies, one
+  image to 10 cm. The mantle's corners and triangles are round 145's to the last figure; of its 10 362
+  triangles the 2 687 of the sheet's fur have other places in the image, and the 2 496 of the fur's rolled
+  hems keep theirs, by which the builder knows a hem.
+- **The image** (`fur_tex.py`, `cloth_mantle_fur`, 10 kB and 10 kB for 20 and 28): two tails, the second half
+  the image across from the first and half down, so that they stand in two staggered rows along either front
+  edge, 5 cm from row to row, and in one row round the neck; slimmer than they were (0.09 of the image for
+  0.04 of one three to five times as large); no tail in the hems' strip. The script prints where its tails
+  lie, and has a switch for how far down a row they stand (`TAIL_AT`; as it was where it is not set: the
+  hood's fur comes out as before).
+- Nothing in the builder and nothing on the stage.
+
+Measured, on sixteen crowned heads from a child of five to an old one (`portrait/tests/mantle.rs`; "before"
+is the same test's measure on round 145's file):
+
+| | before | after |
+|---|---|---|
+| the cloth one image covers on the chest, across the facing | 29 to 36 cm | 6.6 to 11.3 cm (made for 7) |
+| down it | 18 to 27 cm | 6.4 to 11.8 cm (made for 10) |
+| of the fur on the chest, the share where the image's way down is within 45 degrees of the cloth's way down | 0 (it ran up) | 0.95 |
+| sides where the fur ends, at the red cloth or at a hem, down to 24 cm under the chin | | 9 568, none in a tail or within 2 to 3 mm of one |
+| triangles of the hems with a tail on them | not measured (the tick at the neck) | 0 of 39 936 |
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in rounds 138 to 151 to its last figure (the
+sample is of the common people, who wear no mantle).
+
+Tried and not kept.
+- The hems' corners in the facing's image too, laid beyond the sheet's edge: the builder knows a hem's roll
+  by its strip of the image and no longer knew these, and where the hem is evened round the sheet's corner at
+  the neck its triangles had no area in the image. The stage finds the relief's direction by that area and
+  drew them black: a black line round the whole facing in the first picture, black splinters at the neck's
+  corners in the next.
+- Tails 0.35 of the image long and 0.13 broad: dabs of ink.
+
+Honest about it. The rows are the source's word; everything else is by eye and PLACEHOLDER: a tail's size
+(some 3.4 cm by 1 cm on a grown person, and smaller on a child, whose mantle is the same sheet made small),
+5 cm from row to row, two rows on the facing, one round the neck. A tail is drawn up to 1.5 times as broad
+for its length as the image has it: the image is laid by the sheet's columns, which stand further apart on a
+grown person's chest than where the facing's 7 cm are measured, and nearer round the neck, where the tails
+are thin strokes that lean (the last picture). The facing's columns that lie over an arm end at the arm's
+end in the middle of the image; that is 40 cm under a grown person's chin and 25 cm under a child of five's,
+by my reading of the pictures 1 to 2 cm under such a child's picture, and no test holds it. The tests hold
+the tails' places as the script printed them; they do not read the image. The fur itself is as it was, a
+smooth white with the hairs' relief and no depth, the mantle is still a laid tent, and what round 151 said
+of the gown under it stands.
+
+Tests: `portrait/tests/mantle.rs`, one new (no tail where the fur ends and none on a hem, the image's way
+down is the cloth's on the chest, the image is drawn at about its size, no triangle of the fur without an
+area in the image); it fails on round 145's file.
+`cargo test --release` as a whole: 125 of 125. `tests/portrait.test.ts` and its neighbour 44 of 44; typecheck
+and lint pass, no new warning. The module is 756 kB.
+Pictures (project files, `portraits/`): `runde152_vorher_nachher.png` (five crowned heads, before above and
+after below), `runde152_nah.png` (two of them large, before above and after below),
+`runde152_seite_und_hinten.png` (the five from the side and from behind).
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the

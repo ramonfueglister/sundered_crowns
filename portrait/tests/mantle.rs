@@ -121,6 +121,117 @@ fn the_mantle_is_open_in_front_and_its_fur_lies_along_the_opening() {
     }
 }
 
+/// The ermine's image (round 152; tools/portrait/pipeline/README.md): how much of the cloth it covers across the
+/// facing and down it (units of 10 cm; mantle.py, `MANTLE_TAILS`), and where its two tails lie in it, across from
+/// its left edge and down from its upper one, as fur_tex.py prints them. The tests do not read the image itself.
+const COVERS: [f32; 2] = [0.7, 1.0];
+const TAILS: [[f32; 4]; 2] = [[0.293, 0.418, 0.084, 0.383], [0.711, 0.818, 0.572, 0.869]];
+/// How much of the image, from its upper edge, goes round a rolled hem (tunic_bind.py; the builder knows a hem's
+/// triangles by it, real_look.rs).
+const HEM: f32 = 0.05;
+
+/// Whether a place in the fur's image lies in a tail or within `by` of one (the image repeats with every whole
+/// number, and the stage draws it from its upper edge down).
+fn in_a_tail(uv: [f32; 2], by: f32) -> bool {
+    let within = |v: f32, lo: f32, hi: f32| [-1.0, 0.0, 1.0].iter().any(|w| v + w > lo - by && v + w < hi + by);
+    TAILS.iter().any(|t| within(uv[0].rem_euclid(1.0), t[0], t[1]) && within(uv[1].rem_euclid(1.0), t[2], t[3]))
+}
+
+#[test]
+fn the_ermines_tails_stand_whole_on_the_facing_and_hang_down_the_cloth() {
+    // (round 152) The fur's place in its image is the facing's own: across it from the front edge, down it from the
+    // neck. On sixteen crowned heads: where the fur ends (at the red cloth, and where a rolled hem hangs on it) no
+    // tail is cut, and none lies on a hem; on the chest the image's way down is the cloth's way down, a tail
+    // hangs; the image is drawn about as large as it is made for; and no triangle of the fur is without an area in
+    // the image (the stage finds the relief's direction by it, and draws a triangle without one black).
+    let Some(h) = head() else { return };
+    let sub = |a: &V3, b: &V3| -> V3 { [a[0] - b[0], a[1] - b[1], a[2] - b[2]] };
+    let len = |a: V3| (a[0] * a[0] + a[1] * a[1] + a[2] * a[2]).sqrt();
+    let none = (f32::MAX, f32::MIN);
+    let wide = |r: &mut (f32, f32), v: f32| *r = (r.0.min(v), r.1.max(v));
+    let (mut ends, mut cut, mut hems, mut hangs, mut chest, mut flat, mut seen) = (0, 0, 0, 0f32, 0f32, 0, 0);
+    let (mut across, mut down, mut tall) = (none, none, 0f32);
+    for (k, female, age) in people() {
+        let out = build(&h, &person_of(k, female, age, 4), 1);
+        let m = parts(&out.surfaces, k);
+        let fur = m.fur;
+        let level = m.gold.pos.iter().map(|q| q[1]).sum::<f32>() / m.gold.pos.len() as f32;
+        // the fur's sides, by their two corners: one that a single triangle has is where the fur ends at the cloth,
+        // one that more than two have is where a rolled hem hangs on it
+        let bits = |q: &V3| q.map(f32::to_bits);
+        let mut sides: std::collections::HashMap<([u32; 3], [u32; 3]), u32> = std::collections::HashMap::new();
+        let side = |a: &V3, b: &V3| if bits(a) < bits(b) { (bits(a), bits(b)) } else { (bits(b), bits(a)) };
+        for t in (0..fur.pos.len()).step_by(3) {
+            for c in 0..3 {
+                *sides.entry(side(&fur.pos[t + c], &fur.pos[t + (c + 1) % 3])).or_insert(0) += 1;
+            }
+        }
+        let (mut size_a, mut size_d, mut weight) = (0f32, 0f32, 0f32);
+        for t in (0..fur.pos.len()).step_by(3) {
+            for c in 0..3 {
+                let (a, b) = (t + c, t + (c + 1) % 3);
+                // (as far as a picture shows it, to 24 cm under the chin: the facing's columns that lie over an arm
+                // end at the arm's end, in the middle of the image, 25 cm under the chin of a child of five and
+                // 40 cm under a grown person's)
+                if sides[&side(&fur.pos[a], &fur.pos[b])] != 2 && fur.pos[a][1].min(fur.pos[b][1]) > out.chin - 2.4 {
+                    ends += 1;
+                    let half = [(fur.uv[a][0] + fur.uv[b][0]) / 2.0, (fur.uv[a][1] + fur.uv[b][1]) / 2.0];
+                    let in_one = [fur.uv[a], fur.uv[b], half].iter().any(|&uv| in_a_tail(uv, 0.03));
+                    cut += usize::from(in_one);
+                    if !show() {
+                        assert!(!in_one, "person {k}: a tail at the fur's end, {:?} to {:?} in the image", fur.uv[a], fur.uv[b]);
+                    }
+                }
+            }
+            // the triangle on the cloth and in the image: which way on the cloth the image goes across and up
+            let (e1, e2) = (sub(&fur.pos[t + 1], &fur.pos[t]), sub(&fur.pos[t + 2], &fur.pos[t]));
+            let (d1, d2) = ([fur.uv[t + 1][0] - fur.uv[t][0], fur.uv[t + 1][1] - fur.uv[t][1]], [fur.uv[t + 2][0] - fur.uv[t][0], fur.uv[t + 2][1] - fur.uv[t][1]]);
+            let det = d1[0] * d2[1] - d2[0] * d1[1];
+            let area = len([e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]]) / 2.0;
+            let hem = (0..3).all(|c| fur.uv[t + c][1].abs() <= HEM);
+            // (a hem's image is laid along the hem, two of the cloth's lengths to one of the image's)
+            if det.abs() * COVERS[0] * COVERS[1] / 2.0 < if hem { 0.002 } else { 0.02 } * area {
+                flat += 1;
+                assert!(show(), "person {k}: a triangle of the fur at {:?} without an area in the image", fur.pos[t]);
+                continue;
+            }
+            if hem {
+                hems += 1;
+                assert!(!(0..3).any(|c| in_a_tail(fur.uv[t + c], 0.02)), "person {k}: a tail on a hem");
+                continue;
+            }
+            let to_right: V3 = std::array::from_fn(|i| (e1[i] * d2[1] - e2[i] * d1[1]) / det);
+            let down_way: V3 = std::array::from_fn(|i| (e2[i] * d1[0] - e1[i] * d2[0]) / det);
+            // on the chest, in front, from under the brooches down to the picture's lower edge
+            let front = (0..3).all(|c| fur.pos[t + c][2] > out.cz && fur.pos[t + c][1] < level - 0.3 && fur.pos[t + c][1] > out.chin - 2.4);
+            if front && (0..3).all(|c| fur.uv[t + c][0] > 0.0 && fur.uv[t + c][0] < 1.0) {
+                chest += area;
+                hangs += area * f32::from(down_way[1] < -0.7 * len(down_way));
+                size_a += area * len(to_right);
+                size_d += area * len(down_way);
+                weight += area;
+            }
+        }
+        assert!(weight > 0.5, "person {k}: {weight} of fur on the chest");
+        wide(&mut across, size_a / weight);
+        wide(&mut down, size_d / weight);
+        // (the image is made for 7 cm across the facing where the mantle's sheet stands 12.5 cm off the body's axis,
+        // and for 10 cm down it, on the base body: on a grown person's chest the facing is broader than that, and a
+        // child's mantle is smaller all round; a woman's is narrower across for its length than a man's)
+        let (a, d) = (size_a / weight, size_d / weight);
+        tall = tall.max(a / d * COVERS[1] / COVERS[0]);
+        if !show() {
+            assert!(a > 0.6 && a < 1.2 && d > 0.6 && d < 1.25 && a / d > 0.7 && a / d < 1.1, "person {k}: the image covers {a} by {d} of the cloth");
+        }
+        seen += 1;
+    }
+    if show() {
+        println!("{seen} mantles: {ends} sides where the fur ends, {cut} of them in a tail; {hems} triangles of hems; {flat} triangles without an area in the image");
+        println!("on the chest: {:.3} of the fur's image hangs down the cloth; the image covers {:.2}..{:.2} across and {:.2}..{:.2} down, a tail at most {tall:.2} times as broad for its length as in the image", hangs / chest, across.0, across.1, down.0, down.1);
+    }
+    assert!(ends > 16 * 300 && hems > 16 * 1000 && hangs > 0.9 * chest, "{ends} sides where the fur ends, {hems} triangles of hems, {hangs} of {chest} of the chest's fur hangs");
+}
+
 #[test]
 fn two_brooches_on_the_fur_hold_it_with_a_cord_that_runs_over_the_gown() {
     let Some(h) = head() else { return };
