@@ -100,15 +100,11 @@
         "!src/net/lots.ts",
         "!src/net/people.ts",
         "!src/people/panel.ts",
-        "!src/sim/content/ground.ts",
         "!src/sim/content/landmarks.ts",
         "!src/sim/settlement/fields.ts",
         "!src/sim/settlement/landmarks.ts",
         "!src/sim/settlement/streets.ts",
-        "!src/sim/setup.ts",
         "!src/sim/state.ts",
-        "!src/sim/systems/fields.ts",
-        "!src/sim/systems/landmarks.ts",
         "!src/sim/systems/lots.ts",
         "!src/sim/upgrade.ts",
         "!src/worldprobe/far.ts",
@@ -116,9 +112,7 @@
         "!src/worldprobe/lots.ts",
         "!src/worldprobe/settle.ts",
         "!src/worldprobe/world.ts",
-        "!tests/worldprobe/hamlets.test.ts",
-        "!tools/sim/write_lots.ts",
-        "!tools/worldprobe/build_ground.ts"
+        "!tools/sim/write_lots.ts"
       ],
       "formatter": { "enabled": true }
     }

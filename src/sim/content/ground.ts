@@ -26,15 +26,21 @@ export interface Ground {
 
 export function compileGround(j: GroundJson): Ground {
   const towns = new Map<number, { w: number; d: number; bits: Uint8Array }>();
-  for (const t of j.sites) towns.set(t.site, { w: t.w, d: t.d, bits: Uint8Array.from(atob(t.cells), (c) => c.charCodeAt(0)) });
+  for (const t of j.sites)
+    towns.set(t.site, { w: t.w, d: t.d, bits: Uint8Array.from(atob(t.cells), (c) => c.charCodeAt(0)) });
   return {
-    year: j.year, metresPerBlock: j.metresPerBlock,
+    year: j.year,
+    metresPerBlock: j.metresPerBlock,
     has: (site) => towns.has(site),
-    reach: (site) => { const t = towns.get(site); return t ? Math.min(t.w, t.d) >> 1 : 0; },
+    reach: (site) => {
+      const t = towns.get(site);
+      return t ? Math.min(t.w, t.d) >> 1 : 0;
+    },
     free: (site, bx, bz) => {
       const t = towns.get(site);
       if (!t) return false;
-      const x = bx + (t.w >> 1), z = bz + (t.d >> 1);
+      const x = bx + (t.w >> 1),
+        z = bz + (t.d >> 1);
       if (x < 0 || z < 0 || x >= t.w || z >= t.d) return false;
       const k = z * t.w + x;
       return ((t.bits[k >> 3] >> (k & 7)) & 1) === 1;
@@ -48,9 +54,13 @@ export function compileGround(j: GroundJson): Ground {
 export function widened(g: Ground | null, dry: Ground | null): Ground | null {
   if (!g || !dry || dry.year !== g.year || dry.metresPerBlock !== g.metresPerBlock) return g;
   return {
-    year: g.year, metresPerBlock: g.metresPerBlock,
+    year: g.year,
+    metresPerBlock: g.metresPerBlock,
     has: (site) => g.has(site),
     reach: (site) => (dry.has(site) ? Math.max(g.reach(site), dry.reach(site)) : g.reach(site)),
-    free: (site, bx, bz) => { const r = g.reach(site); return Math.abs(bx) <= r && Math.abs(bz) <= r ? g.free(site, bx, bz) : dry.free(site, bx, bz); },
+    free: (site, bx, bz) => {
+      const r = g.reach(site);
+      return Math.abs(bx) <= r && Math.abs(bz) <= r ? g.free(site, bx, bz) : dry.free(site, bx, bz);
+    },
   };
 }
