@@ -2,7 +2,7 @@
 // and the stage's own code is not part of what the pieces are made of, tools/stamp/piece_key.ts).
 import type { Batch } from './batch';
 import type { Figures } from '../figures/stage';
-import type { Faces, Free } from './faces';
+import type { Faces, Field, Free } from './faces';
 
 /**
  * A mesh as flat lists: three numbers per corner for position, direction and colour. A `Batch` is one. Or, where
@@ -20,6 +20,8 @@ export interface Shape {
   faces?: Faces;
   /** its upright and level rectangles on no grid, taken out of the lists likewise (faces.ts `Free`) */
   free?: Free;
+  /** the level tops of its columns, taken out of `faces` and joined where they lie side by side at one height (faces.ts `Field`) */
+  tops?: Field;
   /**
    * Of lists that move as the mesh glides to the shape of the next coarser step (worldprobe/glide.ts): the height each
    * corner ends up at.

@@ -5,7 +5,7 @@ import * as THREE from 'three/webgpu';
 import { Batch } from '../lookprobe/batch';
 import type { Shape } from '../lookprobe/shape';
 import { buildOpenSea } from '../lookprobe/terrain';
-import { FACE_STEPS } from '../lookprobe/faces';
+import { FACE_GEO, FACE_STEPS } from '../lookprobe/faces';
 import { GRID, N, SEA_Y, onGrid } from '../lookprobe/layout';
 import { maybeGunzip } from './gunzip';
 import { buildPiece, warmPieces } from './build';
@@ -13,6 +13,7 @@ import { type Cover, KINDS, laidOut } from './far';
 import { glide } from './glide';
 import { above, lay, meanCover, summary } from './mean';
 import { faced, flat as floats, small } from './small';
+import { joinTops } from './tops';
 import { bytesOf, pack, unpack } from './pack';
 import { folderOf, kept } from './store';
 import { unbrotli } from './brotli';
@@ -23,7 +24,7 @@ import type { Piece, WorldScene } from './world';
 /** a matrix that moves nothing */
 const AS_IT_IS = new THREE.Matrix4();
 
-export interface PieceJob { id: number; piece: Piece; region: string; /** step of the map: blocks 2^step cells wide */ step: number; base: string; bakedSky: boolean; /** the piece is kept on disk under this name, in the folder of this build (store.ts); `kept`: it is there, or may be (the store has not yet said what it holds), and is read if so, not built */ keep?: { build: string; name: string; kept: boolean }; /** the world's start year, whose towns are built, whose forest stands and whose people live on the land (default 1356) */ year?: number; /** false: a far step as far.ts lays it out, not as the mean of the finer step */ mean?: boolean | 'compare'; /** for a piece of the first far step: the summaries of the four finest pieces under it that the page holds (mean.ts), in rows */ under?: (Float32Array | undefined)[]; /** side of the ground the piece is built on, where it is not the usual one (layout.ts: GRID); the piece's ox, oz and part are given on that ground */ grid?: number; /** the piece's lists as small numbers (small.ts), not as floats */ small?: boolean; /** and of those the rectangles on the grid of blocks as faces (lookprobe/faces.ts) */ faces?: boolean; /** false: the rectangles on no grid of what stands on the piece stay triangles (faces.ts `Free`) */ free?: boolean; /** false: the piece is built even where its table was built ahead (table.ts) */ tables?: boolean; /** the piece's land as faces that glide to the shape of the coarser piece over it, where that has a table (glide.ts) */ glide?: boolean }
+export interface PieceJob { id: number; piece: Piece; region: string; /** step of the map: blocks 2^step cells wide */ step: number; base: string; bakedSky: boolean; /** the piece is kept on disk under this name, in the folder of this build (store.ts); `kept`: it is there, or may be (the store has not yet said what it holds), and is read if so, not built */ keep?: { build: string; name: string; kept: boolean }; /** the world's start year, whose towns are built, whose forest stands and whose people live on the land (default 1356) */ year?: number; /** false: a far step as far.ts lays it out, not as the mean of the finer step */ mean?: boolean | 'compare'; /** for a piece of the first far step: the summaries of the four finest pieces under it that the page holds (mean.ts), in rows */ under?: (Float32Array | undefined)[]; /** side of the ground the piece is built on, where it is not the usual one (layout.ts: GRID); the piece's ox, oz and part are given on that ground */ grid?: number; /** the piece's lists as small numbers (small.ts), not as floats */ small?: boolean; /** and of those the rectangles on the grid of blocks as faces (lookprobe/faces.ts) */ faces?: boolean; /** false: the rectangles on no grid of what stands on the piece stay triangles (faces.ts `Free`) */ free?: boolean; /** false: the piece is built even where its table was built ahead (table.ts) */ tables?: boolean; /** the piece's land as faces that glide to the shape of the coarser piece over it, where that has a table (glide.ts) */ glide?: boolean; /** false: the level tops of a near piece's columns stay a face to each column, not joined (tops.ts) */ tops?: boolean }
 /** Asks a worker to load the map's data of the finest step before its first piece of that step (build.ts `warmPieces`); no answer comes. */
 export interface WarmJob { warm: true; region: string; base: string; year?: number }
 /** Tells a worker that a job it was given is no longer wanted: if it has not begun it, it answers `cancelled` and drops it; else the piece comes as usual. */
@@ -222,14 +223,23 @@ async function build(job: PieceJob) {
     // water above the sea are rectangles on no grid: those are faces of floats)
     const flat = job.small ? small : floats, solid = job.small && job.faces ? faced : flat, sea = job.small && job.faces ? (b: Batch) => faced(b, SEA_LIFT) : flat;
     const loose = job.small && job.faces && job.free !== false ? (b: Batch) => faced(b, 0, true) : solid;
-    const scene: WorldScene<Shape> = built ? { ground: solid(built.ground), carried: built.carried && solid(built.carried), things: (glides ? flat : loose)(built.things), water: sea(built.water), raised: (glides ? flat : loose)(built.raised!), figures: built.figures, cells: built.cells.map((c) => ({ ...c, far: flat(c.far) })), counts: built.counts }
+    // (the tops of a near piece's columns joined where they lie at one height: tops.ts)
+    // (the counts `ground faces` and `ground faces joined`: the faces of its ground before and after)
+    const ground = (b: Batch) => {
+      const own = solid(b);
+      if (!(step === 0 && job.small && job.faces && job.tops !== false) || !built) return own;
+      const joined = joinTops(own, piece.part.x0, piece.part.z0), faces = (s: Shape) => (s.faces?.geo.length ?? 0) / FACE_GEO + (s.tops?.geo.length ?? 0) / FACE_GEO;
+      built.counts['ground faces'] = faces(own); built.counts['ground faces joined'] = faces(joined);
+      return joined;
+    };
+    const scene: WorldScene<Shape> = built ? { ground: ground(built.ground), carried: built.carried && solid(built.carried), things: (glides ? flat : loose)(built.things), water: sea(built.water), raised: (glides ? flat : loose)(built.raised!), figures: built.figures, cells: built.cells.map((c) => ({ ...c, far: flat(c.far) })), counts: built.counts }
       : { ground: nothing, things: nothing, water: sea(buildOpenSea(piece.ox, piece.oz, piece.part)), cells: [], counts: {} };
     // the piece glides to the shape of the coarser piece over it, where that has a table
     if (built && glides && own && !built.cells.length && !built.figures) {
       const before = performance.now(), over = await tableOver(job);
       if (over) { built.counts[`pieces gliding step ${step}`] = glide(scene, own, over, job.bakedSky, step) ? 1 : 0; built.counts['ms glide'] = Math.round(performance.now() - before); }
     }
-    const lists = [scene.ground, scene.carried ?? nothing, scene.things, scene.water, scene.raised ?? nothing, ...scene.cells.map((c) => c.far)].flatMap((s) => [s.pos, s.nor, s.col, ...(s.sink ? [s.sink] : []), ...(s.faces ? [s.faces.geo, s.faces.col, s.faces.nor, ...(s.faces.aim && s.faces.aimCol ? [s.faces.aim, s.faces.aimCol] : [])] : []), ...(s.free ? [s.free.geo, s.free.col, s.free.nor] : [])]).concat(scene.figures ? [scene.figures.a, scene.figures.b, scene.figures.c, scene.figures.d, scene.figures.e] : []).map((a) => (a as Float32Array).buffer).filter((buf) => buf.byteLength > 0);
+    const lists = [scene.ground, scene.carried ?? nothing, scene.things, scene.water, scene.raised ?? nothing, ...scene.cells.map((c) => c.far)].flatMap((s) => [s.pos, s.nor, s.col, ...(s.sink ? [s.sink] : []), ...(s.faces ? [s.faces.geo, s.faces.col, s.faces.nor, ...(s.faces.aim && s.faces.aimCol ? [s.faces.aim, s.faces.aimCol] : [])] : []), ...(s.free ? [s.free.geo, s.free.col, s.free.nor] : []), ...(s.tops ? [s.tops.geo, s.tops.nor, s.tops.tones] : [])]).concat(scene.figures ? [scene.figures.a, scene.figures.b, scene.figures.c, scene.figures.d, scene.figures.e] : []).map((a) => (a as Float32Array).buffer).filter((buf) => buf.byteLength > 0);
     // (summed before the lists are handed over)
     const sum = step === 0 && job.mean === true ? summed(built, piece.part) ?? undefined : undefined;
     // (packed before the lists are handed over, too: a copy, which the page passes on to be zipped and written)
