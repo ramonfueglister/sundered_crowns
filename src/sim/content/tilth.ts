@@ -12,7 +12,17 @@ export interface TilthJson {
    *  `dry` (1: the Mediterranean kind of land, two courses), and the field lots from (`lx0`, `lz0`) in a box of `cols`
    *  by `rows`: `cells`, base64 of a bit field, row by row from north to south, in a row from west to east, the lowest
    *  bit of a byte first, 1 = a furlong can lie there */
-  sites: { site: number; wx: number; wz: number; dry: number; lx0: number; lz0: number; cols: number; rows: number; cells: string }[];
+  sites: {
+    site: number;
+    wx: number;
+    wz: number;
+    dry: number;
+    lx0: number;
+    lz0: number;
+    cols: number;
+    rows: number;
+    cells: string;
+  }[];
 }
 
 export interface Tilth {
@@ -34,18 +44,23 @@ export function compileTilth(j: TilthJson): Tilth {
   return {
     year: j.year,
     has: (site) => towns.has(site),
-    centre: (site) => { const t = towns.get(site); return t ? [t.wx, t.wz] : null; },
+    centre: (site) => {
+      const t = towns.get(site);
+      return t ? [t.wx, t.wz] : null;
+    },
     courses: (site) => (towns.get(site)?.dry ? COURSES_DRY : COURSES),
     slots: (site) => {
       const t = towns.get(site);
       if (!t) return [];
-      const bits = Uint8Array.from(atob(t.cells), (c) => c.charCodeAt(0)), out: Slot[] = [];
-      for (let r = 0; r < t.rows; r++) for (let c = 0; c < t.cols; c++) {
-        const k = r * t.cols + c;
-        if (!((bits[k >> 3] >> (k & 7)) & 1)) continue;
-        const [x, z] = lotCorner(t.lx0 + c, t.lz0 + r);
-        out.push({ bx: x - t.wx, bz: z - t.wz });
-      }
+      const bits = Uint8Array.from(atob(t.cells), (c) => c.charCodeAt(0)),
+        out: Slot[] = [];
+      for (let r = 0; r < t.rows; r++)
+        for (let c = 0; c < t.cols; c++) {
+          const k = r * t.cols + c;
+          if (!((bits[k >> 3] >> (k & 7)) & 1)) continue;
+          const [x, z] = lotCorner(t.lx0 + c, t.lz0 + r);
+          out.push({ bx: x - t.wx, bz: z - t.wz });
+        }
       return out;
     },
   };

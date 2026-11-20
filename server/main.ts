@@ -85,6 +85,12 @@ const http = createServer((req, res) => {
     res.end(zip ? gz : json);
     return;
   }
+  // how far the world has gone from history (src/sim/divergence.ts)
+  if (req.url === '/divergence') {
+    res.writeHead(200, h);
+    res.end(JSON.stringify(core.divergence()));
+    return;
+  }
   // the persons (src/net/people.ts): of a place for the figures, one in full for the portrait
   const people = /^\/people\/(\d+)$/.exec(req.url ?? ''),
     person = /^\/person\/(\d+)$/.exec(req.url ?? '');
