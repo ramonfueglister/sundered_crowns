@@ -886,7 +886,7 @@ describe('the economies of the cities in the world', () => {
     // a world of 1291 from before feature 21 has its economies founded anew on the day it has reached
     // biome-ignore lint/suspicious/noExplicitAny: a state of an older version, which no type of today describes
     const old = decodeState(encodeState(s)) as any;
-    old.v = 32;
+    old.v = 33;
     const up = upgradeState(old, w),
       founded = decodeState(encodeState(s));
     foundEconomy(founded, w);

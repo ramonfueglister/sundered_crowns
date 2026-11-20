@@ -44,9 +44,11 @@ import type { Table } from './ecs';
  *  32: the days of rest without a leak (economy feature 20): a firm buys on a working day the materials of its next
  *  working day, and the owner of a firm buys on the working days of his faith on the mean profit of his firm over a
  *  year; the engine's state keeps those profits (its format 11).
- *  33: a world knows the history only up to its start (economy feature 21): a world of 1291 on the table of 1356 forms
+ *  33: the streets and the market of every town (settlement feature 3, src/sim/settlement/streets.ts): the parcels
+ *  lie at streets that grew to them, no longer on a grid; every parcel keeps its family and its size.
+ *  34: a world knows the history only up to its start (economy feature 21): a world of 1291 on the table of 1356 forms
  *  its expectations from 1281 to 1291, not from the years of the plague; its economies are founded anew. */
-export const STATE_VERSION = 33;
+export const STATE_VERSION = 34;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
@@ -195,6 +197,22 @@ export type HamletSchema = typeof HAMLET_SCHEMA;
 /** What a row of the land register is: the parcel of a family in a town, or the farmstead of a family in a hamlet.
  *  Walls, gates, bridges, streets, squares and landmarks get their numbers when their features are built. */
 export const LOT_KIND = { parcel: 0, farmstead: 1 } as const;
+/** The streets and the markets of the towns (settlement feature 3, src/sim/settlement/streets.ts): straight pieces
+ *  of street, east-west or north-south, and the square of each town's market. A row is never freed. */
+export const STREET_SCHEMA = {
+  /** the town (its site, as in the land register) */
+  site: 'i16',
+  /** the ends of the piece on the street's middle line, or the corners of the market: metres east and south of the
+   *  centre of the town, at the scale of the houses */
+  x0: 'f32', z0: 'f32', x1: 'f32', z1: 'f32',
+  /** what it is (STREET_KIND) */
+  kind: 'u8',
+  /** metres from side to side */
+  width: 'f32',
+} as const;
+export type StreetSchema = typeof STREET_SCHEMA;
+/** What a row of the streets is: a lane grown to the parcels, a street along a way of the world of its kind, the market. */
+export const STREET_KIND = { lane: 0, track: 1, road: 2, highway: 3, market: 4 } as const;
 /** A firm of the economy of a city (economy feature 10): an entity for every firm the engine computes. The firms of
  *  a city lie one after the other, in the engine's order (`CityEconomies.firm0`). All but the place and the owner
  *  are written by the economy after every day (src/sim/systems/economy.ts). */
@@ -292,6 +310,8 @@ export interface WorldState {
   nextUid: number;
   /** the years of the archive of the dead, the earliest first (src/sim/people/archive.ts) */
   archive: ArchiveYear[];
+  /** the streets and the markets of the towns (src/sim/systems/lots.ts) */
+  street: Table<StreetSchema>;
   economy: {
     /** the cities as economies that trade; null in a world that does not start in the year of their calibration */
     cities: CityEconomies | null;

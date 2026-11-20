@@ -1,5 +1,5 @@
-// What the world server tells a browser about the land register (src/sim/systems/lots.ts): the parcels of a town
-// and the farmsteads of its hamlets, for the houses the world graphic sets on them. Read-only HTTP: GET /lots/<site> and GET /lots?sites=<a>,<b>,…
+// What the world server tells a browser about the land register (src/sim/systems/lots.ts): the parcels of a town,
+// its streets and market, and the farmsteads of its hamlets, for the houses the world graphic sets on them. Read-only HTTP: GET /lots/<site> and GET /lots?sites=<a>,<b>,…
 // (server/main.ts). A town is named by its site: its index into data/content/gazetteer.json.
 import type { WorldState } from '../sim/state';
 import { ALIVE, NO_LOT } from '../sim/state';
@@ -23,6 +23,9 @@ export interface TownLots {
   family: number[]; persons: number[];
   /** the hamlets of the town: their ids, their middles and the farmsteads laid out in each */
   hamlets: { id: number[]; x: number[]; z: number[]; farms: number[] };
+  /** the streets and the market of the town (settlement feature 3): the ends of each straight piece on its middle
+   *  line, or the corners of the market; what it is (STREET_KIND in src/sim/state.ts) and its width in metres */
+  streets: { x0: number[]; z0: number[]; x1: number[]; z1: number[]; kind: number[]; width: number[] };
 }
 
 /** The most towns one request may ask for (GET /lots?sites=…). */
@@ -36,7 +39,7 @@ export function townLots(s: WorldState, site: number): TownLots {
  *  the persons. A site without ground gets an empty list. */
 export function manyTownsLots(s: WorldState, sites: readonly number[]): TownLots[] {
   const L = s.lot.cols, F = s.family.cols, P = s.person.cols;
-  const out = sites.map((site): TownLots => ({ site, day: s.day, id: [], kind: [], hamlet: [], x: [], z: [], w: [], d: [], front: [], family: [], persons: [], hamlets: { id: [], x: [], z: [], farms: [] } }));
+  const out = sites.map((site): TownLots => ({ site, day: s.day, id: [], kind: [], hamlet: [], x: [], z: [], w: [], d: [], front: [], family: [], persons: [], hamlets: { id: [], x: [], z: [], farms: [] }, streets: { x0: [], z0: [], x1: [], z1: [], kind: [], width: [] } }));
   const at = new Map<number, TownLots>();
   out.forEach((o) => { if (!at.has(o.site)) at.set(o.site, o); });
   const row = new Int32Array(s.lot.size).fill(-1); // the position of a parcel in the list of its town
@@ -51,6 +54,11 @@ export function manyTownsLots(s: WorldState, sites: readonly number[]): TownLots
   for (let h = 0; h < s.hamlets.size; h++) {
     const o = s.hamlets.alive[h] ? at.get(H.site[h]) : undefined;
     if (o) { o.hamlets.id.push(h); o.hamlets.x.push(H.x[h]); o.hamlets.z.push(H.z[h]); o.hamlets.farms.push(H.farms[h]); }
+  }
+  const S = s.street.cols;
+  for (let k = 0; k < s.street.size; k++) {
+    const o = s.street.alive[k] ? at.get(S.site[k]) : undefined;
+    if (o) { o.streets.x0.push(S.x0[k]); o.streets.z0.push(S.z0[k]); o.streets.x1.push(S.x1[k]); o.streets.z1.push(S.z1[k]); o.streets.kind.push(S.kind[k]); o.streets.width.push(S.width[k]); }
   }
   for (let f = 0; f < s.family.size; f++) {
     const l = s.family.alive[f] ? F.lot[f] : NO_LOT;

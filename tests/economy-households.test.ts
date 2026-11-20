@@ -385,10 +385,10 @@ describe('the state', () => {
     }
     expect(hashState(decodeState(encodeState(a)))).toBe(hashState(b));
   });
-  it('of a world that starts in the year of its table goes on where it is through the step to 33 (economy feature 21)', () => {
+  it('of a world that starts in the year of its table goes on where it is through the step to 34 (economy feature 21)', () => {
     // biome-ignore lint/suspicious/noExplicitAny: a state of an older version, which no type of today describes
     const old = decodeState(encodeState(s)) as any;
-    old.v = 32;
+    old.v = 33;
     const up = upgradeState(old, w);
     expect(up.v).toBe(STATE_VERSION);
     expect(hashState(up)).toBe(hashState(s));

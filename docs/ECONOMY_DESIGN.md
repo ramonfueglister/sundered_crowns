@@ -3431,7 +3431,7 @@ between the two runs stays at about 1.5 % instead of widening to 4.4 %.
 
 ### State and upgrade
 
-State version 33. The upgrade 32 → 33 founds the economies of a world that starts before the year of its table anew
+State version 34. The upgrade 33 → 34 founds the economies of a world that starts before the year of its table anew
 on the day the world has reached, as the step to 24: their days and yearly figures are gone, the firms and the parts
 of the persons are given out again, and the first period is the next day of the world. The persons stay who they
 are. A world that starts in the year of its table goes on where it is: its calibration has not changed.

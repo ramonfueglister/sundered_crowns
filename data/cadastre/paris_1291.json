@@ -1,0 +1,26 @@
+{
+ "wall_ha": 255.6,
+ "street_km": 61.6,
+ "streets": 1188,
+ "kinds": {
+  "Rue": 894,
+  "null": 152,
+  "Quai": 66,
+  "Impasse": 23,
+  "Passage": 13,
+  "Pont": 12,
+  "Cul de Sac": 10,
+  "Cul-de-Sac": 9
+ },
+ "junctions": {
+  "3": 562,
+  "4": 89,
+  "1": 72
+ },
+ "dead": 0.1,
+ "T": 0.777,
+ "X": 0.123,
+ "blocks": 330,
+ "block_median_m2": 3798,
+ "tau": 1.35
+}
