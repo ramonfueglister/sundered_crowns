@@ -6,4 +6,5 @@
 // stays as it is.
 declare const __BUILD__: string | undefined;
 
-export const stamped = (url: string) => (typeof __BUILD__ === 'string' ? `${url}${url.includes('?') ? '&' : '?'}v=${__BUILD__}` : url);
+export const stamped = (url: string) =>
+  typeof __BUILD__ === 'string' ? `${url}${url.includes('?') ? '&' : '?'}v=${__BUILD__}` : url;

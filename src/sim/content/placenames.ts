@@ -17,16 +17,25 @@ function hash(a: number, b: number) {
 
 /** Splits a word between a vowel and the following consonant nearest to its middle (null if it has no such point). */
 function cut(word: string): [string, string] | null {
-  const mid = word.length / 2; let best = -1, bd = Infinity;
-  for (let k = 1; k < word.length - 1; k++) if (isV(word[k - 1]) && !isV(word[k]) && Math.abs(k - mid) < bd) { bd = Math.abs(k - mid); best = k; }
+  const mid = word.length / 2;
+  let best = -1,
+    bd = Infinity;
+  for (let k = 1; k < word.length - 1; k++)
+    if (isV(word[k - 1]) && !isV(word[k]) && Math.abs(k - mid) < bd) {
+      bd = Math.abs(k - mid);
+      best = k;
+    }
   return best < 0 ? null : [word.slice(0, best), word.slice(best)];
 }
 
 function blend(a: string, b: string): string | null {
-  const wa = a.split(' '), wb = b.split(' ');
+  const wa = a.split(' '),
+    wb = b.split(' ');
   // two-word names ("Kafr Nakhl", "Tell Qadim"): keep the first word of one and the last word of the other
-  if (wa.length > 1 && wb.length > 1) return wa[0] === wb[0] && wa[wa.length - 1] === wb[wb.length - 1] ? null : `${wa[0]} ${wb[wb.length - 1]}`;
-  const x = cut(wa[0]), y = cut(wb[wb.length - 1]);
+  if (wa.length > 1 && wb.length > 1)
+    return wa[0] === wb[0] && wa[wa.length - 1] === wb[wb.length - 1] ? null : `${wa[0]} ${wb[wb.length - 1]}`;
+  const x = cut(wa[0]),
+    y = cut(wb[wb.length - 1]);
   if (!x || !y) return null;
   const out = x[0] + y[1];
   if (out.length < 4 || out.length > 13 || out === wa[0] || out === wb[wb.length - 1]) return null;
@@ -42,32 +51,50 @@ export function refineNames(names: string[], lon: ArrayLike<number>, lat: ArrayL
   // 2° grid of the real names
   const cell = (lo: number, la: number) => `${Math.floor(lo / 2)},${Math.floor(la / 2)}`;
   const grid = new Map<string, number[]>();
-  for (const i of real) { const k = cell(lon[i], lat[i]); let g = grid.get(k); if (!g) grid.set(k, (g = [])); g.push(i); }
+  for (const i of real) {
+    const k = cell(lon[i], lat[i]);
+    let g = grid.get(k);
+    if (!g) grid.set(k, (g = []));
+    g.push(i);
+  }
   const used = new Set(names.slice(0, L));
   for (let i = 0; i < L; i++) {
     if (isReal(names[i])) continue;
     // the nearest real names: widen the search ring until there are enough
-    const cx = Math.floor(lon[i] / 2), cy = Math.floor(lat[i] / 2);
+    const cx = Math.floor(lon[i] / 2),
+      cy = Math.floor(lat[i] / 2);
     let near: number[] = [];
     for (let r = 0; r < 40 && near.length < 10; r++) {
-      for (let dx = -r; dx <= r; dx++) for (let dy = -r; dy <= r; dy++) {
-        if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
-        const g = grid.get(`${cx + dx},${cy + dy}`); if (g) near = near.concat(g);
-      }
+      for (let dx = -r; dx <= r; dx++)
+        for (let dy = -r; dy <= r; dy++) {
+          if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+          const g = grid.get(`${cx + dx},${cy + dy}`);
+          if (g) near = near.concat(g);
+        }
     }
-    const cosLat = Math.cos(lat[i] * Math.PI / 180);
-    near.sort((p, q) => ((lon[p] - lon[i]) * cosLat) ** 2 + (lat[p] - lat[i]) ** 2 - (((lon[q] - lon[i]) * cosLat) ** 2 + (lat[q] - lat[i]) ** 2));
+    const cosLat = Math.cos((lat[i] * Math.PI) / 180);
+    near.sort(
+      (p, q) =>
+        ((lon[p] - lon[i]) * cosLat) ** 2 +
+        (lat[p] - lat[i]) ** 2 -
+        (((lon[q] - lon[i]) * cosLat) ** 2 + (lat[q] - lat[i]) ** 2),
+    );
     near = near.slice(0, 12);
     let name: string | null = null;
     for (let t = 0; t < 60 && !name; t++) {
       const h = hash(i, t);
-      const a = names[near[h % near.length]], b = names[near[(h >>> 8) % near.length]];
+      const a = names[near[h % near.length]],
+        b = names[near[(h >>> 8) % near.length]];
       if (a === b) continue;
       const c = blend(a, b);
       if (c && !used.has(c)) name = c;
     }
-    if (!name) { const base = numbered.exec(names[i])?.[1]; name = base && !generic.test(base) ? base : names[near[0]]; } // the old name stays readable at worst
-    used.add(name); out[i] = name;
+    if (!name) {
+      const base = numbered.exec(names[i])?.[1];
+      name = base && !generic.test(base) ? base : names[near[0]];
+    } // the old name stays readable at worst
+    used.add(name);
+    out[i] = name;
   }
   return out;
 }

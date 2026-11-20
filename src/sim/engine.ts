@@ -4,4 +4,6 @@ import type { World } from './world';
 import { tick, type Tick } from './schedule';
 import { SYSTEMS } from './systems';
 
-export function advanceDay(s: WorldState, w: World): Tick { return tick(s, w, SYSTEMS); }
+export function advanceDay(s: WorldState, w: World): Tick {
+  return tick(s, w, SYSTEMS);
+}

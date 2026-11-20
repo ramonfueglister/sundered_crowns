@@ -39,12 +39,26 @@ export interface ChronicleJson {
 /** What happens on a day: a person comes into the world (born, or alive on the first day), a reign ends, a person
  *  dies, a person takes a crown. On one day they happen in this order, so a successor takes the crown after the
  *  predecessor has left it. */
-export const enum Happening { Enter = 0, End = 1, Die = 2, Accede = 3 }
-export interface ChronicleEvent { day: number; what: Happening; person: number; realm: string }
-export interface ChronicleReignDays {
-  person: number; start: number; end: number | null;
+export const enum Happening {
+  Enter = 0,
+  End = 1,
+  Die = 2,
+  Accede = 3,
+}
+interface ChronicleEvent {
+  day: number;
+  what: Happening;
+  person: number;
+  realm: string;
+}
+interface ChronicleReignDays {
+  person: number;
+  start: number;
+  end: number | null;
   /** the dates of the source (null: none given) and the source of the row */
-  from: string | null; to: string | null; source: string;
+  from: string | null;
+  to: string | null;
+  source: string;
 }
 
 export interface Chronicle {
@@ -82,15 +96,23 @@ export function dayOf(date: string | null, startYear: number): number | null {
  *    ends; whose last reign has no end either, stays.
  *  - Nobody who died before the first day comes into the world. */
 export function compileChronicle(j: ChronicleJson): Chronicle {
-  const Y = j.year, n = j.persons.length;
-  const bornDay = j.persons.map((p) => dayOf(p.born, Y)), diedDay = j.persons.map((p) => dayOf(p.died, Y));
+  const Y = j.year,
+    n = j.persons.length;
+  const bornDay = j.persons.map((p) => dayOf(p.born, Y)),
+    diedDay = j.persons.map((p) => dayOf(p.died, Y));
   const reigns = j.reigns.map((r) => ({ ...r, s: dayOf(r.start, Y), e: dayOf(r.end, Y) }));
-  const first = new Array<number | null>(n).fill(null), last = new Array<number | null>(n).fill(null), home = new Array<string>(n).fill('');
+  const first = new Array<number | null>(n).fill(null),
+    last = new Array<number | null>(n).fill(null),
+    home = new Array<string>(n).fill('');
   const open = new Array<boolean>(n).fill(false);
   for (const r of [...reigns].sort((a, b) => (a.s ?? 0) - (b.s ?? 0))) {
     const p = r.person;
-    if (first[p] === null || (r.s ?? 0) < first[p]!) { first[p] = r.s ?? 0; home[p] = r.realm; }
-    if (r.e === null) open[p] = true; else if (last[p] === null || r.e > last[p]!) last[p] = r.e;
+    if (first[p] === null || (r.s ?? 0) < first[p]!) {
+      first[p] = r.s ?? 0;
+      home[p] = r.realm;
+    }
+    if (r.e === null) open[p] = true;
+    else if (last[p] === null || r.e > last[p]!) last[p] = r.e;
   }
   const events: ChronicleEvent[] = [];
   for (let p = 0; p < n; p++) {
@@ -108,10 +130,14 @@ export function compileChronicle(j: ChronicleJson): Chronicle {
     events.push({ day: Math.max(0, r.s ?? 0), what: Happening.Accede, person: r.person, realm: r.realm });
     if (r.e !== null) events.push({ day: r.e, what: Happening.End, person: r.person, realm: r.realm });
   }
-  events.sort((a, b) => a.day - b.day || a.what - b.what || a.person - b.person || (a.realm < b.realm ? -1 : a.realm > b.realm ? 1 : 0));
+  events.sort(
+    (a, b) =>
+      a.day - b.day || a.what - b.what || a.person - b.person || (a.realm < b.realm ? -1 : a.realm > b.realm ? 1 : 0),
+  );
   const reignsOf = new Map<string, ChronicleReignDays[]>();
   for (const r of reigns) {
-    const l = reignsOf.get(r.realm) ?? []; reignsOf.set(r.realm, l);
+    const l = reignsOf.get(r.realm) ?? [];
+    reignsOf.set(r.realm, l);
     l.push({ person: r.person, start: r.s ?? 0, end: r.e, from: r.start, to: r.end, source: r.source });
   }
   return { year: Y, persons: j.persons, bornDay, diedDay, home, events, reignsOf };
@@ -119,7 +145,12 @@ export function compileChronicle(j: ChronicleJson): Chronicle {
 
 /** The index of the first event on or after `day` (binary search). */
 export function firstEventOn(c: Chronicle, day: number): number {
-  let lo = 0, hi = c.events.length;
-  while (lo < hi) { const m = (lo + hi) >> 1; if (c.events[m].day < day) lo = m + 1; else hi = m; }
+  let lo = 0,
+    hi = c.events.length;
+  while (lo < hi) {
+    const m = (lo + hi) >> 1;
+    if (c.events[m].day < day) lo = m + 1;
+    else hi = m;
+  }
   return lo;
 }
