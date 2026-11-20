@@ -13,6 +13,7 @@ import { PROTOCOL_VERSION, type ClientMsg, type ServerMsg } from '../src/net/pro
 import { placePeople, manyPlacesPeople, personDetail, rulersOnMap, MAX_PLACES_PER_REQUEST } from '../src/net/people';
 import { townLots, manyTownsLots, MAX_SITES_PER_REQUEST } from '../src/net/lots';
 import { ALL_CULTURES } from '../src/sim/content/peoples';
+import { Talk, talkConfigFromEnv } from './talk';
 
 // local development: read ./.env if present (production hosts set real environment variables)
 if (existsSync('.env') && typeof process.loadEnvFile === 'function') process.loadEnvFile('.env');
@@ -37,6 +38,8 @@ const core = new WorldCore(cfg, store);
 await core.restoreIfEmpty();
 core.init();
 core.start();
+// conversations with the persons through a language model (server/talk, docs/TALK.md)
+const talk = new Talk(talkConfigFromEnv(env), () => ({ s: core.s, w: core.w }));
 console.log(
   `[world] ${cfg.id} day ${core.s.day}, ${cfg.secondsPerDay}s per day, store ${store.enabled ? 'supabase' : 'local only'}`,
 );
@@ -171,7 +174,8 @@ wss.on('connection', (ws, req) => {
       return;
     }
     if (session) {
-      session.handle(m);
+      if (m?.type === 'talk') void talk.handle(session, m);
+      else session.handle(m);
       return;
     }
     if (m?.type !== 'hello' || authing) return;
