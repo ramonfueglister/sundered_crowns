@@ -25,7 +25,7 @@ import type * as THREE from 'three/webgpu';
 import { N, NEAR, RIGHT, SEA_Y } from '../lookprobe/layout';
 import type { Stage } from '../lookprobe/stage';
 import { type HouseCell, createFine } from './fine';
-import type { PieceDone, PieceJob, WarmJob } from './piece.worker';
+import type { CancelJob, PieceDone, PieceJob, WarmJob } from './piece.worker';
 import { cover, keyOf } from './pyramid';
 import type { StoreAsk, StoreSays } from './store.worker';
 import { CELL } from './world';
@@ -74,6 +74,13 @@ const ROOM = 1000;
 const WAITING = 600;
 /** workers that build ahead into the store while the view rests: the others stay free for what the view asks for next */
 const SPARE_WORKERS = 2;
+/**
+ * the jobs a worker holds at once: the one it builds and the next, whose tables it fetches meanwhile (piece.worker.ts).
+ * One at a time, a worker stood still while the tables of its next piece came over the network, about as long as it
+ * takes to draw them. A job that waits its turn is taken back when the view no longer asks for it, or when a piece the
+ * view asks for more urgently has no worker; it is then given out again as the view asks.
+ */
+const DEPTH = 2;
 /** the widest view of each step: what a leap out to that step may show */
 const WIDEST = Array.from({ length: COARSEST + 1 }, (_, s) => { let w = NEAREST; while (w < FARTHEST && stepOf(w * 1.02) <= s) w *= 1.02; return Math.min(FARTHEST, w); });
 /** the width at which each step gives way to the next coarser one */
@@ -157,7 +164,7 @@ export interface Pieces {
  * need them). `changed` is called whenever a piece has arrived.
  */
 export function createPieces(stage: Stage, o: { region: string; base: string; bakedSky: boolean; ahead: boolean; changed(): void; /** how many workers build the pieces (default: up to 6 where the machine has ten cores or more, else up to 4 and one core left) */ workers?: number; /** the world's start year, whose towns are built */ year?: number; /** blocks of land around a piece of the far steps, for measuring (default NARROW; 100 is the wide margin of the finest step) */ margin?: number; /** keeps the pieces on disk, under this name of the game's build (store.ts): pieces of another build are not read */ keep?: string; /** the pieces' directions and colours as bytes, 20 bytes to a corner (small.ts), not as floats of 36 */ small?: boolean; /** and their rectangles on the grid of blocks as faces, 32 bytes to a rectangle (lookprobe/faces.ts) */ faces?: boolean; /** false: the rectangles on no grid of what stands on a piece stay triangles, not faces of floats (faces.ts `Free`) */ free?: boolean; /** false: every piece is built from the map's data, also where its table was built ahead (table.ts) */ tables?: boolean; /** false: the far steps change at their borders as they are, their land does not glide to the coarser step's shape (glide.ts) */ glide?: boolean; /** true: the first far step as the mean of the finest step (mean.ts: exact, but it builds four finest pieces for each far piece); 'compare': as far.ts lays it out, and measured against that mean (the counts `cmp …`); else as far.ts lays it out */ mean?: boolean | 'compare' }): Pieces {
-  const held = new Map<string, Held>(), building = new Set<string>(), jobs = new Map<number, Spot>(), idle: Worker[] = [];
+  const held = new Map<string, Held>(), building = new Set<string>(), jobs = new Map<number, Spot & { worker: Worker; taken?: boolean }>();
   const workers: Worker[] = [];
   const fine = createFine(stage, { still: !o.ahead, changed: o.changed, small: o.small, free: !!o.small && !!o.faces && o.free !== false });
   const pieces: Pieces = { look, failed: '', dispose: () => { for (const w of workers) w.terminate(); store?.terminate(); fine.dispose(); } };
@@ -251,7 +258,9 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
     const worker = new Worker(new URL('./piece.worker.ts', import.meta.url), { type: 'module' });
     worker.onmessage = (e: MessageEvent<PieceDone>) => {
       const spot = jobs.get(e.data.id)!;
-      jobs.delete(e.data.id); idle.push(worker);
+      jobs.delete(e.data.id);
+      // (a job taken back before the worker began it: the view gives it out again if it still asks for it)
+      if (e.data.cancelled) { building.delete(spot.key); stage.probe.counts['jobs taken back'] = (stage.probe.counts['jobs taken back'] ?? 0) + 1; o.changed(); return; }
       if (e.data.summary) {
         sums.delete(spot.key); sums.set(spot.key, e.data.summary);
         if (sums.size > KEPT_SUMS) sums.delete(sums.keys().next().value!);
@@ -262,17 +271,20 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
         if (waiting + bytes < WAITING * 1e6 && !sent.has(name)) { waiting += bytes; sent.set(name, bytes); store.postMessage({ put: name, bytes: e.data.packed } satisfies StoreAsk, [e.data.packed]); }
         else stage.probe.counts['pieces not kept'] = (stage.probe.counts['pieces not kept'] ?? 0) + 1;
       }
-      // a piece built ahead into the store goes on the stage only if the view has come to ask for it meanwhile
-      const spare = spot.spare && !asked.has(spot.key);
-      if (spare) for (const [name, n] of Object.entries(e.data.scene?.counts ?? {})) if (name.startsWith('ms ') || name.startsWith('pieces ')) stage.probe.counts[`${name} ahead`] = (stage.probe.counts[`${name} ahead`] ?? 0) + n;
+      // a piece goes on the stage only if the view asks for it: one built ahead into the store only if the view has
+      // come to ask for it meanwhile, and one the view has moved away from while it was built not at all (it is kept
+      // on disk all the same; sent to the graphics card it would only have cost a picture its time)
+      const unasked = !asked.has(spot.key);
+      if (unasked && spot.spare) for (const [name, n] of Object.entries(e.data.scene?.counts ?? {})) if (name.startsWith('ms ') || name.startsWith('pieces ')) stage.probe.counts[`${name} ahead`] = (stage.probe.counts[`${name} ahead`] ?? 0) + n;
+      if (unasked && !spot.spare && e.data.scene) stage.probe.counts['pieces no longer asked'] = (stage.probe.counts['pieces no longer asked'] ?? 0) + 1;
       // (a piece counts as being built until it is on the stage, so that it is not asked for again)
-      if (e.data.scene && !e.data.error && !spare) arrived.push({ spot, scene: e.data.scene }); else building.delete(spot.key);
+      if (e.data.scene && !e.data.error && !unasked) arrived.push({ spot, scene: e.data.scene }); else building.delete(spot.key);
       if (e.data.error) pieces.failed ||= e.data.error;
       if (stage.staged) { if (!admitting && arrived.length) admit(); o.changed(); }
       else if (!o.ahead) admit(); else { if (!admitting && arrived.length) { admitting = true; requestAnimationFrame(admit); } o.changed(); }
     };
     worker.onerror = (e) => { pieces.failed ||= e.message; o.changed(); };
-    idle.push(worker); workers.push(worker);
+    workers.push(worker);
   }
 
   /** how far a square of `side` finest blocks about (cx, cz) lies outside the picture (0: it reaches into it); what stands on it leans `lean` blocks into the picture */
@@ -342,10 +354,28 @@ export function createPieces(stage: Stage, o: { region: string; base: string; ba
       ahead.sort((a, b) => b.step - a.step || a.far - b.far);
       queue.push(...ahead.slice(0, SPARE_WORKERS - sparing).reverse());
     }
-    while (idle.length && queue.length) {
-      const next = queue.pop()!, worker = idle.pop()!, id = nextId++, margin = marginOf(next.step);
-      jobs.set(id, next); building.add(next.key);
+    // each job to the worker that holds the fewest
+    const loadOf = (w: Worker) => { let n = 0; for (const j of jobs.values()) if (j.worker === w) n++; return n; };
+    const freest = () => { let best: Worker | undefined, least = DEPTH; for (const w of workers) { const n = loadOf(w); if (n < least) { least = n; best = w; } } return best; };
+    for (let worker = freest(); worker && queue.length; worker = freest()) {
+      const next = queue.pop()!, id = nextId++, margin = marginOf(next.step);
+      jobs.set(id, { ...next, worker }); building.add(next.key);
       worker.postMessage({ id, step: next.step, small: o.small, faces: o.faces, free: o.free, tables: o.tables, glide: o.glide !== false, grid: margin === MARGIN ? undefined : PIECE + 2 * margin, keep: store ? { build: o.keep!, name: fileOf(next), kept: !listed || kept.has(fileOf(next)) } : undefined, piece: { ox: next.px * PIECE - margin, oz: next.pz * PIECE - margin, part: { x0: margin, z0: margin, x1: margin + PIECE, z1: margin + PIECE } }, region: o.region, base: o.base, bakedSky: o.bakedSky, year: o.year, mean: o.mean, under: next.step === 1 ? [0, 1, 2, 3].map((q) => sums.get(keyOf(0, next.px * 2 + (q & 1), next.pz * 2 + (q >> 1)))) : undefined } satisfies PieceJob);
+    }
+
+    // a job that waits its turn behind another (the later of a worker's two) is taken back where the view no longer
+    // asks for it, or where a piece of a more urgent kind found no worker (the kinds are those of the ranks above: the
+    // picture the view comes to rest at, its own step in the picture, the coarser step, around the picture …, and not
+    // the distance within a kind, which changes with every move of the view); and any job the view no longer asks
+    // for, in case the worker has not begun it
+    const kind = (rank: number) => Math.floor(rank / 5e8), rankOf = new Map<string, number>(), urgent = kind((queue[queue.length - 1] as (Spot & { rank?: number }) | undefined)?.rank ?? Infinity);
+    for (const w of wanted) if (!(rankOf.get(w.key)! <= w.rank)) rankOf.set(w.key, w.rank);
+    const later = new Set<number>();
+    for (const w of workers) { let first = Infinity, last = -1; for (const [id, j] of jobs) if (j.worker === w) { first = Math.min(first, id); last = Math.max(last, id); } if (last > first) later.add(last); }
+    for (const [id, j] of jobs) {
+      if (j.taken) continue;
+      const stale = !j.spare && !rankOf.has(j.key), behind = later.has(id) && kind(rankOf.get(j.key) ?? Infinity) > urgent;
+      if (stale || behind) { j.taken = true; j.worker.postMessage({ cancel: id } satisfies CancelJob); }
     }
 
     // the store zips what it has written once the workers are through with what the picture is missing

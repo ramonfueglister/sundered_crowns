@@ -48,7 +48,7 @@ describe('the kept tables of the far pieces', () => {
     // the loaders of the world graphic fetch the map's data from the page's base: here they read the files of public/
     beforeAll(() => {
       globalThis.fetch = (async (url: string | URL | Request) => {
-        const file = `public/${String(url).replace(/^\//, '')}`;
+        const file = `public/${String(url).replace(/^\//, '').replace(/\?.*$/, '')}`;
         return existsSync(file) ? new Response(readFileSync(file), { headers: { 'content-type': file.endsWith('.json') ? 'application/json' : 'application/octet-stream' } }) : new Response(null, { status: 404 });
       }) as typeof fetch;
     });

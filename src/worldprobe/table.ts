@@ -15,7 +15,7 @@
 import { Batch, type RGB } from '../lookprobe/batch';
 import { type Ground, type GroundTraits, Mat, N, SUMMIT, idx, onGrid } from '../lookprobe/layout';
 import { buildShore } from '../lookprobe/shore';
-import { type Part, buildTerrain, buildWater } from '../lookprobe/terrain';
+import { type Part, buildTerrain, buildWater, drawnTops } from '../lookprobe/terrain';
 import { pack, unpack } from './pack';
 import { FAR_FROM_ROADS, ROAD_SHOWS, roadOn } from './roads';
 
@@ -187,6 +187,12 @@ const traitsOf = (table: Table): GroundTraits => new TableTraits(table);
 export function drawLand(table: Table, bakedSky: boolean, part: Part): { ground: Batch; carried: Batch } {
   const g: Ground = { h: table.h, mat: table.mat, wet: table.wet, shore: table.shore, occ: table.occ, surf: table.surf, ox: table.ox, oz: table.oz };
   return onGrid(table.side, () => { const carried = new Batch(); return { ground: buildTerrain(g, traitsOf(table), bakedSky, part, carried), carried }; });
+}
+
+/** The tops of a table's columns as they are drawn: where trees stand, lower than the table has them (terrain.ts `drawnTops`). */
+export function drawnHeights(table: Table): ArrayLike<number> {
+  const g: Ground = { h: table.h, mat: table.mat, wet: table.wet, shore: table.shore, occ: table.occ, surf: table.surf, ox: table.ox, oz: table.oz };
+  return onGrid(table.side, () => drawnTops(g, traitsOf(table)));
 }
 
 /** Draws the banks of the water in a part of a table's own columns, as the piece has them there (glide.ts asks the coarser piece for them). */

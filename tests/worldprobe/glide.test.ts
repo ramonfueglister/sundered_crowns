@@ -6,7 +6,7 @@ import { FACE_COL, FACE_GEO, FACE_STEPS, FLIPPED, RISES, type Faces, glided } fr
 import { SEA_Y, onGrid } from '../../src/lookprobe/layout';
 import { TALLER, glide } from '../../src/worldprobe/glide';
 import { BRIGHTEST, faced, small } from '../../src/worldprobe/small';
-import { type Table, drawBanks, drawLand, drawTable, tableOf } from '../../src/worldprobe/table';
+import { type Table, drawBanks, drawLand, drawTable, drawnHeights, tableOf } from '../../src/worldprobe/table';
 import { SIDE, land, part } from './land';
 
 const S = FACE_STEPS;
@@ -27,12 +27,15 @@ function pair(over = OVER): { fine: Table; parent: Table } {
 function piece(over = OVER) {
   // (the meshes as the worker hands them over: the sea as faces on a grid lifted to its level, the water above it as lists)
   const { fine, parent } = pair(over), drawn = drawTable(fine, true), ground = faced(drawn.ground), carried = faced(drawn.carried!), water = faced(drawn.water, SEA_Y - Math.floor(SEA_Y * S) / S), raised = small(drawn.raised);
-  const before = { faces: ground.faces!.geo.length / FACE_GEO, geo: ground.faces!.geo.slice(), col: ground.faces!.col.slice(), banks: ground.pos.length / 9, water: water.pos.length / 9, raised: raised.pos.length / 9 };
+  const before = { faces: ground.faces!.geo.length / FACE_GEO, geo: ground.faces!.geo.slice(), col: ground.faces!.col.slice(), carried: carried.faces!.geo.length / FACE_GEO, banks: ground.pos.length / 9, water: water.pos.length / 9, raised: raised.pos.length / 9 };
   const columns = glide({ ground, carried, water, raised }, fine, parent, true);
   return { fine, parent, shapes: { ground, carried, water, raised }, ground: ground.faces!, carried: carried.faces!, before, columns };
 }
 /** a height of the coarser piece in the piece's blocks */
 const tall = (y: number) => SEA_Y + (y - SEA_Y) * TALLER;
+/** the tops of a table's columns as they are drawn (lower than the table has them where trees stand), worked out once a table */
+const drawn = new WeakMap<Table, ArrayLike<number>>();
+const topsAt = (table: Table) => { let h = drawn.get(table); if (!h) drawn.set(table, h = drawnHeights(table)); return h; };
 /**
  * What becomes of a column, from the two tables alone: the coarser column over it, where its top (or its bed) starts
  * and ends in 64ths, whether it is water now and then, and the level the coarser step's water has there.
@@ -40,7 +43,8 @@ const tall = (y: number) => SEA_Y + (y - SEA_Y) * TALLER;
 function fate(fine: Table, parent: Table, x: number, z: number) {
   const i = z * SIDE + x, p = (Math.floor((fine.oz + z) / 2) - parent.oz) * parent.side + Math.floor((fine.ox + x) / 2) - parent.ox, wetNow = fine.wet[i] === 1, wetThen = parent.wet[p] === 1;
   // (the bed of the sea that stays the sea stays where it is)
-  return { i, p, wetNow, wetThen, start: fine.h[i] * S, end: wetNow && wetThen && fine.surf[i] <= SEA_Y + 0.01 ? fine.h[i] * S : Math.round(tall(parent.h[p]) * S), level: wetThen ? (parent.surf[p] > SEA_Y + 0.01 ? tall(parent.surf[p]) : SEA_Y) : NaN };
+  const h = topsAt(fine), theirH = topsAt(parent);
+  return { i, p, wetNow, wetThen, start: h[i] * S, end: wetNow && wetThen && fine.surf[i] <= SEA_Y + 0.01 ? h[i] * S : Math.round(tall(theirH[p]) * S), level: wetThen ? (parent.surf[p] > SEA_Y + 0.01 ? tall(parent.surf[p]) : SEA_Y) : NaN };
 }
 /** a face that is the top of a column: the column's x and z; none for any other face */
 function topOf(f: Faces, k: number): [number, number] | null {
@@ -57,7 +61,7 @@ function topsOf(parent: Table) {
   for (const [b, carried] of [[drawn.ground, false], [drawn.carried, true]] as [Batch, boolean][]) for (let o = 0; o < b.pos.length; o += 9) {
     const corners = [0, 1, 2].map((c) => [b.pos[o + c * 3], b.pos[o + c * 3 + 2], b.col[o + c * 3], b.col[o + c * 3 + 1], b.col[o + c * 3 + 2]]);
     const x = Math.min(...corners.map((c) => c[0])), z = Math.min(...corners.map((c) => c[1])), p = z * parent.side + x;
-    if (![0, 1, 2].every((c) => b.nor[o + c * 3 + 1] === 1 && b.pos[o + c * 3 + 1] === parent.h[p]) || !Number.isInteger(x) || !Number.isInteger(z)) continue;
+    if (![0, 1, 2].every((c) => b.nor[o + c * 3 + 1] === 1 && b.pos[o + c * 3 + 1] === topsAt(parent)[p]) || !Number.isInteger(x) || !Number.isInteger(z)) continue;
     if (Math.max(...corners.map((c) => c[0])) !== x + 1 || Math.max(...corners.map((c) => c[1])) !== z + 1) continue;
     const top = tops.get(p) ?? { corners: [], carried };
     top.corners.push(corners); tops.set(p, top);
@@ -279,6 +283,59 @@ describe('the glide of a far piece to the coarser one over it', () => {
       expect(under).toBeLessThan(Infinity);
     }
     for (let v = 0; v < 12; v++) { expect(list.nor[(own * 3) * 4 + v]).toBe(theirs.nor[v]); expect(list.col[(own * 3) * 4 + v]).toBe(theirs.col[v]); }
+  });
+
+  it('takes the crowns of its woods down into their columns and brings up those of the coarser piece, where that piece has them', () => {
+    const { fine, parent, carried, before } = piece(), count = carried.geo.length / FACE_GEO;
+    /** a face of a crown: the column it stands inside (x, z), of a ground `side` columns a side; none for any other face */
+    const crownOf = (f: Faces, k: number, side: number): [number, number] | null => {
+      const g = k * FACE_GEO, axis = f.geo[g] % FLIPPED, level = f.geo[g + 1], u = [f.geo[g + 2], f.geo[g + 3]], v = [f.geo[g + 4], f.geo[g + 5]];
+      if (axis === 1) {
+        if (topOf(f, k)) return null;
+        const x = Math.floor(Math.min(...u) / S), z = Math.floor(Math.min(...v) / S);
+        return Math.max(...u) <= (x + 1) * S && Math.max(...v) <= (z + 1) * S && x < side && z < side ? [x, z] : null;
+      }
+      if (level % S) { const a = axis === 0 ? v : u, along = Math.floor(Math.min(...a) / S); return axis === 0 ? [Math.floor(level / S), along] : [along, Math.floor(level / S)]; }
+      return null;
+    };
+    // its own: down into the column, under its top at the end, with no height
+    let own = 0;
+    for (let k = 0; k < before.carried; k++) {
+      const at = crownOf(carried, k, SIDE);
+      if (!at || !inside(at[0], at[1])) continue;
+      const c = fate(fine, parent, at[0], at[1]), axis = carried.geo[k * FACE_GEO] % FLIPPED, [end0, end1] = glided(carried, k, 1);
+      if (c.wetNow && c.wetThen) continue;
+      own++;
+      expect(end0, `${at}`).toBeLessThan(c.end);
+      expect(end0).toBeGreaterThan(c.end - 0.1 * S);
+      if (axis !== 1) expect(end1).toBe(end0);
+      // (a crown stands on its column's top, now)
+      expect(axis === 1 ? glided(carried, k, 0)[0] : Math.min(...glided(carried, k, 0))).toBeGreaterThanOrEqual(c.start);
+    }
+    expect(own).toBeGreaterThan(500);
+    // the coarser piece's: each of its crowns' faces over the piece, under the columns now, where that piece has them then
+    const theirs = faced(drawLand(parent, true, QUARTER).carried).faces!, wanted: string[] = [], came: string[] = [];
+    for (let k = 0; k < theirs.geo.length / FACE_GEO; k++) {
+      const at = crownOf(theirs, k, parent.side);
+      if (!at) continue;
+      const g = k * FACE_GEO, axis = theirs.geo[g] % FLIPPED, X = (u: number) => 2 * u + (2 * parent.ox - fine.ox) * S, Z = (v: number) => 2 * v + (2 * parent.oz - fine.oz) * S, Y = (y: number) => Math.round(tall(y / S) * S);
+      const level = axis === 1 ? Y(theirs.geo[g + 1]) : axis === 0 ? X(theirs.geo[g + 1]) : Z(theirs.geo[g + 1]);
+      const u = axis === 0 ? [Y(theirs.geo[g + 2]), Y(theirs.geo[g + 3])] : [X(theirs.geo[g + 2]), X(theirs.geo[g + 3])], v = axis === 2 ? [Y(theirs.geo[g + 4]), Y(theirs.geo[g + 5])] : [Z(theirs.geo[g + 4]), Z(theirs.geo[g + 5])];
+      wanted.push([axis, level, ...u, ...v, ...theirs.col.slice(k * FACE_COL, (k + 1) * FACE_COL)].join());
+    }
+    for (let k = before.carried; k < count; k++) {
+      const g = k * FACE_GEO, axis = carried.geo[g] % FLIPPED, [end0, end1] = glided(carried, k, 1), [now0, now1] = glided(carried, k, 0);
+      // (where it ends up, as the coarser piece has it)
+      const level = axis === 1 ? end0 : carried.geo[g + 1], u = axis === 0 ? [end0, end1] : [carried.geo[g + 2], carried.geo[g + 3]], v = axis === 2 ? [end0, end1] : [carried.geo[g + 4], carried.geo[g + 5]];
+      came.push([axis, level, ...u, ...v, ...carried.aimCol!.slice(k * FACE_COL, (k + 1) * FACE_COL)].join());
+      expect(carried.col.slice(k * FACE_COL, (k + 1) * FACE_COL)).toEqual(carried.aimCol!.slice(k * FACE_COL, (k + 1) * FACE_COL));
+      // now: under the tops of the columns about it, with no height
+      if (axis !== 1) expect(now1).toBe(now0);
+      const x = Math.floor((axis === 0 ? carried.geo[g + 1] : Math.min(carried.geo[g + 2], carried.geo[g + 3])) / S), z = Math.floor((axis === 2 ? carried.geo[g + 1] : Math.min(carried.geo[g + 4], carried.geo[g + 5])) / S);
+      expect(now0, `${x}, ${z}`).toBeLessThan(topsAt(fine)[z * SIDE + x] * S);
+    }
+    expect(wanted.length).toBeGreaterThan(300);
+    expect(came.sort()).toEqual(wanted.sort());
   });
 
   it('takes what stands on the ground down into its column: at the end it lies under the top there, with no height', () => {
