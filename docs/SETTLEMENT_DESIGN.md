@@ -16,7 +16,7 @@ computes is in the world: what a town shows must be state of the ECS.
 | 1 | Every family who lives in a town has a parcel (the land register) | agreed by Ramon 16 Nov 2026 as a draft; built in state 20, on main since 17 Nov 2026 (PR #61). The world graphic sets a house on each parcel of `public/data/lots_1291.json` |
 | 2 | Every farming family has a farmstead in a hamlet (hamlets and farmsteads in the land register) | agreed by Ramon 17 Nov 2026 as a draft with the small farmstead ("Ja, mit kleinem Hof"); built in the same state step, on main since 17 Nov 2026 (PR #61). The world graphic sets the hamlets where the register has them and a farmhouse on each farmstead (PR #64) |
 | 3 | The streets and the market of every town grow to its parcels (the street network in the state) | agreed by Ramon 18 Nov 2026 ("ja"); built in state 33 |
-| 4 | Every farmstead has its fields: the furlongs of each hamlet in the courses of its open field, a strip of each farmstead in every furlong | agreed by Ramon 19 Nov 2026 ("ok"); built in state 34. The world graphic draws only these fields round the towns |
+| 4 | Every farmstead has its fields: the furlongs of each hamlet in the courses of its open field, a strip of each farmstead in every furlong | agreed by Ramon 19 Nov 2026 ("ok"); built in state 35. The world graphic draws only these fields round the towns |
 | – | Where a new house arises while the world runs; real plans of the large towns; walls and gates; bridges; landmarks on their ground; building by players | not proposed yet |
 
 ## Feature 1: every family of a town has a parcel
@@ -440,7 +440,7 @@ written by `tools/worldprobe/build_tilth.ts` from the world graphic), state in `
 and in the file), `src/net/people.ts` and `src/people/economy_rows.ts` (the farm in the family's window), the drawing in
 `src/worldprobe/settle.ts`, `far.ts` and `lots.ts`. Tests: `tests/fields.test.ts`, `tests/worldprobe/hamlets.test.ts`.
 
-Written once when a world is founded, after the farmsteads (feature 2), or by the upgrade 33 → 34 of a running world.
+Written once when a world is founded, after the farmsteads (feature 2), or by the upgrade 34 → 35 of a running world.
 Nothing changes while the world runs except the crop: which course bears what follows from the year.
 
 | Table | Column | Type | Meaning |

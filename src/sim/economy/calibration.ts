@@ -175,9 +175,20 @@ export function ar1(y: readonly number[]): { alpha: number; beta: number; sigma:
   return { alpha, beta, sigma: Math.sqrt(sum(res.map((e) => (e - mr) ** 2)) / (n - 1)) };
 }
 
-export function calibrateEconomy(t: CalibrationTable): EconomyCalibration {
+/** The yearly calibration of a table: the accounts of its year, and the years before the start from its history.
+ *
+ *  `until` is the year the world starts in (economy feature 21): the series of the years before the start (output,
+ *  inflation, the crown's purchases, exports) run from the first year of the history to `until`, each scaled to its
+ *  value in `until`, and the rule of exports is estimated on them. That is the port's window: every series and every
+ *  estimate runs from `estimation_date` to `calibration_date` and is scaled to the last (`get_params_and_initial_
+ *  conditions`, src/calibration.rs of the port). A world of 1291 on the table of 1356 (src/sim/tables.ts) therefore
+ *  knows the years 1281 to 1291 and not the plague after them. The one exception is the crown's rule: on 1281 to
+ *  1291 its estimate has α = 1.126, no long-run mean, which the daily rule needs (`dailyEconomy`); it keeps the
+ *  estimate of the table's whole history. Since feature 16 that rule sets only the crown's first day. */
+export function calibrateEconomy(t: CalibrationTable, until: number = t.year): EconomyCalibration {
   const i = t.inputs, S = t.scale.value, G = 3, sectors = [0, 1, 2];
   const h = t.history, first = h.first_year, years = t.year - first; // the history covers first + 1 … year
+  if (!(Number.isInteger(until) && until >= first + 3 && until <= t.year)) throw new Error(`a start in ${until}: the history runs from ${first + 1} to ${t.year}, and an estimate needs three of its years`);
   for (const k of ['real_gdp_gbp_mn_2013', 'gdp_deflator_2013_100', 'crown_revenue_gbp_thousand', 'export_volume_gbp_mn_2013'] as const) {
     if (h[k].length !== years + 1) throw new Error(`history.${k} has ${h[k].length} years, ${first} to ${t.year} are ${years + 1}`);
   }
@@ -237,12 +248,13 @@ export function calibrateEconomy(t: CalibrationTable): EconomyCalibration {
 
   // ---- the years before the start
   const at = (series: readonly number[], year: number) => series[year - first];
-  const history = Array.from({ length: years }, (_, k) => first + 1 + k);
+  const upTo = (last: number) => Array.from({ length: last - first }, (_, k) => first + 1 + k);
+  const history = upTo(until);
   const realRevenue = (y: number) => at(h.crown_revenue_gbp_thousand, y) / at(h.gdp_deflator_2013_100, y);
-  const level = (total: number, f: (y: number) => number) => history.map((y) => total * f(y) / f(t.year));
+  const level = (total: number, f: (y: number) => number, ys = history) => ys.map((y) => total * f(y) / f(until));
   const crownSeries = level(sum(crown), realRevenue);
   const exportSeries = level(X, (y) => at(h.export_volume_gbp_mn_2013, y));
-  const arG = ar1(crownSeries.map(Math.log)), arE = ar1(exportSeries.map(Math.log));
+  const arG = ar1(level(sum(crown), realRevenue, upTo(t.year)).map(Math.log)), arE = ar1(exportSeries.map(Math.log));
 
   const parameters = {
     G, T_prime: history.length, H_act: N + i.unemployed.value + I + BANK_OWNERS, H_inact: 1, J: roundHalfEven(I / 4), L: roundHalfEven(I / 2), I_s: firms,
@@ -263,7 +275,7 @@ export function calibrateEconomy(t: CalibrationTable): EconomyCalibration {
   const D_H = i.coin_split.value.households * coin, D_I = i.coin_split.value.firms * coin, E_k = i.bank_equity_of_coin.value * coin;
   const initial_conditions = {
     D_I, L_I: 0, omega: b.omega, w_UB: benefit.w_UB, sb_inact: 0, sb_other: 0, D_H, K_H: dwellings, L_G: 0, E_k, E_CB: -D_I - D_H - E_k, D_RoW: 0, N_s: employees,
-    Y: history.map((y) => sum(output) * at(h.real_gdp_gbp_mn_2013, y) / at(h.real_gdp_gbp_mn_2013, t.year)),
+    Y: history.map((y) => sum(output) * at(h.real_gdp_gbp_mn_2013, y) / at(h.real_gdp_gbp_mn_2013, until)),
     pi: history.map((y) => Math.log(at(h.gdp_deflator_2013_100, y) / at(h.gdp_deflator_2013_100, y - 1))),
     Y_EA: i.rest_of_the_world.value.output, pi_EA: i.rest_of_the_world.value.inflation, r_bar: 0,
     C_G: crownSeries, C_E: exportSeries, Y_I: history.map(() => sum(imports)),
@@ -349,7 +361,8 @@ export function dailyEconomy(c: EconomyCalibration, days: number, plan: number):
   return { ...c, periods_per_year: days, clock: { plan, window: days }, parameters: p, initial_conditions: ic };
 }
 
-/** The yearly calibration of a table turned into days, with the clock of the table (economy feature 4). */
-export function dailyCalibration(t: CalibrationTable): EconomyCalibration {
-  return dailyEconomy(calibrateEconomy(t), t.clock.days_per_year.value, t.clock.plan_days.value);
+/** The yearly calibration of a table turned into days, with the clock of the table (economy feature 4), for a world
+ *  that starts in `until` (economy feature 21). */
+export function dailyCalibration(t: CalibrationTable, until: number = t.year): EconomyCalibration {
+  return dailyEconomy(calibrateEconomy(t, until), t.clock.days_per_year.value, t.clock.plan_days.value);
 }

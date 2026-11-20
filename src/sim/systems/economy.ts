@@ -134,7 +134,8 @@ export const cityAt = (e: CityEconomies, place: number): number => e.places.inde
 
 /** What the economy of each city of a world is founded from: its place, its people, its persons who work
  *  (src/sim/systems/work.ts) and its calibration, which has as many active persons as the city has persons who
- *  work. A world whose start year has no cities, or no calibration table, has none. */
+ *  work. A world whose start year has no cities, or no calibration table, has none. A world that starts before the
+ *  year of its table knows the history only up to its start (economy feature 21, `calibrateEconomy`). */
 export function cityCalibrations(s: WorldState, w: World): { place: number; name: string; people: number; working: number[]; idle: number; calibration: EconomyCalibration }[] {
   const c = w.cityEconomies;
   if (s.startYear !== c.year && !(c.year === 1356 && uses1356Tables(s.startYear))) return [];
@@ -143,7 +144,7 @@ export function cityCalibrations(s: WorldState, w: World): { place: number; name
   return cities.map((x, k) => {
     const { working, idle } = force[k];
     if (idle < 0) throw new Error(`every adult of ${x.name} works: the model needs a person who does not`);
-    const calibration = dailyCalibration(cityTable(c.table, x.people, working.length));
+    const calibration = dailyCalibration(cityTable(c.table, x.people, working.length), Math.min(c.year, s.startYear));
     if (activePersons(calibration) !== working.length) throw new Error(`${x.name} has ${working.length} persons who work, its calibration ${activePersons(calibration)} active persons`);
     return { ...x, working, idle, calibration };
   });

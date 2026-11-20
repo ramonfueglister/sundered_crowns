@@ -47,6 +47,7 @@ players and the AI of realms without a player act through the same commands.
 | 17 | Distance in trade: goods travel for days, and carrying costs labour | proposed 17 Nov 2026 (https://claude.ai/artifact/9Gt22ijoL8Xdqx4cfLM7NV), variant B agreed by Ramon ("ok"); held back until the money drain was cleared (features 15 and 16); built after his choice of 18 Nov 2026 ("Krone gibt aus, was sie einnimmt": then the distance). How the Americas stay apart in 1356 is asked of him (card of 18 Nov 2026). Built, with tests and numbers; not yet in the running world (section 17) |
 | 19 | The firms and households keep the working days of their faith | step 3 of way A of the proposal «Personen: Archiv der Toten und Tagesplan» (https://claude.ai/artifact/8UqSxP49CfvpPfX1UCDULc), chosen by Ramon 19 Nov 2026, with merge and deploy ("vorwärts machen alles mergren comitten und feddich", "du darfst deployen"). Built, with tests and numbers from the game (section 19); people feature 8 holds the calendars |
 | 20 | The days of rest without a leak | after feature 19 Ramon wrote "naja jetzt sind wir aber nicht fertig" (19 Nov 2026), chose to damp the firms' price rule first, "nur literaturkonform"; Calvo held the prices but cost work, and he chose "Zuerst Leck an Ruhetagen schliessen" (card, 19 Nov 2026). Built: materials for the next working day, the owner on his working days on the profit of the year; with tests and numbers from the game (section 20) |
+| 21 | A world knows the history only up to its start | the open gap of feature 20, found to come from the history of the placeholder tables: a world of 1291 expected the recovery after the plague of 1348. Under Ramon's "nur literaturkonform" (19 Nov 2026) and his order to clear the open questions of the economy first; the port's window (data up to the date of the calibration). Built, with tests and numbers from the game (section 21) |
 
 ## 1. Grain harvest per place
 
@@ -3323,7 +3324,8 @@ weighs in it.
   with the owner on the mean profit of 30 days 0.9 % of the goods stayed unsold and the price level fell to 0.97;
   the owners' overspending on the profit of the day before filled it. Feature 20 takes that overspending away with
   the days of rest, and the gap is what holds the economy of the game 4.4 % below the run without working days in
-  the third year. Where the money of that demand stays is the next question; no rule is built for it here.
+  the third year. Where the money of that demand stays is the next question; no rule is built for it here. (Feature
+  21 found the cause: no money leaks, the firms expected the recovery after the plague, section 21.)
 
 ### State and upgrade
 
@@ -3332,3 +3334,104 @@ State version 32. Engine format 11: the clock keeps the owners' profits of the l
 from the next day on, the year before taken to be the profit of the day before (test
 `a_state_of_format_10_gathers_the_profits_of_the_owners_anew`). The upgrade 31 → 32 changes nothing else: the
 economies go on where they are.
+
+## 21. A world knows the history only up to its start
+
+### Why
+
+Feature 20 left the gap in the demand open (section 20, "Deviations"): in the game the world of 1291 with working
+days fell 1.5, 2.7 and 4.4 % behind the run without them, and its firms' stock grew year by year. Outside the game
+(550 cities of 1291, two years, `Cities::step`) the money did not leak: the deposits hardly changed. The firms made
+more than was asked. Under the demand pull of CANVAS (section 8) the supply grows by the expected growth in every
+case, and the firms expected about 1 to 3 % a year (γ_e read every 60 days), while the demand hardly grew once the owners
+no longer spent beyond their profit. With working days the planned supply stood 0.2 to 0.8 % above the demand from
+day 480 on, and the stock grew from 446 on day 60 to 1,729 on day 720. Without working days it stayed near 150:
+there the owners, on the profit of the day before, spent 878 more than their firms earned in two years, on credit,
+and that made the expected growth come true.
+
+### Where the expected growth came from
+
+The firms expect growth and inflation by an AR(1) on the history of output and prices (A.6, A.7; on the daily clock
+on sums of 365 days, section 4), and the calibration hands them the years before the start. The world of 1291 has no
+tables of its own: it takes those of 1356 as a placeholder (`src/sim/tables.ts`), and with them the history 1281 to
+1356, scaled to 1356. That history has the plague: real GDP £3,879 m in 1345, £2,841 m in 1350, £2,686 m in 1356
+(2013 prices; Bank of England workbook, sheet A1, Broadberry et al.). An AR(1) on its logarithms has α = 0.845 and a
+long-run mean 27.7 % above the start: it expects 3.86 % growth in the first year, the recovery after the plague. A
+world of 1291 knows nothing of the plague, which comes 57 years after its start.
+
+### What was read
+
+- The port, `get_params_and_initial_conditions` (`src/calibration.rs` of the port, `economy/vendor/port-beforeit`):
+  every series of the years before the start (real GDP, the deflator, the government's consumption, exports,
+  imports) runs from `estimation_date` to `calibration_date` (`range(key, Te, Tx)`) and is scaled to its value at
+  `calibration_date`; the AR(1) rules of the government's consumption, of exports and of imports are estimated on
+  that window, and `T_prime = Tx − Te + 1`. The port calibrates the model at any quarter of its data (Italy 2010 to
+  2016 in its tests), each time with the data up to that quarter: the model of a start knows the years before it and
+  none after.
+- The history of the table (Bank of England, A millennium of macroeconomic data, sheets A1 and A26) runs from 1280.
+  The years 1281 to 1291 are part of it, from the same sources as the rest.
+
+### The rule
+
+A world calibrates its cities on the history up to its own start year (`calibrateEconomy(table, until)`, `until`
+the start year; `cityCalibrations` passes the smaller of the start year and the table's year). For a world of 1291 on
+the table of 1356: the series of output, inflation, the crown's purchases, exports and imports run from 1281 to 1291
+(11 years, `T_prime` = 11), each scaled to 1291, and the rule of exports is estimated on them. The accounts stay the
+table's, the placeholder of 1356. On 1281 to 1291 the AR(1) on output has α = 0.195 and a long-run mean 1.3 % above
+the start: 1.07 % growth expected in the first year. England's real GDP grew 0.2 % a year from 1281 to 1345 (£3,390 m
+to £3,879 m).
+
+A world that starts in the year of its table (1356) is calibrated as before, bit for bit (test: the file of the
+reference world).
+
+In the game two of the rules of the rest of the world do not enter: the merchants replace the series of exports and
+imports in every city (feature 5, `economy/src/trade.rs`), and since feature 16 the crown buys with what it took in,
+so its series sets only its first day. What changes is the history of output and prices, from which the firms form
+their expectations.
+
+Code: `src/sim/economy/calibration.ts` (`calibrateEconomy`), `src/sim/systems/economy.ts` (`cityCalibrations`);
+tests in `tests/economy.test.ts` (the calibration, the world of 1291, its upgrade) and
+`tests/economy-households.test.ts` (the upgrade of a world of 1356).
+
+### The numbers
+
+In the game (`npm run workdays:check -- 3`, as in section 20: the world of 1291 with the working days against every
+day a working day):
+
+| | year 1 | year 2 | year 3 |
+|---|---|---|---|
+| real GDP | 178,367 / 180,955 (−1.4 %) | 180,280 / 182,915 (−1.4 %) | 179,635 / 182,486 (−1.6 %) |
+| consumption | −1.7 % | −1.9 % | −1.9 % |
+| investment | −1.3 % | −1.4 % | −1.5 % |
+| without work, at the end of the year | 944 / 685 | 998 / 693 | 1,036 / 717 |
+| households' deposits | −0.5 % | −0.8 % | −0.8 % |
+| firms' deposits | −0.3 % | −0.4 % | −0.5 % |
+| mean price level | 1.004 / 1.002 | 0.996 / 1.001 | 0.999 / 1.001 |
+| output of the Latin firms | −1.9 % | −2.4 % | −2.6 % |
+| output of the Muslim firms | −0.1 % | +1.1 % | +1.1 % |
+
+| real GDP | year 1 | year 2 | year 3 |
+|---|---|---|---|
+| with working days, history to 1356 (section 20) | 180,211 | 183,446 | 183,665 |
+| with working days, history to 1291 | 178,367 | 180,280 | 179,635 |
+| without working days, history to 1356 (section 20) | 183,025 | 188,506 | 192,054 |
+| without working days, history to 1291 | 180,955 | 182,915 | 182,486 |
+
+The run without working days no longer grows 2.4 % a year: it is flat, as England was before the plague, and the gap
+between the two runs stays at about 1.5 % instead of widening to 4.4 %.
+
+### What stays open
+
+- **The gap of about 1.5 % to the run without working days.** It no longer widens, but in year 3 about 2.8 % of the
+  workers are without work against 2.0 % without working days. The two runs do not have the same owners: without
+  working days the owner plans on the profit of the day before (feature 18), with them on the profit of the year
+  (feature 20). Whether the gap is that difference or the days of rest themselves is the next question.
+- **The tables of 1291 are still those of 1356.** Only the history is cut at the start; the accounts (people, output,
+  coin, the crown's revenue) are post-plague numbers for a pre-plague world (`src/sim/tables.ts`).
+
+### State and upgrade
+
+State version 34. The upgrade 33 → 34 founds the economies of a world that starts before the year of its table anew
+on the day the world has reached, as the step to 24: their days and yearly figures are gone, the firms and the parts
+of the persons are given out again, and the first period is the next day of the world. The persons stay who they
+are. A world that starts in the year of its table goes on where it is: its calibration has not changed.

@@ -46,9 +46,11 @@ import type { Table } from './ecs';
  *  year; the engine's state keeps those profits (its format 11).
  *  33: the streets and the market of every town (settlement feature 3, src/sim/settlement/streets.ts): the parcels
  *  lie at streets that grew to them, no longer on a grid; every parcel keeps its family and its size.
- *  34: the fields of the farmsteads (settlement feature 4, src/sim/settlement/fields.ts): every hamlet has its furlongs
+ *  34: a world knows the history only up to its start (economy feature 21): a world of 1291 on the table of 1356 forms
+ *  its expectations from 1281 to 1291, not from the years of the plague; its economies are founded anew.
+ *  35: the fields of the farmsteads (settlement feature 4, src/sim/settlement/fields.ts): every hamlet has its furlongs
  *  in courses, shared in strips by its farmsteads. */
-export const STATE_VERSION = 34;
+export const STATE_VERSION = 35;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
