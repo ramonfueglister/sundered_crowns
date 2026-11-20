@@ -74,6 +74,6 @@ export function calibrate(w: World, places: readonly number[], pop: ArrayLike<nu
   const landLimit = limitFor(arablePerHead);
   // T_E: with T_E = 1 the places bring in Y_E · T_E^α too much or too little
   const y = englandAt(w, places, pop, ENGLAND_1300.people, { landLimit, arablePerHead, englandLand: 1 });
-  const englandLand = Math.pow(y.perHeadDay / ENGLAND_1300.kcalPerHeadDay, 1 / LAND_SHARE);
+  const englandLand = (y.perHeadDay / ENGLAND_1300.kcalPerHeadDay) ** (1 / LAND_SHARE);
   return { landLimit, arablePerHead, englandLand };
 }

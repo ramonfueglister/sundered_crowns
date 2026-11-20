@@ -195,7 +195,7 @@ if (checking) {
     }
   }
   console.log(
-    `${held} pieces held against their tables: ${differ} differ${differ ? ' (build the tables again: npx tsx tools/worldprobe/build_tables.ts ' + year + ')' : ''}`,
+    `${held} pieces held against their tables: ${differ} differ${differ ? ` (build the tables again: npx tsx tools/worldprobe/build_tables.ts ${year})` : ''}`,
   );
   process.exit(differ ? 1 : 0);
 }

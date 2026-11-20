@@ -37,7 +37,7 @@ const out = {
   hamlet_persons: places.map((p) => at.get(p)!.hamletPersons),
   hamlet_families: places.map((p) => at.get(p)!.hamletFamilies.size),
 };
-writeFileSync(dataPath(`hamlets_${year}.json`), JSON.stringify(out) + '\n');
+writeFileSync(dataPath(`hamlets_${year}.json`), `${JSON.stringify(out)}\n`);
 console.log(
   `hamlets_${year}.json: ${places.length} places, ${out.hamlet_families.reduce((a, b) => a + b, 0)} hamlet families`,
 );

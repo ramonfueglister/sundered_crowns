@@ -219,7 +219,7 @@ for (const key of [...wanted].sort()) {
 const path = process.argv[4] ?? resolve(ROOT, `public/data/plan_${year}.json`);
 writeFileSync(
   path,
-  JSON.stringify({
+  `${JSON.stringify({
     year,
     about:
       'What the finest step of the world graphic builds in its places, per piece of pieceBlocks finest blocks: houses (9 numbers each: x, z, w, d, floors, height in tenths, wall, roof, kind), greats (7 each: kind, x, z, w, d, height in tenths, site), walled towns. Written by tools/worldprobe/build_plan.ts.',
@@ -229,7 +229,7 @@ writeFileSync(
     greatKinds,
     inputs,
     pieces,
-  }) + '\n',
+  })}\n`,
 );
 const sites = round
   .sort((a, b) => a.site - b.site)
@@ -252,13 +252,13 @@ const sites = round
 if (!process.argv[3])
   writeFileSync(
     resolve(ROOT, `public/data/dry_${year}.json`),
-    JSON.stringify({
+    `${JSON.stringify({
       year,
       about:
         'Dry ground without rock round the towns of the world graphic, per site of the gazetteer: w x d blocks of 2 m at the scale of the houses round the centre, rows north to south, bit 1 = dry and no rock; nothing is said of slopes and buildings. Written by tools/worldprobe/build_plan.ts.',
       metresPerBlock: 2,
       sites,
-    }) + '\n',
+    })}\n`,
   );
 console.log(`dry_${year}.json: ${sites.length} towns`);
 console.log(
