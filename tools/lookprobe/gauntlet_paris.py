@@ -4,12 +4,13 @@
 Usage: python3 tools/lookprobe/gauntlet_paris.py reference.png probe.png
 The probe is shot at the reference's size (SHOT_W=1448 SHOT_H=1086 node tools/lookprobe/shot.mjs ...). Only the town
 part of the reference is measured, the houses and the market square at its left (REF_BOX, below the river and above
-the quay wall): its cathedral, town wall, river and bridge are not built by the house kit. The probe is all town, so the whole probe picture is measured. The
-edge angles are not compared: the reference is drawn from a camera turned about 30 degrees off ours, and the camera is
-the game's, not the houses'. What is measured, each against a limit that a glance could not tell apart:
-the light (saturation, brightness and its spread), the share and colour of each class of surface (roofs, pale walls,
-dark timber and openings, slate, green, paving), how varied the roofs are from house to house and how finely they are cut into
-surfaces, the windows and other small spots per area, fine detail and the overlap of the colour spread.
+the quay wall): its cathedral, town wall, river and bridge are not built by the house kit. The probe is all town, so
+the whole probe picture is measured. The edge angles are not compared: the reference is drawn from a camera turned
+about 30 degrees off ours, and the camera is the game's, not the houses'. What is measured, each against a limit that
+a glance could not tell apart: the light (saturation, brightness and its spread), the share and colour of each class
+of surface (roofs, pale walls, dark timber and openings, slate, green, paving), the share of each band of hue, how
+varied the roofs are from house to house and how finely they are cut into surfaces, the windows and other small spots
+per area, fine detail and the overlap of the colour spread.
 """
 
 import sys
@@ -28,6 +29,20 @@ CLASSES = {
     'Grün': lambda h, s, v: (h > 60) & (h < 150) & (s > 0.3),
     'Pflaster': lambda h, s, v: (s < 0.25) & (v > 0.45) & (v <= 0.68),
 }
+
+# bands of hue for the coloured pixels (saturation over 0.25, brightness over 0.25), in degrees: added after the first
+# search found pink walls and ochre roofs that the classes above do not hold (their hues fall between the classes)
+HUES = ((345, 10), (10, 20), (20, 30), (30, 45), (45, 75))
+
+
+# the same for the pale warm pixels (saturation 0.22 to 0.45, brightness over 0.6): cream walls against pink ones,
+# added after the second search turned the walls pink, which the hues above count with the red roofs
+PALE = ((340, 20), (20, 40))
+
+
+def hue_band(h, s, v, lo, hi, pale=False):
+    inside = (h >= lo) | (h < hi) if lo > hi else (h >= lo) & (h < hi)
+    return inside & ((s > 0.22) & (s < 0.45) & (v > 0.6) if pale else (s > 0.25) & (v > 0.25))
 
 
 def load(path, box=None):
@@ -82,36 +97,49 @@ def spot_groups(im, sign):
 
 
 def ratio(a, b, lo, hi):
-    """how far the probe's value b is from the reference's a, as a share of the allowed range [lo, hi] of b / a"""
-    q = b / max(a, 1e-6)
-    return np.log(q) / np.log(hi) if q >= 1 else np.log(q) / np.log(lo)
+    """how far the probe's value b is from the reference's a, as a share of the allowed range [lo, hi] of b / a,
+    negative below"""
+    q = max(b, 1e-6) / max(a, 1e-6)
+    return np.log(q) / np.log(hi) if q >= 1 else -np.log(q) / np.log(lo)
 
 
 def measure(ref, probe):
     """every check as (name, reference, probe, error, format): the error is the distance divided by what is allowed,
-    so a check passes at an error of 1 or less"""
+    positive where the probe has more, so a check passes at an error between -1 and 1"""
     rows = []
 
     def check(name, a, b, err, fmt='{:.3f}'):
         rows.append((name, a, b, float(err), fmt))
 
     (rh, rs, rv), (ph, ps, pv) = hsv(ref), hsv(probe)
-    check('mittlere Sättigung', rs.mean(), ps.mean(), abs(rs.mean() - ps.mean()) / 0.03)
-    check('mittlere Helligkeit', rv.mean(), pv.mean(), abs(rv.mean() - pv.mean()) / 0.03)
+    check('mittlere Sättigung', rs.mean(), ps.mean(), (ps.mean() - rs.mean()) / 0.03)
+    check('mittlere Helligkeit', rv.mean(), pv.mean(), (pv.mean() - rv.mean()) / 0.03)
     for name, q in (('dunkelste 5 %', 5), ('Median', 50), ('hellste 5 %', 95)):
         a, b = np.percentile(rv, q), np.percentile(pv, q)
-        check(f'Helligkeit {name}', a, b, abs(a - b) / 0.04)
+        check(f'Helligkeit {name}', a, b, (b - a) / 0.04)
     warm_r = (ref[..., 0] - ref[..., 2]).mean()
     warm_p = (probe[..., 0] - probe[..., 2]).mean()
-    check('Wärme (Rot minus Blau)', warm_r, warm_p, abs(warm_r - warm_p) / 0.03)
+    check('Wärme (Rot minus Blau)', warm_r, warm_p, (warm_p - warm_r) / 0.03)
     for name, f in CLASSES.items():
         ma, mb = f(rh, rs, rv), f(ph, ps, pv)
         tol = max(0.01, 0.2 * ma.mean())
-        check(f'Anteil {name} (%)', ma.mean() * 100, mb.mean() * 100, abs(ma.mean() - mb.mean()) / tol, '{:.1f}')
+        check(f'Anteil {name} (%)', ma.mean() * 100, mb.mean() * 100, (mb.mean() - ma.mean()) / tol, '{:.1f}')
         for part, lo, hi in (('dunkel', 0.05, 0.15), ('mittel', 0.45, 0.55), ('hell', 0.85, 0.95)):
             a, b = class_colour(ref, ma, lo, hi), class_colour(probe, mb, lo, hi)
-            dist = 1 if a is None or b is None else float(np.abs(a - b).max())
-            check(f'Farbe {name} {part}', hexc(a), hexc(b), dist / 0.08, '{}')
+            # the channel that differs most, with its sign
+            d = np.array([1.0]) if a is None or b is None else b - a
+            check(f'Farbe {name} {part}', hexc(a), hexc(b), d[np.argmax(np.abs(d))] / 0.08, '{}')
+    # the hues of the coloured surfaces: pink, red, orange-brown, ochre and yellow-green, each as a share of the picture
+    for lo, hi in HUES:
+        ma, mb = hue_band(rh, rs, rv, lo, hi), hue_band(ph, ps, pv, lo, hi)
+        tol = max(0.01, 0.2 * ma.mean())
+        check(f'Farbton {lo}–{hi}° (%)', ma.mean() * 100, mb.mean() * 100, (mb.mean() - ma.mean()) / tol, '{:.1f}')
+    for lo, hi in PALE:
+        ma, mb = hue_band(rh, rs, rv, lo, hi, True), hue_band(ph, ps, pv, lo, hi, True)
+        tol = max(0.01, 0.2 * ma.mean())
+        check(
+            f'blass, Farbton {lo}–{hi}° (%)', ma.mean() * 100, mb.mean() * 100, (mb.mean() - ma.mean()) / tol, '{:.1f}'
+        )
     (rn, rb, rhs), (pn, pb, phs) = roofs(ref), roofs(probe)
     check('Dachflächen je Megapixel', rn, pn, ratio(rn, pn, 0.7, 1.4), '{:.0f}')
     check('Dachvielfalt Helligkeit', rb, pb, ratio(rb, pb, 0.75, 1.33))
@@ -145,8 +173,8 @@ def main(ref_path, probe_path):
     rows = measure(load(ref_path, REF_BOX), load(probe_path))
     print(f'{"Prüfung":38s} {"Referenz":>9s} {"Probe":>9s}')
     for name, a, b, err, fmt in rows:
-        print(f'{name:38s} {fmt.format(a):>9s} {fmt.format(b):>9s}  {"PASS" if err <= 1 else "FAIL"}')
-    fails = sum(err > 1 for *_, err, _ in rows)
+        print(f'{name:38s} {fmt.format(a):>9s} {fmt.format(b):>9s}  {"PASS" if abs(err) <= 1 else "FAIL"}')
+    fails = sum(abs(err) > 1 for *_, err, _ in rows)
     print(f'\n{len(rows) - fails} von {len(rows)} Prüfungen bestanden')
     return fails
 

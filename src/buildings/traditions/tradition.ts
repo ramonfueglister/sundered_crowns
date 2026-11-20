@@ -13,6 +13,8 @@ export interface Quay {
   stepsEvery: readonly [number, number];
   /** the joint between two paving slabs in fine blocks, where the ground shows; none if not given */
   joint?: number;
+  /** how much more the slabs differ in brightness than the Venetian ones (1 if not given) */
+  spread?: number;
   postEvery: readonly [number, number];
 }
 
@@ -65,4 +67,6 @@ export interface Tradition {
   dormers?: number;
   /** the shades of a roof's tiles: the darkest, and how much lighter the lightest is ([0.88, 0.2] if not given) */
   tileShades?: readonly [number, number];
+  /** the glass of the windows, before the house's own shade of it (dark and warm if not given) */
+  glass?: RGB;
 }

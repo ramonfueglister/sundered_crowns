@@ -39,7 +39,8 @@ const TR: Tradition = {
   ...PARIS,
   walls: moved(PARIS.walls, hexOf('wall'), num('wallspread', 1)),
   roofs: moved(PARIS.roofs ?? [PARIS.roof], hexOf('roof'), num('roofspread', 1)),
-  quay: { ...PARIS.quay, paving: hexOf('pave') ?? PARIS.quay.paving },
+  quay: { ...PARIS.quay, paving: hexOf('pave') ?? PARIS.quay.paving, spread: num('pspread', PARIS.quay.spread ?? 1) },
+  glass: hexOf('glass') ?? PARIS.glass,
   timber: PARIS.timber && { share: num('tshare', PARIS.timber.share), c: hexOf('timber') ?? PARIS.timber.c },
   window: [num('winw', PARIS.window[0]), num('winh', PARIS.window[1])],
   tileShades: [num('tlow', PARIS.tileShades?.[0] ?? 0.88), num('tspread', PARIS.tileShades?.[1] ?? 0.2)],
@@ -51,8 +52,8 @@ const BLOCK = num('block', 11),
   LANE = num('lane', 4.5),
   CELL = BLOCK + LANE;
 const GRASS = rgb(0x6a8a3a),
-  OLIVE = rgb(0x3a5a12),
-  LIGHT_LEAF = rgb(0x7a9a10),
+  OLIVE = hexOf('olive') ?? rgb(0x3a5a12),
+  LIGHT_LEAF = hexOf('leaf') ?? rgb(0x7a9a10),
   STRIPES: readonly RGB[] = [rgb(0xc8382c), rgb(0x2f5f9a), rgb(0xd8a030)],
   CANVAS = rgb(0xf0e8d8),
   POLE = rgb(0x6b4a2c);
@@ -88,7 +89,7 @@ function side(things: Batch, x0: number, z0: number, x1: number, z1: number, fro
       last = b - (t + w) <= 1.5;
     // walls shared with the neighbour stay blind; the end houses of a side show windows round the corner
     const party: Front[] = alongX ? ['nx', 'px'] : ['nz', 'pz'],
-      blind = party.filter((s, i) => !(i === 0 ? first : last));
+      blind = party.filter((_, i) => !(i === 0 ? first : last));
     const house = alongX
       ? fineHouse(w, d, floors, tr, r, { front, blind, shop: r.chance(0.3) })
       : fineHouse(d, w, floors, tr, r, { front, blind, shop: r.chance(0.3) });

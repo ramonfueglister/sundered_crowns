@@ -1,21 +1,38 @@
-// The timber frame (colombage) of a storey: dark posts at the corners and between the window axes, a sill and a head
-// rail along the storey, and a brace from each post towards its neighbour in the bays without a window, laid flat on
-// the plastered infill as panes. PROTOTYPE (20 Nov 2026): the members follow Ramon's reference picture of Paris of
-// that day (stored in the project's haeuser/referenz); their sizes are drawing values, not measured ones.
+// The timber frame (colombage) of a storey: dark posts at the corners and between the window axes, rails along the
+// storey at its foot and head and under and over its windows, and a brace from each post towards its neighbour in the
+// bays without a window, laid flat on the plastered infill as panes. PROTOTYPE (20 Nov 2026): the members follow
+// Ramon's reference picture of Paris of that day (stored in the project's haeuser/referenz); their sizes are drawing
+// values, not measured ones.
 import { type Batch, type RGB, shade } from '../../lookprobe/batch';
 import { type Wall, on, pane } from '../core/wall';
 import { VOXEL as V } from './style';
 
 const LIFT = 0.055;
 
-/** The frame of one storey from y to y + h (blocks) on wall `w`, posts beside the window axes `axes` of `ww` fine blocks. */
-export function timberFrame(b: Batch, w: Wall, y: number, h: number, axes: readonly number[], ww: number, c: RGB) {
-  const post = V * 0.7,
-    half = (ww * V) / 2 + V * 0.6,
-    side = shade(c, 0.9);
-  // the rails: a sill under the storey and a head under the next floor
-  pane(b, w, 0, y, w.len, y + post, c, LIFT);
-  pane(b, w, 0, y + h - post, w.len, y + h, c, LIFT);
+/**
+ * The frame of one storey from y to y + h (blocks) on wall `w`: posts beside the window axes `axes` of `ww` fine
+ * blocks, and rails along the whole storey under and over its windows, `open` above y. The rails lie a little deeper
+ * than the posts and braces, so that a brace crossing one does not flicker with it.
+ */
+export function timberFrame(
+  b: Batch,
+  w: Wall,
+  y: number,
+  h: number,
+  axes: readonly number[],
+  ww: number,
+  open: readonly [number, number],
+  c: RGB,
+) {
+  const post = V * 0.9,
+    half = (ww * V) / 2 + post / 2 + V * 0.1,
+    side = shade(c, 0.9),
+    deep = LIFT * 0.7;
+  // the rails: a sill under the storey and a head under the next floor, one under and one over the windows
+  pane(b, w, 0, y, w.len, y + post, c, deep);
+  pane(b, w, 0, y + h - post, w.len, y + h, c, deep);
+  pane(b, w, 0, y + open[0] - post, w.len, y + open[0], c, deep);
+  pane(b, w, 0, y + open[1], w.len, y + open[1] + post, c, deep);
   // posts at both corners, at both sides of every window, and half-way between two windows
   const ts = [post / 2, w.len - post / 2];
   axes.forEach((t, i) => {
@@ -29,8 +46,6 @@ export function timberFrame(b: Batch, w: Wall, y: number, h: number, axes: reado
     const t0 = sorted[i] + post / 2,
       t1 = sorted[i + 1] - post / 2;
     if (t1 - t0 < V * 1.2 || axes.some((t) => t > t0 && t < t1)) continue;
-    // a middle rail across the bay, at the height of the window sills
-    pane(b, w, t0, y + h * 0.42 - post / 2, t1, y + h * 0.42 + post / 2, c, LIFT);
     const up = i % 2 === 0,
       a = up ? t0 : t1,
       e = up ? t1 : t0,

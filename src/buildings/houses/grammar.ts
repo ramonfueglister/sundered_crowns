@@ -62,9 +62,10 @@ export function fineHouse(w: number, d: number, floors: number, tr: Tradition, r
   const W = Math.max(6, Math.round(w / V)) * V,
     D = Math.max(6, Math.round(d / V)) * V;
   // what the whole house decides, drawn first and in this order
-  // the openings are dark and warm, as in the reference class image (not the blue-grey glass of the far view)
+  // the openings are dark and warm, as in the reference class image (not the blue-grey glass of the far view),
+  // unless the tradition has a glass of its own
   const wallC = drawnWall(tr, r),
-    mt: Materials = { stone: tr.stone, wood: tr.wood, glass: shade(WINDOW_WARM, r.range(0.4, 0.65)) };
+    mt: Materials = { stone: tr.stone, wood: tr.wood, glass: shade(tr.glass ?? WINDOW_WARM, r.range(0.4, 0.65)) };
   // in the near view the body shows in the joint colour between the ashlar panes, from afar in the wall colour
   const bodyC = detail && !tr.plaster ? jointOf(wallC) : wallC;
   const arched = r.chance(tr.arched),
@@ -196,7 +197,8 @@ function facade(
   const axes = Array.from({ length: n }, (_, i) => wl.len / 2 + (i - (n - 1) / 2) * bay),
     [ww, wh] = tr.window;
   if (o.detail && !tr.plaster) ashlar(b, wl, y + V, y + (h - 1) * V, o.wallC, o.seed + k * 7 + SIDES.indexOf(s));
-  if (o.detail && o.frame && k >= 1) timberFrame(b, wl, y - V, h * V, axes, tr.window[0], o.frame);
+  if (o.detail && o.frame && k >= 1)
+    timberFrame(b, wl, y - V, h * V, axes, ww, [V + tr.sill * V, V + (tr.sill + wh) * V], o.frame);
   const win = (t: number, hv = wh) => {
     window(b, wl, t, y + tr.sill * V, ww, hv, mt, o.arched, o.detail);
     if (o.detail && !o.arched && r.chance(tr.shutters))
