@@ -150,13 +150,50 @@ export function birthsTo(s: WorldState, day: number): number {
   return n;
 }
 
+/** What the weddings of a month share: the vacant households and the widows who may marry again, by place, and the
+ *  children of the vacant houses who live in another place. */
+interface Month {
+  s: WorldState;
+  day: number;
+  P: WorldState['person']['cols'];
+  F: WorldState['family']['cols'];
+  seed: number;
+  /** the stream of the persons' draws at a wedding, apart from their own (people.ts, work.ts, deaths.ts, births) */
+  lots: number;
+  q: Births;
+  tally: Passed | undefined;
+  vacant: Map<number, number[]>;
+  widows: Map<number, number[]>;
+  /** the children of a vacant house who live in another place and are neither man nor woman of a family there */
+  awayKids: Map<number, number[]>;
+  away: Set<number>;
+}
+/** The people of a town who may marry this month: the men without a wife and the women without a household, and the
+ *  living children of each vacant house of the town, the eldest first. */
+interface Town {
+  place: number;
+  men: number[];
+  women: number[];
+  houses: Map<number, number[]>;
+}
+
 /** The weddings of a month. Returns the number of weddings; `tally` counts the households that passed on. */
 export function weddingsOn(s: WorldState, day: number, tally?: Passed): number {
+  const m = monthOf(s, day, tally);
+  let n = 0;
+  for (const place of new Set([...m.vacant.keys(), ...m.widows.keys()])) {
+    const t = townOf(m, place);
+    for (const f of m.vacant.get(place) ?? []) if (wedVacant(m, t, f)) n++;
+    for (const f of m.widows.get(place) ?? []) if (wedWidow(m, t, f)) n++;
+  }
+  return n;
+}
+
+function monthOf(s: WorldState, day: number, tally: Passed | undefined): Month {
   const P = s.person.cols,
     F = s.family.cols,
     seed = s.seed >>> 0,
     q = queueOf(s);
-  /** the stream of the persons' draws at a wedding, apart from their own (people.ts, work.ts, deaths.ts, births) */
   const lots = (seed ^ 0x5bd1e995) >>> 0;
   // the vacant households and the widows who may marry again, by place
   const vacant = new Map<number, number[]>(),
@@ -171,8 +208,6 @@ export function weddingsOn(s: WorldState, day: number, tally?: Passed): number {
     if (F.woman[f] < 0) add(vacant, F.place[f], f);
     else if (F.man[f] < 0 && ageOn(P.born[F.woman[f]], day) < WIDOW_REMARRIES_BELOW) add(widows, F.place[f], f);
   }
-  let n = 0;
-  const age = (id: number) => ageOn(P.born[id], day);
   // the children of the vacant houses who live in another place and are neither man nor woman of a family there
   const awayKids = new Map<number, number[]>(),
     away = new Set<number>();
@@ -192,193 +227,220 @@ export function weddingsOn(s: WorldState, day: number, tally?: Passed): number {
       away.add(id);
     }
   }
-  /** The heir `h` who lives away comes home into the house `f`. False where the part in the economy holds the heir. */
-  const comeHome = (h: number, f: number): boolean => {
-    if (!changeFamily(s, h, f, day)) return false;
-    away.delete(h);
-    if (tally) tally.home = (tally.home ?? 0) + 1;
-    return true;
-  };
-  /** Brother and sister (one parent in common is enough), or parent and child (the parents are uids). */
-  const kin = (a: number, b: number) =>
+  return { s, day, P, F, seed, lots, q, tally, vacant, widows, awayKids, away };
+}
+
+const age = (m: Month, id: number) => ageOn(m.P.born[id], m.day);
+
+/** The heir `h` who lives away comes home into the house `f`. False where the part in the economy holds the heir. */
+function comeHome(m: Month, h: number, f: number): boolean {
+  if (!changeFamily(m.s, h, f, m.day)) return false;
+  m.away.delete(h);
+  if (m.tally) m.tally.home = (m.tally.home ?? 0) + 1;
+  return true;
+}
+
+/** Brother and sister (one parent in common is enough), or parent and child (the parents are uids). */
+function kin(P: Month['P'], a: number, b: number): boolean {
+  return (
     (P.mother[a] >= 0 && P.mother[a] === P.mother[b]) ||
     (P.father[a] >= 0 && P.father[a] === P.father[b]) ||
     P.mother[a] === P.uid[b] ||
     P.father[a] === P.uid[b] ||
     P.mother[b] === P.uid[a] ||
-    P.father[b] === P.uid[a];
-  /** At the head of a household: its housewife, or its man (a widower of a vacant one too). */
-  const settled = (id: number) => {
-    const f = P.family[id];
-    return !!F.seat[f] && (F.man[f] === id || F.woman[f] === id);
-  };
-  for (const place of new Set([...vacant.keys(), ...widows.keys()])) {
-    const people = livingIn(s, place);
-    const men = people.filter(
-      (id) =>
-        P.sex[id] === 1 && age(id) >= GROOM_AGE_MIN && !(F.man[P.family[id]] === id && F.woman[P.family[id]] >= 0),
-    );
-    const women = people.filter(
-      (id) =>
-        P.sex[id] === 0 && F.woman[P.family[id]] !== id && age(id) >= BRIDE_YEARS[0] && age(id) < BRIDE_YEARS[1] + 1,
-    );
-    /** One of the list who is not kin of `spouse`, taken off the list; −1 where there is none: drawn among those
-     *  within the bride's window of the age `target`, else the nearest in age within `window`. */
-    const take = (list: number[], target: number, window: number, spouse = -1): number => {
-      // among those within the bride's window of the age, drawn by the weight of their traits (people feature 5):
-      // the greatest of weight plus a Gumbel draw is a draw in proportion to the weights
-      let pick = -1,
-        key = -Infinity;
-      for (let k = 0; k < list.length; k++) {
-        if (spouse >= 0 && kin(list[k], spouse)) continue;
-        if (Math.abs(age(list[k]) - target) >= AGE_WINDOW.bride) continue;
-        const g =
-          weddingWeight(P, list[k], P.sex[list[k]] === 1) - Math.log(-Math.log(hash01(lots, P.uid[list[k]], day)));
-        if (g > key || (g === key && list[k] < list[pick])) {
-          key = g;
-          pick = k;
-        }
-      }
-      if (pick >= 0) {
-        const id = list[pick];
-        list[pick] = list[list.length - 1];
-        list.pop();
-        return id;
-      }
-      // nobody that near in age: the nearest within the window, as before
-      let best = -1,
-        bestD = window;
-      for (let k = 0; k < list.length; k++) {
-        if (spouse >= 0 && kin(list[k], spouse)) continue;
-        const d = Math.abs(age(list[k]) - target);
-        if (d < bestD || (d === bestD && best >= 0 && list[k] < list[best])) {
-          best = k;
-          bestD = d;
-        }
-      }
-      if (best < 0) return -1;
-      const id = list[best];
-      list[best] = list[list.length - 1];
-      list.pop();
-      return id;
-    };
-    const drop = (list: number[], id: number): boolean => {
-      const k = list.indexOf(id);
-      if (k < 0) return false;
-      list[k] = list[list.length - 1];
-      list.pop();
-      return true;
-    };
-    /** The man leaves the head of the family he was the widower of. */
-    const leave = (man: number) => {
-      const f = P.family[man];
-      if (F.man[f] === man) F.man[f] = -1;
-    };
-    /** A new family takes the seat and the house of the vacant household `f`. */
-    const found = (f: number, groom: number, bride: number) => {
-      leave(groom);
-      const nf = spawn(s.family);
-      F.place[nf] = place;
-      F.man[nf] = groom;
-      F.woman[nf] = bride;
-      F.seat[nf] = 1;
-      F.hamlet[nf] = F.hamlet[f];
-      F.lot[nf] = F.lot[f];
-      F.seat[f] = 0;
-      P.family[groom] = nf;
-      P.family[bride] = nf;
-      if (tally) tally.passed++;
-    };
-    // the living children of the vacant houses of the town, the eldest first
-    const houses = new Map<number, number[]>();
-    for (const f of vacant.get(place) ?? []) houses.set(f, []);
-    if (houses.size) {
-      for (const id of people) {
-        const m = rowOf(s, P.mother[id]),
-          fa = rowOf(s, P.father[id]);
-        const l = (m >= 0 ? houses.get(P.family[m]) : undefined) ?? (fa >= 0 ? houses.get(P.family[fa]) : undefined);
-        if (l) l.push(id);
-      }
-      for (const [f, l] of houses) {
-        const a = awayKids.get(f);
-        if (a) l.push(...a);
-      }
-      for (const l of houses.values()) l.sort((a, b) => P.born[a] - P.born[b] || a - b);
+    P.father[b] === P.uid[a]
+  );
+}
+
+/** At the head of a household: its housewife, or its man (a widower of a vacant one too). */
+function settled(m: Month, id: number): boolean {
+  const f = m.P.family[id];
+  return !!m.F.seat[f] && (m.F.man[f] === id || m.F.woman[f] === id);
+}
+
+function townOf(m: Month, place: number): Town {
+  const { s, P, F } = m;
+  const people = livingIn(s, place);
+  const men = people.filter(
+    (id) =>
+      P.sex[id] === 1 && age(m, id) >= GROOM_AGE_MIN && !(F.man[P.family[id]] === id && F.woman[P.family[id]] >= 0),
+  );
+  const women = people.filter(
+    (id) =>
+      P.sex[id] === 0 &&
+      F.woman[P.family[id]] !== id &&
+      age(m, id) >= BRIDE_YEARS[0] &&
+      age(m, id) < BRIDE_YEARS[1] + 1,
+  );
+  // the living children of the vacant houses of the town, the eldest first
+  const houses = new Map<number, number[]>();
+  for (const f of m.vacant.get(place) ?? []) houses.set(f, []);
+  if (houses.size) {
+    for (const id of people) {
+      const mo = rowOf(s, P.mother[id]),
+        fa = rowOf(s, P.father[id]);
+      const l = (mo >= 0 ? houses.get(P.family[mo]) : undefined) ?? (fa >= 0 ? houses.get(P.family[fa]) : undefined);
+      if (l) l.push(id);
     }
-    /** The heir of the vacant household `f` by the custom of the children's father (their mother, where he is not known). */
-    const heir = (f: number): number => {
-      const kids = houses.get(f)!;
-      if (!kids.length) return -1;
-      const of = P.father[kids[0]] >= 0 ? rowOf(s, P.father[kids[0]]) : rowOf(s, P.mother[kids[0]]);
-      const custom = customOf(P.culture[of], P.faith[of]);
-      if (custom === CUSTOM.none) return -1;
-      const children: Child[] = kids.map((id) => ({
-        id,
-        son: P.sex[id] === 1,
-        free:
-          !settled(id) &&
-          (P.sex[id] === 1 ? age(id) >= GROOM_AGE_MIN : age(id) >= BRIDE_YEARS[0] && age(id) < FERTILE_TO),
-      }));
-      return heirOf(custom, children, hash01(seed, f, -day));
-    };
-    for (const f of vacant.get(place) ?? []) {
-      if (F.woman[f] >= 0) continue; // filled this month by the widower's wedding
-      const h = heir(f);
-      const gone = h >= 0 && away.has(h); // the heir lives in another place
-      if (h >= 0 && P.sex[h] === 1 && (gone || drop(men, h))) {
-        // the heir takes a bride
-        const bride = take(women, brideAge(hash01(seed, f, day)), AGE_WINDOW.bride, h);
-        if (bride >= 0 && (!gone || comeHome(h, f))) {
-          found(f, h, bride);
-          if (tally) tally.sons++;
-          expect(s, q, bride, day);
-          n++;
-          continue;
-        }
-        if (bride >= 0) women.push(bride);
-        if (!gone) men.push(h);
-      } else if (h >= 0 && P.sex[h] === 0 && (gone || drop(women, h))) {
-        // the heiress takes a groom
-        const groom = take(men, age(h) + GROOM_OLDER, AGE_WINDOW.groom, h);
-        if (groom >= 0 && (!gone || comeHome(h, f))) {
-          found(f, groom, h);
-          if (tally) tally.daughters++;
-          expect(s, q, h, day);
-          n++;
-          continue;
-        }
-        if (groom >= 0) men.push(groom);
-        if (!gone) women.push(h);
-      }
-      const bride = take(women, brideAge(hash01(seed, f, day)), AGE_WINDOW.bride);
-      if (bride < 0) continue;
-      const groom = take(men, age(bride) + GROOM_OLDER, AGE_WINDOW.groom, bride);
-      if (groom < 0) {
-        women.push(bride);
-        continue;
-      }
-      const gf = P.family[groom];
-      if (F.man[gf] === groom && F.seat[gf] && F.woman[gf] < 0) {
-        F.woman[gf] = bride;
-        P.family[bride] = gf;
-      } // the widower of a vacant household
-      else found(f, groom, bride); // a new family takes the seat and the house
-      expect(s, q, bride, day);
-      n++;
+    for (const [f, l] of houses) {
+      const a = m.awayKids.get(f);
+      if (a) l.push(...a);
     }
-    for (const f of widows.get(place) ?? []) {
-      const widow = F.woman[f];
-      if (F.man[f] >= 0) continue;
-      const groom = take(men, age(widow) + GROOM_OLDER, AGE_WINDOW.groom, widow);
-      if (groom < 0) continue;
-      leave(groom);
-      F.man[f] = groom;
-      P.family[groom] = f;
-      expect(s, q, widow, day);
-      n++;
+    for (const l of houses.values()) l.sort((a, b) => P.born[a] - P.born[b] || a - b);
+  }
+  return { place, men, women, houses };
+}
+
+/** One of the list who is not kin of `spouse`, taken off the list; −1 where there is none: drawn among those
+ *  within the bride's window of the age `target`, else the nearest in age within `window`. */
+function take(m: Month, list: number[], target: number, window: number, spouse = -1): number {
+  const { P, lots, day } = m;
+  // among those within the bride's window of the age, drawn by the weight of their traits (people feature 5):
+  // the greatest of weight plus a Gumbel draw is a draw in proportion to the weights
+  let pick = -1,
+    key = -Infinity;
+  for (let k = 0; k < list.length; k++) {
+    if (spouse >= 0 && kin(P, list[k], spouse)) continue;
+    if (Math.abs(age(m, list[k]) - target) >= AGE_WINDOW.bride) continue;
+    const g = weddingWeight(P, list[k], P.sex[list[k]] === 1) - Math.log(-Math.log(hash01(lots, P.uid[list[k]], day)));
+    if (g > key || (g === key && list[k] < list[pick])) {
+      key = g;
+      pick = k;
     }
   }
-  return n;
+  if (pick >= 0) {
+    const id = list[pick];
+    list[pick] = list[list.length - 1];
+    list.pop();
+    return id;
+  }
+  // nobody that near in age: the nearest within the window, as before
+  let best = -1,
+    bestD = window;
+  for (let k = 0; k < list.length; k++) {
+    if (spouse >= 0 && kin(P, list[k], spouse)) continue;
+    const d = Math.abs(age(m, list[k]) - target);
+    if (d < bestD || (d === bestD && best >= 0 && list[k] < list[best])) {
+      best = k;
+      bestD = d;
+    }
+  }
+  if (best < 0) return -1;
+  const id = list[best];
+  list[best] = list[list.length - 1];
+  list.pop();
+  return id;
+}
+
+function drop(list: number[], id: number): boolean {
+  const k = list.indexOf(id);
+  if (k < 0) return false;
+  list[k] = list[list.length - 1];
+  list.pop();
+  return true;
+}
+
+/** The man leaves the head of the family he was the widower of. */
+function leave(m: Month, man: number): void {
+  const f = m.P.family[man];
+  if (m.F.man[f] === man) m.F.man[f] = -1;
+}
+
+/** A new family takes the seat and the house of the vacant household `f`. */
+function found(m: Month, place: number, f: number, groom: number, bride: number): void {
+  const { s, P, F, tally } = m;
+  leave(m, groom);
+  const nf = spawn(s.family);
+  F.place[nf] = place;
+  F.man[nf] = groom;
+  F.woman[nf] = bride;
+  F.seat[nf] = 1;
+  F.hamlet[nf] = F.hamlet[f];
+  F.lot[nf] = F.lot[f];
+  F.seat[f] = 0;
+  P.family[groom] = nf;
+  P.family[bride] = nf;
+  if (tally) tally.passed++;
+}
+
+/** The heir of the vacant household `f` by the custom of the children's father (their mother, where he is not known). */
+function heir(m: Month, t: Town, f: number): number {
+  const { s, P, seed, day } = m;
+  const kids = t.houses.get(f)!;
+  if (!kids.length) return -1;
+  const of = P.father[kids[0]] >= 0 ? rowOf(s, P.father[kids[0]]) : rowOf(s, P.mother[kids[0]]);
+  const custom = customOf(P.culture[of], P.faith[of]);
+  if (custom === CUSTOM.none) return -1;
+  const children: Child[] = kids.map((id) => ({
+    id,
+    son: P.sex[id] === 1,
+    free:
+      !settled(m, id) &&
+      (P.sex[id] === 1 ? age(m, id) >= GROOM_AGE_MIN : age(m, id) >= BRIDE_YEARS[0] && age(m, id) < FERTILE_TO),
+  }));
+  return heirOf(custom, children, hash01(seed, f, -day));
+}
+
+/** The vacant household `f` goes to its heir with a spouse of the town, else takes a bride and her groom. Returns
+ *  whether there was a wedding. */
+function wedVacant(m: Month, t: Town, f: number): boolean {
+  const { s, day, P, F, seed, q, tally } = m,
+    { men, women } = t;
+  if (F.woman[f] >= 0) return false; // filled this month by the widower's wedding
+  const h = heir(m, t, f);
+  const gone = h >= 0 && m.away.has(h); // the heir lives in another place
+  if (h >= 0 && P.sex[h] === 1 && (gone || drop(men, h))) {
+    // the heir takes a bride
+    const bride = take(m, women, brideAge(hash01(seed, f, day)), AGE_WINDOW.bride, h);
+    if (bride >= 0 && (!gone || comeHome(m, h, f))) {
+      found(m, t.place, f, h, bride);
+      if (tally) tally.sons++;
+      expect(s, q, bride, day);
+      return true;
+    }
+    if (bride >= 0) women.push(bride);
+    if (!gone) men.push(h);
+  } else if (h >= 0 && P.sex[h] === 0 && (gone || drop(women, h))) {
+    // the heiress takes a groom
+    const groom = take(m, men, age(m, h) + GROOM_OLDER, AGE_WINDOW.groom, h);
+    if (groom >= 0 && (!gone || comeHome(m, h, f))) {
+      found(m, t.place, f, groom, h);
+      if (tally) tally.daughters++;
+      expect(s, q, h, day);
+      return true;
+    }
+    if (groom >= 0) men.push(groom);
+    if (!gone) women.push(h);
+  }
+  const bride = take(m, women, brideAge(hash01(seed, f, day)), AGE_WINDOW.bride);
+  if (bride < 0) return false;
+  const groom = take(m, men, age(m, bride) + GROOM_OLDER, AGE_WINDOW.groom, bride);
+  if (groom < 0) {
+    women.push(bride);
+    return false;
+  }
+  const gf = P.family[groom];
+  if (F.man[gf] === groom && F.seat[gf] && F.woman[gf] < 0) {
+    F.woman[gf] = bride;
+    P.family[bride] = gf;
+  } // the widower of a vacant household
+  else found(m, t.place, f, groom, bride); // a new family takes the seat and the house
+  expect(s, q, bride, day);
+  return true;
+}
+
+/** The widow of the household `f` takes a husband. Returns whether there was a wedding. */
+function wedWidow(m: Month, t: Town, f: number): boolean {
+  const { s, day, P, F, q } = m;
+  const widow = F.woman[f];
+  if (F.man[f] >= 0) return false;
+  const groom = take(m, t.men, age(m, widow) + GROOM_OLDER, AGE_WINDOW.groom, widow);
+  if (groom < 0) return false;
+  leave(m, groom);
+  F.man[f] = groom;
+  P.family[groom] = f;
+  expect(s, q, widow, day);
+  return true;
 }
 
 /** Every day the births that are due; on the first day of a month the weddings. After the deaths of the day. */
