@@ -55,7 +55,7 @@ for (const r of frame.realms) {
 console.log(
   `1 January 1291, realms with a list: ${lists.size}; holder agrees with the research ${same}, differs ${other}, none ${none}`,
 );
-for (const d of differ) console.log('  ' + d);
+for (const d of differ) console.log(`  ${d}`);
 for (const date of ['1350-01-01', '1453-06-01', '1500-01-01', '1648-01-01', '1789-07-14', '1848-12-31']) {
   const day = dayOf(date, 1291)!;
   playChronicle(s, w, s.day + 1, day);

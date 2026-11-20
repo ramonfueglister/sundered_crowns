@@ -141,7 +141,7 @@ async function tableOf(job: PieceJob): Promise<{ scene: WorldScene | null; table
   if (!table || table.ox !== job.piece.ox || table.oz !== job.piece.oz) return null;
   // (what stands on the piece was drawn with the sky's share baked in, as the tables are built: without it the piece is built)
   if (table.things && !job.bakedSky) return null;
-  const drawn = drawTable(table, job.bakedSky), things = table.things ? Batch.of(table.things.pos, table.things.nor, table.things.col) : new Batch();
+  const drawn = drawTable(table, job.bakedSky, job.step), things = table.things ? Batch.of(table.things.pos, table.things.nor, table.things.col) : new Batch();
   return { table, scene: { ...drawn, things, cells: [], counts: { triangles: drawn.ground.triangles + (drawn.carried?.triangles ?? 0) + drawn.water.triangles + drawn.raised.triangles + things.triangles + (drawn.standing?.triangles ?? 0) } } };
 }
 /** The table of the piece of the next coarser step over a job's piece, where one was built ahead. */
@@ -227,7 +227,7 @@ async function build(job: PieceJob) {
     // the piece glides to the shape of the coarser piece over it, where that has a table
     if (built && glides && own && !built.cells.length && !built.figures) {
       const before = performance.now(), over = await tableOver(job);
-      if (over) { built.counts[`pieces gliding step ${step}`] = glide(scene, own, over, job.bakedSky) ? 1 : 0; built.counts['ms glide'] = Math.round(performance.now() - before); }
+      if (over) { built.counts[`pieces gliding step ${step}`] = glide(scene, own, over, job.bakedSky, step) ? 1 : 0; built.counts['ms glide'] = Math.round(performance.now() - before); }
     }
     const lists = [scene.ground, scene.carried ?? nothing, scene.things, scene.water, scene.raised ?? nothing, ...scene.cells.map((c) => c.far)].flatMap((s) => [s.pos, s.nor, s.col, ...(s.sink ? [s.sink] : []), ...(s.faces ? [s.faces.geo, s.faces.col, s.faces.nor, ...(s.faces.aim && s.faces.aimCol ? [s.faces.aim, s.faces.aimCol] : [])] : []), ...(s.free ? [s.free.geo, s.free.col, s.free.nor] : [])]).concat(scene.figures ? [scene.figures.a, scene.figures.b, scene.figures.c, scene.figures.d, scene.figures.e] : []).map((a) => (a as Float32Array).buffer).filter((buf) => buf.byteLength > 0);
     // (summed before the lists are handed over)

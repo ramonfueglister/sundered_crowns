@@ -564,14 +564,14 @@ function housesOver(c: Columns, pos: ArrayLike<number>, sink: Float32Array) {
  * `parent` that of the coarser piece. The faces of the land get `aim` and `aimCol`, and the fourth byte of their
  * direction says whether the column they end up on is ground to the map's paper; the ground gets the tops and sides
  * that are to come and the coarser piece's banks, the water what is to stand where land sinks; the lists that move
- * get `sink`. Returns how many columns glide.
+ * get `sink`. `step`: the piece's step of the map. Returns how many columns glide.
  */
-export function glide(shapes: { ground: Shape; carried?: Shape; things?: Shape; water?: Shape; raised?: Shape }, fine: Table, parent: Table, bakedSky: boolean): number {
+export function glide(shapes: { ground: Shape; carried?: Shape; things?: Shape; water?: Shape; raised?: Shape }, fine: Table, parent: Table, bakedSky: boolean, step: number): number {
   const pn = parent.side, own = fine.part;
   // the coarser piece's own columns over this piece, drawn for their colours
   const qx = Math.floor((fine.ox + own.x0) / 2) - parent.ox, qz = Math.floor((fine.oz + own.z0) / 2) - parent.oz, wide = (own.x1 - own.x0) / 2, deep = (own.z1 - own.z0) / 2;
   if (qx < 1 || qz < 1 || qx + wide >= pn || qz + deep >= pn) return 0;
-  const quarter = { x0: qx, z0: qz, x1: qx + wide, z1: qz + deep }, drawn = drawLand(parent, bakedSky, quarter);
+  const quarter = { x0: qx, z0: qz, x1: qx + wide, z1: qz + deep }, drawn = drawLand(parent, bakedSky, quarter, step + 1);
   const above: Above = { side: pn, tops: new Float32Array(pn * pn * 12), has: new Uint8Array(pn * pn), ink: new Uint8Array(pn * pn), sides: new Map() };
   read(above, faced(drawn.ground).faces, 1);
   const theirCarried = drawn.carried ? faced(drawn.carried).faces : undefined;

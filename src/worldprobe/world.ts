@@ -8,7 +8,7 @@ import { ACACIA, CYPRESS, JUNGLE, LEAVES, PALM, TREE_TALL, acacia, cypress, palm
 import { type Ground, type GroundTraits, LAND_Y, Mat, N, SEA_Y, SUMMIT, idx, inGrid, measureShore, occlude, rockPillar } from '../lookprobe/layout';
 import type { Shape, StageScene } from '../lookprobe/shape';
 import { crowd } from '../figures';
-import { type Part, WATER_SHALLOW } from '../lookprobe/terrain';
+import { type Part, WATER_SHALLOW, sideTopAt } from '../lookprobe/terrain';
 import { type Climate, FIELDS_KNOWN, KIND, Land, WOODS_KNOWN, climateAt, snowLineAt, treeLineAt } from './climate';
 import { type Arable, arableAt } from './arable';
 import { type Forest, WOOD, conifersAt, forestAt, leanOf, stand, tilth } from './forest';
@@ -311,10 +311,11 @@ const CROPS = [null, 'wheat', 'vine', 'fallow', 'oats'] as const;
  */
 class WorldTraits implements GroundTraits {
   readonly slope = SLOPE;
+  readonly sideTop: number;
   readonly houses: GroundTraits['houses'];
   readonly trees: GroundTraits['trees'];
-  constructor(private readonly town: Uint8Array, private readonly field: Uint8Array | null, private readonly mean: Cover | undefined, private readonly land: Uint8Array, private readonly metres: Float32Array, private readonly snow: Float32Array, private readonly massifs: Massifs, private readonly roads: Float32Array | null) {
-    this.houses = mean?.houses; this.trees = mean?.trees;
+  constructor(step: number, private readonly town: Uint8Array, private readonly field: Uint8Array | null, private readonly mean: Cover | undefined, private readonly land: Uint8Array, private readonly metres: Float32Array, private readonly snow: Float32Array, private readonly massifs: Massifs, private readonly roads: Float32Array | null) {
+    this.sideTop = sideTopAt(step); this.houses = mean?.houses; this.trees = mean?.trees;
   }
   city(x: number, z: number) { return fieldAt(this.town, x, z) === 1; }
   plaza() { return Infinity; }
@@ -793,7 +794,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     if (cover.rise[i] > 0) { g.h[i] -= cover.rise[i]; g.occ[i] = g.h[i]; cover.rise[i] = 0; }
     cover.has[i] = 0;
   }
-  const traits = new WorldTraits((settled ?? cover!).town, settled ? settled.field : null, cover, land, metres, snow, massifs, roadEdge);
+  const traits = new WorldTraits(step, (settled ?? cover!).town, settled ? settled.field : null, cover, land, metres, snow, massifs, roadEdge);
   // (drawn by table.ts, which can keep the table of the columns: a far piece is drawn again from that alone)
   const { ground, carried, water, raised, standing } = drawGround(g, traits, bakedSky, part, !!cover, roadEdge);
   // the houses that have fine blocks and the paved ground stand in cells of their own (the part is whole cells), so

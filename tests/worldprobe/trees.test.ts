@@ -6,7 +6,7 @@ import { LEAVES, tree } from '../../src/lookprobe/blocks';
 import { N, idx, onGrid } from '../../src/lookprobe/layout';
 import { drawGround, drawTable, packTable, tableOf, unpackTable } from '../../src/worldprobe/table';
 import { STRAY, TEMPERATE, TREE_NUMBERS, TREE_PITCH, TREES_CLOSED, drawTrees, treesCode, treesIn } from '../../src/worldprobe/trees';
-import { SIDE, land, part } from './land';
+import { LAND_STEP, SIDE, land, part } from './land';
 
 const seedOf = (a: number, b: number, salt: number) => Math.floor(hash2(a, b, salt) * 4294967296);
 
@@ -64,7 +64,7 @@ describe('the trees of the first far step', () => {
     onGrid(SIDE, () => {
       const { g, t } = land(), trees = new Uint8Array(N * N * TREE_NUMBERS);
       for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) if ((x + z) % 3 === 0) { const [code, kind] = treesCode(0.2 + 0.6 * hash2(x, z, 5), TEMPERATE, hash2(x, z, 6)); trees[idx(x, z) * 2] = code; trees[idx(x, z) * 2 + 1] = kind; }
-      const traits = { ...t, trees }, built = drawGround(g, traits, true, part, true), table = tableOf(g, traits, part), again = drawTable(unpackTable(packTable(table)), true);
+      const traits = { ...t, trees }, built = drawGround(g, traits, true, part, true), table = tableOf(g, traits, part), again = drawTable(unpackTable(packTable(table)), true, LAND_STEP);
       expect(built.standing!.triangles).toBeGreaterThan(1000);
       expect(again.standing!.pos).toEqual(built.standing!.pos);
       expect(again.standing!.col).toEqual(built.standing!.col);

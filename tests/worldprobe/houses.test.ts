@@ -5,7 +5,7 @@ import { Batch, rgb, shade } from '../../src/lookprobe/batch';
 import { N, idx, onGrid } from '../../src/lookprobe/layout';
 import { HOUSE_NUMBERS, drawHouses, housesIn } from '../../src/worldprobe/houses';
 import { drawGround, drawTable, packTable, tableOf, unpackTable } from '../../src/worldprobe/table';
-import { SIDE, land, part } from './land';
+import { LAND_STEP, SIDE, land, part } from './land';
 
 const WALL = 0xd8c8a8, ROOF = 0xb04a30;
 /** a house: its corner, width and depth, eaves and rise, and hips (1) or gables (0) */
@@ -75,7 +75,7 @@ describe('the houses of the far steps', () => {
     onGrid(SIDE, () => {
       // two inside the piece, one across its edge with its middle inside, one with its middle outside
       const houses = [...house(30.25, 40.5, 1.5, 2, 2.4, 1.1), ...house(50, 33, 2, 1.5, 2, 0.8, 1), ...house(23.5, 50, 1, 1.5, 1.8, 0.7), ...house(22.5, 50, 1, 1.5, 1.8, 0.7)];
-      const { g, t } = land(4000, -1200, 0, 60, houses), built = drawGround(g, t, true, part, true), table = tableOf(g, t, part), again = drawTable(unpackTable(packTable(table)), true);
+      const { g, t } = land(4000, -1200, 0, 60, houses), built = drawGround(g, t, true, part, true), table = tableOf(g, t, part), again = drawTable(unpackTable(packTable(table)), true, LAND_STEP);
       expect(table.houses).toEqual(housesIn(houses, part));
       expect(table.houses!.length).toBe(3 * HOUSE_NUMBERS);
       expect(built.standing!.triangles).toBeGreaterThan(3 * 12);
