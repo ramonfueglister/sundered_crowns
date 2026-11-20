@@ -7,9 +7,18 @@ import { hagiaSophia } from './hagia-sophia';
 import { basilica, palace } from './st-marks';
 
 /** A model in a file under public/models/landmarks/, with the ground and height it takes, in blocks. */
-export interface FileModel { file: string; w: number; d: number; height: number }
+export interface FileModel {
+  file: string;
+  w: number;
+  d: number;
+  height: number;
+}
 /** One building of a monument, set off from the monument's site by (dx, dz) blocks. */
-export interface MonumentPart { model: Model | FileModel; dx: number; dz: number }
+export interface MonumentPart {
+  model: Model | FileModel;
+  dx: number;
+  dz: number;
+}
 
 export const isFile = (model: Model | FileModel): model is FileModel => 'file' in model;
 
@@ -35,7 +44,15 @@ export const MONUMENTS: Record<string, readonly MonumentPart[]> = {
 };
 
 /** Every file the monuments read, each once. */
-export const MONUMENT_FILES: readonly string[] = [...new Set(Object.values(MONUMENTS).flat().map((p) => p.model).filter(isFile).map((m) => m.file))];
+export const MONUMENT_FILES: readonly string[] = [
+  ...new Set(
+    Object.values(MONUMENTS)
+      .flat()
+      .map((p) => p.model)
+      .filter(isFile)
+      .map((m) => m.file),
+  ),
+];
 
 /** The model of a part: its own, or the one read from its file. A file model is the same batch wherever it stands. */
 export function modelOf(part: MonumentPart, files: ReadonlyMap<string, Batch>): Model {
