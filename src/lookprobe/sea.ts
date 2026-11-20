@@ -356,7 +356,8 @@ export function createSea(mirror: Nd): Sea {
   const waves = texture(waveTexture());
   /** the water's clock in seconds (a still's is fixed) */
   const clock = STILL ? uniform(number('seatime', 0)) : time;
-  // (a tool that takes a row of stills of the moving water sets the clock here: tools/lookprobe/water_frames.mjs)
+  // (a tool that takes a row of stills of the moving water sets the clock here, tools/lookprobe/water_frames.mjs:
+  // through globalThis, whose type has no such field)
   if (STILL) (globalThis as { __seaClock?: unknown }).__seaClock = clock;
   /** how far a picture of octave n has drifted along the wind (in its own frame), at `run` of the swell's pace */
   const drift = (n: Nd, run: number) => vec2(Math.cos(WIND), Math.sin(WIND)).mul(fract(clock.mul(SWELL_RUN * run * SPAN_LEAST ** 0.25).mul(exp2(n.mul(-0.25)))));

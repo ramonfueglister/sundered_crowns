@@ -189,10 +189,15 @@ FLICKER, FLICKER_L = 0.3, 20
 def motion(folder, name):
     """the motion of a scene's water: the mean change of its lightness in half a second, and the share (%) of it that
     changes by more than FLICKER_L from one frame to the next (pictures <name>.png, <name>_1.png, <name>_2.png)"""
-    lum = [srgb_to_lab(np.asarray(Image.open(f'{folder}/{name}{k}.png').convert('RGB')).astype(float))[..., 0] for k in ('', '_1', '_2')]
+    lum = [
+        srgb_to_lab(np.asarray(Image.open(f'{folder}/{name}{k}.png').convert('RGB')).astype(float))[..., 0]
+        for k in ('', '_1', '_2')
+    ]
     m = water_mask(np.asarray(Image.open(f'{folder}/{name}.png').convert('RGB')))
     inner = ndi.distance_transform_edt(m) >= 4
-    return float(np.abs(lum[2] - lum[0])[inner].mean()), float(100 * (np.abs(lum[1] - lum[0])[inner] > FLICKER_L).mean())
+    move = float(np.abs(lum[2] - lum[0])[inner].mean())
+    flicker = float(100 * (np.abs(lum[1] - lum[0])[inner] > FLICKER_L).mean())
+    return move, flicker
 
 
 def rows(r, kind):
@@ -218,7 +223,10 @@ def gauntlet(folder):
         more = []
         if kind in MOVES:
             move, flicker = motion(folder, name)
-            more = [(f'Bewegung >= {MOTION}', move, move >= MOTION), (f'Flimmern <= {FLICKER} %', flicker, flicker <= FLICKER)]
+            more = [
+                (f'Bewegung >= {MOTION}', move, move >= MOTION),
+                (f'Flimmern <= {FLICKER} %', flicker, flicker <= FLICKER),
+            ]
         for row, v, ok in rows(r, kind) + more:
             total += 1
             green += bool(ok)
