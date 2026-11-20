@@ -25,6 +25,7 @@ import { TREE_NUMBERS, crownTallAt } from './trees';
 import { unshade } from './mean';
 import { FARMS, FIELD_GROUND, LOT_BLOCKS, LOT_FILL, type Lot, type Monument, PEOPLE_PER_PERSON, type Settled, type Site, type Survey, type Told, farmsFor, firstHalf, raise, settle } from './settle';
 import { type Columns, columnsOf } from './nearground';
+import { layPlanGrounds } from './plan_ground';
 import { MONUMENTS, bridge, m, modelOf, styleOf } from '../buildings';
 import { FAR_FROM_ROADS, ROAD_KINDS, ROAD_SHOWS, type Road, relaxPoints, roadOn, roadsIn, wayOnGround } from './roads';
 import { Matrix4 } from 'three';
@@ -380,6 +381,8 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   // frayed by a few kilometres, the same at every step
   const land = new Uint8Array(N * N).fill(Land.Temperate | WOODS_KNOWN | FIELDS_KNOWN);
   readColumns(region, climate, forest, ox, oz, cell, { metres, kind, shift, lat, snow, woodsEnd, dark, land });
+  // the towns laid on a real plan that draws its land and water stand on that ground (plan_ground.ts)
+  if (parcels) layPlanGrounds(parcels, step, (site) => { const p = places[site]; return p ? toGround(...cellOf(region, p.lon, p.lat)) : null; }, kind, metres);
   const levelBy = (m: number, by: number) => levelFor(m, by, flatter);
   const levelOf = (m: number, i: number) => levelBy(m, shift[i]);
   // the massifs, read from the drainage network (`massifsOf`)

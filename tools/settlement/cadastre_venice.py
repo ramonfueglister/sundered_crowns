@@ -6,11 +6,15 @@
 # the half width at its junction is a corner of a wider space, not a street, and junctions closer than their half widths
 # are one. The streets are strokes: at each junction the two pieces that run on most nearly straight, within 60 degrees,
 # are one street (Thomson & Richardson 1999; Porta, Crucitti & Latora 2006). The strokes that carry the most shortest
-# ways between all junctions (edge betweenness by length) are kept whole up to KEEP metres and laid as in Paris
-# (cadastre_skeleton.py): in radii of the town, east-west and north-south.
+# ways between all junctions (edge betweenness by length) are kept whole up to as many metres to the hectare as Paris
+# keeps (PARIS) and laid as in Paris (cadastre_skeleton.py): in radii of the town, east-west and north-south.
+# The ground of the town is the register's too: water where it draws none of its land and the water is wider than the
+# longest bridge spans (the narrower canals were bridged wherever a street met them); per cell of CELL radii its share
+# of water.
 # Writes Venice into src/sim/content/town_plans_1291.json and its measure into data/cadastre/venice_1808.json.
 #   pip install scikit-image scipy sknw pillow shapely networkx
 #   python3 tools/settlement/cadastre_venice.py   (about 15 minutes, most of it the thinning)
+import base64
 import collections
 import gzip
 import json
@@ -26,7 +30,7 @@ import numpy as np
 import sknw
 from PIL import Image, ImageDraw
 from scipy import ndimage
-from shapely.geometry import LineString, shape
+from shapely.geometry import LineString, Polygon, shape
 from shapely.ops import transform, unary_union
 from skimage.morphology import skeletonize
 
@@ -41,12 +45,17 @@ RES = 0.5  # metres per pixel: the narrowest calli are about a metre wide. PLACE
 SPUR = 3.0  # metres: a dead end at least this long is a street. PLACEHOLDER
 ANGLE = 60.0  # degrees: two pieces of street running on within this are one stroke (Thomson & Richardson 1999)
 LOOK = 10.0  # metres along a piece that give its direction at a junction. PLACEHOLDER
-KEEP = float(
-    os.environ.get('KEEP', '9000')
-)  # real metres of skeleton, the busiest strokes first. Calibrated against Venice's own junctions
+PARIS = ('68', 3500.0)  # Paris's plan: its site and the real metres of skeleton it keeps (cadastre_skeleton.py, KEEP)
+# real metres of skeleton, the busiest strokes first: as many to the hectare as Paris keeps inside its wall (KEEP over
+# the area of Paris's radius); Venice's own shares of junctions cannot be met by the world's street growth, which was
+# calibrated against Paris (docs/SETTLEMENT_DESIGN.md)
 CACHE = os.environ.get('CACHE')  # a file to keep the network in between runs of the calibration
 STEP = 0.13  # radii: a street is simplified to this before it is laid in steps (as Paris). PLACEHOLDER
 SHORTEST = 0.02  # radii: a shorter piece is left out (as Paris). PLACEHOLDER
+CELL = 0.01  # radii (about 11 m): a cell of the ground; a block of the world (2 m) takes about 0.015 at Venice's size
+SUB = 8  # sub-cells a side of a cell, over which its share of water is counted
+# metres: the Rialto bridge, the longest span over a canal (BRIDGE_SPAN in src/sim/settlement/plan_ground.ts)
+SPAN = 28.8
 
 
 def xy(x, y, z=None):
@@ -89,6 +98,54 @@ def picture(tmp):
     # (the thinning is given a fresh array: on the array read from PIL it returns the picture unthinned)
     np.save(f'{tmp}/thin.npy', skeletonize(half > 0, method='lee') > 0)
     return x0, y0, math.sqrt(land.area / math.pi)
+
+
+def ground(radius):
+    """The register's ground round the centre in cells of CELL radii, rows from north to south, west to east: the share
+    of each cell that is water, in sixteenths of its 8 x 8 sub-cells (0 to 15, 16 counted as 15), packed two cells to a
+    byte, the lower half first. Water is what the register does not draw as land: the lagoon and the canals. A canal
+    no wider than the longest bridge spans was crossed by a bridge wherever a street met it, and is land here; the
+    world's Venice keeps the wider water only (the Grand Canal, the Giudecca, the basins)."""
+    feats = json.loads(gzip.decompress(SRC.read_bytes()))['features']
+    drawn = [(f['properties']['geometry_type'], transform(xy, shape(f['geometry']).buffer(0))) for f in feats]
+    # the canals the register leaves open between the blocks are holes of what it draws: filled, as the canals it
+    # draws, they are water
+    covered = unary_union([g for _, g in drawn])
+    filled = unary_union([Polygon(p.exterior) for p in getattr(covered, 'geoms', [covered])])
+    water = filled.difference(unary_union([g for t, g in drawn if t not in ('water', None)]))
+    # a canal no wider than the longest span is crossed by bridges wherever a street meets it: it is land, and only
+    # the water wider than the span stays (an opening by a disk as wide as the span)
+    wide = water.buffer(-SPAN / 2).buffer(SPAN / 2).intersection(water)
+    land = filled.difference(wide)
+    x0, y0, x1, y1 = covered.bounds
+    cell = CELL * radius
+    sub = cell / SUB
+    u0, v0 = math.floor(x0 / cell), math.floor(y0 / cell)
+    w, h = math.ceil(x1 / cell) - u0, math.ceil(y1 / cell) - v0
+    img = Image.new('1', (SUB * w, SUB * h), 0)
+    draw = ImageDraw.Draw(img)
+
+    def px(cs):
+        return [((x - u0 * cell) / sub, (y - v0 * cell) / sub) for x, y in cs]
+
+    for p in getattr(land, 'geoms', [land]):
+        draw.polygon(px(p.exterior.coords), fill=1)
+        for hole in p.interiors:
+            draw.polygon(px(hole.coords), fill=0)
+    dry = np.array(img, dtype=bool).reshape(h, SUB, w, SUB).mean(axis=(1, 3))
+    wet = np.minimum(15, np.round((1 - dry) * 16)).astype(np.uint8).ravel()
+    if len(wet) % 2:
+        wet = np.append(wet, 0)
+    packed = wet[0::2] | (wet[1::2] << 4)
+    print(f'ground: {w} x {h} cells of {cell:.1f} m, water {1 - dry.mean():.3f}', flush=True)
+    return {
+        'x0': round(u0 * CELL, 3),
+        'z0': round(v0 * CELL, 3),
+        'cell': CELL,
+        'w': w,
+        'h': h,
+        'water': base64.b64encode(packed.tobytes()).decode(),
+    }
 
 
 def network():
@@ -232,9 +289,11 @@ def main():
     for s in strokes(g):
         length = sum(g.edges[e]['length'] for e in s)
         scored.append((sum(load(*e) * g.edges[e]['length'] for e in s) / length, length, s))
+    paris = json.loads(OUT.read_text())['towns'][PARIS[0]]
+    most = PARIS[1] * (radius / paris['radius']) ** 2
     keep, total = [], 0.0
     for _, length, s in sorted(scored, key=lambda t: -t[0]):
-        if total + length > KEEP:
+        if total + length > most:
             continue
         keep += [g.edges[e]['line'] for e in s]
         total += length
@@ -247,6 +306,7 @@ def main():
         'radius': round(radius),
         'market': [round(mx / radius, 3), round(mz / radius, 3)],
         'streets': [list(q) for q in pieces],
+        'ground': ground(radius),
     }
     plan['towns'] = dict(sorted(plan['towns'].items(), key=lambda kv: int(kv[0])))
     OUT.write_text(json.dumps(plan, ensure_ascii=False) + '\n')

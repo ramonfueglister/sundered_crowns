@@ -55,8 +55,11 @@ import type { Table } from './ecs';
  *  worker who heads a family is paid for the days he works, and workers without work stand in for those who are
  *  away; the engine's state keeps the contracts (its format 13).
  *  37: the fields of the farmsteads (settlement feature 4, src/sim/settlement/fields.ts): every hamlet has its furlongs
- *  in courses, shared in strips by its farmsteads. */
-export const STATE_VERSION = 37;
+ *  in courses, shared in strips by its farmsteads.
+ *  38: Venice on the land and water of its land register of 1808 (settlement feature 3, real plans,
+ *  src/sim/settlement/plan_ground.ts): its parcels and streets lie on the register's land, its main streets cross the
+ *  canals on bridges. */
+export const STATE_VERSION = 38;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {

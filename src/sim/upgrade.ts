@@ -2,7 +2,7 @@
 // without end, so every change to the shape of the state needs its step here.
 import type { WorldState } from './state';
 import { STATE_VERSION, PERSON_SCHEMA, FAMILY_SCHEMA, REALM_SCHEMA, ALIVE } from './state';
-import { foundLots, relayTowns } from './systems/lots';
+import { foundLots, relayTowns, plannedAnew } from './systems/lots';
 import { foundFields } from './systems/fields';
 import { foundRulers, rulerCultures, rulerGenes } from './systems/rulers';
 import { foundBorders } from './systems/borders';
@@ -317,6 +317,13 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     // reached; nothing else changes.
     foundFields(s, w.tilth);
     s.v = 37;
+  }
+  if (s.v === 37) { // 37 → 38: Venice on the ground of its land register of 1808 (src/sim/settlement/plan_ground.ts).
+    // A town whose real plan is newer than its streets (Venice, unless the world was founded with it) is laid out anew
+    // along its streets as at 32 → 33: every parcel keeps its id, its family and its size. The other towns, the
+    // hamlets, their fields and everybody's life stay as they are.
+    relayTowns(s, w.ground, (site) => plannedAnew(s, site));
+    s.v = 38;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one

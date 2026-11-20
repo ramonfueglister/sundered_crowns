@@ -25,6 +25,7 @@
 // nearest of the four directions.
 import type { Parcel, ParcelSize } from './rule';
 import { FRONT, PARCEL_SHARE, PARCELS_PER_ROW } from './rule';
+import type { PlanGround } from './plan_ground';
 import { seedRng, rand } from '../rng';
 
 /** a way of the world that leaves the town: its direction (radians, east 0, south positive) and its kind (0 track, 1 road, 2 highway) */
@@ -38,8 +39,9 @@ export interface Street { x0: number; z0: number; x1: number; z1: number; kind: 
 
 /** the real plan of a town where an old plan of it is open (src/sim/content/town_plans_<year>.json): its market and
  *  the pieces of its main streets [x0, z0, x1, z1], east-west or north-south, east and south of the centre in radii
- *  of the real town. It gives the form, not the size: layTown lays it as wide as the town it lays. */
-export interface Plan { market: readonly [number, number]; streets: readonly (readonly number[])[] }
+ *  of the real town. It gives the form, not the size: layTown lays it as wide as the town it lays. `radius`: the real
+ *  metres of a radius; `ground`: the plan's land and water, where it draws them (plan_ground.ts). */
+export interface Plan { market: readonly [number, number]; streets: readonly (readonly number[])[]; radius?: number; ground?: PlanGround }
 
 export interface Town {
   parcels: Parcel[];
@@ -134,6 +136,11 @@ function marketWithin(size: ParcelSize, free: (x: number, z: number) => boolean,
 const packedRadius = (families: number, size: ParcelSize) =>
   Math.sqrt((families * Math.max(1, Math.round(size.w)) * Math.max(1, Math.round(size.d))) / PARCEL_SHARE / Math.PI) + dims(size).half;
 
+/** the radius a real plan is laid at, in a town's steps (layTown) */
+export const planRadius = (families: number, size: ParcelSize) => 2 * packedRadius(families, size);
+/** how far a town's streets reach from their middle lines, in its steps: `hw` and the middle line's own half step */
+export const streetReach = (size: ParcelSize) => dims(size).hw + 0.5;
+
 /** a town's street half-width and market half-side, in its own steps */
 const dims = (size: ParcelSize) => {
   const hw = Math.max(1, Math.round(streetWidth(size) / 2));
@@ -153,7 +160,7 @@ export function layTown(families: number, size: ParcelSize, ways: readonly Way[]
   // a real plan in steps: the walled town's radius becomes twice the radius of the town packed round its market, about
   // where the density of the families falls to a tenth (r − half ~ Gamma(2, r_c), r_c = R_C × packed: 90 % lie
   // within 3.9 r_c ≈ 2 packed). OWN RULE: the wall held the town.
-  const r = 2 * packedRadius(families, size);
+  const r = planRadius(families, size);
   const real = plan && { market: [plan.market[0] * r, plan.market[1] * r] as const, streets: plan.streets.map((q) => q.map((v) => v * r)) };
   const [ox, oz] = real ? [Math.round(real.market[0]), Math.round(real.market[1])] : ground ? marketAt(size, ground.free) : [0, 0];
   const t = layAround(families, size, ways, seed, ground, tune, ox, oz, real);

@@ -18,7 +18,7 @@ export interface Site { /** the same in every ground the place falls on */ id: n
  * the street and `d` metres deep, their middles `x` metres east and `z` metres south of the town's centre, the
  * street on the side `front` (0 north, 1 east, 2 south, 3 west). Metres at the scale of the houses.
  */
-export interface Parcels { w: number; d: number; x: readonly number[]; z: readonly number[]; front: readonly number[]; /** the streets of the town (settlement feature 3): straight pieces [x0, z0, x1, z1, kind] on their middle line, the market (kind 4) as its corners; metres as the parcels */ streets?: readonly (readonly number[])[]; /** how wide every street is, metres */ street?: number }
+export interface Parcels { w: number; d: number; x: readonly number[]; z: readonly number[]; front: readonly number[]; /** the streets of the town (settlement feature 3): straight pieces [x0, z0, x1, z1, kind] on their middle line, the market (kind 4) as its corners; metres as the parcels */ streets?: readonly (readonly number[])[]; /** how wide every street is, metres */ street?: number; /** a town on a real plan that draws its ground: the metres of a radius of the plan and how far its streets reach from their middle lines (src/net/lots.ts) */ ground?: { radius: number; half: number } }
 
 /** the kind of the market among a town's streets (STREET_KIND in src/sim/state.ts) */
 const MARKET = 4;
@@ -291,7 +291,8 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
 
   [...sites].sort((a, b) => b.size - a.size || (b.pop ?? 0) - (a.pop ?? 0) || a.id - b.id).forEach((s) => {
     // the site itself may lie in the water or on the rock at this scale: the nearest ground that can be built on
-    let cx = -1, cz = -1;
+    // (a town on a real plan that draws its ground is laid round its site's block, as that ground: plan_ground.ts)
+    let cx = s.lots?.ground ? Math.floor(s.at[0]) : -1, cz = s.lots?.ground ? Math.floor(s.at[1]) : -1;
     for (let k = 0; k <= 10 && cx < 0; k++) for (let dz = -k; dz <= k && cx < 0; dz++) for (let dx = -k; dx <= k; dx++) {
       const x = Math.floor(s.at[0]) + dx, z = Math.floor(s.at[1]) + dz;
       if (Math.max(Math.abs(dx), Math.abs(dz)) === k && buildable(x, z)) { cx = x; cz = z; break; }

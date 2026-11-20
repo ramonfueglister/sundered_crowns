@@ -17,11 +17,12 @@
 // are not built yet).
 import type { WorldState } from '../state';
 import { LOT_SCHEMA, LOT_KIND, NO_LOT, HAMLET_SCHEMA, NO_HAMLET, STREET_SCHEMA, STREET_KIND } from '../state';
-import { createTable, spawn } from '../ecs';
+import { createTable, despawn, spawn } from '../ecs';
 import { citiesOf } from '../content/cities';
 import { SCALE } from '../scale';
 import { townGround, parcelSize, footprint, FRONT, type Parcel, type ParcelSize } from '../settlement/rule';
-import { layTown, type Street, type Town, type Tuning } from '../settlement/streets';
+import { layTown, planRadius, streetReach, type Street, type Town, type Tuning } from '../settlement/streets';
+import { GROUND, groundBlocks } from '../settlement/plan_ground';
 import { waysOf } from '../content/town_ways';
 import { planOf } from '../content/town_plans';
 import { FARM, HAMLET_GAP, HAMLET_OFF, METRES_PER_BLOCK, hamletBox, hamletRing, hamletSizes, hamletSpots, layFarms } from '../settlement/hamlets';
@@ -107,6 +108,68 @@ const CELL = 32;
 /** whether two pieces of ground (middle, size) lie nearer to each other than `gap` */
 const near = (a: Box, b: Box, gap: number) => Math.abs(a.x - b.x) < (a.w + b.w) / 2 + gap && Math.abs(a.z - b.z) < (a.d + b.d) / 2 + gap;
 
+/** the steps a town is laid in: `u` metres, about one, so that a parcel is a whole number of steps wide and deep
+ *  and keeps its exact ground (feature 1); `cells`: the parcel in steps */
+const stepsOf = (size: ParcelSize) => {
+  const W = Math.max(1, Math.round(size.w)), u = size.w / W;
+  return { u, cells: { w: W, d: Math.max(1, Math.round(size.d / u)) } };
+};
+
+/** Where a town of `count` families with parcels of `size` is laid on a real plan that draws its ground
+ *  (src/sim/settlement/plan_ground.ts): the metres of a radius of the plan in the world, and how far the town's
+ *  streets reach from their middle lines, in metres; null for every other town. The world graphic draws the plan's
+ *  ground at the same size (src/net/lots.ts tells it). */
+export function planGroundOf(year: number, site: number, count: number, size: ParcelSize): { radius: number; half: number } | null {
+  const plan = planOf(year, site);
+  if (!plan?.ground || !count) return null;
+  const { u, cells } = stepsOf(size);
+  return { radius: planRadius(count, cells) * u, half: streetReach(cells) * u };
+}
+
+/** The building ground of the towns, with the ground of a town laid on a real plan that draws its land and water
+ *  taken from the plan where it draws it (the world graphic draws it there instead of the map's), from the survey
+ *  elsewhere. */
+function onPlan(g: Ground | null, year: number, site: number, count: number, size: ParcelSize): Ground | null {
+  const plan = planOf(year, site), at = planGroundOf(year, site, count, size);
+  if (!g?.has(site) || !plan?.ground || !plan.radius || !at) return g;
+  const blocks = groundBlocks(plan, plan.ground, plan.radius, at.radius, at.half, g.metresPerBlock), far = Math.max(g.reach(site), blocks.reach);
+  return {
+    year: g.year, metresPerBlock: g.metresPerBlock, has: (s) => g.has(s),
+    reach: (s) => (s === site ? far : g.reach(s)),
+    free: (s, bx, bz) => {
+      if (s !== site) return g.free(s, bx, bz);
+      const k = blocks.at(bx, bz);
+      return k === GROUND.open ? g.free(s, bx, bz) : k === GROUND.land;
+    },
+  };
+}
+
+/** The parcels of a town in the register and their size (all of a town are alike): none for a town without parcels. */
+function parcelsOf(s: WorldState, site: number): { rows: number[]; size: ParcelSize } | null {
+  const L = s.lot.cols, rows: number[] = [];
+  for (let i = 0; i < s.lot.size; i++) if (s.lot.alive[i] && L.kind[i] === LOT_KIND.parcel && L.site[i] === site) rows.push(i);
+  return rows.length ? { rows, size: { w: L.w[rows[0]], d: L.d[rows[0]] } } : null;
+}
+
+/** The building ground of a town of the register as its parcels were laid on it (`onPlan`). */
+export function registerGround(s: WorldState, g: Ground | null, site: number): Ground | null {
+  const p = parcelsOf(s, site);
+  return p ? onPlan(g, s.startYear, site, p.rows.length, p.size) : g;
+}
+
+/** Whether a town has a real plan but its market does not lie where the plan has it: its streets were laid before
+ *  the plan was read, and are laid anew on it (src/sim/upgrade.ts). */
+export function plannedAnew(s: WorldState, site: number): boolean {
+  const plan = planOf(s.startYear, site), p = parcelsOf(s, site), S = s.street.cols;
+  if (!plan || !p) return false;
+  const { u, cells } = stepsOf(p.size), r = planRadius(p.rows.length, cells);
+  for (let k = 0; k < s.street.size; k++) {
+    if (!s.street.alive[k] || S.site[k] !== site || S.kind[k] !== STREET_KIND.market) continue;
+    return Math.abs((S.x0[k] + S.x1[k]) / 2 - Math.round(plan.market[0] * r) * u) > 0.01 || Math.abs((S.z0[k] + S.z1[k]) / 2 - Math.round(plan.market[1] * r) * u) > 0.01;
+  }
+  return true;
+}
+
 /** What founding the land register found. */
 export interface LotsFound {
   /** towns whose surveyed ground does not hold all their families: laid out without regard to the ground */
@@ -130,7 +193,7 @@ function layStreets(s: WorldState, site: number, count: number, size: ParcelSize
   const ways = waysOf(s.startYear, site), seed = (s.seed ^ Math.imul(site + 1, 0x9e3779b1)) >>> 0;
   // the plan of the town is laid in steps of `u` metres, about one, so that a parcel is a whole number of steps wide
   // and deep and keeps its exact ground (feature 1)
-  const W = Math.max(1, Math.round(size.w)), u = size.w / W, cells = { w: W, d: Math.max(1, Math.round(size.d / u)) };
+  const { u, cells } = stepsOf(size);
   const plan = planOf(s.startYear, site); // a real plan, where an old plan of the town is read
   let town: Town | null = null;
   if (g?.has(site)) {
@@ -178,16 +241,19 @@ function layStreets(s: WorldState, site: number, count: number, size: ParcelSize
  * their families and their size; the parcels move to the streets that grow to them, the lowest id
  * the first, as a new world lays them. The hamlets stay where they are.
  */
-export function relayTowns(s: WorldState, ground?: Ground | null): LotsFound {
+export function relayTowns(s: WorldState, ground?: Ground | null, only?: (site: number) => boolean): LotsFound {
   const L = s.lot.cols, found: LotsFound = { tight: [], rough: 0, crowded: 0, streets: new Map() };
   const g = ground && ground.year === s.startYear ? ground : null;
-  s.street = createTable(STREET_SCHEMA, 16384);
   const bySite = new Map<number, number[]>();
   for (let i = 0; i < s.lot.size; i++) if (s.lot.alive[i] && L.kind[i] === LOT_KIND.parcel) { const a = bySite.get(L.site[i]); if (a) a.push(i); else bySite.set(L.site[i], [i]); }
+  // all towns, or those `only` names (asked once, before anything moves): their streets go, the others' stay
+  if (only) { for (const site of [...bySite.keys()]) if (!only(site)) bySite.delete(site); }
+  if (!only) s.street = createTable(STREET_SCHEMA, 16384);
+  else for (let k = 0; k < s.street.size; k++) if (s.street.alive[k] && bySite.has(s.street.cols.site[k])) despawn(s.street, k);
   // in the order the towns were founded (their first parcel), so that the streets lie in the register as a new world lays them
   for (const [site, rows] of [...bySite].sort((a, b) => a[1][0] - b[1][0])) {
     const size = { w: L.w[rows[0]], d: L.d[rows[0]] };
-    const town = layStreets(s, site, rows.length, size, g, found);
+    const town = layStreets(s, site, rows.length, size, onPlan(g, s.startYear, site, rows.length, size), found);
     rows.forEach((id, k) => { const p = town.parcels[k]; L.x[id] = p.x; L.z[id] = p.z; L.w[id] = size.w; L.d[id] = size.d; L.front[id] = p.front; });
   }
   return found;
@@ -227,7 +293,7 @@ export function foundLots(s: WorldState, ground?: Ground | null, dry?: Ground | 
     if (families.length) {
       const exact = parcelSize(townGround(persons, city.site), families.length);
       const size = exact;
-      const town = layStreets(s, city.site, families.length, size, g, found, tune);
+      const town = layStreets(s, city.site, families.length, size, onPlan(g, s.startYear, city.site, families.length, size), found, tune);
       const parcels: Parcel[] = town.parcels;
       const keep = (b: Box, into = built) => {
         for (let cz = Math.floor((b.z - b.d / 2) / CELL); cz <= Math.floor((b.z + b.d / 2) / CELL); cz++) for (let cx = Math.floor((b.x - b.w / 2) / CELL); cx <= Math.floor((b.x + b.w / 2) / CELL); cx++) {
@@ -258,7 +324,9 @@ export function foundLots(s: WorldState, ground?: Ground | null, dry?: Ground | 
     const sizes = hamletSizes(farmers.length), hectares = (s.place.arable[city.place] * farmPersons) / farmersOfPlace.get(city.place)!;
     const ring = hamletRing(half, sizes, hectares), spots = hamletSpots(sizes.length, ring.inner, ring.outer);
     const town: Box = { x: 0, z: 0, w: 2 * Math.max(half, reach), d: 2 * Math.max(half, reach) }, taken: Box[] = [];
-    const hg = wide?.has(city.site) ? wide : g?.has(city.site) ? g : null, surveyed = !!hg;
+    const size = families.length ? parcelSize(townGround(persons, city.site), families.length) : null;
+    const on = (q: Ground | null) => (size ? onPlan(q, s.startYear, city.site, families.length, size) : q);
+    const hg = wide?.has(city.site) ? on(wide) : g?.has(city.site) ? on(g) : null, surveyed = !!hg;
     let next = 0, free: ReturnType<typeof allFree> | null = null;
     sizes.forEach((farms, h) => {
       const box = hamletBox(farms), lay = layFarms(farms);

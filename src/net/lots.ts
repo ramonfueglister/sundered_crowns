@@ -5,6 +5,7 @@ import type { WorldState } from '../sim/state';
 import { ALIVE, NO_LOT, LOT_KIND } from '../sim/state';
 import { stripOrder } from '../sim/settlement/fields';
 import { presentPersons } from '../sim/people/living';
+import { planGroundOf } from '../sim/systems/lots';
 
 /** The ground of a town and of its hamlets in the land register, as columns of equal length (JSON). Metres at the
  *  scale of the houses; x east and z south of the centre of the town. */
@@ -33,6 +34,9 @@ export interface TownLots {
    *  the farmstead that holds it whole (an id of the ground above; −1 in the open field, where every farmstead of the
    *  hamlet has a strip in it, from the west in the order of `hamlets.strips`) */
   fields: { hamlet: number[]; x: number[]; z: number[]; w: number[]; d: number[]; zelge: number[]; courses: number[]; farm: number[] };
+  /** a town laid on a real plan that draws its land and water (src/sim/settlement/plan_ground.ts): the metres of a
+   *  radius of the plan and how far its streets reach from their middle lines, for the graphic to draw that ground */
+  ground?: { radius: number; half: number };
 }
 
 /** The most towns one request may ask for (GET /lots?sites=…). */
@@ -70,6 +74,11 @@ export function manyTownsLots(s: WorldState, sites: readonly number[]): TownLots
   for (let k = 0; C && k < s.field.size; k++) {
     const o = s.field.alive[k] ? at.get(C.site[k]) : undefined;
     if (o) { const q = o.fields; q.hamlet.push(C.hamlet[k]); q.x.push(C.x[k]); q.z.push(C.z[k]); q.w.push(C.w[k]); q.d.push(C.d[k]); q.zelge.push(C.zelge[k]); q.courses.push(C.courses[k]); q.farm.push(C.farm[k]); }
+  }
+  for (const o of at.values()) {
+    const parcels = o.id.map((_, i) => i).filter((i) => o.kind[i] === LOT_KIND.parcel);
+    const ground = parcels.length ? planGroundOf(s.startYear, o.site, parcels.length, { w: o.w[parcels[0]], d: o.d[parcels[0]] }) : null;
+    if (ground) o.ground = ground;
   }
   const S = s.street.cols;
   for (let k = 0; k < s.street.size; k++) {
