@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { FINER_STEPS, cellOfBlock } from '../../src/worldprobe/land';
-import { type Region } from '../../src/worldprobe/region';
+import type { Region } from '../../src/worldprobe/region';
 import { buildWorld, windowOf } from '../../src/worldprobe/world';
 
 describe('a river', () => {

@@ -234,7 +234,10 @@ if (!share) {
   } = { land: {}, sea: {}, odd: [], inputs: {} };
   for (let k = 0; k < n; k++) {
     const part = JSON.parse(readFileSync(resolve(dir, `found.${k}.json`), 'utf8')) as typeof found;
-    for (const [step, at] of Object.entries(part.sea)) (found.sea[step] ??= []).push(...at);
+    for (const [step, at] of Object.entries(part.sea)) {
+      found.sea[step] ??= [];
+      found.sea[step].push(...at);
+    }
     found.odd.push(...part.odd);
     Object.assign(found.inputs, part.inputs);
     rmSync(resolve(dir, `found.${k}.json`));
@@ -325,8 +328,10 @@ if (!share) {
       continue;
     }
     const table = await tableOf(w);
-    if (table === 'sea') (sea[w.step] ??= []).push(w.px, w.pz);
-    else if (typeof table === 'string') odd.push(`step ${w.step} piece ${w.px},${w.pz}: ${table}`);
+    if (table === 'sea') {
+      sea[w.step] ??= [];
+      sea[w.step].push(w.px, w.pz);
+    } else if (typeof table === 'string') odd.push(`step ${w.step} piece ${w.px},${w.pz}: ${table}`);
     // (written whole or not at all, for a build that goes on after it was cut off)
     else {
       writeFileSync(`${fileOf(w)}.part`, table);

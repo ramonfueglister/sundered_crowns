@@ -116,7 +116,8 @@ function boxesOf(r: Realms): Int32Array {
       if (x >= b[k + 2]) b[k + 2] = x + 1;
       if (y >= b[k + 3]) b[k + 3] = y + 1;
     }
-  return (boxes = b);
+  boxes = b;
+  return b;
 }
 /** The rectangles of these places, one after another (see `RealmsDone.dirty`). */
 function rectsOf(r: Realms, places: Iterable<number>): number[] {
@@ -163,7 +164,10 @@ self.onmessage = async (e: MessageEvent<RealmsJob>) => {
       const colour = new Map<number, boolean>(),
         changedColour = (k: number) => {
           let c = colour.get(k);
-          if (c === undefined) colour.set(k, (c = k >= 0 && recoloured(k)));
+          if (c === undefined) {
+            c = k >= 0 && recoloured(k);
+            colour.set(k, c);
+          }
           return c;
         };
       for (let p = 0; p < now.owner.length; p++) {

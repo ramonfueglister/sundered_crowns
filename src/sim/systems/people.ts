@@ -86,7 +86,10 @@ function stationary() {
     total = L.reduce((s, v) => s + v, 0),
     cdf = new Float64Array(L.length);
   let r = 0;
-  for (let i = 0; i < L.length; i++) cdf[i] = (r += L[i]) / total;
+  for (let i = 0; i < L.length; i++) {
+    r += L[i];
+    cdf[i] = r / total;
+  }
   return { pMale: SEX_RATIO_AT_BIRTH / (1 + SEX_RATIO_AT_BIRTH), cdf };
 }
 

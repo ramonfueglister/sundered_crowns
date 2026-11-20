@@ -39,7 +39,7 @@ export interface ChronicleJson {
 /** What happens on a day: a person comes into the world (born, or alive on the first day), a reign ends, a person
  *  dies, a person takes a crown. On one day they happen in this order, so a successor takes the crown after the
  *  predecessor has left it. */
-export const enum Happening {
+export enum Happening {
   Enter = 0,
   End = 1,
   Die = 2,

@@ -6,7 +6,10 @@ import { cornerOf, faced, small } from '../../src/worldprobe/small';
 /** a list of corners: places within a piece of the world, directions of length one, colours up to `bright` */
 function corners(n: number, bright: number) {
   let seed = 7;
-  const next = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const next = () => {
+    seed = (seed * 16807) % 2147483647;
+    return seed / 2147483647;
+  };
   const pos: number[] = [],
     nor: number[] = [],
     col: number[] = [];
