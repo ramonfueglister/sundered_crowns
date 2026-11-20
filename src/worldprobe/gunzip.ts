@@ -9,7 +9,9 @@ export async function maybeGunzip(b: Uint8Array): Promise<Uint8Array> {
     try {
       const s = new Blob([b as BlobPart]).stream().pipeThrough(new DecompressionStream('gzip'));
       return new Uint8Array(await new Response(s).arrayBuffer());
-    } catch { /* fall back to fflate */ }
+    } catch {
+      /* fall back to fflate */
+    }
   }
   return new Promise((res, rej) => gunzip(b, (err, out) => (err ? rej(err) : res(out))));
 }

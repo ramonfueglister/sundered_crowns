@@ -12,6 +12,7 @@ import { NG } from '../sim/people/genes';
 import { ROLE } from '../sim/systems/work';
 import { presentPersons } from '../sim/people/living';
 import { type ArchivedPersons, rowOf } from '../sim/people/archive';
+import type { Track } from '../sim/content/travel';
 
 /** The living persons of a place, as columns of equal length (JSON). */
 export interface PlacePeople {
@@ -34,14 +35,24 @@ export interface PlacePeople {
 /** A ruler as the map shows them (GET /rulers): who, where they live, and the crowns they hold. */
 export interface RulerOnMap {
   uid: number; name: string; house: string; female: boolean;
-  /** the place the ruler lives in (their family's) */
+  /** the place the ruler is staying in today: where the itinerary has them (src/sim/content/itineraries.ts), else
+   *  the place they live in (their family's) */
   place: number;
   /** the realms whose crown the ruler holds: the id, the German short name and the colour (0xRRGGBB) */
   crowns: { id: number; name: string; color: number }[];
+  /** for a ruler whose itinerary places them: the way ahead from the place the sources last name, as the places
+   *  reached and the day (to a hundredth) each is reached, for TRACK_DAYS (src/sim/content/travel.ts) */
+  track?: Track;
 }
 
-/** The rulers who live and hold at least one crown, in the order they came into the world. */
-export function rulersOnMap(s: WorldState): RulerOnMap[] {
+/** How many days ahead GET /rulers tells a ruler's way. OWN RULE: the map asks again when a way runs out
+ *  (src/people/rulers_mode.ts); some four months of a journey are a few hundred places. */
+export const TRACK_DAYS = 120;
+
+/** The rulers who live and hold at least one crown, in the order they came into the world; `stays`: where the persons
+ *  of history are staying today, by row (staysOf, src/sim/content/itineraries.ts), the others are at home; `tracks`:
+ *  their ways ahead, by row (tracksOf). */
+export function rulersOnMap(s: WorldState, stays: ReadonlyMap<number, number> = new Map(), tracks: ReadonlyMap<number, Track> = new Map()): RulerOnMap[] {
   const held = new Map<number, RulerOnMap['crowns']>();
   for (let r = 0; r < s.realm.size; r++) {
     const h = s.realm.cols.holder[r];
@@ -53,7 +64,9 @@ export function rulersOnMap(s: WorldState): RulerOnMap[] {
   for (const n of s.named ?? []) {
     const id = n.person, crowns = held.get(id);
     if (!crowns || P.died[id] !== ALIVE) continue;
-    out.push({ uid: P.uid[id], name: n.name, house: n.house, female: P.sex[id] === 0, place: s.family.cols.place[P.family[id]], crowns });
+    const t = tracks.get(id),
+      track = t && { day: t.day.map((d) => Math.round(d * 100) / 100), place: t.place };
+    out.push({ uid: P.uid[id], name: n.name, house: n.house, female: P.sex[id] === 0, place: stays.get(id) ?? s.family.cols.place[P.family[id]], crowns, ...(track ? { track } : {}) });
   }
   return out;
 }
@@ -191,26 +204,27 @@ export function personHousehold(s: WorldState, id: number): PersonHousehold | nu
   return { persons: F.persons[f], working: F.working[f], baskets: F.baskets[f], income: F.income[f], spent: F.spent[f], savings: F.savings[f], consumed: s.person.cols.consumed[id], need: F.need[f], fed: F.fed[f] };
 }
 
-export function placePeople(s: WorldState, place: number): PlacePeople {
-  return manyPlacesPeople(s, [place])[0];
+export function placePeople(s: WorldState, place: number, stays: ReadonlyMap<number, number> = new Map()): PlacePeople {
+  return manyPlacesPeople(s, [place], stays)[0];
 }
 
 /** The most places one request may ask for (GET /people?places=…). */
 export const MAX_PLACES_PER_REQUEST = 200;
 
 /** The living persons of several places, one list each in the order asked, in a single pass over the persons: the
- *  figures of a world with persons in hundreds of towns ask for them in a few requests, not one per place. */
-export function manyPlacesPeople(s: WorldState, places: readonly number[]): PlacePeople[] {
+ *  figures of a world with persons in hundreds of towns ask for them in a few requests, not one per place. A person
+ *  of history in `stays` (by row) is listed at the place they are staying in, not at home. */
+export function manyPlacesPeople(s: WorldState, places: readonly number[], stays: ReadonlyMap<number, number> = new Map()): PlacePeople[] {
   const P = s.person.cols, out = places.map((place): PlacePeople => ({ place, day: s.day, id: [], born: [], sex: [], family: [], hamlet: [] }));
   const at = new Map<number, PlacePeople>();
   out.forEach((o) => { if (!at.has(o.place)) at.set(o.place, o); });
   for (const i of presentPersons(s)) {
     if (P.died[i] !== ALIVE) continue;
-    const o = at.get(s.family.cols.place[P.family[i]]);
+    const o = at.get(stays.get(i) ?? s.family.cols.place[P.family[i]]);
     if (!o) continue;
     o.id.push(P.uid[i]); o.born.push(P.born[i]); o.sex.push(P.sex[i]); o.family.push(P.family[i]); o.hamlet.push(s.family.cols.hamlet[P.family[i]]);
   }
-  for (const r of rulersOnMap(s)) {
+  for (const r of rulersOnMap(s, stays)) {
     const o = at.get(r.place);
     if (o) (o.rulers ??= []).push({ uid: r.uid, color: r.crowns[0].color });
   }

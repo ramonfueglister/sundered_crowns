@@ -9,11 +9,13 @@ let loaded: Promise<Map<string, Batch>> | undefined;
 export function loadModels(base: string): Promise<Map<string, Batch>> {
   loaded ??= (async () => {
     const out = new Map<string, Batch>();
-    await Promise.all(MONUMENT_FILES.map(async (file) => {
-      const r = await fetch(`${base}models/landmarks/${file}`);
-      if (!r.ok) throw new Error(`${file}: HTTP ${r.status}`);
-      out.set(file, glbToBatch(await r.arrayBuffer()));
-    }));
+    await Promise.all(
+      MONUMENT_FILES.map(async (file) => {
+        const r = await fetch(`${base}models/landmarks/${file}`);
+        if (!r.ok) throw new Error(`${file}: HTTP ${r.status}`);
+        out.set(file, glbToBatch(await r.arrayBuffer()));
+      }),
+    );
     return out;
   })();
   return loaded;

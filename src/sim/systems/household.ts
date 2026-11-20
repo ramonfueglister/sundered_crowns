@@ -65,12 +65,20 @@ export function citiesByPlace(s: WorldState, e: CityEconomies): Int32Array {
 /** The price of agriculture in every city of the economies, 1 at the start: the mean price of the city's firms of
  *  that sector, weighted by what they made on the last day (by their number on a day on which none made anything). */
 export function foodPrices(s: WorldState): Float64Array {
-  const e = s.economy.cities!, F = s.firm.cols, out = new Float64Array(e.places.length);
+  const e = s.economy.cities!,
+    F = s.firm.cols,
+    out = new Float64Array(e.places.length);
   for (let k = 0; k < out.length; k++) {
-    let made = 0, value = 0, n = 0, prices = 0;
+    let made = 0,
+      value = 0,
+      n = 0,
+      prices = 0;
     for (let f = e.firm0[k]; f < e.firm0[k + 1]; f++) {
       if (F.sector[f] !== FOOD_SECTOR) continue;
-      made += F.output[f]; value += F.output[f] * F.price[f]; n++; prices += F.price[f];
+      made += F.output[f];
+      value += F.output[f] * F.price[f];
+      n++;
+      prices += F.price[f];
     }
     out[k] = made > 0 ? value / made : n > 0 ? prices / n : 1;
   }
@@ -85,38 +93,72 @@ export const FOOD_SECTOR = 0;
  *  the family needs to eat that day and the part of it that it covered. A world without economies has no purses:
  *  everything is 0, and so it is for a family of a place without an economy (`need` 0 says that `fed` says nothing). */
 export function writeHouseholds(s: WorldState, w: World): void {
-  const P = s.person.cols, F = s.family.cols, e = s.economy.cities;
-  F.persons.fill(0); F.working.fill(0); F.baskets.fill(0); F.income.fill(0); F.spent.fill(0); F.savings.fill(0); F.need.fill(0); F.fed.fill(0); P.consumed.fill(0);
+  const P = s.person.cols,
+    F = s.family.cols,
+    e = s.economy.cities;
+  F.persons.fill(0);
+  F.working.fill(0);
+  F.baskets.fill(0);
+  F.income.fill(0);
+  F.spent.fill(0);
+  F.savings.fill(0);
+  F.need.fill(0);
+  F.fed.fill(0);
+  P.consumed.fill(0);
   if (!e) return;
-  const n = s.family.size, income = new Float64Array(n), spent = new Float64Array(n), savings = new Float64Array(n), baskets = new Float64Array(n);
+  const n = s.family.size,
+    income = new Float64Array(n),
+    spent = new Float64Array(n),
+    savings = new Float64Array(n),
+    baskets = new Float64Array(n);
   // the baskets the family buys on this day: each member's times the factor of its calendar, if the engine computed
   // the day with working days (economy feature 19)
-  const toBuy = new Float64Array(n), { y, m, d } = dayToDate(e.day, s.startYear), doy = dateToDay(y, m, d, y);
-  const factors = new Map<number, number>(), factorOf = (faith: number) => {
-    let a = factors.get(faith);
-    if (a === undefined) { a = e.workingTo >= e.day ? dayFactor(calendarOf(faith), y, doy) : 1; factors.set(faith, a); }
-    return a;
-  };
+  const toBuy = new Float64Array(n),
+    { y, m, d } = dayToDate(e.day, s.startYear),
+    doy = dateToDay(y, m, d, y);
+  const factors = new Map<number, number>(),
+    factorOf = (faith: number) => {
+      let a = factors.get(faith);
+      if (a === undefined) {
+        a = e.workingTo >= e.day ? dayFactor(calendarOf(faith), y, doy) : 1;
+        factors.set(faith, a);
+      }
+      return a;
+    };
   // the living and the dead who still hold a part (src/sim/people/living.ts); a dead person without a part has no money
-  const persons = presentPersons(s).slice(), own = new Float32Array(persons.length);
+  const persons = presentPersons(s).slice(),
+    own = new Float32Array(persons.length);
   for (let k = 0; k < persons.length; k++) {
-    const id = persons[k], f = P.family[id], role = P.role[id];
+    const id = persons[k],
+      f = P.family[id],
+      role = P.role[id];
     // the dead are no members; the money of a dead person whose part nobody has taken yet (src/sim/systems/deaths.ts)
     // stays with the family
     if (P.died[id] === ALIVE) {
       own[k] = basketsOf(ageOn(P.born[id], e.day));
-      F.persons[f]++; baskets[f] += own[k]; toBuy[f] += own[k] * factorOf(P.faith[id]);
+      F.persons[f]++;
+      baskets[f] += own[k];
+      toBuy[f] += own[k] * factorOf(P.faith[id]);
       if (role === ROLE.worker || role === ROLE.owner || role === ROLE.banker) F.working[f]++;
     }
-    income[f] += P.income[id]; spent[f] += P.spent[id]; savings[f] += P.savings[id];
+    income[f] += P.income[id];
+    spent[f] += P.spent[id];
+    savings[f] += P.savings[id];
   }
-  const price = foodPrices(s), city = citiesByPlace(s, e), cost = w.cityEconomies.foodNeed;
+  const price = foodPrices(s),
+    city = citiesByPlace(s, e),
+    cost = w.cityEconomies.foodNeed;
   for (let f = 0; f < n; f++) {
-    F.baskets[f] = baskets[f]; F.income[f] = income[f]; F.spent[f] = spent[f]; F.savings[f] = savings[f];
+    F.baskets[f] = baskets[f];
+    F.income[f] = income[f];
+    F.spent[f] = spent[f];
+    F.savings[f] = savings[f];
     const k = city[F.place[f]];
     if (k < 0 || !(baskets[f] > 0)) continue;
-    const need = baskets[f] * cost * price[k], today = toBuy[f] * cost * price[k];
-    F.need[f] = need; F.fed[f] = today > 0 ? Math.min(1, Math.max(0, spent[f]) / today) : 1;
+    const need = baskets[f] * cost * price[k],
+      today = toBuy[f] * cost * price[k];
+    F.need[f] = need;
+    F.fed[f] = today > 0 ? Math.min(1, Math.max(0, spent[f]) / today) : 1;
   }
   for (let k = 0; k < persons.length; k++) {
     const id = persons[k];

@@ -11,14 +11,16 @@ import { VIEW } from '../lookprobe/layout';
 import { FINER, FINER_STEPS } from './land';
 
 /** finest blocks across the picture: from a street of houses to the whole width of the world (data/content/world_extent.json) */
-export const NEAREST = 30, FARTHEST = 14000 * FINER;
+export const NEAREST = 30,
+  FARTHEST = 14000 * FINER;
 /**
  * the near view: from NEAR_FROM inwards the camera rises to the angle and the light softens to that of the near
  * view's reference, fully at FINE_UNTIL; from there inwards the houses in the picture are built from their fine
  * blocks. A fine block is then four dots wide in a picture of 1600, and a town fills the picture with some three
  * million triangles; wider, it would be many more (a fine house has 12,000 to 40,000).
  */
-const NEAR_FROM = 160, NEAR_ELEVATION = 30;
+const NEAR_FROM = 160,
+  NEAR_ELEVATION = 30;
 export const FINE_UNTIL = 70;
 /** up to this width the world is built house by house and tree by tree (step 0) */
 const DETAIL_UNTIL = 400;
@@ -37,18 +39,30 @@ export const PAPER_COARSEST = 6 + FINER_STEPS;
  * a land: it rises and the land sinks only over the last stretch before the realms' map (which begins once the camera
  * looks straight down, REALMS_FROM).
  */
-const TILT_FROM = 5100 * FINER, TILT_UNTIL = 9000 * FINER, STRAIGHT_DOWN = 89.5;
+const TILT_FROM = 5100 * FINER,
+  TILT_UNTIL = 9000 * FINER,
+  STRAIGHT_DOWN = 89.5;
 /** the relief keeps its strength up to here and is all but flat where the camera looks straight down */
-const RELIEF_FROM = 5100 * FINER, RELIEF_LEAST = 0.06;
+const RELIEF_FROM = 5100 * FINER,
+  RELIEF_LEAST = 0.06;
 /**
  * the realms colour the flat world from here, fully from there: a short way, well after the world lies flat, so that
  * the map comes in one move of the wheel and the world is not seen half under it for long
  */
-const REALMS_FROM = 9100 * FINER, REALMS_FULL = 10500 * FINER;
+const REALMS_FROM = 9100 * FINER,
+  REALMS_FULL = 10500 * FINER;
 /** blocks across the picture at the middle of a step: there its heights are drawn as they were built */
 const MIDDLE = STEP_FROM * Math.SQRT2;
 /** a step's blocks stand for heights flattened by this power of their width (see buildWorld) */
 const FLATTER = 0.6;
+/**
+ * How many blocks of a step's height stand for one finest block of height: the land of a step is built flatter than
+ * its blocks are wide (FLATTER, world.ts `flatter`), and what stands on it is built as the land is. So a house, a
+ * tree, a sheaf or a wall stands as tall against its hill at every step, and as tall in the picture on both sides of
+ * a step's border as the finer step drew it there (`reliefOf`); built as tall as they are wide (1 / 2^step), they
+ * shrank by a quarter at every border.
+ */
+export const uprightOf = (step: number) => 2 ** (-FLATTER * step);
 
 const over = (from: number, until: number, wide: number) => smooth(Math.log2(from), Math.log2(until), Math.log2(wide));
 
@@ -57,15 +71,20 @@ const over = (from: number, until: number, wide: number) => smooth(Math.log2(fro
  * blocks across a picture of 3000 dots a block is half a dot, a tower a few dots tall, and the mirror's blur nine dots
  * wide. Beyond it the mirror is not drawn (stage/api.ts `mirror`).
  */
-const MIRROR_FROM = 3000, MIRROR_UNTIL = 6000;
+const MIRROR_FROM = 3000,
+  MIRROR_UNTIL = 6000;
 /** How much of the mirror image a view shows, 1 … 0. */
 export const mirrorOf = (wide: number) => 1 - over(MIRROR_FROM, MIRROR_UNTIL, wide);
 /** How much of the near view a view has, 0 … 1: its camera angle and its light. */
 export const nearOf = (wide: number) => 1 - over(FINE_UNTIL, NEAR_FROM, wide);
 /** The step of the map a view is drawn in: its blocks are 2^step finest blocks wide. */
-export const stepOf = (wide: number) => (wide < DETAIL_UNTIL ? 0 : Math.max(1, Math.min(COARSEST, Math.floor(Math.log2(wide / STEP_FROM)))));
+export const stepOf = (wide: number) =>
+  wide < DETAIL_UNTIL ? 0 : Math.max(1, Math.min(COARSEST, Math.floor(Math.log2(wide / STEP_FROM))));
 /** How far the camera looks down, in degrees. */
-export const elevationOf = (wide: number) => VIEW.elevation + (NEAR_ELEVATION - VIEW.elevation) * nearOf(wide) + (STRAIGHT_DOWN - VIEW.elevation) * over(TILT_FROM, TILT_UNTIL, wide);
+export const elevationOf = (wide: number) =>
+  VIEW.elevation +
+  (NEAR_ELEVATION - VIEW.elevation) * nearOf(wide) +
+  (STRAIGHT_DOWN - VIEW.elevation) * over(TILT_FROM, TILT_UNTIL, wide);
 /**
  * Whether a coarser step is laid into the picture of the finer one by the zoom, dot by dot over the last stretch
  * before its border (from the border's width divided by BLEND). OFF: as the steps are built today they show
@@ -86,7 +105,8 @@ export function blendOf(wide: number): number {
   return over((STEP_FROM * 2 ** (step + 1)) / BLEND, STEP_FROM * 2 ** (step + 1), wide);
 }
 /** The level of the realms' map a view is drawn from: its dots are 2^level finest cells wide, about one to a pixel of a picture `pixels` wide. */
-export const paperLevelOf = (wide: number, pixels: number) => Math.max(0, Math.min(PAPER_COARSEST, Math.ceil(Math.log2((0.7 * wide) / pixels))));
+export const paperLevelOf = (wide: number, pixels: number) =>
+  Math.max(0, Math.min(PAPER_COARSEST, Math.ceil(Math.log2((0.7 * wide) / pixels))));
 /** How deep the creases and corners of the blocks are drawn, 1 … 0: they go as the relief goes. */
 export const creasesOf = (wide: number) => 1 - over(RELIEF_FROM, TILT_UNTIL, wide);
 /**
@@ -109,18 +129,23 @@ export const realmsOf = (wide: number) => over(REALMS_FROM, REALMS_FULL, wide);
  * shade show through, as in EU5's political map close up; the names of the realms come in from NAMES_FROM, fully at
  * NAMES_FULL, where a realm is small enough in the picture for its name to be read
  */
-const POLITICAL_NEAR = 0.75, NAMES_FROM = 900 * FINER, NAMES_FULL = 2200 * FINER;
+const POLITICAL_NEAR = 0.75,
+  NAMES_FROM = 900 * FINER,
+  NAMES_FULL = 2200 * FINER;
 /**
  * of that, this share lies on what stands on the ground: houses, trees and fields keep their own colours where the
  * world is seen from near, and take more of the realm's where its name is written, so that a realm reads as one land
  */
-const THINGS_NEAR = 0.3, THINGS_FAR = 0.6;
+const THINGS_NEAR = 0.3,
+  THINGS_FAR = 0.6;
 /**
  * from afar woods, fields and towns are blocks of the ground, many and small: there the colour lies more strongly on
  * the land (POLITICAL_FAR) and the land's light and shade are evened out under it (`calm`), so that a realm is one
  * calm colour with the woods and the relief as a soft shade in it, not a speckled dark carpet
  */
-const POLITICAL_FAR = 0.9, CALM_FROM = DETAIL_UNTIL, CALM_FULL = 6 * DETAIL_UNTIL;
+const POLITICAL_FAR = 0.9,
+  CALM_FROM = DETAIL_UNTIL,
+  CALM_FULL = 6 * DETAIL_UNTIL;
 /**
  * How the realms' map lies on a view: `strength` how much it covers the land, `flat` how much it is a printed map
  * (the land's light hidden, the sea painted too), `names` how strongly the realms' names are written, `things` how
@@ -129,12 +154,23 @@ const POLITICAL_FAR = 0.9, CALM_FROM = DETAIL_UNTIL, CALM_FULL = 6 * DETAIL_UNTI
  * The political map mode lays it on the land at every distance, the terrain mode nowhere; `far` (the world probe's
  * own page and the tools that take pictures of it) only where the world lies flat, as the 2D map.
  */
-export function paperOf(wide: number, mode: 'political' | 'terrain' | 'far'): { strength: number; flat: number; names: number; things: number; calm: number } {
+export function paperOf(
+  wide: number,
+  mode: 'political' | 'terrain' | 'far',
+): { strength: number; flat: number; names: number; things: number; calm: number } {
   const flat = realmsOf(wide);
   if (mode === 'terrain') return { strength: 0, flat: 0, names: 0, things: 1, calm: 0 };
   if (mode === 'far') return { strength: flat, flat, names: flat, things: 1, calm: 0 };
-  const names = Math.max(flat, over(NAMES_FROM, NAMES_FULL, wide)), calm = over(CALM_FROM, CALM_FULL, wide), near = POLITICAL_NEAR + (POLITICAL_FAR - POLITICAL_NEAR) * calm;
-  return { strength: near + (1 - near) * flat, flat, names, things: THINGS_NEAR + (THINGS_FAR - THINGS_NEAR) * Math.max(names, calm), calm };
+  const names = Math.max(flat, over(NAMES_FROM, NAMES_FULL, wide)),
+    calm = over(CALM_FROM, CALM_FULL, wide),
+    near = POLITICAL_NEAR + (POLITICAL_FAR - POLITICAL_NEAR) * calm;
+  return {
+    strength: near + (1 - near) * flat,
+    flat,
+    names,
+    things: THINGS_NEAR + (THINGS_FAR - THINGS_NEAR) * Math.max(names, calm),
+    calm,
+  };
 }
 /** Whether a view shows the realms rather than the land: there a click means the place, nearer it means what stands on the ground. */
 export const realmsShown = (wide: number) => realmsOf(wide) >= 0.5;

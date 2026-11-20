@@ -10,4 +10,6 @@ async function swaps() {
   return { campanile: glbToBatch(await (await fetch('/models/landmarks/campanile_san_marco_1356.glb')).arrayBuffer()) };
 }
 
-swaps().then((s) => stage((bakedSky) => buildScene(bakedSky, s))).catch(showError);
+swaps()
+  .then((s) => stage((bakedSky) => buildScene(bakedSky, s)))
+  .catch(showError);

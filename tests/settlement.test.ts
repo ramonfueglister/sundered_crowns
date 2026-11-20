@@ -302,25 +302,25 @@ describe('the land register of a world of 1291', () => {
     for (let i = 0; i < bare.lot.size; i++) if (bare.lot.cols.kind[i] === LOT_KIND.parcel && !house(bare, i)) off++;
     expect(off).toBeGreaterThan(500); // 926 (1,000 and more while the graphic's own church stood in the ground)
   });
-  it('is the same from the same seed, survives a snapshot, and founding it again changes nothing', { timeout: 60_000 }, () => {
+  it('is the same from the same seed, survives a snapshot, and founding it again changes nothing', () => {
     const t = decodeState(encodeState(s));
     expect(hashState(t)).toBe(hashState(s));
     expect(Array.from(t.lot.cols.x.subarray(0, t.lot.size))).toEqual(Array.from(L.x.subarray(0, s.lot.size)));
     expect(Array.from(t.street.cols.x0.subarray(0, t.street.size))).toEqual(Array.from(s.street.cols.x0.subarray(0, s.street.size)));
     foundLots(t, w.ground, w.dry);
     expect(hashState(t)).toBe(hashState(s));
-  });
+  }, 60_000); // lays out every town of the world again: 4 s alone, more beside the other test files
 });
 
 describe('the streets of a world of 1291', () => {
   const t = decodeState(encodeState(s)), found = foundLots(t, w.ground, w.dry, { ...DEFAULT_TUNING, measure: true });
   const S = s.street.cols, L = s.lot.cols, rows = Array.from({ length: s.street.size }, (_, i) => i);
-  it('are the streets of a new world, measured or not, and every town has one market', { timeout: 60_000 }, () => {
+  it('are the streets of a new world, measured or not, and every town has one market', () => {
     expect(hashState(t)).toBe(hashState(s));
     const towns = cities.filter((c, k) => townFamilies(s)[k].families.length);
     expect(found.streets.size).toBe(towns.length);
     for (const c of towns) expect(rows.filter((i) => S.site[i] === c.site && S.kind[i] === STREET_KIND.market).length).toBe(1);
-  });
+  }, 60_000); // hashes two worlds and counts the families of every town: 4 s alone
   it('front every parcel of the register', () => {
     for (let i = 0; i < s.lot.size; i++) if (L.kind[i] === LOT_KIND.parcel) expect(fronts(found.streets.get(L.site[i])! as Town, { x: L.x[i], z: L.z[i], front: L.front[i] }, { w: L.w[i], d: L.d[i] })).toBe(true);
   });

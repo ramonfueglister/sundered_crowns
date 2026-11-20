@@ -128,5 +128,5 @@ const sites = round.sort((a, b) => a.site - b.site).map(({ site, r }) => {
   }
   return { site, wx, wz, dry: dry.get(site) ?? 0, lx0, lz0, cols, rows, cells: Buffer.from(bits).toString('base64') };
 }).filter((t) => centres.has(t.site));
-writeFileSync(process.env.OUT ?? resolve(ROOT, `public/data/tilth_${year}.json`), JSON.stringify({ year, about: 'The field lots of the world graphic round every town with hamlets on which a furlong can lie (dry, no rock, nothing built, level, no woods), per site of the gazetteer: the world block of its centre, dry = 1 for the Mediterranean kind of land (two courses), and a bit field of the lots from (lx0, lz0), cols by rows. Written by tools/worldprobe/build_tilth.ts.', sites }) + '\n');
+writeFileSync(process.env.OUT ?? resolve(ROOT, `public/data/tilth_${year}.json`), `${JSON.stringify({ year, about: 'The field lots of the world graphic round every town with hamlets on which a furlong can lie (dry, no rock, nothing built, level, no woods), per site of the gazetteer: the world block of its centre, dry = 1 for the Mediterranean kind of land (two courses), and a bit field of the lots from (lx0, lz0), cols by rows. Written by tools/worldprobe/build_tilth.ts.', sites })}\n`);
 console.log(`tilth_${year}.json: ${sites.length} towns, ${open.size} lots with room`);

@@ -10,7 +10,9 @@ import { advanceDay } from '../src/sim/engine';
 import { hashState } from '../src/sim/snapshot';
 import { createWorldState } from '../src/sim/setup';
 import { upgradeState } from '../src/sim/upgrade';
-import { loadWorldFor, loadSetup } from '../tools/sim/load';
+import { loadWorldFor, loadSetup, loadItineraries } from '../tools/sim/load';
+import type { Itineraries } from '../src/sim/content/itineraries';
+import { Travels } from '../src/sim/content/travel';
 import { realmInfos, placeDetail } from '../src/net/views';
 import { encodeOwners, SPEEDS, type ClientMsg, type WorldInfo, type Me } from '../src/net/protocol';
 import type { WorldConfig } from './config';
@@ -76,6 +78,10 @@ export class WorldCore {
   readonly store: WorldStore;
   w!: World;
   s!: WorldState;
+  /** the journeys of the rulers the sources tell day by day (src/sim/content/itineraries.ts) */
+  itineraries!: Itineraries | null;
+  /** the ways the rulers travel between the places of their itineraries (src/sim/content/travel.ts) */
+  travels!: Travels | null;
   meta!: Meta;
   private files!: WorldFiles;
   private queue: Queued[] = [];
@@ -127,6 +133,8 @@ export class WorldCore {
   /** Creates the world, or resumes it from its latest snapshot and the log after it. */
   init(): this {
     this.w = loadWorldFor(this.cfg.startYear);
+    this.itineraries = loadItineraries(this.cfg.startYear, this.w);
+    this.travels = this.itineraries ? new Travels(this.w) : null;
     mkdirSync(this.root, { recursive: true });
     const metaPath = join(this.root, 'meta.json');
     this.meta = existsSync(metaPath)

@@ -8,6 +8,7 @@
 // colours come as floats, not as bytes (worldprobe/small.ts). ?faces=0: their rectangles on the grid of blocks come as
 // triangles in those lists, not as faces (faces.ts); ?free=0: the rectangles on no grid of what stands on them do.
 // ?pilots=0: the shaders of a kind of mesh are made when its first mesh is drawn, not at the start (see there).
+// ?seatime=<seconds>: the moment a still of fixed size shows the moving water at (../sea.ts, 0).
 import * as THREE from 'three/webgpu';
 import { MapControls } from 'three/addons/controls/MapControls.js';
 import { FRAME_W, LAND_Y, N, NEAR, RIGHT, SEA_Y, VIEW } from '../layout';
@@ -20,7 +21,7 @@ import type { Stage, StageOptions } from './api';
 import { flag, q } from './address';
 import { FAR_SHADOW, FIGURES_GONE, FIGURES_LAYER, LOOK, NEAR_LIGHT, NEAR_SHADOW } from './look';
 import { KeptShadow } from './kept_shadow';
-import { faceGeometry, freeGeometry, geometry } from './geometry';
+import { faceGeometry, fieldGeometry, freeGeometry, geometry } from './geometry';
 import { createMaterials } from './materials';
 import { createPicture } from './picture';
 import { createSender } from './sending';
@@ -45,7 +46,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   const scene = new THREE.Scene();
   let pending = 3;
   scene.background = new THREE.Color(...OPEN_WATER);
-  const { smallLists, solid, water, faced, seaFaced, freed, gliding, sinking, surface, mirrored, tint, mirrorShare, shareCode, inkOf, marked } = createMaterials(scene);
+  const { smallLists, solid, water, faced, fieldFaced, fieldGliding, fields, seaFaced, freed, gliding, sinking, surface, mirrored, tint, mirrorShare, shareCode, inkOf, marked } = createMaterials(scene);
 
   // light step 1: sun, side light and sky; strengths are multiplied by π because a Lambert surface returns light / π
   const rad = THREE.MathUtils.degToRad;
@@ -160,6 +161,23 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     };
     return made;
   };
+  /**
+   * The joined tops of a shape as a mesh, drawn as its faces are, their colours read from the shape's field: its
+   * layer of the texture all such meshes share is taken here (`own`: a pilot takes none) and given back as it goes.
+   */
+  const fieldMesh = (shape: Shape, casts: boolean, own = true) => {
+    const f = shape.tops!, ends = !!(f.aim && f.aimTones), made = new THREE.Mesh(fieldGeometry(shape), ends ? fieldGliding : fieldFaced);
+    made.castShadow = casts; made.receiveShadow = true; made.userData.dots = new THREE.Vector2(0, 1); made.userData.ink = 1; made.userData.glide = 0;
+    made.userData.field = new THREE.Vector3(f.x0, f.z0, own ? fields.take(f.tones) : 0); made.userData.ownField = own;
+    made.userData.fieldEnd = ends && own ? fields.take(f.aimTones!) : 0;
+    made.raycast = (ray, hits) => {
+      const local = ray.ray.clone().applyMatrix4(new THREE.Matrix4().copy(made.matrixWorld).invert()), t = faceHit(f, local.origin.toArray(), local.direction.toArray());
+      if (t === null) return;
+      const point = local.at(t, new THREE.Vector3()).applyMatrix4(made.matrixWorld), distance = ray.ray.origin.distanceTo(point);
+      if (distance >= ray.near && distance <= ray.far) hits.push({ distance, point, object: made });
+    };
+    return made;
+  };
   /** The faces on no grid of a shape as a mesh, drawn as the faces on the grid are. */
   const freeMesh = (shape: Shape, casts: boolean) => {
     const f = shape.free!, made = new THREE.Mesh(freeGeometry(shape), freed);
@@ -194,7 +212,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     const none: Shape = { pos: new Float32Array(0), nor: new Int8Array(0), col: new Uint8Array(0), small: true, ball: [0, 0, 0, 0] };
     const face = (aimed = false): Shape => ({ ...none, faces: { geo: new Int16Array(FACE_GEO), col: new Uint8Array(FACE_COL), nor: new Int8Array(4), ...(aimed ? { aim: new Int16Array(2), aimCol: new Uint8Array(FACE_COL) } : {}) } });
     const sea = [...(water !== solid ? [mesh(lists(), water, false)] : []), faceMesh(face(), false, true)];
-    for (const pilot of [mesh(lists(), solid, true), mesh(lists(true), sinking, true), faceMesh(face(), true), faceMesh(face(true), true), freeMesh({ ...none, free: { geo: new Float32Array(FREE_GEO), col: new Uint8Array(FACE_COL), nor: new Int8Array(4) } }, true), ...sea]) {
+    for (const pilot of [mesh(lists(), solid, true), mesh(lists(true), sinking, true), faceMesh(face(), true), faceMesh(face(true), true), fieldMesh({ ...none, tops: { geo: new Int16Array(FACE_GEO), nor: new Int8Array(4), tones: new Uint8Array(0), x0: 0, z0: 0 } }, true, false), fieldMesh({ ...none, tops: { geo: new Int16Array(FACE_GEO), nor: new Int8Array(4), tones: new Uint8Array(0), x0: 0, z0: 0, aim: new Int16Array(2), aimTones: new Uint8Array(0) } }, true, false), freeMesh({ ...none, free: { geo: new Float32Array(FREE_GEO), col: new Uint8Array(FACE_COL), nor: new Int8Array(4) } }, true), ...sea]) {
       (pilot.userData.dots as THREE.Vector2).set(0, 0); pilot.userData.glide = 0; pilot.frustumCulled = false;
       // (the sea's lie where the sea's meshes lie: on the layer the mirror does not draw)
       if (sea.includes(pilot)) pilot.layers.set(FIGURES_LAYER);
@@ -207,8 +225,8 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   // The renderer keeps a record of every mesh it has drawn, and each record hangs on the material, which all pieces
   // share and which is never let go: only the mesh's own 'dispose' takes the record, and with it the mesh and its
   // numbers, out of the renderer. Letting go of the geometry alone leaves them held for good.
-  const gone = (made: THREE.Mesh) => { warm(made); partial.delete(made); made.dispatchEvent({ type: 'dispose' } as never); made.geometry.dispose(); };
-  const sender = createSender(scene, camera, fixedW, mesh, { solid, faced, seaFaced, gliding, freed, smallLists }), { staged, cold, cool, warm, parts } = sender;
+  const gone = (made: THREE.Mesh) => { warm(made); partial.delete(made); if (made.userData.ownField) { fields.give((made.userData.field as THREE.Vector3).z); if (made.material === fieldGliding) fields.give(made.userData.fieldEnd as number); made.userData.ownField = false; } made.dispatchEvent({ type: 'dispose' } as never); made.geometry.dispose(); };
+  const sender = createSender(scene, camera, fixedW, mesh, { solid, faced, fieldFaced, fieldGliding, seaFaced, gliding, freed, smallLists }), { staged, cold, cool, warm, parts } = sender;
   const stage: Stage = {
     canvas, aim, soften, busy: true, staged,
     probe: { ready: false, counts: {}, backend: flag('webgl', false) ? 'webgl2' : 'webgpu' },
@@ -217,7 +235,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
       group.position.set(x, 0, z);
       for (const [shape, material, casts] of [[built.ground, solid, true], [built.carried, solid, true], [built.things, solid, true], [built.water, water, false], [built.raised, solid, false]] as const) {
         if (!shape) continue;
-        for (const part of [...(shape.faces?.geo.length ? [cool(faceMesh(shape, casts, shape === built.water))] : []), ...(shape.free?.geo.length ? [cool(freeMesh(shape, casts))] : []), ...(shape.pos.length ? parts(shape).map((some) => cool(mesh(some, some.sink && material === solid ? sinking : material, casts))) : [])]) {
+        for (const part of [...(shape.faces?.geo.length ? [cool(faceMesh(shape, casts, shape === built.water))] : []), ...(shape.tops?.geo.length ? [cool(fieldMesh(shape, casts))] : []), ...(shape.free?.geo.length ? [cool(freeMesh(shape, casts))] : []), ...(shape.pos.length ? parts(shape).map((some) => cool(mesh(some, some.sink && material === solid ? sinking : material, casts))) : [])]) {
           if (part.material === sinking) part.userData.glide = 0;
           part.userData.ground = shape === built.ground || shape === built.carried;
           if (shape === built.things || shape === built.carried) part.userData.ink = 0;
@@ -311,7 +329,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     // walking figures keep the picture moving; a picture of fixed size is a still, so that a tool's picture comes
     // (a picture that something other than the walking figures asks for draws the shadows of all that stands still anew: see KeptShadow)
     const full = pending > 0 || cold.size > 0;
-    if (!fixedW && (anyFigures() || cold.size)) pending = Math.max(pending, 1);
+    if (!fixedW && (anyFigures() || cold.size || surface?.moving(frameW, renderer.domElement.width))) pending = Math.max(pending, 1);
     if (pending <= 0 || (fixedW && stage.busy)) return;
     shade.full ||= full; sun.shadow.needsUpdate = true;
     sender.beforePicture();

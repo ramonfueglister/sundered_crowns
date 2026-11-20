@@ -16,6 +16,7 @@ pub mod clock;
 pub mod past;
 pub mod state;
 pub mod trade;
+pub mod workers;
 
 use beforeit::{
     AbstractModel, Data, InitialConditions, Model, Parameters, Xoshiro, get_accounting_identities,
@@ -838,6 +839,38 @@ pub mod abi {
         })())
     }
 
+    /// The cities of a state with the workers who are away from their next period on, as [`crate::absences`] reads
+    /// them (economy feature 22). Result: their state.
+    ///
+    /// # Safety
+    ///
+    /// As [`sce_create`], for both pairs of pointer and length.
+    #[unsafe(no_mangle)]
+    pub unsafe extern "C" fn sce_absences(state: *const u8, len: usize, list: *const u8, list_len: usize) -> u32 {
+        hook();
+        answer((|| {
+            let mut all = take(unsafe { bytes(state, len) })?;
+            crate::workers::absences(&mut all, unsafe { bytes(list, list_len) })?;
+            Ok(keep(all))
+        })())
+    }
+
+    /// The cities of a state with their contracts from their next period on, as [`crate::workers::contracts`] reads
+    /// them (economy feature 23). Result: their state.
+    ///
+    /// # Safety
+    ///
+    /// As [`sce_create`], for both pairs of pointer and length.
+    #[unsafe(no_mangle)]
+    pub unsafe extern "C" fn sce_contracts(state: *const u8, len: usize, list: *const u8, list_len: usize) -> u32 {
+        hook();
+        answer((|| {
+            let mut all = take(unsafe { bytes(state, len) })?;
+            crate::workers::contracts(&mut all, unsafe { bytes(list, list_len) })?;
+            Ok(keep(all))
+        })())
+    }
+
     /// Computes `periods` periods from a state. Result: the state after them.
     ///
     /// # Safety
@@ -919,6 +952,21 @@ pub mod abi {
     pub extern "C" fn sce_agents_last() -> u32 {
         hook();
         answer(look_last(|all| float_lists(all.cities.iter().map(Economy::agents))))
+    }
+
+    /// Of the state kept in [`LAST`], per city the workers away from firms that worked in its last period and the
+    /// workers without work who stood in for them (economy feature 23, [`crate::workers::Today`]): two 64-bit floats a
+    /// city. A measure for the tools; no rule and no state reads it.
+    #[unsafe(no_mangle)]
+    pub extern "C" fn sce_stand_ins_last() -> u32 {
+        hook();
+        answer(look_last(|all| {
+            floats(
+                all.cities
+                    .iter()
+                    .flat_map(|e| [e.model.ext.today.away as f64, e.model.ext.today.stood_in as f64]),
+            )
+        }))
     }
 
     /// Result: the key figures of every city of a state, [`super::FIGURES`] 64-bit floats a city.

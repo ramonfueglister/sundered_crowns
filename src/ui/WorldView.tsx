@@ -150,7 +150,14 @@ export function WorldView() {
             effect(() => {
               const on = mapMode.value === 'rulers';
               if (on && !hide)
-                hide = showRulers(made, loc, (uid) => void peoplePanel?.show(uid), import.meta.env.VITE_WORLD_URL);
+                hide = showRulers(
+                  made,
+                  loc,
+                  (uid) => void peoplePanel?.show(uid),
+                  import.meta.env.VITE_WORLD_URL,
+                  // the travelling rulers go along their ways with the days of the world
+                  (f) => world.subscribe((w) => w && f(w.day)),
+                );
               else if (!on && hide) {
                 hide();
                 hide = null;

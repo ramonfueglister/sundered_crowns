@@ -11,18 +11,23 @@ import { join } from 'node:path';
 import { newWorldState, loadWorld, loadSetup, loadEconomy, loadEconomyEngine, dataPath } from '../tools/sim/load';
 import { ECONOMY_DIR } from '../tools/sim/build_economy';
 import { REFERENCE, calibrationJson, cityCalibrations, readTable } from '../tools/sim/calibrate_economy';
-import {
-  calibrateEconomy,
-  cityTable,
-  dailyCalibration,
-  dailyEconomy,
-  unemploymentBenefit,
-  ar1,
-  roundHalfEven,
-  type Entry,
-} from '../src/sim/economy/calibration';
+import { calibrateEconomy, cityTable, ar1, type Entry } from '../src/sim/economy/calibration';
+import { roundHalfEven, unemploymentBenefit } from '../src/sim/economy/accounts';
+import { dailyCalibration, dailyEconomy } from '../src/sim/economy/daily';
 import { FIGURE, FIGURES, type CitySetup, type EconomyEngine, type EconomyRules } from '../src/sim/economy/engine';
-import { cityAt, cityPlaces, citySeed, computeTo, workingDays, yearRow } from '../src/sim/systems/economy';
+import {
+  absences,
+  cityAt,
+  cityCalibrations as foundFrom,
+  cityPlaces,
+  citySeed,
+  computeTo,
+  contracts,
+  foundEconomy,
+  workingDays,
+  yearRow,
+} from '../src/sim/systems/economy';
+import { upgradeState } from '../src/sim/upgrade';
 import { cityRoutes } from '../src/sim/economy/routes';
 import { cityPeopleByPlace } from '../src/sim/systems/people';
 import { advanceDay } from '../src/sim/engine';
@@ -30,6 +35,7 @@ import { encodeState, decodeState, hashState } from '../src/sim/snapshot';
 import { STATE_VERSION, type WorldState } from '../src/sim/state';
 import { createWorldState } from '../src/sim/setup';
 import { placeDetail } from '../src/net/views';
+import { dateToDay, dayToDate } from '../src/sim/calendar';
 import { World } from '../src/sim/world';
 import { configFromEnv } from '../server/config';
 import { WorldCore } from '../server/world';
@@ -42,10 +48,16 @@ const days = (s: WorldState, w: World, n: number) => {
  *  read here in the shape the port gives it. */
 // biome-ignore lint/suspicious/noExplicitAny: the port's tables are JSON; a key's shape is the port's, not a type here
 type PortJson = Record<string, any>;
-/** The state of the economies of a world with the working days of the firms that the world gives them before its
- *  next day (economy feature 19): what the engine starts that day from. */
-const withWorkingDays = (s: WorldState, w: World) =>
-  w.economyEngine.workingDays(s.economy.cities!.model, workingDays(s, s.economy.cities!));
+/** The state of the economies of a new world with what the world gives them before its first day: the working days
+ *  of the firms (economy feature 19) and the workers who are away in the rest of the month (economy feature 22).
+ *  What the engine starts that day from. */
+const withWorkingDays = (s: WorldState, w: World) => {
+  const e = s.economy.cities!,
+    next = dayToDate(e.day + 1, s.startYear);
+  const lastOfMonth = dateToDay(next.y + (next.m === 11 ? 1 : 0), (next.m + 1) % 12, 1, s.startYear) - 1;
+  const days = w.economyEngine.workingDays(e.model, workingDays(s, e));
+  return w.economyEngine.contracts(w.economyEngine.absences(days, absences(s, e, lastOfMonth)), contracts(s, e));
+};
 const bits = (v: Float64Array) =>
   Array.from(new BigUint64Array(v.buffer, v.byteOffset, v.length), (x) => x.toString(16).padStart(16, '0')).join(' ');
 
@@ -123,6 +135,29 @@ describe("the calibration of England's economy (the year of the sources)", () =>
     expect(ic.C_E[75]).toBeCloseTo(a.exports, 9);
     expect(ic.Y[0] / ic.Y[75]).toBeCloseTo(3389.51 / 2686.02, 9); // real GDP of 1281 against 1356
     expect(ic.pi[0]).toBeCloseTo(Math.log(0.1249 / 0.132607), 9); // the deflator of 1281 against 1280
+  });
+  it("hands a world that starts before the table's year the history up to its start, as the port ends it at the date of the calibration (feature 21)", () => {
+    const u = calibrateEconomy(table, 1291),
+      q = u.parameters as PortJson,
+      h = u.initial_conditions as PortJson;
+    expect(q.T_prime).toBe(11);
+    for (const k of ['Y', 'pi', 'C_G', 'C_E', 'Y_I']) expect(h[k].length).toBe(11);
+    expect(h.Y[10]).toBeCloseTo(sum(a.output), 6); // every series is scaled to its value in the start year
+    expect(h.C_G[10]).toBeCloseTo(a.crown, 9);
+    expect(h.C_E[10]).toBeCloseTo(a.exports, 9);
+    expect(h.Y[0] / h.Y[10]).toBeCloseTo(3389.51 / 3231.35, 9); // real GDP of 1281 against 1291
+    expect(h.pi).toEqual(ic.pi.slice(0, 11));
+    const e = ar1(h.C_E.map(Math.log)); // the exports' rule from 1281 to 1291
+    expect([q.alpha_E, q.beta_E, q.sigma_E]).toEqual([e.alpha, e.beta, e.sigma]);
+    // the crown's rule from the whole history: from 1281 to 1291 it has no long-run mean
+    expect(ar1(h.C_G.map(Math.log)).alpha).toBeGreaterThan(1);
+    expect(q.alpha_G).toBeCloseTo(p.alpha_G, 12);
+    expect(q.sigma_G).toBeCloseTo(p.sigma_G, 12);
+    expect(u.accounts).toEqual(c.accounts); // the accounts are the table's
+    expect(dailyCalibration(table, 1291).parameters).toMatchObject({ T_prime: 11 });
+    expect(calibrateEconomy(table, 1356)).toEqual(c);
+    for (const y of [1282, 1357, 1291.5])
+      expect(() => calibrateEconomy(table, y)).toThrow(/the history runs from 1281 to 1356/);
   });
   it('estimates an AR(1) by least squares', () => {
     const y = [1, 1.5, 1.75, 1.875, 1.9375]; // y_t = 0.5 · y_(t−1) + 1 exactly
@@ -671,7 +706,7 @@ describe('the economies of the cities in the world', () => {
   beforeAll(() => {
     for (let d = 1; d <= 400; d++) {
       advanceDay(run.s, run.w);
-      if ([45, 75, 365, 366, 367].includes(d))
+      if ([45, 75, 365, 366, 367, 396].includes(d))
         at[d] = {
           hash: hashState(run.s),
           state: encodeState(run.s),
@@ -747,9 +782,10 @@ describe('the economies of the cities in the world', () => {
     expect(e.years[0]).toBe(1356);
     expect(bits(e.years.slice(1))).toBe(bits(at[365].figures));
     // from the 366th day on the accounts hold 365 days, and the past of the expectations has a fixed size from the
-    // first day: the state of the economies no longer grows
+    // first day: the state of the economies no longer grows within a month (the workers who are away in a month,
+    // economy feature 22, are 12 bytes each, given on its first day)
     expect(at[367].model - at[366].model).toBe(0);
-    expect(e.model.length - at[367].model).toBe(0);
+    expect(at[396].model - at[367].model).toBe(0);
   });
   it('keep the books of every city and of the merchants after a year of the world', () => {
     const k = run.w.economyEngine.checks(run.s.economy.cities!.model);
@@ -791,13 +827,16 @@ describe('the economies of the cities in the world', () => {
     expect(all[largest]).toBeGreaterThan(0.65 * Math.max(...share));
   });
   it('give for many days at once what the same days give one by one', () => {
-    const { s, w } = newWorldState();
+    // the persons stay as they are in both: the workers who are away in a month follow from the persons at its
+    // start (economy feature 22), and the world's own days change them
+    const { s, w } = newWorldState(),
+      one = newWorldState();
     computeTo(s, w, 400);
-    s.day = 400;
+    for (let d = 1; d <= 400; d++) computeTo(one.s, one.w, d);
     expect(s.economy.cities!.years.length).toBe(yearRow(N));
-    expect(Buffer.compare(s.economy.cities!.model, run.s.economy.cities!.model)).toBe(0);
-    expect(bits(s.economy.cities!.years)).toBe(bits(run.s.economy.cities!.years));
-    expect(bits(s.economy.cities!.figures)).toBe(bits(run.s.economy.cities!.figures));
+    expect(Buffer.compare(s.economy.cities!.model, one.s.economy.cities!.model)).toBe(0);
+    expect(bits(s.economy.cities!.years)).toBe(bits(one.s.economy.cities!.years));
+    expect(bits(s.economy.cities!.figures)).toBe(bits(one.s.economy.cities!.figures));
   }, 120_000);
   it('are in the snapshot and in its hash: save in the middle of a month, load and go on equals going straight on', () => {
     const loaded = decodeState(at[45].state);
@@ -834,6 +873,8 @@ describe('the economies of the cities in the world', () => {
     expect(e.day).toBe(0);
     expect(e.halted).toBe('');
     expect(e.figures.length).toBe(n * FIGURES);
+    // the history up to 1291, not the plague of the table's years (feature 21)
+    for (const x of foundFrom(s, w).slice(0, 3)) expect((x.calibration.parameters as PortJson).T_prime).toBe(11);
     days(s, w, 35); // past the first plan of every firm
     expect(e.day).toBe(35);
     expect(e.halted).toBe('');
@@ -848,6 +889,17 @@ describe('the economies of the cities in the world', () => {
     expect(cityPlaces(1291).map((x) => x.name)).toContain('Bruges');
     const noTown = Array.from({ length: w.L }, (_, i) => i).find((i) => s.place.pop[i] > 0 && !e.places.includes(i))!;
     expect(placeDetail(s, w, noTown)!.cityEconomy).toBeUndefined();
+    // a world of 1291 from before feature 21 has its economies founded anew on the day it has reached
+    // biome-ignore lint/suspicious/noExplicitAny: a state of an older version, which no type of today describes
+    const old = decodeState(encodeState(s)) as any;
+    old.v = 33;
+    const up = upgradeState(old, w),
+      founded = decodeState(encodeState(s));
+    foundEconomy(founded, w);
+    expect(up.v).toBe(STATE_VERSION);
+    expect(hashState(up)).toBe(hashState(founded));
+    expect(up.economy.cities!.day).toBe(35);
+    expect(up.economy.cities!.years.length).toBe(0);
   }, 300_000);
   it('stand still when the engine cannot compute a day, and the world goes on', () => {
     const real = loadWorld();

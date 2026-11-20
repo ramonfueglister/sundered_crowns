@@ -14,6 +14,8 @@ import '../ui/fonts';
 import './panel.css';
 import { economyRows, householdRows, farmRows } from './economy_rows';
 import { dressOf } from '../sim/people/pools';
+import { status } from '../net/client';
+import { createTalkBox } from './talk';
 
 /** A portrait of a person neutral in all the portrait reads beyond the person system (portrait thread, 15 Nov 2026). */
 const NEUTRAL = { stand: 1, job: 'Bauern', health: 1000, fed: 1000 } as const;
@@ -37,6 +39,8 @@ export function createPersonPanel(host: HTMLElement, worldUrl: string | undefine
   const box = el('aside', 'person-panel');
   box.hidden = true;
   host.append(box);
+  const talkBox = createTalkBox(host);
+  let shown = -1;
   let assets: Promise<PortraitAssets> | null = null, stage: Promise<import('../portrait/stage').PortraitStage> | null = null, asked = 0;
 
   const portrait = async (p: PersonDetail, into: HTMLCanvasElement) => {
@@ -71,7 +75,14 @@ export function createPersonPanel(host: HTMLElement, worldUrl: string | undefine
       close.onclick = () => panel.close();
       const head = el('div', 'head');
       const h = p.history;
-      head.append(el('b', '', `${h ? h.name : p.female ? 'Frau' : 'Mann'}${p.alive ? '' : ' (verstorben)'}`), close);
+      const name = h ? h.name : p.female ? 'Frau' : 'Mann';
+      head.append(el('b', '', `${name}${p.alive ? '' : ' (verstorben)'}`), close);
+      // a living person can be spoken to while the game is connected to its world server (server/talk, docs/TALK.md)
+      const speak = el('button', 'btn speak', 'Sprechen');
+      speak.onclick = () => talkBox.open(p.id, name === 'Frau' ? 'der Frau' : name === 'Mann' ? 'dem Mann' : name);
+      const canSpeak = p.alive && status.value === 'open';
+      if (id !== shown) talkBox.close();
+      shown = id;
       const pic = el('canvas', 'portrait');
       // drawn at twice the size the panel shows it at (about 268 px wide, panel.css): scaled up from 224 px it was soft
       pic.width = 448; pic.height = 560;
@@ -125,11 +136,11 @@ export function createPersonPanel(host: HTMLElement, worldUrl: string | undefine
       if (p.spouse >= 0) own.append(kin(p.female ? 'Ehemann' : 'Ehefrau', p.spouse));
       for (const [k, c] of (p.children ?? []).entries()) own.append(kin(`Kind ${k + 1}`, c));
       if (own.childElementCount) family.append(el('h3', '', 'Familie'), own);
-      box.replaceChildren(head, pic, facts, ...(rows.length ? [work] : []), ...(purse.length ? [house] : []), ...(land.length ? [farm] : []), traits, ...(family.childElementCount ? [family] : []));
+      box.replaceChildren(head, pic, ...(canSpeak ? [speak] : []), facts, ...(rows.length ? [work] : []), ...(purse.length ? [house] : []), ...(land.length ? [farm] : []), traits, ...(family.childElementCount ? [family] : []));
       box.hidden = false;
       await portrait(p, pic).catch((e) => console.warn('portrait', e));
     },
-    close() { asked++; box.hidden = true; },
+    close() { asked++; box.hidden = true; talkBox.close(); shown = -1; },
   };
   return panel;
 }

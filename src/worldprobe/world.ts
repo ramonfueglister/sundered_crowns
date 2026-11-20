@@ -4,11 +4,11 @@
 // On it stand the towns and villages (see settle.ts) and the fields the simulation has cultivated (arable.ts). North is at the top of the picture. The ways of the
 // world's start year run over it (roads.ts).
 import { Batch, hash2, noise2, rgb, seeded, shade, smooth } from '../lookprobe/batch';
-import { ACACIA, CYPRESS, JUNGLE, LEAVES, PALM, acacia, cypress, palm, tree } from '../lookprobe/blocks';
+import { ACACIA, CYPRESS, JUNGLE, LEAVES, PALM, TREE_TALL, acacia, cypress, palm, tree } from '../lookprobe/blocks';
 import { type Ground, type GroundTraits, LAND_Y, Mat, N, SEA_Y, SUMMIT, idx, inGrid, measureShore, occlude, rockPillar } from '../lookprobe/layout';
 import type { Shape, StageScene } from '../lookprobe/shape';
 import { crowd } from '../figures';
-import { type Part, WATER_SHALLOW } from '../lookprobe/terrain';
+import { type Part, WATER_SHALLOW, sideTopAt } from '../lookprobe/terrain';
 import { type Climate, FIELDS_KNOWN, KIND, Land, WOODS_KNOWN, climateAt, snowLineAt, treeLineAt } from './climate';
 import { type Arable, arableAt } from './arable';
 import { fieldsByLot, lotKey } from './lots';
@@ -22,6 +22,7 @@ import { BARE, FINER, FINER_STEPS, SNOW_LINE, TINT, TREE_LINE, WOODS, blockOfCel
 import { type Region, Water, cellOf, latOf, sample, waterAt } from './region';
 import { type Cover, type Woods, coverLand, lotFill } from './far';
 import { drawGround } from './table';
+import { TREE_NUMBERS, crownTallAt } from './trees';
 import { unshade } from './mean';
 import { FARMS, FIELD_GROUND, LOT_BLOCKS, LOT_FILL, type Lot, type Monument, PEOPLE_PER_PERSON, type Settled, type Site, type Survey, type Told, farmsFor, firstHalf, raise, settle } from './settle';
 import { type Columns, columnsOf } from './nearground';
@@ -43,7 +44,15 @@ export const CELL = 25;
 /** A cell of a town: its middle on the ground, its houses as the far view shows them and their lots, and the columns of its paved ground. */
 export interface Cell<S extends Shape = Batch> { x: number; z: number; far: S; lots: Lot[]; ground?: Columns }
 /** A piece of the world for the stage, with the cells of its towns. */
-export interface WorldScene<S extends Shape = Batch> extends StageScene<S> { cells: Cell<S>[] }
+export interface WorldScene<S extends Shape = Batch> extends StageScene<S> {
+  cells: Cell<S>[];
+  /**
+   * what a far step draws from numbers, the trees of the first far step (trees.ts) and the houses drawn as houses
+   * (houses.ts), apart from the other things: a table keeps them as numbers, not as the drawn triangles it keeps of
+   * those (table.ts `withThings`). The worker adds them to the things.
+   */
+  standing?: S;
+}
 /** The window of whole-map cells that the ground starting at world block (ox, oz) needs, and `beyond` blocks more on every side. */
 export function windowOf(ox: number, oz: number, beyond = 0): { gx0: number; gy0: number; w: number; h: number } {
   const us: number[] = [], vs: number[] = [], lo = -beyond, hi = N + beyond;
@@ -307,11 +316,18 @@ const CROPS = [null, 'wheat', 'vine', 'fallow', 'oats'] as const;
  */
 class WorldTraits implements GroundTraits {
   readonly slope = SLOPE;
-  constructor(private readonly town: Uint8Array, private readonly field: Uint8Array | null, private readonly mean: Cover | undefined, private readonly land: Uint8Array, private readonly metres: Float32Array, private readonly snow: Float32Array, private readonly massifs: Massifs, private readonly roads: Float32Array | null) {}
+  readonly sideTop: number;
+  readonly crownTall: number;
+  readonly houses: GroundTraits['houses'];
+  readonly trees: GroundTraits['trees'];
+  readonly crops: GroundTraits['crops'];
+  constructor(step: number, private readonly town: Uint8Array, private readonly field: Uint8Array | null, private readonly mean: Cover | undefined, private readonly land: Uint8Array, private readonly metres: Float32Array, private readonly snow: Float32Array, private readonly massifs: Massifs, private readonly roads: Float32Array | null) {
+    this.sideTop = sideTopAt(step); this.crownTall = crownTallAt(step); this.houses = mean?.houses; this.trees = mean?.trees; this.crops = mean?.crops;
+  }
   city(x: number, z: number) { return fieldAt(this.town, x, z) === 1; }
   plaza() { return Infinity; }
   road(x: number, z: number) { return this.roads ? roadOn(this.roads, x, z) + ROAD_SHOWS : Infinity; }
-  crop(x: number, z: number) { return this.field ? CROPS[fieldAt(this.field, x, z)] : null; }
+  crop(x: number, z: number) { const field = this.field ?? this.mean?.crops; return field ? CROPS[fieldAt(field, x, z)] : null; }
   cover(x: number, z: number) {
     const cover = this.mean;
     if (!cover) return null;
@@ -732,6 +748,8 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   // (no woods stand on them: a stream shows as a line through a wood, as a river does)
   if (cover) for (let i = 0; i < N * N; i++) {
     const wet = stream[i];
+    if (wet && cover.trees) cover.trees.fill(0, i * TREE_NUMBERS, (i + 1) * TREE_NUMBERS);
+    if (wet && cover.crops?.[i]) { cover.crops[i] = 0; g.mat[i] = Mat.Grass; }
     if (!wet || g.wet[i] || g.mat[i] === Mat.Rock || cover.town[i]) continue;
     const was = cover.has[i] ? cover.share[i] * (1 - wet) : 0, all = wet + was;
     for (let k = 0; k < 3; k++) cover.top[i * 3 + k] = (WATER_SHALLOW[k] * wet + cover.top[i * 3 + k] * was) / all;
@@ -774,11 +792,11 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
       const palms = oasis(i) && byWater(Math.floor(x), Math.floor(z), 3), lot = hash2(tx, tz, 73);
       if (palms ? lot > 0.3 : lot > (BARE.includes(here) ? 0 : STRAY_TREES) + CLOSED * wooded(x, z)) continue;
       const mine = own(Math.floor(x), Math.floor(z)), r = seeded(seedOf(tx, tz, 75)), sort = hash2(tx, tz, 74);
-      if (palms || (here === Land.Rainforest && sort < 0.1)) { if (mine) palm(things, x, g.h[i], z, r); occlude(g, x - 0.8, z - 0.8, x + 0.8, z + 0.8, g.h[i] + 4.5); }
+      if (palms || (here === Land.Rainforest && sort < 0.1)) { if (mine) palm(things, x, g.h[i], z, r); occlude(g, x - 0.8, z - 0.8, x + 0.8, z + 0.8, g.h[i] + 4.5 * TREE_TALL); }
       else if (here === Land.Savanna) { if (mine) acacia(things, x, g.h[i], z, r); occlude(g, x - 1.1, z - 1.1, x + 1.1, z + 1.1, g.h[i] + 2.4); }
-      else if (here === Land.Rainforest) { if (mine) tree(things, x, g.h[i], z, r, r.range(1.1, 1.6), JUNGLE); occlude(g, x - 1.05, z - 1.05, x + 1.05, z + 1.05, g.h[i] + 4); }
-      else if (sort < conifers(i)) { if (mine) cypress(things, x, g.h[i], z, r); occlude(g, x - 0.6, z - 0.6, x + 0.6, z + 0.6, g.h[i] + 4.2); }
-      else { if (mine) tree(things, x, g.h[i], z, r, wooded(x, z) > 0.5 ? r.range(0.9, 1.4) : r.range(0.85, 1.15)); occlude(g, x - 1.05, z - 1.05, x + 1.05, z + 1.05, g.h[i] + 3.4); }
+      else if (here === Land.Rainforest) { if (mine) tree(things, x, g.h[i], z, r, r.range(1.1, 1.6), JUNGLE); occlude(g, x - 1.05, z - 1.05, x + 1.05, z + 1.05, g.h[i] + 4 * TREE_TALL); }
+      else if (sort < conifers(i)) { if (mine) cypress(things, x, g.h[i], z, r); occlude(g, x - 0.6, z - 0.6, x + 0.6, z + 0.6, g.h[i] + 4.2 * TREE_TALL); }
+      else { if (mine) tree(things, x, g.h[i], z, r, wooded(x, z) > 0.5 ? r.range(0.9, 1.4) : r.range(0.85, 1.15)); occlude(g, x - 1.05, z - 1.05, x + 1.05, z + 1.05, g.h[i] + 3.4 * TREE_TALL); }
       if (mine) counts.tree++;
     }
   }
@@ -814,13 +832,15 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   // (terrain.ts colours it from the corners, a soft line rather than a row of blocks); far.ts raised the ground by it
   if (cover && roadEdge && step > 0) for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
     const i = idx(x, z);
+    if (cover.trees?.[i * TREE_NUMBERS] && roadAt(x + 0.5, z + 0.5) < FAR_CLEAR) cover.trees.fill(0, i * TREE_NUMBERS, (i + 1) * TREE_NUMBERS);
+    if (cover.crops?.[i] && roadAt(x + 0.5, z + 0.5) < FAR_CLEAR) { cover.crops[i] = 0; g.mat[i] = Mat.Grass; }
     if (!cover.has[i] || g.wet[i] || cover.town[i] || roadAt(x + 0.5, z + 0.5) >= FAR_CLEAR) continue;
     if (cover.rise[i] > 0) { g.h[i] -= cover.rise[i]; g.occ[i] = g.h[i]; cover.rise[i] = 0; }
     cover.has[i] = 0;
   }
-  const traits = new WorldTraits((settled ?? cover!).town, settled ? settled.field : null, cover, land, metres, snow, massifs, roadEdge);
+  const traits = new WorldTraits(step, (settled ?? cover!).town, settled ? settled.field : null, cover, land, metres, snow, massifs, roadEdge);
   // (drawn by table.ts, which can keep the table of the columns: a far piece is drawn again from that alone)
-  const { ground, carried, water, raised } = drawGround(g, traits, bakedSky, part, !!cover, roadEdge);
+  const { ground, carried, water, raised, standing } = drawGround(g, traits, bakedSky, part, !!cover, roadEdge);
   // the houses that have fine blocks and the paved ground stand in cells of their own (the part is whole cells), so
   // that the near view can build them again cell by cell
   const cells: Cell[] = [], across = Math.ceil((part.x1 - part.x0) / CELL), down = Math.ceil((part.z1 - part.z0) / CELL), byCell = new Map<number, Lot[]>();
@@ -836,9 +856,9 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     for (const l of lots) raise(far, l, 0);
     cells.push({ x: x0 + CELL / 2, z: z0 + CELL / 2, far, lots, ground });
   }
-  counts.triangles = ground.triangles + (carried?.triangles ?? 0) + water.triangles + raised.triangles + things.triangles + cells.reduce((n, c) => n + c.far.triangles, 0);
+  counts.triangles = ground.triangles + (carried?.triangles ?? 0) + water.triangles + raised.triangles + things.triangles + (standing?.triangles ?? 0) + cells.reduce((n, c) => n + c.far.triangles, 0);
   // the people of the towns, villages and fields; on the coarser steps a block is wider than a person is tall
   const figures = settled ? crowd(g, settled, own) : undefined;
   if (figures) counts.figures = figures.count;
-  return { ground, carried, things, water, raised, figures, cells, counts };
+  return { ground, carried, things, water, raised, figures, cells, counts, standing };
 }

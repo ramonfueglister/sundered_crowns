@@ -300,13 +300,14 @@ fn the_working_days_are_part_of_the_state() {
 
 #[test]
 fn a_state_of_format_10_gathers_the_profits_of_the_owners_anew() {
-    // format 10 is format 11 without the owners' profits at its end: per firm twelve plan periods of profits and of
-    // their periods, the profit and the periods since the last plan and the plan periods that ended, each list after
-    // its length
+    // format 10 is format 13 without the workers who are away, the materials they left unused and the contracts at its
+    // end (for none, three numbers of 0) and without the owners' profits before them: per firm twelve plan periods of profits and of their periods, the profit and the
+    // periods since the last plan and the plan periods that ended, each list after its length
     let mut e = one_calendar(austria(9).with_owner_household(), weeks(3).0, weeks(3).1);
     e.step(4);
     let mut bytes = e.save();
     let firms = e.model.firms.len();
+    assert_eq!(bytes.split_off(bytes.len() - 12), [0u8; 12]);
     bytes.truncate(bytes.len() - 20 - (2 * OWNER_PLANS * 8 + 2 * 8 + 4) * firms);
     bytes[4..8].copy_from_slice(&10u32.to_le_bytes());
     let mut back = Economy::load(&bytes).unwrap();

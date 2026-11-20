@@ -120,7 +120,9 @@ fn an_economy_that_kept_the_whole_past_goes_over_on_any_day() {
 
 #[test]
 fn a_state_of_format_5_is_read_and_keeps_the_whole_past() {
-    // format 5 is format 11 without the owners' profits at its end (for none, five numbers of 0), without the working
+    // format 5 is format 13 without the workers who are away, the materials they left unused and the contracts at its
+    // end (for none, three numbers of 0), without the owners' profits before them (for none, five numbers of 0),
+    // without the working
     // days before them (for none, seven numbers of 0 and then the days worked by every firm since its last plan),
     // without the owners' rule before them (a byte), without the crown's rule and outlays before it (a byte and a
     // number), without the two numbers of the spending out of savings before them and without the byte before those,
@@ -129,7 +131,7 @@ fn a_state_of_format_5_is_read_and_keeps_the_whole_past() {
     e.step(3);
     let mut bytes = e.save();
     let firms = e.model.firms.len();
-    assert_eq!(bytes.split_off(bytes.len() - 20), [0u8; 20]);
+    assert_eq!(bytes.split_off(bytes.len() - 32), [0u8; 32]);
     let worked = bytes.split_off(bytes.len() - 4 - 8 * firms);
     assert_eq!(worked[..4], (firms as u32).to_le_bytes());
     assert_eq!(bytes.split_off(bytes.len() - 28), [0u8; 28]);

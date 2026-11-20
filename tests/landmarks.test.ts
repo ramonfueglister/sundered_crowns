@@ -129,7 +129,7 @@ describe('the landmarks in the register of a world of 1291', () => {
 describe('a world of 1291 saved before the landmarks', () => {
   it('gets the landmarks a new world has, and encodes as one', { timeout: 60_000 }, () => {
     const old = decodeState(encodeState(s)) as WorldState;
-    old.v = 34;
+    old.v = 37;
     delete (old as Partial<WorldState>).landmark;
     const up = upgradeState(decodeState(encodeState(old)), w, () => loadSetup(1291));
     expect(up.v).toBe(STATE_VERSION);

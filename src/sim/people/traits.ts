@@ -13,7 +13,14 @@
 // not touched: the sources find nothing there, or there is none.
 
 /** A person's traits as the columns of the person table hold them. */
-export interface TraitColumns { iq: Uint8Array; o: Uint8Array; c: Uint8Array; e: Uint8Array; a: Uint8Array; n: Uint8Array }
+export interface TraitColumns {
+  iq: Uint8Array;
+  o: Uint8Array;
+  c: Uint8Array;
+  e: Uint8Array;
+  a: Uint8Array;
+  n: Uint8Array;
+}
 /** IQ in standard deviations from the mean. */
 export const zIq = (P: TraitColumns, id: number): number => (P.iq[id] - 100) / 15;
 /** A Big Five trait (a column of the person table) in standard deviations from the mean. */
@@ -37,7 +44,10 @@ export const MOVE = { openness: 1.29, agreeableness: 0.88 } as const;
 /** Odds ratio of ever marrying per standard deviation, men and women: Jokela, Alvergne, Pollet & Lummaa 2011,
  *  European Journal of Personality 25(6), table 2; 15,729 persons of WLS and MIDUS aged 35 or more. The traits were
  *  measured after the weddings (the authors' main limit). The other traits are not significant. */
-export const MARRIES = { men: { extraversion: 1.53, openness: 0.79 }, women: { extraversion: 1.22, openness: 0.76 } } as const;
+export const MARRIES = {
+  men: { extraversion: 1.53, openness: 0.79 },
+  women: { extraversion: 1.22, openness: 0.76 },
+} as const;
 /** The weight of a person in the draw among the unmarried is exp(WEIGHT · Σ b·z). A wedding needs a vacant household
  *  and a draw is among the few of a town who fit in age, so the odds of ever marrying follow the weight less than
  *  one to one; with these the odds ratios of the source come out in a world of 1291 over 100 years (men 1.55 and
@@ -57,9 +67,11 @@ const B = {
 const NORM = { death: (B.death.c ** 2 + B.death.iq ** 2) / 2, move: (B.move.o ** 2 + B.move.a ** 2) / 2 };
 
 /** The factor on the force of death of a person from TRAITS_FROM_AGE on. */
-export const deathFactor = (P: TraitColumns, id: number): number => Math.exp(B.death.c * zOf(P.c, id) + B.death.iq * zIq(P, id) - NORM.death);
+export const deathFactor = (P: TraitColumns, id: number): number =>
+  Math.exp(B.death.c * zOf(P.c, id) + B.death.iq * zIq(P, id) - NORM.death);
 /** The factor on the rate of a far move of a person. */
-export const moveFactor = (P: TraitColumns, id: number): number => Math.min(MOVE_FACTOR_TOP, Math.exp(B.move.o * zOf(P.o, id) + B.move.a * zOf(P.a, id) - NORM.move));
+export const moveFactor = (P: TraitColumns, id: number): number =>
+  Math.min(MOVE_FACTOR_TOP, Math.exp(B.move.o * zOf(P.o, id) + B.move.a * zOf(P.a, id) - NORM.move));
 /** The logarithm of the weight of a person in the draw among the unmarried who fit a wedding. */
 export const weddingWeight = (P: TraitColumns, id: number, man: boolean): number => {
   const b = man ? B.men : B.women;

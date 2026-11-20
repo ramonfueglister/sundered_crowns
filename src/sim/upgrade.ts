@@ -290,20 +290,42 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     if (!s.street) relayTowns(s, w.ground);
     s.v = 33;
   }
-  if (s.v === 33) { // 33 → 34: the fields of the farmsteads (settlement feature 4, src/sim/settlement/fields.ts).
+  if (s.v === 33) { // 33 → 34: a world knows the history only up to its start (economy feature 21,
+    // src/sim/economy/calibration.ts): a world of 1291 on the table of 1356 no longer expects the recovery after the
+    // plague. Its calibration changes, so its economies are founded anew on the day the world has reached, as in the
+    // step to 24. A world that starts in the year of its table keeps its calibration and goes on where it is.
+    if (s.startYear < w.cityEconomies.year) foundEconomy(s, w);
+    s.v = 34;
+  }
+  if (s.v === 34) { // 34 → 35: sickness and childbed (people feature 9, economy feature 22, src/sim/people/absence.ts).
+    // The economies go on where they are: the engine reads their state of the format before as one in which everybody
+    // is there, and is given the working days of the rest of the year and the absences of the rest of the month
+    // before it computes the next day. Nothing of the persons changes: their days away follow from them.
+    if (s.economy.cities) s.economy.cities.workingTo = -1;
+    s.v = 35;
+  }
+  if (s.v === 35) { // 35 → 36: service by the year and work by the day (people feature 10, economy feature 23,
+    // economy/src/workers.rs). The economies go on where they are: the engine reads their state of the format before
+    // as one without contracts, and is given the working days of the rest of the year, the absences of the rest of the
+    // month and the contracts before it computes the next day. Nothing of the persons changes: their contracts follow
+    // from their families.
+    if (s.economy.cities) s.economy.cities.workingTo = -1;
+    s.v = 36;
+  }
+  if (s.v === 36) { // 36 → 37: the fields of the farmsteads (settlement feature 4, src/sim/settlement/fields.ts).
     // Every hamlet gets its furlongs as a new world lays them, on the arable its place has on the day the world has
     // reached; nothing else changes.
     foundFields(s, w.tilth);
-    s.v = 34;
+    s.v = 37;
   }
-  if (s.v === 34) { // 34 → 35: the landmarks (settlement feature 5, src/sim/systems/landmarks.ts). The land register
+  if (s.v === 37) { // 37 → 38: the landmarks (settlement feature 5, src/sim/systems/landmarks.ts). The land register
     // is founded anew, as a new world founds it on the day the world has reached: the church of every town's see and
     // its buildings known by name first, the streets and parcels of the town round them, its hamlets clear of them,
     // the convents and the residence at its edge, and the fields of the hamlets. (The hamlets cannot stay where they
     // were: a landmark may stand on them.) Nothing else changes.
     foundLots(s, w.ground, w.dry);
     foundFields(s, w.tilth);
-    s.v = 35;
+    s.v = 38;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one

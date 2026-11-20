@@ -6,37 +6,60 @@ import { existsSync, readFileSync } from 'node:fs';
 import { brotliDecompressSync, gunzipSync } from 'node:zlib';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildPiece } from '../../src/worldprobe/build';
-import { type TablesIndex, keepTables, keyOfTable, packTable, tabled, whereTable, withThings } from '../../src/worldprobe/table';
+import {
+  type TablesIndex,
+  keepTables,
+  keyOfTable,
+  packTable,
+  tabled,
+  whereTable,
+  withThings,
+} from '../../src/worldprobe/table';
 
-const YEAR = 1291, DIR = `public/map/tables/world_${YEAR}`, AGAIN = `build the tables again: npx tsx tools/worldprobe/build_tables.ts ${YEAR}`;
+const YEAR = 1291,
+  DIR = `public/map/tables/world_${YEAR}`,
+  AGAIN = `build the tables again: npx tsx tools/worldprobe/build_tables.ts ${YEAR}`;
 const index = JSON.parse(readFileSync(`${DIR}/index.json`, 'utf8')) as TablesIndex;
-const stampOf = (file: string) => (existsSync(file) ? createHash('sha1').update(readFileSync(file)).digest('hex').slice(0, 12) : 'missing');
+const stampOf = (file: string) =>
+  existsSync(file) ? createHash('sha1').update(readFileSync(file)).digest('hex').slice(0, 12) : 'missing';
 
 /** a kept table, unzipped, from its own file or its pack */
 function keptTable(step: number, px: number, pz: number): Uint8Array {
   const at = index.land[step] ?? [];
   let k = -1;
-  for (let i = 0; i < at.length; i += 2) if (at[i] === px && at[i + 1] === pz) { k = i / 2; break; }
+  for (let i = 0; i < at.length; i += 2)
+    if (at[i] === px && at[i + 1] === pz) {
+      k = i / 2;
+      break;
+    }
   if (k < 0) return new Uint8Array(0);
-  const { file, range } = whereTable(index, step, px, pz, k), bytes = readFileSync(`${DIR}/${file}`);
+  const { file, range } = whereTable(index, step, px, pz, k),
+    bytes = readFileSync(`${DIR}/${file}`);
   const zipped = range ? bytes.subarray(range[0], range[0] + range[1]) : bytes;
   return new Uint8Array(index.coding === 'br' ? brotliDecompressSync(zipped) : gunzipSync(zipped));
 }
 
 describe('the kept tables of the far pieces', () => {
   it('were built from the files of the map as they are now', () => {
-    const stale = Object.entries(index.inputs).filter(([name, stamp]) => stampOf(name.startsWith('content/') ? `data/${name}` : `public/${name}`) !== stamp).map(([name]) => name);
+    const stale = Object.entries(index.inputs)
+      .filter(([name, stamp]) => stampOf(name.startsWith('content/') ? `data/${name}` : `public/${name}`) !== stamp)
+      .map(([name]) => name);
     expect(stale, AGAIN).toEqual([]);
   });
 
   it('are there for every piece of land the index names, and no piece is both land and open sea', () => {
     let land = 0;
     for (const step of index.steps) {
-      const at = index.land[step], sea = new Set<string>();
-      for (let k = 0; k < (index.sea[step]?.length ?? 0); k += 2) sea.add(keyOfTable(step, index.sea[step][k], index.sea[step][k + 1]));
+      const at = index.land[step],
+        sea = new Set<string>();
+      for (let k = 0; k < (index.sea[step]?.length ?? 0); k += 2)
+        sea.add(keyOfTable(step, index.sea[step][k], index.sea[step][k + 1]));
       for (let k = 0; k < at.length; k += 2) {
         land++;
-        expect(existsSync(`${DIR}/${whereTable(index, step, at[k], at[k + 1], k / 2).file}`), `step ${step} piece ${at[k]},${at[k + 1]}`).toBe(true);
+        expect(
+          existsSync(`${DIR}/${whereTable(index, step, at[k], at[k + 1], k / 2).file}`),
+          `step ${step} piece ${at[k]},${at[k + 1]}`,
+        ).toBe(true);
         expect(sea.has(keyOfTable(step, at[k], at[k + 1]))).toBe(false);
       }
     }
@@ -48,23 +71,51 @@ describe('the kept tables of the far pieces', () => {
     // the loaders of the world graphic fetch the map's data from the page's base: here they read the files of public/
     beforeAll(() => {
       globalThis.fetch = (async (url: string | URL | Request) => {
-        const file = `public/${String(url).replace(/^\//, '')}`;
-        return existsSync(file) ? new Response(readFileSync(file), { headers: { 'content-type': file.endsWith('.json') ? 'application/json' : 'application/octet-stream' } }) : new Response(null, { status: 404 });
+        const file = `public/${String(url).replace(/^\//, '').replace(/\?.*$/, '')}`;
+        return existsSync(file)
+          ? new Response(readFileSync(file), {
+              headers: { 'content-type': file.endsWith('.json') ? 'application/json' : 'application/octet-stream' },
+            })
+          : new Response(null, { status: 404 });
       }) as typeof fetch;
     });
-    afterAll(() => { globalThis.fetch = fetched; keepTables(false); });
+    afterAll(() => {
+      globalThis.fetch = fetched;
+      keepTables(false);
+    });
 
     // Paris lies in these: a piece of each of the two finest kept steps (with the landmarks, bridges and ribbons that stand
     // on it), the one of the next step over it and the one of the coarsest step over all. What changes the land's
     // shape or cover in the code (world.ts, far.ts), or how what stands on step 2 is drawn, changes these too.
-    it.each([[1, 152, -64], [2, 76, -32], [3, 38, -16], [4, 19, -8], [7, 2, -1]])('step %i piece %i,%i is what the build gives now', async (step, px, pz) => {
-      const margin = (index.side - index.piece) / 2, piece = { ox: px * index.piece - margin, oz: pz * index.piece - margin, part: { x0: margin, z0: margin, x1: margin + index.piece, z1: margin + index.piece } };
-      keepTables(true);
-      const built = await buildPiece({ region: index.region, base: '/', bakedSky: true, year: YEAR, grid: index.side }, step, piece), table = tabled();
-      keepTables(false);
-      expect(built && table, 'a piece of land with a table').toBeTruthy();
-      const now = new Uint8Array(packTable(withThings(table!, built!.things))), kept = keptTable(step, px, pz);
-      expect(now.length === kept.length && now.every((v, k) => v === kept[k]), AGAIN).toBe(true);
-    }, 60000);
+    it.each([
+      [1, 152, -64],
+      [2, 76, -32],
+      [3, 38, -16],
+      [4, 19, -8],
+      [7, 2, -1],
+    ])(
+      'step %i piece %i,%i is what the build gives now',
+      async (step, px, pz) => {
+        const margin = (index.side - index.piece) / 2,
+          piece = {
+            ox: px * index.piece - margin,
+            oz: pz * index.piece - margin,
+            part: { x0: margin, z0: margin, x1: margin + index.piece, z1: margin + index.piece },
+          };
+        keepTables(true);
+        const built = await buildPiece(
+            { region: index.region, base: '/', bakedSky: true, year: YEAR, grid: index.side },
+            step,
+            piece,
+          ),
+          table = tabled();
+        keepTables(false);
+        expect(built && table, 'a piece of land with a table').toBeTruthy();
+        const now = new Uint8Array(packTable(withThings(table!, built!.things))),
+          kept = keptTable(step, px, pz);
+        expect(now.length === kept.length && now.every((v, k) => v === kept[k]), AGAIN).toBe(true);
+      },
+      60000,
+    );
   });
 });

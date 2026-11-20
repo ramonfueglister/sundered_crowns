@@ -7,7 +7,11 @@ import { landAveraged, terrace } from '../../src/worldprobe/world';
 describe('the terraces of the land', () => {
   const grass = () => new Uint8Array(N * N).fill(Mat.Grass);
   /** a plain with a scarp of two steps from column 200 on */
-  const scarp = () => { const level = new Int16Array(N * N); for (let z = 0; z < N; z++) for (let x = 200; x < N; x++) level[z * N + x] = 2; return level; };
+  const scarp = () => {
+    const level = new Int16Array(N * N);
+    for (let z = 0; z < N; z++) for (let x = 200; x < N; x++) level[z * N + x] = 2;
+    return level;
+  };
 
   it('take down what stands out narrower than eleven columns, and fill what lies in narrower than that', () => {
     const level = scarp();
@@ -39,9 +43,14 @@ describe('the terraces of the land', () => {
   });
 
   it('average the heights of the dry land only', () => {
-    const metres = new Float32Array(N * N).fill(400), kind = new Uint8Array(N * N);
+    const metres = new Float32Array(N * N).fill(400),
+      kind = new Uint8Array(N * N);
     // a sea to the west of column 100, a single hill of 900 m
-    for (let z = 0; z < N; z++) for (let x = 0; x < 100; x++) { kind[z * N + x] = Water.Sea; metres[z * N + x] = -50; }
+    for (let z = 0; z < N; z++)
+      for (let x = 0; x < 100; x++) {
+        kind[z * N + x] = Water.Sea;
+        metres[z * N + x] = -50;
+      }
     metres[200 * N + 200] = 900;
     const smooth = landAveraged(metres, kind);
     expect(smooth[50 * N + 100]).toBeCloseTo(400);
@@ -50,10 +59,13 @@ describe('the terraces of the land', () => {
   });
 
   it('leave the rock and the water as they are, and count them for nothing', () => {
-    const level = new Int16Array(N * N), mat = grass();
+    const level = new Int16Array(N * N),
+      mat = grass();
     // a pillar of rock and a pond, each a single column, and a grass column between two rocks
-    level[40 * N + 40] = 9; mat[40 * N + 40] = Mat.Rock;
-    level[70 * N + 70] = -3; mat[70 * N + 70] = Mat.Bed;
+    level[40 * N + 40] = 9;
+    mat[40 * N + 40] = Mat.Rock;
+    level[70 * N + 70] = -3;
+    mat[70 * N + 70] = Mat.Bed;
     terrace(level, mat);
     expect(level[40 * N + 40]).toBe(9);
     expect(level[70 * N + 70]).toBe(-3);

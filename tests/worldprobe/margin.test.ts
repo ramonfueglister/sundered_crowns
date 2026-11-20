@@ -10,24 +10,49 @@ import { GRID } from '../../src/lookprobe/layout';
 import { buildPiece } from '../../src/worldprobe/build';
 import { type Table, keepTables, tabled } from '../../src/worldprobe/table';
 
-const YEAR = 1291, PIECE = 200, WIDE = (GRID - PIECE) / 2, NARROW = 32;
+const YEAR = 1291,
+  PIECE = 200,
+  WIDE = (GRID - PIECE) / 2,
+  NARROW = 32;
 
 describe('a piece on a narrow ground', () => {
   const fetched = globalThis.fetch;
   // the loaders of the world graphic fetch the map's data from the page's base: here they read the files of public/
   beforeAll(() => {
     globalThis.fetch = (async (url: string | URL | Request) => {
-      const file = `public/${String(url).replace(/^\//, '')}`;
-      return existsSync(file) ? new Response(readFileSync(file), { headers: { 'content-type': file.endsWith('.json') ? 'application/json' : 'application/octet-stream' } }) : new Response(null, { status: 404 });
+      const file = `public/${String(url).replace(/^\//, '').replace(/\?.*$/, '')}`;
+      return existsSync(file)
+        ? new Response(readFileSync(file), {
+            headers: { 'content-type': file.endsWith('.json') ? 'application/json' : 'application/octet-stream' },
+          })
+        : new Response(null, { status: 404 });
     }) as typeof fetch;
   });
-  afterAll(() => { globalThis.fetch = fetched; keepTables(false); });
+  afterAll(() => {
+    globalThis.fetch = fetched;
+    keepTables(false);
+  });
 
   /** the columns of a piece of a step, built on a ground with `margin` blocks round the piece's own */
   async function columns(step: number, px: number, pz: number, margin: number): Promise<Table> {
-    const piece = { ox: px * PIECE - margin, oz: pz * PIECE - margin, part: { x0: margin, z0: margin, x1: margin + PIECE, z1: margin + PIECE } };
+    const piece = {
+      ox: px * PIECE - margin,
+      oz: pz * PIECE - margin,
+      part: { x0: margin, z0: margin, x1: margin + PIECE, z1: margin + PIECE },
+    };
     keepTables(true);
-    const built = await buildPiece({ region: 'world', base: '/', bakedSky: true, year: YEAR, grid: margin === WIDE ? undefined : PIECE + 2 * margin }, step, piece), table = tabled();
+    const built = await buildPiece(
+        {
+          region: 'world',
+          base: '/',
+          bakedSky: true,
+          year: YEAR,
+          grid: margin === WIDE ? undefined : PIECE + 2 * margin,
+        },
+        step,
+        piece,
+      ),
+      table = tabled();
     keepTables(false);
     expect(built && table, 'a piece of land').toBeTruthy();
     return table!;
@@ -35,13 +60,23 @@ describe('a piece on a narrow ground', () => {
 
   // step 1 in the Alps, east of Brig: a river crosses the piece and its floor does not fall evenly
   it('has its land and its rivers as high as on the wide ground', async () => {
-    const wide = await columns(1, 162, -62, WIDE), narrow = await columns(1, 162, -62, NARROW);
-    let other = 0, wet = 0;
-    for (let z = 0; z < PIECE; z++) for (let x = 0; x < PIECE; x++) {
-      const a = (z + WIDE) * wide.side + x + WIDE, b = (z + NARROW) * narrow.side + x + NARROW;
-      if (wide.wet[a]) wet++;
-      if (wide.h[a] !== narrow.h[b] || wide.wet[a] !== narrow.wet[b] || wide.surf[a] !== narrow.surf[b] || wide.mat[a] !== narrow.mat[b]) other++;
-    }
+    const wide = await columns(1, 162, -62, WIDE),
+      narrow = await columns(1, 162, -62, NARROW);
+    let other = 0,
+      wet = 0;
+    for (let z = 0; z < PIECE; z++)
+      for (let x = 0; x < PIECE; x++) {
+        const a = (z + WIDE) * wide.side + x + WIDE,
+          b = (z + NARROW) * narrow.side + x + NARROW;
+        if (wide.wet[a]) wet++;
+        if (
+          wide.h[a] !== narrow.h[b] ||
+          wide.wet[a] !== narrow.wet[b] ||
+          wide.surf[a] !== narrow.surf[b] ||
+          wide.mat[a] !== narrow.mat[b]
+        )
+          other++;
+      }
     expect(wet, 'columns of water in the piece').toBeGreaterThan(100);
     expect(other, 'columns that differ between the two grounds').toBe(0);
   }, 60000);

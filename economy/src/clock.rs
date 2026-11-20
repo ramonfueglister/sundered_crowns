@@ -92,6 +92,18 @@
 //!    on a day without any: they keep the value of the day before.
 //!
 //! Without a calendar, and on every day of the factor 1, the economy computes as before, number for number.
+//!
+//! And it carries the workers who are away (economy feature 22, [`Absences`]: sickness and childbed in the game). On a
+//! day a worker is away the labour of the firm is that of the workers who are there, `a (N − away) α` in the Leontief
+//! function; the worker keeps the place and the wage. A firm that sold all it had counts the output its workers who
+//! were away would have made to the demand of its next plan, and it does not buy again the materials they left
+//! unused. Without absences the economy computes as before, number for number.
+//!
+//! And it carries the contracts of the workers (economy feature 23, [`crate::workers`]): who serves by the year and
+//! who works by the day, with the workers without work who stand in for those who are away. A stand-in adds to the
+//! labour of his firm on the day, `a (N − away + stand-ins) α`; what the day labourers and the stand-ins are paid
+//! more or less than the port's pay goes through the firm's profit and deposits, the worker's income and the crown's
+//! taxes on wages, and into the national accounts. Without contracts the economy computes as before, number for number.
 #![allow(non_snake_case)] // the fields of the port carry the names of the paper's appendix
 
 use beforeit::julia::min;
@@ -99,6 +111,7 @@ use beforeit::{AbstractModel, Extension, Firms, FirmsDecisions, Randomness, base
 
 use crate::past::Past;
 use crate::trade::{self, Trade};
+use crate::workers::{self, Absences, Today};
 
 /// The working days of the firms and households of an economy (economy feature 19): for a run of days, per calendar the
 /// kind of every day, per calendar and kind the factor of the flows of a firm or a household on such a day, per firm
@@ -349,6 +362,19 @@ pub struct DailyClock {
     pub attendance: Attendance,
     /// with working days and [`DailyClock::owner`]: the profits the owners plan their spending on (economy feature 20)
     pub owner_profit: OwnerProfit,
+    /// the workers who are away (economy feature 22); empty: everybody is there, as in the port
+    pub absences: Absences,
+    /// per firm, the output that its workers who are away kept it from making in the period (economy feature 22):
+    /// set by the production and read by the market of the same period, so it is not part of the state
+    pub lost: Vec<f64>,
+    /// per firm, the materials that its workers who were away left unused and that it has not yet bought less of
+    /// (economy feature 22); empty while nobody has been away
+    pub unused: Vec<f64>,
+    /// per worker the contract ([`workers::BY_THE_YEAR`] or [`workers::BY_THE_DAY`], economy feature 23); empty:
+    /// everybody serves by the year, and nobody stands in, as before
+    pub contracts: Vec<u8>,
+    /// the stand-ins and the pays of the period that is being computed ([`workers::today`]); not part of the state
+    pub today: Today,
 }
 
 impl DailyClock {
@@ -380,6 +406,11 @@ impl DailyClock {
             trade: None,
             attendance: Attendance::default(),
             owner_profit: OwnerProfit::default(),
+            absences: Absences::default(),
+            lost: Vec::new(),
+            unused: Vec::new(),
+            contracts: Vec::new(),
+            today: Today::default(),
         })
     }
 
@@ -572,6 +603,9 @@ impl Extension for DailyClock {
     /// times cost push times expected inflation times (1 + gap or 0). Every planning firm adjusts (the port's
     /// `theta_calvo` of 1; the port's random draw for it is not made).
     ///
+    /// With workers who are away (economy feature 22) a firm buys the port's materials (A.18) less those its workers
+    /// who were away left unused in the stock.
+    ///
     /// # Panics
     ///
     /// If the model has gained or lost firms: the clock does not follow that.
@@ -644,6 +678,14 @@ impl Extension for DailyClock {
                 I_d_i[i] *= a;
             }
         }
+        // a firm does not buy again the materials that its workers who were away left unused (economy feature 22)
+        if m.ext.unused.len() == I {
+            for i in 0..I {
+                let take = min(m.ext.unused[i], DM_d_i[i]);
+                DM_d_i[i] -= take;
+                m.ext.unused[i] -= take;
+            }
+        }
         d.I_d_i = I_d_i;
         d.DM_d_i = DM_d_i;
         d.N_d_i = N_d_i;
@@ -653,27 +695,51 @@ impl Extension for DailyClock {
     /// The port's `firms_production` (A.13, A.25); with working days ([`Attendance`]) the flows of the Leontief
     /// function are those of the day: `min(a Q_s, a N α, a K κ, M β)` with the factor `a` of the firm's day, α the
     /// productivity times the port's work effort. With the factor 1 it is the port's number for number. Every firm adds
-    /// the factor of the day to the days it worked since its last plan ([`DailyClock::worked`]).
+    /// the factor of the day to the days it worked since its last plan ([`DailyClock::worked`]). With workers who are
+    /// away ([`Absences`], economy feature 22) the labour of the day is that of the workers who are there and of
+    /// those who stand in for them (economy feature 23): `a (N − away + stand-ins) α`; the effort stays the one the
+    /// firm's employees give. What the firm would have made with all its workers is kept as the output lost
+    /// ([`DailyClock::lost`]) for the market of the period.
     fn firms_production(m: &mut AbstractModel<Self>) -> Vec<f64> {
-        if m.ext.attendance.is_empty() {
+        if m.ext.attendance.is_empty() && m.ext.absences.is_empty() {
             m.ext.worked.iter_mut().for_each(|w| *w += 1.0);
             return base::firms_production(m);
         }
         let t = m.ext.periods_computed(m.agg.t) + 1;
         let (f, c) = (&m.firms, &mut m.ext);
-        (0..f.len())
+        let away = c.absences.of_firms(f.len(), &m.w_act.O_h, |id| f.index(id), t);
+        let mut lost = Vec::with_capacity(if c.absences.is_empty() { 0 } else { f.len() });
+        let Y = (0..f.len())
             .map(|i| {
                 let (a, alpha) = (c.attendance.factor(i, t), f.alpha_bar_i[i] * effort(f, i));
                 c.worked[i] += a;
-                min(
-                    a * f.Q_s_i[i],
+                let made = |n: i64| {
                     min(
-                        a * f.N_i[i] as f64 * alpha,
-                        min(a * f.K_i[i] * f.kappa_i[i], f.M_i[i] * f.beta_i[i]),
-                    ),
-                )
+                        a * f.Q_s_i[i],
+                        min(
+                            a * n as f64 * alpha,
+                            min(a * f.K_i[i] * f.kappa_i[i], f.M_i[i] * f.beta_i[i]),
+                        ),
+                    )
+                };
+                let stand_ins = c.today.stand_ins.get(i).map_or(0, |&n| n as i64);
+                let y = made((f.N_i[i] - away[i] as i64 + stand_ins).max(0));
+                if !c.absences.is_empty() {
+                    let l = made(f.N_i[i]) - y;
+                    // the materials the workers who are away did not use stay in the stock (A.13: M β per unit)
+                    if l > 0.0 {
+                        if c.unused.len() != f.len() {
+                            c.unused = vec![0.0; f.len()];
+                        }
+                        c.unused[i] += l / f.beta_i[i];
+                    }
+                    lost.push(l);
+                }
+                y
             })
-            .collect()
+            .collect();
+        c.lost = lost;
+        Y
     }
 
     /// The port's price index (A.11, A.12), which weights the prices of the firms with what they made in the period.
@@ -698,6 +764,13 @@ impl Extension for DailyClock {
         index
     }
 
+    /// The port's labour market (A.1.1); with contracts (economy feature 23) then who stands in for the workers who
+    /// are away and who is paid what in the period ([`workers::today`]).
+    fn search_and_matching_labour<R: Randomness + ?Sized>(m: &mut AbstractModel<Self>, rng: &mut R) {
+        base::search_and_matching_labour(m, rng);
+        m.ext.today = workers::today(m, rng);
+    }
+
     /// The port's goods market (A.42 and the rules of the market). With working days the spare capacity of a firm,
     /// `K κ − Y` in the port, which records the demand the firm cannot serve, is that of the day: `a K κ − Y`. The mean
     /// prices the households paid for what they consumed and for what they invested, and the crown and the buyers
@@ -719,6 +792,15 @@ impl Extension for DailyClock {
         if let Some(kappa) = kappa {
             m.firms.kappa_i = kappa;
         }
+        // a firm that sold all it had would have sold what its workers who are away kept it from making: that output
+        // counts to the demand of its next plan, which the port measures by what it sold (economy feature 22)
+        let (f, c) = (&m.firms, &mut m.ext);
+        for (i, &lost) in c.lost.iter().enumerate() {
+            if lost > 0.0 && f.Q_d_i[i] >= (f.Y_i[i] + f.S_i[i]) * (1.0 - 1e-12) {
+                c.demand[i] += lost;
+            }
+        }
+        c.lost.clear();
         let keep = |now: &mut f64, before: f64| {
             if !(now.is_finite() && *now > 0.0) {
                 *now = if before.is_finite() && before > 0.0 {
@@ -739,6 +821,10 @@ impl Extension for DailyClock {
     /// Catullo 2023, eq. 23). The stock stays in the firm's books in units; it is profit on the day it is sold.
     fn firms_profits(m: &mut AbstractModel<Self>) -> Vec<f64> {
         let mut pi = base::firms_profits(m);
+        // what the firm pays its day labourers and stand-ins more than the port's wages (economy feature 23)
+        for (pi, more) in pi.iter_mut().zip(workers::wages_more(m)) {
+            *pi -= more;
+        }
         if m.ext.owner {
             for i in 0..pi.len() {
                 pi[i] -= m.firms.P_i[i] * m.firms.DS_i[i];
@@ -811,6 +897,34 @@ impl Extension for DailyClock {
         on_working_days(m, &mut c, &mut i, m.w_act.len());
         (c, i)
     }
+    /// The port's income of a worker (A.53); the realised one with what the worker is paid more or less than the
+    /// port's pay in the period (economy feature 23). The expected one, which the budget is planned on (A.46), stays
+    /// the wage of the contract per mean day.
+    fn households_income_act(m: &mut AbstractModel<Self>, expected: bool) -> Vec<f64> {
+        let mut y = base::households_income_act(m, expected);
+        if !expected {
+            workers::add_pays(m, &mut y);
+        }
+        y
+    }
+    /// The port's revenue of the crown (A.59), with the taxes on what the workers are paid more or less than the
+    /// port's pay (economy feature 23).
+    fn gov_revenues(m: &mut AbstractModel<Self>) -> f64 {
+        base::gov_revenues(m) + workers::taxes_on_pays(m)
+    }
+    /// The port's national accounts of the period, with the wages as they were paid (economy feature 23): what the
+    /// firms paid more or less than the port's wages is compensation of employees, not operating surplus.
+    fn update_data_step(m: &mut AbstractModel<Self>) {
+        base::update_data_step(m);
+        let more: f64 = workers::wages_more(m).iter().sum();
+        if more != 0.0 {
+            let d = &mut m.data;
+            let t = d.collection_time.len() - 1;
+            d.compensation_employees[t] += more;
+            d.wages[t] += more / (1.0 + m.prop.tau_SIF);
+            d.operating_surplus[t] -= more;
+        }
+    }
     /// The port's income of an owner (A.33, A.44), which holds the share of a profit and nothing of a loss; with
     /// [`DailyClock::owner`] the owner bears the same share of a loss: firm and owner are one household with
     /// unlimited liability (economy feature 18; SNA 2008, 4.155 and 4.158).
@@ -834,6 +948,9 @@ impl Extension for DailyClock {
     /// of a loss, the other side of [`Extension::households_income_firms`].
     fn firms_deposits(m: &mut AbstractModel<Self>) -> Vec<f64> {
         let mut d = base::firms_deposits(m);
+        for (d, more) in d.iter_mut().zip(workers::wages_more(m)) {
+            *d -= more;
+        }
         if m.ext.owner {
             let borne = std::mem::take(&mut m.ext.borne);
             for i in 0..d.len() {
