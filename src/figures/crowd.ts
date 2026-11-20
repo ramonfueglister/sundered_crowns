@@ -155,13 +155,7 @@ export function place(
   const estate = ESTATES[e];
   // a ruler stands on the spot, so that the map mode of the rulers finds them where it says
   let mode =
-    kind === 'field'
-      ? crop === 2
-        ? Mode.Stand
-        : Mode.Work
-      : shown?.ruler !== undefined
-        ? Mode.Stand
-        : estate.mode;
+    kind === 'field' ? (crop === 2 ? Mode.Stand : Mode.Work) : shown?.ruler !== undefined ? Mode.Stand : estate.mode;
   // the way: straight on over free ground of even height, as far as it goes
   const [dx, dz] = DIRS[Math.floor(h(1) * 4)],
     want = 2 + Math.floor(h(2) * (LONGEST_WAY - 1));
