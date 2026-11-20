@@ -28,11 +28,13 @@ npm run dev        # the client at http://localhost:5173 (a browser with WebGPU)
   the repository since its own repository is gone), built to WebAssembly
   (`npm run economy:build`; needs the Rust toolchain). `data/economy/` holds its calibration table.
 - `server/`: the world server (`world.ts` core, `log.ts` the log entries and their replay, `files.ts` snapshots and log
-  on disk, `config.ts` settings, `session.ts` connections, `main.ts` WebSocket transport, `auth.ts`, `store.ts` for
-  Supabase).
+  on disk, `backup.ts` the copy of the world in the store, `history.ts` the history of the borders for the replay,
+  `rulers_copy.ts` the readable copy of the rulers, `config.ts` settings, `session.ts` connections, `main.ts`
+  WebSocket transport, `auth.ts`, `store.ts` for Supabase).
 - `supabase/migrations/`: accounts, worlds and seats with Row Level Security.
 - `tools/geo/` builds the map, `tools/history/` the start setups.
 
+How to work in this repository (checks before a pull request, layout, file size, the piece key): [CLAUDE.md](CLAUDE.md).
 More: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/DATA_SCHEMA.md](docs/DATA_SCHEMA.md), [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ## Tests
