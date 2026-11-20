@@ -77,7 +77,7 @@ describe('the snow line of a place', () => {
 describe('the lines of the world', () => {
   let line: (lon: number, lat: number) => number, trees: (lon: number, lat: number) => number;
   beforeAll(async () => {
-    vi.stubGlobal('fetch', async (url: string) => new Response(readFileSync(join(__dirname, '../../public', url))));
+    vi.stubGlobal('fetch', async (url: string) => new Response(readFileSync(join(__dirname, '../../public', url.replace(/\?.*$/, '')))));
     const p = await projectionOf('world'), climate = await loadClimate('/', p.round / p.cells, p.rows / p.cells);
     line = (lon, lat) => { const [u, v] = p.cellOf(lon, lat); return snowLineAt(climate, u / p.cells, v / p.cells); };
     trees = (lon, lat) => { const [u, v] = p.cellOf(lon, lat); return treeLineAt(climate, u / p.cells, v / p.cells); };
