@@ -12,24 +12,36 @@ const LAYER_BYTES = FIELD_SIDE * FIELD_SIDE * 4;
 
 const made = (data: Uint8Array, layers: number) => {
   const t = new THREE.DataArrayTexture(data, FIELD_SIDE, FIELD_SIDE, layers);
-  t.format = THREE.RGBAFormat; t.type = THREE.UnsignedByteType; t.minFilter = t.magFilter = THREE.NearestFilter; t.generateMipmaps = false; t.colorSpace = THREE.NoColorSpace;
+  t.format = THREE.RGBAFormat;
+  t.type = THREE.UnsignedByteType;
+  t.minFilter = t.magFilter = THREE.NearestFilter;
+  t.generateMipmaps = false;
+  t.colorSpace = THREE.NoColorSpace;
   t.needsUpdate = true;
   // (a texture is sent whole the first time; after that the layers written since are sent alone)
   t.userData.sent = false;
-  t.onUpdate = () => { t.userData.sent = true; };
+  t.onUpdate = () => {
+    t.userData.sent = true;
+  };
   return t;
 };
 
 export function createFields() {
-  let layers = FIRST_LAYERS, data = new Uint8Array(LAYER_BYTES * layers), tex = made(data, layers);
+  let layers = FIRST_LAYERS,
+    data = new Uint8Array(LAYER_BYTES * layers),
+    tex = made(data, layers);
   const free = Array.from({ length: layers }, (_, k) => layers - 1 - k);
   /** the texture as the material reads it (its value changes where the texture grows) */
   const node = texture(tex);
   return {
     node,
     /** the layers there are now, and of those the ones taken (for the counts) */
-    get layers() { return layers; },
-    get taken() { return layers - free.length; },
+    get layers() {
+      return layers;
+    },
+    get taken() {
+      return layers - free.length;
+    },
     /** A layer for a mesh's field, with its colours written into it. */
     take(tones: Uint8Array): number {
       if (!free.length) {
@@ -38,7 +50,10 @@ export function createFields() {
         more.set(data);
         for (let k = layers * 2 - 1; k >= layers; k--) free.push(k);
         const old = tex;
-        layers *= 2; data = more; tex = made(data, layers); node.value = tex;
+        layers *= 2;
+        data = more;
+        tex = made(data, layers);
+        node.value = tex;
         old.dispose();
       }
       const layer = free.pop()!;
@@ -48,7 +63,9 @@ export function createFields() {
       return layer;
     },
     /** A mesh's layer given back as the mesh leaves the stage. */
-    give(layer: number) { if (!free.includes(layer)) free.push(layer); },
+    give(layer: number) {
+      if (!free.includes(layer)) free.push(layer);
+    },
   };
 }
 export type Fields = ReturnType<typeof createFields>;
