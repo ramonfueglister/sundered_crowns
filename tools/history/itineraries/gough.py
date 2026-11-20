@@ -249,8 +249,10 @@ def day_of_row(y, m, last, number, weekday, report):
         report['days_missing'] += number - nxt
         return y, m, number
     ny, nm = (y + 1, 1) if m == 12 else (y, m + 1)
+    # OWN RULE: only late in a month (from the 20th), so that a number misread early in one does not skip a month
     if (
         number is not None
+        and last >= 20
         and number < nxt
         and number <= month_days(ny, nm)
         and weekday == julian_weekday(ny, nm, number)
