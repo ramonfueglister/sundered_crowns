@@ -2,7 +2,8 @@
 // the islands and the farmhouses by the fields.
 import { type Batch, type Rnd, hash2, seeded } from '../batch';
 import { basilica, campanile, castle, church, lighthouse, palace, tower, townWall } from '../../buildings';
-import { CASTLE_AT, CITY, FIELDS, ISLANDS, type P2, SITES, TOWNS, idx, inCity, inGrid } from '../layout';
+import { type P2, idx, inGrid } from '../layout';
+import { CASTLE_AT, CITY, FIELDS, ISLANDS, SITES, TOWNS, inCity } from './places';
 import { type Site, blocks, rural } from './site';
 
 /** The landmarks of the city, its square kept open; the castle; the two towers. `swap` puts another model in a

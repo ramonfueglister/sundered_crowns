@@ -3,7 +3,8 @@
 import { seeded } from '../batch';
 import { boat, pier, ship } from '../blocks';
 import { bridge } from '../../buildings';
-import { LAND_Y, N, type P2, ROADS, SHIPS, idx, inCity, inGrid, isWet, riverDist } from '../layout';
+import { LAND_Y, N, type P2, idx, inGrid, isWet } from '../layout';
+import { ROADS, SHIPS, inCity, riverDist } from './places';
 import { type Site, inFrame } from './site';
 
 /** Piers wherever the city quay looks onto open water, every few cells. */
