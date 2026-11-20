@@ -106,6 +106,14 @@ export interface EconomyEngine {
   /** The cities of a state with the workers who are away from their next period on (economy feature 22), one entry
    *  per city in their order; they take the place of the absences the cities had. */
   absences(state: EconomyState, cities: readonly CityAbsences[]): Uint8Array;
+  /** The cities of a state with their contracts from their next period on (economy feature 23): per city the workers
+   *  who work by the day (positions in the engine's list of workers); every other worker serves by the year. They
+   *  take the place of the contracts the cities had. */
+  contracts(state: EconomyState, byTheDay: readonly Uint32Array[]): Uint8Array;
+  /** Of the state the engine computed last, per city the workers away from firms that worked in its last period and
+   *  the workers without work who stood in for them (economy feature 23): two numbers a city. A measure for the tools;
+   *  no rule reads it. */
+  standIns(): Float64Array;
   /** The state after `periods` more periods. */
   step(state: EconomyState, periods: number): Uint8Array;
   /** The state after `periods` more periods, kept inside the engine: the same state as `step` gives, without
@@ -125,6 +133,8 @@ interface Exports {
   sce_routes(state: number, len: number, routes: number, routesLen: number): number;
   sce_working_days(state: number, len: number, days: number, daysLen: number): number;
   sce_absences(state: number, len: number, list: number, listLen: number): number;
+  sce_contracts(state: number, len: number, list: number, listLen: number): number;
+  sce_stand_ins_last(): number;
   sce_step(state: number, len: number, periods: number): number;
   sce_figures(state: number, len: number): number;
   sce_checks(state: number, len: number): number;
@@ -280,6 +290,19 @@ export function wasmEconomyEngine(wasm: Uint8Array): EconomyEngine {
       flush();
       return keeps(call([b, out], (e, a) => e.sce_absences(a[0], a[1], a[2], a[3])));
     },
+    contracts(state, byTheDay) {
+      // as `sce_contracts` reads them: per city the number of its workers who work by the day, then each of them
+      const out = new Uint8Array(byTheDay.reduce((n, c) => n + 4 + 4 * c.length, 0)), dv = new DataView(out.buffer);
+      let at = 0;
+      for (const c of byTheDay) {
+        dv.setUint32(at, c.length, true); at += 4;
+        for (const h of c) { dv.setUint32(at, h, true); at += 4; }
+      }
+      const b = bytesOf(state);
+      flush();
+      return keeps(call([b, out], (e, a) => e.sce_contracts(a[0], a[1], a[2], a[3])));
+    },
+    standIns() { return floats(call([], (e) => e.sce_stand_ins_last())); },
     step,
     advance(state, periods) {
       if (!Number.isInteger(periods) || periods < 0) throw new Error(`${periods} is not a number of periods`);

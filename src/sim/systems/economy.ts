@@ -28,7 +28,10 @@
 // day. A worker who is sick or in childbed is away (people feature 9, economy feature 22, src/sim/people/absence.ts):
 // the firm works with those who are there, pays everybody, does not buy again the materials they left unused and,
 // when it sold all it had, plans as if they had all been there (economy/src/clock.rs); the engine is given the
-// absences of a month before it computes the month's first day.
+// absences of a month before it computes the month's first day. A worker who heads a family works by the day, every
+// other worker serves by the year (people feature 10, economy feature 23, `contracts`): a day labourer is paid for
+// the days he works, a servant for every day, and on a day on which workers are away, workers without work stand in
+// for them (economy/src/workers.rs); the engine is given the contracts with the absences.
 //
 // The economies are not connected to anything else in the world yet: not to the harvest or the arable, and nothing a
 // player does reaches them. Places without a city have no economy. The year has no seasons.
@@ -138,6 +141,27 @@ export function absences(s: WorldState, e: CityEconomies, to: number): CityAbsen
     for (let r = 0; r < days.length; r += 2) { worker.push(P.agent[id]); first.push(days[r] - from); last.push(days[r + 1] - from); }
   }
   return runs.map(([worker, first, last]) => ({ worker: Uint32Array.from(worker), first: Uint32Array.from(first), last: Uint32Array.from(last) }));
+}
+
+/** The workers of every city who work by the day (people feature 10, economy feature 23, economy/src/workers.rs), by
+ *  their place in the engine's list: every living worker who heads a family, as its man or its woman. Every other
+ *  worker, who lives in the family of another without a household of his own, serves by the year. Day labourers were
+ *  often "smallholding tenants who used temporary employment to supplement the incomes" of their land, while the
+ *  famuli were hired "most commonly for the whole agricultural year" (Claridge, Delabastita and Gibbs 2024, (In-kind)
+ *  Wages and labour relations in the Middle Ages, working paper, p. 13); married women worked by the day, unmarried
+ *  women in annual service (Humphries and Weisdorf 2015, The wages of women in England, 1260–1850, Journal of
+ *  Economic History 75). In the world of 1291 this puts 54 % of the workers in service by the year, against about 40
+ *  to 46 % in the sources (Humphries and Weisdorf 2019, Unreal wages?, Economic Journal 129); the gap is not tuned. A
+ *  part that passes to another person keeps the contract of the one before until the contracts are given again. */
+export function contracts(s: WorldState, e: CityEconomies): Uint32Array[] {
+  const P = s.person.cols, Fam = s.family.cols, cityOf = citiesByPlace(s, e);
+  const byTheDay: number[][] = Array.from(e.places, () => []);
+  for (const id of presentPersons(s)) {
+    if (P.role[id] !== ROLE.worker || P.died[id] !== ALIVE) continue;
+    const f = P.family[id], k = cityOf[Fam.place[f]];
+    if (k >= 0 && (Fam.man[f] === id || Fam.woman[f] === id)) byTheDay[k].push(P.agent[id]);
+  }
+  return byTheDay.map((c) => Uint32Array.from(c));
 }
 
 /** Numbers of a row of `CityEconomies.years` in a world with `cities` cities: the year, then the key figures of
@@ -281,8 +305,8 @@ function compute(e: CityEconomies, s: WorldState, w: World, days: number): void 
 
 /** Computes the economies up to the day `day` of the world: one period for each day. Before the first day of a year
  *  is computed, the figures of the year that has ended are kept as a row of `years`, and the engine is given the
- *  working days of the year; before the first day of a month, the workers who are away in it. Many days at once give
- *  what the same days give one by one. */
+ *  working days of the year; before the first day of a month, the workers who are away in it and the contracts.
+ *  Many days at once give what the same days give one by one. */
 export function computeTo(s: WorldState, w: World, day: number): void {
   const e = s.economy.cities;
   if (!e) return;
@@ -301,8 +325,11 @@ export function computeTo(s: WorldState, w: World, day: number): void {
         hold(e, w.economyEngine.workingDays(stateOf(e), workingDays(s, e)));
         e.workingTo = lastOfYear;
       }
-      // the workers who are away in the month, from its next day on (economy feature 22)
-      if (given || next.d === 1) hold(e, w.economyEngine.absences(stateOf(e), absences(s, e, lastOfMonth)));
+      // the workers who are away in the month and the contracts, from its next day on (economy features 22 and 23)
+      if (given || next.d === 1) {
+        hold(e, w.economyEngine.absences(stateOf(e), absences(s, e, lastOfMonth)));
+        hold(e, w.economyEngine.contracts(stateOf(e), contracts(s, e)));
+      }
     } catch (err) { e.halted = `${fmtDate(e.day + 1, s.startYear)}: ${err instanceof Error ? err.message : String(err)}`; return; }
     compute(e, s, w, Math.min(day, lastOfMonth) - e.day);
   }
