@@ -24,7 +24,8 @@ export const realms = signal<RealmInfo[]>([]);
 export const owners = signal<Int16Array | null>(null);
 export const placeInfo = signal<PlaceDetail | null>(null);
 
-const ENV: Record<string, string | undefined> = ((import.meta as any).env ?? {}) as any;
+// Vite puts the build's settings on import.meta.env; under Node (the server and the tools) there is none
+const ENV: Record<string, string | undefined> = (import.meta as { env?: Record<string, string | undefined> }).env ?? {};
 export const worldUrl = ENV.VITE_WORLD_URL || 'ws://localhost:8787';
 
 let ws: WebSocket | null = null;

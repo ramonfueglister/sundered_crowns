@@ -49,13 +49,13 @@ function figures(s: WorldState) {
   }
   const trait = (t: (typeof TRAITS)[number]) => {
     const v: number[] = [];
-    for (let i = 0; i < N; i++) v.push((P as any)[t][i]);
+    for (let i = 0; i < N; i++) v.push(P[t][i]);
     return v;
   };
   const reg = (t: (typeof TRAITS)[number]) => {
     const x: number[] = [],
       y: number[] = [];
-    const v = (P as any)[t];
+    const v = P[t];
     for (let i = 0; i < N; i++)
       if (P.mother[i] >= 0) {
         x.push((v[P.mother[i]] + v[P.father[i]]) / 2);

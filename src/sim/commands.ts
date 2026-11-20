@@ -20,7 +20,7 @@ interface CommandDef<C extends Command = Command> {
 }
 
 /** The commands of the game by kind (filled as systems are built). */
-const COMMANDS: Record<string, CommandDef<any>> = {};
+const COMMANDS: Record<string, CommandDef> = {};
 
 export function applyCommand(s: WorldState, w: World, c: Command): CmdResult {
   const def = COMMANDS[c?.t];

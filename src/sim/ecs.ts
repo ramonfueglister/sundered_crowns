@@ -91,7 +91,7 @@ function grow<S extends Schema>(t: Table<S>, need: number) {
     const old = cols[k],
       width = old.length / cap;
     const c = new (old.constructor as new (n: number) => Column)(n * width);
-    c.set(old as any);
+    c.set(old);
     cols[k] = c;
   }
 }

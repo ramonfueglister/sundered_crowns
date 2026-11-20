@@ -94,9 +94,9 @@ export function createPicture(
       half.value.set(0.5 / dots.x, 0.5 / dots.y);
       fewer.value.set(Math.floor(dots.x * scale), Math.floor(dots.y * scale));
     };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the pass's own pictures or smaller copies of them
-    let depths: any = far,
-      faces: any = facing;
+    // the pass's own pictures or smaller copies of them
+    let depths: THREE.TextureNode = far,
+      faces: THREE.TextureNode = facing;
     if (small) {
       // the dot a smaller picture's dot stands for: the one whose middle lies half a dot before its own middle
       const from = uv().sub(half);
@@ -134,7 +134,7 @@ export function createPicture(
           return creased.value > 0 ? draw(frame) : undefined;
         };
     }
-    let open = smooth.sample(screenUV).r as ReturnType<typeof float>;
+    let open: THREE.Node<'float'> = smooth.sample(screenUV).r;
     if (small) {
       // a dot of the picture takes the creases of the four dots around it in the smaller picture, each by how near
       // it is and by how near its point lies to the surface the dot shows: so that the darkness under an eave
@@ -145,9 +145,8 @@ export function createPicture(
         part = at.sub(corner);
       const here = getViewPosition(screenUV, far.sample(screenUV).r, lensInverse),
         faced = facing.sample(screenUV).rgb.normalize();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- sums of nodes: every `add` is a node type of its own
-      let sum: any = float(0),
-        weight: any = float(0);
+      let sum: THREE.Node<'float'> = float(0),
+        weight: THREE.Node<'float'> = float(0);
       for (const [i, j] of [
         [0, 0],
         [1, 0],
@@ -199,9 +198,8 @@ export function createPicture(
     const own = read(screenUV),
       here = whole.sample(screenUV).rgb,
       mine = mix(own.mark, own.mark.oneMinus(), own.upper);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- sums of nodes: every `add` is a node type of its own
-    let others: any = vec3(0, 0, 0),
-      found: any = float(0);
+    let others: THREE.Node<'vec3'> = vec3(0, 0, 0),
+      found: THREE.Node<'float'> = float(0);
     for (const by of [
       [-1, -1],
       [0, -1],

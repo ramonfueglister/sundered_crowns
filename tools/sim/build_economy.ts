@@ -15,8 +15,10 @@ const OUT = resolve(ROOT, 'build/economy/sc_economy.wasm');
 export function cargo(args: string[], quiet = false): void {
   try {
     execFileSync('cargo', args, { cwd: ECONOMY_DIR, stdio: quiet ? 'pipe' : 'inherit' });
-  } catch (e: any) {
-    throw new Error(`cargo ${args.join(' ')} failed${e?.stderr ? `:\n${e.stderr}` : ''}`);
+  } catch (e) {
+    // the error of execFileSync carries what the child wrote to stderr (node:child_process)
+    const stderr = (e as { stderr?: Buffer | string } | null)?.stderr;
+    throw new Error(`cargo ${args.join(' ')} failed${stderr ? `:\n${stderr}` : ''}`);
   }
 }
 
