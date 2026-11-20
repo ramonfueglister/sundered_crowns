@@ -166,8 +166,8 @@ export class Travels {
     return way.place[i];
   }
 
-  /** The track of a ruler from the stop they last reached on `day` to the first point after `until`; empty outside
-   *  the days the journey covers. */
+  /** The track of a ruler from the stop they last reached on `day` to the first point after `until`, or to the last
+   *  day of the journey where it ends before; empty outside the days the journey covers. */
   track(j: Journey, day: number, until: number): Track {
     const out: Track = { day: [], place: [] },
       push = (d: number, p: number) => {
@@ -182,6 +182,9 @@ export class Travels {
       const { way, leave, pace } = this.leg(j, k);
       for (let i = 0; i < way.place.length; i++) push(leave + way.at[i] / pace, way.place[i]);
     }
+    // where the itinerary ends before the way ahead does, the ruler stays at its last place to its last day
+    const last = out.day[out.day.length - 1];
+    if (last < until && last < j.to) push(Math.min(until, j.to), out.place[out.place.length - 1]);
     return out;
   }
 }

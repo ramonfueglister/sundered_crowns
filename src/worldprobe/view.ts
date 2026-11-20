@@ -311,17 +311,18 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
     mapMode(mode) { if (realms.mode !== mode) { realms.mode = mode; look(); } },
     redraw() { stage.redraw(); },
     setMarks(now) {
-      const seen = new Map<string, number>();
-      marks = now.map((m) => {
+      const seen = new Map<string, number>(), old = marks;
+      marks = now.map((m, i) => {
         const [x, z] = blockOfCell(...projection.cellOf(m.lon, m.lat)), at = `${Math.round(x)},${Math.round(z)}`, k = seen.get(at) ?? 0;
         seen.set(at, k + 1);
-        const dot = document.createElement('button');
+        // the dots shown are used again: the marks of travelling rulers are set anew on every day of the world
+        const dot = old[i]?.dot ?? document.createElement('button');
         dot.type = 'button'; dot.className = 'world-mark'; dot.title = m.title; dot.setAttribute('aria-label', m.title);
         dot.style.cssText = `position:absolute;left:0;top:0;width:${MARK_SIZE}px;height:${MARK_SIZE}px;padding:0;border-radius:50%;border:1.5px solid ${m.color};background:#111;box-shadow:0 0 0 1px rgba(255,255,255,.7);cursor:pointer;pointer-events:auto`;
-        if (m.open) dot.onclick = m.open;
+        dot.onclick = m.open ?? null;
         return { m, dot, x, z, k };
       });
-      markLayer.replaceChildren(...marks.map((d) => d.dot));
+      if (marks.length !== old.length) markLayer.replaceChildren(...marks.map((d) => d.dot));
       placeMarks();
     },
     dispose() {
