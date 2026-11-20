@@ -105,6 +105,19 @@ CUTS['part01'] = dict(
     veil=(VEIL_RIM, *_e('PART_VEIL', '10,0')),
     line=[(th, el - _e('PART_DROP', '2.5')[0] * max(0.0, min(1.0, (60 - th) / 28))) for th, el in PARTED['line']],
 )
+# A man's hair parted in the middle and cut at the jaw (round 125; `portrait/src/dress.rs` `hair_lengths`): the
+# parted hair's bundles, not drawn to a plait but falling free past the temple and over the ear, and cut where
+# they cross a level line (`end`, degrees, as a bowl cut's; `ends`: how far above or below it a bundle ends).
+# `to` lies far below the ear, so that the hair's way there is down; it stands as high off the head as a bowl
+# cut's (`lift`) and swings as combed hair does (`comb`). Its bundles keep their breadth to the end (`gather`'s
+# third number 1). The parting runs on down the back of the head as a girl's does. No painted layer and no scalp
+# of its own: the builder takes the girl's (`DressSet::under_of`). All PLACEHOLDER by eye, beside the reference's
+# men with hair to the jaw.
+CUTS['page01'] = dict(
+    PARTED, to=tuple(_e('PAGE_TO', '100,-85')), by=tuple(_e('PAGE_BY', '64,-14')), lift=_e('PAGE_LIFT', '2.2')[0],
+    end=_e('PAGE_END', '-50')[0], ends=tuple(_e('PAGE_ENDS', '-2.5,2.5')), comb=tuple(_e('PAGE_COMB', '0.025,0.9,0,1')),
+    layers=[dict(L, gather=(0.05, 0.1, 1.0)) for L in PARTED['layers']],
+)
 # Tightly curled hair (round 111): no bundles and no strands that run anywhere. Each hair is a coil of a few
 # millimetres, and a head of them is one springy mass that stands off the skull the same height all round, its
 # surface small tufts side by side, its edge the hairline itself. `h`: how high the mass stands over the skin;
@@ -349,6 +362,8 @@ def parted(L, rng):
             P = P[(P[:, 0] * sgn > 0.1) & (el - np.interp(np.abs(th), line[:, 0], line[:, 1]) > 6)][:n]
             d0, room, key = P, np.zeros(len(P)), np.radians(ang(P)[1])
         near = rng.uniform(L['gather'][0], L['gather'][1], len(d0))
+        # (hair that is cut: each bundle ends where it crosses the cut's line, a little above or below it)
+        low = C['end'] + rng.uniform(C['ends'][0], C['ends'][1], len(d0)) if 'end' in C else None
         G = dirs(sgn * to0, to1)
         d = d0.copy()
         ways = [[p] for p in d0]
@@ -356,6 +371,8 @@ def parted(L, rng):
         for i in range(1, int(4.0 / STEP)):
             dn = unit(d + flow(d) * (STEP / OVER.skin(d))[:, None])
             alive &= np.arccos(np.clip(dn @ G, -1, 1)) > near
+            if low is not None:
+                alive &= ang(dn)[1] > low
             if not alive.any():
                 break
             d = np.where(alive[:, None], dn, d)

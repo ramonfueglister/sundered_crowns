@@ -157,17 +157,21 @@ mod tests {
     #[test]
     fn men_of_england_wear_their_hair_in_three_lengths() {
         let set = crate::dress::Dress::England1356.set().unwrap();
-        let mut n = std::collections::BTreeMap::new();
+        let (mut n, mut boys) = (std::collections::BTreeMap::new(), std::collections::BTreeMap::new());
         for seed in 0..1000u32 {
-            *n.entry(set.hair_of(seed)).or_insert(0) += 1;
+            *n.entry(set.hair_of(seed, 30.0)).or_insert(0) += 1;
+            *boys.entry(set.hair_of(seed, 10.0)).or_insert(0) += 1;
         }
         // the shares are tenths of the people, and the same person keeps the same hair
-        assert_eq!(n.into_iter().collect::<Vec<_>>(), vec![("bob01", 500), ("bob06", 300), ("bob07", 200)]);
-        assert_eq!(set.hair_of(4711), set.hair_of(4711));
+        // (round 125: two men in ten wear it parted and cut at the jaw; a boy who will, wears the bowl cut still)
+        assert_eq!(n.into_iter().collect::<Vec<_>>(), vec![("bob01", 300), ("bob06", 300), ("bob07", 200), ("page01", 200)]);
+        assert_eq!(boys.into_iter().collect::<Vec<_>>(), vec![("bob01", 500), ("bob06", 300), ("bob07", 200)]);
+        assert_eq!(set.hair_of(4711, 30.0), set.hair_of(4711, 30.0));
         // each length is a hair the repository has
         if let Some(dir) = crate::real::folder() {
             for name in set.hair_lengths.iter().map(|h| h.0).chain([set.hair]) {
-                assert!(crate::real::exists(&format!("{dir}/{name}_cap.txt")), "{name}");
+                assert!(crate::real::exists(&format!("{dir}/{name}_body.txt")), "{name}");
+                assert!(crate::real::exists(&format!("{dir}/{}_cap.txt", set.under_of(name))), "{name}");
             }
         }
     }

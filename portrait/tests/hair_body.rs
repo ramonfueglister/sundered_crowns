@@ -238,6 +238,58 @@ fn a_girl_wears_her_hair_parted_and_drawn_to_her_plaits() {
 }
 
 #[test]
+fn two_men_in_ten_wear_their_hair_parted_and_cut_at_the_jaw() {
+    // Round 125. Until then every man of England wore the one bowl cut, in three lengths. Two in ten now wear
+    // their hair parted in the middle, falling over the ears and cut at the jaw (`hair_body.py` `page01`,
+    // `DressSet::hair_parted`): a girl's parting and hairline (her painted layer is under it), no plaits, the hair
+    // standing as high off the head as a bowl cut does and ending level, above the neck.
+    let Some(h) = head() else { return };
+    let parted = |out: &Portrait| out.surfaces.iter().any(|s| s.tex.as_deref().is_some_and(|t| t.contains("/plait01_cap.")));
+    let (mut found, mut with_hair) = (0, 0);
+    for k in (1..160u32).step_by(2) {
+        let out = build(&h, &person(k, false, 30.0), 1);
+        let Some(hair) = body(&out) else { continue };
+        with_hair += 1;
+        if !parted(&out) {
+            continue;
+        }
+        found += 1;
+        let who = format!("man {k}");
+        // a boy with the same seed wears the bowl cut still
+        assert!(!parted(&build(&h, &person(k, false, 10.0), 1)), "{who} as a boy of 10: parted hair");
+        assert!(!out.surfaces.iter().any(|s| s.tex.as_deref().is_some_and(|t| t.contains("/plait01_rope."))), "{who}: plaits");
+        let (skin, crown) = skin(&out);
+        let height = crown - out.chin;
+        let top = hair.pos.iter().map(|p| p[1]).fold(f32::MIN, f32::max);
+        // no fringe: the forehead is free in the middle
+        let broad = skin.pos.iter().filter(|p| p[1] > crown - 0.3 * height).map(|p| (p[0] - out.cx).abs()).fold(0f32, f32::max);
+        let front = hair.pos.iter().filter(|p| (p[0] - out.cx).abs() < 0.25 * broad && p[2] > out.cz).map(|p| p[1]).fold(f32::MAX, f32::min);
+        let on_top = |p: &V3| p[1] > crown - 0.12 * height;
+        let across = hair.pos.chunks_exact(3).filter(|t| t.iter().all(on_top) && t.iter().any(|p| p[0] > out.cx) && t.iter().any(|p| p[0] < out.cx)).count();
+        // cut level at the jaw: the lowest tenth of the hair's corners lies within a narrow band of height
+        let mut ys: Vec<f32> = hair.pos.iter().map(|p| p[1]).collect();
+        ys.sort_by(|a, b| a.partial_cmp(b).expect("a number"));
+        let (low, tenth) = (ys[0], ys[ys.len() / 10]);
+        // beside the face it stands off the head: the hair's breadth at the height of the mouth against the skin's
+        let band = |p: &&V3| (p[1] - (out.chin + 0.3 * height)).abs() < 0.04 * height;
+        let (wide_hair, wide_skin) = (hair.pos.iter().filter(band).map(|p| (p[0] - out.cx).abs()).fold(0f32, f32::max), skin.pos.iter().filter(band).map(|p| (p[0] - out.cx).abs()).fold(0f32, f32::max));
+        if show() {
+            println!("{who}: top {:.3} over the crown, forehead free down to {:.3}, {across} across the parting, ends {:.3} below the crown (lowest tenth from {:.3}), {:.3} broader than the skin a side at the mouth's height", top - crown, (crown - front) / height, (crown - low) / height, (crown - tenth) / height, wide_hair - wide_skin);
+        }
+        assert!((0.08..0.3).contains(&(top - crown)), "{who}: the hair's top lies {} over the crown (1 is 10 cm)", top - crown);
+        assert!((crown - front) / height < 0.2, "{who}: hair on the forehead down to {} of the head's height", (crown - front) / height);
+        assert!(across > 40, "{who}: {across} triangles of a bundle's beginning lie across the parting");
+        assert!((0.62..0.9).contains(&((crown - low) / height)), "{who}: the hair ends {} of the head's height below the crown", (crown - low) / height);
+        assert!((tenth - low) / height < 0.15, "{who}: the hair's end is ragged over {} of the head's height", (tenth - low) / height);
+        assert!((0.05..0.5).contains(&(wide_hair - wide_skin)), "{who}: the hair stands {} off the head beside the mouth", wide_hair - wide_skin);
+    }
+    if show() {
+        println!("{found} of {with_hair} men with hair on the head wear it parted");
+    }
+    assert!(found >= 4, "{found} of {with_hair} men wear their hair parted");
+}
+
+#[test]
 fn hair_that_is_cut_runs_to_the_cut_and_wears_the_image_along_its_length() {
     // The image of a bundle is laid along it at one scale, whatever its length (it goes on at its lower edge),
     // and the fringe is several bundles deep: the layers lie over each other where the hair is cut.

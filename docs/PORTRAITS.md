@@ -5074,6 +5074,57 @@ point under the picture's foot; the shadows' box as large on the figure as befor
 `portraits/`): `runde124_vorher_nachher_frauen.png`, `runde124_vorher_nachher_maenner.png` (eight each: round
 123 as it was framed, round 123 framed as wide as now, round 124).
 
+**Round 125: a second head of hair for the men** (2026-11-20). Ramon's "fokus auf figure, haare etc."
+again, now the hair. Round 124's sheets show it at a glance: every man who shows his hair wears the one bowl
+cut with a fringe, in three lengths that are hard to tell apart; the rest are hooded or bald. The reference
+shows the same man of its own under three heads of hair on one sheet (a bowl cut, short hair combed back, and
+hair parted and falling in waves to the neck), and its women in plaits looped beside the cheeks under a band.
+
+What is changed. Two men in ten, from 15, wear their hair parted in the middle, falling by the temples and
+over the ears, and cut level at the jaw, without a fringe (`page01`, `DressSet::hair_lengths`,
+`hair_parted`, `hair_parted_from`). It is built from what a girl's hair is built from
+(`tools/portrait/pipeline/hair_body.py`, the parted cut): bundles that begin side by side along the parting
+and along the hairline. They are not drawn to a plait: their way goes by the temple towards a place far
+below the ear, and each ends where it crosses the cut's line (`end` -50 degrees, 2.5 above or below it),
+keeping its breadth. The hair stands as high off the head as a bowl cut (`lift` 2.2: 1.3 to 1.5 cm over the
+crown, 1.3 to 3.7 cm beside the mouth) and ends 0.71 to 0.78 of the head's height below the crown. It has
+no painted layer and no scalp of its own: the builder takes the girl's, whose hairline it has. The men's
+shares are now 3 : 3 : 2 : 2 (the bowl cut to the lobe, to above the ear, to the jaw, parted); a boy whose
+seed draws the parted hair wears the bowl cut to the lobe until 15. Hooded, thinning, bald and curly heads are
+as they were. The test page takes `?pid=940021:940043`: a person drawn under another number, the same face
+with what the builder draws from the number (pose, hood, hair's cut).
+
+Tried and not kept: the parted hair on every age. On boys of 8 and 13 it is a girl's head (a bob over a
+child's face), hence the age. Nothing else: the first form of the cut was kept as it came, and its numbers
+are a first guess that was looked at on the sample's men from the front and on one of them from five
+sides, not a choice among several.
+
+**The gauntlet**: 22 of 22 over the whole sample, with round 124's numbers to the digit. It says nothing about the round:
+no man of the sample draws the parted hair (the sample's seeds give it to none of those who show their
+hair), and the gauntlet reads skin.
+
+Honest about it. This is one cut more, built from parts that were there, and the men's heads are
+still few: two forms where the reference has a different one on nearly every head. The parted hair is
+straight and close as a helmet: the reference's falls in waves and is fuller at its ends. Its parting runs
+down the whole back of the head as a girl's does (seen from behind only). It ends at the jaw because hair
+below the chin would be turned with the shoulders by the pose (round 123): hair to the collar, which the
+reference has, is not possible until hair is carried by the head through the pose. From the side there is a
+notch in the hair in front of the ear. A curly head keeps the wavy bowl cut, so no one wears parted hair in
+waves. The shares, the age of 15 and every number of the cut are by eye (PLACEHOLDER); nothing was read on
+how men wore their hair in 1356 beyond what the dress table's sources already say. The sample's sheet does
+not show the round at all; its pictures draw men of the sample under other numbers. The women's hair is as
+round 121 left it: no plaits looped at the temples, no band. The head is still not tipped from person to
+person.
+
+Tests: `portrait/tests/hair_body.rs` has one more (of 80 men with hair on the head at least four wear it
+parted, 9 measured: no fringe, bundles across the parting, no plaits, cut level between 0.62 and 0.9 of the
+head's height below the crown, standing off the head beside the mouth; the same men as boys of 10 wear the
+bowl cut). `lib.rs`: the shares, and that each cut's files are there. Cargo: 88 of 88.
+`tests/portrait.test.ts` and its neighbour 42 of 42. `npx tsc --noEmit` and `npm run lint` pass. Pictures
+(project files, `portraits/`): `runde125_vorher_nachher_maenner.png` (six men of the sample drawn under
+numbers that draw the parted hair, as round 124 drew them and now), `runde125_von_allen_seiten.png` (one of
+them from five sides).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
@@ -5094,7 +5145,8 @@ colour asks (brown, red and blond read as the reference's do at the crown; black
 since round 123 the light is softer (held to five of their women's faces instead of one) and the shoulders
 are turned further than the head, each person's by another angle, since round 124 the picture is a bust
 that ends under the chest on cloth, as theirs does, in a plain gown without the belts, clasps, cloaks and
-layered cuts theirs wear, and without hands, and the face still lacks the
+layered cuts theirs wear, and without hands, since round 125 two men in ten wear their hair parted and cut at
+the jaw beside the bowl cut, straight where theirs is waved, and the face still lacks the
 reference's streak of gloss on the nose's flank; the thrown-back hood closes round the neck since round 35, but
 has no folds across its cloth. Since round 111 the people of every part of the world can be drawn, in a plain
 dress that is no people's own, and without a picture of the reference to hold them against.

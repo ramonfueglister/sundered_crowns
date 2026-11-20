@@ -272,9 +272,17 @@ pub struct DressSet {
     /// hair): its painted layer and scalp are `hair_girl`'s (`under_of`); the hair of girls and of women who go
     /// without the veil.
     pub hair: &'static str,
-    /// Other lengths of the same cut, each with its share in ten (by the person's seed); the rest wear `hair`.
-    /// With one length every man of a town has the same head.
+    /// Other lengths of the same cut and other cuts, each with its share in ten (by the person's seed); the rest
+    /// wear `hair`. With one length every man of a town has the same head.
     pub hair_lengths: &'static [(&'static str, u32)],
+    /// (round 125) Those of `hair` and `hair_lengths` that are parted hair, not a cut round the whorl
+    /// (tools/portrait/pipeline/hair_body.py `page01`: parted in the middle, falling over the ears, cut at the
+    /// jaw): they have no painted layer and no scalp of their own, and the builder takes `hair_girl`'s
+    /// (`under_of`), whose hairline theirs is.
+    pub hair_parted: &'static [&'static str],
+    /// The age from which a man wears it; a boy whose seed draws it wears `hair` until then (on a boy of 8 parted
+    /// hair to the jaw is a girl's head). PLACEHOLDER, by eye.
+    pub hair_parted_from: f32,
     /// The same on a head that loses its hair: gone back at the temples, and a horseshoe round a bare top.
     /// The same on a head with curls (wavy, standing off the head).
     pub hair_curly: &'static str,
@@ -814,7 +822,9 @@ const ENGLAND: DressSet = DressSet {
     veil_back: "cloth_veil_back",
     wimple: "cloth_wimple",
     hair: "bob01",
-    hair_lengths: &[("bob06", 3), ("bob07", 2)],
+    hair_lengths: &[("bob06", 3), ("bob07", 2), ("page01", 2)],
+    hair_parted: &["page01"],
+    hair_parted_from: 15.0,
     hair_curly: "bob05",
     hair_receding: "bob03",
     hair_bald: "bob04",
@@ -1032,7 +1042,7 @@ const ENGLAND: DressSet = DressSet {
         Source { what: "wool colours: undyed greys and browns, cheap dyes (russet, a dull blue)", source: "Statute concerning diet and apparel 1363 (russet and blanket for the poorest), read from a summary. Hex values PLACEHOLDER." },
         Source { what: "married women's hair covered by a linen veil, a wimple round the throat on older women and widows; girls in braids", source: "Newton 1980. Summary only. Ages 20 and 50 PLACEHOLDER (the simulation has no marriages yet). How the veil is worn (its rim on the forehead and on the cheeks in front of the ears, falling to the shoulders, no hair to be seen; the wimple under it, showing under the chin and round the throat): PLACEHOLDER, by eye against one veiled figure of the reference pictures (round 70). Since round 121 that is one of three ways (`veils`): the veil set back on the head over parted hair that covers the ears, the veil on forehead and cheeks, and a girl's plaits on three women in ten until 30, as unmarried. The shares, the age and the cut of the hair under the veil: PLACEHOLDER, by eye; nothing was read for them." },
         Source { what: "children under seven: the men's hair to the jaw with a fringe, girls and boys alike", source: "PLACEHOLDER, nothing read on small children's hair. Chosen because Apoleia's cropped hair begins far back on a child's large skull (a shaven head)." },
-        Source { what: "men's hair in three lengths (to above the ear, to the ear's lobe, to the jaw), 3 : 5 : 2", source: "PLACEHOLDER: lengths and shares by eye, so that the men of a town do not all have one head." },
+        Source { what: "men's hair in three lengths (to above the ear, to the ear's lobe, to the jaw), 3 : 3 : 2, and two men in ten from 15 with their hair parted in the middle, over the ears and cut at the jaw, without a fringe (round 125)", source: "PLACEHOLDER: lengths, shares and the age by eye, so that the men of a town do not all have one head. Nothing was read for the parted cut: to be checked against picture sources as the fringe is (Luttrell Psalter c. 1330, Holkham Bible)." },
         Source { what: "men's hair to the jaw with a fringe", source: "PLACEHOLDER, to be checked against picture sources (Luttrell Psalter c. 1330, Holkham Bible)." },
         Source { what: "beards short or full; no long philosopher's beard, no beard on the chin alone", source: "PLACEHOLDER, to be checked against picture sources (Luttrell Psalter c. 1330). Apoleia's chin beard hangs as a tuft of long strands, which also reads badly." },
         Source { what: "no trimmings, belts' fittings or jewels on common people", source: "Not built: nothing read that shows them; rather none than invented ones." },
@@ -1278,17 +1288,20 @@ impl DressSet {
             Some(c) if self.is_coily(name) => c.under[0],
             // (round 121) the hair under a veil set back is a girl's above the ears: her painted layer, her scalp
             _ if !self.hair_veiled.is_empty() && name == self.hair_veiled => self.hair_girl,
+            // (round 125) a man's parted hair has her hairline
+            _ if self.hair_parted.contains(&name) => self.hair_girl,
             _ => name,
         }
     }
 
     /// What a man wears on the head.
-    /// The hair of the head of a person with this seed: one of `hair_lengths` by its share, else `hair`.
-    pub fn hair_of(&self, seed: u32) -> &'static str {
+    /// The hair of the head of a person with this seed at this age: one of `hair_lengths` by its share, else
+    /// `hair` (and `hair` in place of parted hair on a boy, `hair_parted_from`).
+    pub fn hair_of(&self, seed: u32, age: f32) -> &'static str {
         let mut r = (seed / 10) % 10;
         for &(name, share) in self.hair_lengths {
             if r < share {
-                return name;
+                return if age < self.hair_parted_from && self.hair_parted.contains(&name) { self.hair } else { name };
             }
             r -= share;
         }
