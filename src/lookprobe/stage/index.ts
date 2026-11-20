@@ -1,8 +1,8 @@
 // The stage of the look: renderer, light rig, camera and picture pipeline. A scene (ground, things, water) is put on
 // it and shown with the camera of Ramon's reference image.
 // The parts: api.ts (what a page sees), look.ts (the look in numbers), rig.ts (the lights), materials.ts, geometry.ts,
-// meshes.ts, pilots.ts, picture.ts (the picture pipeline), kept_shadow.ts, sending.ts (?send=1), counts.ts (for the
-// tools), address.ts; this file puts them together into a Stage.
+// meshes.ts, pilots.ts, picture.ts (the picture pipeline: creases.ts, paper.ts), kept_shadow.ts, sending.ts (?send=1),
+// counts.ts (for the tools), address.ts; this file puts them together into a Stage.
 // Address options: ?webgl=1 (WebGL 2 instead of WebGPU), ?w=1672&h=941 (fixed picture size), ?blur=1 (miniature blur,
 // which the reference does not have), ?shadows=0, ?mirror=0 (no mirror image on the water), ?sky=0 (without the baked sky share: light step 1 only),
 // ?ao=0 (without the darkening of creases and corners; ?aoscale, ?aosamples, ?aosmooth: see there). ?small=0: the pieces' directions and
