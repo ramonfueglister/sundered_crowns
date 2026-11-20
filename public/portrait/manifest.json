@@ -119,7 +119,7 @@
   },
   {
    "name": "bob01_body.txt.zst",
-   "bytes": 630484
+   "bytes": 743324
   },
   {
    "name": "bob01_cap.txt",
@@ -131,7 +131,7 @@
   },
   {
    "name": "bob02_body.txt.zst",
-   "bytes": 619805
+   "bytes": 730909
   },
   {
    "name": "bob02_cap.txt",
@@ -143,7 +143,7 @@
   },
   {
    "name": "bob03_body.txt.zst",
-   "bytes": 606648
+   "bytes": 715590
   },
   {
    "name": "bob03_cap.txt",
@@ -155,7 +155,7 @@
   },
   {
    "name": "bob04_body.txt.zst",
-   "bytes": 333952
+   "bytes": 391204
   },
   {
    "name": "bob04_cap.txt",
@@ -167,7 +167,7 @@
   },
   {
    "name": "bob05_body.txt.zst",
-   "bytes": 885430
+   "bytes": 1061283
   },
   {
    "name": "bob05_cap.txt",
@@ -179,7 +179,7 @@
   },
   {
    "name": "bob06_body.txt.zst",
-   "bytes": 573085
+   "bytes": 670096
   },
   {
    "name": "bob06_cap.txt",
@@ -191,7 +191,7 @@
   },
   {
    "name": "bob07_body.txt.zst",
-   "bytes": 643567
+   "bytes": 773324
   },
   {
    "name": "bob07_cap.txt",
@@ -203,7 +203,7 @@
   },
   {
    "name": "bob08_body.txt.zst",
-   "bytes": 588242
+   "bytes": 693702
   },
   {
    "name": "bob08_cap.txt",
@@ -215,7 +215,7 @@
   },
   {
    "name": "bob09_body.txt.zst",
-   "bytes": 792131
+   "bytes": 1000722
   },
   {
    "name": "braid01.txt.zst",

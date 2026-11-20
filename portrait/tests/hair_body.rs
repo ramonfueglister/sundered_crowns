@@ -235,7 +235,9 @@ fn a_head_of_england_wears_a_body_of_thick_bundles() {
         assert!((12_000..80_000).contains(&n), "{who}: {n} triangles");
         assert!((40..260).contains(&found.len()), "{who}: {} pieces (the locks were some 950)", found.len());
         assert!(long > 0.5, "{who}: the median bundle is {long} long (1 is 10 cm)");
-        assert!((0.1..0.32).contains(&broad), "{who}: a bundle is {broad} broad where it is broad (1 is 10 cm)");
+        // (round 141: a bowl cut's upper layers are broad locks, and the measure reads them with the bundles: 2.4 to
+        // 2.8 cm where it was 1.7 to 2.2, 3.5 on the horseshoe round a bare top where it was 3.1)
+        assert!((0.1..0.42).contains(&broad), "{who}: a bundle is {broad} broad where it is broad (1 is 10 cm)");
         assert!(outward / area > 0.85, "{who}: {} of the bundles' surface faces away from the head", outward / area);
         assert!(own / area > 0.02, "{who}: the bundles are lit as cards were ({})", own / area);
         assert!(shade < 0.85, "{who}: the hair is of one tone (the darkest tenth {shade} of the lightest)");
@@ -403,7 +405,7 @@ fn one_man_in_ten_wears_his_hair_to_the_jaw_with_its_ends_turned_out() {
     // fringe hangs as the plain cut's. A boy with the same seed wears the plain cut.
     let Some(h) = head() else { return };
     let d = &sc_portrait::dress::ENGLAND_1356;
-    // the hair's greatest breadth to one side in the lowest quarter of its height against that above it, how far its fringe stands in front of the skin of the forehead, and how far below the
+    // the hair's greatest breadth to one side in the lowest third of its height against that above 0.45 of it, how far its fringe stands in front of the skin of the forehead, and how far below the
     // crown it ends (in the head's height)
     let measures = |out: &Portrait| {
         let hair = body(out).expect("a body of hair");
@@ -414,7 +416,7 @@ fn one_man_in_ten_wears_his_hair_to_the_jaw_with_its_ends_turned_out() {
         let broad = skin.pos.iter().filter(|p| p[1] > crown - 0.3 * height).map(|p| (p[0] - out.cx).abs()).fold(0f32, f32::max);
         let middle = |p: &&V3| (p[0] - out.cx).abs() < 0.25 * broad && p[2] > out.cz && p[1] > crown - 0.45 * height;
         let fringe = hair.pos.iter().filter(middle).map(|p| p[2]).fold(f32::MIN, f32::max) - skin.pos.iter().filter(middle).map(|p| p[2]).fold(f32::MIN, f32::max);
-        (wide(0.0, 0.25) - wide(0.3, 1.0), fringe, (crown - low) / height)
+        (wide(0.0, 0.33) - wide(0.45, 1.0), fringe, (crown - low) / height)
     };
     let (mut turned, mut plain) = (Vec::new(), Vec::new());
     for k in (1..400u32).step_by(2) {
@@ -432,7 +434,7 @@ fn one_man_in_ten_wears_his_hair_to_the_jaw_with_its_ends_turned_out() {
         let who = format!("man {k}");
         let (out_at_ends, fringe, ends) = measures(&out);
         if show() {
-            println!("{who}: {name}, {:.1} mm broader a side in its lowest quarter than above it, the fringe {:.1} mm in front of the forehead, ends {ends:.3} of the head's height below the crown", 100.0 * out_at_ends, 100.0 * fringe);
+            println!("{who}: {name}, {:.1} mm broader a side in its lowest third than above it, the fringe {:.1} mm in front of the forehead, ends {ends:.3} of the head's height below the crown", 100.0 * out_at_ends, 100.0 * fringe);
         }
         if name == "bob09" {
             assert_eq!(d.under_of(name), "bob07");
@@ -449,9 +451,12 @@ fn one_man_in_ten_wears_his_hair_to_the_jaw_with_its_ends_turned_out() {
         return;
     }
     assert!(turned.len() >= 5 && plain.len() >= 5, "{} men with turned ends, {} with the plain cut to the jaw", turned.len(), plain.len());
-    // (measured on 6 and 18 men: the rolls 2.3 to 5.5 mm broader a side than anything above them, the plain cut's
-    // ends 2.4 to 4.9 mm narrower)
-    assert!(turned.iter().all(|m| m.0 > 0.01) && plain.iter().all(|m| m.0 < -0.01), "broader at the ends than above them: turned {turned:?}, plain {plain:?}");
+    // (round 141: read as the lowest third of the hair's height against what lies above 0.45 of it. Until then
+    // the lowest quarter against all above 0.3, where the broadest place above was the rolls' own upper side:
+    // 2.3 to 5.5 mm, and with a bowl cut's locks standing a little further off the head at the ears -1.8 to
+    // 4.2. Read so, on 5 and 14 men: the rolls 24.7 to 30.2 mm broader a side than the hair above them (24.6 to
+    // 28.7 before the locks), the plain cut's ends 6.2 to 11.8 (6.5 to 12.6))
+    assert!(turned.iter().all(|m| m.0 > 0.2) && plain.iter().all(|m| m.0 < 0.15), "broader at the ends than above them: turned {turned:?}, plain {plain:?}");
     let most = plain.iter().map(|m| m.1).fold(f32::MIN, f32::max);
     assert!(turned.iter().all(|m| m.1 < most + 0.03), "the fringe of a head with turned ends stands further off the forehead than any plain one ({most}): {turned:?}");
     assert!(turned.iter().all(|m| (0.6..0.9).contains(&m.2)), "where the turned hair ends: {turned:?}");
@@ -591,8 +596,10 @@ fn hair_that_is_cut_ends_in_wisps() {
         // (measured: 99 hundredths of a cut's pieces and all of a parted cut's, the shell being the rest; 56 of
         // the turned cut's 206 on two heads, whose bundles at the sides and behind end in rolls; a bundle's
         // points 5.6 to 6.5 mm apart along it in the median, 10.8 at most)
-        let enough = if name == "bob09" { 0.2 } else { 0.8 };
-        assert!(heads >= 2 && share > enough, "{name}: on {heads} heads {many} of {pieces} pieces end in two points and more");
+        // (round 141: of a bowl cut's 129 pieces 86 are bundles, which fray; its 42 locks end in one point each,
+        // as leaves: two thirds of the pieces where it was 99 hundredths, 48 of the turned cut's 258)
+        let (enough, most_frayed) = if name == "bob09" { (0.15, 0.3) } else if name.starts_with("bob") { (0.6, 0.75) } else { (0.8, 1.01) };
+        assert!(heads >= 2 && share > enough && share < most_frayed, "{name}: on {heads} heads {many} of {pieces} pieces end in two points and more");
         assert!(least > 0.01 && most < 0.2, "{name}: a bundle's points lie {least} apart along it in the median at least, {most} at most (1 is 10 cm)");
     }
 }

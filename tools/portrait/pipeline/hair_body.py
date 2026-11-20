@@ -52,6 +52,14 @@ W = dirs(180, 52)    # the whorl
 # wisps side by side, each narrowing to a point of its own: over what length before the end (least, greatest), a
 # wisp's breadth, the least share of that length a wisp has (one has all of it), how much flatter a wisp is at
 # its point than the bundle, and how far its point may lie outside its own share of the breadth (`lay(frayed=)`).
+# A layer's `fray` (round 141; False: its bundles are not frayed) and `point` (how much of the slant its end is
+# cut at is left, and a power on the way along its end by which it narrows): a lock, broad along its length,
+# narrowing over `tip` to a point near its middle, as a leaf does. Since round 141 a bowl cut has two layers
+# of such locks over its two layers of bundles (in place of a third of single strands), few and broad, ending
+# at heights of their own above the cut's line: until then some hundred bundles of one breadth ran side by side
+# from the crown to that line, a comb. The bundles under them keep the fringe as thick as it was. A cut's
+# `locks`: a factor on how high its locks' ridges stand and how much they lean (hair that lies flat under a hood or
+# a hat).
 # All PLACEHOLDER by eye, beside the reference's bowl cuts (docs/PORTRAITS.md, round 109).
 _e = lambda k, d: [float(t) for t in os.environ.get(k, d).split(',')]
 BOWL = dict(
@@ -63,7 +71,8 @@ BOWL = dict(
     layers=[
         dict(n=52, fit=1.6, vary=0.25, flat=0.16, h=0.115, long=(1.2, 1.8), ends=(-0.5, 0.8), tip=(0.03, 0.06), wave=(0.003, 0.01, 1.2, 2.2), roll=0.15, tone=0.95, seed=3),
         dict(n=34, fit=1.25, vary=0.35, flat=0.2, h=0.155, roots=(0.1, 0.55, 0.3, 0.55), ends=(-1.2, 1.2), tip=(0.04, 0.09), wave=(0.004, 0.015, 1.2, 2.2), roll=0.35, tone=1.0, seed=5),
-        dict(n=16, w=(0.05, 0.09), flat=0.4, h=0.18, roots=(0.15, 0.4, 0.25, 0.45), ends=(-1.0, 7.0), tip=(0.1, 0.2), wave=(0.015, 0.04, 1.0, 1.8), roll=0.2, tone=1.1, seed=7),
+        dict(n=26, fit=1.4, vary=0.35, flat=0.3, h=0.17, roots=(0.1, 0.55, 0.3, 0.55), ends=(1.0, 5.0), tip=(0.25, 0.5), fray=False, point=(0.4, 1.6), wave=(0.01, 0.03, 1.2, 2.2), roll=0.35, tone=1.02, seed=11),
+        dict(n=16, fit=1.25, vary=0.4, flat=0.36, h=0.195, roots=(0.15, 0.4, 0.25, 0.45), ends=(4.0, 10.0), tip=(0.3, 0.6), fray=False, point=(0.4, 1.6), wave=(0.02, 0.05, 1.0, 1.8), roll=0.3, tone=1.06, seed=7),
     ],
 )
 
@@ -73,13 +82,13 @@ CUTS = {
     'bob01': BOWL,                                          # to the ear's lower end
     'bob06': dict(BOWL, end=-31.0),                         # to above the ear
     'bob07': dict(BOWL, end=-51.0),                         # to the jaw
-    'bob02': dict(BOWL, lift=0.22, round=0.6),              # under a hood: lying flat
+    'bob02': dict(BOWL, lift=0.22, round=0.6, locks=0.15),   # under a hood: lying flat
     'bob03': dict(BOWL, recede=(34.0, 11.0, 22.0)),         # gone back at the temples: the fringe's line rises there
-    'bob04': dict(BOWL, lift=0.25, round=0.6, bare=True),    # a horseshoe round a bare top
+    'bob04': dict(BOWL, lift=0.25, round=0.6, locks=0.15, bare=True),    # a horseshoe round a bare top
     'bob05': dict(BOWL, curl=(0.04, 0.03, 0.65)),          # curls
     'bob08': dict(BOWL, cut=2.0, end=-38.0, lift=0.75),     # a small child's: the fringe cut high
     # to the jaw, its ends turned out and up (round 133); all PLACEHOLDER by eye
-    'bob09': dict(BOWL, end=_e('TURN_END', '-62')[0], turn=tuple(_e('TURN', '140,220,0.07,0.09,0.003,0.85,0.3,0.5'))),
+    'bob09': dict(BOWL, end=_e('TURN_END', '-62')[0], locks=0.5, turn=tuple(_e('TURN', '140,220,0.07,0.09,0.003,0.85,0.3,0.5'))),
 }
 # A girl's and a young woman's hair: parted in the middle, drawn down over the ears to the place below each ear
 # where her plait begins (`styles.py`, style `plait`: `to` that place, `by` the temple the front hair goes by,
@@ -311,7 +320,7 @@ def bundles(L, rng):
             rolled = (len(before), np.clip((run - (total - lf)) / R, 0, None), R, rng.uniform(-turn[4], turn[4]))
         # (a frayed end, round 138: the band keeps its breadth to its end and is parted there into wisps)
         frayed = None
-        if fray and rolled is None:
+        if fray and rolled is None and L.get('fray', True):
             tl = min(wrng.uniform(fray[0], fray[1]), 0.45 * total)
             before = np.arange(0, total - tl - 0.02, 0.03 if curl else 0.05)
             run = np.concatenate([before, total - tl + np.linspace(0, tl, 9)])
@@ -322,12 +331,14 @@ def bundles(L, rng):
         e = np.clip((run - (total - tl)) / tl, 0, 1)                 # 0..1 along its end
         r = np.clip(run / rl, 0, 1)                                   # 0..1 along its beginning
         # (a turned end keeps `turn`'s eighth number of its breadth: a roll does not end in a claw)
-        hw = 0.5 * np.minimum(width, fan) * (0.25 + 0.75 * smooth(r)) * (1 - (0 if frayed else 1 - turn[7] if rolled else 1) * e)
+        # (a lock, round 141: its end narrows by a power of the way along it, and is cut at less of a slant)
+        pt = L.get('point', (1.0, 1.0)) if rolled is None else (1.0, 1.0)
+        hw = 0.5 * np.minimum(width, fan) * (0.25 + 0.75 * smooth(r)) * (1 - (0 if frayed else 1 - turn[7] if rolled else 1) * e ** pt[1])
         # its way: a swing to either side as long as the bundle and longer (a bow, not a wave), and its end cut
         # at a slant, the point on one flank's line
         side = unit(np.cross(d, unit(np.gradient(d, axis=0))))
         A, lam = rng.uniform(L['wave'][0], L['wave'][1]), total * rng.uniform(L['wave'][2], L['wave'][3])
-        off = A * np.sin(2 * np.pi * run / lam + rng.uniform(0, 2 * np.pi)) * smooth(run / 0.4) + (0 if frayed else 1) * rng.choice([-1, 1]) * rng.uniform(0.5, 0.95) * hw[np.argmax(e > 0) - 1] * e ** 1.3
+        off = A * np.sin(2 * np.pi * run / lam + rng.uniform(0, 2 * np.pi)) * smooth(run / 0.4) + (0 if frayed else pt[0]) * rng.choice([-1, 1]) * rng.uniform(0.5, 0.95) * hw[np.argmax(e > 0) - 1] * e ** 1.3
         # combed: neighbours swing together, and the bundles of a side lean one way together at their ends
         # (both by the way still to go to the end: bundles side by side have the same, wherever they began)
         tk, cb = np.radians(th_end[k]), C['comb']
@@ -346,9 +357,10 @@ def bundles(L, rng):
         thin = 1 - C['thin'] * smooth((run - (total - C['thin_over'])) / C['thin_over'])
         low = C['shell']['h'] - 0.03
         h = LIFT * (low + (L['h'] - low) * smooth(run / 0.35)) * thin + LIFT * rng.uniform(-0.006, 0.006) + up
-        ht = ROUND * L['flat'] * hw
+        low_ = C.get('locks', 1.0) if 'point' in L else 1.0          # (a lock under a hood: flat, and not leaning)
+        ht = ROUND * L['flat'] * hw * low_
         h = np.maximum(h, ht + 0.004)                                 # its flanks stay off the skin
-        roll = L['roll'] * rng.uniform(-1, 1) * ROUND
+        roll = L['roll'] * rng.uniform(-1, 1) * ROUND * low_
         out_ += lay(d, h, hw, ht, roll, run, L['tone'] * float(np.clip(rng.lognormal(0, 0.1), 0.78, 1.25)) * (0.7 + 0.3 * smooth(run / 0.3)), rng, rolled=rolled, frayed=frayed, wrng=wrng)
     return out_
 

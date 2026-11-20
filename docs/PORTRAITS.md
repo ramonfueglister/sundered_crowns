@@ -6091,6 +6091,77 @@ run. `tests/portrait.test.ts` and its neighbour 42 of 42; typecheck and lint pas
 Pictures (project files, `portraits/`): `runde140_vorher_nachher.png` (four veiled women and four hooded
 men of the sample from the left and from the right, round 139 above, now below).
 
+**Round 141: a bowl cut is of locks, not a comb** (2026-11-20). Rounds 138 and 139 left it open: a head of
+our hair reads as carved. Looked at beside three bowl cuts of the reference, heads at one size (ours drawn
+at 600 by 750 and brought down to theirs). Ours: some hundred bundles of one breadth (1.7 to 2.2 cm
+where they are broad) run side by side from the crown to the line the hair is cut at and all end on it,
+a comb from every side. Theirs: few broad locks, each narrowing to a point, lying over one another like
+shingles in two or three tiers, over a fringe with a nearly straight edge.
+
+What is changed (`tools/portrait/pipeline/hair_body.py`; the builder and the stage are unchanged).
+- A bowl cut's third layer, sixteen single strands 5 to 9 mm broad, is replaced by two layers of locks
+  over the two layers of bundles, which stay as they were: 26 locks that end 1 to 5 degrees above the cut's
+  line and narrow over their last 2.5 to 5 cm, and over them 16 that end 4 to 10 degrees above it and
+  narrow over 3 to 6 cm. A lock is 1.4 and 1.25 times as broad as its room round the head, more arched
+  than a bundle (`flat` 0.3 and 0.36 for 0.16 and 0.2), not frayed, and its end runs to a point near its middle,
+  as a leaf's (a layer's `fray` and `point`, new; a bundle's end is cut at a slant and frayed).
+- A cut's `locks` (new): a factor on how high its locks' ridges stand and how much they lean. 0.15 for the
+  hair under a hood or a hat and for the horseshoe round a bare top (`bob02`, `bob04`), 0.5 for the cut
+  with its ends turned out (`bob09`).
+- The nine files `bob01_body` to `bob09_body` are written anew; `page01`, `page02`, `plait01` and
+  `part01` are written byte for byte as before (checked).
+
+Measured (the hair tests' own counts, round 140's files against these). A bowl cut is 129 pieces where it
+was 103, 46 282 to 53 350 triangles where it was 38 182 to 43 296 (the horseshoe 25 422 for 20 754, the
+curls 76 516 for 63 280, the turned cut 77 260 for 61 060); the nine files 6.78 MB packed for 5.67. What
+the test reads as a bundle's breadth is 2.4 to 2.8 cm for 1.7 to 2.2. The fringe is as deep as it was or
+deeper (2 to 4 bundles in the median for 2 to 3, as many places bare). The hair's top stands 2.3 to 2.4 cm
+over the crown of a grown head for 1.8 to 2.0, and 1.7 to 1.8 cm on a small child's for 1.2 to 1.4:
+the locks lie on top of what was there. Under a hood it is where it was (4.8 to 5.3 mm), and no hair
+comes through a hat (the hats' test: at least 4.8 mm of room). A portrait has 8 100 to 10 050 triangles
+more (108 000 to 158 000 on the four people timed); built ten times each, four people took 132, 52,
+146 and 50 ms a portrait for 173, 48, 138 and 37 before, on this machine: the timing is too uneven to say
+more than that it is not much slower.
+
+Tried and not kept. (1) The locks in place of the second layer of bundles, three ways (as blades cut at
+a slant; ending lower and bowed; as leaves): each read better than the comb, and the last was nearest
+the reference at a portrait's size, but the fringe was thin: on a boy of 13 the forehead showed at 14 of
+84 places where it showed at 2, one bundle deep in the median for two (the test of the fringe said so,
+the pictures had not). Hence the bundles under the locks. (2) For the turned cut, whose rolls no longer
+stood out beyond the hair above them by the old test's measure: larger rolls (the measure got worse: a
+larger roll reaches up into what the measure calls above), and the locks ending on the cut's line where
+the ends are rolled (worse again). The measure itself was the fault: it compared the hair's lowest
+quarter with all above 0.3 of its height, and the broadest place above was the rolls' own upper side.
+It reads the lowest third against what lies above 0.45 now: the rolls stand 2.5 to 3.0 cm further out a
+side than the hair above them, as before the locks (2.5 to 2.9), a plain cut's ends 0.6 to 1.2 cm.
+(The nine files were written on the way, three of them more than once; written again with the script as
+it is committed, all nine are the same to the byte.)
+
+**The gauntlet**: 22 of 22 over the whole sample (read with this round's files), and every line reads
+what it read in rounds 138 to 140 to its last figure.
+
+Honest about it. Nearer, not there. A lock is still a modelled band, broad and arched, with the bundle's
+image along it: close up a leaf or a feather, not a strand of hairs, and under the locks the bundles are
+the bands they were. Every head with one cut wears the same locks in the same places (a cut is one file),
+and the cuts differ in their length only. The fringe is as long as it was, to the brows on a grown man,
+where the reference's ends high on the forehead; on a small child, whose fringe is cut high, the locks'
+points stand in a row over it. The hair is half a centimetre higher over the crown than it was, which
+nobody asked for. Nothing was read for this round: the form is by eye beside three heads of the
+reference, and every new number is PLACEHOLDER. The files are a fifth larger. The two hats were made on
+the flat hair as it was and are not made anew (its height is unchanged). The turned cut's rolls are broader
+than they were, a lock's roll among them, and from behind one shows its dark underside at the nape.
+Black hair is still a dark shape, and the women's hair is untouched.
+
+Tests: `portrait/tests/hair_body.rs`, no new test; three measures moved with the form. The bound on a
+bundle's breadth is 4.2 cm for 3.2 (the horseshoe's reads 3.5 for 3.1). Of a bowl cut's pieces two thirds
+end in wisps, not 99 in 100: the test asks for more than 0.6 and less than 0.75 (the locks must be there;
+0.15 to 0.3 for the turned cut, 48 of 258). The turned cut's rolls are read as said above. `cargo test
+--release` as a whole: 109 of 109 in one run. `tests/portrait.test.ts` and its neighbour 42 of 42;
+typecheck and lint pass.
+Pictures (project files, `portraits/`): `runde141_vorher_nachher.png` (four bare-headed men and boys of
+the sample, round 140 above, now below), `runde141_von_allen_seiten.png` (six men, one of each cut, from
+the front, the side and behind, round 140 above, now below).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
