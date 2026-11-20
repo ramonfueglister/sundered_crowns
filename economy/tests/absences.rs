@@ -1,4 +1,4 @@
-//! The workers who are away (economy feature 22, src/clock.rs `Absences`): on a day a worker is away, the labour of
+//! The workers who are away (economy feature 22, src/workers.rs `Absences`): on a day a worker is away, the labour of
 //! the worker's firm is that of the workers who are there; the worker keeps the place and the wage, a firm that sold
 //! all it had plans as if its workers had been there, and it does not buy again the materials they left unused.
 //! Without absences
@@ -9,7 +9,7 @@
 
 use beforeit::AUSTRIA2010Q1;
 use sc_economy::Economy;
-use sc_economy::clock::Absences;
+use sc_economy::workers::Absences;
 
 /// Austria with a plan every 30 periods and windows of 365 periods, as the cities of the game, wages in money.
 fn austria(seed: u64) -> Economy {
@@ -160,9 +160,10 @@ fn the_absences_and_the_unused_materials_are_part_of_the_state_and_a_state_of_fo
     a.step(6);
     b.step(6);
     assert_eq!(a.save(), b.save());
-    // format 11 is format 12 without the absences and the unused materials at its end (for none, two numbers of 0)
+    // format 11 is format 13 without the absences, the unused materials and the contracts at its end (for none, three
+    // numbers of 0)
     let mut old = plain.clone();
-    assert_eq!(old.split_off(old.len() - 8), [0u8; 8]);
+    assert_eq!(old.split_off(old.len() - 12), [0u8; 12]);
     old[4..8].copy_from_slice(&11u32.to_le_bytes());
     let back = Economy::load(&old).unwrap();
     assert!(back.model.ext.absences.is_empty());

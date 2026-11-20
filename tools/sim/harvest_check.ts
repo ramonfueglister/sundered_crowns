@@ -4,7 +4,7 @@
 // places.
 // Nothing here feeds back into the model: the tables are the check, deviations stay as they are.
 //   npx tsx tools/sim/harvest_check.ts [startYear]
-import { harvestKcal, kcalPerHeadDay, farmers, LAND_SHARE, ENGLAND_1300 } from '../../src/sim/systems/harvest';
+import { harvestKcal, kcalPerHeadDay, farmers, ENGLAND_1300 } from '../../src/sim/systems/harvest';
 import { hectares, landLimitHa, HECTARES_PER_ACRE } from '../../src/sim/systems/cultivation';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';

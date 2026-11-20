@@ -9,18 +9,20 @@
 // on the road", AJPS 2025, reconstruct the emperors' journeys from 72,665 dated and placed documents the same way).
 import { dayOf } from './chronicle';
 import type { WorldState } from '../state';
+import { km, lastStop, reachableStops, type Track, type Travels } from './travel';
 
 /** data/history/itineraries/<source>.json */
 export interface ItineraryFile {
   /** the places of issue: name as the source writes it, latitude, longitude */
   places: [string, number, number][];
   /** per king: the key of the person in the chronicle of rulers (the Wikidata id), the first and the last day of the
-   *  reign the source covers, and the days with the place (index into `places`) */
-  kings: { key: string; name: string; from: string; to: string; stops: [string, number][] }[];
+   *  reign the source covers, and the days with the place (index into `places`) and the uid of the source's first
+   *  entry for the day there */
+  kings: { key: string; name: string; from: string; to: string; stops: [day: string, place: number, uid?: number][] }[];
 }
 
 /** An itinerary as days of the world: the stops in order, each with the place of the map, and the last day it covers. */
-interface Journey {
+export interface Journey {
   day: Int32Array;
   place: Int32Array;
   to: number;
@@ -33,14 +35,6 @@ export type Itineraries = ReadonlyMap<string, Journey>;
  *  is some 1,850 km², about 24 km from its centre to its edge). OWN RULE: twice that, so that a place of issue near
  *  the edge of a place of the map still finds it. */
 const ON_MAP_KM = 50;
-
-function km(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const p = Math.PI / 180,
-    h =
-      Math.sin(((lat2 - lat1) * p) / 2) ** 2 +
-      Math.cos(lat1 * p) * Math.cos(lat2 * p) * Math.sin(((lon2 - lon1) * p) / 2) ** 2;
-  return 12742 * Math.asin(Math.sqrt(h));
-}
 
 /** The place of the map nearest each place of issue (−1: none within ON_MAP_KM), through a grid of whole degrees. */
 function placesOnMap(f: ItineraryFile, lat: ArrayLike<number>, lon: ArrayLike<number>): Int32Array {
@@ -78,40 +72,55 @@ export function compileItineraries(
   const onMap = placesOnMap(f, lat, lon),
     out = new Map<string, Journey>();
   for (const k of f.kings) {
-    const stops = k.stops.filter(([, p]) => onMap[p] >= 0);
-    if (!stops.length) continue;
+    const stops = k.stops.filter(([, p]) => onMap[p] >= 0),
+      day = Int32Array.from(stops, ([d]) => dayOf(d, startYear) as number),
+      place = Int32Array.from(stops, ([, p]) => onMap[p]),
+      kept = reachableStops(day, place, lat, lon);
+    if (!kept.length) continue;
     out.set(k.key, {
-      day: Int32Array.from(stops, ([d]) => dayOf(d, startYear) as number),
-      place: Int32Array.from(stops, ([, p]) => onMap[p]),
+      day: Int32Array.from(kept, (i) => day[i]),
+      place: Int32Array.from(kept, (i) => place[i]),
       to: dayOf(k.to, startYear) as number,
     });
   }
   return out;
 }
 
-/** The place a person of history is staying in on `day` by the itinerary: that of the last stop on or before it, while
- *  the itinerary covers the day; −1 outside it. */
+/** The place of the last stop on or before `day`, while the itinerary covers the day; −1 outside it. */
 export function stayOn(j: Journey, day: number): number {
-  if (day < j.day[0] || day > j.to) return -1;
-  let lo = 0,
-    hi = j.day.length - 1;
-  while (lo < hi) {
-    const mid = (lo + hi + 1) >> 1;
-    if (j.day[mid] <= day) lo = mid;
-    else hi = mid - 1;
-  }
-  return j.place[lo];
+  const k = lastStop(j, day);
+  return k < 0 ? -1 : j.place[k];
 }
 
-/** Where the persons of history are staying today, by row, for those an itinerary places (the rest are at home). */
-export function staysOf(s: WorldState, it: Itineraries | null): Map<number, number> {
+/** Where the persons of history are staying today, by row, for those an itinerary places (the rest are at home): on
+ *  the way between two places of the sources where `travels` is given (src/sim/content/travel.ts), else at the last
+ *  place named. */
+export function staysOf(s: WorldState, it: Itineraries | null, travels?: Travels | null): Map<number, number> {
   const out = new Map<number, number>();
   if (!it) return out;
   for (const n of s.named ?? []) {
     const j = it.get(n.key);
     if (!j) continue;
-    const p = stayOn(j, s.day);
+    const p = travels ? travels.where(j, s.day) : stayOn(j, s.day);
     if (p >= 0) out.set(n.person, p);
+  }
+  return out;
+}
+
+/** The tracks of the persons of history an itinerary places today, by row, from today to `days` ahead. */
+export function tracksOf(
+  s: WorldState,
+  it: Itineraries | null,
+  travels: Travels | null,
+  days: number,
+): Map<number, Track> {
+  const out = new Map<number, Track>();
+  if (!it || !travels) return out;
+  for (const n of s.named ?? []) {
+    const j = it.get(n.key);
+    if (!j) continue;
+    const t = travels.track(j, s.day, s.day + days);
+    if (t.day.length) out.set(n.person, t);
   }
   return out;
 }

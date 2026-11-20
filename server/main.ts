@@ -10,8 +10,15 @@ import { WorldCore } from './world';
 import { NullStore, SupabaseStore } from './store';
 import { authConfigFromEnv, authenticate } from './auth';
 import { PROTOCOL_VERSION, type ClientMsg, type ServerMsg } from '../src/net/protocol';
-import { placePeople, manyPlacesPeople, personDetail, rulersOnMap, MAX_PLACES_PER_REQUEST } from '../src/net/people';
-import { staysOf } from '../src/sim/content/itineraries';
+import {
+  placePeople,
+  manyPlacesPeople,
+  personDetail,
+  rulersOnMap,
+  MAX_PLACES_PER_REQUEST,
+  TRACK_DAYS,
+} from '../src/net/people';
+import { staysOf, tracksOf } from '../src/sim/content/itineraries';
 import { townLots, manyTownsLots, MAX_SITES_PER_REQUEST } from '../src/net/lots';
 import { ALL_CULTURES } from '../src/sim/content/peoples';
 import { Talk, talkConfigFromEnv } from './talk';
@@ -83,13 +90,21 @@ const http = createServer((req, res) => {
     person = /^\/person\/(\d+)$/.exec(req.url ?? '');
   if (people && Number(people[1]) < core.s.place.pop.length) {
     res.writeHead(200, h);
-    res.end(JSON.stringify(placePeople(core.s, Number(people[1]), staysOf(core.s, core.itineraries))));
+    res.end(JSON.stringify(placePeople(core.s, Number(people[1]), staysOf(core.s, core.itineraries, core.travels))));
     return;
   }
   // the rulers who hold a crown, for the map mode of the rulers (src/ui/mapmode.ts)
   if (req.url === '/rulers') {
     res.writeHead(200, h);
-    res.end(JSON.stringify(rulersOnMap(core.s, staysOf(core.s, core.itineraries))));
+    res.end(
+      JSON.stringify(
+        rulersOnMap(
+          core.s,
+          staysOf(core.s, core.itineraries, core.travels),
+          tracksOf(core.s, core.itineraries, core.travels, TRACK_DAYS),
+        ),
+      ),
+    );
     return;
   }
   const many = /^\/people\?places=(\d+(?:,\d+)*)$/.exec(req.url ?? '');
@@ -97,7 +112,7 @@ const http = createServer((req, res) => {
     const places = many[1].split(',').map(Number);
     if (places.length <= MAX_PLACES_PER_REQUEST && places.every((p) => p < core.s.place.pop.length)) {
       res.writeHead(200, h);
-      res.end(JSON.stringify(manyPlacesPeople(core.s, places, staysOf(core.s, core.itineraries))));
+      res.end(JSON.stringify(manyPlacesPeople(core.s, places, staysOf(core.s, core.itineraries, core.travels))));
       return;
     }
   }

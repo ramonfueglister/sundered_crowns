@@ -1,15 +1,17 @@
 // Every realm's name lies on its own realm (Ramon, 2026-11-16: "sauber, ein für alle Mal"): for each start year's
-// setup in public/data, the names are found as the game finds them (paint.ts, over the world's frame), laid out as the
-// game lays them (names.ts), and every point of every letter's reach is checked against the map at its own pixels.
+// setup in public/data, the names are found as the game finds them (realm_names.ts, over the world's frame), laid out
+// as the game lays them (names.ts), and every point of every letter's reach is checked against the map at its own
+// pixels.
 // The reach of the letters is the font's own, measured in the browser on EB Garamond 500 (dominant-baseline central):
 // capitals and ascenders 0.35 of the size above the curve, accented capitals 0.52; the baseline 0.34 below it,
-// descenders 0.54. This test does not share these numbers with paint.ts, so that a change there is caught here.
+// descenders 0.54. This test does not share these numbers with realm_names.ts, so that a change there is caught here.
 import { readFileSync, readdirSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
 import { extentOf } from '../../src/worldprobe/extent';
 import { layoutNames } from '../../src/worldprobe/names';
-import { type Realms, placeAt, realmNames } from '../../src/worldprobe/paint';
+import { type Realms, placeAt } from '../../src/worldprobe/paint';
+import { realmNames } from '../../src/worldprobe/realm_names';
 import { type Index, projectionFrom } from '../../src/worldprobe/region';
 
 const u16 = (b: Buffer) => new Uint16Array(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength));

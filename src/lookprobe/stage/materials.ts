@@ -94,7 +94,8 @@ export function createMaterials(scene: THREE.Scene) {
   /** how much of the mirror image the water shows, 1 near, 0 from afar (Stage.mirror) */
   const mirrorShare = uniform(1);
   if (flag('mirror', true)) {
-    const mirror = (mirrored = reflector({ resolutionScale: 0.5 }));
+    const mirror = reflector({ resolutionScale: 0.5 });
+    mirrored = mirror;
     mirror.target.rotateX(-Math.PI / 2);
     mirror.target.position.y = SEA_Y;
     marked(mirror.target);

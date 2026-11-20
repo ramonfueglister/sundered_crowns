@@ -66,7 +66,7 @@ const COLLECTIVE = /collective government/i,
 const NOT_HOLDER = /claimant|pretender|not a monarch|anti-?king|antipope/i,
   IN_CONTROL = /in control|de facto/i;
 const date = (s: string) => (/^-?\d{1,4}(-\d{2}(-\d{2})?)?$/.test(s) ? s : null);
-/** Later of two dates given as the source gives them (compared on the text, padded to a full day). */
+/** A date as the source gives it, padded to a full day (the middle of its year or month), to be compared on the text. */
 const pad = (d: string) => (d.length === 4 ? `${d}-07-01` : d.length === 7 ? `${d}-15` : d);
 
 /** What the build counted, and the rows it could not use. */
@@ -84,16 +84,8 @@ export interface RulersReport {
 }
 
 export function build(): { chronicle: ChronicleJson; report: RulersReport } {
-  const sex = new Map<string, 0 | 1>();
-  const wd = resolve(ROOT, 'data/history/rulers/wikidata/holders.csv');
-  if (existsSync(wd))
-    for (const r of parseCsv(readFileSync(wd, 'utf8'))) {
-      if (r.sex === 'Q6581072') sex.set(r.person, 0);
-      else if (r.sex === 'Q6581097') sex.set(r.person, 1);
-    }
-  const persons: ChroniclePerson[] = [],
-    reigns: ChronicleReign[] = [],
-    byKey = new Map<string, number>();
+  const people: People = { sex: sexesOf(), persons: [], byKey: new Map() },
+    reigns: ChronicleReign[] = [];
   const report: RulersReport = {
     lists: 0,
     rows: 0,
@@ -116,17 +108,7 @@ export function build(): { chronicle: ChronicleJson; report: RulersReport } {
       rows = parseCsv(readFileSync(resolve(LISTS, file), 'utf8'));
     rows.sort((a, b) => Number(a.order) - Number(b.order));
     report.lists++;
-    const kept = rows.filter((r) => {
-      if (COLLECTIVE.test(r.note ?? '') || !r.name || NO_PERSON.test(r.name)) {
-        report.collective++;
-        return false;
-      }
-      if (NOT_HOLDER.test(r.note ?? '') && !IN_CONTROL.test(r.note ?? '')) {
-        report.claimants++;
-        return false;
-      }
-      return true;
-    });
+    const kept = holdersIn(rows, report);
     kept.forEach((r, k) => {
       report.rows++;
       const start =
@@ -141,35 +123,80 @@ export function build(): { chronicle: ChronicleJson; report: RulersReport } {
         report.beforeStart++;
         return;
       }
-      const born = date(r.born),
-        died = date(r.died);
-      const key = r.qid || `${r.name}|${born ?? `${realm}#${r.order}`}`;
-      let p = byKey.get(key);
-      if (p === undefined) {
-        let sx: 0 | 1;
-        if (r.qid && sex.has(r.qid)) {
-          sx = sex.get(r.qid)!;
-          report.sexByWikidata++;
-        } else if (FEMALE.test(`${r.name} ${r.note}`)) {
-          sx = 0;
-          report.sexByWord++;
-        } else {
-          sx = 1;
-          report.sexAssumed++;
-        }
-        p = persons.push({ key, name: r.name, house: r.house ?? '', qid: r.qid ?? '', sex: sx, born, died }) - 1;
-        byKey.set(key, p);
-      } else {
-        const q = persons[p]; // the same person in another list: keep what one of them knows
-        q.born ??= born;
-        q.died ??= died;
-        if (!q.house) q.house = r.house ?? '';
-      }
-      const source = r.source_revid ? `${r.source_url} (revision ${r.source_revid})` : (r.source_url ?? '');
-      reigns.push({ realm, person: p, start, end: end && pad(end) <= UNTIL ? end : null, source });
+      const person = personOf(r, realm, people, report),
+        source = r.source_revid ? `${r.source_url} (revision ${r.source_revid})` : (r.source_url ?? '');
+      reigns.push({ realm, person, start, end: end && pad(end) <= UNTIL ? end : null, source });
     });
   }
-  return { chronicle: { year: YEAR, until: UNTIL, persons, reigns }, report };
+  return { chronicle: { year: YEAR, until: UNTIL, persons: people.persons, reigns }, report };
+}
+
+/** The persons found so far, counted from 0, the number of each by its key, and the sex of those Wikidata knows. */
+interface People {
+  sex: Map<string, 0 | 1>;
+  persons: ChroniclePerson[];
+  byKey: Map<string, number>;
+}
+
+/** The sex of the persons Wikidata knows (0 female: Q6581072, 1 male: Q6581097), by their Wikidata id. */
+function sexesOf(): Map<string, 0 | 1> {
+  const sex = new Map<string, 0 | 1>();
+  const wd = resolve(ROOT, 'data/history/rulers/wikidata/holders.csv');
+  if (existsSync(wd))
+    for (const r of parseCsv(readFileSync(wd, 'utf8'))) {
+      if (r.sex === 'Q6581072') sex.set(r.person, 0);
+      else if (r.sex === 'Q6581097') sex.set(r.person, 1);
+    }
+  return sex;
+}
+
+/** The rows of a list that name a person who held the title; the others are counted. */
+function holdersIn(rows: Record<string, string>[], report: RulersReport): Record<string, string>[] {
+  return rows.filter((r) => {
+    if (COLLECTIVE.test(r.note ?? '') || !r.name || NO_PERSON.test(r.name)) {
+      report.collective++;
+      return false;
+    }
+    if (NOT_HOLDER.test(r.note ?? '') && !IN_CONTROL.test(r.note ?? '')) {
+      report.claimants++;
+      return false;
+    }
+    return true;
+  });
+}
+
+/** The person a row names: added when first seen; seen again in another list, they keep what one of the lists knows. */
+function personOf(r: Record<string, string>, realm: string, people: People, report: RulersReport): number {
+  const born = date(r.born),
+    died = date(r.died);
+  const key = r.qid || `${r.name}|${born ?? `${realm}#${r.order}`}`;
+  let p = people.byKey.get(key);
+  if (p === undefined) {
+    const sex = sexOf(r, people.sex, report);
+    p = people.persons.push({ key, name: r.name, house: r.house ?? '', qid: r.qid ?? '', sex, born, died }) - 1;
+    people.byKey.set(key, p);
+  } else {
+    const q = people.persons[p];
+    q.born ??= born;
+    q.died ??= died;
+    if (!q.house) q.house = r.house ?? '';
+  }
+  return p;
+}
+
+/** The sex of a person new to the chronicle, by the rule at the top of this file, counted by the rule that gave it. */
+function sexOf(r: Record<string, string>, sex: Map<string, 0 | 1>, report: RulersReport): 0 | 1 {
+  const known = r.qid ? sex.get(r.qid) : undefined;
+  if (known !== undefined) {
+    report.sexByWikidata++;
+    return known;
+  }
+  if (FEMALE.test(`${r.name} ${r.note}`)) {
+    report.sexByWord++;
+    return 0;
+  }
+  report.sexAssumed++;
+  return 1;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

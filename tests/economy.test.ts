@@ -11,16 +11,9 @@ import { join } from 'node:path';
 import { newWorldState, loadWorld, loadSetup, loadEconomy, loadEconomyEngine, dataPath } from '../tools/sim/load';
 import { ECONOMY_DIR } from '../tools/sim/build_economy';
 import { REFERENCE, calibrationJson, cityCalibrations, readTable } from '../tools/sim/calibrate_economy';
-import {
-  calibrateEconomy,
-  cityTable,
-  dailyCalibration,
-  dailyEconomy,
-  unemploymentBenefit,
-  ar1,
-  roundHalfEven,
-  type Entry,
-} from '../src/sim/economy/calibration';
+import { calibrateEconomy, cityTable, ar1, type Entry } from '../src/sim/economy/calibration';
+import { roundHalfEven, unemploymentBenefit } from '../src/sim/economy/accounts';
+import { dailyCalibration, dailyEconomy } from '../src/sim/economy/daily';
 import { FIGURE, FIGURES, type CitySetup, type EconomyEngine, type EconomyRules } from '../src/sim/economy/engine';
 import {
   absences,
@@ -29,6 +22,7 @@ import {
   cityPlaces,
   citySeed,
   computeTo,
+  contracts,
   foundEconomy,
   workingDays,
   yearRow,
@@ -61,7 +55,8 @@ const withWorkingDays = (s: WorldState, w: World) => {
   const e = s.economy.cities!,
     next = dayToDate(e.day + 1, s.startYear);
   const lastOfMonth = dateToDay(next.y + (next.m === 11 ? 1 : 0), (next.m + 1) % 12, 1, s.startYear) - 1;
-  return w.economyEngine.absences(w.economyEngine.workingDays(e.model, workingDays(s, e)), absences(s, e, lastOfMonth));
+  const days = w.economyEngine.workingDays(e.model, workingDays(s, e));
+  return w.economyEngine.contracts(w.economyEngine.absences(days, absences(s, e, lastOfMonth)), contracts(s, e));
 };
 const bits = (v: Float64Array) =>
   Array.from(new BigUint64Array(v.buffer, v.byteOffset, v.length), (x) => x.toString(16).padStart(16, '0')).join(' ');

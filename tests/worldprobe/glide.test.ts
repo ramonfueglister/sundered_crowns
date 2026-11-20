@@ -69,7 +69,10 @@ const tall = (y: number) => SEA_Y + (y - SEA_Y) * TALLER;
 const drawn = new WeakMap<Table, ArrayLike<number>>();
 const topsAt = (table: Table) => {
   let h = drawn.get(table);
-  if (!h) drawn.set(table, (h = drawnHeights(table)));
+  if (!h) {
+    h = drawnHeights(table);
+    drawn.set(table, h);
+  }
   return h;
 };
 /**

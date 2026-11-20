@@ -78,7 +78,10 @@ for (let y = 1; y <= YEARS; y++) {
     if (a < 15) continue;
     risk.push(i);
     let x = S.get(a);
-    if (!x) S.set(a, (x = { n: 0, c: 0, cc: 0, q: 0, qq: 0, e: 0, ee: 0 }));
+    if (!x) {
+      x = { n: 0, c: 0, cc: 0, q: 0, qq: 0, e: 0, ee: 0 };
+      S.set(a, x);
+    }
     const c = z('c', i),
       q = z('iq', i),
       e = z('e', i);
