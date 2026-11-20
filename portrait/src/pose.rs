@@ -10,6 +10,11 @@
 //! It is applied to the finished surfaces, to all of them alike, so that cloth, hair and skin stay on each
 //! other: a hood's cape and a veil's fall go with the shoulders, their upper part stays with the head. A beard's
 //! locks hang from the jaw and stay with the head whole (`stays`).
+//!
+//! Since round 127 a person carries the head turned and tilted as well (`DressSet::head`). The head still keeps
+//! its place here: the stage turns and tilts the whole figure by the person's angles (`Portrait::head`), and the
+//! shoulders' line is tipped back by the tilt (build.rs), about the neck's foot, which is the place the stage
+//! tilts about. What is left is a head tilted on a neck that bends, over shoulders that stand as the pose has them.
 
 use crate::geo::{c01, hash, sm, Surface, V3};
 

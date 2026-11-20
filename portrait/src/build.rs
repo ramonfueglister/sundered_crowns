@@ -41,6 +41,14 @@ pub struct Portrait {
     /// draws a child's skin with less of the grown's pores, relief, blotches and speckle (src/portrait/profile.ts
     /// `skin.child`): the skin's images and the stage's noise are a grown person's.
     pub young: f32,
+    /// (round 127) How the person carries the head (`DressSet::head_of`): turned further than the stage turns
+    /// every head, and tilted (radians), and the place the tilt is about: the neck's foot (x and height). The
+    /// stage turns the figure about the upright axis through the head's centre and tilts it about the axis from
+    /// back to front through that place; the shoulders are tipped back by the tilt here, so that they stand as
+    /// the pose has them (to within the bust's lean: the tilt's axis leans with the bust, the stage's does not,
+    /// which leaves the shoulders turned by an eighth of the tilt). All 0 in a look without a dress table.
+    pub head: [f32; 2],
+    pub neck: [f32; 2],
     pub tris: usize,
     /// Morph targets in use.
     pub targets: usize,
@@ -931,7 +939,7 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
                 let old = ((p.age - 45.0) / 35.0).clamp(0.0, 1.0);
                 // where the eyes look, seen from the head: straight ahead, or turned as the dress asks (the ball's
                 // image is laid round that direction, which on a ball is the same as turning the eye)
-                let gaze = garb.map(|d| d.gaze_of(temporal, crate::dress::by_sex(d.lean[0], d.lean[1], fem, grown))).filter(|g| *g != [0.0, 0.0]).map(|[yaw, pitch]| {
+                let gaze = garb.map(|d| d.gaze_at(temporal, crate::dress::by_sex(d.lean[0], d.lean[1], fem, grown), d.head_of(p.seed))).filter(|g| *g != [0.0, 0.0]).map(|[yaw, pitch]| {
                     let g = [yaw.sin() * pitch.cos(), pitch.sin(), yaw.cos() * pitch.cos()];
                     let r = norm(cross([0.0, 1.0, 0.0], g));
                     (r, cross(g, r), g)
@@ -2008,7 +2016,15 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
         crate::pose::hold_bust(&mut merged, &line, x.pp[crate::pose::FRONT_TOP][1], crate::pose::BUST_SIDE, share);
     }
     let range = pose.or(garb.map(|d| d.pose)).unwrap_or([0.0; 3]);
-    if range != [0.0; 3] {
+    // how the person carries the head: the stage tilts the whole figure, the shoulders are tipped back by as much
+    // (a pose asked for by the caller is taken as it is)
+    let head = garb.map_or([0.0; 2], |d| d.head_of(p.seed));
+    let mut stand = crate::pose::pose_of(range, p.seed);
+    if pose.is_none() {
+        stand.tip -= head[1];
+    }
+    let mut neck = [0.0; 3];
+    if garb.is_some() || range != [0.0; 3] {
         let (mut lo, mut hi) = ([f32::MAX; 2], [f32::MIN; 2]);
         for &v in body_full {
             let b = h.base[v as usize];
@@ -2018,12 +2034,16 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
                 hi = [hi[0].max(q[0]), hi[1].max(q[2])];
             }
         }
-        crate::pose::pose(&mut merged, crate::pose::pose_of(range, p.seed), [(lo[0] + hi[0]) / 2.0, (lo[1] + hi[1]) / 2.0], y0 - crate::pose::NECK * (y1 - y0), y0);
+        let (axis, foot) = ([(lo[0] + hi[0]) / 2.0, (lo[1] + hi[1]) / 2.0], y0 - crate::pose::NECK * (y1 - y0));
+        crate::pose::pose(&mut merged, stand, axis, foot, y0);
+        neck = [axis[0], foot, axis[1]];
     }
     // the bust leaning back, where the dress asks for it
     let lean = garb.map_or(0.0, |d| crate::dress::by_sex(d.lean[0], d.lean[1], fem, p.grown()));
     if lean != 0.0 {
         lean_back(&mut merged, (y0 + y1) / 2.0, hz / hn.max(1) as f32, lean);
+        // (the neck's foot leans with the rest)
+        neck[1] = (y0 + y1) / 2.0 + (neck[1] - (y0 + y1) / 2.0) * lean.cos() + (neck[2] - hz / hn.max(1) as f32) * lean.sin();
     }
     // the picture's foot (0.86 of its height below the top) stays above where the skin's data ends, on a stage
     // that stands as the builder frames it (a stage that shows more of the figure, as England's bust since round
@@ -2032,7 +2052,7 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
     let low = body_full.iter().filter(|&&v| h.base[v as usize][0].abs() < 1.0).map(|&v| x.pp[v as usize][1]).fold(f32::MAX, f32::min);
     let fill = (0.86 * (top - y0).max(0.8) / (top - low - 0.1)).max(0.53);
     let young = garb.map_or(0.0, |d| crate::dress::child_share(d.adult[if fem { 0 } else { 1 }], p.age));
-    Portrait { surfaces: merged, top, chin: y0, cx: hx / hn.max(1) as f32, cz: hz / hn.max(1) as f32, fill, young, tris, targets }
+    Portrait { surfaces: merged, top, chin: y0, cx: hx / hn.max(1) as f32, cz: hz / hn.max(1) as f32, fill, young, head, neck: [neck[0], neck[1]], tris, targets }
 }
 
 /// Leans surfaces back by `a` radians about the axis from ear to ear at height `cy` and depth `cz`: what lies above

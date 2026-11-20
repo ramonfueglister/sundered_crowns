@@ -88,7 +88,7 @@ fn floats<const N: usize>(out: &mut Vec<u8>, v: &[[f32; N]]) {
 pub fn portrait(p: &Portrait, look: &Look) -> Vec<u8> {
     let st = &STANDS[look.stand.min(STANDS.len() - 1)];
     let mut out = Vec::with_capacity(64 + p.tris * 3 * 44);
-    for x in [p.top, p.chin, p.cx, p.cz, p.fill, p.young] {
+    for x in [p.top, p.chin, p.cx, p.cz, p.fill, p.young, p.head[0], p.head[1], p.neck[0], p.neck[1]] {
         out.extend(x.to_le_bytes());
     }
     out.extend((p.tris as u32).to_le_bytes());

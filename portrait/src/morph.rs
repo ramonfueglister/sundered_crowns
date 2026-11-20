@@ -778,7 +778,7 @@ fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, s
     // and each ball set in its socket so that the pupil stands between the lids as a real one does (`DressSet::pupil`)
     if let Some(d) = p.dress.set().filter(|d| d.pupil > 0.0) {
         let lean = crate::dress::by_sex(d.lean[0], d.lean[1], p.female, p.grown());
-        pupils_set(h, &mut pp, d.pupil, |side| d.gaze_of(side, lean)[1]);
+        pupils_set(h, &mut pp, d.pupil, |side| d.gaze_at(side, lean, d.head_of(p.seed))[1]);
     }
     // a child's nose as long against a grown one's as a real child's, where a dress with a table asks for it
     // (`DressSet::child_nose`); heights of the face's front between the lower lids and the chin only

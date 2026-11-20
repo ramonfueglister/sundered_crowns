@@ -598,6 +598,16 @@ pub struct DressSet {
     /// By eye beside the reference's half figures, whose shoulders stand 15 to 40 degrees round from the face:
     /// PLACEHOLDER.
     pub pose: [f32; 3],
+    /// (round 127) How a person carries the head: the most it is turned further than the stage turns every head
+    /// (src/portrait/profile.ts `turn`), either way, and the most it is tilted towards a shoulder, either way
+    /// (radians; a person's lie between by two draws of the seed, `head_of`). Both 0: every head of a sample
+    /// stands at the one angle, upright (Apoleia's, and England's until round 127: twenty people who all hold the
+    /// head as a passport asks for). The builder leaves the head where it is and says the two angles with the
+    /// portrait (`Portrait::head`); the stage turns and tilts the whole figure by them, and the builder tips the
+    /// shoulders back by the tilt (pose.rs), so that the tilt is the neck's and the shoulders stay as the pose
+    /// has them. The eyes stay on whoever looks (`gaze_at`). By eye beside the reference, whose heads are tilted
+    /// a few degrees and turned each its own way: PLACEHOLDER.
+    pub head: [f32; 2],
     /// How large the iris is, across, in millimetres (0 = as the ball's image has it, Apoleia's: 27.5 degrees of
     /// the ball, tools/portrait/pipeline/eye_tex.py). MakeHuman's eyeball is 30 mm across (a real one 24), and
     /// `rest` scales the eyes up on top of that: the iris was 14 to 17 mm across and, seen from the front, took
@@ -930,6 +940,7 @@ const ENGLAND: DressSet = DressSet {
     lean: [0.12, 0.10],
     bust: 0.5,
     pose: [0.1, 0.4, 0.035],
+    head: [0.1, 0.07],
     iris_mm: 11.7,
     eyes_child: [0.6, 0.5],
     gaze: [0.24, 0.0],
@@ -1363,6 +1374,31 @@ impl DressSet {
     /// +x side and -1 for the other, `lean` how far the bust leans back.
     pub fn gaze_of(&self, side: f32, lean: f32) -> [f32; 2] {
         [self.gaze[0] - self.converge * side, self.gaze[1] - lean]
+    }
+
+    /// How the person with this seed carries the head (`head`): turned further than the stage turns it (radians
+    /// about the upright axis, towards the head's left when positive) and tilted (radians about the axis from back
+    /// to front, the crown towards the head's right when positive: as pose.rs tips the shoulders).
+    pub fn head_of(&self, seed: u32) -> [f32; 2] {
+        [self.head[0] * (2.0 * crate::geo::hash(seed, 1233, 13) - 1.0), self.head[1] * (2.0 * crate::geo::hash(seed, 1234, 17) - 1.0)]
+    }
+
+    /// As `gaze_of`, on a head carried as `head` says (`head_of`): the stage turns and tilts the head by the two
+    /// angles, and the eyes are turned back by them, so that they stay on whoever looks at the picture. The line
+    /// to the viewer as the stage sees it, turned back about the upright axis, then about the axis from back to
+    /// front, then by the bust's lean (the stage tilts the figure as it stands, leaning). `gaze_of` takes the
+    /// lean off the pitch alone, which is the same for eyes that look straight ahead and 0.2 degrees off at
+    /// England's turn; with the lean taken off the pitch alone here, eyes on a head tilted by 0.06 looked half
+    /// a degree further beside the viewer (tests/portrait.test.ts).
+    pub fn gaze_at(&self, side: f32, lean: f32, head: [f32; 2]) -> [f32; 2] {
+        if head == [0.0, 0.0] {
+            return self.gaze_of(side, lean);
+        }
+        let (yaw, pitch) = (self.gaze[0] - self.converge * side - head[0], self.gaze[1]);
+        let g = [yaw.sin() * pitch.cos(), pitch.sin(), yaw.cos() * pitch.cos()];
+        let (c, s) = (head[1].cos(), head[1].sin());
+        let (x, y) = (g[0] * c + g[1] * s, g[1] * c - g[0] * s);
+        [x.atan2(g[2] * lean.cos() + y * lean.sin()), (y * lean.cos() - g[2] * lean.sin()).clamp(-1.0, 1.0).asin()]
     }
 
     pub fn hood_of(&self, female: bool, age: f32, seed: u32) -> Hood {

@@ -11,7 +11,7 @@ import { LOCK_OPAQUE, drawOrder, portraitSkinTone, skinTone, surfaceKind, surfac
 import { APOLEIA, ENGLAND_1356, profileOf } from '../src/portrait/profile';
 import { CURVE, toneCurve } from '../src/portrait/finish';
 import { decodePortrait, encodePerson, type Portrait, type PortraitPerson } from '../src/portrait/wire';
-import { framing, keyPlaces } from '../src/portrait/stage';
+import { framing, keyPlaces, standing } from '../src/portrait/stage';
 
 interface GoldenSurface { rough: number; metal: number; double: boolean; tex: string; nmap: string; verts: number; pos: number; col: number; uv: number; nrm: number }
 interface Golden { pid: number; top: number; chin: number; cx: number; cz: number; fill: number; tris: number; surfaces: GoldenSurface[] }
@@ -346,12 +346,10 @@ describe('portraits', { timeout: 20_000 }, () => {
     const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
     const offs = (p: PortraitPerson, profile = ENGLAND_1356): [number, number][] => {
       const built = b.build(p), ball = built.surfaces.find(s => surfaceKind(s) === 'eyeball')!;
-      const f = framing(built, profile), [cs, sn] = [Math.cos(profile.turn), Math.sin(profile.turn)];
-      // a point or a direction of the portrait as the stage turns it about the upright axis through the head
-      const turned = (q: number[], point: boolean): number[] => {
-        const [x, z] = [q[0]! - (point ? built.cx : 0), q[2]! - (point ? built.cz : 0)];
-        return [x * cs + z * sn + (point ? built.cx : 0), q[1]!, -x * sn + z * cs + (point ? built.cz : 0)];
-      };
+      const f = framing(built, profile), stands = standing(built, profile);
+      // a point or a direction of the portrait as the stage stands it: turned about the upright axis through the
+      // head by the profile's turn and the person's own, tilted about the neck's foot (round 127)
+      const turned = (q: number[], point: boolean): number[] => stands.place(q, point);
       const n = ball.pos.length / 3, all = Array.from({ length: n }, (_, i) => i);
       const mid = all.reduce((a, i) => a + ball.pos[3 * i]!, 0) / n;
       return [all.filter(i => ball.pos[3 * i]! < mid), all.filter(i => ball.pos[3 * i]! >= mid)].map(eye => {
@@ -376,6 +374,11 @@ describe('portraits', { timeout: 20_000 }, () => {
         expect(Math.abs(above), `person ${p.pid}: above the camera`).toBeLessThan(1.5);
       }
     }
+    // (round 127) and the heads are carried each its own way: turned further than the stage turns them and tilted,
+    // by no more than the dress table says, and not all alike
+    const heads = sample.map(p => b.build(p).head);
+    for (const [yaw, tilt] of heads) { expect(Math.abs(yaw)).toBeLessThanOrEqual(0.1001); expect(Math.abs(tilt)).toBeLessThanOrEqual(0.0701); }
+    for (const k of [0, 1]) expect(Math.max(...heads.map(h => h[k]!)) - Math.min(...heads.map(h => h[k]!))).toBeGreaterThan(k ? 0.07 : 0.1);
     // on a stage that turns the person the other way the same eyes look past the camera by twice the turn
     const other = offs(sample[6]!, { ...ENGLAND_1356, turn: -ENGLAND_1356.turn });
     for (const [beside] of other) expect(Math.abs(beside)).toBeGreaterThan(20);

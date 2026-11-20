@@ -57,6 +57,12 @@ export interface Portrait {
   /** How much of a child's skin the person has: 1 a child up to eleven, 0 the grown (the stage draws a child's skin
    *  smoother: profile.ts `skin.child`). */
   young: number;
+  /** How the person carries the head (portrait/src/dress.rs `head`): turned further than the profile turns every
+   *  head, and tilted towards a shoulder (radians), and the place the tilt is about: the neck's foot (x and
+   *  height). The stage turns and tilts the whole figure; the builder has tipped the shoulders back. All 0 on a
+   *  portrait of Apoleia's. */
+  head: [number, number];
+  neck: [number, number];
   tris: number;
   /** Background of the look: inner and outer colour, sRGB 0..1. */
   bg: [[number, number, number], [number, number, number]];
@@ -93,7 +99,7 @@ export function decodePortrait(b: Uint8Array): Portrait {
   const str = (): string => { const n = v.getUint16(o, true); o += 2 + n; return text.decode(b.subarray(o - n, o)); };
   /** `n` floats, copied (the bytes are not aligned). */
   const floats = (n: number): Float32Array => { const out = new Float32Array(b.slice(o, o + 4 * n).buffer); o += 4 * n; return out; };
-  const [top, chin, cx, cz, fill, young] = [f32(), f32(), f32(), f32(), f32(), f32()];
+  const [top, chin, cx, cz, fill, young, yaw, tilt, nx, ny] = [f32(), f32(), f32(), f32(), f32(), f32(), f32(), f32(), f32(), f32()];
   const tris = u32();
   const c = floats(6);
   const look = str();
@@ -104,5 +110,5 @@ export function decodePortrait(b: Uint8Array): Portrait {
     surfaces.push({ rough, metal, double, tex, nmap, pos: floats(3 * verts), col: floats(3 * verts), uv: floats(2 * uvs), nrm: floats(3 * nrms) });
   }
   if (o !== b.length) throw new Error('the bytes of the portrait do not end where the portrait ends');
-  return { top, chin, cx, cz, fill, young, tris, bg: [[c[0], c[1], c[2]], [c[3], c[4], c[5]]], look, surfaces };
+  return { top, chin, cx, cz, fill, young, head: [yaw, tilt], neck: [nx, ny], tris, bg: [[c[0], c[1], c[2]], [c[3], c[4], c[5]]], look, surfaces };
 }

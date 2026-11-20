@@ -1604,8 +1604,8 @@ fn the_lids_of_england_stand_to_the_pupil_as_real_lids_do() {
         let (female, age) = (k % 2 == 0, [2.0, 5.0, 8.0, 13.0, 17.0, 24.0, 35.0, 50.0, 68.0][(k / 2) as usize % 9]);
         let p = person(k, female, age);
         let lean = sc_portrait::dress::by_sex(set.lean[0], set.lean[1], female, p.grown());
-        let [over, under] = sc_portrait::measure::lids_to_pupil(&h, &morph_test_measured(&h, &p), set.gaze_of(1.0, lean)[1]);
-        let [drawn_over, drawn_under] = sc_portrait::measure::lids_to_pupil(&h, &morph_test(&h, &p), set.gaze_of(1.0, lean)[1]);
+        let [over, under] = sc_portrait::measure::lids_to_pupil(&h, &morph_test_measured(&h, &p), set.gaze_at(1.0, lean, set.head_of(p.seed))[1]);
+        let [drawn_over, drawn_under] = sc_portrait::measure::lids_to_pupil(&h, &morph_test(&h, &p), set.gaze_at(1.0, lean, set.head_of(p.seed))[1]);
         let drawn_iris = set.iris_of(female, age) / 2.0;
         if std::env::var("SHOW").is_ok() {
             println!("{} of {age}: the upper lid {over:.1} mm over the pupil, the lower lid {under:.1} mm under it; drawn {drawn_over:.1} and {drawn_under:.1}, the iris {drawn_iris:.2} mm", if female { "woman" } else { "man" });

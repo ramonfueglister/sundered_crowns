@@ -48,6 +48,24 @@ export function framing(p: Pick<Portrait, 'top' | 'chin' | 'cx' | 'cz' | 'fill'>
   return { at: [p.cx, cy, p.cz], camera: [p.cx, cy + profile.rise * hv, p.cz + dist], height: hv };
 }
 
+/** How a portrait stands on the stage: turned about the upright axis through the head's centre by the profile's
+ *  turn and the person's own (`Portrait.head`), and before that tilted about the axis from back to front through
+ *  the neck's foot (`Portrait.neck`). `at`: where the portrait's origin then lies, seen from the head's centre
+ *  before the turn. `place` says where a point of the portrait stands (the camera's world). */
+export function standing(p: Pick<Portrait, 'cx' | 'cz' | 'head' | 'neck'>, profile: StageProfile): { turn: number; tilt: number; at: [number, number, number]; place(q: readonly number[], point?: boolean): [number, number, number] } {
+  const [turn, tilt] = [profile.turn + p.head[0], p.head[1]], [c, s] = [Math.cos(tilt), Math.sin(tilt)], [nx, ny] = p.neck;
+  // about the neck's foot n: R (q - n) + n, as a turn about the origin and a shift
+  const at: [number, number, number] = [nx - (nx * c - ny * s) - p.cx, ny - (nx * s + ny * c), -p.cz];
+  const [ct, st] = [Math.cos(turn), Math.sin(turn)];
+  return {
+    turn, tilt, at,
+    place(q, point = true) {
+      const k = point ? 1 : 0, [x, y, z] = [q[0]! * c - q[1]! * s + k * at[0], q[0]! * s + q[1]! * c + k * at[1], q[2]! + k * at[2]];
+      return [x * ct + z * st + k * p.cx, y, -x * st + z * ct + k * p.cz];
+    },
+  };
+}
+
 export interface StageOptions {
   /** Pixels of the picture; default twice the size in the game, for clean edges. */
   width?: number; height?: number;
@@ -207,9 +225,11 @@ export class PortraitStage {
    *  above the middle; the person turns about the axis through the head's centre. */
   private frame(p: Portrait, inner: Group, profile: StageProfile): void {
     const f = framing(p, profile), hv = f.height;
+    const s = standing(p, profile);
     this.pivot.position.set(p.cx, 0, p.cz);
-    this.pivot.rotation.y = profile.turn;
-    inner.position.set(-p.cx, 0, -p.cz);
+    this.pivot.rotation.y = s.turn;
+    inner.position.set(...s.at);
+    inner.rotation.z = s.tilt;
     this.pivot.add(inner);
     const at = new Vector3(...f.at);
     this.camera.position.set(...f.camera);
