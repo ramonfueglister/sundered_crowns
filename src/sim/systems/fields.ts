@@ -16,6 +16,7 @@ import type { WorldState } from '../state';
 import { FIELD_SCHEMA, LOT_KIND, NO_LOT } from '../state';
 import { createTable, spawn } from '../ecs';
 import { FIELD_LOT, GEWANN, GEWANN_HA, COURSES, hectaresOf, layFields, slotsAround, stripOrder, type FieldHamlet, type Slot } from '../settlement/fields';
+import { landmarkBoxes } from './landmarks';
 import { HAMLET_GAP, HAMLET_OFF, METRES_PER_BLOCK, hamletBox } from '../settlement/hamlets';
 import type { Tilth } from '../content/tilth';
 
@@ -75,7 +76,7 @@ export function foundFields(s: WorldState, tilth?: Tilth | null): FieldsFound {
       slots = slotsAround(Math.max(...hamlets.map((h) => Math.hypot(h.x, h.z))) + 2 * flur);
     }
     // clear of the town and of every hamlet of the town (as the hamlets keep from them, src/sim/settlement/hamlets.ts)
-    const townHalf = (half.get(site) ?? 0) + HAMLET_OFF, boxes = hamlets.map((h, k) => ({ x: h.x, z: h.z, ...hamletBox(town.farms[k].length) }));
+    const townHalf = (half.get(site) ?? 0) + HAMLET_OFF, boxes = [...hamlets.map((h, k) => ({ x: h.x, z: h.z, ...hamletBox(town.farms[k].length) })), ...landmarkBoxes(s, site)];
     slots = slots.filter((q) => {
       const x0 = q.bx * METRES_PER_BLOCK, z0 = q.bz * METRES_PER_BLOCK, x1 = (q.bx + GEWANN.w) * METRES_PER_BLOCK, z1 = (q.bz + GEWANN.d) * METRES_PER_BLOCK;
       if (x1 > -townHalf && x0 < townHalf && z1 > -townHalf && z0 < townHalf) return false;

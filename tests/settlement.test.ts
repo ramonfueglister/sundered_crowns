@@ -6,7 +6,7 @@ import { AREA_LAW, PARCEL_SHARE, DEPTH_PER_WIDTH, NARROWEST_FRONT, FRONT, settle
 import { layTown, streetWidth, DEFAULT_TUNING, STREET, type Town } from '../src/sim/settlement/streets';
 import { planOf } from '../src/sim/content/town_plans';
 import { foundLots, houseGround, townFamilies } from '../src/sim/systems/lots';
-import { compileGround } from '../src/sim/content/ground';
+import { compileGround, widened } from '../src/sim/content/ground';
 import { townLots, manyTownsLots } from '../src/net/lots';
 import { citiesOf } from '../src/sim/content/cities';
 import { STATE_VERSION, LOT_KIND, NO_LOT, NO_HAMLET, STREET_KIND, type WorldState } from '../src/sim/state';
@@ -244,7 +244,7 @@ describe('the farmsteads of a world of 1291', () => {
     const found = foundLots(decodeState(encodeState(s)), w.ground, w.dry);
     expect(found.rough).toBe(wet.size);
     expect(found.rough).toBeLessThan(s.hamlets.size / 30);
-    expect(found.crowded).toBeLessThan(s.hamlets.size / 30); // 56 of 1857 in 1291: most whose own spot lies on a street out of the town (feature 3)
+    expect(found.crowded).toBeLessThan(s.hamlets.size / 25); // 62 of 1857 in 1291: most whose own spot lies on a street out of the town (feature 3)
     // by the building ground alone, which ends 96 blocks from the centre and counts every step, more hamlets stay rough
     expect(foundLots(decodeState(encodeState(s)), w.ground, null).rough).toBeGreaterThan(found.rough);
   });
@@ -285,21 +285,22 @@ describe('the land register of a world of 1291', () => {
       for (const a of ids) for (const b of ids) if (a < b) expect(overlap({ x: L.x[a], z: L.z[a], front: L.front[a] }, { x: L.x[b], z: L.z[b], front: L.front[b] }, { w: L.w[a], d: L.d[a] })).toBe(false);
     }
   });
-  it('lays every parcel where its house can stand, by the building ground of the towns, but in two island towns', { timeout: 60_000 }, () => {
-    const g = w.ground!, house = (t: WorldState, i: number) => { const C = t.lot.cols; return houseGround(g, C.site[i], { x: C.x[i], z: C.z[i], front: C.front[i] }, { w: C.w[i], d: C.d[i] }); };
+  it('lays every parcel where its house can stand, by the building ground of the towns, but in three towns cut by water', { timeout: 60_000 }, () => {
+    const g = w.ground!, gw = widened(g, w.dry)!, house = (t: WorldState, i: number) => { const C = t.lot.cols; return houseGround(gw, C.site[i], { x: C.x[i], z: C.z[i], front: C.front[i] }, { w: C.w[i], d: C.d[i] }); };
     expect(g.year).toBe(1291);
     for (const c of cities) expect(g.has(c.site)).toBe(true);
-    // Venice and Hormuz lie on islands too small or too cut by water for their streets without bridges: they are
-    // laid out without regard to the ground
-    const bare = decodeState(encodeState(s)), tight = foundLots(bare, g).tight;
-    expect(tight).toEqual([site('Venice'), site('Hormuz')]);
+    // Venice lies on islands too cut by water for its streets without bridges, and in Aberdeen and Seville the rivers
+    // leave too little ground on one bank once the landmarks stand at their real place: they are laid out without
+    // regard to the ground (but clear of the landmarks)
+    const bare = decodeState(encodeState(s)), tight = foundLots(bare, g, w.dry).tight;
+    expect(tight.map((x) => cities.find((c) => c.site === x)!.name).sort()).toEqual(['Aberdeen', 'Seville', 'Venice']);
     let off = 0;
     for (const i of parcels) if (!tight.includes(L.site[i]) && !house(s, i)) off++;
     expect(off).toBe(0);
-    // laid out without the ground, the houses of many parcels stand in the water, on rock or under a church
+    // laid out without the ground, the houses of many parcels stand in the water, on rock or on a step
     foundLots(bare, null);
     for (let i = 0; i < bare.lot.size; i++) if (bare.lot.cols.kind[i] === LOT_KIND.parcel && !house(bare, i)) off++;
-    expect(off).toBeGreaterThan(1000);
+    expect(off).toBeGreaterThan(500); // 926 (1,000 and more while the graphic's own church stood in the ground)
   });
   it('is the same from the same seed, survives a snapshot, and founding it again changes nothing', () => {
     const t = decodeState(encodeState(s));

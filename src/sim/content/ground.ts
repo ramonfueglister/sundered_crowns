@@ -41,3 +41,16 @@ export function compileGround(j: GroundJson): Ground {
     },
   };
 }
+
+/** The building ground of the towns, and beyond its survey the dry ground (`dry`: no water, no rock, slopes not
+ *  asked) as far as that reaches: for a town whose landmarks take the ground its survey holds (settlement feature 5).
+ *  OWN RULE: the dry ground does not know the steps a house cannot stand on. */
+export function widened(g: Ground | null, dry: Ground | null): Ground | null {
+  if (!g || !dry || dry.year !== g.year || dry.metresPerBlock !== g.metresPerBlock) return g;
+  return {
+    year: g.year, metresPerBlock: g.metresPerBlock,
+    has: (site) => g.has(site),
+    reach: (site) => (dry.has(site) ? Math.max(g.reach(site), dry.reach(site)) : g.reach(site)),
+    free: (site, bx, bz) => { const r = g.reach(site); return Math.abs(bx) <= r && Math.abs(bz) <= r ? g.free(site, bx, bz) : dry.free(site, bx, bz); },
+  };
+}

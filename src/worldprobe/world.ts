@@ -12,6 +12,7 @@ import { type Part, WATER_SHALLOW, sideTopAt } from '../lookprobe/terrain';
 import { type Climate, FIELDS_KNOWN, KIND, Land, WOODS_KNOWN, climateAt, snowLineAt, treeLineAt } from './climate';
 import { type Arable, arableAt } from './arable';
 import { fieldsByLot, lotKey } from './lots';
+import { shownOf } from './landmarks';
 import { FIELD_LOT, GEWANN } from '../sim/settlement/fields';
 import { type Forest, WOOD, conifersAt, forestAt, leanOf, stand, tilth } from './forest';
 import { type Rural, ruralAt } from './rural';
@@ -62,6 +63,8 @@ export function windowOf(ox: number, oz: number, beyond = 0): { gx0: number; gy0
 }
 /** A place of the gazetteer (data/content/gazetteer.json). */
 export interface Place { lon: number; lat: number; size: number; pop1356: number | null; region: string }
+/** what a landmark of the register is counted as (LANDMARK_KIND in src/sim/settlement/landmarks.ts) */
+const KIND_COUNTED: Record<number, string> = { 0: 'landmark', 1: 'landmark', 2: 'landmark', 3: 'church', 4: 'landmark', 5: 'castle', 6: 'castle', 7: 'church', 8: 'monument' };
 /** A monument of data/content/landmarks.json. */
 export interface Landmark { id: string; lon: number; lat: number; built_state: string }
 
@@ -586,6 +589,12 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     const at = toGround(...cellOf(region, p.lon, p.lat));
     // (with the parcels of its register: the finest step builds on them, the far steps that draw houses pave its streets)
     const site: Site = { id, at, size: p.size, pop: h ? h.inside * PEOPLE_PER_PERSON : inhabitants.get(id) ?? p.pop1356, region: p.region, style: styleOf(p.region), lots: step <= HOUSES_UNTIL ? parcels?.get(id) : undefined };
+    // its landmarks, where the register has them: then they are its great buildings and churches
+    const marks = step === 0 ? parcels?.get(id)?.landmarks : undefined;
+    if (marks) site.marks = marks.flatMap(([kind, x, z, w, d, named, , start, end, ruined]) => {
+      const shown = shownOf(kind, named, w, d, start, end, ruined, parcels!.year ?? 1291, site.style, models);
+      return shown ? [{ x, z, model: shown.model, kind: KIND_COUNTED[kind] ?? 'landmark' }] : [];
+    });
     all.push(site);
     if (onGround(site.at)) sites.push(site);
     if (!h) return;
@@ -751,8 +760,13 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     cover.share[i] = all;
   }
   if (step === 0) {
-    // the monuments that stood in 1356 and have a model
-    landmarks.forEach((l, id) => {
+    // the landmarks of the register that stand alone, at their real place; without a register the monuments of
+    // landmarks.json that have a model
+    if (parcels?.alone) parcels.alone.forEach(([kind, lat, lon, w, d, named, start, end, ruined], id) => {
+      const here = toGround(...cellOf(region, lon, lat)), shown = onGround(here) ? shownOf(kind, named, w, d, start, end, ruined, parcels.year ?? 1291, farm(here[0], here[1]).style, models) : null;
+      if (shown) monuments.push({ id: 4096 + id, at: here, model: shown.model, level: true });
+    });
+    else landmarks.forEach((l, id) => {
       const here = toGround(...cellOf(region, l.lon, l.lat));
       if (l.built_state !== 'not_yet_built' && onGround(here)) (MONUMENTS[l.id] ?? []).forEach((m, k) => monuments.push({ id: id * 8 + k, at: [here[0] + m.dx, here[1] + m.dz], model: modelOf(m, models) }));
     });
