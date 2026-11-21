@@ -78,7 +78,7 @@
     }
   },
   "lines": {
-    "server/world.ts": 541,
+    "server/world.ts": 502,
     "src/sim/settlement/streets.ts": 622,
     "src/worldprobe/world.ts": 868,
     "tools/atlas/probe.py": 536,
