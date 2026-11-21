@@ -127,7 +127,7 @@ const INLAND: readonly [number, number] = [0.2, 0.34],
  * from near the water is this much deeper or shallower in colour, in shares of the depth picture, over the bed's
  * hollows and banks (sea_bed.ts `bedRelief`): the open water lies in darker and lighter patches some 15 to 20 blocks
  * across and not as one sheet (the lightness of the water in a near picture, blurred over 25 dots, between its 5th
- * and 95th hundredth: 18-23 in EU5's nearest views, 7-8 in round 8, 9-13 with this and OFFING). OWN RULE: by eye
+ * and 95th hundredth: 11-21 in EU5's nearest views, 7-8 in round 8, 9-13 with this and OFFING). OWN RULE: by eye
  */
 const RELIEF = 0.09;
 /** how much darker the water's colour is in the nearest views, against their brighter light */

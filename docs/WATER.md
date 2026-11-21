@@ -5,7 +5,9 @@ colour, surface and what it gives back come from `src/lookprobe/sea.ts`. EU5's m
 the water changes with the distance (as a comparison only: nothing of its look or assets is copied); its colours are
 the model's own, as clear and full as the land's. Since round 5 the water is calmer than EU5's from its nearest
 distance on, as the low-poly worlds' water is, and its coasts have foam (Ramon's word, 20 November 2026); since
-round 6 the foam runs in smooth bows.
+round 6 the foam runs in smooth bows, since round 8 the bed shows through the shallows and the open water is rippled,
+and since round 9 the lakes and rivers above the sea have the sea's water too (until then they were flat sheets of
+one colour, drawn as the land is).
 
 ## The gauntlet
 
@@ -35,7 +37,7 @@ four more where the water moves (the diorama: pictures at 0, 1/30 and 0.5 second
 | Flocken | share of the water at least 14 lighter than its surroundings (white strokes, glints) | 0.05–1 % diorama, ≤ 0.05 % farther | 0.07–0.39 % nearest, 0 farther |
 | Bewegung | mean change of the water's lightness in half a second | ≥ 0.8 | none (no moving pictures) |
 | Flimmern | share of the water whose lightness changes by more than 20 from one picture to the next (1/30 s) | ≤ 0.3 % | none |
-| Schaumsaum | how many points of % more of the water within 4 columns of the shore is white (saturation < 0.3, L > 72) than of the open water, over the three pictures | ≥ 1.0 | none (round 4: 0.42 Valencia, 0.14 Venice) |
+| Schaumsaum | how many points of % more of the water within 4 columns of the shore is white (saturation < 0.3, L > 72) than of the open water, over the three pictures | ≤ 1.0 (a least of 1.0 until round 8) | 0.1–0.9 nearest (rounds 5 and 6: 4–5) |
 | Schaumbögen | how many degrees the direction of the foam's lines (white shapes by the coast at least 40 dots long) turns to a dot along them, on the median | ≤ 1.3 | none (round 5: 2.2 Valencia, 2.1 Venice) |
 
 The saturation row holds the water to the rest of the world: the land of the model is far fuller in colour than
@@ -55,6 +57,53 @@ python3 tools/lookprobe/gauntlet_water.py some.png[:x0,y0,x1,y1]                
 PROBE_URL=http://localhost:5199 node tools/lookprobe/water_frames.mjs /tmp/w/d60 "lon=-0.33&lat=39.45&wide=60" 36x0.0833
                                                                    # a row of stills of the moving water (3 s)
 ```
+
+## Round 9 (21 November 2026): lakes and rivers, a greener near sea
+
+Ramon's "weiter" after round 8. Two things were open: water above the sea had none of the new water, and the open sea
+from near was one light blue beyond its shallows, bluer than EU5's.
+
+- **Lakes and rivers.** Water above the sea (terrain.ts `buildWater`, the stage's `raised`) was drawn with the land's
+  material: a flat sheet of its corners' colour. It now has three materials of its own (`stage/materials.ts`: `lake`
+  for its lists, `lakeSinking` for lists that glide between two steps of the view, `lakeFreed` for its rectangles on
+  no grid) with the sea's colour, swell, ripples, flecks and glitter. It gives the open sky back, not the mirror's
+  picture, which is taken at the sea's level. The depth picture knows no depth there, so the water is as deep in
+  colour as it lies from its banks (`INLAND`), over a bed that falls steeply (`BED_INLAND_*`: under the sea's
+  shelving bed a river three columns wide was a pale band); no surf runs up its banks. The upright sheets of its
+  falls stay as they were. Seen at Lake Geneva from 100 to 1200 blocks across and at Paris from 60 to 420: no jump
+  from one step of the view to the next.
+- **The near sea's colour.** Each stop of `RAMP` has a second colour for the near view: greener, a teal that darkens
+  to a slate blue. It darkens faster and further into the offing (`OFFING` 0.06 to 0.5 over 4 to 80 blocks, was 0.1
+  to 0.34 over 8 to 110) and lies in lighter and darker patches over the bed's banks and hollows (`RELIEF`,
+  `bedRelief`). From some 300 blocks across nothing changes.
+- **Fine stripes.** The steeper fall into the offing showed dotted stripes a few dots apart. The width of a dot of the
+  depth picture was reckoned from how far the place on the picture moves from one dot of the view to the next; from
+  near that is a thousandth of a dot of the picture, a few steps of what a 32 bit number holds of a place on the
+  whole map, and the width came out a quarter off from dot to dot. `sea_depth.ts` now reckons it from the view's step
+  in finest blocks (exact) and the stage's place on the picture.
+
+Measured with one script on pictures cut to their water (EU5's nearest views | round 8 | round 9, at Valencia 60,
+Venice 100 and 190): the open water's colour L 43–61, a −3 to −19, b −11 to −21 | 56–59, −17 to −21, −21 to −26 |
+54–58, −18 to −22, −16 to −23; the lightness of the water blurred over 25 dots, between its 5th and 95th hundredth,
+11–21 | 7–8 | 9–13. The gauntlet is 43 of 43; Valencia's open hue is 217°, at the green end of its bar (215°) and of
+EU5's pictures. Still short of EU5: its near water is deeper and richer in tone, with soft foam round its whitecaps;
+the colour changes more than before between the near view and 300 blocks across; WebGPU, retina and a lake's glide
+between two steps were not seen in the cloud. Before and after: project files `wasser/runden/runde9_*`.
+
+## Round 8 (21 November 2026): the near water itself
+
+Ramon, on a sketch of piers and boats that was to liven up the coast: "das wasser ist das problem nicht die umgebung".
+(Round 7, a set of low-poly prototypes, was turned down and is not in the game.)
+
+- **The bed shows through the shallows** (`sea_bed.ts`): sand at the water's edge, turquoise over it, then the sea's
+  blue, by Beer-Lambert's law over a bed that falls evenly from the water's edge, flat or steep by the depth picture.
+- **Ripples** under the flecks: the flecks' own waves at a lower line, as strokes of lighter water with darker
+  troughs; the flecks are half as large and come in groups that drift at the waves' group velocity. The swell is two
+  and a half times fainter.
+- **The shore:** a thin line at the water's edge and faint lines coming in, where rounds 5 and 6 had two thick rows
+  of foam. The gauntlet's foam row turned round with it: a most of 1.0, read off EU5's nearest pictures.
+
+Before and after: project files `wasser/runden/runde8_*`.
 
 ## Round 6 (21 November 2026): the foam in smooth bows, clear flecks
 
