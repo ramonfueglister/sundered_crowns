@@ -47,8 +47,17 @@ fn down(out: &Portrait) -> Down {
     let hangs = across(&mut hair.pos.iter().filter(|p| (p[1] - out.chin).abs() < 0.1)) / across(&mut hair.pos.iter());
     // (how far inside a triangle: nearest to it, against the way it faces; inside from 1 mm)
     let depth = |q: &V3, tris: &[([V3; 3], V3)]| -> f32 {
-        let Some((on, faces)) = tris.iter().map(|(t, faces)| (closest(q, t), faces)).min_by(|a, b| dist(q, &a.0).total_cmp(&dist(q, &b.0))) else { return 0.0 };
-        -dot(&sub(q, &on), faces)
+        // (round 172: where the nearest place is one that several triangles share, a corner or an edge of the
+        // cloth's mesh, the corner of hair is inside only if it is under every one of them. On the ridge of a
+        // fold at a collar's top the triangles of one flank face up and those of the other down, and whichever
+        // came first in the file decided: a corner of fine hair at the jaw, 2.4 cm over a shoulder that the pose
+        // brings up, read as 1.75 cm deep in the gown)
+        let near: Vec<(V3, &V3)> = tris.iter().map(|(t, faces)| (closest(q, t), faces)).collect();
+        if near.is_empty() {
+            return 0.0;
+        }
+        let least = near.iter().map(|(on, _)| dist(q, on)).fold(f32::MAX, f32::min);
+        near.iter().filter(|(on, _)| dist(q, on) <= least + 1e-4).map(|(on, faces)| -dot(&sub(q, on), faces)).fold(f32::MAX, f32::min)
     };
     let unit = |v: V3| -> V3 {
         let l = dot(&v, &v).sqrt().max(1e-9);
@@ -91,6 +100,11 @@ fn a_small_girl_wears_her_hair_down() {
     // Behind, the collar stands off the nape and the innermost ends hang into it: of the corners under the chin
     // 7 to 19 in some 1 500 to 2 300 lie under the gown's cloth, by 0.4 to 0.6 cm at most; held to one in fifty
     // and 1 cm. A boy of her age wears the small child's cut as before, and a girl of seven her plaits.
+    // Round 172: the hair is of fine strands (tests/hair_body.rs) and the measure of a corner's depth in the
+    // gown is corrected (`down`): hair on the forehead down to 0.13 to 0.18, ends 2.4 to 3.4 cm under the chin,
+    // 0.86 to 0.93 as broad at the chin; of 2 733 to 3 433 corners under the chin 4 to 8 lie in the gown, by
+    // 0.4 to 0.6 cm at most (round 162's file by the corrected measure: 7 to 16, 0.6 cm). The bounds are as
+    // they were.
     let Some(h) = head() else { return };
     for k in 0..8u32 {
         for (age, stand) in [(2.0f32, 1u8), (4.0, 1), (6.0, 1), (5.0, 3)] {
@@ -120,6 +134,10 @@ fn hair_worn_down_stays_out_of_the_gown_when_the_shoulders_turn() {
     // and turned 0.35 either way nothing of the hair lies in the skin, and no more of it in the collar's back than
     // one corner in fifty of those under the chin (7 to 14 in some 1 500 to 2 300 on four girls), by 1.0 cm at
     // most when turned (0.6 square); held to 1.3 cm.
+    // Round 172: by the corrected measure (`down`) round 162's file read 0.7 cm at most when turned, not 1.0:
+    // the centimetre was the ridge of a collar's fold read from its wrong flank. The strands lie 3 to 7 corners
+    // in 2 773 to 3 332 in the gown, by 0.5 cm at most turned and 0.4 square; held to 1 cm as with square
+    // shoulders.
     let Some(h) = head() else { return };
     for k in 0..4u32 {
         for turn in [-0.35f32, 0.0, 0.35] {
@@ -128,7 +146,7 @@ fn hair_worn_down_stays_out_of_the_gown_when_the_shoulders_turn() {
             if show() {
                 println!("girl {k}, turned {turn}: of {} corners under the chin {} in the gown ({:.2} cm at most), {} in the skin", m.ends, m.in_cloth, m.deep, m.in_skin);
             }
-            assert!(50 * m.in_cloth < m.ends && m.deep < 1.3 && m.in_skin == 0, "girl {k}, turned {turn}: of {} corners of the hair under the chin {} in the gown ({} cm at most), {} in the skin", m.ends, m.in_cloth, m.deep, m.in_skin);
+            assert!(50 * m.in_cloth < m.ends && m.deep < 1.0 && m.in_skin == 0, "girl {k}, turned {turn}: of {} corners of the hair under the chin {} in the gown ({} cm at most), {} in the skin", m.ends, m.in_cloth, m.deep, m.in_skin);
         }
     }
 }

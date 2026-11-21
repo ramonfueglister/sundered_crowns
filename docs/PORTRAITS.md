@@ -8770,6 +8770,114 @@ front, before above and after below), `runde171_seite_vorher_nachher.png` (the s
 `runde171_hof.png` (all 36, village and court, after), `runde171_blender.png` (Blender: round 170's `bob01`
 above, the new below, from three sides), `runde171_blender_alle.png` (Blender: the other eight cuts).
 
+**Round 172: parted hair of fine strands, modelled in the Blender on Ramon's Mac** (2026-11-21). Round 171
+made the men's bowl cut of strands and left all parted hair as it was: a girl's and a woman's hair drawn to
+her plaits (`plait01`), a woman's under a veil set back (`part01`), a man's cut at the jaw (`page01`, waved
+`page02`) and a small girl's worn down (`loose01`). Seen in Blender, round 171's: 86 bundles a side of 1.7
+to 2.2 cm, thick rolls with dark furrows between them, and on hair that is cut each roll ending in pointed
+wisps of its own. Beside the new bowl cut they showed it.
+
+What was read. Nothing. Set by eye, in Blender and in the portrait, beside the reference's parted hair.
+
+What is changed.
+- **Parted hair is some 650 pieces** (`tools/portrait/pipeline/hair_body.py`, `PARTED`): on each side 44
+  broad flat bands underneath (2 to 3.2 cm, they close the head) and over them 280 strands of 4 to 6 mm, as a
+  bowl cut's (three corners across, the image in true scale): 50 that begin along the hairline, 140 along the
+  parting and 90 on top. Heights over the skin, the hairline, the parting and where the hair goes to are as
+  they were, so the fillet, the circlet, the veil and the plaits sit as before.
+- **Hair that is cut ends in clumps, blunt** (`clump`, as round 171's): 30 clumps round the head; a strand
+  goes up to four fifths of the way to its clump's middle over its last 6 cm, and a clump ends up to 1.5
+  degrees over or under the cut's line. The pointed wisps are gone (`fray`).
+- **A man's hair at the jaw turns in** (`tuck`): over its last 1.2 cm a strand comes in towards the skin, to
+  some 7 mm over it: a closed rim, as the bowl cut's.
+- **A small girl's hair** hangs straight to its ends, which lie within 1.5 degrees of the line (3 before: in
+  the first pass in Blender fine strands of such different lengths were a ragged hem).
+- **The bands underneath end 4 degrees above the cut** (`short`), so that no broad band shows under the
+  strands' ends.
+- `fray` and the code that parted a bundle's end into wisps (rounds 138 to 170) are taken out of
+  `hair_body.py`: no cut uses them. The script writes the same files without them (`page01`, `loose01` and
+  `bob09` compared byte for byte).
+- The five files `page01`, `page02`, `plait01`, `part01`, `loose01` (`public/portrait/real/*_body.txt.zst`)
+  are written anew, by Blender 5.1.2 on the Mac. Nothing in the builder and nothing on the stage; the wasm
+  is the same file. The plaits themselves (`plait01_rope`), tightly curled hair and the beards are not
+  touched.
+
+How it was made. As round 171: `hair_body.py` sent to the socket of the Blender that is open on the Mac and
+run in scenes of its own, each cut rendered there from the front, three quarters, the side and behind. First
+the old cuts, then two passes of the new, then the files tried in the portrait. What the portrait showed
+(a grey man's hair striped with dark gaps) and what the tests showed (a corner of a small girl's hair "in
+the gown", below) was worked on in two passes with the cloud's Blender module and looked at in the portrait
+only, not in Blender; the last pass ran on the Mac
+again, was rendered there, and its files are the ones in the repository. The cloud's module writes `page01`
+and `loose01` byte for byte as the Mac's Blender does.
+
+Measured (`portrait/tests/hair_body.rs` and `hair_down.rs` with `SHOW=1`, on round 171's files and on these):
+
+| | round 171 | now |
+|---|---|---|
+| pieces, a girl's hair to her plaits (`plait01`) and a small girl's (`loose01`) | 172 | 648 |
+| a man's at the jaw (`page01`), waved (`page02`) | 161, 161 | 564, 558 |
+| the image's breadth on a piece, of `ACROSS` 0.3 units | 0.13 to 0.20 | 0.34 to 0.36 |
+| pieces ending in two ends and more (`page01`) | 161 of 161 | 0 of 564 |
+| a small girl's hair ends under the chin | 2.8 to 3.9 cm | 2.4 to 3.4 cm |
+| on her forehead down to, of the head's height | 0.12 to 0.17 | 0.13 to 0.18 |
+| her hair's corners in the gown, of those under the chin | 7 to 16 | 4 to 8 |
+| triangles `page01`, `plait01`, `part01`, `loose01` | 54 304, 53 376, 60 480, 71 112 | 45 988, 52 084, 56 492, 63 576 |
+| corners | 38 485, 32 340, 36 484, 48 330 | 35 037, 39 908, 43 003, 48 220 |
+| the five files, packed | 4.23 MB | 4.79 MB |
+
+Tried and not kept.
+- 50 strands a side on top and the parting's at 1.9 times their room: grey hair showed dark gaps between
+  the strands, stripes; 90 and 2.3 close it more (not wholly, see below).
+- To mend the corner "in the gown" below: the layer underneath thicker, and clumps that all end on the
+  line: no effect on it. The girl's ends drawn up (0.5 degrees over the line to 2 under it): her hair ended
+  1.9 cm under the chin, where the test holds 2. It was the measure; the ends are back at 1.5 either way.
+
+**A measure corrected** (`portrait/tests/hair_down.rs`, `down`). The test on a small girl's hair with the
+shoulders turned read one corner of the new hair as 1.75 cm deep in the gown (it holds 1.3). The corner lies
+at the jaw, 2.4 cm above the shoulder. Its nearest place on the gown was a point on the ridge of a fold at
+the collar's top, shared by triangles that face up and triangles that face down; the measure took whichever
+came first in the file, and from under the wrong flank a corner in the air reads as deep inside. Now a
+corner counts as inside only if it is under every triangle that shares the nearest place. By the corrected
+measure round 171's file reads 7 to 16 corners in the gown where the old measure read 7 to 19, and 0.7 cm at
+most with turned shoulders where it read 1.0; the new file 4 to 8 and 0.5 cm. The bound with turned
+shoulders is 1 cm now (1.3), as with square ones. No bound is loosened.
+
+**Two tests changed, and why.** Both in `portrait/tests/hair_body.rs`, both because the form they held is
+changed on purpose; round 171's files fail each new bound, these fail each old one. (1)
+`a_head_of_england_wears_a_body_of_hair` held parted hair at 40 to 260 pieces of 1 to 4.2 cm: it holds it at
+400 to 800 pieces with the image 0.28 to 0.38 units broad on a strand and a side of 1 to 5 mm across, as a
+bowl cut. (2) `hair_that_is_cut_ends_in_wisps` held four fifths and more of a parted cut's pieces frayed,
+their ends 1 to 20 mm apart: it is `hair_that_is_cut_ends_in_no_wisps` and holds that no piece of any cut
+ends in two ends.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 171. The colour sheet is round
+171's to the last figure, all 160 lines: the hairline and the hair's heights are the same, and no place the
+sheet reads lies under the hair.
+
+Honest about it. A visible step, smaller than round 171's. From the side a girl's and a woman's hair reads
+as combed hair drawn to the plait where it was a row of thick rolls; from the front, where parted hair is a
+narrow rim round the face, the difference is fine lines for coarse ones. A grey man's hair at the jaw is
+finer and ends in a rim, but still reads as cords: light strands over a dark layer, striped. A small girl's
+hair is finer and its hem calmer, but from the side it is a stiff bell that stands off the neck, and its
+ends are a comb of dark teeth. As in round 171 a strand is a flat opaque ribbon: no single hairs, no soft
+edge, one pattern of clumps for a cut on every head that wears it. The plaits themselves and the beards are
+the old bands and show it beside the strands; a veil and a hood hide most of a woman's hair anyway. The
+bright pixels of round 171 (rim light on strand edges, head turned on the test page) now have more hair to
+sit on; not counted again, not mended. It was made by a script that Blender ran, looked at in Blender for
+three of five passes; not combed by hand, and Blender's own hair tools were not used. The download grows by
+0.56 MB. Every number is by eye: PLACEHOLDER.
+
+Tests: `portrait/tests/hair_body.rs`, two changed, and `hair_down.rs`, its measure corrected and one bound
+tightened (above). `cargo test --release` as a whole 140 of 140; `tests/portrait.test.ts` and its neighbour
+46 of 46; typecheck and lint pass, no new warning. Pictures (project files, `portraits/`):
+`runde172_vorher_nachher.png` (four heads from the front, before above and after below: a girl's plaits, a
+veil set back, a man's hair at the jaw, a small girl's hair down), `runde172_seite_vorher_nachher.png` (the
+same from the side), `runde172_dorf.png` and `runde172_hof.png` (all 36, village and court, after; round
+171's sheets are the before), `runde172_blender.png` (Blender: `page01` and `plait01`, round 171's above the
+new, from four sides), `runde172_blender_weitere.png` (Blender: `loose01` and `part01` the same way, and the
+new `page02`).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair

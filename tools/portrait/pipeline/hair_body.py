@@ -1,8 +1,9 @@
 # Hair as a modelled body (round 109), built in Blender: a dark shell over the skull, and on it layers of thick
-# bundles that run from the whorl to the line the hair is cut at, each a ridge with flanks, frayed into wisps at
-# its end (round 138; until then cut at a slant). Until round 108 a head's hair was some 950 narrow locks, each
-# begun where its strands were rooted: scales all over the head and a fringe of stepped bands. A bundle here
-# begins under the bundles above it and shows its length and its end only.
+# bundles that run from the whorl to the line the hair is cut at, each a ridge with flanks. Until round 108 a
+# head's hair was some 950 narrow locks, each begun where its strands were rooted: scales all over the head and a
+# fringe of stepped bands. A bundle here begins under the bundles above it and shows its length and its end only.
+# Since rounds 171 and 172 the bundles are fine strands (below), and no cut frays into wisps at its end (rounds
+# 138 to 170 did: `fray`, taken out in round 172 when the last cut that used it, `page01`, became strands).
 #
 # Runs with Blender's Python (inside Blender, `blender -b -P hair_body.py -- ...`, or the `bpy` module from pip):
 #   python hair_body.py base.obj outdir name [cut: another name's, if not its own]
@@ -48,20 +49,11 @@ W = dirs(180, 52)    # the whorl
 # roll's middle over the topmost layer), how far at most it runs to the side for each radian turned (a corkscrew,
 # not a hoop), how much of the shade the bake gives the turned band's underside is taken back, how much of the
 # roll's length the bundle's slanted end may take, and how much of its breadth the bundle has left where it ends.
-# `fray` (a cut's, round 138): a bundle that is not turned keeps its breadth to its end and is parted there into
-# wisps side by side, each narrowing to a point of its own: over what length before the end (least, greatest), a
-# wisp's breadth, the least share of that length a wisp has (one has all of it), how much flatter a wisp is at
-# its point than the bundle, how far its point may lie outside its own share of the breadth, and how much of its
-# breadth a wisp has left where it ends (`lay(frayed=)`).
-# A layer's `fray` (round 141; False: its bundles are not frayed) and `point` (how much of the slant its end is
-# cut at is left, and a power on the way along its end by which it narrows): a lock, broad along its length,
-# narrowing over `tip` to a point near its middle, as a leaf does. From round 141 to 170 a bowl cut had two
-# layers of such locks over its two layers of bundles; since round 171 it is of strands (below).
+# A layer's `point` (round 141; how much of the slant its end is cut at is left, and a power on the way along its
+# end by which it narrows): a lock, broad along its length, narrowing over `tip` to a point near its middle, as a
+# leaf does. From round 141 to 170 a bowl cut had two layers of such locks over its two layers of bundles; since
+# round 171 it is of strands (below).
 # All PLACEHOLDER by eye, beside the reference's bowl cuts (docs/PORTRAITS.md, round 109).
-# (round 168) `fray`: wisps of 8 mm over 3 to 9 mm that keep half their breadth at the end (until then of 3.5 mm
-# over 8 to 20 mm, each ending in a point: a saw, tooth by tooth in a picture). The reference's bowl cuts end
-# blunt, in a line that is nearly straight with a few short notches. Parted hair (`page01`, `loose01`) keeps the
-# pointed wisps: blunt, its ends at the jaw and on the shoulders were torn rags.
 # (round 147) `cut` -5 degrees (-12.5 until then): the fringe ends on the middle of the forehead, as the
 # reference's bowl cuts do; at -12.5 it ended two fingers over the eyes, on the brows in a picture.
 # (round 171) A bowl cut of fine strands, made and looked at in the Blender on Ramon's Mac (through its MCP add-on;
@@ -83,6 +75,8 @@ W = dirs(180, 52)    # the whorl
 # neighbours': combed waves). `FLAT`: the lift of hair under a hood, a hat, a circlet and round a bare top
 # (0.38: as high as the bundles were there, 0.5 cm; at 0.45 hair came through a lord's circlet on three heads
 # of eighty, at 0.22 a hood's rim stood open over it). All PLACEHOLDER by eye, in Blender and in the portrait.
+# (round 172) Parted hair of fine strands, made and looked at in the same Blender (docs/PORTRAITS.md): `PARTED`
+# and the cuts made of it, below.
 _e = lambda k, d: [float(t) for t in os.environ.get(k, d).split(',')]
 BOWL = dict(
     cut=-5.0, end=-43.0, corner=tuple(_e('CORNER', '57,3')), over=(8, 6, 35, 30), lift=1.0, round=1.0,
@@ -123,16 +117,24 @@ CUTS = {
 # `rise`: how much higher a bundle lies for every unit it has run (those that have come furthest lie on top where
 # all run together); `gather`: how near the place below the ear a bundle ends (radians: least, greatest) and how
 # much of its breadth it has left there.
+# (round 172) Until then 44 bundles under, 11 along the hairline and 24 and 7 along the parting on each side, of
+# 1.7 to 2.2 cm: thick rolls with dark furrows between them, in Blender and in the portrait. Now the layer
+# underneath is 44 broad flat bands (2 to 3.2 cm, `flat` 0.1) that close the head, and over it lie strands as a
+# bowl cut's (`m`, `across`, `ring`, `blunt`, `tones`: see `BOWL`): 50 along the hairline, 140 along the parting
+# that take 2.3 times their room there (they lie over one another: at 1.9 grey hair showed dark gaps between
+# them) and 90 of 4 to 6 mm on top (`PART_N`, `PART_FIT`). `short` (the layer underneath): by how many degrees
+# its bands end above the cut's line on hair that is cut, so that no broad band shows under the strands' ends.
+# All PLACEHOLDER by eye.
 PARTED = dict(
     parted=True, to=(92.0, -44.0), by=(60.0, 4.0), over=(8, 6, 35, 30, -50, -42), trend=14, lift=1.0, round=1.0,
     line=[(0, 8), (20, 4.9), (32, -2.4), (44, -8.4), (58, -13), (66, -17.5), (71, -24), (75, -20), (78, -12), (84, -12), (102, -12), (112, -16), (126, -28), (145, -40), (165, -46), (180, -48)],
     comb=(0.012, 0.7, 0.0, 1.0),
     shell=dict(h=0.02),
     layers=[
-        dict(kind='under', n=44, w=(0.2, 0.32), flat=0.14, h=0.03, rise=0.012, gather=(0.1, 0.3, 0.35), wave=(0.002, 0.008, 1.2, 2.2), roll=0.15, tone=0.92, seed=3),
-        dict(kind='edge', n=11, fit=1.5, vary=0.25, flat=0.18, h=0.036, rise=0.016, gather=(0.1, 0.3, 0.3), wave=(0.002, 0.008, 1.2, 2.2), roll=0.2, tone=0.97, seed=4),
-        dict(kind='part', n=24, fit=1.35, vary=0.3, flat=0.2, h=0.05, rise=0.02, gather=(0.06, 0.2, 0.3), wave=(0.003, 0.01, 1.2, 2.2), roll=0.3, tone=1.0, seed=5),
-        dict(kind='part', n=7, w=(0.05, 0.09), flat=0.4, h=0.062, rise=0.02, gather=(0.1, 0.5, 0.5), wave=(0.008, 0.02, 1.0, 1.8), roll=0.2, tone=1.1, seed=7),
+        dict(kind='under', n=44, w=(0.2, 0.32), flat=_e('PART_UFLAT', '0.1')[0], h=0.03, rise=0.012, gather=(0.1, 0.3, 0.35), short=_e('PART_SHORT', '4')[0], m=5, across=0.3, ring=0.09, wave=(0.002, 0.006, 1.2, 2.2), roll=0.1, tone=0.9, seed=3),
+        dict(kind='edge', n=int(_e('PART_N', '50,140,90')[0]), fit=_e('PART_FIT', '2.3')[0], vary=0.3, flat=0.22, h=0.036, rise=0.016, gather=(0.1, 0.3, 0.3), blunt=0.6, m=3, across=0.3, ring=0.09, tones=0.07, wave=(0.002, 0.006, 1.2, 2.2), roll=0.3, tone=0.97, seed=4),
+        dict(kind='part', n=int(_e('PART_N', '50,140,90')[1]), fit=_e('PART_FIT', '2.3')[0], vary=0.35, flat=0.22, h=0.05, rise=0.02, gather=(0.06, 0.2, 0.3), blunt=0.6, m=3, across=0.3, ring=0.09, tones=0.07, wave=(0.002, 0.006, 1.2, 2.2), roll=0.3, tone=1.0, seed=5),
+        dict(kind='part', n=int(_e('PART_N', '50,140,90')[2]), w=(0.04, 0.06), flat=0.26, h=0.062, rise=0.02, gather=(0.1, 0.5, 0.5), blunt=0.5, m=3, across=0.3, ring=0.09, tones=0.07, wave=(0.003, 0.008, 1.0, 1.8), roll=0.35, tone=1.05, seed=7),
     ],
 )
 CUTS['plait01'] = PARTED
@@ -158,10 +160,15 @@ CUTS['part01'] = dict(
 # third number 1). The parting runs on down the back of the head as a girl's does. No painted layer and no scalp
 # of its own: the builder takes the girl's (`DressSet::under_of`). All PLACEHOLDER by eye, beside the reference's
 # men with hair to the jaw.
+# (round 172) Of strands: they end together in clumps as a bowl cut's do (`clump`, as `BOWL`'s: 30 clumps round
+# the head) and blunt, and turn in to the head over their last 1.2 cm (`tuck`: how long before the end, how high
+# over the skin they end, times the cut's `lift`). Until then each bundle ended in pointed wisps of its own
+# (`fray`), a saw at the jaw.
 CUTS['page01'] = dict(
     PARTED, to=tuple(_e('PAGE_TO', '100,-85')), by=tuple(_e('PAGE_BY', '64,-14')), lift=_e('PAGE_LIFT', '2.2')[0],
     end=_e('PAGE_END', '-50')[0], ends=tuple(_e('PAGE_ENDS', '-2.5,2.5')), comb=tuple(_e('PAGE_COMB', '0.025,0.9,0,1')),
-    layers=[dict(L, gather=(0.05, 0.1, 1.0)) for L in PARTED['layers']], fray=(0.08, 0.2, 0.035, 0.45, 0.6, 0.25, 0.0),
+    layers=[dict(L, gather=(0.05, 0.1, 1.0)) for L in PARTED['layers']],
+    clump=tuple(_e('PART_CLUMP', '30,0.8,0.6,0.45,1.5')), tuck=tuple(_e('PAGE_TUCK', '0.12,0.03')),
 )
 # The same in waves (round 130): `waves`: how far the bundles swing to the side and off the head, the length of a
 # wave, and how far from a bundle's beginning the waves begin. All PLACEHOLDER by eye.
@@ -170,9 +177,12 @@ CUTS['page02'] = dict(CUTS['page01'], waves=tuple(_e('PAGE_WAVES', '0.055,0.04,0
 # the jaw but hanging to over the shoulders (`end`), and hanging: from the head's middle down it lies in no
 # direction nearer the head's upright than it does above (`hang`: from how many degrees down), where `page01`
 # goes in under the ear to the neck. Closer to the head than a man's (`lift`). All PLACEHOLDER by eye.
+# (round 172) Of strands that end in clumps, as `page01`, but hanging straight to their ends (no `tuck`), and
+# ending within 1.5 degrees of the line (3 until then: fine strands of such different lengths were a ragged hem
+# in the first pass in Blender).
 CUTS['loose01'] = dict(
-    CUTS['page01'], to=tuple(_e('LOOSE_TO', '170,-87')), end=_e('LOOSE_END', '-60')[0], ends=tuple(_e('LOOSE_ENDS', '-3,3')), lift=_e('LOOSE_LIFT', '1.7')[0],
-    hang=_e('LOOSE_HANG', '0')[0], part_to=_e('LOOSE_PART', '-25')[0],
+    CUTS['page01'], to=tuple(_e('LOOSE_TO', '170,-87')), end=_e('LOOSE_END', '-60')[0], ends=tuple(_e('LOOSE_ENDS', '-1.5,1.5')), lift=_e('LOOSE_LIFT', '1.7')[0],
+    hang=_e('LOOSE_HANG', '0')[0], part_to=_e('LOOSE_PART', '-25')[0], tuck=None, clump=tuple(_e('LOOSE_CLUMP', '30,0.8,0.6,0.45,1.5')),
 )
 # Tightly curled hair (round 111): no bundles and no strands that run anywhere. Each hair is a coil of a few
 # millimetres, and a head of them is one springy mass that stands off the skull the same height all round, its
@@ -344,9 +354,7 @@ def bundles(L, rng):
     # how many bundles of the layer there are at a distance from the whorl: there a bundle has that share of the
     # way round the whorl for itself, and is no broader
     begun = np.sort([np.arccos(np.clip(w[0] @ W, -1, 1)) for w in ways])
-    curl, turn, fray = C.get('curl'), C.get('turn'), C.get('fray')
-    # (the wisps draw random numbers of their own: a bundle is what it was up to where it frays)
-    wrng = np.random.default_rng(L['seed'] + 100 * SEED + 7919)
+    curl, turn = C.get('curl'), C.get('turn')
     out_ = []
     for k, D in enumerate(ways):
         if len(D) < 12:
@@ -374,13 +382,6 @@ def bundles(L, rng):
             before = np.arange(0, total - lf - 0.02, 0.05)
             run = np.concatenate([before, total - lf + np.linspace(0, lf, max(int(lf / (0.02 if 'across' in L else 0.012)) + 1, 8))])
             rolled = (len(before), np.clip((run - (total - lf)) / R, 0, None), R, near * rng.uniform(-turn[4], turn[4]))
-        # (a frayed end, round 138: the band keeps its breadth to its end and is parted there into wisps)
-        frayed = None
-        if fray and rolled is None and L.get('fray', True):
-            tl = min(wrng.uniform(fray[0], fray[1]), 0.45 * total)
-            before = np.arange(0, total - tl - 0.02, 0.03 if curl else 0.05)
-            run = np.concatenate([before, total - tl + np.linspace(0, tl, 9)])
-            frayed = len(before)
         d = unit(np.stack([np.interp(run, run0, D[:, i]) for i in range(3)], -1))
         a = np.arccos(np.clip(d @ W, -1, 1))
         fan = np.inf if C.get('bare') else 1.15 * 2 * np.pi * np.sin(np.minimum(a, np.pi / 2)) * OVER.skin(d) / np.maximum(np.searchsorted(begun, a, side='right'), 1)
@@ -389,12 +390,12 @@ def bundles(L, rng):
         # (a turned end keeps `turn`'s eighth number of its breadth: a roll does not end in a claw)
         # (a lock, round 141: its end narrows by a power of the way along it, and is cut at less of a slant)
         pt = L.get('point', (1.0, 1.0)) if rolled is None else (1.0, 1.0)
-        hw = 0.5 * np.minimum(width, fan) * (0.25 + 0.75 * smooth(r)) * (1 - (0 if frayed else 1 - max(turn[7], L.get('blunt', 0.0)) if rolled else 1 - L.get('blunt', 0.0)) * e ** pt[1])
+        hw = 0.5 * np.minimum(width, fan) * (0.25 + 0.75 * smooth(r)) * (1 - (1 - max(turn[7], L.get('blunt', 0.0)) if rolled else 1 - L.get('blunt', 0.0)) * e ** pt[1])
         # its way: a swing to either side as long as the bundle and longer (a bow, not a wave), and its end cut
         # at a slant, the point on one flank's line
         side = unit(np.cross(d, unit(np.gradient(d, axis=0))))
         A, lam = rng.uniform(L['wave'][0], L['wave'][1]), total * rng.uniform(L['wave'][2], L['wave'][3])
-        off = A * np.sin(2 * np.pi * run / lam + rng.uniform(0, 2 * np.pi)) * smooth(run / 0.4) + (0 if frayed else pt[0]) * rng.choice([-1, 1]) * rng.uniform(0.5, 0.95) * hw[np.argmax(e > 0) - 1] * e ** 1.3
+        off = A * np.sin(2 * np.pi * run / lam + rng.uniform(0, 2 * np.pi)) * smooth(run / 0.4) + pt[0] * rng.choice([-1, 1]) * rng.uniform(0.5, 0.95) * hw[np.argmax(e > 0) - 1] * e ** 1.3
         # combed: neighbours swing together, and the bundles of a side lean one way together at their ends
         # (both by the way still to go to the end: bundles side by side have the same, wherever they began)
         tk, cb = np.radians(th_end[k]), C['comb']
@@ -427,7 +428,7 @@ def bundles(L, rng):
         ht = ROUND * L['flat'] * hw
         h = np.maximum(h, ht + 0.004)                                 # its flanks stay off the skin
         roll = L['roll'] * rng.uniform(-1, 1) * ROUND
-        out_ += lay(d, h, hw, ht, roll, run, L['tone'] * float(np.clip(rng.lognormal(0, L.get('tones', 0.1)), 0.78, 1.25)) * (0.7 + 0.3 * smooth(run / 0.3)), rng, m=L.get('m', 7), rolled=rolled, frayed=frayed, wrng=wrng, across=L.get('across'))
+        out_ += lay(d, h, hw, ht, roll, run, L['tone'] * float(np.clip(rng.lognormal(0, L.get('tones', 0.1)), 0.78, 1.25)) * (0.7 + 0.3 * smooth(run / 0.3)), rng, m=L.get('m', 7), rolled=rolled, across=L.get('across'))
     return out_
 
 
@@ -449,7 +450,6 @@ def parted(L, rng):
     front = np.interp(0, line[:, 0], line[:, 1]) + 6           # the parting begins a centimetre behind the hairline
     # degrees along the parting: over the top, down the back (as far as the place the hair goes to, or `part_to`)
     span = (90 - front) + (90 - C.get('part_to', to1))
-    wrng = np.random.default_rng(L['seed'] + 100 * SEED + 7919)
     out_ = []
     for sgn in (1.0, -1.0):
         n = L['n']
@@ -480,7 +480,16 @@ def parted(L, rng):
             d0, room, key = P, np.zeros(len(P)), np.radians(ang(P)[1])
         near = rng.uniform(L['gather'][0], L['gather'][1], len(d0))
         # (hair that is cut: each bundle ends where it crosses the cut's line, a little above or below it)
-        low = C['end'] + rng.uniform(C['ends'][0], C['ends'][1], len(d0)) if 'end' in C else None
+        low = C['end'] + L.get('short', 0.0) + rng.uniform(C['ends'][0], C['ends'][1], len(d0)) if 'end' in C else None
+        clump = C.get('clump') if low is not None else None
+        if clump:
+            # (round 172) strands that end together, as a bowl cut's: clumps round the head, the same for all
+            # layers, each ending a little above or below the cut's line; a strand belongs to the clump it is
+            # nearest when it comes to the line
+            crng = np.random.default_rng(SEED + 4241)
+            th_c = np.sort((np.arange(int(clump[0])) + crng.uniform(-clump[3], clump[3], int(clump[0]))) * 360 / int(clump[0]) - 180)
+            up_c = crng.uniform(-clump[4], clump[4], len(th_c))
+            nearest = lambda p: np.abs((ang(p)[0][:, None] - th_c[None, :] + 180) % 360 - 180).argmin(1)
         G = dirs(sgn * to0, to1)
         d = d0.copy()
         ways = [[p] for p in d0]
@@ -489,7 +498,7 @@ def parted(L, rng):
             dn = unit(d + flow(d) * (STEP / OVER.skin(d))[:, None])
             alive &= np.arccos(np.clip(dn @ G, -1, 1)) > near
             if low is not None:
-                alive &= ang(dn)[1] > low
+                alive &= ang(dn)[1] > low + (up_c[nearest(dn)] if clump else 0.0)
             if not alive.any():
                 break
             d = np.where(alive[:, None], dn, d)
@@ -507,14 +516,7 @@ def parted(L, rng):
             width = L['fit'] * room[k] if 'fit' in L else rng.uniform(L['w'][0], L['w'][1])
             tl = min(0.1, 0.3 * total)
             rl = 0.12 if L['kind'] == 'part' else min(0.3, 0.3 * total)
-            run = np.concatenate([np.arange(0, total - tl, 0.05), total - tl + tl * np.linspace(0, 1, 5)])
-            # (hair that is cut ends frayed, as a bowl cut's: round 138)
-            frayed = None
-            if 'fray' in C:
-                tl = min(wrng.uniform(C['fray'][0], C['fray'][1]), 0.3 * total)
-                before = np.arange(0, total - tl - 0.02, 0.05)
-                run = np.concatenate([before, total - tl + np.linspace(0, tl, 9)])
-                frayed = len(before)
+            run = np.concatenate([np.arange(0, total - tl, L.get('ring', 0.05)), total - tl + tl * np.linspace(0, 1, 5)])
             d = unit(np.stack([np.interp(run, run0, D[:, i]) for i in range(3)], -1))
             a = np.arccos(np.clip(d @ G, -1, 1))
             e = np.clip((run - (total - tl)) / tl, 0, 1)
@@ -522,7 +524,7 @@ def parted(L, rng):
             # drawn to one place: the nearer it, the narrower
             g = L['gather'][2] + (1 - L['gather'][2]) * smooth((a - near[k]) / 0.8)
             begin = 1.0 if L['kind'] == 'part' else 0.25 + 0.75 * smooth(r)
-            hw = 0.5 * width * g * begin * (1 - (0 if frayed else 0.8) * e)
+            hw = 0.5 * width * g * begin * (1 - (1 - L.get('blunt', 0.2)) * e)
             side = unit(np.cross(d, unit(np.gradient(d, axis=0))))
             A, lam = rng.uniform(L['wave'][0], L['wave'][1]), total * rng.uniform(L['wave'][2], L['wave'][3])
             cb = C['comb']
@@ -538,42 +540,34 @@ def parted(L, rng):
                 ramp = smooth((run - w0) / 0.4)
                 off = off + ws * ramp * np.sin(ph)
                 up = wu * ramp * (0.5 + 0.5 * np.sin(ph + 1.3))
+            if clump:
+                # (towards its clump's middle over the clump's length before the end, by a share of the way there)
+                mid_c = dirs(th_c[nearest(d[-1:])], ang(d[-1:])[1])[0]
+                off = off + clump[1] * rng.uniform(0.6, 1.0) * ((mid_c - d[-1]) @ side[-1]) * OVER.skin(d[-1:])[0] * smooth((run - (total - clump[2])) / clump[2])
             d = unit(d + side * (off / OVER.skin(d))[:, None])
             lift = free(d)
             h = lift * (L['h'] + L['rise'] * run) * (0.2 + 0.8 * smooth(r)) + lift * rng.uniform(-0.004, 0.004) + up
+            if C.get('tuck') and low is not None:
+                # (round 172) hair cut at the jaw turns in at its end, as a bowl cut's rim: over the cut's `tuck`
+                # (how long before the end, how high over the skin it ends there)
+                te = np.clip((run - (total - C['tuck'][0])) / C['tuck'][0], 0, 1)
+                h = h - (h - lift * C['tuck'][1]) * (1 - np.sqrt(1 - te ** 2))
             ht = ROUND * L['flat'] * hw
             h = np.maximum(h, ht + 0.004)
             roll = L['roll'] * rng.uniform(-1, 1) * ROUND
-            out_ += lay(d, h, hw, ht, roll, run, L['tone'] * float(np.clip(rng.lognormal(0, 0.1), 0.78, 1.25)) * (0.75 + 0.25 * smooth(run / 0.2)), rng, frayed=frayed, wrng=wrng)
+            out_ += lay(d, h, hw, ht, roll, run, L['tone'] * float(np.clip(rng.lognormal(0, L.get('tones', 0.1)), 0.78, 1.25)) * (0.75 + 0.25 * smooth(run / 0.2)), rng, m=L.get('m', 7), across=L.get('across'))
     return out_
 
 
-def lay(d, h, hw, ht, roll, run, shade, rng, m=7, rolled=None, frayed=None, wrng=None, across=None):
+def lay(d, h, hw, ht, roll, run, shade, rng, m=7, rolled=None, across=None):
     """A band laid over the skin: its middle's directions, its height, half breadth and half thickness ring by
-    ring, how much it leans to one flank. Returns its pieces, for each its rings, their places in the image, the
-    points they are bound by, a shade for each ring and for each ring how far it is turned off the head (0: not).
+    ring, how much it leans to one flank. Returns it as a list of one piece: its rings, their places in the image,
+    the points they are bound by, a shade for each ring and for each ring how far it is turned off the head (0:
+    not).
     `rolled`: from that ring on the band leaves the skin and turns out and up in a roll (each ring's angle, the
     radius, the way to the side for a radian): the ring where it begins, carried round, as broad as the band is
-    there; the roll is bound by the place it begins at.
-    `frayed` (round 138): the band ends at that ring, and from there on it is parted into wisps side by side (the
-    cut's `fray`: a wisp's breadth, the least share of the frayed length a wisp has, how much flatter it is at its
-    point, how far its point may lie outside its own share of the breadth, how much of its breadth it has left
-    where it ends), each a piece of its own that lies in the band's own surface and narrows to its end: hair ends
-    one hair after the other, not as a block."""
+    there; the roll is bound by the place it begins at."""
     turn = np.linspace(-np.pi / 2, np.pi / 2, m)
-    if frayed is not None:
-        # the wisps' edges are corners of every ring of the band, so that a wisp begins on the band's last ring,
-        # corner on corner: the breadth shared out evenly, each edge a little off the even place (a band of two
-        # wisps has the seven corners of any other; one of three or four keeps a corner on each flank)
-        wide, least, flat, astray, blunt = C['fray'][2:7]
-        nw = int(np.clip(round(2 * hw[frayed] / wide), 2, 7))
-        first = [0, 3, 6]
-        if nw > 2:
-            edges = (np.arange(nw + 1) + np.concatenate([[0], wrng.uniform(-0.25, 0.25, nw - 1), [0]])) / nw * 2 - 1
-            flank = [0.87] if nw < 5 else []
-            turn = np.arcsin(np.concatenate([[-1.0], [-f for f in flank], edges[1:-1], flank, [1.0]]))
-            first = [0] + [len(flank) + k for k in range(1, nw)] + [len(turn) - 1]
-        m = len(turn)
     c = OVER.at(d, h)
     n0 = unit(c - hc)
     b = unit(np.cross(unit(np.gradient(c, axis=0)), n0))
@@ -605,7 +599,7 @@ def lay(d, h, hw, ht, roll, run, shade, rng, m=7, rolled=None, frayed=None, wrng
         c[i0 + 1:] = c[i0]
         out = lit
     flip = rng.random() >= 0.5
-    u = turn / np.pi + 0.5 if frayed is not None else np.linspace(0, 1, m)
+    u = np.linspace(0, 1, m)
     u = 1 - u if flip else u
     v0 = rng.random()
     uv = np.stack(np.broadcast_arrays(u[None, :], (v0 + run * VSCALE)[:, None]), -1)
@@ -614,30 +608,7 @@ def lay(d, h, hw, ht, roll, run, shade, rng, m=7, rolled=None, frayed=None, wrng
         # on a strand of 5 mm as on a bundle of 3 cm
         lat = hw[:, None] * np.sin(turn)[None, :] / across
         uv[..., 0] = rng.uniform(0.5 * hw.max() / across, 1 - 0.5 * hw.max() / across) + (-lat if flip else lat)
-    if frayed is None:
-        return [(rings, uv, c, shade, out)]
-    i0 = frayed
-    pieces = [(rings[:i0 + 1], uv[:i0 + 1], c[:i0 + 1], shade[:i0 + 1], out[:i0 + 1])]
-    share = wrng.uniform(least, 1.0, nw)
-    share[wrng.integers(nw)] = 1.0                                  # one of them as long as the band
-    along = lambda x, at: np.stack([np.interp(at, run, x[:, i]) for i in range(3)], -1) if x.ndim == 2 else np.interp(at, run, x)
-    for j in range(nw):
-        cols = np.arange(first[j], first[j + 1] + 1)
-        a0, a1 = turn[cols[0]], turn[cols[-1]]
-        mid = 0.5 * (a0 + a1)
-        point = mid + wrng.uniform(-1, 1) * (0.5 + astray) * (a1 - a0)
-        t = np.linspace(0, 1, 6)
-        at = run[i0] + t * share[j] * (run[-1] - run[i0])
-        a_ = (mid + (point - mid) * t ** 1.5)[:, None] + (turn[cols] - mid)[None, :] * (1 - (1 - blunt) * t ** 1.6)[:, None]
-        a_ = np.clip(a_, -np.pi / 2, np.pi / 2)
-        cw = along(c, at)
-        wr = arch(cw, unit(along(b, at)), along(h, at), along(hw, at), along(ht, at) * (1 - flat * t), a_)
-        wr[0], cw[0] = rings[i0, cols], c[i0]                      # (to the last digit: the builder takes them for one)
-        uw = a_ / np.pi + 0.5
-        wuv = np.stack([1 - uw if flip else uw, np.broadcast_to((v0 + at * VSCALE)[:, None], uw.shape)], -1)
-        wuv[0] = uv[i0, cols]
-        pieces.append((wr, wuv, cw, along(shade, at), np.zeros(len(at))))
-    return pieces
+    return [(rings, uv, c, shade, out)]
 
 
 def shell():

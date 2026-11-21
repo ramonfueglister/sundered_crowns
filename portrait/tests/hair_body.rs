@@ -208,7 +208,11 @@ fn a_head_of_england_wears_a_body_of_hair() {
     // Round 171: a bowl cut is some 450 fine strands in three layers where it was 128 bundles and locks of 2.4 to
     // 2.8 cm (modelled in Blender on Ramon's Mac, docs/PORTRAITS.md): beside the reference's bowl cut, a close cap
     // of fine hair, the bundles were a thatch of slabs. Each strand runs from the crown to the cut as a bundle
-    // did. Girls' parted hair is of bundles as it was.
+    // did.
+    // Round 172: parted hair is of fine strands too (modelled in the same Blender): 648 pieces on a girl's head,
+    // 560 strands of 4 to 6 mm over 88 broad flat bands that close the head under them, where it was 172 bundles
+    // of 1.7 to 2.2 cm, thick rolls with dark furrows between them. So every body of hair here is held to strands,
+    // and the bound on bundles (40 to 260 pieces, 1 to 4.2 cm broad) is gone with the bundles.
     let Some(h) = head() else { return };
     // loose hair in three lengths, under a hood, a horseshoe round a bare top, gone back at the temples; small
     // children of either sex; girls
@@ -234,24 +238,23 @@ fn a_head_of_england_wears_a_body_of_hair() {
         // how broad a bundle is: the side of a triangle that lies across it (its two corners at one height of the
         // image) by the share of the image's breadth it takes (until round 138 always a sixth; a bundle with a
         // frayed end has its corners where its wisps part)
-        // (round 171: a strand of a bowl cut takes as much of the image's breadth as it is broad, `ACROSS` units to
-        // the whole image, so the same measure reads the image's scale on it, and a strand's breadth is read from
-        // the sides themselves: a strand has two of them across, the lowest layer's four)
+        // (round 171: a strand takes as much of the image's breadth as it is broad, `ACROSS` units to the whole
+        // image, so the same measure reads the image's scale on it, and a strand's breadth is read from the sides
+        // themselves: a strand has two of them across, the lowest layer's four)
         let mut across: Vec<f32> = Vec::new();
         let mut sides: Vec<f32> = Vec::new();
         for (t, u) in hair.pos.chunks_exact(3).zip(hair.uv.chunks_exact(3)) {
             for (a, b) in [(0, 1), (1, 2), (2, 0)] {
                 let share = (u[a][0] - u[b][0]).abs();
-                if (u[a][1] - u[b][1]).abs() < 1e-5 && share > if bowl { 0.002 } else { 0.02 } && !shell_step(share) {
+                if (u[a][1] - u[b][1]).abs() < 1e-5 && share > 0.002 && !shell_step(share) {
                     across.push(len(sub(t[a], t[b])) / share);
                     sides.push(len(sub(t[a], t[b])));
                 }
             }
         }
-        // (where it is broad: the upper quarter of these; a bundle is narrow where it begins and where it ends)
+        // (where it is broad: the upper quarter of the sides; a strand is narrow where it begins and where it ends)
         across.sort_by(|a, b| a.partial_cmp(b).expect("a number"));
         sides.sort_by(|a, b| a.partial_cmp(b).expect("a number"));
-        let broad = across[across.len() * 3 / 4];
         let (scale, side) = (across[across.len() / 2], sides[sides.len() * 3 / 4]);
         // the upper side of a bundle faces away from the head, and its corners' directions are its own surface's
         let (_, crown) = skin(&out);
@@ -275,23 +278,20 @@ fn a_head_of_england_wears_a_body_of_hair() {
         light.sort_by(|a, b| a.partial_cmp(b).expect("a number"));
         let shade = light[light.len() / 10] / light[light.len() * 9 / 10].max(1e-9);
         if show() {
-            println!("{who}: {n} triangles in {} pieces, the median piece {long:.2} long and a bundle {broad:.3} broad where it is broad (the image {scale:.3} units broad on it, a side across it {side:.4}); {:.3} of the surface faces away from the head, lit by its own form {:.3}; the darkest tenth {shade:.2} of the lightest", found.len(), outward / area, own / area);
+            println!("{who}: {n} triangles in {} pieces, the median piece {long:.2} long (the image {scale:.3} units broad on a strand, a side across it {side:.4}); {:.3} of the surface faces away from the head, lit by its own form {:.3}; the darkest tenth {shade:.2} of the lightest", found.len(), outward / area, own / area);
             continue;
         }
         assert!((12_000..80_000).contains(&n), "{who}: {n} triangles");
         assert!(long > 0.5, "{who}: the median bundle is {long} long (1 is 10 cm)");
-        if bowl {
-            // (round 171, measured on these people: 451 pieces, the horseshoe round a bare top 287; the image
-            // 0.32 to 0.35 units broad on a strand, read along its arch, where a bundle of 2.4 to 2.8 cm had all
-            // of it; a side across a strand 2.0 to 2.4 mm, the horseshoe's 4.0)
-            assert!((180..600).contains(&found.len()), "{who}: {} strands (the bundles were 128, the locks some 950)", found.len());
-            assert!((ACROSS - 0.02..ACROSS + 0.08).contains(&scale), "{who}: the image lies {scale} units broad on a strand ({ACROSS}: its hairs as fine on every strand)");
-            assert!((0.01..0.05).contains(&side), "{who}: a side across a strand is {side} long where it is broad (1 is 10 cm)");
-        } else {
-            assert!((40..260).contains(&found.len()), "{who}: {} pieces (the locks were some 950)", found.len());
-            // (round 141: the measure reads locks with the bundles; a girl's parted hair 1.7 to 2.2 cm)
-            assert!((0.1..0.42).contains(&broad), "{who}: a bundle is {broad} broad where it is broad (1 is 10 cm)");
-        }
+        // (round 171, measured on these people: a bowl cut 451 pieces, the horseshoe round a bare top 287; the
+        // image 0.32 to 0.35 units broad on a strand, read along its arch, where a bundle of 2.4 to 2.8 cm had all
+        // of it; a side across a strand 2.0 to 2.4 mm, the horseshoe's 4.0. Round 172, parted hair: 648 pieces,
+        // the image 0.34 to 0.36 units broad on a strand where a bundle read 0.13 to 0.20, a side across 3.1 to
+        // 4.0 mm, the upper quarter being the broad bands underneath)
+        let strands = if bowl { 180..600 } else { 400..800 };
+        assert!(strands.contains(&found.len()), "{who}: {} strands (a bowl cut's bundles were 128, parted hair's 172, the locks some 950)", found.len());
+        assert!((ACROSS - 0.02..ACROSS + 0.08).contains(&scale), "{who}: the image lies {scale} units broad on a strand ({ACROSS}: its hairs as fine on every strand)");
+        assert!((0.01..0.05).contains(&side), "{who}: a side across a strand is {side} long where it is broad (1 is 10 cm)");
         assert!(outward / area > 0.85, "{who}: {} of the bundles' surface faces away from the head", outward / area);
         assert!(own / area > 0.02, "{who}: the bundles are lit as cards were ({})", own / area);
         assert!(shade < 0.85, "{who}: the hair is of one tone (the darkest tenth {shade} of the lightest)");
@@ -610,7 +610,7 @@ fn hair_that_is_cut_runs_to_the_cut_and_wears_the_image_along_its_length() {
 }
 
 #[test]
-fn hair_that_is_cut_ends_in_wisps() {
+fn hair_that_is_cut_ends_in_no_wisps() {
     // Round 138. Until then a bundle of a man's hair ended as it was broad, cut at a slant: one point each, and a
     // fringe and a cut's edge that were a row of teeth. Now a bundle that is cut keeps its breadth to its end and
     // is parted there into wisps side by side, two to seven by its breadth, each narrowing to a point of its own
@@ -622,7 +622,10 @@ fn hair_that_is_cut_ends_in_wisps() {
     // or pointed (`ends`); on round 167's files it reads what the count of points read.
     // Round 171: a bowl cut is of fine strands, each a few millimetres broad and ending blunt as one end: none is
     // parted into wisps, and the fringe's line is made by the strands' own ends (their clumps end together).
-    // Parted hair cut at the jaw is of bundles and keeps its wisps.
+    // Round 172: parted hair cut at the jaw is of fine strands as well and ends as a bowl cut does: no piece of it
+    // is parted into wisps (its pointed wisps, 5.6 to 6.1 mm apart along a bundle on every one of its 161 pieces,
+    // were the saw at a man's jaw), and what was held of the wisps is held of no cut now: `fray` is gone from
+    // `hair_body.py` with the last cut that used it.
     let Some(h) = head() else { return };
     let d = &sc_portrait::dress::ENGLAND_1356;
     let mut seen = std::collections::BTreeMap::new();
@@ -668,23 +671,14 @@ fn hair_that_is_cut_ends_in_wisps() {
         return;
     }
     for name in ["bob01", "bob06", "bob07", "bob09", "page01", "page02"] {
-        let (heads, pieces, many, least, most) = *seen.get(name).unwrap_or_else(|| panic!("nobody wears {name}: {seen:?}"));
-        let share = many as f32 / pieces as f32;
+        let (heads, pieces, many, ..) = *seen.get(name).unwrap_or_else(|| panic!("nobody wears {name}: {seen:?}"));
         // (measured: 99 hundredths of a cut's pieces and all of a parted cut's, the shell being the rest; 56 of
         // the turned cut's 206 on two heads, whose bundles at the sides and behind end in rolls; a bundle's
         // points 5.6 to 6.5 mm apart along it in the median, 10.8 at most)
         // (round 141: of a bowl cut's 129 pieces 86 are bundles, which fray; its 42 locks end in one point each,
         // as leaves: two thirds of the pieces where it was 99 hundredths, 48 of the turned cut's 258)
-        if name.starts_with("bob") {
-            // (round 171; until then two thirds of a bowl cut's pieces were frayed, their ends 0.7 to 3.8 mm apart)
-            assert!(heads >= 2 && many == 0, "{name}: on {heads} heads {many} of {pieces} strands end in two ends and more");
-            continue;
-        }
-        let (enough, most_frayed) = (0.8, 1.01);
-        assert!(heads >= 2 && share > enough && share < most_frayed, "{name}: on {heads} heads {many} of {pieces} pieces end in two points and more");
-        // (round 168 held a bowl cut's frayed ends under 5 mm apart along the bundle; since round 171 its strands
-        // have no wisps, see above. Parted hair as it was)
-        let (near, far) = (0.01, 0.2);
-        assert!(least > near && most < far, "{name}: a bundle's ends lie {least} apart along it in the median at least, {most} at most (1 is 10 cm)");
+        // (round 171; until then two thirds of a bowl cut's pieces were frayed, their ends 0.7 to 3.8 mm apart.
+        // Round 172: all of a parted cut's were, see above; measured now 0 of 564 and of 558 pieces)
+        assert!(heads >= 2 && many == 0, "{name}: on {heads} heads {many} of {pieces} strands end in two ends and more");
     }
 }
