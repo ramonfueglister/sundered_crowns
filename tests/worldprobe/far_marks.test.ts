@@ -1,12 +1,12 @@
-// The landmarks of the land register at the far steps: the model the finest step stood on a great building's ground,
-// built from the same numbers as the piece of the finest step that built it.
+// The landmarks of the land register and the monuments at the far steps: the model the finest step stood on a great
+// building's ground, built from the same numbers as the piece of the finest step that built it.
 import { describe, expect, it } from 'vitest';
 import { type Model, styleOf } from '../../src/buildings';
 import { Batch } from '../../src/lookprobe/batch';
 import { GRID, type Ground, LAND_Y, Mat, N, onGrid, SEA_Y } from '../../src/lookprobe/layout';
-import { markOn } from '../../src/worldprobe/far_marks';
+import { markOn, monumentOn } from '../../src/worldprobe/far_marks';
 import { PIECE } from '../../src/worldprobe/piece_sight';
-import { type Mark, type Site, settle } from '../../src/worldprobe/settle';
+import { type Mark, type Monument, type Site, settle } from '../../src/worldprobe/settle';
 
 /** a model of w × d blocks whose colour is the next three numbers of its source */
 const drawn = (w: number, d: number): Model => ({
@@ -18,6 +18,17 @@ const drawn = (w: number, d: number): Model => ({
   w,
   d,
   height: 2,
+});
+/** a meadow of the finest step whose first block is the world's block ox, oz */
+const meadow = (ox: number, oz: number): Ground => ({
+  h: new Int16Array(N * N).fill(LAND_Y),
+  mat: new Uint8Array(N * N).fill(Mat.Grass),
+  wet: new Uint8Array(N * N),
+  shore: new Uint8Array(N * N),
+  occ: new Float32Array(N * N).fill(LAND_Y),
+  surf: new Float32Array(N * N).fill(SEA_Y),
+  ox,
+  oz,
 });
 /** the town's middle in finest blocks of the world, and its landmarks in metres east and south of it */
 const MIDDLE = [1150, 700] as const;
@@ -49,16 +60,7 @@ describe('the landmarks of the register at the far steps', () => {
       for (const px of [5, 6]) {
         const ox = px * PIECE - (GRID - PIECE) / 2,
           oz = 3 * PIECE - (GRID - PIECE) / 2,
-          g: Ground = {
-            h: new Int16Array(N * N).fill(LAND_Y),
-            mat: new Uint8Array(N * N).fill(Mat.Grass),
-            wet: new Uint8Array(N * N),
-            shore: new Uint8Array(N * N),
-            occ: new Float32Array(N * N).fill(LAND_Y),
-            surf: new Float32Array(N * N).fill(SEA_Y),
-            ox,
-            oz,
-          },
+          g = meadow(ox, oz),
           things = new Batch(),
           own = (x: number, z: number) => x >= 100 && x < 300 && z >= 100 && z < 300;
         settle(
@@ -97,6 +99,48 @@ describe('the landmarks of the register at the far steps', () => {
       const { gx, gz, gw, gd } = stood[0];
       expect(markOn(site, gx, gz, 11, 11, MIDDLE, built)).toBeNull();
       expect(markOn(site, gx + 40, gz, gw, gd, MIDDLE, built)).toBeNull();
+    });
+  });
+
+  it('and the monuments, each from its own numbers, where it stands on its own ground or found ground near its place', () => {
+    onGrid(GRID, () => {
+      const ox = 900,
+        oz = 500,
+        monuments: Monument[] = [
+          { id: 4097, at: [150.5, 160.5], model: drawn(9, 7), level: true },
+          { id: 16, at: [230.2, 210.7], model: drawn(6, 6) },
+        ],
+        things = new Batch(),
+        stood: { gx: number; gz: number; gw: number; gd: number; colour: number[] }[] = [];
+      settle(
+        meadow(ox, oz),
+        things,
+        [],
+        monuments,
+        () => ({ region: '', style: styleOf('') }),
+        () => 0,
+        () => 0,
+        {},
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        {
+          house() {},
+          town() {},
+          great(_kind, x, z, w, d) {
+            const v = (things.pos.length / 3 - 30) * 3;
+            stood.push({ gx: x + ox, gz: z + oz, gw: w, gd: d, colour: [...things.col.slice(v, v + 3)] });
+          },
+        },
+      );
+      expect(stood.length).toBe(2);
+      const world = (x: number, z: number): [number, number] => [x + ox, z + oz];
+      for (const { gx, gz, gw, gd, colour } of stood) {
+        const b = monumentOn(monuments, gx, gz, gw, gd, world);
+        expect([...(b?.col.slice(0, 3) ?? [])]).toEqual(colour);
+      }
+      expect(monumentOn(monuments, stood[0].gx, stood[0].gz, 5, 5, world)).toBeNull();
     });
   });
 });

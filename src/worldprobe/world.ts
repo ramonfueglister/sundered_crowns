@@ -726,6 +726,16 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   /** a farm is built as the place nearest to it builds */
   const farm = (x: number, z: number) => { let best = all[0]; for (const s of all) if (Math.hypot(s.at[0] - x, s.at[1] - z) < Math.hypot(best.at[0] - x, best.at[1] - z)) best = s; return best ?? { region: '', style: styleOf('') }; };
   let settled: Settled | undefined, cover: Cover | undefined;
+  // the landmarks of the register that stand alone, at their real place; without a register the monuments of
+  // landmarks.json that have a model (also where the far steps draw the finest step's models again: far_marks.ts)
+  if (step <= MODELS_UNTIL && parcels?.alone) parcels.alone.forEach(([kind, lat, lon, w, d, named, start, end, ruined], id) => {
+    const here = toGround(...cellOf(region, lon, lat)), shown = onGround(here) ? shownOf(kind, named, w, d, start, end, ruined, parcels.year ?? 1291, farm(here[0], here[1]).style, models) : null;
+    if (shown) monuments.push({ id: 4096 + id, at: here, model: shown.model, level: true });
+  });
+  else if (step <= MODELS_UNTIL) landmarks.forEach((l, id) => {
+    const here = toGround(...cellOf(region, l.lon, l.lat));
+    if (l.built_state !== 'not_yet_built' && onGround(here)) (MONUMENTS[l.id] ?? []).forEach((m, k) => monuments.push({ id: id * 8 + k, at: [here[0] + m.dx / 2 ** step, here[1] + m.dz / 2 ** step], model: modelOf(m, models) }));
+  });
   if (step > 0 && mean) {
     // the mean of the finer step, seen from above (mean.ts); what stands out of it raises the ground
     cover = mean;
@@ -734,7 +744,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   }
   else if (step > 0) {
     // from farther away the towns, the fields and the woods are part of the ground
-    cover = coverLand(g, step, things, sites, { ploughed, laid: arable !== null || hamlets !== null, courses, field: fieldOf, vines, farm: (x, z) => farm(x, z).style.house, farms, own, clear: (x, z) => stream[idx(x, z)] > 0, woods: (x, z): Woods | null => {
+    cover = coverLand(g, step, things, sites, { monuments, ploughed, laid: arable !== null || hamlets !== null, courses, field: fieldOf, vines, farm: (x, z) => farm(x, z).style.house, farms, own, clear: (x, z) => stream[idx(x, z)] > 0, woods: (x, z): Woods | null => {
       const i = idx(x, z), here = land[i] & KIND;
       if (metres[i] > woodsEnd[i]) return null;
       if (oasis(i)) return byWater(x, z, Math.max(1, Math.round(0.75 / cell))) ? { share: 0.8, crowns: PALM, tall: true } : null;
@@ -760,16 +770,6 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     cover.share[i] = all;
   }
   if (step === 0) {
-    // the landmarks of the register that stand alone, at their real place; without a register the monuments of
-    // landmarks.json that have a model
-    if (parcels?.alone) parcels.alone.forEach(([kind, lat, lon, w, d, named, start, end, ruined], id) => {
-      const here = toGround(...cellOf(region, lon, lat)), shown = onGround(here) ? shownOf(kind, named, w, d, start, end, ruined, parcels.year ?? 1291, farm(here[0], here[1]).style, models) : null;
-      if (shown) monuments.push({ id: 4096 + id, at: here, model: shown.model, level: true });
-    });
-    else landmarks.forEach((l, id) => {
-      const here = toGround(...cellOf(region, l.lon, l.lat));
-      if (l.built_state !== 'not_yet_built' && onGround(here)) (MONUMENTS[l.id] ?? []).forEach((m, k) => monuments.push({ id: id * 8 + k, at: [here[0] + m.dx, here[1] + m.dz], model: modelOf(m, models) }));
-    });
     // the survey of the fields' ground: a furlong lies only where no woods stand (as the fields were laid before the register)
     const surveyed: Told | undefined = told?.room ? { ...told, room: (fits) => told.room!((lx, lz) => {
       const x0 = lx * FIELD_LOT.w - ox + (lz & 1 ? Math.floor(FIELD_LOT.w / 2) : 0) + 1, z0 = lz * FIELD_LOT.d - oz + 1, mx = x0 + GEWANN.w / 2, mz = z0 + GEWANN.d / 2;

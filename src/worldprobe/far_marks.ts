@@ -1,18 +1,21 @@
-// The landmarks of the land register at the far steps that draw models (far_places.ts MODELS_UNTIL): the very model
-// the finest step stood on a great building's ground (settle.ts `marks`), as large as the register has it and built
-// from the same numbers, so that a cathedral or a palace stays the building it is from near to far.
+// The landmarks of the land register and the monuments at the far steps that draw models (far_places.ts
+// MODELS_UNTIL): the very model the finest step stood on a great building's ground (settle.ts `marks`, `monument`),
+// as large as it is and built from the same numbers, so that a cathedral or a palace stays the building it is from
+// near to far.
 import { m } from '../buildings';
 import { type Batch, seeded } from '../lookprobe/batch';
 import { GRID } from '../lookprobe/layout';
 import { PIECE } from './piece_sight';
-import type { Mark, Site } from './settle';
+import type { Mark, Monument, Site } from './settle';
 
 /** the blocks of land round a piece of the finest step on the ground it is built on (pieces.ts MARGIN) */
 const MARGIN = (GRID - PIECE) / 2;
-/** the finest step looks this many blocks each way for a town's middle where the register gives it none (settle.ts `middleOf`) */
+/** the finest step looks this far each way for a town's middle without one from the register (settle.ts `middleOf`) */
 const MIDDLE_SEARCH = 10;
+/** and this many for ground for a monument that does not stand on ground levelled for it (settle.ts `monument`) */
+const MONUMENT_SEARCH = 14;
 
-/** where the finest step stands a landmark of a town whose middle is the block cx, cz: its footprint's corner (settle.ts `marks`) */
+/** the corner of the footprint a landmark stands on, of a town whose middle is cx, cz (settle.ts `marks`) */
 const cornerOf = (k: Mark, cx: number, cz: number): [number, number] => [
   cx + Math.round(m(k.x) - k.model.w / 2),
   cz + Math.round(m(k.z) - k.model.d / 2),
@@ -66,4 +69,30 @@ export function markOn(
     built.set(key, builds);
   }
   return builds[which];
+}
+
+/**
+ * The model of the monument the finest step stood on the footprint gw × gd from gx, gz (in finest blocks of the
+ * world, as the plan has it), built from the monument's own numbers (settle.ts `monument`); null where none of
+ * `monuments` stands there. `world` gives a point of the monuments' ground in finest blocks of the world.
+ */
+export function monumentOn(
+  monuments: readonly Monument[],
+  gx: number,
+  gz: number,
+  gw: number,
+  gd: number,
+  world: (x: number, z: number) => [number, number],
+): Batch | null {
+  let best: Monument | null = null,
+    off = MONUMENT_SEARCH + 1;
+  for (const mon of monuments) {
+    if (mon.model.w !== gw || mon.model.d !== gd) continue;
+    const [x, z] = world(mon.at[0], mon.at[1]),
+      far = Math.max(Math.abs(gx + gw / 2 - x), Math.abs(gz + gd / 2 - z));
+    if (far >= off) continue;
+    best = mon;
+    off = far;
+  }
+  return best ? best.model.build(seeded(500 + best.id)) : null;
 }

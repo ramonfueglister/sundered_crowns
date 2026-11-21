@@ -6,7 +6,7 @@ import { type Ground, Mat, N, idx, inGrid } from '../lookprobe/layout';
 import type { HouseStyle } from '../buildings';
 import type { Cover, Plan, Woods } from './far';
 import type { FieldShown } from './lots';
-import type { Site } from './settle';
+import type { Monument, Site } from './settle';
 import { uprightOf } from './zoom';
 
 /** something stands out of the ground while it is two thirds of a block; from front to back a house of the finest step is about six blocks deep */
@@ -34,6 +34,8 @@ export interface CoverAsks {
   field?(lx: number, lz: number): FieldShown | undefined;
   /** whether a column is kept clear of woods: a stream narrower than a block runs through it (world.ts) */
   clear?(x: number, z: number): boolean;
+  /** the monuments on the ground as the finest step stands them (settle.ts), where the far step draws their models */
+  monuments?: readonly Monument[];
 }
 
 /** What `coverLand` keeps while it lays out a piece's ground: its parts (far_places.ts, far_fields.ts, far_woods.ts) take it. */

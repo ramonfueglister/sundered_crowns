@@ -5,7 +5,7 @@ import { Mat, N, idx, inGrid, occlude } from '../lookprobe/layout';
 import { type HouseStyle, type Model, type Style, tower, townWall } from '../buildings';
 import { builtOn, streetOn } from './crowd';
 import type { Laying } from './far_lay';
-import { markOn } from './far_marks';
+import { markOn, monumentOn } from './far_marks';
 import { houseShape } from './houses';
 import { PEOPLE_PER_PERSON, PERSONS_PER_FLOOR_BLOCK, POP_OF_SIZE, WALLED_FROM, streetsOf } from './settle';
 
@@ -292,11 +292,12 @@ export function layPlanned(l: Laying) {
                 : name === 'tower'
                   ? { build: tower, w: 3, d: 3, height: 10 }
                   : null;
-          // a landmark of the register: the finest step's own model of it, as large as it is (far_marks.ts)
-          const mark =
-            s?.marks && name !== 'tower' && step <= MODELS_UNTIL
-              ? markOn(s, gx, gz, gw, gd, [(s.at[0] + ox) * wider, (s.at[1] + oz) * wider], marked)
-              : null;
+          // a landmark of the register or a monument: the finest step's own model, as large as it is (far_marks.ts)
+          const world = (x: number, z: number): [number, number] => [(x + ox) * wider, (z + oz) * wider];
+          let mark: Batch | null = null;
+          if (step <= MODELS_UNTIL && name !== 'tower' && s?.marks)
+            mark = markOn(s, gx, gz, gw, gd, world(s.at[0], s.at[1]), marked);
+          else if (step <= MODELS_UNTIL && id < 0) mark = monumentOn(o.monuments ?? [], gx, gz, gw, gd, world);
           // without them a town's first great building is its church or its cathedral, built from its numbers as they
           // start (settle.ts: a village's church, a walled town's building in the middle, before its other churches)
           const first = name === 'landmark' || (name === 'church' && (s?.size ?? 0) < 4),
