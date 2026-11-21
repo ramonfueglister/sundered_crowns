@@ -1127,9 +1127,10 @@ feature 11), and a widow who heads her family works by the day.
   same for both contracts.
 - **The family stands in first** (economy feature 24, Ramon's choice of 20 November 2026). A sick tenant found "a
   family member or even a hired laborer" (Owen, Brown & Skinner 2025, Journal of British Studies 64, e92, p. 5): an
-  adult of the family who does not work and is not away himself takes the place for the day, and the pay goes to the
-  household of the worker who is away. Where nobody of the family is at home and no worker without work is left, the
-  place stays empty for the day.
+  adult of the family who does not work and is not away himself takes the place for the day. For a day labourer the
+  pay of the day goes to his household; for a servant, whose wage goes on, the firm pays nothing more (Ramon's choice
+  of 21 November 2026, «Ohne Zusatzlohn für Knechte»). Where nobody of the family is at home and no worker without
+  work is left, the place stays empty for the day.
 - **The day labourer's days are not his own.** He works every day his firm works and he is there; how many days a day
   labourer wanted and found work (a target income) is phase B of the proposal, a choice of its own.
 
