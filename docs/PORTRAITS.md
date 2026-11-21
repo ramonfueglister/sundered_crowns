@@ -8645,6 +8645,131 @@ above and after below), `runde170_seite_vorher_nachher.png` (four from the side)
 `runde170_hof.png` (all 36 at court, after), `runde170_blender.png` (the renders from Blender on the bare
 body: the old drape and the three new ones).
 
+**Round 171: a bowl cut of fine strands, modelled in the Blender on Ramon's Mac** (2026-11-21). After round
+170 Ramon was asked what to model next in Blender and chose the hair ("Haare neu modellieren"). The subject
+is the men's bowl cut, the hair most heads of the sample wear. Seen in Blender, round 170's beside the
+reference's: the reference's is a close cap of fine hair with a thick round rim and a fringe that ends in
+small clumps; ours was a thatch, 129 bundles and locks of 1 to 4 cm, each a ridge of its own, standing 2.3 cm
+off the crown, with broad flat wisps for ends.
+
+What was read. Nothing. The cut is set by eye beside the reference's bowl cuts (round 109's pictures), in
+Blender and in the portrait.
+
+What is changed.
+- **A bowl cut is some 450 strands** (`tools/portrait/pipeline/hair_body.py`, `BOWL`): three layers of 70,
+  200 and 180 strands for two layers of bundles and two of locks. A strand of the upper two layers is 4 to 5
+  mm broad (three corners across, a side 2.0 to 2.4 mm), nearly flat, and runs in one piece from the whorl to
+  the cut as a bundle did; the lowest layer's are broader and close the cap. The hair lies 1.1 to 1.2 cm over
+  the crown (2.3 to 2.4).
+- **A round, closed rim** (`tuck`): over its last centimetre a strand turns in to the head through a quarter
+  of a circle and ends 2 mm over the skin, blunt (`blunt`: 0.6 to 0.8 of its breadth left). No wisps, no
+  locks: the line of the fringe is the strands' own ends.
+- **Clumps** (`clump`): 36 places round the head, unevenly spaced; a strand's end goes up to four fifths of
+  the way to its clump's middle over its last 6 cm, and a clump ends up to 1.5 degrees over or under the cut's line.
+  The fringe is clumps a finger broad with small notches between them.
+- **A step at the temple** (`corner` 57, 3): the fringe's line steps down to the sides' within 3 degrees round
+  the head, and no strand ends on the step. Over the 25 degrees it took before, strands ended one under the
+  other down the temple: a ladder, seen in the first pass in Blender.
+- **The image in true scale** (`across`): a strand takes as much of the strand image's breadth as it is
+  broad (the whole image to 3 cm), so the image's hairs are as fine on a strand as they were on a bundle; a
+  strand's tone is off its layer's by a sigma of 0.07 (`tones`; 0.1 gave stripes).
+- **Curls** (`bob05`): a strand's waves go by the way still to go to its end, a tenth of a wave off its
+  neighbours' (`curl`'s fourth number, 0.3), so they lie combed side by side. By each strand's own beginning they
+  were a wickerwork.
+- **Rolls** (`bob09`): the strands of a place turn out and up together, round one middle (11 to 13 mm
+  outside the topmost layer), and keep their breadth in the roll. With a radius and an angle of its own for
+  every strand the ends were claws.
+- **Flat hair** (`FLAT` 0.38: `bob02` under a hood, a hat, a circlet; `bob04` round a bare top): as high over
+  the crown as round 170's (0.5 cm).
+- The nine files `public/portrait/real/bob01_body.txt.zst` to `bob09_body.txt.zst` are written anew, by
+  Blender 5.1.2 on the Mac. Nothing in the builder and nothing on the stage; the wasm is the same file.
+  Parted hair, plaits, a small girl's hair, the hair under a veil, tightly curled hair and beards are not
+  touched (`page01` and `plait01` come out byte for byte as before).
+
+How it was made. Blender was started on the Mac with the MCP add-on's server (it was closed), and
+`hair_body.py` was sent to its socket and run in scenes of its own (`SCENE`; in an open Blender the script
+makes a scene and bakes the shade in it, and leaves what is open as it is). Each pass was rendered there from
+the front, three quarters and the side with the strand image and the baked shade, beside round 170's cut in
+a scene of its own, and changed in the script, in seven passes, by what each showed: the ladder at the
+temple, a fringe as even as a comb and then one of square notches, striped tones, ridges like spaghetti (laid
+flatter), and the curls, the rolls and the flat hair. The files Blender wrote on the Mac are the ones in the repository. The cloud's Blender writes
+the same file but for 13 of `bob01`'s 39 259 points, each off in a digit of its place.
+
+Measured (`portrait/tests/hair_body.rs` with `SHOW=1`, on round 170's files and on these):
+
+| | round 170 | now |
+|---|---|---|
+| pieces of a bowl cut (`bob01`) | 129 | 451 |
+| of the horseshoe round a bare top (`bob04`) | 99 | 287 |
+| a side across a piece where it is broad | 3.7 to 4.4 mm | 2.0 to 2.4 mm |
+| the hair's top over the crown, grown people | 2.25 to 2.37 cm | 1.08 to 1.17 cm |
+| small boys (`bob08`) | 1.78 to 1.79 cm | 0.78 to 0.80 cm |
+| under a hood (`bob02`) | 0.50 to 0.54 cm | 0.47 to 0.49 cm |
+| the fringe ends, of the way from eyes to chin over the eyes | 0.31 to 0.39 | 0.31 to 0.39 |
+| pieces ending in two ends and more (`bob01`) | 86 of 129 | 0 of 451 |
+| the rolls (`bob09`): broader a side in the lowest third | 25.5 and 29.5 mm | 28.7 and 32.2 mm |
+| triangles, `bob01` | 52 342 | 53 544 |
+| the curls `bob05`, the rolls `bob09` | 77 760, 77 560 | 79 588, 85 240 |
+| the nine files, packed | 6.77 MB | 9.08 MB |
+
+A strand is three corners across where a bundle was seven, so there are three and a half times the pieces
+for about the same triangles; the files are larger by the corners' rows (39 259 corners in `bob01` for
+32 536).
+
+Tried and not kept.
+- `corner` left as it was (45 to 70 degrees): the ladder down the temple.
+- Clumps of one breadth and one height: square notches, a row of battlements; no clumps: a comb.
+- The flat cut at a lift of 0.22, as the bundles' was: under a hood the strands lay under the rim with a gap
+  and stood in it as teeth. At 0.7 the hair went through a lord's circlet (1 758 corners outside it on one
+  lord; the full test run found it), at 0.45 still on three lords (27, 24 and 12 corners), at 0.38 on none.
+- Curls by each strand's own beginning, a ring every 3 mm: a wickerwork, and 2.09 MB for 1.41.
+- Rolls with a radius and an angle for each strand: claws, and 11 to 16 mm broader a side where the test
+  holds 20.
+
+**Three tests changed, and why.** All in `portrait/tests/hair_body.rs`, all because the form they held is
+changed on purpose; round 170's files fail each new bound, these fail each old one. (1)
+`a_head_of_england_wears_a_body_of_thick_bundles` held 40 to 260 pieces of 1 to 4.2 cm: it is
+`a_head_of_england_wears_a_body_of_hair` now and holds a bowl cut at 180 to 600 strands with a side of 1 to
+5 mm across and the image lying 0.28 to 0.38 units broad on a strand; a girl's parted hair is held as it
+was. (2) `a_body_of_hair_lies_on_a_head_of_any_size` held the hair's top 1.0 to 2.6 cm over the crown: 0.6
+to 1.6 now. (3) `hair_that_is_cut_ends_in_wisps` held two thirds of a bowl cut's pieces frayed, their ends
+under 5 mm apart: it holds that no strand of a bowl cut ends in two ends; parted hair cut at the jaw keeps
+its wisps and its bounds. The tests on the hood, the circlet, the rolls and the fringe's height are as they
+were and pass.
+
+**The gauntlet**: 22 of 22 over the whole sample. One line moved by 0.1 against round 165 (a man's far
+cheek chroma against the lit, -3.7 for -3.8). The colour sheet against round 168: women, girls and shaven
+men to the last figure; grown men four values by 0.1; boys of 8 to 17, who all wear a bowl cut, by more:
+the shaded cheek L 40.4 for 40.1, the forehead L 50.9 for 50.5, beside the nose 25.3 darker than the cheek
+for 27.2, the cheek beyond the nose 17.3 for 18.1. The hair is lower and its rim rounder, and throws another
+shadow on forehead and temple.
+
+Honest about it. This is a large step in the picture: from the front and from the side the bowl cut reads as hair, a compact cap with a clean fringe, where it read as a thatch of
+slabs. It was made by a script that Blender ran and looked at in Blender, pass by pass; it was not combed by
+hand there, and Blender's own hair tools were not used. It is the nine bowl cuts only: parted hair, plaits,
+a small girl's hair, the hair under a veil and the beards are bundles still, and beside the new cut they
+show it. A strand is a flat ribbon with the old strand image, opaque: no single hairs, no fly-aways, no
+soft edge, and the cap reads a little like a wig, even and tidy on every head; the clumps of the fringe are
+one pattern for a cut, the same on every man who wears it. The curls read as waves, not as curls. A new
+fault: with the head turned to the rim light's side on the test page (0.6 rad), single bright pixels of
+that light sit on the strands' edges, 64 on one head where round 170's had 8; in the game's own view 0 to 2.
+They are gone without the rim light and stay without its shadow, without the hair's two sheens and with no
+specular, so they are three.js' own highlight at a grazing angle on edges under a pixel broad. Not mended:
+the strands' normals would have to come from a smooth cap, which is the builder's work. Under a hood's rim
+the hair is a dark band. The hats were made on the old flat hair and are not made anew (the flat hair is as
+high as it was; the test on the hat passes). The download grows by 2.3 MB. Every number is by eye:
+PLACEHOLDER.
+
+Tests: `portrait/tests/hair_body.rs`, three changed (above). `cargo test --release` as a whole 135 of 140
+in the first full run (the circlet, mended in the files; the rolls, mended in the script; the three above),
+140 of 140 in the last; `tests/portrait.test.ts` and its neighbour 46 of 46; typecheck and lint pass, no
+new warning. Pictures (project files, `portraits/`): `runde171_vorher_nachher.png` (four heads from the
+front, before above and after below), `runde171_seite_vorher_nachher.png` (the same from the side),
+`runde171_halbprofil_vorher_nachher.png` (three men turned 0.6, with the bright pixels),
+`runde171_locken_rollen.png` (the curls and the rolls, front and side), `runde171_dorf.png` and
+`runde171_hof.png` (all 36, village and court, after), `runde171_blender.png` (Blender: round 170's `bob01`
+above, the new below, from three sides), `runde171_blender_alle.png` (Blender: the other eight cuts).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
