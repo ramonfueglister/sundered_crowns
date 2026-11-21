@@ -413,7 +413,7 @@ fn calm(refs: &[([usize; 3], [f32; 3], [f32; 3])], tris: &[([usize; 3], [[f32; 2
             hem[i] = true;
         }
     }
-    let calmed: Vec<V3> = (0..nv)
+    let mut calmed: Vec<V3> = (0..nv)
         .map(|i| {
             let e = &even[i];
             let folds = if hem[i] { 1.0 } else { e[6].min(1.0) };
@@ -421,6 +421,46 @@ fn calm(refs: &[([usize; 3], [f32; 3], [f32; 3])], tris: &[([usize; 3], [[f32; 2
             arms.turned(q, if rest[i][0] < 0.0 { -1.0 } else { 1.0 }, e[7], 1.0)
         })
         .collect();
+    // (round 160) A gown worn on the skin lies on it at its neck. How much of the gown's own way off the body a
+    // place keeps: none at the hem of the neck, growing to all of it `CLOTH_LIE_REACH` from the hem (straight
+    // through the air, on the gown as it was draped); on a gown with linen under it all of it everywhere. The
+    // cloth is brought in towards its body triangle by the rest, to where the hem's roll lies on the skin, and
+    // the roll goes with the place of the cloth it hangs on.
+    let hold: Vec<f32> = if layer == Layer::Bare {
+        let hems: Vec<V3> = (0..nv).filter(|&i| hem[i]).map(|i| rest[i]).collect();
+        (0..nv)
+            .map(|i| {
+                let far = hems.iter().map(|h| len(sub(rest[i], *h))).fold(f32::MAX, f32::min);
+                let t = (far / CLOTH_LIE_REACH).min(1.0);
+                t * t * (3.0 - 2.0 * t)
+            })
+            .collect()
+    } else {
+        vec![1.0; nv]
+    };
+    if layer == Layer::Bare {
+        let sheet: Vec<usize> = (0..nv).filter(|&i| !hem[i] && hold[i] < 1.0).collect();
+        let pull: Vec<V3> = sheet
+            .iter()
+            .map(|&i| {
+                let (r, w, _) = &refs[i];
+                let (a, b, c) = (pp[r[0]], pp[r[1]], pp[r[2]]);
+                let n = norm(cross(sub(b, a), sub(c, a)));
+                let on: V3 = std::array::from_fn(|q| w[0] * a[q] + w[1] * b[q] + w[2] * c[q]);
+                let over = dot(sub(calmed[i], on), n) - (CLOTH_LIE + CLOTH_HEM);
+                mul(n, -over.max(0.0) * (1.0 - hold[i]))
+            })
+            .collect();
+        for i in (0..nv).filter(|&i| hem[i]) {
+            let near = (0..sheet.len()).min_by(|&a, &b| len(sub(rest[sheet[a]], rest[i])).total_cmp(&len(sub(rest[sheet[b]], rest[i]))));
+            if let Some(k) = near {
+                calmed[i] = add(calmed[i], pull[k]);
+            }
+        }
+        for (k, &i) in sheet.iter().enumerate() {
+            calmed[i] = add(calmed[i], pull[k]);
+        }
+    }
     // (round 140) the cloth's own direction at each vertex, from its triangles as they lie calmed
     let mut out = vec![[0f32; 3]; nv];
     for (t, _) in tris {
@@ -446,6 +486,7 @@ fn calm(refs: &[([usize; 3], [f32; 3], [f32; 3])], tris: &[([usize; 3], [[f32; 2
             let [lo, hi] = match layer {
                 Layer::Under => CLOTH_OFF_UNDER,
                 Layer::Gown => CLOTH_OFF_GOWN,
+                Layer::Bare => CLOTH_OFF_GOWN.map(|off| CLOTH_LIE + (off - CLOTH_LIE) * hold[i]),
                 _ if rest[i][1] < CLOTH_NECK_Y => CLOTH_OFF_OVER,
                 _ => CLOTH_OFF_HEAD,
             };
@@ -519,6 +560,9 @@ pub(crate) enum Layer {
     Under,
     /// Calmed (see mh_cloth), over what is worn next to the body.
     Gown,
+    /// (round 160) A gown with nothing worn under it: as `Gown`, but at its neck it lies on the skin
+    /// (`CLOTH_LIE`).
+    Bare,
     /// Calmed, lying over the gown.
     Over,
 }
@@ -532,6 +576,18 @@ const CLOTH_OFF_GOWN: [f32; 2] = [0.07, 0.09];
 /// The same for what is worn under the gown: it lies on the skin, and nowhere as far off it as the gown's least.
 /// Such a garment has no rolled hem (this hold would crush one). PLACEHOLDER, by eye.
 const CLOTH_OFF_UNDER: [f32; 2] = [0.015, 0.045];
+/// (round 160) A gown worn on the skin (`Layer::Bare`): how far off the body the lowest side of its neck's hem
+/// is brought, and how far from that hem the gown lies as any gown does. The gown's least of 7 mm keeps the
+/// body's finer bumps under a cloth that was draped on another body; at the edge of a neck cut out to the
+/// shoulders it showed as a rim that stands over the skin, with a look into the gown from in front (a tub: the
+/// hem's roll 1.1 cm off the skin on average, tests/neck.rs). With 1 mm, 302 of 142 882 places of the cloth near
+/// the hem lay under the skin on 56 women and girls (up to 11 on one, by up to 1.7 mm on the grown); with 2.5 mm
+/// one place on one of 32. PLACEHOLDER, by eye and by that count.
+const CLOTH_LIE: f32 = 0.025;
+const CLOTH_LIE_REACH: f32 = 0.4;
+/// How far a hem's roll reaches under the cloth it hangs on: 0.4 of its radius (`tunic_bind.py`: `R_HEM` 0.028,
+/// the roll's middle 0.6 of it over the cloth).
+const CLOTH_HEM: f32 = 0.0112;
 const CLOTH_OFF_OVER: [f32; 2] = [0.13, 0.17];
 const CLOTH_OFF_HEAD: [f32; 2] = [0.0, 0.05];
 /// (round 140) The least share of the cloth's own direction that lies along its body triangle's for the cloth to
@@ -671,7 +727,7 @@ pub(crate) fn mh_cloth_as(dir: &str, name: &str, image: &str, pp: &[V3], base: &
     let ao: Vec<f32> = crate::real::column(&format!("{dir}/{name}_ao.txt"), 1.0);
     // (round 143) a calmed garment's is read off the garment as it lies on this body; the file's is of the garment
     // as it was draped, on a body with a bust, and says only that the garment has a shade
-    let ao = if ao.is_empty() || !matches!(layer, Layer::Gown | Layer::Over) { ao } else { fold_shade(&tris, &vs, &vn) };
+    let ao = if ao.is_empty() || !matches!(layer, Layer::Gown | Layer::Bare | Layer::Over) { ao } else { fold_shade(&tris, &vs, &vn) };
     // a corner: position, uv, normal, cell coordinates, fold shade
     type Cn = (V3, [f32; 2], V3, [f32; 2], f32);
     let lerp_cn = |a: &Cn, b: &Cn, t: f32| -> Cn {

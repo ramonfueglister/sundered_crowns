@@ -1615,13 +1615,20 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
             };
             // (a dress with a table cuts the gown's neck by who wears it; the cuts are of the gown's cloth)
             let (name, image) = match garb {
-                Some(t) if !t.gown_cut[cut].is_empty() && !wimpled => (t.gown_cut[cut], t.gown),
+                Some(t) if !t.gown_cut[cut].is_empty() && !wimpled && p.age >= t.gown_cut_from[cut] => (t.gown_cut[cut], t.gown),
                 // (round 151: the round gown from a file of its own where the table has one, with the gown's image)
                 Some(t) if !t.gown_file.is_empty() => (t.gown_file, t.gown),
                 Some(t) => (t.gown, ""),
                 None => ("cloth_tunic", ""),
             };
-            let mut gown = mh_cloth_as(&d, name, image, &x.pp, &h.base, &col, Some(&cell), if garb.is_some() { Layer::Gown } else { Layer::Bound }, &arms)?;
+            // (round 160) a gown with no linen under it lies on the skin at its neck (under a wimple the round gown
+            // is worn, close at the throat: as it was)
+            let layer = match garb {
+                Some(t) if t.under[cut].is_empty() && !wimpled => Layer::Bare,
+                Some(_) => Layer::Gown,
+                None => Layer::Bound,
+            };
+            let mut gown = mh_cloth_as(&d, name, image, &x.pp, &h.base, &col, Some(&cell), layer, &arms)?;
             // (round 150) a table's own cloth for the gown, whatever its cut: the court's silk, plain or figured
             // (round 156)
             if let Some(image) = garb.map(|t| t.gown_image_of(p.seed)).filter(|i| !i.is_empty()) {

@@ -7658,8 +7658,8 @@ figure, for the first time since round 138, since a head's painted layers take s
 cheek against the lit one -19.2 for -19.0 (bound 4 from -16.9: 2.3 off, was 2.1), its chroma -3.8 for -3.9,
 the emperor's eye against his cheek -42.5 for -42.6. The other nineteen are as they were. The colour sheet
 beside it: the eight bearded men's shaded cheek reads L 39.4 (39.7) and their upper lip 25.6 (26.8), where the
-nose's shadow falls on the moustache; their chin 41.3 and the place above the lip 41.7 as before (the sheet
-reads a face's middle, which is in the light).
+nose's shadow falls on the moustache; their chin 41.3 and the place above the lip 41.7 as before (why a
+hood's shade does not move those two was not looked into).
 
 Honest about it. This takes the glare off; it does not make the layer a beard. Close by it is still a shell
 with hairs painted on it, one density from the cheek to the throat, with an outline as cut with scissors,
@@ -7678,6 +7678,94 @@ typecheck and lint pass, no new warning.
 Pictures (project files, `portraits/`): `runde159_vorher_nachher.png` (four men of the sample, before above
 and after below), `runde159_blond.png` (three of them with blond hair, the same), `runde159_hof.png` (the four
 at court, the same), `runde159_nah.png` (two beards close by, from the front and from the side).
+
+**Round 160: a lady's neck lies on her skin** (2026-11-21). The sheet of the court after round 159, all 36
+from the front and from the side: a lady's wide neck (round 149) stands over her shoulders as the rim of a
+tub. From in front one looks into the gown behind either shoulder, a dark band between the hem and the skin,
+and across the chest the hem casts a shade as a shelf does. The reference's gowns lie on the body at the neck
+(two sheets of its dresses looked at, `ck3_13`, `ck3_14`; nothing measured on them). On a small girl the same
+cut reaches out to the arms: a child of four in a tub with bare shoulders. (Seen on the same sheet and not
+touched: a lord's hood thrown back is a cape with a roll round the neck and no hood behind it, and with round
+148's white fur on it the roll reads as a neck brace; the eight small children have one haircut.)
+
+Looked for the cause in numbers (`portrait/tests/neck.rs`: how far the points of the hem's roll lie from the
+skin). On eight ladies of 30 the roll stands 1.11 to 1.13 cm off the skin on average, 1.55 to 1.71 at most,
+all the way round. Two things hold it there. The court's gowns were draped with the cloth laid 1.2 cm off the
+body (round 151), and in the file the neck's edge lies 0.8 to 1.1 cm off the base body across the chest. And
+the builder holds every place of a gown at least 7 mm off the body triangle it is bound to (`CLOTH_OFF_GOWN`,
+real_look.rs), so that the body's finer bumps stay under a cloth that was draped on another body: where the
+drape does lie on the shoulder (1.7 mm off at the neck's outer ends) the builder lifts it off again. In the
+village the same holds (1.06 to 1.12 cm), but there the neck is 19 cm broad, close round the throat, and
+linen lies under it.
+
+What is changed, in the builder.
+- **A gown worn on the skin lies on it at its neck** (`real_look.rs`, `Layer::Bare`; `build.rs` takes it for
+  a gown whose table names no linen under it, `DressSet::under`, and that is not under a wimple: the court's
+  ladies and girls, and a queen). From 4 cm off the hem (`CLOTH_LIE_REACH`, straight through the air on the
+  gown as draped) the cloth is brought in towards the body triangle it is bound to, the more the nearer the
+  hem, so far that the lowest side of the hem's roll comes to 2.5 mm off the skin (`CLOTH_LIE`; the roll hangs
+  0.4 of its radius under the cloth, `CLOTH_HEM`), and the least the gown is held off falls with it. The roll
+  goes with the place of the cloth it hangs on. Beyond the 4 cm the gown is what it was.
+- **A girl under seven wears the round gown at court** (`DressSet::gown_cut_from`, the court's `[7, 0]`): the
+  court's own round gown, close at the throat, which lies on her skin there by the rule above. OWN RULE: the
+  wide and low neck is a woman's fashion in round 149's reading, no source read speaks of a small girl's, and
+  seven is the age to which the table's children are small. A boy's cut is worn at every age as before.
+
+Measured (the same 8 founders at each age; the hem's roll off the skin, average and most, in cm):
+
+| | before | now |
+|---|---|---|
+| lady of 30 | 1.11 to 1.13, at most 1.55 to 1.71 | 0.52 to 0.53, at most 0.92 to 0.98 |
+| queen of 30 | 1.11 to 1.14, at most 1.55 to 1.71 | 0.52 to 0.53, at most 0.92 to 0.98 |
+| girl of ten | 0.95 to 0.97, at most 1.41 to 1.56 | 0.53, at most 0.86 to 1.06 |
+| girl of four | the wide cut | the round gown: 0.49 to 0.51, at most 0.83 to 0.88 |
+| village woman of 30 | 1.06 to 1.12 | the same |
+
+The roll itself is 5.6 mm thick, so 0.5 cm on average is a roll that lies on the skin. Of the cloth's places
+within 4 cm of the hem (some 2 400 to 3 000 a gown) one lies more than 1 mm under the skin, on one girl of
+ten where the cut meets her arm (four on her before); none on the other 31. The neck is 0.1 to 1 cm less
+broad than it was (35.0 to 37.4 cm on the eight ladies, 35.9 to 37.5 before) and its lowest place 0.3 to 0.4
+cm lower (9.5 for 9.1 cm under the chin on the first): the hem lies down where it stood.
+
+Tried and not kept.
+- The least hold lowered alone, the cloth not brought in: 0.6 cm at the shoulders' ends and 1.1 to 1.3 as
+  before everywhere else, since the drape itself lies a centimetre off.
+- The roll's lowest side at 1 mm (`CLOTH_LIE` 0.01; the hem 0.37 cm off on average): on 56 women and girls
+  302 of 142 882 places of the cloth near the hem lay under the skin, up to 11 on one lady, by up to 1.7 mm.
+- The wide cut left on small girls, with the rule: the hem lies in waves and stands as two ears at the arms.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 159 to its last figure, and the
+colour sheet beside it the same (they read skin of the face).
+
+Honest about it. This takes the rim off the tub; it does not make the gown a fitted one. The cut's line is
+what it was, a boat with a corner at either shoulder, and just under the hem the sleeve bulges out again,
+since from 4 cm on the gown is the same wide sack. The hem is a roll 5.6 mm thick, a bead where a silk gown
+has a fine edge, and no edge of another cloth shows in the neck as on the reference's gowns. The rule is for
+a gown without linen under it: the village's necks and every man's stand off as before. On a small girl the
+round gown's hem has small waves at the throat. Seen close on four ladies and four girls from the front and
+from a quarter, and at a picture's size on the court's 36, on twelve queens and on six ladies from behind
+(there the hem lies on the back in slight waves). `CLOTH_LIE`
+and its reach are by eye and by the count above, the age of seven is an own rule: PLACEHOLDER.
+
+Tests: `portrait/tests/neck.rs`, new: the hem's roll of a lady, a girl of ten, a girl of four and a queen lies
+under 0.65 cm off the skin on average and under 1.25 at most, with at most two places of the cloth near it
+under the skin, and a village woman's over 0.9 as before (without the rule the first fails with 1.11); a girl
+at court has the round gown's neck the day before she is seven (8.5 to 10.8 cm broad) and the wide one on
+that day (24.9 to 26.0). One bound of an older test is changed, with its reason in the test:
+`portrait/tests/clothes.rs` held a queen's neck to a lady's breadth within 0.5 cm, as that test builds them
+(not posed). Until now the hem stood out to the gown's own cut at the arm on nearly everyone and both read
+37.7 to the digit, whatever the gown did; brought in it ends short of that on most (36.0 to 37.7), and there
+the measure is as fine as the builder's cut of a gown along the cells of its cloth, 6 mm apart: the hem's
+outermost corner is one of its own or one on a cell's border beside it, and a queen's body is not a lady's
+to the digit. Of the test's eight pairs five read the same, two 0.2 cm apart and one 1.0. The test holds the
+two within 1.3 cm, two cells. The helpers that read a garment and the skin
+off a built person moved from that file to `portrait/tests/common/mod.rs`, unchanged. `cargo test --release` as a whole 132 of 132 (in the round's full run 131 and one failure, of the
+new test itself: it asked for 1 500 places of cloth near the hem and a girl of four's round neck has 1 462;
+set to 1 000 and the file run again, 2 of 2); `tests/portrait.test.ts` and its neighbour 46 of 46; typecheck
+and lint pass, no new warning.
+Pictures (project files, `portraits/`): `runde160_vorher_nachher.png` (four ladies at court, before above and
+after below), `runde160_schraeg.png` (the same from a quarter), `runde160_nah.png` (two necks close by),
+`runde160_maedchen.png` (a girl of the sample and three small ones at court).
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the

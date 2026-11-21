@@ -232,6 +232,11 @@ pub struct DressSet {
     /// 110): a woman's neckline cut wide, out onto the shoulders, and a man's opened in front in a V a hand
     /// deep.
     pub gown_cut: [&'static str; 2],
+    /// (round 160) From which age the cut is worn (hers, his); younger, the round gown. The court's: a girl from
+    /// seven, the age to which the table's children are small (`hair_small`). OWN RULE: the court's wide and low
+    /// neck is a woman's fashion (`sources`, round 149), no source read speaks of a small girl's gown, and on a
+    /// small child's body the cut reaches out to the arms, where its hem lies in waves.
+    pub gown_cut_from: [f32; 2],
     /// (round 150) The image the gown and its cuts are drawn with in place of `gown`'s (empty: `gown`'s): another
     /// cloth for the same gown. Its name begins with `gown`'s: the builder and the tests find a gown by that.
     pub gown_image: &'static str,
@@ -951,6 +956,7 @@ const ENGLAND: DressSet = DressSet {
     origins: &["England"],
     gown: "cloth_cote",
     gown_cut: ["cloth_kirtle", "cloth_cote_v"],
+    gown_cut_from: [0.0, 0.0],
     gown_image: "",
     gown_figured: "",
     figured: [false; 10],
@@ -1308,6 +1314,7 @@ const COURT: DressSet = DressSet {
     // (round 151) all three cuts from drapes of the court's own, laid closer on the body before they fall: a
     // smoother gown, no narrower (`sources`)
     gown_cut: ["cloth_kirtle_court", "cloth_cote_v_court"],
+    gown_cut_from: [7.0, 0.0],
     gown_file: "cloth_cote_court",
     under: ["", "cloth_shirt"],
     // (round 150) the gown is of silk: a smooth cloth that shines (`sources`). PLACEHOLDER: that every gown at

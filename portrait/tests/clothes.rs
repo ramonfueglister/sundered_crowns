@@ -3,107 +3,8 @@
 
 mod common;
 
-use common::{head, person, person_of};
+use common::{closest, cloth, cross, dist, dot, head, person, person_of, skin, sub, Cloth, V3};
 use sc_portrait::{build, build_posed, Look, Portrait};
-
-type V3 = [f32; 3];
-
-/// A triangle, and whether it is of the hem's roll.
-struct Tri {
-    at: [V3; 3],
-    hem: bool,
-}
-
-/// A garment's points, each once, and whether a point is of the hem's roll alone (the roll's texture
-/// coordinates run a twentieth of the image round it); its triangles.
-struct Cloth {
-    pos: Vec<V3>,
-    hem: Vec<bool>,
-    tris: Vec<Tri>,
-}
-
-fn cloth(out: &Portrait, image: &str) -> Option<Cloth> {
-    let s = out.surfaces.iter().find(|s| s.tex.as_deref().is_some_and(|t| t.contains(image)))?;
-    assert_eq!(s.uv.len(), s.pos.len(), "{image}: texture coordinates for every corner");
-    let mut c = Cloth { pos: Vec::new(), hem: Vec::new(), tris: Vec::new() };
-    let mut seen = std::collections::HashSet::new();
-    // (the cloth's triangles first: a point the roll shares with the cloth is the cloth's)
-    for of_hem in [false, true] {
-        for t in 0..s.pos.len() / 3 {
-            let hem = (0..3).all(|k| s.uv[t * 3 + k][1].abs() <= 0.05);
-            if hem != of_hem {
-                continue;
-            }
-            let at = [s.pos[t * 3], s.pos[t * 3 + 1], s.pos[t * 3 + 2]];
-            c.tris.push(Tri { at, hem });
-            for q in at {
-                if seen.insert(q.map(f32::to_bits)) {
-                    c.pos.push(q);
-                    c.hem.push(hem);
-                }
-            }
-        }
-    }
-    Some(c)
-}
-
-fn sub(a: &V3, b: &V3) -> V3 {
-    [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
-}
-
-fn dot(a: &V3, b: &V3) -> f32 {
-    a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
-}
-
-fn dist(a: &V3, b: &V3) -> f32 {
-    let d = sub(a, b);
-    dot(&d, &d).sqrt()
-}
-
-/// The point of a triangle closest to a point (Ericson, Real-Time Collision Detection, 5.1.5).
-fn closest(p: &V3, [a, b, c]: &[V3; 3]) -> V3 {
-    let (ab, ac, ap) = (sub(b, a), sub(c, a), sub(p, a));
-    let (d1, d2) = (dot(&ab, &ap), dot(&ac, &ap));
-    let at = |v: f32, w: f32| [a[0] + ab[0] * v + ac[0] * w, a[1] + ab[1] * v + ac[1] * w, a[2] + ab[2] * v + ac[2] * w];
-    if d1 <= 0.0 && d2 <= 0.0 {
-        return at(0.0, 0.0);
-    }
-    let bp = sub(p, b);
-    let (d3, d4) = (dot(&ab, &bp), dot(&ac, &bp));
-    if d3 >= 0.0 && d4 <= d3 {
-        return at(1.0, 0.0);
-    }
-    let vc = d1 * d4 - d3 * d2;
-    if vc <= 0.0 && d1 >= 0.0 && d3 <= 0.0 {
-        return at(d1 / (d1 - d3), 0.0);
-    }
-    let cp = sub(p, c);
-    let (d5, d6) = (dot(&ab, &cp), dot(&ac, &cp));
-    if d6 >= 0.0 && d5 <= d6 {
-        return at(0.0, 1.0);
-    }
-    let vb = d5 * d2 - d1 * d6;
-    if vb <= 0.0 && d2 >= 0.0 && d6 <= 0.0 {
-        return at(0.0, d2 / (d2 - d6));
-    }
-    let va = d3 * d6 - d5 * d4;
-    if va <= 0.0 && d4 - d3 >= 0.0 && d5 - d6 >= 0.0 {
-        let w = (d4 - d3) / ((d4 - d3) + (d5 - d6));
-        return at(1.0 - w, w);
-    }
-    let k = 1.0 / (va + vb + vc);
-    at(vb * k, vc * k)
-}
-
-/// The skin's triangles.
-fn skin(out: &Portrait) -> Vec<[V3; 3]> {
-    let s = out.surfaces.iter().filter(|s| s.tex.as_deref().is_some_and(|t| t.contains("skin"))).max_by_key(|s| s.pos.len()).expect("the skin");
-    s.pos.chunks_exact(3).map(|t| [t[0], t[1], t[2]]).collect()
-}
-
-fn cross(a: &V3, b: &V3) -> V3 {
-    [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
-}
 
 /// How far along a ray (from `o`, along the unit vector `d`) a triangle is met (Möller and Trumbore 1997).
 fn met(o: &V3, d: &V3, [a, b, c]: &[V3; 3]) -> Option<f32> {
@@ -369,7 +270,13 @@ fn a_ladys_gown_at_court_is_cut_wider_and_lower_than_a_village_womans_and_shows_
             continue;
         }
         assert!(broad > 5.0 && lower > 2.0, "lady {k}: the neck {broad} cm broader and {lower} cm lower than the village's");
-        assert!((breadth(&q) - breadth(&l)).abs() < 0.5, "lady {k}: a queen's gown {} cm broad at the neck, a lady's {}", breadth(&q), breadth(&l));
+        // (round 160: within two cells' breadth. Until then the hem stood out to the gown's own cut at the arm on
+        // nearly everyone, 37.7 cm, and the two were the same number whatever the gown did. Brought in to the
+        // skin it ends short of that on most, and there the measure is as fine as the builder's cut of a gown
+        // along the cells of its cloth, 6 mm apart: the hem's outermost corner is one of its own or one on a
+        // cell's border to either side of it, and a queen's body is not a lady's to the digit. Of these eight
+        // pairs five are the same, two 0.2 cm apart and one 1.0)
+        assert!((breadth(&q) - breadth(&l)).abs() < 1.3, "lady {k}: a queen's gown {} cm broad at the neck, a lady's {}", breadth(&q), breadth(&l));
         // (the wimple in the court's own linen since round 153: its image has another name)
         assert!(breadth(&own) < breadth(&v) - 2.5 && cloth(&old, "/cloth_wimple_fine.").is_some(), "lady {k}: the round gown under the wimple, {} cm broad", breadth(&own));
         assert!(shown.len() == usize::from(laced) && shown.iter().all(|&t| t < 300), "lady {k}: linen in the gown's neck, {shown:?} triangles (laced: {laced})");
