@@ -25,6 +25,8 @@
 // The parts: where the pieces lie for a view and what it asks for (piece_sight.ts), the store on disk
 // (piece_store.ts), the workers and their jobs (piece_builders.ts), the pieces that arrive going on the stage
 // (piece_arrival.ts), and how the pieces on it show (piece_show.ts). Here a look of the view brings them together.
+import type { PlacePeopleList } from '../figures';
+import { type Figures, figuresIn } from '../figures/stage';
 import type { Stage } from '../lookprobe/stage';
 import { N } from '../lookprobe/layout';
 import { type HouseCell, createFine } from './fine';
@@ -84,6 +86,14 @@ export interface Layout {
 interface Pieces {
   /** Brings the stage to the view: asks for what is missing, shows what covers the picture best. Returns the layout and how many pieces of the picture are still to come. */
   look(view: View): Layout & { missing: number };
+  /** Hands the workers newer lists of persons (src/people/town_rolls.ts). */
+  tellPersons(lists: readonly PlacePeopleList[]): void;
+  /**
+   * Builds again, from the lists the workers hold, the figures of the finest pieces on the stage that `stale` finds
+   * built with persons who have changed since; each piece once for each `version` of the lists. The land of the piece
+   * stays as it is, and the piece is kept on disk anew.
+   */
+  renewFigures(stale: (f: Figures) => boolean, version: number): void;
   /** the first error of a worker, if any */
   failed: string;
   /** Stops the workers; the pieces are not used after that. */
@@ -135,8 +145,25 @@ export function createPieces(stage: Stage, o: PiecesOptions): Pieces {
     small: o.small,
     free: !!o.small && !!o.faces && o.free !== false,
   });
+  /** the finest pieces on the stage whose figures are to be built again, and the version of the lists of the persons
+   *  each was last found out of date with */
+  const renewals = new Set<string>(),
+    renewed = new Map<string, number>();
   const pieces: Pieces = {
     look,
+    tellPersons: (lists) => builders.tell({ persons: lists, year: o.year }),
+    renewFigures(stale, version) {
+      let more = false;
+      for (const [key, h] of held) {
+        if (h.step !== 0 || renewed.get(key) === version) continue;
+        const f = figuresIn(h.group)?.f;
+        if (!f || !stale(f)) continue;
+        renewed.set(key, version);
+        renewals.add(key);
+        more = true;
+      }
+      if (more) o.changed();
+    },
     failed: '',
     dispose: () => {
       builders.dispose();
@@ -191,6 +218,19 @@ export function createPieces(stage: Stage, o: PiecesOptions): Pieces {
     }
     if (store && d.kept) store.used(fileOf(spot));
     if (store && d.packed) store.put(fileOf(spot), d.packed);
+    // a piece built again for its figures keeps its land on the stage and takes only the new figures
+    if (spot.renew) {
+      building.delete(spot.key);
+      const h = held.get(spot.key);
+      if (d.error) pieces.failed ||= d.error;
+      else if (d.scene) {
+        renewals.delete(spot.key);
+        if (h) stage.swapFigures(h.group, d.scene.figures);
+        stage.probe.counts['pieces renewed'] = (stage.probe.counts['pieces renewed'] ?? 0) + 1;
+      }
+      o.changed();
+      return;
+    }
     // a piece goes on the stage only if the view asks for it: one built ahead into the store only if the view has
     // come to ask for it meanwhile, and one the view has moved away from while it was built not at all (it is kept
     // on disk all the same; sent to the graphics card it would only have cost a picture its time)
@@ -222,7 +262,7 @@ export function createPieces(stage: Stage, o: PiecesOptions): Pieces {
       tops: o.tops,
       grid: margin === MARGIN ? undefined : PIECE + 2 * margin,
       keep: store
-        ? { build: store.build, name: fileOf(next), kept: !store.listed || store.kept(fileOf(next)) }
+        ? { build: store.build, name: fileOf(next), kept: !next.renew && (!store.listed || store.kept(fileOf(next))) }
         : undefined,
       piece: {
         ox: next.px * PIECE - margin,
@@ -303,6 +343,12 @@ export function createPieces(stage: Stage, o: PiecesOptions): Pieces {
         .sort((a, b) => a.rank - b.rank)
         .filter((w) => !once.has(w.key) && once.add(w.key))
         .reverse();
+    // the pieces whose figures are built again come after all the view is missing
+    for (const key of renewals) {
+      const h = held.get(key);
+      if (!h) renewals.delete(key);
+      else if (!building.has(key)) queue.unshift({ key, step: 0, px: h.px, pz: h.pz, renew: true });
+    }
     // while the view rests with all it asks for, pieces a zoom from here would come to are built into the store by
     // some of the workers (not for a page nobody looks at)
     const sparing = [...builders.jobs.values()].filter((j) => j.spare).length;
@@ -345,6 +391,8 @@ export function createPieces(stage: Stage, o: PiecesOptions): Pieces {
     for (const [key, h] of spare.slice(0, Math.max(0, spare.length - SPARE))) {
       stage.remove(h.group);
       held.delete(key);
+      renewals.delete(key);
+      renewed.delete(key);
     }
   }
   return pieces;

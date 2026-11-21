@@ -3,6 +3,7 @@
 import { LAND_Y, SEA_Y } from '../lookprobe/layout';
 import type { Stage } from '../lookprobe/stage';
 import type { Layout } from './pieces';
+import { RIDER_PX } from './view_riders';
 import { reliefOf } from './zoom';
 
 /** A dot on the map (WorldView.setMarks). */
@@ -12,6 +13,8 @@ export interface WorldMark {
   color: string;
   title: string;
   open?(): void;
+  /** the mark of a rider (view_riders.ts): no dot, only a place to point at over the horseman, at every distance */
+  rider?: boolean;
 }
 /** the dots of the marks, in pixels across, and how far apart dots of one place are pushed */
 const MARK_SIZE = 9,
@@ -35,6 +38,10 @@ export function createMarks(
   markLayer.style.cssText = 'position:fixed;left:0;top:0;width:0;height:0;pointer-events:none;z-index:4';
   parent.append(markLayer);
   let marks: { m: WorldMark; dot: HTMLButtonElement; x: number; z: number; k: number }[] = [];
+  const looks = (m: WorldMark) =>
+    m.rider
+      ? `width:${RIDER_PX}px;height:${RIDER_PX}px;border:0;background:transparent;margin:${MARK_SIZE / 2 - RIDER_PX}px 0 0 ${(MARK_SIZE - RIDER_PX) / 2}px`
+      : `width:${MARK_SIZE}px;height:${MARK_SIZE}px;border-radius:50%;border:1.5px solid ${m.color};background:#111;box-shadow:0 0 0 1px rgba(255,255,255,.7)`;
   return {
     set(now) {
       const seen = new Map<string, number>(),
@@ -50,21 +57,22 @@ export function createMarks(
         dot.className = 'world-mark';
         dot.title = m.title;
         dot.setAttribute('aria-label', m.title);
-        dot.style.cssText = `position:absolute;left:0;top:0;width:${MARK_SIZE}px;height:${MARK_SIZE}px;padding:0;border-radius:50%;border:1.5px solid ${m.color};background:#111;box-shadow:0 0 0 1px rgba(255,255,255,.7);cursor:pointer;pointer-events:auto`;
+        dot.style.cssText = `position:absolute;left:0;top:0;padding:0;${looks(m)};cursor:pointer;pointer-events:auto`;
         dot.onclick = m.open ?? null;
         return { m, dot, x, z, k };
       });
       if (marks.length !== old.length) markLayer.replaceChildren(...marks.map((d) => d.dot));
     },
     place(laid, wide) {
-      const show = marks.length > 0 && laid.step > 0;
+      // (near, the figures themselves stand where the dots would be; the riders ride at every distance)
+      const show = marks.some(({ m }) => laid.step > 0 || m.rider);
       markLayer.style.display = show ? '' : 'none';
       if (!show) return;
       const tall = reliefOf(wide, laid.step),
         y = LAND_Y * tall + SEA_Y * (1 - tall);
-      for (const { dot, x, z, k } of marks) {
+      for (const { m, dot, x, z, k } of marks) {
         const at = stage.toScreen(x / laid.coarse - laid.homeX, y, z / laid.coarse - laid.homeZ);
-        if (!at) {
+        if (!at || (laid.step === 0 && !m.rider)) {
           dot.style.display = 'none';
           continue;
         }

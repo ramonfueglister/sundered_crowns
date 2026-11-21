@@ -8,8 +8,9 @@
 import { hash2 } from '../lookprobe/batch';
 import { type Ground, Mat, N, idx } from '../lookprobe/layout';
 import { ESTATES, Mode, dress, pickEstate, townEstate } from './estates';
-import { type TownPerson, peopleSeed, townPeople } from './people';
-import { FIGURE_AT, LOOK, type TownAims, aimsOf, key, personOf, spot } from './aims';
+import { type TownPerson, peopleSeed, rollsOf, townPeople } from './people';
+import { DIRS, FIGURE_AT, LOOK, type TownAims, aimsOf, key, personOf, spot } from './aims';
+import { fieldHands, lotOf, placeHands } from './farmers';
 
 /** A walled town as settle() laid it out: its gazetteer index, its middle and the half side of its square, in world blocks. */
 export interface Town {
@@ -29,6 +30,9 @@ export interface SettledGround {
   town: Uint8Array;
   field: Uint8Array;
   towns?: readonly Town[];
+  /** the field lots of the furlongs of each town near, by its site, as pairs (lx, lz) (worldprobe/lots.ts fieldsByLot;
+   *  absent where the land register lays no fields): the farmers among the town's persons work them (farmers.ts) */
+  furlongs?: ReadonlyMap<number, readonly number[]>;
 }
 
 /**
@@ -54,6 +58,9 @@ export interface Figures {
   at?: Uint8Array;
   plan?: Float32Array;
   seed?: number;
+  /** the towns whose persons the figures were built with, each with the roll of its persons then (site, roll, …;
+   *  people.ts `rollOf`): the figures are built again once the persons of a town have changed (pieces.ts) */
+  rolls?: number[];
   /** the piece's ground in the world, in blocks of the finest step */
   ox?: number;
   oz?: number;
@@ -76,12 +83,6 @@ const IN_STREET = 0.09,
 const PACE = 0.95;
 /** A way is at most this many blocks long; shorter ways make figures that turn more often. Drawing value. */
 const LONGEST_WAY = 14;
-const DIRS = [
-  [1, 0],
-  [0, 1],
-  [-1, 0],
-  [0, -1],
-] as const;
 
 /**
  * What a figure asks of the ground at a block of the finest step (its x, z in the piece): whether it is free to stand
@@ -94,6 +95,8 @@ export interface Where {
   nearHouse(x: number, z: number): boolean;
   field(x: number, z: number): number;
   h(x: number, z: number): number;
+  /** whether the persons of a town work the field at a block, and no anonymous farmer (farmers.ts) */
+  tended?(x: number, z: number): boolean;
 }
 /** Figures as lists of numbers, before they are made into the lists of `Figures`: the five numbers, then `at` and
  *  `plan`. */
@@ -126,7 +129,7 @@ export function place(
     field = !street && w.free(x, z, false) ? DIRS.findIndex(([dx, dz]) => w.field(x + dx, z + dz) > 0) : -1;
   let kind: 'street' | 'house' | 'field' | null = null;
   if (street && (person || (!inTown && lot < IN_STREET))) kind = 'street';
-  else if (field >= 0 && lot < IN_FIELD) kind = 'field';
+  else if (field >= 0 && lot < IN_FIELD && !w.tended?.(x + DIRS[field][0], z + DIRS[field][1])) kind = 'field';
   else if (!street && lot < ABOUT_HOUSE && w.free(x, z, false) && w.nearHouse(x, z)) kind = 'house';
   if (!kind) return;
   const h = (k: number) => hash2(wx, wz, 410 + k);
@@ -205,7 +208,8 @@ export function figuresOf(out: Gathered, ox: number, oz: number, scale?: [number
 export function crowd(g: Ground, s: SettledGround, own: (x: number, z: number) => boolean): Figures {
   const ox = g.ox ?? 0,
     oz = g.oz ?? 0,
-    out = gathered();
+    out = gathered(),
+    hands = fieldHands(s);
   const w: Where = {
     free(x, z, street) {
       if (x < 1 || z < 1 || x >= N - 1 || z >= N - 1) return false;
@@ -225,6 +229,7 @@ export function crowd(g: Ground, s: SettledGround, own: (x: number, z: number) =
     },
     field: (x, z) => s.field[idx(x, z)],
     h: (x, z) => g.h[idx(x, z)],
+    tended: (x, z) => hands.has(lotOf(x + ox, z + oz)),
   };
   const towns: { t: Town; aims: TownAims }[] = (s.towns ?? []).flatMap((t) => {
     const aims = aimsOf(t);
@@ -265,5 +270,8 @@ export function crowd(g: Ground, s: SettledGround, own: (x: number, z: number) =
       place(out, w, x, z, wx, wz, town.aims.market.get(k), true, FIGURE_AT.market);
       place(out, w, x, z, wx, wz, town.aims.worship.get(k), true, FIGURE_AT.worship);
     }
-  return figuresOf(out, ox, oz);
+  placeHands(out, w, hands, ox, oz, own);
+  const f = figuresOf(out, ox, oz),
+    rolls = rollsOf([...towns.map(({ t }) => t.site), ...(s.furlongs?.keys() ?? [])]);
+  return rolls.length ? { ...f, rolls } : f;
 }

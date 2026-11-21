@@ -21,17 +21,24 @@ hood with a long tail. The head is drawn larger than true so that a figure reads
 - Near: 516 triangles a figure (including the folded parts). Far, beyond 260 blocks across the picture: 108.
 - Only on the finest step of the map. On a coarser step a block is wider than a person is tall.
 - The persons of the 30 great cities follow the plan of the day (people feature 12, `docs/PEOPLE_DESIGN.md`): a
-  person has a figure in the street, and where the plan takes the person, one at the market and one at a house of
-  worship. Once a second the main thread puts on the stage the one where the plan has the person at the world's hour
-  (`schedule.ts`), and none at night; a figure off the stage has a negative phase and is folded into a point by the
-  vertex stage, so nothing is built anew.
+  person has a figure in the street, and where the plan takes the person, one at the market, one at a house of
+  worship and, for the farmers, one at a furlong of the town (`farmers.ts`). Once a second the main thread puts on the stage the one where the plan has the person at the world's hour
+  (`schedule.ts`; the latitude and the farming year of each place from `plan_places.ts`), and none at night; a figure off the stage has a negative phase and is folded into a point by the
+  vertex stage, so nothing is built anew. Once a day of the world the persons' lists are asked for again
+  (`src/people/town_rolls.ts`): the dead leave the stage at once, and the pieces of a town whose persons changed
+  build only their figures again (`Figures.rolls`, `people.ts rollOf`).
+- A ruler on a leg of the way the itinerary tells rides it on horseback, in the map mode of the rulers (`horse.ts`,
+  `src/worldprobe/view_riders.ts`, `src/people/rulers_mode.ts`): one more kit, drawn by the same material, whose
+  horse's legs swing about their own tops. The main thread tells each rider once a second where it is and where it
+  will be a few seconds on; in between the vertex stage moves it. Far out a rider is drawn 28 dots tall, as the
+  rulers' dots are drawn larger than a town.
 
 ## Rules for this code
 
 - One concern per file, at most 300 lines (checked by `tests/figures/figures.test.ts`).
 - Every number that describes the real world (height of a person, walking pace, colours of cloth) carries its source
   in a comment, or is marked as an assumption.
-- `kit.ts`, `estates.ts`, `crowd.ts` and `aims.ts` run in the world's web workers: no page, no renderer. A figure is decided by
+- `kit.ts`, `estates.ts`, `crowd.ts`, `aims.ts` and `farmers.ts` run in the world's web workers: no page, no renderer. A figure is decided by
   its own column of the world alone, and only the piece that owns the column adds it.
 
 ## Open

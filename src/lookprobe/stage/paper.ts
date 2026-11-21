@@ -64,7 +64,9 @@ export function createPaper(
         .mul(laid.strength)
         .mul(inside)
         .mul(land)
-        .mul(inked ? mix(mix(laid.things, 1, inked.sample(screenUV).r), 1, laid.flat) : float(1));
+        .mul(inked ? mix(mix(laid.things, 1, inked.sample(screenUV).r), 1, laid.flat) : float(1))
+        // (and none on a marker of the map, whose ink is below 0: a ruler riding, worldprobe/view_riders.ts)
+        .mul(inked ? step(-0.5, inked.sample(screenUV).r) : float(1));
     // the land's light and shade, as a share of how sunlit level ground is drawn, colours the ink with it
     // (softened: the light and shade of the relief should show, the colours of woods and fields much less)
     const light = clamp(

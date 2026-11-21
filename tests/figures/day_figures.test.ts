@@ -10,6 +10,7 @@ import { figureMeshes, figuresAtHour, personAt } from '../../src/figures/stage';
 import { type Ground, N, idx } from '../../src/lookprobe/layout';
 import { sickness } from '../../src/sim/people/absence';
 import { AWAY, DOING, WHO, dayPlan, doingAt } from '../../src/sim/people/day_plan';
+import { FARM_YEAR } from '../../src/sim/people/farm_year';
 import { CALENDAR, DAY } from '../../src/sim/holy_days';
 import CITIES_JSON from '../../src/sim/content/cities_1356.json';
 
@@ -74,7 +75,13 @@ const days = (() => {
     plan,
   };
 })();
-const clock = (day: number, hour: number | null): FigureClock => ({ day, hour, startYear: START, lat: () => LAT });
+const clock = (day: number, hour: number | null): FigureClock => ({
+  day,
+  hour,
+  startYear: START,
+  lat: () => LAT,
+  farm: () => FARM_YEAR.north,
+});
 
 describe('a person who goes to the market or to a house of worship', () => {
   const { g, s } = town(),
