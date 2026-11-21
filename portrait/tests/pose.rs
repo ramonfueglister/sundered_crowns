@@ -19,12 +19,30 @@ fn dist(a: &V3, b: &V3) -> f32 {
     ((a[0] - b[0]).powi(2) + (a[1] - b[1]).powi(2) + (a[2] - b[2]).powi(2)).sqrt()
 }
 
+/// (round 155) By how much a place of the head may lie elsewhere when the shoulders stand otherwise: by nothing,
+/// but for a veil. A veil hangs from the head to the shoulders now (src/hang.rs), so its cloth beside and behind
+/// the head lies as the shoulders under it stand, and the hair under it, which is laid under the veil
+/// (layers.rs `sink`), goes with it. Over 120 people, built stiff and as they stand: a veil's place over the
+/// chin lies 2.6 mm elsewhere at most (0.8 mm with and without the shoulders tipped back), a place of the hair
+/// 0.16 thousandths of a mm. The skin, the eyes, the brows and every other cloth are held to the digit as before.
+fn give(veiled: bool, tex: &Option<String>) -> f32 {
+    let of = |names: &[&str]| tex.as_deref().is_some_and(|t| names.iter().any(|n| !n.is_empty() && t.contains(n)));
+    if of(&[ENGLAND_1356.veil, ENGLAND_1356.veil_back]) {
+        0.03
+    } else if veiled && of(&["hair"]) {
+        1e-5
+    } else {
+        0.0
+    }
+}
+
 #[test]
 fn the_head_keeps_its_place_and_the_shoulders_turn_as_one_piece() {
     // Until round 123 a portrait was one stiff piece and every person stood square to their own face. Now the
     // shoulders are turned further than the head. Held here against the same person built as one stiff piece:
     // nothing from the chin upward has moved by a digit (the face, its landmarks, the frame: what the gauntlet
-    // reads stays read at the same places); what lies under the neck's foot has turned as one piece, by the
+    // reads stays read at the same places; but for a veil, which hangs from the head to the shoulders since
+    // round 155, see `give`); what lies under the neck's foot has turned as one piece, by the
     // person's angle; and the skin of the neck between them is twisted, not torn.
     let Some(h) = head() else { return };
     let idx = &h.parts["body"][LODS - 1];
@@ -39,11 +57,12 @@ fn the_head_keeps_its_place_and_the_shoulders_turn_as_one_piece() {
         // height here, and the chin itself by its landmark)
         let (head_from, foot) = (stiff.chin + 0.3, stiff.chin - NECK * (stiff.top - 0.12 - stiff.chin) - 0.3);
         let (mut kept, mut moved) = (0usize, 0usize);
+        let veiled = posed.surfaces.iter().any(|s| give(false, &s.tex) > 0.0);
         for (a, b) in stiff.surfaces.iter().zip(&posed.surfaces) {
             assert_eq!((a.pos.len(), &a.tex), (b.pos.len(), &b.tex), "person {k}: a surface's corners");
             for (q, r) in a.pos.iter().zip(&b.pos) {
                 if q[1] >= head_from {
-                    assert!(q == r, "person {k}: a place of the head moved, {q:?} to {r:?} ({:?})", a.tex);
+                    assert!(q == r || dist(q, r) <= give(veiled, &a.tex), "person {k}: a place of the head moved, {q:?} to {r:?} ({:?})", a.tex);
                     kept += 1;
                 } else if q[1] < foot && q != r {
                     moved += 1;
@@ -116,7 +135,7 @@ fn the_head_is_tilted_from_the_neck_and_the_shoulders_stay() {
     // Round 127: a person carries the head turned and tilted by angles of their own (`DressSet::head`). The head
     // is not moved for it: the portrait says the angles, the stage turns and tilts the whole figure, and the
     // shoulders are tipped back by the tilt here. Held against the same person built in the table's pose without
-    // that (a pose handed to the builder is taken as it is): the head has not moved by a digit, and what lies
+    // that (a pose handed to the builder is taken as it is): the head has not moved by a digit (but for a veil, `give`), and what lies
     // under the neck's foot stands, once the stage has tilted it about the place the portrait names, where it
     // stood before, to within what the bust's lean leaves (the tilt's axis leans with the bust, the stage's does
     // not: 3 mm at the shoulder's end at the most tilt).
@@ -131,10 +150,11 @@ fn the_head_is_tilted_from_the_neck_and_the_shoulders_stay() {
         assert_eq!(plain.neck, carried.neck, "person {k}: the neck's foot");
         let (head_from, foot) = (plain.chin + 0.3, plain.chin - NECK * (plain.top - 0.12 - plain.chin) - 0.3);
         assert!((carried.neck[1] - (plain.chin - NECK * (plain.top - 0.12 - plain.chin))).abs() < 0.15, "person {k}: the neck's foot at {}", carried.neck[1]);
+        let veiled = carried.surfaces.iter().any(|s| give(false, &s.tex) > 0.0);
         for (a, b) in plain.surfaces.iter().zip(&carried.surfaces) {
             assert_eq!((a.pos.len(), &a.tex), (b.pos.len(), &b.tex), "person {k}: a surface's corners");
             for (q, r) in a.pos.iter().zip(&b.pos) {
-                assert!(q[1] < head_from || q == r, "person {k}: a place of the head moved, {q:?} to {r:?} ({:?})", a.tex);
+                assert!(q[1] < head_from || q == r || dist(q, r) <= give(veiled, &a.tex), "person {k}: a place of the head moved, {q:?} to {r:?} ({:?})", a.tex);
             }
         }
         let skin = |o: &sc_portrait::Portrait| o.surfaces.iter().position(|s| s.pos.len() >= idx.len() && s.tex.as_deref().is_some_and(|t| t.contains("skin"))).expect("the skin");

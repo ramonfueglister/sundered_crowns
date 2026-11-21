@@ -14,6 +14,7 @@ pub mod dress;
 pub mod facing;
 pub mod fasten;
 pub mod geo;
+pub mod hang;
 mod hair;
 pub mod head;
 pub mod look;

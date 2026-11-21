@@ -7279,6 +7279,101 @@ Pictures (project files, `portraits/`): `runde154_vorher_nachher.png` (a lady fr
 `runde154_von_hinten.png` (two ladies from behind, before above and after below),
 `runde154_kapuzen_von_hinten.png` (two men's hoods from behind, the same).
 
+**Round 155: the veil hangs from the head** (2026-11-21). Round 154 left it written down: the veil stands off
+the head as a hood, and where the cloth on the head meets the cloth on the shoulders there is a ledge. Five
+ladies of the court and the same five in the village, from the front, the side and behind: from behind the
+veil is a ball, drawn in under the back of the head as far as the nape, on a cape that starts under it at the
+shoulders' breadth; from the side the ball's lower edge goes in to the neck and the cape comes out again. A
+bathing cap with a cape. A linen veil that is laid over a head falls from the head's widest place to the
+shoulders.
+
+Where it comes from. A veil is bound to the body place by place (`real_look.rs` `mh_cloth_as`), so it goes
+where the body goes. On the body it was draped on (`drape_sim.py`) its back runs straight down from the back
+of the head, and under the ears and the back of the head its rings lie in a fold on each other, the middle of
+the fold facing the head. England's women have thinner necks, carry the head further forward and are drawn
+leaning back (since round 73), and the stage tilts the head to a shoulder (round 127): bound to them, the cloth
+under the head goes in with the neck.
+
+What is changed (`portrait/src/hang.rs`, new, called from `build.rs` after the pose; no file and no image).
+- **In every direction from the head's upright, the cloth lies no further in than it does on the head
+  above.** The upright stands through the middle of the cloth's top. For each place of the cloth behind and
+  beside the head: how far out the cloth on the head lies in its direction, at its height or above and from
+  the ears' height up. A place that lies further in than that is moved out to it.
+- **The cloth beside holds a place too.** Cloth spans the hollow behind an ear and does not go into it: cloth
+  that lies some degrees to the side counts, by 1 mm less for each degree, up to 10 degrees (OWN RULE, by eye).
+- **The fold is drawn out.** The heights of the places that hang, and of the places next to them, are evened
+  along the cloth (successive over-relaxation, Young 1954, 80 sweeps), with the cloth's edge held, and each
+  place goes out to what holds it at its new height. A rolled hem goes with the edge it is sewn to.
+- **As the figure is drawn.** The builder leans the bust back after this and the stage tilts the figure; a
+  cloth hangs down in the picture, not along the body's own upright. So the rule is worked in the drawn
+  position (the lean and the tilt applied, the result taken back).
+- The veil's rim on the forehead, its ends on the breast and the cloth on the shoulders stay as draped: the
+  rule sets in behind a line 5 cm in front of the ears and 2.5 cm under the cloth's top, over 3 cm each
+  (PLACEHOLDER, by eye).
+
+Measured (`portrait/tests/veil.rs`), on 120 people of 15 to 68, 47 veils, as the stage stands them: of the
+cloth's places behind the ears and more than 5.5 cm under its top, how far a place lies further in than the
+cloth on the head above it in its direction (within 1 degree).
+
+| | round 154 | now |
+|---|---|---|
+| a veil's deepest place, mean of the 47 | 35.3 mm | 2.3 mm |
+| the deepest of all | 46.9 mm | 4.1 mm |
+| places more than 5 mm in | 54 399 of 114 958 | 0 |
+| triangles behind the ears that face the head | 15 366 | 0 |
+| places of a hem that lie more than 2.5 cm off their cloth | 3 | 3 |
+| corners of the skin that stand through the cloth above the chin | 36 | 36 |
+| triangles over the ears that lie turned over | 0 | 0 |
+
+Tried and not kept.
+- Each place taking its way out from the nearest place on the head along the cloth (shortest ways over the
+  net): places in the fold stayed where they were as pins, and under the pose's turn the two sides came out
+  unlike, one at 10 cm from the upright and the other at 11.9.
+- Evening the places sideways as well as in height, and a skin stretched over what holds it (projected
+  over-relaxation, Cryer 1971): no gain to see, and more places that stand alone.
+- The cloth above holding only within 2 degrees: a place behind the ear hung 5 mm further in than the places
+  next to it, a dent.
+- The shoulders holding the cloth as the head does: 208 places of the cape near the shoulders' points moved
+  by up to 2 cm, where nothing was wrong.
+- Hanging along the body's own upright, before the lean: in the picture the fall slanted, 19 mm in at the
+  back.
+- The fall's lower end drawn up in height with the rest: the cape's hem came out ragged. The cloth's edge is
+  held.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in rounds 138 to 154 to its last figure (it
+reads skin, and no skin moved).
+
+Honest about it. The ball and the ledge are gone; the veil is still a stiff sheet with no fold of its own.
+Where the fall meets the cloth on the shoulders, 5.5 to 6 cm under the ears, there is a crease now: a thin
+line across the nape from behind, a few flat wrinkles across from the side. That is the fold's cloth pushed
+together, not what linen does (it would fall in upright folds). The cape's upright folds under the nape are
+flatter than they were. From the front little changes: the notch under the jaw is softer. Along that crease a
+place stands 6 to 8 mm off the middle of the places next to it, as along any fold, so round 154's test (no
+place over an ear stands alone as a point) looks no further than 5 cm under the ear now; with round 154's
+rule taken out it finds 29 points there, up to 15 mm. What is left of the measure, 4.1 mm at most, is 2 mm by
+the rule itself (1 mm of play, 1 mm for the degree the test looks to the side); where the rest comes from was
+not looked into. All the rule's numbers are by eye. The head no longer keeps every place to the digit when
+the shoulders stand otherwise (rounds 123 and 127 held that): a veil hangs between the two, and over 120
+people its places over the chin lie up to 2.6 mm elsewhere built stiff and as they stand, the hair under it
+0.16 thousandths of a mm. `portrait/tests/pose.rs` lets a veil 3 mm and the hair under one a thousandth of a
+mm; skin, eyes, brows and every other cloth are held to the digit as before. The builder now knows how the
+stage tilts the figure; if the stage changes that, `hang.rs` has to follow (the test stands the figure as the
+stage does). Hoods are not
+touched, and from behind a woman's hood keeps the ball's form (not looked into). A wimple is not hung. The
+module grew by 37 kB to 795 kB, and a veil costs 10 to 15 ms more to build on this machine (of about 200);
+in a browser it was not timed.
+
+Tests: `portrait/tests/veil.rs`, one new (a veil hangs from the head and does not go in under it: no veil's
+deepest place more than 5 mm in, no triangle behind the ears facing the head beyond 10, the hems whole; on
+round 154's builder the deepest lies 46.9 mm in). Round 154's test beside it is narrowed and the two of
+`tests/pose.rs` let a veil move, both as written above.
+`cargo test --release` as a whole: 128 of 128. `tests/portrait.test.ts` and its neighbour 44 of 44; typecheck and
+lint pass, no new warning.
+Pictures (project files, `portraits/`): `runde155_vorher_nachher_hinten.png`, `runde155_vorher_nachher_seite.png`
+and `runde155_vorher_nachher_vorn.png` (five ladies of the court from behind, from the side and from the front,
+before above and after below), `runde155_dorf_seite_und_hinten.png` (the same five in the village),
+`runde155_dreiviertel.png` (three ladies from two three-quarter views, after).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair

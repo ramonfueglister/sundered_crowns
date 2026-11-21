@@ -296,6 +296,13 @@ fn no_place_of_the_cloth_over_an_ear_stands_alone_as_a_point() {
     use sc_portrait::dress::ENGLAND_1356;
     use sc_portrait::measure::TRAGION;
     use std::collections::HashMap;
+    // (round 155) not more than 5 cm under the ear: a veil hangs from the head now, and 5.5 to 6 cm under the ears
+    // its fall meets the cloth that lies on the shoulders in a fold, along which a place stands 6 to 8 mm off
+    // the middle of the places next to it (the two under it lie 2 cm further out), as along any fold. With
+    // round 154's rule taken out, 29 places within these 5 cm stand more than 6 mm off, up to 15 mm.
+    const LOW: f32 = 0.5;
+
+
     let Some(h) = head() else { return };
     let d = &ENGLAND_1356;
     let idx = &h.parts["body"][LODS - 1];
@@ -332,7 +339,7 @@ fn no_place_of_the_cloth_over_an_ear_stands_alone_as_a_point() {
                     }
                 }
             }
-            for v in (0..at.len()).filter(|&v| next[v].len() > 2 && ears.iter().any(|&e| dist(&at[v], &skin.pos[e]) < 0.7 && at[v][2] < skin.pos[e][2] - 0.1)) {
+            for v in (0..at.len()).filter(|&v| next[v].len() > 2 && ears.iter().any(|&e| dist(&at[v], &skin.pos[e]) < 0.7 && at[v][2] < skin.pos[e][2] - 0.1 && at[v][1] > skin.pos[e][1] - LOW)) {
                 places += 1;
                 let middle: V3 = std::array::from_fn(|a| next[v].iter().map(|&w| at[w][a]).sum::<f32>() / next[v].len() as f32);
                 let off = dist(&at[v], &middle);
@@ -349,4 +356,85 @@ fn no_place_of_the_cloth_over_an_ear_stands_alone_as_a_point() {
     }
     assert!(worn >= 60 && places > 15_000, "{worn} cloths on a head, {places} places over the ears");
     assert_eq!(points, 0, "{points} places over the ears stand alone, at most by {} mm on person {}", worst.0 * 100.0, worst.1);
+}
+
+#[test]
+fn a_veil_hangs_from_the_head_and_does_not_go_in_under_it() {
+    // (round 155) A veil is bound to the body place by place, and went where the body goes: in under the back of
+    // the head to the nape and out again over the shoulders, a ball with a ledge under it; under the ears and the
+    // back of the head its rings lay folded on each other, the middle of the fold facing the head. It hangs from
+    // the head now (hang.rs). On the 47 veils of 120 people, as the stage stands them, of the cloth's places
+    // behind the ears and more than 5.5 cm under its top: how far a place lies further in, from the upright
+    // through the middle of the cloth's top, than the cloth on the head above it (from the ears' height up) in
+    // its direction. A veil's deepest place lay 35.3 mm in on average and 46.9 mm at most, 54 399 of 114 958
+    // places more than 5 mm; 2.3 mm on average and 4.1 mm at most now, no place more than 5 mm (the builder
+    // lets a place lie 1 mm in and 1 mm more for each degree the cloth above lies to the side, and this looks
+    // 1 degree to either side: 2 mm; where the rest comes from was not looked into). 15 366 triangles behind
+    // the ears faced the head; none does. And the hems are whole: 3 places of a hem's tube lie more than 2.5 cm
+    // off their cloth, as before.
+    use sc_portrait::dress::ENGLAND_1356;
+    use sc_portrait::measure::TRAGION;
+    use std::collections::HashSet;
+    let Some(h) = head() else { return };
+    let d = &ENGLAND_1356;
+    let idx = &h.parts["body"][LODS - 1];
+    let ears: Vec<usize> = [TRAGION.0, TRAGION.1].iter().map(|v| idx.iter().position(|i| *i as usize == *v).expect("the tragion is drawn")).collect();
+    let (mut worn, mut places, mut deep, mut inward, mut loose) = (0, 0, 0, 0, 0);
+    let mut steps: Vec<(f32, u32)> = Vec::new();
+    for k in 0..120u32 {
+        let p = person(k, k % 2 == 0, [15.0, 24.0, 35.0, 50.0, 58.0, 68.0][(k / 2) as usize % 6]);
+        let out = build(&h, &p, 1);
+        let skin = out.surfaces.iter().find(|s| s.pos.len() >= idx.len() && s.tex.as_deref().is_some_and(|t| t.contains("skin"))).expect("the skin");
+        // as the stage stands the figure: tilted towards a shoulder (src/portrait/stage.ts `standing`)
+        let (c, s) = (out.head[1].cos(), out.head[1].sin());
+        let stood = |q: &V3| -> V3 { [q[0] * c - q[1] * s, q[0] * s + q[1] * c, q[2]] };
+        let ear = stood(&std::array::from_fn(|a| (skin.pos[ears[0]][a] + skin.pos[ears[1]][a]) / 2.0));
+        for cloth in out.surfaces.iter().filter(|s| s.tex.as_deref().is_some_and(|t| [d.veil, d.veil_back].iter().any(|n| t.contains(n)))) {
+            worn += 1;
+            // the cloth's corners as they stand, and which are the cloth's own (a rolled hem's tube has texture
+            // coordinates of its own, up to 0.05: `tunic_bind.py`)
+            let at: Vec<V3> = cloth.pos.iter().map(stood).collect();
+            let own: Vec<bool> = cloth.uv.iter().map(|uv| uv[1].abs() > 0.05).collect();
+            let mut seen = HashSet::new();
+            let sheet: Vec<V3> = (0..at.len()).filter(|&i| own[i] && seen.insert(at[i].map(f32::to_bits))).map(|i| at[i]).collect();
+            // round the upright through the middle of the cloth's top (its places within 2.5 cm of its highest)
+            let crest = sheet.iter().map(|q| q[1]).fold(f32::MIN, f32::max);
+            let top: Vec<&V3> = sheet.iter().filter(|q| q[1] > crest - 0.25).collect();
+            let axis = [0, 2].map(|a| top.iter().map(|q| q[a]).sum::<f32>() / top.len() as f32);
+            let round = |q: &V3| ((q[0] - axis[0]).hypot(q[2] - axis[1]), (q[2] - axis[1]).atan2(q[0] - axis[0]).to_degrees());
+            // how far a place behind the ears lies further in than the cloth on the head above it (from the ears'
+            // height up) in its direction (to within a degree either way)
+            let turned: Vec<(f32, f32)> = sheet.iter().map(round).collect();
+            let mut step = 0.0f32;
+            for v in (0..sheet.len()).filter(|&v| sheet[v][2] < ear[2] && sheet[v][1] < crest - 0.55) {
+                let far = (0..sheet.len()).filter(|&u| sheet[u][1] >= sheet[v][1].max(ear[1]) && ((turned[u].1 - turned[v].1 + 540.0).rem_euclid(360.0) - 180.0).abs() <= 1.0).map(|u| turned[u].0).fold(0.0f32, f32::max);
+                step = step.max(far - turned[v].0);
+                places += 1;
+                deep += (far - turned[v].0 > 0.05) as usize;
+            }
+            steps.push((step, k));
+            // what of the cloth behind the ears faces the head: the middle of a pleat
+            for t in (0..at.len()).step_by(3).filter(|&t| own[t] && own[t + 1] && own[t + 2]) {
+                let (a, b): (V3, V3) = (std::array::from_fn(|i| at[t + 1][i] - at[t][i]), std::array::from_fn(|i| at[t + 2][i] - at[t][i]));
+                let n = [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+                let m: V3 = std::array::from_fn(|i| (at[t][i] + at[t + 1][i] + at[t + 2][i]) / 3.0);
+                let l = (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]).sqrt();
+                let r = (m[0] - axis[0]).hypot(m[2] - axis[1]);
+                inward += (m[2] < ear[2] && m[1] < crest - 0.55 && l > 1e-9 && r > 0.3 && (n[0] * (m[0] - axis[0]) + n[2] * (m[2] - axis[1])) / (l * r) < -0.3) as usize;
+            }
+            // a hem's tube stays on the edge it is rolled on
+            let mut seen = HashSet::new();
+            loose += (0..at.len()).filter(|&i| !own[i] && seen.insert(at[i].map(f32::to_bits)) && off(&at[i], &sheet) > 0.25).count();
+        }
+    }
+    let most = |of: &[(f32, u32)]| of.iter().copied().fold((0.0f32, 0u32), |a, b| if b.0 > a.0 { b } else { a });
+    let mean = |of: &[(f32, u32)]| of.iter().map(|s| s.0).sum::<f32>() / of.len() as f32;
+    if std::env::var("SHOW").is_ok() {
+        println!("{worn} veils on 120 people, {places} places behind the ears; a veil's deepest place lies {:.1} mm in under the cloth above it on average, at most {:.1} mm on person {}; {deep} places lie more than 5 mm in; {inward} triangles behind the ears face the head; {loose} places of a hem lie more than 2.5 cm off their cloth", mean(&steps) * 100.0, most(&steps).0 * 100.0, most(&steps).1);
+        return;
+    }
+    assert!(worn >= 40 && places > 100_000, "{worn} veils, {places} places behind the ears");
+    assert!(most(&steps).0 <= 0.05 && deep == 0, "{deep} places lie more than 5 mm in under the cloth above them, at most {} mm on person {}", most(&steps).0 * 100.0, most(&steps).1);
+    assert!(inward <= 10, "{inward} triangles of a veil behind the ears face the head");
+    assert!(loose <= 3, "{loose} places of a hem lie more than 2.5 cm off their cloth");
 }
