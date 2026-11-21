@@ -61,8 +61,7 @@ export function ageAtDeath(age: number, u: number): number {
     y0 = Math.min(119, Math.floor(a));
   if (a >= 120 || l[y0] <= 0) return a;
   // survivorship at the age reached, with the constant force of the year
-  const within = (y: number, x: number) =>
-    l[y + 1] > 0 ? l[y] * Math.pow(l[y + 1] / l[y], x - y) : l[y] * (1 - (x - y));
+  const within = (y: number, x: number) => (l[y + 1] > 0 ? l[y] * (l[y + 1] / l[y]) ** (x - y) : l[y] * (1 - (x - y)));
   const target = (1 - u) * within(y0, a);
   let y = y0;
   while (y < 119 && l[y + 1] > target) y++;
@@ -77,7 +76,7 @@ export function ageAtDeath(age: number, u: number): number {
 /** The share of those of the age `a` who reach the whole age `b`, by the life table. */
 const survives = (a: number, b: number): number => {
   const y = Math.floor(a),
-    within = L[y + 1] > 0 ? L[y] * Math.pow(L[y + 1] / L[y], a - y) : L[y];
+    within = L[y + 1] > 0 ? L[y] * (L[y + 1] / L[y]) ** (a - y) : L[y];
   return within > 0 ? L[b] / within : 0;
 };
 /** The day of death of the person `id` who lives on `day`: at least the next day. */
@@ -90,10 +89,10 @@ export function drawDeath(s: WorldState, id: number, day: number): number {
   const k = deathFactor(P, id),
     left = 1 - u;
   let at: number;
-  if (age >= TRAITS_FROM_AGE) at = ageAtDeath(age, 1 - Math.pow(left, 1 / k));
+  if (age >= TRAITS_FROM_AGE) at = ageAtDeath(age, 1 - left ** (1 / k));
   else {
     const grown = survives(age, TRAITS_FROM_AGE);
-    at = left > grown ? ageAtDeath(age, u) : ageAtDeath(TRAITS_FROM_AGE, 1 - Math.pow(left / grown, 1 / k));
+    at = left > grown ? ageAtDeath(age, u) : ageAtDeath(TRAITS_FROM_AGE, 1 - (left / grown) ** (1 / k));
   }
   return Math.max(day + 1, P.born[id] + Math.ceil(at * DAYS_PER_YEAR));
 }

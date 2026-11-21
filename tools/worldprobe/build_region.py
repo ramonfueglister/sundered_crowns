@@ -2,10 +2,10 @@
 
 The region is a window of the game map (same Mercator projection as tools/geo) at CELLS cells per map pixel, so that
 it lines up with locations and borders later. It is written as square tiles of TILE cells, which the probe loads as it
-needs them. The region `world` goes on beyond the game map, once round the globe and south to Cape Horn (see WORLD_W). Per cell: height in metres after river erosion, drainage area, water class, forest and cultivation share.
+needs them. The region `world` goes on beyond the game map, once round the globe and south to Cape Horn (world_grid.py). Per cell: height in metres after river erosion, drainage area, water class, forest and cultivation share.
 Rivers go along as lines, tile by tile, because the probe draws them on its own turned grid.
 
-Inputs (all open, fetched into GEO_CACHE on first use):
+Inputs (all open, fetched into GEO_CACHE on first use by geodata.py):
   - AWS Terrain Tiles, terrarium, zoom 8 (SRTM / GMTED derived), about 430 m per pixel at 45° N
   - Natural Earth 10m: land, lakes, rivers, each with its European supplement (public domain)
   - the game's own 1356 layers: coast, lake and river overrides (data/history/1356), forest and cultivation (public/map/biome.png)
@@ -25,32 +25,27 @@ Usage: python3 tools/worldprobe/build_region.py europe      (a part of the world
 then   python3 tools/worldprobe/build_overviews.py world    (the coarser steps of the whole)
 """
 
-import http.client
-import io
 import json
 import math
 import os
 import shutil
 import sys
-import time
-import urllib.request
-from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 import tiles as tiles_file
+from drainage_rivers import read_rivers
+from geodata import elevation, grid, natural_earth
 from PIL import Image, ImageDraw
 from scipy import ndimage
+from world_grid import ACROSS, CELLS, SPAN, TILE, WORLD_H, WORLD_W, tile_start, world_lonlat, world_px
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'geo'))
 from common import (
-    CACHE,
     LAT_N,
     LAT_S,
     LON0,
     LON1,
     ROOT,
-    YMAX,
-    YMIN,
     H,
     W,
     lines_from_geojson_geom,
@@ -61,21 +56,10 @@ from common import (
 from erosion import erode_lands
 
 Image.MAX_IMAGE_PIXELS = None
-CELLS = 4
-TILE = 512
-ZOOM = 8
 REGIONS = {
     # name: west, south, east, north (degrees); the window is widened to whole tiles
     'alps': (6.0, 43.0, 15.0, 48.6),
 }
-# The world goes once round the globe: WORLD_W map pixels across, of which the first W are the game map (LON0 … LON1)
-# and the rest the other side of the earth, and WORLD_H down, the game map's rows and on to 58° south. Beyond the
-# game map a pixel is 0.2 % narrower in longitude than on it, so that the way round is a whole number of the cells of
-# every step of the map (see build_overviews.py) and the world joins itself without a seam.
-WORLD_W, WORLD_H = 13024, 6400
-SPAN = LON1 - LON0
-# tiles across the way round (the last one is cut short where the world joins itself) and down
-ACROSS, DOWN = -(-WORLD_W * CELLS // TILE), WORLD_H * CELLS // TILE
 # the parts of the region `world`: first tile and the tile after the last, across and down. Across, the tiles are
 # counted on round the globe: tile ACROSS is tile 0 again.
 PARTS = {
@@ -115,184 +99,7 @@ PARTS = {
 # cells of land worked out around a part (Europe was cut first, without)
 MARGIN = {'europe': 0}
 MARGIN_CELLS = 256
-TILES = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'
-NE = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/{name}.geojson'
 SEA, LAKE = 1, 2
-ROWS = 512  # rows sampled at a time, to keep the memory in bounds
-
-
-def cached(url, path):
-    """The bytes behind `url`, kept in the cache folder."""
-    full = os.path.join(CACHE, path)
-    if not os.path.exists(full):
-        os.makedirs(os.path.dirname(full), exist_ok=True)
-        for attempt in range(5):
-            try:
-                with urllib.request.urlopen(
-                    urllib.request.Request(url, headers={'User-Agent': 'worldprobe'}), timeout=120
-                ) as r:
-                    data = r.read()
-                break
-            except (OSError, http.client.HTTPException):
-                # the line drops now and then: wait and ask again
-                if attempt == 4:
-                    raise
-                time.sleep(2**attempt)
-        # written under another name first, so that no half file is ever read
-        with open(f'{full}.{os.getpid()}', 'wb') as f:
-            f.write(data)
-        os.replace(f'{full}.{os.getpid()}', full)
-    with open(full, 'rb') as f:
-        return f.read()
-
-
-def tile_start(t):
-    """The first cell across of tile `t`, counted on round the globe."""
-    return t // ACROSS * WORLD_W * CELLS + t % ACROSS * TILE
-
-
-def world_lonlat(x, y):
-    """Degrees of the map pixels `x`, `y` of the world; the longitude counts on beyond 180° where the columns do."""
-    lap, xm = np.divmod(np.asarray(x, np.float64), WORLD_W)
-    lon = np.where(xm < W, LON0 + xm / W * SPAN, LON1 + (xm - W) / (WORLD_W - W) * (360 - SPAN)) + 360 * lap
-    return lon, np.degrees(np.arctan(np.sinh(YMAX - np.asarray(y, np.float64) / H * (YMAX - YMIN))))
-
-
-def world_px(lon, lat):
-    """Map pixel of the world of a place in degrees (longitude -180 … 180); the columns west of the game map are negative."""
-    lon, far = np.asarray(lon, np.float64), (WORLD_W - W) / (360 - SPAN)
-    x = np.where(lon < LON0, (lon - LON0) * far, np.where(lon <= LON1, (lon - LON0) / SPAN * W, W + (lon - LON1) * far))
-    return x, (YMAX - np.arcsinh(np.tan(np.radians(lat)))) / (YMAX - YMIN) * H
-
-
-def natural_earth(name):
-    return json.loads(cached(NE.format(name=name), f'{name}.geojson'))['features']
-
-
-def grid(field, ys, xs, order=1):
-    """`field` sampled on the grid of rows `ys` and columns `xs` (pixel coordinates of the field), a few rows at a time."""
-    out = np.empty((len(ys), len(xs)), np.float32)
-    for r in range(0, len(ys), ROWS):
-        yy, xx = np.meshgrid(ys[r : r + ROWS], xs, indexing='ij')
-        out[r : r + ROWS] = ndimage.map_coordinates(field, [yy, xx], order=order, mode='nearest')
-    return out
-
-
-def elevation(lon, lat, land):
-    """
-    Metres above sea level on the grid of longitudes `lon` and latitudes `lat`, from terrarium tiles, bilinear. Only
-    the tiles that `land` (the grid's cells that are not sea) reaches are fetched; the rest of the grid stays 0.
-    """
-    n = 2**ZOOM
-    tx = (lon + 180) / 360 * n
-    ty = (1 - np.arcsinh(np.tan(np.radians(lat))) / math.pi) / 2 * n
-    x0, x1, y0, y1 = int(tx.min()), int(tx.max()), int(ty.min()), int(ty.max())
-    # the tiles with land, and those beside them, which the blend at a tile's edge reaches into
-    dry = np.zeros((y1 - y0 + 1, x1 - x0 + 1), bool)
-    rows, cols = ty.astype(int) - y0, tx.astype(int) - x0
-    for r in np.unique(rows):
-        dry[r, np.unique(cols[land[rows == r].any(0)])] = True
-    dry = ndimage.binary_dilation(dry, np.ones((3, 3), bool))
-    # round the globe the tiles begin again
-    wanted = [(x, y) for x in range(x0, x1 + 1) for y in range(y0, y1 + 1) if dry[y - y0, x - x0]]
-
-    def source(x, y):
-        return cached(TILES.format(z=ZOOM, x=x % n, y=y), f'terrarium/{ZOOM}_{x % n}_{y}.png')
-
-    with ThreadPoolExecutor(16) as pool:
-        list(pool.map(lambda t: source(*t), wanted))
-    mosaic = np.zeros(((y1 - y0 + 1) * 256, (x1 - x0 + 1) * 256), np.float32)
-    for x, y in wanted:
-        a = np.asarray(Image.open(io.BytesIO(source(x, y))).convert('RGB'), dtype=np.float32)
-        mosaic[(y - y0) * 256 : (y - y0 + 1) * 256, (x - x0) * 256 : (x - x0 + 1) * 256] = (
-            a[..., 0] * 256 + a[..., 1] + a[..., 2] / 256 - 32768
-        )
-    return grid(mosaic, (ty - y0) * 256 - 0.5, (tx - x0) * 256 - 0.5)
-
-
-def read_rivers(area, water, drawn, km):
-    """
-    (`km` is the size of a cell in each row.)
-    The rivers that the drawn lines leave out, read from the drainage: every run of land cells through which at least
-    RIVER_FROM km² drain, from where it lies clear of the drawn rivers down to the water or to the drawn river it
-    joins. A run ends where the path goes straight for long, which is where the heights are too flat to say where the
-    water runs; what then ends in the open plain is dropped.
-    """
-    RIVER_FROM, CLEAR_KM, STRAIGHT, SHORTEST = 400, 7, 10, 10
-    h, w = area.shape
-    img = Image.new('L', (w, h), 0)
-    d = ImageDraw.Draw(img)
-    for r in drawn:
-        d.line([tuple(p) for p in r['pts']], fill=1, width=1)
-    away = ndimage.distance_transform_edt(np.asarray(img) == 0)
-    clear, stream = away * km[:, None] > CLEAR_KM, (area >= RIVER_FROM * 1e6) & (water == 0)
-    down = {}
-    for y, x in zip(*np.nonzero(stream)):
-        best = None
-        for dy in (-1, 0, 1):
-            for dx in (-1, 0, 1):
-                ny, nx = y + dy, x + dx
-                if (
-                    (dy or dx)
-                    and 0 <= ny < h
-                    and 0 <= nx < w
-                    and area[ny, nx] > area[y, x]
-                    and (best is None or area[ny, nx] < area[best])
-                ):
-                    best = (ny, nx)
-        if best:
-            down[(y, x)] = best
-    fed = {v for c, v in down.items() if clear[c]}
-    heads, seen, found = [c for c in down if clear[c] and c not in fed], set(), []
-    for head in sorted(heads, key=lambda c: area[c]):
-        path, c, beside = [], head, 0
-        while c in down and c not in seen:
-            seen.add(c)
-            path.append(c)
-            beside = 0 if clear[c] else beside + 1
-            # beside a drawn river: it is joined soon, or the path is that river itself, read a little off its line
-            if away[c] <= 1.5:
-                break
-            if beside * km[c[0]] > 2 * CLEAR_KM:
-                path = path[:-beside]
-                break
-            c = down[c]
-        else:
-            path.append(c)
-        # cut out the straight stretches
-        runs, start, last = [], 0, None
-        for i in range(1, len(path)):
-            step = (path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1])
-            if i == 1 or step != last:
-                turn = i - 1
-            last = step
-            if i - turn == STRAIGHT:
-                runs.append(path[start : turn + 1])
-                start = None
-            if start is None and i - turn < STRAIGHT:
-                start = i - 1
-        if start is not None:
-            runs.append(path[start:])
-        found += [run for run in runs if len(run) >= SHORTEST]
-    # a river goes on to water, to a drawn river or to another river that does; what ends in the open plain is dropped
-    kept, reached = [], ~clear | ndimage.binary_dilation(water != 0, iterations=2)
-    while True:
-        more = [run for run in found if reached[run[-1]]]
-        if not more:
-            break
-        for run in more:
-            found.remove(run)
-            kept.append(run)
-            for c in run:
-                reached[c] = True
-    return [
-        {
-            'name': '',
-            'rank': 10 if area[run[-1]] < 2000e6 else 9,
-            'pts': [[float(x) + 0.5, float(y) + 0.5] for y, x in run[::2] + run[-1:]],
-        }
-        for run in kept
-    ]
 
 
 def main(name):
