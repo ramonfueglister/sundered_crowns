@@ -10,7 +10,17 @@
 // stage.ts    the figures on the stage: near or far kit, and whether anything walks
 //
 // index.ts exports only what runs in a worker; the stage takes stage.ts directly.
-export { type Figures, type SettledGround, type Town, type Where, crowd, figuresOf, gathered, place } from './crowd';
+export {
+  type Figures,
+  type SettledGround,
+  type Town,
+  type Where,
+  crowd,
+  figuresOf,
+  gathered,
+  place,
+  townsOn,
+} from './crowd';
 export { type TownPerson, FIGURE_FROM_AGE, loadTownPeople, setPlacePeople, townPeople } from './people';
 export { ESTATES, Mode } from './estates';
 export { HEIGHT, MICRO, buildKit, FAR_PARTS, NEAR_PARTS } from './kit';

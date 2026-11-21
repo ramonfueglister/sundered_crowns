@@ -19,7 +19,7 @@ import { type Rural, ruralAt } from './rural';
 import { HAMLET_TURN, type HamletLands, hamletAt, hamletsOf } from './hamlets';
 import { BARE, FINER, FINER_STEPS, SNOW_LINE, TINT, TREE_LINE, WOODS, blockOfCell, cellOfBlock, lineShift, paleFrom, rockAt, woodsUntil } from './land';
 import { type Region, Water, cellOf, latOf, sample, waterAt } from './region';
-import { type Cover, HOUSES_UNTIL, MODELS_UNTIL, type Woods, coverLand, lotFill } from './far';
+import { type Cover, HOUSES_UNTIL, MODELS_UNTIL, type Woods, coverLand, lotFill, plannedTowns } from './far';
 import { drawGround } from './table';
 import { CROWD_AT, farCrowd } from './crowd';
 import { TREE_NUMBERS, crownTallAt } from './trees';
@@ -860,9 +860,9 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     cells.push({ x: x0 + CELL / 2, z: z0 + CELL / 2, far, lots, ground });
   }
   counts.triangles = ground.triangles + (carried?.triangles ?? 0) + water.triangles + raised.triangles + things.triangles + (standing?.triangles ?? 0) + cells.reduce((n, c) => n + c.far.triangles, 0);
-  // the people of the towns, villages and fields: the finest step's, at the first far step too (crowd.ts); on the
-  // coarser steps a block is wider than a person is tall
-  const figures = settled ? crowd(g, settled, own) : cover && step === CROWD_AT ? farCrowd({ ...g, town: cover.town, has: cover.has, quarters: cover.quarters, crops: cover.crops, furlongs: cover.furlongs }, ox, oz, part) : undefined;
+  // the people of the towns, villages and fields: the finest step's, at the first far step too (crowd.ts), the persons
+  // of the towns in the towns of the plan; on the coarser steps a block is wider than a person is tall
+  const figures = settled ? crowd(g, settled, own) : cover && step === CROWD_AT ? farCrowd({ ...g, town: cover.town, has: cover.has, quarters: cover.quarters, crops: cover.crops, furlongs: cover.furlongs, towns: plannedTowns(ox, oz, part) }, ox, oz, part) : undefined;
   if (figures) counts.figures = figures.count;
   return { ground, carried, things, water, raised, figures, cells, counts, standing };
 }

@@ -7,10 +7,11 @@
 // each of them that the column does not tell, far.ts lays down (`quarters`, a byte to a column): which quarters are
 // street, the paving of a town on which nothing stands (settle.ts), and which a building stands on. The crop of a
 // quarter is that of its lot (crops.ts), a farmhouse is a building like any other.
-import { type Figures, type Where, figuresOf, gathered, place } from '../figures';
+import { type Figures, type Town, type Where, figuresOf, gathered, place, townsOn } from '../figures';
 import { Mat, idx, inGrid } from '../lookprobe/layout';
 import type { Part } from '../lookprobe/terrain';
 import { cropAt } from './crops';
+import { PIECE } from './piece_sight';
 import { RIM } from './table';
 import { uprightOf } from './zoom';
 
@@ -68,6 +69,8 @@ export interface CrowdGround {
   quarters?: ArrayLike<number>;
   crops?: ArrayLike<number>;
   furlongs?: ArrayLike<number>;
+  /** the walled towns of the plan about it, in blocks of the finest step (far.ts `plannedTowns`) */
+  towns?: readonly Town[];
 }
 
 /**
@@ -109,9 +112,15 @@ export function farCrowd(t: CrowdGround, ox: number, oz: number, part: Part): Fi
     field,
     h: (fx, fz) => t.h[column(fx, fz)] / up,
   };
+  // the persons of the towns stand where the finest step stands them: a ruler in the piece of the finest step that
+  // holds the town's middle (a piece of this step holds four of them whole: piece_sight.ts)
+  const own = (x: number, z: number) => x >= 2 * part.x0 && z >= 2 * part.z0 && x < 2 * part.x1 && z < 2 * part.z1,
+    piece = (fx: number, fz: number) => `${Math.floor((fx + 2 * ox) / PIECE)},${Math.floor((fz + 2 * oz) / PIECE)}`,
+    holds = (fx: number, fz: number, cx: number, cz: number) => own(cx, cz) && piece(fx, fz) === piece(cx, cz),
+    at = townsOn(t.towns ?? [], w, 2 * ox, 2 * oz, holds);
   const out = gathered();
   for (let fz = 2 * part.z0; fz < 2 * part.z1; fz++)
-    for (let fx = 2 * part.x0; fx < 2 * part.x1; fx++) place(out, w, fx, fz, fx + 2 * ox, fz + 2 * oz);
+    for (let fx = 2 * part.x0; fx < 2 * part.x1; fx++) place(out, w, fx, fz, fx + 2 * ox, fz + 2 * oz, ...at(fx, fz));
   const f = figuresOf(out, 2 * ox, 2 * oz, [1 / 2, up]);
   return f.count ? f : undefined;
 }
