@@ -862,7 +862,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   counts.triangles = ground.triangles + (carried?.triangles ?? 0) + water.triangles + raised.triangles + things.triangles + (standing?.triangles ?? 0) + cells.reduce((n, c) => n + c.far.triangles, 0);
   // the people of the towns, villages and fields: the finest step's, at the first far step too (crowd.ts); on the
   // coarser steps a block is wider than a person is tall
-  const figures = settled ? crowd(g, settled, own) : cover && step === CROWD_AT ? farCrowd({ ...g, town: cover.town, has: cover.has, quarters: cover.quarters, crops: cover.crops }, ox, oz, part) : undefined;
+  const figures = settled ? crowd(g, registered ? { ...settled, furlongs: registered.towns } : settled, own) : cover && step === CROWD_AT ? farCrowd({ ...g, town: cover.town, has: cover.has, quarters: cover.quarters, crops: cover.crops }, ox, oz, part) : undefined;
   if (figures) counts.figures = figures.count;
   return { ground, carried, things, water, raised, figures, cells, counts, standing };
 }

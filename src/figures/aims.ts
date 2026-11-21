@@ -65,8 +65,15 @@ export function aimsOf(t: Town): TownAims | undefined {
   return aims;
 }
 
-/** Which of a person's figures a figure is (crowd.ts `Figures.at`). */
-export const FIGURE_AT = { anonymous: 0, street: 1, market: 2, worship: 3 } as const;
+/** Which of a person's figures a figure is (crowd.ts `Figures.at`): at a furlong of the town, farmers.ts. */
+export const FIGURE_AT = { anonymous: 0, street: 1, market: 2, worship: 3, field: 4 } as const;
+/** The four ways along the grid a figure walks or faces. */
+export const DIRS = [
+  [1, 0],
+  [0, 1],
+  [-1, 0],
+  [0, -1],
+] as const;
 /** numbers per figure in crowd.ts `Figures.plan`: part, calendar, place, day of birth, day of birth of the child of a
  *  mother in childbed (−Infinity for none) */
 export const PLAN = 5;
