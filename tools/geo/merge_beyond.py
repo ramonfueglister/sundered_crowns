@@ -7,7 +7,7 @@ running world refers to a sea zone, and every array per place only grows at its 
 places to a running world).
 
 Per new place: centre, area, height, neighbours (also across the edges of the game map), a province, a name, its
-terrain and climate (tools/geo/build_setup.py's rules), culture, faith and people (data/history/1356/world_beyond.json
+terrain and climate (build_setup.py, climate.py), culture, faith and people (data/history/1356/world_beyond.json
 "demography"), and its holder in 1356: the realms of world_beyond.json and those of the game map that reach beyond it
 ("extends") spread from their capitals and holdings over the land, as build_setup.py spreads them.
 
@@ -30,11 +30,13 @@ from scipy.spatial import cKDTree
 sys.path.insert(0, os.path.dirname(__file__))
 from build_beyond import frame, load_step
 from build_land import yield_curve
-from build_setup import CULT_GROUP, SYL, assign_resources, climate, gen_name
+from climate import climate
 from common import CACHE, ROOT
 from common import H as MAP_H
 from common import W as MAP_W
+from district_names import add_peoples_beyond, gen_name
 from provinces import build_areas, build_provinces
+from resources import assign_resources
 
 DATA = os.path.join(ROOT, 'public', 'data')
 MAP = os.path.join(ROOT, 'public', 'map')
@@ -44,125 +46,7 @@ def read(name):
     return json.loads(Path(os.path.join(DATA, name)).read_text(encoding='utf-8'))
 
 
-# names for the peoples beyond the game map, built as build_setup.py builds the European ones (prefix + suffix)
-SYL.update(
-    {
-        'sinic': (
-            [
-                'Ping',
-                'An',
-                'Chang',
-                'Lin',
-                'Shan',
-                'He',
-                'Nan',
-                'Bei',
-                'Dong',
-                'Xi',
-                'Feng',
-                'Yong',
-                'Jin',
-                'Qing',
-                'Huai',
-                'Gao',
-                'Bao',
-                'Fu',
-                'Ning',
-                'Long',
-            ],
-            ['zhou', 'cheng', 'xian', 'ling', 'yang', 'an', 'shan', 'kou', 'jiang', 'ping', 'de', 'yuan', 'tai', 'hua'],
-        ),
-        'japonic': (
-            [
-                'Taka',
-                'Naka',
-                'Kawa',
-                'Yama',
-                'Matsu',
-                'Oka',
-                'Hira',
-                'Fuku',
-                'Kita',
-                'Minami',
-                'Shima',
-                'Asa',
-                'Mori',
-                'Ise',
-                'Toyo',
-            ],
-            ['saki', 'mura', 'hara', 'da', 'yama', 'shima', 'gawa', 'no', 'oka', 'zawa', 'ta', 'ura'],
-        ),
-        'korean': (
-            ['Gwang', 'Cheong', 'Yeong', 'Hae', 'Nam', 'Seo', 'Jin', 'Hwa', 'Mun', 'Pyeong', 'Dan', 'Ok'],
-            ['ju', 'san', 'won', 'cheon', 'yang', 'seong', 'chang', 'do'],
-        ),
-        'indic': (
-            [
-                'Rama',
-                'Chandra',
-                'Deva',
-                'Sri',
-                'Hari',
-                'Vijaya',
-                'Shiva',
-                'Ratna',
-                'Kanaka',
-                'Bhima',
-                'Indra',
-                'Gopal',
-                'Lakshmi',
-                'Narayan',
-                'Sona',
-                'Kali',
-            ],
-            ['pur', 'nagar', 'garh', 'abad', 'kot', 'ganj', 'pura', 'gaon', 'wara', 'ghat', 'patan'],
-        ),
-        'dravidian': (
-            ['Kanchi', 'Tiru', 'Palla', 'Kumba', 'Vella', 'Manga', 'Kolla', 'Anna', 'Siru', 'Peri', 'Mel', 'Kil'],
-            ['puram', 'palli', 'ur', 'koil', 'nadu', 'kottai', 'pettai', 'kudi'],
-        ),
-        'tai': (
-            ['Chiang ', 'Muang ', 'Ban ', 'Nong ', 'Wiang ', 'Phra ', 'Na ', 'Mae '],
-            ['Rai', 'Kham', 'Thong', 'Saen', 'Luang', 'Khao', 'Yai', 'Noi', 'Kaeo', 'Chan'],
-        ),
-        'austroasiatic': (
-            ['Thanh ', 'Phú ', 'An ', 'Vĩnh ', 'Long ', 'Bình ', 'Kampong ', 'Prey ', 'Phnom ', 'Svay '],
-            ['Hòa', 'Yên', 'Định', 'Xuân', 'Lộc', 'Thom', 'Chas', 'Srei', 'Meas', 'Sơn'],
-        ),
-        'austronesian': (
-            ['Kota ', 'Tanjung ', 'Sungai ', 'Batu ', 'Bukit ', 'Muara ', 'Kuala ', 'Pulau ', 'Teluk '],
-            ['Besar', 'Lama', 'Raja', 'Mas', 'Tinggi', 'Putih', 'Merah', 'Baru', 'Panjang', 'Kecil'],
-        ),
-        'tibeto_burman': (
-            ['Myit', 'Taung', 'Nyaung', 'Shwe', 'Kyauk', 'Pyin', 'Gya', 'Nyang', 'Lho', 'Dra', 'Tsang', 'Ri'],
-            ['gyi', 'oo', 'myo', 'pin', 'daw', 'kar', 'tse', 'gang', 'ling', 'rong', 'thang'],
-        ),
-        'polynesian': (
-            ['Moto', 'Hau', 'Kai', 'Lani', 'Ma', 'Wai', 'Puke', 'Rangi', 'Tai', 'Hono'],
-            ['nui', 'ka', 'loa', 'iti', 'tea', 'roa', 'kau', 'pua'],
-        ),
-        'mongolic': (
-            ['Ulaan', 'Khar', 'Tsagaan', 'Shar', 'Ikh', 'Baga', 'Khongor', 'Altan', 'Bayan'],
-            ['tolgoi', 'gol', 'nuur', 'bulag', 'khoshuu', 'uul', 'tal'],
-        ),
-    }
-)
-for grp, members in {
-    'sinic': 'han jurchen',
-    'japonic': 'japanese ryukyuan',
-    'korean': 'korean',
-    'indic': 'hindustani bengali kashmiri dakhini rajput nepali assamese odia sinhala dhivehi gujarati punjabi newar',
-    'dravidian': 'kannada tamil telugu malayali',
-    'tai': 'thai lao shan ahom',
-    'austroasiatic': 'vietnamese khmer mon',
-    'austronesian': 'cham javanese sundanese malay bugis tagalog',
-    'tibeto_burman': 'tibetan burmese arakanese',
-    'polynesian': 'polynesian maori',
-    'mongolic': 'mongol',
-    'turkic': 'chagatai_turkic uyghur',
-}.items():
-    for m in members.split():
-        CULT_GROUP[m] = grp
+add_peoples_beyond()
 
 REGIONS = [  # region key of a new place (as geo.json's region_key): first box that holds it, (lon0, lon1, lat0, lat1)
     ('china', 97, 125, 18, 42),
