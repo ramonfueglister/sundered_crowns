@@ -21,10 +21,6 @@
     "src/sim/economy/daily.ts": {
       "style/useExponentiationOperator": 2
     },
-    "src/sim/economy/engine.ts": {
-      "suspicious/noAssignInExpressions": 1,
-      "suspicious/useIterableCallbackReturn": 1
-    },
     "src/sim/people/lifetable.ts": {
       "style/useExponentiationOperator": 2
     },
@@ -83,7 +79,6 @@
   },
   "lines": {
     "server/world.ts": 541,
-    "src/sim/economy/engine.ts": 518,
     "src/sim/settlement/streets.ts": 622,
     "src/worldprobe/world.ts": 868,
     "tools/atlas/probe.py": 536,
