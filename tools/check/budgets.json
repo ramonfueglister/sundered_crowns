@@ -96,7 +96,6 @@
     "src/worldprobe/world.ts": 868,
     "tests/economy-households.test.ts": 533,
     "tests/economy.test.ts": 1045,
-    "tests/worldprobe/world.test.ts": 754,
     "tools/atlas/probe.py": 536,
     "tools/geo/build_export.py": 511,
     "tools/geo/build_setup.py": 915,
