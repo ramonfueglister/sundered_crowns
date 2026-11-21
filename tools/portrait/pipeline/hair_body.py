@@ -88,7 +88,10 @@ CUTS = {
     'bob03': dict(BOWL, recede=(34.0, 11.0, 22.0)),         # gone back at the temples: the fringe's line rises there
     'bob04': dict(BOWL, lift=0.25, round=0.6, locks=0.15, bare=True),    # a horseshoe round a bare top
     'bob05': dict(BOWL, curl=(0.04, 0.03, 0.65)),          # curls
-    'bob08': dict(BOWL, cut=2.0, end=-38.0, lift=0.75),     # a small child's: the fringe cut high
+    # a small child's: to the ear's lobe, closer to the head. (round 167) Its fringe ends where a man's does, on
+    # the middle of the forehead; until then it was cut at 2 degrees, in the forehead's upper half (round 105,
+    # when a man's ended on the brows), and under it the larger part of a child's face was bare forehead.
+    'bob08': dict(BOWL, end=-38.0, lift=0.75),
     # to the jaw, its ends turned out and up (round 133); all PLACEHOLDER by eye
     'bob09': dict(BOWL, end=_e('TURN_END', '-62')[0], locks=0.5, turn=tuple(_e('TURN', '140,220,0.07,0.09,0.003,0.85,0.3,0.5'))),
 }

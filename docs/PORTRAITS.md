@@ -8330,6 +8330,67 @@ Pictures (project files, `portraits/`): `runde166_kinder_vorn.png` (two boys' ch
 above and after below), `runde166_kinder_seite.png` (the same from the side), `runde166_dorf.png` (all 36 of
 the sample in the village's dress, after).
 
+**Round 167: a small boy's fringe ends on the middle of the forehead** (2026-11-21). Round 166's two boys
+large, for the gown: above it, the larger part of each face is bare forehead, and the hair ends high over it
+in a row of points, as a wig that has slid back. Round 141's own list: "on a small child, whose fringe is
+cut high, the locks' points stand in a row over it". The cut is so on purpose: round 105 gave children under
+seven a cut of their own (`bob08`) with the fringe in the forehead's upper half, because the grown's fringe
+ended on the brows then, and under it "a child of two was a small adult under a bowl" (`dress.rs`,
+`hair_small`). Since round 147 a man's fringe ends on the middle of the forehead, as the reference's bowl
+cuts do; the child's stayed where it was.
+
+What was read. Nothing new. No picture of the reference shows a child (these docs say so of two earlier
+rounds), and no source was read on how a small boy's hair was cut.
+
+What is changed.
+- **`bob08` has no fringe line of its own** (`tools/portrait/pipeline/hair_body.py`, `CUTS`): it was cut at 2
+  degrees and takes the bowl cut's -5 now, the line every man's and boy's fringe ends at. Its sides (to the
+  ear's lobe) and how close it lies to the head are as they were. The file is written anew
+  (`public/portrait/real/bob08_body.txt.zst`, 709 kB for 694; the manifest has its size). The painted layer
+  under it and the scalp are not touched: the hair covers more of them.
+- Nothing in the builder and nothing on the stage. Girls under seven wear their hair down since round 162 and
+  are as they were.
+
+Measured (`portrait/tests/hair_body.rs`'s measure, on eight boys each of two, four and six, and eight men of
+24 for comparison):
+
+| | round 166 | now |
+|---|---|---|
+| the fringe's lowest place over the eyes, boys of two | 4.8 to 5.3 cm | 3.2 to 3.6 cm |
+| the same, of four; of six | 4.9 to 5.4; 5.0 to 5.6 | 3.4 to 3.8; 3.5 to 4.0 |
+| the same as a share of the way from the eyes to the chin, boys of two to six | 0.50 to 0.60 | 0.35 to 0.40 |
+| a man's, for comparison | 4.1 to 5.0 cm, 0.27 to 0.33 | the same |
+| `bob08_body.txt.zst` | 693 702 bytes | 708 551 |
+
+A small boy's fringe ends lower over the eyes than a man's in centimetres and higher in shares of the face:
+his head is smaller and his face shorter under it.
+
+Tried and not kept.
+- The fringe at -10 degrees: down to near the brows, a heavy mop over a small face; round 105's "small adult
+  under a bowl" again.
+- Round 147 had tried -1 on these boys with the old locks' line ("a broken line on a boy, the upper locks'
+  points standing in it"); not tried again.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 165 to its last figure, and the
+colour sheet the same.
+
+Honest about it. A boy of two to six reads as a child with a fringe now, not as a man whose hair has gone
+back; that is all. The fringe is still a saw: wisps of 3.5 mm that each end in a point, which a picture as
+close as a small child's shows tooth by tooth, and the locks' points still stand in a row above it, lower on
+the forehead now. From the side and from behind the hair is the helmet it was, broad slabs from the whorl,
+standing far off the back of the head. All small boys wear this one cut, as before. The line is the grown's
+by eye: nothing was read, the reference shows no child, and the one reason is that the reference's bowl cuts
+end there on grown heads. PLACEHOLDER, as the cut's other numbers.
+
+Tests: `portrait/tests/hair_body.rs`, one test changed, with the reason in it: it held a small boy's fringe
+to the forehead's upper half (0.40 to 0.70 of the way from the eyes to the chin over the eyes) and holds it
+to a man's bounds now (0.27 to 0.48); round 166's file fails it with 0.59. `cargo test --release` as a
+whole 140 of 140; `tests/portrait.test.ts` and its neighbour 46 of 46; typecheck and lint pass, no new
+warning.
+Pictures (project files, `portraits/`): `runde167_buben_vorher_nachher.png` (four small boys from the front
+and from the side, before above and after below), `runde167_gross.png` (two of them large), `runde167_dorf.png`
+(all 36 of the sample in the village's dress, after).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair

@@ -430,7 +430,9 @@ pub struct DressSet {
     /// small under a large braincase (`skull`), and its forehead is the larger part of what a picture shows of
     /// it: with the fringe at the brows a child of two was a small adult under a bowl. Round 105: `bob08`, a cut
     /// of its own (tools/portrait/pipeline/README.md): the fringe 46 to 52 mm over the eyes, in the forehead's
-    /// upper half, ragged; the sides to the ear's lobe; lying closer to the head. By eye, PLACEHOLDER.
+    /// upper half, ragged; the sides to the ear's lobe; lying closer to the head. Round 167: a man's fringe ends
+    /// on the middle of the forehead since round 147, and `bob08`'s ends there too (32 to 40 mm over the eyes):
+    /// cut higher than a man's, the larger part of a small child's face was bare forehead. By eye, PLACEHOLDER.
     pub hair_small: &'static str,
     /// (round 162) The hair of a girl under seven; empty: `hair_small`, as a boy's. England: `loose01`, parted in
     /// the middle and worn down, hanging to over the shoulders (tools/portrait/pipeline/README.md). It has no

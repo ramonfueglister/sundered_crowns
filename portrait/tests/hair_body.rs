@@ -279,11 +279,12 @@ fn a_body_of_hair_lies_on_a_head_of_any_size() {
         }
         // a body that stands: 1.3 to 2.3 cm over the crown (the locks 0.7 to 1.8; under a hood less, see below)
         assert!((0.10..0.26).contains(&(top - crown)), "{who}: the hair's top lies {} over the crown (1 is 10 cm)", top - crown);
-        // a small boy wears a cut of his own (round 105, `DressSet::hair_small`), its fringe in the upper half
-        // of the forehead; the grown's ends on the middle of the forehead (round 147: 4 to 5 cm over the eyes; two
-        // fingers over the eyes until then, 0.12 to 0.34)
-        let bounds = if age < 7.0 { 0.40..0.70 } else { 0.27..0.48 };
-        assert!(bounds.contains(&ends), "{who}: the fringe ends {ends} of the way from eyes to chin over the eyes ({} mm)", (fringe - eyes) * 100.0);
+        // the fringe ends on the middle of the forehead (round 147: 4 to 5 cm over the eyes on the grown; two
+        // fingers over the eyes until then, 0.12 to 0.34). A small boy wears a cut of his own (round 105,
+        // `DressSet::hair_small`), and its fringe was cut in the upper half of the forehead, held here to 0.40
+        // to 0.70; since round 167 it ends where a man's does (on eight boys each of two, four and six: 0.35
+        // to 0.40, 3.2 to 4.0 cm over the eyes; 0.50 to 0.60 and 4.8 to 5.6 cm until then)
+        assert!((0.27..0.48).contains(&ends), "{who}: the fringe ends {ends} of the way from eyes to chin over the eyes ({} mm)", (fringe - eyes) * 100.0);
     }
     // under a hood the hair lies flat: the hood's own form stays the head's outline
     for (k, age) in [(5u32, 17.0f32), (7, 24.0), (9, 35.0)] {
