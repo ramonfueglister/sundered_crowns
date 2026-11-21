@@ -62,7 +62,10 @@ for k in range(len(ridge)):
     if m.sum() >= 8:
         top = P[pts[m]]
         ridge[k] = top[top[:, 1] >= np.quantile(top[:, 1], 0.92), 2].mean()
-NECK = 0.9
+# (round 170: `NECK` can be given. A lady's neck is cut out to 1.65 from the middle, and between 0.9 and there
+# the cloth's highest points are the edge of her neck behind. On a gown that hangs that did no harm; on one
+# cut to the body, whose back comes forward in the hollow of the waist, the seam ran through the back.)
+NECK = float(os.environ.get('NECK', '0.9'))
 first = int(np.searchsorted(edges, NECK))
 ridge[:first] = ridge[first]
 mid = (edges[:-1] + edges[1:]) / 2

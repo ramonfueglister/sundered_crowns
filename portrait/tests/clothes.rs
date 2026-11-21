@@ -233,7 +233,11 @@ fn a_ladys_gown_at_court_is_cut_wider_and_lower_than_a_village_womans_and_shows_
         // court's own, closer on the body)
         let before = stiff(c.wimple_from - 0.01, 3);
         let (last, sk) = (gown(&before), skin(&before));
-        assert!((breadth(&last) - breadth(&l)).abs() < 1.0, "lady {k}: the wide cut until the wimple's age");
+        // (round 170: within 1.3 cm for 1.0. The gown is cut to the body now, and where its hem ends at the arm
+        // goes with the body's own breadth there, which is another at 30 than at the wimple's age: 36.2 for 37.4
+        // on one of these. The measure is as fine as the builder's cut along the cells of the cloth, 6 mm apart
+        // on either side, round 160's bound for a queen's neck against a lady's. The round gown's neck is 14 cm.)
+        assert!((breadth(&last) - breadth(&l)).abs() < 1.3, "lady {k}: the wide cut until the wimple's age, {:.1} cm broad for {:.1}", breadth(&last), breadth(&l));
         let (own, round) = (round, gown(&stiff(c.wimple_from, 1)));
         let within = |g: &Cloth| g.pos.iter().enumerate().filter(|(i, q)| !g.hem[*i] && q[0].abs() < 1.0 && q[1] > before.chin - 2.0).filter_map(|(_, q)| beyond(q, &sk, &round)).fold((0, 0, 0.0f32), |(n, over, most), out| (n + 1, over + usize::from(out > 0.02), most.max(10.0 * out)));
         let (n_own, over_own, most_own) = within(&own);
@@ -323,14 +327,14 @@ fn folds(c: &Cloth) -> f32 {
 }
 
 #[test]
-fn the_courts_gown_lies_smoother_than_the_villages_and_no_deeper() {
+fn the_courts_gown_lies_smoother_than_the_villages_and_closer_at_the_waist() {
     // (round 151) The court's gown was the village's drape, laid 4.5 cm off the body from the chest down before
     // it was let fall: a sack whose folds and dents a smooth silk shows. The court's files are draped from 1.2
     // cm. On the same body, as draped and in no pose, a person of rank's gown is less uneven than the
-    // villager's, with every cut (a lady's, a lord's, the round one under a wimple). It is not narrower: a
-    // cloth that is let fall lies on the body where the body carries it, and from front to back in the middle
-    // of the trunk the two gowns are as deep as each other, at the chest and at the waist. A lord's shirt still
-    // lies under his gown.
+    // villager's, with every cut (a lady's, a lord's, the round one under a wimple). It was not narrower: a
+    // cloth that is let fall lies on the body where the body carries it. Since round 170 it is cut to the body
+    // (below), and from front to back in the middle of the trunk it is less deep than the village's at the
+    // waist. A lord's shirt still lies under his gown.
     let Some(h) = head() else { return };
     let none = (f32::MAX, f32::MIN);
     let wide = |r: &mut (f32, f32), v: f32| *r = (r.0.min(v), r.1.max(v));
@@ -355,7 +359,11 @@ fn the_courts_gown_lies_smoother_than_the_villages_and_no_deeper() {
             // 2.7 degrees less uneven than it was, the court's, which had fewer, 0.3 to 0.8. On these eighteen the
             // court's was 0.61 to 0.83 of the village's and is 0.65 to 0.91: held under 0.95 (0.85 until then).
             assert!(uneven.1 < 0.95 * uneven.0, "{name} {k}: the gown's folds {:.1} degrees at court, {:.1} in the village", uneven.1, uneven.0);
-            assert!(high.abs() < 2.0 && low.abs() < 3.0, "{name} {k}: the gown at court {high:.1} cm deeper at the chest and {low:.1} at the waist than in the village");
+            // (round 170) The court's gown is cut to the body (`tunic_sim.py`, `FIT`, `ARMS`): it was held as
+            // deep as the village's from front to back, within 2 cm at the chest and 3 at the waist (2.4 less to
+            // 0.8 more on round 169's files), and is held narrower at the waist now: 1.3 to 4.5 cm less on these eighteen,
+            // at the chest 1.9 less to 0.6 more. Round 169's files fail it.
+            assert!(high < 2.0 && high > -3.0 && low < -0.8 && low > -6.0, "{name} {k}: the gown at court {high:.1} cm deeper at the chest and {low:.1} at the waist than in the village");
             if !female {
                 let (under, sk) = (cloth(&court, "/cloth_smock.").expect("his shirt"), skin(&court));
                 let (mut n, mut inside) = (0, 0);

@@ -8537,6 +8537,114 @@ after below), `runde169_dame_und_gekroente.png` (a lady and two crowned heads, t
 (all 36 of the sample at court, after).
 
 
+**Round 170: at court the gown is cut to the body, modelled in the Blender on Ramon's Mac** (2026-11-21).
+Ramon, after round 169: "naja machst du das nicht mit blender mcp wie besprochen? wird hier delulu gemacht?"
+The Blender MCP was agreed with the session that worked on his Mac on 17 November, before this thread began;
+this thread never saw it and ran Blender as a module of Python in the cloud for 55 rounds. That session's own
+work, seven pieces for the head made in Blender (a great helm, a bascinet with its aventail, a mail coif, a
+crown, a linen coif, two hats; the branch `claude/headwear-blender`), never came into this pull request: the
+coif, the felt hat and the crown were made again here in rounds 132, 134 and 144, the helms and the mail are
+on that branch alone, worn by nobody, and wait for sources and for Ramon's word on who wears them.
+
+From this round on the pipeline's scripts are run in the Blender that is open on his Mac (5.1.2), through
+its MCP add-on, and looked at there before anything is bound (below, "How it was made").
+
+The subject is round 151's own paragraph: "this is not the reference's fitted gown: it is as wide as the
+village's, has no waist, no seams, no belt and no tight sleeve". Seen in Blender on the bare body, the
+court's gown hung from the chest straight down, and its sleeves were flat pleated flaps: a tube drawn out of
+the armhole with no arm in it (the body the cloth fell on ended at the upper arm).
+
+What was read. Nothing new. Round 144's reading of Wikipedia, 1300-1400 in European fashion (as an account
+of the page): noblemen and squires about 1350 in tunics "so short and tight", "the cotehardie fits snugly";
+round 149's of the Fashion History Timeline: "low-necked fitted dresses" at 1380.
+
+What is changed.
+- **A cut to the body** (`tools/portrait/pipeline/tunic_sim.py`, `FIT`): the cloth is a share shorter each
+  way than the shell it starts as (Blender's cloth, `shrink_min` 0.04), as a garment cut narrower than the
+  body and closed on it with buttons or a lace. It lies on the body under its own pull, spans the hollows
+  and goes in at the waist, where a cloth let fall hangs from the chest. Laid 0.7 cm off the body all the way
+  down and no wider than it (`LOOSE=0 WIDE=0` for 0.12 and 0.15).
+- **Sleeves cut to the arm** (`ARMS=3.9`): the cloth is MakeHuman's helper along the arm to the elbow, where
+  the body's data ends, and the body it lies on reaches further; no tube is drawn out of the armhole.
+- **The court's three gowns are written anew** (`public/portrait/real/cloth_cote_court`, `cloth_kirtle_court`,
+  `cloth_cote_v_court`, each `.txt.zst` and `_ao.txt`; 217, 208 and 224 kB for 203, 197 and 213; 4 685, 4 699
+  and 5 025 points): draped in Blender on the Mac, then held under the village's round gown, bound, the part
+  below sewn on and laid flat in the cloth's image as rounds 151 and 156 did. Held under the village's gown
+  293 to 388 points were set back, by up to 1.1 cm (857 to 958, by up to 2.6).
+- **`cloth_panels.py` takes the neck's breadth** (`NECK`, 0.9 as it was; 1.9 for the lady's cut). Its seam
+  between front and back runs down from the cloth's highest points; within a lady's wide neck those are the
+  edge of her neck behind, and on a gown cut to the body, whose back comes forward in the hollow of the waist,
+  the seam ran through the back: 5 465 triangles in front and 2 400 behind, and the figure on her chest was
+  drawn several times too large. With the neck's own breadth 3 784 and 4 081.
+- `tunic_sim.py` run in a Blender that is open works in a scene of its own (`SCENE`) and leaves what is open
+  as it is; run by itself it starts from an empty file as before.
+- Nothing in the builder and nothing on the stage: who wears which file, the neck's hem, the buttons and the
+  lace, the silk and its figure are as they were. The village's gowns are not touched.
+
+How it was made. The scripts and `base.obj` lie in a folder on the Mac that git does not track; a script is
+sent to the add-on's socket (127.0.0.1:9876, `execute_code`), draped there (24 to 27 seconds a gown) and
+rendered from three sides, and the pictures and the drape come back to the cloud, where the binding runs.
+Blender was closed on the Mac after the three drapes were written; the scenes were not saved, the drapes and
+the pictures were.
+
+Measured (`portrait/tests/clothes.rs`'s measure: six ladies of 30, six lords of 34 and six ladies of 60 with
+the wimple, each on the same body as a villager and as a person of rank, as draped and in no pose):
+
+| | round 169 | now |
+|---|---|---|
+| the gown at court against the village's, from front to back in the middle of the trunk, at the waist: a lady | 1.4 to 0.3 cm less | 3.3 to 2.2 cm less |
+| a lord | 0.4 less to 0.8 more | 2.6 to 1.3 less |
+| a lady with a wimple | 2.4 to 1.1 less | 4.5 to 3.2 less |
+| the same at the chest, all three | 1.2 less to 0.9 more | 1.9 less to 0.6 more |
+| how uneven the cloth is, a lady | 17.2 to 20.5 degrees | 14.9 to 16.3 |
+| a lord | 12.8 to 14.2 | 10.7 to 10.8 |
+| a lady with a wimple | 14.6 to 17.2 | 12.9 to 13.7 |
+
+Tried and not kept.
+- The cut to the body with the old sleeves (`FIT` without `ARMS`): the trunk fitted, the sleeves the same
+  flat flaps.
+- `FIT=0.08`: in Blender not to be told from 0.04 from three sides; not bound.
+
+**A drape is not written twice the same.** Meant as a check that the script's old call still writes round
+151's drape: it does not, and neither does the script as it was before this round. Round 151's drape, one
+run of the old script and one of the new, each with round 151's call in the cloud: a point of one lies 2 to
+7 mm from the nearest point of another in the median, up to 1.7 to 4 cm on the trunk and up to 3.7 to 8.9 cm
+at the loose sleeves (the mesh's points are 8 mm apart; the points' order is not the same either, so no row
+can be held against a row). Blender's cloth is not the same from run to run; the files in the repository
+are the record, not the call. The new switches are read where they are set, and without them the script
+takes the lines it took.
+
+**Two bounds moved, and why.** Both in `portrait/tests/clothes.rs`, both because the form they held is
+changed on purpose. (1) Round 151's test held the court's gown as deep as the village's from front to back
+(within 2 cm at the chest and 3 at the waist): it holds it less deep at the waist now, by 0.8 to 6 cm, and at
+the chest between 3 cm less and 2 more. Round 169's files fail it (a lord: 0.8 cm more at the waist). (2)
+Round 149's test held a lady's neck as broad the day before the wimple's age as at 30, within 1 cm: 1.3 now.
+The hem ends at the arm, where a gown cut to the body goes with the body's own breadth, and one of the
+test's ladies reads 36.2 for 37.4; the measure is as fine as the builder's cut along the cloth's cells, 6 mm
+apart on either side (round 160's bound for a queen's neck). The round gown's neck is 14 cm broad.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 165 to its last figure, and the
+colour sheet as in round 168 (they read skin of the face, on the common people).
+
+Honest about it. In Blender, on the whole trunk, the gown is another garment: it goes in at the waist and
+the arm is in its sleeve. In a portrait most of that lies under the picture's foot, which ends above the
+waist: what the picture shows is the arm parted from the trunk by a fold under the armpit, a rounder shoulder
+and a smoother chest, and from the side a back that goes in. It is a small step in the picture. The fit is a
+formula (the cloth made shorter by one share everywhere), not a tailor's pattern: no seams, no gores, no
+belt, the same for a child of two as for a lord, and no source says that a small child wore the tight cut.
+On a lady the bust shows more, the body's and not a tailor's, with the point and the crease on it that round
+169 could not take out; on plain silk the cloth's shade is blotchy on a small child's chest. 0.04, 0.7 cm and
+the elbow are by eye in Blender: PLACEHOLDER. The drapes were written by Blender 5.1.2 on the Mac; the cloud's
+5.2.3 writes another drape with the same call, as it would on a second run.
+
+Tests: `portrait/tests/clothes.rs`, two changed (above). `cargo test --release` as a whole 138 of 140 in the
+round's full run, the two that failed being these two, which pass now (the files they read are the same to
+the byte); `tests/portrait.test.ts` and its neighbour 46 of 46; typecheck and lint pass, no new warning.
+Pictures (project files, `portraits/`): `runde170_vorher_nachher.png` (three ladies and three lords, before
+above and after below), `runde170_seite_vorher_nachher.png` (four from the side), `runde170_kinder_vorher_nachher.png`,
+`runde170_hof.png` (all 36 at court, after), `runde170_blender.png` (the renders from Blender on the bare
+body: the old drape and the three new ones).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
