@@ -111,8 +111,8 @@ describe('portraits', { timeout: 20_000 }, () => {
       expect(english.look.startsWith('england1356/'), `person ${p.pid}`).toBe(true);
       expect(profileOf(english.look)).toBe(ENGLAND_1356);
       const worn = english.surfaces.map(s => s.tex);
-      // (a person of rank wears it in silk since round 150)
-      expect(worn.some(t => t.includes('/cloth_cote.') || t.includes('/cloth_cote_silk.')), `person ${p.pid} wears the gown`).toBe(true);
+      // (a person of rank wears it in silk since round 150, plain or figured since round 156)
+      expect(worn.some(t => /\/cloth_cote(_silk(_figured)?)?\./.test(t)), `person ${p.pid} wears the gown`).toBe(true);
       expect(worn.some(t => t.includes('/cloth_tunic.') || t.includes('/cloth_veil.')), `person ${p.pid} wears nothing Roman`).toBe(false);
       for (const t of worn) if (t) expect(images.has(t), `${t} is in the repository`).toBe(true);
       // no man and no girl wears the veil. A woman from the age of the veil wears it one of two ways (round
@@ -865,6 +865,37 @@ describe('portraits', { timeout: 20_000 }, () => {
     // Apoleia's profile has no cloth of its own: an image named so is drawn as any cloth
     expect(surfaceMaterials(of('real/cloth_cote_silk.webp'), null, null, APOLEIA)[0]!.roughness).toBe(0.95);
   });
+  it('a figured silk has its figure drawn in gold (round 156)', () => {
+    // Half of the court's gowns are of a silk with a figure woven in in gold thread (`DressSet::gown_figured`, an
+    // image named `_figured`): the figure is the image's covering, and where the covering is less than 1 the
+    // stage draws the gold's colour in place of the dye's, with the gold's roughness and share of metal. The
+    // rest of the cloth is the plain silk's.
+    const of = (tex: string) => ({ rough: 0.5, metal: 0, double: false, tex, nmap: '', pos: new Float32Array(9), col: new Float32Array(9).fill(0.5), uv: new Float32Array(6), nrm: new Float32Array(9) });
+    const drawn = (tex: string, profile = ENGLAND_1356) => {
+      const m = surfaceMaterials(of(tex), null, null, profile)[0]!;
+      const shader = { uniforms: {}, vertexShader: ShaderLib.physical.vertexShader, fragmentShader: ShaderLib.physical.fragmentShader };
+      m.onBeforeCompile(shader as never, null as never);
+      return { m, code: shader.fragmentShader, key: m.customProgramCacheKey() };
+    };
+    const [plain, figured] = [drawn('real/cloth_cote_silk.webp'), drawn('real/cloth_cote_silk_figured.webp')];
+    const k = ENGLAND_1356.cloth!;
+    expect([figured.m.roughness, figured.m.color.r, figured.m.ior]).toEqual([plain.m.roughness, plain.m.color.r, plain.m.ior]);
+    expect(plain.code).toBe(ShaderLib.physical.fragmentShader);
+    expect(figured.code).toContain('silkFigure = 1.0 - sampledDiffuseColor.a;');
+    expect(figured.code).toContain(`vec3( ${k.figured.gold.map(c => c.toFixed(3)).join(', ')} )`);
+    expect(figured.code).toContain(`roughnessFactor = mix( roughnessFactor, ${k.figured.rough.toFixed(3)}, silkFigure );`);
+    expect(figured.code).toContain(`metalnessFactor = mix( metalnessFactor, ${k.figured.metal.toFixed(3)}, silkFigure );`);
+    // the figure is declared before it is used, and both after the image is read
+    const at = (piece: string) => figured.code.indexOf(piece);
+    expect(at('#include <map_fragment>')).toBeLessThan(at('float silkFigure'));
+    expect(at('float silkFigure')).toBeLessThan(at('roughnessFactor = mix'));
+    expect(figured.key).not.toBe(plain.key);
+    // gold is yellow and lighter than any dye is drawn
+    const [r, g, b] = k.figured.gold;
+    expect(r > g && g > 2 * b && r > 1).toBe(true);
+    // Apoleia's profile has no cloth of its own: an image named so is drawn as any cloth
+    expect(drawn('real/cloth_cote_silk_figured.webp', APOLEIA).code).toBe(ShaderLib.physical.fragmentShader);
+  });
   it('a scar takes the tone of the skin it lies in', () => {
     // a scar of the real look is a small surface of skin of its own, lighter than the skin as a whole: with a
     // tone of its own it would take more of the profile's tint than the skin round it and show as a patch
@@ -1247,8 +1278,11 @@ describe('portraits', { timeout: 20_000 }, () => {
       // a person of rank without a crown: none, and a gown of another cloth than the common people's
       expect(metal(3).every(s => s.pos.length / 9 < 2500), `${at}: no crown without a kingdom`).toBe(true);
       // (round 150: the common people's gown is drawn with the wool's image, the court's with the silk's)
-      const gown = (stand: number) => built(stand).surfaces.find(s => /cloth_cote(_silk)?\./.test(s.tex))!;
-      expect([1, 3, 4].map(stand => gown(stand).tex.replace(/^.*\/|\..*$/g, '')), `${at}: the gown's cloth`).toEqual(['cloth_cote', 'cloth_cote_silk', 'cloth_cote_silk']);
+      // (round 156: at court the silk is plain or figured by the person's seed, a crowned head's always figured)
+      const gown = (stand: number) => built(stand).surfaces.find(s => /cloth_cote(_silk(_figured)?)?\./.test(s.tex))!;
+      const cloth = [1, 3, 4].map(stand => gown(stand).tex.replace(/^.*\/|\..*$/g, ''));
+      expect([cloth[0], cloth[2]], `${at}: the gown's cloth`).toEqual(['cloth_cote', 'cloth_cote_silk_figured']);
+      expect(['cloth_cote_silk', 'cloth_cote_silk_figured'], `${at}: the court's cloth`).toContain(cloth[1]);
       const red = (stand: number) => { const c = gown(stand).col; let r = 0, g = 0; for (let i = 0; i < c.length; i += 3) { r += c[i]!; g += c[i + 1]!; } return r / g; };
       expect(Math.abs(Math.log(red(3) / red(1))), `${at}: the court's cloth`).toBeGreaterThan(0.15);
     }

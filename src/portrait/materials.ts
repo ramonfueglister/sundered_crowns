@@ -192,6 +192,23 @@ diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.072
   m.customProgramCacheKey = () => `portrait-cap-${p.key}-${stubble ? 'stubble' : v === k ? 'hair' : 'beard'}`;
 }
 
+/** (round 156) A figured silk (an image named `_figured`, tools/portrait/pipeline/silk_figure.py): where the
+ *  image's covering is less than 1 a second thread lies on the cloth, gold. There the cloth has the gold's colour
+ *  in place of its dye's, under the weave's own shade, and the gold's roughness and share of metal. */
+function figuredLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageProfile['cloth']>['figured']): void {
+  m.onBeforeCompile = shader => {
+    let code = swap(shader.fragmentShader, '#include <color_fragment>', `#include <color_fragment>
+float silkFigure = 0.0;
+#ifdef USE_MAP
+silkFigure = 1.0 - sampledDiffuseColor.a;
+diffuseColor.rgb = mix( diffuseColor.rgb, vec3( ${k.gold.map(f).join(', ')} ) * sampledDiffuseColor.rgb, silkFigure );
+#endif`);
+    code = swap(code, '#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>\nroughnessFactor = mix( roughnessFactor, ${f(k.rough)}, silkFigure );`);
+    shader.fragmentShader = swap(code, '#include <metalnessmap_fragment>', `#include <metalnessmap_fragment>\nmetalnessFactor = mix( metalnessFactor, ${f(k.metal)}, silkFigure );`);
+  };
+  m.customProgramCacheKey = () => `portrait-figured-${p.key}`;
+}
+
 /** The eyeball of a profile: the upper lid's shadow (the key light's shadow map is too coarse for a lid, so the
  *  ball darkens towards its top), a tint and less colour. */
 function eyeLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageProfile['eye']>): void {
@@ -346,6 +363,7 @@ export function surfaceMaterials(s: PortraitSurface, map: Texture | null, normal
       // (round 150) silk shines: a smoother cloth with a glint along its folds
       if (p.cloth && s.tex.includes('_silk')) {
         m.color.setScalar(p.cloth.silk.tone); m.roughness = p.cloth.silk.rough; m.ior = ior(p.cloth.silk.specular);
+        if (s.tex.includes('_figured')) figuredLook(m, p, p.cloth.figured);
       }
       break;
     case 'cap': blended(m); m.roughness = 0.85; m.ior = ior(0.15); m.side = DoubleSide; if (p.cap) capLook(m, p, p.cap, s.tex); break;

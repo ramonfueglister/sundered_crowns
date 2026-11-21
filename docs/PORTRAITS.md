@@ -7374,6 +7374,102 @@ and `runde155_vorher_nachher_vorn.png` (five ladies of the court from behind, fr
 before above and after below), `runde155_dorf_seite_und_hinten.png` (the same five in the village),
 `runde155_dreiviertel.png` (three ladies from two three-quarter views, after).
 
+**Round 156: a figured silk at court** (2026-11-21). Twelve people of the court beside the reference's: a
+lord's and a lady's gown is one plain cloth from the neck to the picture's edge, a smooth shape with a glint,
+where every gown of the reference's nobles is a figured cloth, gold on the dye. The waist and a belt, which
+round 155 named as the next thing, lie under the picture's edge: a portrait ends under the chest. What the
+picture shows of a gown is its cloth.
+
+Read (21.11.2026, as accounts of the pages; no picture was looked at). Three museums' records of Italian silks:
+the Cleveland Museum of Art, 1926.507, "Parrots and Animals" (Italy, 1300s; silk and gold thread, lampas): "the
+paired eagles and gazelles flanking concentric bulb-shaped palmettes", with like pieces dated "between 1334 and
+1361"; the same museum's 1977.14 (Italy, 1350 to 1400): "large palmette leaves", deer, birds and dogs amid
+vines; the Victoria and Albert Museum, O261087 (Lucca, 1300 to 1350): "scrolling vines, squirrels and deer", "a
+type called camacas in the statutes for the city of Lucca in 1376". Wikipedia, 1300-1400 in European fashion:
+"The well-off could afford woven brocades from Italy", "Fashionable Italian silks of this period featured
+repeating patterns of roundels and animals". The National Archives' blog on opus anglicanum: the royal wardrobe
+of 1337-8 has surcoats of buckram "decorated with gold leaves" for the king's games at Christmas (E
+101/388/8). Three more records read (a Venetian silk of 1375 to 1400 with a dog and an eagle in a boat, one
+with no description, one whose caption and record disagree) gave nothing to draw. No record gives a repeat's
+measure.
+
+What is changed.
+- **The figure** (`tools/portrait/pipeline/silk_figure.py`, new; `cloth_cote_silk_figured` with its normal
+  map): palmettes in rows, each row set off by half a step against the one under it, and between two
+  palmettes a sprig of two leaves with a bud. A palmette is a bulb, round below and pointed above, with two
+  smaller bulbs on the same foot within it. It is written into the plain silk's image as its covering (1 is
+  ground, 0 is gold thread; a fifth of the cloth is gold) and stands a little over the ground in the normal
+  map. From palmette to palmette it is 5.5 cm on a gown.
+- **The stage draws the gold** (`src/portrait/materials.ts` `figuredLook`, `profile.ts` `cloth.figured`): where
+  the covering of an image named `_figured` is less than 1, the cloth has the gold's colour in place of its
+  dye's, under the weave's own shade, and the gold's roughness and share of metal.
+- **Who wears it** (`portrait/src/dress.rs`: `DressSet::gown_figured`, `figured`, `gown_image_of`): at court
+  half of the gowns, by the ninth digit of the seed, and every crowned head's. Nobody's in the village. Both
+  halves of a gown of two cloths are figured.
+- **The court's three gowns are laid flat in their image** (`tools/portrait/pipeline/cloth_panels.py`, new;
+  `cloth_cote_court`, `cloth_kirtle_court`, `cloth_cote_v_court` written anew in their texture coordinates
+  alone: points, binding, triangles, hems and shade are the same to the digit). A gown's coordinates went
+  round the body, the angle about its upright and the height (`tunic_bind.py`). On the shoulders' tops, which
+  lie level, and along a sleeve the image was drawn out, which a plain weave does not show: the first figured
+  gowns had streaks of gold on the shoulders. The gown is now parted into a front and a back along the
+  shoulders' ridge and down the sides and sleeves, where a gown has its seams, and on each part the
+  coordinates are fitted so that the image's steps follow the cloth's own length and breadth (a least-squares
+  fit over the triangles, the Poisson equation with cotangent weights, Pinkall and Polthier 1993). "Up the
+  cloth" is the body's upright on the trunk, on over the shoulder where the cloth lies level, and the arm's
+  own line on a sleeve.
+
+Measured (`portrait/tests/court.rs`), on the built gowns of 40 people at court, 1.7 million triangles of cloth:
+how many are drawn out three times as far one way in the image as the other, a streak.
+
+| | round 155's files | steepest way up on the shoulders | now |
+|---|---|---|---|
+| of all the court's triangles of cloth | 7.05 % | 3.00 % | 2.45 % |
+| of those that lie level (the shoulders' tops) | 62.7 % | 26.8 % | 15.3 % |
+| in the three files themselves, on the body they were draped on | 7.3, 2.9, 9.3 % | 2.1, 2.1, 2.4 % | 1.3, 1.7, 1.2 % |
+| the village's gown, which keeps its coordinates round the body | 13.1 % | | 13.1 % |
+| gowns at court that are figured | 0 of 40 | | 19 of 40 |
+
+Tried and not kept.
+- "Up the cloth" as the steepest way up everywhere: on a shoulder's top that leads to the neck, the
+  coordinates run together round it, and a quarter of the level triangles stayed drawn out (the table's middle
+  column). The cloth's length now runs on over the shoulder towards the ridge.
+- The figure with its point down (the image's rows run the other way than a cloth's file holds them), and a
+  gold of the buttons' colour with a third of metal: a dull olive on green.
+- The first palmette, lines of equal share between its upright and its outline: a bulb of garlic with hairlines
+  at its point, and the sprig a bow.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in rounds 138 to 155 to its last figure (it
+reads skin, and no skin moved).
+
+Honest about it. The figure is mine: a palmette and a leaf as formulas, after the records' words, with none of
+the beasts and birds that every one of those silks has, and it is one figure for everybody, in one gold, at
+one size, which no record gave. It reads as a figured silk; set beside a Lucchese silk it would not pass. The
+palmette looks as much like a flame or a modern print as like a palmette. Half of the court and every crowned
+head is by eye. Where front and back meet, on the shoulder's ridge and down the side, the figure does not
+match, as at a seam, and beside the neck at the ridge a palmette or two is twisted. On a sleeve the figure
+leans, by the angle between the arm's line on the body the gown was draped on and the arm as it hangs. Under
+the arms and at the shoulders' ends 2.5 in a hundred of the triangles are still drawn out: there the builder
+brings the arms down and pushes the cloth together. The gold is a colour with a little metal, not a thread:
+it has no weave of its own and shines as the silk does. The gown's cut is what it was, a smooth sack, now a
+figured one; no belt, no seam is drawn, no trim at the neck, no fur. The village's gowns keep their
+coordinates round the body (their weave shows no streak). `ARM`, `NECK`, the gold's numbers and all the
+figure's sizes are PLACEHOLDER.
+
+Tests: `portrait/tests/court.rs`, one new (half of the court's gowns are of a figured silk that lies flat in
+its image: the shares by the table, under 4 in a hundred of the triangles drawn out and under a quarter of the
+level ones; it fails on round 155's files with 7.05 and 62.7); the test of round 150 beside it looks for the
+plain or the figured silk by the person's seed. `tests/portrait.test.ts`, one new (the stage draws a figured
+silk's figure in gold, and Apoleia's profile does not); the test that held a crowned head's gown to the
+plain silk's image holds it to the figured one's, and the test that every person of England wears the gown
+knows it under the figured silk's name too (it failed in the first whole run, 44 of 45). `cargo test
+--release` as a whole: 129 of 129. `tests/portrait.test.ts` and its neighbour 45 of 45; typecheck and lint
+pass, no new warning. The module is 797 kB.
+Pictures (project files, `portraits/`): `runde156_vorher_nachher.png` (twelve people of the court, before above
+and after below), `runde156_vorher_nachher_herren.png` (three lords, the same), `runde156_seite_und_hinten.png`
+(three from the side and from behind), `runde156_gekroente.png` (three crowned heads),
+`runde156_schultern_vorher_nachher.png` (the figure on the coordinates round the body, above, and on the flat
+parts, below).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair

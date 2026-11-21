@@ -88,8 +88,10 @@ export interface StageProfile {
    *  The builder's wools are a cloth's own colour, a quarter as light as skin; under a light set for the face,
    *  and through a tone curve that draws the darks together, a gown of them is a black shape under the head.
    *  As `cap.light` is for hair. `silk` (round 150: a cloth whose image is named `_silk`): how many times lighter
-   *  it is drawn, its roughness and its "specular" (wool and linen: 0.95 and 0.15, a matt cloth). */
-  cloth: null | { wool: number; linen: number; silk: { tone: number; rough: number; specular: number } };
+   *  it is drawn, its roughness and its "specular" (wool and linen: 0.95 and 0.15, a matt cloth). `figured`
+   *  (round 156: a silk whose image is named `_figured`): the colour of the gold thread its figure is woven of
+   *  (in linear light, as it is drawn: not multiplied by `silk.tone`'s dye), its roughness and its share of metal. */
+  cloth: null | { wool: number; linen: number; silk: { tone: number; rough: number; specular: number }; figured: { gold: [number, number, number]; rough: number; metal: number } };
   /** Hair cards, the round strands of a plait and the locks of a head's hair: roughness, "specular", anisotropy
    *  of the glint. */
   cards: { rough: number; specular: number; anisotropy: number };
@@ -459,7 +461,7 @@ export const ENGLAND_1356: StageProfile = {
   eye: { corner: { from: 0.3, to: 0.8, dark: 0.35 }, lid: { from: -0.35, to: 0.05, dark: 0.4 }, tint: [0.84, 0.73, 0.57], white: 1.3, iris: 1.15, colour: 1.1, lift: 0.6, rough: 0.22, specular: 0.6, wrap: 0.5, wrapWhite: 0.1, cornea: 0.36, ring: 0.35, pupil: { size: 0.42, soft: 0.1, dark: 0.25 }, blush: [1.27, 0.945, 0.76] },
   brow: { rough: 1, specular: 0.05, lashes: 0.3, brows: 0.95 },
   cap: { tone: 1.7, light: 2.6, colour: 0.85, wrap: 1, shadow: false, stubble: 0, beard: { tone: 8.8, light: 3.2, colour: 0.8, wrap: 0.3 } },
-  cloth: { wool: 2.6, linen: 1, silk: { tone: 2.6, rough: 0.55, specular: 0.5 } },
+  cloth: { wool: 2.6, linen: 1, silk: { tone: 2.6, rough: 0.55, specular: 0.5 }, figured: { gold: [1.2, 0.8, 0.22], rough: 0.4, metal: 0.2 } },
   cards: { rough: 0.72, specular: 0.2, anisotropy: 0.3 },
   sheen: { white: 0.3, whiteSharp: 120, whiteShift: 0.1, own: 0.45, ownSharp: 40, ownShift: -0.1, ragged: 0.15, strands: 1.35, light: 0.5, colour: 0.85, tone: 1.6, toneLight: 1, wrap: 1 },
   finish: {

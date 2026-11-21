@@ -118,9 +118,11 @@ fn the_courts_gown_is_of_strong_cloth_with_buttons_of_metal_and_some_of_two_clot
         // with the silk's, whatever its cut (a lady's wide one, the round one under her wimple, a lord's); the
         // court's hood is of wool as the village's
         let image = |s: &Surface| s.tex.clone().unwrap_or_default();
-        assert!(image(ga).ends_with("/cloth_cote.webp") && image(gb).ends_with("/cloth_cote_silk.webp"), "person {k}: the gown's image, {} and {}", image(ga), image(gb));
+        // (round 156: the silk plain or figured, by the table's digit of the seed)
+        let silk = format!("/{}.webp", d.gown_image_of(high.seed));
+        assert!(image(ga).ends_with("/cloth_cote.webp") && image(gb).ends_with(&silk), "person {k}: the gown's image, {} and {}", image(ga), image(gb));
         // (the edges of a gown's closing are surfaces of their own, of the gown's cloth)
-        assert!(b.surfaces.iter().map(image).filter(|t| t.contains("_silk")).all(|t| t.ends_with("/cloth_cote_silk.webp")), "person {k}: silk on the gown alone");
+        assert!(b.surfaces.iter().map(image).filter(|t| t.contains("_silk")).all(|t| t.ends_with(&silk)), "person {k}: silk on the gown alone");
         assert!(!a.surfaces.iter().any(|s| image(s).contains("_silk")), "person {k}: no silk in the village");
         let hoods = |s: &'_ [Surface]| s.iter().map(image).filter(|t| t.contains("/cloth_hood_")).collect::<Vec<_>>();
         assert_eq!(hoods(&a.surfaces), hoods(&b.surfaces), "person {k}: the hood's cloth");
@@ -385,4 +387,79 @@ fn a_lord_with_nothing_else_on_the_head_wears_a_circlet_five_in_ten_on_hair_that
         println!("{with} lords with a circlet, {without} without; its foot {:.1} to {:.1} cm over the eyes; hair through it at most {} corners", 10.0 * worst.0, 10.0 * worst.1, worst.2);
     }
     assert!(show() || (with >= 8 && without >= 40), "{with} with a circlet, {without} without");
+}
+
+/// How a triangle of cloth lies in its image: the longest and the shortest that a step of 10 cm on the cloth can
+/// be in the image (the singular values of the map from the triangle's plane to its texture coordinates).
+fn in_image(p: &[V3], t: &[[f32; 2]]) -> Option<(f32, f32)> {
+    let e: [V3; 2] = [std::array::from_fn(|a| p[1][a] - p[0][a]), std::array::from_fn(|a| p[2][a] - p[0][a])];
+    let l = (e[0][0].powi(2) + e[0][1].powi(2) + e[0][2].powi(2)).sqrt();
+    let along = (e[1][0] * e[0][0] + e[1][1] * e[0][1] + e[1][2] * e[0][2]) / l.max(1e-9);
+    let across = ((e[1][0].powi(2) + e[1][1].powi(2) + e[1][2].powi(2)) - along * along).max(0.0).sqrt();
+    if l < 1e-5 || across < 1e-5 {
+        return None;
+    }
+    // the triangle in its own plane: (0,0), (l,0), (along,across); the image's coordinates as a linear map of it
+    let (du, dv) = ([t[1][0] - t[0][0], t[1][1] - t[0][1]], [t[2][0] - t[0][0], t[2][1] - t[0][1]]);
+    let (a, c) = (du[0] / l, du[1] / l);
+    let (b, d) = ((dv[0] - a * along) / across, (dv[1] - c * along) / across);
+    let (sum, det) = (a * a + b * b + c * c + d * d, (a * d - b * c).abs());
+    let root = (sum * sum - 4.0 * det * det).max(0.0).sqrt();
+    Some((((sum + root) / 2.0).sqrt(), ((sum - root) / 2.0).max(0.0).sqrt()))
+}
+
+#[test]
+fn half_of_the_courts_gowns_are_of_a_figured_silk_that_lies_flat_in_its_image() {
+    // (round 156) At court half of the gowns, and every crowned head's, are of a silk with a figure woven in in
+    // gold thread (`DressSet::gown_figured`, by a digit of the seed), and nobody's in the village. A figure
+    // shows how the cloth lies in its image. A gown's texture coordinates went round the body (the angle and the
+    // height, `tunic_bind.py`): on the shoulders' tops and along the sleeves the image was drawn out, and a
+    // palmette was a streak. The court's three gowns are laid in the image as a front and a back, each flat
+    // (`tools/portrait/pipeline/cloth_panels.py`). Held here on the built gowns of 40 people: of the triangles of
+    // cloth, how many are drawn out three times as far one way as the other, a streak. With round 155's files
+    // 7.05 in a hundred of the court's 1.7 million, and 62.7 in a hundred of those that lie level; 2.45 and 15.3
+    // now (the village's gown, which keeps its coordinates round the body: 13.1). What is left lies under the
+    // arms and at the shoulders' ends, where the builder brings the arms down and pushes the cloth together: in
+    // the files themselves, on the body they were draped on, 1.2 to 1.7 in a hundred (7.3, 2.9 and 9.3 before).
+    let Some(h) = head() else { return };
+    let (c, k, e) = (&COURT_1356, &CROWNED_1356, &ENGLAND_1356);
+    assert!(e.gown_figured.is_empty() && c.gown_figured.starts_with(c.gown_image) && c.gown_figured != c.gown_image && k.gown_figured == c.gown_figured);
+    assert_eq!((c.figured.iter().filter(|f| **f).count(), k.figured.iter().filter(|f| **f).count()), (5, 10));
+    assert_eq!((c.gown_image_of(123_456_789), c.gown_image_of(23_456_789), k.gown_image_of(123_456_789), e.gown_image_of(23_456_789)), (c.gown_image, c.gown_figured, c.gown_figured, ""));
+    let (mut figured, mut all) = (0, 0);
+    let (mut drawn, mut seen) = ([0usize; 2], [0usize; 2]);
+    // (the same of the triangles that lie level, on the shoulders' tops: their normal within 45 degrees of upright)
+    let (mut level, mut tops) = (0usize, 0usize);
+    for n in 0..40u32 {
+        let (female, age) = (n % 2 == 0, [24.0f32, 35.0, 50.0, 17.0][(n / 2) as usize % 4]);
+        for (at, stand) in [1u8, 3].into_iter().enumerate() {
+            let p = person_of(n, female, age, stand);
+            let out = build(&h, &p, 1);
+            for s in out.surfaces.iter().filter(|s| s.tex.as_deref().is_some_and(|t| t.contains("/cloth_cote")) && s.uv.len() == s.pos.len()) {
+                if stand == 3 && s.pos.len() > 3000 {
+                    all += 1;
+                    figured += s.tex.as_deref().is_some_and(|t| t.contains("_figured")) as usize;
+                }
+                for (q, t) in s.pos.chunks_exact(3).zip(s.uv.chunks_exact(3)).filter(|(_, t)| t.iter().any(|c| c[1].abs() > 0.05)) {
+                    let Some((long, short)) = in_image(q, t) else { continue };
+                    seen[at] += 1;
+                    drawn[at] += (long > 3.0 * short) as usize;
+                    let (a, b): (V3, V3) = (std::array::from_fn(|i| q[1][i] - q[0][i]), std::array::from_fn(|i| q[2][i] - q[0][i]));
+                    let n = [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+                    if stand == 3 && n[1].abs() > 0.7071 * dist(&n, &[0.0; 3]) {
+                        tops += 1;
+                        level += (long > 3.0 * short) as usize;
+                    }
+                }
+            }
+        }
+    }
+    let share = |at: usize| drawn[at] as f32 / seen[at] as f32;
+    if show() {
+        println!("{figured} of {all} gowns at court figured; triangles drawn out three times: village {:.1} % of {}, court {:.2} % of {}, of the court's that lie level {:.1} % of {tops}", share(0) * 100.0, seen[0], share(1) * 100.0, seen[1], level as f32 / tops as f32 * 100.0);
+        return;
+    }
+    assert!(all == 40 && (12..=28).contains(&figured), "{figured} of {all} gowns at court are figured");
+    assert!(seen[1] > 1_000_000 && share(1) < 0.04, "{:.2} % of the court's {} triangles of cloth are drawn out in the image", share(1) * 100.0, seen[1]);
+    assert!(tops > 50_000 && (level as f32) < 0.25 * tops as f32, "{level} of the court's {tops} triangles that lie level are drawn out in the image");
 }

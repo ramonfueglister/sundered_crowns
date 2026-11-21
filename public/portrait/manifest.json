@@ -255,7 +255,7 @@
   },
   {
    "name": "cloth_cote_court.txt.zst",
-   "bytes": 201915
+   "bytes": 202745
   },
   {
    "name": "cloth_cote_court_ao.txt",
@@ -271,7 +271,7 @@
   },
   {
    "name": "cloth_cote_v_court.txt.zst",
-   "bytes": 211583
+   "bytes": 212792
   },
   {
    "name": "cloth_cote_v_court_ao.txt",
@@ -331,7 +331,7 @@
   },
   {
    "name": "cloth_kirtle_court.txt.zst",
-   "bytes": 196092
+   "bytes": 197316
   },
   {
    "name": "cloth_kirtle_court_ao.txt",
@@ -633,6 +633,8 @@
   "cloth_cote.webp",
   "cloth_cote_n.webp",
   "cloth_cote_silk.webp",
+  "cloth_cote_silk_figured.webp",
+  "cloth_cote_silk_figured_n.webp",
   "cloth_cote_silk_n.webp",
   "cloth_fillet.webp",
   "cloth_fillet_n.webp",
