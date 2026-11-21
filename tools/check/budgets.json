@@ -82,13 +82,10 @@
     }
   },
   "lines": {
-    "economy/src/lib.rs": 1040,
-    "economy/src/trade.rs": 760,
     "server/world.ts": 541,
     "src/sim/economy/engine.ts": 518,
     "src/sim/settlement/streets.ts": 622,
     "src/worldprobe/world.ts": 868,
-    "tests/economy-households.test.ts": 533,
     "tools/atlas/probe.py": 536,
     "tools/geo/build_export.py": 511,
     "tools/geo/build_setup.py": 915,
