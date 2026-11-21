@@ -7470,6 +7470,77 @@ and after below), `runde156_vorher_nachher_herren.png` (three lords, the same), 
 `runde156_schultern_vorher_nachher.png` (the figure on the coordinates round the body, above, and on the flat
 parts, below).
 
+**Round 157: hair as often black, brown and blonde as the British call theirs** (2026-11-21). The whole
+sample on one sheet, village and court: nearly every head of hair that is not grey is the same brown with a
+cast of red, from child to lord. The reference's courts have black, brown, blonde and red heads side by side.
+The red was not the cause (round 47 made it rare, and it is). The lightness is: a person's lightness gene is
+the mean of two alleles, which in the pool England draws from come from 50 to 220, and the builder took it as
+the place in its row of colours (black, dark brown, brown, light brown, blonde). The mean of two draws is most
+often near the middle: of 4000 founders 68 in 100 had the gene between 0.4 and 0.7, the brown of the row's
+middle, the weakest pair of alleles was a dark brown and the strongest a light brown. Nobody had black hair
+and nobody blonde.
+
+Read: Morgan et al. 2018, "Genome-wide study of hair colour in UK Biobank explains most of the SNP
+heritability", Nature Communications 9:5271. Table 1: of 343 884 white British people, asked "what is your
+natural hair colour", 4.2 % say black, 37.2 % dark brown, 41.1 % light brown, 11.5 % blonde, 4.6 % red and
+1.4 % other; and "self-reported black, dark brown, light brown and blond hair lie on an approximately linear
+spectrum". (The first half of the article was read word for word, the rest as an account of it; the table is
+in the first half.) Carleton Coon, The Races of Europe (1939), chapter X section 3, in a transcription on the
+web: black hair in England "between 4 per cent and 5 per cent" for the country, dark brown 14 to 43 % and
+brown 57 to 24 % by region, fair 5 to 47 %, no single share for the country and none for red. Both are of
+people of the 19th and 20th century. No count of hair colours is known from 1356.
+
+What is changed.
+- **The lightness gene's place in the row of colours** (`portrait/src/look.rs` `shade`, `SHADES`;
+  `portrait/src/dress.rs` `DressSet::hair_shades`): England's dress names the three strengths of the gene at
+  which black passes into dark brown, dark brown into light brown and light brown into blonde, 0.296, 0.509
+  and 0.699: the strengths under which 4.5, 44.1 and 87.8 in 100 of all pairs of alleles from 50 to 220 lie,
+  Morgan's four colours taken together. Between two divides the place runs straight. Where the named colours
+  divide in the row is an OWN RULE: hair is black or blonde where it is nearer to the row's end than to the
+  colour beside it, and the brown of the middle divides dark brown from light brown. The row's five colours
+  are what they were, and so is the red, the greying, and Apoleia's hair, which takes the gene as the place.
+  The middle of the pool is the same brown as before; whoever is under it is darker and whoever is over it
+  lighter.
+
+Measured, by the place in the row (4000 founders of the pool, and the 36 people of the test page):
+
+| | black | dark brown | light brown | blonde |
+|---|---|---|---|---|
+| Morgan et al. 2018, Table 1, of the four together | 4.5 % | 39.6 % | 43.7 % | 12.2 % |
+| 4000 founders, before | 0 % | 42.0 % | 58.0 % | 0 % |
+| 4000 founders, now | 4.6 % | 40.5 % | 42.8 % | 12.1 % |
+| the page's 36, before | 0 | 15 | 21 | 0 |
+| the page's 36, now | 2 | 13 | 16 | 5 |
+
+Before, "dark brown" and "light brown" were the two halves of one middle brown; now each tenth of the row
+holds between 8.7 and 14.6 in 100 of the founders but the two at its ends (0.6 and 4.8).
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in rounds 138 to 156 to its last figure (it
+reads skin). The colour sheet beside it moved where a beard lies over the skin: the eight bearded men's chin
+reads L 40.4 (42.3) and the place above the lip 40.7 (42.0), some of their beards being darker now.
+
+Honest about it. The shares are of people born between 1934 and 1971 who named their own colour, laid on the
+people of 1356 because nothing nearer is known; they say nothing about whether England's villages of 1356
+were as dark or as fair. Where "dark brown" ends and "light brown" begins in the row of colours is my rule,
+and the row's five colours are by eye, as they were: what a Briton calls blonde may be lighter or darker than
+the row's last fifth. In Morgan's table more women than men call their hair red or blonde and far fewer call
+it black (1.5 against 7.4 %); the builder gives both the same. The red goes on top of any lightness, as
+before, where Morgan finds red-haired people's other colour mostly blonde or light brown. The divides are
+those of the pool England draws from: a dress for a people of another pool needs its own. The darker heads
+show what the open list has: black hair is a dark shape with little light on it, most of all on a child's
+head. Brows, lashes and beards follow the hair as before (a blonde head has light brows).
+
+Tests: `portrait/src/lib.rs`, one new (hair in the dress of England is as often black, brown and blonde as
+the British call theirs: the row runs through the divides and never back, the four shares over all pairs of
+alleles are within half of one in 100 of the table's, and the pool's ends are darker and lighter than in
+Apoleia's dress, its middle the same). The test of the red hair held the strongest red gene to the same
+colour in both dresses; the hair under the red is no longer the same in both, and it now holds each dress to
+three parts in four of the red over its own hair (it failed in the first run). `cargo test --release` as a
+whole: 130 of 130. `tests/portrait.test.ts` and its neighbour 45 of 45; typecheck and lint pass, no new
+warning. The module is 798 kB.
+Pictures (project files, `portraits/`): `runde157_vorher_nachher.png` (the page's 36 people, before above and
+after below), `runde157_vier_koepfe.png` (four heads large), `runde157_hof.png` (eighteen at court).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair

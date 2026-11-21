@@ -69,8 +69,11 @@ mod tests {
         // the middle of the pool England draws from (alleles 20 to 170): red in Apoleia's hair, none in England's
         assert_ne!(hair(roman, 95.0), hair(roman, 0.0));
         assert_eq!(hair(england, 95.0), hair(england, 0.0));
-        // the strongest gene is as red in both
-        assert_eq!(hair(england, 255.0), hair(roman, 255.0));
+        // the strongest gene is as red in both: three parts in four of the red (since round 157 the hair under
+        // the red is not the same in both: England's dress has its own lightness, `hair_shades`)
+        for dress in [roman, england] {
+            assert_eq!(hair(dress, 255.0), crate::geo::cmix(hair(dress, 0.0), crate::geo::hex("#a4461d"), 0.75));
+        }
         // and of all pairs of such alleles about 5 in 100 show a third of the red or more
         let set = england.set().unwrap();
         let (mut red, mut all) = (0, 0);
@@ -83,6 +86,45 @@ mod tests {
         }
         let share = red as f32 / all as f32;
         assert!((0.04..0.06).contains(&share), "{share}");
+    }
+
+    #[test]
+    fn hair_in_the_dress_of_england_is_as_often_black_brown_and_blonde_as_the_british_call_theirs() {
+        use crate::look::{shade, GREY, HAIR_L, HAIR_R, SHADES};
+        let set = crate::dress::Dress::England1356.set().unwrap();
+        // the row of colours runs through the divides, from its dark end to its light one, and never back
+        assert_eq!((shade(0.0, set.hair_shades), shade(1.0, set.hair_shades)), (0.0, 1.0));
+        for (at, place) in set.hair_shades.iter().zip(SHADES) {
+            assert!((shade(*at, set.hair_shades) - place).abs() < 1e-6);
+        }
+        assert!((1..=255).all(|g| shade(g as f32 / 255.0, set.hair_shades) > shade((g - 1) as f32 / 255.0, set.hair_shades)));
+        // of all pairs of alleles from 50 to 220 (the pool England draws from): black, dark brown, light brown,
+        // blonde as Morgan et al. 2018, Table 1 count them among those four (4.2, 37.2, 41.1, 11.5 of 94.0)
+        let mut named = [0u32; 4];
+        for a in 50..=220 {
+            for b in 50..=220 {
+                let place = shade((a + b) as f32 / 2.0 / 255.0, set.hair_shades);
+                named[SHADES.iter().filter(|s| place >= **s).count()] += 1;
+            }
+        }
+        let all = named.iter().sum::<u32>() as f32;
+        for (n, told) in named.iter().zip([4.2, 37.2, 41.1, 11.5]) {
+            let (share, told) = (*n as f32 / all, told / 94.0);
+            assert!((share - told).abs() < 0.005, "{share} for {told}");
+        }
+        // Apoleia's takes the gene as the place in the row: the pool's weakest pair is black in England's dress
+        // and a dark brown in hers, the middle of the pool the same brown in both
+        let hair = |dress, light: f32| {
+            let mut p = look(false, 30.0, 1, 7);
+            p.dress = dress;
+            (p.genes[GREY], p.genes[HAIR_R], p.genes[HAIR_L]) = (0.0, 0.0, light);
+            p.hair_colour()
+        };
+        let (roman, england) = (crate::dress::Dress::Roman, crate::dress::Dress::England1356);
+        let lum = |c: [f32; 3]| 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+        assert!(lum(hair(england, 50.0)) < 0.75 * lum(hair(roman, 50.0)));
+        assert!(lum(hair(england, 220.0)) > 1.1 * lum(hair(roman, 220.0)));
+        assert!((lum(hair(england, 130.0)) - lum(hair(roman, 130.0))).abs() < 0.01);
     }
 
     #[test]

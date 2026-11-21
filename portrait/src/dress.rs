@@ -573,6 +573,12 @@ pub struct DressSet {
     /// red, and at which it shows all of it. Apoleia mixes red in from 0 on, in step with the gene: of people whose
     /// alleles come from 20 to 170 (the pool England draws from) the usual one then has orange hair.
     pub hair_red: [f32; 2],
+    /// Hair's lightness: the strengths of the lightness gene (0..1, the mean of a person's two alleles) at which
+    /// black hair passes into dark brown, dark brown into light brown and light brown into blonde
+    /// (`look::SHADES` says where those are in the row of hair's colours). Apoleia takes the gene as the place in
+    /// the row: of people whose alleles come from 50 to 220 (the pool England draws from) 68 in 100 then have the
+    /// same middle brown (the gene between 0.4 and 0.7), none has black hair and none blonde (round 157).
+    pub hair_shades: [f32; 3],
     /// How much redder than Apoleia's the skin is over nose, cheeks, ears and chin (factor on settings::SKIN_RED),
     /// for women and for men; and the file of the real look that says where (per vertex of the head 0..1,
     /// tools/portrait/pipeline/skin_red.py; Apoleia's is skin_red.txt). The women's 0.65 since round 107 (0.7):
@@ -1036,6 +1042,13 @@ const ENGLAND: DressSet = DressSet {
     lash_image: "Eyelashes1356",
     lash_tone: (0.6, "#3a2416"),
     hair_red: [0.45, 0.74],
+    // Morgan et al. 2018, "Genome-wide study of hair colour in UK Biobank explains most of the SNP heritability",
+    // Nature Communications 9:5271, Table 1: of 343 884 white British people 4.2 % call their natural hair
+    // black, 37.2 % dark brown, 41.1 % light brown, 11.5 % blonde (and 4.6 % red, 1.4 % other); "black, dark
+    // brown, light brown and blond hair lie on an approximately linear spectrum". Of the four together that is
+    // 4.5, 39.6, 43.7 and 12.2 in 100: the gene's strengths under which that many of all pairs of alleles from 50
+    // to 220 lie. People born 1934 to 1971, NOT of 1356: no count of hair colours is known from then.
+    hair_shades: [0.296, 0.509, 0.699],
     flush: [0.65, 0.5],
     flush_map: "skin_flush.txt",
     flush_gene: 0.9,
