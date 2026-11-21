@@ -15,7 +15,21 @@ const TASKS: Record<number, string> = {
   [TASK.weed]: 'Jäten, Brache pflügen',
   [TASK.harvest]: 'Getreideernte',
   [TASK.winter]: 'Wintersaat',
+  [TASK.prune]: 'Reben schneiden und setzen',
+  [TASK.garden]: 'Pflanzen und säen',
+  [TASK.floor]: 'Dreschen',
+  [TASK.summer]: 'Ernte der Sommerfrüchte',
 };
+
+/** Where the work of the farming year is done, in German. */
+const workPlace = (task: number): string =>
+  inBarn(task)
+    ? 'in der Scheune'
+    : task === TASK.floor
+      ? 'auf der Tenne'
+      : task === TASK.garden
+        ? 'im Garten'
+        : 'auf dem Feld';
 
 /** What kind of day it is for the person. */
 export function dayText(p: DayPlan): string {
@@ -79,7 +93,7 @@ function doingText(p: PersonPlan, doing: number): string {
 }
 
 function workText(p: PersonPlan): string {
-  if (p.who === WHO.farm) return `${inBarn(p.task) ? 'in der Scheune' : 'auf dem Feld'}: ${TASKS[p.task]}`;
+  if (p.who === WHO.farm) return `${workPlace(p.task)}: ${TASKS[p.task]}`;
   if (p.who === WHO.craft) return 'in der Werkstatt';
   if (p.who === WHO.bank) return 'in der Bank';
   return 'bei der Arbeit';

@@ -45,6 +45,10 @@ describe('the day of the person on the card', () => {
     expect(r.Jetzt).toBeUndefined();
     const at = (h: number) => Object.fromEntries(hoverLines({ ...base, plan }, h).rows).Jetzt;
     expect(at(10)).toBe('auf dem Feld: Heuernte (bis 12:00 Uhr)');
+    // round the Mediterranean the corn is threshed out of doors, on the threshing floor (farm_year.ts)
+    expect(Object.fromEntries(hoverLines({ ...base, plan: { ...plan, task: TASK.floor } }, 10).rows).Jetzt).toBe(
+      'auf der Tenne: Dreschen (bis 12:00 Uhr)',
+    );
     expect(at(12.5)).toBe('beim Mittagessen (bis 13:30 Uhr)');
     expect(at(22)).toBe('schläft');
     // the plan is of another day than the world's: no hour

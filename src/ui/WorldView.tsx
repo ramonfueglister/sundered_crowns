@@ -10,6 +10,7 @@ import { replay } from './replay';
 import { listenForWorldClicks } from '../people/panel';
 import { listenForWorldHover } from '../people/hover';
 import { showRulers } from '../people/rulers_mode';
+import { planPlaces } from '../figures/plan_places';
 import { followDayPlans } from '../people/day_figures';
 import { followTownRolls } from '../people/town_rolls';
 import type { WorldView as View } from '../worldprobe/view';
@@ -21,6 +22,7 @@ const AT_PLACE = 260;
 
 interface Geo {
   loc: { lon: number[]; lat: number[] };
+  provinces: { locs: number[]; region: string }[];
 }
 /** how long the world waits for the server to name its start year before it builds that of 1356 (no server: a preview) */
 const WAIT_FOR_YEAR = 8000;
@@ -179,12 +181,7 @@ export function WorldView() {
           }),
         );
         // the figures of the great cities go where the plans of their day have them at the world's hour
-        stops.push(
-          followDayPlans(
-            made,
-            geo.then((g) => g.loc.lat),
-          ),
-        );
+        stops.push(followDayPlans(made, planPlaces(import.meta.env.BASE_URL, geo)));
         // and show the persons of their towns as they are on the world's day: the dead leave, the young come
         stops.push(followTownRolls(made, import.meta.env.VITE_WORLD_URL));
         // a click on a figure of the great cities opens that person; the pointer resting on one shows who it is

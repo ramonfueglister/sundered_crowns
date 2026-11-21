@@ -7,6 +7,7 @@
 // state of the world (src/sim/state.ts); a call takes the bytes and gives new ones. So a period is a function of the
 // state alone, like every other system, and the snapshot of a world holds all its economies. (The engine remembers
 // the cities of the bytes it handed out last and uses them for exactly those bytes, to save decoding them every day.)
+import { absencesInput, citiesInput, contractsInput, routesInput, workingDaysInput } from './engine_inputs';
 
 /** The key figures of a city, in the order of `Economy::figures` (economy/src/lib.rs). Amounts are in the units
  *  of the calibration; "real" means at the prices of the starting position. Flows (GDP and its uses) are sums over
@@ -85,9 +86,9 @@ type EconomyCrown = 'series' | 'revenue';
  *  is paid the profit with the unsold stock at its price and bears no loss; 'household': firm and owner are one
  *  household, the owner's income is the firm's profit without the change of its stock, of either sign. */
 type EconomyOwner = 'paper' | 'household';
-/** The rules of the cities that the calibration chooses. */
-/** `savings`: the share of what a household holds above its target that it spends per period (economy feature 15,
- *  economy/src/clock.rs); 0 is the port's rule, a household that spends out of its income only. */
+/** The rules of the cities that the calibration chooses. `savings`: the share of what a household holds above its
+ *  target that it spends per period (economy feature 15, economy/src/clock.rs); 0 is the port's rule, a household
+ *  that spends out of its income only. */
 export interface EconomyRules {
   wage: EconomyWage;
   prices: EconomyPrices;
@@ -117,6 +118,15 @@ export interface CityAbsences {
   first: Uint32Array;
   last: Uint32Array;
   family: Uint8Array;
+}
+/** The distance between the cities (economy feature 17): the days of travel and the labour of carrying per pair of
+ *  the `cities` cities, the weight of every product, and the elasticity of the stock to keep. */
+export interface EconomyRoutes {
+  cities: number;
+  days: Uint32Array;
+  labour: Float64Array;
+  weight: readonly number[];
+  elasticity: number;
 }
 /** What the engine is given for a city: the port's parameters and initial conditions (JSON text) and the seed of
  *  the city's random numbers. */
@@ -155,12 +165,8 @@ export type EconomyState = Uint8Array | KeptEconomy;
 export interface EconomyEngine {
   /** New cities that trade with each other, with the clock and the rules of their firms: their state. */
   create(cities: readonly CitySetup[], clock: EconomyClock, rules: EconomyRules): Uint8Array;
-  /** The cities of a state that has not computed a period, with distance between them (economy feature 17): the
-   *  days of travel and the labour of carrying per pair of cities, and the elasticity of the stock to keep. */
-  routes(
-    state: Uint8Array,
-    routes: { cities: number; days: Uint32Array; labour: Float64Array; weight: readonly number[]; elasticity: number },
-  ): Uint8Array;
+  /** The cities of a state that has not computed a period, with distance between them (economy feature 17). */
+  routes(state: Uint8Array, routes: EconomyRoutes): Uint8Array;
   /** The cities of a state with the working days of their firms from their next period on (economy feature 19), one
    *  entry per city in their order. */
   workingDays(state: EconomyState, cities: readonly CityWorkingDays[]): Uint8Array;
@@ -227,8 +233,8 @@ export function wasmEconomyEngine(wasm: Uint8Array): EconomyEngine {
   const module = new WebAssembly.Module(wasm as BufferSource);
   let x: Exports | null = null;
   const instance = (): Exports => (x ??= new WebAssembly.Instance(module, {}).exports as unknown as Exports);
-  /** The state the instance handed out last and keeps beside it (economy/src/lib.rs `LAST`). Given this very array
-   *  again (the world computes day after day), the instance takes the state it keeps instead of being given the
+  /** The state the instance handed out last and keeps beside it (economy/src/abi/last.rs `LAST`). Given this very
+   *  array again (the world computes day after day), the instance takes the state it keeps instead of being given the
    *  bytes: copying the state of a world (some 50 MB) into the instance and comparing it took about 40 ms a call,
    *  three calls a day. The arrays the engine hands out are not changed by anyone. */
   let last: Uint8Array | null = null;
@@ -289,7 +295,8 @@ export function wasmEconomyEngine(wasm: Uint8Array): EconomyEngine {
         current = null;
         return this.written;
       }
-      return (this.written = step(this.base, this.periods));
+      this.written = step(this.base, this.periods);
+      return this.written;
     }
   }
   /** Before the instance computes or reads another state: the bytes of the one it keeps without them are written,
@@ -316,30 +323,6 @@ export function wasmEconomyEngine(wasm: Uint8Array): EconomyEngine {
     return keeps(call([b], (e, a) => e.sce_step(a[0], a[1], periods)));
   }
   const floats = (b: Uint8Array): Float64Array => new Float64Array(b.buffer, b.byteOffset, b.byteLength / 8);
-  const utf8 = new TextEncoder();
-
-  /** The list of cities as `sce_create` reads it: for every city the seed in 64 bits, then the two texts, each with
-   *  its length in 32 bits before it; little endian. */
-  function list(cities: readonly CitySetup[]): Uint8Array {
-    const texts = cities.map((c) => [utf8.encode(c.parameters), utf8.encode(c.initialConditions)]);
-    const out = new Uint8Array(texts.reduce((n, [p, ic]) => n + 16 + p.length + ic.length, 0)),
-      dv = new DataView(out.buffer);
-    let at = 0;
-    cities.forEach((c, k) => {
-      if (!Number.isSafeInteger(c.seed) || c.seed < 0)
-        throw new Error(`economy seed ${c.seed} is not a whole number from 0`);
-      const lo = c.seed % 0x100000000;
-      dv.setUint32(at, lo, true);
-      dv.setUint32(at + 4, (c.seed - lo) / 0x100000000, true);
-      at += 8;
-      for (const t of texts[k]) {
-        dv.setUint32(at, t.length, true);
-        out.set(t, at + 4);
-        at += 4 + t.length;
-      }
-    });
-    return out;
-  }
 
   return {
     create(cities, clock, { wage, prices, savings, crown, owner }) {
@@ -356,7 +339,7 @@ export function wasmEconomyEngine(wasm: Uint8Array): EconomyEngine {
         throw new Error(`${owner} is not a way for an owner to hold a firm: 'paper' or 'household'`);
       flush();
       return keeps(
-        call([list(cities)], (e, a) =>
+        call([citiesInput(cities)], (e, a) =>
           e.sce_create(
             a[0],
             a[1],
@@ -371,104 +354,27 @@ export function wasmEconomyEngine(wasm: Uint8Array): EconomyEngine {
         ),
       );
     },
-    routes(state, { cities: n, days, labour, weight, elasticity }) {
-      if (days.length !== n * n || labour.length !== n * n)
-        throw new Error(`routes of ${days.length} ways and ${labour.length} labours do not fit ${n} cities`);
-      // as `sce_routes` reads them: the elasticity, the weight per product, then per pair of cities the days and the labour
-      const G = weight.length,
-        out = new Uint8Array(8 + 8 * G + 12 * n * n),
-        dv = new DataView(out.buffer);
-      dv.setFloat64(0, elasticity, true);
-      weight.forEach((v, g) => dv.setFloat64(8 + 8 * g, v, true));
-      let at = 8 + 8 * G;
-      for (let k = 0; k < n * n; k++) {
-        dv.setUint32(at, days[k], true);
-        dv.setFloat64(at + 4, labour[k], true);
-        at += 12;
-      }
-      const b = bytesOf(state);
+    routes(state, routes) {
+      const out = routesInput(routes),
+        b = bytesOf(state);
       flush();
       return keeps(call([b, out], (e, a) => e.sce_routes(a[0], a[1], a[2], a[3])));
     },
     workingDays(state, cities) {
-      // as `sce_working_days` reads them: per city its calendars, kinds and days, the factors, the kinds of the days,
-      // its firms and their calendars, its other households and theirs
-      let size = 0;
-      for (const c of cities) {
-        const calendars = c.factor.length / c.kinds;
-        if (!Number.isInteger(calendars) || c.day.length !== calendars * c.days)
-          throw new Error(
-            `working days of ${c.factor.length} factors and ${c.day.length} days do not fit ${c.kinds} kinds and ${c.days} days`,
-          );
-        size += 20 + 8 * c.factor.length + c.day.length + c.calendar.length + c.household.length;
-      }
-      const out = new Uint8Array(size),
-        dv = new DataView(out.buffer);
-      let at = 0;
-      for (const c of cities) {
-        dv.setUint32(at, c.factor.length / c.kinds, true);
-        dv.setUint32(at + 4, c.kinds, true);
-        dv.setUint32(at + 8, c.days, true);
-        at += 12;
-        for (const f of c.factor) {
-          dv.setFloat64(at, f, true);
-          at += 8;
-        }
-        out.set(c.day, at);
-        at += c.day.length;
-        dv.setUint32(at, c.calendar.length, true);
-        at += 4;
-        out.set(c.calendar, at);
-        at += c.calendar.length;
-        dv.setUint32(at, c.household.length, true);
-        at += 4;
-        out.set(c.household, at);
-        at += c.household.length;
-      }
-      const b = bytesOf(state);
+      const out = workingDaysInput(cities),
+        b = bytesOf(state);
       flush();
       return keeps(call([b, out], (e, a) => e.sce_working_days(a[0], a[1], a[2], a[3])));
     },
     absences(state, cities) {
-      // as `sce_absences` reads them: per city the number of its absences, then per absence the worker, the first and
-      // the last day and whether the family stands in
-      const out = new Uint8Array(cities.reduce((n, c) => n + 4 + 16 * c.worker.length, 0)),
-        dv = new DataView(out.buffer);
-      let at = 0;
-      for (const c of cities) {
-        const n = c.worker.length;
-        if (c.first.length !== n || c.last.length !== n || c.family.length !== n)
-          throw new Error(
-            `absences of ${n} workers with ${c.first.length} first and ${c.last.length} last days and ${c.family.length} words on the family`,
-          );
-        dv.setUint32(at, n, true);
-        at += 4;
-        for (let k = 0; k < n; k++) {
-          dv.setUint32(at, c.worker[k], true);
-          dv.setUint32(at + 4, c.first[k], true);
-          dv.setUint32(at + 8, c.last[k], true);
-          dv.setUint32(at + 12, c.family[k], true);
-          at += 16;
-        }
-      }
-      const b = bytesOf(state);
+      const out = absencesInput(cities),
+        b = bytesOf(state);
       flush();
       return keeps(call([b, out], (e, a) => e.sce_absences(a[0], a[1], a[2], a[3])));
     },
     contracts(state, byTheDay) {
-      // as `sce_contracts` reads them: per city the number of its workers who work by the day, then each of them
-      const out = new Uint8Array(byTheDay.reduce((n, c) => n + 4 + 4 * c.length, 0)),
-        dv = new DataView(out.buffer);
-      let at = 0;
-      for (const c of byTheDay) {
-        dv.setUint32(at, c.length, true);
-        at += 4;
-        for (const h of c) {
-          dv.setUint32(at, h, true);
-          at += 4;
-        }
-      }
-      const b = bytesOf(state);
+      const out = contractsInput(byTheDay),
+        b = bytesOf(state);
       flush();
       return keeps(call([b, out], (e, a) => e.sce_contracts(a[0], a[1], a[2], a[3])));
     },

@@ -1,10 +1,13 @@
 // Checks the day plan (people feature 12, src/sim/people/day_plan.ts) on a world of 1291 that runs with all systems:
 //   npm run dayplan:check [-- years]
 // Per year: the days a day labourer and a servant by the year are at work by their plans (a half day as half), also by
-// the calendar of the firm, against
-// the 175 to 200 days a day labourer needed before 1348 for the income of a year (Humphries & Weisdorf 2019, Unreal
-// wages?, Economic Journal 129: a check, not a parameter, computed from wages and not counted); the hours at work of a
-// worker of London by month; and whether every person has the same plan after a restart from the snapshot of the day.
+// the calendar of the firm, against the days the sources compute for a day labourer before 1348, none of them counted:
+// "some four days of casual work per week" for the income of a servant by the year, about 208 days (Humphries &
+// Weisdorf 2019, Unreal wages?, Economic Journal 129, p. 18 of the accepted manuscript), "at least 201 days" for the
+// food alone (Clark 2001, The Industrious Revolution?, chapter 12 of the reader of Econ 110A, UC Davis, p. 20) and 156
+// days for the grain livery of a famulus (Claridge, Delabastita & Gibbs 2024, (In-kind) Wages and labour relations in
+// the Middle Ages, working paper, p. 29): checks, not parameters. Also the hours at work of a worker of London by
+// month, and whether every person has the same plan after a restart from the snapshot of the day.
 import { loadSetup, loadWorld } from './load';
 import { createWorldState } from '../../src/sim/setup';
 import { tick } from '../../src/sim/schedule';
@@ -14,6 +17,7 @@ import { dayToDate } from '../../src/sim/calendar';
 import { CALENDAR, DAY } from '../../src/sim/holy_days';
 import { CHILDBED_DAYS, awayDays, sickness } from '../../src/sim/people/absence';
 import { AWAY, DOING, type DayPlan, dayPlan } from '../../src/sim/people/day_plan';
+import { FARM_YEAR } from '../../src/sim/people/farm_year';
 import { planPerson } from '../../src/sim/people/plan_person';
 import { presentPersons } from '../../src/sim/people/living';
 import { CITIES } from '../../src/sim/systems/people';
@@ -23,7 +27,9 @@ import { ALIVE, type WorldState } from '../../src/sim/state';
 const YEARS = Number(process.argv.slice(2).find((a) => /^\d+$/.test(a)) ?? 3);
 const w = loadWorld(),
   s = createWorldState(w, loadSetup(1291), 1291),
-  london = CITIES.find((c) => c.name === 'London')!.place;
+  london = CITIES.find((c) => c.name === 'London')!.place,
+  /** the farming year of a place (src/sim/people/farm_year.ts) */
+  farm = (place: number) => w.farmYear?.[place] ?? FARM_YEAR.north;
 
 /** The share of a day the plan has the person at work: the hours at work over those of a working day of the same
  *  sunrise and sunset, so a half day counts as about half. */
@@ -86,7 +92,14 @@ for (let y = 1; y <= YEARS; y++) {
       if (P.died[id] !== ALIVE || P.role[id] !== ROLE.worker || P.firm[id] < 0) continue;
       const f = P.family[id],
         place = Fam.place[f],
-        plan = dayPlan(planPerson(s, id, -1, awayFrom(runs.get(id), s.day)), place, w.lat[place], s.day, s.startYear),
+        plan = dayPlan(
+          planPerson(s, id, -1, awayFrom(runs.get(id), s.day)),
+          place,
+          w.lat[place],
+          s.day,
+          s.startYear,
+          farm(place),
+        ),
         // a worker who heads a family works by the day, every other serves by the year (people feature 10)
         acc = Fam.man[f] === id || Fam.woman[f] === id ? byDay : byYear;
       acc.days++;
@@ -104,7 +117,7 @@ for (let y = 1; y <= YEARS; y++) {
   }
   const perYear = (a: { days: number; worked: number }) => ((a.worked / a.days) * 365).toFixed(1);
   console.log(
-    `year ${y} (to day ${s.day}): days at work a year, day labourers ${perYear(byDay)} (Humphries & Weisdorf: 175–200 needed), servants ${perYear(byYear)}`,
+    `year ${y} (to day ${s.day}): days at work a year, day labourers ${perYear(byDay)} (computed before 1348: ~208 for a servant's income, 201+ for food, 156 for a famulus' grain), servants ${perYear(byYear)}`,
   );
   console.log(
     `  day labourers by the calendar of the firm: ${Object.entries(CALENDAR)
@@ -126,10 +139,17 @@ let same = 0,
 for (const id of presentPersons(s)) {
   const place = s.family.cols.place[s.person.cols.family[id]],
     a = JSON.stringify(
-      dayPlan(planPerson(s, id, -1, awayFrom(awayA.get(id), s.day)), place, w.lat[place], s.day, 1291),
+      dayPlan(planPerson(s, id, -1, awayFrom(awayA.get(id), s.day)), place, w.lat[place], s.day, 1291, farm(place)),
     ),
     b = JSON.stringify(
-      dayPlan(planPerson(back, id, -1, awayFrom(awayB.get(id), back.day)), place, w.lat[place], back.day, 1291),
+      dayPlan(
+        planPerson(back, id, -1, awayFrom(awayB.get(id), back.day)),
+        place,
+        w.lat[place],
+        back.day,
+        1291,
+        farm(place),
+      ),
     );
   if (a === b) same++;
   else differ++;

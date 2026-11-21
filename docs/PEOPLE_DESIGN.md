@@ -1242,6 +1242,41 @@ The farming year (`src/sim/people/farm_year.ts`), on the days of the Julian cale
 | 1 August | the harvest | "five weeks in August and early September" (Ramsey: Owen, Brown & Skinner 2025); reaping paid from the first week of August (Statute of Labourers 1351) |
 | 5 September | ploughing and sowing the winter corn | the seed changed at Michaelmas (Walter of Henley); the winter corn in the autumn (research of feature 7) |
 
+Which farming year a place follows goes by its land, not by the faith of its people (step D of 21 November, after
+the proposal «Vorschlag: Bauernjahr für Süden und Islam», https://claude.ai/artifact/T8KjRYpoP6BCsN8wtTCGC6): the
+Muslim almanacs, too, set the field work by the months of the sun (the calendar of Córdoba by the months January to
+December, Ibn Mammātī by the Coptic months; filaha.org), and the lunar year of the hijra goes round all seasons in
+some 33 years. The farming year of each land place is worked out from the region of its province (data/geo.json) and
+its climate (`public/data/place_climate.json`, written by `tools/worldprobe/build_place_climate.ts` from the world
+graphic's climate layer, the Köppen-Geiger zones), by the world loader (`World.farmYear`) and on the main thread
+(`src/figures/plan_places.ts`) alike:
+
+| Farming year | Places | Source |
+|---|---|---|
+| Mediterranean | the Mediterranean climate (Köppen-Geiger Cs) in Iberia, France, Italy, Greece, the Balkans, Anatolia, the Levant and the Maghreb; OWN RULE: in Iberia, the Maghreb and the Levant also the steppe and the desert (the same winter rains; Toledo and Zaragoza lay in al-Andalus) | the calendar of Córdoba, 961 |
+| Mesopotamia | the region of Mesopotamia | Handbook of Mesopotamia, vol. I (Naval Staff, 1918), pp. 176–177: not medieval |
+| North | everywhere else, also Egypt, Persia, the steppe, Arabia and the Sahel, for which no source with months could be read (Ibn Mammātī's calendar, ed. Pellat 1986; Rabie 1981; Rashīd al-Dīn's *Āthār wa aḥyāʾ*; Lambton 1977 are not online) | above |
+
+The calendar of Córdoba (ʿArīb ibn Saʿd; English extracts by John Brogden after Dozy's edition of 1873, filaha.org)
+names months only; OWN RULE: each work begins on the first of its month, and where a month names the corn and other
+work, the corn's goes first:
+
+| From | Work | The calendar |
+|---|---|---|
+| 1 January | pruning and setting the vines | January "the vines … are pruned", February "the vine shoots transplanted" |
+| 1 March | planting in the gardens and watered fields | March "Sugar cane is planted", April "rice and beans are sown" |
+| 1 May | the harvest | May "farīk is gathered" (the green early wheat), June "the grain on the threshing floor is weighed" |
+| 1 July | threshing out of doors, on the threshing floor | July "grain is harvested and barley is threshed" |
+| 1 August | planting in the gardens | "autumn beans, sky-blue stock, turnips, carrots, chards" |
+| 1 September | ploughing and sowing | September "ploughed and sown in the mountains", November "sowing activities reach their peak" (the olive picking that "commences" in October gives way) |
+| 1 December | planting in the gardens | "White poppy is sown, and also garlic" |
+
+Mesopotamia, after the handbook: from 1 September sowing (wheat and barley "Sep–Oct or Nov–end Jan", the spring crops
+to March), from 1 April the harvest ("The harvest begins in April"), from 1 June threshing on the floor (OWN RULE: the
+handbook says only "after drying", here the two months after the harvest), from 1 August the harvest of the summer
+crops (rice, millet, sesame, cotton; August to October, before the sowing from September). Threshing on the floor is
+field work: the figure stays at the furlong (`src/figures/schedule.ts`), the card says «auf der Tenne».
+
 ### Measured (`npm run dayplan:check -- 3`, world of 1291, seed 1291, all systems)
 
 Days at work a year by the plan, a half day as half (the day labourers by the calendar of their firm; in brackets the
@@ -1255,7 +1290,9 @@ day labourers of that calendar):
 | Sunday (the other churches) | 299.1 (103) | 301.0 (101) | 297.2 (105) |
 | Muslim | 349.8 (4,272) | 349.5 (4,337) | 349.8 (4,368) |
 | Servants by the year, all | 274.7 | 280.7 | 275.0 |
-| Needed by a day labourer before 1348 (Humphries & Weisdorf 2019) | 175–200 | | |
+| Needed by a day labourer before 1348, computed from wages: for the income of a servant by the year (Humphries & Weisdorf 2019, p. 18: "some four days of casual work per week") | about 208 | | |
+| for the food alone (Clark 2001, p. 20: "at least 201 days") | 201 or more | | |
+| for the grain livery of a famulus (Claridge, Delabastita & Gibbs 2024, p. 29) | 156 | | |
 
 Hours at work on a working day, workers of London, by month (year 3; sunrise to sunset less the meal, and the services'
 mornings at the market): 6.8, 8.3, 10.1, 12.3, 13.9, 14.4, 13.5, 12.0, 10.1, 8.4, 6.7, 6.0. Paris had "from 14 hours
@@ -1312,12 +1349,16 @@ browser asks for the lists of the places whose figures are on the stage again:
 
 ### Limits
 
-- **The day labourer works too many days.** By his plan a day labourer works on every working day of his firm on
-  which he is not away, as in the economy (feature 10): 241 to 249 days a year in a firm of the Latin calendar and
-  273 to 279 over all calendars, against the 175 to 200 days a day labourer needed before 1348 for the income of a
-  year (Humphries & Weisdorf 2019). That number is computed from wages, not counted, and is a check, not a parameter;
-  how many days a day labourer wanted and found work is phase B of step 6 (a target income), a choice of its own.
-  The templates do not close the gap and are not set to.
+- **The day labourer works more days than the sources compute.** By his plan a day labourer works on every working
+  day of his firm on which he is not away, as in the economy (feature 10): 241 to 249 days a year in a firm of the
+  Latin calendar and 273 to 279 over all calendars. Before 1348 a day labourer needed about 208 days for the income
+  of a servant by the year ("some four days of casual work per week", Humphries & Weisdorf 2019, p. 18 of the
+  accepted manuscript), at least 201 for his food alone (Clark 2001, p. 20) and 156 for the grain livery of a famulus
+  (Claridge, Delabastita & Gibbs 2024, p. 29). All three are computed from wages and none is counted; no source read
+  counts the days before 1348 (the proposal «Vorschlag: Arbeitstage der Tagelöhner vor der Pest»,
+  https://claude.ai/artifact/8yyRoSFbwsLTLJ2kaR5nFW, 21 November 2026; Ramon chose «A: Prüfwert berichtigen»: the
+  rule stays, the check is set right). The check read 175 to 200 days before, which none of these sources gives. How many days a day labourer wanted and found work is phase B of step 6 (a target
+  income), a choice of its own. The templates do not close the gap and are not set to.
 - **One template a part.** The servants by the year and the day labourers have the same day; the owner works as his
   workers do; nobody of a family goes to the market to buy (the households buy every working day in the economy, and
   no source read says how often a family went to the market); the women of the farmsteads do not go into the field in
