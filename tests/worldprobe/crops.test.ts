@@ -150,7 +150,7 @@ describe('the fields of the first far step', () => {
             tone = 0.84 + 0.32 * hash2(7 * 16 + k, 5, 69);
           crops(fine, meadow(), [(a0 + a1) / 2, fz0 + rows / 2], a1 - a0, rows, name, r, tone);
         }
-        const field = (lx: number, lz: number) => (lx === 7 && lz === 5 ? { crop, rows, strips } : undefined),
+        const field = (lx: number, lz: number) => (lx === 7 && lz === 5 ? { crop, rows, strips, site: 0 } : undefined),
           g = meadow(),
           c = coverLand(g, CROPS_AT, new Batch(), [], { ...asks, field }),
           far = new Batch();
@@ -180,7 +180,7 @@ describe('the fields of the first far step', () => {
       for (const register of [false, true]) {
         const strips = register ? 2 : 1,
           rows = register ? 6 : 7,
-          field = register ? () => ({ crop: CROP.winter, rows, strips }) : undefined,
+          field = register ? () => ({ crop: CROP.winter, rows, strips, site: 0 }) : undefined,
           g = meadow(),
           c = coverLand(g, CROPS_AT, new Batch(), [], { ...asks, courses: () => 1, vines: () => 1, field }),
           far = new Batch();

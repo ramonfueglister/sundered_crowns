@@ -1,6 +1,7 @@
 // Takes a picture of the look probe with headless Chromium (WebGL 2, software rendering) for comparison with the
 // reference image. Usage: node tools/lookprobe/shot.mjs <out.png> [extra address options, e.g. "post=0&sky=0"]
-// PROBE_PAGE picks another page on the same stage (world-probe.html). The dev server must be running (npm run dev). Playwright is not a dependency of the project; it is taken from the
+// PROBE_PAGE picks another page on the same stage (world-probe.html); PROBE_TIMEOUT the milliseconds to wait for the
+// picture (default 240000: a town at the finest step takes longer in the cloud's software rendering). The dev server must be running (npm run dev). Playwright is not a dependency of the project; it is taken from the
 // machine (global install, NODE_PATH).
 import { createRequire } from 'node:module';
 
@@ -19,7 +20,9 @@ page.on('console', (m) => {
 page.on('pageerror', (e) => console.log('[pageerror]', e.message));
 const t0 = Date.now();
 await page.goto(url);
-await page.waitForFunction(() => globalThis.__probe?.ready === true, null, { timeout: 240000 });
+await page.waitForFunction(() => globalThis.__probe?.ready === true, null, {
+  timeout: Number(process.env.PROBE_TIMEOUT ?? 240000),
+});
 await page.waitForTimeout(500);
 console.log(JSON.stringify(await page.evaluate(() => globalThis.__probe)), `${Date.now() - t0} ms`);
 await page.screenshot({ path: out });

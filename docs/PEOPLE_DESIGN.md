@@ -1264,13 +1264,16 @@ reads the state only, and keeps nothing of its own). Two runs of the same code g
 ### The figures of the towns
 
 The figures of the persons in the 30 great cities (src/figures) follow the plan at the world's hour. Each person may
-have three figures, each in the piece of the world that owns its column (src/figures/aims.ts): the one in the
+have four figures, each in the piece of the world that owns its column (src/figures/aims.ts): the one in the
 street of the town that it always had, one at the market (a column of the market of the land register, for those
 whom the plan takes there: the services on the market day and those who look for work at the hiring place) and
 one at a house of worship (a column within 12 blocks of the middle of one of the town's landmarks that are
 cathedrals, churches, abbeys, convents or Friday mosques; OWN RULE, a drawing value: the great churches of the
-register are 35 to 70 blocks long, and those who find no street there are inside). A person's figures wear the
-same, drawn from the person's id. Once a second the browser works out which of them is on the stage
+register are 35 to 70 blocks long, and those who find no street there are inside), and for a worker in agriculture
+one at a furlong of the town (src/figures/farmers.ts): a furlong of the land register's fields round the town,
+drawn from the person's id, at a free block of its balk, facing it, bent over the hoe (tending the vines standing).
+In the furlongs of a town whose persons are known no anonymous farmer works. A person's figures wear the same,
+drawn from the person's id; in the field a farmer wears the farm estate. Once a second the browser works out which of them is on the stage
 (src/figures/schedule.ts, the plan as the world server has it for the card of the person):
 
 | The plan has the person | The figure on the stage |
@@ -1278,7 +1281,8 @@ same, drawn from the person's id. Once a second the browser works out which of t
 | at the market, at the hiring place | at the market |
 | at the mass | at the house of worship |
 | at work in the services | in the street (OWN RULE, a drawing rule: they sell, carry and serve in the town) |
-| at work in a workshop, in the fields, in the bank | none |
+| at the work of the farming year | at the furlong; none while threshing in the barn (farm_year.ts) |
+| at work in a workshop, in the bank | none |
 | at home or at the meal, between sunrise and sunset | in the street (OWN RULE, a drawing rule: the houses have no inside to show) |
 | at home after sunset, asleep, sick, in childbed | none |
 | a ruler | in the street at every hour, where the map mode of the rulers finds them |
@@ -1305,8 +1309,10 @@ still at the market and at the house of worship; they walk only in the street.
   hours are of local solar time and follow the sun alone: Douai's seasons of the bells (All Saints, the first Sunday
   of Lent, Stabel 2014, p. 37) and the closing bell of winter are not apart.
 - **No inn, no lodging.** A ruler on the way sleeps from sunset; where, the itinerary does not say.
-- **The figures of the towns follow the plan as far as the town shows it** (below): the field, the workshop and the
-  bank have no figures of the persons, only the anonymous farmers in the fields.
+- **The figures of the towns follow the plan as far as the town shows it** (above): the workshop, the bank and the
+  barn have no figures of the persons. A farmer works the same furlong every day, one drawn by the id and not that of
+  the person's own farmstead, and at the same pose whatever the work of the farming year (the hoe: no plough, scythe or
+  sickle in the kit).
 - **The figures know the persons as on the day their list was fetched.** A worker of the world graphic fetches the
   persons of the cities once (src/figures/people.ts); the part, the calendar and the mothers in childbed are those
   of that day, the days of sickness are always right (a pure function). A person who dies later still walks, and a
