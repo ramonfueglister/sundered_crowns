@@ -82,7 +82,6 @@
     "src/sim/settlement/streets.ts": 622,
     "src/worldprobe/world.ts": 868,
     "tools/atlas/probe.py": 536,
-    "tools/geo/build_export.py": 511,
     "tools/geo/build_setup.py": 915,
     "tools/geo/merge_beyond.py": 636,
     "tools/history/1291/beyond.py": 840,

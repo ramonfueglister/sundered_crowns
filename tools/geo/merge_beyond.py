@@ -29,12 +29,12 @@ from scipy.spatial import cKDTree
 
 sys.path.insert(0, os.path.dirname(__file__))
 from build_beyond import frame, load_step
-from build_export import build_areas, build_provinces
 from build_land import yield_curve
 from build_setup import CULT_GROUP, SYL, assign_resources, climate, gen_name
 from common import CACHE, ROOT
 from common import H as MAP_H
 from common import W as MAP_W
+from provinces import build_areas, build_provinces
 
 DATA = os.path.join(ROOT, 'public', 'data')
 MAP = os.path.join(ROOT, 'public', 'map')
