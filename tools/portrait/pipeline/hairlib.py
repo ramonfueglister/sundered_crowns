@@ -616,6 +616,14 @@ def write_head_obj(head, path):
             f.write('f %d %d %d\n' % tuple(t + 1))
 
 
+def read_obj(path):
+    """The corners and triangles of an OBJ as this pipeline writes them to look at (`v x y z`, `f a b c`)."""
+    rows = [ln.split() for ln in open(path)]
+    V = np.array([[float(t) for t in r[1:4]] for r in rows if r and r[0] == 'v'])
+    T = [[int(t.split('/')[0]) - 1 for t in r[1:4]] for r in rows if r and r[0] == 'f']
+    return V, T
+
+
 def outside(margin, step=0.5):
     """How far outside the hair a direction lies: the angle in degrees to the nearest place where `margin` is not
     negative, 0 inside. (`margin` itself counts degrees of height over the hairline: where the hairline is steep,

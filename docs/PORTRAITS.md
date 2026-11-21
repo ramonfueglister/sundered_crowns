@@ -8975,6 +8975,97 @@ after, from three quarters before and after), `runde173_seite_vorher_nachher.png
 before above), `runde173_dorf.png` and `runde173_hof.png` (all 36, village and court, after; round 172's sheets
 are the before), `runde173_blender.png` (Blender: the old beard above the new, from three sides).
 
+**Round 174: the plaits get a shade and begin under the hair, in the Blender on Ramon's Mac** (2026-11-21).
+Rounds 171 to 173 made the hair of the head and the full beard of strands; the plaits were left. Looked at in
+Blender beside the head's hair of round 172, their form holds: three round strands, plaited, closed and lit
+round (round 86), not bands as the beard's locks were. Three faults: the plait began with a round knob 1 to 2 cm
+under the point the head's strands run to, and skin showed between; the strands were as light in their
+crossings as on their backs; the end is a blunt point. This round mends the first two. A small step.
+
+What was read. Nothing. Set by eye, in Blender and in the portrait. The reference was not looked at for it.
+
+What is changed.
+- **A plait begins under the head's hair** (`tools/portrait/pipeline/styles.py`, `PLAIT_ROPE_ROOT`): 2.5 cm
+  before the place below the ear where the hair is drawn together, 2 mm over the skin and with 0.45 of its
+  thickness, and comes up to the place, where the head's strands lie 1.1 to 1.6 cm over the skin. After the
+  place the strands part over 5 cm where it was 3; they cross where they did, counted from the place.
+- **A plait has a shade** (`PLAIT_ROPE_AO`, `PLAIT_ROPE_BLOCK`): baked in Blender as round 173's beard (Cycles,
+  ambient occlusion per corner within 3 cm), with the body and the head's hair of round 172 standing in the
+  scene, written as each corner's tenth number, from 0.35 for a corner wholly hidden to 1. The builder reads
+  it as a hair body's (`real_look.rs`, `mh_rope`, softened on light hair). Nothing in the builder is changed.
+- The plaits pinned up beside the cheeks (`loop01_rope`, round 126) are written with the same three switches.
+- `hairlib.py`: `read_obj`, which reads a hair body's OBJ for the scene. Without the switches both calls write
+  the old files byte for byte (checked in the cloud and on the Mac).
+- Two files, `public/portrait/real/plait01_rope.txt.zst` and `loop01_rope.txt.zst`, are written anew, by
+  Blender 5.1.2 on the Mac. The head's hair, the images, the stage and the wasm are not touched.
+
+How it was made. The old calls were run first, in the cloud and in the Mac's Blender: both write the
+repository's files byte for byte. Then, as rounds 171 to 173, the scripts were sent to the socket of the
+Blender that is open on the Mac and run there in scenes of their own, each pass rendered from the front, three
+quarters and the side, whole and near the ear: the old plaits, then the shade alone and with a first
+beginning; the beginning laid lower, with two shades; and that again after each of three corrections (two that
+the tests asked for, one for steps on the stem; below). The last pass's files were tried in the portrait and
+are the ones in the repository; run again on the Mac with the scripts as committed, the calls write them byte
+for byte. The cloud's Blender module baked a first shade (not kept) and was not compared with the Mac's.
+
+Measured (`portrait/tests/plait.rs` with `SHOW=1`; the files; four girls of the tests built with either file):
+
+| | before | now |
+|---|---|---|
+| corners, triangles, hanging plaits | 6240, 12 384 | 6672, 13 248 |
+| corners, triangles, pinned plaits | 2256, 4416 | 2640, 5184 |
+| a corner's shade in the file, hanging; its mean | none | 0.35 to 1.0; 0.60 |
+| a corner's shade in the file, pinned; its mean | none | 0.35 to 1.0; 0.48 |
+| the corners' colour as drawn, mean, against before (hidden corners counted) | 1 | 0.63 to 0.67 |
+| two plaits hold, girls of 8 and 13 | 0.125 to 0.143 l | 0.134 to 0.154 l |
+| the plaits' lowest point, the same four girls | | the same to 0.3 mm |
+| a plait's middle line turns within 2 cm, as laid; in the pose | 23.2; 32.0 degrees | 22.3; 32.1 degrees |
+| the files, packed | 130 and 49 kB | 147 and 59 kB |
+
+Tried and not kept.
+- The beard's shade (within 1.5 cm, no darker than 0.5): in Blender the crossings hardly darker than the
+  strands' backs. Not tried in the portrait.
+- The beginning with the plait's own thickness, its middle 3 mm over the skin and the strands as high over it
+  as below the ear (first pass): a stalk lying on the head's hair.
+- The three strands at one place before they part: the builder takes corners at one place for one corner, so
+  the strands were no closed surface to it and were drawn from both sides
+  (`a_girl_of_england_wears_plaits_of_round_strands` failed on "a strand is solid"). They lie 0.02 of their
+  swing apart now; with 0.08 the stem had steps in Blender.
+- The strands' crossings counted from the new beginning: on girls of 8 and on the pinned plaits single
+  triangles folded over where the strands part (`a_plait_hangs_without_a_kink_on_every_body`). Counted from
+  the place and parting over 3 cm: still three triangles on girls of 8; over 4 cm the strands fold as laid;
+  over 5 cm nothing folds. What lies before the place bound to the place's triangle: more folds.
+- A plait of flat strands as the head's hair: not tried. It would give up the closed strands of round 86 and
+  what `portrait/tests/plait.rs` holds of them.
+
+**No test changed.** `portrait/tests/plait.rs` passes as it was; two forms on the way failed it and were
+dropped (above).
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 173. The colour sheet: 160 of 160
+lines to the last figure (it reads skin, and no skin is changed).
+
+Honest about it. A small step, on the seven of the 36 who wear plaits (nine at court). At the size of the
+sheet of 36 the plaits are a little darker and nothing more. From near the crossings have depth, the knob
+below the ear is gone and the plait comes out of the hair. Skin still shows between the ends of the head's
+strands beside the plait's beginning (a reddish spot on the black-haired girl, from three quarters):
+those ends are round 172's file, not touched. In Blender, near, the beginning is three tubes in one another
+with small steps where they part. A strand is still a smooth tube with the image of hair on it, coarser than
+the head's strands of 4 to 6 mm beside it; its shade is baked at eight corners round, so it is soft and not a
+line in the crossing. The end is still a blunt point: no tie, no loose end (no source was read for how a
+girl's plait was tied). The pinned plaits are darkest where they turn under the lobe, almost a shadow there;
+behind their turn a patch of skin shows in Blender between the head's hair and the plait, as before. The
+shade is baked on the base's body without a gown, so on the chest it is the shade of a plait on skin. The file
+was baked on one machine; the cloud's bake was not compared. Every number is by eye: PLACEHOLDER.
+
+Tests: none changed. `cargo test --release` as a whole 140 of 140; `tests/portrait.test.ts` and its neighbour
+46 of 46; typecheck and lint pass, no new warning. Pictures (project files, `portraits/`):
+`runde174_vorher_nachher.png` (four girls with hanging plaits: from the front before and after, from three
+quarters before and after), `runde174_hochgesteckt.png` (two women with pinned plaits: before the two on the
+left, after the two on the right; from the front above, from three quarters below), `runde174_dorf.png` and
+`runde174_hof.png` (all 36, village and court, after; round 173's sheets are the before),
+`runde174_blender.png` (Blender: the old plaits above the new, whole and near the ear),
+`runde174_blender_hochgesteckt.png` (the pinned plaits, old above new).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair

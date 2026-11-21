@@ -6,6 +6,7 @@ import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(sys.argv[0])))
 import numpy as np
 from hairlib import Head, dirs, ang, unit, tangent, roots, grow, wisps, cards_from_wisps, write_cards, write_tubes, paint_cap, make_shade, write_head_obj
+from hairlib import in_blender, bake_ao, read_obj
 from hairlib import write_locks as _write_locks
 
 base, out, style, name = sys.argv[1:5]
@@ -258,12 +259,25 @@ elif style == 'plait':
     # beside the cheek. Its way as places on the head, `th,el,h;...` (degrees as the hairline's, and the height
     # over the skin), after the place below the ear where it begins.
     LOOP = [[float(t) for t in q.split(',')] for q in os.environ['PLAIT_LOOP'].split(';')] if os.environ.get('PLAIT_LOOP') else None
+    # `PLAIT_ROPE_ROOT` (round 174; `el,h,thin,part`; with `PLAIT_ROPE_ONLY`): the plait does not begin at the
+    # place below the ear, where the head's hair is drawn together, but before it, under that hair: at this angle
+    # below the horizon (the place's own is `PLAIT_G`'s) and this height over the skin, with `thin` of its
+    # thickness, and from there it comes up to the place's height and to its thickness. The head's strands
+    # (round 172) run together 1.1 to 1.6 cm over the skin there; until now the plait began at their point with a
+    # round knob and skin showed between the strands' ends above it. `part`: the length after the place over
+    # which the strands part (0.3 without a root. With a root and 0.3, on girls of 8 a few triangles folded over
+    # where the strands part, tests/plait.rs; 0.4 folds them as laid; 0.5 does not). By eye in Blender: PLACEHOLDER.
+    ROOT = [float(t) for t in os.environ['PLAIT_ROPE_ROOT'].split(',')] if os.environ.get('PLAIT_ROPE_ROOT') else None
     tubes = []
     for sgn in (1.0, -1.0):
         way = WAY * np.array([sgn, 1, 1])
         if LOOP:
             way = np.concatenate([way[:1], [H.at(dirs(np.array([sgn * th]), np.array([el])), np.array([h]))[0] for th, el, h in LOOP]])
         way[0] = H.at(dirs(np.array([sgn * GTH]), np.array([GEL])), np.array([0.05]))[0]
+        before = 0.0                                # the length of plait that lies before the place below the ear
+        if ROOT:
+            way = np.concatenate([H.at(dirs(np.array([sgn * GTH]), np.array([ROOT[0]])), np.array([ROOT[1]])), way])
+            before = float(np.linalg.norm(way[1] - way[0]))
         # a smooth line through the table's points
         u0 = np.concatenate([[0], np.cumsum(np.linalg.norm(np.diff(way, axis=0), axis=1))])
         uu = np.linspace(0, u0[-1], 400)
@@ -288,22 +302,39 @@ elif style == 'plait':
         nrm = unit(nrm - (nrm * tg).sum(-1, keepdims=True) * tg)
         bn = unit(np.cross(tg, nrm))
         g = np.clip((total - tt) / (0.14 * total), 0, 1); thin = 0.3 + 0.7 * g * g * (3 - 2 * g)   # the end runs out thin
-        g = np.clip(tt / 0.3, 0, 1); part = g * g * (3 - 2 * g)              # gathered below the ear, the strands part over 3 cm
+        g = np.clip((tt - before) / (ROOT[3] if ROOT else 0.3), 0, 1); part = g * g * (3 - 2 * g)   # gathered below the ear, the strands part over 3 cm (`ROOT`: over its fourth number)
         e = 0.06; tip = np.sqrt(np.clip(1 - (np.clip(tt - (total - e), 0, None) / e) ** 2, 0, 1))   # a round end
+        g = np.clip(tt / before, 0, 1) if ROOT else 1 + 0 * tt; up = g * g * (3 - 2 * g)            # from under the head's hair up to the place
+        grown = ROOT[2] + (1 - ROOT[2]) * up if ROOT else up
+        # (before the place the three strands lie in one another, a hair's breadth apart: the builder takes corners
+        # at one place for one corner, and three strands at one place are no closed surface to it)
+        part = np.maximum(part, 0.02 * g) if ROOT else part
         tip = tip * np.sqrt(np.clip(1 - np.clip(1 - tt / e, 0, None) ** 2, 0, 1))                    # and a round beginning, in the hair below the ear
         for k in range(3):
-            ph = 2 * np.pi * tt / LAM + 2 * np.pi * k / 3
-            q = c + bn * (RA * thin * part * np.sin(ph))[:, None] + nrm * (RD * thin * part * np.sin(2 * ph) + (RD + RH) * thin + 0.01)[:, None]
+            ph = 2 * np.pi * (tt - before) / LAM + 2 * np.pi * k / 3     # (the strands cross where they did, counted from the place)
+            q = c + bn * (RA * thin * part * np.sin(ph))[:, None] + nrm * (RD * thin * part * np.sin(2 * ph) + (RD + RH) * thin * up + 0.01)[:, None]
             tg2 = unit(np.gradient(q, axis=0))
             n2 = unit(nrm - (nrm * tg2).sum(-1, keepdims=True) * tg2)
             b2 = np.cross(tg2, n2)
-            size = thin * tip * (1 + 0.35 * (1 - part))
+            size = thin * tip * grown * (1 + 0.35 * (1 - part))
             rings = q[:, None, :] + n2[:, None, :] * (RH * size[:, None] * np.cos(turn)[None, :])[..., None] + b2[:, None, :] * (RW * size[:, None] * np.sin(turn)[None, :])[..., None]
             along = np.concatenate([[0], np.cumsum(np.linalg.norm(np.diff(q, axis=0), axis=1))]) / V_LEN + 0.37 * k
             v = 1 - np.abs(along % 2 - 1)
             uv = np.stack(np.broadcast_arrays(u_round[None, :], v[:, None]), -1)
             tubes.append((rings, uv, c))
-    nvr, ntr = write_tubes(H2, out, name + '_rope', tubes)
+    # `PLAIT_ROPE_AO` (round 174; `dist,samples,floor,power`): the shade where the strands cross and where the plait
+    # lies against the neck and under the head's hair, baked in Blender as a full beard's (round 173; `bake_ao`),
+    # with the body and the OBJs named in `PLAIT_ROPE_BLOCK` (the head's hair, `<name>_body_view.obj`) standing in
+    # the scene, and written as each corner's tenth number. Until then a plait had no shade of its own: three
+    # smooth tubes, as light in the crossings as on their backs. Every number by eye in Blender: PLACEHOLDER.
+    AO = [float(t) for t in os.environ.get('PLAIT_ROPE_AO', '0,0,0,1').split(',')]
+
+    def rope_shade(verts, tris, tri_uv, of):
+        sc, ob = in_blender(name + '_rope', verts, tris, tri_uv, os.environ.get('SCENE'))
+        block = [('head', H2.V, H2.T)] + [(os.path.basename(p)[:-4],) + read_obj(p) for p in os.environ.get('PLAIT_ROPE_BLOCK', '').split(',') if p]
+        return AO[2] + (1 - AO[2]) * np.clip(bake_ao(sc, ob, block, AO[0], AO[1]), 0, 1) ** AO[3]
+
+    nvr, ntr = write_tubes(H2, out, name + '_rope', tubes, shade=rope_shade if AO[0] > 0 else None)
     if rope_only:
         print(style, 'plaits alone: corners', nvr, 'tris', ntr)
         sys.exit(0)
