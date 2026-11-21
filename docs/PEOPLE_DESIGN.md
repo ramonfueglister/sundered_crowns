@@ -1186,7 +1186,10 @@ Step 5 of way A of the proposal «Personen: Archiv der Toten und Tagesplan» (fe
 20 November 2026 («Vorschlag: Tagesplan der Personen und Reisen der Herrscher»,
 https://claude.ai/artifact/Bi91xAnUNQtxCw3hkKKuks), to which Ramon said yes the same day («5. gut aber später») and
 which he set going on 21 November («ok»). The travels of the rulers of the same proposal are in the itineraries
-(`src/sim/content/itineraries.ts`, `src/sim/content/travel.ts`).
+(`src/sim/content/itineraries.ts`, `src/sim/content/travel.ts`). On the map a ruler between two places of the way
+rides it as a horseman, at every distance (step C of 21 November, «wir starten mit a dann b und c»: `src/figures/
+horse.ts`, `src/worldprobe/view_riders.ts`); where the ruler stays, the dot of the ruler stands at the place, and near
+the ruler's figure stands in the town the ruler stays in (GET /people lists a person of history there).
 
 Every person has a plan of the day: what the person does at which hour, and where. The plan is a pure function of
 the person's part in the world, the calendar of the person's days of work, the place and the day

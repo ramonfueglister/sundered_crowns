@@ -2,7 +2,7 @@
 // and shows the realms as the world server last told them; a click on a place of the game map selects it.
 import { useEffect, useRef } from 'preact/hooks';
 import { effect } from '@preact/signals';
-import { owners, realms, status, world } from '../net/client';
+import { dayLength, owners, realms, status, world, worldHour } from '../net/client';
 import { L, lang } from './i18n';
 import { hoverPlace, mapCtl, mapError, selectedPlace } from './mapstate';
 import { landOf, mapMode } from './mapmode';
@@ -157,8 +157,12 @@ export function WorldView() {
                   loc,
                   (uid) => void peoplePanel?.show(uid),
                   import.meta.env.VITE_WORLD_URL,
-                  // the travelling rulers go along their ways with the days of the world
-                  (f) => world.subscribe((w) => w && f(w.day)),
+                  // the travelling rulers ride their ways with the days and hours of the world
+                  () => {
+                    const w = world.value,
+                      ms = w ? dayLength(w) : 0;
+                    return w && { day: w.day + (worldHour() ?? 0) / 24, pace: w.paused || !ms ? 0 : 1000 / ms };
+                  },
                 );
               else if (!on && hide) {
                 hide();

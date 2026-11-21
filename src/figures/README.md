@@ -27,6 +27,11 @@ hood with a long tail. The head is drawn larger than true so that a figure reads
   vertex stage, so nothing is built anew. Once a day of the world the persons' lists are asked for again
   (`src/people/town_rolls.ts`): the dead leave the stage at once, and the pieces of a town whose persons changed
   build only their figures again (`Figures.rolls`, `people.ts rollOf`).
+- A ruler on a leg of the way the itinerary tells rides it on horseback, in the map mode of the rulers (`horse.ts`,
+  `src/worldprobe/view_riders.ts`, `src/people/rulers_mode.ts`): one more kit, drawn by the same material, whose
+  horse's legs swing about their own tops. The main thread tells each rider once a second where it is and where it
+  will be a few seconds on; in between the vertex stage moves it. Far out a rider is drawn 28 dots tall, as the
+  rulers' dots are drawn larger than a town.
 
 ## Rules for this code
 
