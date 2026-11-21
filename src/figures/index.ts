@@ -6,8 +6,10 @@
 // crowd.ts    where the figures of a piece of the world stand and go (runs in the world's web workers; the first far
 //             step's are in worldprobe/crowd.ts)
 // people.ts   the persons of the 30 great cities who walk in their towns, fetched from the world server (workers)
+// aims.ts     where in its town a person stands, walks, goes to market and to worship, and the person's figures there
 // material.ts how they are drawn and moved, all in the vertex stage
 // stage.ts    the figures on the stage: near or far kit, and whether anything walks
+// schedule.ts which of a person's figures the plan of the day puts on the stage at the world's hour (main thread)
 //
 // index.ts exports only what runs in a worker; the stage takes stage.ts directly.
 export { type Figures, type SettledGround, type Town, type Where, crowd, figuresOf, gathered, place } from './crowd';

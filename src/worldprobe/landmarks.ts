@@ -13,6 +13,8 @@ export type LandmarkRow = readonly number[];
 /** one that stands alone: [kind, lat, lon, w, d, named, start, end, ruined] */
 export type AloneRow = readonly number[];
 
+/** the landmarks that are houses of worship, where the persons of a town go on a day of rest (src/worldprobe/town_spots.ts) */
+export const WORSHIP: ReadonlySet<number> = new Set([LANDMARK_KIND.cathedral, LANDMARK_KIND.orthodox, LANDMARK_KIND.mosque, LANDMARK_KIND.convent, LANDMARK_KIND.abbey, LANDMARK_KIND.church]);
 /** the smallest part of a building under way that is drawn, as a share of its length. PLACEHOLDER */
 const LEAST_BUILT = 0.4;
 /** what a ruin keeps of its height. PLACEHOLDER */

@@ -12,7 +12,7 @@ import { type Part, WATER_SHALLOW, sideTopAt } from '../lookprobe/terrain';
 import { type Climate, FIELDS_KNOWN, KIND, Land, WOODS_KNOWN, climateAt, snowLineAt, treeLineAt } from './climate';
 import { type Arable, arableAt } from './arable';
 import { fieldsByLot, layPlanGrounds, lotKey, type TownParcels } from './lots';
-import { shownOf } from './landmarks';
+import { WORSHIP, shownOf } from './landmarks';
 import { FIELD_LOT, GEWANN } from '../sim/settlement/fields';
 import { type Forest, WOOD, conifersAt, forestAt, leanOf, stand, tilth } from './forest';
 import { type Rural, ruralAt } from './rural';
@@ -593,7 +593,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     const marks = step === 0 ? parcels?.get(id)?.landmarks : undefined;
     if (marks) site.marks = marks.flatMap(([kind, x, z, w, d, named, , start, end, ruined]) => {
       const shown = shownOf(kind, named, w, d, start, end, ruined, parcels!.year ?? 1291, site.style, models);
-      return shown ? [{ x, z, model: shown.model, kind: KIND_COUNTED[kind] ?? 'landmark' }] : [];
+      return shown ? [{ x, z, model: shown.model, kind: KIND_COUNTED[kind] ?? 'landmark', worship: WORSHIP.has(kind) }] : [];
     });
     all.push(site);
     if (onGround(site.at)) sites.push(site);
