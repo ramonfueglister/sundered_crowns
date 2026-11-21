@@ -398,6 +398,21 @@ data/cadastre/venice_1808/) draws every building, courtyard, sottoportico and st
    Rialto spans (at the plan's size, and a block for the rounding), its blocks within the street's half width are
    land: a bridge. At the Rialto the Grand Canal is no wider than the span, so it is land there already, a flat
    crossing at the bridge's place.
+4. **The lagoon round it, as far as the world leaves room.** The register draws the town only; beyond it the map's
+   own land began at once, with straight shores where the register's sheet ended, and the hamlets and convents that
+   found no land stood in the water. Round the register, out to 6 km east, west, north and south of San Marco, the
+   lagoon is drawn at the same size as the town (`around`, cells of 0.03 radii): water but for the islands of the
+   lagoon and its mainland shore after OpenStreetMap (2026, ODbL; data/cadastre/venice_lagoon/), less the land made
+   after the register (OWN RULE, the list in cadastre_venice.py: the sacche, Tronchetto, the Stazione Marittima, the
+   Tresse, the Petroli, Forte Marghera, the islands without a name). The other towns stand where the world's scale sets
+   them (Ramon, 21 November 2026: "wir haben einen massstab und daran muss es angepasst werden"): Chioggia, Treviso and
+   Padua lie 180 to 260 blocks from Venice, nearer than the real lagoon is wide. So a cell of the register or the
+   lagoon that lies nearer another town of the world than Venice is open (`open`), and that town's own ground holds
+   there (OWN RULE: half-way between the towns). Murano, Sant'Erasmo and the Vignole stay; the Lido falls to Chioggia's
+   side, and to the west Venice meets Treviso's and Padua's land. Its islands keep today's shores, which have grown
+   since 1291. The hamlets of Venice look for an island or a shore that carries them as far as the ground is known when
+   there is none near their spot, and a convent whose bearing crosses only water takes the ground nearest the centre
+   (both OWN RULE, only for a town on the ground of its real plan: they stand on land).
 
 Venice in the world of 1291: its 48 families fit on its register (before: laid out without regard to the ground),
 238 streets, 1,868 m, the market 64 m from the centre. Its streets meet as Paris's do, not as Venice's: 0.03, 0.83,

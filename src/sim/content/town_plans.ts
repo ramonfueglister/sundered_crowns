@@ -1,7 +1,7 @@
 // The real plans of the towns whose old plan is open, by the start year (src/sim/content/town_plans_<year>.json,
 // written by tools/settlement/cadastre_skeleton.py and cadastre_venice.py): the market and the main streets east and
 // south of the town's centre, in radii of the real town (the world lays a plan as wide as its own town), and where the
-// plan draws them its land and water (src/sim/settlement/plan_ground.ts). Such a town lays these streets instead of
+// plan draws them its land and water and the land and water round it (src/sim/settlement/plan_ground.ts). Such a town lays these streets instead of
 // the ones along the ways of the world (settlement feature 3, src/sim/settlement/streets.ts).
 import P1291 from './town_plans_1291.json';
 import type { Plan, PlanGround } from '../settlement/plan_ground';
@@ -13,21 +13,28 @@ interface GroundJson {
   w: number;
   h: number;
   water: string;
+  open?: string;
 }
 interface TownJson {
   market: number[];
   streets: number[][];
   radius: number;
   ground?: GroundJson;
+  around?: GroundJson;
   wall?: number[][];
 }
 
-/** the shares of water, two cells to a byte, the lower half first (cadastre_venice.py) */
+/** the shares of water, two cells to a byte, the lower half first, and the open cells (cadastre_venice.py) */
 const groundOf = (g: GroundJson): PlanGround => {
   const bytes = Uint8Array.from(atob(g.water), (c) => c.charCodeAt(0)),
     water = new Uint8Array(g.w * g.h);
   for (let k = 0; k < water.length; k++) water[k] = (bytes[k >> 1] >> ((k & 1) * 4)) & 15;
-  return { x0: g.x0, z0: g.z0, cell: g.cell, w: g.w, h: g.h, water };
+  if (!g.open) return { x0: g.x0, z0: g.z0, cell: g.cell, w: g.w, h: g.h, water };
+  // the open cells, a bit each, the lowest bit first
+  const bits = Uint8Array.from(atob(g.open), (c) => c.charCodeAt(0)),
+    open = new Uint8Array(g.w * g.h);
+  for (let k = 0; k < open.length; k++) open[k] = (bits[k >> 3] >> (k & 7)) & 1;
+  return { x0: g.x0, z0: g.z0, cell: g.cell, w: g.w, h: g.h, water, open };
 };
 const read = (towns: Record<string, TownJson>) =>
   new Map(
@@ -38,6 +45,7 @@ const read = (towns: Record<string, TownJson>) =>
         streets: t.streets,
         radius: t.radius,
         ground: t.ground && groundOf(t.ground),
+        around: t.around && groundOf(t.around),
         wall: t.wall,
       },
     ]),

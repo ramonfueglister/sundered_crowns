@@ -368,6 +368,24 @@ describe('Venice on its land register of 1808', () => {
     expect(Math.abs(told.radius - at.radius)).toBeLessThan(1e-3);
     expect(Math.abs(told.half - at.half)).toBeLessThan(1e-3);
   });
+  it('sets its farmsteads and landmarks on the land of the lagoon: its islands and shores, none in the water', () => {
+    const g = registerGround(s, widened(w.ground!, w.dry), venice)!, m = g.metresPerBlock, M = s.landmark.cols;
+    const farms = Array.from({ length: s.lot.size }, (_, i) => i).filter((i) => L.kind[i] === LOT_KIND.farmstead && L.site[i] === venice);
+    expect(farms.length).toBeGreaterThan(100);
+    for (const i of farms) expect(houseGround(g, venice, { x: L.x[i], z: L.z[i], front: L.front[i] }, FARM)).toBe(true);
+    let marks = 0;
+    for (let i = 0; i < s.landmark.size; i++) {
+      if (!s.landmark.alive[i] || M.site[i] !== venice) continue;
+      marks++;
+      for (let bz = Math.floor((M.z[i] - M.d[i] / 2) / m); bz < Math.ceil((M.z[i] + M.d[i] / 2) / m); bz++)
+        for (let bx = Math.floor((M.x[i] - M.w[i] / 2) / m); bx < Math.ceil((M.x[i] + M.w[i] / 2) / m); bx++) expect(g.free(venice, bx, bz)).toBe(true);
+    }
+    expect(marks).toBeGreaterThan(2);
+    // the lagoon round the register: Murano (2.6 km north of San Marco, 1 km east) is land, the lagoon between it and the town is not
+    const real = plan.radius!, toBlock = (metres: number) => Math.round(((metres / real) * at.radius) / m);
+    expect(blocks.at(toBlock(1000), toBlock(-2600))).toBe(GROUND.land);
+    expect(blocks.at(toBlock(-500), toBlock(-1700))).toBe(GROUND.water);
+  });
   it('has its market at the Rialto, across the Grand Canal from San Marco, and the canal is crossed where it is no wider than the Rialto bridge spans', () => {
     const S = s.street.cols, streets = Array.from({ length: s.street.size }, (_, k) => k).filter((k) => S.site[k] === venice);
     const k = streets.find((q) => S.kind[q] === STREET_KIND.market)!, mx = Math.round((S.x0[k] + S.x1[k]) / 4), mz = Math.round((S.z0[k] + S.z1[k]) / 4);
