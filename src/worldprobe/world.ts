@@ -19,7 +19,7 @@ import { type Rural, ruralAt } from './rural';
 import { HAMLET_TURN, type HamletLands, hamletAt, hamletsOf } from './hamlets';
 import { BARE, FINER, FINER_STEPS, SNOW_LINE, TINT, TREE_LINE, WOODS, blockOfCell, cellOfBlock, lineShift, paleFrom, rockAt, woodsUntil } from './land';
 import { type Region, Water, cellOf, latOf, sample, waterAt } from './region';
-import { type Cover, HOUSES_UNTIL, type Woods, coverLand, lotFill } from './far';
+import { type Cover, HOUSES_UNTIL, MODELS_UNTIL, type Woods, coverLand, lotFill } from './far';
 import { drawGround } from './table';
 import { CROWD_AT, farCrowd } from './crowd';
 import { TREE_NUMBERS, crownTallAt } from './trees';
@@ -589,8 +589,8 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     const at = toGround(...cellOf(region, p.lon, p.lat));
     // (with the parcels of its register: the finest step builds on them, the far steps that draw houses pave its streets)
     const site: Site = { id, at, size: p.size, pop: h ? h.inside * PEOPLE_PER_PERSON : inhabitants.get(id) ?? p.pop1356, region: p.region, style: styleOf(p.region), lots: step <= HOUSES_UNTIL ? parcels?.get(id) : undefined };
-    // its landmarks, where the register has them: then they are its great buildings and churches
-    const marks = step === 0 ? parcels?.get(id)?.landmarks : undefined;
+    // its landmarks, where the register has them: then they are its great buildings and churches (also where far_marks.ts draws them again)
+    const marks = step <= MODELS_UNTIL ? parcels?.get(id)?.landmarks : undefined;
     if (marks) site.marks = marks.flatMap(([kind, x, z, w, d, named, , start, end, ruined]) => {
       const shown = shownOf(kind, named, w, d, start, end, ruined, parcels!.year ?? 1291, site.style, models);
       return shown ? [{ x, z, model: shown.model, kind: KIND_COUNTED[kind] ?? 'landmark' }] : [];

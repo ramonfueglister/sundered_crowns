@@ -62,7 +62,7 @@ export interface Woods {
 }
 
 // (world.ts takes it from here)
-export { HOUSES_UNTIL } from './far_places';
+export { HOUSES_UNTIL, MODELS_UNTIL } from './far_places';
 
 /** The share of a lot's ground that is its field at a step: of the land's lots `ploughed / lotFill` are fields. */
 export const lotFill = (_step: number) => 1;
