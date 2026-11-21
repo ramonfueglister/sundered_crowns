@@ -57,12 +57,12 @@ const TR: Tradition = {
  * numbers are the search's own, unrounded: a rounded block size draws another town, which measured systematically
  * worse (21 Nov 2026: fine detail over its limit on two of four draws)
  */
-const BLOCK = num('block', 12.014),
-  LANE = num('lane', 4.608),
+const BLOCK = num('block', 12.033),
+  LANE = num('lane', 5.181),
   CELL = BLOCK + LANE;
 const GRASS = rgb(0x6a8a3a),
-  OLIVE = hexOf('olive') ?? rgb(0x2b5517),
-  LIGHT_LEAF = hexOf('leaf') ?? rgb(0x5d7212),
+  OLIVE = hexOf('olive') ?? rgb(0x3c5528),
+  LIGHT_LEAF = hexOf('leaf') ?? rgb(0x607300),
   STRIPES: readonly RGB[] = [rgb(0xc8382c), rgb(0x2f5f9a), rgb(0xd8a030)],
   CANVAS = rgb(0xf0e8d8),
   POLE = rgb(0x6b4a2c);
@@ -131,7 +131,7 @@ function side(things: Batch, x0: number, z0: number, x1: number, z1: number, fro
 function block(ground: Batch, things: Batch, x0: number, z0: number, sx: number, sz: number, r: Rnd) {
   const x1 = x0 + sx,
     z1 = z0 + sz,
-    d = num('depth', 3.922);
+    d = num('depth', 3.931);
   side(things, x0, z1 - d, x1, z1, 'pz', r);
   side(things, x0, z0, x1, z0 + d, 'nz', r);
   side(things, x1 - d, z0 + d, x1, z1 - d, 'px', r);
@@ -148,7 +148,7 @@ function block(ground: Batch, things: Batch, x0: number, z0: number, sx: number,
       LAND_Y,
       z0 + sz / 2 + r.range(-0.8, 0.8),
       r,
-      r.range(1.8, 2.3) * num('treesize', 0.95),
+      r.range(1.8, 2.3) * num('treesize', 0.956),
       r.chance(0.4) ? LIGHT_LEAF : OLIVE,
     );
 }
@@ -249,18 +249,18 @@ async function build(): Promise<StageScene> {
 
 /**
  * the light of the near view (stage/look.ts) as the Paris gauntlet's search found it closest to the picture
- * (tools/lookprobe/search_paris.py, 21 Nov 2026), seen through `?tone=neutral&exposure=1.19&saturation=0.88` (the
+ * (tools/lookprobe/search_paris.py, 21 Nov 2026), seen through `?tone=neutral&exposure=1.2&saturation=0.88` (the
  * game's own tone stays AgX); each strength can be tried out from the address, as in near.ts
  */
-const FOUND = { ...NEAR_LIGHT, sun: 1.35, side: 0.95, sky: 0.75, bounce: 0.31, fill: 0.61, skyColor: 0xc4d1f0 };
+const FOUND = { ...NEAR_LIGHT, sun: 1.364, side: 0.923, sky: 0.755, bounce: 0.299, fill: 0.611, skyColor: 0xc4d1f0 };
 const LIGHT = { ...FOUND };
 for (const k of ['sun', 'side', 'sky', 'bounce', 'fill'] as const) LIGHT[k] = num(k, FOUND[k]);
 LIGHT.skyColor = colour('skycol') ?? FOUND.skyColor;
 LIGHT.sunColor = colour('suncol') ?? FOUND.sunColor;
 
 stage(build, {
-  frameW: num('across', 63.12),
-  elevation: num('elev', 36.097),
+  frameW: num('across', 63.182),
+  elevation: num('elev', 36.521),
   tall: 14,
   light: LIGHT,
   shadowRadius: Number(q.get('soft')) || NEAR_SHADOW,
