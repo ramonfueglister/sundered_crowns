@@ -42,7 +42,8 @@ fn with<'a>(s: &'a [Surface], image: &str) -> Vec<&'a Surface> {
 const EDGE: [usize; 2] = [114, 96];
 const ROUND: usize = 12;
 const PLAIN: [usize; 2] = [11980, 5568];
-const DAGGED: [usize; 2] = [12004, 6275];
+// (round 163: the hood thrown back is laid anew, tests/collar.rs; its dagged file has 6 661 triangles for 6 275)
+const DAGGED: [usize; 2] = [12004, 6661];
 
 /// The roll's rings: the corners round it at each place along the edge (two triangles for each of the `ROUND`
 /// pieces between two rings, each beginning with the first ring's corner).

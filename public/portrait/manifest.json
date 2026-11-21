@@ -291,7 +291,7 @@
   },
   {
    "name": "cloth_hood_down.txt.zst",
-   "bytes": 89673
+   "bytes": 88372
   },
   {
    "name": "cloth_hood_down_ao.txt",
@@ -299,11 +299,11 @@
   },
   {
    "name": "cloth_hood_down_dag.txt.zst",
-   "bytes": 122403
+   "bytes": 131310
   },
   {
    "name": "cloth_hood_down_dag_ao.txt",
-   "bytes": 21180
+   "bytes": 22680
   },
   {
    "name": "cloth_hood_up.txt.zst",

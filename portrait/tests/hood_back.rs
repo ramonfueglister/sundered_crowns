@@ -91,6 +91,11 @@ fn a_hood_thrown_back_hangs_behind_the_neck() {
     // turned to, and no place of the cape or the gown stands out of it (with the bag laid square on the cloth
     // as it is seen from behind, without the rule that it hangs straight where the cloth falls away and
     // without the mouth held over the roll, 27 of 39 builds had such places, up to 14).
+    // (round 163) The file of the hood thrown back is laid anew: its opening lies round the shoulders, a third
+    // longer round, and the roll at the nape is 2.4 cm lower (tests/collar.rs). The bag is as broad as the
+    // opening lies and is measured from the cape's highest place, so three of its measures went with the file and
+    // their bounds with them: 26 to 33 cm under the cape's highest (28.6 to 30.3 measured), 22 to 33 cm broad
+    // (25.0 to 30.1), the point under 4 cm (2.0 to 3.2). The builder's rule for the bag is as round 161 wrote it.
     let Some(h) = head() else { return };
     let (mut seen, mut other) = (0, 0);
     for (stand, d) in [(1, &ENGLAND_1356), (3, &COURT_1356)] {
@@ -118,8 +123,8 @@ fn a_hood_thrown_back_hangs_behind_the_neck() {
             if show() {
                 println!("stand {stand} person {k}: long {:.3} point {:.3} broad {:.3} behind {:.3} round {:.3} (turned {turn:.3}) through {}", m.long, m.point, m.broad, m.behind, m.round, m.through);
             }
-            assert!(m.long > 3.0 && m.long < 3.6, "person {k} of stand {stand}: the bag hangs {} under the cape's top", m.long);
-            assert!(m.broad > 1.5 && m.broad < 2.8 && m.point < 0.3, "person {k} of stand {stand}: {} broad, {} at the point", m.broad, m.point);
+            assert!(m.long > 2.6 && m.long < 3.3, "person {k} of stand {stand}: the bag hangs {} under the cape's top", m.long);
+            assert!(m.broad > 2.2 && m.broad < 3.3 && m.point < 0.4, "person {k} of stand {stand}: {} broad, {} at the point", m.broad, m.point);
             assert!(m.behind > 0.6, "person {k} of stand {stand}: the bag's nearest place lies {} behind the head's middle", m.behind);
             assert!(m.round * turn > 0.0, "person {k} of stand {stand}: the point hangs {} round, the shoulders are turned {turn}", m.round);
             assert_eq!(m.through, 0, "person {k} of stand {stand}: places of the cloth under the bag stand out of it");

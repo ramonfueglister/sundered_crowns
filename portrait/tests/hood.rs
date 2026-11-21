@@ -15,7 +15,8 @@ fn show() -> bool {
 /// The files' triangles (tools/portrait/pipeline/README.md): the plain hood on the head and thrown back, and
 /// the same with the hem dagged.
 const PLAIN: [usize; 2] = [11980, 5568];
-const DAGGED: [usize; 2] = [12004, 6275];
+// (round 163: the hood thrown back is laid anew, tests/collar.rs; its dagged file has 6 661 triangles for 6 275)
+const DAGGED: [usize; 2] = [12004, 6661];
 
 #[test]
 fn three_hoods_in_ten_are_dagged() {

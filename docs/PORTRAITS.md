@@ -7962,6 +7962,101 @@ Pictures (project files, `portraits/`): `runde162_vorher_nachher.png` (the eight
 village, before above and after below), `runde162_hof_vorher_nachher.png` (the same at court),
 `runde162_seite_und_hinten.png` (the four girls from the side and from behind, before and after).
 
+**Round 163: a hood thrown back lies round the shoulders** (2026-11-21). Round 161's own list: "the ring of
+white fur is still a thick tube round the throat; that needs another collar (a lower, wider opening)". All 36
+of the sample beside each other at court: the two lords with the hood thrown back are the first thing the eye
+goes to, a white tube under the chin. Looked at on them at court and in the village, from the front, the side,
+behind and the other side, sixteen views.
+
+Measured before anything was changed, on a lord's fur, which lies along the edge of the hood's opening: on the
+head that edge is 68 to 80 cm round (53 lords), thrown back 51 to 60 (seven). It is the same hood. The
+opening its wearer's face looked out of cannot be a quarter shorter when it lies round his neck; an edge that
+long does not lie on a throat, it lies round the shoulders. The file (`cloth_hood_down`, round 35; its last
+form, the inner edge drawn in to the neck and lifted towards the nape, is in the commit of round 77) was laid
+by eye, not to this measure.
+
+Nothing new was read. Round 161's pages say that the hood 'could be pulled off the head to hang behind,
+leaving the short cape round the neck and shoulders', and no more of how it lies. The two reference sheets
+looked at this round (pairs at half figure, the group in the barber's shop) show no hood thrown back, so the
+result is not held against a picture of the reference either. The form follows from the hood's own measure.
+
+What is changed, in the pipeline (`tools/portrait/pipeline/drape_sim.py`, kind `cowl`; the call is in the
+pipeline's README). The builder is untouched: its file is the same to the byte (831 873).
+- **Lower in front** (`CW_DIP=0.42,2`): the roll's foot lies 4.2 cm lower in the middle of the front, less to
+  either side, and not at all behind.
+- **Off the neck** (`CW_INP=0.36`): the inner edge is drawn in to the neck at the nape as before, less over
+  the shoulders, and not in front, where it stands on the gown.
+- **On the shoulders** (`CW_RO=1.25`): over the shoulder, which is nearly level, the old rule (the body's
+  outside at the foot's height) put the roll's foot on the shoulder's cap, 19 cm out and more. The foot lies
+  no further out than 12.5 cm from the body's axis and stands on the cloth there, found from above.
+- **The edge where it is seen** (`CW_U0=0.35`): the sheet's edge lay at the roll's inner foot, rolled in
+  towards the neck; from in front it was behind the roll's crest. It lies just within the crest now, and a
+  lord's fur with it.
+- **The rim held** (`CW_HOLD=4`): the edge and the three rows after it are held as they are laid, the rest of
+  the roll and the cape fall in the simulation. The old roll was wedged between neck and gown and stood by
+  that.
+- **The nape** (`COWL=0.3,0.69,0.2,0.4,3`, `CW_UP=0.25`, `FOLD=0.25`): the roll is laid 2 cm high in front
+  and 6 at the nape (2.4 and 8.4 before), grows towards the nape later (by the third power), and is a little
+  uneven.
+- The dagged file is cut anew from it (`dag.py`, as round 136): 6 661 triangles (6 275). The plain file has
+  its 2 688 corners and 5 568 triangles as before; the two are 88 and 131 kB (90 and 122). With the old call
+  the script writes the same drape as before the change.
+
+Measured (120 lords of 15 to 68, `tests/collar.rs`; before: seven of the first forty):
+
+| | before | now |
+|---|---|---|
+| the opening's edge thrown back, round | 51 to 60 cm | 70.9 to 79.6 cm (mean 75.4) |
+| the same on the head | 68.1 to 80.4 cm (mean 74.9) | the same |
+| its foremost place under the chin's lowest | 2.6 to 2.9 cm | 5.3 to 7.8 cm |
+| how far it reaches to either side of the head's middle | 8.2 to 9.9 cm | 11.3 to 12.6 cm |
+| the fur's top at the nape over the chin's lowest (`tests/facing.rs`) | 5.4 to 6.9 cm | 4.9 to 6.3 cm |
+| the hood behind: its lowest place under the cape's highest | 32.3 to 34.0 cm | 28.6 to 30.3 cm |
+| the hood behind: its breadth, and at the point | 17.8 to 24.9 cm, 1.4 to 1.8 | 25.0 to 30.1 cm, 2.0 to 3.2 |
+
+The before of the last three rows is rounds 148's and 161's own tables. The last two are round 161's hood
+behind the neck. Its rule is not touched: it is as broad as the opening lies and is measured from the cape's
+highest place, so it is broader with the wider opening and hangs less far under a lower nape.
+
+Tried and not kept, each a file draped, bound, cut and looked at on the two men from four sides.
+- Lower and off the neck, nothing held (a flat roll, then one 2.8 cm high): the roll fell flat in the
+  simulation. A cape with a round hole, the fur a hoop lying on it.
+- All of the roll held, the edge rolled in as before: the villagers' roll read as a hood bunched round the
+  neck, but at court the fur lay behind the crest in front, and on one lord it was torn at a shoulder.
+- The roll turned out, the edge on its outer foot and the cape going on from its inner end: the builder's
+  layers tore the cape (holes, back faces), and the dagged hem shrank to 109 cm round.
+- All of the roll held, the edge near the crest, the foot where the old rule put it: an arch standing over
+  the shoulders with its rim at the jaw's corners, a wide funnel, and the fur torn on one lord.
+- As kept, but lower in front by 3 cm only and the nape's roll as high as before: the fur's rearmost place
+  stood 6.0 to 8.1 cm over the chin (3.8 to 4.8 as kept, on the same seven lords), and its top 9.8 cm on one
+  (`tests/facing.rs` failed on him).
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 162 to its last figure, and the
+colour sheet the same (they read skin of the face).
+
+Honest about it. The neck brace is gone: the throat and the gown's neckline show, and the hood lies round the
+shoulders as a collar, on a lord and on a villager. It is not a drape. The rim is a formula held in place,
+one form for everybody, the same in wool and in a lord's cloth, and only the cloth under it has fallen. The
+fur on it is still round 148's: one smooth white band of one breadth, a white hoop from in front, now on the
+shoulders. From straight behind a white corner of it shows beside the hood's upper corner on one side (both
+lords of the sample). The hood behind is broader and blunter than round 161 made it, 25 to 30 cm, because it
+follows the opening; that was not looked at for its own sake. The cape under the collar is some 4 cm shorter
+in front than it was (the roll lies 4.2 cm lower, the hem where it was). No source and no picture gives how
+such a hood lies; the measure the form is taken from is the builder's own hood on the head, and every number
+in the call is by eye, on sixteen views of two men: PLACEHOLDER.
+
+Tests: `portrait/tests/collar.rs`, new: on 120 lords the opening's edge thrown back is over 62 cm round and
+in the mean within a tenth of the mean on the head, its foremost place over 4.5 cm under the chin, and it
+reaches over 10.5 cm to either side (fails on round 162's file at the first lord, 51.1 cm). Three older tests
+are changed, each with its reason in the test, because the file is another: the dagged file's triangles in
+`tests/hood.rs` and `tests/facing.rs` (6 661 for 6 275), and in `tests/hood_back.rs` three bounds of the
+hood behind, which go with the opening and the nape (26 to 33 cm under the cape's highest for 30 to 36, 22
+to 33 cm broad for 15 to 28, the point under 4 cm for under 3). `cargo test --release` as a whole 137 of 137;
+`tests/portrait.test.ts` and its neighbour 46 of 46; typecheck and lint pass, no new warning.
+Pictures (project files, `portraits/`): `runde163_hof_vorher_nachher.png` (the two lords from the front, the
+side, behind and the other side, before above and after below), `runde163_dorf_vorher_nachher.png` (the same
+two men in the village).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
