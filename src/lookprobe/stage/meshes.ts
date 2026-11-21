@@ -36,9 +36,12 @@ function hitBy(made: THREE.Mesh, hit: (from: ArrayLike<number>, along: ArrayLike
 
 /** The stage's ways of making a mesh of a shape, with the materials it draws them with. */
 export function createMeshes(
-  m: Pick<Materials, 'faced' | 'gliding' | 'seaFaced' | 'fieldFaced' | 'fieldGliding' | 'fields' | 'freed'>,
+  m: Pick<
+    Materials,
+    'faced' | 'gliding' | 'seaFaced' | 'fieldFaced' | 'fieldGliding' | 'fields' | 'freed' | 'lakeFreed'
+  >,
 ) {
-  const { faced, gliding, seaFaced, fieldFaced, fieldGliding, fields, freed } = m;
+  const { faced, gliding, seaFaced, fieldFaced, fieldGliding, fields, freed, lakeFreed } = m;
   const mesh = (shape: Shape, material: THREE.Material, casts: boolean) => onStage(geometry(shape), material, casts);
   /** The faces of a shape as a mesh: one drawing of the four corners and their two triangles for every face. */
   const faceMesh = (shape: Shape, casts: boolean, sea = false) => {
@@ -67,10 +70,10 @@ export function createMeshes(
     hitBy(made, (from, along) => faceHit(f, from, along));
     return made;
   };
-  /** The faces on no grid of a shape as a mesh, drawn as the faces on the grid are. */
-  const freeMesh = (shape: Shape, casts: boolean) => {
+  /** The faces on no grid of a shape as a mesh, drawn as the faces on the grid are (`lake`: as water above the sea). */
+  const freeMesh = (shape: Shape, casts: boolean, lake = false) => {
     const f = shape.free!,
-      made = onStage(freeGeometry(shape), freed, casts);
+      made = onStage(freeGeometry(shape), lake ? lakeFreed : freed, casts);
     hitBy(made, (from, along) => freeHit(f, from, along));
     return made;
   };

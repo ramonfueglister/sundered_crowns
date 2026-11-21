@@ -20,7 +20,7 @@ const AHEAD = 5;
 
 /** The world's clock as the riders follow it: the day with the share of it gone, and how many days pass in a real
  *  second (0: the world is paused). */
-export interface RideClock {
+interface RideClock {
   day: number;
   pace: number;
 }
