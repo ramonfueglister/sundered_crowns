@@ -6,6 +6,7 @@ import { GRID, onGrid } from '../lookprobe/layout';
 import { loadTownPeople } from '../figures';
 import { loadArable } from './arable';
 import { loadClimate } from './climate';
+import { CROWD_AT } from './crowd';
 import { type Cover, loadPlan, usePlan } from './far';
 import { loadForest } from './forest';
 import { loadHamletLands } from './hamlets';
@@ -71,7 +72,7 @@ export async function buildPiece(
     base,
     year,
     region,
-    step === 0,
+    step <= CROWD_AT,
   );
   return onGrid(from.grid, () =>
     buildWorld(
@@ -100,7 +101,8 @@ export async function buildPiece(
 /**
  * The map's data a piece is built from, beside its window of the region: each part is fetched and unpacked once by
  * a worker and kept (every loader keeps what it loaded), and all parts are asked for at once, not one after the other.
- * `people`: with the persons of the towns, who walk in the pieces of the finest step (src/figures/people.ts).
+ * `people`: with the persons of the towns, who walk in the pieces of the finest and the first far step
+ * (src/figures/people.ts).
  */
 async function mapData(
   base: string,

@@ -49,11 +49,13 @@ describe('the land from farther away', () => {
         for (let x = 60; x < 140; x++) {
           const i = z * N + x + 200,
             j = z * N + x;
-          covered += b.has[j];
+          // (at the first far step the fields are not cover but their crops, whose sheaves and vines stand on them)
+          covered += b.has[j] || (b.crops?.[j] ? 1 : 0);
           expect(
             [a.has[i], a.rise[i], a.town[i], a.share[i], a.top[i * 3], a.top[i * 3 + 1], a.top[i * 3 + 2]],
             `step ${step} at ${x + 200}, ${z}`,
           ).toEqual([b.has[j], b.rise[j], b.town[j], b.share[j], b.top[j * 3], b.top[j * 3 + 1], b.top[j * 3 + 2]]);
+          expect(a.crops?.[i] ?? 0, `crop at step ${step} at ${x + 200}, ${z}`).toBe(b.crops?.[j] ?? 0);
         }
       expect(covered).toBeGreaterThan(500);
     }

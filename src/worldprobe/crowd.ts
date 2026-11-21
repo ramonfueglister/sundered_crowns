@@ -7,10 +7,11 @@
 // each of them that the column does not tell, far.ts lays down (`quarters`, a byte to a column): which quarters are
 // street, the paving of a town on which nothing stands (settle.ts), and which a building stands on. The crop of a
 // quarter is that of its lot (crops.ts), a farmhouse is a building like any other.
-import { type Figures, type Where, figuresOf, gathered, place } from '../figures';
+import { type Figures, type Town, type Where, figuresOf, gathered, placer } from '../figures';
 import { Mat, idx, inGrid } from '../lookprobe/layout';
 import type { Part } from '../lookprobe/terrain';
 import { cropAt } from './crops';
+import { PIECE } from './piece_sight';
 import { RIM } from './table';
 import { uprightOf } from './zoom';
 
@@ -67,6 +68,9 @@ export interface CrowdGround {
   has: ArrayLike<number>;
   quarters?: ArrayLike<number>;
   crops?: ArrayLike<number>;
+  furlongs?: ArrayLike<number>;
+  /** the walled towns about it as the finest step lays them out, in blocks of the finest step (far.ts `Cover`) */
+  towns?: readonly Town[];
 }
 
 /**
@@ -77,7 +81,7 @@ export interface CrowdGround {
  */
 export function farCrowd(t: CrowdGround, ox: number, oz: number, part: Part): Figures | undefined {
   const up = uprightOf(CROWD_AT),
-    { quarters, crops } = t;
+    { quarters, crops, furlongs } = t;
   const x0 = 2 * Math.max(0, part.x0 - RIM),
     z0 = 2 * Math.max(0, part.z0 - RIM),
     x1 = 2 * (part.x1 + RIM),
@@ -85,7 +89,7 @@ export function farCrowd(t: CrowdGround, ox: number, oz: number, part: Part): Fi
   const inside = (fx: number, fz: number) => fx >= x0 && fz >= z0 && fx < x1 && fz < z1 && inGrid(fx >> 1, fz >> 1);
   const column = (fx: number, fz: number) => idx(fx >> 1, fz >> 1);
   const field = (fx: number, fz: number) =>
-    crops && inside(fx, fz) ? cropAt(crops, fx >> 1, fz >> 1, fx & 1, fx + 2 * ox, fz + 2 * oz) : 0;
+    crops && inside(fx, fz) ? cropAt(crops, fx >> 1, fz >> 1, fx & 1, fx + 2 * ox, fz + 2 * oz, furlongs) : 0;
   const built = (fx: number, fz: number) => ((quarters?.[column(fx, fz)] ?? 0) >> (BUILT + quarterOf(fx, fz))) & 1;
   const w: Where = {
     free(fx, fz, street) {
@@ -108,9 +112,14 @@ export function farCrowd(t: CrowdGround, ox: number, oz: number, part: Part): Fi
     field,
     h: (fx, fz) => t.h[column(fx, fz)] / up,
   };
+  // the persons of the towns stand where the finest step stands them: a ruler in the piece of the finest step that
+  // holds the town's middle (a piece of this step holds four of them whole: piece_sight.ts)
+  const own = (x: number, z: number) => x >= 2 * part.x0 && z >= 2 * part.z0 && x < 2 * part.x1 && z < 2 * part.z1,
+    piece = (fx: number, fz: number) => `${Math.floor((fx + 2 * ox) / PIECE)},${Math.floor((fz + 2 * oz) / PIECE)}`,
+    holds = (fx: number, fz: number, cx: number, cz: number) => own(cx, cz) && piece(fx, fz) === piece(cx, cz),
+    at = placer(t.towns ?? [], w, 2 * ox, 2 * oz, holds);
   const out = gathered();
-  for (let fz = 2 * part.z0; fz < 2 * part.z1; fz++)
-    for (let fx = 2 * part.x0; fx < 2 * part.x1; fx++) place(out, w, fx, fz, fx + 2 * ox, fz + 2 * oz);
+  for (let fz = 2 * part.z0; fz < 2 * part.z1; fz++) for (let fx = 2 * part.x0; fx < 2 * part.x1; fx++) at(out, fx, fz);
   const f = figuresOf(out, 2 * ox, 2 * oz, [1 / 2, up]);
   return f.count ? f : undefined;
 }
