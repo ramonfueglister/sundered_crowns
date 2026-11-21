@@ -2,6 +2,7 @@
 import { signal } from '@preact/signals';
 import {
   PROTOCOL_VERSION,
+  SPEEDS,
   BIN_OWNERS,
   decodeBinary,
   type ClientMsg,
@@ -23,6 +24,10 @@ export const realms = signal<RealmInfo[]>([]);
 /** owner of every place (replaced, not mutated, when it changes) */
 export const owners = signal<Int16Array | null>(null);
 export const placeInfo = signal<PlaceDetail | null>(null);
+/** When the world's day began here and when the world was paused (performance.now(); 0: not yet, not paused), for
+ *  the hour of the world (worldHour). */
+let dayBegan = 0,
+  pausedAt = 0;
 
 // Vite puts the build's settings on import.meta.env; under Node (the server and the tools) there is none
 const ENV: Record<string, string | undefined> = (import.meta as { env?: Record<string, string | undefined> }).env ?? {};
@@ -98,13 +103,16 @@ function onMessage(m: ServerMsg) {
     case 'welcome':
       status.value = 'open';
       me.value = m.me;
+      notePause(m.world.paused);
       world.value = m.world;
       realms.value = m.realms;
       return;
     case 'world':
+      notePause(m.world.paused);
       world.value = m.world;
       return;
     case 'tick':
+      dayBegan = performance.now();
       if (world.value) world.value = { ...world.value, day: m.day };
       return;
     case 'realms':
@@ -154,6 +162,31 @@ export const abdicate = () => send({ type: 'abdicate' });
 export const askPlace = (place: number) => send({ type: 'place', place });
 /** Pauses or runs the world, or sets its speed (only for whom `me.time` allows; the server says the new clock to all). */
 export const setTime = (t: { paused?: boolean; speed?: number }) => send({ type: 'time', ...t });
+/** Keeps the time of a pause, and moves the day's beginning on by the pause when the world goes on. */
+function notePause(paused: boolean) {
+  const now = performance.now();
+  if (paused && !pausedAt) pausedAt = now;
+  else if (!paused && pausedAt) {
+    if (dayBegan) dayBegan += now - pausedAt;
+    pausedAt = 0;
+  }
+}
+
+/** How long a day of the world lasts at its speed, in real milliseconds (0: as fast as the server can reckon). */
+export function dayLength(w: WorldInfo): number {
+  const speed = SPEEDS[(w.speed ?? 1) - 1];
+  return speed === 'own' ? w.secondsPerDay * 1000 : speed;
+}
+/** The hour of the world's day (0 to 24), by the time since the day began here and the world's pace (people feature
+ *  12: the day plan); null before the first day here, and at the last speed, where a day has no hours to see. */
+export function worldHour(now = performance.now()): number | null {
+  const w = world.value;
+  if (!w || !dayBegan) return null;
+  const ms = dayLength(w);
+  if (!ms) return null;
+  return Math.min(0.999, ((pausedAt || now) - dayBegan) / ms) * 24;
+}
+
 /** Sends a command; the answer comes when the world applies it at the next day. */
 export function command(cmd: Omit<Command, 'realm'>): Promise<CmdResult> {
   const id = nextCmd++;

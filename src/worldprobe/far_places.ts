@@ -2,11 +2,13 @@
 // out by rules of their own; where it is, the finest step's own houses, great buildings and walled towns.
 import { type RGB, type Rnd, hash2, rgb, seeded, shade } from '../lookprobe/batch';
 import { Mat, N, idx, inGrid, occlude } from '../lookprobe/layout';
-import { type HouseStyle, type Model, type Style, tower, townWall } from '../buildings';
+import { type HouseStyle, type Model, type Style, ringWall, tower, townWall } from '../buildings';
 import { builtOn, streetOn } from './crowd';
 import type { Laying } from './far_lay';
 import { houseShape } from './houses';
-import { PEOPLE_PER_PERSON, PERSONS_PER_FLOOR_BLOCK, POP_OF_SIZE, WALLED_FROM, streetsOf } from './settle';
+import { PEOPLE_PER_PERSON, PERSONS_PER_FLOOR_BLOCK, POP_OF_SIZE, WALLED_FROM } from './settle';
+import { streetsOf } from './town_spots';
+import { onWall, wallOf } from './town_wall';
 
 /** a house of the finest step has two storeys on most of its ground and stands about five blocks high with its roof */
 const STOREYS = 2,
@@ -438,7 +440,23 @@ export function layPlanned(l: Laying) {
               }
           // the wall as long as the great buildings stay themselves: the finest step's wall (settle.ts), made smaller,
           // on the lowest ground of its ring, with its gates and its openings for the water; nothing grows on its ring
-          if (step <= MODELS_UNTIL && t.wall !== null) {
+          const ring = s?.lots?.walls;
+          if (step <= MODELS_UNTIL && t.wall !== null && ring?.length) {
+            // the ring of the land register (settlement feature 6), made smaller: each piece of the world draws what
+            // of it lies on its own ground
+            const mx = t.cx / wider - ox,
+              mz = t.cz / wider - oz,
+              pieces = wallOf(s!.lots!, wider);
+            const ground = (x: number, z: number) => {
+              const gx = Math.floor(mx + x),
+                gz = Math.floor(mz + z);
+              return inGrid(gx, gz) && o.own(gx, gz) && !g.wet[idx(gx, gz)] ? g.h[idx(gx, gz)] : null;
+            };
+            onWall(pieces, mx, mz, (x, z) => {
+              if (inGrid(x, z)) taken[idx(x, z)] = 1;
+            });
+            things.append(ringWall(pieces, ground, 1 / wider, up), m.makeRotationY(0).setPosition(mx, 0, mz));
+          } else if (step <= MODELS_UNTIL && t.wall !== null) {
             let lo = Infinity;
             for (let z = z0 - 1; z <= z1; z++)
               for (let x = x0 - 1; x <= x1; x++) {

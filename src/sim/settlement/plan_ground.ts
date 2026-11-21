@@ -17,6 +17,8 @@ export interface Plan {
   /** the land and water round what the plan draws, in coarser cells: a town in a lagoon (Venice: its islands and
    *  shores); `ground` holds where both draw */
   around?: PlanGround;
+  /** the corners of its town wall [x, z], in radii as the streets, where the plan has it (settlement feature 6) */
+  wall?: readonly (readonly number[])[];
 }
 
 /** what a block of such a town is: `open` lies outside what the plan draws (the map's own ground holds there) */

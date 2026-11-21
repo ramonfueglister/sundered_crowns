@@ -17,6 +17,8 @@ import { compileChronicle, type Chronicle } from '../../src/sim/content/chronicl
 import { compileBorders, type Borders } from '../../src/sim/content/borders';
 import { compileGround, type Ground } from '../../src/sim/content/ground';
 import { compileTilth, type Tilth } from '../../src/sim/content/tilth';
+import { compilePlaceClimate } from '../../src/sim/content/place_climate';
+import { farmYears } from '../../src/sim/people/farm_year';
 import { compileItineraries, type ItineraryFile, type Itineraries } from '../../src/sim/content/itineraries';
 import { cityPeopleByPlace } from '../../src/sim/systems/people';
 import { toHeads } from '../../src/sim/scale';
@@ -32,10 +34,14 @@ export function loadWorld(): World {
 }
 /** A world with the given calibration of cultivated land (the calibration itself starts from one without). */
 export function buildWorld(cultivation: CultivationJson): World {
-  return new World(read('geo.json'), read('world.json'), loadLand(), cultivation, {
+  const w = new World(read('geo.json'), read('world.json'), loadLand(), cultivation, {
     engine: loadEconomyEngine(),
     table: loadEconomyTable(),
   });
+  // the farming year of every place, by its region and its climate (src/sim/people/farm_year.ts)
+  if (existsSync(dataPath('place_climate.json')))
+    w.farmYear = farmYears(w.provinces, compilePlaceClimate(read('place_climate.json')));
+  return w;
 }
 export function loadLand(): LandJson {
   return read('land.json');

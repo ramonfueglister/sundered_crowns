@@ -138,10 +138,10 @@ export const ESTATES: readonly Estate[] = [
 ];
 
 /** Skin, hair and hose: drawing values in the palette of the look probe. */
-export const SKIN = [0xe8b892, 0xd9a47e, 0xc98f6a, 0xb97e5a] as const;
-export const HAIR = [0x3a2a1e, 0x5a3b22, 0x8a6a3a, 0x2a2420, 0xa0805a, 0x6a6a66] as const;
-export const HOSE = [0x5b4a3a, 0x3e4a5a, 0x7a2f28, 0x4a4a3e, 0x2a2a2a] as const;
-export const LOAD_COLOURS: Record<Load, readonly number[]> = {
+const SKIN = [0xe8b892, 0xd9a47e, 0xc98f6a, 0xb97e5a] as const;
+const HAIR = [0x3a2a1e, 0x5a3b22, 0x8a6a3a, 0x2a2420, 0xa0805a, 0x6a6a66] as const;
+const HOSE = [0x5b4a3a, 0x3e4a5a, 0x7a2f28, 0x4a4a3e, 0x2a2a2a] as const;
+const LOAD_COLOURS: Record<Load, readonly number[]> = {
   [Load.None]: [0],
   [Load.Sack]: [0xcdbb8f, 0xb9a67a],
   [Load.Basket]: [0x9a7440],
@@ -160,4 +160,23 @@ export function pickEstate(u: number, share: (e: Estate) => number): number {
     if (at < 0) return k;
   }
   return ESTATES.length - 1;
+}
+
+/** Estates a woman or a man of the town is shown in, until the person system gives each household its estate. */
+const FEMALE = new Set(['Bäuerin', 'Bürgerin']);
+
+/** The estate a person of a town is shown in, from a number 0 … 1: one of the person's sex, by its share of the town. */
+export const townEstate = (u: number, female: boolean): number =>
+  pickEstate(u, (q) => (FEMALE.has(q.name) === female ? q.townShare : 0));
+
+/**
+ * Puts what a figure of estate `e` does, wears and carries into gathered lists of figures (crowd.ts `Figures`: c, d,
+ * and the first two numbers of e), each colour drawn by `u(k)` with its own k (6 to 11).
+ */
+export function dress(out: number[][], mode: number, e: number, u: (k: number) => number) {
+  const estate = ESTATES[e],
+    pick = (list: readonly number[], k: number) => list[Math.floor(u(k) * list.length)];
+  out[2].push(mode, estate.load, estate.cut, estate.head);
+  out[3].push(pick(SKIN, 6), pick(estate.tunic, 7), pick(HOSE, 8), pick(estate.headwear, 9));
+  out[4].push(estate.load === Load.None ? 0 : pick(LOAD_COLOURS[estate.load], 10), pick(HAIR, 11));
 }

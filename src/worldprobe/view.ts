@@ -8,6 +8,8 @@
 // + and - zoom. A click on the ground is told to the page as the event `world-click` (see `click` below).
 // The probe's own page (main.ts) and the game (ui/WorldView.tsx) both show the world through this.
 import * as THREE from 'three/webgpu';
+import type { PlacePeopleList } from '../figures';
+import type { Figures } from '../figures/stage';
 import { NEAR, RIGHT, SEA_Y } from '../lookprobe/layout';
 import { type Stage, bakedSky, createStage } from '../lookprobe/stage';
 import { withCoast } from '../lookprobe/sea_coast';
@@ -22,12 +24,13 @@ import { extentOf, heldIn } from './extent';
 import { type Projection, projectionOf } from './region';
 import { FINER, blockOfCell, cellOfBlock } from './land';
 import { type WorldMark, createMarks } from './view_marks';
+import { type WorldRider, createRiders } from './view_riders';
 import { type Place, createMotion } from './view_motion';
 import { type WorldClick, createPointer } from './view_pointer';
 import { FARTHEST, NEAREST, awayOf, creaseReachOf, creasesOf, elevationOf, mirrorOf, nearOf, reliefOf } from './zoom';
 
 export type { WorldHover } from './view_pointer';
-export type { WorldMark };
+export type { WorldMark, WorldRider };
 
 interface WorldViewOptions {
   /** the canvas to draw on (default: the page's first, filling the window) */
@@ -70,8 +73,13 @@ export interface WorldView {
    * the figures themselves stand there. An empty list takes them away.
    */
   setMarks(marks: readonly WorldMark[]): void;
+  /** Shows rulers on their way as horsemen (view_riders.ts), at every distance; an empty list takes them away. */
+  setRiders(riders: readonly WorldRider[]): void;
   /** Asks for a new picture (something drawn changed that the view does not know of, such as the figures' colours). */
   redraw(): void;
+  /** The persons of the towns changed (src/people/town_rolls.ts): see pieces.ts `tellPersons` and `renewFigures`. */
+  tellPersons(lists: readonly PlacePeopleList[]): void;
+  renewFigures(stale: (f: Figures) => boolean, version: number): void;
   /** Stops the view and lets go of all it holds. */
   dispose(): void;
 }
@@ -136,7 +144,8 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
       changed: () => look(),
     }),
     names = createNames(o.names);
-  const marks = createMarks(o.names ?? document.body, stage, blockOf);
+  const marks = createMarks(o.names ?? document.body, stage, blockOf),
+    riders = createRiders(stage, blockOf);
   const middle = (): [number, number] => {
     const box = canvas.getBoundingClientRect();
     return [box.left + box.width / 2, box.top + box.height / 2];
@@ -186,6 +195,7 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
     if (stage.busy) stage.probe.ready = false;
     o.status?.(failed || (still && missing ? `Lade ${missing} ${missing === 1 ? 'Stück' : 'Stücke'} der Welt …` : ''));
     marks.place(laid, wide);
+    riders.place(laid, wide);
     moved();
   };
   const note = () => {
@@ -275,14 +285,20 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
     redraw() {
       stage.redraw();
     },
+    tellPersons: (lists) => pieces.tellPersons(lists),
+    renewFigures: (stale, version) => pieces.renewFigures(stale, version),
     setMarks(now) {
       marks.set(now);
       marks.place(laid, place.wide);
+    },
+    setRiders(now) {
+      riders.set(now);
     },
     dispose() {
       motion.stop();
       pointer.hoverOff();
       marks.dispose();
+      riders.dispose();
       pointer.dispose();
       window.removeEventListener('resize', look);
       sized.disconnect();

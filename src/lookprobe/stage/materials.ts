@@ -25,6 +25,7 @@ import { hashBlur } from 'three/addons/tsl/display/hashBlur.js';
 import { SEA_Y } from '../layout';
 import { OPEN_WATER } from '../terrain';
 import { type Sea, createSea } from '../sea';
+import { COAST_STEPS } from '../sea_corners';
 import { flag } from './address';
 import { faceMaterials } from './face_materials';
 import { LOOK } from './look';
@@ -71,7 +72,8 @@ export function createMaterials(scene: THREE.Scene) {
       part.userData.dots ??= new THREE.Vector2(0, 1);
       part.userData.ink ??= 1;
     });
-  // whether a mesh is ground to the map's paper (1) or stands on the ground (0, see Stage.lay)
+  // whether a mesh is ground to the map's paper (1) or stands on the ground (0, see Stage.lay); below 0 a marker of
+  // the map that the paper is not laid on at all (a ruler riding, worldprobe/view_riders.ts)
   // (a mesh that glides to the shape of the coarser step tells for each face what it ends up as, and is that by the
   // share it has glided: see `gliding` in face_materials.ts)
   const glided = userData('glide', 'float') as unknown as ReturnType<typeof float>;
@@ -114,7 +116,7 @@ export function createMaterials(scene: THREE.Scene) {
     reflecting.updateBefore = (frame) => (mirrorShare.value > 0 ? draw(frame) : undefined);
   }
   // the faces' materials (face_materials.ts)
-  const { placed, faced, fields, fieldFaced, fieldGliding, gliding, freed } = faceMaterials(drawn, glided);
+  const { placed, corner, faced, fields, fieldFaced, fieldGliding, gliding, freed } = faceMaterials(drawn, glided);
   // The sea's faces: its level is on no 64th of a block, so the mesh says how far above their numbers its faces lie
   // (faces.ts `lift`); and they mirror as the sea's lists do.
   const seaFaced = new THREE.MeshLambertNodeMaterial();
@@ -130,7 +132,14 @@ export function createMaterials(scene: THREE.Scene) {
     // colour is materialColor times a vec3, in `coloured` and in face_materials.ts)
     surface = createSea(water.emissiveNode as THREE.Node<'vec3'>);
     water.colorNode = surface.colour(water.colorNode as THREE.Node<'vec3'>);
-    seaFaced.colorNode = surface.colour(faced.colorNode as THREE.Node<'vec3'>);
+    // (the sea's faces have the coast's distance at their four corners, as bytes: sea_corners.ts)
+    const coast = attribute('coast', 'vec4'),
+      away = select(
+        corner.lessThan(0.5),
+        coast.x,
+        select(corner.lessThan(1.5), coast.y, select(corner.lessThan(2.5), coast.z, coast.w)),
+      ).mul(255 / COAST_STEPS);
+    seaFaced.colorNode = surface.colour(faced.colorNode as THREE.Node<'vec3'>, away.toVarying());
     water.normalNode = seaFaced.normalNode = surface.normal;
     water.emissiveNode = seaFaced.emissiveNode = surface.mirror;
   }

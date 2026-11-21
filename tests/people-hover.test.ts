@@ -2,6 +2,10 @@
 import { describe, it, expect } from 'vitest';
 import { hoverLines } from '../src/people/hover_lines';
 import type { PersonDetail } from '../src/net/people';
+import type { PersonPlan } from '../src/net/plan';
+import { DAY } from '../src/sim/holy_days';
+import { DOING, WHO } from '../src/sim/people/day_plan';
+import { TASK } from '../src/sim/people/farm_year';
 
 const base: PersonDetail = {
   id: 7, alive: true, day: 0, female: true, born: -12000, age: 32.9, mother: -1, father: -1, family: 3, place: 1, culture: 'english',
@@ -27,6 +31,34 @@ describe('the card of the person under the pointer', () => {
   it('leaves out what is not known', () => {
     const r = rows({ ...base, economy: null, household: null, spouse: -1, children: [], town: null, age: null });
     expect(r).toEqual({ Alter: 'unbekannt', Merkmale: 'IQ 104' });
+  });
+});
+
+describe('the day of the person on the card', () => {
+  const plan: PersonPlan = {
+    kind: DAY.work, feast: false, weekday: 2, market: true, task: TASK.hay, sunrise: 4.5, sunset: 19.5, who: WHO.farm, to: null,
+    slots: [[0, DOING.sleep], [4.5, DOING.work], [12, DOING.meal], [13.5, DOING.work], [19.5, DOING.home], [21, DOING.sleep]],
+  };
+  it('tells the kind of day and what the person does at the hour of the world, until when', () => {
+    const r = rows({ ...base, plan });
+    expect(r.Heute).toBe('Werktag, Markttag, Heuernte');
+    expect(r.Jetzt).toBeUndefined();
+    const at = (h: number) => Object.fromEntries(hoverLines({ ...base, plan }, h).rows).Jetzt;
+    expect(at(10)).toBe('auf dem Feld: Heuernte (bis 12:00 Uhr)');
+    // round the Mediterranean the corn is threshed out of doors, on the threshing floor (farm_year.ts)
+    expect(Object.fromEntries(hoverLines({ ...base, plan: { ...plan, task: TASK.floor } }, 10).rows).Jetzt).toBe(
+      'auf der Tenne: Dreschen (bis 12:00 Uhr)',
+    );
+    expect(at(12.5)).toBe('beim Mittagessen (bis 13:30 Uhr)');
+    expect(at(22)).toBe('schläft');
+    // the plan is of another day than the world's: no hour
+    expect(Object.fromEntries(hoverLines({ ...base, plan }, 10, base.day + 1).rows).Jetzt).toBeUndefined();
+  });
+  it('names Sundays, feasts and the ruler on the way', () => {
+    expect(rows({ ...base, plan: { ...plan, kind: DAY.rest, weekday: 0, market: false } }).Heute).toBe('Sonntag');
+    expect(rows({ ...base, plan: { ...plan, kind: DAY.rest, feast: true, market: false } }).Heute).toBe('Feiertag');
+    const ride = { ...plan, who: WHO.ruler, task: -1, market: false, to: 'Avignon', slots: [[0, DOING.sleep], [6, DOING.travel], [18, DOING.sleep]] as [number, number][] };
+    expect(Object.fromEntries(hoverLines({ ...base, plan: ride }, 9).rows).Jetzt).toBe('unterwegs nach Avignon (bis 18:00 Uhr)');
   });
 });
 

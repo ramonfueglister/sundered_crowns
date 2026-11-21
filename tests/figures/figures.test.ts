@@ -232,10 +232,10 @@ describe('the rulers of a town', () => {
 describe('the figure code that runs in a web worker', () => {
   const dir = join(__dirname, '../../src/figures');
   for (const file of readdirSync(dir).filter((n) => n.endsWith('.ts')))
-    it(`${file}: at most 300 lines${['kit.ts', 'estates.ts', 'crowd.ts', 'index.ts', 'people.ts'].includes(file) ? ', no page' : ''}`, () => {
+    it(`${file}: at most 300 lines${['kit.ts', 'estates.ts', 'crowd.ts', 'aims.ts', 'farmers.ts', 'index.ts', 'people.ts'].includes(file) ? ', no page' : ''}`, () => {
       const src = readFileSync(join(dir, file), 'utf8');
       expect(src.split('\n').length).toBeLessThanOrEqual(300);
-      if (['kit.ts', 'estates.ts', 'crowd.ts', 'index.ts', 'people.ts'].includes(file)) {
+      if (['kit.ts', 'estates.ts', 'crowd.ts', 'aims.ts', 'farmers.ts', 'index.ts', 'people.ts'].includes(file)) {
         expect(src).not.toMatch(/\b(document|window|localStorage|requestAnimationFrame)\./);
         expect(src).not.toMatch(/from '(three|three\/webgpu|three\/tsl)'/);
       }

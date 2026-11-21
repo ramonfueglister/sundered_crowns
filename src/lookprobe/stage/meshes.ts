@@ -2,6 +2,7 @@
 // (their colours read from the shape's field) and its faces on no grid (../faces.ts).
 import * as THREE from 'three/webgpu';
 import { faceHit, freeHit } from '../faces';
+import { coastOf } from '../sea_corners';
 import type { Shape } from '../shape';
 import { faceGeometry, fieldGeometry, freeGeometry, geometry } from './geometry';
 import type { Materials } from './materials';
@@ -40,7 +41,10 @@ export function createMeshes(
   /** The faces of a shape as a mesh: one drawing of the four corners and their two triangles for every face. */
   const faceMesh = (shape: Shape, casts: boolean, sea = false) => {
     const f = shape.faces!,
-      made = onStage(faceGeometry(shape), sea ? seaFaced : f.aim && f.aimCol ? gliding : faced, casts);
+      lists = faceGeometry(shape);
+    // (the sea's faces know how far from the coast their corners lie: sea_corners.ts)
+    if (sea) lists.setAttribute('coast', new THREE.InstancedBufferAttribute(coastOf(f), 4, true));
+    const made = onStage(lists, sea ? seaFaced : f.aim && f.aimCol ? gliding : faced, casts);
     made.userData.glide = 0;
     made.userData.lift = f.lift ?? 0;
     hitBy(made, (from, along) => faceHit(f, from, along));

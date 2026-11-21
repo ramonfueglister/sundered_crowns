@@ -12,7 +12,6 @@ import {
   BIG_TOWN,
   LANDMARK_KIND,
   NO_YEAR,
-  ORDERS,
   SIZE_ARCH,
   SIZE_GREAT_MOSQUE,
   SIZE_OF,
@@ -326,17 +325,4 @@ export function landmarkBoxes(s: WorldState, site: number): Box[] {
   for (let i = 0; C && i < s.landmark.size; i++)
     if (s.landmark.alive[i] && C.site[i] === site) out.push({ x: C.x[i], z: C.z[i], w: C.w[i], d: C.d[i] });
   return out;
-}
-
-/** the name of a landmark in the register, in German */
-export function landmarkName(s: WorldState, id: number): string {
-  const C = s.landmark.cols,
-    n = C.named[id];
-  if (n >= 0) return namedOf(s.startYear)[n]?.name.de ?? '';
-  if (C.order[id] !== 255) return `Konvent der ${ORDERS[C.order[id]].de}`;
-  return (
-    ['Kathedrale', 'Kathedrale', 'Freitagsmoschee', 'Konvent', 'Abtei', 'Burg', 'Palast', 'Kirche', 'Monument'][
-      C.kind[id]
-    ] ?? ''
-  );
 }

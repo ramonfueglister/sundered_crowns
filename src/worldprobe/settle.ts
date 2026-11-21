@@ -4,35 +4,20 @@
 import * as THREE from 'three/webgpu';
 import { Batch, type RGB, type Rnd, hash2, seeded } from '../lookprobe/batch';
 import { crops } from '../lookprobe/blocks';
-import { type Model, type Side, type Style, heightOf, houseOf, m, m2, styleOf, tower, townWall, type WallGap } from '../buildings';
+import { type Model, type Side, type Style, heightOf, houseOf, m, m2, styleOf, ringWall, tower, townWall, type WallGap } from '../buildings';
 import { type Crop, type Ground, Mat, N, type P2, idx, inGrid, occlude } from '../lookprobe/layout';
 import type { Town } from '../figures';
 import { FINER } from './land';
 import type { FieldShown, Parcels } from './lots';
 import { CROP } from '../sim/settlement/fields';
+import { marketOf, streetsOf, worshipOf } from './town_spots';
+import { onWall, wallOf } from './town_wall';
 
 /** A place of the gazetteer on the ground. */
 export interface Site { /** the same in every ground the place falls on */ id: number; at: P2; /** 1 village … 5 great city */ size: number; /** inhabitants in 1356, where an estimate exists */ pop: number | null; /** the region it builds as (buildings/traditions/regions.ts) */ region: string; style: Style; /** a hamlet of a town's farming families before its walls (hamlets.ts): houses close together, no church */ hamlet?: boolean; /** the parcels of its families in the land register (lots.ts): a house stands on each, at its street */ lots?: Parcels; /** its landmarks in the land register (landmarks.ts): each at its middle, `x` metres east and `z` south of the town's centre; with them the town has no church of the graphic's own */ marks?: readonly Mark[] }
 /** A landmark of the register as it is built: its middle (metres from the town's centre), its model of w × d blocks, and what it is counted as. */
-export interface Mark { x: number; z: number; model: Model; kind: string }
+export interface Mark { x: number; z: number; model: Model; kind: string; /** a house of worship: where the persons of the town go on a day of rest (src/worldprobe/town_spots.ts) */ worship?: boolean }
 
-/** the kind of the market among a town's streets (STREET_KIND in src/sim/state.ts) */
-const MARKET = 4;
-/**
- * The ground of a town's streets and market as blocks from its middle, four numbers to a piece (x0, z0, x1, z1, the
- * ends not included): a street as wide as the register makes it about its middle line, the market as its corners.
- * The edges round to blocks as those of the parcels do, so that a street reaches the houses at its side.
- */
-export function streetsOf(L: Parcels): number[] {
-  const half = (L.street ?? 0) / 2, out: number[] = [];
-  for (const [x0, z0, x1, z1, k] of L.streets ?? []) {
-    const pad = k === MARKET ? 0 : half;
-    const a0 = Math.round(m(Math.min(x0, x1) - pad)), a1 = Math.max(a0 + 1, Math.round(m(Math.max(x0, x1) + pad)));
-    const b0 = Math.round(m(Math.min(z0, z1) - pad)), b1 = Math.max(b0 + 1, Math.round(m(Math.max(z0, z1) + pad)));
-    out.push(a0, b0, a1, b1);
-  }
-  return out;
-}
 /**
  * Asked for every town once its great buildings stand and before its houses: `free` tells whether a block `dx` east
  * and `dz` south of the town's middle can carry a house (dry, no rock, level with its neighbours, nothing built).
@@ -174,7 +159,7 @@ const blocks = (r: Rnd, lo: number, hi: number) => r.int(Math.max(2, Math.round(
  */
 export function settle(g: Ground, things: Batch, sites: readonly Site[], monuments: readonly Monument[], farm: (x: number, z: number) => Builds, ploughed: (x: number, z: number) => number, vines: (x: number, z: number) => number, counts: Record<string, number>, own: (x: number, z: number) => boolean = () => true, farms: (x: number, z: number) => number = () => FARMS, courses: (x: number, z: number) => number = () => 1, survey?: Survey, told?: Told, fieldOf?: (lx: number, lz: number) => FieldShown | undefined): Settled {
   const used = new Uint8Array(N * N), town = new Uint8Array(N * N), field = new Uint8Array(N * N), mat = new THREE.Matrix4();
-  const towns: Town[] = [], lots: Lot[] = [];
+  const towns: Town[] = [], lots: Lot[] = [], onRing: number[] = [];
   /** the place that is being built, and what its houses are */
   let now = -1, kind: 'town' | 'village' | 'hamlet' | 'farm' = 'farm';
   const count = (k: string, n = 1) => { counts[k] = (counts[k] ?? 0) + n; };
@@ -435,16 +420,28 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     // so that no figure stands or walks in it (src/figures/crowd.ts)
     const streets: number[] = [];
     for (let i = 0; i < N * N; i++) if (town[i] && used[i] !== 1) { used[i] = 2; streets.push(i); }
-    const walled = carries && hi - lo <= 2;
-    if (walled) {
+    // a town of the land register has the wall the simulation lays along its ring (settlement feature 6): it steps
+    // with the ground, and each piece of the world draws what of it lies on its ground
+    const ring = s.lots?.walls;
+    if (ring?.length) {
+      const pieces = wallOf(s.lots!), ground = (x: number, z: number) => { const i = idx(Math.floor(cx + x), Math.floor(cz + z)); return inGrid(Math.floor(cx + x), Math.floor(cz + z)) && own(Math.floor(cx + x), Math.floor(cz + z)) && !g.wet[i] ? g.h[i] + 1 : null; };
+      things.append(ringWall(pieces, ground), mat.makeRotationY(0).setPosition(cx, 0, cz));
+      if (own(cx, cz)) count('wall');
+      // nothing else stands or grows on the ring, once the fields' ground is surveyed (the survey comes before the
+      // register, which lays the ring: tools/worldprobe/build_tilth.ts)
+      onWall(pieces, cx, cz, (x, z) => { if (inGrid(x, z)) onRing.push(idx(x, z)); });
+    }
+    const walled = ring?.length ? true : carries && hi - lo <= 2;
+    if (walled && !ring?.length) {
       if (own(cx, cz)) { things.append(townWall(half * 2 + 2, half * 2 + 2, gaps), mat.makeRotationY(0).setPosition(cx, lo + 1, cz)); count('wall'); }
       claim(cx - half - 2, cz - half - 2, cx + half + 2, cz + half + 2);
       // the claim takes the square within the wall too; its paving stays street, where the persons of the town walk
       // (src/figures/crowd.ts: a column is street where it is town and used is 2)
       for (const i of streets) used[i] = 2;
     }
-    towns.push({ site: s.id, cx: cx + (g.ox ?? 0), cz: cz + (g.oz ?? 0), half });
-    if (own(cx, cz)) told?.town(s.id, cx, cz, half, g.h[idx(cx, cz)], walled ? gaps : null);
+    const wx = cx + (g.ox ?? 0), wz = cz + (g.oz ?? 0), market = s.lots ? marketOf(s.lots, wx, wz) : undefined, worship = worshipOf(s.marks, wx, wz);
+    towns.push({ site: s.id, cx: wx, cz: wz, half, ...(market ? { market } : {}), ...(worship.length ? { worship } : {}) });
+    if (own(cx, cz)) told?.town(s.id, cx, cz, half, g.h[idx(cx, cz)], walled ? (ring?.length ? [] : gaps) : null);
     if (own(cx, cz)) count('town');
   });
 
@@ -454,6 +451,7 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
   /** the corner of a lot's field (balk left off on its west and north side), on this ground */
   const cornerOf = (lx: number, lz: number): [number, number] => [lx * LOT_W - ox + (lz & 1 ? Math.floor(LOT_W / 2) : 0) + 1, lz * LOT_D - oz + 1];
   told?.room?.((lx, lz) => { const [x0, z0] = cornerOf(lx, lz); return lot(x0, z0, x0 + LOT_W - 1, z0 + LOT_D - 1, 1, 2) !== null; });
+  for (const i of onRing) used[i] = 1;
   for (let lz = Math.floor(oz / LOT_D); lz * LOT_D < oz + N; lz++) for (let lx = Math.floor(ox / LOT_W) - 1; lx * LOT_W < ox + N; lx++) {
     // every other row of lots is set off by half a lot; a field fills its lot but for the balk on two sides
     const [x0, z0] = cornerOf(lx, lz), w = LOT_W - 1, d = LOT_D - 1;

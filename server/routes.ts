@@ -10,12 +10,14 @@ import {
   placePeople,
   rulersOnMap,
 } from '../src/net/people';
-import { staysOf, tracksOf } from '../src/sim/content/itineraries';
+import { headingOf, staysOf, tracksOf } from '../src/sim/content/itineraries';
+import { personPlan } from '../src/net/plan';
+import { rowOf } from '../src/sim/people/archive';
 import { ALL_CULTURES } from '../src/sim/content/peoples';
 import type { WorldCore } from './world';
 
 /** An answer: its status, the headers it adds to the JSON headers, and its body. */
-export interface Answer {
+interface Answer {
   status: number;
   headers?: Record<string, string>;
   body: string | Buffer;
@@ -72,7 +74,15 @@ export function answer(core: WorldCore, url: string, gzip: boolean): Answer {
       (i) => ALL_CULTURES[i] ?? 'unknown',
       (uid) => core.archived(uid),
     );
-    if (d) return ok(d);
+    if (!d) return { status: 404, body: '{"error":"not found"}' };
+    // the plan of the day of a living person, where the person is today (a ruler where staying)
+    const id = rowOf(core.s, d.id);
+    if (!d.alive || id < 0) return ok(d);
+    const at = staysOf(core.s, core.itineraries, core.travels).get(id) ?? d.place;
+    return ok({
+      ...d,
+      plan: personPlan(core.s, core.w, id, at, headingOf(core.s, core.itineraries, core.travels, id)),
+    });
   }
   // the land register (src/net/lots.ts): the parcels of a town, for the houses of the world graphic
   const lots = /^\/lots\/(\d+)$/.exec(url),

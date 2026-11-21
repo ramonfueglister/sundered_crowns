@@ -52,7 +52,7 @@ export function dailyEconomy(c: EconomyCalibration, days: number, plan: number):
     ic = structuredClone(c.initial_conditions) as Record<string, unknown> & DailyConditions;
   const perDay = (v: number[]) => v.map((x) => x / days);
   for (const k of ['alpha_s', 'kappa_s', 'delta_s', 'w_s'] as const) p[k] = perDay(p[k]);
-  p.mu = Math.pow(1 + p.mu, 1 / days) - 1;
+  p.mu = (1 + p.mu) ** (1 / days) - 1;
   p.theta = p.theta / days;
   for (const s of ['G', 'E'] as const) {
     const a: number = p[`alpha_${s}`],
@@ -62,7 +62,7 @@ export function dailyEconomy(c: EconomyCalibration, days: number, plan: number):
       throw new Error(
         `the AR(1) rule of ${s} has α = ${a}: only a rule with a long-run mean can be turned into a daily one`,
       );
-    const ad = Math.pow(a, 1 / days),
+    const ad = a ** (1 / days),
       mean = b / (1 - a) - Math.log(days);
     p[`alpha_${s}`] = ad;
     p[`beta_${s}`] = mean * (1 - ad);

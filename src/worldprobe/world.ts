@@ -12,7 +12,7 @@ import { type Part, WATER_SHALLOW, sideTopAt } from '../lookprobe/terrain';
 import { type Climate, FIELDS_KNOWN, KIND, Land, WOODS_KNOWN, climateAt, snowLineAt, treeLineAt } from './climate';
 import { type Arable, arableAt } from './arable';
 import { fieldsByLot, layPlanGrounds, lotKey, type TownParcels } from './lots';
-import { shownOf } from './landmarks';
+import { WORSHIP, shownOf } from './landmarks';
 import { FIELD_LOT, GEWANN } from '../sim/settlement/fields';
 import { type Forest, WOOD, conifersAt, forestAt, leanOf, stand, tilth } from './forest';
 import { type Rural, ruralAt } from './rural';
@@ -593,7 +593,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     const marks = step === 0 ? parcels?.get(id)?.landmarks : undefined;
     if (marks) site.marks = marks.flatMap(([kind, x, z, w, d, named, , start, end, ruined]) => {
       const shown = shownOf(kind, named, w, d, start, end, ruined, parcels!.year ?? 1291, site.style, models);
-      return shown ? [{ x, z, model: shown.model, kind: KIND_COUNTED[kind] ?? 'landmark' }] : [];
+      return shown ? [{ x, z, model: shown.model, kind: KIND_COUNTED[kind] ?? 'landmark', worship: WORSHIP.has(kind) }] : [];
     });
     all.push(site);
     if (onGround(site.at)) sites.push(site);
@@ -862,7 +862,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   counts.triangles = ground.triangles + (carried?.triangles ?? 0) + water.triangles + raised.triangles + things.triangles + (standing?.triangles ?? 0) + cells.reduce((n, c) => n + c.far.triangles, 0);
   // the people of the towns, villages and fields: the finest step's, at the first far step too (crowd.ts); on the
   // coarser steps a block is wider than a person is tall
-  const figures = settled ? crowd(g, settled, own) : cover && step === CROWD_AT ? farCrowd({ ...g, town: cover.town, has: cover.has, quarters: cover.quarters, crops: cover.crops }, ox, oz, part) : undefined;
+  const figures = settled ? crowd(g, registered ? { ...settled, furlongs: registered.towns } : settled, own) : cover && step === CROWD_AT ? farCrowd({ ...g, town: cover.town, has: cover.has, quarters: cover.quarters, crops: cover.crops }, ox, oz, part) : undefined;
   if (figures) counts.figures = figures.count;
   return { ground, carried, things, water, raised, figures, cells, counts, standing };
 }

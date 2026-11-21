@@ -109,6 +109,13 @@ export function staysOf(s: WorldState, it: Itineraries | null, travels?: Travels
   return out;
 }
 
+/** For the person of history in row `id`: the place of the next stop while on the way there today, else −1. */
+export function headingOf(s: WorldState, it: Itineraries | null, travels: Travels | null, id: number): number {
+  const n = it && travels ? (s.named ?? []).find((x) => x.person === id) : undefined,
+    j = n ? it?.get(n.key) : undefined;
+  return j && travels ? travels.heading(j, s.day) : -1;
+}
+
 /** The tracks of the persons of history an itinerary places today, by row, from today to `days` ahead. */
 export function tracksOf(
   s: WorldState,

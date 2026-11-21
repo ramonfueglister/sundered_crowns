@@ -2,10 +2,11 @@
 //! labourer only for the periods he works, at the wage times the factor of his firm's day; on a day on which workers
 //! of a firm are away, workers without work who are not away themselves stand in for them, as far as there are any,
 //! and are paid as day labourers; where the game says so, an adult of the worker's family stands in first (economy
-//! feature 24), paid into the household of the worker who is away. The books balance, contracts with nobody away and
-//! every day a mean day change nothing, the contracts and the family's stand-ins are part of the state, a state of
-//! format 12 has no contracts and one of format 13 no family that stands in, and what does not fit is refused. The
-//! calibration is the port's own data set for Austria (2010Q1), so these tests need nothing from the game.
+//! feature 24), paid into the household of a day labourer who is away and not for a servant, whose wage goes on. The
+//! books balance, contracts with nobody away and every day a mean day change nothing, the contracts and the family's
+//! stand-ins are part of the state, a state of format 12 has no contracts and one of format 13 no family that stands
+//! in, and what does not fit is refused. The calibration is the port's own data set for Austria (2010Q1), so these
+//! tests need nothing from the game.
 #![allow(non_snake_case)]
 
 use beforeit::AUSTRIA2010Q1;
@@ -305,7 +306,7 @@ fn contracts_that_do_not_fit_are_refused() {
 }
 
 #[test]
-fn the_family_stands_in_first_and_is_paid_into_the_household_of_the_worker_who_is_away() {
+fn the_family_stands_in_first_and_is_paid_into_the_household_of_a_day_labourer_but_not_of_a_servant() {
     let mut a = austria(7);
     a.step(3);
     let i = firm_bound_by_labour(&a, 4);
@@ -332,7 +333,7 @@ fn the_family_stands_in_first_and_is_paid_into_the_household_of_the_worker_who_i
     let today = &b.model.ext.today;
     assert_eq!(today.stand_ins[i], 3);
     assert_eq!((today.away, today.by_family, today.stood_in), (3, 2, 1));
-    // the day labourer's household has what he would have earned, the servant's his wage and the family's pay
+    // the day labourer's household has what he would have earned, the servant's his wage alone
     let y = |h: u32| b.model.w_act.Y_h[h as usize];
     close(
         y(by_day),
@@ -341,7 +342,7 @@ fn the_family_stands_in_first_and_is_paid_into_the_household_of_the_worker_who_i
     );
     close(
         y(by_year),
-        port_income(&b, by_year as usize) + net_wage(&b, i),
+        port_income(&b, by_year as usize),
         "the servant whose family stands in",
     );
     close(
@@ -349,6 +350,9 @@ fn the_family_stands_in_first_and_is_paid_into_the_household_of_the_worker_who_i
         port_income(&b, alone as usize),
         "the servant whose family does not",
     );
+    // the firm pays the day labourer's family and nothing more for the servant's
+    let paid = |h: u32| today.pays.iter().filter(|p| p.worker == h as usize).count();
+    assert_eq!((paid(by_day), paid(by_year)), (2, 0));
     // one worker without work stands in for the third
     let hired: Vec<usize> = today
         .pays

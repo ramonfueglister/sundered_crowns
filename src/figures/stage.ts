@@ -2,10 +2,13 @@
 // is in the picture, and whether anything walks, so that the stage keeps drawing. Main thread only.
 import type * as THREE from 'three/webgpu';
 import { Group } from 'three/webgpu';
+import { FIGURE_AT, PLAN } from './aims';
 import type { Figures } from './crowd';
-import { figureMeshes as build, figureAt as standing, figureSeconds } from './material';
+import { figureMeshes as build, riderMesh, figureAt as standing, figureSeconds } from './material';
+import { type FigureClock, figureShown } from './schedule';
 
 export type { Figures } from './crowd';
+export { figureSeconds };
 
 /**
  * Up to this many blocks of the finest step across the picture a figure is drawn with its full kit; beyond it, with
@@ -51,6 +54,7 @@ export function figureMeshes(f: Figures) {
   pairOf.set(pair.far, pair);
   draw(pair);
   if (rulerColours.size) paint(pair);
+  if (clock) follow(pair, clock);
   shown.add(pair);
   pair.near.addEventListener('dispose' as never, () => {
     shown.delete(pair);
@@ -100,7 +104,7 @@ export function personAt(x: number, y: number, z: number, reach = 2): number | n
       lz = z - (p.f.oz ?? 0);
     for (let i = 0; i < p.f.count; i++) {
       const id = p.f.e[i * 4 + 3];
-      if (!id) continue;
+      if (!id || !onStage(p, i)) continue;
       const [fx, fy, fz] = standing(p.f, i, t),
         d = Math.hypot(fx - lx, fz - lz);
       if (d < bestD && Math.abs(fy - y) < 3) {
@@ -114,15 +118,20 @@ export function personAt(x: number, y: number, z: number, reach = 2): number | n
 
 /** the realm colours the rulers are painted in (the map mode of the rulers), by uid; empty: as they are built */
 let rulerColours: ReadonlyMap<number, number> = new Map();
-/** where in a figure's numbers the colours of the garment and of the headwear lie (material.ts `interleave`: a, b, c,
- *  d, e of four each; d holds skin, garment, hose and headwear) */
-const GARMENT = 13,
+/** where in a figure's numbers the phase and the colours of the garment and of the headwear lie (material.ts
+ *  `interleave`: a, b, c, d, e of four each; a ends with the phase, d holds skin, garment, hose and headwear) */
+const PHASE = 3,
+  GARMENT = 13,
   HEADWEAR = 15,
   STRIDE = 20;
+/** the numbers of a piece's figures as the graphics card has them (one list for both kits, material.ts) */
+const numbersOf = (p: Pair, name: 'figureA' | 'figureD') =>
+  (p.near.geometry.getAttribute(name) as THREE.InterleavedBufferAttribute).data;
+/** whether figure `i` of a piece is on the stage: a negative phase keeps it off (material.ts) */
+const onStage = (p: Pair, i: number) => (numbersOf(p, 'figureA').array as Float32Array)[i * STRIDE + PHASE] >= 0;
 /** Paints the figures of these rulers in their colours (garment and headwear), or back as they were built. */
 function paint(p: Pair) {
-  const attr = p.near.geometry.getAttribute('figureD') as THREE.InterleavedBufferAttribute,
-    buf = attr.data,
+  const buf = numbersOf(p, 'figureD'),
     arr = buf.array as Float32Array;
   let changed = false;
   for (let i = 0; i < p.f.count; i++) {
@@ -149,5 +158,65 @@ export function paintRulers(colours: ReadonlyMap<number, number>): boolean {
   return changed;
 }
 
-/** whether any figures stand on the stage */
-export const anyFigures = () => shown.size > 0;
+/** the world's clock the persons' figures follow; null until the world tells its hour */
+let clock: FigureClock | null = null;
+/** Puts each figure of a person on the stage or off it, by where the plan of the day has the person (schedule.ts). */
+function follow(p: Pair, at: FigureClock) {
+  const kinds = p.f.at;
+  if (!kinds) return false;
+  const buf = numbersOf(p, 'figureA'),
+    arr = buf.array as Float32Array;
+  let changed = false;
+  for (let i = 0; i < p.f.count; i++) {
+    if (kinds[i] === FIGURE_AT.anonymous) continue;
+    // (the phase as built, negative where the figure was built off the stage)
+    const built = p.f.a[i * 4 + 3],
+      phase = built < 0 ? -1 - built : built,
+      want = Math.fround(figureShown(p.f, i, at) === kinds[i] ? phase : -1 - phase);
+    if (arr[i * STRIDE + PHASE] !== want) {
+      arr[i * STRIDE + PHASE] = want;
+      changed = true;
+    }
+  }
+  if (changed) buf.needsUpdate = true;
+  return changed;
+}
+/** Shows the figures of the persons where the plans of their day have them at the world's hour, now and as pieces
+ *  come. Returns whether a figure on the stage changed (the stage then needs a picture). */
+export function figuresAtHour(at: FigureClock): boolean {
+  clock = at;
+  let changed = false;
+  for (const p of shown) changed = follow(p, at) || changed;
+  return changed;
+}
+
+/** the meshes of the riders on the map (`riders`) */
+const riding = new Set<THREE.Mesh<THREE.InstancedBufferGeometry>>();
+/** Makes the mesh of the riders on the map, with room for `room` of them (material.ts riderMesh): while it shows any,
+ *  the stage keeps drawing, as for walking figures. */
+export function riders(room: number) {
+  const made = riderMesh(room);
+  riding.add(made.mesh);
+  made.mesh.addEventListener('dispose' as never, () => riding.delete(made.mesh));
+  return made;
+}
+
+/** whether any figures stand on the stage, or riders ride on it */
+export const anyFigures = () => shown.size > 0 || [...riding].some((m) => m.geometry.instanceCount > 0);
+
+/** The places (of the game map) of the persons whose figures are on the stage. */
+export function placesOnStage(): number[] {
+  const places = new Set<number>();
+  for (const p of shown)
+    for (let i = 0; p.f.at && p.f.plan && i < p.f.count; i++)
+      if (p.f.at[i] !== FIGURE_AT.anonymous) places.add(p.f.plan[i * PLAN + 2]);
+  return [...places];
+}
+/** The figures among the parts of a group on the stage, and the share of them drawn, if it has any. */
+export function figuresIn(group: THREE.Object3D): { f: Figures; kept: number } | undefined {
+  for (const part of group.children) {
+    const p = pairOf.get(part);
+    if (p) return { f: p.f, kept: p.kept };
+  }
+  return undefined;
+}

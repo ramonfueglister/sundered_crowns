@@ -24,6 +24,7 @@ import {
   vec4,
 } from 'three/tsl';
 import type { Figures } from './crowd';
+import { FORE_Z, HIND_Z, RIDER_PARTS } from './horse';
 import { HIP, Joint, Load, SHOULDER, Slot, buildKit, FAR_PARTS, NEAR_PARTS } from './kit';
 
 type F = THREE.Node<'float'>;
@@ -113,6 +114,9 @@ function material(): THREE.MeshLambertNodeMaterial {
           .and(abs(variant.sub(cut)).greaterThan(0.1)),
       )
       .or(variant.greaterThan(9.5).and(abs(variant.sub(head)).greaterThan(0.1)));
+    // a figure with a negative phase is not on the stage: a person's figure where the plan of the day does not have
+    // the person at the hour (schedule.ts), folded into a point as a part not worn
+    const away = A.w.lessThan(0);
     // the way: there and back again, at the figure's pace
     const way = B.xyz.sub(A.xyz),
       long = max(length(way.xz), float(0.001));
@@ -124,7 +128,14 @@ function material(): THREE.MeshLambertNodeMaterial {
     // legs and arms
     const clock = time.mul(STRIDE).add(A.w.mul(7)),
       swing = select(walking, sin(clock).mul(0.42), sin(time.mul(0.7).add(A.w)).mul(0.04));
-    const leg = select(is(joint, Joint.LegL), swing, swing.negate());
+    // (a horse's legs swing as a man's, both of one side together, each about its own top: horse.ts)
+    const fore = is(joint, Joint.ForeL).or(is(joint, Joint.ForeR)),
+      hind = is(joint, Joint.HindL).or(is(joint, Joint.HindR));
+    const leg = select(
+      is(joint, Joint.LegL).or(is(joint, Joint.ForeL)).or(is(joint, Joint.HindL)),
+      swing,
+      swing.negate(),
+    );
     const shouldered = is(carried, Load.Sack).or(is(carried, Load.Log)),
       held = is(carried, Load.Basket).or(is(carried, Load.Bundle));
     let arm = select(is(joint, Joint.ArmL), swing.mul(-0.8), swing.mul(0.8));
@@ -132,10 +143,14 @@ function material(): THREE.MeshLambertNodeMaterial {
     arm = select(held, float(0.9), arm);
     arm = select(is(carried, Load.Spear).and(is(joint, Joint.ArmR)), float(0.35), arm);
     arm = select(working, float(1.2).add(sin(time.mul(3).add(A.w)).mul(0.9)), arm);
-    const isLeg = is(joint, Joint.LegL).or(is(joint, Joint.LegR)),
+    const isLeg = is(joint, Joint.LegL).or(is(joint, Joint.LegR)).or(fore).or(hind),
       isArm = is(joint, Joint.ArmL).or(is(joint, Joint.ArmR));
     const angle = select(isLeg, leg, select(isArm, arm, float(0))),
-      pivot = vec3(0, select(isLeg, float(HIP), float(SHOULDER)), 0);
+      pivot = vec3(
+        0,
+        select(isLeg, float(HIP), float(SHOULDER)),
+        select(fore, float(FORE_Z), select(hind, float(HIND_Z), float(0))),
+      );
     let p = turnX(positionGeometry.sub(pivot), angle).add(pivot),
       n = turnX(normalLocal, angle);
     // at work the body bends forward over the hoe
@@ -148,7 +163,7 @@ function material(): THREE.MeshLambertNodeMaterial {
       s = facing.x.negate();
     const yaw = (v: V3): V3 => vec3(v.x.mul(c).add(v.z.mul(s)), v.y, v.z.mul(c).sub(v.x.mul(s)));
     normalLocal.assign(yaw(n));
-    return select(hidden, at, yaw(p).add(at));
+    return select(hidden.or(away), at, yaw(p).add(at));
   })();
   const colour = select(
     is(slot, Slot.Skin),
@@ -179,10 +194,11 @@ function material(): THREE.MeshLambertNodeMaterial {
   return m;
 }
 
-const kits = { near: buildKit(NEAR_PARTS), far: buildKit(FAR_PARTS) };
-const shapes = new Map<'near' | 'far', Record<'position' | 'normal' | 'info', THREE.BufferAttribute>>();
+const kits = { near: buildKit(NEAR_PARTS), far: buildKit(FAR_PARTS), rider: buildKit(RIDER_PARTS) };
+type KitName = keyof typeof kits;
+const shapes = new Map<KitName, Record<'position' | 'normal' | 'info', THREE.BufferAttribute>>();
 /** the kit's shape, held once, with the numbers of a piece's figures beside it: one figure per instance */
-function geometry(which: 'near' | 'far', numbers: THREE.InstancedInterleavedBuffer, count: number) {
+function geometry(which: KitName, numbers: THREE.InstancedInterleavedBuffer, count: number) {
   let shape = shapes.get(which);
   if (!shape) {
     const k = kits[which];
@@ -245,4 +261,26 @@ export function figureMeshes(f: Figures): {
     return mesh;
   };
   return { near: make('near'), far: make('far') };
+}
+
+/**
+ * The mesh of the riders on the map (worldprobe/view_riders.ts), with room for `room` of them: the caller writes the
+ * five numbers of each into `numbers` (side by side, as `interleave` lays them) and shows as many as it sets the
+ * geometry's instance count to. Drawn by the figures' one material, with the rider kit (horse.ts).
+ */
+export function riderMesh(room: number): {
+  mesh: THREE.Mesh<THREE.InstancedBufferGeometry>;
+  numbers: THREE.InstancedInterleavedBuffer;
+} {
+  shared ??= material();
+  const numbers = new THREE.InstancedInterleavedBuffer(new Float32Array(room * 20), 20).setUsage(
+      THREE.DynamicDrawUsage,
+    ),
+    mesh = new THREE.Mesh(geometry('rider', numbers, 0), shared);
+  mesh.addEventListener('dispose' as never, () => letGo(mesh.geometry));
+  // (placed by the material, as the figures are: see figureMeshes)
+  mesh.frustumCulled = false;
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  return { mesh, numbers };
 }
