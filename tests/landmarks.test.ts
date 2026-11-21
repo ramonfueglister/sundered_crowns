@@ -13,7 +13,8 @@ import { SCALE } from '../src/sim/scale';
 import { encodeState, decodeState, hashState } from '../src/sim/snapshot';
 import { upgradeState } from '../src/sim/upgrade';
 import { townLots, aloneLandmarks } from '../src/net/lots';
-import { shownOf } from '../src/worldprobe/landmarks';
+import { type Shown, shownOf } from '../src/worldprobe/landmarks';
+import { seeded } from '../src/lookprobe/batch';
 import { m, styleOf } from '../src/buildings';
 import { newWorldState, loadSetup } from '../tools/sim/load';
 
@@ -162,5 +163,29 @@ describe('the landmarks the world graphic draws', () => {
     expect(ruin.model.height).toBeLessThan(whole.model.height);
     // a castle is not raised as far as its ground is wide (CASTLE_TALL)
     expect(whole.model.height).toBeLessThanOrEqual(m(30) + 1e-9);
+  });
+  it('while it is built, as the part built so far from its east end, never less than 0.4 of it (LEAST_BUILT)', () => {
+    // a cathedral of 128 × 48 m built from 1250 to 1350, its long side east-west
+    const at = (year: number) => shownOf(LANDMARK_KIND.cathedral, -1, 128, 48, 1250, 1350, NO_YEAR, year, style, files)!;
+    /** how far the built model reaches west and east (−x, +x) */
+    const span = (s: Shown) => {
+      const pos = s.model.build(seeded(1)).pos;
+      let west = Infinity, east = -Infinity;
+      for (let i = 0; i < pos.length; i += 3) { west = Math.min(west, pos[i]); east = Math.max(east, pos[i]); }
+      return { west, east };
+    };
+    const whole = at(1351), all = span(whole);
+    let west = all.west;
+    for (const year of [1349, 1300, 1260]) {
+      const part = at(year), { share } = builtIn(1250, 1350, NO_YEAR, year), drawn = Math.max(0.4, share), s = span(part);
+      expect(part.w).toBe(whole.w); expect(part.d).toBe(whole.d); // it keeps its whole ground
+      expect(part.model.height / whole.model.height).toBeCloseTo(drawn, 9);
+      expect(s.east - s.west).toBeCloseTo((all.east - all.west) * drawn, 6);
+      // the east end stays where the whole church ends, within the ground; the west end comes nearer as less is built
+      expect(s.east).toBeGreaterThanOrEqual(all.east - 1e-9);
+      expect(s.east).toBeLessThanOrEqual(whole.w / 2);
+      expect(s.west).toBeGreaterThan(west);
+      west = s.west;
+    }
   });
 });
