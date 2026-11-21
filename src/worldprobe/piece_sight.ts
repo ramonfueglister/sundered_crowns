@@ -63,6 +63,8 @@ export interface Spot {
   pz: number;
   /** built ahead into the store: it goes on the stage only if the view has come to ask for it */
   spare?: boolean;
+  /** a piece on the stage built again for its figures (the persons of its towns changed): not read from disk */
+  renew?: boolean;
 }
 /** a piece a view asks for, with its rank (RANK) */
 export interface Wanted extends Spot {

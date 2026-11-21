@@ -8,7 +8,7 @@
 import { hash2 } from '../lookprobe/batch';
 import { type Ground, Mat, N, idx } from '../lookprobe/layout';
 import { ESTATES, Mode, dress, pickEstate, townEstate } from './estates';
-import { type TownPerson, peopleSeed, townPeople } from './people';
+import { type TownPerson, peopleSeed, rollsOf, townPeople } from './people';
 import { DIRS, FIGURE_AT, LOOK, type TownAims, aimsOf, key, personOf, spot } from './aims';
 import { fieldHands, lotOf, placeHands } from './farmers';
 
@@ -58,6 +58,9 @@ export interface Figures {
   at?: Uint8Array;
   plan?: Float32Array;
   seed?: number;
+  /** the towns whose persons the figures were built with, each with the roll of its persons then (site, roll, …;
+   *  people.ts `rollOf`): the figures are built again once the persons of a town have changed (pieces.ts) */
+  rolls?: number[];
   /** the piece's ground in the world, in blocks of the finest step */
   ox?: number;
   oz?: number;
@@ -268,5 +271,7 @@ export function crowd(g: Ground, s: SettledGround, own: (x: number, z: number) =
       place(out, w, x, z, wx, wz, town.aims.worship.get(k), true, FIGURE_AT.worship);
     }
   placeHands(out, w, hands, ox, oz, own);
-  return figuresOf(out, ox, oz);
+  const f = figuresOf(out, ox, oz),
+    rolls = rollsOf([...towns.map(({ t }) => t.site), ...(s.furlongs?.keys() ?? [])]);
+  return rolls.length ? { ...f, rolls } : f;
 }

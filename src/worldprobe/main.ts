@@ -49,6 +49,7 @@ createWorldView({
   },
 })
   .then((view) => {
+    if (import.meta.env.DEV) (window as Window & { __world?: unknown }).__world = view; // for browser tests
     if (mode === 'political' || mode === 'terrain' || mode === 'rulers')
       view.mapMode(mode === 'rulers' ? 'political' : mode);
     // the rulers' dots and figures (src/people/rulers_mode.ts), from the world server of the build

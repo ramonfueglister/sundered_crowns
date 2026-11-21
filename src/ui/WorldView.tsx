@@ -11,6 +11,7 @@ import { listenForWorldClicks } from '../people/panel';
 import { listenForWorldHover } from '../people/hover';
 import { showRulers } from '../people/rulers_mode';
 import { followDayPlans } from '../people/day_figures';
+import { followTownRolls } from '../people/town_rolls';
 import type { WorldView as View } from '../worldprobe/view';
 
 /** where the game opens: as far out as the view goes, the world's frame from west to east as a map of its realms */
@@ -180,6 +181,8 @@ export function WorldView() {
             geo.then((g) => g.loc.lat),
           ),
         );
+        // and show the persons of their towns as they are on the world's day: the dead leave, the young come
+        stops.push(followTownRolls(made, import.meta.env.VITE_WORLD_URL));
         // a click on a figure of the great cities opens that person; the pointer resting on one shows who it is
         if (!listeningForPeople) {
           listeningForPeople = true;

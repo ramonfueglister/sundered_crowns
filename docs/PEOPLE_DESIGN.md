@@ -1292,6 +1292,21 @@ the middle of the hour of the mass, three and a half unequal hours after sunrise
 day of rest at the house of worship, on the market day at the market, on the others at work. The figures stand
 still at the market and at the house of worship; they walk only in the street.
 
+The figures show the persons as they are on the world's day (src/people/town_rolls.ts). A piece's figures are built
+with the lists of the persons the world server gave when the piece was built, which is long ago for a piece kept on
+disk: a day of the world passes in four minutes, a year in a day. Once a day of the world, and at most once a minute
+(OWN RULE, a drawing value: at the highest speeds the pieces of the towns would be built again every second), the
+browser asks for the lists of the places whose figures are on the stage again:
+
+- who is no longer listed at the place (dead, or moved away) leaves the stage at once, and the part, the calendar and
+  a birth are those of the new list: a mother in childbed stays at home (src/figures/schedule.ts);
+- each town has a number drawn from who its persons are (people.ts `rollOf`), which the figures keep from the lists
+  they were built with (`Figures.rolls`). Where a town's persons have changed (the dead, the young who come to the
+  age of 14 from which the figures are drawn, a ruler who arrives or leaves), the workers take the new lists and
+  build the figures of its pieces again; the land of a piece stays on the stage as it is and only its figures change
+  (src/worldprobe/pieces.ts `renewFigures`), and the piece is kept on disk anew. A change of work or a birth changes
+  no figure that is built and is followed on the stage alone.
+
 ### Limits
 
 - **The day labourer works too many days.** By his plan a day labourer works on every working day of his firm on
@@ -1313,7 +1328,7 @@ still at the market and at the house of worship; they walk only in the street.
   barn have no figures of the persons. A farmer works the same furlong every day, one drawn by the id and not that of
   the person's own farmstead, and at the same pose whatever the work of the farming year (the hoe: no plough, scythe or
   sickle in the kit).
-- **The figures know the persons as on the day their list was fetched.** A worker of the world graphic fetches the
-  persons of the cities once (src/figures/people.ts); the part, the calendar and the mothers in childbed are those
-  of that day, the days of sickness are always right (a pure function). A person who dies later still walks, and a
-  child born later keeps no mother at home, until the page is loaded anew. This was so before for who walks at all.
+- **The figures know the persons as on the last day their list was fetched** (above): up to a day of the world, and
+  at least a minute, late. A person whose part changes keeps the figures of the part the piece was built with until
+  the persons of the town change: a farmer who loses his work is not at the hiring place, and one who finds work in
+  the fields is not at the furlong, meanwhile.
