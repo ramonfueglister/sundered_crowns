@@ -150,11 +150,14 @@ describe('the rulers of a world of 1291', () => {
 });
 
 describe('a world of 1291 saved before the rulers', () => {
+  // made once, while the tests are collected (as the world of the rulers above); the same seed gives the same world, so
+  // its snapshot stands for a second fresh one (each takes ten seconds and more, walls and economies included)
+  const s = fresh(),
+    saved = encodeState(s);
   it('gets the rulers of the day it has reached, as a world that had them from the first day', () => {
-    const s = fresh();
     until(s, '1310-01-01');
     // the world as the build before saved it: no holders, nobody's death, no persons of history
-    const old = decodeState(encodeState(fresh()));
+    const old = decodeState(saved);
     old.day = s.day;
     old.v = 15;
     const R = old.realm.cols as Record<string, unknown>,
