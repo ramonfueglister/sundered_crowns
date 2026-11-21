@@ -10,11 +10,14 @@
 //    columns of the land by the colours of the water's own corners (terrain.ts, which this reads back by their hue,
 //    which their patches of light and shade leave alone), wider out within some dots of the coast as the depth
 //    picture has it (`withCoast`, sea_coast.ts).
-//  - its surface changes with the distance, as EU5's does: from near and in the middle distance a calm swell, a few
-//    long soft waves in which the sky and what stands by the water are mirrored, and white strokes where the wind
-//    breaks a crest, short and a little bent, across the wind and in groups; from farther out (a dot some blocks
-//    wide) the sea lies smooth, its colour the depth's alone. The strokes are always some dots large, so that they
-//    read as strokes of paint and never as a fine grey chop or as specks.
+//  - its surface changes with the distance: from near a calm swell, a few long soft waves in which the sky and what
+//    stands by the water are mirrored, and white strokes where the wind breaks a crest, short and a little bent,
+//    across the wind and in groups; and along the coast lines of foam that come in to the shore (sea_shore.ts).
+//    From a thousand blocks across the picture on the sea lies smooth, its colour the depth's alone, and from some
+//    1500 the foam is gone too, on every screen alike (Ramon, 20 November 2026: "man sieht extrem weit rausgezoomt
+//    immer noch wellen"; as calm as the water of the low-poly worlds, "gibt es schöneres wasser auch im poly
+//    bereich nicht?"). The strokes are always some dots large, so that they read as strokes of paint and never as a
+//    fine grey chop or as specks.
 //    (The first round laid a natural wind sea of fine ripples over the water at every distance: it was measured
 //    close to EU5's numbers, but looked like a photograph of the sea and did not belong to the model.)
 //    Both come from one picture made once at the start (`waveTexture`, sea_waves.ts): random waves worked out by the
@@ -23,7 +26,6 @@
 // The waves lie in the world's blocks, so that they stay where they are when the view moves.
 import * as THREE from 'three/webgpu';
 import {
-  abs,
   cameraPosition,
   clamp,
   dFdx,
@@ -56,6 +58,7 @@ import {
 } from 'three/tsl';
 import { SEA_Y } from './layout';
 import { COAST_REACH } from './sea_coast';
+import { RINGS_UNTIL, shoreFoam } from './sea_shore';
 import { TEX, WIND, waveTexture } from './sea_waves';
 import { number, q } from './stage/address';
 import { WATER_DEEP, WATER_SHALLOW } from './terrain';
@@ -90,6 +93,11 @@ const HALO = 40,
   HALO_UNTIL: readonly [number, number] = [110, 220];
 /** the corners' band: how near the coast its colour begins and is full (in shares of the corners' mix: 0 some 8 columns out, 1 at the coast) */
 const RIM: readonly [number, number] = [0.1, 0.8];
+/**
+ * how much of the coast's colour the corners' band takes from near (where it is the only band): 0.7 until round 4, when
+ * the light on the bed lit the band too; without it, a little more, so that the shallows stay as light
+ */
+const NEAR_RIM = 0.85;
 /** how much darker the water's colour is in the nearest views, against their brighter light */
 const NEAREST_DARKER = 0.74;
 /** the sky as the water gives it back where a wave turns towards it (linear light, at the share Fresnel gives) */
@@ -129,34 +137,33 @@ const SWELL_RUN = 0.035,
   FLECK_RUN = 1.6,
   FLECK_LIFE = 3.5,
   FLECK_SWAY = 1.1;
-/**
- * the light the shallows' waves gather on the sea bed, nearest only and within the rim along the coast: thin lines
- * where either of two drifting pictures of the swell, half its span, crosses its middle (CAUSTIC_RUN of the swell's
- * drift), as wide as CAUSTIC_WIDTH dots, at CAUSTIC_SHARE of CAUSTIC_LIGHT
- */
-const CAUSTIC_RUN = 1.3,
-  CAUSTIC_WIDTH = 1.8,
-  CAUSTIC_SHARE = 0.45;
-const CAUSTIC_LIGHT = new THREE.Color(0xc8fbf4);
 /** the glitter: points where two of the flecks' pictures one octave finer, drifting apart, both rise above SPARKLE spreads; brighter at a slant (SPARKLE_SLANT) */
 const SPARKLE = 2.0,
   SPARKLE_SLANT = 2.2;
 /**
  * the stage draws every picture while a dot in the middle of the picture is up to MOVING_SLACK times as wide as where
- * the swell ends (SURFACE_UNTIL; the nearer bottom of the picture shows it farther); beyond, it lies smooth and
- * nothing needs drawing
+ * the swell or the foam along the coast ends (SURFACE_UNTIL, RINGS_UNTIL; the nearer bottom of the picture shows them
+ * farther); beyond, the sea lies still and nothing needs drawing
  */
 const MOVING_SLACK = 1.5;
 /** a still of fixed size (a tool's picture, ?w=) shows the water as it is at ?seatime= seconds (0), so that the same picture comes each time */
 const STILL = q.has('w');
-const FOAM = new THREE.Color(0xf2f8f6);
 /**
- * how far the swell reaches: it shows fully up to the first many finest blocks to a dot of the picture and is gone
- * from the second (in a picture 1672 dots wide the sea lies smooth from some 3000 blocks across on); and the flecks and the
- * glitter, a little less far (from farther the flecks of a picture would be more than EU5's nearest view shows)
+ * how many dots of the screen a dot of the picture is wide (as the stage sets it: stage/index.ts, setPixelRatio), so
+ * that the swell reaches as far on a screen of fine dots as on any other
  */
-const SURFACE_UNTIL: readonly [number, number] = [0.8, 1.8],
-  FLECKS_UNTIL: readonly [number, number] = [0.5, 1.3];
+const RATIO = STILL ? 1 : Math.min(globalThis.devicePixelRatio ?? 1, 2);
+const FOAM = new THREE.Color(0xf2f8f6);
+/** how much of the light the foam along the coast gives back (it is lit as the water is, sea_shore.ts) */
+const FOAM_LIGHT = 0.9;
+/**
+ * how far the swell reaches, in finest blocks to a dot of the screen (RATIO): it shows fully up to the first and is
+ * gone from the second (in a picture 1672 dots wide: fully up to some 400 blocks across, smooth from 1000 on); and the
+ * flecks and the glitter, less far (up to 200, gone from 500). OWN RULE, after Ramon's word that the waves must not
+ * show far out (20 November 2026); the swell reached three times as far before, as far as EU5's nearest view
+ */
+const SURFACE_UNTIL: readonly [number, number] = [0.25, 0.6],
+  FLECKS_UNTIL: readonly [number, number] = [0.12, 0.3];
 /** TSL's nodes of one number, a pair and a colour (or a direction) */
 type Float = THREE.Node<'float'>;
 type Vec2 = THREE.Node<'vec2'>;
@@ -200,7 +207,7 @@ export function createSea(mirror: Vec3): Sea {
   const seen = whereSeen(blocks, home, homeCoarse),
     s = surfaceOf(seen);
   return {
-    colour: (corners) => waterColour(corners, depth, seen.nearest, s.caustic),
+    colour: (corners) => waterColour(corners, depth, seen, s.clock, s.flecksAt),
     normal: transformNormalToView(s.facing),
     mirror: mirror
       .mul(s.waved.div(s.level))
@@ -222,7 +229,8 @@ export function createSea(mirror: Vec3): Sea {
       home.value.set(wrap(hx, PERIOD), wrap(hz, PERIOD));
       homeCoarse.value.set(wrap(hx, PERIOD_COARSE), wrap(hz, PERIOD_COARSE));
     },
-    moving: (across, dots) => !STILL && (across * blocks.value) / dots < SURFACE_UNTIL[1] * MOVING_SLACK,
+    moving: (across, dots) =>
+      !STILL && (across * blocks.value * RATIO) / dots < Math.max(SURFACE_UNTIL[1], RINGS_UNTIL[1]) * MOVING_SLACK,
   };
 }
 
@@ -268,12 +276,14 @@ function whereSeen(blocks: Float, home: Vec2, homeCoarse: Vec2) {
   const acrossDot = length(dFdx(pFine))
     .mul(length(dFdy(pFine)))
     .sqrt();
+  // (and of a dot of the screen: how far the swell and the foam reach goes by it, the octaves by the picture's dots)
+  const acrossScreen = acrossDot.mul(RATIO);
   /** 1 in the nearest views (a street of houses across the picture), 0 from a few hundred blocks across (by a dot's width alone) */
-  const nearest = float(1).sub(smoothstep(0.04, 0.12, length(dFdx(pFine))));
+  const nearest = float(1).sub(smoothstep(0.04, 0.12, length(dFdx(pFine)).mul(RATIO)));
   /** 1 where the swell shows, 0 where the sea lies smooth; and where the flecks and the glitter do */
-  const surface = float(1).sub(smoothstep(SURFACE_UNTIL[0], SURFACE_UNTIL[1], acrossDot)),
-    flecked = float(1).sub(smoothstep(FLECKS_UNTIL[0], FLECKS_UNTIL[1], acrossDot));
-  return { pFine, pCoarse, acrossDot, nearest, surface, flecked };
+  const surface = float(1).sub(smoothstep(SURFACE_UNTIL[0], SURFACE_UNTIL[1], acrossScreen)),
+    flecked = float(1).sub(smoothstep(FLECKS_UNTIL[0], FLECKS_UNTIL[1], acrossScreen));
+  return { pFine, pCoarse, acrossDot, acrossScreen, nearest, surface, flecked };
 }
 
 /** a colour as a node (three keeps a Color's components in linear light) */
@@ -289,8 +299,14 @@ const ramp = (t: Float) => {
   return c;
 };
 
-/** The water's colour from its corners' colour (Sea.colour), by the depth picture and, nearest, the light on the bed. */
-function waterColour(corners: Vec3, depth: ReturnType<typeof readDepths>, nearest: Float, caustic: Float): Vec3 {
+/** The water's colour from its corners' colour (Sea.colour), by the depth picture, and the foam along the coast. */
+function waterColour(
+  corners: Vec3,
+  depth: ReturnType<typeof readDepths>,
+  seen: ReturnType<typeof whereSeen>,
+  clock: Float,
+  flecksAt: ReturnType<typeof createWaves>['flecksAt'],
+): Vec3 {
   const { share, known, coastDots, dotsPerTexel } = depth;
   // how far from the coast the corners are, as their colour has it (terrain.ts: WATER_SHALLOW at the coast, mixed
   // towards WATER_DEEP by k = 0 … 1 within some 8 columns, and the mix a tenth lighter or darker in broad patches
@@ -326,20 +342,19 @@ function waterColour(corners: Vec3, depth: ReturnType<typeof readDepths>, neares
     .sub(smoothstep(0, HALO, coastDots.max(0)))
     .mul(sea);
   // (from near the corners' band is the only one, a column or two wide, and shows fully: a light rim along the coast)
-  const coast = max(corner.mul(mix(float(0.7), float(1), coarse)), halo.mul(halo).mul(HALO_SHARE));
+  const coast = max(corner.mul(mix(float(NEAR_RIM), float(1), coarse)), halo.mul(halo).mul(HALO_SHARE));
   const patches = clamp(shade, 0.9, 1.1);
   // from near, all the picture lies within a dot or two of the depth picture, which runs down to the coast's depth
   // across them: there the water beyond the corners' band is the shelf's (and the band the shallows')
   const t = mix(share, max(share, float(RAMP[1][0]).mul(float(1).sub(corner))), coarse);
-  // (the near view's light is brighter: the water is as dark there as it looks from afar)
-  // (and in the shallows, nearest, the light the waves gather on the bed)
-  return mix(mix(ramp(t), lin(COAST), coast), lin(CAUSTIC_LIGHT), caustic.mul(corner).mul(CAUSTIC_SHARE))
-    .mul(materialColor.rgb)
-    .mul(patches)
-    .mul(mix(float(1), float(NEAREST_DARKER), nearest));
+  // (the near view's light is brighter: the water is as dark there as it looks from afar; the foam is white in it)
+  const darker = mix(float(1), float(NEAREST_DARKER), seen.nearest);
+  const water = mix(ramp(t), lin(COAST), coast).mul(materialColor.rgb).mul(patches).mul(darker);
+  const foam = shoreFoam(k, seen.pFine, seen.acrossScreen, clock, flecksAt);
+  return mix(water, lin(FOAM).mul(materialColor.rgb).mul(FOAM_LIGHT), foam);
 }
 
-/** The surface: the swell's slope, the sky it gives back, the flecks, the glitter and the light on the bed. */
+/** The surface: the swell's slope, the sky it gives back, the flecks and the glitter (and the waves' clock and flecks, for the foam). */
 function surfaceOf({ pFine, pCoarse, acrossDot, nearest, surface, flecked }: ReturnType<typeof whereSeen>) {
   // the surface: the wave picture at the two octaves whose texels are DOTS_PER_TEXEL to twice that many dots wide here
   // (from near at least SPAN_LEAST blocks across the picture), faded from one to the next; the flecks' at those
@@ -352,7 +367,7 @@ function surfaceOf({ pFine, pCoarse, acrossDot, nearest, surface, flecked }: Ret
   const octaveF = fine.add(1).max(Math.log2(SPAN_LEAST)),
     oF = floor(octaveF),
     fF = octaveF.sub(oF);
-  const { clock, octaveAt, flecksAt, bed } = createWaves(pFine, pCoarse);
+  const { clock, octaveAt, flecksAt } = createWaves(pFine, pCoarse);
   const a = octaveAt(o0),
     b = octaveAt(o0.add(1)),
     w0 = float(1).sub(f),
@@ -399,17 +414,11 @@ function surfaceOf({ pFine, pCoarse, acrossDot, nearest, surface, flecked }: Ret
   )
     .mul(clamp(pow(float(1).sub(eye.y), SPARKLE_SLANT).mul(3), 0, 1))
     .mul(flecked);
-  const caustic = max(
-    bed(o0.sub(1), 0.3, vec2(0.11, 0.57), CAUSTIC_RUN),
-    bed(o0.sub(1), 2.2, vec2(0.83, 0.29), -CAUSTIC_RUN * 0.8),
-  )
-    .mul(nearest)
-    .mul(surface);
-  return { facing, waved, level, fleck, sparkle, caustic };
+  return { facing, waved, level, fleck, sparkle, clock, flecksAt };
 }
 
 /** The wave picture laid over the water at `pFine` (and `pCoarse`, where its octave is wider than PERIOD), drifting
- *  with the water's clock: the swell's octaves, the flecks' and the bed's. */
+ *  with the water's clock: the swell's octaves and the flecks'. */
 function createWaves(pFine: Vec2, pCoarse: Vec2) {
   const waves = texture(waveTexture());
   /** the water's clock in seconds (a still's is fixed) */
@@ -463,19 +472,7 @@ function createWaves(pFine: Vec2, pCoarse: Vec2) {
       dy = turn(dFdy(pFine), c, s).div(size);
     return waves.sample(uv).grad(dx, dy).a.mul(2).sub(1).mul(8);
   };
-  // the light on the bed of the shallows: the swell's height at octave n (surfaceOf reads it at half the swell's
-  // span, twice, drifting apart); a line where it crosses its middle
-  const bed = (n: Float, angle: number, shift: Vec2, run: number) => {
-    const size = exp2(n),
-      c = Math.cos(angle),
-      s = Math.sin(angle);
-    const uv = turn(pFine, float(c), float(s)).div(size).add(shift).add(drift(n, run)),
-      dx = turn(dFdx(pFine), float(c), float(s)).div(size),
-      dy = turn(dFdy(pFine), float(c), float(s)).div(size);
-    const h = waves.sample(uv).grad(dx, dy).b.mul(2).sub(1).mul(4);
-    return float(1).sub(smoothstep(0, fwidth(h).mul(CAUSTIC_WIDTH), abs(h)));
-  };
-  return { clock, octaveAt, flecksAt, bed };
+  return { clock, octaveAt, flecksAt };
 }
 
 /** a point of the world (finest blocks) and its dot's extent turned by (c, s) */

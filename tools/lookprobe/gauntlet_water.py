@@ -30,11 +30,18 @@ The first round (19 November 2026) held the water at every distance to EU5's nea
 blue): 30 of 30 rows of its own bar, but it looked like a photograph laid into the model. The second round (20
 November) holds each distance to its own kind, and the colour to the land's.
 
-Where the water moves (MOVES: from near, as EU5's does), the scene is also taken a frame (1/30 s) and half a second
-later (MOMENTS, water_frames.mjs), and two more rows hold the motion: the water moves (the mean change of its
-lightness in half a second) and does not flicker (few dots change much from one frame to the next: a fleck that
-pops up or vanishes at once, or glitter that jumps). These two bars are not read off EU5 (no moving pictures of it
-were at hand) but set by what they are for: a change one can see in half a second, and none that jumps.
+Where the water moves (MOVES), the scene is also taken a frame (1/30 s) and half a second later (MOMENTS,
+water_frames.mjs), and two more rows hold the motion: the water moves (the mean change of its lightness in half a
+second) and does not flicker (few dots change much from one frame to the next: a fleck that pops up or vanishes at
+once, or glitter that jumps). These two bars are not read off EU5 (no moving pictures of it were at hand) but set by
+what they are for: a change one can see in half a second, and none that jumps. A third row holds the foam along the
+coast (sea_shore.ts): how much more of the water within FOAM_COLUMNS columns of the shore is white than of the open
+water beyond (where only the wind's flecks are), over the three moments.
+
+The fifth round (20 November 2026) leaves EU5's nearest view behind where Ramon found it wrong: "man sieht extrem
+weit rausgezoomt immer noch wellen" and "gibt es schöneres wasser auch im poly bereich nicht?". From EU5's nearest
+distance on the water is calm, as the low-poly worlds' is: 'nah' is held to the middle distance's chop and flecks,
+and no longer moves; only the diorama does, and its coasts have foam.
 """
 
 import sys
@@ -73,6 +80,12 @@ def water_mask(rgb):
         pale = ndi.mean(s, holes, ids) < 0.3
         small = np.flatnonzero((ndi.sum(np.ones_like(m), holes, ids) <= 1500) & pale) + 1
         m = m | np.isin(holes, small)
+    # and so does the foam along the coast (sea_shore.ts), which touches the land and so is no hole: light dots
+    # within 6 dots of the water, bluish where the foam is mixed into the water's colour, and where it is white,
+    # white in the sun's warm light (a little redder than blue, as the white walls are); the land's pale stone by the
+    # water is darker (the quays' walls in their shade) or redder, its sand fuller
+    foam = (mx > 150) & (((s < 0.35) & (b > r + 3)) | ((s < 0.12) & (b > r - 16)))
+    m = m | (foam & ndi.binary_dilation(m, iterations=6))
     lab, n = ndi.label(m)
     if n == 0:
         return m
@@ -153,7 +166,8 @@ def measure(path, box=None):
 #  'diorama' nearer than EU5 can come (a street to a town and its fields across the picture): EU5's nearest bars
 #            where they fit, and the model's own look;
 #  'nah'     EU5's nearest view (an island or a stretch of coast across the picture: steam_05, z_140, z_025, z_058,
-#            z_170): turquoise, a fine swell and a few white flecks;
+#            z_170): turquoise shallows, blue beyond; calm since the fifth round (EU5 has a fine swell and a few white
+#            flecks here: Ramon wants no waves this far out);
 #  'mittel'  EU5's middle distance (a sea across the picture: z_143, z_201, z_133): smooth, light shelves, deep blue
 #            beyond;
 #  'fern'    EU5's far views before the paper map (half the Mediterranean: z_128, z_046): smooth, the shelves as light
@@ -167,9 +181,9 @@ SCENES = [
 ]
 # the bars by kind: chop (most), the shallows' lightness over the open water (least, most), the flecks and glints in
 # % (least, most); from EU5's pictures of each kind (see the head)
-CHOP = {'diorama': 2.4, 'nah': 2.4, 'mittel': 1.2, 'fern': 1.2}
+CHOP = {'diorama': 2.4, 'nah': 1.2, 'mittel': 1.2, 'fern': 1.2}
 SHALLOWS = {'diorama': (3, 15), 'nah': (4, 15), 'mittel': (5, 25), 'fern': (5, 25)}
-FLECKS = {'diorama': (0.05, 1), 'nah': (0.03, 0.5), 'mittel': (0, 0.05), 'fern': (0, 0.05)}
+FLECKS = {'diorama': (0.05, 1), 'nah': (0, 0.05), 'mittel': (0, 0.05), 'fern': (0, 0.05)}
 # the water about as full in colour as the land beside it, at least (EU5 0.87 to 3.1; the land of the model is far
 # fuller than EU5's, so its water must be too: the first round's was 0.56 to 0.79 from near and in the middle); the
 # open water's hue (EU5 217 to 270 degrees), the water by the shore at least this much greener (EU5 0 to 29, mostly
@@ -180,10 +194,17 @@ GREENER = 5
 # the kinds whose water moves, the moments they are taken at (s), and the motion's bars: the mean change of the
 # water's lightness in half a second (least), and the share of the water (%) whose lightness changes by more than
 # FLICKER_L from one frame to the next (most)
-MOVES = ('diorama', 'nah')
+MOVES = ('diorama',)
 MOMENTS = (0, 0.0333, 0.5)
 MOTION = 0.8
 FLICKER, FLICKER_L = 0.3, 20
+# the foam along the coast: within how many columns of the shore (a column is 1672 / wide dots, wide the scene's
+# blocks across), what is white (HSV saturation below, CIELAB lightness above: no water is as light, EU5's nearest
+# shallows reach L 68), and how many points of % more of the water there is white than of the open water (least;
+# round 4, without foam along the coast, 0.15)
+FOAM_COLUMNS = 4
+FOAM_WHITE = (0.3, 72)
+FOAM = 1.0
 
 
 def motion(folder, name):
@@ -198,6 +219,22 @@ def motion(folder, name):
     move = float(np.abs(lum[2] - lum[0])[inner].mean())
     flicker = float(100 * (np.abs(lum[1] - lum[0])[inner] > FLICKER_L).mean())
     return move, flicker
+
+
+def foam(folder, name, wide):
+    """how many points of % more of the water within FOAM_COLUMNS columns of the shore is white than of the open water
+    beyond, over the three moments"""
+    rgb = np.asarray(Image.open(f'{folder}/{name}.png').convert('RGB'))
+    dist = ndi.distance_transform_edt(water_mask(rgb))
+    reach = max(FOAM_COLUMNS * 1672 / wide, 6)
+    band, beyond = (dist >= 2) & (dist <= reach), dist > reach + 10
+    more = []
+    for k in ('', '_1', '_2'):
+        f = np.asarray(Image.open(f'{folder}/{name}{k}.png').convert('RGB')).astype(float)
+        full = (f.max(-1) - f.min(-1)) / np.maximum(f.max(-1), 1)
+        white = (full < FOAM_WHITE[0]) & (srgb_to_lab(f)[..., 0] > FOAM_WHITE[1])
+        more.append(100 * (white[band].mean() - white[beyond].mean()))
+    return float(np.mean(more))
 
 
 def rows(r, kind):
@@ -218,14 +255,16 @@ def rows(r, kind):
 
 def gauntlet(folder):
     green = total = 0
-    for name, _, kind in SCENES:
+    for name, address, kind in SCENES:
         r = measure(f'{folder}/{name}.png')
         more = []
         if kind in MOVES:
             move, flicker = motion(folder, name)
+            white = foam(folder, name, float(address.split('wide=')[1].split('&')[0]))
             more = [
                 (f'Bewegung >= {MOTION}', move, move >= MOTION),
                 (f'Flimmern <= {FLICKER} %', flicker, flicker <= FLICKER),
+                (f'Schaumsaum >= {FOAM} %-Pkt', white, white >= FOAM),
             ]
         for row, v, ok in rows(r, kind) + more:
             total += 1
