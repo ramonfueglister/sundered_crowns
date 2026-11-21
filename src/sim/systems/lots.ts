@@ -268,7 +268,7 @@ function seatTowns(year: number): Set<number> {
 function layEdge(s: WorldState, city: { place: number; site: number; people: number }, g: Ground | null, seats: Set<number>): void {
   const known = namedOf(s.startYear).some((n) => n.site === city.site && (n.kind === LANDMARK_KIND.castle || n.kind === LANDMARK_KIND.palace || n.seat));
   const residence = seats.has(city.site) && !known ? residenceAt(s, city.place) : null;
-  writeLandmarks(s, city.place, city.site, edgeLandmarks(latinAt(s, city.place), city.people, residence, takenOf(s, city.site), landmarkGround(registerGround(s, g, city.site), city.site)));
+  writeLandmarks(s, city.place, city.site, edgeLandmarks(latinAt(s, city.place), city.people, residence, takenOf(s, city.site), landmarkGround(registerGround(s, g, city.site), city.site), !!planOf(s.startYear, city.site)?.around));
 }
 
 /**
@@ -384,7 +384,7 @@ export function foundLots(s: WorldState, ground?: Ground | null, dry?: Ground | 
     const town: Box = { x: 0, z: 0, w: 2 * Math.max(half, reach), d: 2 * Math.max(half, reach) }, taken: Box[] = [];
     const size = families.length ? parcelSize(townGround(persons, city.site), families.length) : null;
     const on = (q: Ground | null) => (size ? onPlan(q, s.startYear, city.site, families.length, size) : q);
-    const hg = wide?.has(city.site) ? on(wide) : g?.has(city.site) ? on(g) : null, surveyed = !!hg;
+    const hg = wide?.has(city.site) ? on(wide) : g?.has(city.site) ? on(g) : null, surveyed = !!hg, lagoon = !!planOf(s.startYear, city.site)?.around;
     let next = 0, free: ReturnType<typeof allFree> | null = null;
     sizes.forEach((farms, h) => {
       const box = hamletBox(farms), lay = layFarms(farms);
@@ -408,13 +408,13 @@ export function foundLots(s: WorldState, ground?: Ground | null, dry?: Ground | 
         if (n === farms) break;
       }
       // the nearest clear spot farther out (`whole`: one that carries all the farmhouses)
-      const farther = (whole: boolean) => {
+      const farther = (whole: boolean, far = HAMLET_FAR) => {
         if (whole) free ??= allFree(hg!, city.site);
         // a hamlet lies on whole blocks, so the strips of its farmhouses keep their place in it wherever it lies
         const strips = whole ? lay.map((p) => houseStrip(hg!.metresPerBlock, p, FARM)) : [];
         const bx = Math.round(spots[h].x / METRES_PER_BLOCK), bz = Math.round(spots[h].z / METRES_PER_BLOCK);
         let best = Infinity, hit: { x: number; z: number } | null = null;
-        for (let ring = HAMLET_SEARCH + 1; ring <= HAMLET_FAR && ring * ring < best; ring++) {
+        for (let ring = HAMLET_SEARCH + 1; ring <= far && ring * ring < best; ring++) {
           for (let dz = -ring; dz <= ring; dz++) for (let dx = -ring; dx <= ring; dx += Math.abs(dz) === ring ? 1 : 2 * ring) { // the blocks of the ring only
             if (dx * dx + dz * dz >= best) continue;
             const x = spots[h].x + dx * METRES_PER_BLOCK, z = spots[h].z + dz * METRES_PER_BLOCK;
@@ -424,12 +424,13 @@ export function foundLots(s: WorldState, ground?: Ground | null, dry?: Ground | 
         return hit;
       };
       if (at && surveyed && most < farms) { // near its own spot the ground does not carry every farmhouse
-        const dryer = farther(true);
+        const dryer = farther(true) ?? (most || !lagoon ? null : farther(true, hg!.reach(city.site)));
         if (dryer) { at = dryer; most = farms; }
       }
       if (!at) { // no clear spot near its own: the nearest clear one farther out, on ground that carries it if there is
         found.crowded++;
-        at = (surveyed ? farther(true) : null) ?? farther(false) ?? spots[h];
+        // (a town in a lagoon: the nearest island or shore that carries it, as far as its ground is known)
+        at = (surveyed ? (farther(true) ?? (lagoon ? farther(true, hg!.reach(city.site)) : null)) : null) ?? farther(false) ?? spots[h];
         most = surveyed ? carried(at.x, at.z) : farms;
       }
       if (surveyed && most < farms) found.rough++;

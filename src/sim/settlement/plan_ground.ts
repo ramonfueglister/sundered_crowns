@@ -14,6 +14,9 @@ export interface Plan {
   radius?: number;
   /** the plan's land and water, where it draws them (below) */
   ground?: PlanGround;
+  /** the land and water round what the plan draws, in coarser cells: a town in a lagoon (Venice: its islands and
+   *  shores); `ground` holds where both draw */
+  around?: PlanGround;
 }
 
 /** what a block of such a town is: `open` lies outside what the plan draws (the map's own ground holds there) */
@@ -24,7 +27,8 @@ export const GROUND = { open: 0, land: 1, water: 2 } as const;
 export const BRIDGE_SPAN = 28.8;
 
 /** the ground of a plan: from (x0, z0) east and south of the centre, `w` × `h` cells of `cell` radii, rows from north
- *  to south, and per cell its share of water in fifteenths (0 dry, 15 water) */
+ *  to south, per cell its share of water in fifteenths (0 dry, 15 water), and where the plan leaves the ground to
+ *  another town of the world (`open`: 1 where the cell lies nearer it; cadastre_venice.py) */
 export interface PlanGround {
   x0: number;
   z0: number;
@@ -32,6 +36,7 @@ export interface PlanGround {
   w: number;
   h: number;
   water: Uint8Array;
+  open?: Uint8Array;
 }
 
 /** what the blocks of a town are, and how far from the centre the plan draws ground (blocks, east, west, north, south) */
@@ -56,48 +61,21 @@ export function groundBlocks(
   half: number,
   metres: number,
 ): GroundBlocks {
-  const { x0, z0, cell, w, h, water } = ground;
-  // the shares of water summed from the north-west corner: the integral of the cells, exact between the corners
-  // of the cells when read bilinearly
-  const sum = new Float64Array((w + 1) * (h + 1));
-  for (let z = 0; z < h; z++)
-    for (let x = 0, row = 0; x < w; x++) {
-      row += water[z * w + x] / 15;
-      sum[(z + 1) * (w + 1) + x + 1] = sum[z * (w + 1) + x + 1] + row;
-    }
-  const corner = (u: number, v: number) => {
-    const x = Math.max(0, Math.min(w, u)),
-      z = Math.max(0, Math.min(h, v)),
-      i = Math.min(w - 1, Math.floor(x)),
-      j = Math.min(h - 1, Math.floor(z)),
-      fx = x - i,
-      fz = z - j;
-    const a = sum[j * (w + 1) + i],
-      b = sum[j * (w + 1) + i + 1],
-      c = sum[(j + 1) * (w + 1) + i],
-      d = sum[(j + 1) * (w + 1) + i + 1];
-    return a * (1 - fx) * (1 - fz) + b * fx * (1 - fz) + c * (1 - fx) * fz + d * fx * fz;
-  };
-  // a block in cells of the plan
-  const toCell = metres / radius / cell,
-    ux = -x0 / cell,
-    vz = -z0 / cell;
-  const known = new Map<number, number>();
+  // per ground (the plan's, then the one round it) its share of water over a box of the plan, in radii; NaN where the
+  // box's middle lies outside it
+  const shares = [ground, plan.around].filter((q): q is PlanGround => !!q).map(shareOf);
+  const known = new Map<number, number>(),
+    size = metres / radius;
   const base = (bx: number, bz: number) => {
     const key = (bz + 32768) * 65536 + bx + 32768,
       had = known.get(key);
     if (had !== undefined) return had;
-    const cu = ux + bx * toCell,
-      cv = vz + bz * toCell;
     let k: number = GROUND.open;
-    if (cu >= 0 && cu < w && cv >= 0 && cv < h) {
-      const a = cu - toCell / 2,
-        b = cv - toCell / 2,
-        c = cu + toCell / 2,
-        d = cv + toCell / 2;
-      const area = (Math.min(w, c) - Math.max(0, a)) * (Math.min(h, d) - Math.max(0, b));
-      const wet = (corner(c, d) - corner(a, d) - corner(c, b) + corner(a, b)) / area;
+    for (const share of shares) {
+      const wet = share(bx * size, bz * size, size);
+      if (Number.isNaN(wet)) continue;
       k = wet > 0.5 ? GROUND.water : GROUND.land;
+      break;
     }
     known.set(key, k);
     return k;
@@ -151,9 +129,51 @@ export function groundBlocks(
     for (const [rx, rz] of run)
       for (let j = -side; j <= side; j++) bridges.add(along.get(keyOf(rx, rz)) ? keyOf(rx, rz + j) : keyOf(rx + j, rz));
   }
-  const far = Math.max(Math.abs(x0), Math.abs(z0), Math.abs(x0 + w * cell), Math.abs(z0 + h * cell));
+  const far = Math.max(
+    ...[ground, plan.around].flatMap((q) =>
+      q ? [Math.abs(q.x0), Math.abs(q.z0), Math.abs(q.x0 + q.w * q.cell), Math.abs(q.z0 + q.h * q.cell)] : [],
+    ),
+  );
   return {
     at: (bx, bz) => (bridges.has(keyOf(bx, bz)) ? GROUND.land : base(bx, bz)),
     reach: Math.ceil((far * radius) / metres),
+  };
+}
+
+/** The share of water of a ground over the box of `size` radii a side round (x, z) radii east and south of the
+ *  centre: from the shares of its cells summed from the north-west corner (the integral of the cells, exact between
+ *  their corners when read bilinearly); NaN where (x, z) lies outside the ground or in an open cell. */
+function shareOf(g: PlanGround): (x: number, z: number, size: number) => number {
+  const { x0, z0, cell, w, h, water, open } = g;
+  const sum = new Float64Array((w + 1) * (h + 1));
+  for (let z = 0; z < h; z++)
+    for (let x = 0, row = 0; x < w; x++) {
+      row += water[z * w + x] / 15;
+      sum[(z + 1) * (w + 1) + x + 1] = sum[z * (w + 1) + x + 1] + row;
+    }
+  const corner = (u: number, v: number) => {
+    const x = Math.max(0, Math.min(w, u)),
+      z = Math.max(0, Math.min(h, v)),
+      i = Math.min(w - 1, Math.floor(x)),
+      j = Math.min(h - 1, Math.floor(z)),
+      fx = x - i,
+      fz = z - j;
+    const a = sum[j * (w + 1) + i],
+      b = sum[j * (w + 1) + i + 1],
+      c = sum[(j + 1) * (w + 1) + i],
+      d = sum[(j + 1) * (w + 1) + i + 1];
+    return a * (1 - fx) * (1 - fz) + b * fx * (1 - fz) + c * (1 - fx) * fz + d * fx * fz;
+  };
+  return (x, z, size) => {
+    const cu = (x - x0) / cell,
+      cv = (z - z0) / cell,
+      half = size / cell / 2;
+    if (!(cu >= 0 && cu < w && cv >= 0 && cv < h) || open?.[Math.floor(cv) * w + Math.floor(cu)]) return Number.NaN;
+    const a = cu - half,
+      b = cv - half,
+      c = cu + half,
+      d = cv + half;
+    const area = (Math.min(w, c) - Math.max(0, a)) * (Math.min(h, d) - Math.max(0, b));
+    return (corner(c, d) - corner(a, d) - corner(c, b) + corner(a, b)) / area;
   };
 }
