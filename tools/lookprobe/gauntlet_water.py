@@ -46,6 +46,15 @@ and no longer moves; only the diorama does, and its coasts have foam.
 The sixth round (21 November 2026) holds the foam's lines to smooth bows: in round 5 they ran in zigzags from corner
 to corner of the water's columns. A fourth row of the diorama measures how fast the lines of foam turn, in degrees to
 a dot along them (FOAM_BENDS; round 5: 2.1).
+
+The eighth round (21 November 2026) works on the near water itself (Ramon: "das wasser ist das problem nicht die
+umgebung"): the bed shows through the shallows, the open water is rippled, and the two thick rows of foam round every
+coast are a thin line at the water's edge. So the foam's row turns round: by the same measure EU5's nearest pictures
+have 0.1 to 0.9 points more white by the shore than on the open water (z_025, z_058, z_140; within 35 dots of the
+shore), rounds 5 and 6 had 4 to 5, and the bar is a most, no longer a least. Measured beside it, not as rows (in
+EU5's pictures they are the scene's as much as the water's): the open water's lightness over the picture, blurred
+over 25 dots, between its 5th and 95th hundredth, EU5 12 to 17, round 6 2 to 4, round 8 6.5 to 7; and the open
+water's colour, EU5 z_140 L 54, a -17, b -13, round 6 56, -17, -30, round 8 57, -19, -21.
 """
 
 import sys
@@ -204,8 +213,8 @@ MOTION = 0.8
 FLICKER, FLICKER_L = 0.3, 20
 # the foam along the coast: within how many columns of the shore (a column is 1672 / wide dots, wide the scene's
 # blocks across), what is white (HSV saturation below, CIELAB lightness above: no water is as light, EU5's nearest
-# shallows reach L 68), and how many points of % more of the water there is white than of the open water (least;
-# round 4, without foam along the coast, 0.15)
+# shallows reach L 68), and how many points of % more of the water there is white than of the open water (most:
+# EU5's nearest pictures 0.1 to 0.9, a thin line at the water's edge 0.5 to 0.7, round 6's two thick rows 4 to 5)
 FOAM_COLUMNS = 4
 FOAM_WHITE = (0.3, 72)
 FOAM = 1.0
@@ -308,8 +317,9 @@ def gauntlet(folder):
             more = [
                 (f'Bewegung >= {MOTION}', move, move >= MOTION),
                 (f'Flimmern <= {FLICKER} %', flicker, flicker <= FLICKER),
-                (f'Schaumsaum >= {FOAM} %-Pkt', white, white >= FOAM),
-                (f'Schaumbögen <= {FOAM_BENDS} °/Pkt', bent, bent <= FOAM_BENDS),
+                (f'Schaumsaum <= {FOAM} %-Pkt', white, white <= FOAM),
+                # (no line of foam long enough to be measured: none that could run in zigzags)
+                (f'Schaumbögen <= {FOAM_BENDS} °/Pkt', bent, bent <= FOAM_BENDS or np.isnan(bent)),
             ]
         for row, v, ok in rows(r, kind) + more:
             total += 1
