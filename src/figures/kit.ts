@@ -33,6 +33,11 @@ export enum Joint {
   ArmL = 3,
   ArmR = 4,
   Head = 5,
+  /** a horse's legs (horse.ts): fore and hind, left and right, each swinging about its own top */
+  ForeL = 6,
+  ForeR = 7,
+  HindL = 8,
+  HindR = 9,
 }
 /** What a figure carries (0: nothing). */
 export enum Load {
@@ -67,7 +72,7 @@ export interface Part {
   load?: Load;
   variant?: number;
 }
-const P = (
+export const P = (
   x0: number,
   y0: number,
   z0: number,

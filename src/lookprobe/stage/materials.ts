@@ -72,7 +72,8 @@ export function createMaterials(scene: THREE.Scene) {
       part.userData.dots ??= new THREE.Vector2(0, 1);
       part.userData.ink ??= 1;
     });
-  // whether a mesh is ground to the map's paper (1) or stands on the ground (0, see Stage.lay)
+  // whether a mesh is ground to the map's paper (1) or stands on the ground (0, see Stage.lay); below 0 a marker of
+  // the map that the paper is not laid on at all (a ruler riding, worldprobe/view_riders.ts)
   // (a mesh that glides to the shape of the coarser step tells for each face what it ends up as, and is that by the
   // share it has glided: see `gliding` in face_materials.ts)
   const glided = userData('glide', 'float') as unknown as ReturnType<typeof float>;

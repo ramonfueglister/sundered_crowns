@@ -4,10 +4,11 @@ import type * as THREE from 'three/webgpu';
 import { Group } from 'three/webgpu';
 import { FIGURE_AT, PLAN } from './aims';
 import type { Figures } from './crowd';
-import { figureMeshes as build, figureAt as standing, figureSeconds } from './material';
+import { figureMeshes as build, riderMesh, figureAt as standing, figureSeconds } from './material';
 import { type FigureClock, figureShown } from './schedule';
 
 export type { Figures } from './crowd';
+export { figureSeconds };
 
 /**
  * Up to this many blocks of the finest step across the picture a figure is drawn with its full kit; beyond it, with
@@ -189,8 +190,19 @@ export function figuresAtHour(at: FigureClock): boolean {
   return changed;
 }
 
-/** whether any figures stand on the stage */
-export const anyFigures = () => shown.size > 0;
+/** the meshes of the riders on the map (`riders`) */
+const riding = new Set<THREE.Mesh<THREE.InstancedBufferGeometry>>();
+/** Makes the mesh of the riders on the map, with room for `room` of them (material.ts riderMesh): while it shows any,
+ *  the stage keeps drawing, as for walking figures. */
+export function riders(room: number) {
+  const made = riderMesh(room);
+  riding.add(made.mesh);
+  made.mesh.addEventListener('dispose' as never, () => riding.delete(made.mesh));
+  return made;
+}
+
+/** whether any figures stand on the stage, or riders ride on it */
+export const anyFigures = () => shown.size > 0 || [...riding].some((m) => m.geometry.instanceCount > 0);
 
 /** The places (of the game map) of the persons whose figures are on the stage. */
 export function placesOnStage(): number[] {
