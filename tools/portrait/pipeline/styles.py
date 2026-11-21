@@ -253,9 +253,16 @@ elif style == 'plait':
     # across the image from one flank of the strand over its front to the other, and back again behind it; along
     # it down the image and up again: the image has no seam anywhere
     u_round = 1 - np.abs(2 * np.arange(ROUND + 1) / ROUND - 1)
+    # `PLAIT_LOOP` (round 126; `loop01`): the plait does not hang. It is laid from the place below the ear forward
+    # under the lobe and up in front of the ear to the temple, where its end is pinned under the hair: a loop
+    # beside the cheek. Its way as places on the head, `th,el,h;...` (degrees as the hairline's, and the height
+    # over the skin), after the place below the ear where it begins.
+    LOOP = [[float(t) for t in q.split(',')] for q in os.environ['PLAIT_LOOP'].split(';')] if os.environ.get('PLAIT_LOOP') else None
     tubes = []
     for sgn in (1.0, -1.0):
         way = WAY * np.array([sgn, 1, 1])
+        if LOOP:
+            way = np.concatenate([way[:1], [H.at(dirs(np.array([sgn * th]), np.array([el])), np.array([h]))[0] for th, el, h in LOOP]])
         way[0] = H.at(dirs(np.array([sgn * GTH]), np.array([GEL])), np.array([0.05]))[0]
         # a smooth line through the table's points
         u0 = np.concatenate([[0], np.cumsum(np.linalg.norm(np.diff(way, axis=0), axis=1))])

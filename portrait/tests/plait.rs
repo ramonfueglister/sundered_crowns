@@ -4,7 +4,7 @@
 mod common;
 
 use common::{head, person};
-use sc_portrait::build;
+use sc_portrait::{build, build_posed};
 
 type V3 = [f32; 3];
 
@@ -51,6 +51,12 @@ fn turned_over(pos: &[V3], nrm: &[V3]) -> usize {
         .count()
 }
 
+/// Whether plaits are pinned up beside the cheeks (round 126, `DressSet::hair_looped`): they end above the chin;
+/// plaits that hang reach the chest.
+fn pinned_up(out: &sc_portrait::Portrait, rope: &sc_portrait::Surface) -> bool {
+    rope.pos.iter().map(|p| p[1]).fold(f32::MAX, f32::min) > out.chin - 0.3
+}
+
 #[test]
 fn a_girl_of_england_wears_plaits_of_round_strands() {
     // Until round 86 a plait was flat cards, ragged ribbons, each lit as one face turned away from the head: with
@@ -80,7 +86,9 @@ fn a_girl_of_england_wears_plaits_of_round_strands() {
             }
         }
         assert!(len(sum) / area < 0.01, "girl {k}: the strands are not closed, {}", len(sum) / area);
-        assert!((0.1..0.4).contains(&volume), "girl {k}: the plaits hold {volume} litres");
+        // (round 126: plaits pinned up beside the cheeks are a third as long as plaits that hang, and narrower)
+        let hold = if pinned_up(&out, rope) { 0.03..0.1 } else { 0.1..0.4 };
+        assert!(hold.contains(&volume), "girl {k}: the plaits hold {volume} litres");
         // lit round: of the surface, as much faces the head as away from it, to the front as to the back (as
         // cards, all of a plait faced away from the head)
         for (axis, name) in [(0, "to the sides"), (2, "to front and back")] {
@@ -107,13 +115,44 @@ fn a_plait_hangs_without_a_kink_on_every_body() {
     // themselves. The builder evens the plait's way with the body out along it (`mh_rope`): 23 degrees, which is
     // the turn the plait is laid with below the ear.
     let Some(h) = head() else { return };
-    let mut worst = 0f32;
+    let (mut worst, mut posed, mut pinned, mut hanging) = (0f32, 0f32, 0, 0);
     for k in 0..40u32 {
         let age = [8.0, 10.0, 13.0, 15.0, 17.0, 19.0][k as usize % 6];
-        let out = build(&h, &person(2 * k, true, age), 1);
+        // (the plait as the body carries it, in no pose. The pose of round 123 turns the shoulders under the head
+        // and draws a plait that hangs past the neck aslant: its rings stay level, so a strand is flatter there
+        // and a corner of it may face a right angle away from one of its triangles, which is no fold)
+        let out = build_posed(&h, &person(2 * k, true, age), 1, Some([0.0; 3]));
         let rope = out.surfaces.iter().find(|s| s.tex.as_deref().is_some_and(|t| t.contains("/plait01_rope."))).expect("the plaits' strands");
         // no strand is folded over itself: every corner faces as the triangles round it do
         assert_eq!(turned_over(&rope.pos, &rope.nrm), 0, "girl {k} of {age}: triangles folded over");
+        if pinned_up(&out, rope) {
+            // (round 126) plaits pinned up turn by intent, from below the ear up in front of it: they are held to
+            // their place instead. Girls wear theirs hanging; a pinned plait lies beside the cheek, between the
+            // chin's height and the forehead's, within 2.5 cm of the skin, and in her pose it is where it was (it is
+            // above the chin, where the pose moves nothing)
+            assert!(age >= 15.0, "girl {k} of {age}: plaits pinned up");
+            pinned += 1;
+            let skin = out.surfaces.iter().filter(|s| s.tex.as_deref().is_some_and(|t| t.contains("/skin_"))).max_by_key(|s| s.pos.len()).expect("skin");
+            let crown = skin.pos.iter().map(|p| p[1]).fold(f32::MIN, f32::max);
+            let (low, high) = rope.pos.iter().fold((f32::MAX, f32::MIN), |(l, h), p| (l.min(p[1]), h.max(p[1])));
+            assert!(low > out.chin - 0.1 && high < crown - 0.15 * (crown - out.chin), "girl {k} of {age}: the pinned plaits lie from {} over the chin to {} under the crown", low - out.chin, crown - high);
+            let off = rope.pos.iter().step_by(7).map(|p| skin.pos.iter().map(|q| len(sub(*p, *q))).fold(f32::MAX, f32::min)).fold(0f32, f32::max);
+            assert!(off < 0.25, "girl {k} of {age}: a pinned plait stands {off} off the skin");
+            let stood = build(&h, &person(2 * k, true, age), 1);
+            let stood = stood.surfaces.iter().find(|s| s.tex.as_deref().is_some_and(|t| t.contains("/plait01_rope."))).expect("the plaits' strands");
+            assert!(stood.pos.iter().zip(&rope.pos).filter(|(a, _)| a[1] >= out.chin).all(|(a, b)| a == b), "girl {k} of {age}: the pose moves a pinned plait above the chin");
+            continue;
+        }
+        hanging += 1;
+        // and in her pose: how far the middle line turns then
+        let stood = build(&h, &person(2 * k, true, age), 1);
+        let stood = stood.surfaces.iter().find(|s| s.tex.as_deref().is_some_and(|t| t.contains("/plait01_rope."))).expect("the plaits' strands");
+        for line in middle_lines(&stood.pos) {
+            for s in 16..line.len() - 16 {
+                let (a, b) = (sub(line[s], line[s - 8]), sub(line[s + 8], line[s]));
+                posed = posed.max((dot(a, b) / (len(a) * len(b))).clamp(-1.0, 1.0).acos().to_degrees());
+            }
+        }
         for line in middle_lines(&rope.pos) {
             // how far the plait's middle line turns within 2 cm (8 pieces of 2.5 mm), in degrees; the first and the
             // last 4 cm left out (the strands begin and end as points)
@@ -123,5 +162,11 @@ fn a_plait_hangs_without_a_kink_on_every_body() {
             }
         }
     }
+    if std::env::var("SHOW").is_ok() {
+        println!("a plait turns {worst} degrees within 2 cm as laid, {posed} in the pose; {hanging} wear plaits hanging, {pinned} pinned up");
+    }
+    // (of the 20 who are 15 and older, six in ten pin them up: `DressSet::looped`)
+    assert!((6..=18).contains(&pinned) && hanging >= 20, "{pinned} wear their plaits pinned up, {hanging} hanging");
     assert!(worst < 30.0, "a plait turns {worst} degrees within 2 cm");
+    assert!(posed < 40.0, "in the pose a plait turns {posed} degrees within 2 cm");
 }

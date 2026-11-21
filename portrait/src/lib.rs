@@ -11,21 +11,29 @@ mod build;
 mod caster;
 pub mod dna;
 pub mod dress;
+pub mod facing;
+pub mod fasten;
 pub mod geo;
+pub mod hang;
 mod hair;
 pub mod head;
+mod hood_back;
 pub mod look;
+pub mod mantle;
 pub mod measure;
 mod morph;
 pub mod person;
+pub mod pile;
+pub mod layers;
+pub mod pose;
 pub mod real;
 mod real_look;
 mod settings;
 mod wasm;
 pub mod wire;
 
-pub use build::{build, Portrait, LODS};
-pub use morph::{cheek_field, lower_band, lower_share, morph_targets, morph_test, morph_test_measured, morph_test_measured_as, morph_test_mouth, morph_test_seam, morph_test_nose, morph_test_skull, morph_test_wide, face_front, FACE_FRONT, NOSE_HEIGHTS, mouth_field, neck_share, seam_field, seam_gaps, skull_field, CHEEK_FIELD, LIP_SEAM, MOUTH_FIELD, NECK_UNDER, SEAM_REACH, SKULL_CENTRE, SKULL_FLOOR, SKULL_REACH, STYLE_REACH};
+pub use build::{build, build_posed, Portrait, LODS};
+pub use morph::{cheek_field, jaw_field, chin_field, chin_round, jaw_edge_field, cheek_soft_field, jaw_soften, JAW_NARROW, CHIN_ROUND, JAW_SOFT, CHEEK_SOFT, lower_band, lower_share, morph_targets, morph_test, morph_test_measured, morph_test_measured_as, morph_test_mouth, morph_test_seam, morph_test_nose, morph_test_skull, morph_test_wide, face_front, FACE_FRONT, NOSE_HEIGHTS, mouth_field, neck_share, seam_field, seam_gaps, skull_field, CHEEK_FIELD, LIP_SEAM, MOUTH_FIELD, NECK_UNDER, SEAM_REACH, SKULL_CENTRE, SKULL_FLOOR, SKULL_REACH, STYLE_REACH};
 pub use geo::{Mat, Surface};
 pub use head::Head;
 pub use look::{default_life, Beard, Hair, Hat, Jewel, Life, Look, Mood, GENES, NG, STANDS};
@@ -63,8 +71,11 @@ mod tests {
         // the middle of the pool England draws from (alleles 20 to 170): red in Apoleia's hair, none in England's
         assert_ne!(hair(roman, 95.0), hair(roman, 0.0));
         assert_eq!(hair(england, 95.0), hair(england, 0.0));
-        // the strongest gene is as red in both
-        assert_eq!(hair(england, 255.0), hair(roman, 255.0));
+        // the strongest gene is as red in both: three parts in four of the red (since round 157 the hair under
+        // the red is not the same in both: England's dress has its own lightness, `hair_shades`)
+        for dress in [roman, england] {
+            assert_eq!(hair(dress, 255.0), crate::geo::cmix(hair(dress, 0.0), crate::geo::hex("#a4461d"), 0.75));
+        }
         // and of all pairs of such alleles about 5 in 100 show a third of the red or more
         let set = england.set().unwrap();
         let (mut red, mut all) = (0, 0);
@@ -77,6 +88,45 @@ mod tests {
         }
         let share = red as f32 / all as f32;
         assert!((0.04..0.06).contains(&share), "{share}");
+    }
+
+    #[test]
+    fn hair_in_the_dress_of_england_is_as_often_black_brown_and_blonde_as_the_british_call_theirs() {
+        use crate::look::{shade, GREY, HAIR_L, HAIR_R, SHADES};
+        let set = crate::dress::Dress::England1356.set().unwrap();
+        // the row of colours runs through the divides, from its dark end to its light one, and never back
+        assert_eq!((shade(0.0, set.hair_shades), shade(1.0, set.hair_shades)), (0.0, 1.0));
+        for (at, place) in set.hair_shades.iter().zip(SHADES) {
+            assert!((shade(*at, set.hair_shades) - place).abs() < 1e-6);
+        }
+        assert!((1..=255).all(|g| shade(g as f32 / 255.0, set.hair_shades) > shade((g - 1) as f32 / 255.0, set.hair_shades)));
+        // of all pairs of alleles from 50 to 220 (the pool England draws from): black, dark brown, light brown,
+        // blonde as Morgan et al. 2018, Table 1 count them among those four (4.2, 37.2, 41.1, 11.5 of 94.0)
+        let mut named = [0u32; 4];
+        for a in 50..=220 {
+            for b in 50..=220 {
+                let place = shade((a + b) as f32 / 2.0 / 255.0, set.hair_shades);
+                named[SHADES.iter().filter(|s| place >= **s).count()] += 1;
+            }
+        }
+        let all = named.iter().sum::<u32>() as f32;
+        for (n, told) in named.iter().zip([4.2, 37.2, 41.1, 11.5]) {
+            let (share, told) = (*n as f32 / all, told / 94.0);
+            assert!((share - told).abs() < 0.005, "{share} for {told}");
+        }
+        // Apoleia's takes the gene as the place in the row: the pool's weakest pair is black in England's dress
+        // and a dark brown in hers, the middle of the pool the same brown in both
+        let hair = |dress, light: f32| {
+            let mut p = look(false, 30.0, 1, 7);
+            p.dress = dress;
+            (p.genes[GREY], p.genes[HAIR_R], p.genes[HAIR_L]) = (0.0, 0.0, light);
+            p.hair_colour()
+        };
+        let (roman, england) = (crate::dress::Dress::Roman, crate::dress::Dress::England1356);
+        let lum = |c: [f32; 3]| 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+        assert!(lum(hair(england, 50.0)) < 0.75 * lum(hair(roman, 50.0)));
+        assert!(lum(hair(england, 220.0)) > 1.1 * lum(hair(roman, 220.0)));
+        assert!((lum(hair(england, 130.0)) - lum(hair(roman, 130.0))).abs() < 0.01);
     }
 
     #[test]
@@ -155,17 +205,23 @@ mod tests {
     #[test]
     fn men_of_england_wear_their_hair_in_three_lengths() {
         let set = crate::dress::Dress::England1356.set().unwrap();
-        let mut n = std::collections::BTreeMap::new();
+        let (mut n, mut boys) = (std::collections::BTreeMap::new(), std::collections::BTreeMap::new());
         for seed in 0..1000u32 {
-            *n.entry(set.hair_of(seed)).or_insert(0) += 1;
+            *n.entry(set.hair_of(seed, 30.0)).or_insert(0) += 1;
+            *boys.entry(set.hair_of(seed, 10.0)).or_insert(0) += 1;
         }
         // the shares are tenths of the people, and the same person keeps the same hair
-        assert_eq!(n.into_iter().collect::<Vec<_>>(), vec![("bob01", 500), ("bob06", 300), ("bob07", 200)]);
-        assert_eq!(set.hair_of(4711), set.hair_of(4711));
+        // (round 125: two men in ten wear it parted and cut at the jaw; a boy who will, wears the bowl cut still;
+        // round 130: one of the two in waves; round 133: one of the two with hair to the jaw has its ends turned
+        // out, and a boy who will, wears it plain still)
+        assert_eq!(n.into_iter().collect::<Vec<_>>(), vec![("bob01", 300), ("bob06", 300), ("bob07", 100), ("bob09", 100), ("page01", 100), ("page02", 100)]);
+        assert_eq!(boys.into_iter().collect::<Vec<_>>(), vec![("bob01", 500), ("bob06", 300), ("bob07", 200)]);
+        assert_eq!(set.hair_of(4711, 30.0), set.hair_of(4711, 30.0));
         // each length is a hair the repository has
         if let Some(dir) = crate::real::folder() {
             for name in set.hair_lengths.iter().map(|h| h.0).chain([set.hair]) {
-                assert!(crate::real::exists(&format!("{dir}/{name}_cap.txt")), "{name}");
+                assert!(crate::real::exists(&format!("{dir}/{name}_body.txt")), "{name}");
+                assert!(crate::real::exists(&format!("{dir}/{}_cap.txt", set.under_of(name))), "{name}");
             }
         }
     }
@@ -438,6 +494,24 @@ mod tests {
         let mut p = look(true, 78.0, 2, 9);
         p.life = Life { mourn: 0.6, wealth: 0.1, worn: 1.0, sun: 0.9, ..p.life };
         assert!(build(&h, &p, 1).tris > 1000);
+    }
+
+    #[test]
+    fn the_arms_way_down_is_gone_back_to_where_it_began() {
+        // (round 142) A garment is set on the body as it stood with its arms spread, which the builder reads back
+        // from the body with its arms down (`morph::Arms::moved`, way -1): to a hundredth of a millimetre.
+        let Some(h) = head() else { return };
+        let (down, _, arms) = crate::morph::morph(&h, &look(false, 30.0, 1, 7));
+        let (mut moved, mut most) = (0, 0f32);
+        for i in 0..h.n {
+            let up = arms.moved(down[i], h.base[i][0], -1.0);
+            let again = arms.moved(up, h.base[i][0], 1.0);
+            moved += usize::from(crate::geo::len(crate::geo::sub(up, down[i])) > 0.5);
+            most = most.max(crate::geo::len(crate::geo::sub(again, down[i])));
+        }
+        // (the arms' vertices come up by 5 cm and more; the trunk's and the head's stay)
+        assert!(moved > 300 && moved < h.n / 2, "{moved} of {} vertices move by 5 cm and more", h.n);
+        assert!(most < 1e-4, "down again {most} from where it lay");
     }
 
     #[test]

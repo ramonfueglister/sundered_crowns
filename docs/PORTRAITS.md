@@ -17,7 +17,7 @@ one, changes nothing: same people in, same pictures out, measured.
 |---|---|---|
 | Builder | `portrait/` (Rust, WebAssembly) | From a person (100 bytes of genes, sex, age, estate, occupation, origin, food, mourning, wealth, worn clothes) to the triangles of head and shoulders: MakeHuman's head morphed by the genes, skin, eyes, hair, beard, clothes, headwear, jewellery |
 | Genes | `portrait/src/dna.rs` | 50 genes of two alleles, one byte each (Apoleia's 34, and 16 since round 112 that a dress with a table shows); a child takes one allele of each gene from either parent, plus a small mutation; founders draw from one of 23 pools (round 111), which one is the culture's (`src/sim/people/pools.ts`) |
-| Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; a culture without a set wears the plain dress of 1356 (round 111), one of Apoleia's seven regions Apoleia's Roman dress |
+| Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; a culture without a set wears the plain dress of 1356 (round 111), one of Apoleia's seven regions Apoleia's Roman dress. England's has a table for people of rank and one for a crowned head (round 144), chosen by the person's stand; a crowned head wears a mantle faced with ermine over the gown (round 145, `portrait/src/mantle.rs`); a lady of rank shows her plaits and wears a circlet of gilt metal on them (round 146), a lord with nothing else on the head wears one too (round 147); a lord's hood is faced with white fur along the edge of its opening (round 148, `portrait/src/facing.rs`); a lady's gown is cut wide and low at the neck, with no linen in it (round 149, `cloth_kirtle_court`); the court's gown is of silk (round 150, `DressSet::gown_image`) and draped closer, so that it lies smooth (round 151, `DressSet::gown_file`); the ermine's tails stand in rows on the mantle's facing (round 152, `tools/portrait/pipeline/mantle.py`); the ermine has a pile (round 165, `portrait/src/pile.rs`); veil and wimple at court are of a fine bleached linen (round 153, `DressSet::veil_image`, `wimple_image`) |
 | Stage profile | `src/portrait/profile.ts` | Light and materials per set of dress; Apoleia's portraits keep Apoleia's |
 | Pipeline | `tools/portrait/pipeline/` | Blender scripts that wrote the draped clothes and hair (not part of the build) |
 | Files of the real look | `public/portrait/` (41.5 MB) | The head (1.1 MB), data files (15.0 MB since round 111, 13.1 since round 110, 12.7 since round 109, 12.9 since round 105, 10.4 before round 104: the hair's bodies, the beard's locks, draped clothes, skin shading), images (24.8 MB: skin by age and sex, wrinkle maps, hair, cloth, eyes) |
@@ -63,7 +63,8 @@ people, finds of cloth from London). No estates yet: a noble of England wears th
 **Calmed clothes** (`real_look.rs`, `calm`): a garment bound to the head's triangles follows every small bump of a
 morphed body and crumples. The builder now takes only the smooth part of the movement (24 passes over the
 neighbours) and keeps a least distance to the body per layer (gown 0.07 to 0.09, what lies over it 0.13 to 0.17,
-on the head at most 0.05). Apoleia's own clothes are bound as before.
+on the head at most 0.05). Where a gown's own shape stands in a point, its folds are evened (round 166). Apoleia's
+own clothes are bound as before.
 
 **Stage profile** (`src/portrait/profile.ts`, by eye): key light more from the side, less light from all round,
 skin with a soft reddish edge of the shadow (wrap lighting, where Godot scatters inside the skin) and slight
@@ -3729,7 +3730,7 @@ The build (`tools/portrait/pipeline/hair_body.py`; a cut is a table in it):
 
 | cut | what it changes of the bowl cut |
 |---|---|
-| `bob01` | the bowl cut: the fringe at -12.5 degrees, sides and back at -43 (the ear's lower end) |
+| `bob01` | the bowl cut: the fringe at -12.5 degrees (-5 since round 147), sides and back at -43 (the ear's lower end) |
 | `bob06`, `bob07` | sides and back at -31 (over the ear), at -51 (the jaw) |
 | `bob02` (under a hood) | 0.22 as high, its bundles 0.6 as round |
 | `bob03` (gone back at the temples) | the fringe's line rises by 22 degrees at 34 degrees to either side |
@@ -4280,17 +4281,4639 @@ Tests: `portrait/tests/variety.rs` (every brow nearer the skin's colour by `brow
 `runde114_vorher_nachher_frauen.png`, `runde114_vorher_nachher_maenner.png` (round 113 above, now below),
 `runde114_augen_neben_ck3.png` (the lit eye of five: the reference, round 113, now).
 
+**Round 115: a lower face that runs in to the chin** (2026-11-18). Round 114 ended on it: without veil and
+clothes the women's heads are pears, as broad at the mouth as at the cheekbones. The reference's pictures are
+not at hand in this round (they lay in the files of the project before this one; asked for), so it is held
+to the three numbers round 114 read by hand on face A: in lengths from the line of the eyes to the chin a face
+is about 1.4 broad at the eyes, 1.0 at the mouth and 0.7 between mouth and chin.
+
+**A measure for it**: `portrait/examples/outline.rs` reads the same three off the drawn head of every person
+of a sample, turned as the stage turns it (the skin that stands furthest left and right at a height, the ears
+left out). England's sample before this round, grown women and men (the eight of each):
+
+| | at the eyes | at the mouth | half way from mouth to chin |
+|---|---|---|---|
+| the reference's woman A (by hand, round 114) | 1.4 | 1.0 | 0.7 |
+| women before | 1.40 | 1.21 | 1.04 |
+| women now | 1.40 | 1.06 | 0.83 |
+| men before | 1.31 | 1.13 | 1.01 |
+| men now | 1.31 | 1.05 | 0.90 |
+
+(Round 114's 1.4, 1.4, 1.2 was the heaviest woman, 940020; she is 1.54, 1.35, 1.15 now, before 1.54, 1.50,
+1.40.)
+
+**What does it**: `Style::jaw` in the dress table (0.3 for women, 0.15 for men; a child has none and grows
+into it as into the rest of the drawn face) and `jaw_narrow` in `morph.rs`: every vertex of the face's front
+is drawn towards the middle by that share times its place between the cheekbones (none) and the chin (all),
+fading out down the neck over 9 cm and towards the ears, and only from 2.5 cm beside the middle on, so that
+nose, lips and the chin's front keep their breadth and the outline moves. Across the face at the mouth a
+grown woman's head is 105.6 mm, 123.0 without it; the lips' length and the nose's breadth do not move.
+
+Tried and not kept: MakeHuman's own head forms for it. `head-invertedtriangular` and `head-diamond` at 1.2
+each (taken below the cheekbones only, as the jaw's gene takes them) reach the same numbers (1.39, 1.07,
+0.82) and fold the skin beside the chin into a crease from the mouth's corner down, at 2.4 of the first
+alone into a cut; `head-fat-decr` and the cheeks' volume take the cheeks' fullness, which round 97 gave them.
+
+**The gauntlet**: 20 of 22, the same two lines failing as in round 114 (the nose's back 0.9, 8; a man's far
+cheek -32.3, -16.9). No line moved by more than 0.4.
+
+Honest about it. The numbers are a third to half of the way from ours to face A's, on purpose: at 0.4 for
+women the mean reaches 1.01 and 0.76, and the lean women (940006, 940018: 0.95 and 0.87 at the mouth already)
+get a chin like a wedge. One face read by hand is a thin base, and it was a young, lean one. What a sheet
+shows: the two heavy women (940010, 940020) have lost the sack under the cheeks and read as round faces; on
+the lean ones little changes; the men hardly differ at a glance (their beards and hoods hide the jaw, and
+0.15 is small). What is as it was: the hard edge where the jaw meets the neck on the lit side, the creases
+beside the mouth of the old, eyes, brows, skin. `Style::jaw`, the band and the 2.5 cm are by eye and by three
+numbers of one face: PLACEHOLDER.
+
+Tests: `portrait/tests/faces.rs` (`the_drawn_lower_face_runs_in_to_the_chin`: the field leaves cheekbones,
+ears and the face's middle, a grown woman's face is 8 to 22 mm narrower at the mouth, a child has none; the
+drawn jaw's corners of women held at 0.98 to 1.10 of the measured, before 1.05 to 1.20; the far cheek at the
+mouth 13 to 19 mm inside its top, before 6 to 9.5, which had been fitted to the one outline of round 97).
+Pictures (project files, `portraits/`): `runde115_vorher_nachher_frauen.png`,
+`runde115_vorher_nachher_frauen_ohne_kleider.png`, `runde115_vorher_nachher_maenner.png` (round 114 above,
+now below).
+
+**Round 116: why a man's far cheek is dark, and a larger key light** (2026-11-18). The gauntlet's line "man:
+far cheek against the lit" has failed since round 114 added it (-31.9, the reference's -16.9, our women's
+-19.0 on the same stage), with "cause not found". Found in this round, by taking one thing away at a time and
+reading the eight grown men again:
+
+| | lit cheek L | far cheek L | far under lit |
+|---|---|---|---|
+| men as they were | 59.8 | 27.5 | -32.3 |
+| without beards, without the painted stubble, without hair, without clothes (each alone) | 59.7 | 27.0 to 27.5 | -32 |
+| cheeks filled out by 4 mm as the women's are | 59.8 | 27.6 | -32.2 |
+| the same men drawn as women | 58.0 | 36.4 | -21.6 |
+| the women drawn as men | 59.5 | 28.9 | -30.6 |
+| without the key light | 18.8 | 13.2 | (women 17.5, 13.8: skin and fill are the same) |
+| **without any cast shadow** (`shadow.strength` 0) | 59.8 | 39.9 | **-19.9** (women -11.5) |
+| a man's nose no further out than a woman's (`nose-scale-depth-incr` 0 for 0.55) | 59.8 | 31.7 | -28.1 |
+
+So it is the head's form under the key's cast shadow: a man's nose stands out further and is broader, and its
+shadow, hard at its edge, reaches the place that is read (the mean of the eye's outer corner, the mouth's
+corner and the nose's wing; drawn into the picture, the circle lies in the dark wedge beside a man's nose and
+at its edge on a woman). Round 114 had tried the shadow at 0.6 for 0.7, seen 1.7 L move and ruled it out.
+
+**What is changed**: the key light is twice as large (`shadow.spread` 20 degrees; 10), so the edge of the
+nose's shadow is soft where the place lies. Men's far cheek -24.3 (-32.3), women's -19.0 as before, the
+shade beside a woman's nose -30.7 (-33.2; the reference's -34.5, within the limit by 0.2). The hard line a
+fringe threw across a man's forehead is soft as well.
+
+Tried and not kept: the key further to the front (50 and 45 degrees off the face for 56: the men's -28.1
+and -23.3, but the women's far cheek -13.6 and -10.2 and two lines lost; both sexes move together, the gap
+between them stays); the key higher (45 degrees for 36: four lines lost); `spread` 24 and 35 (-23.2 and
+-20.3, the shade beside a woman's nose -29.2 and -24.1, lost); a larger light with a darker shadow
+(`strength` 0.8 with 20 and 26: no better); a man's nose less far out (it is held to the survey's
+protrusion, `portrait/tests/faces.rs`).
+
+**The gauntlet**: 20 of 22. The men's far cheek still **fails**, at 7.4 off where it was 15.4; the nose's
+back as before (0.9; 8).
+
+Honest about it. Half of the gap is closed and the line is still red. What is left is either the nose (a
+man's is of human measure by the survey; whether the reference's men have smaller ones was not measured, the
+pictures are not at hand) or how the reference lights its men (the three men read were three scenes: -20.9,
+-11.6, -18.3). Before and after differ little at a glance: softer shade beside the men's noses and under
+fringes and hoods, the women all but the same. The key is drawn as eight lights on a disc now twice
+as wide; no steps were seen in the shadows at the panel's size or at 448 x 560, on the software driver only.
+`spread` 20 is the upper end of what `tests/portrait.test.ts` takes for a window or a shaded lamp:
+PLACEHOLDER.
+
+Tests: `tests/portrait.test.ts` as before (the key's size within 6 to 20 degrees, its lights spread over the
+disc). Pictures (project files, `portraits/`): `runde116_vorher_nachher_frauen.png`,
+`runde116_vorher_nachher_maenner.png` (round 115 above, now below).
+
+**Round 117: the jaw's hard edge, and round 115 held against the pictures** (2026-11-18). The reference's
+pictures are at hand again (twelve screenshots, fetched from Ramon's computer into the project's files under
+`portraits/referenz_ck3`; not in the repository). The first sheet of rounds 115 and 116 beside them
+(`tools/portrait/beside.mjs`) showed what stood out most: a grown woman's face ended in a block of a chin with
+a hard, level edge under it, over hollow cheeks, as a mask set on a neck; the reference's women have an oval
+face whose jaw goes over into the neck in a soft shade.
+
+**What the edge is.** Not the light: with the cast shadows off (`set=shadow.strength:0`) the edge stands as
+before; with the key lower (25 and 18 degrees up) it stands and two lines of the gauntlet are lost. It is the
+form, and two things of it:
+
+- *A fold in MakeHuman's mesh along the jaw's lower edge.* On 40 grown women's measured heads the skin there
+  bends by 8.8 degrees from facet to facet in the mean and by 37 degrees at the sharpest place (the mean of
+  each head's sharpest; tests/faces.rs prints it): a crease, which any light draws as a line.
+- *Round 115's narrowing.* It drew the jaw's sides in by 0.3 from 2.5 cm beside the middle on and left the
+  chin's own breadth: a chin 5 cm broad under sides that run in to it is a block. And it was held to three
+  numbers read once by hand (1.4, 1.0, 0.7). Read again with a ruler laid over two faces of the reference (A
+  and C of `beside.mjs`; to the chin's lowest point, which lies under the mark `beside.mjs` has for the chin):
+
+| | at the eyes | at the mouth | half way from mouth to chin | the far cheek at the mouth, inside its top |
+|---|---|---|---|---|
+| the reference's woman A (ruler) | 1.41 | 1.14 | 0.9 | 13 mm |
+| the reference's woman C (ruler) | 1.16 | 1.08 | 0.83 | 5 mm |
+| women, rounds 115 and 116 | 1.40 | 1.06 | 0.83 | 17.3 mm |
+| women now | 1.39 | 1.13 | 0.85 | 12.3 mm |
+| men, rounds 115 and 116 | 1.31 | 1.05 | 0.90 | 15.5 mm |
+| men now | 1.30 | 1.04 | 0.89 | 15.6 mm |
+
+  Round 115 had gone past the reference at the mouth and had hollowed the cheek turned away from the camera
+  to 17 mm, where round 97 had filled it to 8 and the reference has 5 to 13.
+
+**What is changed** (the drawn face only, `Style` in the dress table; `portrait/src/morph.rs`):
+
+- `jaw_narrow` works at the jaw's sides only: it fades out from 3.5 cm in front of the ears' depth and is gone
+  at 7.5 cm, where the cheek beside the mouth lies (`JAW_NARROW`'s fourth pair). The side turned to the camera
+  comes in, the cheek turned away keeps its fullness. `Style::jaw` for women 0.2 (0.3), for men 0.15 as before.
+- `chin_round` (`Style::chin`, women 0.3, men none): the chin's end is drawn in towards the middle, from the
+  line of the mouth (none) down to the chin's lowest point (all), from 3 mm beside the middle on, so that the
+  middle stays and no beak comes of it.
+- `jaw_soften` (`Style::edge`, women 0.5, men 0.4, at every age): the skin within 1.2 cm of the jaw's lower
+  edge (fading out to 3 cm), from the chin to the jaw's corners, goes that share of the way to the middle of
+  its neighbours, eight times over. The fold becomes a round: 5.0 degrees from facet to facet in the mean, 18 at
+  the sharpest. What lines the mouth lies in that band too, behind the chin, and is left out by where its
+  facets face; the chin's lowest point is held (the face's length and the mouth's place are measured from it).
+  A child has it as the grown have: the fold is the mesh's, not an age's. On twelve children of 2 to 11 it moves
+  the skin by under 8 mm at the sharpest of the fold (the test's limit; 6 mm was seen).
+
+Tried and not kept, all against the edge: the cheeks' fill off (nothing to see); `head-invertedtriangular`
+off the drawn face (the edge stays); a broader neck by a shape of our own, 15 and 20 in 100 (a swelling
+under the jaw); round 115's narrowing reaching back to the ears (a pinched face); more light from below
+(`bounce` 0.35, the sky 0.25: a little softer, the edge stays); the women's head leant further forward (0.24:
+worse); MakeHuman's `neck-double-incr` 1.0 with `neck-trans-forward` 1.0 (the edge is gone and a double chin
+is there; at 0.4 and 1.5 the neck's tendons stand out; forward alone leaves the edge); a thin face's targets
+at less than half (`head-fat-decr` 0.3 for 0.8, the cheeks' volume 0.2 for 0.7: next to nothing to see, left
+as round 112 set them). Of this round's own: `Style::chin` 0.45 over `jaw` 0.15 is a heart with a pointed
+chin; `Style::edge` 0.8 takes a lean woman's jaw line away altogether, her neck goes on from her cheeks.
+`chin-jaw-drop-decr` (the dent of round 93) and `chin-width-decr` (dropped in an earlier round) were not
+tried again.
+
+**The gauntlet**: 19 of 22, one fewer. "woman: beside the nose against cheek" stood 3.8 off with a limit of
+4 and stands 4.1 off: the lit cheek is 0.3 L darker (58.4, before 58.7; why was not looked at, a fuller cheek
+turned a little further from the key is a guess), and every line read against it moved by that. "man: far cheek against the
+lit" is -25.8 (-24.3), further from the reference's: with the men's soft edge off it is -25.8 as well, with
+round 115's narrowing and the soft edge -26.3 (and the women's line 4.0 off, within its limit by nothing). The nose's back 1.2 (0.9). No
+limit and no reading of the reference was touched.
+
+Honest about it. This round takes back part of round 115 (the women's breadth at the mouth, 1.13, is where
+the reference's is, and round 115's "1.0" was a misreading of mine by hand) and keeps its direction. The
+ruler readings are by eye on a picture where the jaw of the side turned to the camera goes over into a neck
+of the same colour: 0.05 either way; the two women differ from each other by more than ours do from either.
+On C the pupils lie about 15 pixels over the line `beside.mjs` has for her eyes; not changed here, so she
+stands a little small on the sheets. What a sheet shows: the block and its edge are gone on every grown
+woman, the faces are ovals, the jaw is a soft shade as the reference's; the men's jaws are softer and
+otherwise as they were; the girls of 13 keep hollow cheeks with a line from the ear to the chin (a thin
+face's targets, not this round's), most on 940004. A fold is smoothed, not understood: why MakeHuman's
+targets leave a crease of 37 degrees there (which of them) was not looked for. What stands out next beside
+the reference: the eyes (wide open, the whites bright, a stare), the skin (smooth as wax, theirs has
+blotches and pores at this size), the gloss on the nose's flank (the gauntlet's line), a man's far cheek.
+All four values (`jaw`, `chin`, `edge`, the bands) are by eye and by two faces: PLACEHOLDER.
+
+Tests: `portrait/tests/faces.rs`: new `the_drawn_chin_is_round_and_the_jaws_edge_soft` (the fields leave
+mouth, cheekbones and ears, the chin's lowest point stays, the fold is under 0.8 of its mean and 0.7 of its
+sharpest, lips and nose do not move, a child has the soft edge and no round chin);
+`the_drawn_lower_face_runs_in_to_the_chin` (the field is whole at the jaw's corners and none at the chin's
+end now); the far cheek at the mouth 9 to 15 mm inside its top (round 115: 13 to 19); a child's drawn head
+is its measured one with the soft edge and nothing else. Pictures (project files, `portraits/`):
+`runde117_vorher_nachher_frauen.png`, `runde117_vorher_nachher_maenner.png` (round 116 above, now below),
+`runde117_neben_referenz.png` (the reference above, ours below).
+
+**Round 118: the stare** (2026-11-19). Round 117 named it first of what stands out beside the reference:
+eyes wide open with bright whites, a stare. The eyes were laid large beside four faces of the reference (a
+face drawn at 896 by 1120, the eye's band cut out) and read before anything was changed.
+
+**What it is not.** Not the lids' opening: its height against the length from the eyes to the chin is 0.082 to
+0.124 on ours, and 0.072, 0.088 and 0.113 on three faces of the reference; the iris fills it as theirs does.
+And not a white that is too light: on a face in the reference's light the white of the eye near the camera is
+L 30.1 where the skin under the eye has 36.6; the reference's woman A has 29.3 and 37.0.
+
+**What it is.** Four things, each seen in the large picture and then counted:
+
+- *A dark line all round the eye, as drawn with a pen.* It stayed with the lashes off (`without=Eyelashes`),
+  with the cast shadows off and with the lash line off; it went with the socket's painted shade off
+  (`SKIN_AO` 0). That shade (skin_ao.txt, rays over each vertex) is darkest where a lid lies against the ball,
+  on the lower lid as on the upper, and the lash line lay on the lower lid too, at half weight. An eye has
+  thick lashes above and few below, and the lower lid's rim faces up, to the light: the reference's eyes have
+  a soft dark band above and a light rim below. (My first reading, that the line is the lash line alone, was
+  wrong: with `lash_line` 0 it stood.)
+- *A grey white.* The white's colour was a 6.6, b 9.2 beside skin of a 14.0, b 20.9: grey-blue in a warm face,
+  and it is by its colour that it jumps out, not by its lightness. The reference's whites are near the skin's
+  colour (A: a 14.1, b 17.1; C: a 7.5 to 12.7, b 15.6 to 18.2): a white lit by a warm lamp and by the light
+  the lids throw on it.
+- *A pinpoint pupil.* The image's pupil is 0.29 of the iris across, with a hard edge and black (L 0.8): an
+  eye in glaring light. The reference's light-eyed man has about 0.45, soft at the edge, L 4.8.
+- *A glint of dots.* Since round 116 the key is eight lights; on a ball as smooth as the eye was (`rough`
+  0.14) each throws its own point: a cluster of six to eight dots beside the pupil.
+
+**What is changed.**
+
+- `DressSet::lid_under` (England [0.3, 0.25]): on the lower lid's rim that share of the lash line is painted
+  and that share of the socket's shade stays. Which vertices are the lower lid's is read from the lash table
+  (skin_lash.py writes the lower lid at half weight; `real_look.rs`). The upper lid is as it was.
+- The stage's eye (`profile.ts` `eye`, `materials.ts` `eyeLook`): `blush` [1.27, 0.945, 0.76], a colour on the
+  white alone, warmer and as light as before (the same lid's white now a 10.2, b 13.7 at L 31.9); `pupil`
+  { size 0.42, soft 0.1, dark 0.25 }: the stage draws its own pupil over the image's, 0.42 of the iris, soft
+  by 0.1 to either side, the iris under it at a quarter; `rough` 0.22 (0.14): the eight points run together.
+
+| the skin within reach of the eyeball, below the eye's middle against above it (36 of the sample) | least | most | mean |
+|---|---|---|---|
+| the tables as they are | 1.02 | 1.67 | 1.25 |
+| now | 1.35 | 2.40 | 1.76 |
+
+Tried and not kept. *The women's brows lower.* The gap from the brow's lower edge to the lid's rim is 0.106
+to 0.146 of the length from the eyes to the chin on our women and 0.065 to 0.085 on the reference's (men
+about 0.09 against 0.06), and with `brow_lift` at 1.0 or at -0.5 mm for 3.0 the faces read calmer and less
+surprised. Not kept: 3.0 is what puts the brow where a young woman's was measured (round 69, Matros 2009),
+and round 69 found that a low brow "made the women read as men, and as glowering"; the reference's brows
+are a drawn style's, heavier and lower than measured ones. It stays open as a choice (below). `rough` 0.25:
+one soft glint, but faint, the eye loses its life at 448 by 560; 0.35: next to no glint. `blush` [1.1, 0.82,
+0.66]: warm, and an eighth darker, which no reading asked for. `blush` further to yellow ([1.2, 0.84, 0.52]: b
+16.7): a yellow eye. `pupil.dark` 0.1: blacker than the reference's pupil; 0.4: the image's pinpoint shows through. `white` 1.1 for
+1.3: darker, greyer. `lid.dark` and `corner.dark` are what is left of the light, not how dark: set to 0 by
+mistake they black out the ball.
+
+**The gauntlet**: 19 of 22 as before, the same three lines. The two lines of the eye moved away from the
+reference's by about one L and stay within their limit of 4: "woman: eye against cheek" -41.9 (-41.0; the
+reference's -40.2), "emperor: eye against cheek" -41.9 (-39.8; -40.6). They read the middle of the eye's
+opening, which is the pupil: the larger pupil makes it darker (with the old glint on the new pupil -41.7
+and -40.8), and so does the fainter glint, which lay in that place. No limit and no reading of the reference
+was touched.
+
+Honest about it. The stare is less, not gone. At 448 by 560 the eyes sit in the face instead of on it
+(warm whites, no pen line under the eye, a pupil that is not a pinpoint); beside the reference the women's
+eyes still look larger and more open than theirs, and I take the brows for the larger part of what is left
+(high and thin over the eye, theirs low and heavy), with the choice above not made. The colours were read on
+one face of ours (940008, the eye near the camera) and one to two of the reference, in boxes set by hand;
+the opening's heights on three. `blush` reaches the reference's white in a (10.2 for 7.5 to 14.1), not in b
+(13.7 for 15.6 to 18.2): further is yellow on our faces. At 896 by 1120 the glint still shows two or
+three of its points. The lower lid is told from the upper by a table's half weight, which is a
+side-effect of how that table was written, not a mark of its own. All of `lid_under`, `blush`, `pupil` and
+`rough` are by eye: PLACEHOLDER. What stands out next: the brows (a choice), the skin (smooth as wax), the
+gloss on the nose's flank, a man's far cheek.
+
+Tests: `tests/portrait.test.ts`: new "the lower lid's rim of a person of England is not drawn round with a
+dark line" (every one of the sample over 1.3, all together over 1.6); "the lid's edge ... is dark where the
+lashes grow" reads the upper lid alone on England's people (0.29 to 0.59; all round the eye they now have
+0.52 to 0.75, which is what the change is); the eye's shader has the pupil and the white's colour, the
+pupil 0.35 to 0.5 of the iris, the white warmer and within 0.03 as light, the glint's roughness 0.2 to 0.3.
+Pictures (project files, `portraits/`): `runde118_vorher_nachher_augen.png` (the eyes' band of two women
+and a man, round 117 above, now below), `runde118_vorher_nachher_frauen.png`,
+`runde118_vorher_nachher_maenner.png`, `runde118_neben_referenz.png` (the reference above, ours below).
+
+**Round 119: the eye that glows in the shade** (2026-11-19). Round 118 ended on the brows: "high and thin
+over the eye, theirs low and heavy", with a choice left to Ramon (lower them from 3 mm to 1 mm or not). Ramon's
+answer was that fetching and reading the reference is this side's work. So more of it was fetched, and the
+brows were read before they were moved.
+
+**More reference.** All 170 pictures of Crusader Kings III that lie on Ramon's computer (dev diaries, the
+store's screenshots, an earlier selection) are now in the project's files (`portraits/referenz_ck3_alle/`,
+with a list of which show faces), and the numbered selection the rounds work from went from 12 to 24
+(`portraits/referenz_ck3/`). None of it is in the repository. Two of the new ones show ten women's faces at
+about 55 pixels from the pupils to the chin, in the game's own portrait light: until now the women were held
+against one face.
+
+**The brows are not higher than theirs.** I had read the gap between lid and brow off small faces by hand
+(theirs 0.083 of the face, ours 0.106 to 0.146) and told Ramon the brows would go lower. Read at one size
+that does not hold. `face_colour.mjs --brow` on our eight grown women: the brow 0.101 of the face's length
+above the upper lid (the reference's woman of round 71: 0.115), 38.6 L darker than the skin above it (37.9),
+0.034 broad at half its darkness (0.045). And a reading of my own on the pupil's column, every face brought
+to 55 pixels from pupil to chin, the ten women of the reference against our eight (medians, in lengths
+pupil to chin): the brow's darkest place 0.136 above the pupil on theirs and 0.145 on ours, its lower edge
+0.109 and 0.127, both 0.055 broad (three pixels: as fine as that size reads). Ours lie where theirs do,
+within what the reading can tell. The brows stay at 3 mm; the choice put to Ramon is withdrawn, it was asked
+on a wrong reading. What does differ shows in the picture and not in these numbers: their brow is a closed
+dark band, heaviest at its inner half, ours a row of hairs, and thin on the side turned from the camera.
+
+**What it is.** Set face by face at one size, the eye on the shaded half of our faces stands out: its white
+is the lightest thing on that half. Read on the pupil's row, the lightest place of the white beside the iris
+against a patch of cheek 0.3 (of pupil to chin) under the pupil: on the reference's ten women the white is
+6.7 L darker than the cheek on the lit half and 7.3 darker on the shaded half (medians; single faces from 24
+darker to 19 lighter, the lighter ones in the orange light of a candle). On ours 9.2 darker on the lit
+half, and 4.4 *lighter* on the shaded half (5.7 darker to 7.3 lighter). Skin goes into the shade and the
+ball did not follow: since round 60 light reaches half way round the eyeball (`eye.wrap` 0.5), set when one
+key light stood on the other side and the eyes lay in dark sockets.
+
+**What is changed.** `eye.wrapWhite` 0.1 (src/portrait/profile.ts, materials.ts `eyeLook`): the white of
+the eye takes the light's reach round the ball on its own, the iris and the pupil keep `eye.wrap` 0.5 (the
+shader's `eyeWrap`, mixed by the same reading of the image that tells white from iris). The white on the
+shaded half is now 4.7 L darker than the cheek under it (1.4 to 11.4 darker), on the lit half 10.4 darker.
+Nothing in the builder changed; the wasm is the one of round 118.
+
+**Tried and not kept.** `eye.wrap` 0.15 on the whole ball: the white as wanted (4.9 darker in the shade),
+and in the picture a calmer eye, but the eye's middle 5 L darker: "woman: eye against cheek" -47.1 for the
+reference's -40.2, "emperor: eye against cheek" -46.5 for -40.6, the gauntlet at 17 of 22. Made up for with
+a lighter iris and white (`iris` 1.33, `white` 1.5): the middle next to unmoved (-46.2), the white lighter
+again in the shade (2.1 darker). 0.25 with `iris` 1.28 and `white` 1.44: -44.8, and the white as light as
+the cheek. `wrapWhite` 0.15: 3.7 darker in the shade; 0.05: 5.8, nearest the reference's, with the
+ball's far side darkening towards the sickle of round 60 when the eye is drawn large; 0.1 lies between. The brows, since they were
+the question: `brow_band` 1.5 for the women (1.15), `brow_paint` 0.4 (a band painted under the hairs), and
+both: at 100 pixels from pupil to chin the faces are next to the same as before. The lid's shade on the ball further down and darker (`eye.lid.to` 0.35 and 0.6,
+`dark` 0.3 and 0.2), thicker lashes (`brow.lashes` 0.6): little to see at the reference's size.
+
+**The gauntlet**: 19 of 22 as before, the same three lines ("woman: beside the nose against cheek" 4.1 off,
+"woman: nose's back against cheek", "man: far cheek against the lit" -25.8 for -16.9), the two lines of the
+eye where they were (-41.9 both). No limit and no reading of the reference was touched. The white against the
+cheek is not a line of the gauntlet: it was read with a script of my own on pictures where pupil and chin
+were set by hand, and the reference's pictures are not in the repository.
+
+Honest about it. This is a small step: one eye of each face no longer glows, and that is what the pictures
+show, not more. The first half of the round went into a question that was put wrongly; what came of it is
+that the brows' height is settled, and ten faces to read against instead of one. On the lit half our white
+is now 3.7 L darker than theirs against the cheek (it was 2.5 darker), which is the price of 0.1 and was not
+made up for (`white` 1.5 lightens the shaded half again). The readings are medians of eight and ten faces
+with a wide spread, the reference's faces are 55 pixels high and were brought to twice that; `wrapWhite` is
+by eye between two readings: PLACEHOLDER. That the iris keeps the light where the white loses it has a
+reason (the cornea gathers light for the iris from the side) but no number. Beside the reference's ten
+women ours are still told at a glance: a closed band of a brow against our hairs, skin as smooth as wax,
+every woman in the same coif and seen more from the front than theirs, the gloss on the nose's flank, a
+man's far cheek.
+
+Tests: `tests/portrait.test.ts`, "the eye of England's profile tells its white from its iris ...": the
+eye's shader mixes the light's reach by white and iris, `wrapWhite` between 0.03 and 0.2, `wrap` over 0.4.
+Pictures (project files, `portraits/`): `runde119_neben_referenz.png` (the reference's ten women above, ours
+of round 118 and of this round below, at one size), `runde119_vorher_nachher_frauen.png`,
+`runde119_vorher_nachher_maenner.png`.
+
+**Round 120: the fold in the cheek beside the mouth** (2026-11-19). The round set out for the nose, where two
+of the gauntlet's three open lines lie ("woman: nose's back against cheek" 1.2 for the reference's 8, "woman:
+beside the nose against cheek" 4.1 off). It did not get them, and what it built is something else, found when
+two women were drawn large to look at the nose.
+
+**The nose, tried again and left open.** Read on the eight grown women alone (30 seconds a reading instead
+of the gauntlet's three minutes), against the lit cheek: the nose's back 1.2 L lighter (reference 8), beside
+the nose 30.4 darker (34.5), the cheek beyond it 16.9 darker (16), the far cheek 18.2 darker, the forehead
+5.5, the chin 15.6. The key light further to the front (45, 35 and 25 degrees for 56): the nose's back stays
+at 1.0 and the far cheek loses its shade (11.1, 7.6 and 4.9 darker). The key higher (50 degrees): the nose's
+back 4.4, and beside the nose 23.5 for the reference's 34.5, the chin 21.2 darker; higher and further to the
+side (55 and 70 degrees) 6.4, with the forehead 12.2 and the chin 25.4 darker than the cheek: a face lit
+from above, which theirs are not. More oil on the skin (`oil` 1, `specular` 0.6): 0.3. The head turned
+further (0.32, 0.40 and 0.50 for 0.24): 1.5, 2.3 and 7.5, the last with the forehead 10.8 darker and the
+eyes looking past the viewer. And the thing itself, which round 113 read on the five faces of the
+reference it measured, a narrow streak of gloss on the nose's far flank from the light behind: a trial `skin.back` that let the back
+light reach the skin (its diffuse light 0.15 to 0.3, its gloss 1, 4 and 8 times, the rim at 105 and 120
+degrees) gave chalky pale patches on the far cheek and the forehead and no narrow streak, and where the rim
+stands it does not reach a face under a veil or a hood. None of it is kept. The line of the nose's back
+cannot be had from the light, the gloss or the pose that stand now without losing other lines; it is open,
+and the gauntlet says so.
+
+One reading that was not looked for: how smooth the skin is. The spread of L over the cheek at 55 pixels
+from pupil to chin, fine and coarse: ours 1.15 and 2.33, the reference's ten women 0.88 and 1.79. Ours is
+not the smoother. "Skin as smooth as wax", which the last rounds wrote, is not a lack of grain at the game's
+size; what reads as wax there is not found yet.
+
+**What it is.** Drawn at twice the size, a woman's cheek has a hard fold under and beside the mouth's
+corner, running from the cheek down to the jaw's edge: a pit with a sharp rim, most on the shaded cheek, and
+at the game's size a short dark line like a scar. It is not the veil (it stays without it), not a cast
+shadow, not the cheek's fill of round 116 (without the fill it is harder), not the narrow jaw, the round
+chin or the soft edge of rounds 115 and 117 (it stays without them). It is in MakeHuman's net and targets:
+for the most part one vertex a side (4.6 cm beside the middle, 3 mm under the mouth's line) that lies
+behind its neighbours on a measured woman's head. On 40 grown women the skin there bends from facet to facet
+by 7.4 degrees in the mean and 20.8 at the sharpest fold.
+
+**What is changed.** `jaw_soften` (portrait/src/morph.rs), which since round 117 moves the jaw's edge
+towards the mean of its neighbours, now reaches up the cheek under the mouth's corner (`cheek_soft_field`,
+`CHEEK_SOFT`): from 4 cm beside the middle outwards, up to the mouth's line. There a vertex moves along its
+own normal only, in and out, not along the skin. The fold after it: 5.4 degrees in the mean and 16.4 at the
+sharpest, the skin moved by 1.29 mm at most. The jaw's edge is moved as before. The mouth, the nose, the
+cheekbones and the ears take nothing of it, nor does any facet that touches what the lips' seam moves.
+
+**Tried and not kept.** Three versions before this one, each stopped by a test. The band of the jaw's edge
+simply made broader: the net's uneven facets slid along the cheek by up to 7.6 mm and took the skin's image
+with them, a landmark of the cheekbone moved by 6.4 mm, the far cheek's outline ran 17.0 mm in at the
+mouth's height (the limit of round 116: 9 to 15) and the gene "folds" showed 1.18 mm for its 1.7. A field
+of its own, moved along the normal, up to the nose's foot: the far cheek 15.5, the gene 1.18. To make up for
+it the cheek's fill at 7 and 8.5 for 6 and the gene's weights raised: the pit came back. The field begun
+nearer the mouth (3 cm): the vertex at the mouth's corner took a hair of it and the lips no longer lay on
+each other to the last digit, which their test asks. The field higher and broader ([0.4, 0.48] beside,
+2 mm under to 10 mm over the mouth's line): the fold no smaller and the gene at 1.42.
+
+**The gauntlet**: 19 of 22, and no line moved against round 119: the same three fail ("woman: beside the
+nose against cheek" 4.1 off, "woman: nose's back against cheek" 1.2 for 8, "man: far cheek against the lit"
+-25.8 for -16.9). No limit and no reading of the reference was touched. The fold is not a line of the
+gauntlet; it is held by a test of the builder.
+
+Honest about it. A small step again, and not the one that was announced. The fold is softer, not gone: at
+twice the game's size a dent is left where the pit was, and at the game's size the difference is small: the
+dark line on a woman's shaded cheek is fainter, and on some faces one has to know where to look. The men are next to unchanged (their cheek has less of it). The
+gene "folds" moves the skin by 1.5 mm now (1.7 before), which passes its limit of 1.5 by little: the field
+may not grow upward without that limit being looked at. The far cheek at the mouth's height is 12.8 mm
+inside its top (12.3). `CHEEK_SOFT` is by eye on two women's heads: PLACEHOLDER. What causes the fold in
+MakeHuman's targets (which of them push that vertex back) was not traced; the field mends the place, not
+the cause. And the nose: half the round went into it without a result, as the lines above say.
+
+Tests: `portrait/tests/faces.rs`, "the cheek under the mouth's corner is drawn without its fold": the
+field leaves the landmarks of mouth, nose, cheekbones and ears alone, shares no facet with the lips' seam,
+is the same on both sides, and on 40 grown women the fold is smaller after it (the mean by a tenth at least)
+with the skin moved between 0.3 and 3 mm. Cargo: 77 of 77. Pictures (project files, `portraits/`):
+`runde120_vorher_nachher_wange.png` (two women at twice the size, round 119 above, this round below),
+`runde120_vorher_nachher_gesichter.png` (twelve faces of the sample, before above, after below).
+
+**Round 121: the women's hair** (2026-11-19). This round took no line of the gauntlet. It began by setting
+our eight grown women beside ten women of the reference at one size, with the hair in the crop, and took
+what stands out first. It is not in the face. Of the reference's ten, eight show their hair (plaits beside
+the face, plaits wound round the head, a band across the forehead, in red, black, brown and fair) and two
+wear a cloth set back on the head with hair under it at the forehead. Ours: eight times the same grey oval
+of linen with a face in it, and no hair on any grown woman's head. Round 119 named "every woman in the
+same coif" among what was open; no round had looked at it.
+
+**What is built.** Three ways for a woman to wear her hair, where there was one.
+
+A veil set back (`cloth_veil_back`, `DressSet::veil_back`): the veil's call with the face's opening taken
+up over the top of the head, so that its rim lies 8.7 to 10.6 cm above the nose's root (six women of 30 and
+six of 60), behind the hairline, and falls from the temples loose beside the cheeks to the shoulders. It
+stands 2 cm off the skull for the closed veil's 1, since hair lies under it. It has no image of its own:
+the builder draws it with the closed veil's linen (`mh_cloth_as`).
+
+Hair under it (`part01_body`, `DressSet::hair_veiled`): a girl's parted hair without its plaits, laid from
+the parting over the ears down to their lobes and on to the nape. In front of the veil's rim it stands half
+again as high as a girl's, under the cloth as flat as hers (`free()` in `hair_body.py`, which knows the
+rim's line as a table measured on the draped veil), and it begins 2.5 degrees lower on the forehead. Its
+painted layer and scalp are the plaits' (`DressSet::under_of`). Measured on the twelve women: the hair
+begins 6.2 to 6.9 cm above the nose's root, lies 0.5 to 0.7 cm outside each ear, and behind the rim 262 to
+617 of its points lie near the cloth, none outside it.
+
+A rule (`DressSet::veils`, `unveiled_until`, `veil_of`; `Look::veil`), by the third digit of a woman's seed:
+five in ten wear the veil set back, two the veil on forehead and cheeks as until now, and three go without
+a veil in a girl's plaits until 30 and wear the veil set back from then on. The wimple of the women from 50
+goes under either veil. A woman with tightly curled hair wears the closed veil, since there is no such hair
+cut to lie under a cloth. A dress table without a veil to set back or without hair for it draws every veil
+as before. In the sample's eight grown women: one in plaits, five with the veil set back, two closed.
+
+The tools that make cloth and hair (`tools/portrait/pipeline/`) ran in the cloud for the first time this
+round (MakeHuman's base mesh, Blender's Python as a wheel, the cote written again as the body's dress for
+the drape). Both new rows, with their calls, are in the pipeline's README.
+
+**Tried and not kept.** All eight women in a girl's plaits: one way again, and the table's own source has
+married women's hair covered. The veil wider over the ears (`EARS=0.22,30`): a lump of cloth over each ear,
+and the ear through it. Looser (`LOOSE=0.3`) and further off the head (`OFF0=0.26`): a hood, with a ragged
+fold beside the jaw. The plaits' hair itself with the plaits left off: the ear bare and a pointed tuft where
+the plait began. The hair led back higher (`PART_TO=150,-38`): it passes above the ear, which shows whole.
+The hair more than twice as high (`PART_LIFT=2.2`) and 5 degrees lower on the forehead: strands through the veil, ragged ends at the
+jaw, a bare strip at the hairline. As high under the cloth as in front of it: strands through the veil's
+rim, which is why the lift now ends at the rim. A first formula for the rim's line was wrong because the
+hair's scripts and the drape's measure angles from two different centres; the table took its place.
+
+**The gauntlet**: 19 of 22, as after round 120, and the same three fail ("woman: beside the nose against
+cheek" 4.1 off, "woman: nose's back against cheek" 1.3 for 8, "man: far cheek against the lit" -25.8 for
+-16.9). Two readings moved in the last digit (lit cheek b* 26.2 for 26.1, the nose's back 1.3 for 1.2). No
+limit and no reading of the reference was touched. The gauntlet reads skin; it has no line for hair or
+dress, so nothing in it says this round did anything. What says so is the picture beside the reference.
+
+Honest about it. The women are no longer all alike, and they are still far from the reference's. Ours have
+two cuts of hair, theirs a different one on nearly every head: no plaits wound round the head, no band or
+fillet, no net. Our hair lies close to the skull and is thin beside theirs, which stands off the head as a
+mass; half again the height in front of the rim is what went in without strands through the cloth. The
+colours are browns and greys, as the genes give them; theirs are red, black and fair too, and no gene was
+touched. Grey hair shows a pale band at the hairline, where the painted layer fades with the grey and the
+bundles begin behind it. Specks in the gown's colour come through the veil at the shoulders, on the closed
+veil as on the new one; they were there before this round and are not mended. The shares (five, two, three
+in ten), the age of 30 and the cut are by eye: PLACEHOLDER, nothing was read for them, and the simulation
+has no marriages to tell a wife from a maid. The way is picked by a digit of the seed and by age, not by
+anything in a woman's life: not her rank, not her means, not whether she is wed. Three files
+are new, 0.98 MB together. The cloth simulation does not repeat itself to the digit (the closed veil written
+again came out with other numbers in 6664 of 14928 lines), so `cloth_veil_back` cannot be had again
+exactly; the closed veil's file is left as it was. And a scar's test had to learn to skip skin whose tone
+changes within one facet (the scalp's tint at the hairline), because a scar under the new hair read as too
+pale or too dark there; the test still reads at least a quarter of each scar.
+
+Tests: `portrait/src/dress.rs`, "women of England wear the veil three ways" (of 1000 seeds at 25: 300, 500,
+200; at 40: 0, 800, 200; tables without the new veil or hair: all closed). `portrait/tests/veil.rs`: the two
+tests of the closed veil now pick six women who wear it; new, "a veil set back shows the hair over the
+forehead and keeps it under the cloth" (rim 6.5 to 12 cm above the nose's root, hair more than 2 cm below
+it and outside each ear, behind the rim hair under the cloth with fewer than 2 in 100 points outside, the
+veil in front below the chin, the wimple from 50, the plaits' painted layer and no plait). `tests/portrait.test.ts`:
+the dress test knows the three ways; new, "the grown women of England's sample do not all wear their hair
+one way" (one, five, two). Cargo: 79 of 79; the builder's three vitest files: 53 of 53. Pictures (project files, `portraits/`):
+`runde121_neben_referenz.png` (the reference's ten women, ours before, ours after, at one size),
+`runde121_vorher_nachher_frauen.png` (the eight grown women, round 120 above, this round below).
+
+**Round 122: hair as light and as coloured as its colour** (2026-11-19). Round 121 ended on hair that "lies
+close to the skull and is thin beside theirs" and on its colours, "browns and greys". This round took the
+colour, and found that it is not the genes' doing.
+
+**What was read.** The hair at the crown (above the forehead) of six of the reference's ten women, in boxes
+set by hand on crops of one size, and of three of ours the same way, in CIELAB:
+
+| hair at the crown | L | chroma |
+|---|---|---|
+| the reference's black | 17.9 | 8.0 |
+| the reference's brown (two heads) | 25.0, 31.6 | 21.1, 24.9 |
+| the reference's red (two) | 33.4, 41.9 | 25.2, 30.1 |
+| the reference's fair | 48.8 | 25.3 |
+| ours, three brown-haired women | 20.5, 21.8, 27.9 | 13.3, 14.9, 16.3 |
+
+Ours is darker than theirs and a third less coloured, and it is so against its own colour too. The three
+women's genes ask for #724e2c, #6c4829 and #8d683a: L 36.4, 33.9 and 46.8 with a chroma of 27 to 33. Drawn,
+that is L 20.5, 21.8 and 27.9. A brown that the builder asks for comes out as a grey-brown close to black.
+
+**What it is.** Two things, both older than the bundles. The image of a bundle (`hair1356_body`, round 109)
+is 0.73 in the mean, which is half in linear light, and the shade between the bundles is baked into the
+corners on top of it: half of a hair's colour is gone before any light falls on it. And the stage leaves
+0.7 of the colour in hair (`sheen.colour`), a value of round 47, set when hair was cards that read L 32 for
+the middle of England's range with a chroma of 21. On bundles the same hair reads L 18 with 11.5 (eleven
+heads of the sample whose hair is not grey, at the crown).
+
+**What is changed.** In the stage alone (`src/portrait/profile.ts`, `materials.ts` `hairLook`): solid hair
+(bundles, locks, a plait's strands, a full beard's locks) is drawn lighter where it is dark, by 1.6
+(`sheen.tone`), and as it was where it is as light as white (`sheen.toneLight` 1; between them by the hair's
+brightness, as `cap.tone` and `cap.light` are for the painted layer), and 0.85 of its colour is left
+(`sheen.colour`, 0.7). The painted layers go with it: the shade under the hair keeps 0.85 of its colour
+(`cap.colour`), and a short beard, which is its layer alone, is lighter by the same 1.6 (`cap.beard.tone`
+8.8 for 5.5, `cap.beard.colour` 0.8 for 0.65).
+
+A tool reads it, in the repository this time: `tools/portrait/hair_colour.mjs` draws the sample twice, as it
+is and with no colour left in the hair, and takes as hair every pixel whose colour goes with it. At the
+crown, before and after:
+
+| hair at the crown (hair_colour.mjs) | L before | chroma before | L now | chroma now | the reference |
+|---|---|---|---|---|---|
+| eleven heads of the sample, brown | 18.4 | 11.5 | 26.5 | 18.6 | 25.0 to 31.6, 21.1 to 24.9 |
+| blond (`gene=27:240`, four heads) | 46.8 | 20.1 | 49.0 | 25.4 | 48.8, 25.3 |
+| red, the middle of what shows red (`gene=28:150`) | 22.7 | 16.9 | 32.5 | 27.4 | 33.4 to 41.9, 25.2 to 30.1 |
+| red, the reddest the pool gives (`gene=28:170`) | 24.2 | 20.8 | 34.3 | 33.4 | |
+| dark (`gene=27:40`) | 7.5 | 4.8 | 8.3 | 6.2 | 17.9, 8.0 |
+
+White hair is as it was (three heads, L 62 to 64 before and after); a head half grey is lighter by what
+its brown is. A full beard's locks go with the head's hair. A short beard stays lighter than the man's
+hair, as the reference's emperor's is (2 to 8 L): 3.1 before, 4.5 now (one man of the sample, the lit jaw
+against the crown).
+
+**Tried and not kept.** All of the colour and no lightening: chroma 16 to 22 at L 18 to 27, coloured and as
+dark as before. The lightening and 0.7 of the colour: L as now, chroma 15 to 20, still the greyer hair. All
+of the colour with the lightening: the browns stand to their lightness as the reference's browns do (chroma
+22.5 to 29.8 at L 27 to 38), but a light brown of the sample is then as coloured as the reference's reddest
+head (29.8 for 30.1), and red hair far beyond it. Lighter by 1.8: the browns at L 29 to 39, above the
+reference's, and a dark blond (`gene=27:200`) as light as a blond (47 for 50). The lightening on light
+hair too was not tried: blond read 46.8 for the reference's 48.8 before the round.
+
+**The gauntlet**: 19 of 22, no line moved, the same three fail. It reads skin, and no skin changed.
+
+Honest about it. The hair is the colour its genes ask for now, and the women beside the reference's are
+closer for it; what the sheet still shows is the rest. All of England's hair is one warm brown, lighter or
+darker: the pool's own spread, which no round touched, and theirs are red, black and fair heads side by
+side. Black hair is still a dark shape (L 8 for the reference's 18): lightening a colour that is next to
+black gives next to nothing; their black hair is read by its sheen, and ours has none to speak of. Most of
+the world's peoples have such hair, and the world's sample was not drawn with the new values. The reddest
+hair the pool gives is more coloured than the reference's reddest (33.4 for 30.1), and our red is redder
+than theirs (hue 45 to 52 degrees for 51 to 54). A dark blond is nearly as light as a blond now (44.8 for
+49.0, read with the trial's values): the light end is pressed together. The reference is six heads in two
+screenshots, read in boxes set by hand on small faces enlarged, and which head is "brown" and which "red"
+is by eye; their hair is their people's, not England's. The values (1.6, 0.85) come from a few trials on
+four heads: PLACEHOLDER. The short beard's factor rests on one man. The cause is not mended where it lies:
+the image of a bundle still takes half the colour, and the stage gives it back. `hair_colour.mjs` finds
+hair by the colour it loses, so it does not find white hair and finds little of black hair (the dark row
+above reads the few pixels that have colour). And the hair's form is as round 121 left it: close to the
+skull, two cuts.
+
+Tests: `tests/portrait.test.ts`, "dark hair of England is drawn lighter and hair keeps most of its
+colour" (the values' ranges, the line in the shader of bundles, a plait's strands and a beard's locks, the
+painted layers in step). The builder's three vitest files: 54 of 54. No Rust changed: cargo was 79 of 79 in
+round 121 and was not run again. `main` is merged into the branch (the clean-up's nine pull requests, with
+Biome and ruff in CI): `npm run lint` and `ruff check` pass, `npx tsc --noEmit` passes; the whole vitest
+suite was left to CI. Pictures (project files, `portraits/`): `runde122_neben_referenz.png` (the reference's
+ten women, ours of round 121, ours now, at one size), `runde122_vorher_nachher_haar.png` (twelve heads of
+the sample, before above, after below).
+
+**Round 123: a softer light held to five faces, and shoulders that are turned** (2026-11-19). Ramon after
+round 122: the whole portrait (figure, hair), not fine details of the face, and the gauntlet to 22 of 22. The
+round took the gauntlet's three open lines and the figure's pose.
+
+**The three lines, and what each hangs on.** Read on the sixteen grown people (two minutes; the same table
+as the whole sample's), one thing changed at a time, against the lit cheek:
+
+| | far cheek, women | far cheek, men | beside the nose | cheek beyond it | nose's back |
+|---|---|---|---|---|---|
+| round 122 | -18.2 | -25.8 | -30.4 | -16.9 | +1.3 |
+| no cast shadow of the key (`shadow.strength` 0) | -10.3 | -18.0 | -29.8 | -9.0 | +1.3 |
+| the key larger (`shadow.spread` 30 for 20) | -17.1 | -21.3 | -26.2 | -16.5 | +1.2 |
+| the key higher (45 degrees for 36) | -14.3 | -21.4 | -26.3 | -16.1 | +3.3 |
+| the fill twice as strong (0.4) | -15.9 | -22.0 | -26.0 | -15.1 | +1.2 |
+| the light from below three times (0.3) | -16.7 | -23.2 | -29.4 | -15.4 | +0.4 |
+| no shadow of the rim (`rimShadow` 0) | -17.7 | -24.4 | -18.2 | -12.3 | +2.7 |
+| the rim's shadow whole (`rimShadow` 1) | -18.7 | -26.9 | -38.2 | -17.1 | +0.6 |
+| more light round the skin's shade (`skin.wrap` half again) | -17.0 | -23.7 | -27.6 | -16.1 | +1.8 |
+
+The shade beside the nose is the nose's own form and the rim's shadow, not the key's cast shadow. The men's
+far cheek is 7.6 darker than the women's and the two lines asked for 4 between them at most (-20.9 and -16.9,
+each with a limit of 4): by form alone, with no cast shadow, the men's is 7.7 darker already. Only the key's
+size brings the two nearer (at 30 degrees 4.2 apart), and it lightens the shade beside the nose. With the
+old lines no stage was found that holds all of them: the key at 35 degrees with the rim's shadow whole stood
+at the men's limit to the tenth, at the shade's limit to the tenth, and lost the women's far cheek by 0.5.
+
+**The nose's back by a light from the side, tried a third time.** The rim light at 95 and at 110 degrees
+round, its shadow whole, so that only the nose's ridge would catch it past the cheek: it lights the far half
+of the face as a second key, flat and pale (rounds 113 and 120 found much the same with other values). Not kept.
+
+**The reference read again, on four more faces.** The four lines round the nose were each read on one face,
+the ruler designer's woman (rounds 71 and 83), and the women's far cheek was held to the emperor's since
+round 107, a man's. Read now at the gauntlet's own places on four more faces of women, the landmarks set by
+eye on the pictures enlarged four and five times (scratch readings; the pictures are not in the repository):
+
+| against the lit cheek, L | her (rounds 71, 83) | A (`ck3_06`) | C (`ck3_06`) | N (`ck3_10`) | N in the game's light | mean of five |
+|---|---|---|---|---|---|---|
+| far cheek | -27.7 | -16.6 | -11.2 | -11.3 | -15.5 | **-16.5** |
+| beside the nose | -34.5 | -23.4 | -27.8 | -30.2 | -18.4 | **-26.9** |
+| the cheek beyond it | -16 | -10.6 | -9.9 | -11.1 | -14.6 | **-12.4** |
+| the nose's back, on the middle line | +8 | -3.7 | -10.3 | -7.0 | -1.2 | **-2.8** |
+
+She is the hardest lit of the five in every row, and the only one whose nose's back is lighter than her
+cheek on the middle line: on the other four the streak of round 113 lies beside the line, on the far flank,
+and the line itself reads skin in half shade. With all landmarks two pixels off, a face's far cheek reads up
+to 2.8 otherwise, its nose's back up to 5, the shade beside its nose up to 8 (a narrow place).
+
+**The lines are moved, said here plainly.** Ramon was asked and chose it: the four lines are held to the
+mean of the five faces (`tools/portrait/gauntlet.mjs`; the limits are as they were). Held to the new lines
+the stage of round 122 is 19 of 22 as before, with other lines red: the cheek beyond the nose 0.5 too dark,
+the nose's back 0.1 too light, the men's far cheek 8.9 too dark. Held to the old lines the stage of this
+round is 19 of 22 as well (the women's far cheek 5.2 too light, the shade beside the nose 6.9, the nose's
+back). So the 22 below are reached by a softer light AND by lines that ask for a softer light; neither alone.
+
+**What is changed in the light** (`src/portrait/profile.ts`, England's stage; Apoleia's is as it was):
+- `shadow.spread` 35 degrees (20): the key is a window a metre and a half wide a metre off. The edge of the
+  shadow a man's nose throws on his far cheek is softer again.
+- `rimShadow` 0.9 (0.5): under the larger key the key itself reaches further round the nose, and with half of
+  the rim let through the shade beside the nose would be 24 (round 116's reading). A tenth is let through.
+- `sky.energy` 0.2 (0.12): lifts what faces up or down in the shade.
+
+| | the five's mean | round 122 | now |
+|---|---|---|---|
+| woman: far cheek against the lit | -16.5 | -18.2 | -15.7 |
+| woman: beside the nose | -26.9 | -30.4 | -27.6 |
+| woman: the cheek beyond it | -12.4 | -16.9 | -15.6 |
+| woman: nose's back | -2.8 | +1.3 | +0.9 |
+| man: far cheek against the lit | -16.9 (three men, round 114) | -25.8 | -19.8 |
+
+**The gauntlet**: 22 of 22 over the whole sample, for the first time. Nearest their limits: the women's far
+cheek's chroma against the lit one's (2.6 off, limit 2.7; 1.7 before: the sky's light greys the shade), the nose's back (3.7 of 4), a woman's
+upper lip (3.5), the cheek beyond the nose (3.2), the men's far cheek (2.9).
+
+**The pose** (`portrait/src/pose.rs`, `DressSet::pose`). Until now a portrait was one stiff piece: head,
+neck and shoulders faced one way and the stage turned the whole of it, every person in the one pose, square
+to their own face. The reference's half figures stand with the shoulders turned further than the face. Now
+the shoulders are turned further than the head by 0.1 to 0.4 radians (6 to 23 degrees; a draw of the
+person's seed) and their line is tipped by up to 0.035 either way (2 degrees). It is a twist of the neck
+applied to the finished surfaces, to all of them alike: from the chin upward nothing moves by a digit (the
+face, its landmarks, the frame: what the gauntlet reads is read at the same places), from the neck's foot
+(5 cm under the chin on MakeHuman's base) downward everything turns as one piece, between them the neck
+twists. A hood's cape and a veil's fall go with the shoulders; a beard's locks stay with the head. The
+direction of a surface within the twist is turned by the transposed inverse of how its places move (a
+plait's strands that hang past the neck were lit as upright otherwise). Apoleia's portraits have no pose
+and are the same.
+
+Tried and not kept: the neck's foot 4 cm under the chin and the turn rising as a smooth step, up to 0.5
+radians (the neck's skin drawn to 1.67 of its length; now half even, half smooth, at most 1.38).
+
+Honest about it. The light: before and after differ little at a glance: the dark wedge beside the nose and
+the far cheek's shade are softer, most on the men; nobody would call the faces new. The 22 rest on a reading
+of five faces of which two are one woman in two lights, four are from developer diaries and one from the
+game, with landmarks set by eye; her own values were taken from rounds 71 and 83 and not read again. The
+men's line is still three men in three scenes. Two lines pass by 0.1 and 0.3. The narrow streak of light on
+the far flank of the reference's noses is still missing, and no line of the gauntlet reads it any more: the
+line that failed for it since round 113 now says only how light the nose's back is (the gauntlet's head
+says so). The key of 35 degrees is drawn as eight lights as before; no steps were seen in the shadows at
+896 x 1120, on the software driver only. The pose: the picture is framed so close (`close` 1.12) that of
+the turned shoulders one sees the collar off the middle and one shoulder nearer; framed wider (`close`
+0.85) the figure ends in ragged sleeves at the upper arm, which is why it is framed close: there is no bust
+below the shoulders to show, and that, not the pose, is the figure's largest gap to the reference. Cloth
+and hair that hang past the neck far from its axis are drawn aslant there (a veil's fall, a plait: its
+middle line turns up to 31 degrees within 2 cm, 23 as laid, and its strands are flatter there). The head
+itself is not tipped or turned from person to person: every face still looks out of the picture the same
+way. `pose` is by eye: PLACEHOLDER. The hair's form is as round 121 left it.
+
+Tests: `portrait/tests/pose.rs` (three: the head keeps its place to the digit and the shoulders turn as
+one piece by the angle asked, with the neck's skin drawn to between 0.65 and 1.45 of its length; no two
+stand alike and none past the range; a beard's locks stay on the jaw). `portrait/tests/clothes.rs` and
+`portrait/tests/plait.rs` read the gown and the plait as draped and laid, in no pose (`build_posed`), the
+plait's bend in the pose as well. Cargo: 82 of 82. `tests/portrait.test.ts`: the key's size up to 37
+degrees (20), the rim's shadow between 0.5 and 1 (0.3 and 0.7), what the rim lets through between 0.05 and
+0.5; its two files 41 of 41, the three other files that use the builder 29 of 29. `npx tsc --noEmit`,
+`npm run lint` and `ruff check` pass; the whole vitest suite was left to CI. Pictures (project files, `portraits/`): `runde123_vorher_nachher_frauen.png`,
+`runde123_vorher_nachher_maenner.png` (the sixteen grown people, round 122 above, now below).
+
+**Round 124: a bust under the shoulders** (2026-11-19). Ramon: "fokus auf figure, haare etc.", "22/22
+vorwärts machen gesamtportraits". Round 123 named the figure's largest gap itself: framed wider, it ended in
+ragged sleeves at the upper arm, because neither the body's data nor the gowns went further than the
+shoulders. This round took no line of the gauntlet; it gives the figure a body down to under the waist, the
+gowns their length and their sleeves, and frames the picture as a bust.
+
+What was read. The reference's portraits are half figures: the head from chin to crown takes a little under
+half of the picture's height and the picture ends under the chest, on cloth. Ours showed the head on 0.59 of
+the height and ended at the collar. `head.bin` held MakeHuman's body down to 3.4 (base units of 10 cm, the
+chest's cut) and within 2.85 of the middle; the three gowns' files ended where it did.
+
+What is changed.
+
+- **The body** (`tools/portrait/pipeline/extend_head.py`, `hairlib.py` `bust_faces`). `head.bin.zst` now
+  carries the trunk to under the waist and the arms to the elbows: 848 vertices after the head's own 7001,
+  1668 triangles in a part of their own, `bust`, with what each of the file's morph targets does to them (106
+  of 391 move them). Nothing that was there is renumbered, so every file bound to the head's vertices stays as
+  it is. The part is not drawn: it carries cloth. The skin that is drawn ends where it did, under the gown.
+- **The gowns** (`bust_bind.py`; `cloth_cote`, `cloth_cote_v`, `cloth_kirtle`). Each file keeps its rows (hoods,
+  veils and wimples were draped over them and the tests read their folds). Under the old cut the rest of a
+  drape of the same garment is set, down to its hem at the hips and out to the ends of its sleeves, and bound
+  to the bust. Between the file's open edges and that piece a strip is sewn and the piece's points near it are
+  evened out. A sleeve's points are bound to the arm and the body's cloth to the trunk, so that a sleeve swings
+  in whole when the builder brings the arms down from MakeHuman's pose; the seam under the arm is left open
+  there (95 to 104 triangles a gown). The files have 4429 to 4895 points now.
+- **The bust is held** (`pose.rs` `hold_bust`, `DressSet::bust` 0.5). The gown is bound to the body as MakeHuman
+  shapes it and lay on a young woman's breasts like a wet shirt. Half of how far skin and cloth stand in front
+  of the body's front middle line is taken off, from under the collar bones down, growing to its whole over
+  5 cm of height, and not beyond 16 cm from the middle (the arms). Skin, cloth and what hangs in front of them
+  alike.
+- **What lies over the gown is lifted off it** (`layers.rs` `lift`, `GAP` 0.08). A veil's fall, a hood's cape
+  and a wimple were each held a least distance off the body, and where a fold of the gown stood further off
+  than they did the gown came through. Now a corner of such a cloth that lies inside the gown, or less than
+  8 mm outside it, is moved to 8 mm outside it.
+- **The frame** (`src/portrait/profile.ts`). `close` 0.85 (1.12): the head on 0.45 of the height, the
+  picture's foot under the chest. `rise` 0.11 (0.03) keeps the camera at the height of the eyes, where the
+  dress table's eyes look. `shadow.reach` 0.68 (new; the stage had 0.9 of the picture's height written in)
+  keeps the box in which shadows are thrown as large on the figure as it was, so that the shadows on the face
+  are drawn with the same pixels as in round 123.
+
+Tried and not kept.
+
+- The strip sewn from the two nearest points on, always by the shorter of the two next seams. On the
+  kirtle's sleeve that made a fan from one point under the arm to the whole of the other edge, with triangles
+  12 cm long through the arm: women's arms were bare from the side and small girls had teeth at the far
+  sleeve. It cost most of the round, because the open seam, the held bust, the builder's evening of the
+  cloth, the lift and the women's body were each suspected and ruled out first. Now the strip is sewn by the
+  angle round the line between the two edges' middles; the longest edge on an arm is 8 cm.
+- The seam under the arm sewn shut (`SEAM=closed`). With the fan gone it was tried again: on children of
+  8 it tears larger dark holes at the armpit than the open seam leaves specks.
+- A sleeve's points bound to the nearer of arm and flank: with the arm down the bag under the arm was torn
+  into flags.
+- The bust held from a line 2 cm under where it begins: a plait hanging in front of the chest was bent back
+  there and its strands' corners faced away from their triangles (5 cm now).
+- The lift with a gap of 0.02 and 0.04: the veil's shadow on the gown under it still flickered through.
+- `rise` 0.03 in the wider picture: the camera stood 5 cm under the eyes and they looked 2 degrees over it
+  (the test of the gaze failed).
+
+**The gauntlet**: 22 of 22 over the whole sample, read again with the final files. The numbers are round
+123's to within 0.3 (the face is lit and framed as it was): lit cheek L 58.3; women: far cheek -15.7, beside
+the nose -27.4, the cheek beyond -15.6 (3.2 of 4), nose's back +0.6 (3.4 of 4), upper lip 3.6 of 4, the far
+cheek's chroma 2.5 of 2.7; men: far cheek -19.7 (2.8 of 4).
+
+Honest about it. The picture now reads as a bust at a glance, and that is the round's whole gain: the cloth
+itself is no better than it was. The gown is one plain piece without belt, seams, trims or fastenings, and
+its folds under the chest are those of a drape on a standing body with the arms out, brought down: on small
+boys the chest is lumpy. With the open seam there is a slit behind the armpit, and on children of 8 dark
+specks at the armpit from the front. From behind, the smock shows through the gown at the shoulders as white
+specks; the gown's lower hem and the sleeves' ends are raw (below the picture and beyond the elbows, out of
+the frame). Small specks remain on some hood capes and veils. The seam between the old file and the new piece
+runs across the chest and can be found by one who looks for it. The arms end at the elbows and there are no
+hands, so the frame cannot go lower than it does. The head's share of 0.45 and the bust's hold of 0.5 are by
+eye (PLACEHOLDER): no picture of the reference was measured for them and no garment. MakeHuman's
+`neck-scale-vert` targets move the body at the old cut by 5 mm and the bust not at all. A per-vertex file
+written anew by the pipeline would have 848 rows more than those in the repository. During the round the test
+server once stopped serving a gown's file after the old files were swapped back in for the before pictures
+(it answered with the page instead, and the women's gowns came out dark and faceted); the before pictures were made
+again from a clean checkout of round 123, and the gauntlet and the after pictures after a restart of the
+server. The hair's form is as round 121 left it and the head is still not tipped from person to person.
+
+Tests: `portrait/tests/bust.rs` (five: the head file carries the body to under the waist; on 40 people the
+gown ends at least 3 cm under the picture's foot in the middle and at the sides, 7.8 measured, with no edge
+longer than 10 cm, 8.2 measured; on 16 people less than a twentieth of the arms' skin is bare under the
+sleeves, 0 to 1.7 percent measured; the lift and the hold on made-up surfaces). `portrait/tests/clothes.rs`
+and `faces.rs` know the bust's rows. Cargo: 87 of 87. `tests/portrait.test.ts`: a picture of England is a bust
+that ends on cloth (the head on 0.44 to 0.46 of the height, more on children under 12; the gown's lowest
+point under the picture's foot; the shadows' box as large on the figure as before); its two files 42 of 42.
+`npx tsc --noEmit` and `npm run lint` pass; the whole vitest suite was left to CI. Pictures (project files,
+`portraits/`): `runde124_vorher_nachher_frauen.png`, `runde124_vorher_nachher_maenner.png` (eight each: round
+123 as it was framed, round 123 framed as wide as now, round 124).
+
+**Round 125: a second head of hair for the men** (2026-11-20). Ramon's "fokus auf figure, haare etc."
+again, now the hair. Round 124's sheets show it at a glance: every man who shows his hair wears the one bowl
+cut with a fringe, in three lengths that are hard to tell apart; the rest are hooded or bald. The reference
+shows the same man of its own under three heads of hair on one sheet (a bowl cut, short hair combed back, and
+hair parted and falling in waves to the neck), and its women in plaits looped beside the cheeks under a band.
+
+What is changed. Two men in ten, from 15, wear their hair parted in the middle, falling by the temples and
+over the ears, and cut level at the jaw, without a fringe (`page01`, `DressSet::hair_lengths`,
+`hair_parted`, `hair_parted_from`). It is built from what a girl's hair is built from
+(`tools/portrait/pipeline/hair_body.py`, the parted cut): bundles that begin side by side along the parting
+and along the hairline. They are not drawn to a plait: their way goes by the temple towards a place far
+below the ear, and each ends where it crosses the cut's line (`end` -50 degrees, 2.5 above or below it),
+keeping its breadth. The hair stands as high off the head as a bowl cut (`lift` 2.2: 1.3 to 1.5 cm over the
+crown, 1.3 to 3.7 cm beside the mouth) and ends 0.71 to 0.78 of the head's height below the crown. It has
+no painted layer and no scalp of its own: the builder takes the girl's, whose hairline it has. The men's
+shares are now 3 : 3 : 2 : 2 (the bowl cut to the lobe, to above the ear, to the jaw, parted); a boy whose
+seed draws the parted hair wears the bowl cut to the lobe until 15. Hooded, thinning, bald and curly heads are
+as they were. The test page takes `?pid=940021:940043`: a person drawn under another number, the same face
+with what the builder draws from the number (pose, hood, hair's cut).
+
+Tried and not kept: the parted hair on every age. On boys of 8 and 13 it is a girl's head (a bob over a
+child's face), hence the age. Nothing else: the first form of the cut was kept as it came, and its numbers
+are a first guess that was looked at on the sample's men from the front and on one of them from five
+sides, not a choice among several.
+
+**The gauntlet**: 22 of 22 over the whole sample, with round 124's numbers to the digit. It says nothing about the round:
+no man of the sample draws the parted hair (the sample's seeds give it to none of those who show their
+hair), and the gauntlet reads skin.
+
+Honest about it. This is one cut more, built from parts that were there, and the men's heads are
+still few: two forms where the reference has a different one on nearly every head. The parted hair is
+straight and close as a helmet: the reference's falls in waves and is fuller at its ends. Its parting runs
+down the whole back of the head as a girl's does (seen from behind only). It ends at the jaw because hair
+below the chin would be turned with the shoulders by the pose (round 123): hair to the collar, which the
+reference has, is not possible until hair is carried by the head through the pose. From the side there is a
+notch in the hair in front of the ear. A curly head keeps the wavy bowl cut, so no one wears parted hair in
+waves. The shares, the age of 15 and every number of the cut are by eye (PLACEHOLDER); nothing was read on
+how men wore their hair in 1356 beyond what the dress table's sources already say. The sample's sheet does
+not show the round at all; its pictures draw men of the sample under other numbers. The women's hair is as
+round 121 left it: no plaits looped at the temples, no band. The head is still not tipped from person to
+person.
+
+Tests: `portrait/tests/hair_body.rs` has one more (of 80 men with hair on the head at least four wear it
+parted, 9 measured: no fringe, bundles across the parting, no plaits, cut level between 0.62 and 0.9 of the
+head's height below the crown, standing off the head beside the mouth; the same men as boys of 10 wear the
+bowl cut). `lib.rs`: the shares, and that each cut's files are there. Cargo: 88 of 88.
+`tests/portrait.test.ts` and its neighbour 42 of 42. `npx tsc --noEmit` and `npm run lint` pass. Pictures
+(project files, `portraits/`): `runde125_vorher_nachher_maenner.png` (six men of the sample drawn under
+numbers that draw the parted hair, as round 124 drew them and now), `runde125_von_allen_seiten.png` (one of
+them from five sides).
+
+**Round 126: plaits pinned up beside the cheeks** (2026-11-20). The hair again, now the women's. The
+reference's women wear their plaits looped beside the face, from the temple down along the cheek and up
+again, under a band round the head (on one sheet of two couples). Ours wore
+plaits one way: hanging in front of the shoulders, on girls and on grown women alike.
+
+What is changed. Six in ten of the women of 15 and more who wear plaits pin them up
+(`DressSet::hair_looped`, `looped`, `hair_looped_from`, `plaits_of`): each plait is laid from the place
+below the ear where it begins, forward under the lobe and up in front of the ear to the temple, where its
+end goes under the hair: a loop of plait beside each cheek, from the jaw's corner to the temple. It is the
+plait that was there on another way (`tools/portrait/pipeline/styles.py` `PLAIT_LOOP`: the way as places on
+the head), 2.5 cm broad instead of 2.9, in a file of the strands alone (`loop01_rope`, 52 kB). The hair of
+the head, its painted layer, its scalp and the strands' image are the girl's (`under_of`; the builder takes
+another cut's body of hair where a cut has none of its own). Girls under 15 wear their plaits hanging, as
+do four in ten of the grown; the world's people in the plain dress wear them hanging. In the sample two of
+the women who showed plaits now wear them pinned up (17 and 24 years).
+
+A pinned plait lies above the chin, where the pose of round 123 moves nothing: it is not drawn aslant as a
+hanging plait is, and it does not hang over the gown.
+
+Tried and not kept.
+
+- The way evened as little as a short way seems to need (`PLAIT_EVEN` 40, then 100 to 400; a hanging plait
+  has 600). The way's points lie 0.3 mm apart on 12 cm, the turn under the ear stayed a corner, and the
+  strands folded over themselves there: 95 triangles of 4700 with a corner facing away from its triangle,
+  33 at 400, 9 at 3000 with the plait's full breadth. With 3000 and the narrower plait none.
+- The turn laid lower, round under the ear on the neck: the way dips in from the jaw to the neck and comes
+  out again, and more folded (74 to 115).
+- The strands' direction off the head carried along the way from its beginning instead of taken anew at
+  each place: more folded (40 for 9).
+
+**The gauntlet**: 22 of 22 over the whole sample, every line where round 124 left it (one of the grown
+women it reads now wears the pinned plaits; the lines are the same to the tenth).
+
+Honest about it. It is one more way to wear the same plaits, and the nearest of ours to what the
+reference's women wear, not the same: theirs hang as a loop from the temple, ours run up from under the ear,
+because the hair of the head is drawn to the place under the ear and was left as it is. There is no band
+round the head, no net and no veil behind the plaits, which theirs have. The plait is the hanging plait's
+strands, as thick at the temple as at the ear until its last centimetre; its end simply stops under the
+hair. Under the ear the plait's beginning is a knob. The form was looked at on one head from five sides and
+on the sample's women from the front. The share of six in ten, the age of 15 and the way are by eye (PLACEHOLDER):
+nothing was read on how women pinned their plaits in 1356. Grown women under a veil set back show no
+plaits. The men's hair is as round 125 left it, and the head is still not tipped from person to person.
+
+Tests: `portrait/tests/plait.rs`: the test of the hanging plait's bend tells pinned plaits apart (they end
+above the chin) and holds them to their place instead: no strand folded on any of 40 bodies, none on a girl
+under 15, between the chin's height and the forehead's, within 2.5 cm of the skin, not moved by the pose;
+13 of the 20 who are 15 and older wear them. The test of the round strands takes a pinned pair's smaller
+volume. `dress.rs`: the share and the age, and that the plain dress has none. Cargo: 89 of 89.
+`tests/portrait.test.ts` and its neighbour 42 of 42. `npx tsc --noEmit` and `npm run lint` pass. Pictures
+(project files, `portraits/`): `runde126_vorher_nachher_frauen.png` (the sample's five who wear plaits,
+round 125 above, now below), `runde126_von_allen_seiten.png`.
+
+**Round 127: each person carries the head their own way** (2026-11-20). The whole portrait again (Ramon:
+"gesamtportraits"). Since round 123 the shoulders stand differently from person to person, but every head
+of a sample stood at the one angle, upright, as a passport asks for: every face turned 14 degrees to the
+same side. The reference's people hold the head each their own way: tilted a few degrees towards a
+shoulder, turned a little more or less (read by eye on the sheets of half figures and of hoods; no angle
+was measured on them).
+
+What is changed. A person has two angles of their own, by two draws of the seed (`DressSet::head`,
+`head_of`): the head turned up to 0.1 further or less than the stage turns every head (5.7 degrees either
+way), and tilted up to 0.07 towards a shoulder (4 degrees either way). The builder does not move the head
+for it: faces, landmarks and frame stay where they are, to the last digit, and what the tests and the
+gauntlet read on a head is read at the same places. The portrait says the two angles and the neck's foot
+(`Portrait::head`, `neck`; four numbers more on the wire), and the stage turns the whole figure about the
+upright axis through the head and tilts it about the axis from back to front through the neck's foot
+(`stage.ts` `standing`). The builder tips the shoulders back by the tilt (pose.rs, on top of the pose's own
+tip), so that the tilt is the neck's: the head leans, the shoulders stand as the pose has them (to 1.6 mm
+on the twelve bodies of the test; the stage tilts about a level axis, the builder about one that leans
+with the bust). The eyes are turned back by the same two angles and stay on whoever looks
+(`DressSet::gaze_at`). Apoleia's portraits and the plain look carry no angles and are as they were.
+
+Tried and not kept.
+
+- The eyes turned back with the bust's lean taken off the pitch alone, as `gaze_of` does: on a head tilted
+  by 0.06 they looked half a degree further beside the viewer, and one of the sample (a girl of 13) 1.6
+  degrees in all (the test's limit is 1.5). The line to the viewer is now turned back through the tilt and
+  then through the lean; the worst of the sample is 1.2 degrees.
+- A most tilt of 0.06 instead of 0.07, for the neck's skin (below): the shortest edge 0.65 of its length
+  instead of 0.64. Nothing gained; 0.07 kept.
+
+**The gauntlet**: 22 of 22 over the whole sample. The heads stand each at another angle to the light now,
+and the lines moved by a few tenths: lit cheek L 58.4 (-1.9), a* 17.2, b* 25.8, chroma 31.0, hue 56.3;
+women: far cheek -15.4 (was -15.7), beside the nose -28.5 (-27.4), cheek beyond -15.6 (3.2 of 4), nose's
+back +0.4 (3.2 of 4, was 3.4), lower lip -25.3, upper lip -31.3 (3.8 of 4, was 3.6: the nearest to its
+limit), eye -41.8, far-cheek chroma -2.9 (2.3 of 2.7, was 2.5); men: far cheek -19.1 (2.2 of 4, was 2.8),
+chroma -3.9 (2.1 of 2.7, was 1.6); emperor: lip -26.4, eye -42.6.
+
+Honest about it. Both ranges are by eye (PLACEHOLDER), small on purpose: the gauntlet's lines were set on
+heads at the one angle, and a wider turn moves them. Nobody lifts or lowers the chin: there is no third
+angle. The angles are drawn from the seed alone; they do not go with age, rank or temper, and not with
+the shoulders (a head tilted against tipped shoulders reads livelier than one tilted with them; ours is
+either, by chance). The neck is bent over the 5 cm between its foot and the chin, where it is twisted as
+well: the shortest edge of the neck's skin on the twelve bodies of the test is 0.64 of its length (0.70
+before, the test's limit lowered from 0.65 to 0.6), on a man turned by 0.31 and tilted by 0.06; looked
+at on bare necks under three seeds with much tilt and turn, no fold shows. The picture is framed
+on the head as it stood upright: a head tilted by 0.07 stands about a centimetre to the side of the
+picture's middle. The lids do not follow the eyes' turn (as before). A veil's fall and a hood's cape
+hang from a tilted head down to the chin and from the shoulders below it, as the pose of round 123 has
+them; the blue speck in a veil's fall seen from behind was there before (held against round 126 on the
+same woman). Looked at on the sample's sixteen grown people from the front and on two from five sides.
+
+Tests: `portrait/tests/pose.rs`, two new: the head is the same to the last digit with and without the
+tilt's tip, the angles on the portrait are the seed's, and the skin under the neck's foot, tilted as the
+stage tilts it, stands within 5 mm (measured 1.6) of where the pose alone has it, on twelve bodies; over
+1000 seeds turn and tilt keep to their range, use it either way, and go neither with each other nor with
+the shoulders' tip; a head carried straight has the eyes as `gaze_of` has them. `tests/faces.rs` reads
+the lids at the pitch the eyes have on the carried head. `tests/portrait.test.ts`: the test of the eyes
+stands each figure as the stage does (`standing`) and holds the sample's angles to the table's range.
+Cargo: 91 of 91. `tests/portrait.test.ts` and its neighbour 42 of 42. `npx tsc --noEmit` and
+`npm run lint` pass. Pictures (project files, `portraits/`): `runde127_vorher_nachher_frauen.png`,
+`runde127_vorher_nachher_maenner.png` (the sample's grown women and men, round 126 above, now below).
+
+**Round 128: a fillet on the hair** (2026-11-20). The women's heads again. The reference's women wear a band
+round the head over their hair (jewelled, on the sheet of two couples); ours had hair or a veil and nothing
+between. What was read this time (one page, a re-enactor's, not a primary source: Rosalie Gilbert, Headwear,
+rosaliegilbert.com/headwear.html): the fillet was often a stiffened band of linen about 2 to 2.5 inches
+wide, worn to hold the veil, also by working women; a Madonna of 1340 to 1360 wears it high on the head,
+"almost like a crown"; and fillet and barbette were going out of use in the middle of the 14th century in
+favour of plaits beside the face. A second page (Tasha Kelly, cottesimple.com, 14th-century braids) shows
+the plaits beside the face from French pictures of 1350 to 1398 and names no band.
+
+What is changed. Three in ten of the women of 15 and more who show their plaits wear a fillet
+(`DressSet::fillet`, `fillets`, `fillet_from`, `fillet_of`): one stiff band of linen, 5 cm high (the low
+end of what was read), round the head at the top of the forehead, on the hair, with the crown's hair
+showing over it. It is a new file (`cloth_fillet`, 16 kB, with a linen image of its own, 0.17 MB) written
+by a new script (`tools/portrait/pipeline/fillet.py`): a wall of 120 rings round the head's upright axis
+that stands 4 mm outside the hair under it at every place, evened round the head so that it is one oval,
+its top 8 mm further in than its foot. The builder reads it as it reads a plait's strand (`mh_rope`): bound
+to the skin, carried by the head and evened along itself, so that it keeps its form on every head. It is
+in the table's linen colour. A minority wears it because the page read says it was going out of use by
+1356. Veiled women do not wear it, nor the world's people in the plain dress.
+
+Tried and not kept.
+
+- The band's foot 3 to 5.5 cm over the head's middle: a ring floating over the crown, then a pillbox on
+  top of the head. I took the head's middle (the pipeline's `hc`) for the eyes' height; the eyes lie
+  some 2 cm under it (the skull's top is 7.4 cm over it on the base's head and 9.6 cm over the eyes on a
+  built one).
+- The foot level on the base's head or higher in front (`FILLET_AT=0.12,0` and `0.02,0`): tipped up in
+  front in the picture, since a portrait's bust leans back by 0.12. The foot is now 2 cm lower in front
+  than behind.
+- Every ring bound to the one place of skin under its middle, instead of every corner to the skin in its
+  own direction: no difference to speak of (the band's top within 2 mm on the bodies measured); the second
+  kept, as it follows a skull's height.
+- 2 mm between hair and band: hair came through at a temple on one of the seven test bodies that wear it
+  (6 corners) and on one of four pictures. With 4 mm none.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line where round 127 left it to the tenth. No
+person of the sample wears the band (below), so this says only that nothing else moved. It was read before
+the band's last file (the wider gap) and the sources' text were written; neither is in a picture of the
+sample.
+
+Honest about it. It is a plain ring of stiff linen and reads as one: no fold, no seam, no pin, no tie
+behind, the same on every head but for its size, and its weave hardly shows at the picture's size. It
+sits on the hair like a paper crown; the reference's bands are narrow, jewelled and lie in the hair. It
+is the 13th century's fillet more than what the reference's women wear, kept because it is what the one
+page read describes for linen; a narrower band would look nearer the reference and has no source here.
+That it is worn with plaits and without a veil, the three in ten and the age of 15 are by eye
+(PLACEHOLDER): the page has it with a veil or a barbette, which ours have not. One secondary page is thin
+ground; no effigy, brass or manuscript was looked at. No woman of the sample draws it (three of the
+sample's women are in plaits, none with the digit), so the sample's sheet does not show the round; the
+pictures draw four of the sample's women under other numbers. Looked at on those four from the front and
+on one from five sides. The band's top stands clear of the hair where the head runs in; from above one
+looks into the gap.
+
+Tests: `portrait/tests/fillet.rs`, new: over 100 000 seeds three in ten of the girls of 15 to 19 and nine
+in a hundred of the women of 20 to 29 wear it, nobody under 15, from 30 or veiled, no man, nobody in the
+plain dress; on forty young women the ones the table names have the band and nobody else (7 of 40), it is
+one closed surface seen from outside, its foot 2.5 to 7 cm over the eyes in front (measured 3.3 to 4.7),
+its top not more than 1 cm over the hair's crown, about as broad as the hair, and no corner of the hair
+stands further out than the band at the band's height, anywhere round the head. Cargo: 93 of 93 (the
+whole suite with the band 2 mm off the hair; the band's tests and the library's again with the last file).
+`tests/portrait.test.ts` and its neighbour 42 of 42. `npm run lint` passes. Pictures (project files,
+`portraits/`): `runde128_vorher_nachher_frauen.png` (four of the sample's women under seeds that draw the
+band, round 127 above, now below), `runde128_von_allen_seiten.png`.
+
+**Round 129: a woman's gown is closed in front** (2026-11-20). The dress (Ramon: the figure, the hair, the
+whole portrait). Since round 124 the picture ends under the chest, and what it shows there was a plain front
+of cloth from the neck to the picture's foot, on everyone: a sack pulled over the head. The reference's
+gowns are closed down the front, the common women's with a lace over linen, the ladies' with a row of
+buttons. What was read this time (three pages of one re-enactor, Rosalie Gilbert: Buttons and Lacings,
+Kirtles, and the buttons of her collection; not a primary source, and read as quotations fetched from the
+pages, not the pages in full): kirtles and gowns closed with buttons or with lacing, in front or at the
+side seams; a working woman was likely to wear a kirtle laced in front, since she could dress herself;
+eyelets "closely set, around 2cm"; the lace of the gown's colour until the 15th century; the lower classes
+"would have to be content with matching cloth buttons", which were "almost always ball-shaped", "set very
+closely together" and at the very edge of the opening; a gown buttoned down the front in the Romance of
+Alexander, c. 1340; the English buttons the collection lists are 9 to 16 mm.
+
+What is changed. A woman's gown is closed in front from 14 years, by the sixth digit of her seed
+(`DressSet::fastens`, `fasten_from`, `fasten_of`): on five in ten with a lace, on two in ten with buttons,
+on three in ten not at all, as before. The lace: the two edges stand 5 mm apart from the neckline down,
+the linen she wears under the gown shows between them, and one lace of the gown's colour crosses them
+every 2 cm, from an eyelet 1.3 cm inside one edge to the next on the other. The buttons: balls of the
+gown's own cloth, 11 mm across, 2 cm from one to the next, from 1.6 cm under the neckline down, and beside
+them the line where the edge with the buttonholes ends. Both go down the gown as far as its data does
+(under the waist, 16 or 17 of them; the picture shows the upper seven or eight).
+
+They are not files: a new part of the builder (`portrait/src/fasten.rs`) lays them on the gown as it lies
+on the person. After her bust is held and before the body is turned, it reads the gown's front down the
+body's middle line off the gown's own triangles (every millimetre of height, the foremost triangle that
+faces the front; the neckline is where that line begins), and sets the pieces along the way down the
+cloth: a button's ball with its middle a third of a ball off the gown, a lace out of the cloth at one
+eyelet, over both edges and into the cloth at the other. So they lie on a broad chest and a narrow one, on
+a girl of 14 and a woman of 68, and are turned with the shoulders. Each piece is drawn with the gown's
+image and the gown's colour at its place (a patch's, a fold's shade); the linen between the edges with the
+smock's image in the table's linen. What another cloth covers is left out (a wimple, a veil's fall, a
+hood's cape). A fastening is 900 to 1 550 triangles of some 122 000 and took 2.8 and 3.6 ms of a
+portrait's 150 and 60 on the two measured here. The wire, the stage and the files are as they were; only the builder changed.
+
+Tried and not kept.
+
+- The laced edges meeting in one dark line, the lace 2.8 mm thick from eyelets 8 mm inside the edges: a
+  scar sewn up with short stitches. With the edges 5 mm apart over linen and a lace of 3.4 mm from eyelets
+  1.3 cm inside it reads as a laced opening. That the edges stand apart is by eye (PLACEHOLDER): the pages
+  say nothing on it, the reference's laced gowns show linen between the edges.
+- The opening beginning 8 mm under the neckline's rolled edge: a slit in a closed front, which nobody could
+  put on. It begins 3 mm under the edge's top now, on the roll.
+- A ball's and a lace's places in the cloth's image taken from where their corners stand before the gown:
+  the sides of a ball have no breadth in the image then, and the stage, which reads the weave's relief by
+  how the image lies on a triangle, drew those triangles black (black chips on every button). Each corner
+  now has its own place: a ball's cloth is drawn together behind it, a lace's laid round it.
+- The first search for the neckline found the gown's rolled edge at the nape, which faces the front too:
+  no fastening at all. Only what lies in front of the chest's skin is read.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line where round 128 left it to the tenth (the
+faces are not touched; six of the sample's women wear a fastening). Read with this round's builder, before
+the source's text was written into the table.
+
+Honest about it. Buttons and lace are of the gown's colour, as the pages say of common people, so at the
+size of a small picture they are a row of dots and a pale line, not the reference's gold buttons and
+contrasting laces; in a large picture they read well. The gown itself is the same loose sack: it is not
+cut closer to the body, which is what a lace or buttons are for, and it has no belt, no trim and no seam.
+The buttoned gown has no buttonholes and no second layer of cloth, only a dark line beside the buttons;
+the laced one has no eyelets (the lace goes into the cloth) and no knot or hanging end; the edges of the
+opening are flat lines 0.6 mm over the gown, not turned cloth, and the linen between them is a band on the
+gown, not a gap in it. Seen close from the side one sees that. The line follows the body's middle, not a
+fold of the cloth, and a strong fold across it would be bridged or cut; none was seen on the people looked
+at. One re-enactor's pages are thin ground, and they were read as fetched quotations: no find, effigy or
+manuscript was looked at. The shares (five, two, three in ten), the age of 14, that none is laced at the
+side, the 5 mm between the edges and the 2 cm from button to button are by eye (PLACEHOLDER). The men's
+gown is as it was: nothing was read on how a common man's was closed. On England's women no cloth lies
+over the gown's front middle (the wimple ends at the neckline), so the leaving-out is tested on a sheet,
+not seen on a person. Looked at on the six of the sample's women who wear one from the front, on two from
+five sides and on two close up. From behind, the linen specks on the gown's shoulder are still there (the slit behind
+the armpit, not this round's).
+
+Tests: `portrait/tests/fasten.rs`, new, three: over a million seeds five in ten of the women from 14 are
+laced and two in ten buttoned, no girl of 13, no man, nobody in the plain dress; on forty women and girls
+of 10 to 68 and ten men, each standing as their seed turns them, the ones the table names have a
+fastening and nobody else (16 laced, 7 buttoned on this set), every triangle is wound as its corners face,
+the buttons are balls of 11 mm (the topmost round to 5 %: it lies where the neck's twist ends) whose
+middles stand 0.4 to 0.8 of a ball's radius off the gown's triangles (measured 3.2 to 3.3 mm), 2 cm apart
+to 15 % (measured 1.94 to 2.07), ten and more; the lace's ways are 2 cm apart, as long as from eyelet to
+eyelet, on the gown (0 to 2.3 mm off it), eight and more, with linen between the edges as far as the lace
+goes; and on a sheet with a second sheet over its upper part both begin below where the second ends.
+`tests/clothes.rs`: a woman under a wimple has no smock at the neck as before, and linen only as the
+strip of a laced gown. Cargo: 96 of 96 (one of the old tests failed on that linen in the first whole run
+and was brought in line; it and its file's others then ran again, the rest was not run twice; after the
+source's text was written into the table, the library's tests and the fastening's again).
+`tests/portrait.test.ts` and its neighbour 42 of 42. `npm run lint` and `npm run typecheck` pass.
+Pictures (project files, `portraits/`): `runde129_vorher_nachher_frauen.png` (four of the sample's women,
+round 128 above, now below), `runde129_nah.png` (buttons and lace close up),
+`runde129_von_allen_seiten.png` (a buttoned and a laced woman from five sides).
+
+**Round 130: a man's parted hair in waves** (2026-11-20). The men's hair again (round 125 left it "straight
+as a helmet where theirs is waved"). On the reference's sheet of men's heads most wear the bowl cut, as
+ours do, and one wears his hair in loose waves to the collar. Nothing was read this time: no source for a
+common man's waved hair in 1356 (PLACEHOLDER, as the parted cut itself is).
+
+What is changed. Of the two men in ten who wear their hair parted and cut at the jaw, one now wears it in
+waves (`page02`; `DressSet::hair_lengths` has `page01` and `page02` with one tenth each, `hair_parted`
+both). It is round 125's cut with one thing more (`tools/portrait/pipeline/hair_body.py`, `waves`): from 3
+cm after its beginning a bundle swings 5.5 mm to the side and 4 mm off the head, a wave 7 cm long. The
+wave's place goes by the way a bundle still has to go to the cut, so that bundles side by side wave
+together, wherever they began, each a little off its neighbours. A new file (`page02_body`, 0.69 MB); the
+painted layer and the scalp are the girl's, as the straight cut's are. The seed's digit that drew the
+parted cut draws the same or the waved one: nobody else's hair changed, and a boy keeps the bowl cut until
+15 as before.
+
+Tried and not kept.
+
+- A wave 5.5 cm long, 5 mm to the side and 3 mm off the head, each bundle's wave up to 0.4 radians and 4 %
+  of its length off its neighbours': every bundle a snake of its own, crossing the next ("a head of
+  worms"). With the bundles nearer in step (0.2 radians, 2 %) and a longer wave the hair lies in waves.
+- To tell waved from straight hair in a test by how much the hair's surface tips up and down at the back
+  of the head: 0.30 to 0.34 on the waved, 0.31 to 0.32 on the straight; the bundles' flanks and ends
+  tip as much as a wave does. The test reads the bundles' middle lines instead (below).
+
+**The gauntlet**: 22 of 22 over the whole sample, every line where round 129 left it to the tenth. No man
+of the sample draws parted hair (round 125), so this says only that nothing else moved.
+
+Honest about it. It is one cut more, and the same cut: parted in the middle, to the jaw, on one man in
+ten, with the same hairline and no fringe; the waves are even, the same on every head that wears them, and
+each bundle is still a thick smooth band, so it reads as a wig in soft waves, not as the reference's loose
+locks, which also fall to the collar (ours ends at the jaw, since hair below the chin would be turned
+with the shoulders). From the front the waves show mostly as the outline beside the cheeks; from the side
+and from behind they read. The bowl cut, which seven men in ten wear, is as it was. The share (one in
+ten), the wave's measures and that it goes with nothing about the person (no gene: a man's curls are
+`hair_curly`, another cut) are by eye (PLACEHOLDER). No man of the sample draws it, so the sample's sheet
+does not show the round; the pictures draw men of the sample under other numbers. Looked at on three
+heads from the front and on one from five sides.
+
+Tests: `portrait/tests/hair_body.rs`, the parted men's test: of 80 men with hair on the head nine wear it
+parted, three straight and six in waves, and every one passes what round 125 asked of the cut; the
+bundles' middle lines (through the middles of their cross-sections, over the middle half of each) turn
+by 0.83 to 1.00 radians in 10 cm on the straight (as the head under them is round) and by 1.62 to 2.14 on
+the waved, the test's line between them at 1.3. The library's test of the shares: three, three, two, one
+and one tenth. Cargo: 96 of 96, in one run.
+`tests/portrait.test.ts` and its neighbour 42 of 42. `npm run lint` passes (`tools/portrait` is left out of
+`ruff`). Pictures (project
+files, `portraits/`): `runde130_vorher_nachher_maenner.png` (three of the sample's men under seeds that
+draw the waved cut, round 129 above, now below), `runde130_von_allen_seiten.png`.
+
+**Round 131: a man's gown is buttoned** (2026-11-20). The dress again (Ramon: the figure, the hair, the
+whole portrait). Round 129 closed the women's gowns and left the men's "as it was: nothing was read on how
+a common man's was closed". Read now (two pages, as quotations fetched from them, not the pages in full:
+the Medieval Combat Society's "Male reenactment costume", a re-enactors' page whose paragraphs on these
+garments have no notes, and Wikipedia's "1300-1400 in European fashion"): the cotehardie, which began to
+replace the surcote from 1350, "fastened at the front by buttons down to the height of the girdle";
+cheaper cotehardies were looser, had "no fastening at the front" and were "put on over the head"; working
+men wore short or knee-length tunics. Nothing was found on a common man's buttons themselves (cloth, size,
+spacing).
+
+What is changed. Two men in ten from 15 years wear the gown buttoned down the front, by the same digit of
+the seed that closes the women's (`DressSet::fastens` and `fasten_from` now hold a row and an age for
+each sex; `fasten_of` reads the person's). The others' gown is pulled over the head as before, and no man
+is laced. The buttons are the women's (round 129: balls of the gown's own cloth, 11 mm across, 2 cm
+apart, with the line of the buttonhole edge beside them), set from under the point of the men's slit
+neckline down, by the same part of the builder; nothing in `fasten.rs` changed but its words. Six men in
+ten wear a hood, whose cape lies over the chest: there the buttons are left out as far as the cape goes
+and begin under its edge (the leaving-out was built in round 129 and tested on a sheet only; here it is
+seen on people, hood up and hood thrown back). Girls, women and boys are as they were.
+
+Tried and not kept: nothing was built twice this round. A test set of ten men (round 129's) drew two
+buttoned ones, both under a hood, which says nothing about a bare neck; the set is a hundred men now.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line where round 130 left it to the tenth (the
+faces are not touched; two of the sample's men, both hooded, wear the buttons).
+
+Honest about it. It is round 129's row of buttons on a second gown, not a new garment: the men's gown is
+the same loose tunic, not the cotehardie the pages speak of, which lies close on the body and is what
+buttons are for; it has no belt, which is where the pages have the buttons end (ours go down as far as
+the gown's data, under the picture's foot). The buttons are of the gown's colour, so in a small picture
+they are a row of dots; the reference's are metal and contrast. On a bare neck the row begins under the
+slit, and the slit itself is not closed with them. Under a hood, which most men wear, three or four
+buttons show between the cape's edge and the picture's foot: for six men in ten of the buttoned the round
+is nearly nothing to see. The sources are thin: a re-enactors' page without notes and an encyclopedia,
+read as fetched quotations, and what they say is of the cotehardie, a garment of people better off than a
+field hand; that two in ten of the common men wore such a front, the age of 15 and the women's buttons
+on it are by eye (PLACEHOLDER). No buttonholes, no second layer of cloth (as round 129). Looked at on
+four men from the front (one bare-necked with the slit, one bald, one hood thrown back, one hood up) and
+on one from five sides.
+
+Tests: `portrait/tests/fasten.rs`, the three of round 129, widened: over a million seeds two in ten of
+the men from 15 are buttoned, none at 14, none laced, nobody in the plain dress; the set that is built is
+forty women and girls and a hundred men of 10 to 68 (16 laced, 14 buttoned, seven of them men, five of
+those under a hood; 110 plain), with round 129's measures on every one (winding, the balls' roundness,
+their height off the gown, the spacing), ten buttons and more on a bare-necked man, four and more under
+a cape, and under a cape the row's top no more than a button's breadth above the cape's lowest point in
+front. Cargo: 96 of 96, in one run. `tests/portrait.test.ts` and its neighbour 42 of 42. `npm run lint` passes.
+Pictures (project files, `portraits/`): `runde131_vorher_nachher_maenner.png` (four men, round 130 above,
+now below; three are the sample's men under seeds that draw the buttons),
+`runde131_von_allen_seiten.png` (a buttoned man with the hood thrown back, from five sides).
+
+**Round 132: a man's coif, and the fillet's linen** (2026-11-20). The men's heads (Ramon: the figure, the
+hair, the whole portrait). A man of England had three heads: bare, a hood on it, a hood thrown back. The
+reference's men wear caps and hats of many kinds. Read this time (five pages, as quotations fetched from
+them, not the pages in full): Wikipedia's "Coif": coifs "fell out of popularity with men in the fourteenth
+century", were "worn by all classes in England and Scotland from the Middle Ages to the early seventeenth
+century" and are "usually made of unadorned white linen and tied under the chin"; the Medieval Combat
+Society's page on men's costume, under Edward II (1307 to 1327): "A linen coif or undercap covering the
+hair and ears and tied under the chin", and "Coif and hood" under effigies of 1354 and 1372 (gentry);
+Cadw's leaflet "Hats" (no dates, no notes): coifs "were considered to be underwear", worn "underneath
+formal hats by everybody over 12 except those doing physical labour", with the Luttrell Psalter, the
+Romance of Alexander and the Queen Mary Psalter named for people of all levels in coifs; a re-enactment
+group's guide (Buckingham's Retinue): before 1500 a coif of one or two pieces, "an oblong of material,
+folded in half with a curve where the back of your head should be", with ties at the corners; a blog
+without notes (Ruth Johnston): "Men still wore the linen coif", which "went under armor and even under
+other hats". Two more pages said nothing on men's coifs. Nothing was found on how many common men still
+wore one in 1356.
+
+What is changed. One man in ten from 30 years wears a coif (`DressSet::coif`, `coif_from`, `coifs`,
+`coif_of`): of the three in ten whom the seed's last digit leaves bare-headed, one. It is a close cap of
+the table's linen over the skull and the ears: its edge crosses the forehead at the hairline (6.1 to 7.5
+cm over the eyes on the test's men), goes down in front of the ears to below the lobes and round the nape,
+and is turned in 5 mm; two strings 7 mm broad run from under the cap below the ears along under the jaw
+and meet under the chin. Under it the head's hair is drawn as its painted layer alone (it shows at the
+nape and nothing of it at the forehead); the body of bundles is left out.
+
+A new file (`cloth_coif`, 0.12 MB) written by a new script (`tools/portrait/pipeline/coif.py`): a shell
+round the head's middle that stands in every direction above its edge as far out as the base head's skin
+and ears do, evened so that it passes over an ear in one bow, plus 4 mm (5.5 mm at the edge, where it is
+not evened); each corner is bound to the skin in its own direction from the head's middle, the strings to
+the skin they lie on (where the plane through the cap's two corners and the place under the chin cuts the
+head), and the builder reads the file as it reads the fillet's and evens three times how the head carries
+it. 3 305 points, 6 504 triangles. The image is the fillet's linen, laid on each half of the cap as on a
+flat piece against the side of the head (the halves meet over the crown, as a coif's two pieces do), a
+tile to 15 cm.
+
+Found on the way, both of round 128. The stage tells wool from linen by an image's name and took the
+fillet's image for wool: the fillet was drawn 2.6 times as light as the veil's linen
+(`src/portrait/materials.ts`; now linen). Drawn as linen it came out darker than the veil: the band's
+triangles were wound inside out, so that its front was lit as the inside of a ring is; the factor had
+hidden that. `fillet.py` winds them outward now, and the file is the old one with every triangle turned.
+The fillet is now the veil's linen: greyer than before, with the weave showing.
+
+Tried and not kept.
+
+- The cap over the hair that lies under a hood (`bob02`'s body of bundles, as far out as it stands): 21.8
+  cm broad on the base head, its sides standing off the cheeks, the fringe a thick roll under its edge: a
+  helmet. With a second file for a head without hair. Now one cap on the skull, 19.1 cm broad, and the hair
+  under it painted.
+- The cap evened over the head's whole form: from the head's middle the jaw and the neck are further away
+  the lower one looks, and evened with that in it the cap stood up to 2.8 cm off the lower head. It is
+  evened over what stands out of the head's own trend (20 degrees).
+- The strings straight from the cap's corner in front of the ear to the chin: a strap across the cheek.
+- A gap of 3 mm and the builder evening twelve times how the head carries the cap: on three of sixteen men
+  the skin under the ear came through the cap's rim by up to 2.2 mm. With 4 and 5.5 mm and three times, on
+  none (at least 1.3 mm of room on the nearest).
+- A tile of the image to 4 cm, as the fillet has: at a portrait's size the weave is finer than a pixel and
+  the cap was blotched like felt.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line where round 131 left it to the tenth (one man
+of the sample, of 50, wears the coif; read with this round's builder and stage, before the fillet's file
+was turned, which no one of the sample wears).
+
+Honest about it. It reads as a cap of linen, and close up as a bathing cap: the shell is smooth, with no
+fold, no wrinkle and no seam over the crown (the image has its seam there, which hardly shows); it does
+not press the ears flat as cloth does but goes over them in a bow, so the head is 1 to 2 cm broader than
+the skull; the strings have no knot and no ends, they meet under the chin, and on a man with a beard
+they are lost in it (on most men of that age, then, the coif has no strings to see). No hair shows at the
+forehead or the temples, where the reference's and the manuscripts' coifs let a fringe out; a man of 30
+with a full head of hair has a bare forehead under it. It is worn alone only: the pages have it mostly
+under a hood or a hat, as underwear, and one says not by those doing physical labour, which the people
+here are; that it was still worn by one common man in ten in 1356, from 30 years, is by eye (PLACEHOLDER),
+set low and on the older because the pages have it going out of use. The cut (where the edge runs, the
+gap, the strings' breadth and way) is by eye too; the two-piece cut is from a re-enactment group's guide.
+No manuscript, effigy or find was looked at. Looked at on four men from the front (two with beards) and
+on one from five sides, and a fillet before and after.
+
+Tests: `portrait/tests/coif.rs`, new, two: over 100 000 seeds one man in ten from 30 wears it, none at
+29, no woman, nobody in the plain dress, and whoever wears it has no hood and the hair of a covered head;
+of 150 men of 30 to 68 the sixteen whom the seed names have it and none of the first forty others, on
+each it is the file's sheet and strings on a head without a body of hair, the sheet's outer side faces
+out, no corner of any other surface lies outside the sheet over it (rays from the head's middle; at
+least 1.3 mm of room on the nearest man, up to 8.5 mm over the crown's skin), its edge lies 6.1 to 7.5 cm
+over the eyes in front, 4.4 to 5.4 under them at the sides and 2.4 to 3.6 behind, and the strings end at
+the middle, in front, 1 to 2.5 cm over the frame's chin. `tests/fillet.rs`: the band's sides that face
+out lie further out than those that face in (1.3 mm; the other way round until now). `tests/hair_body.rs`:
+the parted men's test builds men of 29 (two of its men of 30 now wear a coif). `tests/portrait.test.ts`:
+the fillet's image is linen to the stage, the sample wears it (the coif), and the two tests of the
+garments' hems leave the coif out (its edge is the sheet turned in, no tube). Cargo: 98, of which one
+failed in the first whole run (the parted men's) and was brought in line; then all again in one run;
+after the sources were written into the table the library's, the coif's and the fillet's again, and
+five portraits drawn pixel for pixel as before. `tests/portrait.test.ts` and its neighbour 42 of 42.
+`npm run typecheck` and `npm run lint` pass.
+Pictures (project files, `portraits/`): `runde132_vorher_nachher.png` (a woman with the fillet and four
+men, round 131 above, now below; three of the men are the sample's under seeds that draw the coif),
+`runde132_von_allen_seiten.png`.
+
+**Round 133: a man's hair with its ends turned out** (2026-11-20). The men's hair (Ramon: the figure, the
+hair, the whole portrait). Seven men in ten wore the one bowl cut in three lengths, all of them straight to
+the end. Read this time, as quotations fetched from the pages, not the pages in full. On the hood first,
+because a man's gown is buttoned since round 131: Rosalie Gilbert's page on hoods (women's hoods "often
+buttoned"); a blog on the London hood no. 247 (the plain hood "sewn up the front" "seemed to be more
+masculine", "Women's hoods were more often buttoned"); another, that a woman's open hood buttons up the
+front "rather than pulling on over the head as earlier and men's versions do"; a handout of the Society
+for Creative Anachronism (hoods of the upper class "usually contoured at the neck (often fitting closely
+enough to require buttons)"). Nothing in them has a common man's hood buttoned, so none is. On the hair:
+D. C. Calthrop's "English Costume" (the page gives the book's edition of 1907; a popular book by a
+painter, without notes), the chapter on Edward III as reprinted at fashion-era.com: nearly every man "with
+long hair to his neck, curled at the ears and on the forehead", and of a knight in the height of fashion
+"His hair is shorter than is usual, and it is not curled"; the Medieval Combat Society's page on men's
+costume, under Edward II (1307 to 1327, the reign before): "Men tended to wear their hair long, almost to
+the shoulders", "The hair was bushy, cut round and curled"; Encyclopedia.com's "Bowl Haircut" (from Gale's
+"Fashion, Costume, and Culture"): the cut "especially popular among European men from the twelfth through
+the fifteenth centuries", "with long curls being popular during some decades and shorter lengths coming
+into style during others". Wikipedia's article on fashion from 1300 to 1400 says nothing on men's hair.
+No picture of the time was looked at.
+
+What is changed. Of the two men in ten whose bowl cut reaches the jaw, one now has its ends turned out and
+up in rolls at the sides and behind (`hair_body.py`, cut `bob09`; `DressSet::hair_lengths`, and
+`hair_dressed`, new: a cut that is another cut with its ends dressed). It is `bob07`'s cut, the fringe as
+it is, the sides and back cut 11 degrees lower (`end` -62 for -51), so that the rolls lie where the plain
+cut ends: the hair ends 0.84 to 0.86 of the head's height below the crown on the test's men, the plain
+cut's 0.77 to 0.82. From 45 degrees round the head (in full from 70) the end of every bundle leaves the
+skin and turns through 140 to 220 degrees round a middle that lies 7 to 9 mm outside the topmost layer;
+the layers under it turn round the same middle, so a lower layer's roll is the wider (up to 1.4 cm) and
+the rolls lie in one another. A roll runs up to 3 mm to the side for each radian (a corkscrew, not a
+hoop), keeps half the bundle's breadth to its end, and has a ring every 1.2 mm. The band's arch turns
+over as it rolls, so that its ridge stays on the side that is seen, and the turned part gets back 85 in
+100 of the shade the bake takes from it (Blender reads a band that shows its underside as facing the
+head). 37 472 points and 63 372 triangles (`bob07`: 29 905 and 50 400), 0.80 MB packed. It has no painted
+layer and no scalp of its own: the builder takes `bob07`'s (`DressSet::under_of`). A boy under 15 whose
+seed draws it wears `bob07`, as he did; under a hood on the head or a coif the hair is the one that lies
+flat, as everyone's; a head that loses its hair or has curls wears those cuts, as before.
+
+`hair_body.py`: a cut's `turn` (eight numbers, in the comment over `BOWL`), `lay(rolled=)`. The other
+cuts come out as they were: `bob07` and `page02` written again are the repository's files byte for byte.
+
+Tried and not kept.
+
+- Every bundle with a roll of its own radius (5.5 to 8.5 mm, through 150 to 250 degrees), the layers'
+  rolls one over the other: a row of ringlets three deep round the head, a judge's wig, and dark.
+- The band rolled as it lies (its arch not turned over): from 90 degrees on one looks into the trough of
+  its underside.
+- The bundle narrowing to its point within the roll, as a straight end does: claws.
+- Curls on the forehead, which the page has: the fringe cut 3.5 degrees lower and rolled at 0.45 of the
+  sides' radius. At a portrait's size a row of dark blocks over the brows, like battlements. The fringe
+  hangs as it is cut.
+- The bundle keeping 0.8 of its breadth and its slanted end a fifth of the roll (for 0.5 and three
+  tenths): nothing to see of it.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line where round 132 left it to the tenth (read with
+this round's builder and stage; nobody of the sample wears the new cut).
+
+Honest about it. It reads as hair to the jaw whose ends flick out, and from the side and behind as a row
+of single curls: each bundle's roll is a band with an edge, and where the bundles are narrow (behind) they
+stand side by side like hooks. Every roll turns the same way, out and up; none turns in, and none hangs
+as a ringlet. The page says "curled at the ears and on the forehead"; the forehead's curls are not built
+(tried, see above), and the ears are covered. The sources are thin: a painter's popular book of 1907
+without notes, a re-enactment society's page on the reign before, and an encyclopedia's sentence about
+"some decades"; no manuscript, effigy or brass was looked at, and that a curl of 1356 was a roll turned
+out and up, its size, the share (one man in ten) and the age (from 15) are by eye (PLACEHOLDER). Nobody
+of the sample is drawn with it: two of its men draw the cut and both wear the hood on the head, so the
+gauntlet does not see it. Looked at on five men from the front (two with the hood thrown back, where the
+rolls lie over the hood's cape) and on two from five sides. Seen on the way and left: from behind, a few
+white specks on a gown's back at the right shoulder (round 132's builder has them too).
+
+Tests: `portrait/tests/hair_body.rs`, one new: of the men of 29 among 200 whose seed draws `bob07` or
+`bob09` and who wear it (bare-headed or the hood thrown back, a full head of straight hair), the 6 with
+`bob09` have `bob07`'s painted layer under it, are a boy of 10 with `bob07`, and their head of hair is
+broadest in its lowest quarter (2.3 to 5.5 mm a side over anything above it), where the 18 with `bob07`
+are 2.4 to 4.9 mm narrower than above; their fringe stands no further off the forehead than a plain
+one's, and the hair ends 0.6 to 0.9 of the head's height below the crown. `portrait/src/lib.rs`: the
+shares (of 1000 seeds 100 draw `bob09`, 100 `bob07`; no boy draws `bob09`). Cargo: 99 of 99 in one run;
+after the source was written into the table the library's 28 again. `tests/portrait.test.ts` and
+its neighbour 42 of 42. `npm run typecheck` and `npm run lint` pass.
+Pictures (project files, `portraits/`): `runde133_vorher_nachher.png` (five men of the sample under seeds
+that draw the cut, round 132 above, now below), `runde133_von_allen_seiten.png`.
+
+**Round 134: a man's felt hat** (2026-11-20). The men's heads again (Ramon: the figure, the hair, the whole
+portrait). A man of England had four heads: bare, a hood on it, a hood thrown back, and since round 132 a
+coif; the reference's men wear hats of many kinds. Read this time (five pages, as quotations fetched from
+them, not the pages in full): Encyclopedia.com's "Peasant Costume" (from Gale's "Arts and Humanities
+Through the Eras"; a list of sources, not footnoted): "Peasant men usually wore a large round felt hat",
+in a costume that "remained fairly fixed from about 800 to about 1375", and from the French shepherd's
+treatise "Le Bon Berger" (the page: written in 1373): "It is proper that the shepherd wear a felt hat,
+round and very large", "On the brim and upper part of the crown fabric ought to be doubled a palm's length
+or more"; History Hit's article on dress in medieval England (popular, the statement undated): "Men wore
+wide-brimmed straw hats, close fitting bonnet-like hoods made from linen or hemp, or a felt cap";
+Medievalists.net, quoting Margaret Scott's "Fashion in the Middle Ages": "straw hats were worn outdoors by
+all ranks in the summer"; Rosalie Gilbert's page on women's hats (straw hats "worn by both men and women
+for protection against the sun", a cocked cap of felt "worn with the brim turned up", written of first in
+1464); Cadw's leaflet "Hats" (a hat with a folded brim of two layers of wool, no date). None of the pages
+has an English man's hat of the 14th century with a date, a measure or a colour.
+
+What is changed. Two men in ten from 15 years wear a felt hat (`DressSet::hat`, `hat_from`, `hats`,
+`hat_tones`, `hat_of`, `hat_tone`): by the seed's last digit one of the three in ten who went bare-headed,
+and one of the three in ten who wear the hood thrown back, over it. It is a round crown, some 12 cm high over
+its line and 4 cm further off the top of the head than off the forehead, with a brim 6 cm broad that falls
+outward by 20 degrees, rises and falls 6 mm round the head and is 6 mm thick: the sheet goes out along
+the brim's top, round its edge and back underneath to the crown. The line lies across the forehead (5.8
+to 6.9 cm over the eyes on the test's men) and nearly level round the head, above the ears. Its colour
+is one of four tones of undyed wool by a digit of the seed (`#6b5a48`, `#7d7870`, `#3f3a36`, `#9a8468`).
+Under it the hair is the one that lies flat under a hood, and shows under the brim as a fringe and round
+the sides and the nape; a man with a bare top keeps his horseshoe (`real_look.rs`). The straw hat, which
+three pages have, is not built.
+
+A new file (`cloth_hat`, 0.12 MB) written by a new script (`tools/portrait/pipeline/hat.py`, on
+`coif.py`'s way of reading the head): a dome that stands in every direction above its line as far out as
+the base head's skin and the two flat heads of hair do (`bob02`, `bob04`), evened over 12 degrees, plus 8
+mm; the brim hangs from the line. Each corner of the crown is bound to the skin in its own direction from
+the head's middle, a corner of the brim to the skin under the place it hangs from, and the builder evens
+twelve times how the head carries it. 3 457 points, 6 816 triangles (3 744 the crown). An image of its
+own (`cloth_hat.webp` and `_n`, 0.18 MB together): `fabric_tex.py` has a third kind, `felt`, matted fibres
+without threads, a tile to 5 cm.
+
+Tried and not kept.
+
+- A crown 2.2 cm further off the top of the head with a brim 4 mm thick that falls 14 degrees, drawn with the wool's weave
+  half hidden and mottled as the gowns are, a tile to 10 cm: an iron hat, hammered, with a rim of sheet
+  metal.
+- A gap of 6 mm with the builder carrying the hat as stiffly as the fillet (300 times evened): on two of
+  five men the fringe's bundles came through the crown over the forehead. With 8 mm and twelve times, on
+  none of 28 (at least 6.4 mm of room on the nearest).
+- The wool's image with its nap at the full (`NAP=1`): the weave still shows as a grid, which felt has not.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line where round 133 left it to the tenth (read with
+this round's builder and stage; nobody of the sample wears the hat).
+
+Honest about it. It reads as a felt hat, and as one hat: every man who wears one has the same crown and
+the same brim at the same angle, in four colours. The form is a guess from two words, "large" and
+"round"; the treatise's "very large" hat with its felt doubled a palm's length at the brim is larger than
+ours and is a shepherd's of France; no picture of the time was looked at, and the pages are an
+encyclopedia with a list of books, a popular article, a blog quoting one book, and a page on women's hats.
+The crown is a smooth dome without a dent, a band, a cord or a seam, the brim's edge is a clean line
+without a turned-up side, and the felt is one even surface: close up a hat of moulded plastic. The brim
+shades nobody's forehead more than a little (looked at, not measured), and the eyes of a man who looks
+down from under it would be in shade, which nobody here does. It sits on hair that lies as flat as under
+a hood, so the fringe under it is the same on every man; a man with curls or with his hair parted has
+neither under the hat. Worn over a thrown-back hood, whose cape lies on the shoulders, and never over a
+hood on the head or a coif, which the pages have under hats. The shares (two in ten), the age and the
+measures are by eye (PLACEHOLDER). Nobody of the sample is drawn with it (its men whose digits draw it
+are boys of 8 and 13 and a small child), so the gauntlet does not see a face under a brim. Looked at on
+five men from the front and on two from five sides.
+
+Tests: `portrait/tests/hat.rs`, new, two: over 100 000 seeds two men in ten from 15 wear it, none at 14,
+no woman, nobody in the plain dress, never with a hood on the head or a coif, one in ten over a hood
+thrown back, and every colour is drawn; of 150 men of 15 to 68 the 28 whom the seed names have it and
+none of the first forty others, on each it is the file's sheet with its own image, the crown's outer side
+faces out, no corner of any other surface lies outside the crown over it (rays from a place inside the
+crown; at least 6.4 mm of room on the nearest man), the line lies 5.8 to 6.9 cm over the eyes, the
+brim's lowest place in front 4.2 to 4.9 cm over them, the hat is 11.8 to 12.9 cm broader than its crown
+(31 to 35 cm), and the hair goes on 10 cm and more under the line behind. `tests/coif.rs`: a covered head is
+one under a hood, a coif or a hat. Cargo: 101, of which one failed in the whole run (the coif's shares,
+which did not know the hat) and was brought in line and run again with its file. `tests/portrait.test.ts`
+and its neighbour 42 of 42. `npm run typecheck` and `npm run lint` pass.
+Pictures (project files, `portraits/`): `runde134_vorher_nachher.png` (five men of the sample under seeds
+that draw the hat, round 133 above, now below), `runde134_von_allen_seiten.png`.
+
+**Round 135: a second hat, its brim turned up behind** (2026-11-20). Round 134's hat was one hat: the same
+crown and the same brim on every man who wears one. Read for it then, on Rosalie Gilbert's page on hats
+(a re-enactor's page, mostly on women's; quotations fetched from it, not the page in full): a cocked cap,
+"a hat, probably felted or made of stiff material, and worn with the brim turned up either before or
+behind", "worn by both men and women in medieval times"; "Many contemporary images show men of all
+classes during the fourteenth and fifteenth centuries wearing this style of hat"; "The brim usually is a
+different colour to the body of the hat"; its first written mention is of 1464. Nothing more was read
+this round, and no picture was looked at.
+
+What is changed. Half of the men who wear a hat (one man in ten from 15 years) wear it with the brim
+turned up behind and drawn out to a point in front (`DressSet::hat_cocked`, `hat_file`: by a digit of the
+seed of its own). It is round 134's crown; from 35 degrees round the head the brim begins to turn up and
+from 95 degrees it stands up 78 degrees against the crown, 5.6 to 6.4 cm over the crown's line behind on
+the test's men; in front it falls as before and is six tenths longer at the middle, 9 to 10 cm in front
+of the crown (the falling brim 5.7 to 6.4), narrowing to its ordinary breadth over some 24 degrees to
+either side. A second file (`cloth_hat_cocked`, 0.12 MB) from the same script (`hat.py`, `HAT_COCK`),
+drawn with the hat's felt and in the same four colours; where the brim is turned up it is as thick
+across itself as the falling brim is straight down. The falling hat's file is written as before, byte
+for byte.
+
+Tried and not kept: the brim turning up from 60 degrees round the head, up in full from 130 and by 70
+degrees, half longer in front: from the front two wings standing off the crown beside the temples.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line where round 134 left it to the tenth (read with
+`tools/portrait/gauntlet.mjs`, before the last build, which added the source's entry to the table and no
+form: two portraits compared byte for byte before and after it). Nobody of the sample wears a hat, so it
+could not have moved.
+
+Honest about it. From the side it reads as the hat of the time's pictures as they are remembered, a cap
+with a beak; that memory is not a source, and the one page read has no measure for it: how far the brim
+is turned up, where it begins, how long the point is are by eye, as is the share (half of the hats). From
+the front the turned-up brim still shows as a flap beside each temple. The page says the brim is usually
+of another colour than the body: ours is of one felt. Where the brim meets the crown the surface's
+evened directions lean in, so the crease behind is lit a little flatter than a crease would be. Crown,
+felt and the hair under it are round 134's, with what is said there. Nobody of the sample is drawn with
+it. Looked at on three men from the front beside two with the falling brim, and on one from five sides.
+
+Tests: `portrait/tests/hat.rs`: of a hundred seeds that differ in the digit, fifty draw the turned-up
+brim; of the 28 men with a hat among the 150, the 13 with it have the brim 5.6 to 6.4 cm over the
+crown's line behind and 9.0 to 10.0 cm in front of the crown, the 15 others not over the line and 5.7 to
+6.4 cm in front; the crown's outer side is read by the triangles' winding now. Cargo: 101 of 101
+in one run. `tests/portrait.test.ts` and its neighbour 42 of 42. `npm run typecheck` and `npm run lint`
+pass.
+Pictures (project files, `portraits/`): `runde135_vorher_nachher.png` (five men of the sample under seeds
+that draw a hat, round 134 above, now below: three of them with the turned-up brim),
+`runde135_von_allen_seiten.png`.
+
+**Round 136: a hood whose cape is dagged** (2026-11-20). Six men in ten wear a hood, on the head or thrown
+back, and every one of them had the same cape: a plain round bib with a rolled hem. The reference's hoods
+end in cut edges of many forms. Read for it, as quotations fetched from the pages (not the pages in
+full, and no picture of the time): the Fashion Institute of Technology's glossary page on dagging (K.
+Odom; it quotes costume histories): dagging is "created by cutting or slashing the fabric into different
+shapes"; "sleeves, tippets, collars, hemlines, cloaks, and hoods were flamboyantly edged with dagging
+(also dagges), a scalloped or crenelated cut"; "this decorative treatment was not solely confined to the
+garments of the wealthy. Illuminated manuscripts show grooms, servants, even field workers and shepherds
+wearing clothing accented with dagging" (both from Hill); its forms "Simple cuts in V and U shapes" or
+strips. The Medieval Combat Society's page on men's clothing (re-enactors, without notes), under Edward
+III: "In the 1330's edges of garments were cut away to form dagging and became a very popular fashion",
+and, in Calthrop's words (a painter's popular book of 1907) on that reign's common men's hoods: "some are
+very full in the cape, which is jagged at the hem; some are close about the neck and are plain". Against
+it, an SCA member's article (Florilegium, "Dag on It!"): "these styles were worn primarily by the upper
+classes". None of the pages has a measure, a number of dags or a share.
+
+What is changed. Three hoods in ten have the cape's hem dagged: cut into eighteen tongues with a round
+end, 4.5 cm deep, each 5.1 to 5.5 cm broad in a room of 6.0 to 6.4 cm, a tongue's middle at the middle
+of the chest (`DressSet::hood_dagged`,
+`hood_dags`, `hood_file`: by a draw of the seed of its own, the same whether the hood is on the head or
+thrown back). They are two new files (`cloth_hood_up_dag`, `cloth_hood_down_dag`, 0.25 and 0.14 MB with
+their shade), cut out of the plain hoods' files by a new script (`tools/portrait/pipeline/dag.py`):
+nothing is draped anew. The script lays the hood on the base body as the builder does, finds the cloth's
+lowest edge, halves every edge of the sheet along the tongues' outline (what will be cut away and a
+centimetre inside it), and cuts each triangle where the outline crosses it (the outline: a place's way from the hem against the cut's depth at its place round
+the hem). A corner the file had keeps its row to the digit; a new one is bound to the body's nearest
+triangle as `tunic_bind.py` binds. The rolled hem of that edge is left out (a dag is a cut in fulled
+wool), the hood's other edge keeps its hem. The dagged hood is drawn with the plain hood's image and in
+its colours.
+
+Tried and not kept: the sheet made finer twice (edges of 3 mm): the outline is smoother, and the
+tongues crumple, each small triangle going with its own piece of the body (the builder calms a garment
+over its neighbours, and there are four times as many within the same length). Not made finer at all:
+calm, and the cuts between the tongues are lost to shallow notches.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line where round 135 left it to the tenth (read with
+this round's builder, stage and files). Three of the sample's men wear a dagged hood (940009, 940019, 940025); the
+gauntlet reads skin, and the cape's hem lies on the chest.
+
+Honest about it. From the front it reads as a dagged cape, and it is the one form: eighteen even round
+tongues on every dagged hood, where the pages name V cuts, strips, crenels and leaves and the
+reference's hoods differ from man to man. The tongues' outline is a polygon with corners every 5 mm,
+which shows close up. A tongue lies as the plain cape lay: it does not hang or curl by itself. From
+behind, on the hood thrown back, the tongues are uneven and the cuts between them wide: the cape is
+stretched there. The cut edge has no thickness. The share (three in ten), the number, the depth and the form are
+by eye; the pages disagree on whether common people wore it at all, and the three that say so are a
+glossary quoting a costume history, a re-enactors' page and a painter's book. The cape is still a flat
+bib without folds, and the hood's point has no liripipe. Seen and left: on one man of the sample
+(940009) pale specks of the gown come through the cape at the shoulder, before this round as after it.
+Looked at on five men from the front, before and after, and on two from five sides.
+
+Tests: `portrait/tests/hood.rs` (new, two tests): of 100 000 seeds some 30 000 draw the dagged hood,
+the same on the head and thrown back, and 2 700 to 3 300 of 10 000 whatever the seed's last digit;
+on 150 men of 15 to 68, of whom 103 wear a hood, the 30 who draw it have the dagged file (23 on the
+head, 7 thrown back) and nobody else, drawn with the plain hood's image; a plain hood has no open edge,
+a dagged one an open edge 2.5 to 3.6 m long that rises 5.7 to 7.7 cm in front; the cape hangs 15 to
+23 cm under the frame's chin either way. Cargo: 103, of which one failed in the whole run
+(`tests/fasten.rs`: on one man the row of buttons began in a cut between two tongues, a millimetre
+higher over the cape's lowest corner than the test allows; the tongues were then begun so that one's
+middle lies at the front's middle, which is where the buttons are; on those files cargo was run again
+as a whole: 103 of 103). `tests/portrait.test.ts` and its neighbour 42 of 42, on the first files and on
+the last. `npm run typecheck` and `npm run lint` pass.
+Pictures (project files, `portraits/`): `runde136_vorher_nachher.png` (five men, round 135 above, now
+below; three as the sample has them, two of its men under other numbers), `runde136_von_allen_seiten.png`.
+
+**Round 137: the gown no longer comes through the cloth over it** (2026-11-20). Seen in round 136 on a man
+of the sample (940009): pale specks on his hood's cape at the shoulder, from the front and from behind.
+With the linen left out of the picture they stay, with the gown left out they are gone: the gown's colour.
+Round 124 lifts the cloth over the gown off it (`layers.rs` `lift`: a corner of a cape, a veil's fall or
+a wimple that lies inside the gown or less than 8 mm outside it is set 8 mm outside). That moves the
+corners of the cloth over the gown; a fold of the gown that stands up between three of them came through
+all the same.
+
+What is changed. After the lift, and after the figure is turned into its pose, what of the gown still
+stands through the cloth over it is set 2 mm under that cloth (`layers.rs` `sink`, the lift's mirror: a
+corner of the gown that stands outside a cape, a veil or a wimple by up to 1 cm, or less than 2 mm inside
+it, goes in against its own direction; from where it then lies it is looked at again, up to three times,
+for a rolled hem has a far side). What is moved lies under the other cloth and is not seen. It is done
+after the pose because the pose shears the layers against each other at the neck: done before it, a
+sixth of the corners stood through again (1 096 of 6 577 on the test's people), nearly all by less than
+3 mm.
+
+Counted on 120 people of 15 to 68, of whom 118 wear a cloth over the gown: 6 577 corners of the gown stood
+outside the cape, veil or wimple over them (up to 370 on one person), now none. The pass looks at the
+gown's corners inside the other cloth's box only, each shared corner once, and takes 5 to 6 ms for each
+cloth over the gown (a woman in veil and wimple has two) of some 105 to 110 ms a portrait, on this
+machine and not in the browser (the cells and corners are kept by a quick hash of this file's own: with
+the standard one it took 9 ms).
+
+**The gauntlet**: 22 of 22 over the whole sample, every line where round 136 left it to the tenth (read with
+this round's builder and stage). The gauntlet reads skin; the gown under a cape is not in it.
+
+Honest about it. A fault mended, nothing new to see where there was no speck. Counted along the gown's
+own directions, which is how the pass looks too: a place where the gown shows past the cloth over it
+seen from the camera, at a hem or between two tongues of a dagged cape, is no fault and is not counted,
+and a fold more than 1 cm through would be left (none was found). The gown's surface under the cloth is
+dented where it was sunk; its directions are not made anew, which does not show under the cloth. The
+linen under the gown is not treated: the white specks of the smock at a shoulder from behind that round
+124 left were not looked at again. Seen and left, on veiled women from behind: creases across the veil
+at the shoulders' height, and on one a small dark hole in the veil at the head. The 2 mm and the 1 cm
+are by eye. Looked at on two hooded men of the sample
+from three sides, before and after.
+
+Tests: `portrait/tests/bust.rs`, two more: a corner through a flat cloth or close inside it is set 2 mm
+inside, one far enough inside, too far through, beside the cloth, above the height or facing against it
+is left; and on the 120 people no corner of the gown stands through the cloth over it. `cargo test
+--release` as a whole: 105 of 105 in one run. `tests/portrait.test.ts` and its neighbour 42 of 42; typecheck
+and lint pass.
+Pictures (project files, `portraits/`): `runde137_vorher_nachher.png` (two hooded men of the sample from
+three sides, round 136 above, now below).
+
+**Round 138: hair that is cut ends in wisps** (2026-11-20). Looked at on the sample's grown people after
+round 137, beside the reference's men with a fringe (one sheet of bowl cuts, by eye, nothing measured): what
+stands out most on ours is where the men's hair ends. A bundle is 1 to 2 cm broad and ended as broad as it
+is, cut at a slant in one point (round 109): a fringe, and the cut's edge round the head, were a row of
+teeth, from behind a row of blocks. Theirs ends in single strands on an even line.
+
+What is changed. A bundle of hair that is cut keeps its breadth to its end and is parted there into wisps
+side by side, each narrowing to a point of its own (`tools/portrait/pipeline/hair_body.py`, a cut's
+`fray`, `lay(frayed=)`): over the last 0.8 to 2 cm of the bundle, a wisp some 3.5 mm broad where it
+begins, so two to seven of them by the bundle's breadth; one wisp runs to the bundle's end and the others
+end somewhere in the frayed length's second half, each point a little to one side of its wisp's middle,
+and a wisp is flatter at its point than the bundle's ridge. The wisps lie in the bundle's own surface
+and begin on its last ring corner on corner (their edges are corners of every ring of that bundle), so
+the builder takes a bundle and its wisps for one piece and carries them with the head together. They
+draw random numbers of their own: a bundle is what it was up to where it frays. All bowl cuts (`bob01`
+to `bob09`: every length, under a hood, the hair gone back, the horseshoe, the curls, a small child's,
+and the fringe of the cut with turned ends, whose rolls are as broad as they were to a tenth of a
+millimetre) and the parted hair cut at the jaw (`page01`, `page02`) are written anew: eleven files,
+7.34 MB packed as before (`bob01` 42 676 triangles where it had 49 992: the slanted end had more rings
+than the frayed one has). A girl's parted hair and the hair under
+a veil are drawn to a plait or pinned up and end as they did: `plait01` and `part01` are written byte for
+byte as before (checked). Nothing in the builder or the stage is changed.
+
+Tried and not kept. The wisps as pieces of their own that begin anywhere on the bundle's last ring: the
+builder evens each piece's way with the head by itself, so a wisp and its bundle parted by a fraction of
+a millimetre, and under a hood dark and pale lines lay across the fringe where the wisps begin. The
+wisps drawing from the bundle's own random numbers: every bundle after the first frayed one came out
+another, and the turned cut's rolls 2 mm narrower (its test failed, rightly). A ring every 5 mm in a
+frayed curl where a curl had one every 3: coarser curls, found by the file's size and set back.
+
+**The gauntlet**: 22 of 22 over the whole sample (read with this round's files). One line moved by a tenth:
+a man's far cheek against the lit one, 2.1 of its 4 where it was 2.2 (the hair beside the cheek ends
+otherwise); every other line is where round 137 left it. The gauntlet reads skin and has no line for hair.
+
+Honest about it. It is the ends only. A bundle is still a thick smooth band with a ridge and two flanks,
+and a head of them reads as carved, where the reference's hair is fine strands along its whole length:
+that is the larger part of the distance and is not touched. A wisp is a flat pointed band with straight
+edges, close up a paper point; at a portrait's size the edge reads as hair. The line the hair ends on
+is more ragged than the reference's fringe, which is nearly straight: ours frays over a centimetre and
+more (on a boy of 13, of 84 places 1 to 2 cm above the fringe's lowest end 11 are bare). Nothing was read
+for it: no page was looked for on how a man's hair was cut in 1356, and the length, the breadth and the
+shares are by eye, PLACEHOLDER. The two felt hats were made on the hair as it was (their script reads
+the meshes of the hair under a hood and of the horseshoe) and are not made anew: the hair's height on the
+head is unchanged, only its ends. The women's hair has no free end to fray, so no woman changes. Seen and left: the
+bundles' tops over the crown as carved as before; white specks of linen on the gown's back at one
+shoulder (round 124's).
+
+Tests: `portrait/tests/hair_body.rs`. New: on 163 bare heads of men and boys and 20 girls, 99 in 100 of
+a bowl cut's pieces and every piece of a parted cut end in two points and more (the shell is the
+hundredth), 56 of the turned cut's 206 on two heads (its rolls end at a breadth), no bundle of a girl's
+hair; a bundle's first and last point lie 5.6 to 6.5 mm apart along it in the median, 10.8 at most.
+Three measures of older tests moved with the form, and one of them moved its place: a bundle's breadth is
+read by the share of the image a step across it takes (it was six steps of a sixth), a bundle's turning
+on whole rings only (a wisp's ring has four corners at most), and how many bundles lie over each other in
+the fringe is read 1.5 cm and more above its lowest end where it was 0.7 (0.07 of the head's height for
+0.03): what it read before is now where the hair frays. `cargo test --release` as a whole:
+106 of 106 in one run on the last files (on the first, four of the six hair tests failed: three by their
+measures reading the old form, one rightly, see above). `tests/portrait.test.ts` and its neighbour 42 of
+42; typecheck and lint pass.
+Pictures (project files, `portraits/`): `runde138_vorher_nachher.png` (six men, one of each cut that is
+drawn on a bare head, and six of the sample, round 137 above, now below), `runde138_von_allen_seiten.png`
+(the six from the side and from behind, round 137 above, now below).
+
+**Round 139: the wimple lies under the veil** (2026-11-20). Looked at on the sample's women after round 138:
+the four who wear a wimple under the veil (50 and 68 years) have a dark slit in the veil's fall on a
+shoulder, some 4 cm long, with a shelf of cloth over it; from behind a ridge runs across the veil's
+back at the shoulders' height, with slits along it, and from the side the same. The women of 24 and 35, who
+wear the veil alone, have none.
+
+The cause. A veil, a wimple and a hood's cape are each set a least distance outside the gown, each for
+itself (round 124's `lift`, the same 0.8 cm for all). Nothing set the veil outside the wimple: the two lay
+as far off the gown, and where the wimple ends on the shoulders it stood through the veil's fall, its rolled
+hem first. On the 30 women of the test's 120 people who wear both, 37 260 corners of the wimple stood
+outside the veil, up to 1 428 on one woman and up to 1 cm (measured on round 138's builder with the new
+test's count).
+
+What is changed (`portrait/src/layers.rs`, `portrait/src/build.rs`).
+- The veil is lifted off the wimple as it is off the gown, after both are lifted off the gown.
+- After the pose the wimple is set under the veil (`tuck`), before the gown is set under both as they then
+  stand. `tuck` is `sink` with the cloth beside what is sunk taken along: the corners at one place go the
+  longest of their ways, and a place beside one that is sunk goes part of the way with it, the nearer the
+  more, eight times over (`PASS`, PLACEHOLDER, by eye); what then still stands through is sunk for itself.
+  With `sink` alone the hem's roll stayed where it was: of its corners only those that face the veil are
+  moved, and a row of slits lay across the veil's back where the ridge had been.
+- `lift` passes a lifted corner's way on in the same manner. Lifted each for itself, one corner of the
+  veil's fall that the wimple's end lay under stood out of its neighbours: a crack of 2 to 3 cm at the back
+  of one woman's shoulder, which was not there before the veil was lifted off the wimple.
+- `lift` no longer counts what a corner's line meets behind a place where it went in through the other
+  cloth's outside. A corner of a rolled hem looks along the cloth: its line goes in through the gown over
+  the shoulder and out again at the shoulder's back, and the corner was lifted as if it lay under that
+  (on one woman sixteen corners of her veil's hem by 1.2 cm and more, up to 2.6 cm; that their lines go in
+  and out so is read from what they met and where they point, not drawn). Each for itself that was a spike
+  too thin to see; passed on to its neighbours it bent the hem outward at the veil's lower end (seen from
+  the side on two women with a wimple, with the rule switched off, and gone with it on).
+Men change too where a hood's cape lies on the gown (`lift` is theirs as well): on the sample's hooded men
+a few dozen to 150 pixels of a picture of 300 by 375 differ, all below the face, and nothing was seen to
+change on them from the front or obliquely from behind.
+
+Tried and not kept. Three things, two of them from a wrong reading of the fault. (1) Hair, before this
+round's fault was taken up: flatter bundles with softer furrows between them (the ridge half as high, the
+shade in the furrows no darker than 0.7) on the commonest bowl cut: at a portrait's size nearly the same
+picture, taken back. (2) The slit was first read as a step in the veil itself: the builder holds a cloth
+over the gown off the body corner by corner (`calm`), and that hold was passed on to the neighbours. The
+shelf went and the slit stayed (why the shelf went was not looked into). (3) Then as a hole
+torn by `lift` moving corners singly; with the lift's ways passed on the slit shrank to a speck and stayed.
+Only a picture drawn from the builder's own triangles, each cloth in a colour of its own, showed that the
+speck was the wimple. (2) is taken back whole; of (3) the passing on is kept for the crack named above.
+
+**The gauntlet**: 22 of 22 over the whole sample (read with this round's files), and every line reads
+what it read in round 138 to its last figure: the gauntlet reads skin, and the pictures differ on the cloth
+only, from the height of the jaw down.
+
+Honest about it. A fault mended, not a likeness gained: the veil is as much a flat board as it was, hanging
+from the head in few long triangles (4 to 6 cm long on the shoulder) with no folds of its own, and the
+wimple under it is now simply out of sight there. Nothing was read for this round; that the wimple is worn
+under the veil is the dress table's (Newton 1980, a summary, as before). Seen and left: holes in the veil
+at the ear on all three veiled women, seen from the side and from behind (black, a finger's breadth, there
+before this round); cracks along the veil's hem beside the neck (as before); the gown's white specks at one
+shoulder's back (round 124's). `PASS` is by eye, and so is that a place goes half its neighbours' way each
+time.
+
+Tests: `portrait/tests/bust.rs`. New: on the 30 women of 120 people who wear a wimple under a veil no
+corner of the wimple stands outside the veil (37 260 before, see above; 58 044 of its corners lie close
+under the veil); a rolled hem's side goes under the cloth with its edge and the corners at one place stay
+together (`tuck`; `sink` leaves the side where it was); and in the test of `lift`: a corner behind a place
+where its line went in is left, the same corner under that layer alone is lifted, and a corner beside
+lifted ones goes part of the way. The older test that nothing of the gown comes through the cloth over it
+failed once on the way (20 corners on one woman, when the wimple was tucked after the gown was sunk under
+it: the order above is from that). `cargo test --release` as a whole: 108 of 108 in one run (run before
+the last edit of comments in `layers.rs`; `bust.rs` again after it, 9 of 9). `tests/portrait.test.ts` and
+its neighbour 42 of 42; typecheck and lint pass.
+Pictures (project files, `portraits/`): `runde139_vorher_nachher.png` (three veiled women of the
+sample, of 35, 50 and 50, round 138 above, now below), `runde139_von_allen_seiten.png` (the two of 50 from
+both sides and from behind, round 138 above, now below).
+
+**Round 140: no holes in the cloth over the ears** (2026-11-20). Round 139 left it seen: black holes in the
+veil at the ear, a finger's breadth, on the veiled women from the side and from behind. Looked at from both
+sides on four veiled women and four hooded men of the sample: a hole or a row of dark specks with a crumple
+round it over the ear of three of the four women (the fourth has a ridge there), on one of them dark
+specks beside the cheek from the front as well, and on another a crack beside the neck; and on two of the four men a strand of hair standing
+through the hood over the ear, a finger long, from either side.
+
+The causes, two. (1) A cloth on the head is bound to the body corner by corner, each to a triangle of the
+skin, and after it is calmed each corner is held a least distance off its triangle, along that triangle's
+direction (`calm`, real_look.rs). Over an ear the triangles are those of the ear's folds, which face
+anywhere: neighbouring corners of the cloth were pushed apart and across each other, and triangles of the
+cloth lay turned over, their dark inside out. On the test's 120 people 288 triangles of 5 mm² and more
+over the ears lay so, up to 9 on one person (measured on round 139's builder with the new test's count).
+(2) The hair under a hood is a cut of bundles bound to the skull as the hood is, each for itself, and
+nothing set the one under the other: 17 954 corners of the bundles stood outside the hoods of 26 men, up
+to 1 356 on one (and 1 318 outside women's veils, where nothing was seen in a picture).
+
+What is changed (`portrait/src/real_look.rs`, `portrait/src/build.rs`).
+- On the head a cloth worn over the gown (a veil, a wimple, a hood) is held off its triangle along the
+  cloth's own direction at that corner (from its triangles as they lie calmed), as far as takes it the same
+  distance off the triangle; and not at all where the two directions differ by more than 60 degrees
+  (`CLOTH_ALONG` 0.5, PLACEHOLDER, by eye). Below the neck, and for the gown and what is under it, nothing
+  changes.
+- After the pose, where the gown is set under the cloth over it, the hair's bundles are set under a veil
+  or a hood on the head in the same way (`layers::sink`, the same 0.2 mm under).
+
+**The gauntlet**: 22 of 22 over the whole sample (read with this round's files), and every line reads
+what it read in round 139 to its last figure: the gauntlet reads skin, and of the sample's 36 only those in
+a veil or a hood differ at all, on the cloth (at most 100 pixels each of a picture of 300 by 375 from the
+front, at most 143 from obliquely behind).
+
+Honest about it. Two faults mended, not a likeness gained. Where the ear is, the cloth has a soft bump now,
+on one woman with a light speck on it from one side; no ear is modelled under the cloth, and the bump is
+what the hold-off leaves, not a shape that was meant. The skin that stands through a cloth on the head by
+the new test's count is hardly fewer (84 corners before, 72 now, on 78 cloths; none of it was seen in a
+picture). The hair set under a hood is moved corner by corner along its own direction: under the cloth
+nobody sees it, and in front of the hood's rim the fringe reads as it did (looked at on the sample from the
+front). Nothing was read for this round. The veil is as much a flat board as it was, and the cracks along
+its hem beside the neck are as before. `CLOTH_ALONG` is by eye.
+
+Tests: `portrait/tests/veil.rs`. New: over the ears of the 120 people's 78 veils and hoods (within 7 cm of
+the tragion and behind it) no triangle of 5 mm² and more faces against its corners (288 before; counted
+where the three corners face one way, which leaves out the veil's rolled rim, where a triangle joins the
+outside to the inside: counted without that, 604 before and 17 now, all 17 such rim triangles); the skin
+through the cloth above the chin stays under 100 corners; and no corner of the hair's bundles stands
+outside the cloth (19 272 before). `cargo test --release` as a whole: 109 of 109 in one
+run. `tests/portrait.test.ts` and its neighbour 42 of 42; typecheck and lint pass.
+Pictures (project files, `portraits/`): `runde140_vorher_nachher.png` (four veiled women and four hooded
+men of the sample from the left and from the right, round 139 above, now below).
+
+**Round 141: a bowl cut is of locks, not a comb** (2026-11-20). Rounds 138 and 139 left it open: a head of
+our hair reads as carved. Looked at beside three bowl cuts of the reference, heads at one size (ours drawn
+at 600 by 750 and brought down to theirs). Ours: some hundred bundles of one breadth (1.7 to 2.2 cm
+where they are broad) run side by side from the crown to the line the hair is cut at and all end on it,
+a comb from every side. Theirs: few broad locks, each narrowing to a point, lying over one another like
+shingles in two or three tiers, over a fringe with a nearly straight edge.
+
+What is changed (`tools/portrait/pipeline/hair_body.py`; the builder and the stage are unchanged).
+- A bowl cut's third layer, sixteen single strands 5 to 9 mm broad, is replaced by two layers of locks
+  over the two layers of bundles, which stay as they were: 26 locks that end 1 to 5 degrees above the cut's
+  line and narrow over their last 2.5 to 5 cm, and over them 16 that end 4 to 10 degrees above it and
+  narrow over 3 to 6 cm. A lock is 1.4 and 1.25 times as broad as its room round the head, more arched
+  than a bundle (`flat` 0.3 and 0.36 for 0.16 and 0.2), not frayed, and its end runs to a point near its middle,
+  as a leaf's (a layer's `fray` and `point`, new; a bundle's end is cut at a slant and frayed).
+- A cut's `locks` (new): a factor on how high its locks' ridges stand and how much they lean. 0.15 for the
+  hair under a hood or a hat and for the horseshoe round a bare top (`bob02`, `bob04`), 0.5 for the cut
+  with its ends turned out (`bob09`).
+- The nine files `bob01_body` to `bob09_body` are written anew; `page01`, `page02`, `plait01` and
+  `part01` are written byte for byte as before (checked).
+
+Measured (the hair tests' own counts, round 140's files against these). A bowl cut is 129 pieces where it
+was 103, 46 282 to 53 350 triangles where it was 38 182 to 43 296 (the horseshoe 25 422 for 20 754, the
+curls 76 516 for 63 280, the turned cut 77 260 for 61 060); the nine files 6.78 MB packed for 5.67. What
+the test reads as a bundle's breadth is 2.4 to 2.8 cm for 1.7 to 2.2. The fringe is as deep as it was or
+deeper (2 to 4 bundles in the median for 2 to 3, as many places bare). The hair's top stands 2.3 to 2.4 cm
+over the crown of a grown head for 1.8 to 2.0, and 1.7 to 1.8 cm on a small child's for 1.2 to 1.4:
+the locks lie on top of what was there. Under a hood it is where it was (4.8 to 5.3 mm), and no hair
+comes through a hat (the hats' test: at least 4.8 mm of room). A portrait has 8 100 to 10 050 triangles
+more (108 000 to 158 000 on the four people timed); built ten times each, four people took 132, 52,
+146 and 50 ms a portrait for 173, 48, 138 and 37 before, on this machine: the timing is too uneven to say
+more than that it is not much slower.
+
+Tried and not kept. (1) The locks in place of the second layer of bundles, three ways (as blades cut at
+a slant; ending lower and bowed; as leaves): each read better than the comb, and the last was nearest
+the reference at a portrait's size, but the fringe was thin: on a boy of 13 the forehead showed at 14 of
+84 places where it showed at 2, one bundle deep in the median for two (the test of the fringe said so,
+the pictures had not). Hence the bundles under the locks. (2) For the turned cut, whose rolls no longer
+stood out beyond the hair above them by the old test's measure: larger rolls (the measure got worse: a
+larger roll reaches up into what the measure calls above), and the locks ending on the cut's line where
+the ends are rolled (worse again). The measure itself was the fault: it compared the hair's lowest
+quarter with all above 0.3 of its height, and the broadest place above was the rolls' own upper side.
+It reads the lowest third against what lies above 0.45 now: the rolls stand 2.5 to 3.0 cm further out a
+side than the hair above them, as before the locks (2.5 to 2.9), a plain cut's ends 0.6 to 1.2 cm.
+(The nine files were written on the way, three of them more than once; written again with the script as
+it is committed, all nine are the same to the byte.)
+
+**The gauntlet**: 22 of 22 over the whole sample (read with this round's files), and every line reads
+what it read in rounds 138 to 140 to its last figure.
+
+Honest about it. Nearer, not there. A lock is still a modelled band, broad and arched, with the bundle's
+image along it: close up a leaf or a feather, not a strand of hairs, and under the locks the bundles are
+the bands they were. Every head with one cut wears the same locks in the same places (a cut is one file),
+and the cuts differ in their length only. The fringe is as long as it was, to the brows on a grown man,
+where the reference's ends high on the forehead; on a small child, whose fringe is cut high, the locks'
+points stand in a row over it. The hair is half a centimetre higher over the crown than it was, which
+nobody asked for. Nothing was read for this round: the form is by eye beside three heads of the
+reference, and every new number is PLACEHOLDER. The files are a fifth larger. The two hats were made on
+the flat hair as it was and are not made anew (its height is unchanged). The turned cut's rolls are broader
+than they were, a lock's roll among them, and from behind one shows its dark underside at the nape.
+Black hair is still a dark shape, and the women's hair is untouched.
+
+Tests: `portrait/tests/hair_body.rs`, no new test; three measures moved with the form. The bound on a
+bundle's breadth is 4.2 cm for 3.2 (the horseshoe's reads 3.5 for 3.1). Of a bowl cut's pieces two thirds
+end in wisps, not 99 in 100: the test asks for more than 0.6 and less than 0.75 (the locks must be there;
+0.15 to 0.3 for the turned cut, 48 of 258). The turned cut's rolls are read as said above. `cargo test
+--release` as a whole: 109 of 109 in one run. `tests/portrait.test.ts` and its neighbour 42 of 42;
+typecheck and lint pass.
+Pictures (project files, `portraits/`): `runde141_vorher_nachher.png` (four bare-headed men and boys of
+the sample, round 140 above, now below), `runde141_von_allen_seiten.png` (six men, one of each cut, from
+the front, the side and behind, round 140 above, now below).
+
+**Round 142: a small child's gown lies smooth** (2026-11-20). The whole sample beside the reference at
+one size, looking at the figure: of the 36 people the eight children of two and five stood out. Their
+gown was crumpled, with a shelf of cloth across the chest that ended in a spike at either side, a dark
+slit beside it, and from the side a ragged row of triangles down the back of the sleeve; the children
+of eight had the two points on the chest. A child's head is large against its trunk, so the picture of
+a child of two shows the gown to under the armpits, where a grown person's ends at the chest: what was
+wrong lay in the picture only on the small.
+
+What was looked at first. The body under the gown is smooth on every one of them (drawn bare, with
+the part that carries the cloth). The gown alone, drawn as a grey surface from the front, the side and
+behind, was crumpled all over with the calming left out and had the shelf and the spikes with it, and
+with it 400 times over for 24: more of the same evening does not take them away. Two causes.
+
+1. The arms. The gown is draped on MakeHuman's base, which stands with its arms spread, and the builder
+   brings the arms down (0.66 radians about the shoulder's joint, softly weighted from 13 to 18 cm from
+   the middle). A garment's points were set on the body with its arms down, each with its own triangle:
+   a sleeve's points went by the whole of the arm's turn, the points of the cloth in the armpit, bound
+   to the trunk, by none of it, and the calming, which evens out how far points have moved, made of a
+   turn of 38 degrees beside none a shelf.
+2. The folds. A calmed garment is its own shape, as draped on the base, moved by the evened shift. What
+   that shape has beyond its own evened shape, its folds and the bust of the base it was draped on, stood
+   on every body as large as draped: on a child of two, 0.58 of the base's size, a fold 2 cm deep on a
+   chest half as broad.
+
+What is changed (`portrait/src/real_look.rs` `calm` and `mh_cloth_as`, `portrait/src/morph.rs`
+`Arms`; no file of the pipeline, no image, nothing on the stage).
+- The arms' way down is a thing of its own (`Arms`: the two joints, the share of the turn by a place's
+  distance from the middle, the turn itself, down or back up). The body comes down by it as before: the
+  skin is the same to the last bit on the nine people it was compared on.
+- A calmed garment (gown, linen under it, hood, veil, wimple) is set on the body as it stood with its
+  arms spread (read back from the body with its arms down), calmed there, and then comes down with the
+  arms: each point by the share of the turn that the body takes where the point is bound, evened out
+  over the cloth as the shift is (24 times). A sleeve goes all the way, the gown's side under the arm
+  stays with the flank, and the cloth between them turns by a share that changes evenly along it.
+- The folds are as large against the base's as the body is where the point is bound (the root of the
+  bound triangle's area against the base's, evened out likewise), and never larger than draped. A hem's
+  roll keeps its thickness: it is no fold.
+- `portrait/src/fasten.rs`: the edge beside a lace or a row of buttons is left out between two places
+  where the gown faces opposite ways (the underside of the neck's rolled edge and the cloth under it).
+  On one woman of 140 the first piece of the edge lay across them after this round's change and was
+  wound against its corners; the test of the fastening said so.
+
+Measured (`portrait/tests/bust.rs`, new: 48 people of 2 to 50, eight of each age, as much of the gown
+as the picture shows; the middle one of eight, round 141 against now).
+
+| age | edges turned over 90 degrees, % | a corner off the mean of its neighbours, thousandths of the head's height |
+|---|---|---|
+| 2 | 3.32, now 2.44 | 10.44, now 8.63 |
+| 5 | 2.72, now 2.19 | 9.96, now 9.04 |
+| 8 | 2.48, now 1.87 | 10.18, now 9.04 |
+| 13 | 1.54, now 1.33 | 9.02, now 8.78 |
+| 24 | 1.02, now 0.90 | 8.62, now 8.57 |
+| 50 | 1.09, now 1.01 | 8.85, now 8.79 |
+
+A child's gown is as rough against the child as a grown person's is against the grown (within a
+twentieth), where it was a sixth to a fifth rougher, and a sixth to a quarter fewer of its edges are
+turned over. A portrait has 150 to 2 700
+triangles fewer (the gown is cut along its patches' borders after it is laid, and a smoother gown is cut
+into fewer pieces). Built ten times each, three times over, four people took 55 to 78, 174 to 204, 243
+to 280 and 51 to 61 ms a portrait, and 66 to 87, 185 to 210, 232 to 271 and 56 to 65 before, on this
+machine: no difference to be read from it, though five more numbers a point are evened out.
+
+Tried and not kept. (1) The cloth brought down with the arms by where its own shape lies from the
+middle, as the skin is (the first way built): the spikes went, but the gown's side under the arm, which
+hangs further than 13 cm from the middle in places, was turned in towards the flank with it, and the
+hold pushed it out again. In the trial outside the builder (the V-necked gown, binding, calming and
+hold alone) 325 of the gown's triangles were turned over against their own shape on a man for 170 as
+it was, and 462 for 380 on the child of two; with the share of the bound place, evened out, 86 and 324
+(evened 8 and 60 times: 93 and 76, 312 and 311: it hardly matters how often). (2) The seam under the arm closed again
+(`bust_bind.py` `SEAM=closed`; the script still writes the repository's `cloth_cote_v` byte for byte as
+it is, so it could be tried): no difference to see, 330 edges turned over in the gown's own shape for
+292. Left open. (3) The turned edges of the gown's own shape round the armpit evened out in the file
+(207 of them in `cloth_cote_v`, where round 124 sewed the piece below the old cut to it; 6 after): on
+the child of two little to see, and points of the file moved by up to 7 cm. Not written. (4) The folds
+larger than draped where the body is larger than the base (a man is 1.05 of its size, up to 1.23 over
+the shoulders): 918 of a man's gown's edges turned over for 769. Hence never larger. (5) The body's
+own way at the bound place evened out less than the rest (8, 3 and 0 times for 24): the gown followed
+a child better and showed a man's chest and belly through the cloth, muscle for muscle.
+
+**The gauntlet**: 22 of 22 over the whole sample (read with this round's build), and every line reads
+what it read in rounds 138 to 141 to its last figure: the skin is not touched.
+
+Honest about it. The gown is calm on the small, not right. It is still the loose sack of the rounds
+before, with no belt and no weight in it, and on the children of five and eight a rest of the two
+points stands on the chest: the base's bust in the gown's evened shape, which is not brought down. In
+the armpit the cloth still folds over itself when the arm comes down (the arm's turn folds the space
+there, for the skin as well); it is hidden behind the arm from the front and shows as an uneven edge
+from behind. Grown people's gowns are hardly changed in the picture and by the whole gown's count a
+man's is a little rougher than it was (769 of some 73 000 edges turned over for 712, counted before the
+hem was kept: in the picture fewer are, so the more lie below it, at the sleeves' ends and the hem). The scale is by similarity, not by cloth: real folds have the size
+the cloth's stiffness gives them, whoever wears it, and a child's gown of the same wool would have
+fewer folds, not smaller ones. Nothing was read for this round; that a garment's folds go with the
+wearer's size is my assumption, and the 24 rounds of evening are the old PLACEHOLDER used for two more
+things. Hoods, veils and wimples go through the same code and are not looked at one by one beyond the
+tests and the sample's wall.
+
+Tests: `portrait/tests/bust.rs`, one new (the table above: the children's middle values under 2.8,
+2.5 and 2.1 % and within 1.06 of the grown's roughness; the grown not rougher than 1.0 and 1.05 %);
+`portrait/src/lib.rs`, one new (a vertex brought back up and down again lies within a hundredth of a
+millimetre of where it lay). The first full run failed in one test of the stage (`tests/portrait.test.ts`, the hems wound
+outward: on the girl of two 0.77 of the gown's hem for the 0.8 asked, the roll brought down with the
+folds and pressed flat), hence the hem's roll kept. `cargo test --release` as a whole: 111 of 111 in
+one run. `tests/portrait.test.ts` and its neighbour 42 of 42; typecheck and lint pass.
+Pictures (project files, `portraits/`): `runde142_vorher_nachher.png` (three children of two and five
+from the front and turned, round 141 above, now below), `runde142_alle_kinder.png` (the sample's twelve
+children of two to eight, round 141 above, now below).
+
+**Round 143: no points and no stains on a gown's chest** (2026-11-20). The whole sample beside the reference
+at one size, looking at the figure again: every gown, a man's and a child's as well, had a point on either
+side of the chest and dark patches between and under them, where the reference's cloth lies in one smooth
+plane over a chest. Two causes, neither the one round 142 named (it had the points for the bust of the base
+in the gown's own shape).
+
+1. The points. With the gown's folds left out altogether the points stood as before; with the gown not held
+   off the body they were gone, and the linen and the skin came through the gown there. The body's breast is
+   a coarse pyramid with its tip as one corner (drawn bare from the side: on a boy of 8 and a man as well as
+   on a woman), and the calmed gown, which is evened out, cuts through it. The hold then set each place of the
+   gown 7 to 9 mm off its own body triangle, along that triangle's direction: round a pyramid's tip each place
+   another way.
+2. The patches. The shade in a gown's folds came from a file (`cloth_<name>_ao.txt`): how far each place of
+   the gown as it was draped lies under the gown's own shape evened 30 times, 9 % darker for each millimetre.
+   The gown was draped on the base, which has a bust: its shade lay between two breasts on everyone. And the
+   measure takes a broad shallow dip for a fold of its depth: 3 mm under the evened shape is 27 % darker,
+   whether the dip is 1 cm broad or 8.
+
+What is changed (`portrait/src/real_look.rs` `calm`, `fold_shade`; no file of the pipeline, no image, nothing
+on the stage).
+- Below the neck the cloth round a place that is held off goes with it, as a tent: the ways the places have
+  to go are evened out over the cloth as the shift is (24 times, each place half its own way and half the
+  mean of its neighbours'), and a place that would then stand nearer its body triangle than it has to goes
+  the rest by itself. For the gown, the linen under it (which still goes no further off the skin than the
+  gown's least) and the cloth over the gown; on the head the hold is round 140's.
+- A calmed garment's shade is read off the garment as it lies on the person, by the pipeline's measure with
+  its numbers (`FOLD_EVEN` 30, `FOLD_SHADE` 9), and a place less than 3 mm under or over its evened shape has
+  none (`FOLD_FLAT`). The file's column now says only that the garment has a shade; the linen under the gown
+  has none as before, and Apoleia's garments, which are not calmed, keep the file's.
+
+Measured (`portrait/tests/bust.rs`, round 142's 48 people of 2 to 50, as much of the gown as the picture
+shows; the middle one of eight, round 142 against now).
+
+| age | edges turned over 90 degrees, % | corners of the gown's front darker than 0.8 of the middle one, % | the same of the whole gown, % |
+|---|---|---|---|
+| 2 | 2.44, now 1.83 | 5.3, now 0.5 | 8.3, now 0.8 |
+| 5 | 2.19, now 1.75 | 4.7, now 0.5 | 8.6, now 1.0 |
+| 8 | 1.87, now 1.63 | 4.9, now 0.6 | 9.5, now 1.3 |
+| 13 | 1.33, now 1.23 | 4.6, now 1.7 | 8.8, now 2.6 |
+| 24 | 0.90, now 0.90 | 2.2, now 0.8 | 8.5, now 3.0 |
+| 50 | 1.01, now 0.90 | 1.4, now 0.2 | 8.7, now 3.5 |
+
+A corner stands as far off the mean of its neighbours as it did or a little less (8.61, 8.93 and 8.95
+thousandths of the head's height at 2, 5 and 8 for 8.63, 9.04 and 9.04; 8.61 and 8.79 at 24 and 50 for 8.57
+and 8.79). Built ten times each, three times over and that twice, four people took 47 to 66, 143 to 210,
+229 to 284 and 48 to 58 ms a portrait, and 49 to 52, 160 to 226, 232 to 276 and 52 to 59 before, on this
+machine: no difference to be read from it, though each calmed garment's shape is evened 30 times more for
+its shade and its way off the body 24 times.
+
+Tried and not kept. (1) The way evened out as a length, each place along its own body triangle's direction
+(the first way built): 1.97, 1.69 and 1.64 % of the edges turned over at 2, 5 and 8, but a corner stood
+further off its neighbours than before (8.91, 9.27 and 9.26 thousandths): neighbours went apart. (2) Every
+place held off along the cloth's own direction, as on the head: a spike of cloth stood out behind a small
+child's sleeve, where the cloth in the armpit folds over itself and has no direction to speak of. (3) The way
+evened out 96 times for 24: nothing more to see on the chest, and a crease more in the armpit. (4) The shade
+read off the gown as it lies, with no place left out: the picture was the file's, patch for patch (the gown
+has the dips; that the file was of another body was not what showed). (5) The same against the shape evened 8
+times for 30, twice as dark for each millimetre: the same patches. (6) No shade at all: a clean chest and
+nothing in the folds under the arm.
+
+**The gauntlet**: 22 of 22 over the whole sample (read with this round's build), and every line reads
+what it read in rounds 138 to 142 to its last figure: the skin is not touched.
+
+Honest about it. In the picture the gain is small: beside round 142's the chests are cleaner and the points
+softer, not gone. A boy's and a man's gown still shows a mound on either side of the chest, since the body
+under it has one and the gown follows the body; a real gown hangs from the shoulders and the chest's highest
+places and spans what lies between, and nothing here drapes. The gown is the loose sack it was, without belt
+or weight. Of the shade in the folds less is left than the stains that went: a child's gown, whose folds
+round 142 made as small as the child, has hardly any (0.8 % of its corners at two), and the 3 mm are by eye
+on four people, one number for every size of body. The shade is read before the gown is lifted, held, posed
+and sunk, which move it a little. Hoods, veils and wimples go through the same code: their shade is their
+own now and they are not looked at one by one beyond the tests and the sample's wall. Nothing was read for
+this round. PLACEHOLDER: `CLOTH_TENT`, `FOLD_FLAT`.
+
+Tests: `portrait/tests/bust.rs`, one new (the table's third column: under 1.5, 1.5, 1.6, 2.7, 1.6 and 1.0 %,
+and over 1.5 % of a grown person's whole gown still dark), and round 142's bounds drawn in (the children's
+edges turned over under 2.2, 2.1 and 1.9 %, the grown's under 1.0 %). `cargo test --release` as a whole: 112 of 112 in one run.
+`tests/portrait.test.ts` and its neighbour 42 of 42; typecheck and lint pass.
+Pictures (project files, `portraits/`): `runde143_vorher_nachher.png` (a boy of 8, a man, a woman and a child
+of 5, the chest, round 142 above, now below), `runde143_alle.png` (the sample's wall, now).
+
+**Round 144: who rules is dressed for it** (2026-11-20). The whole sample beside the reference at one size,
+looking at the whole portrait: every one of the reference's people is a lord or a lady, in strong cloth with
+metal on it and something on the head that says who they are; every one of ours is a villager in undyed or
+dull wool. That is not the sample's choice. England's table, which the seven western groups of peoples wear,
+knew one estate, and the game hands over every person as one of the common people (`src/people/panel.ts`
+`NEUTRAL`: stand 1, "Bauern"): Edward III, a person of history in the game, stood in a villager's russet gown
+with a hood.
+
+What was read (each as an account of the page by a reading tool, not the page itself; none a primary source).
+- The statute on diet and apparel of 1363, as Rosalie Gilbert's page lists it rank by rank
+  (rosaliegilbert.com/sumptuarylaws.html; a re-enactor's summary that names no edition; Wikipedia's page on
+  the statute has no rank's rules): lords with lands of 1000 pounds a year and their families "no
+  restrictions"; cloth of gold, ermine and stones barred from the knights of 200 marks down, silk, silver and
+  embroidery from the yeoman down, and "blanket and russet at 12d" for those who work the land.
+- Wikipedia, 1300-1400 in European fashion: "the cotehardie fits snugly and is buttoned up the front";
+  noblemen and squires about 1350 in tunics "so short and tight"; "a fashion for mi-parti or parti-coloured
+  garments made of two contrasting fabrics, one on each side, arose for men in mid-century ... and was
+  especially popular at the English court"; Edward III's robes of 1351 of "red velvet", a "red cotehardie",
+  a royal lady in "a blue mantle", "her hair is worn in two braids beneath her crown" (Italy, 1350s). No dye
+  is named there, and nothing on how a mantle is fastened.
+- Rosalie Gilbert, Buttons and Lacings: "the upper classes would have preferred ... metal buttons", the lower
+  classes "matching cloth buttons"; a tin button with a glass stone of the late 14th century. No metal is
+  named for the rich.
+- Crowns in the treasure of Richard II (Institute of Historical Research and Royal Holloway,
+  archives.history.ac.uk/richardII/crowns.html): eleven gold crowns in the inventory of 1399, crowns "with
+  alternating large and small fleurons", of eight, ten, twelve and fourteen; the one that survives (Munich,
+  c. 1380) "a circlet of twelve hinged plaques and six large and six small fleurons"; "sapphires, balas rubies
+  and clusters of pearls". No height and no breadth is given.
+
+What is changed.
+- **Two tables beside England's** (`portrait/src/dress.rs` `COURT_1356`, `CROWNED_1356`, `Dress::ranked`;
+  `person.rs`, `wire.rs`: the stand handed over may be 4). A person of England's dress whose stand is the
+  council's or higher wears the court's: England's table with six strongly dyed cloths (two reds, two blues,
+  a green, a murrey) for the villagers' six, the gown buttoned in front on eight men in ten and six women in
+  ten (laced on three women), the buttons of gilt metal, and on three men in ten a gown of two cloths, one on
+  each side. Head wear, hair, linen, the gown's cut and all of the face are the common people's. The plain
+  dress of 1356 and Apoleia's Roman dress know one estate as before.
+- **A crown** on the highest stand (`tools/portrait/pipeline/crown.py`, new; `metal_crown`, 49 kB;
+  `build.rs` `crown`): a circlet of gold 2 cm high round the head, on the hair, with a raised rim at foot and
+  top and twelve fleurons standing on it, six of 4.6 cm cut as a lily of three leaves and six of 2.5 cm, in
+  turn, one large one over the forehead; a sapphire or a balas ruby on the circlet under each fleuron, a balas
+  ruby and three pearls on each large fleuron, a small stone on each small one. 2 796 points, 5 448 triangles
+  (2 760 of gold). It is one mesh, bound to the skin and carried as the fillet is: the circlet stands where
+  the hair under it does plus 1.5 mm, evened round the head over 12 degrees, its foot 0.8 cm under the head's
+  middle in front and 1.2 cm over it behind (level on a bust that leans back); fleurons stand on the band's
+  own corners, and a stone is tied to a corner of the gold by triangles without area, so that the builder's
+  evening carries all of it as one piece. Under a crown there is nothing else on the head: no hood, coif, hat,
+  veil, wimple or fillet; a man's hair is the cut that lies flat under a hat (`bob02`), a woman's is in plaits.
+- **Metal** (`fasten.rs` `METAL`): buttons and gold are surfaces without an image, handed to the stage as
+  metal of roughness 0.32; stones as polished (0.12), pearls a little dull (0.3). The stage needed no change:
+  it draws a surface without an image by what the builder says of it, under its own lamps.
+- **The game** (`src/portrait/wire.ts` `rankOfHistory`, `src/people/panel.ts`, `src/net/people.ts`): a person
+  of history is handed over as a person of rank, and with a kingdom or an empire among the realms held on the
+  day as a crowned head. The world server now sends each realm's rank with a person's crowns.
+- The test page takes `stand=<0..4>` (`src/portrait/test.ts`).
+
+Measured (`portrait/tests/court.rs`, new).
+
+| | the common people | the court | a crowned head |
+|---|---|---|---|
+| a gown's colour, its strongest part over its weakest (linear light, 40 grown people) | 3.02 | 7.39 | as the court's |
+| buttons of metal showing, of 40 | 0 | 28 | |
+| men in a gown of two cloths, of 20 | 0 | 11 | 0 |
+| the crown against the head's height (24 people of 5 to 68) | | | at most 0.89 broad, 1.03 deep |
+| a stone's middle from the nearest corner of the gold | | | at most 7.8 mm (the test's bound: 1 cm) |
+
+Built ten times each, three times over, on this machine: a man of 24 took 179 to 191 ms a portrait as one of
+the common people, 177 to 181 at court and 64 to 74 crowned (his own cut of hair is the costly part, and under
+a crown he wears the flat one); a woman of 24 took 64 to 76, 69 to 72 and 77 to 82; a man of 50 in a coif 43
+to 50, 44 to 47 and 70 to 74. A crown costs some 10 to 25 ms and 5 400 triangles.
+
+Tried and not kept. (1) The circlet round the body of every cut of hair that could lie under it (eleven): it stood
+10.9 to 12.3 cm from the head's axis, a hand broader than the head, since a cut's body stands 2 cm off the
+skull where the circlet sits. Hence the flat cut under a crown: 8.7 to 10.5 cm. (2) The foot 1 cm over the
+head's middle in front and 3 cm behind: a ring floating over the forehead with the hairline under it, as the
+fillet's first tries were. (3) The circlet evened round the head as the fillet is (twice over 25 degrees) and
+3 mm off the hair: an oval a centimetre off the hair at the temples. (4) The cloths as first
+written (`#8c1c22`, `#1f3f86`, `#2c6a3c`, `#6a1430`, `#2f6f93`, `#5c2a5e`): the stage draws wool lighter than
+its own colour, and they were sweets, a turquoise and a bright purple among them. Darker by a quarter to a
+third; the deep red and the murrey were then near black and are a little lighter again. (5) Before any of
+this, the shoulders, which I took for narrow beside the reference's: measured on ten bodies drawn bare, a man
+of 24 is 46 cm across the shoulders on a head 15.5 cm broad, a woman 41 on 14.6, a child of eight 29 to 31 on
+14. Nothing was read to hold that against in this round, the numbers do not look wrong, and nothing was
+changed.
+
+**The gauntlet**: 22 of 22 over the whole sample (read with this round's build), and every line reads what
+it read in rounds 138 to 143 to its last figure: the sample is the common people's, and nothing of theirs is
+touched.
+
+Honest about it. It is the first thing a portrait says of a ruler and it now says it; it is not the
+reference's lord. The court's gown is the villagers' gown in another colour: the same loose sack with the
+villagers' coarse weave, where the pages read have a cotehardie cut close to the body. No silk, no velvet, no
+woven pattern, no embroidery and no fur is drawn, though the statute is about exactly those; no mantle, no
+belt, no brooch, no chain. Hoods, coifs, hats and veils are the common people's in the court's colours, and a
+lady's veil is the same plain linen. The crown is one crown for every king, queen and emperor of the west;
+what it is made after is forty years younger than 1356 and gives no measure, so its height, the lily's cut
+and the stones' places are mine, and the plaques with their hinges, tracery and enamel are not made. The gold
+is lit by the stage's lamps alone: there is nothing round it to mirror, which a polished metal would show.
+Under the crown a man wears the cut made to lie under a hood, with its fringe to the brows. That no hair
+comes through the circlet was looked at on twelve heads from three sides and is held by no test. A crown's
+tips stand up to 3 mm over the height the picture is framed by; the picture has that room. Green and murrey,
+gilt for the buttons, every colour's value and every share are PLACEHOLDER, as are `METAL` and the stones'
+polish.
+In the game every person of history is dressed as a lord: the game knows no rank between a ruler's house and
+everybody else and no dress of the clergy, so a prince-bishop and a doge wear the court's gown, and three in
+ten of them mi-parti. Only who holds a kingdom or an empire on the day wears the crown, and only where the
+world server is of this round (an older one names no rank: the court's dress without a crown). Peoples
+outside the seven western groups wear the plain dress whatever their stand: their rulers are villagers still.
+The sample of the gauntlet and of the walls is the common people's as before.
+
+Tests: `portrait/tests/court.rs`, three new (who wears which table, and that the other dresses know one
+estate; the court's cloth, metal buttons and mi-parti on 40 people; the crown on 24: gold, 24 stones and 18
+pearls, each on the gold, nothing else on the head, where it sits and how broad it is).
+`tests/portrait.test.ts`, one new (a person of history's stand by the realms held; the crown's gold drawn as
+metal; no metal on the common people); `tests/rulers.test.ts` holds the rank with a person's crowns.
+`cargo test --release` as a whole: 115 of 115 in one run. `tests/portrait.test.ts` and its neighbour 43 of
+43; `tests/rulers.test.ts` 9 of 9; typecheck and lint pass.
+Pictures (project files, `portraits/`): `runde144_vorher_nachher.png` (six people as the game drew a ruler
+until now, as people of rank, and crowned), `runde144_krone.png` (a king and a queen from the front, the side
+and behind), `runde144_hof.png` (the whole sample as people of rank).
+
+**Round 145: a mantle on the crowned head** (2026-11-20). Round 144's crowned people beside the reference's
+rulers at one size: ours wear a crown on a gown and nothing more, a villager's sack in a strong colour up to the
+neck; the reference's stand in a mantle, broad on the shoulders, with fur at its edges and metal on the chest.
+Round 144's own list had it: "no fur is drawn ... no mantle, no belt, no brooch".
+
+What was read (each as an account of the page by a reading tool, not the page itself; none a primary source).
+- Elspeth Veale, The English Fur Trade in the Later Middle Ages, ch. I "Costly Thy Habit" (London Record
+  Society 38, 2003, british-history.ac.uk/london-record-soc/vol38/pp1-21): "For outdoor wear a cloak was added,
+  or a mantle for ceremonial occasions, often with a hood attached"; a lining "might be turned back at neck or
+  wrist, showing as a collar, revers, or cuffs of fur", "the edges of a long or short gown were turned back to
+  form borders or facings of fur in front"; in 1337 "only the royal family, prelates, earls, barons, knights,
+  and clerks with at least £100 a year could wear them", in 1363 "less prosperous knights and clerks could
+  wear only facings of ermine and lettice on their hoods"; Charles V in 1379 "liked his best robes furred with
+  ermine". Nothing on how a mantle is fastened.
+- La Cotte Simple, a fur primer (cottesimple.com/articles/fur-primer/, after Veale and Newton; the first
+  40 000 characters word for word, the rest as a summary): ermine "was traditionally worn by royals and their
+  family", white "with the well-known exception of a black tip on its tail", the tails "either left in place
+  or removed and powdered on the skins"; "Fur's most common role was as a lining on the inside of garments";
+  "ermine mantles worn by kings" (Richard II, BL Royal MS 20 B vi, c. 1395).
+- Rosalie Gilbert, Cloaks and Mantles (rosaliegilbert.com/cloaksandmantles.html; a re-enactor's page that
+  names no sources and no English example of the 14th century): women's mantles "fastened across the front,
+  with a cord and two brooches of some kind on each side at clavicle height"; Philip IV's effigy of 1327 with
+  "the mantle fastening with a tasseled cord".
+- Stothard's Monumental Effigies (Heidelberg) could not be read: the site refuses a reading tool.
+
+What is changed.
+- **A mantle** (`tools/portrait/pipeline/mantle.py`, new; `cloth_mantle`, 184 kB packed; `DressSet::mantle`,
+  `CROWNED_1356` alone): one sheet round the back of the neck and both shoulders, over the arms and the back,
+  open in front by 36 degrees to either side of the middle, down to the waist. It is laid, not draped:
+  MakeHuman's base stands with its arms spread, and a cloth let fall on it hangs from the arms as a curtain,
+  which the builder then swings into the body. The sheet is a tent: at every height it goes round body, arms
+  and gown as a taut string would (the convex hull of that height's section, 1 cm outside it), and from the
+  shoulders down it never comes in again. Folds are laid on it (three waves round the body that deepen below
+  the shoulders, outward only). 5 128 points, 10 362 triangles. The builder carries it as a hood's cape
+  (`Layer::Over`): laid on the body with its arms spread, calmed, brought down with the arms, lifted off the
+  gown, the gown sunk under it.
+- **Its facing of ermine** (`tools/portrait/pipeline/fur_tex.py`, new; `cloth_mantle_fur`, 20 kB and 28 kB):
+  the eleven columns of the sheet next to either front edge (7 cm on the chest, more below) and the five rings
+  next to the neck (5.5 cm) are fur, standing 5 mm over the cloth. They are the same mesh as the cloth, so
+  there is no seam to come apart: the file marks their triangles by a whole number added to the place across
+  the image (64; 128 where a brooch sits), and the builder takes the sheet apart at the very end
+  (`portrait/src/mantle.rs` `face`, new), when everything stands as it is drawn. The image: light grey hairs
+  lying down the garment, nine black tail tips to a tile of 20 cm, set in staggered rows, and its relief.
+- **Its clasp** (`mantle.rs`): on either front edge, 2 cm in from it at the height of the collar bones, a round
+  boss of gold 3.2 cm across with a blue stone, its rim sunk into the fur; between them a cord 5.6 mm thick,
+  drawn taut over the gown and the linen at its neck (the upper hull of how far they stand in front of the line
+  from brooch to brooch) and hanging 4 mm.
+- **The cloth's image** (`cloth_mantle`): a cloth without a weave (`MOTT=0.03 DEPTH=0.7 fabric_tex.py ... felt
+  160`), dyed red (`#7a1a1f`).
+- **`tunic_bind.py`** takes `BUST=1` (and `YCUT`): the cloth is bound to the bust's body too and kept down to
+  the waist. Without it the binder ends a cloth where the head's own data ends (3.45), as it did the gowns
+  before round 124.
+- **`layers::lift`** looks a corner that several triangles share up once (as `sink` has since round 137). What
+  it returns is the same to the last bit; it is here because the 51 000 corners of the mantle's first, finer
+  sheet, each for itself, took 0.3 to 0.6 s a portrait.
+
+Measured (`portrait/tests/mantle.rs`, new, on 16 people of 5 to 68 years, both sexes).
+
+| | |
+|---|---|
+| the mantle's triangles that are fur | 0.50 |
+| in front, from the brooches to 10 cm below them: the mantle's nearest corner to the body's middle | at least 3.2 cm to either side |
+| a brooch's middle from the fur | at most 3.7 mm |
+| the brooches apart | at least 11.6 cm |
+| the cord's front before the gown and the linen under it | at least 1.05 cm |
+| the cord | 384 triangles |
+
+Built ten times each, three times over, on this machine (ms a portrait; round 144's numbers were taken on
+another day's machine load and are not held against these):
+
+| | common people | at court | crowned |
+|---|---|---|---|
+| a man of 24 | 159 to 170 | 161 to 170 | 134 to 141 |
+| a woman of 24 | 73 to 74 | 71 to 81 | 174 to 181 |
+| a man of 50 | 51 to 55 | 52 to 60 | 151 to 155 |
+| a woman of 68 (veil and wimple) | 92 to 95 | 112 to 117 | 164 to 177 |
+| a boy of 8 | 57 to 65 | 55 to 65 | 174 to 181 |
+
+A mantle costs some 70 to 110 ms and 11 200 triangles (10 362 of the sheet, 360 of gold, 96 of stone, 384 of
+cord). With the first, finer sheet of 17 030 triangles the first build of a crowned head took 416 to 862 ms
+before `lift` looked a shared corner up once and 188 to 331 after (one build each of four people, the files
+read with it).
+
+Tried and not kept. (1) Apoleia's palla as the mantle: a narrow shawl with ragged ends. (2) The fur marked by
+its distance from the edge, a triangle fur when two of its corners were: the fur ended in a saw's teeth. By
+whole columns and rings, a triangle fur when all three are, it ends along a line. (3) The sheet down to 3.5, as
+the binder cut it: on a child of eight, whose picture shows the body further down, the mantle ended 5 cm above
+the picture's foot in teeth, the gown going on under it. (4) Taken for the cause of (3), the mantle lifted off
+the gown from 9 cm inside it: the same picture, and 3 to 6 s a portrait. (5) The sheet at 2.5 degrees and 8 mm
+down to 2.0: 17 030 triangles and 0.4 to 0.9 s. (6) The sheet cut 27.5 cm from the middle on the arm: the cut
+in a child's picture, the sleeve under it. (7) The sheet beginning as far from the axis all round: at the back
+it began a hand below the gown's neck, a V down between the shoulder blades (it begins 6.6 cm from the axis
+there now, 8 in front). (8) Four tails to a tile, hairs 46 pixels long, the relief at 1.0: pleated paper with
+one tail on a band. (9) A brooch of flat bands: a target of light and dark rings.
+
+**The gauntlet**: 22 of 22 over the whole sample (read with this round's build), every line as in rounds 138
+to 144 to its last figure: the sample is the common people's.
+
+Honest about it. A king reads as a king now at the size of a portrait, and it is a costume, not a cloth. The
+mantle is laid as a tent and its folds are three waves: it does not hang, it lies smooth and a little stiff
+over the shoulders as a felt cape would, 1 cm and more off the gown. Seen from behind it has a crease down the
+spine and a notch in the collar (how the builder carries a sheet that spans the shoulder blades); looked at,
+not looked into: the game shows no back. The fur is an image on a raised band: no hair stands over its edge,
+the band is broader below than on the chest because it is counted in columns, and the tails lie where the
+image's tile puts them, some cut in half by the band's edge or under a brooch. The cloth is one red for every
+crowned head, drawn by the stage as wool with no pile's sheen, and its inside is the same red: no lining is
+drawn. The clasp does not hold anything: the cord is a line laid over the gown and the edges do not come
+together under it; its ends go into the brooches' middles, through the stones' feet. A girl's or a woman's
+hanging plaits lie over the fur and across a brooch and the cord. Every crowned head from five years to old
+age wears the same mantle in every picture, a man's fastened as the page read says of a woman's, and by the
+pages a mantle is for ceremony. That no hair and no gown comes through the mantle was looked at on twelve
+people from the front, eight of them a quarter turned, four from the side and behind, and is held by no test. A crowned head's portrait takes
+about as long as a common man's with his own cut of hair and twice as long as it did. The facing's breadth,
+the tails, the brooches' form and stone, a cord without tassels and every colour are PLACEHOLDER. People of
+rank without a crown have no fur and no mantle; the court's gown is still the villagers' sack. In the game
+the mantle comes with the crown, and so only where the world server is of round 144.
+
+Tests: `portrait/tests/mantle.rs`, three new (a crowned head has the mantle's cloth and fur, nobody else has;
+the marks are off the image's places; red cloth, white fur; open in front with the fur along the opening; two
+brooches on the fur with a stone each, the cord from one to the other and in front of the gown).
+`portrait/tests/court.rs`: the crown's test tells the crown's stones from the brooches'.
+`tests/portrait.test.ts`: the crown's test reads the brooches' stones and the mantle's two surfaces as cloth
+on a crowned head and none at court. The test of the eyes builds each person once: it read the heads off a
+second build of all 36 and ran into its 20 seconds on GitHub's machine in the runs of rounds 140 and 142 (both
+logs read; three more failures of that check on 20 November were not; 14.5 s here before, 8.3 after). The
+crown's test builds each stand once (with the mantle 17.4 s of its 20 here, 4.1 after). `cargo test --release` as a whole: 118 of 118 in one run.
+`tests/portrait.test.ts` and its neighbour 43 of 43; typecheck and lint pass.
+Pictures (project files, `portraits/`): `runde145_vorher_nachher.png` (four crowned people before and after),
+`runde145_mantel.png` (four more, and the first four a quarter turned), `runde145_koenig.png` (a king, large).
+
+**Round 146: a lady's plaits and a circlet** (2026-11-20). Round 144's court beside the reference's at one
+size, eight women and eight men of the sample dressed as people of rank: the women of 24 and more wear the
+villagers' linen veil, a sheet over the head and the shoulders, and from 50 the wimple under it; the men the
+hood on the head. Dyed cloth under a peasant's head. The reference's women of rank show their hair, plaited and
+dressed, with a band of metal and stones on it.
+
+What was read (each as an account of the page by a reading tool, not the page itself; none a primary source).
+- The Medieval Combat Society, Female reenactment costume (themcs.org; a re-enactment society's page without
+  notes; its first half word for word, the rest as a summary that was not used), the part on Edward III's
+  reign: "Hair was worn in plaits around the face, the rich having gold or silver or embroided tubes on either
+  side of the face which was suspended from a narrow band worn around the head"; "Ladies wore veils and
+  wimples, those of the rich being made of fine transparent silk"; "Over the 14th century the wimple became
+  less common, being worn by older women and nuns"; "A gilded or jewelled circlet was worn by the nobility, or
+  ornate net was worn. Veils, nets, barbettes and hoods were worn by all"; "From around 1349 the nebulé
+  headdress ... was worn"; captions of brasses: "Cylinder Cauls or Templars, Eleanor Mohun, Atherington, 1349",
+  "Floral coronet over veil with pin, Unknown Lady, Norwell, 1350".
+- Rosalie Gilbert, Headwear (rosaliegilbert.com/headwear.html; a re-enactor's page): "Wealthy women preferred
+  to have their external fillets made from metal and set with metal flowers or sometimes jewels", "These days
+  we usually refer to them collectively as circlets", "Royal and noble ladies favoured them on any important
+  occasion"; a fillet on a Madonna "dated between 1340 and 1360" that "sits up high on her head, almost like a
+  crown"; "The filet and barbette gradually became less popular in the middle part of the 14th century in
+  favour of plaits worn on each side of the face".
+- The same, Crowns, coronets, diadems and circlets (/crownsandcirclets.html): the circlet of the bust of
+  Marie de France, "1327 to 1341", "a one-piece, being worn with a braided hairstyle", with "holes drilled
+  where gemstones probably once were"; "The circlet or coronet returned to fashion among ladies of the nobility
+  and upper classes about 1360", then of hinged plaques in place of "the solid band previously worn"; a
+  coronet of 1370 to 1372 "set at regular intervals with only a few gemstones". No measure, no number of
+  stones, nothing on where on the head it sat.
+- The Fashion Institute of Technology's page on 1350 to 1399 and Wikipedia on the chaperon were read for the
+  men's heads: nothing on what a man of rank wore on the head about 1356 beyond "a hood" (the chaperon wound on
+  the head is later; in the hunting book of about 1400 the hood's old form is worn "by the very
+  highest-ranking figures"). Nothing is changed on the men.
+
+What is changed.
+- **Who shows her hair** (`portrait/src/dress.rs` `COURT_1356`: `veils`, `unveiled_until`): at court six women
+  in ten wear no veil until 50 years (the common people's: three in ten until 30), their hair in plaits as a
+  girl's, hanging or pinned up beside the cheeks (round 126's six in ten). Three in ten wear the veil set back,
+  one in ten the veil on forehead and cheeks, and from 50 every woman the veil with the wimple, as before.
+- **A circlet** (`DressSet::circlet`, `metal_circlet`, 29 kB packed; `tools/portrait/pipeline/crown.py` with
+  `CROWN_PLAIN=1`): of the ladies who show their plaits seven in ten, from 15 years, wear a band of gilt metal
+  round the head on the hair, at the top of the forehead where round 128's linen fillet lies and in its place:
+  1.6 cm high and 2.5 mm thick with a rim raised 0.8 mm at foot and top, twelve stones on it, a sapphire and a
+  balas ruby in turn (domes 1 cm broad, the crown's colours). It is the crown's script without its fleurons,
+  fitted round a woman's plaited hair alone and 2 mm off it; the builder reads it as it reads the crown
+  (`build.rs` `crown`, which takes the file's name now). One mesh of 1 416 points and 3 192 triangles, 408 of
+  them without area. The crown's own file is written byte for byte as before.
+
+Measured (`portrait/tests/court.rs`, one new test).
+
+| | |
+|---|---|
+| of 100 000 seeds, ladies without a veil at 17, 25, 45, 50 | 100 000, 60 000, 60 000, 0 |
+| the same of the common people at 25, 45 | 30 000, 0 |
+| ladies with a circlet at 14, 17, 35, 55 | 0, 70 000, 42 000, 0 |
+| on forty ladies of 17 to 45: with a circlet, without | 20, 20 |
+| the band's foot over the eyes, in front | 4.0 to 5.4 cm |
+| the band's breadth against the hair's with its plaits | 1.5 to 3.6 cm narrower |
+| corners of hair that stand through the band | 0 (6 on one of the twenty with the band 0.8 mm off the hair) |
+
+Tried and not kept. (1) The band 1.1 cm high with stones 7 mm broad: a wire with dots at a portrait's size.
+(2) Fitted round the plaits, the hair under a veil and the pinned plaits' strands together, 1.5 mm off them: a
+hoop standing a centimetre off the temples; round the plaited hair alone it lies on it, and the pinned
+plaits' upper ends go under it. (3) Evened less by the builder (`CROWN_EVEN=40` for 300) and round the head
+(over 6 degrees for 12): no difference to be seen in the picture; the 6 degrees are kept, the 300 too.
+(4) The foot 0.4 cm under the head's middle in front and 0.6 over it behind (the crown's: 0.8 and 1.2): the
+same picture; the crown's values are kept. (5) 0.8 mm off the hair: on one of twenty heads six corners of hair
+stood 0.14 mm through the band.
+
+**The gauntlet**: 22 of 22 over the whole sample (read with this round's build), every line as in rounds 138
+to 145 to its last figure: the sample is the common people's.
+
+Honest about it. Two women of the sample's eight grown ones look like ladies now; the others are as they
+were, and nothing is gained on the men, whose hood on the head is the weakest thing in a picture of the court:
+the pages read say nothing of a lord's head but that he wore a hood. The circlet is a stiff smooth ring: no
+plaques, no flowers of metal, no enamel, no pearls; its stones are twelve small domes that read as dots; it
+lies on the hair like a hoop laid on it and does not press into it, and at a portrait's size its far side
+shows as a dark band behind the temples. It sits where the linen fillet sat, high on the head, by one sentence
+on a Madonna; the reference's bands lie lower, on the forehead. Every lady's is the same, and she wears it in
+every picture where the pages have it for occasions. What the pages do say of the rich is not built: the tubes
+of gold or silver beside the face that hung from the band, a net, a veil of transparent silk (the court's veil
+is the villagers' linen, as coarse as theirs), the frilled veil from 1349. That a lady went without any veil
+is not said by any page read: one has the plaits "around the face", another the circlet "with a braided
+hairstyle" on a bust, a third a coronet "over veil"; the shares, the 50 years, the band's measures and stones
+are by eye, PLACEHOLDER. The plaits themselves are the girls' of the villages: pinned up they run from under
+the ear to the temple, hanging they lie in front of the shoulders and over a buttoned gown's buttons. The gown under it all is
+still the villagers' sack. The sources are two re-enactors' pages, read as accounts; no effigy, brass or
+manuscript was looked at.
+
+Tests: `portrait/tests/court.rs`, one new (who shows her hair at court and among the common people, who wears
+the circlet; on forty ladies the band of metal with its twelve stones over the eyes and under the hair's
+crown, each stone on the band, no hair through it, no linen fillet at court, no metal on a woman of the
+common people). Two older tests moved with it: round 144's test of the court's gown tells
+a gown's buttons (under the chin) from a circlet's metal and allows a lady her stones; in
+`tests/portrait.test.ts` the one woman of rank among the test's people (44 years) need not wear the veil
+before 50. `cargo test --release` as a whole: 118 of 119 in the full run (that test of round 144's), then
+`court.rs` again, 4 of 4. `tests/portrait.test.ts` and its neighbour 42 of 43 in the full run (the veil of
+that woman), that test again after the change: passes; typecheck and lint pass.
+Pictures (project files, `portraits/`): `runde146_vorher_nachher.png` (the sample's eight grown women at
+court, before and after), `runde146_reif.png` (five ladies with the circlet, hanging and pinned plaits, from
+the front, the side and behind).
+
+**Round 147: a fringe on the middle of the forehead, and a lord's circlet** (2026-11-20). Round 146 left
+the men as they were. Two things beside the reference at one size. Its bowl cuts end on the middle of the
+forehead in a nearly straight line; ours ended two fingers over the eyes, on the brows in a picture, on every
+man and boy who shows his hair and under every hood: a lad's head on every man (round 141's own list: "the
+fringe is as long as it was, to the brows on a grown man"). And a lord of ours is told from a villager by his
+gown's colour alone.
+
+What was read (as an account of the page by a reading tool, not the page itself; not a primary source).
+- The Medieval Combat Society, Male reenactment costume (themcs.org; a re-enactment society's page without
+  notes; the parts on Edward II's and Edward III's reigns word for word), under Edward III: "Headwear was
+  often worn, either a hat or a crown, where headwear is not shown, then a hood is generally present, worn
+  either with cloaks or as seperate garments"; captions of tombs: "Circlet, William of Hatfield, York
+  Cathedral, 1337", "Circlet, Thomas Beauchamp and wife Katherine mortimer weeper 27, Warwick. 1369",
+  "Circlet, weeper of Thomas de Vere, Bures, 1371", "Coif and hood, John de Stonore, Dorchester Abbey, 1354",
+  "Hood, Thomas de Montsorel, Whitelackington, 1350", "Beaver Hat worn over hood ... Warwick. 1369";
+  "Chaplets were made of metal with repoussé decoration or embellished with gemstones and pearls"; the beaver
+  hat "a rounded hat with an oval brim", in royal accounts "for the first time in 1350"; "The Chaperon was a
+  head covering popular among older men from about 1350"; "From about 1350 painted hoods were worn". Under
+  Edward II: "Men tended to wear their hair long, almost to the shoulders", "The hair was bushy, cut round and
+  curled, the face clean shaven". The page does not say which head wear is a lord's and which a villager's,
+  and nothing on how long a fringe was.
+- Nothing was read for the fringe: its length is by eye beside three bowl cuts of the reference.
+
+What is changed.
+- **The fringe** (`tools/portrait/pipeline/hair_body.py`, `BOWL`: `cut` -5 degrees for -12.5): the line a
+  bowl cut's hair is cut at in front of the face lies 7.5 degrees higher round the head. The eight files
+  `bob01` to `bob07` and `bob09` are written anew (5.96 MB together for 6.09); a small child's `bob08`, which
+  has a line of its own, and `page01`, `page02`, `plait01`, `part01` are the same to the byte (checked). The
+  painted layers and scalps under the hair are as they were.
+- **A lord's circlet** (`DressSet::circlet_men`, `circlets_men`, `circlet_of`, `hair_flat`;
+  `metal_circlet_m`, 30 kB): at court a man from 15 years with nothing else on the head (no hood on it, no
+  coif, no hat; the hood thrown back does not count) wears round 146's band by a digit of his seed, five in
+  ten of them, which is two lords in ten until 30 and three in twenty after (a coif takes one). It is the same
+  script's file fitted round the hair that lies flat and a bare top's horseshoe (`bob02`, `bob04`), and his
+  hair lies flat under it as under a hat: a bowl cut's own body stands 2 cm off the skull where the band sits.
+  `DressSet::circlet_of` says which file a person wears, a lady's or a lord's.
+
+Measured.
+
+| | before | now |
+|---|---|---|
+| the fringe's lowest end over the eyes' middle, five men and boys of 8 to 68 (`portrait/tests/hair_body.rs`) | 24 to 32 mm | 42 to 50 mm |
+| the same as a share of the way from the eyes down to the chin | 0.18 to 0.24 | 0.32 to 0.37 |
+| four small children of 2 and 5 (their own cut) | 51 to 57 mm | 51 to 57 mm |
+
+On 80 lords of 17 to 61 years (`portrait/tests/court.rs`): 11 wear the circlet, 69 do not; its foot 4.4 to
+5.3 cm over the eyes; no corner of hair through it. Of 100 000 seeds 20 000 wear it at 25 and 15 000 at 45,
+none at 14, none of the common people, no crowned head.
+
+Tried and not kept. The fringe's line at -1 degree: a broken line on a boy, with the upper locks' points
+standing in it. The circlet was built once, with round 146's measures.
+
+**The gauntlet**: 22 of 22 over the whole sample (read with this round's build), every line as in rounds 138
+to 146 to its last figure: no line reads the forehead under the fringe.
+
+Honest about it. The higher fringe is the gain of the round: a man's forehead shows, his eyes are no longer
+under the hair's edge, and he looks his age. It is one number moved by eye beside three heads; the line is
+still more ragged than the reference's, the hair is the same modelled bands, and under a hood less of the
+fringe shows than did. The crown, the hats and the coif were fitted round the hair as it was and are not made
+anew (their tests, which read the hair under them, pass with the new files). The lord's circlet is round 146's
+ring on another head: the page read names three tombs by their captions and the pictures were not looked at,
+so its form on a man, where it sat and what hair he wore under it are guesses, and that every second
+bare-headed lord wears one in every picture is too. Under it the hair lies as flat as under a hood, the same
+on every man. Four lords in ten still wear the villagers' hood on the head, as the page allows ("a hood is
+generally present"); the beaver hat, the painted hood and the older men's chaperon the page names are not
+built. Round 146's ladies are unchanged. All new values are PLACEHOLDER.
+
+Tests: `portrait/tests/court.rs`, one new (who wears a lord's circlet by his seed; on 80 lords the band with
+its twelve stones over the eyes, nothing else on the head, the hair that lies flat under it, no hair through
+it); round 146's test shares its two measures with it (`front_of`, `hair_through`).
+`portrait/tests/hair_body.rs`: the bound on where a grown head's fringe ends moved with the form (0.27 to
+0.48 of the way from eyes to chin over the eyes, for 0.12 to 0.34; a small child's is as it was).
+Round 144's test of the court's gown asks `circlet_of` whether a person may have stones on the head.
+`cargo test --release` as a whole: 119 of 120 in the full run (that test, which did not know a lord's
+circlet), then `court.rs` again, 5 of 5. `tests/portrait.test.ts` and its neighbour 43 of 43; typecheck and
+lint pass.
+Pictures (project files, `portraits/`): `runde147_vorher_nachher.png` (six villagers and the sample's eight
+grown men at court, before and after), `runde147_herren_reif.png` (five lords with the circlet from the
+front, the side and behind).
+
+**Round 148: a lord's hood faced with fur** (2026-11-20). Round 147's own list: "four lords in ten still wear
+the villagers' hood on the head". Ten of the sample's men at court beside each other: five in a hood, on the
+head or thrown back, and each of them the villager's hood in a stronger dye. The reference's hoods show a pale
+lining round the face and as a collar where the hood is thrown back.
+
+What was read. Nothing new: round 145's reading of Elspeth Veale, The English Fur Trade in the Later Middle
+Ages, ch. I (as an account of the page, not the page itself) has the statute of 1363 leave lesser knights "only
+facings of ermine and lettice on their hoods", and a lining "turned back at neck or wrist, showing as a collar,
+revers, or cuffs of fur", edges "turned back to form borders or facings of fur in front"; La Cotte Simple's fur
+primer (read the same day) has ermine's tails "either left in place or removed and powdered on the skins". So
+a facing of fur on a hood is named, for knights below the lords this table dresses; that the lords, whom the
+statute leaves without restriction, wore it too is this table's reading. No picture of the time was looked at.
+
+What is changed.
+- **The facing** (`portrait/src/facing.rs`, new; `DressSet::hood_fur`, `hood_fur_dye`, set in the court's
+  table only): when everything stands as it is drawn, a roll of fur is laid on a lord's hood along the edge of
+  its opening: round the face of a hood on the head, round the neck of one thrown back. The edge is found in
+  the hood as it is drawn, as `dag.py` finds a hood's hems (where the rolled hem's tube hangs on the sheet an
+  edge has more than two triangles; of the hemmed edges the opening's lies highest). At each corner of that
+  edge the roll has a ring of twelve corners: 2.5 cm broad on the wool and 0.7 cm beyond the edge, over the
+  hem; 0.9 cm over the wool, and more where the wool under it bulges, so that the wool and the hem's tube lie
+  at least 2 mm within it (to 2.5 cm at most); 3 mm under the wool. The edge's way and the roll's lie are
+  evened out along the edge, so the roll passes over the tuck a hood on the head has at either corner of the
+  jaw. The hood itself is not touched: the villagers' file, whole, plain or dagged.
+- **The fur's image** (`cloth_fur_white.webp` and `_n`, 31 and 62 kB): `fur_tex.py` without tails and with
+  short hairs (`TAILS=0,0 HAIR=7,1.6 DEPTH=0.6`), drawn in the white of the mantle's ermine: ermine with its
+  tails removed, or lettice; which, the sources do not say.
+
+Measured, on 120 lords of 15 to 68 years (`portrait/tests/facing.rs`): 53 wear the hood on the head, 29 thrown
+back, 38 none.
+
+| | |
+|---|---|
+| the roll round the face: its lowest place | 0.5 to 2.2 cm under the chin's lowest place |
+| its highest place | 23 to 26 cm over it |
+| before the face's middle, a hand broad: the upper rim of the roll under the chin | 1.9 to 3.8 cm over the chin's lowest place |
+| the lower rim of the roll over the brow | 20 to 22.5 cm over it |
+| the roll round the neck of a hood thrown back: its highest place (at the nape) | 5.4 to 6.9 cm over the chin's lowest place |
+| the roll: broad, thick | 3.2 cm; 1.2 to 2.8 cm |
+| its middle from the nearest corner of the wool | 0 to 1 cm |
+| the wool within 1 cm of its middle, under its top | 0.3 to 22.5 mm |
+| triangles | 2 736 on the head, 2 304 thrown back |
+
+Tried and not kept.
+- The facing as a part of the hood's own sheet, marked in the hoods' files as the mantle's is (a script that
+  added 64 to a triangle's place across the image, for the triangles within 3 cm of the edge): a white tape
+  round the face, as thin as the wool, with the ermine's tails as black ticks on it; a border in stairs at
+  the temples where each corner's own way along the sheet reached 3 cm, and, drawn ring by ring instead, a bib
+  under the chin, where the sheet's rings lie 2 cm apart.
+- The same cut in the builder, 3 cm from the edge straight through the air, and lifted 6 mm along the
+  corners' own directions: a clean border, but the tuck at either corner of the jaw stood up in shards, and
+  with the ermine's long hairs across the band it read as a pleated ruff of linen.
+- The roll's first casts: laid along the straight way from the edge to the wool 2 to 3 cm in, it lay under
+  the wool where the hood bulges over the forehead; wound the other way round, the stage lit it as a cloth's
+  back, grey; and at the nape of a hood thrown back, where no corner lies 2 to 3 cm from the edge, it shrank
+  to a point and stood up as a flap. 3 cm broad on the wool it was a costume's trim.
+
+**The gauntlet**: 22 of 22 over the whole sample (read with this round's build), every line as in rounds 138
+to 147 to its last figure: no line reads a hood.
+
+Honest about it. A lord in a hood is now told from a villager at the size of a picture, which he was not. But
+it is one white roll, the same on every lord who wears a hood: smooth, with no hair standing on its outline,
+and at a picture's size the image's hairs do not show, so it reads as the trim of a winter coat as much as as
+ermine. It is thicker where the wool bulges under it, to 2.8 cm at the corners of the jaw, where a tuck of
+the hood's wool still shows inside it on some heads. Under the chin its upper rim lies 2 to 4 cm over the
+chin's lowest place, as the villagers' hem did. Round the neck of a hood thrown back it is a white ring that
+ends in the wool at the nape; what a turned-out lining looks like there was not looked up. No lining is drawn
+inside the hood. The hood under it is still the villagers': their cut, their wool, no buttons, no liripipe.
+The source names such facings for lesser knights; that every lord's hood has one, the fur, its breadth, its
+depth and its form are PLACEHOLDER, and no picture of the time was looked at. Not built from round 147's
+reading: the beaver hat, the painted hood, the chaperon.
+
+Tests: `portrait/tests/facing.rs`, two new, on 120 lords of 15 to 68 years: who has the fur (a lord with a
+hood, one roll with a ring for every corner of the edge, the hood under it whole; no villager, no lord without
+a hood, no crowned head, no lady), pale and nearly without colour; where it lies (round the face from under
+the chin to over the brow and on both sides, nothing of it before the face from 4.5 to 19 cm over the chin;
+round the neck of a hood thrown back; on the wool, as broad and as thick as `facing.rs` says, no corner of the
+wool under its middle through its top).
+`cargo test --release` as a whole: 122 of 122. `tests/portrait.test.ts` and its neighbour 43 of 43; typecheck
+and lint pass, no new warning. The whole run was made twice: after the first, the search for the opening's
+edge was rewritten (with it the module had grown from 721 to 784 kB; it is 751 kB now), and everything was run
+again with the same result.
+Pictures (project files, `portraits/`): `runde148_vorher_nachher.png` (ten of the sample's men at court, before
+and after), `runde148_kapuze_reif.png` (a lord with the hood on the head and one with it thrown back, from the
+front, the side and behind).
+
+**Round 149: a lady's gown cut wide at the neck** (2026-11-20). Round 148's own list: "the court gown is the
+villagers' sack". Ten of the sample's ladies at court beside each other: six without a wimple, each in the
+village woman's cut, a neck 19 cm broad that ends a hand under the chin, with the smock's grey edge in it. The
+reference's ladies show the collarbones and the start of the shoulders over a wide neckline; at a picture's
+size that is what tells a lady's gown from a village woman's before its colour does.
+
+What was read (each as an account of the page, not the page itself). Encyclopedia.com, "A New Look for
+Women" (from Gale's Arts and Humanities Through the Eras; a list of sources, no notes), under "Necklines and
+Upper Body Coverings": "a low neckline revealing shoulders and the upper portions of the breasts", "around the
+middle of the fourteenth century in France and England", "perhaps at first a climate-related trend from
+Italy", and "women's arms still remained covered by sleeves"; no estate is named. Rosalie Gilbert, Kirtles (a
+re-enactor's page without notes): "Most of these were cut with a wide, low neckline", and a decree of 1375
+whose issuer the page does not name: "The neckline should not be lower than the armpits". Against the date:
+the Fashion History Timeline of the Fashion Institute of Technology, 1350-1399, has "Women's shoulders are
+revealed for the first time in low-necked fitted dresses" at 1380. Wikipedia (1300-1400 in European fashion)
+and La Cotte Simple (the versatile dress layer) say nothing of a woman's neckline at mid-century. No page says
+that a lady's was cut lower than a village woman's, whether a smock showed in it, or whether it was edged.
+
+What is changed.
+- **The cut** (`public/portrait/real/cloth_kirtle_court.txt.zst`, 198 kB, and `_ao.txt`; 4 545 points, 8 984
+  triangles): the gown draped anew with a neckline 16.5 cm out on either shoulder, its edge 5.5 cm under the
+  collarbones' notch in front and 1 cm under it at the back, as a boat's line (below); held under the round
+  gown (1 558 of 4 068 points set back onto it, by up to 6 cm), bound, and the part below the old cut sewn on,
+  as the village's cut was made. Drawn with the gown's image, in the court's wools.
+- **The line** (`tools/portrait/pipeline/neckline.py`, `NROUND=1`): from the shoulder the edge falls as a
+  quarter of an ellipse, steep at the shoulder and flat in the middle. The line the village's cuts were made
+  with, an S between two flat ends, stays the default.
+- **Who wears it** (`DressSet::gown_cut`, `under`, `under_image`): the court's table has the new cut for women
+  and girls and no smock under it; a queen wears it under her mantle (her table is the court's). From the
+  wimple's age a lady wears the round gown, as before. A lord's gown and shirt are what they were. The linen
+  between the edges of a laced gown is still drawn: the table names the linen's image apart from the smock now
+  (`under_image`), since the builder took it from the smock's row.
+- **A tool repaired** (`drape_under.py`): it read the round gown's file as it was before round 124 and stopped
+  on the file as it is now, with the part below the old cut sewn on. It leaves that part out now (2 938 of
+  4 429 points and 5 660 of 8 663 triangles are kept: all that lies near a neckline).
+
+Measured, on eight ladies of 30 years and the same bodies as village women (`portrait/tests/clothes.rs`):
+
+| | village | court |
+|---|---|---|
+| the gown's neck, from its hem's outermost place on one shoulder to the other | 18.9 to 19.6 cm | 37.4 to 37.7 cm |
+| its lowest place in front, under the chin's lowest place | 5.5 to 7.3 cm | 8.4 to 9.8 cm (2.4 to 2.9 cm lower on the same body) |
+| linen in the neck | the smock's edge | none (a laced gown: the strip between its edges, 162 triangles) |
+| the day before the wimple's age: points of the cut more than 2 mm outside the round gown | | 4 to 12 of some 2 800, by up to 0.3 cm |
+
+The line asks for 33 cm; the cut leaves the mesh's faces whole beyond it, and the hem's roll lies on them.
+
+Tried and not kept.
+- The same breadth with the old line (`NECKLINE=1.65,5.1,5.6,5.72`, the S): a tub. The edge ran flat across
+  the chest, rose steeply a hand from the middle and ran out flat again along the top of either shoulder, so
+  each shoulder showed as a shelf of skin with the gown's back edge standing behind it.
+- Wider still (`NROUND=1 NECKLINE=1.8,5.2,5.62,5.74`): the opening reached the place where the gown's file
+  is cut at the arms, its edge came apart in two (61 and 71 points), and the part below could not be sewn on.
+
+**The gauntlet**: 22 of 22 over the whole sample (read with this round's build), every line as in rounds 138
+to 148 to its last figure: the sample is of the common people, and no line reads a gown's neck.
+
+Honest about it. A lady is told from a village woman by her gown's cut now, and a bare neck and collarbones
+sit under her plaits and her circlet, which is nearer to the reference than a smock's edge at the throat. But
+the neckline is all that is new: under it hangs the same loose gown, with the villagers' weave, no close fit,
+no silk, no pattern, no fur and no belt, and where the gown stands off the far shoulder one looks into it. It
+is less low than the first page has it: the breast is covered. The edge is a plain rolled hem that waves a
+little across the chest; nothing is known here of how such an edge was finished. Girls and small children at
+court wear the same cut, since the table cuts by sex and not by age; no page speaks of children. The date is
+not safe either: one page has the low neckline about 1350, another the bare shoulders at 1380. That the
+court has this cut and the village keeps its own, the line, and the bare skin in it are PLACEHOLDER; no
+picture of the time was looked at. A lady in a veil without a wimple has the veil's ends hanging beside a bare
+neck and chest, which nothing read speaks of.
+
+Tests: `portrait/tests/clothes.rs`, one new, on eight ladies (six, and the first two with a laced gown): the
+court's neck more than 5 cm broader and more than 2 cm lower than the village's on the same body; a queen's
+the same; under the wimple the round gown; no smock, and linen only in a laced front; the day before the
+wimple's age the cut lies within the round gown; a lord's shirt shows as before. `portrait/tests/court.rs`
+held the court's table to England's in the gown's cut and the linen: it holds it to a man's cut and shirt now,
+since a lady's are meant to differ.
+`cargo test --release` as a whole: 123 of 123. `tests/portrait.test.ts` and its neighbour 43 of 43; typecheck
+and lint pass, no new warning. The module is 753 kB (751 before: the table's new source row).
+Pictures (project files, `portraits/`): `runde149_vorher_nachher.png` (six of the sample's ladies at court
+without a wimple, before above and after below), `runde149_nah_und_koenigin.png` (three ladies large, and
+three as queens under the mantle).
+
+**Round 150: the court's gown of silk** (2026-11-20). Round 149's own paragraph: "under it hangs the same
+loose gown, with the villagers' weave". Ten people of rank beside each other and beside the reference's sheet
+of women's dress: the reference's ladies wear a smooth cloth that shines along its folds, its village women a
+matt wool whose weave shows. Ours wore the village's wool at court, weave and all, in a stronger dye: at a
+picture's size a lord's gown was told from a villager's by its colour alone.
+
+What was read. Nothing new. Round 144's reading of Wikipedia, 1300-1400 in European fashion (as an account of
+the page): "silk was the finest fabric of all", brocades "for the well-off", Edward III's robes of 1351 of
+"red velvet"; and the statute of 1363 as Rosalie Gilbert's page lists it, which takes silk from the yeoman
+down and leaves it to those above. Which silk a gown was of is not said, nor how many gowns at court were of
+silk and how many of fine wool.
+
+What is changed.
+- **The cloth's image** (`cloth_cote_silk.webp` and `_n`, 139 and 58 kB; `fabric_tex.py`, a new kind `silk`):
+  a plain weave of 320 threads across the image, twice the gown's wool, with no nap, a fifth of the threads'
+  own shades, hardly any mottling and a relief of 2 degrees: at a picture's size no thread shows.
+- **Whose gown** (`DressSet::gown_image`, new, set in the court's table): the gown is drawn with this image in
+  every cut, a lady's wide one, the round one under her wimple, a lord's, a queen's and a king's under the
+  mantle, and so are the edges of its closing. Hoods, the mantle and all linen are what they were.
+- **How it is lit** (`src/portrait/materials.ts`, `profile.ts` `cloth.silk`): a cloth whose image is named
+  `_silk` is drawn smoother and with more of a glint than wool and linen (roughness 0.55 for 0.95, "specular"
+  0.5 for 0.15), as much lighter than its own colour as wool is (2.6 times). Nothing else of the stage changed.
+
+Tried and not kept. The image with all of the threads' own shades, as wool and linen have them: at 320 threads
+the lighter and darker threads drew a plaid across the gown (the image's colour 0.047 from its middle on
+average; 0.018 now).
+
+**The gauntlet**: 22 of 22 over the whole sample (read with this round's build), every line as in rounds 138
+to 149 to its last figure: the sample is of the common people, who wear no silk.
+
+Honest about it. The court's gowns read as another cloth than the village's now, and that is seen at the
+size of a picture: a glint along the folds on the lit side, a deeper shade on the other. But it is one plain
+silk for every gown at court, with no pattern, where the reference's silks are figured, and nothing read says
+that every lord and lady wore silk rather than fine wool. The glint is a smooth surface's: silk shines along
+its threads, across the folds, and that is not built, so some gowns read as oiled cloth or thin leather as
+much as as silk. The smooth cloth also shows what the wool's weave hid: the small dents and facets of the
+drape on the chest, and the gown as loose as before. Hoods are still the villagers' wool, the mantle's cloth
+is what it was. The values of the image and of the stage are by eye: PLACEHOLDER.
+
+Tests: `portrait/tests/court.rs`, the test of the court's cloth, which held the court's gown to the village's
+image: it holds the village's gown to the wool's image and the court's to the silk's now, in every cut, silk
+on nothing but the gown, none in the village, the hoods' image the same in both. `portrait/tests/clothes.rs`
+finds a lady's gown by the silk's name too. `tests/portrait.test.ts`, one new: silk is drawn as cloth, from
+both sides, smoother and with more of a glint than wool and linen, by the profile's values; a profile without
+cloth of its own draws it as any cloth.
+`cargo test --release` as a whole: 123 of 123. `tests/portrait.test.ts` and its neighbour: 42 of 44 in the
+whole run; the two that failed looked for the gown of a person of rank under the wool's image name, were set to
+the silk's (and one holds the gown's image by stand now) and passed when run again, 44 of 44 with them.
+Typecheck and lint pass, no new warning. The module is 754 kB.
+Pictures (project files, `portraits/`): `runde150_vorher_nachher.png` (six ladies at court, before above and
+after below), `runde150_herren_und_gekroente.png` (five lords, and five crowned heads under the mantle).
+
+**Round 151: the court's gown lies smooth** (2026-11-20). Round 150's own paragraph: "the smooth cloth also
+shows what the wool's weave hid: the small dents and facets of the drape on the chest, and the gown as loose
+as before". Ten people of rank beside the reference: the reference's gowns lie on the body, ours hung as the
+village's sack, and on silk every crease of it shone.
+
+What was read. Nothing new. Round 144's reading of Wikipedia, 1300-1400 in European fashion (as an account of
+the page): noblemen and squires about 1350 in tunics "so short and tight" (the continuation of Guillaume de
+Nangis, after Braudel), "the cotehardie fits snugly" (a caption of the late 14th century); round 149's of the
+Fashion History Timeline: "low-necked fitted dresses" at 1380.
+
+What is changed.
+- **Three drapes of the court's own** (`cloth_cote_court`, `cloth_kirtle_court`, `cloth_cote_v_court`; 196 to
+  212 kB each, and their `_ao.txt`): the gown with the round neck, a lady's cut and a lord's, each simulated
+  anew with the cloth laid 1.2 cm off the body from the chest down before it is let fall, where the village's
+  is laid 4.5 cm off, and 15 in a hundred wider than the body below the chest for 50 (`LOOSE=0.12 WIDE=0.15`).
+  Held under the village's round gown, bound, and the part below the old cut sewn on from the court's own
+  drape. Round 149's file of the lady's cut is replaced by this one.
+- **The table** (`DressSet::gown_file`, new: the file of the round gown where it is not `gown`'s; the court's
+  `gown_cut`): a person of rank wears these in every cut. The gown's name, its image and the linen are what
+  they were.
+
+Measured, on six ladies of 30, six lords of 34 and six ladies of 60 (with the wimple), each on the same body
+as a villager and as a person of rank, as draped and in no pose (`portrait/tests/clothes.rs`):
+
+| | village | court |
+|---|---|---|
+| how uneven the cloth is (a triangle's face against the mean face within 3 cm of it), a lady | 24.2 to 25.4 degrees | 17.6 to 20.3 |
+| a lord | 18.9 to 19.8 | 13.4 to 14.6 |
+| a lady with a wimple | 24.6 to 25.4 | 15.0 to 17.8 |
+| the gown from front to back in the middle of the trunk, at the chest | | 1.2 cm less to 0.9 cm more than the village's |
+| at the waist | | 2.4 cm less to 1.1 cm more |
+| points of the court's round gown more than 2 mm outside the village's (eight ladies) | | none on five, 42, 466 and 1 879 of some 4 600 on three, by up to 0.64 cm |
+| corners of the gown through a hood's cape, a veil or a wimple (120 people, as villagers and as people of rank) | 0 | 0 |
+
+So the gown is smoother by a quarter to a third, and it is not narrower: a cloth that is let fall lies on
+the body where the body carries it, however far off it began, and what the looseness left were the folds.
+
+**A bound moved, and why.** Round 149's test held the lady's wide cut within the round gown as the village's
+cut is held (fewer than 4 in a hundred of its points more than 2 mm outside it). The court's drapes lie smooth
+over the places where the village's round gown has its folds: on some bodies many of their points lie 2 to 6
+mm outside it there (the table). The share is not held any more for the court's cuts; the distance is (under 1
+cm; a drape that is not held under the round gown stood up to 2.2 cm outside it, round 110), and the test
+that nothing of the gown comes through the cloth over it (`portrait/tests/bust.rs`) runs on people of rank
+too. The village's own test is as it was.
+
+**The gauntlet**: 22 of 22 over the whole sample (read with this round's build), every line as in rounds 138
+to 150 to its last figure: the sample is of the common people, whose gown is not touched.
+
+Honest about it. The dents are gone from the silk, and from the side a lady's gown follows her body (no
+picture from the side was taken before). But this is not the reference's fitted gown: it is as wide as the village's, has no waist, no
+seams, no belt and no tight sleeve, and the measure says so. "Close" in this round's files means how the
+cloth is laid before it falls, not a cut. With fewer folds the plain silk is a plainer surface still: a
+smooth coloured shape under the head, where the reference has a pattern, a belt and trimmings. On a lady the
+form of the bust shows more, which is the body's and not a tailor's. The values are by eye: PLACEHOLDER.
+
+Tests: `portrait/tests/clothes.rs`, one new (the court's gown less uneven than the village's on the same body
+in every cut, no deeper, a lord's shirt under his gown); round 149's test holds the court's round gown and
+the lady's cut to the village's round gown by distance (above). `portrait/tests/bust.rs`: nothing of the gown
+through the cloth over it, on the 120 people as villagers and as people of rank. `portrait/tests/court.rs`:
+the court's table has files of its own for every cut.
+`cargo test --release` as a whole: 124 of 124. `tests/portrait.test.ts` and its neighbour 44 of 44; typecheck
+and lint pass, no new warning. The module is 755 kB.
+Pictures (project files, `portraits/`): `runde151_vorher_nachher.png` (five people of rank, before above and
+after below), `runde151_von_der_seite.png` (five from the side).
+
+**Round 152: the ermine's tails in rows** (2026-11-20). The crowned heads beside the reference, large: the
+mantle's fur had a few black shapes on it where they happened to fall, some cut off where the fur ends at the
+red cloth, drawn out long over the shoulders, and each standing on its point; a black tick sat on the hem at
+either corner of the neck. They read as holes in the fur, not as ermine.
+
+What was found. Round 145 gave the fur the cloth's own place in the image: round the body and up it, one
+image to some 30 cm by 20 cm as drawn. So the nine tails of the image fell wherever the facing's 7 cm cut
+through that; the image ran up the cloth where the stage draws it downwards (the tails' points were up); and
+the rolled hems, which have a strip of the image of their own (its upper twentieth), took their colour from
+whatever tail lay in that strip.
+
+What was read.
+- Elspeth Veale, The English Fur Trade in the Later Middle Ages, ch. II, Ars Pelliparii (London Record
+  Society 38, 2003, british-history.ac.uk/london-record-soc/vol38/pp22-35; read 20.11.2026 as an account of
+  the page): "the custom of adorning it here and there with black tails, a technique known as powdering";
+  "The white skins were pynked or slit, and little pieces of fur from the legs of black lambs, usually used
+  instead of ermine tails, were stitched into the fur"; note 44: "Illuminated manuscripts which portray royal
+  and ducal personages show the familiar rows of black tails early in the Middle Ages, but surviving accounts
+  rarely make special provision for them before the fifteenth century". No size of a tail and no distance
+  between two is given.
+- The Mammal Society, Stoat (mammal.org.uk, species hub; the same day, as an account of the page): "tail
+  length 9-14cm", a "distinctive bushy black tip"; how long the tip is, it does not say.
+- The Academy of Saint Gabriel's page on ermine tails in English and French sources of the 14th century
+  (s-gabriel.org/armory/ermine) is of pictures, which were not read: nothing is taken from it.
+
+What is changed.
+- **The facing's own place in the fur's image** (`tools/portrait/pipeline/mantle.py`, `MANTLE_TAILS`; the
+  file `cloth_mantle` written anew): across the image how far a corner's column lies in from the front edge,
+  one image to the facing's 7 cm; down it how far down the cloth from the neck's edge the corner lies, one
+  image to 10 cm. The mantle's corners and triangles are round 145's to the last figure; of its 10 362
+  triangles the 2 687 of the sheet's fur have other places in the image, and the 2 496 of the fur's rolled
+  hems keep theirs, by which the builder knows a hem.
+- **The image** (`fur_tex.py`, `cloth_mantle_fur`, 10 kB and 10 kB for 20 and 28): two tails, the second half
+  the image across from the first and half down, so that they stand in two staggered rows along either front
+  edge, 5 cm from row to row, and in one row round the neck; slimmer than they were (0.09 of the image for
+  0.04 of one three to five times as large); no tail in the hems' strip. The script prints where its tails
+  lie, and has a switch for how far down a row they stand (`TAIL_AT`; as it was where it is not set: the
+  hood's fur comes out as before).
+- Nothing in the builder and nothing on the stage.
+
+Measured, on sixteen crowned heads from a child of five to an old one (`portrait/tests/mantle.rs`; "before"
+is the same test's measure on round 145's file):
+
+| | before | after |
+|---|---|---|
+| the cloth one image covers on the chest, across the facing | 29 to 36 cm | 6.6 to 11.3 cm (made for 7) |
+| down it | 18 to 27 cm | 6.4 to 11.8 cm (made for 10) |
+| of the fur on the chest, the share where the image's way down is within 45 degrees of the cloth's way down | 0 (it ran up) | 0.95 |
+| sides where the fur ends, at the red cloth or at a hem, down to 24 cm under the chin | | 9 568, none in a tail or within 2 to 3 mm of one |
+| triangles of the hems with a tail on them | not measured (the tick at the neck) | 0 of 39 936 |
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in rounds 138 to 151 to its last figure (the
+sample is of the common people, who wear no mantle).
+
+Tried and not kept.
+- The hems' corners in the facing's image too, laid beyond the sheet's edge: the builder knows a hem's roll
+  by its strip of the image and no longer knew these, and where the hem is evened round the sheet's corner at
+  the neck its triangles had no area in the image. The stage finds the relief's direction by that area and
+  drew them black: a black line round the whole facing in the first picture, black splinters at the neck's
+  corners in the next.
+- Tails 0.35 of the image long and 0.13 broad: dabs of ink.
+
+Honest about it. The rows are the source's word; everything else is by eye and PLACEHOLDER: a tail's size
+(some 3.4 cm by 1 cm on a grown person, and smaller on a child, whose mantle is the same sheet made small),
+5 cm from row to row, two rows on the facing, one round the neck. A tail is drawn up to 1.5 times as broad
+for its length as the image has it: the image is laid by the sheet's columns, which stand further apart on a
+grown person's chest than where the facing's 7 cm are measured, and nearer round the neck, where the tails
+are thin strokes that lean (the last picture). The facing's columns that lie over an arm end at the arm's
+end in the middle of the image; that is 40 cm under a grown person's chin and 25 cm under a child of five's,
+by my reading of the pictures 1 to 2 cm under such a child's picture, and no test holds it. The tests hold
+the tails' places as the script printed them; they do not read the image. The fur itself is as it was, a
+smooth white with the hairs' relief and no depth, the mantle is still a laid tent, and what round 151 said
+of the gown under it stands.
+
+Tests: `portrait/tests/mantle.rs`, one new (no tail where the fur ends and none on a hem, the image's way
+down is the cloth's on the chest, the image is drawn at about its size, no triangle of the fur without an
+area in the image); it fails on round 145's file.
+`cargo test --release` as a whole: 125 of 125. `tests/portrait.test.ts` and its neighbour 44 of 44; typecheck
+and lint pass, no new warning. The module is 756 kB.
+Pictures (project files, `portraits/`): `runde152_vorher_nachher.png` (five crowned heads, before above and
+after below), `runde152_nah.png` (two of them large, before above and after below),
+`runde152_seite_und_hinten.png` (the five from the side and from behind).
+
+**Round 153: a lady's veil of fine linen** (2026-11-20). Five ladies of the court beside the reference: since
+round 150 the gown is of silk, and on three of the five the head and the shoulders were wrapped in the
+villagers' linen, a grey-brown cloth with threads 4 mm apart that a picture shows one by one. Beside the silk
+it read as sacking.
+
+What was read.
+- Rosalie Gilbert, Veils and Wimples (rosaliegilbert.com/veilsandwimples.html; read 20.11.2026 as an account
+  of the page; a re-enactor's essay that names pictures and tombs but no list of sources): veils "ranging from
+  fine opaque linens to gauzy barely-there silks", wimples "from fine opaque linens to very fine silks";
+  "white was the most overwhelmingly popular colour"; what is left of such cloths "appear to be bleached and
+  pressed"; fine Flemish linens "could cost thirty times as much as finely woven wools"; poorer women had
+  "thick wool" and "natural, unbleached colours". The goffered veil, "popular c.1350-1380", "an intricate
+  lattice or honeycomb effect made from ruffles". The page does not say in so many words that a lady's veil
+  was finer than a villager's.
+- The same author's list of the veils she has made (rosaliegilbert.com/inventory_headwear_veilswimples.html):
+  a shop's list with a picture named for each; nothing is taken from it.
+- Wikipedia, Wimple (its first section only): "usually made from white linen or silk".
+
+What is changed.
+- **The court's table** (`DressSet::veil_image`, `wimple_image`, new: the images a veil, worn either way, and a
+  wimple are drawn with in place of their own; the court's `linen`): veil and wimple are drawn with a fine
+  linen, and the court's linen is bleached (`#faf8f2` for the village's `#e6dfcd`). The cloths themselves are
+  the village's, corner for corner. A lord's shirt, his coif and the linen in a laced front take the white
+  with them and keep their own image.
+- **The image** (`cloth_veil_linen_fine`, `cloth_wimple_fine`: one image under both names, 44 kB and 3 kB
+  each; `fabric_tex.py`'s new kind `fine`): the linen's weave with five threads for one and a third of the
+  threads' shades, made small until no thread is left in it.
+- **The builder** (`build.rs`): puts the table's images on the veil and on the wimple. Nothing on the stage:
+  it knows linen by the image's name, which still holds `_veil` and `_wimple`.
+
+Measured (`portrait/tests/court.rs`), on forty women of 35 to 65, each as a lady and as a villager:
+
+| | village | court |
+|---|---|---|
+| the image's threads on the cloth | one every 4.2 mm | none to be seen (one every 0.8 mm before it is made small) |
+| how uneven the image is (the standard deviation of its light, of 1) | 0.061 | 0.030 before it is made small |
+| the linen's colour | `#e6dfcd`, its strongest part 1.12 times its weakest | `#faf8f2`, 1.03 times |
+| a veil's light as it is built (26 women who wear one both ways) | 1 | at least 1.26 |
+| veils that are the same cloth, corner for corner (19 worn the same way) | | 19 of 19 |
+| wimples in the court's image | | 20 of 20 |
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in rounds 138 to 152 to its last figure (the
+sample is of the common people, whose linen is not touched).
+
+Honest about it. This is another cloth on the same board: the veil is still a stiff sheet that stands off the
+head as a hood, with no fold of its own, and from the side the smooth white shows a small point over the ear
+that the weave hid. In the stage's light the white is a light grey in the shade, as the fur's is. That the
+bleached linen is the court's and the unbleached the village's is the table's reading of a page that says
+what fine linen cost and what the poor had to be content with; that no lady's veil is of silk or gauze, and
+that none is frilled though the page has the goffered veil for exactly these years, is PLACEHOLDER: a
+transparent cloth and a frill are not built. A lord's coif and shirt keep the villagers' weave in the court's
+white. The white's value and every value of the image are by eye.
+
+Tests: `portrait/tests/court.rs`, one new (a lady's veil and wimple in the court's images and not in the
+cloths' own, a villager's in their own; the same cloth where both wear it the same way; lighter and all but
+without colour; a lord's shirt in the same white). The same file held the court's linen to England's colour;
+it now holds the court's veil and wimple to England's files, since the colour is meant to differ. One test of
+`portrait/tests/clothes.rs` looked for a lady's wimple under the village's image name and is set to the
+court's (the full run had 125 of 126 with that one failing; it was run again alone after the change).
+`cargo test --release` as a whole: 126 of 126. `tests/portrait.test.ts` and its neighbour 44 of 44; typecheck
+and lint pass, no new warning. The module is 758 kB.
+Pictures (project files, `portraits/`): `runde153_vorher_nachher.png` (five ladies of the court, before above
+and after below), `runde153_fuenf_damen_und_seite.png` (five in veils, from the front and from the side),
+`runde153_dorf_und_herren.png` (the same five women as villagers, and five lords).
+
+**Round 154: no point on the veil over the ear** (2026-11-21). Round 153 left it written down: from the side
+the smooth white veil shows a small point over the ear. Two ladies of the court, 900 by 1200, from the side
+and from behind: a pyramid about 1 cm high on the veil behind the ear at the height of the mouth, on one lady
+three of them (one over the left ear, two over the right), on the village's women the same under the weave,
+and on a man's hood a crumple at the ear.
+
+Where it comes from. Not from the veil's file: laid on the body it was draped on, the place stands 0.4 mm off
+the middle of the places next to it. The builder holds a cloth on the head off the body triangle each place is
+bound to (`real_look.rs` `calm`, round 140), and measured how far the place stood off that triangle's plane. A
+place is bound to the triangle nearest to it, which it need not lie over: four places of the veil set back are
+bound to triangles of the ears' folds that they lie 2 to 2.5 cm beside, 1.6 cm from the nearest corner of the
+skin as draped and 1.7 cm on this lady. On her head that triangle faces 40 degrees another way than on the
+body the veil was draped on, its plane goes through the place, and the place was held off the plane by itself,
+1.2 cm along the cloth's own direction. A man's hood has such a place 9 mm beside its triangle and 7 mm behind
+its plane (the furthest point measured, 2.3 cm, stood on that man's hood and is gone with it), and two that do
+lie on their triangles over the ear, held 7 and 8 mm off, each alone.
+
+What is changed (`portrait/src/real_look.rs`, `calm`; no file and no image).
+- **Off the triangle, not off its plane.** On the head, what a place lies beside its triangle counts as its
+  distance from it: a place that lies further beside it than it is to stand off it is not held, and one that
+  lies less beside it is held as far as is still missing.
+- **The cloth round a held place goes with it**, on the head as below the neck since round 143: the ways are
+  evened out over the cloth, and a place that would then stand too near goes the rest by itself.
+
+Measured (`portrait/tests/veil.rs`), on 120 people of 15 to 68, 78 veils and hoods on a head, about 40 300
+places of them over the ears: how far a place stands off the middle of the places next to it.
+
+| | round 153 | off the triangle only | now |
+|---|---|---|---|
+| places more than 5 mm off | 163 | 20 | 18 |
+| more than 6 mm | 102 | 2 | 0 |
+| more than 1 cm | 28 | 0 | 0 |
+| more than 1.5 cm | 6 | 0 | 0 |
+| the furthest | 22.7 mm (a man's hood) | 8.2 mm (the same hood) | 5.4 mm |
+| corners of the skin that stand through the cloth above the chin | 72 | 72 | 36 |
+| triangles over the ears that lie turned over | 0 | 0 | 0 |
+
+Tried and not kept.
+- The cloth going with a held place, alone: the points became stubs, lower and with a round foot, and were
+  still to be seen from behind.
+- Off the triangle on every cloth, not only on the head: on all five women looked at the skin came through the
+  gown as patches on the chest. A gown is held off the planes of the breast's coarse pyramid beside its sides
+  as well, and needs it.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in rounds 138 to 153 to its last figure (it
+reads skin, and no skin moved).
+
+Honest about it. This takes a fault away and adds nothing: the veil is still a stiff sheet that stands off the
+head as a hood, with no fold of its own, and where the cloth on the head meets the cloth on the shoulders
+there is a ledge (the hold changes at one height). 18 places still stand between 5 and 5.4 mm off their
+neighbours' middle, and what they are was not looked into. The veils' files have places of their own that
+stand up to 1 cm off at the rolled rim beside the cheek, and a wimple's two upper corners 1.2 cm, under the
+veil: none was seen in a picture, none is touched. From behind the white veil shows two dark specks the size
+of a pixel, before and after. How often the ways are evened out and the least share of the cloth's direction
+are the placeholders they were.
+
+Tests: `portrait/tests/veil.rs`, one new (no place of a veil or a hood over an ear stands more than 6 mm off
+the middle of the places next to it; it fails on round 153's builder with 102 and on the first change alone
+with 2). The test beside it held the skin through the cloth on a head to 100 corners and now holds it to 50.
+`cargo test --release` as a whole: 127 of 127. `tests/portrait.test.ts` and its neighbour 44 of 44; typecheck and
+lint pass, no new warning. The module is 758 kB.
+Pictures (project files, `portraits/`): `runde154_vorher_nachher.png` (a lady from the side),
+`runde154_von_hinten.png` (two ladies from behind, before above and after below),
+`runde154_kapuzen_von_hinten.png` (two men's hoods from behind, the same).
+
+**Round 155: the veil hangs from the head** (2026-11-21). Round 154 left it written down: the veil stands off
+the head as a hood, and where the cloth on the head meets the cloth on the shoulders there is a ledge. Five
+ladies of the court and the same five in the village, from the front, the side and behind: from behind the
+veil is a ball, drawn in under the back of the head as far as the nape, on a cape that starts under it at the
+shoulders' breadth; from the side the ball's lower edge goes in to the neck and the cape comes out again. A
+bathing cap with a cape. A linen veil that is laid over a head falls from the head's widest place to the
+shoulders.
+
+Where it comes from. A veil is bound to the body place by place (`real_look.rs` `mh_cloth_as`), so it goes
+where the body goes. On the body it was draped on (`drape_sim.py`) its back runs straight down from the back
+of the head, and under the ears and the back of the head its rings lie in a fold on each other, the middle of
+the fold facing the head. England's women have thinner necks, carry the head further forward and are drawn
+leaning back (since round 73), and the stage tilts the head to a shoulder (round 127): bound to them, the cloth
+under the head goes in with the neck.
+
+What is changed (`portrait/src/hang.rs`, new, called from `build.rs` after the pose; no file and no image).
+- **In every direction from the head's upright, the cloth lies no further in than it does on the head
+  above.** The upright stands through the middle of the cloth's top. For each place of the cloth behind and
+  beside the head: how far out the cloth on the head lies in its direction, at its height or above and from
+  the ears' height up. A place that lies further in than that is moved out to it.
+- **The cloth beside holds a place too.** Cloth spans the hollow behind an ear and does not go into it: cloth
+  that lies some degrees to the side counts, by 1 mm less for each degree, up to 10 degrees (OWN RULE, by eye).
+- **The fold is drawn out.** The heights of the places that hang, and of the places next to them, are evened
+  along the cloth (successive over-relaxation, Young 1954, 80 sweeps), with the cloth's edge held, and each
+  place goes out to what holds it at its new height. A rolled hem goes with the edge it is sewn to.
+- **As the figure is drawn.** The builder leans the bust back after this and the stage tilts the figure; a
+  cloth hangs down in the picture, not along the body's own upright. So the rule is worked in the drawn
+  position (the lean and the tilt applied, the result taken back).
+- The veil's rim on the forehead, its ends on the breast and the cloth on the shoulders stay as draped: the
+  rule sets in behind a line 5 cm in front of the ears and 2.5 cm under the cloth's top, over 3 cm each
+  (PLACEHOLDER, by eye).
+
+Measured (`portrait/tests/veil.rs`), on 120 people of 15 to 68, 47 veils, as the stage stands them: of the
+cloth's places behind the ears and more than 5.5 cm under its top, how far a place lies further in than the
+cloth on the head above it in its direction (within 1 degree).
+
+| | round 154 | now |
+|---|---|---|
+| a veil's deepest place, mean of the 47 | 35.3 mm | 2.3 mm |
+| the deepest of all | 46.9 mm | 4.1 mm |
+| places more than 5 mm in | 54 399 of 114 958 | 0 |
+| triangles behind the ears that face the head | 15 366 | 0 |
+| places of a hem that lie more than 2.5 cm off their cloth | 3 | 3 |
+| corners of the skin that stand through the cloth above the chin | 36 | 36 |
+| triangles over the ears that lie turned over | 0 | 0 |
+
+Tried and not kept.
+- Each place taking its way out from the nearest place on the head along the cloth (shortest ways over the
+  net): places in the fold stayed where they were as pins, and under the pose's turn the two sides came out
+  unlike, one at 10 cm from the upright and the other at 11.9.
+- Evening the places sideways as well as in height, and a skin stretched over what holds it (projected
+  over-relaxation, Cryer 1971): no gain to see, and more places that stand alone.
+- The cloth above holding only within 2 degrees: a place behind the ear hung 5 mm further in than the places
+  next to it, a dent.
+- The shoulders holding the cloth as the head does: 208 places of the cape near the shoulders' points moved
+  by up to 2 cm, where nothing was wrong.
+- Hanging along the body's own upright, before the lean: in the picture the fall slanted, 19 mm in at the
+  back.
+- The fall's lower end drawn up in height with the rest: the cape's hem came out ragged. The cloth's edge is
+  held.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in rounds 138 to 154 to its last figure (it
+reads skin, and no skin moved).
+
+Honest about it. The ball and the ledge are gone; the veil is still a stiff sheet with no fold of its own.
+Where the fall meets the cloth on the shoulders, 5.5 to 6 cm under the ears, there is a crease now: a thin
+line across the nape from behind, a few flat wrinkles across from the side. That is the fold's cloth pushed
+together, not what linen does (it would fall in upright folds). The cape's upright folds under the nape are
+flatter than they were. From the front little changes: the notch under the jaw is softer. Along that crease a
+place stands 6 to 8 mm off the middle of the places next to it, as along any fold, so round 154's test (no
+place over an ear stands alone as a point) looks no further than 5 cm under the ear now; with round 154's
+rule taken out it finds 29 points there, up to 15 mm. What is left of the measure, 4.1 mm at most, is 2 mm by
+the rule itself (1 mm of play, 1 mm for the degree the test looks to the side); where the rest comes from was
+not looked into. All the rule's numbers are by eye. The head no longer keeps every place to the digit when
+the shoulders stand otherwise (rounds 123 and 127 held that): a veil hangs between the two, and over 120
+people its places over the chin lie up to 2.6 mm elsewhere built stiff and as they stand, the hair under it
+0.16 thousandths of a mm. `portrait/tests/pose.rs` lets a veil 3 mm and the hair under one a thousandth of a
+mm; skin, eyes, brows and every other cloth are held to the digit as before. The builder now knows how the
+stage tilts the figure; if the stage changes that, `hang.rs` has to follow (the test stands the figure as the
+stage does). Hoods are not
+touched, and from behind a woman's hood keeps the ball's form (not looked into). A wimple is not hung. The
+module grew by 37 kB to 795 kB, and a veil costs 10 to 15 ms more to build on this machine (of about 200);
+in a browser it was not timed.
+
+Tests: `portrait/tests/veil.rs`, one new (a veil hangs from the head and does not go in under it: no veil's
+deepest place more than 5 mm in, no triangle behind the ears facing the head beyond 10, the hems whole; on
+round 154's builder the deepest lies 46.9 mm in). Round 154's test beside it is narrowed and the two of
+`tests/pose.rs` let a veil move, both as written above.
+`cargo test --release` as a whole: 128 of 128. `tests/portrait.test.ts` and its neighbour 44 of 44; typecheck and
+lint pass, no new warning.
+Pictures (project files, `portraits/`): `runde155_vorher_nachher_hinten.png`, `runde155_vorher_nachher_seite.png`
+and `runde155_vorher_nachher_vorn.png` (five ladies of the court from behind, from the side and from the front,
+before above and after below), `runde155_dorf_seite_und_hinten.png` (the same five in the village),
+`runde155_dreiviertel.png` (three ladies from two three-quarter views, after).
+
+**Round 156: a figured silk at court** (2026-11-21). Twelve people of the court beside the reference's: a
+lord's and a lady's gown is one plain cloth from the neck to the picture's edge, a smooth shape with a glint,
+where every gown of the reference's nobles is a figured cloth, gold on the dye. The waist and a belt, which
+round 155 named as the next thing, lie under the picture's edge: a portrait ends under the chest. What the
+picture shows of a gown is its cloth.
+
+Read (21.11.2026, as accounts of the pages; no picture was looked at). Three museums' records of Italian silks:
+the Cleveland Museum of Art, 1926.507, "Parrots and Animals" (Italy, 1300s; silk and gold thread, lampas): "the
+paired eagles and gazelles flanking concentric bulb-shaped palmettes", with like pieces dated "between 1334 and
+1361"; the same museum's 1977.14 (Italy, 1350 to 1400): "large palmette leaves", deer, birds and dogs amid
+vines; the Victoria and Albert Museum, O261087 (Lucca, 1300 to 1350): "scrolling vines, squirrels and deer", "a
+type called camacas in the statutes for the city of Lucca in 1376". Wikipedia, 1300-1400 in European fashion:
+"The well-off could afford woven brocades from Italy", "Fashionable Italian silks of this period featured
+repeating patterns of roundels and animals". The National Archives' blog on opus anglicanum: the royal wardrobe
+of 1337-8 has surcoats of buckram "decorated with gold leaves" for the king's games at Christmas (E
+101/388/8). Three more records read (a Venetian silk of 1375 to 1400 with a dog and an eagle in a boat, one
+with no description, one whose caption and record disagree) gave nothing to draw. No record gives a repeat's
+measure.
+
+What is changed.
+- **The figure** (`tools/portrait/pipeline/silk_figure.py`, new; `cloth_cote_silk_figured` with its normal
+  map): palmettes in rows, each row set off by half a step against the one under it, and between two
+  palmettes a sprig of two leaves with a bud. A palmette is a bulb, round below and pointed above, with two
+  smaller bulbs on the same foot within it. It is written into the plain silk's image as its covering (1 is
+  ground, 0 is gold thread; a fifth of the cloth is gold) and stands a little over the ground in the normal
+  map. From palmette to palmette it is 5.5 cm on a gown.
+- **The stage draws the gold** (`src/portrait/materials.ts` `figuredLook`, `profile.ts` `cloth.figured`): where
+  the covering of an image named `_figured` is less than 1, the cloth has the gold's colour in place of its
+  dye's, under the weave's own shade, and the gold's roughness and share of metal.
+- **Who wears it** (`portrait/src/dress.rs`: `DressSet::gown_figured`, `figured`, `gown_image_of`): at court
+  half of the gowns, by the ninth digit of the seed, and every crowned head's. Nobody's in the village. Both
+  halves of a gown of two cloths are figured.
+- **The court's three gowns are laid flat in their image** (`tools/portrait/pipeline/cloth_panels.py`, new;
+  `cloth_cote_court`, `cloth_kirtle_court`, `cloth_cote_v_court` written anew in their texture coordinates
+  alone: points, binding, triangles, hems and shade are the same to the digit). A gown's coordinates went
+  round the body, the angle about its upright and the height (`tunic_bind.py`). On the shoulders' tops, which
+  lie level, and along a sleeve the image was drawn out, which a plain weave does not show: the first figured
+  gowns had streaks of gold on the shoulders. The gown is now parted into a front and a back along the
+  shoulders' ridge and down the sides and sleeves, where a gown has its seams, and on each part the
+  coordinates are fitted so that the image's steps follow the cloth's own length and breadth (a least-squares
+  fit over the triangles, the Poisson equation with cotangent weights, Pinkall and Polthier 1993). "Up the
+  cloth" is the body's upright on the trunk, on over the shoulder where the cloth lies level, and the arm's
+  own line on a sleeve.
+
+Measured (`portrait/tests/court.rs`), on the built gowns of 40 people at court, 1.7 million triangles of cloth:
+how many are drawn out three times as far one way in the image as the other, a streak.
+
+| | round 155's files | steepest way up on the shoulders | now |
+|---|---|---|---|
+| of all the court's triangles of cloth | 7.05 % | 3.00 % | 2.45 % |
+| of those that lie level (the shoulders' tops) | 62.7 % | 26.8 % | 15.3 % |
+| in the three files themselves, on the body they were draped on | 7.3, 2.9, 9.3 % | 2.1, 2.1, 2.4 % | 1.3, 1.7, 1.2 % |
+| the village's gown, which keeps its coordinates round the body | 13.1 % | | 13.1 % |
+| gowns at court that are figured | 0 of 40 | | 19 of 40 |
+
+Tried and not kept.
+- "Up the cloth" as the steepest way up everywhere: on a shoulder's top that leads to the neck, the
+  coordinates run together round it, and a quarter of the level triangles stayed drawn out (the table's middle
+  column). The cloth's length now runs on over the shoulder towards the ridge.
+- The figure with its point down (the image's rows run the other way than a cloth's file holds them), and a
+  gold of the buttons' colour with a third of metal: a dull olive on green.
+- The first palmette, lines of equal share between its upright and its outline: a bulb of garlic with hairlines
+  at its point, and the sprig a bow.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in rounds 138 to 155 to its last figure (it
+reads skin, and no skin moved).
+
+Honest about it. The figure is mine: a palmette and a leaf as formulas, after the records' words, with none of
+the beasts and birds that every one of those silks has, and it is one figure for everybody, in one gold, at
+one size, which no record gave. It reads as a figured silk; set beside a Lucchese silk it would not pass. The
+palmette looks as much like a flame or a modern print as like a palmette. Half of the court and every crowned
+head is by eye. Where front and back meet, on the shoulder's ridge and down the side, the figure does not
+match, as at a seam, and beside the neck at the ridge a palmette or two is twisted. On a sleeve the figure
+leans, by the angle between the arm's line on the body the gown was draped on and the arm as it hangs. Under
+the arms and at the shoulders' ends 2.5 in a hundred of the triangles are still drawn out: there the builder
+brings the arms down and pushes the cloth together. The gold is a colour with a little metal, not a thread:
+it has no weave of its own and shines as the silk does. The gown's cut is what it was, a smooth sack, now a
+figured one; no belt, no seam is drawn, no trim at the neck, no fur. The village's gowns keep their
+coordinates round the body (their weave shows no streak). `ARM`, `NECK`, the gold's numbers and all the
+figure's sizes are PLACEHOLDER.
+
+Tests: `portrait/tests/court.rs`, one new (half of the court's gowns are of a figured silk that lies flat in
+its image: the shares by the table, under 4 in a hundred of the triangles drawn out and under a quarter of the
+level ones; it fails on round 155's files with 7.05 and 62.7); the test of round 150 beside it looks for the
+plain or the figured silk by the person's seed. `tests/portrait.test.ts`, one new (the stage draws a figured
+silk's figure in gold, and Apoleia's profile does not); the test that held a crowned head's gown to the
+plain silk's image holds it to the figured one's, and the test that every person of England wears the gown
+knows it under the figured silk's name too (it failed in the first whole run, 44 of 45). `cargo test
+--release` as a whole: 129 of 129. `tests/portrait.test.ts` and its neighbour 45 of 45; typecheck and lint
+pass, no new warning. The module is 797 kB.
+Pictures (project files, `portraits/`): `runde156_vorher_nachher.png` (twelve people of the court, before above
+and after below), `runde156_vorher_nachher_herren.png` (three lords, the same), `runde156_seite_und_hinten.png`
+(three from the side and from behind), `runde156_gekroente.png` (three crowned heads),
+`runde156_schultern_vorher_nachher.png` (the figure on the coordinates round the body, above, and on the flat
+parts, below).
+
+**Round 157: hair as often black, brown and blonde as the British call theirs** (2026-11-21). The whole
+sample on one sheet, village and court: nearly every head of hair that is not grey is the same brown with a
+cast of red, from child to lord. The reference's courts have black, brown, blonde and red heads side by side.
+The red was not the cause (round 47 made it rare, and it is). The lightness is: a person's lightness gene is
+the mean of two alleles, which in the pool England draws from come from 50 to 220, and the builder took it as
+the place in its row of colours (black, dark brown, brown, light brown, blonde). The mean of two draws is most
+often near the middle: of 4000 founders 68 in 100 had the gene between 0.4 and 0.7, the brown of the row's
+middle, the weakest pair of alleles was a dark brown and the strongest a light brown. Nobody had black hair
+and nobody blonde.
+
+Read: Morgan et al. 2018, "Genome-wide study of hair colour in UK Biobank explains most of the SNP
+heritability", Nature Communications 9:5271. Table 1: of 343 884 white British people, asked "what is your
+natural hair colour", 4.2 % say black, 37.2 % dark brown, 41.1 % light brown, 11.5 % blonde, 4.6 % red and
+1.4 % other; and "self-reported black, dark brown, light brown and blond hair lie on an approximately linear
+spectrum". (The first half of the article was read word for word, the rest as an account of it; the table is
+in the first half.) Carleton Coon, The Races of Europe (1939), chapter X section 3, in a transcription on the
+web: black hair in England "between 4 per cent and 5 per cent" for the country, dark brown 14 to 43 % and
+brown 57 to 24 % by region, fair 5 to 47 %, no single share for the country and none for red. Both are of
+people of the 19th and 20th century. No count of hair colours is known from 1356.
+
+What is changed.
+- **The lightness gene's place in the row of colours** (`portrait/src/look.rs` `shade`, `SHADES`;
+  `portrait/src/dress.rs` `DressSet::hair_shades`): England's dress names the three strengths of the gene at
+  which black passes into dark brown, dark brown into light brown and light brown into blonde, 0.296, 0.509
+  and 0.699: the strengths under which 4.5, 44.1 and 87.8 in 100 of all pairs of alleles from 50 to 220 lie,
+  Morgan's four colours taken together. Between two divides the place runs straight. Where the named colours
+  divide in the row is an OWN RULE: hair is black or blonde where it is nearer to the row's end than to the
+  colour beside it, and the brown of the middle divides dark brown from light brown. The row's five colours
+  are what they were, and so is the red, the greying, and Apoleia's hair, which takes the gene as the place.
+  The middle of the pool is the same brown as before; whoever is under it is darker and whoever is over it
+  lighter.
+
+Measured, by the place in the row (4000 founders of the pool, and the 36 people of the test page):
+
+| | black | dark brown | light brown | blonde |
+|---|---|---|---|---|
+| Morgan et al. 2018, Table 1, of the four together | 4.5 % | 39.6 % | 43.7 % | 12.2 % |
+| 4000 founders, before | 0 % | 42.0 % | 58.0 % | 0 % |
+| 4000 founders, now | 4.6 % | 40.5 % | 42.8 % | 12.1 % |
+| the page's 36, before | 0 | 15 | 21 | 0 |
+| the page's 36, now | 2 | 13 | 16 | 5 |
+
+Before, "dark brown" and "light brown" were the two halves of one middle brown; now each tenth of the row
+holds between 8.7 and 14.6 in 100 of the founders but the two at its ends (0.6 and 4.8).
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in rounds 138 to 156 to its last figure (it
+reads skin). The colour sheet beside it moved where a beard lies over the skin: the eight bearded men's chin
+reads L 40.4 (42.3) and the place above the lip 40.7 (42.0), some of their beards being darker now.
+
+Honest about it. The shares are of people born between 1934 and 1971 who named their own colour, laid on the
+people of 1356 because nothing nearer is known; they say nothing about whether England's villages of 1356
+were as dark or as fair. Where "dark brown" ends and "light brown" begins in the row of colours is my rule,
+and the row's five colours are by eye, as they were: what a Briton calls blonde may be lighter or darker than
+the row's last fifth. In Morgan's table more women than men call their hair red or blonde and far fewer call
+it black (1.5 against 7.4 %); the builder gives both the same. The red goes on top of any lightness, as
+before, where Morgan finds red-haired people's other colour mostly blonde or light brown. The divides are
+those of the pool England draws from: a dress for a people of another pool needs its own. The darker heads
+show what the open list has: black hair is a dark shape with little light on it, most of all on a child's
+head. Brows, lashes and beards follow the hair as before (a blonde head has light brows).
+
+Tests: `portrait/src/lib.rs`, one new (hair in the dress of England is as often black, brown and blonde as
+the British call theirs: the row runs through the divides and never back, the four shares over all pairs of
+alleles are within half of one in 100 of the table's, and the pool's ends are darker and lighter than in
+Apoleia's dress, its middle the same). The test of the red hair held the strongest red gene to the same
+colour in both dresses; the hair under the red is no longer the same in both, and it now holds each dress to
+three parts in four of the red over its own hair (it failed in the first run). `cargo test --release` as a
+whole: 130 of 130. `tests/portrait.test.ts` and its neighbour 45 of 45; typecheck and lint pass, no new
+warning. The module is 798 kB.
+Pictures (project files, `portraits/`): `runde157_vorher_nachher.png` (the page's 36 people, before above and
+after below), `runde157_vier_koepfe.png` (four heads large), `runde157_hof.png` (eighteen at court).
+
+**Round 158: a white sheen on black hair** (2026-11-21). Since round 157 one head in twenty has black hair and
+four in ten a dark brown, and the sheet showed what round 122 had left open: a head of black hair is a dark
+shape. Its locks, a plait's strands and a beard's bundles are there but not to be seen. Read at the crown of
+four heads with black hair (`gene=27:60`; the hair's pixels are those that differ between the same picture
+with blond and with black hair): L 5.2, between 1.3 and 8.6 for four fifths of the pixels; a dark brown
+(`gene=27:95`) 9.3. The reference's dark head reads 17.9 (round 122).
+
+Read: Marschner, Jensen, Cammarano, Worley and Hanrahan 2003, "Light Scattering from Human Hair Fibers"
+(SIGGRAPH 2003), section 2.1: the two highlights of hair "shift in opposite directions, causing them to
+separate into two visually distinguishable highlights"; the "R highlight, since it is surface reflection, is
+white, whereas the TRT highlight, which is formed by light that passes through the interior of the fiber, is
+colored." (The article's first two thirds were read word for word.) The stage has both (after Kajiya and
+Kay 1989 and Scheuermann 2004, `profile.ts` `sheen`): a white band and a band in the hair's own colour. The band in the
+hair's colour is next to nothing on black hair, as it should be; the white one was set to 0.3 on brown hair,
+where the other does the work, and on black hair it was all that was left.
+
+What is changed, on the stage alone.
+- **The white band's strength goes by the hair's darkness** (`src/portrait/materials.ts` `hairLook`,
+  `profile.ts` `sheen.white`, `sheen.whiteLight`): 2 on black hair, 0.3 as before from a middle brown on (a
+  brightness of 0.08, where `sheen.tone` begins to fall), between them by the hair's brightness. Its sharpness
+  is what it was (120: half of its strength 6 degrees off the band's middle). On bundles, locks, a plait's strands, a beard's locks and
+  on cards alike.
+
+Measured, at the crown of the same four heads (L, and the chroma of the mean colour):
+
+| hair (`gene=27:`) | before | now | the reference (round 122) |
+|---|---|---|---|
+| black (60) | 5.2, 2.5 | 13.1, 3.5 | 17.9, 8.0 |
+| dark brown (95) | 9.3, 7.0 | 15.7, 6.9 | |
+| a darker brown (115) | 17.3, 13.2 | 19.5, 12.7 | |
+| brown, the row's middle (130) | 24.4, 18.1 | 24.7, 18.1 | 25.0 to 31.6, 21.1 to 24.9 |
+| light brown (170) | 43.4, 25.6 | 43.4, 25.6 | |
+| blond (240) | 49.6, 25.3 | 49.6, 25.3 | 48.8, 25.3 |
+
+On black hair a tenth of the pixels is now lighter than L 22.7 (8.6): the band, on a head that is otherwise as
+black as it was.
+
+Tried and not kept.
+- The band stronger on every hair (2, and broader, a sharpness of 60): black hair at L 17.2, the reference's
+  number, but brown at 33.1 for 24.4 with less colour (15.5 for 18.1), and blond 54.2: over the reference's.
+- On dark hair alone, but broad (2 at a sharpness of 60): L 16.5 on black, and the boys' bowl cuts read as
+  grey hair, the band lying over most of the head. As sharp as it was the head stays black and shows its
+  locks.
+- Weaker and broad (1.2 at 60, L 11.6), weaker at 100 (9.9), stronger and sharper (3 at 300, 12.7): the last
+  as good as what is kept in a small picture, a wire-thin line in a large one.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in rounds 138 to 157 to its last figure (it
+reads skin). The colour sheet beside it: the eight bearded men's chin reads L 41.3 (40.4) and the place above
+the lip 41.7 (40.7), where a dark beard's locks have their band now.
+
+Honest about it. The reference's number is not reached (13.1 for 17.9) and was not meant to be by this means:
+a white band that brings a black head to L 17 makes it grey. Their dark head has more colour (8.0 for 3.5), a
+warm dark brown rather than our near black; which of their heads is "black" is by eye, one head in one
+screenshot. The band is where the stage's strands run, "down along the head", not where a lock turns: on a
+bowl cut it is a ring round the crown, on a beard it lies on the lower locks, which in a large picture can
+read as the first grey. A short beard, which is its painted layer alone, has no such band and is brown under
+black hair, as before. The strength is the same in every light; in the reference the sheen moves with the
+head. The band's place and the hair's form are untouched: locks are still bands. 2 and the brightness at
+which it ends are by eye: PLACEHOLDER.
+
+Tests: `tests/portrait.test.ts`, one new (black hair has a white sheen to show its form by: the two
+strengths, the sharpness as it was, and the line in the shader of bundles, a plait's strands, a beard's locks
+and cards). `tests/portrait.test.ts` and its neighbour 46 of 46; `cargo test --release` as a whole 130 of
+130 (nothing in the builder is changed, and the module is round 157's); typecheck and lint pass, no new
+warning.
+Pictures (project files, `portraits/`): `runde158_vorher_nachher.png` (six dark heads of the sample, before
+above and after below), `runde158_schwarz.png` (four heads with black hair, the same), `runde158_baerte.png`
+(black beards, the same), `runde158_alle.png` (the page's 36 people).
+
+**Round 159: a short beard in the face's light** (2026-11-21). The sheet after round 158: on a man with light
+hair the short beard is a bright, flat patch on the lower face, orange on one man of the sample, yellow with
+blond hair, a sponge held to the chin. Since round 157 half of England's men have light brown or blond hair,
+before it hardly any. A short beard is its painted layer alone (round 62); the full beard has locks over it
+and reads well in every colour.
+
+Looked for the cause in numbers (three hooded men of the sample with a short beard; the beard's pixels are
+those that differ when the layer is left out, `without=beard_short1356`): the layer is not lighter than the
+hair it belongs to (L 41.1 on light brown hair, whose crown reads 43.4 in full light; 45.6 on blond, 49.6),
+so the factors of round 80 are not the fault. But the skin of those pixels reads 32.5 without the beard: the
+lower face of a hooded man lies in the hood's shade, and the beard does not. No shadow fell on a painted
+layer (`cap.shadow`, off since round 53, when shadows had hard edges and drew a dark wedge with corners on a
+beard; the key has a size since round 81 and its shadows are soft), and a beard's layer took light from a
+third of the way round its shaded side (`cap.beard.wrap` 0.3). A dark beard hid both.
+
+What is changed, on the stage alone (`src/portrait/profile.ts`).
+- **Shadows fall on the painted layers** (`cap.shadow` true): the layer under a head's hair, stubble and
+  the beards stand in the shade of a hood, a hat and the head as the skin beside them does.
+- **A beard's layer is lit as far round as its surface faces the light** (`cap.beard.wrap` 0 for 0.3). Its
+  colour and its factors are what they were.
+
+Measured, the beard's pixels of the three men (L, and the chroma of the mean colour), with every hair colour:
+
+| hair (`gene=27:`) | before | now | the skin there without the beard |
+|---|---|---|---|
+| black (60) | 11.3, 9.6 | 9.8, 8.2 | 32.5, 19.2 |
+| dark brown (95) | 16.7, 15.3 | 13.6, 12.5 | |
+| brown (130) | 32.8, 27.2 | 26.2, 23.2 | |
+| light brown (170) | 41.1, 28.3 | 33.3, 24.6 | |
+| blond (240) | 45.6, 27.6 | 37.3, 24.2 | |
+
+The beards' lit third is about as much lighter than the far third as it was (the three men as they are:
+10.8, 13.6 and 9.7 L before, 9.9, 12.6 and 7.2 now); what changes is that the whole beard goes into the
+face's light.
+
+Tried and not kept.
+- Shadows alone: light brown at L 38.6, most of the patch still there.
+- With them the light end's factor lower (`cap.beard.light` 2.2 for 3.2): a blond man's beard at L 29.7, a
+  brown beard under yellow hair. A fair beard is often darker than the hair, but no picture or count says by
+  how much: left as it was.
+- Locks for the short beard were tried and dropped in round 90 (a dark full beard on a boy of 17), and are
+  not tried again.
+
+**The gauntlet**: 22 of 22 over the whole sample. Three lines are not as in rounds 138 to 158 to their last
+figure, for the first time since round 138, since a head's painted layers take shadows now: the man's far
+cheek against the lit one -19.2 for -19.0 (bound 4 from -16.9: 2.3 off, was 2.1), its chroma -3.8 for -3.9,
+the emperor's eye against his cheek -42.5 for -42.6. The other nineteen are as they were. The colour sheet
+beside it: the eight bearded men's shaded cheek reads L 39.4 (39.7) and their upper lip 25.6 (26.8), where the
+nose's shadow falls on the moustache; their chin 41.3 and the place above the lip 41.7 as before (why a
+hood's shade does not move those two was not looked into).
+
+Honest about it. This takes the glare off; it does not make the layer a beard. Close by it is still a shell
+with hairs painted on it, one density from the cheek to the throat, with an outline as cut with scissors,
+and on blond hair it is still a yellow one. The reference's short beards are not measured for light hair
+(round 80 read one dark emperor: his beard 2 to 8 L lighter than his hair, its lit side 18 L lighter than
+the far one; ours 7 to 13). A beard in the shade is now darker against its hair than it was (a brown one
+26.2 under a hood for the crown's 24.7 in full light). The layer under a head's hair and stubble take
+shadows too: on the eighteen grown people of the sample nothing shows at a picture's size, and close by no
+hard edge was found on two beards from two sides; that is two heads, not all. Whether the wedge of round 53
+comes back under another light or a brimmed hat was not looked for. The values are by eye: PLACEHOLDER.
+
+Tests: `tests/portrait.test.ts`, the test of a beard's layer holds the two new values (shadows fall on the
+painted layers, a beard's layer has no light round its shaded side). `tests/portrait.test.ts` and its
+neighbour 46 of 46; `cargo test --release` as a whole 130 of 130 (nothing in the builder is changed);
+typecheck and lint pass, no new warning.
+Pictures (project files, `portraits/`): `runde159_vorher_nachher.png` (four men of the sample, before above
+and after below), `runde159_blond.png` (three of them with blond hair, the same), `runde159_hof.png` (the four
+at court, the same), `runde159_nah.png` (two beards close by, from the front and from the side).
+
+**Round 160: a lady's neck lies on her skin** (2026-11-21). The sheet of the court after round 159, all 36
+from the front and from the side: a lady's wide neck (round 149) stands over her shoulders as the rim of a
+tub. From in front one looks into the gown behind either shoulder, a dark band between the hem and the skin,
+and across the chest the hem casts a shade as a shelf does. The reference's gowns lie on the body at the neck
+(two sheets of its dresses looked at, `ck3_13`, `ck3_14`; nothing measured on them). On a small girl the same
+cut reaches out to the arms: a child of four in a tub with bare shoulders. (Seen on the same sheet and not
+touched: a lord's hood thrown back is a cape with a roll round the neck and no hood behind it, and with round
+148's white fur on it the roll reads as a neck brace; the eight small children have one haircut.)
+
+Looked for the cause in numbers (`portrait/tests/neck.rs`: how far the points of the hem's roll lie from the
+skin). On eight ladies of 30 the roll stands 1.11 to 1.13 cm off the skin on average, 1.55 to 1.71 at most,
+all the way round. Two things hold it there. The court's gowns were draped with the cloth laid 1.2 cm off the
+body (round 151), and in the file the neck's edge lies 0.8 to 1.1 cm off the base body across the chest. And
+the builder holds every place of a gown at least 7 mm off the body triangle it is bound to (`CLOTH_OFF_GOWN`,
+real_look.rs), so that the body's finer bumps stay under a cloth that was draped on another body: where the
+drape does lie on the shoulder (1.7 mm off at the neck's outer ends) the builder lifts it off again. In the
+village the same holds (1.06 to 1.12 cm), but there the neck is 19 cm broad, close round the throat, and
+linen lies under it.
+
+What is changed, in the builder.
+- **A gown worn on the skin lies on it at its neck** (`real_look.rs`, `Layer::Bare`; `build.rs` takes it for
+  a gown whose table names no linen under it, `DressSet::under`, and that is not under a wimple: the court's
+  ladies and girls, and a queen). From 4 cm off the hem (`CLOTH_LIE_REACH`, straight through the air on the
+  gown as draped) the cloth is brought in towards the body triangle it is bound to, the more the nearer the
+  hem, so far that the lowest side of the hem's roll comes to 2.5 mm off the skin (`CLOTH_LIE`; the roll hangs
+  0.4 of its radius under the cloth, `CLOTH_HEM`), and the least the gown is held off falls with it. The roll
+  goes with the place of the cloth it hangs on. Beyond the 4 cm the gown is what it was.
+- **A girl under seven wears the round gown at court** (`DressSet::gown_cut_from`, the court's `[7, 0]`): the
+  court's own round gown, close at the throat, which lies on her skin there by the rule above. OWN RULE: the
+  wide and low neck is a woman's fashion in round 149's reading, no source read speaks of a small girl's, and
+  seven is the age to which the table's children are small. A boy's cut is worn at every age as before.
+
+Measured (the same 8 founders at each age; the hem's roll off the skin, average and most, in cm):
+
+| | before | now |
+|---|---|---|
+| lady of 30 | 1.11 to 1.13, at most 1.55 to 1.71 | 0.52 to 0.53, at most 0.92 to 0.98 |
+| queen of 30 | 1.11 to 1.14, at most 1.55 to 1.71 | 0.52 to 0.53, at most 0.92 to 0.98 |
+| girl of ten | 0.95 to 0.97, at most 1.41 to 1.56 | 0.53, at most 0.86 to 1.06 |
+| girl of four | the wide cut | the round gown: 0.49 to 0.51, at most 0.83 to 0.88 |
+| village woman of 30 | 1.06 to 1.12 | the same |
+
+The roll itself is 5.6 mm thick, so 0.5 cm on average is a roll that lies on the skin. Of the cloth's places
+within 4 cm of the hem (some 2 400 to 3 000 a gown) one lies more than 1 mm under the skin, on one girl of
+ten where the cut meets her arm (four on her before); none on the other 31. The neck is 0.1 to 1 cm less
+broad than it was (35.0 to 37.4 cm on the eight ladies, 35.9 to 37.5 before) and its lowest place 0.3 to 0.4
+cm lower (9.5 for 9.1 cm under the chin on the first): the hem lies down where it stood.
+
+Tried and not kept.
+- The least hold lowered alone, the cloth not brought in: 0.6 cm at the shoulders' ends and 1.1 to 1.3 as
+  before everywhere else, since the drape itself lies a centimetre off.
+- The roll's lowest side at 1 mm (`CLOTH_LIE` 0.01; the hem 0.37 cm off on average): on 56 women and girls
+  302 of 142 882 places of the cloth near the hem lay under the skin, up to 11 on one lady, by up to 1.7 mm.
+- The wide cut left on small girls, with the rule: the hem lies in waves and stands as two ears at the arms.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 159 to its last figure, and the
+colour sheet beside it the same (they read skin of the face).
+
+Honest about it. This takes the rim off the tub; it does not make the gown a fitted one. The cut's line is
+what it was, a boat with a corner at either shoulder, and just under the hem the sleeve bulges out again,
+since from 4 cm on the gown is the same wide sack. The hem is a roll 5.6 mm thick, a bead where a silk gown
+has a fine edge, and no edge of another cloth shows in the neck as on the reference's gowns. The rule is for
+a gown without linen under it: the village's necks and every man's stand off as before. On a small girl the
+round gown's hem has small waves at the throat. Seen close on four ladies and four girls from the front and
+from a quarter, and at a picture's size on the court's 36, on twelve queens and on six ladies from behind
+(there the hem lies on the back in slight waves). `CLOTH_LIE`
+and its reach are by eye and by the count above, the age of seven is an own rule: PLACEHOLDER.
+
+Tests: `portrait/tests/neck.rs`, new: the hem's roll of a lady, a girl of ten, a girl of four and a queen lies
+under 0.65 cm off the skin on average and under 1.25 at most, with at most two places of the cloth near it
+under the skin, and a village woman's over 0.9 as before (without the rule the first fails with 1.11); a girl
+at court has the round gown's neck the day before she is seven (8.5 to 10.8 cm broad) and the wide one on
+that day (24.9 to 26.0). One bound of an older test is changed, with its reason in the test:
+`portrait/tests/clothes.rs` held a queen's neck to a lady's breadth within 0.5 cm, as that test builds them
+(not posed). Until now the hem stood out to the gown's own cut at the arm on nearly everyone and both read
+37.7 to the digit, whatever the gown did; brought in it ends short of that on most (36.0 to 37.7), and there
+the measure is as fine as the builder's cut of a gown along the cells of its cloth, 6 mm apart: the hem's
+outermost corner is one of its own or one on a cell's border beside it, and a queen's body is not a lady's
+to the digit. Of the test's eight pairs five read the same, two 0.2 cm apart and one 1.0. The test holds the
+two within 1.3 cm, two cells. The helpers that read a garment and the skin
+off a built person moved from that file to `portrait/tests/common/mod.rs`, unchanged. `cargo test --release` as a whole 132 of 132 (in the round's full run 131 and one failure, of the
+new test itself: it asked for 1 500 places of cloth near the hem and a girl of four's round neck has 1 462;
+set to 1 000 and the file run again, 2 of 2); `tests/portrait.test.ts` and its neighbour 46 of 46; typecheck
+and lint pass, no new warning.
+Pictures (project files, `portraits/`): `runde160_vorher_nachher.png` (four ladies at court, before above and
+after below), `runde160_schraeg.png` (the same from a quarter), `runde160_nah.png` (two necks close by),
+`runde160_maedchen.png` (a girl of the sample and three small ones at court).
+
+Where the stage's values stand (21 November, no change to a value): main now checks that no code file is
+longer than 500 lines (`npm run lint`, `tools/check/budgets.ts`), and `src/portrait/profile.ts` had 503.
+England's profile `ENGLAND_1356`, with its notes of the rounds, and `PLAIN_1356` moved to
+`src/portrait/profile_1356.ts`; `profile.ts` keeps the profile's form (`StageProfile`), `APOLEIA` and
+`profileOf`. Where an older round's text names `profile.ts` for one of England's values, it is in
+`profile_1356.ts` now.
+
+**Round 161: a hood thrown back hangs behind the neck** (2026-11-21). Round 160's list named it: a hood
+thrown back is a cape with a roll round the neck and no hood behind it, and with round 148's white fur on it
+the roll reads as a neck brace. Looked at on the two men of the sample who wear one (a plain blue hood, a
+dagged red one), at court and in the village, from the front, from either quarter behind and straight from
+behind, ten views. From the side and from behind the cape's back is a bare shoulder piece with a bead at the
+neck; nothing says that this is a hood. The file of a hood thrown back (`cloth_hood_down`, round 35) is the
+cape with the edge of the hood's opening laid round the neck, and that is all of it.
+
+Read on 21 November, as accounts of the pages with their words quoted (not the pages themselves on my
+screen). Wikipedia, Chaperon (headgear): 'The hood could be pulled off the head to hang behind, leaving the
+short cape round the neck and shoulders'; of the early hood: 'The hood was loose at the back, and sometimes
+ended in a tail that came to a point'. Wikipedia, Liripipe: 'Liripipe was popular from the mid-14th to the end
+of the 15th century', and the Eulogium Historiarum of the 1360s 'mentions liripipes that hang right down to
+the heels like ridiculous strips'. Three more pages on hoods (rosaliegilbert.com, encyclopedia.com, the
+Fashion Institute of Technology's timeline entry on the chaperon) say the same of the caped hood and its tail
+and give no measure. So the sources carry that the hood hangs behind the neck and may end in a point. How
+long, how broad and how thick it hangs, none of them says.
+
+What is changed, in the builder.
+- **The hood itself, a flat bag behind the neck** (`hood_back.rs`, new; `build.rs` lays it on for a hood worn
+  `Hood::Back`). It hangs from the rear half of the opening's edge down the back, over the cape, and ends in a
+  point: 3.2 units (32 cm) along the cloth from the crest of the roll to the point (`LONG`), as broad as the
+  opening lies round the neck and a tenth more where it is broadest (`BROAD`), 3 to 4 cm thick under the nape
+  and 6 mm at the point (`THICK`), in three shallow folds (`FOLDS`, `FOLD`). It is drawn with the hood's own
+  image at the hood's own scale and in the hood's wool where no fold shades it, darker at its rim.
+- **It lies on what is seen from behind.** The cape and the gown under it are read as a depth over the plane
+  across the back (their triangles drawn into cells of 2.5 mm, the hindmost kept). Where the cloth falls away
+  under the bag, under the roll and at the cape's hem, which stands 6 cm off the gown, the depth goes straight
+  down from there: the bag hangs, it does not follow the cape in under its hem. A column of the bag runs down
+  that surface cell by cell, and the bag stands off it by its thickness, square to the surface evened out over
+  3 cm.
+- **The mouth.** The bag's first rows rise from beside the opening's edge to the crest of the roll and are
+  held over every corner of the roll near them. They begin a facing's breadth (`facing::BREADTH`) from the
+  edge: the edge itself, and a lord's fur with it, lies on the bag as the rim of a collar.
+- **It goes with the shoulders.** The bag is laid on while the body stands square and is turned by the same
+  `pose::pose` as the cape, so the head keeps its place to the digit (the two tests of `tests/pose.rs` pass
+  unchanged).
+- `facing.rs` hands out the corners of a hood and its opening's edge (`corners`, `opening`) for both files.
+
+Measured (the 20 hoods thrown back among the men `tests/hood_back.rs` builds in the village and at court):
+
+| | |
+|---|---|
+| the bag's lowest place under the cape's highest | 32.3 to 34.0 cm |
+| its breadth | 17.8 to 24.9 cm |
+| its breadth within 3 cm of its lowest place | 1.4 to 1.8 cm |
+| its nearest place behind the head's middle | 9.3 to 10.2 cm |
+| places of the cape or the gown that stand out of it (2 mm or more) | none, on 39 builds |
+| the point round the head for shoulders turned 0.35 radians | 0.283 to 0.289 |
+
+Without the rule that the depth goes straight down, and without the mouth held over the roll, 27 of the 39
+builds had places of the cape through the bag, up to 14 on one. The builder's file is 830 363 bytes (803 967
+before): `hang` is some 10 kB of it.
+
+Tried and not kept.
+- The bag laid on after the pose, in the turned shoulders' frame: places of the head moved by up to 2 cm
+  (`tests/pose.rs` failed twice), since the bag's mouth reaches up behind the head.
+- The rows begun on the opening's inner edge and walked over a height field: the walk stalled on the roll's
+  level top.
+- The bag following the cloth under it everywhere: it dived forward under the cape's hem, and the rows tangled
+  there (triangles facing the body).
+- A short shield (2.6 units long, broadest 1.3 of the opening): from behind it read as a bib on the back.
+- A thin bag, 1 to 2.8 cm: it read as a part of the cape, a seam drawn on it.
+- The mouth begun on the edge itself: at court the fur's rear stood through it as a white tab.
+- For the file's size: the image's scale as a median and the wool as the lightest tenth by sorting (two sorts,
+  some 10 kB each), and `f32::clamp` with bounds that are not constants, which brings the code that writes a
+  number out into the file (25 kB, the builder has none otherwise). Sums and `max`/`min` do the same.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 160 to its last figure, and the
+colour sheet the same (they read skin of the face).
+
+Honest about it. From behind and from the side there is a hood now where there was a bare back. From the
+front little changes: a little of the hood's cloth shows behind the ring on either side of the neck, and the
+ring of white fur is still a thick tube round the throat; that needs another collar (a lower, wider opening),
+not this bag. The bag is a formula, not a drape: one form for everybody, three even folds and no others, the
+same in wool and in a lord's finer cloth, and it does not swing out when the shoulders turn or the bust leans
+back. Its mouth is closed: no lining and no fur show inside it. Where it crosses a dagged hem the dags' tips
+lie ragged beside it. The long tail the pages give to these very years is not built (a hood's tail to the
+heels leaves the picture; a short point is the early hood's). Every measure and the form are by eye, on ten
+views of two men: PLACEHOLDER.
+
+Tests: `portrait/tests/hood_back.rs`, new. Of 120 men in the village and at court, each with a hood thrown
+back has two surfaces with the hood's image (the cape and the bag), the bag with all its corners, no place of
+it at a hem's place in the image, 30 to 36 cm under the cape's top, 15 to 28 cm broad, under 3 cm at the
+point, over 6 cm behind the head's middle, round to the side the shoulders are turned to, and nothing of the
+cape or the gown standing out of it; a hood on the head has one surface and a man without a hood none. And
+with the shoulders square the point hangs straight behind the head (within 0.01 radians), turned 0.35 either
+way 0.25 to 0.32 round to that side. One count of an older test is changed, with its reason in the test:
+`portrait/tests/facing.rs` held every hood to one surface with the hood's image; a hood thrown back has two.
+`cargo test --release` as a whole 134 of 134 (in the round's full run 133 and one failure, of the new test and
+a true one: on one lord the mouth's first row came to a hem's place in the image; the whole bag's image is now
+shifted until its first place stands a tenth off it, and the file run again, 2 of 2, with
+`tests/facing.rs`); `tests/portrait.test.ts` and its neighbour 46 of 46; typecheck and lint pass, no new
+warning.
+Pictures (project files, `portraits/`): `runde161_vorher_nachher.png` (the two lords from the side, from a
+quarter behind and from behind, before above and after below), `runde161_dorf_vorher_nachher.png` (the same in
+the village), `runde161_von_vorn.png` (the two lords from the front, before and after).
+
+**Round 162: a small girl wears her hair down** (2026-11-21). Round 160's list had it: the small children
+have one haircut. On the sheet of the whole sample, in the village and at court, the eight children of two and
+five are a fifth of the picture, four girls and four boys, and nobody can say which is which: all eight wear
+`bob08`, the small child's cut with its ragged fringe (round 105), on faces that are much alike at that age.
+From seven a girl has plaits; under seven she was a boy.
+
+Read on 21 November, as accounts of the pages with their words quoted (not the pages themselves on my
+screen). Buckinghams Retinue, a re-enactment group's guide, two pages ('Basic Head dress', 'Older children';
+they name no picture and no source for this): 'Girls would generally wear their hair uncovered; unbraided
+loose long hair was a sign of virginity'; 'young girls wear their hair down with a coif on top'; 'Girls over
+fourteen should have their hair up in their coifs'; of babies and toddlers 'Illustrations of the time seem to
+favour coifs, a soft linen bonnet-like cap'. Rosalie Gilbert, Hairstyles: 'it is more usual for only
+unmarried, young women to have hair loose'. The Getty's page on medieval hair care: 'usually only young,
+unmarried women wore their hair uncovered and loose'. A page on girls' hair styles (histclo.com) is of the
+19th and 20th centuries; a paper on hair in the Middle Ages (M. Easton) could not be fetched. So: that a young
+girl's hair is worn down and uncovered is carried by re-enactors' pages and two general ones. None is of the
+14th century's England by its own word, none gives a child under seven by her age, none says how long, and
+none says how a small boy's hair was cut.
+
+What is changed.
+- **A cut of its own, `loose01`** (`tools/portrait/pipeline/hair_body.py`, the recipe in the pipeline's
+  README; `public/portrait/real/loose01_body.txt.zst`, 48 330 corners, 71 112 triangles, 1.05 MB). It is the
+  parted cut `page01` (a man's, to the jaw) with four things changed. It **hangs** (`hang`): from the head's
+  middle down, the surface the hair lies on is in no direction nearer the head's upright than it is above, so
+  the hair falls straight from the head's breadth where `page01` goes in under the ear to the neck. It ends
+  lower (`end` 60 degrees under the head's middle for 50): over the shoulders. The parting ends at the back
+  of the crown (`part_to`), and both sides fall to one place under the head (`to`), so that the back is one
+  fall of hair. It lies closer to the head than a man's (`lift` 1.7 for 2.2).
+- **A girl under seven wears it** (`DressSet::hair_small_girl`, `hair_small_of`; England's table and the
+  court's), on a girl's painted layer and scalp (`under_of`). A boy under seven wears `bob08` as before, a girl
+  from seven her plaits. A crowned head under seven, girl or boy, keeps the flat cut the crown is fitted to
+  (the crowned table names no girl's cut), and Apoleia's children are as they were.
+
+Measured (`portrait/tests/hair_down.rs`: eight girls at two, four and six in the village and at five at
+court):
+
+| | |
+|---|---|
+| the hair's lowest place under the chin | 2.8 to 3.9 cm |
+| hair in front of the face's middle, down from the crown, in the head's height | 0.12 to 0.17 (a boy's fringe 0.20 to 0.22) |
+| its breadth at the chin's height, of its greatest | 0.85 to 0.95 (`page01` has no hair at that height) |
+| corners of the hair under the skin | none |
+| corners under the gown's cloth, of every fifth corner under the chin (1 509 to 2 282 a girl) | 7 to 19, by 0.4 to 0.6 cm at most |
+| the same with the shoulders turned 0.35 radians either way (four girls) | 7 to 14, by 1.0 cm at most |
+
+Those corners are the innermost ends behind: a child's collar stands off the nape, and the ends hang into
+it. Seen close from behind and from either rear quarter on two girls, the hair's ends lie ragged over the
+collar's hem and nothing of the gown shows through the hair. `page01`, `plait01`, `part01` and `bob08` come
+out of the changed script byte for byte as before. The hair's bodies are 18 files and 12.5 MB now, the data
+files 22.0 MB; the builder's file is 831 873 bytes (830 363).
+
+Tried and not kept.
+- `page01` itself on the girls: it reads as a girl at once, but it is a man's cut at the jaw, standing high.
+- `page01` ending lower (`PAGE_END=-72`): it follows the neck in, a bob tucked under at the nape.
+- The parting run down to the place the hair goes to, as `page01`'s: bundles began in the air under the
+  hairline and tangled at the nape. Each side falling to its own place (`to` 100,-85): a slit up the back.
+- The surface pushed out behind, to lay the hair on the collar: along the ray from the head's middle, which
+  points down there, so the ends went into the shoulders (75 to 110 corners in the gown, 6 to 13 in the skin).
+- The hair lifted off the gown in the builder as a cloth is (`layers::lift`): 0 to 9 corners left in the
+  collar where there were 7 to 19, and 1.0 cm when turned as before, since a hair's corner seldom faces as the
+  collar does. Not worth a step in the builder.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 161 to its last figure, and the
+colour sheet the same (they read skin of the face).
+
+Honest about it. A girl of five reads as a girl now, at a picture's size and from any side. What she wears
+is hair to the shoulders, not long hair: the hair is bound to the head and laid over a surface told by
+directions from the head's middle, which ends above the shoulders, so it cannot lie on a shoulder or down a
+back, and it looks more like a bob of our days than like a child's uncut hair. It is one cut for the four
+girls, straight, as long on a child of two as on one of six, and at seven it turns into plaits overnight. It
+is uncovered: the coif the same pages put on small children and on young girls' hair is not built. A
+crowned girl of five still has the boys' flat cut under her crown (seen on four). From
+behind its ends are a ragged line into the collar. The four small boys still share one cut and the eight
+faces are still much alike. The sources are a re-enactment group's guide without sources and two general
+pages: the length, the parting and the age of seven are by eye or the table's own, PLACEHOLDER.
+
+Tests: `portrait/tests/hair_down.rs`, new: a girl under seven has a girl's painted layer and no plaits, a
+free forehead (under 0.18), hair to 2 to 5 cm under the chin and at the chin's height over 0.8 of its greatest
+breadth, no corner in the skin, and under the gown's cloth at most one corner in fifty of those under the
+chin, by under 1 cm; a boy of five wears the small child's cut and a girl of seven plaits; with the shoulders
+turned 0.35 either way the same holds, by under 1.3 cm. One older test is changed, with its reason in the
+test: `a_body_of_hair_lies_on_a_head_of_any_size` (`portrait/tests/hair_body.rs`) held its two small girls to
+the small child's cut (the hair's top 1.0 to 2.6 cm over the crown, a fringe); it holds them to parted hair
+now (0.3 to 1.2 cm over the crown, as the test of a girl's plaits has it, and no hair in front of the face
+below the hairline), its two small boys as before. `cargo test --release` as a whole 136 of 136; `tests/portrait.test.ts` and its
+neighbour 46 of 46; typecheck and lint pass, no new warning.
+Pictures (project files, `portraits/`): `runde162_vorher_nachher.png` (the eight small children in the
+village, before above and after below), `runde162_hof_vorher_nachher.png` (the same at court),
+`runde162_seite_und_hinten.png` (the four girls from the side and from behind, before and after).
+
+**Round 163: a hood thrown back lies round the shoulders** (2026-11-21). Round 161's own list: "the ring of
+white fur is still a thick tube round the throat; that needs another collar (a lower, wider opening)". All 36
+of the sample beside each other at court: the two lords with the hood thrown back are the first thing the eye
+goes to, a white tube under the chin. Looked at on them at court and in the village, from the front, the side,
+behind and the other side, sixteen views.
+
+Measured before anything was changed, on a lord's fur, which lies along the edge of the hood's opening: on the
+head that edge is 68 to 80 cm round (53 lords), thrown back 51 to 60 (seven). It is the same hood. The
+opening its wearer's face looked out of cannot be a quarter shorter when it lies round his neck; an edge that
+long does not lie on a throat, it lies round the shoulders. The file (`cloth_hood_down`, round 35; its last
+form, the inner edge drawn in to the neck and lifted towards the nape, is in the commit of round 77) was laid
+by eye, not to this measure.
+
+Nothing new was read. Round 161's pages say that the hood 'could be pulled off the head to hang behind,
+leaving the short cape round the neck and shoulders', and no more of how it lies. The two reference sheets
+looked at this round (pairs at half figure, the group in the barber's shop) show no hood thrown back, so the
+result is not held against a picture of the reference either. The form follows from the hood's own measure.
+
+What is changed, in the pipeline (`tools/portrait/pipeline/drape_sim.py`, kind `cowl`; the call is in the
+pipeline's README). The builder is untouched: its file is the same to the byte (831 873).
+- **Lower in front** (`CW_DIP=0.42,2`): the roll's foot lies 4.2 cm lower in the middle of the front, less to
+  either side, and not at all behind.
+- **Off the neck** (`CW_INP=0.36`): the inner edge is drawn in to the neck at the nape as before, less over
+  the shoulders, and not in front, where it stands on the gown.
+- **On the shoulders** (`CW_RO=1.25`): over the shoulder, which is nearly level, the old rule (the body's
+  outside at the foot's height) put the roll's foot on the shoulder's cap, 19 cm out and more. The foot lies
+  no further out than 12.5 cm from the body's axis and stands on the cloth there, found from above.
+- **The edge where it is seen** (`CW_U0=0.35`): the sheet's edge lay at the roll's inner foot, rolled in
+  towards the neck; from in front it was behind the roll's crest. It lies just within the crest now, and a
+  lord's fur with it.
+- **The rim held** (`CW_HOLD=4`): the edge and the three rows after it are held as they are laid, the rest of
+  the roll and the cape fall in the simulation. The old roll was wedged between neck and gown and stood by
+  that.
+- **The nape** (`COWL=0.3,0.69,0.2,0.4,3`, `CW_UP=0.25`, `FOLD=0.25`): the roll is laid 2 cm high in front
+  and 6 at the nape (2.4 and 8.4 before), grows towards the nape later (by the third power), and is a little
+  uneven.
+- The dagged file is cut anew from it (`dag.py`, as round 136): 6 661 triangles (6 275). The plain file has
+  its 2 688 corners and 5 568 triangles as before; the two are 88 and 131 kB (90 and 122). With the old call
+  the script writes the same drape as before the change.
+
+Measured (120 lords of 15 to 68, `tests/collar.rs`; before: seven of the first forty):
+
+| | before | now |
+|---|---|---|
+| the opening's edge thrown back, round | 51 to 60 cm | 70.9 to 79.6 cm (mean 75.4) |
+| the same on the head | 68.1 to 80.4 cm (mean 74.9) | the same |
+| its foremost place under the chin's lowest | 2.6 to 2.9 cm | 5.3 to 7.8 cm |
+| how far it reaches to either side of the head's middle | 8.2 to 9.9 cm | 11.3 to 12.6 cm |
+| the fur's top at the nape over the chin's lowest (`tests/facing.rs`) | 5.4 to 6.9 cm | 4.9 to 6.3 cm |
+| the hood behind: its lowest place under the cape's highest | 32.3 to 34.0 cm | 28.6 to 30.3 cm |
+| the hood behind: its breadth, and at the point | 17.8 to 24.9 cm, 1.4 to 1.8 | 25.0 to 30.1 cm, 2.0 to 3.2 |
+
+The before of the last three rows is rounds 148's and 161's own tables. The last two are round 161's hood
+behind the neck. Its rule is not touched: it is as broad as the opening lies and is measured from the cape's
+highest place, so it is broader with the wider opening and hangs less far under a lower nape.
+
+Tried and not kept, each a file draped, bound, cut and looked at on the two men from four sides.
+- Lower and off the neck, nothing held (a flat roll, then one 2.8 cm high): the roll fell flat in the
+  simulation. A cape with a round hole, the fur a hoop lying on it.
+- All of the roll held, the edge rolled in as before: the villagers' roll read as a hood bunched round the
+  neck, but at court the fur lay behind the crest in front, and on one lord it was torn at a shoulder.
+- The roll turned out, the edge on its outer foot and the cape going on from its inner end: the builder's
+  layers tore the cape (holes, back faces), and the dagged hem shrank to 109 cm round.
+- All of the roll held, the edge near the crest, the foot where the old rule put it: an arch standing over
+  the shoulders with its rim at the jaw's corners, a wide funnel, and the fur torn on one lord.
+- As kept, but lower in front by 3 cm only and the nape's roll as high as before: the fur's rearmost place
+  stood 6.0 to 8.1 cm over the chin (3.8 to 4.8 as kept, on the same seven lords), and its top 9.8 cm on one
+  (`tests/facing.rs` failed on him).
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 162 to its last figure, and the
+colour sheet the same (they read skin of the face).
+
+Honest about it. The neck brace is gone: the throat and the gown's neckline show, and the hood lies round the
+shoulders as a collar, on a lord and on a villager. It is not a drape. The rim is a formula held in place,
+one form for everybody, the same in wool and in a lord's cloth, and only the cloth under it has fallen. The
+fur on it is still round 148's: one smooth white band of one breadth, a white hoop from in front, now on the
+shoulders. From straight behind a white corner of it shows beside the hood's upper corner on one side (both
+lords of the sample). The hood behind is broader and blunter than round 161 made it, 25 to 30 cm, because it
+follows the opening; that was not looked at for its own sake. The cape under the collar is some 4 cm shorter
+in front than it was (the roll lies 4.2 cm lower, the hem where it was). No source and no picture gives how
+such a hood lies; the measure the form is taken from is the builder's own hood on the head, and every number
+in the call is by eye, on sixteen views of two men: PLACEHOLDER.
+
+Tests: `portrait/tests/collar.rs`, new: on 120 lords the opening's edge thrown back is over 62 cm round and
+in the mean within a tenth of the mean on the head, its foremost place over 4.5 cm under the chin, and it
+reaches over 10.5 cm to either side (fails on round 162's file at the first lord, 51.1 cm). Three older tests
+are changed, each with its reason in the test, because the file is another: the dagged file's triangles in
+`tests/hood.rs` and `tests/facing.rs` (6 661 for 6 275), and in `tests/hood_back.rs` three bounds of the
+hood behind, which go with the opening and the nape (26 to 33 cm under the cape's highest for 30 to 36, 22
+to 33 cm broad for 15 to 28, the point under 4 cm for under 3). `cargo test --release` as a whole 137 of 137;
+`tests/portrait.test.ts` and its neighbour 46 of 46; typecheck and lint pass, no new warning.
+Pictures (project files, `portraits/`): `runde163_hof_vorher_nachher.png` (the two lords from the front, the
+side, behind and the other side, before above and after below), `runde163_dorf_vorher_nachher.png` (the same
+two men in the village).
+
+**Round 164: the fur on a lord's hood lies in tufts** (2026-11-21). Round 163's own list: "the fur on it is
+still round 148's: one smooth white band of one breadth, a white hoop from in front". All 36 of the sample at
+court on one sheet: eight lords wear a hood, and on each the fur is the first thing seen, a white tube with a
+clean outline, on the head and round the shoulders. Round 148 said so of it when it was made: "smooth, with
+no hair standing on its outline, and at a picture's size the image's hairs do not show". Beside the
+reference's fur (its kings' mantles, `ck3_15`): that lies in tufts with shade between them, and its outline
+is uneven.
+
+What was read. Nothing new. What fur a lord's hood is faced with is round 148's reading (ermine or lettice);
+how such a fur lies was not looked up, and no picture of the time was looked at.
+
+What is changed.
+- **The roll lies in tufts** (`portrait/src/facing.rs`; `TUFT`, `TUFT_LONG`, `TUFTS_ROUND`, `HOLLOW`): the
+  roll's bed is round 148's. On its top and on both its rims the fur stands up to 6 mm over the
+  bed, here more and there less: tufts 1.2 cm long along the edge (a whole number of them round an edge that
+  comes round), eight rows of them round the roll, every second row set off by half a tuft, each tuft's height
+  a draw, evened between neighbours. Nothing stands under the roll, where it lies on the wool. Between tufts
+  the fur is darker, by up to 0.55 where none stands.
+- **A finer roll** (`FINER`, `ROUND`): two rings for each corner of the edge and sixteen corners round each
+  (one ring and twelve), so a tuft has some three rings to its length: 7 296 triangles on the head and 6 144
+  thrown back (2 736 and 2 304). Where the fur faces is read off the tufted form, at each corner square to
+  its neighbours along the edge and round the roll.
+- The fur's image, its colour and the hood are not touched.
+
+Measured, on 120 lords of 15 to 68 years (`portrait/tests/facing.rs`; the tufts on the 27 hoods among the
+first 40):
+
+| | smooth (`TUFT` and `HOLLOW` at 0) | now |
+|---|---|---|
+| the roll's top over the mean of its neighbours two rings before and after (sd) | 0.1 to 0.2 mm | 0.8 to 1.2 mm |
+| tops along 10 cm of the edge | 0.5 to 1.1 | 2.3 to 3.3 |
+| the darkest corner of the roll's upper half beside the lightest | 1.00 | 0.45 to 0.46 |
+| the roll: broad, thick | 3.2 cm; 1.2 to 2.8 cm | 3.3 to 4.3 cm; 1.2 to 3.4 cm |
+| on the head, before the face's middle: the roll's upper rim over the chin's lowest place | 1.9 to 3.8 cm | 2.2 to 4.0 cm |
+| thrown back: the fur's top at the nape over the chin | 4.9 to 6.3 cm | 5.2 to 6.6 cm |
+| the edge read off the roll: thrown back; on the head | 70.9 to 79.6 cm; 68.1 to 80.4 | 71.2 to 79.9; 68.9 to 81.2 |
+| the builder (`sc_portrait.wasm`) | 831 873 bytes | 851 152 |
+
+The smooth roll is this round's builder with the two numbers at 0, which gives round 163's figures in every
+other row (the new test fails on it at the first hood); the builder's size beside it is round 163's file. The
+edge is the same hood's: the rings' middles go with the tufts, and the way read off them is 0.3 to 0.8 cm
+longer.
+
+In the picture (two lords at 880 by 1 100, halved; the pale pixels of the roll): the fur's lightness after
+the mean within 5 pixels is taken off has an sd of 3.9 on the head and 3.4 thrown back (2.6 and 2.4), and its
+darkest tenth lies at L 56 and 62 (62 and 73). The reference's fur read the same way gives 1.3 where it is
+lit and 3.9 in its shade: the figure does not tell a tufted fur from a shaded tube, and nothing is held to it.
+
+Tried and not kept.
+- Tufts in the fur's image only, as shade between clumps (a switch in `fur_tex.py`, a noise evened over 4 by
+  6 mm, the fur a quarter darker where it is low): grey veins on a smooth white tube.
+- Tufts in the image as locks, each over the root of the next (ten across the image and eight down, 0.3
+  darker at the root, in the relief too): a plaited braid, or a knitted cuff. The outline stayed a clean line
+  both times; the switch is taken out of the script again.
+- The tufts in the form at 5 mm and the hollows 0.35 darker: the outline uneven, the roll's face still one
+  white.
+- The builder grew by 19 kB with the tufts. Six ways round it (no clamp between computed bounds, no `round`,
+  no `rem_euclid`, the roll's and the tuft's function not taken into their callers, the draws from the
+  integer generator in place of the sine's) gave 851 096 to 851 510 bytes. The growth is not the roll's code
+  (`facing::face` is 8 783 bytes for 11 078, `tuft` 584): the module has 913 functions for 861, zstd's error
+  formatting among the new ones. Left as it is.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 163 to its last figure, and the
+colour sheet the same (they read skin of the face).
+
+Honest about it. The white hoop is fur at a picture's size now: its outline is uneven and its face has shade.
+It is fleece more than ermine: soft lumps of one size, the same row of them on every lord, as regular as
+beads from the side; no hair stands on the outline, and the fur's image, short hairs that do not show at a
+picture's size, is as it was. It is as white as it was, lighter than anything else in the picture. It is a
+little thicker and comes 2 mm higher before the chin. From straight behind, fur shows at the upper
+corners of the hood behind the neck, as in round 163. The mantle's ermine on a
+crowned head is a flat sheet still. How long, how high and how many the tufts are is by eye beside the
+reference's fur, on two lords from three sides and seven at a picture's size: PLACEHOLDER. No source and no
+picture of the time gives how the fur of a hood's facing lay.
+
+Tests: `portrait/tests/facing.rs`, one new (`the_fur_lies_in_tufts`): on 27 hoods the roll's top stands over
+0.6 mm (sd) over its neighbours' mean, there are 1.5 to 5 tops along 10 cm, and the darkest corner of the
+upper half is under 0.7 of the lightest. Two older tests there are changed because the roll is another: its
+corners (`FINER` rings of `ROUND`, read from `facing.rs` now, as in `tests/collar.rs`), its breadth (to a
+tuft at either rim more) and its thickness (to a tuft more). `cargo test --release` as a whole 138 of 138;
+`tests/portrait.test.ts` and its neighbour 46 of 46; typecheck and lint pass, no new warning.
+Pictures (project files, `portraits/`): `runde164_hof_vorher_nachher.png` (seven of the sample's eight lords
+who wear a hood, before above and after below), `runde164_pelz_gross.png` (two of them large, from the front and
+the side, before above and after below).
+
+**Round 165: the ermine of a crowned head's mantle has a pile** (2026-11-21). Round 164's own list: "The
+mantle's ermine on a crowned head is a flat sheet still". All 36 of the sample crowned on one sheet, and two
+of them large: the facing is a part of the mantle's sheet and as thin as the red cloth beside it, white paper
+with tails drawn on it, and the rolled hem at its front edge is a thread. A lord's hood beside it has had a
+roll of tufted fur since round 164. Beside the reference's fur (its kings' mantles, `ck3_15`): that stands
+thick over the cloth, with a fat soft edge, and lies in tufts.
+
+What was read. Nothing new. How thick the ermine of a mantle's facing lay was not looked up, and no picture of
+the time was looked at.
+
+What is changed.
+- **The fur is lifted off the sheet** (`portrait/src/pile.rs`, new, called by `mantle::face` when everything
+  stands as it is drawn; `BED`, `RIM`, `ACROSS`, and the hood's `TUFT` and `HOLLOW` from `facing.rs`): each of
+  the fur's triangles is divided in four at the middles of its sides (20 732 on a mantle for 5 183, sides of
+  5 mm for 1 cm), and each corner is lifted the way the sheet faces there: by a bed of 2 mm, and by tufts of
+  up to 6 mm, a draw at each corner of a grid of cubes 1.6 cm wide, evened between them. Between tufts the fur
+  is darker, by up to 0.55 where none stands, as on the hood. Where the fur faces is read off the lifted form.
+- **Nothing is lifted along the fur's border**, where the red cloth goes on: the pile rises over the first
+  centimetre from it. The fur lies on the mantle as a cushion, and no gap opens beside it.
+- **The rolled hem at the front edge is a roll**: a tube of six corners round, 3 mm in radius, lifted by the
+  bed and half a tuft all round to 8 mm, without tufts (a tube too thin to carry them). The middles of its
+  sides lie between the sides' ends, and it faces round its tube as it did.
+- The brooches sit on the fur as it lies now. The fur's image, its colour, the mantle's file and the red cloth
+  are not touched.
+
+Measured, on sixteen crowned heads from a child of five to an old one (`portrait/tests/mantle.rs`):
+
+| | round 164 | now |
+|---|---|---|
+| triangles of fur on a mantle; of all the mantle's | 5 183; 0.50 | 20 732; 0.80 |
+| the fur over the sheet | 0 | 2 to 8 mm; 0 at its border |
+| sides of the file whose middle is darker or lighter than their ends by 0.05 of the whole step: the middle lies under or over the line between them | none (one lightness) | 21 292 of 21 738 |
+| a tuft's height read off them | none | 5.5 to 6.5 mm |
+| the hem at the front edge, round | 1.9 cm | 4.9 cm |
+| the opening in front, to either side of the middle, at least | 3.2 cm | 2.3 cm |
+| a brooch's middle off the fur at most; the cord's front before the gown at least | 0.37 cm; 1.05 cm | 0.42 cm; 1.48 cm |
+| the fur's image on the chest covers, across; down (of what it is made for) | 0.66 to 1.13; 0.64 to 1.18 | 0.75 to 1.19; 0.67 to 1.23 |
+| the same, across for its length | 0.74 to 1.07 | 0.78 to 1.13 |
+| of the chest's fur, the image's way down is the cloth's | 0.949 | 0.927 |
+| the builder (`sc_portrait.wasm`) | 851 152 bytes | 864 531 |
+
+The image's size is read on the pile now, which is longer than the sheet under it: a tuft's slopes, and the
+pile's top where the sheet is round across (most on a child's shoulders, the two at 1.13). The older test held
+across for its length under 1.1; that bound is 1.15 now, the others stand (across at most 1.19 for 1.2).
+
+Tried and not kept, and the way there.
+- Every corner lifted alike, the hem's with tufts as the facing's: the hem at the front edge a string of
+  beads.
+- The hem at half a tuft all the way: no beads, a dent between every two of its rings (the middle of a side,
+  lifted by itself, lies within the tube's round).
+- The middles of the hem's sides set between their ends: the form smooth, the light on it still in ribs (where
+  it faces read off its few sides). With the hem facing round its tube as it did, it is smooth: kept.
+- For the fine ribs across a child's hem (below): the hem's corners lifted the way their neighbours along the
+  tube are, evened four times. The picture did not change; taken out again.
+- The older test failed at once with 1.30 across on the first mantle. Not the pile: it took the triangles that
+  lie within the image across, and of the strip along the front edge, where the image lies some five times
+  as broad as elsewhere (4.3 to 5.0 for 0.9, as the file has it since round 152), the inner halves were
+  within it after the division. It takes whole triangles of the file now, as before.
+- The builder was 840 811, 860 986, 863 119 and 864 531 bytes over the four steps above, and 868 656 with the
+  evening: 13 kB more than round 164's, which had grown by 19 kB.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 164 to its last figure, and the
+colour sheet the same (they read skin of the face).
+
+Honest about it. The facing has a body now: a cushion with a fat rolled edge and soft shade in its field, and
+behind the neck a collar that stands thick. It is fleece more than ermine, as on the hood: soft lumps, no
+hair on the outline, as white as it was; the tails are the image's and lie on the lumps as they fall, one
+across a hollow here and there. The roll and the pile are as thick on a child of five as on a man, and heavy
+on the child; and on a child, whose picture is taken closer, the roll shows fine ribs across: the fur's image
+is laid along a hem and goes round the tube with a twentieth of its length, 5 mm of hairs round 4.9 cm now
+(1.9 cm before). Not cured. The opening in front is 0.9 cm narrower to either side. Where the fur ends at the
+cloth the fur has two half sides for the cloth's one; their middle is not moved and lies on the cloth's
+side, and no crack shows in the pictures, but nothing but that holds them together. From the side the fur's
+border on the red cloth is still the file's stairs. In one trial's picture from behind a black slit showed in
+the red cloth low on a girl's back; the cloth is not touched this round, and the slit was not looked for in
+an earlier picture. The mantle is a laid tent still. How thick the bed is, how far from the border the pile
+is whole and how broad a tuft is, is by eye beside the reference's fur, on two crowned heads from the front,
+the side and behind and 36 at a picture's size: PLACEHOLDER. No source and no picture of the time gives how
+the ermine of a mantle lay.
+
+Tests: `portrait/tests/mantle.rs`, one new (`the_fur_has_a_pile`): four triangles for each of the file's and
+over 16 000; nine in ten of the sides whose middle is darker or lighter have it lower or higher; a tuft's
+height read off them within 0.7 to 1.3 of `TUFT`; the fur's border at the cloth on the cloth's corners (a
+quarter of it lies on the sheet's own rim); a hem's sides not bent. It fails without `pile::raise`. One older
+test there is changed as said above (whole triangles of the file; across for its length to 1.15).
+`cargo test --release` as a whole 139 of 139; `tests/portrait.test.ts` and its neighbour 46 of 46; typecheck
+and lint pass, no new warning.
+Pictures (project files, `portraits/`): `runde165_mantel_vorher_nachher.png` (two crowned heads large, before
+above and after below), `runde165_seite_hinten.png` (the same two from the side and from behind, after),
+`runde165_alle_gekroent.png` (all 36 of the sample crowned, after).
+
+**Round 166: no points on a small child's chest** (2026-11-21). All 36 of the sample on one sheet in the
+village's dress and one at court, looked through for what stands out in the whole figure: every one of the
+eight small children, the boys as well, has a point on either side of the chest. Two boys large (of two and
+of five), from the front and from the side: from the front two tips with sharp creases beside them, from the
+side a nipple in the cloth, and under one arm a black slit. No reference picture of a child was held beside
+them: a point on a boy's chest needs none.
+
+What was read. Nothing new. Round 142's own note in `real_look.rs`: the gown was draped on a grown body, and
+"the bust of the body the gown was draped on stood on it as two points" on a child of two; round 142 made the
+gown's folds as small as the child. `tools/portrait/pipeline/tunic_sim.py`: the body the gown is draped on is
+smoothed at the chest. Why the drape has points there all the same was not found out.
+
+What was measured first.
+- The body has none: on a child of two no corner of its chest stands more than 1.6 mm off the mean of its
+  neighbours.
+- The gown has: counted on eight children each, the corners of the gown's front in the picture, between the
+  arms and 3 cm and more from a hem, that stand more than 3 mm off the mean of their neighbours the way the
+  gown faces (table below). They are of two kinds: points and creases in the gown's own shape (on a man of 24,
+  with the hold off the body left out, the highest stands 6.8 mm off its neighbours, 10.9 cm from the middle
+  and 26 cm under the chin: at the foot of a grown person's picture, on the chest of a child's, which shows
+  the gown to under the armpits), and points where the builder holds the gown off the body (round 143).
+
+What is changed.
+- **A point in the gown's own shape is evened** (`portrait/src/real_look.rs`, `calm`; `CLOTH_POINT` 3 mm,
+  `CLOTH_FOLD_EVEN` 3): where a place of the gown's folds stands more than 3 mm off the mean of its
+  neighbours, the way the cloth faces as draped, the folds are evened three times, each place half itself
+  and half its neighbours' mean; wholly at such a place, half at a place beside one, and nowhere else. Of the
+  two gowns small children wear that is 337 of 4 806 places and 317 of 4 895. The rolled hem keeps its form;
+  the gown's other folds, and every other garment's, are as they were to the digit. For a gown with linen
+  under it and for one worn on the skin (the village's and the court's).
+- Nothing else: the hold off the body, the gown's files and the stage are not touched.
+
+Measured (`portrait/tests/chest.rs`, eight children each; `tests/court.rs`, `tests/clothes.rs`):
+
+| | round 165 | now |
+|---|---|---|
+| corners of the gown's chest more than 3 mm off their neighbours: girls of two; boys of two | 41; 64 | 9; 19 |
+| the same: girls of five; boys of five | 71; 76 | 35; 11 |
+| the corner that stands furthest: girls, boys of two | 5.7 mm; 9.7 mm | 5.7; 5.1 |
+| the same: girls, boys of five | 9.7 mm; 14.3 mm | 9.7; 3.7 |
+| triangles of the court's gowns drawn out three times in the image; of the village's | 2.48 in a hundred; 13.1 | 2.78; 14.0 |
+| how uneven a lady's gown is (the angle of a triangle to those within 3 cm): village; court | 24.2 to 25.4 degrees; 18.0 to 20.8 | 21.8 to 23.0; 17.2 to 20.5 |
+| the same, a lord's: village; court | 18.9 to 19.8; 13.4 to 14.6 | 17.0 to 18.0; 12.8 to 14.2 |
+| the court's gown's unevenness for the village's, on the same body (18 pairs) | 0.61 to 0.83 | 0.65 to 0.91 |
+| the builder (`sc_portrait.wasm`) | 864 531 bytes | 870 932 |
+
+One older bound is changed, and why. `tests/clothes.rs` holds that a gown at court is less uneven than the
+village's on the same body, and held it under 0.85 of the village's. Its measure counted the village gown's
+points: without them the village's gown is 2.1 to 2.7 degrees less uneven on a lady and the court's, which
+had fewer, 0.3 to 0.8, and the largest of the eighteen is 0.91 for 0.83. The bound is 0.95 now. The court's
+gown is still the smoother one on every body; its lead is smaller than round 151 measured, because a part of
+that lead was the village gown's points.
+
+Tried and not kept, and the way there.
+- **Every fold of the gown evened three times**, points or none (the round's first rule, and with it the
+  linen under the gown): on the eight children 12, 16, 24 and 33 corners, as good. Two, three, four and six
+  times counted alike. But four older tests failed, and rightly: on a woman of 50 the test found no button
+  that is a ball (why was not looked into), on a girl of ten four places of the cloth at the neck lay under
+  the skin for one, 5.37 in a hundred of the court's triangles were drawn out in the image for 2.48, and the
+  village's gown was nearly as even as the court's. With the gown left as it was within 3 cm of a hem the
+  buttons and the neck were right again, the image not (5.31).
+- **Only the folds' height evened**, the place along the cloth left (over the evened shape; and the way the
+  cloth faces, at the end or in every pass, three and six times): the image stays (2.6 to 2.7), the points
+  go less well (the first way 55 corners on the girls of two for 41; the others 23 to 33 on the boys of two
+  for 16 with every fold evened, and the furthest corner on a boy of five 17.9 and 22.4 mm for 14.3), and
+  the neck or the buttons failed again.
+- A lone peak cut down to its neighbours: the 12.5 mm of one boy of five is a crease, not a peak.
+- The hold off the body evened 72 times for 24, or not at all: did not help.
+- A point at 2, 4 and 5 mm for 3, and the evening one or two places further round it: 81 to 95 corners on
+  the 32 children for 74 (252 before). At the place itself only, or once for three times: 105 to 144, the
+  boys of two keep 43 to 51 of 64. Twice: 64 for 74, within what the counts of each eight jump by from one
+  trial to the next; three is kept, and no picture was made of two.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 165 to its last figure, and the
+colour sheet the same (they read skin of the face).
+
+Honest about it. The two tips and the nipple are gone on the two boys, and the black slit under the arm; what
+is left is a soft swell on either side of the chest, where the gown is held off the body, and a crease at the
+armpit. On the girls of five half of the corners are left (35 of 71) and the one that stands furthest is as
+far as it was (9.7 mm): those are the hold's, and this round does not touch the hold. The counts jump: one
+corner more or less over 3 mm on one child. Grown people's gowns lose their points as well, low in the
+picture; a village woman's gown is a little smoother for it and nearer to a lady's than it was. 0.3 in a
+hundred more of the court's triangles are drawn out in the image (2.78 for 2.48; the test holds 4). Why the
+drape has points where the body it was draped on is smooth is not known; the cure is in the builder, not in
+the file. 3 mm, three times and half beside a point are by the count above and by eye on two boys from the
+front and the side: PLACEHOLDER. No source was read on how a child's gown lay.
+
+Tests: `portrait/tests/chest.rs`, new (`a_small_childs_gown_has_few_points_on_the_chest`): on eight girls and
+eight boys of two and of five the corners of the gown's chest that stand in a point are fewer than six in ten
+of what they were. It fails without the rule (41 for 41 on the girls of two). `tests/clothes.rs`: one bound
+changed as said above. `cargo test --release` as a whole 140 of 140; `tests/portrait.test.ts` and its
+neighbour 46 of 46; typecheck and lint pass, no new warning.
+Pictures (project files, `portraits/`): `runde166_kinder_vorn.png` (two boys' chests from the front, before
+above and after below), `runde166_kinder_seite.png` (the same from the side), `runde166_dorf.png` (all 36 of
+the sample in the village's dress, after).
+
+**Round 167: a small boy's fringe ends on the middle of the forehead** (2026-11-21). Round 166's two boys
+large, for the gown: above it, the larger part of each face is bare forehead, and the hair ends high over it
+in a row of points, as a wig that has slid back. Round 141's own list: "on a small child, whose fringe is
+cut high, the locks' points stand in a row over it". The cut is so on purpose: round 105 gave children under
+seven a cut of their own (`bob08`) with the fringe in the forehead's upper half, because the grown's fringe
+ended on the brows then, and under it "a child of two was a small adult under a bowl" (`dress.rs`,
+`hair_small`). Since round 147 a man's fringe ends on the middle of the forehead, as the reference's bowl
+cuts do; the child's stayed where it was.
+
+What was read. Nothing new. No picture of the reference shows a child (these docs say so of two earlier
+rounds), and no source was read on how a small boy's hair was cut.
+
+What is changed.
+- **`bob08` has no fringe line of its own** (`tools/portrait/pipeline/hair_body.py`, `CUTS`): it was cut at 2
+  degrees and takes the bowl cut's -5 now, the line every man's and boy's fringe ends at. Its sides (to the
+  ear's lobe) and how close it lies to the head are as they were. The file is written anew
+  (`public/portrait/real/bob08_body.txt.zst`, 709 kB for 694; the manifest has its size). The painted layer
+  under it and the scalp are not touched: the hair covers more of them.
+- Nothing in the builder and nothing on the stage. Girls under seven wear their hair down since round 162 and
+  are as they were.
+
+Measured (`portrait/tests/hair_body.rs`'s measure, on eight boys each of two, four and six, and eight men of
+24 for comparison):
+
+| | round 166 | now |
+|---|---|---|
+| the fringe's lowest place over the eyes, boys of two | 4.8 to 5.3 cm | 3.2 to 3.6 cm |
+| the same, of four; of six | 4.9 to 5.4; 5.0 to 5.6 | 3.4 to 3.8; 3.5 to 4.0 |
+| the same as a share of the way from the eyes to the chin, boys of two to six | 0.50 to 0.60 | 0.35 to 0.40 |
+| a man's, for comparison | 4.1 to 5.0 cm, 0.27 to 0.33 | the same |
+| `bob08_body.txt.zst` | 693 702 bytes | 708 551 |
+
+A small boy's fringe ends lower over the eyes than a man's in centimetres and higher in shares of the face:
+his head is smaller and his face shorter under it.
+
+Tried and not kept.
+- The fringe at -10 degrees: down to near the brows, a heavy mop over a small face; round 105's "small adult
+  under a bowl" again.
+- Round 147 had tried -1 on these boys with the old locks' line ("a broken line on a boy, the upper locks'
+  points standing in it"); not tried again.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 165 to its last figure, and the
+colour sheet the same.
+
+Honest about it. A boy of two to six reads as a child with a fringe now, not as a man whose hair has gone
+back; that is all. The fringe is still a saw: wisps of 3.5 mm that each end in a point, which a picture as
+close as a small child's shows tooth by tooth, and the locks' points still stand in a row above it, lower on
+the forehead now. From the side and from behind the hair is the helmet it was, broad slabs from the whorl,
+standing far off the back of the head. All small boys wear this one cut, as before. The line is the grown's
+by eye: nothing was read, the reference shows no child, and the one reason is that the reference's bowl cuts
+end there on grown heads. PLACEHOLDER, as the cut's other numbers.
+
+Tests: `portrait/tests/hair_body.rs`, one test changed, with the reason in it: it held a small boy's fringe
+to the forehead's upper half (0.40 to 0.70 of the way from the eyes to the chin over the eyes) and holds it
+to a man's bounds now (0.27 to 0.48); round 166's file fails it with 0.59. `cargo test --release` as a
+whole 140 of 140; `tests/portrait.test.ts` and its neighbour 46 of 46; typecheck and lint pass, no new
+warning.
+Pictures (project files, `portraits/`): `runde167_buben_vorher_nachher.png` (four small boys from the front
+and from the side, before above and after below), `runde167_gross.png` (two of them large), `runde167_dorf.png`
+(all 36 of the sample in the village's dress, after).
+
+**Round 168: a bowl cut ends blunt, not in a saw** (2026-11-21). Round 167's own list: "The fringe is still a
+saw: wisps of 3.5 mm that each end in a point". Two small boys large, beside four bowl cuts of the reference
+(the sheet of men's and women's heads, three of them bare-headed and one under a hood): there the hair ends
+blunt, in a line that is nearly straight, with a few short notches and steps where one lock ends above the
+next. Ours ends in a row of pointed teeth, each 1 to 2 cm long.
+
+What was read. Nothing new: `hair_body.py`, `lay(frayed=)` (round 138), which parts a bundle's last 0.8 to 2 cm
+into wisps of 3.5 mm that each narrow to a point; and that one picture of the reference. No source on how hair
+was cut.
+
+What is changed.
+- **A wisp may end at a breadth** (`tools/portrait/pipeline/hair_body.py`, `lay`): a cut's `fray` has a seventh
+  number, how much of its breadth a wisp has left where it ends. 0 is the point of before.
+- **A bowl cut's ends are broader, shorter and blunt** (`BOWL`, `fray`): wisps of 8 mm for 3.5, over the bundle's
+  last 3 to 9 mm for 8 to 20, the shortest 0.55 of that length for 0.45, the end at most 0.1 of the wisp's
+  breadth outside its own share for 0.25, and half the breadth left at the end. The nine bowl cuts' files are
+  written anew (`public/portrait/real/bob01_body.txt.zst` to `bob09_body.txt.zst`, 6 767 475 bytes together for
+  6 670 972; the manifest has their sizes).
+- **Parted hair keeps the pointed wisps** (`page01`, `page02`, `loose01`: a man's hair to the jaw and a small
+  girl's worn down): `page01` has the old numbers as its own now, where it took the bowl cut's. Its files are not
+  touched, and the script writes `page01` and `loose01` byte for byte as they are (`plait01`, `part01` and
+  `coil01` too).
+- Nothing in the builder and nothing on the stage.
+
+Measured (`portrait/tests/hair_body.rs`, `hair_that_is_cut_ends_in_wisps`: boys of 8 and men of 29 without a
+hood, 151 heads in `bob01`, `bob06` and `bob07`, two in `bob09`):
+
+| | round 167 | now |
+|---|---|---|
+| a wisp: its breadth; the length of the bundle's end it is parted over; its breadth where it ends | 3.5 mm; 8 to 20 mm; none | 8 mm; 3 to 9 mm; half |
+| how far apart along a bundle its ends lie, the median bundle of a head: `bob01`, `bob06`, `bob07` | 5.6 to 6.5 mm | 1.3 to 1.6 mm |
+| the same, the bundle whose ends lie furthest apart | 10.3 to 10.9 mm | 3.3 to 3.8 mm |
+| the same for `bob09` (turned ends: the fringe alone frays): median; furthest | 6.1 mm; 9.6 mm | 0.7 mm; 3.0 mm |
+| pieces of a bowl cut that end in two ends and more | 86 of 129 | the same |
+| where the fringe ends over the eyes | 3.2 to 3.6 cm on boys of two, 4.1 to 5.0 on men (round 167) | one boy of two 3.4 cm, one man of 24 4.9 cm: within that |
+| the nine files | 6 670 972 bytes | 6 767 475 |
+
+Tried and not kept.
+- The ends blunt and nothing else (the old breadth and length, half the breadth left): a comb of long
+  rectangular teeth.
+- Wisps of 8 mm over 5 to 14 mm, 0.6 of the breadth left: steps as tall as they are broad, battlements.
+- Wisps of 6 mm over 4 to 10 mm, 0.35 of the breadth left: the saw again, finer.
+- **The same blunt ends on parted hair** (`page01`, `page02` and `loose01` were written and looked at): on a man
+  with hair to the jaw the edge beside the forehead was blocks, and on three small girls the ends on the
+  shoulders were torn rags, one with a kink in it. The fine pointed ends read as hair there; kept as they were.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 165 to its last figure. The colour
+sheet under it differs in three values, all on heads with a bowl cut: the forehead's L of the grown men 49.1
+for 49.2 and of the boys of 8 to 17 50.5 for 50.7, and those boys' cheek beyond the nose 18.1 darker than the
+lit one for 17.8. A blunt fringe shades a little more of the forehead than a saw.
+
+Honest about it. From the front and under a hood a bowl cut's fringe is a blunt line with shallow steps now,
+nearer to the reference's than the saw was. It is not the reference's: there the fringe has a thick rounded
+rim, and ours is thin at its edge, flat wisps whose cut ends a close picture shows as small rectangles. From
+the side the edge at the temple and over the ear is stepped in rectangles, and on one of the two heads looked
+at a notch stands in it as in a battlement. Under a crown's band short ends show on the forehead of one of
+two heads, where none showed. The locks' points above the fringe (round 141) stand in a row as before.
+Parted hair still ends in a fine saw at the jaw and on the shoulders. The numbers are by eye, on two small
+boys and five more heads of the sample beside one picture of the reference: PLACEHOLDER. No source was read.
+
+Tests: `portrait/tests/hair_body.rs`, `hair_that_is_cut_ends_in_wisps`, changed in two places, with the reasons
+in it. Its measure counted the places where a triangle has two corners at one place, a point; a blunt end has
+none, and on the new files it found three to six bundles in 129 that fray. It counts ends now, blunt or pointed (the
+places of a bundle's edge that lie further along the bundle than the edge on either side); on round 167's
+files it reads what the old measure read (6 880 of 10 320 pieces, 46 of the turned cut's 258, all of a parted
+cut's, 5.6 to 6.5 mm). And one bound: a bundle's ends were held between 1 mm (the median) and 2 cm (the
+furthest) apart; a bowl cut's are held between 0.5 mm and 5 mm now, parted hair's as before. Round 167's
+files fail it with 10.9 mm. `cargo test --release` as a whole 140 of 140; `tests/portrait.test.ts` and its
+neighbour 46 of 46; typecheck and lint pass, no new warning.
+Pictures (project files, `portraits/`): `runde168_buben_vorher_nachher.png` (two small boys large, before above
+and after below), `runde168_maenner.png` (five more heads of the sample, two of them under hoods, the same),
+`runde168_seite_krone.png` (two heads from the side and under a crown, the same), `runde168_dorf.png` (all 36
+of the sample in the village's dress, after).
+
+
+**Round 169: the court's figured silk is small, close and less yellow** (2026-11-21). The court's sheet beside
+two figured gowns of the reference (the sheet of couples in half figure). There a gown has six or seven small
+figures across the chest, close together, in a gold that is not far from its ground: a woven cloth. Ours had
+four large palmettes across a chest, far apart, in one bright yellow on every dye: printed on.
+
+Looked at first, and not kept (below): a sharp crease in a lady's gown from the armpit to the breast.
+
+What was read. Nothing new. Round 156's records give no repeat's measure and no colour of the gold against its
+ground; the reference's two gowns were measured in the picture (below).
+
+What is changed.
+- **The figure is smaller and closer** (`tools/portrait/pipeline/silk_figure.py`): six palmettes across and up
+  the tile for four, 3.7 cm from palmette to palmette for 5.5, each a little larger in its step and the sprig
+  between them a third larger (`TALL` 0.86, `WIDE` 0.68, `LEAF` 0.32 for 0.8, 0.62, 0.24). The figure covers 27
+  in a hundred of the cloth for 20. The image and its normal map are written anew
+  (`public/portrait/real/cloth_cote_silk_figured.webp`, 169 kB for 137; `_n.webp`, 123 kB for 101).
+- **The gold shows its ground** (`src/portrait/materials.ts` `figuredLook`; `profile.ts`, `cloth.figured.cover`
+  0.7): where the figure is, 0.7 of the cloth is drawn as gold and the rest as the ground, in colour, roughness
+  and share of metal. All of it was gold.
+- Nothing in the builder: who wears the figured silk, the gown's files and their place in the image are as
+  they were.
+
+Measured (in the picture, the chest of a lord in red and of a lady in purple, 600 by 750: the pixels parted
+into ground and figure by how yellow they are; the same on two gowns of the reference, both of one green
+silk, small in their picture):
+
+| | round 168 | now | the reference's two |
+|---|---|---|---|
+| from palmette to palmette | 5.5 cm | 3.7 cm | |
+| the figure's share of the cloth, in the image | 0.20 | 0.27 | |
+| the gold's L: on red; on purple | 41.6; 39.6 | 36.8; 35.8 | 24.8; 25.0 (the ground 11.9; 14.1) |
+| how far the gold is from its ground (the distance in L, a and b): on red; on purple | 34.2; 43.6 | 27.5; 36.7 | 19.0; 17.8 |
+
+Tried and not kept.
+- **A lady's gown without its crease** (the round's first subject). At court a sharp crease runs in the silk
+  from the armpit to the breast, with a small point at its end. Three ways:
+  the gown held off a body with its chest evened as the drape's (`tunic_sim.py`: 25 passes over the chest's
+  front): a woman's breast is flattened by that, the skin came through the gown in patches as large as a hand,
+  and the crease stayed. It is in the gown's folds as draped, not in the hold: with every fold evened forty
+  times the gown is smooth. Round 166's rule from 1 mm for 3: smoother, but 4.28 in a hundred of the court's
+  triangles drawn out in the silk's image for 2.78 (`tests/court.rs` holds 4). The folds from 1 mm evened in
+  their height only, three and eight times, fading out within 4 cm of a hem: the image stays, the crease is
+  fainter but there, and on a girl of ten three places of the cloth at the neck lay under the skin, by 3 and
+  5 mm (`tests/neck.rs`). All taken back; the crease is as it was.
+- The figure with the sprig's leaves at 0.36 of a step: they touch the palmettes, and the figure reads as
+  stripes across the gown. At 0.3 with a palmette of 0.84 and 0.66: thinner than the reference's.
+- The gold at 0.5: 22.1 from its ground on red, nearer the reference's, but on red it is an ochre, not gold.
+  At 0.6 with the thinner figure: looked at, between the two.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 165 to its last figure, and the
+colour sheet as in round 168 (they read skin of the face).
+
+Honest about it. At a portrait's size a figured gown reads as a woven silk now and not as a print. It is still
+further from its ground than the reference's (27 to 37 for 18 to 19; that measure is rough: at an edge a pixel
+is both, and the reference's gowns are small and of one silk in another light). The figure is still my own
+palmette and sprig as formulas, one figure at one size for everybody, with none of the beasts and birds the
+silks of the records have; 3.7 cm, the figure's sizes and 0.7 are by eye beside two gowns of the reference:
+PLACEHOLDER. That a figure's weft lets the ground show is how the stage draws it, not something read. Where
+front and back of a gown meet the figure does not match, as before, and with more figures there are more of
+those places. The crease on a lady's chest, the gown as a sack and the corners of her neck at the shoulders
+are as they were.
+
+Tests: `tests/portrait.test.ts`, the test of the figured silk changed with the reason in it: it holds the
+stage's line with the gold's share, and the share between a half and one. `npx vitest run tests/portrait` 46 of
+46; `cargo test --release` as a whole 140 of 140 (nothing it reads is changed); typecheck and lint pass, no new
+warning.
+Pictures (project files, `portraits/`): `runde169_herren_vorher_nachher.png` (three lords, before above and
+after below), `runde169_dame_und_gekroente.png` (a lady and two crowned heads, the same), `runde169_hof.png`
+(all 36 of the sample at court, after).
+
+
+**Round 170: at court the gown is cut to the body, modelled in the Blender on Ramon's Mac** (2026-11-21).
+Ramon, after round 169: "naja machst du das nicht mit blender mcp wie besprochen? wird hier delulu gemacht?"
+The Blender MCP was agreed with the session that worked on his Mac on 17 November, before this thread began;
+this thread never saw it and ran Blender as a module of Python in the cloud for 55 rounds. That session's own
+work, seven pieces for the head made in Blender (a great helm, a bascinet with its aventail, a mail coif, a
+crown, a linen coif, two hats; the branch `claude/headwear-blender`), never came into this pull request: the
+coif, the felt hat and the crown were made again here in rounds 132, 134 and 144, the helms and the mail are
+on that branch alone, worn by nobody, and wait for sources and for Ramon's word on who wears them.
+
+From this round on the pipeline's scripts are run in the Blender that is open on his Mac (5.1.2), through
+its MCP add-on, and looked at there before anything is bound (below, "How it was made").
+
+The subject is round 151's own paragraph: "this is not the reference's fitted gown: it is as wide as the
+village's, has no waist, no seams, no belt and no tight sleeve". Seen in Blender on the bare body, the
+court's gown hung from the chest straight down, and its sleeves were flat pleated flaps: a tube drawn out of
+the armhole with no arm in it (the body the cloth fell on ended at the upper arm).
+
+What was read. Nothing new. Round 144's reading of Wikipedia, 1300-1400 in European fashion (as an account
+of the page): noblemen and squires about 1350 in tunics "so short and tight", "the cotehardie fits snugly";
+round 149's of the Fashion History Timeline: "low-necked fitted dresses" at 1380.
+
+What is changed.
+- **A cut to the body** (`tools/portrait/pipeline/tunic_sim.py`, `FIT`): the cloth is a share shorter each
+  way than the shell it starts as (Blender's cloth, `shrink_min` 0.04), as a garment cut narrower than the
+  body and closed on it with buttons or a lace. It lies on the body under its own pull, spans the hollows
+  and goes in at the waist, where a cloth let fall hangs from the chest. Laid 0.7 cm off the body all the way
+  down and no wider than it (`LOOSE=0 WIDE=0` for 0.12 and 0.15).
+- **Sleeves cut to the arm** (`ARMS=3.9`): the cloth is MakeHuman's helper along the arm to the elbow, where
+  the body's data ends, and the body it lies on reaches further; no tube is drawn out of the armhole.
+- **The court's three gowns are written anew** (`public/portrait/real/cloth_cote_court`, `cloth_kirtle_court`,
+  `cloth_cote_v_court`, each `.txt.zst` and `_ao.txt`; 217, 208 and 224 kB for 203, 197 and 213; 4 685, 4 699
+  and 5 025 points): draped in Blender on the Mac, then held under the village's round gown, bound, the part
+  below sewn on and laid flat in the cloth's image as rounds 151 and 156 did. Held under the village's gown
+  293 to 388 points were set back, by up to 1.1 cm (857 to 958, by up to 2.6).
+- **`cloth_panels.py` takes the neck's breadth** (`NECK`, 0.9 as it was; 1.9 for the lady's cut). Its seam
+  between front and back runs down from the cloth's highest points; within a lady's wide neck those are the
+  edge of her neck behind, and on a gown cut to the body, whose back comes forward in the hollow of the waist,
+  the seam ran through the back: 5 465 triangles in front and 2 400 behind, and the figure on her chest was
+  drawn several times too large. With the neck's own breadth 3 784 and 4 081.
+- `tunic_sim.py` run in a Blender that is open works in a scene of its own (`SCENE`) and leaves what is open
+  as it is; run by itself it starts from an empty file as before.
+- Nothing in the builder and nothing on the stage: who wears which file, the neck's hem, the buttons and the
+  lace, the silk and its figure are as they were. The village's gowns are not touched.
+
+How it was made. The scripts and `base.obj` lie in a folder on the Mac that git does not track; a script is
+sent to the add-on's socket (127.0.0.1:9876, `execute_code`), draped there (24 to 27 seconds a gown) and
+rendered from three sides, and the pictures and the drape come back to the cloud, where the binding runs.
+Blender was closed on the Mac after the three drapes were written; the scenes were not saved, the drapes and
+the pictures were.
+
+Measured (`portrait/tests/clothes.rs`'s measure: six ladies of 30, six lords of 34 and six ladies of 60 with
+the wimple, each on the same body as a villager and as a person of rank, as draped and in no pose):
+
+| | round 169 | now |
+|---|---|---|
+| the gown at court against the village's, from front to back in the middle of the trunk, at the waist: a lady | 1.4 to 0.3 cm less | 3.3 to 2.2 cm less |
+| a lord | 0.4 less to 0.8 more | 2.6 to 1.3 less |
+| a lady with a wimple | 2.4 to 1.1 less | 4.5 to 3.2 less |
+| the same at the chest, all three | 1.2 less to 0.9 more | 1.9 less to 0.6 more |
+| how uneven the cloth is, a lady | 17.2 to 20.5 degrees | 14.9 to 16.3 |
+| a lord | 12.8 to 14.2 | 10.7 to 10.8 |
+| a lady with a wimple | 14.6 to 17.2 | 12.9 to 13.7 |
+
+Tried and not kept.
+- The cut to the body with the old sleeves (`FIT` without `ARMS`): the trunk fitted, the sleeves the same
+  flat flaps.
+- `FIT=0.08`: in Blender not to be told from 0.04 from three sides; not bound.
+
+**A drape is not written twice the same.** Meant as a check that the script's old call still writes round
+151's drape: it does not, and neither does the script as it was before this round. Round 151's drape, one
+run of the old script and one of the new, each with round 151's call in the cloud: a point of one lies 2 to
+7 mm from the nearest point of another in the median, up to 1.7 to 4 cm on the trunk and up to 3.7 to 8.9 cm
+at the loose sleeves (the mesh's points are 8 mm apart; the points' order is not the same either, so no row
+can be held against a row). Blender's cloth is not the same from run to run; the files in the repository
+are the record, not the call. The new switches are read where they are set, and without them the script
+takes the lines it took.
+
+**Two bounds moved, and why.** Both in `portrait/tests/clothes.rs`, both because the form they held is
+changed on purpose. (1) Round 151's test held the court's gown as deep as the village's from front to back
+(within 2 cm at the chest and 3 at the waist): it holds it less deep at the waist now, by 0.8 to 6 cm, and at
+the chest between 3 cm less and 2 more. Round 169's files fail it (a lord: 0.8 cm more at the waist). (2)
+Round 149's test held a lady's neck as broad the day before the wimple's age as at 30, within 1 cm: 1.3 now.
+The hem ends at the arm, where a gown cut to the body goes with the body's own breadth, and one of the
+test's ladies reads 36.2 for 37.4; the measure is as fine as the builder's cut along the cloth's cells, 6 mm
+apart on either side (round 160's bound for a queen's neck). The round gown's neck is 14 cm broad.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 165 to its last figure, and the
+colour sheet as in round 168 (they read skin of the face, on the common people).
+
+Honest about it. In Blender, on the whole trunk, the gown is another garment: it goes in at the waist and
+the arm is in its sleeve. In a portrait most of that lies under the picture's foot, which ends above the
+waist: what the picture shows is the arm parted from the trunk by a fold under the armpit, a rounder shoulder
+and a smoother chest, and from the side a back that goes in. It is a small step in the picture. The fit is a
+formula (the cloth made shorter by one share everywhere), not a tailor's pattern: no seams, no gores, no
+belt, the same for a child of two as for a lord, and no source says that a small child wore the tight cut.
+On a lady the bust shows more, the body's and not a tailor's, with the point and the crease on it that round
+169 could not take out; on plain silk the cloth's shade is blotchy on a small child's chest. 0.04, 0.7 cm and
+the elbow are by eye in Blender: PLACEHOLDER. The drapes were written by Blender 5.1.2 on the Mac; the cloud's
+5.2.3 writes another drape with the same call, as it would on a second run.
+
+Tests: `portrait/tests/clothes.rs`, two changed (above). `cargo test --release` as a whole 138 of 140 in the
+round's full run, the two that failed being these two, which pass now (the files they read are the same to
+the byte); `tests/portrait.test.ts` and its neighbour 46 of 46; typecheck and lint pass, no new warning.
+Pictures (project files, `portraits/`): `runde170_vorher_nachher.png` (three ladies and three lords, before
+above and after below), `runde170_seite_vorher_nachher.png` (four from the side), `runde170_kinder_vorher_nachher.png`,
+`runde170_hof.png` (all 36 at court, after), `runde170_blender.png` (the renders from Blender on the bare
+body: the old drape and the three new ones).
+
+**Round 171: a bowl cut of fine strands, modelled in the Blender on Ramon's Mac** (2026-11-21). After round
+170 Ramon was asked what to model next in Blender and chose the hair ("Haare neu modellieren"). The subject
+is the men's bowl cut, the hair most heads of the sample wear. Seen in Blender, round 170's beside the
+reference's: the reference's is a close cap of fine hair with a thick round rim and a fringe that ends in
+small clumps; ours was a thatch, 129 bundles and locks of 1 to 4 cm, each a ridge of its own, standing 2.3 cm
+off the crown, with broad flat wisps for ends.
+
+What was read. Nothing. The cut is set by eye beside the reference's bowl cuts (round 109's pictures), in
+Blender and in the portrait.
+
+What is changed.
+- **A bowl cut is some 450 strands** (`tools/portrait/pipeline/hair_body.py`, `BOWL`): three layers of 70,
+  200 and 180 strands for two layers of bundles and two of locks. A strand of the upper two layers is 4 to 5
+  mm broad (three corners across, a side 2.0 to 2.4 mm), nearly flat, and runs in one piece from the whorl to
+  the cut as a bundle did; the lowest layer's are broader and close the cap. The hair lies 1.1 to 1.2 cm over
+  the crown (2.3 to 2.4).
+- **A round, closed rim** (`tuck`): over its last centimetre a strand turns in to the head through a quarter
+  of a circle and ends 2 mm over the skin, blunt (`blunt`: 0.6 to 0.8 of its breadth left). No wisps, no
+  locks: the line of the fringe is the strands' own ends.
+- **Clumps** (`clump`): 36 places round the head, unevenly spaced; a strand's end goes up to four fifths of
+  the way to its clump's middle over its last 6 cm, and a clump ends up to 1.5 degrees over or under the cut's line.
+  The fringe is clumps a finger broad with small notches between them.
+- **A step at the temple** (`corner` 57, 3): the fringe's line steps down to the sides' within 3 degrees round
+  the head, and no strand ends on the step. Over the 25 degrees it took before, strands ended one under the
+  other down the temple: a ladder, seen in the first pass in Blender.
+- **The image in true scale** (`across`): a strand takes as much of the strand image's breadth as it is
+  broad (the whole image to 3 cm), so the image's hairs are as fine on a strand as they were on a bundle; a
+  strand's tone is off its layer's by a sigma of 0.07 (`tones`; 0.1 gave stripes).
+- **Curls** (`bob05`): a strand's waves go by the way still to go to its end, a tenth of a wave off its
+  neighbours' (`curl`'s fourth number, 0.3), so they lie combed side by side. By each strand's own beginning they
+  were a wickerwork.
+- **Rolls** (`bob09`): the strands of a place turn out and up together, round one middle (11 to 13 mm
+  outside the topmost layer), and keep their breadth in the roll. With a radius and an angle of its own for
+  every strand the ends were claws.
+- **Flat hair** (`FLAT` 0.38: `bob02` under a hood, a hat, a circlet; `bob04` round a bare top): as high over
+  the crown as round 170's (0.5 cm).
+- The nine files `public/portrait/real/bob01_body.txt.zst` to `bob09_body.txt.zst` are written anew, by
+  Blender 5.1.2 on the Mac. Nothing in the builder and nothing on the stage; the wasm is the same file.
+  Parted hair, plaits, a small girl's hair, the hair under a veil, tightly curled hair and beards are not
+  touched (`page01` and `plait01` come out byte for byte as before).
+
+How it was made. Blender was started on the Mac with the MCP add-on's server (it was closed), and
+`hair_body.py` was sent to its socket and run in scenes of its own (`SCENE`; in an open Blender the script
+makes a scene and bakes the shade in it, and leaves what is open as it is). Each pass was rendered there from
+the front, three quarters and the side with the strand image and the baked shade, beside round 170's cut in
+a scene of its own, and changed in the script, in seven passes, by what each showed: the ladder at the
+temple, a fringe as even as a comb and then one of square notches, striped tones, ridges like spaghetti (laid
+flatter), and the curls, the rolls and the flat hair. The files Blender wrote on the Mac are the ones in the repository. The cloud's Blender writes
+the same file but for 13 of `bob01`'s 39 259 points, each off in a digit of its place.
+
+Measured (`portrait/tests/hair_body.rs` with `SHOW=1`, on round 170's files and on these):
+
+| | round 170 | now |
+|---|---|---|
+| pieces of a bowl cut (`bob01`) | 129 | 451 |
+| of the horseshoe round a bare top (`bob04`) | 99 | 287 |
+| a side across a piece where it is broad | 3.7 to 4.4 mm | 2.0 to 2.4 mm |
+| the hair's top over the crown, grown people | 2.25 to 2.37 cm | 1.08 to 1.17 cm |
+| small boys (`bob08`) | 1.78 to 1.79 cm | 0.78 to 0.80 cm |
+| under a hood (`bob02`) | 0.50 to 0.54 cm | 0.47 to 0.49 cm |
+| the fringe ends, of the way from eyes to chin over the eyes | 0.31 to 0.39 | 0.31 to 0.39 |
+| pieces ending in two ends and more (`bob01`) | 86 of 129 | 0 of 451 |
+| the rolls (`bob09`): broader a side in the lowest third | 25.5 and 29.5 mm | 28.7 and 32.2 mm |
+| triangles, `bob01` | 52 342 | 53 544 |
+| the curls `bob05`, the rolls `bob09` | 77 760, 77 560 | 79 588, 85 240 |
+| the nine files, packed | 6.77 MB | 9.08 MB |
+
+A strand is three corners across where a bundle was seven, so there are three and a half times the pieces
+for about the same triangles; the files are larger by the corners' rows (39 259 corners in `bob01` for
+32 536).
+
+Tried and not kept.
+- `corner` left as it was (45 to 70 degrees): the ladder down the temple.
+- Clumps of one breadth and one height: square notches, a row of battlements; no clumps: a comb.
+- The flat cut at a lift of 0.22, as the bundles' was: under a hood the strands lay under the rim with a gap
+  and stood in it as teeth. At 0.7 the hair went through a lord's circlet (1 758 corners outside it on one
+  lord; the full test run found it), at 0.45 still on three lords (27, 24 and 12 corners), at 0.38 on none.
+- Curls by each strand's own beginning, a ring every 3 mm: a wickerwork, and 2.09 MB for 1.41.
+- Rolls with a radius and an angle for each strand: claws, and 11 to 16 mm broader a side where the test
+  holds 20.
+
+**Three tests changed, and why.** All in `portrait/tests/hair_body.rs`, all because the form they held is
+changed on purpose; round 170's files fail each new bound, these fail each old one. (1)
+`a_head_of_england_wears_a_body_of_thick_bundles` held 40 to 260 pieces of 1 to 4.2 cm: it is
+`a_head_of_england_wears_a_body_of_hair` now and holds a bowl cut at 180 to 600 strands with a side of 1 to
+5 mm across and the image lying 0.28 to 0.38 units broad on a strand; a girl's parted hair is held as it
+was. (2) `a_body_of_hair_lies_on_a_head_of_any_size` held the hair's top 1.0 to 2.6 cm over the crown: 0.6
+to 1.6 now. (3) `hair_that_is_cut_ends_in_wisps` held two thirds of a bowl cut's pieces frayed, their ends
+under 5 mm apart: it holds that no strand of a bowl cut ends in two ends; parted hair cut at the jaw keeps
+its wisps and its bounds. The tests on the hood, the circlet, the rolls and the fringe's height are as they
+were and pass.
+
+**The gauntlet**: 22 of 22 over the whole sample. One line moved by 0.1 against round 165 (a man's far
+cheek chroma against the lit, -3.7 for -3.8). The colour sheet against round 168: women, girls and shaven
+men to the last figure; grown men four values by 0.1; boys of 8 to 17, who all wear a bowl cut, by more:
+the shaded cheek L 40.4 for 40.1, the forehead L 50.9 for 50.5, beside the nose 25.3 darker than the cheek
+for 27.2, the cheek beyond the nose 17.3 for 18.1. The hair is lower and its rim rounder, and throws another
+shadow on forehead and temple.
+
+Honest about it. This is a large step in the picture: from the front and from the side the bowl cut reads as hair, a compact cap with a clean fringe, where it read as a thatch of
+slabs. It was made by a script that Blender ran and looked at in Blender, pass by pass; it was not combed by
+hand there, and Blender's own hair tools were not used. It is the nine bowl cuts only: parted hair, plaits,
+a small girl's hair, the hair under a veil and the beards are bundles still, and beside the new cut they
+show it. A strand is a flat ribbon with the old strand image, opaque: no single hairs, no fly-aways, no
+soft edge, and the cap reads a little like a wig, even and tidy on every head; the clumps of the fringe are
+one pattern for a cut, the same on every man who wears it. The curls read as waves, not as curls. A new
+fault: with the head turned to the rim light's side on the test page (0.6 rad), single bright pixels of
+that light sit on the strands' edges, 64 on one head where round 170's had 8; in the game's own view 0 to 2.
+They are gone without the rim light and stay without its shadow, without the hair's two sheens and with no
+specular, so they are three.js' own highlight at a grazing angle on edges under a pixel broad. Not mended:
+the strands' normals would have to come from a smooth cap, which is the builder's work. Under a hood's rim
+the hair is a dark band. The hats were made on the old flat hair and are not made anew (the flat hair is as
+high as it was; the test on the hat passes). The download grows by 2.3 MB. Every number is by eye:
+PLACEHOLDER.
+
+Tests: `portrait/tests/hair_body.rs`, three changed (above). `cargo test --release` as a whole 135 of 140
+in the first full run (the circlet, mended in the files; the rolls, mended in the script; the three above),
+140 of 140 in the last; `tests/portrait.test.ts` and its neighbour 46 of 46; typecheck and lint pass, no
+new warning. Pictures (project files, `portraits/`): `runde171_vorher_nachher.png` (four heads from the
+front, before above and after below), `runde171_seite_vorher_nachher.png` (the same from the side),
+`runde171_halbprofil_vorher_nachher.png` (three men turned 0.6, with the bright pixels),
+`runde171_locken_rollen.png` (the curls and the rolls, front and side), `runde171_dorf.png` and
+`runde171_hof.png` (all 36, village and court, after), `runde171_blender.png` (Blender: round 170's `bob01`
+above, the new below, from three sides), `runde171_blender_alle.png` (Blender: the other eight cuts).
+
+**Round 172: parted hair of fine strands, modelled in the Blender on Ramon's Mac** (2026-11-21). Round 171
+made the men's bowl cut of strands and left all parted hair as it was: a girl's and a woman's hair drawn to
+her plaits (`plait01`), a woman's under a veil set back (`part01`), a man's cut at the jaw (`page01`, waved
+`page02`) and a small girl's worn down (`loose01`). Seen in Blender, round 171's: 86 bundles a side of 1.7
+to 2.2 cm, thick rolls with dark furrows between them, and on hair that is cut each roll ending in pointed
+wisps of its own. Beside the new bowl cut they showed it.
+
+What was read. Nothing. Set by eye, in Blender and in the portrait, beside the reference's parted hair.
+
+What is changed.
+- **Parted hair is some 650 pieces** (`tools/portrait/pipeline/hair_body.py`, `PARTED`): on each side 44
+  broad flat bands underneath (2 to 3.2 cm, they close the head) and over them 280 strands of 4 to 6 mm, as a
+  bowl cut's (three corners across, the image in true scale): 50 that begin along the hairline, 140 along the
+  parting and 90 on top. Heights over the skin, the hairline, the parting and where the hair goes to are as
+  they were, so the fillet, the circlet, the veil and the plaits sit as before.
+- **Hair that is cut ends in clumps, blunt** (`clump`, as round 171's): 30 clumps round the head; a strand
+  goes up to four fifths of the way to its clump's middle over its last 6 cm, and a clump ends up to 1.5
+  degrees over or under the cut's line. The pointed wisps are gone (`fray`).
+- **A man's hair at the jaw turns in** (`tuck`): over its last 1.2 cm a strand comes in towards the skin, to
+  some 7 mm over it: a closed rim, as the bowl cut's.
+- **A small girl's hair** hangs straight to its ends, which lie within 1.5 degrees of the line (3 before: in
+  the first pass in Blender fine strands of such different lengths were a ragged hem).
+- **The bands underneath end 4 degrees above the cut** (`short`), so that no broad band shows under the
+  strands' ends.
+- `fray` and the code that parted a bundle's end into wisps (rounds 138 to 170) are taken out of
+  `hair_body.py`: no cut uses them. The script writes the same files without them (`page01`, `loose01` and
+  `bob09` compared byte for byte).
+- The five files `page01`, `page02`, `plait01`, `part01`, `loose01` (`public/portrait/real/*_body.txt.zst`)
+  are written anew, by Blender 5.1.2 on the Mac. Nothing in the builder and nothing on the stage; the wasm
+  is the same file. The plaits themselves (`plait01_rope`), tightly curled hair and the beards are not
+  touched.
+
+How it was made. As round 171: `hair_body.py` sent to the socket of the Blender that is open on the Mac and
+run in scenes of its own, each cut rendered there from the front, three quarters, the side and behind. First
+the old cuts, then two passes of the new, then the files tried in the portrait. What the portrait showed
+(a grey man's hair striped with dark gaps) and what the tests showed (a corner of a small girl's hair "in
+the gown", below) was worked on in two passes with the cloud's Blender module and looked at in the portrait
+only, not in Blender; the last pass ran on the Mac
+again, was rendered there, and its files are the ones in the repository. The cloud's module writes `page01`
+and `loose01` byte for byte as the Mac's Blender does.
+
+Measured (`portrait/tests/hair_body.rs` and `hair_down.rs` with `SHOW=1`, on round 171's files and on these):
+
+| | round 171 | now |
+|---|---|---|
+| pieces, a girl's hair to her plaits (`plait01`) and a small girl's (`loose01`) | 172 | 648 |
+| a man's at the jaw (`page01`), waved (`page02`) | 161, 161 | 564, 558 |
+| the image's breadth on a piece, of `ACROSS` 0.3 units | 0.13 to 0.20 | 0.34 to 0.36 |
+| pieces ending in two ends and more (`page01`) | 161 of 161 | 0 of 564 |
+| a small girl's hair ends under the chin | 2.8 to 3.9 cm | 2.4 to 3.4 cm |
+| on her forehead down to, of the head's height | 0.12 to 0.17 | 0.13 to 0.18 |
+| her hair's corners in the gown, of those under the chin | 7 to 16 | 4 to 8 |
+| triangles `page01`, `plait01`, `part01`, `loose01` | 54 304, 53 376, 60 480, 71 112 | 45 988, 52 084, 56 492, 63 576 |
+| corners | 38 485, 32 340, 36 484, 48 330 | 35 037, 39 908, 43 003, 48 220 |
+| the five files, packed | 4.23 MB | 4.79 MB |
+
+Tried and not kept.
+- 50 strands a side on top and the parting's at 1.9 times their room: grey hair showed dark gaps between
+  the strands, stripes; 90 and 2.3 close it more (not wholly, see below).
+- To mend the corner "in the gown" below: the layer underneath thicker, and clumps that all end on the
+  line: no effect on it. The girl's ends drawn up (0.5 degrees over the line to 2 under it): her hair ended
+  1.9 cm under the chin, where the test holds 2. It was the measure; the ends are back at 1.5 either way.
+
+**A measure corrected** (`portrait/tests/hair_down.rs`, `down`). The test on a small girl's hair with the
+shoulders turned read one corner of the new hair as 1.75 cm deep in the gown (it holds 1.3). The corner lies
+at the jaw, 2.4 cm above the shoulder. Its nearest place on the gown was a point on the ridge of a fold at
+the collar's top, shared by triangles that face up and triangles that face down; the measure took whichever
+came first in the file, and from under the wrong flank a corner in the air reads as deep inside. Now a
+corner counts as inside only if it is under every triangle that shares the nearest place. By the corrected
+measure round 171's file reads 7 to 16 corners in the gown where the old measure read 7 to 19, and 0.7 cm at
+most with turned shoulders where it read 1.0; the new file 4 to 8 and 0.5 cm. The bound with turned
+shoulders is 1 cm now (1.3), as with square ones. No bound is loosened.
+
+**Two tests changed, and why.** Both in `portrait/tests/hair_body.rs`, both because the form they held is
+changed on purpose; round 171's files fail each new bound, these fail each old one. (1)
+`a_head_of_england_wears_a_body_of_hair` held parted hair at 40 to 260 pieces of 1 to 4.2 cm: it holds it at
+400 to 800 pieces with the image 0.28 to 0.38 units broad on a strand and a side of 1 to 5 mm across, as a
+bowl cut. (2) `hair_that_is_cut_ends_in_wisps` held four fifths and more of a parted cut's pieces frayed,
+their ends 1 to 20 mm apart: it is `hair_that_is_cut_ends_in_no_wisps` and holds that no piece of any cut
+ends in two ends.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 171. The colour sheet is round
+171's to the last figure, all 160 lines: the hairline and the hair's heights are the same, and no place the
+sheet reads lies under the hair.
+
+Honest about it. A visible step, smaller than round 171's. From the side a girl's and a woman's hair reads
+as combed hair drawn to the plait where it was a row of thick rolls; from the front, where parted hair is a
+narrow rim round the face, the difference is fine lines for coarse ones. A grey man's hair at the jaw is
+finer and ends in a rim, but still reads as cords: light strands over a dark layer, striped. A small girl's
+hair is finer and its hem calmer, but from the side it is a stiff bell that stands off the neck, and its
+ends are a comb of dark teeth. As in round 171 a strand is a flat opaque ribbon: no single hairs, no soft
+edge, one pattern of clumps for a cut on every head that wears it. The plaits themselves and the beards are
+the old bands and show it beside the strands; a veil and a hood hide most of a woman's hair anyway. The
+bright pixels of round 171 (rim light on strand edges, head turned on the test page) now have more hair to
+sit on; not counted again, not mended. It was made by a script that Blender ran, looked at in Blender for
+three of five passes; not combed by hand, and Blender's own hair tools were not used. The download grows by
+0.56 MB. Every number is by eye: PLACEHOLDER.
+
+Tests: `portrait/tests/hair_body.rs`, two changed, and `hair_down.rs`, its measure corrected and one bound
+tightened (above). `cargo test --release` as a whole 140 of 140; `tests/portrait.test.ts` and its neighbour
+46 of 46; typecheck and lint pass, no new warning. Pictures (project files, `portraits/`):
+`runde172_vorher_nachher.png` (four heads from the front, before above and after below: a girl's plaits, a
+veil set back, a man's hair at the jaw, a small girl's hair down), `runde172_seite_vorher_nachher.png` (the
+same from the side), `runde172_dorf.png` and `runde172_hof.png` (all 36, village and court, after; round
+171's sheets are the before), `runde172_blender.png` (Blender: `page01` and `plait01`, round 171's above the
+new, from four sides), `runde172_blender_weitere.png` (Blender: `loose01` and `part01` the same way, and the
+new `page02`).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
 is a body of thick bundles as theirs is, evener and duller than theirs; since round 110 a gown is cut at
-the neck and linen shows under it, without the bands, trims and fastenings theirs have; the veil (no folds),
+the neck and linen shows under it, without the bands and trims theirs have; the veil (no folds),
 the fine forms of the face (lids, nostrils, edge of the lips), stubble and
 children are not; since round 112 the faces differ from each other as real ones do in what the survey
 measures, by eye in the rest, and wear one hair and one brow each still; since round 113 the face is lit by the
-stage alone (no light painted into the skin, a shaded half in the skin's colour), and still lacks the
+stage alone (no light painted into the skin, a shaded half in the skin's colour), since round 115 the lower
+face runs in to the chin, since round 117 as far as the reference's does, with a round chin and a jaw whose
+edge is a soft shade, since round 118 the eyes have warm whites, a soft pupil and no dark line under
+them, since round 119 the white of the eye goes into the shade with the face, under brows that lie as high
+as theirs (read on ten of their women in round 119) but are rows of hairs where theirs are a closed band, since round 120 the cheek beside the mouth has
+lost the net's hard fold, since round 121 the grown women wear their hair three ways (a veil set back over parted
+hair, the veil on forehead and cheeks, plaits), in two cuts and the genes' browns and greys where theirs have a
+different head of hair on nearly every woman, since round 122 hair is drawn as light and as coloured as its
+colour asks (brown, red and blond read as the reference's do at the crown; black hair is still a dark shape),
+since round 123 the light is softer (held to five of their women's faces instead of one) and the shoulders
+are turned further than the head, each person's by another angle, since round 124 the picture is a bust
+that ends under the chest on cloth, as theirs does, in a plain gown without the belts, clasps, cloaks and
+layered cuts theirs wear, and without hands, since round 125 two men in ten wear their hair parted and cut at
+the jaw beside the bowl cut, since round 130 one of the two in even waves where theirs falls in loose locks, since round 126 six in ten of the grown women in
+plaits wear them pinned up beside the cheeks, without the band theirs wear over them, since round 127 each
+person carries the head turned and tilted by angles of their own (small ones, and nobody lifts or lowers
+the chin), since round 128 three in ten of the young women in plaits wear a fillet, a plain broad ring of
+linen where theirs wear a narrow jewelled band, since round 129 seven in ten of the women's gowns are
+closed down the front with a lace over linen or with cloth buttons, in the gown's own colour where theirs
+are gold and contrast, on a gown that is still a loose sack, since round 131 two in ten of the men's
+with the same buttons (theirs wear belted, layered coats), since round 132 one man in ten from 30 wears
+a plain linen coif (theirs wear caps, hats and hoods of many cuts), since round 133 one man in ten has
+the ends of his hair turned out in rolls (bands side by side, where theirs are locks), since round 134 two
+men in ten wear a felt hat, since round 135 in two forms (theirs wear many), since round 136 three hoods
+in ten end in a dagged hem (one form, theirs many), and the face still lacks the
 reference's streak of gloss on the nose's flank; the thrown-back hood closes round the neck since round 35, but
-has no folds across its cloth. Since round 111 the people of every part of the world can be drawn, in a plain
+has no folds across its cloth, and since round 161 its hood hangs behind the neck, a flat bag of one form
+(not held against a picture of the reference). Since round 111 the people of every part of the world can be drawn, in a plain
 dress that is no people's own, and without a picture of the reference to hold them against.
 
 **Genes.** Since round 111 there are 23 pools and a founder draws from the pool of their culture
@@ -4343,8 +8966,8 @@ England's need sources and Ramon's choice.
   values (the free functions around it are split off into `morph.rs`, `hair.rs`, `real_look.rs`). It is to be cut
   up together with the new clothes and headwear, which replace about half of it.
 - Cultures, clothes and hairstyles as data instead of code, so that a new culture needs data only.
-- Loading: the 15.0 MB of data files are loaded together on the first portrait (the thirteen files of hair alone are
-  7.5 MB, and a head wears one of them); not measured on a slow line.
+- Loading: the 22.0 MB of data files (round 162; 15.0 at round 111) are loaded together on the first portrait (the
+  eighteen bodies of hair alone are 12.5 MB, and a head wears one of them); not measured on a slow line.
 - Speed: a portrait of the real look has 44,000 to 119,000 triangles and takes 40 to 160 ms to build in WebAssembly
   (cloud machine). Drawing was only timed on the software driver (0.3 to 1.6 s), which says nothing about a real
   graphics card.

@@ -7,7 +7,8 @@ import { PORTRAIT_TEST_WASM } from '../tools/portrait/build_portrait';
 import { loadPortraitBuilder } from '../tools/portrait/load';
 import { surfaceKind } from '../src/portrait/materials';
 import { surfaceGeometry } from '../src/portrait/mesh';
-import { APOLEIA, ENGLAND_1356 } from '../src/portrait/profile';
+import { APOLEIA } from '../src/portrait/profile';
+import { ENGLAND_1356 } from '../src/portrait/profile_1356';
 import { smoothSurface, weld } from '../src/portrait/subdivide';
 import type { PortraitPerson, PortraitSurface } from '../src/portrait/wire';
 

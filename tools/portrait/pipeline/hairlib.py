@@ -46,8 +46,18 @@ def farthest(hc, A, B, C, D):
     return R
 
 
+BUST_Y, BUST_X = 1.5, 3.9
+
+
+def bust_faces(vs, body):
+    """The body's faces below and beside what head.bin keeps as the head and shoulders (above 3.4, within 2.85 of the
+    middle): down to `BUST_Y`, out to `BUST_X` (base units; the waist, the forearm below the elbow)."""
+    head = lambda f: all(vs[i][1] > 3.4 and abs(vs[i][0]) < 2.85 for i in f)
+    return [f for f in body if not head(f) and all(vs[i][1] > BUST_Y and abs(vs[i][0]) < BUST_X for i in f)]
+
+
 class Head:
-    def __init__(self, base, ymin=6.4, hc=None, xmax=2.85, elmin=-70, step=2.0, tkeep=None):
+    def __init__(self, base, ymin=6.4, hc=None, xmax=2.85, elmin=-70, step=2.0, tkeep=None, bust=False):
         vs, faces, g = [], {}, None
         for l in open(base):
             if l.startswith('v '):
@@ -62,9 +72,13 @@ class Head:
         parts = [[f for f in faces['body'] if keep(f)], [f for f in faces['helper-tights'] if keep(f)],
                  faces['helper-hair'], faces['helper-l-eye'], faces['helper-r-eye']]
         self.used = sorted({i for p in parts for f in p for i in f})
+        # (round 124) the bust's vertices, which head.bin holds after the head's own: the body from the chest's cut
+        # down to the waist and out to the forearm. They carry cloth and are not drawn (`extend_head.py`)
+        self.bust = bust_faces(vs, faces['body'])
+        self.used += sorted({i for f in self.bust for i in f} - set(self.used))
         self.remap = {o: n for n, o in enumerate(self.used)}
         tris = []
-        for f in parts[0]:
+        for f in parts[0] + (self.bust if bust else []):
             if min(V[i][1] for i in f) > ymin and max(abs(V[i][0]) for i in f) < xmax and (tkeep is None or tkeep(V[f])):
                 for k in range(1, len(f) - 1):
                     tris.append([f[0], f[k], f[k + 1]])

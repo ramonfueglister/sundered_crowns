@@ -119,7 +119,7 @@
   },
   {
    "name": "bob01_body.txt.zst",
-   "bytes": 662412
+   "bytes": 968851
   },
   {
    "name": "bob01_cap.txt",
@@ -131,7 +131,7 @@
   },
   {
    "name": "bob02_body.txt.zst",
-   "bytes": 654815
+   "bytes": 961561
   },
   {
    "name": "bob02_cap.txt",
@@ -143,7 +143,7 @@
   },
   {
    "name": "bob03_body.txt.zst",
-   "bytes": 638978
+   "bytes": 941109
   },
   {
    "name": "bob03_cap.txt",
@@ -155,7 +155,7 @@
   },
   {
    "name": "bob04_body.txt.zst",
-   "bytes": 345391
+   "bytes": 481561
   },
   {
    "name": "bob04_cap.txt",
@@ -167,7 +167,7 @@
   },
   {
    "name": "bob05_body.txt.zst",
-   "bytes": 940995
+   "bytes": 1413105
   },
   {
    "name": "bob05_cap.txt",
@@ -179,7 +179,7 @@
   },
   {
    "name": "bob06_body.txt.zst",
-   "bytes": 620196
+   "bytes": 908251
   },
   {
    "name": "bob06_cap.txt",
@@ -191,7 +191,7 @@
   },
   {
    "name": "bob07_body.txt.zst",
-   "bytes": 669773
+   "bytes": 1001024
   },
   {
    "name": "bob07_cap.txt",
@@ -203,7 +203,7 @@
   },
   {
    "name": "bob08_body.txt.zst",
-   "bytes": 626880
+   "bytes": 942329
   },
   {
    "name": "bob08_cap.txt",
@@ -212,6 +212,10 @@
   {
    "name": "bob08_scalp.txt",
    "bytes": 42006
+  },
+  {
+   "name": "bob09_body.txt.zst",
+   "bytes": 1452872
   },
   {
    "name": "braid01.txt.zst",
@@ -238,28 +242,68 @@
    "bytes": 42006
   },
   {
+   "name": "cloth_coif.txt.zst",
+   "bytes": 119619
+  },
+  {
    "name": "cloth_cote.txt.zst",
-   "bytes": 122667
+   "bytes": 199597
   },
   {
    "name": "cloth_cote_ao.txt",
-   "bytes": 16632
+   "bytes": 26574
+  },
+  {
+   "name": "cloth_cote_court.txt.zst",
+   "bytes": 217150
+  },
+  {
+   "name": "cloth_cote_court_ao.txt",
+   "bytes": 28110
   },
   {
    "name": "cloth_cote_v.txt.zst",
-   "bytes": 133285
+   "bytes": 211624
   },
   {
    "name": "cloth_cote_v_ao.txt",
-   "bytes": 18894
+   "bytes": 28836
+  },
+  {
+   "name": "cloth_cote_v_court.txt.zst",
+   "bytes": 223654
+  },
+  {
+   "name": "cloth_cote_v_court_ao.txt",
+   "bytes": 30150
+  },
+  {
+   "name": "cloth_fillet.txt.zst",
+   "bytes": 16223
+  },
+  {
+   "name": "cloth_hat.txt.zst",
+   "bytes": 117912
+  },
+  {
+   "name": "cloth_hat_cocked.txt.zst",
+   "bytes": 122794
   },
   {
    "name": "cloth_hood_down.txt.zst",
-   "bytes": 89673
+   "bytes": 88372
   },
   {
    "name": "cloth_hood_down_ao.txt",
    "bytes": 16128
+  },
+  {
+   "name": "cloth_hood_down_dag.txt.zst",
+   "bytes": 131310
+  },
+  {
+   "name": "cloth_hood_down_dag_ao.txt",
+   "bytes": 22680
   },
   {
    "name": "cloth_hood_up.txt.zst",
@@ -270,12 +314,36 @@
    "bytes": 35310
   },
   {
+   "name": "cloth_hood_up_dag.txt.zst",
+   "bytes": 213985
+  },
+  {
+   "name": "cloth_hood_up_dag_ao.txt",
+   "bytes": 37356
+  },
+  {
    "name": "cloth_kirtle.txt.zst",
-   "bytes": 137613
+   "bytes": 214386
   },
   {
    "name": "cloth_kirtle_ao.txt",
-   "bytes": 19428
+   "bytes": 29370
+  },
+  {
+   "name": "cloth_kirtle_court.txt.zst",
+   "bytes": 207643
+  },
+  {
+   "name": "cloth_kirtle_court_ao.txt",
+   "bytes": 28194
+  },
+  {
+   "name": "cloth_mantle.txt.zst",
+   "bytes": 175855
+  },
+  {
+   "name": "cloth_mantle_ao.txt",
+   "bytes": 30768
   },
   {
    "name": "cloth_palla.txt.zst",
@@ -324,6 +392,14 @@
   {
    "name": "cloth_veil_ao.txt",
    "bytes": 37866
+  },
+  {
+   "name": "cloth_veil_back.txt.zst",
+   "bytes": 157090
+  },
+  {
+   "name": "cloth_veil_back_ao.txt",
+   "bytes": 28602
   },
   {
    "name": "cloth_veil_linen.txt.zst",
@@ -386,8 +462,40 @@
    "bytes": 20765
   },
   {
+   "name": "loop01_rope.txt.zst",
+   "bytes": 48531
+  },
+  {
+   "name": "loose01_body.txt.zst",
+   "bytes": 1123740
+  },
+  {
+   "name": "metal_circlet.txt.zst",
+   "bytes": 29514
+  },
+  {
+   "name": "metal_circlet_m.txt.zst",
+   "bytes": 29758
+  },
+  {
+   "name": "metal_crown.txt.zst",
+   "bytes": 48616
+  },
+  {
+   "name": "page01_body.txt.zst",
+   "bytes": 831295
+  },
+  {
+   "name": "page02_body.txt.zst",
+   "bytes": 825299
+  },
+  {
+   "name": "part01_body.txt.zst",
+   "bytes": 1038563
+  },
+  {
    "name": "plait01_body.txt.zst",
-   "bytes": 712412
+   "bytes": 974893
   },
   {
    "name": "plait01_cap.txt",
@@ -528,10 +636,24 @@
   "bun01_n.webp",
   "cloth_cote.webp",
   "cloth_cote_n.webp",
+  "cloth_cote_silk.webp",
+  "cloth_cote_silk_figured.webp",
+  "cloth_cote_silk_figured_n.webp",
+  "cloth_cote_silk_n.webp",
+  "cloth_fillet.webp",
+  "cloth_fillet_n.webp",
+  "cloth_fur_white.webp",
+  "cloth_fur_white_n.webp",
+  "cloth_hat.webp",
+  "cloth_hat_n.webp",
   "cloth_hood_down.webp",
   "cloth_hood_down_n.webp",
   "cloth_hood_up.webp",
   "cloth_hood_up_n.webp",
+  "cloth_mantle.webp",
+  "cloth_mantle_fur.webp",
+  "cloth_mantle_fur_n.webp",
+  "cloth_mantle_n.webp",
   "cloth_palla.webp",
   "cloth_palla_n.webp",
   "cloth_smock.webp",
@@ -542,9 +664,13 @@
   "cloth_tunic_n.webp",
   "cloth_veil.webp",
   "cloth_veil_linen.webp",
+  "cloth_veil_linen_fine.webp",
+  "cloth_veil_linen_fine_n.webp",
   "cloth_veil_linen_n.webp",
   "cloth_veil_n.webp",
   "cloth_wimple.webp",
+  "cloth_wimple_fine.webp",
+  "cloth_wimple_fine_n.webp",
   "cloth_wimple_n.webp",
   "crop01.webp",
   "crop01_cap.webp",

@@ -221,23 +221,41 @@ if GRID:
                 ph = math.radians(360.0 * k / NPH - 180.0)
                 back = 0.5 - 0.5 * math.cos(ph)          # 0 in front, 1 behind
                 dx, dz = math.sin(ph), math.cos(ph)
-                yn = float(os.environ.get('CW_Y', '5.72')) + 0.2 * back
+                # CW_DIP=depth,power (round 163): the roll lies lower in front by `depth`, and by less to either side
+                # as the power says (the opening of a hood thrown back is the one its face looked out of: wider
+                # than the neck, it hangs onto the chest in front)
+                _dip = [float(t) for t in os.environ.get('CW_DIP', '0,2').split(',')]
+                yn = float(os.environ.get('CW_Y', '5.72')) + 0.2 * back - _dip[0] * (1 - back) ** _dip[1]
                 ro = outer(yn, dx, dz) + 0.06
+                # (CW_RO, round 163: the roll's foot lies no further out than this. Over the shoulder, which is
+                # nearly level, the body's outside at the foot's height is the shoulder's cap; the foot is taken in
+                # and stands on the cloth where that is as far out, found from above)
+                _ro = float(os.environ.get('CW_RO', '0'))
+                if 0 < _ro < ro:
+                    ro, yn = _ro, next((y for y in np.arange(6.4, yn, -0.01) if outer(y, dx, dz) + 0.06 >= _ro), yn)
                 # CW_IN draws the roll's inner edge from the gown's neckline in to the neck itself (1: on the
                 # neck); the roll then grows wider by as much, so that its foot stays outside the gown
                 # and CW_UP lifts that edge up the neck (fully at the nape, two fifths of it under the chin, where
                 # CW_GAP lets it hang off the throat)
                 yi = yn + float(os.environ.get('CW_UP', '0')) * (0.4 + 0.6 * back)
-                rn = ro - float(os.environ.get('CW_IN', '0')) * (ro - outer(yi, dx, dz, (hb,)) - 0.06 - float(os.environ.get('CW_GAP', '0')) * (1 - back))
-                _c = [float(t) for t in os.environ.get('COWL', '0.3,0.75,0.26,0.5').split(',')]
-                w = _c[0] + _c[1] * back ** 1.5 + (ro - rn); hgt = _c[2] + _c[3] * back ** 1.5
+                # (CW_INP, round 163: the inner edge is drawn in by `back` to this power of CW_IN, wholly at the nape
+                # and not at all in front; 0: as much all round)
+                _in = float(os.environ.get('CW_IN', '0')) * back ** float(os.environ.get('CW_INP', '0'))
+                rn = ro - _in * (ro - outer(yi, dx, dz, (hb,)) - 0.06 - float(os.environ.get('CW_GAP', '0')) * (1 - back))
+                # (COWL's fifth value, round 163: the power of `back` by which the roll grows towards the nape)
+                _c = [float(t) for t in os.environ.get('COWL', '0.3,0.75,0.26,0.5').split(',')] + [1.5]
+                w = _c[0] + _c[1] * back ** _c[4] + (ro - rn); hgt = _c[2] + _c[3] * back ** _c[4]
                 # the bunched cloth: folds running across the roll, uneven
                 _fa = float(os.environ.get('FOLD', '0.0')); _kk = 2 * math.pi * k / NPH
                 _f1 = math.sin(11 * _kk + 0.7) + 0.6 * math.sin(17 * _kk + 2.1) + 0.4 * math.sin(29 * _kk + 4.0)
                 _f2 = math.sin(7 * _kk + 1.3) + 0.5 * math.sin(23 * _kk + 0.2)
                 w *= 1 + 0.5 * _fa * _f2; hgt *= 1 + 0.35 * _fa * _f1
+                # (CW_U0, round 163: where round the roll the sheet's edge lies, as a share of the half turn from its
+                # inner foot, 0, over its crest, 0.5, to its outer foot. 0.12: rolled in to the neck, the edge is
+                # hidden behind the crest in front)
+                _u0 = float(os.environ.get('CW_U0', '0.12'))
                 for j in range(R0 + 1):
-                    u = math.pi * (0.12 + 0.88 * j / R0)
+                    u = math.pi * (_u0 + (1 - _u0) * j / R0)
                     rho = rn + w * (1 - math.cos(u)) / 2 + 0.05 * _fa * _f1 * math.sin(u) * math.sin(3 * u + 0.8 * _f2)
                     idx[(j, k)] = len(gp); gp.append([AX[0] + dx * rho, yn + (yi - yn) * (1 + math.cos(u)) / 2 + hgt * math.sin(u), AX[2] + dz * rho]); rows.append(0.0)
         UCUT = [tuple(float(t) for t in c.split(':')) for c in os.environ.get('UCUT', '').split(',') if c]
@@ -431,6 +449,11 @@ elif kind == 'veil':
     pin = (B[:, 1] > 8.05) | (B[:, 1] < VY0 + 0.2)
 elif kind in ('hood', 'cowl'):
     pin = B[:, 1] > float(os.environ.get('PINY', '8.15'))
+    if kind == 'cowl':
+        # (CW_HOLD, round 163) so many of the roll's rows from the sheet's edge are held as they are laid: a roll
+        # that lies wide on the shoulders is not wedged between neck and gown, and falls flat in the simulation
+        # (the grid's first points are the roll's, column by column)
+        pin[np.array([k * (R0 + 1) + j for k in range(NPH) for j in range(int(os.environ.get('CW_HOLD', '0')))], dtype=int)] = True
 else:
     pin = B[:, 1] < YMIN + 0.25
     # resting on both shoulders

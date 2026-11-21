@@ -11,6 +11,8 @@
 // ?at=0.835:0.5168,0.9031:0.5168 writes where points of the skin's image (u:v) lie in each picture, into the
 // picture's data-at as x:y in pixels, for tools that measure a picture at the face's landmarks
 // (tools/portrait/face_colour.mjs).
+// ?pid=940021:940043 draws a person under another number: what the builder draws from it and not from the genes
+// (the pose, hood or veil, the hair's cut) is then another's, on the same face.
 // ?sample=england draws founders of the pool England's people come from instead of the twelve test people
 // (tests/portrait/sample_england.json, written by portrait/examples/sample.rs): women and men of 8 to 68.
 // ?sample=world draws founders of every pool of genes the game's cultures draw from (tests/portrait/sample_world.json).
@@ -51,6 +53,7 @@ async function main(): Promise<void> {
   const origin = q.get('origin');
   const genes = (q.get('gene') ?? '').split(',').filter(Boolean).map(t => t.split(':').map(Number));
   const only = (q.get('only') ?? '').split(',').filter(Boolean).map(Number);
+  const pids = new Map((q.get('pid') ?? '').split(',').filter(Boolean).map(t => t.split(':').map(Number) as [number, number]));
   const at = (q.get('at') ?? '').split(',').filter(Boolean).map(t => t.split(':').map(Number));
   for (const given of (q.get('sample') === 'england' ? england : q.get('sample') === 'world' ? world : people) as PortraitPerson[]) {
     if (only.length && !only.includes(given.pid)) continue;
@@ -59,6 +62,8 @@ async function main(): Promise<void> {
       ...(origin ? { origin } : {}),
       ...(q.has('female') ? { female: q.get('female') === '1' } : {}),
       ...(q.has('age') ? { age: Number(q.get('age')) } : {}),
+      ...(q.has('stand') ? { stand: Number(q.get('stand')), job: 'Adel' } : {}),
+      ...(pids.has(given.pid) ? { pid: pids.get(given.pid)! } : {}),
     };
     if (genes.length) {
       const dna = Array.from(person.dna);

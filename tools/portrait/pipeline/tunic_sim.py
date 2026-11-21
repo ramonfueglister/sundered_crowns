@@ -23,7 +23,11 @@ for l in open(base):
         faces.setdefault(g, []).append([int(t.split('/')[0]) - 1 for t in l.split()[1:]])
 V = np.array(vs)
 S = 0.1  # base units (about 10 cm) to metres
-body = [f for f in faces['body'] if all(V[i][1] > 1.2 and abs(V[i][0]) < 3.2 for i in f)]
+# (round 170) `ARMS=x`: sleeves cut to the arm. The cloth is the helper's own out to this far from the middle
+# (3.9: the elbow, where the body's data ends, `hairlib.py` `BUST_X`), and no tube is drawn out of the armhole;
+# the body it lies on reaches a little further.
+ARMS = float(os.environ.get('ARMS', '0'))
+body = [f for f in faces['body'] if all(V[i][1] > 1.2 and abs(V[i][0]) < max(3.2, ARMS + 0.8) for i in f)]
 
 def neck_ok(c):
     x, y, z = c
@@ -37,9 +41,14 @@ def neck_ok(c):
 # (`NECKLINE`: a neckline cut wide, `neckline.py`; it is cut out of the finer mesh below, so that its edge is the
 # line and not the helper's faces. `YMIN`: the garment's lower end, for one that is a yoke alone)
 YMIN = float(os.environ.get('YMIN', '1.75'))
-cl = [f for f in faces['helper-tights'] if all((V[i][1] <= 6.3 if neckline.WIDE else neck_ok(V[i])) and V[i][1] > YMIN and abs(V[i][0]) < 2.25 for i in f)]
-bpy.ops.wm.read_factory_settings(use_empty=True)
-sc = bpy.context.scene
+cl = [f for f in faces['helper-tights'] if all((V[i][1] <= 6.3 if neckline.WIDE else neck_ok(V[i])) and V[i][1] > YMIN and abs(V[i][0]) < (ARMS or 2.25) for i in f)]
+# (round 170) Run in a Blender that is open, through its MCP add-on, the script works in a scene of its own
+# (`SCENE`) and leaves what is open as it is; run by itself it starts from an empty file as before.
+if bpy.app.background:
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    sc = bpy.context.scene
+else:
+    sc = bpy.data.scenes.new(os.environ.get('SCENE', 'tunic_sim'))
 
 def make(name, fl, off=None):
     used = sorted({i for f in fl for i in f}); rm = {o: k for k, o in enumerate(used)}
@@ -85,7 +94,7 @@ bmesh.ops.triangulate(bm, faces=bm.faces[:])
 for _ in range(8):
     bmesh.ops.smooth_vert(bm, verts=bm.verts[:], factor=0.5, use_axis_x=True, use_axis_y=True, use_axis_z=True)
 # short sleeves: each armhole (a boundary loop off the middle) extruded down the arm
-if os.environ.get('SLEEVES', '1') == '1':
+if os.environ.get('SLEEVES', '1') == '1' and not ARMS:
     bm.edges.ensure_lookup_table()
     bnd = [e for e in bm.edges if e.is_boundary]
     loops, seen = [], set()
@@ -189,6 +198,12 @@ s.mass = 0.35
 s.tension_stiffness = 30; s.compression_stiffness = 60; s.shear_stiffness = 10
 s.bending_stiffness = BEND
 s.air_damping = 1.0
+# (round 170) `FIT=share`: a gown cut to the body. The cloth is this share shorter each way than the shell it
+# starts as, as a garment cut narrower than the body and closed on it with buttons or a lace: it lies on the
+# body under its own pull, spans the hollows and goes in at the waist, where a cloth let fall hangs from the
+# chest (round 151).
+if os.environ.get('FIT'):
+    s.shrink_min = float(os.environ['FIT'])
 cm.collision_settings.use_collision = True
 cm.collision_settings.distance_min = 0.002
 cm.collision_settings.use_self_collision = True
@@ -197,7 +212,7 @@ cm.point_cache.frame_end = frames
 sc.frame_start, sc.frame_end = 1, frames
 for f in range(1, frames + 1):
     sc.frame_set(f)
-dg = bpy.context.evaluated_depsgraph_get()
+dg = bpy.context.evaluated_depsgraph_get() if bpy.app.background else sc.view_layers[0].depsgraph
 ev = to.evaluated_get(dg)
 m2 = ev.to_mesh()
 with open(outp, 'w') as fo:

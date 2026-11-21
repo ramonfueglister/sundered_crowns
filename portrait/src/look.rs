@@ -246,6 +246,21 @@ pub struct Look {
     pub jewel: Option<Jewel>,
 }
 
+/// Where in the row of hair's colours (`Look::hair_colour`: black, dark brown, brown, light brown, blonde over
+/// 0..1) the four colours people name divide. OWN RULE (no source places named colours in this row): hair is
+/// black or blonde where it is nearer to the row's end than to the colour beside it, and the brown in the row's
+/// middle divides dark brown from light brown.
+pub const SHADES: [f32; 3] = [0.125, 0.5, 0.875];
+
+/// The place in the row of hair's colours for a lightness gene of the strength `gene`, where the named colours
+/// divide at the strengths `at` (`DressSet::hair_shades`): straight from one divide to the next, the weakest
+/// gene the row's dark end and the strongest its light one.
+pub fn shade(gene: f32, at: [f32; 3]) -> f32 {
+    let (from, to) = ([0.0, at[0], at[1], at[2], 1.0], [0.0, SHADES[0], SHADES[1], SHADES[2], 1.0]);
+    let i = (1..4).find(|&i| gene < from[i]).unwrap_or(4);
+    to[i - 1] + (to[i] - to[i - 1]) * c01((gene - from[i - 1]) / (from[i] - from[i - 1]))
+}
+
 impl Look {
     /// 0..255.
     pub fn g(&self, i: usize) -> f32 {
@@ -394,9 +409,21 @@ impl Look {
         }
     }
 
+    /// (round 121) How this person wears the veil of a dress with a table (`DressSet::veil_of`). Tightly curled
+    /// hair stands off the head as one mass and has no cut that lies under a veil set back: closed.
+    pub fn veil(&self) -> crate::dress::Veil {
+        use crate::dress::Veil;
+        let Some(d) = self.dress.set() else { return Veil::None };
+        match d.veil_of(self.female, self.age, self.seed) {
+            Veil::Back if d.coily_of(self.u(CURL)).is_some() => Veil::Closed,
+            v => v,
+        }
+    }
+
     pub fn hair_style(&self) -> Hair {
         if let Some(d) = self.dress.set() {
-            return if self.age < d.veil_from { Hair::Braid } else { Hair::Veil };
+            // (asked of women; by age and, since round 121, by the seed: `DressSet::veil_of`)
+            return if d.veil_of(true, self.age, self.seed) == crate::dress::Veil::None { Hair::Braid } else { Hair::Veil };
         }
         if let Some(h) = self.hair {
             return h;
@@ -426,7 +453,8 @@ impl Look {
     }
 
     pub fn hair_colour(&self) -> Rgb {
-        let mut c = chain(&["#1a1411", "#3e281a", "#6e4a2a", "#a07a45", "#d9bb78"], self.u(HAIR_L));
+        let light = self.dress.set().map_or(self.u(HAIR_L), |d| shade(self.u(HAIR_L), d.hair_shades));
+        let mut c = chain(&["#1a1411", "#3e281a", "#6e4a2a", "#a07a45", "#d9bb78"], light);
         let red = self.dress.set().map_or(self.u(HAIR_R), |d| {
             let t = c01((self.u(HAIR_R) - d.hair_red[0]) / (d.hair_red[1] - d.hair_red[0]));
             t * t * (3.0 - 2.0 * t)

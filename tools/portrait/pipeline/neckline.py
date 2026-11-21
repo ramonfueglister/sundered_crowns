@@ -2,7 +2,9 @@
 # `NECKLINE=half breadth,front,back,shoulder`: the opening reaches that far out on either shoulder, where its edge
 # lies at the shoulder's height; from there it falls to its height in the middle of the front and of the back
 # (base units: 1 is 10 cm, the collarbones' notch lies near 5.7, the shoulders' top near 5.8). In front `NDIP`
-# deepens it in the middle, over `NDIPW` to either side: a notch, a slit, a V.
+# deepens it in the middle, over `NDIPW` to either side: a notch, a slit, a V. `NROUND=1` (round 149): the line falls
+# from the shoulder as a quarter of an ellipse, steep at the shoulder and flat in the middle (a boat's shape), in
+# place of the S between two flat ends, which is a tub with a ledge on either shoulder when it is cut wide and low.
 import os
 import numpy as np
 import bmesh
@@ -10,6 +12,7 @@ import bmesh
 WIDE = [float(t) for t in os.environ.get('NECKLINE', '').split(',') if t]
 NDIP = float(os.environ.get('NDIP', '0.12'))
 NDIPW = float(os.environ.get('NDIPW', '0.6'))
+NROUND = os.environ.get('NROUND', '0') == '1'
 S = 0.1  # base units to Blender's metres; Blender is z-up: the base's (x, y, z) is its (x, -z, y)
 
 
@@ -20,7 +23,7 @@ def line(c):
     if abs(x) >= w:
         return 6.3
     g = abs(x) / w
-    g = g * g * (3 - 2 * g)
+    g = 1 - (1 - g * g) ** 0.5 if NROUND else g * g * (3 - 2 * g)
     low = yf if z > 0.1 else yb
     return low + (ys - low) * g - (NDIP * max(0, 1 - abs(x) / NDIPW) if z > 0.25 else 0)
 
