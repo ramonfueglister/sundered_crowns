@@ -268,9 +268,18 @@ fn a_body_of_hair_lies_on_a_head_of_any_size() {
         if show() {
             println!("{who}: the hair's top {:.3} over the crown, the fringe ends {ends:.3} of the way from eyes to chin over the eyes ({:.0} mm)", top - crown, (fringe - eyes) * 100.0);
         }
+        // (round 162) a girl under seven wears her hair down (`DressSet::hair_small_girl`): parted, so it lies as
+        // close on the crown as a girl's in plaits (0.8 to 0.9 cm over it), and it has no fringe: in front of the
+        // face it ends where it begins, at the hairline, 6 to 7 cm over the eyes (0.74 and 0.81 of the way from
+        // eyes to chin), above where a boy's fringe may end (tests/hair_down.rs has the rest of it)
+        if female && age < 7.0 {
+            assert!((0.03..0.12).contains(&(top - crown)), "{who}: the hair's top lies {} over the crown (1 is 10 cm)", top - crown);
+            assert!(ends > 0.7, "{who}: hair in front of the face down to {ends} of the way from eyes to chin over the eyes");
+            continue;
+        }
         // a body that stands: 1.3 to 2.3 cm over the crown (the locks 0.7 to 1.8; under a hood less, see below)
         assert!((0.10..0.26).contains(&(top - crown)), "{who}: the hair's top lies {} over the crown (1 is 10 cm)", top - crown);
-        // a small child wears a cut of its own (round 105, `DressSet::hair_small`), its fringe in the upper half
+        // a small boy wears a cut of his own (round 105, `DressSet::hair_small`), its fringe in the upper half
         // of the forehead; the grown's ends on the middle of the forehead (round 147: 4 to 5 cm over the eyes; two
         // fingers over the eyes until then, 0.12 to 0.34)
         let bounds = if age < 7.0 { 0.40..0.70 } else { 0.27..0.48 };

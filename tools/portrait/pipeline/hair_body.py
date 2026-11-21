@@ -144,6 +144,14 @@ CUTS['page01'] = dict(
 # The same in waves (round 130): `waves`: how far the bundles swing to the side and off the head, the length of a
 # wave, and how far from a bundle's beginning the waves begin. All PLACEHOLDER by eye.
 CUTS['page02'] = dict(CUTS['page01'], waves=tuple(_e('PAGE_WAVES', '0.055,0.04,0.7,0.3')))
+# A small girl's hair, worn down (round 162; `portrait/src/dress.rs` `hair_small`): parted as `page01`, not cut at
+# the jaw but hanging to over the shoulders (`end`), and hanging: from the head's middle down it lies in no
+# direction nearer the head's upright than it does above (`hang`: from how many degrees down), where `page01`
+# goes in under the ear to the neck. Closer to the head than a man's (`lift`). All PLACEHOLDER by eye.
+CUTS['loose01'] = dict(
+    CUTS['page01'], to=tuple(_e('LOOSE_TO', '170,-87')), end=_e('LOOSE_END', '-60')[0], ends=tuple(_e('LOOSE_ENDS', '-3,3')), lift=_e('LOOSE_LIFT', '1.7')[0],
+    hang=_e('LOOSE_HANG', '0')[0], part_to=_e('LOOSE_PART', '-25')[0],
+)
 # Tightly curled hair (round 111): no bundles and no strands that run anywhere. Each hair is a coil of a few
 # millimetres, and a head of them is one springy mass that stands off the skull the same height all round, its
 # surface small tufts side by side, its edge the hairline itself. `h`: how high the mass stands over the skin;
@@ -183,6 +191,12 @@ def beside(th, el):
 
 # the skin as hair takes it: past the ears in one bow (`hairlib.py` `write_locks`, `<key>_LOCK_OVER`, `_TREND`)
 OVER = H.covered(cover[0], cover[1], beside, trend=C.get('trend', 0.0))
+if 'hang' in C:
+    # hair that hangs (round 162): going down from `hang` degrees, no nearer the head's upright than above
+    _low = OVER.EL <= C['hang']
+    _rho = (OVER.R * np.cos(np.radians(OVER.EL))[None, :])[:, _low]
+    OVER.R = OVER.R.copy()
+    OVER.R[:, _low] = np.maximum.accumulate(_rho[:, ::-1], axis=1)[:, ::-1] / np.cos(np.radians(OVER.EL[_low]))[None, :]
 # what the points are bound to: hair that goes on below the ear lies on the neck, and goes with it
 BIND = Head(base, ymin=3.9, hc=H.hc) if C.get('parted') else H
 
@@ -383,7 +397,8 @@ def parted(L, rng):
     line = np.array(C['line'], float)
     to0, to1 = C['to']
     front = np.interp(0, line[:, 0], line[:, 1]) + 6           # the parting begins a centimetre behind the hairline
-    span = (90 - front) + (90 - to1)                            # degrees along the parting: over the top, down the back
+    # degrees along the parting: over the top, down the back (as far as the place the hair goes to, or `part_to`)
+    span = (90 - front) + (90 - C.get('part_to', to1))
     wrng = np.random.default_rng(L['seed'] + 100 * SEED + 7919)
     out_ = []
     for sgn in (1.0, -1.0):

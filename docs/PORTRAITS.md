@@ -7872,6 +7872,96 @@ Pictures (project files, `portraits/`): `runde161_vorher_nachher.png` (the two l
 quarter behind and from behind, before above and after below), `runde161_dorf_vorher_nachher.png` (the same in
 the village), `runde161_von_vorn.png` (the two lords from the front, before and after).
 
+**Round 162: a small girl wears her hair down** (2026-11-21). Round 160's list had it: the small children
+have one haircut. On the sheet of the whole sample, in the village and at court, the eight children of two and
+five are a fifth of the picture, four girls and four boys, and nobody can say which is which: all eight wear
+`bob08`, the small child's cut with its ragged fringe (round 105), on faces that are much alike at that age.
+From seven a girl has plaits; under seven she was a boy.
+
+Read on 21 November, as accounts of the pages with their words quoted (not the pages themselves on my
+screen). Buckinghams Retinue, a re-enactment group's guide, two pages ('Basic Head dress', 'Older children';
+they name no picture and no source for this): 'Girls would generally wear their hair uncovered; unbraided
+loose long hair was a sign of virginity'; 'young girls wear their hair down with a coif on top'; 'Girls over
+fourteen should have their hair up in their coifs'; of babies and toddlers 'Illustrations of the time seem to
+favour coifs, a soft linen bonnet-like cap'. Rosalie Gilbert, Hairstyles: 'it is more usual for only
+unmarried, young women to have hair loose'. The Getty's page on medieval hair care: 'usually only young,
+unmarried women wore their hair uncovered and loose'. A page on girls' hair styles (histclo.com) is of the
+19th and 20th centuries; a paper on hair in the Middle Ages (M. Easton) could not be fetched. So: that a young
+girl's hair is worn down and uncovered is carried by re-enactors' pages and two general ones. None is of the
+14th century's England by its own word, none gives a child under seven by her age, none says how long, and
+none says how a small boy's hair was cut.
+
+What is changed.
+- **A cut of its own, `loose01`** (`tools/portrait/pipeline/hair_body.py`, the recipe in the pipeline's
+  README; `public/portrait/real/loose01_body.txt.zst`, 48 330 corners, 71 112 triangles, 1.05 MB). It is the
+  parted cut `page01` (a man's, to the jaw) with four things changed. It **hangs** (`hang`): from the head's
+  middle down, the surface the hair lies on is in no direction nearer the head's upright than it is above, so
+  the hair falls straight from the head's breadth where `page01` goes in under the ear to the neck. It ends
+  lower (`end` 60 degrees under the head's middle for 50): over the shoulders. The parting ends at the back
+  of the crown (`part_to`), and both sides fall to one place under the head (`to`), so that the back is one
+  fall of hair. It lies closer to the head than a man's (`lift` 1.7 for 2.2).
+- **A girl under seven wears it** (`DressSet::hair_small_girl`, `hair_small_of`; England's table and the
+  court's), on a girl's painted layer and scalp (`under_of`). A boy under seven wears `bob08` as before, a girl
+  from seven her plaits. A crowned head under seven, girl or boy, keeps the flat cut the crown is fitted to
+  (the crowned table names no girl's cut), and Apoleia's children are as they were.
+
+Measured (`portrait/tests/hair_down.rs`: eight girls at two, four and six in the village and at five at
+court):
+
+| | |
+|---|---|
+| the hair's lowest place under the chin | 2.8 to 3.9 cm |
+| hair in front of the face's middle, down from the crown, in the head's height | 0.12 to 0.17 (a boy's fringe 0.20 to 0.22) |
+| its breadth at the chin's height, of its greatest | 0.85 to 0.95 (`page01` has no hair at that height) |
+| corners of the hair under the skin | none |
+| corners under the gown's cloth, of every fifth corner under the chin (1 509 to 2 282 a girl) | 7 to 19, by 0.4 to 0.6 cm at most |
+| the same with the shoulders turned 0.35 radians either way (four girls) | 7 to 14, by 1.0 cm at most |
+
+Those corners are the innermost ends behind: a child's collar stands off the nape, and the ends hang into
+it. Seen close from behind and from either rear quarter on two girls, the hair's ends lie ragged over the
+collar's hem and nothing of the gown shows through the hair. `page01`, `plait01`, `part01` and `bob08` come
+out of the changed script byte for byte as before. The hair's bodies are 18 files and 12.5 MB now, the data
+files 22.0 MB; the builder's file is 831 873 bytes (830 363).
+
+Tried and not kept.
+- `page01` itself on the girls: it reads as a girl at once, but it is a man's cut at the jaw, standing high.
+- `page01` ending lower (`PAGE_END=-72`): it follows the neck in, a bob tucked under at the nape.
+- The parting run down to the place the hair goes to, as `page01`'s: bundles began in the air under the
+  hairline and tangled at the nape. Each side falling to its own place (`to` 100,-85): a slit up the back.
+- The surface pushed out behind, to lay the hair on the collar: along the ray from the head's middle, which
+  points down there, so the ends went into the shoulders (75 to 110 corners in the gown, 6 to 13 in the skin).
+- The hair lifted off the gown in the builder as a cloth is (`layers::lift`): 0 to 9 corners left in the
+  collar where there were 7 to 19, and 1.0 cm when turned as before, since a hair's corner seldom faces as the
+  collar does. Not worth a step in the builder.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 161 to its last figure, and the
+colour sheet the same (they read skin of the face).
+
+Honest about it. A girl of five reads as a girl now, at a picture's size and from any side. What she wears
+is hair to the shoulders, not long hair: the hair is bound to the head and laid over a surface told by
+directions from the head's middle, which ends above the shoulders, so it cannot lie on a shoulder or down a
+back, and it looks more like a bob of our days than like a child's uncut hair. It is one cut for the four
+girls, straight, as long on a child of two as on one of six, and at seven it turns into plaits overnight. It
+is uncovered: the coif the same pages put on small children and on young girls' hair is not built. A
+crowned girl of five still has the boys' flat cut under her crown (seen on four). From
+behind its ends are a ragged line into the collar. The four small boys still share one cut and the eight
+faces are still much alike. The sources are a re-enactment group's guide without sources and two general
+pages: the length, the parting and the age of seven are by eye or the table's own, PLACEHOLDER.
+
+Tests: `portrait/tests/hair_down.rs`, new: a girl under seven has a girl's painted layer and no plaits, a
+free forehead (under 0.18), hair to 2 to 5 cm under the chin and at the chin's height over 0.8 of its greatest
+breadth, no corner in the skin, and under the gown's cloth at most one corner in fifty of those under the
+chin, by under 1 cm; a boy of five wears the small child's cut and a girl of seven plaits; with the shoulders
+turned 0.35 either way the same holds, by under 1.3 cm. One older test is changed, with its reason in the
+test: `a_body_of_hair_lies_on_a_head_of_any_size` (`portrait/tests/hair_body.rs`) held its two small girls to
+the small child's cut (the hair's top 1.0 to 2.6 cm over the crown, a fringe); it holds them to parted hair
+now (0.3 to 1.2 cm over the crown, as the test of a girl's plaits has it, and no hair in front of the face
+below the hairline), its two small boys as before. `cargo test --release` as a whole 136 of 136; `tests/portrait.test.ts` and its
+neighbour 46 of 46; typecheck and lint pass, no new warning.
+Pictures (project files, `portraits/`): `runde162_vorher_nachher.png` (the eight small children in the
+village, before above and after below), `runde162_hof_vorher_nachher.png` (the same at court),
+`runde162_seite_und_hinten.png` (the four girls from the side and from behind, before and after).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
@@ -7960,8 +8050,8 @@ England's need sources and Ramon's choice.
   values (the free functions around it are split off into `morph.rs`, `hair.rs`, `real_look.rs`). It is to be cut
   up together with the new clothes and headwear, which replace about half of it.
 - Cultures, clothes and hairstyles as data instead of code, so that a new culture needs data only.
-- Loading: the 15.0 MB of data files are loaded together on the first portrait (the thirteen files of hair alone are
-  7.5 MB, and a head wears one of them); not measured on a slow line.
+- Loading: the 22.0 MB of data files (round 162; 15.0 at round 111) are loaded together on the first portrait (the
+  eighteen bodies of hair alone are 12.5 MB, and a head wears one of them); not measured on a slow line.
 - Speed: a portrait of the real look has 44,000 to 119,000 triangles and takes 40 to 160 ms to build in WebAssembly
   (cloud machine). Drawing was only timed on the software driver (0.3 to 1.6 s), which says nothing about a real
   graphics card.

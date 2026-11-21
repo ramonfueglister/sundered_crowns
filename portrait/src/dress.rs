@@ -432,6 +432,13 @@ pub struct DressSet {
     /// of its own (tools/portrait/pipeline/README.md): the fringe 46 to 52 mm over the eyes, in the forehead's
     /// upper half, ragged; the sides to the ear's lobe; lying closer to the head. By eye, PLACEHOLDER.
     pub hair_small: &'static str,
+    /// (round 162) The hair of a girl under seven; empty: `hair_small`, as a boy's. England: `loose01`, parted in
+    /// the middle and worn down, hanging to over the shoulders (tools/portrait/pipeline/README.md). It has no
+    /// painted layer and no scalp of its own: the builder takes `hair_girl`'s (`under_of`). That a young girl's
+    /// hair is worn down and uncovered is from the pages in `sources`; none of them speaks of a child under
+    /// seven by her age, the length is by eye, and seven is the age to which the table's children are small:
+    /// PLACEHOLDER.
+    pub hair_small_girl: &'static str,
     /// Tightly curled hair (`Coily`); none: the table's other hair on every head.
     pub coily: Option<Coily>,
     /// A boy younger than this wears the girls' image of the skin (0: the men's at any age). MakeHuman's image of
@@ -1025,6 +1032,7 @@ const ENGLAND: DressSet = DressSet {
     hats: [false, false, false, false, false, false, true, false, true, false],
     hat_tones: &["#6b5a48", "#7d7870", "#3f3a36", "#9a8468"],
     hair_small: "bob08",
+    hair_small_girl: "loose01",
     coily: Some(Coily { from: 0.86, men: "coil01", women: "coil02", small: "coil03", thin: "coil03", bald: "coil04", image: "hair1356_fleece", under: ["bob01", "bob04"] }),
     boy_skin: 14.0,
     body_image: "hair1356_body",
@@ -1358,6 +1366,7 @@ pub static CROWNED_1356: DressSet = DressSet {
     hair_curly: "bob02",
     hair_receding: "bob02",
     hair_small: "bob02",
+    hair_small_girl: "",
     crown: "metal_crown",
     crown_gold: "#e0b24e",
     mantle: "cloth_mantle",
@@ -1376,6 +1385,7 @@ const COURT_SOURCES: &[Source] = &[
     Source { what: "cloth in strong dyes: reds, blues, a green, a murrey", source: "Wikipedia, 1300-1400 in European fashion (read 20.11.2026 as an account of the page): Edward III's robes of 1351 of 'red velvet' (after Donald King), a bridegroom of the 1350s in a 'red cotehardie', a royal lady in 'a blue mantle'; 'silk was the finest fabric of all', brocades 'for the well-off'. No dye is named there. Green and murrey and every value are PLACEHOLDER: no velvet, no pattern and no fur is drawn on a gown (its cloth: the next row)." },
     Source { what: "the gown of silk on every person of rank: a smooth cloth without a pattern that shines along its folds; the hood stays of wool (round 150)", source: "The same page: 'silk was the finest fabric of all', brocades 'for the well-off', Edward III's robes of 1351 of 'red velvet'. The statute of 1363 as Rosalie Gilbert's page lists it (the first row) takes silk from the yeoman down and leaves it to those above. Which silk a gown was of is not said, nor how many gowns at court were of silk and how many of fine wool: that every gown at court is silk, plain and without a pattern, and how much it shines (the stage's values) are PLACEHOLDER." },
     Source { what: "a figured silk on half of the gowns at court and on every crowned head's: palmettes in rows, each row set off by half a step, with a sprig of two leaves between them, in gold thread on the dyed ground (round 156)", source: "Three museums' records of Italian silks, read 21.11.2026 as accounts of the pages (no picture was looked at): the Cleveland Museum of Art, 1926.507, 'Parrots and Animals' (Italy, 1300s; 'silk, gold thread; a combination of two weaves (lampas)'): 'the paired eagles and gazelles flanking concentric bulb-shaped palmettes', with like pieces dated 'between 1334 and 1361'; the same museum's 1977.14 (Italy, 1350 to 1400; silk, gold thread, lampas): 'large palmette leaves', deer, birds and dogs amid vines; the Victoria and Albert Museum, O261087 (Lucca, 1300 to 1350, lampas): 'scrolling vines, squirrels and deer', 'a type called camacas in the statutes for the city of Lucca in 1376'. Wikipedia, 1300-1400 in European fashion (read the same day as an account of the page): 'The well-off could afford woven brocades from Italy', 'Fashionable Italian silks of this period featured repeating patterns of roundels and animals'. The National Archives' blog, Opus Anglicanum (the same): the royal wardrobe of 1337-8 has surcoats of buckram 'decorated with gold leaves' for the king's games at Christmas (E 101/388/8). Round 144's statute bars cloth of gold from knights of 200 marks down, not from lords. NOT drawn: the beasts and birds every one of these records has (a palmette and a leaf are written as a formula, a gazelle is not), roundels. PLACEHOLDER: the palmette's form, the sprig, every size (5.5 cm from palmette to palmette; no record gives a repeat), the half step, one figure for everybody, the shares, that a crowned head's gown is always figured, and the gold's colour and shine on the stage." },
+    Source { what: "a girl under seven wears her hair down: parted in the middle, uncovered, hanging to over the shoulders (round 162)", source: "Buckinghams Retinue, a re-enactment group's guide, two pages (bucks-retinue.org.uk, guide-book, 'Basic Head dress' and 'Older children'; read 21.11.2026 as accounts of the pages, in quotations; they name no picture and no source for this): 'Girls would generally wear their hair uncovered; unbraided loose long hair was a sign of virginity'; 'young girls wear their hair down with a coif on top'; 'Girls over fourteen should have their hair up in their coifs'; of babies and toddlers 'Illustrations of the time seem to favour coifs, a soft linen bonnet-like cap'. Rosalie Gilbert, Hairstyles (rosaliegilbert.com/hairstyles.html, the same day, the same way): 'it is more usual for only unmarried, young women to have hair loose'. The Getty's page on medieval hair care (getty.edu/news/medieval-hair-care, the same): 'usually only young, unmarried women wore their hair uncovered and loose'. None of the pages is of the 14th century's England by its own word, none gives a small child's hair by her age, and none says how a small boy's hair was cut. NOT built: the coif on a small child, and hair longer than to the shoulders. PLACEHOLDER: the length, the parting, that it is every girl's under seven and no girl's from seven (the table's girls wear plaits from then)." },
     Source { what: "veil and wimple of a fine linen, bleached white, with no weave to be seen; the shirt, the coif and the linen in a laced front in the same white (round 153)", source: "Rosalie Gilbert, Veils and Wimples (rosaliegilbert.com/veilsandwimples.html; read 20.11.2026 as an account of the page; a re-enactor's essay that names pictures and tombs but no list of sources): veils 'ranging from fine opaque linens to gauzy barely-there silks', wimples 'from fine opaque linens to very fine silks'; 'white was the most overwhelmingly popular colour'; what is left of such cloths 'appear to be bleached and pressed'; fine Flemish linens 'could cost thirty times as much as finely woven wools'; poorer women had 'thick wool' and 'natural, unbleached colours'. The page does not say in so many words that a lady's veil was finer than a villager's: that the costly bleached linen is the court's and the unbleached the village's is this table's reading. Wikipedia, Wimple (the same day, its first section only): 'usually made from white linen or silk'. PLACEHOLDER: the white's value, that the cloth is opaque and none of silk or gauze, that no veil is frilled (the page has the goffered veil, 'popular c.1350-1380', which is not built). No picture of the time was looked at." },
     Source { what: "the gown buttoned in front on eight men in ten and six women in ten from 15 and 14 years, laced on three women in ten, with buttons of gilt metal", source: "The same page: 'the cotehardie fits snugly and is buttoned up the front' (a caption of the late 14th century), and noblemen and squires about 1350 in tunics 'so short and tight' (the continuation of Guillaume de Nangis, after Braudel). Rosalie Gilbert, Buttons and Lacings (rosaliegilbert.com/buttonsandlacings.html, read 20.11.2026 as an account of the page): 'the upper classes would have preferred ... metal buttons', the lower classes 'matching cloth buttons'; a tin button with a glass stone of the late 14th century (Museum of London). Which metal is not said: gilt is PLACEHOLDER, and so are the shares." },
     Source { what: "the gown draped close: smooth on the body, with fewer folds than the village's (round 151)", source: "The same page: noblemen and squires about 1350 in tunics 'so short and tight' (the continuation of Guillaume de Nangis, after Braudel), 'the cotehardie fits snugly' (a caption of the late 14th century); for women the Fashion History Timeline (the row of the lady's cut below) has 'low-necked fitted dresses' at 1380. A fit is not built: the court's gown is the village's pattern, laid 1.2 cm off the body before it is let fall where the village's is laid 4.5 cm off, which leaves it smoother and as wide as it was. PLACEHOLDER." },
@@ -1641,6 +1651,15 @@ impl DressSet {
         self.coily.as_ref().is_some_and(|c| [c.men, c.women, c.small, c.thin, c.bald].contains(&name))
     }
 
+    /// The hair of a child under seven: a girl's, a boy's.
+    pub fn hair_small_of(&self, female: bool) -> &'static str {
+        if female && !self.hair_small_girl.is_empty() {
+            self.hair_small_girl
+        } else {
+            self.hair_small
+        }
+    }
+
     /// The cut whose painted layer and scalp lie under the hair `name`: its own, or for tightly curled hair the
     /// table's (`Coily::under`).
     pub fn under_of<'a>(&'a self, name: &'a str) -> &'a str {
@@ -1655,6 +1674,8 @@ impl DressSet {
             _ if !self.hair_veiled.is_empty() && name == self.hair_veiled => self.hair_girl,
             // (round 125) a man's parted hair has her hairline
             _ if self.hair_parted.contains(&name) => self.hair_girl,
+            // (round 162) a small girl's hair worn down has her hairline
+            _ if !self.hair_small_girl.is_empty() && name == self.hair_small_girl => self.hair_girl,
             // (round 126) plaits pinned up are laid on her hair
             _ if !self.hair_looped.is_empty() && name == self.hair_looped => self.hair_girl,
             _ => name,

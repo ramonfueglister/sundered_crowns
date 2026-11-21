@@ -283,8 +283,8 @@ pub(crate) fn mh_pick(p: &Look, long_hair: bool) -> Option<(String, String)> {
                 c.men
             }
         } else if p.age < 7.0 {
-            // small children: short loose hair
-            p.dress.set().map_or("crop01", |d| d.hair_small)
+            // small children: short loose hair, a girl's worn down (round 162)
+            p.dress.set().map_or("crop01", |d| d.hair_small_of(p.female))
         } else if long_hair {
             match p.hair_style() {
                 Hair::Braid => p.dress.set().map_or("braid01", |d| d.plaits_of(p.seed, p.age)),
