@@ -18,7 +18,8 @@ computes is in the world: what a town shows must be state of the ECS.
 | 3 | The streets and the market of every town grow to its parcels (the street network in the state) | agreed by Ramon 18 Nov 2026 ("ja"); built in state 33 |
 | 4 | Every farmstead has its fields: the furlongs of each hamlet in the courses of its open field, a strip of each farmstead in every furlong | agreed by Ramon 19 Nov 2026 ("ok"); built in state 37. The world graphic draws only these fields round the towns |
 | 5 | The landmarks of every town at their real place and size: the church of its see, the great buildings known by name, the convents of the mendicants, the ruler's residence, the great abbeys alone | agreed by Ramon 19 Nov 2026 ("Ja, alles wie vorgeschlagen"); built in state 38. The world graphic draws only these landmarks |
-| – | Where a new house arises while the world runs; real plans of the large towns; walls and gates; bridges; building by players | not proposed yet |
+| 6 | Every town has its wall and gates: a ring round the town (or the walled share the sources know), open at water, a gate where a way crosses it | agreed by Ramon 21 Nov 2026 ("ja alle"); built in state 41. The world graphic draws only this wall |
+| – | Where a new house arises while the world runs; more real plans of the large towns; bridges; building by players | not proposed yet |
 
 ## Feature 1: every family of a town has a parcel
 
@@ -730,3 +731,115 @@ counts too (`widened`, from `dry_<year>.json`), so that the landmarks at its edg
 - The Wikipedia articles of the buildings known by name, for their place, size and years: among them the Lighthouse of
   Alexandria (collapse in the earthquake of 1303; Ibn Battuta 1326 "one of its faces in ruins") and the Moscow Kremlin
   (destroyed 1238; oak walls 1339–1340; stone walls from 1367).
+
+## Feature 6: the walls and gates of every town
+
+Proposal with the sources as Ramon read it: https://claude.ai/artifact/YBFNgkumzYqtchxKDubJwv (Ramon chose "Stadtmauern
+und Tore" on 21 November 2026). Agreed with "ja alle" on 21 November 2026, both recommendations with it: every town
+walled but where a source says none, and the walled share where the sources know it.
+
+Code: `src/sim/settlement/walls.ts` (the geometry: where a ring opens, its gates, the ways that run on through it),
+`src/sim/settlement/wall_shape.ts` (the shape of a ring round its town), `src/sim/content/walls.ts` and
+`src/sim/content/walls_1291.json` (written by `tools/settlement/walls.py` from
+`data/history/1291/settlement/cesaretti_2016_s2_walled.csv`), the wall of Paris in `src/sim/content/town_plans_1291.json`
+(`tools/settlement/plan_walls.py`), `src/sim/systems/walls.ts` (`foundWalls`), state in `src/sim/state.ts` (`wall`),
+`src/net/lots.ts` and `tools/sim/write_lots.ts` (the wall in the answer of the server and in the file), the drawing in
+`src/buildings/fortified/ring-wall.ts`, `src/worldprobe/register.ts`, `settle.ts` and `far_places.ts`. Tests:
+`tests/walls.test.ts`.
+
+Written once when a world is founded, after the fields, or by the upgrade 40 → 41 of a running world (a world that has
+not run gets them exactly as a new world). Nothing changes while the world runs: the towns do not grow yet.
+
+| Table | Column | Type | Meaning |
+|---|---|---|---|
+| wall | site | i16 | the town |
+| wall | x0, z0, x1, z1 | f32 | the ends of a straight piece of the ring, metres east and south of the town's centre (as the parcels) |
+| wall | kind | u8 | 0 wall, 1 gate, 2 postern |
+
+### Steps
+
+1. **Every town is walled.** "Even the smallest of towns had walls" (Pounds 2005, p. 29). Not a town a source knows to
+   have had none: Venice, whose lagoon stood in for a wall (Gelichi 2016, pp. 265, 268–269: very few fortifications in the lagoon up to the modern era).
+2. **What the ring holds.** Most towns filled their circuit (Pounds 2005, pp. 27–29): the ring holds every parcel and
+   the church of the see. Where Cesaretti et al. (2016, appendix S2) give the walled area of a circuit that stood in
+   1291 against the settled area, the ring holds that share of the town: below one the parcels nearest the market (all
+   parcels of a town have one size, so their count is the area), the others are its suburbs; above one (King's Lynn)
+   the ring round the whole town is stretched from the market until it holds that share. 29 towns of the world are
+   among the 41 of S2; Norwich, Coventry, Great Yarmouth, Ghent, Bruges and Lucca are left out, their circuit of S2 was
+   built after 1291, and Ypres has its circuit of the 12th century.
+3. **A town with a real plan that draws its wall** has that wall at the plan's scale: Paris the wall of Philippe
+   Auguste (ALPAGE, Noizet & Lallau 2013; its convex hull, 15 corners, 254 ha at the real size). Its share from S2 is
+   left aside, the plan being laid as wide as its walled town (feature 3).
+4. **The shape.** The ring follows the town round what it holds, a street's width clear of it, so that a lane runs
+   along its inside; it is smoothed over bays three streets wide and keeps a street's width off the farmsteads of the
+   hamlets (`shapeAround`, on a grid of 2 m). A town on both banks of a river has a ring on each.
+5. **Nothing is cut.** A parcel of the suburbs or any other landmark (a convent, a residence, a building known by name)
+   that the ring would cut is taken in where its middle lies inside, else the ring bends round it, until no ring cuts
+   any. A building known by name may stand outside (Westminster Abbey outside London).
+6. **Open at water.** Where water or rock lies under it the ring is open: a river or the sea stood in for the wall
+   (Boston, "bounded by walls and river", Cesaretti et al. 2016, S2 note 18). In Paris, whose wall of the plan crosses
+   parcels laid on it, the wall also ends at the houses.
+7. **Gates.** A gate stands where a street along a way of the world crosses the ring, a postern where a lane does
+   (gates let people in and took the tolls, Pounds 2005, p. 50). A way's street that ends within three street widths of
+   the ring runs on through it. Where no street of a way reaches the ring, a gate stands where each way of the world
+   leaves the town from its market.
+
+The world graphic draws only this wall (`ringWall`), at every zoom the same: the wall along each piece, stepping with
+the ground, a tower at each corner, each open end and beside each gate and every 50 m between them, a gatehouse over
+each gate, a low arch over each postern. The square wall it drew of its own is gone for every town of the register.
+
+### Parameters
+
+| Parameter | Value | Source |
+|---|---|---|
+| towns without a wall | Venice | Gelichi (2016) |
+| walled share | 29 towns, 0.25 (Narbonne) to 1.27 (King's Lynn) | Cesaretti et al. (2016), appendix S2 |
+| Paris | the wall of Philippe Auguste, 15 corners | ALPAGE (Noizet & Lallau 2013), simplified to 0.02 radii of the plan |
+| clear of what it holds, of the farmsteads | a street's width | OWN RULE: a lane along the inside of the wall; the sources give where some circuits ran, not how near the houses stood |
+| smoothing, corners | three street widths; 2 m off the line at the least | OWN RULE: keeps the ring from going in and out round every parcel |
+| a way runs on | within three street widths | OWN RULE: the streets end where the parcels end, the ring a street's width beyond them |
+| gate | two street widths | OWN RULE: no source in hand for the width of a gatehouse |
+| graphic | wall 4 m high and 1.6 m thick, towers every 50 m | OWN RULE: the measures of the square wall it replaces |
+
+### What the world of 1291 gets (seed 1291)
+
+556 towns walled (557 with parcels, Venice without), 21,597 pieces, 327 km of ring at the scale of the houses, 1,196
+gates and 1,053 posterns. A town has 2 gates in the median, Paris the most with 17. Ten towns have no gate (Damietta,
+Rhodes, Stettin, Colchester, Göttingen, Ragusa, Ravensburg, Plzeň, Louviers, Dax): their ways reach the ring over
+water only. No ring cuts a farmstead, and outside Paris none cuts a parcel or a landmark.
+
+The share of its parcels a ring holds against the walled share of S2:
+
+| Town | S2 | World | Town | S2 | World |
+|---|---|---|---|---|---|
+| Paris (plan) | 0.31 | 0.59 | Bristol | 0.42 | 0.60 |
+| London | 0.61 | 0.84 | Canterbury | 0.44 | 0.75 |
+| Avignon | 0.30 | 0.60 | Lincoln | 0.47 | 1.00 |
+| Narbonne | 0.25 | 0.62 | Oxford | 0.40 | 0.57 |
+| Ypres | 0.45 | 0.57 | Leicester | 0.54 | 0.50 |
+| Erfurt | 1.00 | 1.00 | King's Lynn | 1.27 | 1.00 |
+
+The ring holds more than S2 says in most towns: the suburbs it would cut are taken in (step 5), and the parcels of a
+town of the world lie closer than those of the real one, so a ring a street clear of the inner ones reaches the outer.
+
+### Own rules and gaps (no source)
+
+- The shape of a ring (its margin, smoothing and corners) and the width of a gate; that every way's street near the
+  ring runs on through it.
+- A ring holds more than the walled share of S2 where it would cut suburbs; for the towns not in S2 the whole town.
+- The sources tell for few towns whether their circuit stood in 1291 (Gatehouse's murage grants not used yet, Mangini &
+  Petroff's geocoded Stoob not public); every other town is walled by Pounds' rule.
+- Only one circuit: no older inner ring (Paris, Cologne), no castle walls, no wall that changes while the world runs.
+- The wall of Paris is the convex hull of the ALPAGE walls, and ends at the houses of the plan where it crosses them.
+- The graphic's measures and towers.
+
+### Sources
+
+- Pounds, Norman J. G. (2005): The Medieval City. Westport, Greenwood (pp. 25, 27–29, 50).
+- Cesaretti, Rudolf; Lobo, José; Bettencourt, Luís M. A.; Ortman, Scott G.; Smith, Michael E. (2016): Population-Area
+  Relationship for Medieval European Cities. PLOS ONE 11(10): e0162678, appendix S2 (the walled areas).
+- Gelichi, Sauro (2016): Castles on the Water? Defences in Venice and Comacchio during the Early Middle Ages. In:
+  Christie, Neil; Herold, Hajnalka (eds): Fortified Settlements in Early Medieval Europe. Oxford, Oxbow, pp. 265,
+  268–269 (very few fortifications in the lagoon up to the modern era).
+- Noizet, Hélène; Lallau, Émilie (2013): ALPAGE, the wall of Philippe Auguste (ODbL), `data/cadastre/`.
+

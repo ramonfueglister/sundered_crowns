@@ -1,0 +1,245 @@
+{
+ "source": "Cesaretti, Lobo, Bettencourt, Ortman & Smith (2016), PLOS ONE 11(10): e0162678, appendix S2 (CC BY 4.0)",
+ "note": "written by tools/settlement/walls.py from data/history/1291/settlement/cesaretti_2016_s2_walled.csv",
+ "towns": [
+  {
+   "site": 18,
+   "name": "Amiens",
+   "walled_ha": 100.0,
+   "settled_ha": 140.0,
+   "circuit": "walled area c.1300",
+   "source": "Pounds 2005 p. 148 (S2 note 59 [Amiens])"
+  },
+  {
+   "site": 68,
+   "name": "Paris",
+   "walled_ha": 250.0,
+   "settled_ha": 800.0,
+   "circuit": "wall of Philippe Auguste 1190-1215",
+   "source": "Geremek 1987 (S2 note 41)"
+  },
+  {
+   "site": 94,
+   "name": "Chartres",
+   "walled_ha": 58.0,
+   "settled_ha": 60.0,
+   "circuit": "C12 wall (1182)",
+   "source": "Heers 1990; Russell 1972 (S2 note 48)"
+  },
+  {
+   "site": 103,
+   "name": "Troyes",
+   "walled_ha": 102.0,
+   "settled_ha": 120.0,
+   "circuit": "walled area (Chandler & Modelski 1125)",
+   "source": "Russell 1972; Chandler & Modelski 1987 (S2 note 46)"
+  },
+  {
+   "site": 325,
+   "name": "Avignon",
+   "walled_ha": 45.0,
+   "settled_ha": 151.0,
+   "circuit": "walls only (1200)",
+   "source": "Chandler & Modelski 1987 (S2 note 82)"
+  },
+  {
+   "site": 353,
+   "name": "Montpellier",
+   "walled_ha": 45.0,
+   "settled_ha": 150.0,
+   "circuit": "walls only",
+   "source": "Nicholas 1997 (S2 France table)"
+  },
+  {
+   "site": 386,
+   "name": "Narbonne",
+   "walled_ha": 37.0,
+   "settled_ha": 150.0,
+   "circuit": "walls only",
+   "source": "Nicholas 1997 (S2 France table)"
+  },
+  {
+   "site": 476,
+   "name": "Ypres",
+   "walled_ha": 112.0,
+   "settled_ha": 250.0,
+   "circuit": "the C12 walled area (the full circuit of 385 ha is later)",
+   "source": "Jehel & Racinet 1996; Russell 1958 1972 (S2 note 59 [Ypres])"
+  },
+  {
+   "site": 490,
+   "name": "Lille",
+   "walled_ha": 80.0,
+   "settled_ha": 120.0,
+   "circuit": "late C13 wall",
+   "source": "Nicholas 1997 (S2 note 61)"
+  },
+  {
+   "site": 572,
+   "name": "Newcastle upon Tyne",
+   "walled_ha": 64.7,
+   "settled_ha": 90.0,
+   "circuit": "",
+   "source": "Kermode 2000; Barley 1976 (S2 note 6)"
+  },
+  {
+   "site": 602,
+   "name": "York",
+   "walled_ha": 106.4,
+   "settled_ha": 135.0,
+   "circuit": "",
+   "source": "Kermode 2000 (S2 England table)"
+  },
+  {
+   "site": 637,
+   "name": "Lincoln",
+   "walled_ha": 54.5,
+   "settled_ha": 115.0,
+   "circuit": "C12 walled town",
+   "source": "Kermode 2000; Keene 1975 map (S2 note 4)"
+  },
+  {
+   "site": 640,
+   "name": "Chester",
+   "walled_ha": 53.0,
+   "settled_ha": 53.0,
+   "circuit": "",
+   "source": "Barley 1976 (S2 England table)"
+  },
+  {
+   "site": 650,
+   "name": "Boston",
+   "walled_ha": 20.0,
+   "settled_ha": 40.0,
+   "circuit": "bounded by walls and river",
+   "source": "Kermode 2000; Barley 1976 (S2 note 18)"
+  },
+  {
+   "site": 665,
+   "name": "King's Lynn",
+   "walled_ha": 121.0,
+   "settled_ha": 95.0,
+   "circuit": "",
+   "source": "Kermode 2000; Barley 1976 (S2 note 14)"
+  },
+  {
+   "site": 678,
+   "name": "Leicester",
+   "walled_ha": 40.5,
+   "settled_ha": 75.0,
+   "circuit": "",
+   "source": "Kermode 2000 (S2 England table)"
+  },
+  {
+   "site": 706,
+   "name": "Cambridge",
+   "walled_ha": 63.0,
+   "settled_ha": 88.0,
+   "circuit": "earthen perimeter defined 1267",
+   "source": "Kermode 2000; King 1983 (S2 note 13)"
+  },
+  {
+   "site": 716,
+   "name": "Hereford",
+   "walled_ha": 37.6,
+   "settled_ha": 75.0,
+   "circuit": "",
+   "source": "Kermode 2000 (S2 England table)"
+  },
+  {
+   "site": 728,
+   "name": "Colchester",
+   "walled_ha": 45.0,
+   "settled_ha": 60.0,
+   "circuit": "",
+   "source": "Barley 1976 (S2 note 17)"
+  },
+  {
+   "site": 730,
+   "name": "Gloucester",
+   "walled_ha": 52.0,
+   "settled_ha": 75.0,
+   "circuit": "",
+   "source": "Kermode 2000 (S2 England table)"
+  },
+  {
+   "site": 740,
+   "name": "Oxford",
+   "walled_ha": 38.0,
+   "settled_ha": 94.0,
+   "circuit": "circuit completed mid-C13",
+   "source": "Kermode 2000; Barley 1976 (S2 note 7)"
+  },
+  {
+   "site": 753,
+   "name": "London",
+   "walled_ha": 200.0,
+   "settled_ha": 330.0,
+   "circuit": "walls completed c.1312 on the Roman line, never expanded",
+   "source": "Keene 1976; Barron 2000; Barley 1976 (S2 note 1)"
+  },
+  {
+   "site": 759,
+   "name": "Bristol",
+   "walled_ha": 55.0,
+   "settled_ha": 130.0,
+   "circuit": "",
+   "source": "Kermode 2000; Keene 1976 map (S2 note 3)"
+  },
+  {
+   "site": 766,
+   "name": "Canterbury",
+   "walled_ha": 48.5,
+   "settled_ha": 110.0,
+   "circuit": "",
+   "source": "Kermode 2000 (S2 note 9)"
+  },
+  {
+   "site": 780,
+   "name": "Salisbury",
+   "walled_ha": 80.0,
+   "settled_ha": 83.0,
+   "circuit": "",
+   "source": "Barley 1976 (S2 note 10)"
+  },
+  {
+   "site": 782,
+   "name": "Winchester",
+   "walled_ha": 58.0,
+   "settled_ha": 100.0,
+   "circuit": "",
+   "source": "Kermode 2000; Barley 1976 (S2 note 15)"
+  },
+  {
+   "site": 790,
+   "name": "Southampton",
+   "walled_ha": 20.0,
+   "settled_ha": 35.0,
+   "circuit": "",
+   "source": "Barley 1976 (S2 England table)"
+  },
+  {
+   "site": 799,
+   "name": "Exeter",
+   "walled_ha": 40.0,
+   "settled_ha": 40.0,
+   "circuit": "",
+   "source": "Kermode 2000; Barley 1976 (S2 England table)"
+  },
+  {
+   "site": 993,
+   "name": "Erfurt",
+   "walled_ha": 133.0,
+   "settled_ha": 133.0,
+   "circuit": "walled area of 1168",
+   "source": "Schlesinger 1967 p. 261 (S2 note 138)"
+  }
+ ],
+ "unwalled": [
+  {
+   "site": 1329,
+   "name": "Venice",
+   "source": "Gelichi (2016), Castles on the Water? Defences in Venice and Comacchio during the Early Middle Ages, in Christie & Herold (eds), Fortified Settlements in Early Medieval Europe, pp. 265, 268-269: very few fortifications in the lagoon up to the modern era; the wall of John the Deacon has no material evidence"
+  }
+ ]
+}

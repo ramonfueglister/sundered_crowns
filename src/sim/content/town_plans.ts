@@ -19,6 +19,7 @@ interface TownJson {
   streets: number[][];
   radius: number;
   ground?: GroundJson;
+  wall?: number[][];
 }
 
 /** the shares of water, two cells to a byte, the lower half first (cadastre_venice.py) */
@@ -37,6 +38,7 @@ const read = (towns: Record<string, TownJson>) =>
         streets: t.streets,
         radius: t.radius,
         ground: t.ground && groundOf(t.ground),
+        wall: t.wall,
       },
     ]),
   );

@@ -42,6 +42,7 @@ export { mosque } from './sacred/mosque';
 export { tower } from './fortified/tower';
 export { castle } from './fortified/castle';
 export { townWall, type WallGap } from './fortified/town-wall';
+export { ringWall } from './fortified/ring-wall';
 export { bridge } from './works/bridge';
 export { lighthouse } from './works/lighthouse';
 export { type FileModel, MONUMENTS, MONUMENT_FILES, type MonumentPart, isFile, modelOf } from './landmarks';
