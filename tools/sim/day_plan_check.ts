@@ -1,10 +1,13 @@
 // Checks the day plan (people feature 12, src/sim/people/day_plan.ts) on a world of 1291 that runs with all systems:
 //   npm run dayplan:check [-- years]
 // Per year: the days a day labourer and a servant by the year are at work by their plans (a half day as half), also by
-// the calendar of the firm, against
-// the 175 to 200 days a day labourer needed before 1348 for the income of a year (Humphries & Weisdorf 2019, Unreal
-// wages?, Economic Journal 129: a check, not a parameter, computed from wages and not counted); the hours at work of a
-// worker of London by month; and whether every person has the same plan after a restart from the snapshot of the day.
+// the calendar of the firm, against the days the sources compute for a day labourer before 1348, none of them counted:
+// "some four days of casual work per week" for the income of a servant by the year, about 208 days (Humphries &
+// Weisdorf 2019, Unreal wages?, Economic Journal 129, p. 18 of the accepted manuscript), "at least 201 days" for the
+// food alone (Clark 2001, The Industrious Revolution?, chapter 12 of the reader of Econ 110A, UC Davis, p. 20) and 156
+// days for the grain livery of a famulus (Claridge, Delabastita & Gibbs 2024, (In-kind) Wages and labour relations in
+// the Middle Ages, working paper, p. 29): checks, not parameters. Also the hours at work of a worker of London by
+// month, and whether every person has the same plan after a restart from the snapshot of the day.
 import { loadSetup, loadWorld } from './load';
 import { createWorldState } from '../../src/sim/setup';
 import { tick } from '../../src/sim/schedule';
@@ -114,7 +117,7 @@ for (let y = 1; y <= YEARS; y++) {
   }
   const perYear = (a: { days: number; worked: number }) => ((a.worked / a.days) * 365).toFixed(1);
   console.log(
-    `year ${y} (to day ${s.day}): days at work a year, day labourers ${perYear(byDay)} (Humphries & Weisdorf: 175–200 needed), servants ${perYear(byYear)}`,
+    `year ${y} (to day ${s.day}): days at work a year, day labourers ${perYear(byDay)} (computed before 1348: ~208 for a servant's income, 201+ for food, 156 for a famulus' grain), servants ${perYear(byYear)}`,
   );
   console.log(
     `  day labourers by the calendar of the firm: ${Object.entries(CALENDAR)
