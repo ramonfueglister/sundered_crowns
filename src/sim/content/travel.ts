@@ -166,6 +166,16 @@ export class Travels {
     return way.place[i];
   }
 
+  /** The place of the next stop of the journey while the ruler is on the way to it at some time of `day` (from the
+   *  day's start to the next), −1 while staying (the day plan, src/sim/people/day_plan.ts). */
+  heading(j: Journey, day: number): number {
+    const k = lastStop(j, day);
+    if (k < 0 || k === j.day.length - 1 || j.place[k + 1] === j.place[k]) return -1;
+    const { way, leave, pace } = this.leg(j, k + 1),
+      arrive = leave + way.at[way.at.length - 1] / pace;
+    return day + 1 > leave && day < arrive ? j.place[k + 1] : -1;
+  }
+
   /** The track of a ruler from the stop they last reached on `day` to the first point after `until`, or to the last
    *  day of the journey where it ends before; empty outside the days the journey covers. */
   track(j: Journey, day: number, until: number): Track {

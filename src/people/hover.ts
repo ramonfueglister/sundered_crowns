@@ -9,6 +9,7 @@ import { personAt } from '../figures/stage';
 import { httpOf } from '../figures/people';
 import type { PersonDetail } from '../net/people';
 import { hoverLines } from './hover_lines';
+import { world, worldHour } from '../net/client';
 import type { WorldHover } from '../worldprobe/view';
 import './hover.css';
 
@@ -72,10 +73,7 @@ export function listenForWorldHover(
       hide();
       return;
     }
-    if (id === shown) {
-      place(d.px, d.py);
-      return;
-    }
+    const again = id === shown;
     shown = id;
     const p = await fetchPerson(id);
     // the pointer moved on to somebody else, or off, while the person was asked for
@@ -84,8 +82,14 @@ export function listenForWorldHover(
       hide();
       return;
     }
-    const { title, rows } = hoverLines(p),
-      head = document.createElement('b'),
+    const { title, rows } = hoverLines(p, worldHour(), world.value?.day);
+    // the same person again: the card stays unless what the person does now changed with the hour
+    const now = rows.find(([k]) => k === 'Jetzt')?.[1];
+    if (again && !card.hidden && now === card.querySelector('tr.now td')?.textContent) {
+      place(d.px, d.py);
+      return;
+    }
+    const head = document.createElement('b'),
       table = document.createElement('table');
     head.textContent = title;
     for (const [k, v] of rows) {
@@ -95,6 +99,7 @@ export function listenForWorldHover(
       th.textContent = k;
       td.textContent = v;
       tr.prepend(th);
+      if (k === 'Jetzt') tr.className = 'now';
     }
     const hint = document.createElement('small');
     hint.textContent = 'Klicken für mehr';

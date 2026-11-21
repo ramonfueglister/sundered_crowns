@@ -869,8 +869,8 @@ rest, the firms of the cities work on the working days of their owner's faith, a
 days of its own faith (the owner of a firm too since economy feature 20). The calendars are a pure function
 of the faith and the date (`src/sim/holy_days.ts`): nothing of them is saved, the same year always gives the same
 days. The economy reads them (economy feature 19, docs/ECONOMY_DESIGN.md, section 19); the persons' own day follows:
-step 4, sickness and childbed, is feature 9; the contracts of step 6 (phase A) are feature 10; templates and
-places (step 5) and a target income (phase B of step 6) are open.
+step 4, sickness and childbed, is feature 9; the contracts of step 6 (phase A) are feature 10; the day plan from
+templates (step 5) is feature 12; a target income (phase B of step 6) is open.
 
 ### The calendars
 
@@ -928,7 +928,7 @@ today (1 Ramaḍān 1445 = 11 March 2024, Rosh Hashanah 5784 and 5785, Easter 20
   purse of a person with the calendar of that person's faith: in a mixed city a Jewish family buys on a Sunday
   from the firms that work then or hold stock.
 - A firm without an owner works every day; a household of a faith without days of rest buys every day.
-- No seasons and no hours of the day yet: those are the templates of step 5.
+- No seasons and no hours of the day here: those are the templates of step 5 (feature 12).
 
 ## Feature 9: sickness and childbed
 
@@ -1053,8 +1053,8 @@ health and of the 18th century. What the days away do to the economies of the ci
 ### Limits
 
 - **No seasons and no epidemics.** The club's rate is a mean over 75 years; the sicknesses of winter, the summer
-  fluxes and the years of plague or famine are not in it. Steps 5 (templates with seasons) and a later feature of
-  epidemics would add them.
+  fluxes and the years of plague or famine are not in it. The day plan (feature 12) gives the work its seasons, not
+  the sickness; a later feature of epidemics would add them.
 - **Sickness and death are apart.** The day of death is drawn by feature 2, the sicknesses by this feature; a person
   who dies need not have been sick, and a long sickness does not raise the risk of death. The club had 12.6 sicknesses per
   death, Ramsey 17.5 (5.7 % of its cases fatal).
@@ -1178,3 +1178,105 @@ are not born, the crown stays with nobody, and the divergence names the king, th
   as their mother (44 persons); weddings are not in the chronicle.
 - **Wikidata could not be read from the cloud** (query.wikidata.org refuses it); the parents are those of the
   holders.csv already in the repository.
+
+## Feature 12: the day plan
+
+Step 5 of way A of the proposal «Personen: Archiv der Toten und Tagesplan» (feature 7), after the proposal of
+20 November 2026 («Vorschlag: Tagesplan der Personen und Reisen der Herrscher»,
+https://claude.ai/artifact/Bi91xAnUNQtxCw3hkKKuks), to which Ramon said yes the same day («5. gut aber später») and
+which he set going on 21 November («ok»). The travels of the rulers of the same proposal are in the itineraries
+(`src/sim/content/itineraries.ts`, `src/sim/content/travel.ts`).
+
+Every person has a plan of the day: what the person does at which hour, and where. The plan is a pure function of
+the person's part in the world, the calendar of the person's days of work, the place and the day
+(`src/sim/people/day_plan.ts`), as the calendars of feature 8 and the days away of feature 9 are: nothing of it is
+saved, it draws nothing, and the economy does not read it. The world server adds today's plan to a living person
+(`GET /person/<uid>`, `src/net/plan.ts`), and the card of a figure shows the kind of day and what the person does at
+the world's hour (`src/people/plan_lines.ts`; the hour runs from the world's day message and its pace,
+`worldHour` in `src/net/client.ts`).
+
+### Templates
+
+Large simulations give every person the typical day of the person's role: FRED a list of places for the day by
+weekday for each profile (Grefenstette et al. 2013, BMC Public Health 13, 940), JUNE the same for the 53 million
+persons of England (Aylett-Bullock et al. 2021); in Belgian time use seven patterns cover 81.4 % of the working days
+(Aerts et al.). Here the template is chosen by the person's part, the kind of the day and the season. No source gives
+the shares of several templates within one part, so there is one template a part and no draw.
+
+| Part (`WHO`) | Who | A working day |
+|---|---|---|
+| child | under 15, the working age of the economy | at home |
+| home | an adult who does not work | at home |
+| farm | a worker of a firm of agriculture, or its owner | the work of the farming year, sunrise to sunset |
+| craft | of a firm of industry | in the workshop, sunrise to sunset |
+| trade | of a firm of the services | at work, sunrise to sunset; on the market day at the market to noon |
+| bank | the owner of the city's bank | in the bank, sunrise to sunset |
+| seeking | a worker without work | at the hiring place, the market, for the hour after sunrise, then at home |
+| ruler | holds a crown | holds court where staying; rides from sunrise to sunset when on the way |
+
+| Rule | Source |
+|---|---|
+| The kind of the day is the calendar's (feature 8): a worker keeps the days of the firm's owner's faith, everybody else those of the own faith | as in the economy (economy feature 19) |
+| Work from sunrise to sunset; sunrise and sunset by latitude and day (`src/sim/people/sun.ts`, the approximate solar coordinates of the U.S. Naval Observatory, from the Julian day number) | Nieuwpoort weavers between Easter and St Michael, not before sunrise at Saint-Omer (Stabel 2014, TSEG 11(4), pp. 38–41); no night work, "the light at night does not suffice" (Millett 1915 on the Livre des métiers) |
+| The midday meal at noon, an hour and a half | work stopped at noon, «entre deux cloques du mengier» (Douai 1287, Stabel 2014, p. 38); the length is the Artificers and Labourers Act of 1514 as Wikipedia gives it, without a source there: out of period, the only length read |
+| A half day (Saturdays and the eves of the Latin feasts): work to noon | Stabel 2014, pp. 36–38 |
+| A day of rest: the parish church at terce, for one of the twelve unequal hours | going to the parish church: the decretals of Gregory IX, X 3.29.2 (Kirkland 2021); unequal hours: Riis. OWN RULE: the hour of the mass is not in a source read |
+| The market once a week, on a set day | Letters, Gazetteer of Markets and Fairs in England and Wales to 1516. OWN RULE: the day of each place drawn from Monday to Saturday (Sunday markets were displaced in the early 13th century, same source). OWN RULE: the services at the market from sunrise to noon |
+| The worker without work at the hiring place for the hour after the bell | the corn market of Douai, within the hour after the bell (1403, Stabel 2014, pp. 47–48); hiring "in a common place" of the market towns (Statute of Labourers 1351) |
+| Sick or in childbed: at home all day | feature 9, the same days the economy has |
+| Sleep from 21 o'clock, or from sunset where it is later, to sunrise | OWN RULE after Ekirch 2024 (Medical History 68): to bed between 21 and 22, from early modern sources, disputed |
+
+The farming year (`src/sim/people/farm_year.ts`), on the days of the Julian calendar the sources give:
+
+| From | Work | Source |
+|---|---|---|
+| 1 December | threshing in the barn | through the winter, oats not before Christmas (Grosseteste, Rules, c. 1240) |
+| 1 February | spring corn and dung | February and March (the research of feature 7, chapter 5) |
+| 1 April | ploughing the fallow | "April is a good time for fallowing" (Walter of Henley, 1270s) |
+| 1 June | hay | June (the research of feature 7) |
+| 24 June | weeding, the second ploughing of the fallow | after St John's Day (Walter of Henley) |
+| 1 August | the harvest | "five weeks in August and early September" (Ramsey: Owen, Brown & Skinner 2025); reaping paid from the first week of August (Statute of Labourers 1351) |
+| 5 September | ploughing and sowing the winter corn | the seed changed at Michaelmas (Walter of Henley); the winter corn in the autumn (research of feature 7) |
+
+### Measured (`npm run dayplan:check -- 3`, world of 1291, seed 1291, all systems)
+
+Days at work a year by the plan, a half day as half (the day labourers by the calendar of their firm; in brackets the
+day labourers of that calendar):
+
+| | Year 1 (1291) | Year 2 (1292) | Year 3 (1293) |
+|---|---|---|---|
+| Day labourers, all | 272.8 | 278.5 | 273.1 |
+| of a firm of the Latin calendar | 241.1 (11,051) | 249.4 (11,211) | 241.7 (11,315) |
+| Orthodox | 282.4 (967) | 284.8 (974) | 281.7 (979) |
+| Sunday (the other churches) | 299.1 (103) | 301.0 (101) | 297.2 (105) |
+| Muslim | 349.8 (4,272) | 349.5 (4,337) | 349.8 (4,368) |
+| Servants by the year, all | 274.7 | 280.7 | 275.0 |
+| Needed by a day labourer before 1348 (Humphries & Weisdorf 2019) | 175–200 | | |
+
+Hours at work on a working day, workers of London, by month (year 3; sunrise to sunset less the meal, and the services'
+mornings at the market): 6.8, 8.3, 10.1, 12.3, 13.9, 14.4, 13.5, 12.0, 10.1, 8.4, 6.7, 6.0. Paris had "from 14 hours
+in summer to 8 in winter" (Millett 1915).
+
+After a restart from the snapshot of the last day, all 101,286 living persons have the same plan as before (the plan
+reads the state only, and keeps nothing of its own). Two runs of the same code gave the same numbers.
+
+### Limits
+
+- **The day labourer works too many days.** By his plan a day labourer works on every working day of his firm on
+  which he is not away, as in the economy (feature 10): 241 to 249 days a year in a firm of the Latin calendar and
+  273 to 279 over all calendars, against the 175 to 200 days a day labourer needed before 1348 for the income of a
+  year (Humphries & Weisdorf 2019). That number is computed from wages, not counted, and is a check, not a parameter;
+  how many days a day labourer wanted and found work is phase B of step 6 (a target income), a choice of its own.
+  The templates do not close the gap and are not set to.
+- **One template a part.** The servants by the year and the day labourers have the same day; the owner works as his
+  workers do; nobody of a family goes to the market to buy (the households buy every working day in the economy, and
+  no source read says how often a family went to the market); the women of the farmsteads do not go into the field in
+  the harvest; children are at home.
+- **England's year everywhere.** The farming year is that of the English treatises; the Italian cycles of the months
+  set the field work a month earlier, and the Mediterranean and the lands of Islam have years of their own. The
+  hours are of local solar time and follow the sun alone: Douai's seasons of the bells (All Saints, the first Sunday
+  of Lent, Stabel 2014, p. 37) and the closing bell of winter are not apart.
+- **No inn, no lodging.** A ruler on the way sleeps from sunset; where, the itinerary does not say.
+- **The figures do not follow the plan yet.** The figures of the towns walk their streets at every hour; that they go
+  to the field, the workshop, the market and the church by the plan is the next step, and changes the key of the
+  world's pieces.
