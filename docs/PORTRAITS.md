@@ -7610,6 +7610,75 @@ Pictures (project files, `portraits/`): `runde158_vorher_nachher.png` (six dark 
 above and after below), `runde158_schwarz.png` (four heads with black hair, the same), `runde158_baerte.png`
 (black beards, the same), `runde158_alle.png` (the page's 36 people).
 
+**Round 159: a short beard in the face's light** (2026-11-21). The sheet after round 158: on a man with light
+hair the short beard is a bright, flat patch on the lower face, orange on one man of the sample, yellow with
+blond hair, a sponge held to the chin. Since round 157 half of England's men have light brown or blond hair,
+before it hardly any. A short beard is its painted layer alone (round 62); the full beard has locks over it
+and reads well in every colour.
+
+Looked for the cause in numbers (three hooded men of the sample with a short beard; the beard's pixels are
+those that differ when the layer is left out, `without=beard_short1356`): the layer is not lighter than the
+hair it belongs to (L 41.1 on light brown hair, whose crown reads 43.4 in full light; 45.6 on blond, 49.6),
+so the factors of round 80 are not the fault. But the skin of those pixels reads 32.5 without the beard: the
+lower face of a hooded man lies in the hood's shade, and the beard does not. No shadow fell on a painted
+layer (`cap.shadow`, off since round 53, when shadows had hard edges and drew a dark wedge with corners on a
+beard; the key has a size since round 81 and its shadows are soft), and a beard's layer took light from a
+third of the way round its shaded side (`cap.beard.wrap` 0.3). A dark beard hid both.
+
+What is changed, on the stage alone (`src/portrait/profile.ts`).
+- **Shadows fall on the painted layers** (`cap.shadow` true): the layer under a head's hair, stubble and
+  the beards stand in the shade of a hood, a hat and the head as the skin beside them does.
+- **A beard's layer is lit as far round as its surface faces the light** (`cap.beard.wrap` 0 for 0.3). Its
+  colour and its factors are what they were.
+
+Measured, the beard's pixels of the three men (L, and the chroma of the mean colour), with every hair colour:
+
+| hair (`gene=27:`) | before | now | the skin there without the beard |
+|---|---|---|---|
+| black (60) | 11.3, 9.6 | 9.8, 8.2 | 32.5, 19.2 |
+| dark brown (95) | 16.7, 15.3 | 13.6, 12.5 | |
+| brown (130) | 32.8, 27.2 | 26.2, 23.2 | |
+| light brown (170) | 41.1, 28.3 | 33.3, 24.6 | |
+| blond (240) | 45.6, 27.6 | 37.3, 24.2 | |
+
+The beards' lit third is about as much lighter than the far third as it was (the three men as they are:
+10.8, 13.6 and 9.7 L before, 9.9, 12.6 and 7.2 now); what changes is that the whole beard goes into the
+face's light.
+
+Tried and not kept.
+- Shadows alone: light brown at L 38.6, most of the patch still there.
+- With them the light end's factor lower (`cap.beard.light` 2.2 for 3.2): a blond man's beard at L 29.7, a
+  brown beard under yellow hair. A fair beard is often darker than the hair, but no picture or count says by
+  how much: left as it was.
+- Locks for the short beard were tried and dropped in round 90 (a dark full beard on a boy of 17), and are
+  not tried again.
+
+**The gauntlet**: 22 of 22 over the whole sample. Three lines are not as in rounds 138 to 158 to their last
+figure, for the first time since round 138, since a head's painted layers take shadows now: the man's far
+cheek against the lit one -19.2 for -19.0 (bound 4 from -16.9: 2.3 off, was 2.1), its chroma -3.8 for -3.9,
+the emperor's eye against his cheek -42.5 for -42.6. The other nineteen are as they were. The colour sheet
+beside it: the eight bearded men's shaded cheek reads L 39.4 (39.7) and their upper lip 25.6 (26.8), where the
+nose's shadow falls on the moustache; their chin 41.3 and the place above the lip 41.7 as before (the sheet
+reads a face's middle, which is in the light).
+
+Honest about it. This takes the glare off; it does not make the layer a beard. Close by it is still a shell
+with hairs painted on it, one density from the cheek to the throat, with an outline as cut with scissors,
+and on blond hair it is still a yellow one. The reference's short beards are not measured for light hair
+(round 80 read one dark emperor: his beard 2 to 8 L lighter than his hair, its lit side 18 L lighter than
+the far one; ours 7 to 13). A beard in the shade is now darker against its hair than it was (a brown one
+26.2 under a hood for the crown's 24.7 in full light). The layer under a head's hair and stubble take
+shadows too: on the eighteen grown people of the sample nothing shows at a picture's size, and close by no
+hard edge was found on two beards from two sides; that is two heads, not all. Whether the wedge of round 53
+comes back under another light or a brimmed hat was not looked for. The values are by eye: PLACEHOLDER.
+
+Tests: `tests/portrait.test.ts`, the test of a beard's layer holds the two new values (shadows fall on the
+painted layers, a beard's layer has no light round its shaded side). `tests/portrait.test.ts` and its
+neighbour 46 of 46; `cargo test --release` as a whole 130 of 130 (nothing in the builder is changed);
+typecheck and lint pass, no new warning.
+Pictures (project files, `portraits/`): `runde159_vorher_nachher.png` (four men of the sample, before above
+and after below), `runde159_blond.png` (three of them with blond hair, the same), `runde159_hof.png` (the four
+at court, the same), `runde159_nah.png` (two beards close by, from the front and from the side).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair

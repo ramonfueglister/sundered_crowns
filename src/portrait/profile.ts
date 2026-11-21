@@ -74,9 +74,9 @@ export interface StageProfile {
   /** The painted layer of short hairs under the cards and of the short beards: null as it is. Else how much
    *  lighter it is drawn (factor on its colour: `tone` for dark hair, `light` for hair as light as white, between
    *  them by the hair's brightness), how much of its colour is left (as `sheen.colour`), and how far light reaches
-   *  round to its shaded side (as `sheen.wrap`), and whether shadows fall on it (`shadow`: the edge of a shadow
-   *  from the shadow map is a straight, hard line, which on skin reads as the chin's shadow and on a beard as a
-   *  dark patch with corners), and how much of the lightening (`tone`, `light`) stubble takes (`stubble`: 1 = as the
+   *  round to its shaded side (as `sheen.wrap`), and whether shadows fall on it (`shadow`: under a light without size the
+   *  edge of a shadow from the shadow map is a straight, hard line, which on skin reads as the chin's shadow and
+   *  on a beard as a dark patch with corners), and how much of the lightening (`tone`, `light`) stubble takes (`stubble`: 1 = as the
    *  other layers, 0 = none: skin shows between its hairs, and drawn lighter it is a pale dust on the face).
    *  `beard`: the same four values for the layer of a beard (an image named `beard_`, stubble aside). They are
    *  for a beard that is its layer alone, without cards over it, as England's are: such a layer is the beard
@@ -452,7 +452,14 @@ export const APOLEIA: StageProfile = {
  *  from Human Hair Fibers", section 2.1: "R highlight, since it is surface reflection, is white"): `sheen.white`
  *  2 on black hair, `sheen.whiteLight` 0.3 from a middle brown on, as sharp as before. L 13.1 on black, 15.7 on
  *  a dark brown (9.3), 24.7 on brown (24.4), blond as it was. Stronger and broader (2 at a sharpness of 60: L
- *  17) the heads read grey, not black. By eye: PLACEHOLDER. */
+ *  17) the heads read grey, not black. By eye: PLACEHOLDER.
+ *  Round 159: a short beard in the face's light (docs/PORTRAITS.md). On light brown and blond hair, which half
+ *  of England's men have since round 157, a short beard was a bright flat patch: its layer took no shadow
+ *  (`cap.shadow`, off since round 53 for the hard edges shadows had until round 81) and light from a third of
+ *  the way round its shaded side (`cap.beard.wrap` 0.3), so under a hood it was lit and the skin beside it was
+ *  not (three hooded men, the beard's pixels: L 41.1 on light brown hair over skin that reads 32.5 without the
+ *  beard). `cap.shadow` true, `cap.beard.wrap` 0: 33.3, a blond beard 37.3 (45.6), a brown one 26.2 (32.8), a
+ *  black one 9.8 (11.3). The layer keeps its colour and its factors. By eye: PLACEHOLDER. */
 export const ENGLAND_1356: StageProfile = {
   key: 'england1356',
   lights: {
@@ -470,7 +477,7 @@ export const ENGLAND_1356: StageProfile = {
   skin: { rough: 0.55, specular: 0.42, pores: 0.4, wrap: [0.3, 0.16, 0.10], finer: 1, fit: 1, blotch: 0.05, speckle: 0.10, colour: 0.7, tint: [1, 0.87, 0.77], relief: 0.0015, oil: 0.5, fuzz: 0.3, child: 0.3, bleed: [1, 0.5, 0.35] },
   eye: { corner: { from: 0.3, to: 0.8, dark: 0.35 }, lid: { from: -0.35, to: 0.05, dark: 0.4 }, tint: [0.84, 0.73, 0.57], white: 1.3, iris: 1.15, colour: 1.1, lift: 0.6, rough: 0.22, specular: 0.6, wrap: 0.5, wrapWhite: 0.1, cornea: 0.36, ring: 0.35, pupil: { size: 0.42, soft: 0.1, dark: 0.25 }, blush: [1.27, 0.945, 0.76] },
   brow: { rough: 1, specular: 0.05, lashes: 0.3, brows: 0.95 },
-  cap: { tone: 1.7, light: 2.6, colour: 0.85, wrap: 1, shadow: false, stubble: 0, beard: { tone: 8.8, light: 3.2, colour: 0.8, wrap: 0.3 } },
+  cap: { tone: 1.7, light: 2.6, colour: 0.85, wrap: 1, shadow: true, stubble: 0, beard: { tone: 8.8, light: 3.2, colour: 0.8, wrap: 0 } },
   cloth: { wool: 2.6, linen: 1, silk: { tone: 2.6, rough: 0.55, specular: 0.5 }, figured: { gold: [1.2, 0.8, 0.22], rough: 0.4, metal: 0.2 } },
   cards: { rough: 0.72, specular: 0.2, anisotropy: 0.3 },
   sheen: { white: 2, whiteLight: 0.3, whiteSharp: 120, whiteShift: 0.1, own: 0.45, ownSharp: 40, ownShift: -0.1, ragged: 0.15, strands: 1.35, light: 0.5, colour: 0.85, tone: 1.6, toneLight: 1, wrap: 1 },

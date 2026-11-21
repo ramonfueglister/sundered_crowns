@@ -247,6 +247,13 @@ describe('portraits', { timeout: 20_000 }, () => {
     expect(cap.beard.light).toBeGreaterThan(cap.light);
     expect(cap.beard.wrap).toBeLessThan(0.5);
     expect(cap.wrap).toBe(1);
+    // Round 159: a short beard was lit as if nothing stood before it (no shadow fell on a painted layer since
+    // round 53, when shadows had hard edges; they are soft since round 81) and from a third of the way round its
+    // shaded side: in the shade of a hood, on a jaw that is turned away, a light beard was a bright flat patch
+    // (the layer of three hooded men with light brown hair L 41.1 over skin that reads 32.5 without it; 33.3 now).
+    // Shadows fall on the painted layers, and a beard's layer is lit as far round as its surface faces the light
+    expect(cap.shadow).toBe(true);
+    expect(cap.beard.wrap).toBe(0);
   });
   it('a full beard of England is locks over its painted layer, and light hair keeps its strands', () => {
     // Until round 90 a full beard was its painted layer alone: a smooth shell with hairs drawn on it, lit as one
