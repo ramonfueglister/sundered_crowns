@@ -1,10 +1,10 @@
 // The landmarks of the land register and the monuments at the far steps: the model the finest step stood on a great
 // building's ground, built from the same numbers as the piece of the finest step that built it.
 import { describe, expect, it } from 'vitest';
-import { type Model, styleOf } from '../../src/buildings';
+import { type Model, type Style, styleOf } from '../../src/buildings';
 import { Batch } from '../../src/lookprobe/batch';
 import { GRID, type Ground, LAND_Y, Mat, N, onGrid, SEA_Y } from '../../src/lookprobe/layout';
-import { markOn, monumentOn } from '../../src/worldprobe/far_marks';
+import { type Stood, greatOn, markOn, monumentOn } from '../../src/worldprobe/far_marks';
 import { PIECE } from '../../src/worldprobe/piece_sight';
 import { type Mark, type Monument, type Site, settle } from '../../src/worldprobe/settle';
 
@@ -99,6 +99,72 @@ describe('the landmarks of the register at the far steps', () => {
       const { gx, gz, gw, gd } = stood[0];
       expect(markOn(site, gx, gz, 11, 11, MIDDLE, built)).toBeNull();
       expect(markOn(site, gx + 40, gz, gw, gd, MIDDLE, built)).toBeNull();
+    });
+  });
+
+  it("and a walled town's other churches and its towers, from the town's numbers after its landmarks", () => {
+    onGrid(GRID, () => {
+      // a town of the size of a great city with towers over it, its middle six blocks west of the border of two
+      // pieces of the finest step: once with the churches of the graphic's own, once with landmarks of the register
+      const style: Style = { ...styleOf('italy'), church: drawn(6, 11), great: drawn(12, 21), towers: true },
+        middle = [1194, 700] as const;
+      for (const marks of [undefined, MARKS.slice(1, 4)]) {
+        const town = (ox: number, oz: number): Site => ({
+            id: 9,
+            at: [middle[0] + 0.5 - ox, middle[1] + 0.5 - oz],
+            size: 5,
+            pop: 400,
+            region: 'italy',
+            style,
+            ...(marks ? { marks } : {}),
+          }),
+          stood: (Stood & { things: Batch; end: number })[] = [];
+        let cx = 0,
+          cz = 0;
+        for (const px of [5, 6]) {
+          const ox = px * PIECE - (GRID - PIECE) / 2,
+            oz = 3 * PIECE - (GRID - PIECE) / 2,
+            things = new Batch();
+          settle(
+            meadow(ox, oz),
+            things,
+            [town(ox, oz)],
+            [],
+            () => ({ region: 'italy', style }),
+            () => 0,
+            () => 0,
+            {},
+            (x, z) => x >= 100 && x < 300 && z >= 100 && z < 300,
+            undefined,
+            undefined,
+            undefined,
+            {
+              house() {},
+              town(_site, x, z) {
+                cx = x + ox;
+                cz = z + oz;
+              },
+              great(kind, x, z, w, d) {
+                stood.push({ kind, x: x + ox, z: z + oz, w, d, things, end: things.col.length });
+              },
+            },
+          );
+        }
+        // the building in the middle, two churches and two of the three towers (one finds no ground and takes no
+        // numbers), or the four towers of a town with landmarks: the second piece, on whose ground a landmark of the
+        // town does not stand, draws other spots for them; on both pieces
+        const others = stood.filter((f) => f.kind === 'tower' || !marks);
+        expect(others.length).toBe(marks ? 4 : 5);
+        expect(new Set(others.map((f) => Math.floor((f.x + f.w / 2) / PIECE))).size).toBe(2);
+        const built = new Map<string, Map<string, Batch>>(),
+          site = town(0, 0);
+        for (const f of others) {
+          const b = greatOn(site, f.x, f.z, f.w, f.d, cx, cz, stood, built);
+          expect(b, `${f.kind} at ${f.x}, ${f.z}`).not.toBeNull();
+          expect([...b!.col]).toEqual([...f.things.col.slice(f.end - b!.col.length, f.end)]);
+        }
+        expect(greatOn(site, others[0].x + 1, others[0].z, others[0].w, others[0].d, cx, cz, stood, built)).toBeNull();
+      }
     });
   });
 

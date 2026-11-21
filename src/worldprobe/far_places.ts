@@ -5,9 +5,9 @@ import { Mat, N, idx, inGrid, occlude } from '../lookprobe/layout';
 import { type HouseStyle, type Model, type Style, tower, townWall } from '../buildings';
 import { builtOn, streetOn } from './crowd';
 import type { Laying } from './far_lay';
-import { markOn, monumentOn } from './far_marks';
+import { type PlannedTown, greatOn, markOn, monumentOn, plannedTown } from './far_marks';
 import { houseShape } from './houses';
-import { PEOPLE_PER_PERSON, PERSONS_PER_FLOOR_BLOCK, POP_OF_SIZE, WALLED_FROM } from './settle';
+import { PEOPLE_PER_PERSON, PERSONS_PER_FLOOR_BLOCK, POP_OF_SIZE, type Site, WALLED_FROM } from './settle';
 import { streetsOf } from './town_spots';
 
 /** a house of the finest step has two storeys on most of its ground and stands about five blocks high with its roof */
@@ -213,7 +213,15 @@ export function layPlanned(l: Laying) {
   if (plan) {
     /** how much of a block the houses laid on it cover */
     const housed = new Float32Array(N * N),
-      marked = new Map<string, (Batch | null)[]>();
+      marked = new Map<string, (Batch | null)[]>(),
+      walled = new Map<number, PlannedTown | null>(),
+      greats = new Map<string, Map<string, Batch>>();
+    // a walled town's other great buildings as the finest step built them (far_marks.ts `greatOn`)
+    const greatOf = (s: Site, gx: number, gz: number, gw: number, gd: number) => {
+      if (!walled.has(s.id)) walled.set(s.id, plannedTown(plan, s.id, (s.at[0] + ox) * wider, (s.at[1] + oz) * wider));
+      const t = walled.get(s.id);
+      return t ? greatOn(s, gx, gz, gw, gd, t.cx, t.cz, t.stood, greats) : null;
+    };
     const side = plan.pieceBlocks,
       fine = (v: number) => Math.floor((v * wider) / side);
     for (let pz = fine(oz); pz <= fine(oz + N); pz++)
@@ -299,8 +307,9 @@ export function layPlanned(l: Laying) {
           if (step <= MODELS_UNTIL && name !== 'tower' && s?.marks)
             mark = markOn(s, gx, gz, gw, gd, world(s.at[0], s.at[1]), marked);
           else if (step <= MODELS_UNTIL && id < 0) mark = monumentOn(o.monuments ?? [], gx, gz, gw, gd, world);
-          // without them a town's first great building is its church or its cathedral, built from its numbers as they
-          // start (settle.ts: a village's church, a walled town's building in the middle, before its other churches)
+          else if (step <= MODELS_UNTIL && s) mark = greatOf(s, gx, gz, gw, gd);
+          // else a town's first great building is its church or its cathedral, built from its numbers as they start
+          // (settle.ts: a village's church, a walled town's building in the middle, before its other churches)
           const first = name === 'landmark' || (name === 'church' && (s?.size ?? 0) < 4),
             made = mark ? () => mark : model ? () => model.build(seeded(1000 + id + (first ? 0 : k))) : null;
           const roof = s ? pick(s.style.house.roofs, 0) : STONE,
