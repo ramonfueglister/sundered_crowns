@@ -10,3 +10,11 @@ a point, and the urban system. Unchanged except for the encoding (Windows-1252 t
 (settlement feature 1, docs/SETTLEMENT_DESIGN.md).
 
 Known flaw: Bruges (45,000 inhabitants) carries the coordinates of Bruges in the Gironde.
+
+# Bridges of 1291
+
+`bridges_1291.csv`: the bridges of the towns known from the sources (settlement feature 7, docs/SETTLEMENT_DESIGN.md),
+gathered on 21 November 2026, one row each with its source. `what` is `named` for a bridge known by name (its town,
+its name, `stone` yes where the source says it was of stone in 1291, `houses` yes where houses stood on it) or `ferry`
+for a town whose great river was crossed by ferry or on boats in 1291. `tools/settlement/bridges.py` writes
+`src/sim/content/bridges_1291.json` from it.

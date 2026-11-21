@@ -5,6 +5,7 @@ import { STATE_VERSION, PERSON_SCHEMA, FAMILY_SCHEMA, REALM_SCHEMA, ALIVE } from
 import { foundLots, relayTowns } from './systems/lots';
 import { foundFields } from './systems/fields';
 import { foundWalls } from './systems/walls';
+import { foundBridges } from './systems/bridges';
 import { foundRulers, rulerCultures, rulerGenes } from './systems/rulers';
 import { foundBorders } from './systems/borders';
 import { type Column, makeColumns } from './ecs';
@@ -23,7 +24,7 @@ import { foundMoves, redrawMoves } from './systems/moves';
 import type { SetupState } from './setup';
 
 /** The fields of a WorldState in the order createWorldState writes them. */
-const STATE_FIELDS = ['v', 'seed', 'startYear', 'day', 'rng', 'place', 'realm', 'realmText', 'ruler', 'economy', 'person', 'family', 'firm', 'named', 'lot', 'hamlets', 'nextUid', 'archive', 'street', 'field', 'landmark', 'wall'] as const;
+const STATE_FIELDS = ['v', 'seed', 'startYear', 'day', 'rng', 'place', 'realm', 'realmText', 'ruler', 'economy', 'person', 'family', 'firm', 'named', 'lot', 'hamlets', 'nextUid', 'archive', 'street', 'field', 'landmark', 'wall', 'bridge'] as const;
 
 /**
  * The steps before 11 are gone (2026-11-16): the only world, europa-1291, is at 11 or later, and the worlds before it are
@@ -347,6 +348,11 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     // round the parcels and landmarks of the day the world has reached; nothing else changes.
     foundWalls(s, w.dry);
     s.v = 41;
+  }
+  if (s.v === 41) { // 41 → 42: the bridges of the towns (settlement feature 7, src/sim/systems/bridges.ts), where the
+    // streets of the ways of the day the world has reached cross a river; nothing else changes.
+    foundBridges(s, w.riverGround, w.dry);
+    s.v = 42;
   }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one

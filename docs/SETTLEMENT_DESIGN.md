@@ -19,7 +19,8 @@ computes is in the world: what a town shows must be state of the ECS.
 | 4 | Every farmstead has its fields: the furlongs of each hamlet in the courses of its open field, a strip of each farmstead in every furlong | agreed by Ramon 19 Nov 2026 ("ok"); built in state 37. The world graphic draws only these fields round the towns |
 | 5 | The landmarks of every town at their real place and size: the church of its see, the great buildings known by name, the convents of the mendicants, the ruler's residence, the great abbeys alone | agreed by Ramon 19 Nov 2026 ("Ja, alles wie vorgeschlagen"); built in state 38. The world graphic draws only these landmarks |
 | 6 | Every town has its wall and gates: a ring round the town (or the walled share the sources know), open at water, a gate where a way crosses it | agreed by Ramon 21 Nov 2026 ("ja alle"); built in state 41. The world graphic draws only this wall |
-| – | Where a new house arises while the world runs; more real plans of the large towns; bridges; building by players | not proposed yet |
+| 7 | The bridges of every town: where a street along a way meets a river, a bridge to the other bank, of stone where a source says so, none where the sources say ferry | agreed by Ramon 21 Nov 2026 ("ok"); built in state 42. The world graphic draws these bridges in the towns |
+| – | Where a new house arises while the world runs (town growth, to be discussed first); the bridges of the ways between the towns; more real plans of the large towns; building by players | not proposed yet |
 
 ## Feature 1: every family of a town has a parcel
 
@@ -744,7 +745,7 @@ Code: `src/sim/settlement/walls.ts` (the geometry: where a ring opens, its gates
 `data/history/1291/settlement/cesaretti_2016_s2_walled.csv`), the wall of Paris in `src/sim/content/town_plans_1291.json`
 (`tools/settlement/plan_walls.py`), `src/sim/systems/walls.ts` (`foundWalls`), state in `src/sim/state.ts` (`wall`),
 `src/net/lots.ts` and `tools/sim/write_lots.ts` (the wall in the answer of the server and in the file), the drawing in
-`src/buildings/fortified/ring-wall.ts`, `src/worldprobe/register.ts`, `settle.ts` and `far_places.ts`. Tests:
+`src/buildings/fortified/ring-wall.ts`, `src/worldprobe/town_wall.ts`, `settle.ts` and `far_places.ts`. Tests:
 `tests/walls.test.ts`.
 
 Written once when a world is founded, after the fields, or by the upgrade 40 → 41 of a running world (a world that has
@@ -843,3 +844,91 @@ town of the world lie closer than those of the real one, so a ring a street clea
   268–269 (very few fortifications in the lagoon up to the modern era).
 - Noizet, Hélène; Lallau, Émilie (2013): ALPAGE, the wall of Philippe Auguste (ODbL), `data/cadastre/`.
 
+## Feature 7: the bridges of every town
+
+Proposal with the sources as Ramon read it: https://claude.ai/artifact/NEzEmY4UhDhPuCT7oo8X1j (Ramon chose "Brücken" on
+21 November 2026). Agreed with "ok" on 21 November 2026, all three recommendations with it: a bridge at every crossing
+of a way's street over a river in a town but where a source says ferry or boats; stone only where a source says stone,
+else timber; the towns only in this step, the bridges of the ways between the towns later as their own.
+
+Code: `src/sim/settlement/bridges.ts` (the geometry: from the end of a street over the river to the dry bank),
+`src/sim/content/bridges.ts` and `src/sim/content/bridges_1291.json` (written by `tools/settlement/bridges.py` from
+`data/history/1291/settlement/bridges_1291.csv`, every row with its source), `src/sim/systems/bridges.ts`
+(`foundBridges`), state in `src/sim/state.ts` (`bridge`), the rivers round the towns in `public/data/rivers_1291.json`
+(written by `tools/worldprobe/build_plan.ts` from the world graphic's ground, as the dry ground), `src/net/lots.ts` and
+`tools/sim/write_lots.ts` (the bridges in the answer of the server and in the file), the drawing in
+`src/buildings/works/town-bridge.ts` and `src/worldprobe/town_wall.ts` (`townWorks`, with the wall). Tests:
+`tests/bridges.test.ts`.
+
+Written once when a world is founded, after the walls, or by the upgrade 41 → 42 of a running world (a world that has
+not run gets them exactly as a new world). Nothing changes while the world runs.
+
+| Table | Column | Type | Meaning |
+|---|---|---|---|
+| bridge | site | i16 | the town |
+| bridge | x0, z0, x1, z1 | f32 | its ends on the banks, on the middle line of its street, metres east and south of the town's centre |
+| bridge | kind | u8 | 0 timber, 1 stone |
+| bridge | named | i16 | its row among the bridges known by name of `bridges_<year>.json`, −1 none |
+
+### Steps
+
+1. **Where a way meets a river, a bridge.** "Where a major road met a river there was a bridge", and the major bridges
+   stood "either in towns or between two towns" (Harrison 2010, pp. 33, 36). A street along a way of the world (above a
+   lane) that goes on into no other way and meets a river within 1.5 street widths of its end gets a bridge on its
+   line to the first dry ground beyond the water. Two streets that meet over one river share one bridge. Water that
+   ends in a lake, the sea or rock gets none: the ways of the world wait for a ferry there.
+2. **Ferry or boats.** Where a source says the town's great river was crossed by ferry or on boats in 1291 (Cologne,
+   Mainz, Seville, Bordeaux, Valence, Pressburg, Buda), the crossings at least half as wide as its widest get no
+   bridge; the narrower ones (an arm, a brook) keep theirs.
+3. **The bridges known by name** go to the widest crossings of their town, in the order of the file: London Bridge,
+   the Grand-Pont and the Petit-Pont of Paris, the Pont Saint-Bénézet, the Ponte Vecchio, the Rialto, the Judith
+   Bridge, the Krämerbrücke, and the stone bridges of the German towns in the list of medieval stone bridges
+   (Regensburg, Würzburg, Hildesheim, Halle, Quedlinburg, Esslingen, Frankfurt). A bridge known by name whose town has
+   no crossing in the world is left out (Regensburg, Würzburg and Hildesheim: no way's street of theirs meets the
+   river).
+4. **Stone or timber.** A bridge is of stone where its source says stone in 1291, every other one of timber: "we do not
+   know when most major bridges were stone. Was it 1300 or 1500?" (Harrison 2010, p. 37). Houses stand on it where its
+   source says so (London Bridge).
+
+The world graphic draws these bridges in the towns (`townBridge`), at every zoom of the towns' models: a bridge of
+stone on arches, its deck ramping up from both banks, with parapets; a bridge of timber on trestles with rails; houses
+along both sides of London Bridge. The bridges the graphic lays where its ways cross a river stay as they were.
+
+### Parameters
+
+| Parameter | Value | Source |
+|---|---|---|
+| towns crossed by ferry or on boats | 7 | each row of `bridges_1291.csv` |
+| bridges known by name | 15, 10 of stone, London Bridge with houses | each row of `bridges_1291.csv` |
+| a street meets a river | within 1.5 street widths of its end | OWN RULE: a street ends a block before the water it meets, its ground half a street wide |
+| great river of a ferry town | crossings at least half as wide as its widest | OWN RULE: the sources name the river, the world knows only how wide each crossing is |
+| graphic | an arch of 15 m, a trestle every 6 m, a stone deck 2 m above the higher bank | OWN RULE: London Bridge had 19 arches over 282 m, Regensburg 16 over 336 m; no source in hand for all |
+
+### What the world of 1291 gets (seed 1291)
+
+250 bridges in 211 towns, 10 of stone, 12 of them known by name. A bridge is 18 m long in the median, 24 m at the 90th
+percentile, the Rialto the longest with 84 m. The rivers round the towns are those of the world graphic, narrower than
+the real ones: London Bridge is 12 m long, the real one 282 m.
+
+### Own rules and gaps (no source)
+
+- How near its end a street meets a river, and which crossings of a ferry town are its great river.
+- The graphic's measures of arches, trestles and decks.
+- Only the bridges in the towns: the ways between the towns keep the graphic's own bridges, and inside a town the
+  graphic's bridge of a way can stand beside the town's own.
+- Most towns' bridges are not known from a source; the GIS of Brookes, Rye & Oksanen (2019) and Boyer's list of French
+  bridges (1976) are not used yet.
+- The rivers are the world graphic's, not the real ones: their widths and where they cross the towns.
+
+### Sources
+
+- Harrison, David (2010): Bridges: Past and Future. Medieval Settlement Research 25, pp. 32–39 (pp. 33, 36, 37).
+- Harrison, David (2004): The Bridges of Medieval England. Transport and Society 400–1800. Oxford, Clarendon.
+- Boyer, Marjorie Nice (1976): Medieval French Bridges. A History. Cambridge MA, Mediaeval Academy of America.
+- Brookes, Stuart; Rye, Eleanor; Oksanen, Eljas (2019): Bridges of Medieval England to c.1250. York, Archaeology Data
+  Service, doi:10.5284/1053676 (CC BY 4.0).
+- Liste mittelalterlicher Steinbrücken in Deutschland, de.wikipedia.org (read 21 November 2026).
+- The articles and pages named in each row of `data/history/1291/settlement/bridges_1291.csv`: London Bridge, the
+  Grand-Pont and Petit-Pont, the Pont Saint-Bénézet, the Ponte Vecchio, the Rialto, the Judith Bridge; the rivers of
+  Cologne (stadt-koeln.de), Mainz (Landeszentrale für politische Bildung Rheinland-Pfalz), Seville, Bordeaux, Valence
+  (Département de la Drôme), Pressburg and Buda (Buza 1999).

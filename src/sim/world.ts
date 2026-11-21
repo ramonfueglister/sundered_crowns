@@ -184,6 +184,9 @@ export class World {
    *  than the building ground and nothing said of steps and buildings), null without one: then the land register
    *  lays its hamlets by the building ground, as far as that reaches */
   dry: Ground | null = null;
+  /** the rivers round the towns of the start year (public/data/rivers_<year>.json: a river's water, not a lake's or
+   *  the sea's), null without one: then the towns have no bridges */
+  riverGround: Ground | null = null;
   /** the ground round the towns of the start year that the fields can lie on (public/data/tilth_<year>.json,
    *  src/sim/content/tilth.ts), null without one: then the land register lays the fields round the hamlets without
    *  regard to the ground */
