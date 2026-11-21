@@ -14,9 +14,8 @@ import type { CalibrationTable, EconomyCalibration } from '../../src/sim/economy
 import type { WorldState } from '../../src/sim/state';
 import { World } from '../../src/sim/world';
 import { cityCalibrations as calibrationsOf } from '../../src/sim/systems/economy';
-import { ECONOMY_TABLE, dataPath, loadEconomyTable, newWorldState } from './load';
+import { dataPath, loadEconomyTable, newWorldState } from './load';
 
-export const TABLE = ECONOMY_TABLE;
 export const readTable = (): CalibrationTable => loadEconomyTable();
 /** The world whose cities the file holds. */
 export const REFERENCE = { year: 1356, seed: 1356 } as const;

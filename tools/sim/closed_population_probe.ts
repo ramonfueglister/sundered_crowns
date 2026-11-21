@@ -169,8 +169,8 @@ for (const [name, lv, mf, mm, M, rem, cel] of rows) {
   console.log(
     name.padEnd(46),
     'growth/yr',
-    (100 * x.r).toFixed(2) + ' %',
+    `${(100 * x.r).toFixed(2)} %`,
     'married of women 15-49',
-    (100 * x.married).toFixed(0) + ' %',
+    `${(100 * x.married).toFixed(0)} %`,
   );
 }

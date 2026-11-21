@@ -36,13 +36,14 @@ pub const FORMAT_CITIES: u32 = 2;
 /// savings (economy feature 15). 8: the crown that buys with what it took in (economy feature 16). 9: firm and
 /// owner as one household (economy feature 18). 10: the working days of the firms (economy feature 19). 11: the
 /// profits the owners plan their spending on (economy feature 20). 12: the workers who are away and the materials
-/// they left unused (economy feature 22). 13: the contracts of the workers (economy feature 23).
-/// States of formats 4 to 12 are still read and become format 13 when they are saved ([`load`]); formats 4 and 5
+/// they left unused (economy feature 22). 13: the contracts of the workers (economy feature 23). 14: per absence
+/// whether the family stands in (economy feature 24).
+/// States of formats 4 to 13 are still read and become format 14 when they are saved ([`load`]); formats 4 and 5
 /// keep the whole past, as they had it, none before 7 spends out of savings, none before 8 has a crown that buys with
 /// its revenue, none before 9 has owners who bear losses, none before 10 has working days, none before 11 has the
 /// profits of the owners (they are gathered anew from the first period that is computed), none before 12 has
-/// workers who are away, and none before 13 has contracts.
-pub const FORMAT: u32 = 13;
+/// workers who are away, none before 13 has contracts, and in none before 14 does the family stand in.
+pub const FORMAT: u32 = 14;
 const NONE: u32 = u32::MAX;
 /// The length of the last state of cities written ([`save_cities`]): how much room the next one is given at once.
 /// It changes no byte of a state.
@@ -1061,12 +1062,18 @@ fn put_clock(o: &mut Out, c: &DailyClock) {
     for &x in ends {
         o.u32(x);
     }
-    let Absences { worker, first, last } = absences;
+    let Absences {
+        worker,
+        first,
+        last,
+        family,
+    } = absences;
     o.n(worker.len());
     for k in 0..worker.len() {
         o.u32(worker[k]);
         o.u32(first[k]);
         o.u32(last[k]);
+        o.bool(family[k]);
     }
     o.f64s(unused);
     o.bytes(contracts);
@@ -1232,15 +1239,18 @@ fn get_clock(i: &mut In, format: u32) -> Res<DailyClock> {
     };
     // formats before 12 know no workers who are away; the workers of an economy are checked when it is given
     // absences ([`crate::Economy::with_absences`])
+    // formats before 14 know no family that stands in ([`crate::workers`])
     let absences = if format >= 12 {
-        let n = i.len(12)?;
+        let n = i.len(if format >= 14 { 13 } else { 12 })?;
         let (mut worker, mut first, mut last) = (Vec::with_capacity(n), Vec::with_capacity(n), Vec::with_capacity(n));
+        let mut family = Vec::with_capacity(n);
         for _ in 0..n {
             worker.push(i.u32()?);
             first.push(i.u32()?);
             last.push(i.u32()?);
+            family.push(format >= 14 && i.bool()?);
         }
-        Absences::new(usize::MAX, worker, first, last)?
+        Absences::new(usize::MAX, worker, first, last)?.with_family(family)?
     } else {
         Absences::default()
     };

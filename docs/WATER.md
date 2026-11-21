@@ -3,7 +3,8 @@
 The sea, lakes and rivers of the 3D world are drawn by one material (`src/lookprobe/stage/materials.ts`) whose
 colour, surface and what it gives back come from `src/lookprobe/sea.ts`. EU5's map is the bar of quality for how
 the water changes with the distance (as a comparison only: nothing of its look or assets is copied); its colours are
-the model's own, as clear and full as the land's.
+the model's own, as clear and full as the land's. Since round 5 the water is calmer than EU5's from its nearest
+distance on, as the low-poly worlds' water is, and its coasts have foam (Ramon's word, 20 November 2026).
 
 ## The gauntlet
 
@@ -11,8 +12,8 @@ EU5's water changes with the distance it is seen from, and the gauntlet holds ea
 
 | kind | scene | EU5 | what it looks like |
 | --- | --- | --- | --- |
-| diorama | `d60_valencia`, `d190_venezia` | none (EU5 cannot come this near) | the model's own: clear azure, a light rim along the coast, a calm swell, small white strokes |
-| nah | `n1000_attika` | its nearest view (an island across the picture) | turquoise shallows, blue beyond, a swell and white strokes |
+| diorama | `d60_valencia`, `d190_venezia` | none (EU5 cannot come this near) | the model's own: clear azure, a light rim along the coast with lines of foam coming in, a calm swell, small white strokes; it moves |
+| nah | `n1000_attika` | its nearest view (an island across the picture) | turquoise shallows, blue beyond; calm (EU5 has a swell and white strokes here) |
 | mittel | `m3000_aegaeis` | a sea across the picture | smooth; light turquoise shelves, deep blue beyond |
 | fern | `f12000_aegaeis` | half the Mediterranean | smooth; the shelves as light haloes round the coasts |
 
@@ -20,19 +21,20 @@ From some 36000 blocks across on the realms' paper map takes over (its sea: `src
 
 `tools/lookprobe/gauntlet_water.py` finds the water in a picture (blue to cyan, not grey; foam and boats inside it
 count as water, small islands do not) and measures, by each dot's distance from the shore, seven rows per scene, and
-two more where the water moves (diorama and nah: pictures at 0, 1/30 and 0.5 seconds, `water_frames.mjs`):
+three more where the water moves (the diorama: pictures at 0, 1/30 and 0.5 seconds, `water_frames.mjs`):
 
 | row | what | bar | EU5 |
 | --- | --- | --- | --- |
 | Streifen | share of the chop's energy in its single strongest wave (rows of regular waves) | ≤ 0.06 | 0.01–0.05 |
-| Kräuselung | spread of lightness less its blur over 3 dots | ≤ 2.4 near, ≤ 1.2 from the middle distance | 1.8–2.4 nearest, 0.7–1.0 middle |
+| Kräuselung | spread of lightness less its blur over 3 dots | ≤ 2.4 diorama, ≤ 1.2 from EU5's nearest distance | 1.8–2.4 nearest, 0.7–1.0 middle |
 | Sättigung zum Land | median HSV saturation of the water over the land's beside it | ≥ 0.85 | 0.87–3.1 |
 | Farbton offen | CIELAB hue of the water from 80 dots out | 215–275° | 217–270° |
 | Ufer grüner | how much greener the water 4 to 20 dots out is than the open water | ≥ 5° | 0–29° |
 | Flachwasser | how much lighter the water by the shore is than the open water | 3–15 L diorama, 4–15 nah, 5–25 farther | 5–12 nearest, 8–23 middle, 9 far |
-| Flocken | share of the water at least 14 lighter than its surroundings (white strokes, glints) | 0.05–1 % diorama, 0.03–0.5 % nah, ≤ 0.05 % farther | 0.07–0.39 % nearest, 0 farther |
+| Flocken | share of the water at least 14 lighter than its surroundings (white strokes, glints) | 0.05–1 % diorama, ≤ 0.05 % farther | 0.07–0.39 % nearest, 0 farther |
 | Bewegung | mean change of the water's lightness in half a second | ≥ 0.8 | none (no moving pictures) |
 | Flimmern | share of the water whose lightness changes by more than 20 from one picture to the next (1/30 s) | ≤ 0.3 % | none |
+| Schaumsaum | how many points of % more of the water within 4 columns of the shore is white (saturation < 0.3, L > 72) than of the open water, over the three pictures | ≥ 1.0 | none (round 4: 0.42 Valencia, 0.14 Venice) |
 
 The saturation row holds the water to the rest of the world: the land of the model is far fuller in colour than
 EU5's, so its water must be too (EU5's water is about as full as its land, or fuller). It counts HSV's saturation,
@@ -51,6 +53,40 @@ python3 tools/lookprobe/gauntlet_water.py some.png[:x0,y0,x1,y1]                
 PROBE_URL=http://localhost:5199 node tools/lookprobe/water_frames.mjs /tmp/w/d60 "lon=-0.33&lat=39.45&wide=60" 36x0.0833
                                                                    # a row of stills of the moving water (3 s)
 ```
+
+## Round 5 (20 November 2026): calm water, foam along the coast
+
+Ramon on round 4: "leider ist das mülli... weil man sieht extrem weit rausgezoomt immer noch wellen. auch gibt es
+schöneres wasser auch im poly bereich nicht?" Two things were wrong, and the water now follows the low-poly worlds'
+rather than EU5's nearest view.
+
+- **The waves reached too far, twice as far on a screen of fine dots.** How far the swell and the flecks reached went
+  by the picture's dots: on a screen that draws two dots for every one (the stage draws at the screen's pixel ratio,
+  up to 2), the swell reached twice as many blocks out, some 6000 across the picture. Now it goes by the screen's
+  dots (`RATIO`), and reaches far less: fully up to some 400 blocks across a picture 1672 dots wide, gone from 1000;
+  the flecks and the glitter up to 200, gone from 500 (before: 3000 and 2200). From EU5's nearest distance on the
+  sea is calm.
+- **Foam along the coast** (`sea_shore.ts`): lines of foam come in to the shore, one every 2.25 seconds, from some
+  4.5 columns out to 2.2, growing as they come and fading before they reach the land, with a lighter wash behind
+  them, broken into dashes by the flecks' waves. How far a point lies from the coast is read back from the water's
+  corners (terrain.ts mixes them by k = smooth(0.4, 8, d)); in a canal or a river, a column or two wide, d stays
+  under two columns and no line comes. A line shows only where d rises from the coast (by at least 0.3 to 0.6 of a
+  column to a column): in a canal's middle, as far from both banks, it is flat, and a line passing its depth lit the
+  whole middle white. They show up to some 800 blocks across, gone from 1500.
+- **No light lines on the bed of the shallows:** they read as scribbles. The rim along the coast takes a little more
+  of the coast's colour from near instead (0.85, was 0.7), so that the shallows stay as light.
+
+The gauntlet follows: 'nah' is held to the middle distance's chop and flecks and no longer moves, and the diorama has a
+third row of motion, the foam along the coast (Schaumsaum: how many points of % more of the water within 4 columns of
+the shore is white than of the open water; round 4 0.42 and 0.14). The water mask counts the foam by the coast as water,
+as it did the foam within the water, so that the foam does not move the shore: light dots within 6 dots of the water,
+bluish, or white in the sun's warm light (the land's pale stone by the water is darker or redder). Without it Venice's
+shallows measured 2.8 instead of 3.8, the same picture by round 4's mask 4.2. It was 41 of 41, round 4 by the same bars
+37 of 41 (no foam along the coast; 'nah' too rough, chop 1.23 and flecks 0.13 %). A live picture on a screen of two dots
+a point could not be taken in the cloud (the software renderer does not finish a live picture while the water moves);
+the reach holds there by its making: `RATIO` is the pixel ratio the stage draws at (stage/index.ts:155), so such a
+screen shows the water as a still of 1672 dots does. Before and after, and the foam coming in: project files
+`wasser/runden/runde5_*`.
 
 ## Round 4 (20 November 2026): the water moves
 

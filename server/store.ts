@@ -13,7 +13,7 @@ export interface Backup {
   /** borders.ndjson, gzip */
   history: Uint8Array | null;
 }
-export interface SeatRow {
+interface SeatRow {
   uid: string;
   name: string;
   key: string;

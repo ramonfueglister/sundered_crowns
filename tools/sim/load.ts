@@ -27,7 +27,8 @@ export const dataPath = (name: string): string => resolve(ROOT, 'public/data', n
 const read = (name: string) => JSON.parse(readFileSync(dataPath(name), 'utf8'));
 let world: World | null = null;
 export function loadWorld(): World {
-  return (world ??= buildWorld(loadCultivation()));
+  world ??= buildWorld(loadCultivation());
+  return world;
 }
 /** A world with the given calibration of cultivated land (the calibration itself starts from one without). */
 export function buildWorld(cultivation: CultivationJson): World {
@@ -44,14 +45,14 @@ export function loadCultivation(): CultivationJson {
 }
 /** The calibration table of the cities' economies (data/economy/england_1356.json; server/Dockerfile copies it into
  *  the image). The world calibrates every city from it when it founds the economies. */
-export const ECONOMY_TABLE = resolve(ROOT, 'data/economy/england_1356.json');
+const ECONOMY_TABLE = resolve(ROOT, 'data/economy/england_1356.json');
 export function loadEconomyTable(): CalibrationTable {
   return JSON.parse(readFileSync(ECONOMY_TABLE, 'utf8'));
 }
 /** public/data/economy_cities.json: the cities of a reference world with what the port is given for each, as the
  *  game computes it when it founds the economies (written by tools/sim/calibrate_economy.ts). The tests of the engine
  *  compute its cities; the game does not read it. */
-export interface EconomyJson {
+interface EconomyJson {
   case: string;
   table: string;
   /** the year the starting position stands for, and the world the cities were calibrated in */
@@ -85,7 +86,7 @@ export function loadEconomy(): EconomyJson {
 }
 /** The economy engine: the WebAssembly file built from economy/ (npm run economy:build; server/Dockerfile builds it
  *  into the image). */
-export const ECONOMY_WASM = resolve(ROOT, 'build/economy/sc_economy.wasm');
+const ECONOMY_WASM = resolve(ROOT, 'build/economy/sc_economy.wasm');
 let engine: EconomyEngine | null = null;
 export function loadEconomyEngine(): EconomyEngine {
   if (engine) return engine;
@@ -93,7 +94,8 @@ export function loadEconomyEngine(): EconomyEngine {
     throw new Error(
       `${ECONOMY_WASM} is missing: build the economy engine with "npm run economy:build" (needs the Rust toolchain, https://rustup.rs)`,
     );
-  return (engine = wasmEconomyEngine(readFileSync(ECONOMY_WASM)));
+  engine = wasmEconomyEngine(readFileSync(ECONOMY_WASM));
+  return engine;
 }
 export function loadSetup(year = 1356): SetupState {
   return read(`setup_${year}.json`);
@@ -111,7 +113,7 @@ export function loadItineraries(year: number, w: World): Itineraries | null {
   const files = readdirSync(dir)
     .filter((n) => n.endsWith('.json'))
     .sort();
-  // a file read from disk has the shape the tool writes (tools/history/itineraries/regesta.py)
+  // a file read from disk has the shape the tools write (tools/history/itineraries/regesta.py and gough.py)
   const all = new Map(
     files.flatMap((f) => [
       ...compileItineraries(JSON.parse(readFileSync(resolve(dir, f), 'utf8')) as ItineraryFile, w.lat, w.lon, year),
@@ -120,17 +122,17 @@ export function loadItineraries(year: number, w: World): Itineraries | null {
   return all.size ? all : null;
 }
 /** The chronicle of borders of a start year (public/data/borders_<year>.json), compiled; null when there is none. */
-export function loadBorders(year: number): Borders | null {
+function loadBorders(year: number): Borders | null {
   const f = dataPath(`borders_${year}.json`);
   return existsSync(f) ? compileBorders(JSON.parse(readFileSync(f, 'utf8'))) : null;
 }
 /** The building ground of the towns of a start year (public/data/ground_<year>.json), compiled; null when there is none. */
-export function loadGround(year: number): Ground | null {
+function loadGround(year: number): Ground | null {
   const f = dataPath(`ground_${year}.json`);
   return existsSync(f) ? compileGround(JSON.parse(readFileSync(f, 'utf8'))) : null;
 }
 /** The dry ground round the towns of a start year (public/data/dry_<year>.json), compiled; null when there is none. */
-export function loadDry(year: number): Ground | null {
+function loadDry(year: number): Ground | null {
   const f = dataPath(`dry_${year}.json`);
   return existsSync(f) ? compileGround(JSON.parse(readFileSync(f, 'utf8'))) : null;
 }

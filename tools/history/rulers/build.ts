@@ -26,7 +26,7 @@ const YEAR = 1291,
   UNTIL = '1848-12-31';
 
 /** A CSV with a header row and quoted fields (RFC 4180). */
-export function parseCsv(text: string): Record<string, string>[] {
+function parseCsv(text: string): Record<string, string>[] {
   const rows: string[][] = [];
   let row: string[] = [],
     f = '',
@@ -72,7 +72,7 @@ const date = (s: string) => (/^-?\d{1,4}(-\d{2}(-\d{2})?)?$/.test(s) ? s : null)
 const pad = (d: string) => (d.length === 4 ? `${d}-07-01` : d.length === 7 ? `${d}-15` : d);
 
 /** What the build counted, and the rows it could not use. */
-export interface RulersReport {
+interface RulersReport {
   lists: number;
   rows: number;
   collective: number;

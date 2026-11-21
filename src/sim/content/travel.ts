@@ -215,10 +215,14 @@ export function km(lat1: number, lon1: number, lat2: number, lon2: number): numb
  * The stops of an itinerary a king can have been at (`day` the days, `place` the places of the map). Where the king
  * could not have gone from one stay (the stops at one place one after the other) to the next at the pace in haste,
  * even on the straight line, which no way is shorter than, one of the two is left out: the one with fewer days the
- * sources name (ties: the one that cannot be reached in haste from its other side either, else the later one), until
- * every step can be gone. OWN RULE: such a place is one where a charter was written in the king's name without him
- * (the chancery travelled apart at times) or a place of issue found at the wrong place, and the regest does not say
- * which; the place more days name is the likelier one. Returns the indices of the stops kept.
+ * sources name, until every step can be gone. OWN RULE: such a place is one where a charter was written in the king's
+ * name without him (the chancery travelled apart at times) or a place of issue found at the wrong place, and the
+ * regest does not say which; the place more days name is the likelier one. Where both have as many days, the one is
+ * left out without which the journey from the stay before the two to the stay after them is the shorter: the reading
+ * of place names that grounds them all in the smallest region is the likeliest (Leidner, Sinclair & Webber 2003,
+ * "Grounding spatial named entities for information extraction and question answering", sec. 3, whose note 8
+ * measures the region by the distances between the places); ties: the later one. Returns the indices of the stops
+ * kept.
  */
 export function reachableStops(
   day: ArrayLike<number>,
@@ -233,12 +237,14 @@ export function reachableStops(
     if (last && place[last[0]] === place[i]) last.push(i);
     else stays.push([i]);
   }
-  const tooFast = (a: number[] | undefined, b: number[] | undefined) => {
-    if (!a || !b) return false;
-    const p = place[a[a.length - 1]],
+  const between = (a: number[] | undefined, b: number[] | undefined) => {
+    if (!a || !b) return 0;
+    const p = place[a[0]],
       q = place[b[0]];
-    return km(lat[p], lon[p], lat[q], lon[q]) > HASTE_KM_PER_DAY * (day[b[0]] - day[a[a.length - 1]]);
+    return km(lat[p], lon[p], lat[q], lon[q]);
   };
+  const tooFast = (a: number[] | undefined, b: number[] | undefined) =>
+    !!a && !!b && between(a, b) > HASTE_KM_PER_DAY * (day[b[0]] - day[a[a.length - 1]]);
   for (let changed = true; changed; ) {
     changed = false;
     const kept: number[][] = [];
@@ -247,12 +253,12 @@ export function reachableStops(
         before = kept[kept.length - 1];
       if (tooFast(before, s)) {
         changed = true;
-        const dropBefore =
-          before.length > s.length
-            ? false
-            : before.length < s.length
-              ? true
-              : !tooFast(s, stays[k + 1]) && tooFast(kept[kept.length - 2], before);
+        const earlier = kept[kept.length - 2],
+          after = stays[k + 1],
+          dropBefore =
+            before.length !== s.length
+              ? before.length < s.length
+              : between(earlier, s) + between(s, after) < between(earlier, before) + between(before, after);
         if (!dropBefore) continue;
         kept.pop();
       }

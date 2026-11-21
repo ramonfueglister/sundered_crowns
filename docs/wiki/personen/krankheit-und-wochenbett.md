@@ -22,7 +22,7 @@ Eine eigene Anzeige gibt es noch nicht. Zu sehen ist es an der Wirtschaft der St
 2. **Wie lange.** Eine Krankheit dauert im Mittel so lange, wie die Kasse für das Alter beim Beginn zählte, mindestens 3 Tage (die Kasse zahlte erst ab 3 Tagen). Die Verteilung um das Mittel ist eine Annahme, die Quelle nennt nur das Mittel.
 3. **Wieder gesund.** Erst danach kann die Person wieder krank werden.
 4. **Wochenbett.** Eine Mutter fehlt 30 Tage ab der Geburt, in jedem Glauben. Die religiösen Fristen (Levitikus 12, die Nifās im Islam) regeln Reinheit und Gebet, keine gelesene Quelle sagt, dass sie von der Arbeit abhielten.
-5. **Im Betrieb.** Der Betrieb macht an dem Tag, was die Anwesenden machen können. Er zahlt allen den Lohn (seit [Jahresdienst und Tagelohn](jahresdienst-und-tagelohn.md) nur den Knechten; für Fehlende springen Arbeitslose ein). Hat er alles verkauft, plant er so, als wären die Kranken da gewesen. Das Material, das die Kranken nicht verbraucht haben, kauft er nicht noch einmal.
+5. **Im Betrieb.** Der Betrieb macht an dem Tag, was die Anwesenden machen können. Er zahlt allen den Lohn (seit [Jahresdienst und Tagelohn](jahresdienst-und-tagelohn.md) nur den Knechten; für Fehlende springt die Familie ein, sonst Arbeitslose). Hat er alles verkauft, plant er so, als wären die Kranken da gewesen. Das Material, das die Kranken nicht verbraucht haben, kauft er nicht noch einmal.
 
 ## Daten und Parameter
 
@@ -50,7 +50,7 @@ Jede Person ist eine Figur, die Raten gelten je Person.
 - Frauen nehmen die Tabelle der Männer. Die Frauenkasse von Ashborne hatte drei- bis viermal so viele Krankentage.
 - Morcott ist ein Dorf in England im 18. Jahrhundert, die Welt beginnt 1291.
 - Eine arme Frau ging oft vor dem Ende des Monats wieder arbeiten, eine Rate dafür wurde nicht gefunden.
-- Die Ersparnisse der Betriebe sinken jedes Jahr um etwa 5 %, und das hört in sechs Jahren nicht auf. Sie stecken in Werkzeug, das niemand braucht. Seit [Jahresdienst und Tagelohn](jahresdienst-und-tagelohn.md) springen Arbeitslose für Fehlende ein, und das Leck ist kleiner (dort die Zahlen).
+- Die Ersparnisse der Betriebe sinken jedes Jahr um etwa 5 %, und das hört in sechs Jahren nicht auf. Sie stecken in Werkzeug, das niemand braucht. Seit [Jahresdienst und Tagelohn](jahresdienst-und-tagelohn.md) springen Familienmitglieder und Arbeitslose für Fehlende ein, und das Leck ist kleiner (dort die Zahlen).
 - Die Fehltage werden der Wirtschaft monatlich gegeben. Stirbt ein Arbeiter, übernimmt der Erbe für den Rest des Monats seine Fehltage.
 - Die Regeln, wie ein Betrieb mit Kranken plant und Material kauft, stammen nicht aus einem Paper, sondern sind aus den Regeln des Modells abgeleitet. Acht Varianten wurden gemessen.
 

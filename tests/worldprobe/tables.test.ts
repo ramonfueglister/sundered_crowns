@@ -6,15 +6,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import { brotliDecompressSync, gunzipSync } from 'node:zlib';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildPiece } from '../../src/worldprobe/build';
-import {
-  type TablesIndex,
-  keepTables,
-  keyOfTable,
-  packTable,
-  tabled,
-  whereTable,
-  withThings,
-} from '../../src/worldprobe/table';
+import { type TablesIndex, keepTables, keyOfTable, tabled, whereTable, withThings } from '../../src/worldprobe/table';
+import { packTable } from '../../src/worldprobe/table_pack';
 
 const YEAR = 1291,
   DIR = `public/map/tables/world_${YEAR}`,

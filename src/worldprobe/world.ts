@@ -11,16 +11,17 @@ import { crowd } from '../figures';
 import { type Part, WATER_SHALLOW, sideTopAt } from '../lookprobe/terrain';
 import { type Climate, FIELDS_KNOWN, KIND, Land, WOODS_KNOWN, climateAt, snowLineAt, treeLineAt } from './climate';
 import { type Arable, arableAt } from './arable';
-import { fieldsByLot, lotKey } from './lots';
+import { fieldsByLot, layPlanGrounds, lotKey, type TownParcels } from './lots';
+import { shownOf } from './landmarks';
 import { FIELD_LOT, GEWANN } from '../sim/settlement/fields';
 import { type Forest, WOOD, conifersAt, forestAt, leanOf, stand, tilth } from './forest';
 import { type Rural, ruralAt } from './rural';
-import type { TownParcels } from './lots';
 import { HAMLET_TURN, type HamletLands, hamletAt, hamletsOf } from './hamlets';
 import { BARE, FINER, FINER_STEPS, SNOW_LINE, TINT, TREE_LINE, WOODS, blockOfCell, cellOfBlock, lineShift, paleFrom, rockAt, woodsUntil } from './land';
 import { type Region, Water, cellOf, latOf, sample, waterAt } from './region';
-import { type Cover, type Woods, coverLand, lotFill } from './far';
+import { type Cover, HOUSES_UNTIL, type Woods, coverLand, lotFill } from './far';
 import { drawGround } from './table';
+import { CROWD_AT, farCrowd } from './crowd';
 import { TREE_NUMBERS, crownTallAt } from './trees';
 import { unshade } from './mean';
 import { FARMS, FIELD_GROUND, LOT_BLOCKS, LOT_FILL, type Lot, type Monument, PEOPLE_PER_PERSON, type Settled, type Site, type Survey, type Told, farmsFor, firstHalf, raise, settle } from './settle';
@@ -61,6 +62,8 @@ export function windowOf(ox: number, oz: number, beyond = 0): { gx0: number; gy0
 }
 /** A place of the gazetteer (data/content/gazetteer.json). */
 export interface Place { lon: number; lat: number; size: number; pop1356: number | null; region: string }
+/** what a landmark of the register is counted as (LANDMARK_KIND in src/sim/settlement/landmarks.ts) */
+const KIND_COUNTED: Record<number, string> = { 0: 'landmark', 1: 'landmark', 2: 'landmark', 3: 'church', 4: 'landmark', 5: 'castle', 6: 'castle', 7: 'church', 8: 'monument' };
 /** A monument of data/content/landmarks.json. */
 export interface Landmark { id: string; lon: number; lat: number; built_state: string }
 
@@ -318,8 +321,9 @@ class WorldTraits implements GroundTraits {
   readonly houses: GroundTraits['houses'];
   readonly trees: GroundTraits['trees'];
   readonly crops: GroundTraits['crops'];
+  readonly quarters: GroundTraits['quarters'];
   constructor(step: number, private readonly town: Uint8Array, private readonly field: Uint8Array | null, private readonly mean: Cover | undefined, private readonly land: Uint8Array, private readonly metres: Float32Array, private readonly snow: Float32Array, private readonly massifs: Massifs, private readonly roads: Float32Array | null) {
-    this.sideTop = sideTopAt(step); this.crownTall = crownTallAt(step); this.houses = mean?.houses; this.trees = mean?.trees; this.crops = mean?.crops;
+    this.sideTop = sideTopAt(step); this.crownTall = crownTallAt(step); this.houses = mean?.houses; this.trees = mean?.trees; this.crops = mean?.crops; this.quarters = mean?.quarters;
   }
   city(x: number, z: number) { return fieldAt(this.town, x, z) === 1; }
   plaza() { return Infinity; }
@@ -369,7 +373,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   const own = (x: number, z: number) => x >= part.x0 && x < part.x1 && z >= part.z0 && z < part.z1;
 
   // real height, water class and latitude of every column, taken at its centre; the tree line, the snow line and the
-  // foot of the rock follow the latitude
+  // foot of the rock follow the latitude; a town on a real plan that draws its ground has the plan's land and water (lots.ts)
   const metres = new Float32Array(N * N), kind = new Uint8Array(N * N), shift = new Float32Array(N * N), lat = new Float32Array(N * N);
   // the height from which the raised rock is pale and the height up to which the woods grow: by the lines of the
   // place's climate, by its latitude without it
@@ -380,6 +384,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   // frayed by a few kilometres, the same at every step
   const land = new Uint8Array(N * N).fill(Land.Temperate | WOODS_KNOWN | FIELDS_KNOWN);
   readColumns(region, climate, forest, ox, oz, cell, { metres, kind, shift, lat, snow, woodsEnd, dark, land });
+  if (parcels) layPlanGrounds(parcels, step, (site) => { const p = places[site]; return p ? toGround(...cellOf(region, p.lon, p.lat)) : null; }, kind, metres);
   const levelBy = (m: number, by: number) => levelFor(m, by, flatter);
   const levelOf = (m: number, i: number) => levelBy(m, shift[i]);
   // the massifs, read from the drainage network (`massifsOf`)
@@ -582,7 +587,14 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     // with the hamlets of the simulation only the places it holds persons for stand in the world
     if (hamlets && !h) return;
     const at = toGround(...cellOf(region, p.lon, p.lat));
-    const site: Site = { id, at, size: p.size, pop: h ? h.inside * PEOPLE_PER_PERSON : inhabitants.get(id) ?? p.pop1356, region: p.region, style: styleOf(p.region), lots: step === 0 ? parcels?.get(id) : undefined };
+    // (with the parcels of its register: the finest step builds on them, the far steps that draw houses pave its streets)
+    const site: Site = { id, at, size: p.size, pop: h ? h.inside * PEOPLE_PER_PERSON : inhabitants.get(id) ?? p.pop1356, region: p.region, style: styleOf(p.region), lots: step <= HOUSES_UNTIL ? parcels?.get(id) : undefined };
+    // its landmarks, where the register has them: then they are its great buildings and churches
+    const marks = step === 0 ? parcels?.get(id)?.landmarks : undefined;
+    if (marks) site.marks = marks.flatMap(([kind, x, z, w, d, named, , start, end, ruined]) => {
+      const shown = shownOf(kind, named, w, d, start, end, ruined, parcels!.year ?? 1291, site.style, models);
+      return shown ? [{ x, z, model: shown.model, kind: KIND_COUNTED[kind] ?? 'landmark' }] : [];
+    });
     all.push(site);
     if (onGround(site.at)) sites.push(site);
     if (!h) return;
@@ -748,8 +760,13 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     cover.share[i] = all;
   }
   if (step === 0) {
-    // the monuments that stood in 1356 and have a model
-    landmarks.forEach((l, id) => {
+    // the landmarks of the register that stand alone, at their real place; without a register the monuments of
+    // landmarks.json that have a model
+    if (parcels?.alone) parcels.alone.forEach(([kind, lat, lon, w, d, named, start, end, ruined], id) => {
+      const here = toGround(...cellOf(region, lon, lat)), shown = onGround(here) ? shownOf(kind, named, w, d, start, end, ruined, parcels.year ?? 1291, farm(here[0], here[1]).style, models) : null;
+      if (shown) monuments.push({ id: 4096 + id, at: here, model: shown.model, level: true });
+    });
+    else landmarks.forEach((l, id) => {
       const here = toGround(...cellOf(region, l.lon, l.lat));
       if (l.built_state !== 'not_yet_built' && onGround(here)) (MONUMENTS[l.id] ?? []).forEach((m, k) => monuments.push({ id: id * 8 + k, at: [here[0] + m.dx, here[1] + m.dz], model: modelOf(m, models) }));
     });
@@ -843,8 +860,9 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     cells.push({ x: x0 + CELL / 2, z: z0 + CELL / 2, far, lots, ground });
   }
   counts.triangles = ground.triangles + (carried?.triangles ?? 0) + water.triangles + raised.triangles + things.triangles + (standing?.triangles ?? 0) + cells.reduce((n, c) => n + c.far.triangles, 0);
-  // the people of the towns, villages and fields; on the coarser steps a block is wider than a person is tall
-  const figures = settled ? crowd(g, settled, own) : undefined;
+  // the people of the towns, villages and fields: the finest step's, at the first far step too (crowd.ts); on the
+  // coarser steps a block is wider than a person is tall
+  const figures = settled ? crowd(g, settled, own) : cover && step === CROWD_AT ? farCrowd({ ...g, town: cover.town, has: cover.has, quarters: cover.quarters, crops: cover.crops }, ox, oz, part) : undefined;
   if (figures) counts.figures = figures.count;
   return { ground, carried, things, water, raised, figures, cells, counts, standing };
 }

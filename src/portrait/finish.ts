@@ -7,7 +7,7 @@
 import { Mesh, OrthographicCamera, PlaneGeometry, Scene, ShaderMaterial, type Texture, Vector2, Vector3, type WebGLRenderer, Color } from 'three';
 import type { StageProfile } from './profile';
 
-export type FinishProfile = NonNullable<StageProfile['finish']>;
+type FinishProfile = NonNullable<StageProfile['finish']>;
 
 const VERTEX = `
 varying vec2 vUv;

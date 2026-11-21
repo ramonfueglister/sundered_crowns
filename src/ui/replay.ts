@@ -15,7 +15,7 @@ import { httpOf } from '../figures/people';
 import { worldUrl } from '../net/client';
 
 /** What the map shows of the replay: changes only when the owners or the realms change. */
-export interface ReplayFrame {
+interface ReplayFrame {
   /** the owner of every place on that day, as the world's owners (realm ids) */
   owner: Int16Array;
   /** per realm id: colour and the name on the map */
@@ -23,7 +23,7 @@ export interface ReplayFrame {
   names: I18n[];
 }
 /** The replay's clock, for the bar at the bottom. */
-export interface ReplayClock {
+interface ReplayClock {
   /** the day shown (fractional while playing), the first and last day of the history, the world's start year */
   day: number;
   from: number;

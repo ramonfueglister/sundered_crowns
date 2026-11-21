@@ -7,4 +7,4 @@ import { ofTime } from '../../src/sim/scale';
 
 const year = Number(process.argv[2] ?? 1291);
 const { s } = newWorldState(year, year);
-process.stdout.write(JSON.stringify(Array.from(s.place.pop, (p) => ofTime(p))) + '\n');
+process.stdout.write(`${JSON.stringify(Array.from(s.place.pop, (p) => ofTime(p)))}\n`);

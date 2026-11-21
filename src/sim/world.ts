@@ -11,7 +11,7 @@ import type { Ground } from './content/ground';
 import type { Tilth } from './content/tilth';
 import type { WayNet } from './roads';
 
-export interface GeoJson {
+interface GeoJson {
   W: number;
   H: number;
   lon0: number;
@@ -42,7 +42,7 @@ export interface GeoJson {
   areas: { name: string; provinces: number[]; region: string }[];
   rivers: { name: string; rank: number; pts: [number, number][] }[];
 }
-export interface WorldJson {
+interface WorldJson {
   terrain: string[];
   resource: string[];
   name: string[];
@@ -77,7 +77,7 @@ export interface CultivationJson {
 /** The economy of the world: the engine that computes a period, and the calibration table of the cities' economies
  *  (data/economy/england_1356.json; docs/ECONOMY_DESIGN.md, features 3 to 11). The world calibrates every city from
  *  the table when it founds the economies (src/sim/systems/economy.ts). */
-export interface EconomySetup {
+interface EconomySetup {
   engine: EconomyEngine;
   table: CalibrationTable;
 }
@@ -87,7 +87,7 @@ export const EDGE_RIVER = 1,
   EDGE_COAST = 4,
   EDGE_SEA = 8;
 
-export interface Province {
+interface Province {
   id: number;
   name: string;
   locs: number[];
@@ -95,7 +95,7 @@ export interface Province {
   area: number;
   region: string;
 }
-export interface Area {
+interface Area {
   id: number;
   name: string;
   provinces: number[];
@@ -219,72 +219,27 @@ export class World {
     this.arid = Float32Array.from(wj.arid.slice(0, L));
     this.forest = Float32Array.from(wj.forest);
     for (let i = 0; i < L; i++) {
-      this.terrain[i] = Math.max(0, TERRAINS.indexOf(wj.terrain[i] as any));
+      this.terrain[i] = TERRAIN_INDEX.get(wj.terrain[i]) ?? 0;
       this.resource[i] = RESOURCE_INDEX[wj.resource[i]] ?? 0;
       this.coastal[i] = wj.coastal[i] ? 1 : 0;
     }
     for (const [l] of geo.passes) this.pass[l - 1] = 1;
-    if (land.yield.length !== L) throw new Error(`land.json has ${land.yield.length} places, the map has ${L}`);
-    this.landYield = Float32Array.from(land.yield, (v) => v ?? NaN);
+    const soil = soilOf(land, L);
+    this.landYield = soil.yield;
     this.landEngland = cultivation.englandLand;
     this.landLimit = cultivation.landLimit;
     this.arablePerHead = cultivation.arablePerHead;
-    const c = land.curve;
-    if (c.fertile.length !== L)
-      throw new Error(`land.json has a yield curve for ${c.fertile.length} places, the map has ${L}`);
-    this.landEdges = Float64Array.from(c.edges);
-    this.landFertile = Float64Array.from(c.fertile);
-    this.landStepStart = new Int32Array(L + 1);
-    for (let i = 0; i < L; i++) {
-      let n = 0; // one step for every edge that starts below the fertile share
-      while (n < c.edges.length && (n === 0 ? 0 : c.edges[n - 1]) < c.fertile[i]) n++;
-      this.landStepStart[i + 1] = this.landStepStart[i] + n;
-    }
-    if (this.landStepStart[L] !== c.steps.length)
-      throw new Error(
-        `land.json has ${c.steps.length} steps of the yield curve, the places need ${this.landStepStart[L]}`,
-      );
-    this.landSteps = Float32Array.from(c.steps);
-    this.england = new Uint8Array(L);
-    for (const i of land.england.places) this.england[i] = 1;
+    this.landEdges = soil.edges;
+    this.landFertile = soil.fertile;
+    this.landStepStart = soil.stepStart;
+    this.landSteps = soil.steps;
+    this.england = soil.england;
     this.economyEngine = economy.engine;
     const t = economy.table,
-      clock = { plan: t.clock.plan_days.value, window: t.clock.days_per_year.value },
-      wage = t.cities.wage.value,
-      prices = t.cities.prices.value;
-    if (!(Number.isInteger(clock.plan) && clock.plan >= 1 && Number.isInteger(clock.window) && clock.window > 1))
-      throw new Error(
-        `the economy of ${t.case} has a year of ${clock.window} days and a plan every ${clock.plan} days`,
-      );
-    if (wage !== 'prices' && wage !== 'money')
-      throw new Error(
-        `the economy of ${t.case} pays wages in the way "${wage}", the engine knows 'prices' and 'money'`,
-      );
-    if (prices !== 'costs' && prices !== 'demand')
-      throw new Error(
-        `the economy of ${t.case} sets prices in the way "${prices}", the engine knows 'costs' and 'demand'`,
-      );
-    const crown = t.cities.crown.value;
-    if (crown !== 'series' && crown !== 'revenue')
-      throw new Error(`the crown of ${t.case} buys in the way "${crown}", the engine knows 'series' and 'revenue'`);
-    const owner = t.cities.owner.value;
-    if (owner !== 'paper' && owner !== 'household')
-      throw new Error(
-        `the owners of ${t.case} hold their firms in the way "${owner}", the engine knows 'paper' and 'household'`,
-      );
-    const spent = t.cities.savings_spent_per_year.value;
-    if (!(spent >= 0 && spent <= clock.window))
-      throw new Error(`the households of ${t.case} spend ${spent} of their savings above the target in a year`);
+      { clock, rules } = economyRulesOf(t);
     participation.men = t.inputs.participation.value.men;
     participation.women = t.inputs.participation.value.women;
-    this.cityEconomies = {
-      year: t.year,
-      scale: t.scale.value,
-      clock,
-      rules: { wage, prices, savings: spent / clock.window, crown, owner },
-      foodNeed: foodNeedCost(t),
-      table: t,
-    };
+    this.cityEconomies = { year: t.year, scale: t.scale.value, clock, rules, foodNeed: foodNeedCost(t), table: t };
     this.names = new Array(N);
     for (let i = 0; i < N; i++) this.names[i] = (i < L ? wj.name[i] : geo.loc.name[i]) || `#${i}`;
     this.names = refineNames(this.names, this.lon, this.lat, L); // unnamed districts get names from their neighbours
@@ -294,57 +249,17 @@ export class World {
     this.kmPerPx = new Float32Array(N);
     const kmpp0 = ((this.lon1 - this.lon0) / this.W) * 111.32;
     for (let i = 0; i < N; i++) this.kmPerPx[i] = kmpp0 * Math.cos((this.lat[i] * Math.PI) / 180);
-    // adjacency CSR
-    const lists: [number, number][][] = Array.from({ length: N }, () => []);
-    for (const [a1, b1, kind, , rf] of geo.edges) {
-      const a = a1 - 1,
-        b = b1 - 1;
-      let f = 0;
-      if (kind === 0 && rf > 0.3) f |= EDGE_RIVER;
-      if (kind === 1) f |= EDGE_COAST;
-      if (kind === 2) f |= EDGE_SEA;
-      lists[a].push([b, f]);
-      lists[b].push([a, f]);
-    }
-    for (const [a1, b1] of geo.straits) {
-      lists[a1 - 1].push([b1 - 1, EDGE_STRAIT]);
-      lists[b1 - 1].push([a1 - 1, EDGE_STRAIT]);
-    }
-    this.adjStart = new Int32Array(N + 1);
-    let tot = 0;
-    for (let i = 0; i < N; i++) {
-      lists[i].sort((p, q) => p[0] - q[0]);
-      this.adjStart[i] = tot;
-      tot += lists[i].length;
-    }
-    this.adjStart[N] = tot;
-    this.adj = new Int32Array(tot);
-    this.adjKm = new Float32Array(tot);
-    this.adjFlag = new Uint8Array(tot);
-    let k = 0;
-    for (let i = 0; i < N; i++)
-      for (const [j, f] of lists[i]) {
-        this.adj[k] = j;
-        this.adjFlag[k] = f;
-        const dx = this.x[i] - this.x[j],
-          dy = this.y[i] - this.y[j];
-        this.adjKm[k] = Math.sqrt(dx * dx + dy * dy) * (this.kmPerPx[i] + this.kmPerPx[j]) * 0.5;
-        k++;
-      }
-    this.provOf = new Int32Array(L).fill(-1);
-    this.provinces = geo.provinces.map((p, i) => ({
-      id: i,
-      name: p.name,
-      locs: p.locs.map((v) => v - 1),
-      capital: p.capital - 1,
-      area: (p as any).area ?? 0,
-      region: (p as any).region ?? 'unknown',
-    }));
-    for (const p of this.provinces) for (const l of p.locs) this.provOf[l] = p.id;
-    this.areas = geo.areas.map((a, i) => ({ id: i, name: a.name, provinces: a.provinces, region: a.region }));
-    this.regions = [...new Set(this.provinces.map((p) => p.region))].sort();
-    this.regionOf = new Uint8Array(this.provinces.length);
-    for (const p of this.provinces) this.regionOf[p.id] = this.regions.indexOf(p.region);
+    const ways = adjacencyOf(geo, this.x, this.y, this.kmPerPx);
+    this.adjStart = ways.start;
+    this.adj = ways.next;
+    this.adjKm = ways.km;
+    this.adjFlag = ways.flag;
+    const parts = provincesOf(geo, L);
+    this.provOf = parts.provOf;
+    this.provinces = parts.provinces;
+    this.areas = parts.areas;
+    this.regions = parts.regions;
+    this.regionOf = parts.regionOf;
     this.rivers = geo.rivers;
   }
   isSea(i: number) {
@@ -365,4 +280,124 @@ export class World {
     const Y = ymax - (py / this.H) * (ymax - ymin);
     return [lon, (Math.atan(Math.sinh(Y)) * 180) / Math.PI];
   }
+}
+
+/** the index of each terrain in TERRAINS (a name it does not know counts as the first) */
+const TERRAIN_INDEX = new Map<string, number>(TERRAINS.map((name, i) => [name, i]));
+
+/** The land of the places (land.json): their yield and the steps of their yield curves, and which lie in England. */
+function soilOf(land: LandJson, L: number) {
+  if (land.yield.length !== L) throw new Error(`land.json has ${land.yield.length} places, the map has ${L}`);
+  const yields = Float32Array.from(land.yield, (v) => v ?? NaN);
+  const c = land.curve;
+  if (c.fertile.length !== L)
+    throw new Error(`land.json has a yield curve for ${c.fertile.length} places, the map has ${L}`);
+  const stepStart = new Int32Array(L + 1);
+  for (let i = 0; i < L; i++) {
+    let n = 0; // one step for every edge that starts below the fertile share
+    while (n < c.edges.length && (n === 0 ? 0 : c.edges[n - 1]) < c.fertile[i]) n++;
+    stepStart[i + 1] = stepStart[i] + n;
+  }
+  if (stepStart[L] !== c.steps.length)
+    throw new Error(`land.json has ${c.steps.length} steps of the yield curve, the places need ${stepStart[L]}`);
+  const england = new Uint8Array(L);
+  for (const i of land.england.places) england[i] = 1;
+  return {
+    yield: yields,
+    edges: Float64Array.from(c.edges),
+    fertile: Float64Array.from(c.fertile),
+    stepStart,
+    steps: Float32Array.from(c.steps),
+    england,
+  };
+}
+
+/** The daily clock and the rules of the firms and households of the cities' economies, as the calibration table `t`
+ *  has them; throws where the table asks for one the engine does not know. */
+function economyRulesOf(t: CalibrationTable): Pick<World['cityEconomies'], 'clock' | 'rules'> {
+  const clock = { plan: t.clock.plan_days.value, window: t.clock.days_per_year.value },
+    wage = t.cities.wage.value,
+    prices = t.cities.prices.value;
+  if (!(Number.isInteger(clock.plan) && clock.plan >= 1 && Number.isInteger(clock.window) && clock.window > 1))
+    throw new Error(`the economy of ${t.case} has a year of ${clock.window} days and a plan every ${clock.plan} days`);
+  if (wage !== 'prices' && wage !== 'money')
+    throw new Error(`the economy of ${t.case} pays wages in the way "${wage}", the engine knows 'prices' and 'money'`);
+  if (prices !== 'costs' && prices !== 'demand')
+    throw new Error(
+      `the economy of ${t.case} sets prices in the way "${prices}", the engine knows 'costs' and 'demand'`,
+    );
+  const crown = t.cities.crown.value;
+  if (crown !== 'series' && crown !== 'revenue')
+    throw new Error(`the crown of ${t.case} buys in the way "${crown}", the engine knows 'series' and 'revenue'`);
+  const owner = t.cities.owner.value;
+  if (owner !== 'paper' && owner !== 'household')
+    throw new Error(
+      `the owners of ${t.case} hold their firms in the way "${owner}", the engine knows 'paper' and 'household'`,
+    );
+  const spent = t.cities.savings_spent_per_year.value;
+  if (!(spent >= 0 && spent <= clock.window))
+    throw new Error(`the households of ${t.case} spend ${spent} of their savings above the target in a year`);
+  return { clock, rules: { wage, prices, savings: spent / clock.window, crown, owner } };
+}
+
+/** The ways between the places as compressed rows (CSR): the neighbours of place i are next[start[i] … start[i + 1]),
+ *  sorted, with the km to each and how they are joined (EDGE_*). */
+function adjacencyOf(geo: GeoJson, x: Float32Array, y: Float32Array, kmPerPx: Float32Array) {
+  const N = geo.L + geo.S;
+  const lists: [number, number][][] = Array.from({ length: N }, () => []);
+  for (const [a1, b1, kind, , rf] of geo.edges) {
+    const a = a1 - 1,
+      b = b1 - 1;
+    let f = 0;
+    if (kind === 0 && rf > 0.3) f |= EDGE_RIVER;
+    if (kind === 1) f |= EDGE_COAST;
+    if (kind === 2) f |= EDGE_SEA;
+    lists[a].push([b, f]);
+    lists[b].push([a, f]);
+  }
+  for (const [a1, b1] of geo.straits) {
+    lists[a1 - 1].push([b1 - 1, EDGE_STRAIT]);
+    lists[b1 - 1].push([a1 - 1, EDGE_STRAIT]);
+  }
+  const start = new Int32Array(N + 1);
+  let tot = 0;
+  for (let i = 0; i < N; i++) {
+    lists[i].sort((p, q) => p[0] - q[0]);
+    start[i] = tot;
+    tot += lists[i].length;
+  }
+  start[N] = tot;
+  const next = new Int32Array(tot),
+    km = new Float32Array(tot),
+    flag = new Uint8Array(tot);
+  let k = 0;
+  for (let i = 0; i < N; i++)
+    for (const [j, f] of lists[i]) {
+      next[k] = j;
+      flag[k] = f;
+      const dx = x[i] - x[j],
+        dy = y[i] - y[j];
+      km[k] = Math.sqrt(dx * dx + dy * dy) * (kmPerPx[i] + kmPerPx[j]) * 0.5;
+      k++;
+    }
+  return { start, next, km, flag };
+}
+
+/** The provinces, areas and regions of the map, and the province of each of the L land places (-1: none). */
+function provincesOf(geo: GeoJson, L: number) {
+  const provOf = new Int32Array(L).fill(-1);
+  const provinces: Province[] = geo.provinces.map((p, i) => ({
+    id: i,
+    name: p.name,
+    locs: p.locs.map((v) => v - 1),
+    capital: p.capital - 1,
+    area: p.area,
+    region: p.region,
+  }));
+  for (const p of provinces) for (const l of p.locs) provOf[l] = p.id;
+  const areas: Area[] = geo.areas.map((a, i) => ({ id: i, name: a.name, provinces: a.provinces, region: a.region }));
+  const regions = [...new Set(provinces.map((p) => p.region))].sort();
+  const regionOf = new Uint8Array(provinces.length);
+  for (const p of provinces) regionOf[p.id] = regions.indexOf(p.region);
+  return { provOf, provinces, areas, regions, regionOf };
 }

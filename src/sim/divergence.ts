@@ -32,7 +32,7 @@ export interface Divergence {
 
 /** The holder of every one of the world's `L` places on `day` as the setup and the chronicle of borders have it: the
  *  key of a realm, or null. */
-export function shadowOwners(w: World, setup: SetupState, day: number): (string | null)[] {
+function shadowOwners(w: World, setup: SetupState, day: number): (string | null)[] {
   const owner = Array.from({ length: w.L }, (_, p) => {
     const o = setup.owner[p];
     return Number.isInteger(o) && o >= 0 && o < setup.states.length ? setup.states[o].id : null;

@@ -4,7 +4,8 @@ import { describe, expect, it } from 'vitest';
 import { Batch, hash2, seeded } from '../../src/lookprobe/batch';
 import { LEAVES, tree } from '../../src/lookprobe/blocks';
 import { N, idx, onGrid } from '../../src/lookprobe/layout';
-import { drawGround, drawTable, packTable, tableOf, unpackTable } from '../../src/worldprobe/table';
+import { drawGround, drawTable, tableOf } from '../../src/worldprobe/table';
+import { packTable, unpackTable } from '../../src/worldprobe/table_pack';
 import {
   STRAY,
   TEMPERATE,

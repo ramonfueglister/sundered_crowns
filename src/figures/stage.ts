@@ -8,9 +8,9 @@ import { figureMeshes as build, figureAt as standing, figureSeconds } from './ma
 export type { Figures } from './crowd';
 
 /**
- * Up to this many blocks across the picture a figure is drawn with its full kit; beyond it, with the far kit. At 1672
- * pixels across, 260 blocks give 6.4 pixels a block: a figure stands 8 pixels tall, too small for faces and hands.
- * Drawing value.
+ * Up to this many blocks of the finest step across the picture a figure is drawn with its full kit; beyond it, with
+ * the far kit. At 1672 pixels across, 260 blocks give 6.4 pixels a block: a figure stands 8 pixels tall, too small for
+ * faces and hands. Drawing value.
  */
 export const NEAR_UNTIL = 260;
 
@@ -24,7 +24,8 @@ interface Pair {
 }
 const shown = new Set<Pair>(),
   pairOf = new WeakMap<THREE.Object3D, Pair>();
-let near = true;
+/** the stage's blocks across the picture */
+let across = 0;
 /**
  * Both kits of a piece are on the stage all the time, and the one not in use draws none of its figures: so the
  * renderer has the pipelines of both when the piece arrives, and the change of kit costs nothing (shown and hidden
@@ -32,7 +33,10 @@ let near = true;
  * 16 November 2026).
  */
 const draw = (p: Pair) => {
-  const n = Math.round(p.f.count * p.kept);
+  // (a block of the finest step is as many of the stage's as the mesh and its piece are scaled: a far step's figures
+  // and those of a finer piece on a far step's stage are smaller)
+  const n = Math.round(p.f.count * p.kept),
+    near = across <= NEAR_UNTIL * p.near.scale.x * (p.near.parent?.scale.x ?? 1);
   p.near.geometry.instanceCount = near ? n : 0;
   p.far.geometry.instanceCount = near ? 0 : n;
 };
@@ -67,9 +71,9 @@ export function warmFigures(): THREE.Group {
   return group;
 }
 
-/** Shows the near or the far kit, for a picture `across` blocks wide. */
-export function showFigures(across: number) {
-  near = across <= NEAR_UNTIL;
+/** Shows the near or the far kit, for a picture `wide` of the stage's blocks wide. */
+export function showFigures(wide: number) {
+  across = wide;
   for (const p of shown) draw(p);
 }
 

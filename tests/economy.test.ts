@@ -16,17 +16,16 @@ import { roundHalfEven, unemploymentBenefit } from '../src/sim/economy/accounts'
 import { dailyCalibration, dailyEconomy } from '../src/sim/economy/daily';
 import { FIGURE, FIGURES, type CitySetup, type EconomyEngine, type EconomyRules } from '../src/sim/economy/engine';
 import {
-  absences,
   cityAt,
   cityCalibrations as foundFrom,
   cityPlaces,
   citySeed,
   computeTo,
-  contracts,
   foundEconomy,
   workingDays,
   yearRow,
 } from '../src/sim/systems/economy';
+import { absences, contracts } from '../src/sim/systems/workers';
 import { upgradeState } from '../src/sim/upgrade';
 import { cityRoutes } from '../src/sim/economy/routes';
 import { cityPeopleByPlace } from '../src/sim/systems/people';

@@ -1,11 +1,12 @@
-// The houses of the near view as the far steps draw them (far.ts HOUSES_UNTIL): each where it stands and as large as
-// it is, its walls in its own colour under a roof of its own tiles, with the gables or the hips the near view gives
-// it. What a house of the far steps leaves out is what is smaller than a dot of their picture: windows, doors, bands,
-// the rows of tiles, chimneys and dormers (buildings/houses/block.ts draws those in the near view).
+// The houses of the near view as the far steps draw them (far_places.ts HOUSES_UNTIL): each where it stands and as
+// large as it is, its walls in its own colour under a roof of its own tiles, with the gables or the hips the near view
+// gives it. What a house of the far steps leaves out is what is smaller than a dot of their picture: windows, doors,
+// bands, the rows of tiles, chimneys and dormers (buildings/houses/block.ts draws those in the near view).
 //
-// A house is HOUSE_NUMBERS numbers (far.ts lays them out, table.ts keeps them): its footprint in columns of the
+// A house is HOUSE_NUMBERS numbers (far_places.ts lays them out, table.ts keeps them): its footprint in columns of the
 // ground (no longer on their grid), the height of its walls and of its roof over the ground it stands on, in blocks of
 // its step, the colours of its walls and roof, and its kind of roof.
+import { FLOOR, m } from '../buildings';
 import { Batch, type RGB, hash2, rgb, shade } from '../lookprobe/batch';
 import { N } from '../lookprobe/layout';
 import type { Part } from '../lookprobe/terrain';
@@ -21,6 +22,30 @@ const GABLE = 0.96;
 /** each roof is a touch lighter or darker than the next, as the tiles of the near view differ from house to house */
 const ROOF_LIGHT = 0.06;
 
+/** where the near view gives its roofs gables more often than hips: in the lands of steep roofs (traditions/house-styles.ts NORTH, ALPINE …) */
+const GABLES_STEEP = 0.85,
+  GABLES_LOW = 0.3,
+  STEEP_FROM = m(3);
+/**
+ * A house of the plan as it is drawn here. Of the near view's roof (buildings/houses/block.ts) the plan keeps how
+ * high the house stands with it, which is its storeys, a band, and the highest roof its land builds (`maxRise`);
+ * the walls end a little over the last storey. Its roof rises as steeply as the roofs of its land do, which is the
+ * more steeply the higher they may rise (pitch 0.31 under 2.1 m, 0.9 under 4.9 m), as far as `maxRise`.
+ */
+export function houseShape(
+  w: number,
+  d: number,
+  floors: number,
+  height: number,
+  hx: number,
+  hz: number,
+): { eaves: number; rise: number; hips: boolean } {
+  const eaves = floors * FLOOR + m(0.62),
+    most = Math.max(0, height - floors * FLOOR - m(1.7)),
+    pitch = Math.min(1.05, 0.34 * most);
+  const rise = most < m(0.4) ? 0 : Math.min((Math.min(w, d) / 2) * pitch, most);
+  return { eaves, rise, hips: hash2(hx, hz, 142) >= (most >= STEEP_FROM ? GABLES_STEEP : GABLES_LOW) };
+}
 /** The houses of `houses` whose middle lies in `part`: those a piece draws and keeps (table.ts), as floats. */
 export function housesIn(houses: ArrayLike<number> | undefined, part: Part): Float32Array | undefined {
   if (!houses?.length) return undefined;

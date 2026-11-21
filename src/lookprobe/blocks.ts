@@ -30,7 +30,7 @@ const CLOTHES = [rgb(0x8a3b2e), rgb(0x3f5f8a), rgb(0xcaa24a), rgb(0x5a7a3a), rgb
 /**
  * The trees stand this share of the height they were made with: a good four blocks, as high as a house of two storeys
  * with its roof, they made the woods a wall over the villages. Their crowns keep their width, so that a wood stays
- * closed (the far steps lower theirs alike: terrain.ts WOODS_LOW).
+ * closed (the far steps lower theirs alike: terrain_woods.ts `CROWN_LOW`).
  */
 export const TREE_TALL = 0.62;
 

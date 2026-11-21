@@ -199,14 +199,13 @@ export class WorldCore {
   private trimDeadYears() {
     while (this.deadYears.size > 8) this.deadYears.delete(this.deadYears.keys().next().value!);
   }
-  /** A dead person of the archive (GET /person/<uid>): the year that holds the person, and the place there; null where
-   *  the archive has no such person. */
   /** How far the world has gone from history on its day (src/sim/divergence.ts). */
   divergence(): Divergence {
     this.setup ??= loadSetup(this.cfg.startYear);
     return divergence(this.s, this.w, this.setup);
   }
-
+  /** A dead person of the archive (GET /person/<uid>): the year that holds the person, and the place there; null where
+   *  the archive has no such person. */
   archived(uid: number): { year: ArchivedPersons; k: number } | null {
     for (const y of yearsWith(this.s, uid)) {
       let a = this.deadYears.get(y.day) ?? null;

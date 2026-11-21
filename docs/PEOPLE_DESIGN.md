@@ -25,7 +25,7 @@ nothing built before Ramon agrees. Proposal with sources (German): https://claud
 | 7 | The living and the dead: the systems go over the living, the dead go to an archive (step 1: the list of the living; step 2: the archive, with a uid for every person) | built 19 Nov 2026 (Ramon, 19 Nov: «weiter» on the proposal of the archive and the day plan, read as «So bauen» for way A: the archive first, then the day plan). Step 1 no new state, step 2 state 30 |
 | 8 | The calendar of the town: the firms work on the working days of their owner's faith (step 3 of the day plan) | built 19 Nov 2026 (Ramon, 19 Nov: way A of the proposal, after the archive the day plan; «vorwärts machen alles mergen comitten und feddich»). Economy feature 19. State 31 |
 | 9 | Sickness and childbed keep a worker from work (step 4 of the day plan) | built 20 Nov 2026 (Ramon, 20 Nov: «So bauen, Lohn läuft weiter» on the proposal https://claude.ai/artifact/QK327U5QQQGWNCnL5JhHV5). Economy feature 22. State 35 |
-| 10 | Service by the year and work by the day: a worker who heads a family works by the day, every other worker serves by the year (step 6 of the day plan) | built 20 Nov 2026 (Ramon, 20 Nov: «Phase A bauen und messen» on the proposal https://claude.ai/artifact/Wyqd64rfmZgJnz9GZ7Wof9). Economy feature 23. State 36 |
+| 10 | Service by the year and work by the day: a worker who heads a family works by the day, every other worker serves by the year (step 6 of the day plan) | built 20 Nov 2026 (Ramon, 20 Nov: «Phase A bauen und messen» on the proposal https://claude.ai/artifact/Wyqd64rfmZgJnz9GZ7Wof9). Economy feature 23. State 36. Since economy feature 24 (State 39) the family stands in first |
 | 11 | History where the world is still history: the shadow world, the parents of the persons of history, and the divergence | built 20 Nov 2026 (Ramon, 20 Nov: «ok» on the recommendation to build the shadow world and the graph of persons first, then the death of a ruler as luck). No new state |
 
 ## Feature 1: persons of the 30 largest cities
@@ -1080,8 +1080,9 @@ Step 6 of way A of the proposal «Personen: Archiv der Toten und Tagesplan» (fe
 («Phase A bauen und messen»). Every worker has one of two contracts: service by the year, as the famuli, servants and
 maids of the manors, or work by the day. A servant is paid every day, as every worker was before; a day labourer is
 paid for the days he works, and nothing on a day he is away. On a day on which workers are away, workers without work
-of the city stand in for them. The rules of the economy, the sources and the numbers are economy feature 23
-(docs/ECONOMY_DESIGN.md, section 23).
+of the city stand in for them, and since economy feature 24 first an adult of the worker's family who does not work.
+The rules of the economy, the sources and the numbers are economy features 23 and 24 (docs/ECONOMY_DESIGN.md,
+sections 23 and 24).
 
 ### Who has which contract
 
@@ -1092,7 +1093,7 @@ while the famuli were hired "most commonly for the whole agricultural year" (Cla
 (In-kind) Wages and labour relations in the Middle Ages, working paper, p. 13); unmarried women served by the year,
 married women worked by the day (Humphries & Weisdorf 2015, The wages of women in England, 1260–1850, Journal of
 Economic History 75). The contract is a function of the person's place in the family on the day it is given
-(`contracts` in `src/sim/systems/economy.ts`): nothing of it is saved.
+(`contracts` in `src/sim/systems/workers.ts`): nothing of it is saved.
 
 The workers of the world of 1291 at its founding (seed 1291):
 
@@ -1124,9 +1125,11 @@ feature 11), and a widow who heads her family works by the day.
 - **No servant leaves at Michaelmas.** The famuli were hired mostly for the year, but at Meopham ploughmen were
   dismissed in the year (Goose, Archaeologia Cantiana 92, p. 207); the firms hire and dismiss by the port's rule, the
   same for both contracts.
-- **Stand-ins come only from the workers without work of the city.** A sick tenant also found "a family member"
-  (Owen, Brown & Skinner 2025, Journal of British Studies 64, e92, p. 5); the persons of a family who do not work are
-  not households of the engine. Where no worker without work is left, the place stays empty for the day.
+- **The family stands in first** (economy feature 24, Ramon's choice of 20 November 2026). A sick tenant found "a
+  family member or even a hired laborer" (Owen, Brown & Skinner 2025, Journal of British Studies 64, e92, p. 5): an
+  adult of the family who does not work and is not away himself takes the place for the day, and the pay goes to the
+  household of the worker who is away. Where nobody of the family is at home and no worker without work is left, the
+  place stays empty for the day.
 - **The day labourer's days are not his own.** He works every day his firm works and he is there; how many days a day
   labourer wanted and found work (a target income) is phase B of the proposal, a choice of its own.
 

@@ -27,6 +27,12 @@ describe('the stops a king can have been at', () => {
     const kept = reachableStops([1, 2, 3, 4, 90], [PARIS, PARIS, PARIS, ROME, BRUGES], w.lat, w.lon);
     expect(kept).toEqual([0, 1, 2, 4]);
   });
+  it('of two stays with as many days, leaves out the one that lies off the way of the stays around them', () => {
+    // Rome can be reached from Paris in 39 days, but Bruges not from Rome in 3: Rome is the far one between Paris
+    // and Paris (as 'in Arluno', Milan, between Luxembourg and Thionville in 1346)
+    const kept = reachableStops([1, 40, 43, 80], [PARIS, ROME, BRUGES, PARIS], w.lat, w.lon);
+    expect(kept).toEqual([0, 2, 3]);
+  });
   it('keeps every stay that can be reached', () => {
     const kept = reachableStops([1, 30, 80], [PARIS, BRUGES, ROME], w.lat, w.lon);
     expect(kept).toEqual([0, 1, 2]);
