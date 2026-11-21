@@ -63,7 +63,8 @@ people, finds of cloth from London). No estates yet: a noble of England wears th
 **Calmed clothes** (`real_look.rs`, `calm`): a garment bound to the head's triangles follows every small bump of a
 morphed body and crumples. The builder now takes only the smooth part of the movement (24 passes over the
 neighbours) and keeps a least distance to the body per layer (gown 0.07 to 0.09, what lies over it 0.13 to 0.17,
-on the head at most 0.05). Apoleia's own clothes are bound as before.
+on the head at most 0.05). Where a gown's own shape stands in a point, its folds are evened (round 166). Apoleia's
+own clothes are bound as before.
 
 **Stage profile** (`src/portrait/profile.ts`, by eye): key light more from the side, less light from all round,
 skin with a soft reddish edge of the shadow (wrap lighting, where Godot scatters inside the skin) and slight
@@ -8232,6 +8233,102 @@ and lint pass, no new warning.
 Pictures (project files, `portraits/`): `runde165_mantel_vorher_nachher.png` (two crowned heads large, before
 above and after below), `runde165_seite_hinten.png` (the same two from the side and from behind, after),
 `runde165_alle_gekroent.png` (all 36 of the sample crowned, after).
+
+**Round 166: no points on a small child's chest** (2026-11-21). All 36 of the sample on one sheet in the
+village's dress and one at court, looked through for what stands out in the whole figure: every one of the
+eight small children, the boys as well, has a point on either side of the chest. Two boys large (of two and
+of five), from the front and from the side: from the front two tips with sharp creases beside them, from the
+side a nipple in the cloth, and under one arm a black slit. No reference picture of a child was held beside
+them: a point on a boy's chest needs none.
+
+What was read. Nothing new. Round 142's own note in `real_look.rs`: the gown was draped on a grown body, and
+"the bust of the body the gown was draped on stood on it as two points" on a child of two; round 142 made the
+gown's folds as small as the child. `tools/portrait/pipeline/tunic_sim.py`: the body the gown is draped on is
+smoothed at the chest. Why the drape has points there all the same was not found out.
+
+What was measured first.
+- The body has none: on a child of two no corner of its chest stands more than 1.6 mm off the mean of its
+  neighbours.
+- The gown has: counted on eight children each, the corners of the gown's front in the picture, between the
+  arms and 3 cm and more from a hem, that stand more than 3 mm off the mean of their neighbours the way the
+  gown faces (table below). They are of two kinds: points and creases in the gown's own shape (on a man of 24,
+  with the hold off the body left out, the highest stands 6.8 mm off its neighbours, 10.9 cm from the middle
+  and 26 cm under the chin: at the foot of a grown person's picture, on the chest of a child's, which shows
+  the gown to under the armpits), and points where the builder holds the gown off the body (round 143).
+
+What is changed.
+- **A point in the gown's own shape is evened** (`portrait/src/real_look.rs`, `calm`; `CLOTH_POINT` 3 mm,
+  `CLOTH_FOLD_EVEN` 3): where a place of the gown's folds stands more than 3 mm off the mean of its
+  neighbours, the way the cloth faces as draped, the folds are evened three times, each place half itself
+  and half its neighbours' mean; wholly at such a place, half at a place beside one, and nowhere else. Of the
+  two gowns small children wear that is 337 of 4 806 places and 317 of 4 895. The rolled hem keeps its form;
+  the gown's other folds, and every other garment's, are as they were to the digit. For a gown with linen
+  under it and for one worn on the skin (the village's and the court's).
+- Nothing else: the hold off the body, the gown's files and the stage are not touched.
+
+Measured (`portrait/tests/chest.rs`, eight children each; `tests/court.rs`, `tests/clothes.rs`):
+
+| | round 165 | now |
+|---|---|---|
+| corners of the gown's chest more than 3 mm off their neighbours: girls of two; boys of two | 41; 64 | 9; 19 |
+| the same: girls of five; boys of five | 71; 76 | 35; 11 |
+| the corner that stands furthest: girls, boys of two | 5.7 mm; 9.7 mm | 5.7; 5.1 |
+| the same: girls, boys of five | 9.7 mm; 14.3 mm | 9.7; 3.7 |
+| triangles of the court's gowns drawn out three times in the image; of the village's | 2.48 in a hundred; 13.1 | 2.78; 14.0 |
+| how uneven a lady's gown is (the angle of a triangle to those within 3 cm): village; court | 24.2 to 25.4 degrees; 18.0 to 20.8 | 21.8 to 23.0; 17.2 to 20.5 |
+| the same, a lord's: village; court | 18.9 to 19.8; 13.4 to 14.6 | 17.0 to 18.0; 12.8 to 14.2 |
+| the court's gown's unevenness for the village's, on the same body (18 pairs) | 0.61 to 0.83 | 0.65 to 0.91 |
+| the builder (`sc_portrait.wasm`) | 864 531 bytes | 870 932 |
+
+One older bound is changed, and why. `tests/clothes.rs` holds that a gown at court is less uneven than the
+village's on the same body, and held it under 0.85 of the village's. Its measure counted the village gown's
+points: without them the village's gown is 2.1 to 2.7 degrees less uneven on a lady and the court's, which
+had fewer, 0.3 to 0.8, and the largest of the eighteen is 0.91 for 0.83. The bound is 0.95 now. The court's
+gown is still the smoother one on every body; its lead is smaller than round 151 measured, because a part of
+that lead was the village gown's points.
+
+Tried and not kept, and the way there.
+- **Every fold of the gown evened three times**, points or none (the round's first rule, and with it the
+  linen under the gown): on the eight children 12, 16, 24 and 33 corners, as good. Two, three, four and six
+  times counted alike. But four older tests failed, and rightly: on a woman of 50 the test found no button
+  that is a ball (why was not looked into), on a girl of ten four places of the cloth at the neck lay under
+  the skin for one, 5.37 in a hundred of the court's triangles were drawn out in the image for 2.48, and the
+  village's gown was nearly as even as the court's. With the gown left as it was within 3 cm of a hem the
+  buttons and the neck were right again, the image not (5.31).
+- **Only the folds' height evened**, the place along the cloth left (over the evened shape; and the way the
+  cloth faces, at the end or in every pass, three and six times): the image stays (2.6 to 2.7), the points
+  go less well (the first way 55 corners on the girls of two for 41; the others 23 to 33 on the boys of two
+  for 16 with every fold evened, and the furthest corner on a boy of five 17.9 and 22.4 mm for 14.3), and
+  the neck or the buttons failed again.
+- A lone peak cut down to its neighbours: the 12.5 mm of one boy of five is a crease, not a peak.
+- The hold off the body evened 72 times for 24, or not at all: did not help.
+- A point at 2, 4 and 5 mm for 3, and the evening one or two places further round it: 81 to 95 corners on
+  the 32 children for 74 (252 before). At the place itself only, or once for three times: 105 to 144, the
+  boys of two keep 43 to 51 of 64. Twice: 64 for 74, within what the counts of each eight jump by from one
+  trial to the next; three is kept, and no picture was made of two.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 165 to its last figure, and the
+colour sheet the same (they read skin of the face).
+
+Honest about it. The two tips and the nipple are gone on the two boys, and the black slit under the arm; what
+is left is a soft swell on either side of the chest, where the gown is held off the body, and a crease at the
+armpit. On the girls of five half of the corners are left (35 of 71) and the one that stands furthest is as
+far as it was (9.7 mm): those are the hold's, and this round does not touch the hold. The counts jump: one
+corner more or less over 3 mm on one child. Grown people's gowns lose their points as well, low in the
+picture; a village woman's gown is a little smoother for it and nearer to a lady's than it was. 0.3 in a
+hundred more of the court's triangles are drawn out in the image (2.78 for 2.48; the test holds 4). Why the
+drape has points where the body it was draped on is smooth is not known; the cure is in the builder, not in
+the file. 3 mm, three times and half beside a point are by the count above and by eye on two boys from the
+front and the side: PLACEHOLDER. No source was read on how a child's gown lay.
+
+Tests: `portrait/tests/chest.rs`, new (`a_small_childs_gown_has_few_points_on_the_chest`): on eight girls and
+eight boys of two and of five the corners of the gown's chest that stand in a point are fewer than six in ten
+of what they were. It fails without the rule (41 for 41 on the girls of two). `tests/clothes.rs`: one bound
+changed as said above. `cargo test --release` as a whole 140 of 140; `tests/portrait.test.ts` and its
+neighbour 46 of 46; typecheck and lint pass, no new warning.
+Pictures (project files, `portraits/`): `runde166_kinder_vorn.png` (two boys' chests from the front, before
+above and after below), `runde166_kinder_seite.png` (the same from the side), `runde166_dorf.png` (all 36 of
+the sample in the village's dress, after).
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the

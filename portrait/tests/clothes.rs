@@ -351,7 +351,10 @@ fn the_courts_gown_lies_smoother_than_the_villages_and_no_deeper() {
                 continue;
             }
             let name = ["lady", "lord", "lady with a wimple"][who];
-            assert!(uneven.1 < 0.85 * uneven.0, "{name} {k}: the gown's folds {:.1} degrees at court, {:.1} in the village", uneven.1, uneven.0);
+            // (round 166) The village's gown has lost its points, which this measure counted: a lady's is 2.1 to
+            // 2.7 degrees less uneven than it was, the court's, which had fewer, 0.3 to 0.8. On these eighteen the
+            // court's was 0.61 to 0.83 of the village's and is 0.65 to 0.91: held under 0.95 (0.85 until then).
+            assert!(uneven.1 < 0.95 * uneven.0, "{name} {k}: the gown's folds {:.1} degrees at court, {:.1} in the village", uneven.1, uneven.0);
             assert!(high.abs() < 2.0 && low.abs() < 3.0, "{name} {k}: the gown at court {high:.1} cm deeper at the chest and {low:.1} at the waist than in the village");
             if !female {
                 let (under, sk) = (cloth(&court, "/cloth_smock.").expect("his shirt"), skin(&court));

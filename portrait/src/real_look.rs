@@ -413,11 +413,47 @@ fn calm(refs: &[([usize; 3], [f32; 3], [f32; 3])], tris: &[([usize; 3], [[f32; 2
             hem[i] = true;
         }
     }
+    // (Round 166) A point is not a fold. The gown's own shape has points a corner broad and creases as narrow
+    // (with the hold below left out, on a man of 24 the highest stands 6.8 mm off the mean of its neighbours,
+    // 10.9 cm from the middle and 26 cm under the chin; why the drape has them was not found out: the body it
+    // was draped on is smoothed there, tunic_sim.py). On a grown person they lie at the picture's foot; a child's
+    // picture shows the gown to under the armpits, and there they stood on the chest: on eight boys of five the
+    // furthest 14.3 mm off the mean of its neighbours, 3.7 now (tests/chest.rs). Where a place of the gown's
+    // folds stands more than `CLOTH_POINT` off the mean of its neighbours, the way the cloth faces as draped (337
+    // of 4 806 places of one of the two gowns small children wear, 317 of 4 895 of the other), the folds are
+    // evened `CLOTH_FOLD_EVEN` times, each place half itself and half its neighbours' mean: wholly at such a
+    // place, half at a place beside one, and nowhere else. The rolled hem keeps its form. (Every fold evened so,
+    // points or none, drew the cloth's image out: of the court's gowns' triangles 5.3 in a hundred were three
+    // times as long one way as the other, for 2.5; 2.8 with this. tests/court.rs)
+    // (`fold`: the folds as draped, and what the evening moves them by; the gown's other folds and every other
+    // garment's are left as they were, to the digit)
+    let draped: Vec<V3> = (0..nv).map(|i| std::array::from_fn(|a| rest[i][a] - even[i][3 + a])).collect();
+    let mut fold = draped.clone();
+    if matches!(layer, Layer::Gown | Layer::Bare) {
+        let mean = |of: &[V3], i: usize| nbr[i].iter().fold([0f32; 3], |m, &j| add(m, of[j as usize])).map(|v| v / nbr[i].len() as f32);
+        let mut face = vec![[0f32; 3]; nv];
+        for (t, _) in tris {
+            let n = cross(sub(rest[t[1]], rest[t[0]]), sub(rest[t[2]], rest[t[0]]));
+            for &i in t {
+                face[i] = add(face[i], n);
+            }
+        }
+        let loose = |i: usize| !nbr[i].is_empty() && !hem[i];
+        let point: Vec<bool> = (0..nv).map(|i| loose(i) && dot(sub(draped[i], mean(&draped, i)), norm(face[i])).abs() > CLOTH_POINT).collect();
+        let mut evened = draped.clone();
+        for _ in 0..CLOTH_FOLD_EVEN {
+            evened = (0..nv).map(|i| if loose(i) { mul(add(evened[i], mean(&evened, i)), 0.5) } else { evened[i] }).collect();
+        }
+        for i in (0..nv).filter(|&i| loose(i)) {
+            let share = if point[i] { 1.0 } else { 0.5 * f32::from(u8::from(nbr[i].iter().any(|&j| point[j as usize]))) };
+            fold[i] = madd(draped[i], sub(evened[i], draped[i]), share);
+        }
+    }
     let mut calmed: Vec<V3> = (0..nv)
         .map(|i| {
             let e = &even[i];
             let folds = if hem[i] { 1.0 } else { e[6].min(1.0) };
-            let q: V3 = std::array::from_fn(|a| rest[i][a] + e[a] + (folds - 1.0) * (rest[i][a] - e[3 + a]));
+            let q: V3 = std::array::from_fn(|a| rest[i][a] + e[a] + (folds - 1.0) * (rest[i][a] - e[3 + a]) + folds * (fold[i][a] - draped[i][a]));
             arms.turned(q, if rest[i][0] < 0.0 { -1.0 } else { 1.0 }, e[7], 1.0)
         })
         .collect();
@@ -569,6 +605,12 @@ pub(crate) enum Layer {
 
 /// How often a calmed garment's shift from its own shape is averaged over its neighbours (PLACEHOLDER).
 const CLOTH_CALM: usize = 24;
+/// (round 166) How far a place of a gown's folds stands off the mean of its neighbours to be a point (3 mm, on
+/// the gown as draped), and how often the folds are evened there. PLACEHOLDER: by the count of points on small
+/// children's chests (tests/chest.rs; 2, 4 and 5 mm, and once and twice, were counted too) and by eye on two
+/// boys' gowns.
+const CLOTH_POINT: f32 = 0.03;
+const CLOTH_FOLD_EVEN: usize = 3;
 /// The least and the most a calmed garment is held off the body triangle it is bound to, in base units of 10 cm:
 /// the gown; what lies over the gown below the neck; the same on the head. Below the least the body's finer bumps
 /// poke through, above the most the cloth crumples again. PLACEHOLDER, by eye.

@@ -421,6 +421,7 @@ fn half_of_the_courts_gowns_are_of_a_figured_silk_that_lies_flat_in_its_image() 
     // now (the village's gown, which keeps its coordinates round the body: 13.1). What is left lies under the
     // arms and at the shoulders' ends, where the builder brings the arms down and pushes the cloth together: in
     // the files themselves, on the body they were draped on, 1.2 to 1.7 in a hundred (7.3, 2.9 and 9.3 before).
+    // (Round 166 evens a gown's folds where they stand in a point: 2.78 and 14.2, the village's 14.0.)
     let Some(h) = head() else { return };
     let (c, k, e) = (&COURT_1356, &CROWNED_1356, &ENGLAND_1356);
     assert!(e.gown_figured.is_empty() && c.gown_figured.starts_with(c.gown_image) && c.gown_figured != c.gown_image && k.gown_figured == c.gown_figured);
