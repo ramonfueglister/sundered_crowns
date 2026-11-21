@@ -39,6 +39,40 @@ fn skin(out: &Portrait) -> (&Surface, f32) {
     (skin, skin.pos.iter().map(|p| p[1]).fold(f32::MIN, f32::max))
 }
 
+/// The pieces of a beard (corners at one place are one corner): how much of the image's breadth lies on each.
+fn strands(s: &Surface) -> Vec<f32> {
+    fn root(of: &mut [usize], mut i: usize) -> usize {
+        while of[i] != i {
+            of[i] = of[of[i]];
+            i = of[i];
+        }
+        i
+    }
+    let mut at = std::collections::HashMap::new();
+    let ids: Vec<usize> = s
+        .pos
+        .iter()
+        .map(|p| {
+            let n = at.len();
+            *at.entry(p.map(f32::to_bits)).or_insert(n)
+        })
+        .collect();
+    let mut of: Vec<usize> = (0..at.len()).collect();
+    for t in ids.chunks_exact(3) {
+        let a = root(&mut of, t[0]);
+        for &k in &t[1..] {
+            let b = root(&mut of, k);
+            of[b] = a;
+        }
+    }
+    let mut span = std::collections::HashMap::new();
+    for (&i, uv) in ids.iter().zip(&s.uv) {
+        let e = span.entry(root(&mut of, i)).or_insert((f32::MAX, f32::MIN));
+        *e = (e.0.min(uv[0]), e.1.max(uv[0]));
+    }
+    span.values().map(|r| r.1 - r.0).collect()
+}
+
 #[test]
 fn a_full_beard_of_england_is_locks_over_its_painted_layer() {
     // Until round 90 a full beard was its painted layer alone: a smooth shell 3 to 6 mm off the jaw, with the
@@ -47,6 +81,11 @@ fn a_full_beard_of_england_is_locks_over_its_painted_layer() {
     // outline. They lie over the beard's form, not the skin's, and end where the beard does: left to run their
     // length they hang 0.17 to 0.22 of the head's height below the chin (as built 0.02 at most), and laid over
     // the skin itself they went down the throat as a collar (the first trial).
+    // Round 173: the locks are fine strands (modelled in the Blender on Ramon's Mac, docs/PORTRAITS.md): some
+    // 2070 flat bands of 2 to 5 mm where they were 390 locks of 0.9 to 1.8 cm, fat noodles beside a head's hair
+    // of strands (rounds 171, 172). The image lies on a strand in true scale (a part of its breadth), and a
+    // strand is darker where it lies under the others. So the bound on the locks' triangles (8 000 to 30 000;
+    // the old file 25 824) is the strands' now, and their number and breadth are held.
     let Some(h) = head() else { return };
     for (k, age) in [(1u32, 24.0f32), (3, 35.0), (5, 50.0), (7, 68.0), (9, 35.0), (11, 50.0), (13, 68.0)] {
         let mut p = person(k, false, age);
@@ -61,7 +100,22 @@ fn a_full_beard_of_england_is_locks_over_its_painted_layer() {
         // a head's hair is a surface of its own, with its own image
         assert!(head_hair(&out).is_none_or(|hair| !std::ptr::eq(hair, beard)), "{who}: the beard's locks are drawn with the hair's image");
         let n = beard.pos.len() / 3;
-        assert!((8_000..30_000).contains(&n), "{who}: {n} triangles of locks");
+        assert!((40_000..90_000).contains(&n), "{who}: {n} triangles of strands");
+        // fine strands: 1500 to 2800 of them, the image a seventh to less than a half of its breadth on one
+        // (measured: 2072 strands, 0.22 in the median, 0.13 to 0.37; round 172's locks 390, each with the whole image)
+        let mut across = strands(beard);
+        across.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        let mid = across[across.len() / 2];
+        // a strand in the shade of the others is darker: on a young man, whose beard is of one colour, the
+        // lightest corner is more than twice as light as the darkest (measured: 2.2 times; the locks had no shade)
+        let tone = |c: &V3| c[0] + c[1] + c[2];
+        let (dim, lit) = beard.col.iter().map(tone).fold((f32::MAX, f32::MIN), |(d, l), c| (d.min(c), l.max(c)));
+        if std::env::var("SHOW").is_ok() {
+            println!("{who}: {} strands, the image {:.3} of its breadth on one in the median ({:.3} to {:.3}), the lightest corner {:.2} times the darkest", across.len(), mid, across[0], across[across.len() - 1], lit / dim);
+        }
+        assert!((1500..2800).contains(&across.len()), "{who}: {} strands", across.len());
+        assert!(mid > 0.14 && mid < 0.45, "{who}: the image lies {mid} of its breadth on a strand");
+        assert!(age > 30.0 || lit > 2.0 * dim, "{who}: the lightest corner is {} times the darkest", lit / dim);
         let (skin, crown) = skin(&out);
         let height = crown - out.chin;
         // the beard ends under the jaw: nothing of it lower than a tenth of the head's height below the chin,

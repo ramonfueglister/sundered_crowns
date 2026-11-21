@@ -8878,6 +8878,103 @@ same from the side), `runde172_dorf.png` and `runde172_hof.png` (all 36, village
 new, from four sides), `runde172_blender_weitere.png` (Blender: `loose01` and `part01` the same way, and the
 new `page02`).
 
+**Round 173: the full beard of fine strands, modelled in the Blender on Ramon's Mac** (2026-11-21). Rounds 171
+and 172 made the hair of the head of strands. Beside it a man's full beard (round 91) showed what it was: 390
+wavy locks of 0.9 to 1.8 cm over a painted layer, each with the whole image on it and none darker than another,
+fat noodles on the jaw and, from the side, a mat of scales.
+
+What was read. Nothing. Set by eye, in Blender and in the portrait. The reference's beards (`ck3_15`, lower
+row) were looked at after the passes, not used to set a number.
+
+What is changed.
+- **The full beard is 2072 strands** (`tools/portrait/pipeline/beards.py`, style `crop`, and `hairlib.py`): the
+  same strands are grown over the same form and gathered, into 1757 flat bands of 3 to 5 mm with three corners
+  across where they were 300 locks, and 315 of 1.8 to 3 mm in the moustache where it was 90. Where they begin,
+  how long they are, where they are cut, the mouth they leave free and the form they lie over are round 91's.
+- **The image lies on a strand in true scale** (`CROP_LOCK_ACROSS`, `locks_from_wisps(across=)`): a strand takes
+  as much of the image's breadth as it is broad against a lock of 1.35 cm, 0.13 to 0.37 of it, so the image's
+  hairs are as fine on a strand of 4 mm as they were on a lock.
+- **A strand is of a tone of its own and darker under the others** (`CROP_LOCK_TONES`, `CROP_LOCK_AO`): the
+  shade is baked in Blender (Cycles, ambient occlusion per corner within 1.5 cm) with the head and the beard's
+  painted layer standing in the scene, and written as each corner's tenth number, which the builder reads as
+  a corner's lightness, as a hair body's (`real_look.rs`, `mh_rope`). Nothing in the builder is changed.
+- `hair_body.py`'s code that makes a Blender object and bakes its shade is now `hairlib.py`'s `in_blender` and
+  `bake_ao`, used by both; `hair_body.py` writes the same files with it (`page01` and `bob09` compared byte for
+  byte, in the cloud). `hairlib.py` and `beards.py` run where there is no PIL (the Mac's Blender has none; only
+  the painted layer needs it).
+- One file, `public/portrait/real/beard_crop_locks.txt.zst`, is written anew, by Blender 5.1.2 on the Mac. The
+  painted layer under it, the short beard (a painted shell) and stubble are not touched; nothing on the stage;
+  the wasm is the same file.
+
+How it was made. The old call (README, round 91) was run first in the cloud: it writes the repository's old
+file byte for byte. Then, as rounds 171 and 172, the scripts were sent to the socket of the Blender that is open
+on the Mac and run there in scenes of their own, each pass rendered from the front, three quarters and the
+side: the old beard, then three passes of strands (1500 with the old moustache; 1800 with a moustache of 320;
+the same with fewer rings along a strand). The first pass was also run with the cloud's Blender module and
+tried in the portrait, the second pass's file from the Mac was tried in the portrait and is the one in the
+repository. Run again on the Mac with the scripts as committed, the call writes that file byte for byte.
+**Not the same from machine to machine**: the old call on the Mac gives 17 880 corners where the cloud and the
+repository's old file have 18 090, the first pass 1538 strands on the Mac and 1540 in the cloud (the gathering
+into wisps falls a little differently).
+
+Measured (`portrait/tests/locks.rs` with `SHOW=1`, seven men, on round 91's file and on this one):
+
+| | before (round 91's file) | now |
+|---|---|---|
+| bands, of them the moustache's | 390, 90 | 2072, 315 |
+| a band's breadth as set, the moustache's | 0.9 to 1.8 cm, 0.5 to 1 cm | 3 to 5 mm, 1.8 to 3 mm |
+| the image's breadth on a band | all of it | 0.13 to 0.37, 0.22 in the median |
+| the lightest corner against the darkest, a man of 24 | no shade in the file | 2.2 times |
+| triangles, corners | 25 824, 18 090 | 67 224, 56 634 |
+| off the skin in the median, at most | 6.6 to 7.1 mm, 1.5 to 1.6 cm | 7.0 to 7.5 mm, 1.7 to 1.8 cm |
+| lowest corner below the chin, of the head's height | -0.035 to 0.011 | -0.027 to 0.018 |
+| L in a box round the mouth, lips with it (black, brown, grey beard) | 17.1, 19.2, 51.3 | 16.7, 17.4, 49.2 |
+| the file, packed | 0.37 MB | 1.30 MB |
+
+The mouth's free band is 0.73 to 0.86 of what the lips' red is high (held at 0.55 to 1.3), the beard's back
+edge as round 91's (`a_full_beard_closes_round_the_mouth_and_keeps_to_the_jaw` passes unchanged).
+
+Tried and not kept.
+- The moustache left as its 90 locks under a beard of strands (first pass): noodles on the lip over fine hair.
+- The shade down to 0.4 of the colour and tones 0.07 apart (first pass): a grey beard spotted dark, more than
+  with 0.5 and 0.06, with which it is still mottled.
+- A ring every 5.5 mm along a strand for 4 (third pass): 8 % fewer corners (51 948), the same to the eye in
+  Blender; not tried in the portrait, too little saved to change the strands' waves for.
+
+**One test changed, and why.** `portrait/tests/locks.rs`,
+`a_full_beard_of_england_is_locks_over_its_painted_layer`, held the locks at 8 000 to 30 000 triangles. The
+form it held is changed on purpose: it holds 40 000 to 90 000 triangles now, 1500 to 2800 strands, the image
+0.14 to 0.45 of its breadth on one in the median, and on a young man the lightest corner more than twice the
+darkest. Round 91's file fails the new bound (25 824 triangles), this one fails the old. What else the test
+holds (one surface, the layer under it, where it ends, how far it stands off the skin, an old man's beard
+greying) is as it was.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 172. The colour sheet: 148 of 160
+lines to the last figure. The 12 that moved are chin, lips and above the lip of the grown men, read where the
+beard lies (above the lip L 41.7 to 36.9, chin 41.3 to 39.8, upper lip 25.6 to 23.7); no gauntlet line reads
+them.
+
+Honest about it. A visible step on four of the 36: from near, the beard reads as short hair where it was
+noodles, and the moustache as hairs. At the size of the sheet of 36 it is a finer grain and a softer edge, no
+more. In Blender, close, a strand is a flat chip with a blunt end and the beard from the side a rough fur of
+them; the image's frayed ends hide that in the portrait. A black beard is a dark mass in which the strands
+hardly show, and all beards are a little darker than they were (0.4 to 2.1 L in the box above; black hair was
+already darker than the reference's). A grey beard is mottled: the shade on white. Beside the reference's
+beards (`ck3_15`: pointed tufts, lighter at their tips, that break the outline under the chin) ours is a
+close-cropped mat with a closed outline: no tufts, no soft edge, one pattern for every man. The white flecks
+and the dark dash under the chin of 940021 are the painted layer's, there before, not mended. The short beard
+is still a painted shell, the plaits' ropes are the old bands. Made by a script that Blender ran, looked at in
+Blender in all three passes, not combed by hand; Blender's own hair tools were not used. The file is not the
+same from machine to machine (above). The download grows by 0.93 MB for whoever shows a full beard. Every
+number is by eye: PLACEHOLDER.
+
+Tests: `portrait/tests/locks.rs`, one changed (above). `cargo test --release` as a whole 140 of 140;
+`tests/portrait.test.ts` and its neighbour 46 of 46; typecheck and lint pass, no new warning. Pictures (project
+files, `portraits/`): `runde173_vorher_nachher.png` (the four men with a full beard, from the front before and
+after, from three quarters before and after), `runde173_seite_vorher_nachher.png` (the same from the side,
+before above), `runde173_dorf.png` and `runde173_hof.png` (all 36, village and court, after; round 172's sheets
+are the before), `runde173_blender.png` (Blender: the old beard above the new, from three sides).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair

@@ -17,7 +17,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import numpy as np
 import bpy
-from hairlib import Head, dirs, ang, unit, tangent, bind_points
+from hairlib import Head, dirs, ang, unit, tangent, bind_points, in_blender, bake_ao
 
 argv = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else sys.argv[1:]
 base, out, name = argv[:3]
@@ -766,51 +766,16 @@ if not C.get('parted') and not C.get('coily'):
 verts = np.array(verts); anchors = np.array(anchors); shades = np.array(shades)
 
 # The same as a Blender object (to look at, to work on by hand, to bake), in base.obj's coordinates
-me = bpy.data.meshes.new(name + '_body')
-me.from_pydata([tuple(v) for v in verts], [], [tuple(t) for t in tris])
-lay = me.uv_layers.new(name='UVMap')
-for p in me.polygons:
-    for k, li_ in enumerate(p.loop_indices):
-        lay.data[li_].uv = tri_uv[p.index][k]
-ob = bpy.data.objects.new(name + '_body', me)
 # (round 171) In a Blender that is open (run through its MCP add-on) the hair is made in a scene of its own, and
-# nothing of the scene that is open there is touched
-if bpy.app.background:
-    scene = bpy.context.scene
-    for o_ in list(scene.objects):
-        bpy.data.objects.remove(o_)
-else:
-    scene = bpy.data.scenes.new(os.environ.get('SCENE', name + '_body'))
-scene.collection.objects.link(ob)
+# nothing of the scene that is open there is touched (`hairlib.py` `in_blender`)
+scene, ob = in_blender(name + '_body', verts, tris, tri_uv, os.environ.get('SCENE'))
 # The shade between the bundles, baked in Blender (Cycles, ambient occlusion per corner, the head standing in the
 # hair): a furrow between two ridges, a bundle's beginning under its neighbours and the shell behind them see
 # less of the sky than a ridge does. `AO=dist,samples,floor,power` (0: none): how far a place looks, how often,
 # how dark a place that sees nothing is drawn, and the measure's power.
 AO = [float(t) for t in os.environ.get('AO', '0.15,96,0.4,1.0').split(',')]
 if AO[0] > 0:
-    hm = bpy.data.meshes.new('head')
-    hm.from_pydata([tuple(v) for v in H.V], [], [tuple(int(i) for i in t) for t in H.T])
-    scene.collection.objects.link(bpy.data.objects.new('head', hm))
-    scene.render.engine = 'CYCLES'
-    scene.cycles.device = 'CPU'
-    scene.cycles.samples = int(AO[1])
-    if scene.world is None:
-        scene.world = bpy.data.worlds.new('world')
-    scene.world.light_settings.distance = AO[0] * max(LIFT, 0.4)
-    me.materials.append(bpy.data.materials.new('hair'))
-    col = me.color_attributes.new('ao', 'FLOAT_COLOR', 'POINT')
-    me.color_attributes.active_color = col
-    if bpy.app.background:
-        for o_ in scene.objects:
-            o_.select_set(False)
-        ob.select_set(True)
-        bpy.context.view_layer.objects.active = ob
-        bpy.ops.object.bake(type='AO', target='VERTEX_COLORS')
-    else:
-        with bpy.context.temp_override(scene=scene, view_layer=scene.view_layers[0], active_object=ob, object=ob, selected_objects=[ob]):
-            bpy.ops.object.bake(type='AO', target='VERTEX_COLORS')
-    ao = np.array([c.color[0] for c in me.color_attributes['ao'].data])
-    print('shade: mean', round(float(ao.mean()), 3), 'lowest tenth', round(float(np.quantile(ao, 0.1)), 3), 'highest tenth', round(float(np.quantile(ao, 0.9)), 3))
+    ao = bake_ao(scene, ob, [('head', H.V, H.T)], AO[0] * max(LIFT, 0.4), AO[1])
     # (a band that is turned over shows its underside, which the bake reads as facing the head: `turn`'s sixth
     # number of the way to an open place's shade is given back to it)
     for i, w in turned:

@@ -11,7 +11,10 @@
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(sys.argv[0])))
 import numpy as np
-from PIL import Image, ImageDraw
+try:
+    from PIL import Image, ImageDraw
+except ImportError:      # (a Blender without PIL, as the one on Ramon's Mac: the locks alone need none)
+    Image = ImageDraw = None
 from hairlib import Head, dirs, ang, unit, tangent, golden, wisps, write_cards, paint_cap, write_head_obj
 
 base, out, style, name = sys.argv[1:5]
@@ -393,8 +396,8 @@ if style == 'crop' and os.environ.get('CROP_LOCKS'):
         form = Head.__new__(Head)
         form.__dict__.update(H.__dict__)
         form.R = np.maximum(H.R, farthest(hc, P[ts[:, 0]], P[ts[:, 1]], P[ts[:, 2]], D).reshape(H.R.shape))
-        return form
-    form = beard_form()
+        return form, ('layer', P, ts)
+    form, layer = beard_form()
     # CROP_LOCK_MOUTH (round 91): the mouth the locks leave free (half its width, its height above and below the
     # line where the lips meet). With the zone's own (0.39, 0.12, 0.12: the base's full lips with a margin) the
     # locks ended 5 to 8 mm above a man's upper lip and began as far below his lower one, a bare ring round the
@@ -478,8 +481,15 @@ if style == 'crop' and os.environ.get('CROP_LOCKS'):
     # of a wave; 0: straight)
     WAVE = tuple(float(t) for t in os.environ.get('CROP_LOCK_WAVE', '0.012,0.006,0.15').split(','))
     WAVE = WAVE if len(WAVE) == 3 else None
+    # Round 173: the full beard is fine strands where it was 390 locks of 0.9 to 1.8 cm (beside the head's hair
+    # of strands, rounds 171 and 172, the locks were fat noodles). The same strands are grown and gathered, into
+    # 1800 wisps and 320 of the moustache's, each a flat band of 3 to 5 mm (the moustache's 1.8 to 3) with three
+    # corners across; the image lies on them in true scale (`CROP_LOCK_ACROSS`, the old locks' mean breadth), each
+    # is of a tone of its own (`CROP_LOCK_TONES`) and darker where it lies under the others (`CROP_LOCK_AO`:
+    # baked in Blender with the head and the beard's painted layer standing in the scene). Run in the Blender on
+    # Ramon's Mac and looked at there (docs/PORTRAITS.md, round 173; the call is in README.md). PLACEHOLDER by eye.
     write_locks(H, H, out, name, Sl, 'CROP', wave=WAVE, form=form, tip='0.45,0.18,0.75,0.5', root='0.3,0.1,0.25,0.3', vary='0.4,0.25,0.06',
-                jitter='0.008', ring='0.04', seed=90, label=style, extra=extra)
+                jitter='0.008', ring='0.04', seed=90, label=style, extra=extra, blockers=[('head', H.V, H.T), layer])
     if os.environ.get('CROP_LOCKS_ONLY'):
         sys.exit(0)
 
