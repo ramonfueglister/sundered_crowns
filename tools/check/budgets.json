@@ -82,7 +82,6 @@
     }
   },
   "lines": {
-    "economy/src/lib.rs": 1040,
     "economy/src/trade.rs": 760,
     "server/world.ts": 541,
     "src/sim/economy/engine.ts": 518,
