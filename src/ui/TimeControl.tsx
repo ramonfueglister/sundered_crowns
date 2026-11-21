@@ -1,26 +1,11 @@
-// The world's clock in the top bar: the date, pause and the speeds, and the keys for them.
+// The world's clock in the top bar: the date, pause and the speeds, and the keys for them (timectl.ts).
 import { useEffect } from 'preact/hooks';
 import { me, setTime, world } from '../net/client';
 import { SPEEDS } from '../net/protocol';
 import { fmtDate } from '../sim/calendar';
 import { lang, t } from './i18n';
 import { IconCalendar, IconPause, IconPlay } from './icons';
-import { replayClock, stopReplay, toggleReplay } from './replay';
-
-/** Seconds as the time control says them: "4 min", "2 s", "0,25 s". */
-const secondsText = (ms: number) =>
-  ms >= 60_000
-    ? `${Math.round(ms / 60_000)} min`
-    : `${(ms / 1000).toLocaleString(lang.value === 'de' ? 'de-CH' : 'en-GB', { maximumFractionDigits: 2 })} s`;
-/** What a speed of the world's clock means, for its tooltip. */
-function speedText(speed: number, secondsPerDay: number) {
-  const v = SPEEDS[speed - 1];
-  return v === 'own'
-    ? t('time_speed_own', { s: secondsText(secondsPerDay * 1000) })
-    : v === 0
-      ? t('time_speed_max')
-      : t('time_speed_ms', { s: secondsText(v) });
-}
+import { speedText, timeKey } from './timectl';
 
 /** The world's clock top left (Ramon, 19 November 2026: "zeit beschleunigung links oben", for debugging too): the date,
  *  pause and five speeds, as the grand strategy games have it. Space pauses, + and − change the speed. Who may not
@@ -31,30 +16,8 @@ export function TimeControl() {
     speed = wi?.speed ?? 1,
     paused = !!wi?.paused;
   useEffect(() => {
-    const key = (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey || e.altKey || (e.target as HTMLElement)?.closest?.('input, textarea, select')) return;
-      if (replayClock.value && (e.code === 'Space' || e.key === 'Escape')) {
-        e.preventDefault();
-        if (e.key === 'Escape') stopReplay();
-        else toggleReplay();
-        return;
-      }
-      const w = world.value;
-      if (!me.value?.time || !w) return;
-      const now = w.speed ?? 1;
-      if (e.code === 'Space') {
-        e.preventDefault();
-        setTime({ paused: !w.paused });
-      } else if (e.key === '+' || e.code === 'NumpadAdd') {
-        e.preventDefault();
-        setTime({ speed: Math.min(SPEEDS.length, now + 1) });
-      } else if (e.key === '-' || e.code === 'NumpadSubtract') {
-        e.preventDefault();
-        setTime({ speed: Math.max(1, now - 1) });
-      }
-    };
-    addEventListener('keydown', key);
-    return () => removeEventListener('keydown', key);
+    addEventListener('keydown', timeKey);
+    return () => removeEventListener('keydown', timeKey);
   }, []);
   const lock = may ? '' : `\n${t('time_locked')}`;
   return (
