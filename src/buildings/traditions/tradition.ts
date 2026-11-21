@@ -58,9 +58,10 @@ export interface Tradition {
   /** smooth plaster walls instead of the ashlar grid; the paint of the shutters, if not the wood */
   plaster?: boolean;
   shutterC?: RGB;
-  /** roof coverings to draw one per house, instead of the one `roof`; share of houses with a timber frame on their upper storeys, its colour */
+  /** roof coverings to draw one per house, instead of the one `roof`; share of houses with a timber frame on their
+   * upper storeys, its colour and the width of its members in fine blocks (0.9 if not given) */
   roofs?: readonly RGB[];
-  timber?: { share: number; c: RGB };
+  timber?: { share: number; c: RGB; post?: number };
   /** plain square chimneys instead of the Venetian bell */
   plainChimney?: boolean;
   /** mean number of dormers on a gable roof */

@@ -140,7 +140,7 @@ export function fineHouse(w: number, d: number, floors: number, tr: Tradition, r
   // the gable ends of a timber-framed house show their frame too (on the short sides, where tiledGable fills the gable)
   if (frame && detail && !hipped)
     for (const sd of (rx1 - rx0 >= rz1 - rz0 ? ['px', 'nx'] : ['pz', 'nz']) as Side[])
-      gableFrame(b, wallOf(rx0, rz0, rx1, rz1, sd), top, rise, frame);
+      gableFrame(b, wallOf(rx0, rz0, rx1, rz1, sd), top, rise, frame, tr.timber?.post);
   if (tr.dormers && detail && !hipped)
     dormers(b, rx0, rz0, rx1, rz1, top, rise, r.int(0, Math.round(tr.dormers * 2)), wallC, roofC, mt.glass, r);
   if (altanaOn && detail) {
@@ -198,7 +198,7 @@ function facade(
     [ww, wh] = tr.window;
   if (o.detail && !tr.plaster) ashlar(b, wl, y + V, y + (h - 1) * V, o.wallC, o.seed + k * 7 + SIDES.indexOf(s));
   if (o.detail && o.frame && k >= 1)
-    timberFrame(b, wl, y - V, h * V, axes, ww, [V + tr.sill * V, V + (tr.sill + wh) * V], o.frame);
+    timberFrame(b, wl, y - V, h * V, axes, ww, [V + tr.sill * V, V + (tr.sill + wh) * V], o.frame, tr.timber?.post);
   const win = (t: number, hv = wh) => {
     window(b, wl, t, y + tr.sill * V, ww, hv, mt, o.arched, o.detail);
     if (o.detail && !o.arched && r.chance(tr.shutters))

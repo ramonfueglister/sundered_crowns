@@ -11,8 +11,9 @@ const LIFT = 0.055;
 
 /**
  * The frame of one storey from y to y + h (blocks) on wall `w`: posts beside the window axes `axes` of `ww` fine
- * blocks, and rails along the whole storey under and over its windows, `open` above y. The rails lie a little deeper
- * than the posts and braces, so that a brace crossing one does not flicker with it.
+ * blocks, and rails along the whole storey under and over its windows, `open` above y; every member `width` fine
+ * blocks wide. The rails lie a little deeper than the posts and braces, so that a brace crossing one does not flicker
+ * with it.
  */
 export function timberFrame(
   b: Batch,
@@ -23,8 +24,9 @@ export function timberFrame(
   ww: number,
   open: readonly [number, number],
   c: RGB,
+  width = 0.9,
 ) {
-  const post = V * 0.9,
+  const post = V * width,
     half = (ww * V) / 2 + post / 2 + V * 0.1,
     side = shade(c, 0.9),
     deep = LIFT * 0.7;
@@ -64,14 +66,30 @@ export function timberFrame(
 
 /**
  * The frame in a gable of `rise` above y on wall `w` (the gable end of a roof, its apex in the middle): a king post
- * up to the ridge, a collar beam across at a little under half the rise, and two struts from the collar to the post.
+ * up to the ridge, a collar beam across at a little under half the rise, a tie beam at its foot and two struts between them;
+ * its members `width` fine blocks wide.
  */
-export function gableFrame(b: Batch, w: Wall, y: number, rise: number, c: RGB) {
-  const post = V * 0.7,
+export function gableFrame(b: Batch, w: Wall, y: number, rise: number, c: RGB, width = 0.7) {
+  const post = V * width,
     mid = w.len / 2,
     yc = y + rise * 0.42,
     reach = mid * (1 - 0.42) - post;
   pane(b, w, mid - post / 2, y, mid + post / 2, y + rise - post, c, LIFT);
   pane(b, w, mid - reach, yc - post / 2, mid + reach, yc + post / 2, c, LIFT);
   pane(b, w, post, y, w.len - post, y + post, c, LIFT);
+  // two struts from the tie beam up to the foot of the collar beside the king post, as an upturned V
+  const side = shade(c, 0.9),
+    foot = mid - reach * 0.9,
+    d = post * 0.75;
+  for (const q of [-1, 1]) {
+    const pts = [
+      on(w, mid + q * (mid - foot), y + post, LIFT),
+      on(w, mid + q * (mid - foot - d), y + post, LIFT),
+      on(w, mid + q * post * 0.5, yc - post / 2, LIFT),
+      on(w, mid + q * (post * 0.5 + d), yc - post / 2, LIFT),
+    ];
+    // keep the strut's front towards the street whichever way it leans
+    if (q > 0) pts.reverse();
+    b.quad(pts[0], pts[1], pts[2], pts[3], side, w.n);
+  }
 }

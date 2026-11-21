@@ -26,7 +26,8 @@ from gauntlet_paris import REF_BOX, load, measure
 
 ROOT = Path(__file__).resolve().parents[2]
 # knob: (lowest, highest, start); colours are searched as hue in degrees, saturation and value and given as hex; the
-# starts are the best setting of the search of 21 Nov 2026, whose colours src/buildings/traditions/paris.ts holds
+# starts are the best setting of the search of 21 Nov 2026, whose colours src/buildings/traditions/paris.ts holds;
+# the timber stays dark (value up to 0.4), as the picture draws it
 SPACE = {
     'across': (40, 70, 63.12),
     'elev': (28, 42, 36.097),
@@ -58,7 +59,8 @@ SPACE = {
     'roofspread': (0.5, 2, 1),
     'timb_h': (0, 35, 6.492),
     'timb_s': (0.15, 0.65, 0.252),
-    'timb_v': (0.15, 0.5, 0.479),
+    'timb_v': (0.15, 0.4, 0.4),
+    'post': (0.6, 1.5, 0.9),
     'tshare': (0.3, 1, 0.944),
     'tlow': (0.7, 1, 0.812),
     'tspread': (0.05, 0.4, 0.4),
@@ -84,7 +86,7 @@ def address(x):
     """the probe's address options for a setting"""
     o = {k: round(x[k], 3) for k in ('across', 'elev', 'lane', 'block', 'depth', 'exposure', 'saturation')}
     o.update({k: round(x[k], 3) for k in ('sun', 'side', 'sky', 'bounce', 'fill', 'wallspread', 'roofspread')})
-    o.update({k: round(x[k], 3) for k in ('tshare', 'tlow', 'tspread', 'treesize', 'jetty', 'pspread')})
+    o.update({k: round(x[k], 3) for k in ('tshare', 'post', 'tlow', 'tspread', 'treesize', 'jetty', 'pspread')})
     o['tone'] = 'neutral'
     o['skycol'] = ''.join(f'{round(c):02x}' for c in SKY_GREY + (SKY_BLUE - SKY_GREY) * x['skyblue'])
     for knob in ('wall', 'pave', 'roof', 'timber', 'glass', 'leaf', 'olive'):
