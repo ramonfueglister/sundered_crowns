@@ -91,7 +91,6 @@
     "tools/history/1291/west.py": 560,
     "tools/history/1356/world.py": 1847,
     "tools/history/borders/build.py": 690,
-    "tools/history/borders/euratlas_places.py": 670,
     "tools/worldprobe/build_region.py": 550
   }
 }
