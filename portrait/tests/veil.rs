@@ -211,7 +211,8 @@ fn the_cloth_over_an_ear_lies_the_right_way_up_and_no_hair_comes_through_it() {
     // 68, over each ear (within 7 cm of the tragion and behind it, where the veil's rolled rim does not reach):
     // how many triangles of a veil or of a hood on the head face against their corners' directions (288 before,
     // up to 9 on a person; none now); and above the chin, how many corners of the skin stand through that
-    // cloth, counted as `sink` counts, with no gap (84 before, 72 now: not what this round mends).
+    // cloth, counted as `sink` counts, with no gap (84 before, 72 now: not what this round mends; round 154: 36,
+    // since the cloth round a place that is held off the skin goes with it on the head as well).
     // And the hair under it: over the ears a strand of a man's hair stood through his hood, a finger long
     // (17 954 corners of the hair's bundles through the hoods of 26 men, up to 1 356 on one; 1 318 through
     // women's veils, where none was seen). The builder sets the hair under the cloth now: none.
@@ -278,6 +279,74 @@ fn the_cloth_over_an_ear_lies_the_right_way_up_and_no_hair_comes_through_it() {
     }
     assert!(worn >= 60 && triangles > 30_000, "{worn} cloths on a head, {triangles} triangles over the ears");
     assert_eq!(turned, 0, "{turned} triangles over the ears turned over, {} on person {}", worst.0, worst.1);
-    assert!(through <= 100, "{through} corners of the skin through the cloth on a head");
+    assert!(through <= 50, "{through} corners of the skin through the cloth on a head");
     assert_eq!(hairs, 0, "{hairs} corners of the hair through the cloth on a head");
+}
+
+#[test]
+fn no_place_of_the_cloth_over_an_ear_stands_alone_as_a_point() {
+    // (round 154) From the side and from behind a veil had a point over either ear, a pyramid up to 1.2 cm high
+    // on one place of the cloth: the place is bound to a triangle of the ear's folds that it lies 2.4 cm beside,
+    // and was held off that triangle's plane by itself (real_look.rs `calm`). A man's hood had the same, and
+    // smaller ones where a place does lie on its triangle and was held off it alone. On the 120 people of the
+    // test above, over each ear as there: how far a place of a veil or of a hood on the head stands off the
+    // middle of the places next to it. 102 of 40 322 stood off by more than 6 mm, 28 by more than 1 cm, at most
+    // by 22.7 mm (a man's hood); none over 6 mm now, at most 5.4 mm. (18 stand between 5 and 5.4 mm off: what
+    // they are was not looked into.)
+    use sc_portrait::dress::ENGLAND_1356;
+    use sc_portrait::measure::TRAGION;
+    use std::collections::HashMap;
+    let Some(h) = head() else { return };
+    let d = &ENGLAND_1356;
+    let idx = &h.parts["body"][LODS - 1];
+    let ears: Vec<usize> = [TRAGION.0, TRAGION.1].iter().map(|v| idx.iter().position(|i| *i as usize == *v).expect("the tragion is drawn")).collect();
+    let (mut worn, mut places, mut points, mut worst) = (0, 0, 0, (0.0f32, 0u32));
+    for k in 0..120u32 {
+        let p = person(k, k % 2 == 0, [15.0, 24.0, 35.0, 50.0, 58.0, 68.0][(k / 2) as usize % 6]);
+        let out = build(&h, &p, 1);
+        let skin = out.surfaces.iter().find(|s| s.pos.len() >= idx.len() && s.tex.as_deref().is_some_and(|t| t.contains("skin"))).expect("the skin");
+        for cloth in out.surfaces.iter().filter(|s| s.tex.as_deref().is_some_and(|t| [d.veil, d.veil_back, d.hood_up].iter().any(|n| t.contains(n)))) {
+            worn += 1;
+            // the cloth's places, each once (a surface lists the corners of its triangles), and the places next
+            // to each along a triangle's side
+            let mut ids: HashMap<[u32; 3], usize> = HashMap::new();
+            let of: Vec<usize> = cloth
+                .pos
+                .iter()
+                .map(|q| {
+                    let n = ids.len();
+                    *ids.entry(q.map(f32::to_bits)).or_insert(n)
+                })
+                .collect();
+            let mut at = vec![[0f32; 3]; ids.len()];
+            for (i, &v) in of.iter().enumerate() {
+                at[v] = cloth.pos[i];
+            }
+            let mut next: Vec<Vec<usize>> = vec![Vec::new(); ids.len()];
+            for t in of.chunks_exact(3) {
+                for c in 0..3 {
+                    for other in [t[(c + 1) % 3], t[(c + 2) % 3]] {
+                        if !next[t[c]].contains(&other) {
+                            next[t[c]].push(other);
+                        }
+                    }
+                }
+            }
+            for v in (0..at.len()).filter(|&v| next[v].len() > 2 && ears.iter().any(|&e| dist(&at[v], &skin.pos[e]) < 0.7 && at[v][2] < skin.pos[e][2] - 0.1)) {
+                places += 1;
+                let middle: V3 = std::array::from_fn(|a| next[v].iter().map(|&w| at[w][a]).sum::<f32>() / next[v].len() as f32);
+                let off = dist(&at[v], &middle);
+                points += (off > 0.06) as usize;
+                if off > worst.0 {
+                    worst = (off, k);
+                }
+            }
+        }
+    }
+    if std::env::var("SHOW").is_ok() {
+        println!("{worn} cloths on a head on 120 people, {places} places over the ears; {points} stand more than 6 mm off the middle of the places next to them, at most {:.1} mm on person {}", worst.0 * 100.0, worst.1);
+        return;
+    }
+    assert!(worn >= 60 && places > 15_000, "{worn} cloths on a head, {places} places over the ears");
+    assert_eq!(points, 0, "{points} places over the ears stand alone, at most by {} mm on person {}", worst.0 * 100.0, worst.1);
 }

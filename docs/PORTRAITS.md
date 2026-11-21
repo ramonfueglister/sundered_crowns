@@ -7214,6 +7214,71 @@ Pictures (project files, `portraits/`): `runde153_vorher_nachher.png` (five ladi
 and after below), `runde153_fuenf_damen_und_seite.png` (five in veils, from the front and from the side),
 `runde153_dorf_und_herren.png` (the same five women as villagers, and five lords).
 
+**Round 154: no point on the veil over the ear** (2026-11-21). Round 153 left it written down: from the side
+the smooth white veil shows a small point over the ear. Two ladies of the court, 900 by 1200, from the side
+and from behind: a pyramid about 1 cm high on the veil behind the ear at the height of the mouth, on one lady
+three of them (one over the left ear, two over the right), on the village's women the same under the weave,
+and on a man's hood a crumple at the ear.
+
+Where it comes from. Not from the veil's file: laid on the body it was draped on, the place stands 0.4 mm off
+the middle of the places next to it. The builder holds a cloth on the head off the body triangle each place is
+bound to (`real_look.rs` `calm`, round 140), and measured how far the place stood off that triangle's plane. A
+place is bound to the triangle nearest to it, which it need not lie over: four places of the veil set back are
+bound to triangles of the ears' folds that they lie 2 to 2.5 cm beside, 1.6 cm from the nearest corner of the
+skin as draped and 1.7 cm on this lady. On her head that triangle faces 40 degrees another way than on the
+body the veil was draped on, its plane goes through the place, and the place was held off the plane by itself,
+1.2 cm along the cloth's own direction. A man's hood has such a place 9 mm beside its triangle and 7 mm behind
+its plane (the furthest point measured, 2.3 cm, stood on that man's hood and is gone with it), and two that do
+lie on their triangles over the ear, held 7 and 8 mm off, each alone.
+
+What is changed (`portrait/src/real_look.rs`, `calm`; no file and no image).
+- **Off the triangle, not off its plane.** On the head, what a place lies beside its triangle counts as its
+  distance from it: a place that lies further beside it than it is to stand off it is not held, and one that
+  lies less beside it is held as far as is still missing.
+- **The cloth round a held place goes with it**, on the head as below the neck since round 143: the ways are
+  evened out over the cloth, and a place that would then stand too near goes the rest by itself.
+
+Measured (`portrait/tests/veil.rs`), on 120 people of 15 to 68, 78 veils and hoods on a head, about 40 300
+places of them over the ears: how far a place stands off the middle of the places next to it.
+
+| | round 153 | off the triangle only | now |
+|---|---|---|---|
+| places more than 5 mm off | 163 | 20 | 18 |
+| more than 6 mm | 102 | 2 | 0 |
+| more than 1 cm | 28 | 0 | 0 |
+| more than 1.5 cm | 6 | 0 | 0 |
+| the furthest | 22.7 mm (a man's hood) | 8.2 mm (the same hood) | 5.4 mm |
+| corners of the skin that stand through the cloth above the chin | 72 | 72 | 36 |
+| triangles over the ears that lie turned over | 0 | 0 | 0 |
+
+Tried and not kept.
+- The cloth going with a held place, alone: the points became stubs, lower and with a round foot, and were
+  still to be seen from behind.
+- Off the triangle on every cloth, not only on the head: on all five women looked at the skin came through the
+  gown as patches on the chest. A gown is held off the planes of the breast's coarse pyramid beside its sides
+  as well, and needs it.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in rounds 138 to 153 to its last figure (it
+reads skin, and no skin moved).
+
+Honest about it. This takes a fault away and adds nothing: the veil is still a stiff sheet that stands off the
+head as a hood, with no fold of its own, and where the cloth on the head meets the cloth on the shoulders
+there is a ledge (the hold changes at one height). 18 places still stand between 5 and 5.4 mm off their
+neighbours' middle, and what they are was not looked into. The veils' files have places of their own that
+stand up to 1 cm off at the rolled rim beside the cheek, and a wimple's two upper corners 1.2 cm, under the
+veil: none was seen in a picture, none is touched. From behind the white veil shows two dark specks the size
+of a pixel, before and after. How often the ways are evened out and the least share of the cloth's direction
+are the placeholders they were.
+
+Tests: `portrait/tests/veil.rs`, one new (no place of a veil or a hood over an ear stands more than 6 mm off
+the middle of the places next to it; it fails on round 153's builder with 102 and on the first change alone
+with 2). The test beside it held the skin through the cloth on a head to 100 corners and now holds it to 50.
+`cargo test --release` as a whole: 127 of 127. `tests/portrait.test.ts` and its neighbour 44 of 44; typecheck and
+lint pass, no new warning. The module is 758 kB.
+Pictures (project files, `portraits/`): `runde154_vorher_nachher.png` (a lady from the side),
+`runde154_von_hinten.png` (two ladies from behind, before above and after below),
+`runde154_kapuzen_von_hinten.png` (two men's hoods from behind, the same).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair

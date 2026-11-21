@@ -456,8 +456,18 @@ fn calm(refs: &[([usize; 3], [f32; 3], [f32; 3])], tris: &[([usize; 3], [[f32; 2
                 // (round 140) on the head, along the cloth's own direction: a vertex over an ear is bound to a
                 // triangle of the ear's folds, which faces anywhere, and held off along that the cloth over
                 // the ear was crumpled, with triangles turned over
+                // (round 154) and off the triangle itself, not off the plane it lies in. A place is bound to the
+                // body triangle nearest to it, which it need not lie over: 4 of a veil's places lie 2 to 2.5 cm
+                // beside a triangle of an ear's folds, as far from the ear as draped, and when that triangle is
+                // turned on another head (by 40 degrees on a woman of England's pool) its plane goes through
+                // them. Each was then held off the plane by itself, up to 1.2 cm, and stood on the veil as a
+                // point over either ear (tests/veil.rs). What a place lies beside its triangle is its distance
+                // from it already. (Not below the neck: there a gown is held off the planes of the breast's
+                // coarse pyramid beside its sides as well, and without that the skin comes through it.)
+                let beside = len(sub(sub(v, on), mul(n, d)));
+                let want = (want * want - beside * beside).max(0.0).sqrt();
                 let along = dot(n, norm(out[i]));
-                if along >= CLOTH_ALONG { (norm(out[i]), (want - d) / along, most) } else { (n, 0.0, most) }
+                if along >= CLOTH_ALONG && want > 0.0 && d < want { (norm(out[i]), (want - d) / along, most) } else { (n, 0.0, most) }
             } else if want > 0.0 && d < want {
                 (n, want - d, most)
             } else {
@@ -465,18 +475,20 @@ fn calm(refs: &[([usize; 3], [f32; 3], [f32; 3])], tris: &[([usize; 3], [[f32; 2
             }
         })
         .collect();
-    // (Round 143) Below the neck the cloth round a place that is held off goes with it, as a tent: the ways are
+    // (Round 143) The cloth round a place that is held off goes with it, as a tent: the ways are
     // evened out over the cloth, each place half its own and half the mean of its neighbours', and a place that
     // would then stand nearer its body triangle than it has to goes the rest by itself. The body's breast is a
     // coarse pyramid with the tip as one corner, on a man and a child as well, and the calmed gown cuts through
     // it: held off place by place, each along its own triangle of the pyramid's sides, the gown had a point on
     // either side of the chest on everyone, and a crumple between them (tests/bust.rs: fewer of the gown's edges
-    // turned over).
+    // turned over). (Round 154) On the head as well, where until then each place went by itself: a hood's place
+    // that lies on a triangle over the ear was held 8 mm off it alone, a small point on the cloth, and with the
+    // cloth round it going along half as many corners of the skin stand through a veil or a hood (tests/veil.rs).
     let mut way: Vec<V3> = held.iter().map(|h| madd([0.0; 3], h.0, h.1)).collect();
     for _ in 0..CLOTH_TENT {
         way = (0..nv)
             .map(|i| {
-                if nbr[i].is_empty() || rest[i][1] >= CLOTH_NECK_Y {
+                if nbr[i].is_empty() {
                     return way[i];
                 }
                 let mut m = [0f32; 3];
