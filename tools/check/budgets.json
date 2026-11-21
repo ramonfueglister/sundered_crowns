@@ -72,10 +72,6 @@
     "tests/portrait.test.ts": {
       "suspicious/useIterableCallbackReturn": 3
     },
-    "tests/settlement.test.ts": {
-      "correctness/noUnusedFunctionParameters": 1,
-      "suspicious/useIterableCallbackReturn": 4
-    },
     "tools/portrait/build_portrait.ts": {
       "style/useTemplate": 1,
       "suspicious/noExplicitAny": 1

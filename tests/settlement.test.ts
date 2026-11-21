@@ -318,7 +318,7 @@ describe('the streets of a world of 1291', () => {
   const S = s.street.cols, L = s.lot.cols, rows = Array.from({ length: s.street.size }, (_, i) => i);
   it('are the streets of a new world, measured or not, and every town has one market', () => {
     expect(hashState(t)).toBe(hashState(s));
-    const towns = cities.filter((c, k) => townFamilies(s)[k].families.length);
+    const towns = cities.filter((_c, k) => townFamilies(s)[k].families.length);
     expect(found.streets.size).toBe(towns.length);
     for (const c of towns) expect(rows.filter((i) => S.site[i] === c.site && S.kind[i] === STREET_KIND.market).length).toBe(1);
   }, 60_000); // hashes two worlds and counts the families of every town: 4 s alone
@@ -427,20 +427,28 @@ describe('what the world server tells of the ground of a town', () => {
     expect(v.id.length).toBe(t.families.length + t.farmers.length);
     for (const key of ['kind', 'hamlet', 'x', 'z', 'w', 'd', 'front', 'family', 'persons'] as const) expect(v[key].length).toBe(v.id.length);
     expect([...v.family].sort((a, b) => a - b)).toEqual([...t.families, ...t.farmers].sort((a, b) => a - b));
-    v.id.forEach((id, i) => expect(s.family.cols.lot[v.family[i]]).toBe(id));
+    v.id.forEach((id, i) => {
+      expect(s.family.cols.lot[v.family[i]]).toBe(id);
+    });
     expect(v.persons.reduce((a, b) => a + b, 0)).toBe(t.persons + t.farmPersons);
     expect(v.kind.filter((x) => x === LOT_KIND.parcel).length).toBe(t.families.length);
     // its hamlets: every farmstead lies in one of them, and each has as many as it says
     expect(v.hamlets.id.length).toBe(hamletsOf(t.farmers.length));
     expect(v.hamlets.farms.reduce((a, b) => a + b, 0)).toBe(t.farmers.length);
-    v.hamlets.id.forEach((h, i) => expect(v.hamlet.filter((x) => x === h).length).toBe(v.hamlets.farms[i]));
-    v.kind.forEach((kind, i) => expect(v.hamlet[i] === NO_HAMLET).toBe(kind === LOT_KIND.parcel));
+    v.hamlets.id.forEach((h, i) => {
+      expect(v.hamlet.filter((x) => x === h).length).toBe(v.hamlets.farms[i]);
+    });
+    v.kind.forEach((kind, i) => {
+      expect(v.hamlet[i] === NO_HAMLET).toBe(kind === LOT_KIND.parcel);
+    });
   });
   it('of several towns come in one pass, each as the one of its town alone, a site without ground empty', () => {
     const none = [...Array(100).keys()].find((x) => !cities.some((c) => c.site === x))!; // a site that is no town of 1291
     const sites = [site('Paris'), none, site('Zürich')], many = manyTownsLots(s, sites);
     expect(many.map((m) => m.site)).toEqual(sites);
-    sites.forEach((x, i) => expect(many[i]).toEqual(townLots(s, x)));
+    sites.forEach((x, i) => {
+      expect(many[i]).toEqual(townLots(s, x));
+    });
     expect(many[1].id.length).toBe(0);
   });
 });
