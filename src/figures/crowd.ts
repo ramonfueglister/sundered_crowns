@@ -7,9 +7,9 @@
 // processor does nothing per frame.
 import { hash2 } from '../lookprobe/batch';
 import { type Ground, Mat, N, idx } from '../lookprobe/layout';
-import { ESTATES, HAIR, HOSE, LOAD_COLOURS, Mode, SKIN, pickEstate } from './estates';
-import { Load } from './kit';
-import { type TownPerson, townPeople } from './people';
+import { ESTATES, Mode, dress, pickEstate, townEstate } from './estates';
+import { type TownPerson, peopleSeed, townPeople } from './people';
+import { FIGURE_AT, LOOK, type TownAims, aimsOf, key, personOf, spot } from './aims';
 
 /** A walled town as settle() laid it out: its gazetteer index, its middle and the half side of its square, in world blocks. */
 export interface Town {
@@ -17,6 +17,10 @@ export interface Town {
   cx: number;
   cz: number;
   half: number;
+  /** its market (x0, z0, x1, z1, the ends not included) and the middles of its houses of worship, in world blocks,
+   *  where the land register has them (worldprobe/town_spots.ts) */
+  market?: readonly [number, number, number, number];
+  worship?: readonly (readonly [number, number])[];
 }
 /** What settle() leaves on the ground (worldprobe/settle.ts): 1 where built (2 on town paving), the town paving, the
  *  crops, and the walled towns (absent from older builds). */
@@ -26,37 +30,6 @@ export interface SettledGround {
   field: Uint8Array;
   towns?: readonly Town[];
 }
-
-/**
- * Where the persons of a town walk: each person aims at a column of the town's square drawn from a hash of their id,
- * in world blocks, so that every piece of the world agrees without seeing the others; a person shows where that column
- * is street, and of two persons aiming at one column the first. A town shows a share of its persons, as large as the
- * share of street in its square.
- */
-const aims = new Map<string, Map<number, TownPerson>>();
-const key = (wx: number, wz: number) => wx * 1048576 + wz;
-function aimsOf(t: Town): Map<number, TownPerson> | undefined {
-  const people = townPeople(t.site);
-  if (!people?.length) return undefined;
-  const k = `${t.site}:${t.cx}:${t.cz}:${t.half}:${people.length}`;
-  let m = aims.get(k);
-  if (!m) {
-    m = new Map();
-    for (const p of people) {
-      // a ruler is not left to chance: the piece that holds the middle of the town stands them in a street (crowd)
-      if (p.ruler !== undefined) continue;
-      const at = key(
-        t.cx - t.half + Math.floor(hash2(p.id, 1, 920) * 2 * t.half),
-        t.cz - t.half + Math.floor(hash2(p.id, 2, 920) * 2 * t.half),
-      );
-      if (!m.has(at)) m.set(at, p);
-    }
-    aims.set(k, m);
-  }
-  return m;
-}
-/** Estates a woman or a man of the town is shown in, until the person system gives each household its estate. */
-const FEMALE = new Set(['Bäuerin', 'Bürgerin']);
 
 /**
  * The figures of a piece as flat lists, four numbers per figure in each, ready for instanced attributes:
@@ -71,6 +44,16 @@ export interface Figures {
   c: Float32Array;
   d: Float32Array;
   e: Float32Array;
+  /**
+   * which of a person's figures each is (FIGURE_AT, aims.ts: in the street, at the market, at a house of worship; 0
+   * for an anonymous figure), and what the plan of the day needs of its person (PLAN numbers: part, calendar, place,
+   * day of birth, and the day of birth of a child of a mother in childbed; people feature 12) with the world's seed:
+   * the main thread shows a person's figure where the plan has the person at the hour (schedule.ts). Absent from
+   * figures without persons.
+   */
+  at?: Uint8Array;
+  plan?: Float32Array;
+  seed?: number;
   /** the piece's ground in the world, in blocks of the finest step */
   ox?: number;
   oz?: number;
@@ -112,9 +95,10 @@ export interface Where {
   field(x: number, z: number): number;
   h(x: number, z: number): number;
 }
-/** Figures as lists of numbers, before they are made into the lists of `Figures`. */
-type Gathered = number[][];
-export const gathered = (): Gathered => [[], [], [], [], []];
+/** Figures as lists of numbers, before they are made into the lists of `Figures`: the five numbers, then `at` and
+ *  `plan`. */
+export type Gathered = number[][];
+export const gathered = (): Gathered => [[], [], [], [], [], [], []];
 
 /**
  * The figure, if any, at a block of the finest step: x, z in the piece, wx, wz in the world (which draw who it is),
@@ -130,7 +114,12 @@ export function place(
   wz: number,
   person?: TownPerson,
   inTown = false,
+  at: number = FIGURE_AT.street,
 ) {
+  if (at !== FIGURE_AT.street) {
+    if (person && w.free(x, z, true)) spot(out, w, x, z, wx, wz, person, at);
+    return;
+  }
   const lot = hash2(wx, wz, 401);
   // farmers work from the strip of grass round a field, facing their crop: inside it the crop would hide them
   const street = w.free(x, z, true),
@@ -141,21 +130,28 @@ export function place(
   else if (!street && lot < ABOUT_HOUSE && w.free(x, z, false) && w.nearHouse(x, z)) kind = 'house';
   if (!kind) return;
   const h = (k: number) => hash2(wx, wz, 410 + k);
-  // who: farmers in the fields (vines are tended standing, with a basket), the rest by the share of town or village
+  // who: farmers in the fields (vines are tended standing, with a basket), the rest by the share of town or village;
+  // a person wears the same in each of the person's figures (aims.ts)
   const crop = field >= 0 ? w.field(x + DIRS[field][0], z + DIRS[field][1]) : 0;
-  const shown = kind === 'street' ? person : undefined;
+  const shown = kind === 'street' ? person : undefined,
+    look = shown ? (k: number) => hash2(shown.id, k, LOOK) : h;
   const e =
     kind === 'field'
       ? crop === 2
         ? 1
         : 3
       : shown
-        ? pickEstate(h(0), (q) => (FEMALE.has(q.name) === shown.female ? q.townShare : 0))
+        ? townEstate(look(0), shown.female)
         : pickEstate(h(0), (q) => (kind === 'street' ? q.townShare : q.mode === Mode.Work ? 0 : q.villageShare));
-  const estate = ESTATES[e];
   // a ruler stands on the spot, so that the map mode of the rulers finds them where it says
   let mode =
-    kind === 'field' ? (crop === 2 ? Mode.Stand : Mode.Work) : shown?.ruler !== undefined ? Mode.Stand : estate.mode;
+    kind === 'field'
+      ? crop === 2
+        ? Mode.Stand
+        : Mode.Work
+      : shown?.ruler !== undefined
+        ? Mode.Stand
+        : ESTATES[e].mode;
   // the way: straight on over free ground of even height, as far as it goes
   const [dx, dz] = DIRS[Math.floor(h(1) * 4)],
     want = 2 + Math.floor(h(2) * (LONGEST_WAY - 1));
@@ -176,22 +172,33 @@ export function place(
   const ex = sx + dx * len,
     ez = sz + dz * len,
     ey = w.h(x + dx * len, z + dz * len);
-  const pick = (list: readonly number[], k: number) => list[Math.floor(h(k) * list.length)];
   out[0].push(sx, y, sz, h(4) * 100);
   out[1].push(ex, mode === Mode.Walk ? ey : y, ez, mode === Mode.Walk ? PACE * (0.8 + 0.4 * h(5)) : 0);
-  out[2].push(mode, estate.load, estate.cut, estate.head);
-  out[3].push(pick(SKIN, 6), pick(estate.tunic, 7), pick(HOSE, 8), pick(estate.headwear, 9));
+  dress(out, mode, e, look);
   out[4].push(
-    estate.load === Load.None ? 0 : pick(LOAD_COLOURS[estate.load], 10),
-    pick(HAIR, 11),
     kind === 'field' ? Math.atan2(DIRS[field][0], DIRS[field][1]) : h(12) * Math.PI * 2,
     shown ? shown.id + 1 : 0,
   );
+  personOf(out, shown, FIGURE_AT.street);
 }
+
 /** The lists of a piece's figures from those gathered. */
 export function figuresOf(out: Gathered, ox: number, oz: number, scale?: [number, number]): Figures {
-  const [a, b, c, d, e] = out.map((l) => new Float32Array(l));
-  return { count: a.length / 4, a, b, c, d, e, ox, oz, ...(scale ? { scale } : {}) };
+  const [a, b, c, d, e, , plan] = out.map((l) => new Float32Array(l)),
+    at = Uint8Array.from(out[5]),
+    persons = at.some((v) => v !== FIGURE_AT.anonymous);
+  return {
+    count: a.length / 4,
+    a,
+    b,
+    c,
+    d,
+    e,
+    ...(persons ? { at, plan, seed: peopleSeed() } : {}),
+    ox,
+    oz,
+    ...(scale ? { scale } : {}),
+  };
 }
 
 /** Builds the figures of a ground. `own` says whether a column belongs to this piece. */
@@ -219,7 +226,7 @@ export function crowd(g: Ground, s: SettledGround, own: (x: number, z: number) =
     field: (x, z) => s.field[idx(x, z)],
     h: (x, z) => g.h[idx(x, z)],
   };
-  const towns = (s.towns ?? []).flatMap((t) => {
+  const towns: { t: Town; aims: TownAims }[] = (s.towns ?? []).flatMap((t) => {
     const aims = aimsOf(t);
     return aims ? [{ t, aims }] : [];
   });
@@ -251,7 +258,12 @@ export function crowd(g: Ground, s: SettledGround, own: (x: number, z: number) =
         wz = z + oz;
       // in a town with persons the street holds them, not chance
       const town = towns.find(({ t }) => Math.abs(wx - t.cx) <= t.half && Math.abs(wz - t.cz) <= t.half);
-      place(out, w, x, z, wx, wz, rulerAt.get(key(wx, wz)) ?? town?.aims.get(key(wx, wz)), !!town);
+      const k = key(wx, wz);
+      place(out, w, x, z, wx, wz, rulerAt.get(k) ?? town?.aims.street.get(k), !!town);
+      // the same person's figures at the market and at a house of worship, shown when the plan takes them there
+      if (!town) continue;
+      place(out, w, x, z, wx, wz, town.aims.market.get(k), true, FIGURE_AT.market);
+      place(out, w, x, z, wx, wz, town.aims.worship.get(k), true, FIGURE_AT.worship);
     }
   return figuresOf(out, ox, oz);
 }

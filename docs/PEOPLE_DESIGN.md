@@ -1261,6 +1261,33 @@ in summer to 8 in winter" (Millett 1915).
 After a restart from the snapshot of the last day, all 101,286 living persons have the same plan as before (the plan
 reads the state only, and keeps nothing of its own). Two runs of the same code gave the same numbers.
 
+### The figures of the towns
+
+The figures of the persons in the 30 great cities (src/figures) follow the plan at the world's hour. Each person may
+have three figures, each in the piece of the world that owns its column (src/figures/aims.ts): the one in the
+street of the town that it always had, one at the market (a column of the market of the land register, for those
+whom the plan takes there: the services on the market day and those who look for work at the hiring place) and
+one at a house of worship (a column within 12 blocks of the middle of one of the town's landmarks that are
+cathedrals, churches, abbeys, convents or Friday mosques; OWN RULE, a drawing value: the great churches of the
+register are 35 to 70 blocks long, and those who find no street there are inside). A person's figures wear the
+same, drawn from the person's id. Once a second the browser works out which of them is on the stage
+(src/figures/schedule.ts, the plan as the world server has it for the card of the person):
+
+| The plan has the person | The figure on the stage |
+|---|---|
+| at the market, at the hiring place | at the market |
+| at the mass | at the house of worship |
+| at work in the services | in the street (OWN RULE, a drawing rule: they sell, carry and serve in the town) |
+| at work in a workshop, in the fields, in the bank | none |
+| at home or at the meal, between sunrise and sunset | in the street (OWN RULE, a drawing rule: the houses have no inside to show) |
+| at home after sunset, asleep, sick, in childbed | none |
+| a ruler | in the street at every hour, where the map mode of the rulers finds them |
+
+At the speeds at which an hour of the world lasts less than a second (a day under 24 seconds), every day is shown in
+the middle of the hour of the mass, three and a half unequal hours after sunrise (OWN RULE, a drawing rule): on a
+day of rest at the house of worship, on the market day at the market, on the others at work. The figures stand
+still at the market and at the house of worship; they walk only in the street.
+
 ### Limits
 
 - **The day labourer works too many days.** By his plan a day labourer works on every working day of his firm on
@@ -1278,6 +1305,9 @@ reads the state only, and keeps nothing of its own). Two runs of the same code g
   hours are of local solar time and follow the sun alone: Douai's seasons of the bells (All Saints, the first Sunday
   of Lent, Stabel 2014, p. 37) and the closing bell of winter are not apart.
 - **No inn, no lodging.** A ruler on the way sleeps from sunset; where, the itinerary does not say.
-- **The figures do not follow the plan yet.** The figures of the towns walk their streets at every hour; that they go
-  to the field, the workshop, the market and the church by the plan is the next step, and changes the key of the
-  world's pieces.
+- **The figures of the towns follow the plan as far as the town shows it** (below): the field, the workshop and the
+  bank have no figures of the persons, only the anonymous farmers in the fields.
+- **The figures know the persons as on the day their list was fetched.** A worker of the world graphic fetches the
+  persons of the cities once (src/figures/people.ts); the part, the calendar and the mothers in childbed are those
+  of that day, the days of sickness are always right (a pure function). A person who dies later still walks, and a
+  child born later keeps no mother at home, until the page is loaded anew. This was so before for who walks at all.

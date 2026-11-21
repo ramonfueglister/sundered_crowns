@@ -5,6 +5,8 @@ import { PLACES_PER_REQUEST } from '../src/figures/people';
 import { CITIES, personsIn, genesOf } from '../src/sim/systems/people';
 import { newWorldState } from '../tools/sim/load';
 import { rowOf } from '../src/sim/people/archive';
+import { awayOn, partOf } from '../src/sim/people/plan_person';
+import { AWAY } from '../src/sim/people/day_plan';
 
 const { s } = newWorldState();
 describe('the persons of a place', () => {
@@ -23,6 +25,20 @@ describe('the persons of a place', () => {
       expect(many[k]).toEqual(placePeople(s, p));
     });
     expect(PLACES_PER_REQUEST).toBe(MAX_PLACES_PER_REQUEST); // the figures ask for no more than the server gives
+  });
+  it('carry what the figures need for the plan of the day: part, calendar, the seed, the mothers in childbed', () => {
+    const london = CITIES.find((c) => c.name === 'London')!.place,
+      v = placePeople(s, london),
+      childbed = new Map((v.childbed ?? []).map((c) => [c.uid, c.born]));
+    expect(v.seed).toBe(s.seed >>> 0);
+    v.id.forEach((uid, k) => {
+      const row = rowOf(s, uid);
+      expect({ who: v.who![k], calendar: v.calendar![k] }).toEqual(partOf(s, row));
+      // (sickness comes first in awayOn: a mother in childbed may be sick too)
+      if (v.sex[k] === 0 && awayOn(s, row, s.day) === AWAY.childbed) expect(childbed.has(uid)).toBe(true);
+      if (childbed.has(uid)) expect(awayOn(s, row, s.day)).not.toBe(AWAY.none);
+    });
+    expect(childbed.size).toBeGreaterThan(0);
   });
 });
 describe('one person in full', () => {

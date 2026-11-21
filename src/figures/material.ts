@@ -113,6 +113,9 @@ function material(): THREE.MeshLambertNodeMaterial {
           .and(abs(variant.sub(cut)).greaterThan(0.1)),
       )
       .or(variant.greaterThan(9.5).and(abs(variant.sub(head)).greaterThan(0.1)));
+    // a figure with a negative phase is not on the stage: a person's figure where the plan of the day does not have
+    // the person at the hour (schedule.ts), folded into a point as a part not worn
+    const away = A.w.lessThan(0);
     // the way: there and back again, at the figure's pace
     const way = B.xyz.sub(A.xyz),
       long = max(length(way.xz), float(0.001));
@@ -148,7 +151,7 @@ function material(): THREE.MeshLambertNodeMaterial {
       s = facing.x.negate();
     const yaw = (v: V3): V3 => vec3(v.x.mul(c).add(v.z.mul(s)), v.y, v.z.mul(c).sub(v.x.mul(s)));
     normalLocal.assign(yaw(n));
-    return select(hidden, at, yaw(p).add(at));
+    return select(hidden.or(away), at, yaw(p).add(at));
   })();
   const colour = select(
     is(slot, Slot.Skin),

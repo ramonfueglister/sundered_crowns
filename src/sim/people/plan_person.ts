@@ -16,11 +16,17 @@ const INDUSTRY = 1;
  *  the next stop (headingOf, src/sim/content/itineraries.ts), else −1; `away`: why the person is away (AWAY), where
  *  the caller knows it for many persons at once. */
 export function planPerson(s: WorldState, id: number, heading = -1, away = awayOn(s, id, s.day)): PlanPerson {
+  if (holdsCrown(s, id)) return { who: WHO.ruler, calendar: calendarOf(s.person.cols.faith[id]), away, heading };
+  return { ...partOf(s, id), away, heading: -1 };
+}
+
+/** The part of the person in row `id` the template is chosen by, and the calendar of the person's days of work, for
+ *  a person who holds no crown. */
+export function partOf(s: WorldState, id: number): { who: number; calendar: number } {
   const P = s.person.cols,
     F = s.firm.cols,
-    own = calendarOf(P.faith[id]);
-  if (holdsCrown(s, id)) return { who: WHO.ruler, calendar: own, away, heading };
-  const of = (who: number, calendar = own): PlanPerson => ({ who, calendar, away, heading: -1 });
+    own = calendarOf(P.faith[id]),
+    of = (who: number, calendar = own) => ({ who, calendar });
   if (P.born[id] !== BORN_UNKNOWN && ageOn(P.born[id], s.day) < WORKING_AGE) return of(WHO.child);
   const role = P.role[id],
     firm = P.firm[id];
