@@ -82,7 +82,6 @@
     }
   },
   "lines": {
-    "economy/src/clock.rs": 1064,
     "economy/src/lib.rs": 1040,
     "economy/src/trade.rs": 760,
     "server/world.ts": 541,
