@@ -45,6 +45,13 @@ def hue_band(h, s, v, lo, hi, pale=False):
     return inside & ((s > 0.22) & (s < 0.45) & (v > 0.6) if pale else (s > 0.25) & (v > 0.25))
 
 
+def spread(im):
+    """the colour spread: the share of the picture in each of 18 hues by 5 saturations by 5 brightnesses"""
+    h, s, v = hsv(im)
+    cube = np.stack([h.ravel() / 360, s.ravel(), v.ravel()], 1)
+    return np.histogramdd(cube, bins=(18, 5, 5), range=((0, 1),) * 3)[0] / h.size
+
+
 def load(path, box=None):
     im = Image.open(path).convert('RGB')
     if im.size != (1448, 1086):
@@ -156,15 +163,7 @@ def measure(ref, probe):
     check('Feindetail', rf * 100, pf * 100, ratio(rf, pf, 0.8, 1.25), '{:.2f}')
     check('Formenreichtum', rc * 100, pc * 100, ratio(rc, pc, 0.8, 1.25), '{:.2f}')
 
-    def hist(h, s_, v):
-        return (
-            np.histogramdd(np.stack([h.ravel() / 360, s_.ravel(), v.ravel()], 1), bins=(18, 5, 5), range=((0, 1),) * 3)[
-                0
-            ]
-            / h.size
-        )
-
-    overlap = np.minimum(hist(rh, rs, rv), hist(ph, ps, pv)).sum()
+    overlap = np.minimum(spread(ref), spread(probe)).sum()
     check('Überdeckung der Farbverteilung', 1, overlap, (1 - overlap) / 0.25)
     return rows
 

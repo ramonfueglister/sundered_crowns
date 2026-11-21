@@ -5,11 +5,13 @@ Usage: python3 tools/lookprobe/search_paris.py reference.png out_dir [rounds] [s
 with the dev server on http://localhost:5199 (npx vite --port 5199). Each try shoots the probe as two towns (SEEDS,
 about 25 s each, two tries at a time) and measures them. The search is Levenberg-Marquardt (Levenberg 1944;
 Marquardt, "An algorithm for least-squares estimation of nonlinear parameters", J. SIAM 11, 1963) on the checks'
-signed errors, averaged over the towns and capped at 4: each round moves every knob by a small step to learn how it
-shifts every check (forward differences), then solves for the step that shrinks the errors most at three dampings,
-and keeps the best try of the round by the score. The score counts the failed checks and adds how far they miss
-(their error above 1, capped at 4, a third each). Knobs work on a scale of 0 to 1 between their bounds. Every try is
-written to out_dir/log.jsonl, the best picture to out_dir/best.png and its address to out_dir/best.json.
+signed errors and the colour spread's bins (BIN), averaged over the towns and capped at 4: each round moves every
+knob by a small step to learn how it shifts every check (forward differences), then solves for the step that shrinks
+the errors most at three dampings, and keeps the best try of the round by the score. The score counts the failed
+checks and adds how far they miss (their error above 1, capped at 4, a third each) and four times the part of the
+colour spread that does not overlap the reference's. Knobs work on a scale of 0 to 1 between their bounds. Every try
+is written to out_dir/log.jsonl, the best picture to out_dir/best.png and its address to out_dir/best.json. A run of
+more than two rounds outlasts a background job's two hours: start again from best.json.
 """
 
 import colorsys
@@ -22,7 +24,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import numpy as np
-from gauntlet_paris import REF_BOX, load, measure
+from gauntlet_paris import REF_BOX, load, measure, spread
 
 ROOT = Path(__file__).resolve().parents[2]
 # knob: (lowest, highest, start); colours are searched as hue in degrees, saturation and value and given as hex; the
@@ -99,9 +101,9 @@ def address(x):
     return '&'.join(f'{k}={v}' for k, v in o.items())
 
 
-def score(errs):
+def score(errs, overlap):
     fails = [abs(err) for err in errs if abs(err) > 1]
-    return len(fails) + sum(min(err, 4) - 1 for err in fails) / 3, len(errs) - len(fails)
+    return len(fails) + sum(min(err, 4) - 1 for err in fails) / 3 + 4 * (1 - overlap), len(errs) - len(fails)
 
 
 def shoot(x, png, seed):
@@ -116,6 +118,11 @@ def shoot(x, png, seed):
 # the towns every try is measured on, its errors averaged over them: a setting fitted to one draw of the town fitted
 # that draw (21 Nov 2026: 44 of 46 on the town it was searched on, 39 and 40 on two others)
 SEEDS = (21, 31)
+# the colour spread's bins join the errors, a difference of BIN in a bin's share counting as one: the search then sees
+# which colours the probe has too much or too little of (the overlap check alone says only how much); and the score
+# adds four times the part of the spread that does not overlap (both added 21 Nov 2026, after three searches that
+# passed checks by moving colours across the classes' bounds while the spread stayed apart)
+BIN = 0.03
 KEYS = sorted(SPACE)
 LO, HI = np.array([SPACE[k][0] for k in KEYS]), np.array([SPACE[k][1] for k in KEYS])
 
@@ -127,6 +134,7 @@ def knobs(u, whole):
 class Search:
     def __init__(self, ref, out):
         self.ref, self.out, self.n, self.best = ref, out, 0, None
+        self.spread = spread(ref)
         self.log, self.lock = (out / 'log.jsonl').open('a'), threading.Lock()
 
     def try_all(self, us, whole):
@@ -134,14 +142,16 @@ class Search:
 
         def one(i_u):
             i, u = i_u
-            x, errs = knobs(u, whole), []
+            x, errs, spreads = knobs(u, whole), [], []
             for seed in SEEDS:
                 png = self.out / f'try{i}_{seed}.png'
                 if not shoot(x, png, seed):
                     return None
-                errs.append([err for *_, err, _ in measure(self.ref, load(png))])
-            errs = np.mean(errs, 0)
-            s, passed = score(errs)
+                im = load(png)
+                errs.append([err for *_, err, _ in measure(self.ref, im)])
+                spreads.append(spread(im))
+            errs, bins = np.mean(errs, 0), np.mean(spreads, 0)
+            s, passed = score(errs, np.minimum(bins, self.spread).sum())
             with self.lock:
                 self.n += 1
                 rec = {'n': self.n, 'score': s, 'passed': passed, 'knobs': x, 'address': address(x)}
@@ -153,7 +163,7 @@ class Search:
                     (self.out / 'best.json').write_text(json.dumps(rec))
             for seed in SEEDS:
                 (self.out / f'try{i}_{seed}.png').unlink(missing_ok=True)
-            return np.clip(errs, -4, 4), s
+            return np.clip(np.concatenate([errs, (bins - self.spread).ravel() / BIN]), -4, 4), s
 
         with ThreadPoolExecutor(2) as pool:
             return list(pool.map(one, enumerate(us)))
