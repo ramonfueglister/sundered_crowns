@@ -76,7 +76,7 @@ describe('the chronicle of borders of 1291', () => {
   });
 });
 
-describe('a change no source dates (tools/history/borders/build.py, spread_windows)', () => {
+describe('a change no source dates (tools/history/borders/spread.py, spread_windows)', () => {
   it('moves ring by ring, 2 years apart around the middle of its window, or sharing a window too short for that', () => {
     let rings = 0;
     for (const e of json.events) {
