@@ -15,6 +15,8 @@ export interface Quay {
   joint?: number;
   /** how much more the slabs differ in brightness than the Venetian ones (1 if not given) */
   spread?: number;
+  /** the side of a paving slab in fine blocks (2 if not given) */
+  slab?: number;
   postEvery: readonly [number, number];
 }
 
@@ -72,4 +74,6 @@ export interface Tradition {
   glass?: RGB;
   /** a ground floor of ashlar in `stone` under a plastered or timbered house */
   stoneGround?: boolean;
+  /** how much more the blocks of an ashlar wall differ in tone than the Venetian ones (as Venice if not given) */
+  ashlarSpread?: number;
 }

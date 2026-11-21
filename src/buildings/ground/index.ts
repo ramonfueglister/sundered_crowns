@@ -71,7 +71,7 @@ export function fineGround(b: Batch, cell: GroundCell, at: ColumnAt, q: Quay = P
       if (!c || c.wet) continue;
       const wx = x + ox,
         wz = z + oz;
-      if (c.paved) slabs(b, x, z, c.top, wx, wz, q.paving, (q.joint ?? 0) * V, q.spread);
+      if (c.paved) slabs(b, x, z, c.top, wx, wz, q);
       for (const [side, dx, dz] of OUT) {
         const n = at(x + dx, z + dz);
         if (!n) continue;
@@ -106,11 +106,12 @@ export function fineGround(b: Batch, cell: GroundCell, at: ColumnAt, q: Quay = P
 }
 
 /**
- * The paving of one column: slabs of two by two fine blocks in running bond, aligned to the world grid; `gap` apart
- * where the ground under them shows as the joints.
+ * The paving of one column: slabs of the quay's paving, `slab` fine blocks square (two if not given), in running bond,
+ * aligned to the world grid; the quay's `joint` apart where the ground under them shows as the joints.
  */
-function slabs(b: Batch, x: number, z: number, y: number, wx: number, wz: number, c: RGB, gap = 0, spread?: number) {
-  const S = 2 * V,
+function slabs(b: Batch, x: number, z: number, y: number, wx: number, wz: number, q: Quay) {
+  const S = (q.slab ?? 2) * V,
+    gap = (q.joint ?? 0) * V,
     k0 = Math.floor(wz / S),
     k1 = Math.ceil((wz + 1) / S),
     yy = y + LIFT;
@@ -125,7 +126,7 @@ function slabs(b: Batch, x: number, z: number, y: number, wx: number, wz: number
       if (bx <= ax) continue;
       const h = hash2(j, k, 3),
         lit = h < 0.08 ? 0.84 : 0.92 + 0.16 * h,
-        col = shade(c, spread === undefined ? lit : 1 + (lit - 1) * spread),
+        col = shade(q.paving, q.spread === undefined ? lit : 1 + (lit - 1) * q.spread),
         g = gap / 2;
       b.quad(
         [ax - wx + x + g, yy, az - wz + z + g],

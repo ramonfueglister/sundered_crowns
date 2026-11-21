@@ -28,12 +28,13 @@ from gauntlet_paris import REF_BOX, load, measure, spread
 
 ROOT = Path(__file__).resolve().parents[2]
 # knob: (lowest, highest, start); colours are searched as hue in degrees, saturation and value and given as hex; the
-# starts are the best setting of the searches of 21 Nov 2026, whose colours src/buildings/traditions/paris.ts holds;
-# the timber stays dark (value up to 0.4), as the picture draws it
+# starts are the setting src/buildings/traditions/paris.ts and src/lookprobe/paris_probe.ts hold (the searches' best of
+# 21 Nov 2026, then set by eye beside the picture that evening); the timber stays dark (value up to 0.4), as the picture
+# draws it
 SPACE = {
-    'across': (40, 70, 63.182),
+    'across': (40, 70, 52),
     'elev': (28, 42, 36.521),
-    'lane': (3.5, 8, 5.181),
+    'lane': (3.5, 8, 4),
     'block': (9, 14, 12.033),
     'depth': (3.8, 5.5, 3.931),
     'exposure': (0.9, 1.6, 1.2),
@@ -44,42 +45,42 @@ SPACE = {
     'bounce': (0, 0.5, 0.299),
     'fill': (0, 0.8, 0.675),
     'skyblue': (0, 1, 0.069),
-    'wall_h': (10, 40, 22.548),
-    'wall_s': (0.08, 0.35, 0.312),
-    'wall_v': (0.6, 1, 0.924),
+    'wall_h': (10, 40, 22.759),
+    'wall_s': (0.08, 0.35, 0.25),
+    'wall_v': (0.6, 1, 0.91),
     'wallspread': (0.3, 1.6, 1),
-    'pave_h': (-15, 30, 19.583),
-    'pave_s': (0.04, 0.3, 0.216),
-    'pave_v': (0.35, 0.8, 0.451),
-    'pspread': (0.5, 3, 1.968),
-    'glass_h': (0, 200, 119.815),
-    'glass_s': (0.1, 0.7, 0.226),
-    'glass_v': (0.2, 0.9, 0.544),
-    'roof_h': (5, 30, 27.225),
-    'roof_s': (0.35, 0.75, 0.522),
-    'roof_v': (0.35, 0.8, 0.588),
+    'pave_h': (-15, 30, 15),
+    'pave_s': (0.04, 0.3, 0.2),
+    'pave_v': (0.35, 0.8, 0.627),
+    'pspread': (0.5, 3, 2.5),
+    'glass_h': (0, 200, 60),
+    'glass_s': (0.1, 0.7, 0.135),
+    'glass_v': (0.2, 0.9, 0.29),
+    'roof_h': (5, 30, 18.4),
+    'roof_s': (0.35, 0.75, 0.543),
+    'roof_v': (0.35, 0.8, 0.541),
     'roofspread': (0.5, 2, 1),
-    'timb_h': (0, 35, 6.324),
-    'timb_s': (0.15, 0.65, 0.253),
-    'timb_v': (0.15, 0.4, 0.399),
+    'timb_h': (0, 35, 14.118),
+    'timb_s': (0.15, 0.65, 0.378),
+    'timb_v': (0.15, 0.4, 0.353),
     'stone_h': (10, 45, 33.779),
     'stone_s': (0.05, 0.35, 0.16),
     'stone_v': (0.5, 0.95, 0.908),
-    'post': (0.6, 1.5, 0.883),
-    'tshare': (0.3, 1, 0.989),
-    'tlow': (0.7, 1, 0.811),
-    'tspread': (0.05, 0.4, 0.4),
-    'treesize': (0.7, 1.6, 0.956),
-    'leaf_h': (50, 110, 69.758),
-    'leaf_s': (0.5, 1, 1.0),
-    'leaf_v': (0.35, 0.8, 0.451),
-    'olive_h': (60, 120, 92.69),
-    'olive_s': (0.5, 1, 0.572),
-    'olive_v': (0.2, 0.55, 0.332),
+    'post': (0.6, 1.5, 1.2),
+    'tshare': (0.3, 1, 0.55),
+    'tlow': (0.7, 1, 0.86),
+    'tspread': (0.05, 0.4, 0.3),
+    'treesize': (0.7, 1.6, 1.5),
+    'leaf_h': (50, 110, 77.455),
+    'leaf_s': (0.5, 1, 0.797),
+    'leaf_v': (0.35, 0.8, 0.541),
+    'olive_h': (60, 120, 93.103),
+    'olive_s': (0.5, 1, 0.547),
+    'olive_v': (0.2, 0.55, 0.416),
     'jetty': (0, 0.8, 0.533),
 }
 # knobs that take whole fine blocks
-WHOLE = {'winw': (1, 3, 1), 'winh': (2, 4, 3)}
+WHOLE = {'winw': (1, 3, 2), 'winh': (2, 4, 3)}
 SKY_GREY, SKY_BLUE = np.array([0xC8, 0xD4, 0xF0]), np.array([0x8C, 0xA8, 0xF0])
 
 

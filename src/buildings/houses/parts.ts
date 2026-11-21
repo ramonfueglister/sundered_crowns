@@ -35,9 +35,10 @@ export function boxOn(
  * The grid of ashlar, or of plaster scored to look like it, in running bond: every fine block of the wall as a pane
  * in its own tone, a smooth spread from a sixth darker to a sixth lighter than the wall, set a thin joint apart;
  * the wall itself, in the pale joint colour (`jointOf`), shows between them as the joints. One pane per block
- * instead of joints drawn on their own: a fifth of the wall's triangles saved, and every block has a tone.
+ * instead of joints drawn on their own: a fifth of the wall's triangles saved, and every block has a tone. `spread`
+ * widens or narrows the spread of the tones (as drawn before when not given).
  */
-export function ashlar(b: Batch, w: Wall, y0: number, y1: number, c: RGB, seed: number) {
+export function ashlar(b: Batch, w: Wall, y0: number, y1: number, c: RGB, seed: number, spread?: number) {
   const cols = Math.ceil(w.len / V),
     rows = Math.round((y1 - y0) / V),
     j = V * 0.12;
@@ -47,7 +48,9 @@ export function ashlar(b: Batch, w: Wall, y0: number, y1: number, c: RGB, seed: 
       const t0 = Math.max(0, (i + (k % 2) * 0.5) * V + j / 2),
         t1 = Math.min(w.len, (i + 1 + (k % 2) * 0.5) * V - j / 2);
       if (t1 - t0 < j) continue;
-      pane(b, w, t0, y + j / 2, t1, y + V - j / 2, shade(c, 0.84 + 0.32 * hash2(k, i, seed + 1)), 0.02);
+      const h = hash2(k, i, seed + 1),
+        tone = spread === undefined ? 0.84 + 0.32 * h : 1 + (h - 0.5) * 0.32 * spread;
+      pane(b, w, t0, y + j / 2, t1, y + V - j / 2, shade(c, tone), 0.02);
     }
   }
 }

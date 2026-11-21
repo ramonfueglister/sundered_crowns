@@ -196,10 +196,11 @@ function facade(
     n = Math.max(1, Math.floor((wl.len + V) / bay));
   const axes = Array.from({ length: n }, (_, i) => wl.len / 2 + (i - (n - 1) / 2) * bay),
     [ww, wh] = tr.window;
-  if (o.detail && !tr.plaster) ashlar(b, wl, y + V, y + (h - 1) * V, o.wallC, o.seed + k * 7 + SIDES.indexOf(s));
+  if (o.detail && !tr.plaster)
+    ashlar(b, wl, y + V, y + (h - 1) * V, o.wallC, o.seed + k * 7 + SIDES.indexOf(s), tr.ashlarSpread);
   if (o.detail && tr.stoneGround && k === 0) {
     pane(b, wl, 0, y, wl.len, y + (h - 1) * V, shade(tr.stone, 0.7), 0.01);
-    ashlar(b, wl, y, y + (h - 1) * V, tr.stone, o.seed + SIDES.indexOf(s));
+    ashlar(b, wl, y, y + (h - 1) * V, tr.stone, o.seed + SIDES.indexOf(s), tr.ashlarSpread);
   }
   if (o.detail && o.frame && k >= 1)
     timberFrame(b, wl, y - V, h * V, axes, ww, [V + tr.sill * V, V + (tr.sill + wh) * V], o.frame, tr.timber?.post);
