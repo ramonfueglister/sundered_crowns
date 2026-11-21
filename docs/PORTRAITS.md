@@ -8466,6 +8466,77 @@ and after below), `runde168_maenner.png` (five more heads of the sample, two of 
 of the sample in the village's dress, after).
 
 
+**Round 169: the court's figured silk is small, close and less yellow** (2026-11-21). The court's sheet beside
+two figured gowns of the reference (the sheet of couples in half figure). There a gown has six or seven small
+figures across the chest, close together, in a gold that is not far from its ground: a woven cloth. Ours had
+four large palmettes across a chest, far apart, in one bright yellow on every dye: printed on.
+
+Looked at first, and not kept (below): a sharp crease in a lady's gown from the armpit to the breast.
+
+What was read. Nothing new. Round 156's records give no repeat's measure and no colour of the gold against its
+ground; the reference's two gowns were measured in the picture (below).
+
+What is changed.
+- **The figure is smaller and closer** (`tools/portrait/pipeline/silk_figure.py`): six palmettes across and up
+  the tile for four, 3.7 cm from palmette to palmette for 5.5, each a little larger in its step and the sprig
+  between them a third larger (`TALL` 0.86, `WIDE` 0.68, `LEAF` 0.32 for 0.8, 0.62, 0.24). The figure covers 27
+  in a hundred of the cloth for 20. The image and its normal map are written anew
+  (`public/portrait/real/cloth_cote_silk_figured.webp`, 169 kB for 137; `_n.webp`, 123 kB for 101).
+- **The gold shows its ground** (`src/portrait/materials.ts` `figuredLook`; `profile.ts`, `cloth.figured.cover`
+  0.7): where the figure is, 0.7 of the cloth is drawn as gold and the rest as the ground, in colour, roughness
+  and share of metal. All of it was gold.
+- Nothing in the builder: who wears the figured silk, the gown's files and their place in the image are as
+  they were.
+
+Measured (in the picture, the chest of a lord in red and of a lady in purple, 600 by 750: the pixels parted
+into ground and figure by how yellow they are; the same on two gowns of the reference, both of one green
+silk, small in their picture):
+
+| | round 168 | now | the reference's two |
+|---|---|---|---|
+| from palmette to palmette | 5.5 cm | 3.7 cm | |
+| the figure's share of the cloth, in the image | 0.20 | 0.27 | |
+| the gold's L: on red; on purple | 41.6; 39.6 | 36.8; 35.8 | 24.8; 25.0 (the ground 11.9; 14.1) |
+| how far the gold is from its ground (the distance in L, a and b): on red; on purple | 34.2; 43.6 | 27.5; 36.7 | 19.0; 17.8 |
+
+Tried and not kept.
+- **A lady's gown without its crease** (the round's first subject). At court a sharp crease runs in the silk
+  from the armpit to the breast, with a small point at its end. Three ways:
+  the gown held off a body with its chest evened as the drape's (`tunic_sim.py`: 25 passes over the chest's
+  front): a woman's breast is flattened by that, the skin came through the gown in patches as large as a hand,
+  and the crease stayed. It is in the gown's folds as draped, not in the hold: with every fold evened forty
+  times the gown is smooth. Round 166's rule from 1 mm for 3: smoother, but 4.28 in a hundred of the court's
+  triangles drawn out in the silk's image for 2.78 (`tests/court.rs` holds 4). The folds from 1 mm evened in
+  their height only, three and eight times, fading out within 4 cm of a hem: the image stays, the crease is
+  fainter but there, and on a girl of ten three places of the cloth at the neck lay under the skin, by 3 and
+  5 mm (`tests/neck.rs`). All taken back; the crease is as it was.
+- The figure with the sprig's leaves at 0.36 of a step: they touch the palmettes, and the figure reads as
+  stripes across the gown. At 0.3 with a palmette of 0.84 and 0.66: thinner than the reference's.
+- The gold at 0.5: 22.1 from its ground on red, nearer the reference's, but on red it is an ochre, not gold.
+  At 0.6 with the thinner figure: looked at, between the two.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 165 to its last figure, and the
+colour sheet as in round 168 (they read skin of the face).
+
+Honest about it. At a portrait's size a figured gown reads as a woven silk now and not as a print. It is still
+further from its ground than the reference's (27 to 37 for 18 to 19; that measure is rough: at an edge a pixel
+is both, and the reference's gowns are small and of one silk in another light). The figure is still my own
+palmette and sprig as formulas, one figure at one size for everybody, with none of the beasts and birds the
+silks of the records have; 3.7 cm, the figure's sizes and 0.7 are by eye beside two gowns of the reference:
+PLACEHOLDER. That a figure's weft lets the ground show is how the stage draws it, not something read. Where
+front and back of a gown meet the figure does not match, as before, and with more figures there are more of
+those places. The crease on a lady's chest, the gown as a sack and the corners of her neck at the shoulders
+are as they were.
+
+Tests: `tests/portrait.test.ts`, the test of the figured silk changed with the reason in it: it holds the
+stage's line with the gold's share, and the share between a half and one. `npx vitest run tests/portrait` 46 of
+46; `cargo test --release` as a whole 140 of 140 (nothing it reads is changed); typecheck and lint pass, no new
+warning.
+Pictures (project files, `portraits/`): `runde169_herren_vorher_nachher.png` (three lords, before above and
+after below), `runde169_dame_und_gekroente.png` (a lady and two crowned heads, the same), `runde169_hof.png`
+(all 36 of the sample at court, after).
+
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair

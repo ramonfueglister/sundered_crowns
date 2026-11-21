@@ -18,11 +18,16 @@ import sys
 import numpy as np
 from PIL import Image
 src, src_n, out, out_n = sys.argv[1:5]
-# how many palmettes across the tile and how many rows up it (the tile is about 22 cm of cloth on a gown: 5.5 cm
+# how many palmettes across the tile and how many rows up it (the tile is about 22 cm of cloth on a gown: 3.7 cm
 # from palmette to palmette), a palmette's height and half breadth and a leaf's length as shares of that step,
 # and how far the figure stands over the ground (in the normal map's own measure)
-COLS, ROWS = (int(os.environ.get(k, d)) for k, d in (('COLS', '4'), ('ROWS', '4')))
-TALL, WIDE, LEAF, RISE = (float(os.environ.get(k, d)) for k, d in (('TALL', '0.8'), ('WIDE', '0.62'), ('LEAF', '0.24'), ('RISE', '0.5')))
+# (round 169) Six palmettes across and up the tile for four, each a little larger in its step and the sprig a
+# third larger (0.86, 0.68, 0.32 for 0.8, 0.62, 0.24): the figure covers 27 in a hundred of the cloth for 20. At
+# 5.5 cm from palmette to palmette four of them lay across a chest, far apart, as printed on the cloth; the
+# reference's figured gowns have six or seven small figures across a chest, close together. PLACEHOLDER, by eye
+# beside two of its gowns; no record read gives a repeat's measure.
+COLS, ROWS = (int(os.environ.get(k, d)) for k, d in (('COLS', '6'), ('ROWS', '6')))
+TALL, WIDE, LEAF, RISE = (float(os.environ.get(k, d)) for k, d in (('TALL', '0.86'), ('WIDE', '0.68'), ('LEAF', '0.32'), ('RISE', '0.5')))
 silk = np.asarray(Image.open(src).convert('RGBA')).astype(np.float32) / 255
 S = silk.shape[0]
 Z = 2 * S                                       # drawn at twice the size and halved: soft edges

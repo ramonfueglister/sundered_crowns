@@ -373,7 +373,7 @@ export const ENGLAND_1356: StageProfile = {
     wool: 2.6,
     linen: 1,
     silk: { tone: 2.6, rough: 0.55, specular: 0.5 },
-    figured: { gold: [1.2, 0.8, 0.22], rough: 0.4, metal: 0.2 },
+    figured: { gold: [1.2, 0.8, 0.22], cover: 0.7, rough: 0.4, metal: 0.2 },
   },
   cards: { rough: 0.72, specular: 0.2, anisotropy: 0.3 },
   sheen: {

@@ -194,13 +194,14 @@ diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.072
 
 /** (round 156) A figured silk (an image named `_figured`, tools/portrait/pipeline/silk_figure.py): where the
  *  image's covering is less than 1 a second thread lies on the cloth, gold. There the cloth has the gold's colour
- *  in place of its dye's, under the weave's own shade, and the gold's roughness and share of metal. */
+ *  in place of its dye's, under the weave's own shade, and the gold's roughness and share of metal: by the share
+ *  `cover` (round 169), the rest of it the ground's. */
 function figuredLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageProfile['cloth']>['figured']): void {
   m.onBeforeCompile = shader => {
     let code = swap(shader.fragmentShader, '#include <color_fragment>', `#include <color_fragment>
 float silkFigure = 0.0;
 #ifdef USE_MAP
-silkFigure = 1.0 - sampledDiffuseColor.a;
+silkFigure = ( 1.0 - sampledDiffuseColor.a ) * ${f(k.cover)};
 diffuseColor.rgb = mix( diffuseColor.rgb, vec3( ${k.gold.map(f).join(', ')} ) * sampledDiffuseColor.rgb, silkFigure );
 #endif`);
     code = swap(code, '#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>\nroughnessFactor = mix( roughnessFactor, ${f(k.rough)}, silkFigure );`);

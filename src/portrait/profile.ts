@@ -88,8 +88,11 @@ export interface StageProfile {
    *  As `cap.light` is for hair. `silk` (round 150: a cloth whose image is named `_silk`): how many times lighter
    *  it is drawn, its roughness and its "specular" (wool and linen: 0.95 and 0.15, a matt cloth). `figured`
    *  (round 156: a silk whose image is named `_figured`): the colour of the gold thread its figure is woven of
-   *  (in linear light, as it is drawn: not multiplied by `silk.tone`'s dye), its roughness and its share of metal. */
-  cloth: null | { wool: number; linen: number; silk: { tone: number; rough: number; specular: number }; figured: { gold: [number, number, number]; rough: number; metal: number } };
+   *  (in linear light, as it is drawn: not multiplied by `silk.tone`'s dye), how much of the figure is that gold
+   *  and not the ground showing between the gold's threads (`cover`, round 169: with all of it gold the figure
+   *  lay on the silk as printed, one bright yellow on every dye; the reference's gold is nearer its ground.
+   *  PLACEHOLDER, by eye), its roughness and its share of metal. */
+  cloth: null | { wool: number; linen: number; silk: { tone: number; rough: number; specular: number }; figured: { gold: [number, number, number]; cover: number; rough: number; metal: number } };
   /** Hair cards, the round strands of a plait and the locks of a head's hair: roughness, "specular", anisotropy
    *  of the glint. */
   cards: { rough: number; specular: number; anisotropy: number };

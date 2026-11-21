@@ -901,6 +901,7 @@ describe('portraits', { timeout: 20_000 }, () => {
     // image named `_figured`): the figure is the image's covering, and where the covering is less than 1 the
     // stage draws the gold's colour in place of the dye's, with the gold's roughness and share of metal. The
     // rest of the cloth is the plain silk's.
+    // (round 169) Not all of the figure is gold: `cover` of it, the rest the ground between the gold's threads.
     const of = (tex: string) => ({ rough: 0.5, metal: 0, double: false, tex, nmap: '', pos: new Float32Array(9), col: new Float32Array(9).fill(0.5), uv: new Float32Array(6), nrm: new Float32Array(9) });
     const drawn = (tex: string, profile = ENGLAND_1356) => {
       const m = surfaceMaterials(of(tex), null, null, profile)[0]!;
@@ -912,7 +913,9 @@ describe('portraits', { timeout: 20_000 }, () => {
     const k = ENGLAND_1356.cloth!;
     expect([figured.m.roughness, figured.m.color.r, figured.m.ior]).toEqual([plain.m.roughness, plain.m.color.r, plain.m.ior]);
     expect(plain.code).toBe(ShaderLib.physical.fragmentShader);
-    expect(figured.code).toContain('silkFigure = 1.0 - sampledDiffuseColor.a;');
+    expect(figured.code).toContain(`silkFigure = ( 1.0 - sampledDiffuseColor.a ) * ${k.figured.cover.toFixed(3)};`);
+    expect(k.figured.cover).toBeGreaterThan(0.5);
+    expect(k.figured.cover).toBeLessThan(1);
     expect(figured.code).toContain(`vec3( ${k.figured.gold.map(c => c.toFixed(3)).join(', ')} )`);
     expect(figured.code).toContain(`roughnessFactor = mix( roughnessFactor, ${k.figured.rough.toFixed(3)}, silkFigure );`);
     expect(figured.code).toContain(`metalnessFactor = mix( metalnessFactor, ${k.figured.metal.toFixed(3)}, silkFigure );`);
