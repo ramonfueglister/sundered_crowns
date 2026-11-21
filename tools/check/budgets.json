@@ -83,7 +83,7 @@
   },
   "lines": {
     "economy/src/lib.rs": 1040,
-    "server/world.ts": 541,
+    "server/world.ts": 502,
     "src/sim/economy/engine.ts": 518,
     "src/sim/settlement/streets.ts": 622,
     "src/worldprobe/world.ts": 868,
