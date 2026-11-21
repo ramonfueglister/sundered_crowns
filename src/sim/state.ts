@@ -62,8 +62,10 @@ import type { Table } from './ecs';
  *  adult of his family who does not work takes his place before a worker without work does; the engine's state keeps
  *  per absence whether the family stands in (its format 14).
  *  40: Venice on the land and water of its land register of 1808 (settlement feature 3, real plans,
- *  src/sim/settlement/plan_ground.ts): its parcels, streets and landmarks lie on the register's land. */
-export const STATE_VERSION = 40;
+ *  src/sim/settlement/plan_ground.ts): its parcels, streets and landmarks lie on the register's land.
+ *  41: the town walls and their gates (settlement feature 6, src/sim/systems/walls.ts): every town but Venice has a
+ *  ring round it, open at the water, with a gate where a street crosses it. */
+export const STATE_VERSION = 41;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
@@ -270,6 +272,18 @@ export const LANDMARK_SCHEMA = {
   order: 'u8',
 } as const;
 export type LandmarkSchema = typeof LANDMARK_SCHEMA;
+/** The walls of the towns (settlement feature 6, src/sim/settlement/walls.ts): straight pieces of each town's ring,
+ *  wall, gate or postern, in turn round the ring; where the ring is open (water, rock) there is no piece. A row is
+ *  never freed. */
+export const WALL_SCHEMA = {
+  /** the town (its site, as in the land register) */
+  site: 'i16',
+  /** the ends of the piece: metres east and south of the centre of the town, at the scale of the houses */
+  x0: 'f32', z0: 'f32', x1: 'f32', z1: 'f32',
+  /** what it is (WALL_PIECE in src/sim/settlement/walls.ts) */
+  kind: 'u8',
+} as const;
+export type WallSchema = typeof WALL_SCHEMA;
 /** A firm of the economy of a city (economy feature 10): an entity for every firm the engine computes. The firms of
  *  a city lie one after the other, in the engine's order (`CityEconomies.firm0`). All but the place and the owner
  *  are written by the economy after every day (src/sim/systems/economy.ts). */
@@ -373,6 +387,8 @@ export interface WorldState {
   field: Table<FieldSchema>;
   /** the landmarks of the towns and those that stand alone (src/sim/systems/landmarks.ts) */
   landmark: Table<LandmarkSchema>;
+  /** the walls and gates of the towns (src/sim/systems/walls.ts) */
+  wall: Table<WallSchema>;
   economy: {
     /** the cities as economies that trade; null in a world that does not start in the year of their calibration */
     cities: CityEconomies | null;
