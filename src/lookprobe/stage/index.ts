@@ -77,6 +77,9 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     freed,
     gliding,
     sinking,
+    lake,
+    lakeSinking,
+    lakeFreed,
     surface,
     mirrored,
     tint,
@@ -86,7 +89,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     marked,
   } = createMaterials(scene);
 
-  const rig = createRig(scene, o, { tint, water, solid, seaFaced }, redraw);
+  const rig = createRig(scene, o, { tint, water, solid, seaFaced, lake, lakeSinking, lakeFreed }, redraw);
   const rad = THREE.MathUtils.degToRad;
 
   // the camera: far away with a long lens, so that the whole picture has one scale (the "parallel" look of the reference)
@@ -171,12 +174,13 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
   controls?.addEventListener('change', redraw);
   resize();
 
-  const meshes = createMeshes({ faced, gliding, seaFaced, fieldFaced, fieldGliding, fields, freed }),
+  const meshes = createMeshes({ faced, gliding, seaFaced, fieldFaced, fieldGliding, fields, freed, lakeFreed }),
     { mesh, faceMesh, fieldMesh, freeMesh } = meshes;
   const probe: Stage['probe'] = { ready: false, counts: {}, backend: flag('webgl', false) ? 'webgl2' : 'webgpu' };
   countShaders(renderer, probe);
   /** the sea's pilots (pilots.ts), while they are still drawn */
-  let seaPilots = flag('pilots', true) && smallLists ? addPilots(scene, meshes, { water, solid, sinking }) : [];
+  let seaPilots =
+    flag('pilots', true) && smallLists ? addPilots(scene, meshes, { water, solid, sinking, lake, lakeSinking }) : [];
   /** the meshes on the stage that are drawn on a share of the picture's dots, neither all nor none (see `dissolving`) */
   const partial = new Set<THREE.Object3D>();
   // The renderer keeps a record of every mesh it has drawn, and each record hangs on the material, which all pieces
@@ -197,6 +201,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
       seaFaced,
       gliding,
       freed,
+      lakeFreed,
       smallLists,
     }),
     { staged, cold, cool, warm, parts } = sender;
@@ -211,6 +216,11 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     keepFigures(f.near, kept);
     showFigures(frameW);
   };
+  /** the material of a list that glides (it carries the heights it ends at), for the material of one that does not */
+  const sinks = new Map<THREE.Material, THREE.Material>([
+    [solid, sinking],
+    [lake, lakeSinking],
+  ]);
   const stage: Stage = {
     canvas,
     aim,
@@ -226,18 +236,20 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
         [built.carried, solid, true],
         [built.things, solid, true],
         [built.water, water, false],
-        [built.raised, solid, false],
+        [built.raised, lake, false],
       ] as const) {
         if (!shape) continue;
         for (const part of [
           ...(shape.faces?.geo.length ? [cool(faceMesh(shape, casts, shape === built.water))] : []),
           ...(shape.tops?.geo.length ? [cool(fieldMesh(shape, casts))] : []),
-          ...(shape.free?.geo.length ? [cool(freeMesh(shape, casts))] : []),
+          ...(shape.free?.geo.length ? [cool(freeMesh(shape, casts, shape === built.raised))] : []),
           ...(shape.pos.length
-            ? parts(shape).map((some) => cool(mesh(some, some.sink && material === solid ? sinking : material, casts)))
+            ? parts(shape).map((some) =>
+                cool(mesh(some, some.sink ? (sinks.get(material) ?? material) : material, casts)),
+              )
             : []),
         ]) {
-          if (part.material === sinking) part.userData.glide = 0;
+          if (part.material === sinking || part.material === lakeSinking) part.userData.glide = 0;
           part.userData.ground = shape === built.ground || shape === built.carried;
           if (shape === built.things || shape === built.carried) part.userData.ink = 0;
           if (shape === built.water) part.layers.set(FIGURES_LAYER);
