@@ -15,6 +15,7 @@ import {
   dFdx,
   dFdy,
   dot,
+  exp2,
   float,
   fract,
   fwidth,
@@ -27,7 +28,7 @@ import {
   step,
   vec2,
 } from 'three/tsl';
-import type * as THREE from 'three/webgpu';
+import * as THREE from 'three/webgpu';
 
 type Float = THREE.Node<'float'>;
 type Vec2 = THREE.Node<'vec2'>;
@@ -70,6 +71,15 @@ const RING_SLOPE: readonly [number, number] = [0.3, 0.6];
  * 1500)
  */
 export const RINGS_UNTIL: readonly [number, number] = [0.5, 0.9];
+/**
+ * By the shore the bed shows through the water: the colour of wet sand, at the land's edge (RING_TO) by BED_SHARE of
+ * it, and by half as much with every BED_HALF columns out to sea, as the light dies in water with its depth
+ * (Beer-Lambert) over a bed that falls evenly from the shore. EU5's sand runs on under its water; ours was one
+ * colour up to a hard edge. OWN RULE: the colour and the numbers are chosen by eye.
+ */
+export const BED = new THREE.Color(0xe9dfae);
+const BED_SHARE = 0.7,
+  BED_HALF = 0.7;
 /** the view's place is taken modulo these many finest blocks (sea.ts PERIOD): a wave along the coast fits it whole */
 const TURN = (2 * Math.PI) / 1024;
 
@@ -79,6 +89,41 @@ export const columnsOf = (k: Float): Float =>
     .sub(sin(asin(float(1).sub(k.mul(2)).clamp(-1, 1)).div(3)))
     .mul(7.6)
     .add(0.4);
+
+/** The share of the bed's colour at a point of the water `d` columns from the coast (as far as the foam reaches). */
+export function shoreBed(d: Float, acrossScreen: Float): Float {
+  const reach = float(1).sub(smoothstep(RINGS_UNTIL[0], RINGS_UNTIL[1], acrossScreen));
+  return exp2(d.sub(RING_TO).max(0).div(-BED_HALF)).mul(BED_SHARE).mul(reach);
+}
+
+/**
+ * the shore of the low-poly look (sea.ts POLY): two bands of flat colour along the coast with hard edges, the bed's
+ * out to BANDS[0] columns and the shallows' to BANDS[1], which come in and go out together by BAND_SWAY columns every
+ * BAND_PERIOD seconds (a little sooner here and later there); a line of foam BAND_FOAM columns wide at the land's
+ * edge, and a thinner one (BAND_LINE) on the bed band's edge
+ */
+const BANDS: readonly [number, number] = [2.9, 4.5],
+  BAND_SWAY = 0.28,
+  BAND_PERIOD = 6,
+  BAND_FOAM = 0.2,
+  BAND_LINE = 0.07;
+
+/** The bands and the foam of the low-poly shore at a point `d` columns from the coast (`p`, `acrossScreen`, `clock` as for `shoreFoam`). */
+export function shoreBands(d: Float, p: Vec2, acrossScreen: Float, clock: Float) {
+  const along = sin(dot(p, vec2(18, 11).mul(TURN)).add(sin(dot(p, vec2(-7, 23).mul(TURN))))).mul(1.2),
+    sway = sin(clock.mul((2 * Math.PI) / BAND_PERIOD).add(along)).mul(BAND_SWAY);
+  // (an edge a dot wide)
+  const soft = fwidth(d).mul(0.5).max(1e-4),
+    within = (to: Float) => float(1).sub(smoothstep(to.sub(soft), to.add(soft), d));
+  const bedTo = float(BANDS[0]).add(sway),
+    reach = float(1).sub(smoothstep(RINGS_UNTIL[0], RINGS_UNTIL[1], acrossScreen));
+  const line = max(float(BAND_LINE), fwidth(d).mul(0.75));
+  const foam = max(
+    within(float(RING_TO + BAND_FOAM).add(sway.mul(0.5))),
+    within(bedTo.add(line)).mul(float(1).sub(within(bedTo.sub(line)))),
+  );
+  return { bed: within(bedTo), shallows: within(float(BANDS[1]).add(sway)), foam: foam.mul(reach), reach };
+}
 
 /**
  * The share of foam at a point of the water: `d` how many columns from the coast it lies, `p` where it lies in finest

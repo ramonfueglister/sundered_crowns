@@ -48,7 +48,6 @@ import {
   select,
   sin,
   smoothstep,
-  step,
   texture,
   time,
   transformNormalToView,
@@ -57,18 +56,13 @@ import {
   vec3,
 } from 'three/tsl';
 import { SEA_Y } from './layout';
-import { COAST_REACH } from './sea_coast';
-import { RINGS_UNTIL, columnsOf, shoreFoam } from './sea_shore';
+import { readDepths } from './sea_depth';
+import { facetSlope } from './sea_facets';
+import { BED, RINGS_UNTIL, columnsOf, shoreBands, shoreBed, shoreFoam } from './sea_shore';
 import { TEX, WIND, waveTexture } from './sea_waves';
-import { number, q } from './stage/address';
+import { flag, number, q } from './stage/address';
 import { WATER_DEEP, WATER_SHALLOW } from './terrain';
 
-// The depth picture holds the depth d in metres as byte = 255 · ln(1 + d / 20) / ln(1 + 6000 / 20)
-// (tools/worldprobe/build_depth.py D0, DEEPEST); the colours below go by its share, byte / 255.
-/** the depth picture's share for the sea beyond the game map, of which no depths are known: open ocean (about 3000 m) */
-const BEYOND = 0.88;
-/** the depth's share where no depths are known (a stage without the world's map): water over the shelf */
-const UNKNOWN = 0.2;
 /**
  * The water's colours (sRGB) by the depth picture's share: at the coast, over the shallows (some 30 m), at the
  * shelf's edge (some 150 m), over the slope (some 700 m) and over the deep sea (some 3000 m). As the stage lights
@@ -154,6 +148,9 @@ const STILL = q.has('w');
  */
 const RATIO = STILL ? 1 : Math.min(globalThis.devicePixelRatio ?? 1, 2);
 const FOAM = new THREE.Color(0xf2f8f6);
+/** the low-poly look, to be judged beside the other (?seapoly=1): the surface in facets (sea_facets.ts), the shore in bands of flat colour (sea_shore.ts `shoreBands`) */
+const POLY = flag('seapoly', false),
+  SQUARE = number('seapoly', 0) === 2;
 /**
  * how far the swell reaches, in finest blocks to a dot of the screen (RATIO): it shows fully up to the first and is
  * gone from the second (in a picture 1672 dots wide: fully up to some 400 blocks across, smooth from 1000 on); and the
@@ -236,38 +233,6 @@ export function createSea(mirror: Vec3): Sea {
   };
 }
 
-/**
- * Where a point of the water lies on the depth picture, and the picture there: the depth's share (0: as shallow as
- * the coast) and the coast's distance in dots of the picture; with the uniforms `place` sets.
- */
-function readDepths() {
-  const none = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1);
-  none.needsUpdate = true;
-  const depths = texture(none),
-    known = uniform(0),
-    toMap = uniform(new THREE.Matrix3()),
-    round = uniform(0);
-  const at = toMap.mul(vec3(positionWorld.x, positionWorld.z, 1)),
-    u = select(round.greaterThan(0), fract(at.x.div(round)).mul(round), at.x),
-    v = at.y;
-  const onMap = step(0, u).mul(step(u, 1)).mul(step(0, v)).mul(step(v, 1)),
-    seen = depths.sample(vec2(u, v.oneMinus()));
-  const share = mix(float(UNKNOWN), mix(float(BEYOND), seen.r, onMap), known);
-  const coastTexels = mix(
-    float(COAST_REACH),
-    seen.g
-      .mul(255)
-      .sub(128)
-      .mul(COAST_REACH / 128),
-    onMap,
-  );
-  // (the depth picture's size in dots, from the depth picture itself)
-  const texels = uniform(new THREE.Vector2(1, 1)),
-    dotsPerTexel = float(1).div(length(fwidth(vec2(at.x, at.y).mul(texels))).max(1e-6));
-  const coastDots = coastTexels.mul(dotsPerTexel);
-  return { depths, known, toMap, round, texels, share, coastDots, dotsPerTexel };
-}
-
 /** The water as the picture sees it (`blocks`, `home`, `homeCoarse`: the uniforms `place` sets). */
 function whereSeen(blocks: Float, home: Vec2, homeCoarse: Vec2) {
   // where the water lies in finest blocks, and how many of them a dot of the picture is wide there (by the geometric
@@ -310,7 +275,7 @@ function waterColour(
   clock: Float,
   flecksAt: ReturnType<typeof createWaves>['flecksAt'],
 ): Vec3 {
-  const { share, known, coastDots, dotsPerTexel } = depth;
+  const { share, shareSmooth, known, coastDots, dotsPerTexel } = depth;
   // how far from the coast the corners are, as their colour has it (terrain.ts: WATER_SHALLOW at the coast, mixed
   // towards WATER_DEEP by k = 0 … 1 within some 8 columns, and the mix a tenth lighter or darker in broad patches
   // everywhere): by the ratio of their green to their blue, which the patches leave as it is (k worked back from
@@ -347,13 +312,30 @@ function waterColour(
   // (from near the corners' band is the only one, a column or two wide, and shows fully: a light rim along the coast)
   const coast = max(corner.mul(mix(float(NEAR_RIM), float(1), coarse)), halo.mul(halo).mul(HALO_SHARE));
   const patches = clamp(shade, 0.9, 1.1);
-  // from near, all the picture lies within a dot or two of the depth picture, which runs down to the coast's depth
-  // across them: there the water beyond the corners' band is the shelf's (and the band the shallows')
-  const t = mix(share, max(share, float(RAMP[1][0]).mul(float(1).sub(corner))), coarse);
+  // from near, all the picture lies within a few dots of the depth picture: there its depths are read smoothed
+  // (sea_depth.ts), so that the sea bed's rise towards the land shows as it is, lighter water over the shallows of
+  // a bay or a lagoon and deeper blue out to sea, without the picture's dots. (Until round 6 the water beyond the
+  // corners' band was the shelf's alone from near, one blue across the picture; EU5's nearest views vary five times
+  // as much in lightness across their open water.)
+  const t = mix(share, shareSmooth, coarse);
   // (the near view's light is brighter: the water is as dark there as it looks from afar; the foam is white in it)
   const darker = mix(float(1), float(NEAREST_DARKER), seen.nearest);
-  const water = mix(ramp(t), lin(COAST), coast).mul(materialColor.rgb).mul(patches).mul(darker);
-  const foam = shoreFoam(coastAway ?? columnsOf(k), seen.pFine, seen.acrossScreen, clock, flecksAt);
+  // (the bed shows through by the shore where the mesh knows the coast's distance: by the corners' colour alone it
+  // would show in steps)
+  const bands = POLY && coastAway ? shoreBands(coastAway, seen.pFine, seen.acrossScreen, clock) : null;
+  const bed = bands
+    ? bands.bed.mul(bands.reach).mul(0.75)
+    : coastAway
+      ? shoreBed(coastAway, seen.acrossScreen)
+      : float(0);
+  const lit = bands ? mix(coast, bands.shallows.mul(0.8), bands.reach) : coast;
+  const water = mix(mix(ramp(t), lin(COAST), lit), lin(BED), bed)
+    .mul(materialColor.rgb)
+    .mul(bands ? float(1) : patches)
+    .mul(darker);
+  const foam = bands
+    ? bands.foam
+    : shoreFoam(coastAway ?? columnsOf(k), seen.pFine, seen.acrossScreen, clock, flecksAt);
   // (the foam is lit as the water is)
   return mix(water, lin(FOAM).mul(materialColor.rgb), foam);
 }
@@ -387,7 +369,9 @@ function surfaceOf({ pFine, pCoarse, acrossDot, nearest, surface, flecked }: Ret
         .add(0.5),
     );
   const slopeShare = mix(float(SWELL), float(SWELL_NEAR), nearest).mul(surface);
-  const slope = a.slope.mul(w0).add(b.slope.mul(w1)).mul(keep).mul(slopeShare).mul(gust);
+  const slope = POLY
+    ? facetSlope(pFine, acrossDot, clock, SQUARE).mul(surface)
+    : a.slope.mul(w0).add(b.slope.mul(w1)).mul(keep).mul(slopeShare).mul(gust);
   const facing = normalize(vec3(slope.x.negate(), 1, slope.y.negate()));
   const eye = normalize(cameraPosition.sub(positionWorld));
   const fresnel = (n: Vec3) => float(0.02).add(pow(float(1).sub(max(dot(n, eye), 0)), 5).mul(0.98));
@@ -410,7 +394,7 @@ function surfaceOf({ pFine, pCoarse, acrossDot, nearest, surface, flecked }: Ret
     .mul(float(1).sub(fF))
     .add(flecksAt(oF.add(1)).mul(fF))
     .div(float(1).sub(fF).mul(float(1).sub(fF)).add(fF.mul(fF)).sqrt());
-  const fleck = smoothstep(line.sub(fwidth(crests)), line.add(fwidth(crests)), crests).mul(flecked);
+  const fleck = smoothstep(line.sub(fwidth(crests)), line.add(fwidth(crests)), crests).mul(POLY ? float(0) : flecked);
   // the glitter: where two pictures of the flecks' waves an octave finer than the swell's, turned apart and drifting
   // against each other, both peak (they meet and part again: the points twinkle), more at a slant to the water
   const glint = (h: Float, k: Float) => smoothstep(SPARKLE, SPARKLE + 0.6, min(h, k));
@@ -419,7 +403,7 @@ function surfaceOf({ pFine, pCoarse, acrossDot, nearest, surface, flecked }: Ret
     flecksAt(o0.sub(1), -1.3, vec2(0.77, 0.41), -0.8),
   )
     .mul(clamp(pow(float(1).sub(eye.y), SPARKLE_SLANT).mul(3), 0, 1))
-    .mul(flecked);
+    .mul(POLY ? float(0) : flecked);
   return { facing, waved, level, fleck, sparkle, clock, flecksAt };
 }
 
