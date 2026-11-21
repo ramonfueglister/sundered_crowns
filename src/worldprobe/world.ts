@@ -24,6 +24,7 @@ import { drawGround } from './table';
 import { CROWD_AT, farCrowd } from './crowd';
 import { TREE_NUMBERS, crownTallAt } from './trees';
 import { unshade } from './mean';
+import { waterside } from './waterside';
 import { FARMS, FIELD_GROUND, LOT_BLOCKS, LOT_FILL, type Lot, type Monument, PEOPLE_PER_PERSON, type Settled, type Site, type Survey, type Told, farmsFor, firstHalf, raise, settle } from './settle';
 import { type Columns, columnsOf } from './nearground';
 import { MONUMENTS, bridge, m, modelOf, styleOf } from '../buildings';
@@ -776,6 +777,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
       return mx >= 0 && mz >= 0 && mx < N && mz < N && fits(lx, lz) && wooded(mx, mz) < 0.5;
     }, { centre: fineOf, courses: (site) => { const p = places[site], at = p && toGround(...cellOf(region, p.lon, p.lat)); return at && onGround(at) ? courses(Math.floor(at[0]), Math.floor(at[1])) : null; } }) } : told;
     const built = settled = settle(g, things, sites, monuments, farm, ploughed, vines, counts, own, farms, courses, survey, surveyed, fieldOf);
+    if (step === 0 && !survey && !told) waterside(g, things, own, counts);
     // a survey of the building ground needs no more than the towns' ground
     if (survey || told) return { ground: new Batch(), things, water: new Batch(), cells: [], counts };
 
