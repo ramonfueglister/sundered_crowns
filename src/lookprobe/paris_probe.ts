@@ -56,7 +56,7 @@ const BLOCK = num('block', 12),
   LANE = num('lane', 4.6),
   CELL = BLOCK + LANE;
 const GRASS = rgb(0x6a8a3a),
-  OLIVE = hexOf('olive') ?? rgb(0x32551b),
+  OLIVE = hexOf('olive') ?? rgb(0x2d551b),
   LIGHT_LEAF = hexOf('leaf') ?? rgb(0x5d7212),
   STRIPES: readonly RGB[] = [rgb(0xc8382c), rgb(0x2f5f9a), rgb(0xd8a030)],
   CANVAS = rgb(0xf0e8d8),
@@ -78,6 +78,8 @@ function folk(things: Batch, x: number, z: number, r: Rnd) {
 
 type Front = 'px' | 'nx' | 'pz' | 'nz';
 
+/** the town's draw: another seed gives another town of the same kind, to see how much a measure owes to one draw */
+const SEED = num('seed', 21);
 /** the share of houses with a passage after them, its width; how far a block's edges and a house's front may move */
 const GAP = num('gap', 0.35),
   GAP_W = num('gapw', 1.3),
@@ -186,7 +188,7 @@ async function build(): Promise<StageScene> {
     things = new Batch(),
     water = new Batch(),
     c = N / 2,
-    r = seeded(21);
+    r = seeded(SEED);
   // the whole probe is paved town (ground kit: paving, src/buildings/ground); the ground under the slabs, darker, shows in their joints
   const size = 7 * CELL,
     x0 = Math.round(c - size / 2),
@@ -198,7 +200,7 @@ async function build(): Promise<StageScene> {
   fineGround(ground, { x0, z0, size, ox: 0, oz: 0, water: LAND_Y - 2 }, () => land, TR.quay);
   // blocks on a grid of 7 x 7 cells; the square takes the middle 2 x 1 cells. Each block's edges move by up to JIT
   // blocks, so that the lanes widen and narrow as in the reference picture (OWN RULE for the prototype)
-  const rj = seeded(24),
+  const rj = seeded(SEED + 3),
     edge = () => rj.range(-JIT, JIT);
   for (let i = 0; i < 7; i++)
     for (let k = 0; k < 7; k++) {
@@ -212,7 +214,7 @@ async function build(): Promise<StageScene> {
   // the square: stalls in two loose rows, trees at its edge
   const sx = x0 + 3 * CELL + LANE / 2,
     sz = z0 + 3 * CELL + LANE / 2,
-    rs = seeded(22);
+    rs = seeded(SEED + 1);
   for (let k = 0; k < 9; k++) stall(things, sx + 2 + rs.range(0, 2 * CELL - 6), sz + 2 + rs.range(0, BLOCK - 4), rs);
   for (let k = 0; k < 8; k++)
     tree(
@@ -225,7 +227,7 @@ async function build(): Promise<StageScene> {
       OLIVE,
     );
   // people in the lanes and on the square
-  const rf = seeded(23);
+  const rf = seeded(SEED + 2);
   for (let k = 0; k < 160; k++) {
     const lane = x0 + rf.int(0, 7) * CELL + rf.range(-0.9, 0.9),
       along = z0 + rf.range(0, size);
@@ -241,7 +243,7 @@ async function build(): Promise<StageScene> {
  * (tools/lookprobe/search_paris.py, 21 Nov 2026), seen through `?tone=neutral&exposure=1.19&saturation=0.88` (the
  * game's own tone stays AgX); each strength can be tried out from the address, as in near.ts
  */
-const FOUND = { ...NEAR_LIGHT, sun: 1.35, side: 0.95, sky: 0.75, bounce: 0.31, fill: 0.55, skyColor: 0xc4d1f0 };
+const FOUND = { ...NEAR_LIGHT, sun: 1.35, side: 0.95, sky: 0.75, bounce: 0.31, fill: 0.61, skyColor: 0xc4d1f0 };
 const LIGHT = { ...FOUND };
 for (const k of ['sun', 'side', 'sky', 'bounce', 'fill'] as const) LIGHT[k] = num(k, FOUND[k]);
 LIGHT.skyColor = colour('skycol') ?? FOUND.skyColor;

@@ -2,14 +2,14 @@
 comes closest to Ramon's reference picture by gauntlet_paris.py.
 
 Usage: python3 tools/lookprobe/search_paris.py reference.png out_dir [rounds] [start.json]
-with the dev server on http://localhost:5199 (npx vite --port 5199). Each try shoots the probe (about 25 s, two at a
-time) and measures it. The search is Levenberg-Marquardt (Levenberg 1944; Marquardt, "An algorithm for least-squares
-estimation of nonlinear parameters", J. SIAM 11, 1963) on the checks' signed errors, capped at 4: each round moves
-every knob by a small step to learn how it shifts every check (forward differences), then solves for the step that
-shrinks the errors most at three dampings, and keeps the best try of the round by the score. The score counts the
-failed checks and adds how far they miss (their error above 1, capped at 4, a third each). Knobs work on a scale of 0
-to 1 between their bounds. Every try is written to out_dir/log.jsonl, the best picture to out_dir/best.png and its
-address to out_dir/best.json.
+with the dev server on http://localhost:5199 (npx vite --port 5199). Each try shoots the probe as two towns (SEEDS,
+about 25 s each, two tries at a time) and measures them. The search is Levenberg-Marquardt (Levenberg 1944;
+Marquardt, "An algorithm for least-squares estimation of nonlinear parameters", J. SIAM 11, 1963) on the checks'
+signed errors, averaged over the towns and capped at 4: each round moves every knob by a small step to learn how it
+shifts every check (forward differences), then solves for the step that shrinks the errors most at three dampings,
+and keeps the best try of the round by the score. The score counts the failed checks and adds how far they miss
+(their error above 1, capped at 4, a third each). Knobs work on a scale of 0 to 1 between their bounds. Every try is
+written to out_dir/log.jsonl, the best picture to out_dir/best.png and its address to out_dir/best.json.
 """
 
 import colorsys
@@ -26,7 +26,7 @@ from gauntlet_paris import REF_BOX, load, measure
 
 ROOT = Path(__file__).resolve().parents[2]
 # knob: (lowest, highest, start); colours are searched as hue in degrees, saturation and value and given as hex; the
-# starts are the best setting of the search of 21 Nov 2026, whose colours src/buildings/traditions/paris.ts holds;
+# starts are the best setting of the searches of 21 Nov 2026, whose colours src/buildings/traditions/paris.ts holds;
 # the timber stays dark (value up to 0.4), as the picture draws it
 SPACE = {
     'across': (40, 70, 63.12),
@@ -40,7 +40,7 @@ SPACE = {
     'side': (0.3, 1.3, 0.952),
     'sky': (0.2, 1.4, 0.748),
     'bounce': (0, 0.5, 0.306),
-    'fill': (0, 0.8, 0.549),
+    'fill': (0, 0.8, 0.613),
     'skyblue': (0, 1, 0.061),
     'wall_h': (10, 40, 22.884),
     'wall_s': (0.08, 0.35, 0.32),
@@ -51,7 +51,7 @@ SPACE = {
     'pave_v': (0.35, 0.8, 0.45),
     'pspread': (0.5, 3, 1.331),
     'glass_h': (0, 200, 102.929),
-    'glass_s': (0.1, 0.7, 0.176),
+    'glass_s': (0.1, 0.7, 0.224),
     'glass_v': (0.2, 0.9, 0.541),
     'roof_h': (5, 30, 27.119),
     'roof_s': (0.35, 0.75, 0.521),
@@ -61,17 +61,17 @@ SPACE = {
     'timb_s': (0.15, 0.65, 0.252),
     'timb_v': (0.15, 0.4, 0.4),
     'post': (0.6, 1.5, 0.9),
-    'tshare': (0.3, 1, 0.944),
+    'tshare': (0.3, 1, 1.0),
     'tlow': (0.7, 1, 0.812),
     'tspread': (0.05, 0.4, 0.4),
     'treesize': (0.7, 1.6, 0.881),
     'leaf_h': (50, 110, 73.31),
     'leaf_s': (0.5, 1, 0.839),
     'leaf_v': (0.35, 0.8, 0.448),
-    'olive_h': (60, 120, 95.994),
+    'olive_h': (60, 120, 100.794),
     'olive_s': (0.5, 1, 0.687),
     'olive_v': (0.2, 0.55, 0.333),
-    'jetty': (0, 0.8, 0.395),
+    'jetty': (0, 0.8, 0.459),
 }
 # knobs that take whole fine blocks
 WHOLE = {'winw': (1, 3, 1), 'winh': (2, 4, 3)}
@@ -96,20 +96,23 @@ def address(x):
     return '&'.join(f'{k}={v}' for k, v in o.items())
 
 
-def score(rows):
-    fails = [abs(err) for *_, err, _ in rows if abs(err) > 1]
-    return len(fails) + sum(min(err, 4) - 1 for err in fails) / 3, len(rows) - len(fails)
+def score(errs):
+    fails = [abs(err) for err in errs if abs(err) > 1]
+    return len(fails) + sum(min(err, 4) - 1 for err in fails) / 3, len(errs) - len(fails)
 
 
-def shoot(x, png):
+def shoot(x, png, seed):
     env = dict(os.environ, SHOT_W='1448', SHOT_H='1086', PROBE_URL='http://localhost:5199')
     env['PROBE_PAGE'] = 'paris-probe.html'
     png.unlink(missing_ok=True)
-    cmd = ['node', 'tools/lookprobe/shot.mjs', str(png), address(x)]
+    cmd = ['node', 'tools/lookprobe/shot.mjs', str(png), f'{address(x)}&seed={seed}']
     subprocess.run(cmd, cwd=ROOT, env=env, capture_output=True, timeout=400, check=False)
     return png.exists()
 
 
+# the towns every try is measured on, its errors averaged over them: a setting fitted to one draw of the town fitted
+# that draw (21 Nov 2026: 44 of 46 on the town it was searched on, 39 and 40 on two others)
+SEEDS = (21, 31)
 KEYS = sorted(SPACE)
 LO, HI = np.array([SPACE[k][0] for k in KEYS]), np.array([SPACE[k][1] for k in KEYS])
 
@@ -128,12 +131,14 @@ class Search:
 
         def one(i_u):
             i, u = i_u
-            png = self.out / f'try{i}.png'
-            x = knobs(u, whole)
-            if not shoot(x, png):
-                return None
-            rows = measure(self.ref, load(png))
-            s, passed = score(rows)
+            x, errs = knobs(u, whole), []
+            for seed in SEEDS:
+                png = self.out / f'try{i}_{seed}.png'
+                if not shoot(x, png, seed):
+                    return None
+                errs.append([err for *_, err, _ in measure(self.ref, load(png))])
+            errs = np.mean(errs, 0)
+            s, passed = score(errs)
             with self.lock:
                 self.n += 1
                 rec = {'n': self.n, 'score': s, 'passed': passed, 'knobs': x, 'address': address(x)}
@@ -141,10 +146,11 @@ class Search:
                 self.log.flush()
                 if self.best is None or s < self.best['score']:
                     self.best = rec
-                    png.replace(self.out / 'best.png')
+                    (self.out / f'try{i}_{SEEDS[0]}.png').replace(self.out / 'best.png')
                     (self.out / 'best.json').write_text(json.dumps(rec))
-            png.unlink(missing_ok=True)
-            return np.clip([err for *_, err, _ in rows], -4, 4), s
+            for seed in SEEDS:
+                (self.out / f'try{i}_{seed}.png').unlink(missing_ok=True)
+            return np.clip(errs, -4, 4), s
 
         with ThreadPoolExecutor(2) as pool:
             return list(pool.map(one, enumerate(us)))
