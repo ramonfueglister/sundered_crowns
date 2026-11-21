@@ -13,12 +13,14 @@ import type { Figures } from './crowd';
 import { listedPerson, listsVersion } from './people';
 
 /** What the figures follow: the world's day, the hour of it (0 to 24; null where the hours pass too fast to be seen,
- *  `TERCE`), its start year, and the latitude of a place. */
+ *  `TERCE`), its start year, and the latitude and the farming year (FARM_YEAR, src/sim/people/farm_year.ts) of a
+ *  place. */
 export interface FigureClock {
   day: number;
   hour: number | null;
   startYear: number;
   lat: (place: number) => number;
+  farm: (place: number) => number;
 }
 
 /** No figure of the person is on the stage. */
@@ -45,7 +47,8 @@ export function figureAtHour(plan: DayPlan, who: number, hour: number): number {
       return FIGURE_AT.street;
     case DOING.work:
       // OWN RULE, a drawing rule: the services work in the town (they sell, carry and serve), so they are seen in its
-      // streets; the farmers on a furlong of the town, but in the barn while they thresh (farm_year.ts); the crafts
+      // streets; the farmers on a furlong of the town, also at the threshing floor, the vines and the gardens, which
+      // the town has no place of their own for, but in the barn while they thresh there (farm_year.ts); the crafts
       // in the workshop and the banker in the bank, not seen
       if (who === WHO.farm) return inBarn(plan.task) ? NOWHERE : FIGURE_AT.field;
       return who === WHO.trade ? FIGURE_AT.street : NOWHERE;
@@ -105,6 +108,7 @@ export function figureShown(f: Pick<Figures, 'e' | 'plan' | 'seed'>, i: number, 
       clock.lat(place),
       clock.day,
       clock.startYear,
+      clock.farm(place),
     );
     plans.set(uid, plan);
   }

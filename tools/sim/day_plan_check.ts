@@ -14,6 +14,7 @@ import { dayToDate } from '../../src/sim/calendar';
 import { CALENDAR, DAY } from '../../src/sim/holy_days';
 import { CHILDBED_DAYS, awayDays, sickness } from '../../src/sim/people/absence';
 import { AWAY, DOING, type DayPlan, dayPlan } from '../../src/sim/people/day_plan';
+import { FARM_YEAR } from '../../src/sim/people/farm_year';
 import { planPerson } from '../../src/sim/people/plan_person';
 import { presentPersons } from '../../src/sim/people/living';
 import { CITIES } from '../../src/sim/systems/people';
@@ -23,7 +24,9 @@ import { ALIVE, type WorldState } from '../../src/sim/state';
 const YEARS = Number(process.argv.slice(2).find((a) => /^\d+$/.test(a)) ?? 3);
 const w = loadWorld(),
   s = createWorldState(w, loadSetup(1291), 1291),
-  london = CITIES.find((c) => c.name === 'London')!.place;
+  london = CITIES.find((c) => c.name === 'London')!.place,
+  /** the farming year of a place (src/sim/people/farm_year.ts) */
+  farm = (place: number) => w.farmYear?.[place] ?? FARM_YEAR.north;
 
 /** The share of a day the plan has the person at work: the hours at work over those of a working day of the same
  *  sunrise and sunset, so a half day counts as about half. */
@@ -86,7 +89,14 @@ for (let y = 1; y <= YEARS; y++) {
       if (P.died[id] !== ALIVE || P.role[id] !== ROLE.worker || P.firm[id] < 0) continue;
       const f = P.family[id],
         place = Fam.place[f],
-        plan = dayPlan(planPerson(s, id, -1, awayFrom(runs.get(id), s.day)), place, w.lat[place], s.day, s.startYear),
+        plan = dayPlan(
+          planPerson(s, id, -1, awayFrom(runs.get(id), s.day)),
+          place,
+          w.lat[place],
+          s.day,
+          s.startYear,
+          farm(place),
+        ),
         // a worker who heads a family works by the day, every other serves by the year (people feature 10)
         acc = Fam.man[f] === id || Fam.woman[f] === id ? byDay : byYear;
       acc.days++;
@@ -126,10 +136,17 @@ let same = 0,
 for (const id of presentPersons(s)) {
   const place = s.family.cols.place[s.person.cols.family[id]],
     a = JSON.stringify(
-      dayPlan(planPerson(s, id, -1, awayFrom(awayA.get(id), s.day)), place, w.lat[place], s.day, 1291),
+      dayPlan(planPerson(s, id, -1, awayFrom(awayA.get(id), s.day)), place, w.lat[place], s.day, 1291, farm(place)),
     ),
     b = JSON.stringify(
-      dayPlan(planPerson(back, id, -1, awayFrom(awayB.get(id), back.day)), place, w.lat[place], back.day, 1291),
+      dayPlan(
+        planPerson(back, id, -1, awayFrom(awayB.get(id), back.day)),
+        place,
+        w.lat[place],
+        back.day,
+        1291,
+        farm(place),
+      ),
     );
   if (a === b) same++;
   else differ++;
