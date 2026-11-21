@@ -185,6 +185,7 @@ export function faceMaterials(mask: THREE.Node<'bool'>, glided: ReturnType<typeo
   const { fields, fieldFaced, fieldGliding } = fieldMaterials(g, mask, glided);
   return {
     placed: g.placed,
+    corner: g.corner,
     faced,
     fields,
     fieldFaced,
