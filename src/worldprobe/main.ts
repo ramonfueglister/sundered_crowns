@@ -1,7 +1,9 @@
 // World probe: the world to travel through (view.ts) on a page of its own.
 // Address options, besides those of the stage (see ../lookprobe/stage/index.ts): ?lon=12.1&lat=45.85 (the place at the middle),
 // ?wide=190 (finest blocks across the picture), ?region=world (the cut of the world to show), ?year=1291 (the start year whose realms colour the map; default 1356), ?mode=political, terrain or rulers (the map mode; default:
-// the realms only on the flat world far out). The address follows the view.
+// the realms only on the flat world far out), ?at=160:10 (the persons' figures where the plan of the day has them on
+// that day of the world and at that hour, people feature 12; default: in the streets). The address follows the view.
+import { figuresAtHour } from '../figures/stage';
 import { showError } from '../lookprobe/stage';
 import { createWorldView } from './view';
 
@@ -14,6 +16,15 @@ const num = (k: string, fallback: number) => {
 };
 let noted = 0;
 const mode = q.get('mode');
+// the figures follow the plan of a day at an hour (src/figures/schedule.ts), as the game has them follow the world's
+// (src/people/day_figures.ts); the latitudes are those the world server has (src/sim/world.ts)
+const [day, hour] = (q.get('at') ?? '').split(':').map(Number);
+if (Number.isFinite(day) && Number.isFinite(hour))
+  void fetch(`${import.meta.env.BASE_URL}data/geo.json`)
+    .then((r) => r.json())
+    .then((g: { loc: { lat: number[] } }) =>
+      figuresAtHour({ day, hour, startYear: num('year', 1356), lat: (place) => Math.fround(g.loc.lat[place]) }),
+    );
 createWorldView({
   region: q.get('region') ?? 'world',
   year: q.has('year') ? num('year', 1356) : undefined,

@@ -7,6 +7,7 @@
 //             step's are in worldprobe/crowd.ts)
 // people.ts   the persons of the 30 great cities who walk in their towns, fetched from the world server (workers)
 // aims.ts     where in its town a person stands, walks, goes to market and to worship, and the person's figures there
+// farmers.ts  the farmers among the persons at work on the furlongs of their town
 // material.ts how they are drawn and moved, all in the vertex stage
 // stage.ts    the figures on the stage: near or far kit, and whether anything walks
 // schedule.ts which of a person's figures the plan of the day puts on the stage at the world's hour (main thread)

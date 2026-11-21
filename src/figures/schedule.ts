@@ -5,6 +5,7 @@
 // (`Figures.plan`), as the world server works it out for the card of the person (src/net/plan.ts).
 import { CHILDBED_DAYS, sickness } from '../sim/people/absence';
 import { AWAY, DOING, type DayPlan, WHO, dayPlan, doingAt } from '../sim/people/day_plan';
+import { inBarn } from '../sim/people/farm_year';
 import { BORN_UNKNOWN } from '../sim/state';
 import { FIGURE_AT, PLAN } from './aims';
 import type { Figures } from './crowd';
@@ -28,8 +29,8 @@ const TERCE = 3.5;
 
 /**
  * Where the person is seen at the hour by what the plan has the person do: the market and the hiring place at the
- * market's figure, the mass at the house of worship's, court in the street, everything else in the street or
- * nowhere.
+ * market's figure, the mass at the house of worship's, the work of the farming year at the furlong's, court in the
+ * street, everything else in the street or nowhere.
  */
 export function figureAtHour(plan: DayPlan, who: number, hour: number): number {
   switch (doingAt(plan, hour)) {
@@ -42,7 +43,9 @@ export function figureAtHour(plan: DayPlan, who: number, hour: number): number {
       return FIGURE_AT.street;
     case DOING.work:
       // OWN RULE, a drawing rule: the services work in the town (they sell, carry and serve), so they are seen in its
-      // streets; the crafts work in the workshop, the farmers in the fields outside the walls, the banker in the bank
+      // streets; the farmers on a furlong of the town, but in the barn while they thresh (farm_year.ts); the crafts
+      // in the workshop and the banker in the bank, not seen
+      if (who === WHO.farm) return inBarn(plan.task) ? NOWHERE : FIGURE_AT.field;
       return who === WHO.trade ? FIGURE_AT.street : NOWHERE;
     case DOING.home:
     case DOING.meal:
