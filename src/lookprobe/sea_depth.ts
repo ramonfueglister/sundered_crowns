@@ -3,10 +3,11 @@
 import * as THREE from 'three/webgpu';
 import {
   dFdx,
+  dFdy,
+  dot,
   float,
   floor,
   fract,
-  fwidth,
   length,
   mix,
   positionWorld,
@@ -71,7 +72,11 @@ export function readDepths(pFine: Vec2) {
     toMap = uniform(new THREE.Matrix3()),
     round = uniform(0),
     // (the depth picture's size in dots, from the depth picture itself)
-    texels = uniform(new THREE.Vector2(1, 1));
+    texels = uniform(new THREE.Vector2(1, 1)),
+    // (how far a finest block along the stage's x and z goes on the picture, in its dots: along u, and along v)
+    alongU = uniform(new THREE.Vector2(1, 0)),
+    alongV = uniform(new THREE.Vector2(0, 1)),
+    blocksPerTexel = uniform(1);
   const at = toMap.mul(vec3(positionWorld.x, positionWorld.z, 1)),
     u = select(round.greaterThan(0), fract(at.x.div(round)).mul(round), at.x),
     v = at.y;
@@ -88,14 +93,27 @@ export function readDepths(pFine: Vec2) {
         .mul(COAST_REACH / 128),
       onMap,
     );
-  // how many dots of the view, and how many finest blocks, a dot of the picture is wide
-  const inTexels = vec2(at.x, at.y).mul(texels),
-    dotsPerTexel = float(1).div(length(fwidth(inTexels)).max(1e-6)),
-    blocksPerTexel = length(dFdx(pFine)).div(length(dFdx(inTexels)).max(1e-9));
+  // how many dots of the view a dot of the picture is wide: by how far a dot of the view reaches in finest blocks, and
+  // how far a block goes on the picture (`alongU`, `alongV`, which `placed` reckons). Not by how far the place on the
+  // picture itself moves from one dot of the view to the next: from near that is a thousandth of a dot of the picture,
+  // a few steps of what a 32 bit number holds of a place on the whole map, and the widths came out a quarter too wide
+  // or too narrow from dot to dot (fine dotted stripes across the sea's colour, which showed once the colour fell
+  // faster into the offing)
+  const onPicture = (step: Vec2) => vec2(dot(alongU, step), dot(alongV, step)).abs(),
+    dotsPerTexel = float(1).div(length(onPicture(dFdx(pFine)).add(onPicture(dFdy(pFine)))).max(1e-6));
+  /** Sets where the stage lies on the picture (Sea.place: `m` the six numbers of u and v, `blocks` the finest blocks to a block of the stage). */
+  const placed = (m: readonly number[], blocks: number) => {
+    toMap.value.set(m[0], m[1], m[2], m[3], m[4], m[5], 0, 0, 1);
+    const { x: w, y: h } = texels.value;
+    alongU.value.set(m[0] * w, m[1] * w).divideScalar(blocks);
+    alongV.value.set(m[3] * h, m[4] * h).divideScalar(blocks);
+    // (the picture lies turned on the stage, its dots as wide as high: a dot is the root of its area wide)
+    blocksPerTexel.value = 1 / Math.sqrt(Math.max(Math.abs(alongU.value.cross(alongV.value)), 1e-12));
+  };
   return {
     depths,
     known,
-    toMap,
+    placed,
     round,
     texels,
     share: shareOf(seen.r),

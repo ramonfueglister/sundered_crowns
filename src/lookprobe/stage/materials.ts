@@ -11,6 +11,8 @@ import {
   fract,
   materialColor,
   mix,
+  normalLocal,
+  normalView,
   positionGeometry,
   reflector,
   screenCoordinate,
@@ -87,6 +89,9 @@ export function createMaterials(scene: THREE.Scene) {
   let mirrored: ReturnType<typeof reflector> | null = null;
   /** how much of the mirror image the water shows, 1 near, 0 from afar (Stage.mirror) */
   const mirrorShare = uniform(1);
+  /** what the water gives back where no mirror image is drawn: the picture's background, the open sky's */
+  const sky = new THREE.Color(...OPEN_WATER),
+    open = vec3(sky.r, sky.g, sky.b);
   if (flag('mirror', true)) {
     const mirror = reflector({ resolutionScale: 0.5 });
     mirrored = mirror;
@@ -101,9 +106,7 @@ export function createMaterials(scene: THREE.Scene) {
     // is the picture's background: there it is not drawn (a whole second picture of the scene, every picture), and
     // the water takes the background's colour in its place (see Stage.mirror).
     // (the 24 looks into the mirror's picture that blur it are taken only where it is drawn)
-    const sky = new THREE.Color(...OPEN_WATER),
-      open = vec3(sky.r, sky.g, sky.b),
-      blurred = hashBlur(mirror, float(LOOK.mirrorBlur), { repeats: float(24) }).rgb;
+    const blurred = hashBlur(mirror, float(LOOK.mirrorBlur), { repeats: float(24) }).rgb;
     water.emissiveNode = Fn(() => {
       const seen = open.toVar();
       If(mirrorShare.greaterThan(0), () => {
@@ -116,7 +119,10 @@ export function createMaterials(scene: THREE.Scene) {
     reflecting.updateBefore = (frame) => (mirrorShare.value > 0 ? draw(frame) : undefined);
   }
   // the faces' materials (face_materials.ts)
-  const { placed, corner, faced, fields, fieldFaced, fieldGliding, gliding, freed } = faceMaterials(drawn, glided);
+  const { placed, corner, faced, fields, fieldFaced, fieldGliding, gliding, freed, freedAnew } = faceMaterials(
+    drawn,
+    glided,
+  );
   // The sea's faces: its level is on no 64th of a block, so the mesh says how far above their numbers its faces lie
   // (faces.ts `lift`); and they mirror as the sea's lists do.
   const seaFaced = new THREE.MeshLambertNodeMaterial();
@@ -152,10 +158,39 @@ export function createMaterials(scene: THREE.Scene) {
     mix(positionGeometry.y, attribute('sink', 'float'), glided),
     positionGeometry.z,
   );
+  // Water above the sea (lakes and rivers: terrain.ts buildWater, `raised`) has the sea's colour and surface, but not
+  // the mirror's picture, which is taken at the sea's level: it gives the open sky back. The sheets of its falls
+  // stand upright and stay as they are. It comes as the things on the land do: as rectangles on no grid
+  // (`lakeFreed`), or as lists (`lake`), which glide as `sinking` does where they carry the heights they end at
+  // (`lakeSinking`). (Until round 8 of the water it was drawn as the land is: a flat sheet of its corners' colour.)
+  let lake = solid,
+    lakeSinking = sinking,
+    lakeFreed = freed;
+  if (surface) {
+    const sea = surface,
+      level = normalLocal.y.greaterThan(0.5);
+    const above = (m: THREE.MeshLambertNodeMaterial) => {
+      // (a corner's colour is materialColor times a vec3, in `coloured` and in face_materials.ts)
+      const corners = m.colorNode as THREE.Node<'vec3'>;
+      m.colorNode = select(level, sea.colour(corners), corners);
+      m.normalNode = select(level, sea.normal, normalView);
+      m.emissiveNode = select(level, sea.giving(open.mul(tint)), vec3(0, 0, 0));
+      m.maskNode = drawn;
+      return m;
+    };
+    const sinks = coloured();
+    sinks.positionNode = sinking.positionNode;
+    lake = above(coloured());
+    lakeSinking = above(sinks);
+    lakeFreed = above(freedAnew());
+  }
   return {
     smallLists,
     solid,
     water,
+    lake,
+    lakeSinking,
+    lakeFreed,
     faced,
     fieldFaced,
     fieldGliding,

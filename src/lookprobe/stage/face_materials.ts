@@ -192,5 +192,7 @@ export function faceMaterials(mask: THREE.Node<'bool'>, glided: ReturnType<typeo
     fieldGliding,
     gliding: glidingMaterial(g, mask, glided),
     freed: freeMaterial(g.tones, mask),
+    /** one more material of the faces on no grid, for a kind of them that is drawn in its own way (materials.ts: water above the sea) */
+    freedAnew: () => freeMaterial(g.tones, mask),
   };
 }
