@@ -10,6 +10,7 @@ import { replay } from './replay';
 import { listenForWorldClicks } from '../people/panel';
 import { listenForWorldHover } from '../people/hover';
 import { showRulers } from '../people/rulers_mode';
+import { followDayPlans } from '../people/day_figures';
 import type { WorldView as View } from '../worldprobe/view';
 
 /** where the game opens: as far out as the view goes, the world's frame from west to east as a map of its realms */
@@ -171,6 +172,13 @@ export function WorldView() {
           effect(() => {
             made.choose(selectedPlace.value);
           }),
+        );
+        // the figures of the great cities go where the plans of their day have them at the world's hour
+        stops.push(
+          followDayPlans(
+            made,
+            geo.then((g) => g.loc.lat),
+          ),
         );
         // a click on a figure of the great cities opens that person; the pointer resting on one shows who it is
         if (!listeningForPeople) {

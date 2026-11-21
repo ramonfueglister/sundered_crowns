@@ -10,29 +10,13 @@ import type { Town } from '../figures';
 import { FINER } from './land';
 import type { FieldShown, Parcels } from './lots';
 import { CROP } from '../sim/settlement/fields';
+import { marketOf, streetsOf, worshipOf } from './town_spots';
 
 /** A place of the gazetteer on the ground. */
 export interface Site { /** the same in every ground the place falls on */ id: number; at: P2; /** 1 village … 5 great city */ size: number; /** inhabitants in 1356, where an estimate exists */ pop: number | null; /** the region it builds as (buildings/traditions/regions.ts) */ region: string; style: Style; /** a hamlet of a town's farming families before its walls (hamlets.ts): houses close together, no church */ hamlet?: boolean; /** the parcels of its families in the land register (lots.ts): a house stands on each, at its street */ lots?: Parcels; /** its landmarks in the land register (landmarks.ts): each at its middle, `x` metres east and `z` south of the town's centre; with them the town has no church of the graphic's own */ marks?: readonly Mark[] }
 /** A landmark of the register as it is built: its middle (metres from the town's centre), its model of w × d blocks, and what it is counted as. */
-export interface Mark { x: number; z: number; model: Model; kind: string }
+export interface Mark { x: number; z: number; model: Model; kind: string; /** a house of worship: where the persons of the town go on a day of rest (src/worldprobe/town_spots.ts) */ worship?: boolean }
 
-/** the kind of the market among a town's streets (STREET_KIND in src/sim/state.ts) */
-const MARKET = 4;
-/**
- * The ground of a town's streets and market as blocks from its middle, four numbers to a piece (x0, z0, x1, z1, the
- * ends not included): a street as wide as the register makes it about its middle line, the market as its corners.
- * The edges round to blocks as those of the parcels do, so that a street reaches the houses at its side.
- */
-export function streetsOf(L: Parcels): number[] {
-  const half = (L.street ?? 0) / 2, out: number[] = [];
-  for (const [x0, z0, x1, z1, k] of L.streets ?? []) {
-    const pad = k === MARKET ? 0 : half;
-    const a0 = Math.round(m(Math.min(x0, x1) - pad)), a1 = Math.max(a0 + 1, Math.round(m(Math.max(x0, x1) + pad)));
-    const b0 = Math.round(m(Math.min(z0, z1) - pad)), b1 = Math.max(b0 + 1, Math.round(m(Math.max(z0, z1) + pad)));
-    out.push(a0, b0, a1, b1);
-  }
-  return out;
-}
 /**
  * Asked for every town once its great buildings stand and before its houses: `free` tells whether a block `dx` east
  * and `dz` south of the town's middle can carry a house (dry, no rock, level with its neighbours, nothing built).
@@ -443,7 +427,8 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
       // (src/figures/crowd.ts: a column is street where it is town and used is 2)
       for (const i of streets) used[i] = 2;
     }
-    towns.push({ site: s.id, cx: cx + (g.ox ?? 0), cz: cz + (g.oz ?? 0), half });
+    const wx = cx + (g.ox ?? 0), wz = cz + (g.oz ?? 0), market = s.lots ? marketOf(s.lots, wx, wz) : undefined, worship = worshipOf(s.marks, wx, wz);
+    towns.push({ site: s.id, cx: wx, cz: wz, half, ...(market ? { market } : {}), ...(worship.length ? { worship } : {}) });
     if (own(cx, cz)) told?.town(s.id, cx, cz, half, g.h[idx(cx, cz)], walled ? gaps : null);
     if (own(cx, cz)) count('town');
   });

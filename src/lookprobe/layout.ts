@@ -2,6 +2,7 @@
 // image, the kinds of ground, what the mesher asks of a ground (`GroundTraits`), and a few helpers on its columns.
 // One ground block is one unit. Where the probe scene's sea, river, roads, mountains, city and fields lie is in
 // scene/places.ts.
+import type { Town } from '../figures';
 
 /** side of the square ground grid, as a rule */
 export const GRID = 400;
@@ -122,6 +123,8 @@ export interface GroundTraits {
   readonly furlongs?: ArrayLike<number>;
   /** where the figures are drawn from afar, what the finest step has on the four blocks of a column (worldprobe/crowd.ts, a byte to a column, N × N columns): kept with the ground, not drawn by it */
   readonly quarters?: ArrayLike<number>;
+  /** there too, the walled towns on the ground, where the persons of the towns walk (worldprobe/far.ts `Cover`): kept with the ground, not drawn by it */
+  readonly towns?: readonly Town[];
 }
 export const idx = (x: number, z: number) => z * N + x;
 export const inGrid = (x: number, z: number) => x >= 0 && z >= 0 && x < N && z < N;

@@ -50,7 +50,7 @@ players and the AI of realms without a player act through the same commands.
 | 21 | A world knows the history only up to its start | the open gap of feature 20, found to come from the history of the placeholder tables: a world of 1291 expected the recovery after the plague of 1348. Under Ramon's "nur literaturkonform" (19 Nov 2026) and his order to clear the open questions of the economy first; the port's window (data up to the date of the calibration). Built, with tests and numbers from the game (section 21). The gap of 1.5 % that remained, cleared at Ramon's choice ("Erst Restlücke 1,5 % klären", 20 Nov 2026): the owners' rule of the run it was measured against, not the days of rest; nothing built |
 | 22 | The workers who are away: sickness and childbed | step 4 of way A of the proposal «Personen: Archiv der Toten und Tagesplan», proposed 20 Nov 2026 (https://claude.ai/artifact/QK327U5QQQGWNCnL5JhHV5) and chosen by Ramon the same day («So bauen, Lohn läuft weiter»): a firm works with the workers who are there, and everybody keeps the place and the wage. Built, with tests and numbers from the game (section 22); people feature 9 holds the sicknesses and the childbeds |
 | 23 | Service by the year, work by the day, and who stands in | step 6 of way A: after section 22 Ramon chose to solve the drain of the firms' deposits in step 6 («So lassen, in Schritt 6 lösen», 20 Nov 2026), and phase A of the proposal «Vorschlag: Schritt 6, Jahresdienst und Tagelohn» the same day (https://claude.ai/artifact/Wyqd64rfmZgJnz9GZ7Wof9, «Phase A bauen und messen»): two contracts, a day labourer paid for the days he works, workers without work who stand in for those who are away. Built, with tests and numbers from the game (section 23); people feature 10 gives the contracts |
-| 24 | The family stands in | after section 23 Ramon chose «Familie springt ein» on the proposal «Vorschlag: Schritt 6, Phase B und das Rest-Leck» (https://claude.ai/artifact/KQtgEHZTZWWy5vSZZP4Hh4, card, 20 Nov 2026), with merge as before («vorwärts machen alles mergren comitten und feddich»): an adult of the family who does not work stands in for a worker who is away, before a worker without work. Phase B, the target income, waits for the plague. Built, with tests and numbers from the game (section 24) |
+| 24 | The family stands in | after section 23 Ramon chose «Familie springt ein» on the proposal «Vorschlag: Schritt 6, Phase B und das Rest-Leck» (https://claude.ai/artifact/KQtgEHZTZWWy5vSZZP4Hh4, card, 20 Nov 2026), with merge as before («vorwärts machen alles mergren comitten und feddich»): an adult of the family who does not work stands in for a worker who is away, before a worker without work. Phase B, the target income, waits for the plague. Built, with tests and numbers from the game (section 24). On 21 Nov 2026 Ramon chose «Ohne Zusatzlohn für Knechte» (card): the family's stand-in for a servant is not paid on top of the servant's wage |
 
 ## 1. Grain harvest per place
 
@@ -3852,11 +3852,13 @@ p. 5). Section 23 built the hired man; this section builds the family member.
    in for another worker of the family that day.
 2. **The family first.** Such a place is filled before the workers without work are matched to the places left open
    (section 23, rule 4).
-3. **The pay.** The family's stand-in is paid as a worker without work who stands in: the wage of the firm times the
-   factor `a` of the day. He is not a household of the port, so the pay goes to the household of the worker who is
-   away, whose family keeps one purse in the game (feature 11). A day labourer's family so has on the day what he
-   would have earned; a servant's family has his wage and the stand-in's pay, as a servant and the worker without
-   work who stands in for him have in section 23.
+3. **The pay.** The family's stand-in is not a household of the port. For a day labourer the firm pays him as it
+   pays a worker without work who stands in, the wage of the firm times the factor `a` of the day, and the pay goes
+   to the household of the worker who is away, whose family keeps one purse in the game (feature 11): the family so
+   has on the day what he would have earned. For a servant the firm pays nothing more: his wage goes on (section 22),
+   and his family gives the work owed for it, as the sick tenant found the family member himself (Owen, Brown &
+   Skinner 2025, p. 5). Until 21 November 2026 the family's stand-in for a servant was paid as well (below, «Why the
+   servant's stand-in is not paid»).
 4. **The books** are those of section 23, rule 5: the pay comes off the firm's profit, the worker's realised income
    (A.53) has it net of the taxes on wages, the crown takes those taxes (A.59).
 5. **The labour of the day** is `a (N − away + stand-ins) α` (A.13) with the family's stand-ins among the stand-ins:
@@ -3866,9 +3868,11 @@ Where the family stands in on no day the economy computes as in section 23, numb
 `economy/tests/contracts.rs`).
 
 **OWN RULE**, three parts: that the family stands in first (the paper names the family first and the hired man with
-"or even"; it gives no order); that it is paid as the worker without work is paid (so that the firm's books do not
-depend on who stands in); and that, where several adults of a family could stand in, they do in the order of a draw of
-each (`K.standsIn` in `src/sim/systems/work.ts`), so that the same world always gives the same stand-ins.
+"or even"; it gives no order); that the firm pays the family's stand-in for a day labourer as it pays the worker
+without work, and nothing for a servant (the sick tenant found the family member himself, where the man for the sick
+ploughman was hired in the abbey's account, pp. 5 and 7; the paper says nothing of what a sick servant was paid); and
+that, where several adults of a family could stand in, they do in the order of a draw of each (`K.standsIn` in
+`src/sim/systems/work.ts`), so that the same world always gives the same stand-ins.
 
 ### How the world gives it
 
@@ -3885,45 +3889,90 @@ Code: `src/sim/systems/workers.ts` (`absences`, and `contracts`, both moved from
 ### The numbers
 
 `npm run absence:check -- 6`, the world of 1291 with the absences against the same world in which everybody is
-there, both with their contracts, as in section 23 (whose rows are given for comparison). Output in the project
-files, wirtschaft/schritt6/check6_familie.txt.
+there, both with their contracts, as in section 23. The rows of section 23 and of the first rule of this section,
+which paid the family's stand-in for a servant as well (below), are given for comparison. Output in the project files,
+wirtschaft/schritt6/check6_knechte.txt (the first rule: check6_familie.txt).
 
 | | year 1 | year 2 | year 3 | year 4 | year 5 | year 6 |
 |---|---|---|---|---|---|---|
 | days the workers are away (sick or in childbed) | 3.57 % | 3.50 % | 3.59 % | 3.53 % | 3.52 % | 3.57 % |
-| days away at firms that worked on which somebody stood in | 88.0 % | 93.5 % | 97.1 % | 96.2 % | 90.6 % | 84.0 % |
-| of them the family | 48.9 % | 49.5 % | 48.7 % | 48.7 % | 48.5 % | 48.4 % |
-| of them a worker without work | 39.1 % | 43.9 % | 48.4 % | 47.6 % | 42.2 % | 35.6 % |
+| days away at firms that worked on which somebody stood in | 87.1 % | 90.3 % | 95.2 % | 96.7 % | 92.9 % | 89.9 % |
+| of them the family | 49.0 % | 49.4 % | 48.9 % | 49.2 % | 48.9 % | 48.8 % |
+| of them a worker without work | 38.1 % | 40.9 % | 46.3 % | 47.6 % | 44.0 % | 41.2 % |
+| stood in, first rule | 88.0 % | 93.5 % | 97.1 % | 96.2 % | 90.6 % | 84.0 % |
 | stood in, section 23 | 55.0 % | 63.8 % | 73.7 % | 82.4 % | 85.0 % | 79.3 % |
-| real GDP | −0.5 % | −1.4 % | −2.4 % | −2.5 % | −1.8 % | −0.7 % |
+| real GDP | −0.4 % | −0.9 % | −1.6 % | −2.0 % | −1.8 % | −1.2 % |
+| real GDP, first rule | −0.5 % | −1.4 % | −2.4 % | −2.5 % | −1.8 % | −0.7 % |
 | real GDP, section 23 | −1.0 % | −0.8 % | −1.5 % | −2.0 % | −2.2 % | −2.1 % |
-| real GDP with the absences | 177,054 | 176,903 | 174,957 | 175,549 | 177,574 | 180,320 |
-| consumption | −0.6 % | −1.9 % | −3.0 % | −2.9 % | −2.0 % | −0.7 % |
-| investment | −0.2 % | −1.2 % | −2.4 % | −2.4 % | −1.6 % | −0.3 % |
-| employees | −0.7 % | −1.6 % | −2.6 % | −2.5 % | −1.6 % | −0.8 % |
+| real GDP with the absences | 177,302 | 177,726 | 176,330 | 176,422 | 177,562 | 179,509 |
+| consumption | −0.5 % | −1.2 % | −2.0 % | −2.3 % | −2.0 % | −1.3 % |
+| investment | 0.0 % | −0.7 % | −1.5 % | −1.9 % | −1.6 % | −0.9 % |
+| employees | −0.5 % | −1.1 % | −1.9 % | −2.1 % | −1.7 % | −1.1 % |
 | employees, section 23 | −0.5 % | −1.5 % | −2.3 % | −2.9 % | −2.8 % | −2.5 % |
-| without work at the end of the year | 1,275 / 1,031 | 1,638 / 1,054 | 1,982 / 1,073 | 1,836 / 964 | 1,483 / 917 | 1,208 / 917 |
-| households' deposits | +0.3 % | +0.4 % | +0.4 % | +0.5 % | +0.9 % | +1.3 % |
+| without work at the end of the year | 1,202 / 1,031 | 1,440 / 1,054 | 1,748 / 1,073 | 1,698 / 964 | 1,529 / 917 | 1,295 / 917 |
+| households' deposits | +0.2 % | +0.4 % | +0.5 % | +0.6 % | +0.9 % | +1.2 % |
 | households' deposits, section 23 | +0.7 % | +1.2 % | +1.6 % | +1.9 % | +2.3 % | +2.8 % |
-| firms' deposits | −0.8 % | −1.2 % | −1.3 % | −1.6 % | −2.3 % | −3.3 % |
+| firms' deposits | −0.8 % | −1.3 % | −1.6 % | −1.8 % | −2.2 % | −2.9 % |
+| firms' deposits, first rule | −0.8 % | −1.2 % | −1.3 % | −1.6 % | −2.3 % | −3.3 % |
 | firms' deposits, section 23 | −2.9 % | −4.8 % | −6.1 % | −7.0 % | −7.9 % | −9.1 % |
-| mean price level | 0.9991 / 1.0017 | 0.9903 / 0.9962 | 0.9855 / 0.9977 | 0.9828 / 0.9969 | 0.9776 / 0.9933 | 0.9789 / 0.9926 |
+| mean price level | 1.0001 / 1.0017 | 0.9925 / 0.9962 | 0.9915 / 0.9977 | 0.9886 / 0.9969 | 0.9866 / 0.9933 | 0.9853 / 0.9926 |
+| mean price level, first rule | 0.9991 / 1.0017 | 0.9903 / 0.9962 | 0.9855 / 0.9977 | 0.9828 / 0.9969 | 0.9776 / 0.9933 | 0.9789 / 0.9926 |
 
-- **The family stands in on half the days away**, 48 to 50 % every year. With the workers without work 84 to 97 %
-  of the days away are filled, against 55 to 85 % in section 23.
-- **The drain of the firms' deposits is a third of section 23's** after six years, −3.3 % against −9.1 % (and
-  −30.3 % in F). The gap to the comparison grows by 69, 32, 13, 22, 60 and 89 a year. F's drain of the same year times
-  the share of the days away on which nobody stood in is 64, 30, 13, 16, 37 and 63: what remains is still the
-  investment above the wear on those days (section 22), close to that reading in the first three years and somewhat
-  above it later. It grows again from the fifth year, when the pool of workers without work has shrunk (1,982 at the
-  end of the third year, 1,208 at the end of the sixth) and they stand in on fewer days.
-- **Real GDP ends nearer the comparison and dips between.** −0.5 % in the first year and −0.7 % in the sixth,
-  against −1.0 % and −2.1 % in section 23; in the second to the fourth year it lies below section 23 (−1.4, −2.4
-  and −2.5 % against −0.8, −1.5 and −2.0 %), with consumption 3 % below the comparison in the third year. Why is
-  not separated; one world, one seed. What the numbers show: the households' deposits grow less than in section 23
-  (+0.4 % against +1.6 % in the third year) while the firms keep more.
-- **Prices fall more.** The mean price level is 1.4 % below the comparison after six years, against 0.05 % above it
-  in section 23.
+- **The family stands in on half the days away**, 49 % every year. With the workers without work 87 to 97 % of the
+  days away are filled, against 55 to 85 % in section 23.
+- **The drain of the firms' deposits is a third of section 23's** after six years, −2.9 % against −9.1 % (and
+  −30.3 % in F; −3.3 % with the first rule). The gap to the comparison grows by 71, 44, 22, 17, 40 and 58 a year:
+  what remains is still the investment above the wear on the days on which nobody stood in (section 22), 3 to 13 % of
+  the days away. It grows again from the fifth year, when the pool of workers without work has shrunk (1,748 at the
+  end of the third year, 1,295 at the end of the sixth) and they stand in on fewer days.
+- **Real GDP lies at or above section 23's.** −0.4 % in the first year, −2.0 % at the lowest in the fourth and −1.2 %
+  in the sixth, against −1.0, −2.0 and −2.1 % in section 23; in the second and the third year it lies 0.1 points
+  below. Against the first rule it lies higher in the first four years (−1.6 against −2.4 % in the third), the same
+  in the fifth and lower in the sixth (−1.2 against −0.7 %); why the first rule ends higher is not separated.
+- **Prices fall half as much as with the first rule.** The mean price level is 0.7 % below the comparison after six
+  years, against 1.4 % with the first rule and 0.05 % above it in section 23.
+
+### Why the servant's stand-in is not paid
+
+The first rule of this section (merged 20 November 2026, live from Fly v30) paid the family's stand-in for every
+worker who was away. Its numbers (wirtschaft/schritt6/check6_familie.txt) had real GDP below section 23 in the second
+to the fourth year (−1.4, −2.4 and −2.5 % against −0.8, −1.5 and −2.0 %) and the price level 1.4 % below the
+comparison after six years. A probe on 21 November 2026 (not in the repository) computed four years of four worlds
+with the seeds 1291 and 4242: everybody there (B), section 23 (A), the first rule (F), and the family's stand-in for a
+servant unpaid (N), and split income, spending and deposits by employees, workers without work and owners.
+
+| against B, seed 1291 | year 1 | year 2 | year 3 | year 4 |
+|---|---|---|---|---|
+| real GDP, A | −0.98 % | −0.82 % | −1.45 % | −1.97 % |
+| real GDP, F | −0.53 % | −1.39 % | −2.39 % | −2.49 % |
+| real GDP, N | −0.39 % | −0.94 % | −1.62 % | −1.99 % |
+| consumption, F | −0.62 % | −1.85 % | −2.98 % | −2.97 % |
+| consumption, N | −0.44 % | −1.22 % | −1.98 % | −2.31 % |
+| investment, F | −0.15 % | −1.22 % | −2.34 % | −2.42 % |
+| investment, N | +0.01 % | −0.66 % | −1.49 % | −1.91 % |
+| price level, F | −0.27 % | −0.65 % | −0.91 % | −1.42 % |
+| price level, N | −0.15 % | −0.33 % | −0.58 % | −0.75 % |
+| firms' deposits, A | −2.88 % | −4.81 % | −6.09 % | −7.02 % |
+| firms' deposits, F | −0.78 % | −1.14 % | −1.29 % | −1.54 % |
+| firms' deposits, N | −0.80 % | −1.31 % | −1.56 % | −1.76 % |
+
+The seed 4242 gives the same within a few tenths (real GDP in the third year: A −1.70, F −2.31, N −1.57 %; price
+level in the fourth: F −1.33, N −0.62 %).
+
+- **The first rule paid twice for a servant.** On a day on which the family stood in for a servant the firm paid the
+  servant's wage, which goes on (section 22), and the stand-in's pay on top. Both come off the firm's profit, which
+  goes to its owner (sections 18 and 20).
+- **The owner spends it, the servant's family saves it.** The household of the servant plans its spending on the
+  wage of its contract (section 23) and spends what it has above it slowly (section 15). In the third year the owners'
+  income was 53,779 in B, 50,431 in A, 48,521 in F and 50,440 in N; their deposits in the fourth year 11,810, 10,747,
+  9,357 and 10,287. Less spent by the owners is less consumption, less investment and lower prices.
+- **Without the second pay** the dip below section 23 is gone: N lies about where A lies in real GDP from the second year and above it
+  in the first, with prices half as far below the comparison as in F, and keeps most of what the family did for the
+  firms' deposits.
+
+Ramon chose «Ohne Zusatzlohn für Knechte» on 21 November 2026, on the card «Wie soll die Familie bezahlt werden, die
+für einen kranken Knecht einspringt?». The numbers showed where the first rule paid twice; the rule that replaces it
+rests on the source as far as it goes, and is an OWN RULE where it goes beyond (above).
 
 ### Limits
 
@@ -3934,11 +3983,12 @@ files, wirtschaft/schritt6/check6_familie.txt.
 - **The source is about customary tenants on the land.** As in section 23 the rule holds for every firm.
 - **Who in the family goes is not chosen.** A mother of small children stands in as any other adult; no source read
   says who went.
-- **A servant who is away is paid, and so is the family's stand-in**, as the worker without work of section 23 is.
-- **The dip of the second to the fourth year is not explained**, nor the lower prices (above); it is one run of the
-  world of 1291.
+- **A servant who is away is paid**, and so is the worker without work who stands in for him (section 23); the
+  family's stand-in for him is not. No source read says what a sick famulus was paid.
+- **Prices still fall**, 0.7 % below the comparison after six years, where section 23 kept them, and the sixth
+  year's GDP lies below the first rule's. Neither is separated; the six years are one run of the world of 1291.
 - **The firms' deposits still fall** on the days on which nobody of the family is at home and no worker without work
-  is free, 3 to 16 % of the days away.
+  is free, 3 to 13 % of the days away.
 - **Phase B is open.** How many days a day labourer wanted and found work waits for the plague, which the game does
   not have; it would need the whole basket of Allen & Weisdorf (2010, pp. 5–6) in the family's need.
 
@@ -3948,4 +3998,5 @@ The engine's state format 14: per absence one byte after its last day, 1 if the 
 13 is read as one in which no family stands in. State version 39. The upgrade 38 → 39 changes nothing of the
 economies but the day to which they were given working days (`workingTo` = −1), as the upgrade 35 → 36 did: before
 the next day they are given the working days of the rest of the year, the absences of the rest of the month with the
-family's stand-ins, and the contracts.
+family's stand-ins, and the contracts. The pay of the family's stand-in is computed anew in every period, so the
+change of 21 November 2026 needs no new state: a world goes on with it from the next day it computes.

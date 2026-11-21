@@ -28,10 +28,14 @@
 //! family who does not work stands in ([`Absences::family`]): the "family member" of the same sentence of Owen, Brown
 //! and Skinner (p. 5). Such a place is filled before the workers without work are matched to the places left open
 //! (OWN RULE: the paper names the family first and the hired man with "or even", it gives no order). The family's
-//! stand-in is not a household of the port, so the firm pays him as it pays a worker without work who stands in, the
-//! wage times the factor of the day, and the pay goes to the household of the worker who is away: in the game the
-//! family keeps one purse (economy feature 11). OWN RULE: the same pay, so that the firm's books do not depend on who
-//! stands in.
+//! stand-in is not a household of the port. For a day labourer, who is paid nothing on a day he is away, the firm
+//! pays him as it pays a worker without work who stands in, the wage times the factor of the day, and the pay goes to
+//! the household of the worker who is away: in the game the family keeps one purse (economy feature 11). For a
+//! servant, whose wage goes on while he is away, the firm pays nothing more: his household is paid the wage of the
+//! year and gives the work owed for it. OWN RULE: the sick tenant found the family member himself, where the man for
+//! the sick ploughman was hired in the abbey's account (Owen, Brown and Skinner, pp. 5 and 7); the paper says nothing
+//! of a servant's wage while he is sick. Ramon chose it on 21 November 2026 ("Ohne Zusatzlohn für Knechte"), after a
+//! second pay for the family had moved the owners' profits to the families' deposits (docs/ECONOMY_DESIGN.md, 24).
 //!
 //! Without contracts the economy computes as before, number for number: they are given together, and absences
 //! without contracts are economy feature 22 alone.
@@ -193,13 +197,16 @@ pub fn today<R: Randomness + ?Sized>(m: &AbstractModel<DailyClock>, rng: &mut R)
         match gone[h] {
             Away::Alone if a > 0.0 => open[i] += 1,
             Away::Family if a > 0.0 => {
-                // the family's stand-in, paid into the household of the worker who is away
+                // the family's stand-in for a day labourer, paid into the household of the worker who is away; for a
+                // servant the household has his wage
                 family[i] += 1;
-                pays.push(Pay {
-                    worker: h,
-                    firm: i,
-                    more: a,
-                });
+                if c.contracts[h] == BY_THE_DAY {
+                    pays.push(Pay {
+                        worker: h,
+                        firm: i,
+                        more: a,
+                    });
+                }
             }
             _ => {}
         }

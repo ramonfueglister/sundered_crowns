@@ -3,11 +3,14 @@
 // from a piece's table the figures of the piece built.
 import { afterAll, describe, expect, it } from 'vitest';
 import { styleOf } from '../../src/buildings';
-import { type Figures, type SettledGround, crowd, setPlacePeople } from '../../src/figures';
+import { type Figures, type SettledGround, type Town, crowd, setPlacePeople } from '../../src/figures';
+import { FIGURE_AT } from '../../src/figures/aims';
 import { Mode } from '../../src/figures/estates';
 import { Batch } from '../../src/lookprobe/batch';
 import { type Ground, type GroundTraits, LAND_Y, Mat, N, SEA_Y, idx } from '../../src/lookprobe/layout';
 import CITIES_JSON from '../../src/sim/content/cities_1356.json';
+import { CALENDAR } from '../../src/sim/holy_days';
+import { WHO } from '../../src/sim/people/day_plan';
 import { WHEAT_FIELD, cropAt } from '../../src/worldprobe/crops';
 import { CROWD_AT, type CrowdGround, farCrowd } from '../../src/worldprobe/crowd';
 import { coverLand, usePlan } from '../../src/worldprobe/far';
@@ -36,6 +39,7 @@ const farGround = (g: Ground, c: ReturnType<typeof coverLand>): CrowdGround => (
   has: c.has,
   quarters: c.quarters,
   crops: c.crops,
+  towns: c.towns,
 });
 const lists = (f: Figures | undefined) => (f ? [f.a, f.b, f.c, f.d, f.e].map((l) => [...l]) : []);
 
@@ -95,7 +99,25 @@ function expectSame(got: Figures | undefined, fine: Figures) {
     expect(b[k]).toBeCloseTo(fb[k], 4);
   }
   expect([c, d, e]).toEqual([fc, fd, fe]);
+  expect([got?.at, got?.plan, got?.seed]).toEqual([fine.at, fine.plan, fine.seed]);
 }
+
+// 300 persons of London, two of them rulers, in each part of work by turns
+const london = CITIES.find((c) => c.name === 'London')!,
+  PARTS = [WHO.trade, WHO.seeking, WHO.craft, WHO.home];
+setPlacePeople({
+  place: london.place,
+  day: 0,
+  id: Array.from({ length: 300 }, (_, k) => 90000 + k),
+  born: Array.from({ length: 300 }, () => -365 * 30),
+  sex: Array.from({ length: 300 }, (_, k) => k % 2),
+  who: Array.from({ length: 300 }, (_, k) => PARTS[k % PARTS.length]),
+  calendar: Array.from({ length: 300 }, () => CALENDAR.latin),
+  rulers: [
+    { uid: 90000, color: 0xaa2222 },
+    { uid: 90001, color: 0x2222aa },
+  ],
+});
 
 describe('the people of the first far step', () => {
   afterAll(() => usePlan(null));
@@ -109,27 +131,17 @@ describe('the people of the first far step', () => {
     expectSame(got, fine);
   });
 
-  it('and the persons of a town and its rulers where the finest step stands them', () => {
-    // 300 persons of London, two of them rulers, in the town of the streets
-    const london = CITIES.find((c) => c.name === 'London')!;
-    setPlacePeople({
-      place: london.place,
-      day: 0,
-      id: Array.from({ length: 300 }, (_, k) => 90000 + k),
-      born: Array.from({ length: 300 }, () => -365 * 30),
-      sex: Array.from({ length: 300 }, (_, k) => k % 2),
-      rulers: [
-        { uid: 90000, color: 0xaa2222 },
-        { uid: 90001, color: 0x2222aa },
-      ],
-    });
+  it('and the persons of a town and its rulers where the finest step stands them, at the market and church too', () => {
     const { g, s, far } = streetsAndHouses(),
-      towns = [{ site: london.site, cx: 70, cz: 70, half: 30 }];
+      towns: Town[] = [{ site: london.site, cx: 70, cz: 70, half: 30, market: [60, 60, 72, 70], worship: [[84, 54]] }];
     s.towns = towns;
     const fine = crowd(g, s, ownFine),
-      shown = Array.from({ length: fine.count }, (_, k) => fine.e[k * 4 + 3] - 1).filter((id) => id >= 0);
-    expect(shown.length).toBeGreaterThan(20);
-    expect(shown).toEqual(expect.arrayContaining([90000, 90001]));
+      ids = Array.from({ length: fine.count }, (_, k) => fine.e[k * 4 + 3] - 1),
+      shown = (at: number) => ids.filter((_, k) => fine.at?.[k] === at);
+    expect(shown(FIGURE_AT.street).length).toBeGreaterThan(20);
+    expect(shown(FIGURE_AT.street)).toEqual(expect.arrayContaining([90000, 90001]));
+    expect(shown(FIGURE_AT.market).length).toBeGreaterThan(5);
+    expect(shown(FIGURE_AT.worship).length).toBeGreaterThan(5);
     expectSame(farCrowd({ ...far, towns }, 0, 0, PART), fine);
   });
 
@@ -161,15 +173,16 @@ describe('the people of the first far step', () => {
   });
 
   it('stand in the streets of a town and in no house, and come from its table as from the piece built', () => {
-    // a town at 300, 200 of the finest step with a row of houses across its middle, at the far step's columns 150, 100
+    // a town of London's persons at 300, 200 of the finest step with a row of houses across its middle, at the far
+    // step's columns 150, 100
     const houses: number[] = [];
     for (let x = 270; x < 330; x += 8) houses.push(x, 196, 6, 8, 2, 60, 0xc8b496, 0xa0522d, 0);
     usePlan({
       pieceBlocks: 200,
       greatKinds: [],
-      pieces: { '1,1': { houses, towns: [{ site: 0, cx: 300, cz: 200, half: 40, wall: [] }] } },
+      pieces: { '1,1': { houses, towns: [{ site: london.site, cx: 300, cz: 200, half: 40, wall: [] }] } },
     });
-    const site: Site = { id: 0, at: [150.5, 100.5], size: 3, pop: 2000, region: 'italy', style: styleOf('italy') };
+    const site: Site = { id: london.site, at: [150.5, 100.5], size: 3, pop: 2000, region: 'italy', style: styleOf('italy') };
     const g = meadow(),
       c = coverLand(g, CROWD_AT, new Batch(), [site], {
         ploughed: () => 0,
@@ -188,7 +201,9 @@ describe('the people of the first far step', () => {
       }
       return false;
     };
+    expect(c.towns).toEqual([{ site: london.site, cx: 300, cz: 200, half: 40 }]);
     expect(built?.count).toBeGreaterThan(10);
+    expect(built?.at?.includes(FIGURE_AT.street)).toBe(true);
     for (let k = 0; built && k < built.count; k++) {
       expect(housed(Math.floor(built.a[k * 4]), Math.floor(built.a[k * 4 + 2]))).toBe(false);
       expect(built.c[k * 4] === Mode.Work).toBe(false);
@@ -200,8 +215,9 @@ describe('the people of the first far step', () => {
       cover: (x, z) => (c.has[idx(x, z)] ? { top: [0, 0, 0], side: [0, 0, 0], rise: 0 } : null),
       quarters: c.quarters,
       crops: c.crops,
+      towns: c.towns,
     };
     const table = unpackTable(packTable(tableOf(g, t, part)));
-    expect(lists(farCrowd(table, table.ox, table.oz, table.part))).toEqual(lists(built));
+    expectSame(farCrowd(table, table.ox, table.oz, table.part), built!);
   });
 });

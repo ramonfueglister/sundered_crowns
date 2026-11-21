@@ -2,7 +2,7 @@
 // as flat lists that are handed over, not copied. A piece of a coarse step whose table was built ahead is drawn from
 // that (table.ts), which takes a third of the time and none of the map's data.
 import * as THREE from 'three/webgpu';
-import { type Figures, loadTownPeople } from '../figures';
+import { loadTownPeople } from '../figures';
 import { Batch } from '../lookprobe/batch';
 import type { Shape } from '../lookprobe/shape';
 import { buildOpenSea } from '../lookprobe/terrain';
@@ -11,7 +11,7 @@ import { GRID, N, SEA_Y, onGrid } from '../lookprobe/layout';
 import { maybeGunzip } from './gunzip';
 import { buildPiece, warmPieces } from './build';
 import { CROWD_AT, farCrowd } from './crowd';
-import { type Cover, KINDS, laidOut, loadPlan, plannedTowns, usePlan } from './far';
+import { type Cover, KINDS, laidOut } from './far';
 import { glide } from './glide';
 import { meanCover, summary } from './mean';
 import { above, lay } from './mean_look';
@@ -268,15 +268,11 @@ async function tableOf(job: PieceJob): Promise<{ scene: WorldScene | null; table
   if (table.things && !job.bakedSky) return null;
   const drawn = drawTable(table, job.bakedSky, job.step),
     things = table.things ? Batch.of(table.things.pos, table.things.nor, table.things.col) : new Batch();
-  // (the people of the first far step stand on the table's ground as on the ground the piece was built on, the persons
-  // of the towns in the towns of the plan: crowd.ts)
-  let figures: Figures | undefined;
-  if (job.step === CROWD_AT) {
-    usePlan(await loadPlan(job.base, job.year ?? 1356));
-    await loadTownPeople(undefined, job.year);
-    const ground = { ...table, towns: plannedTowns(table.ox, table.oz, table.part) };
-    figures = onGrid(table.side, () => farCrowd(ground, table.ox, table.oz, table.part));
-  }
+  // (the people of the first far step stand on the table's ground as on the ground the piece was built on, and the
+  // persons of the towns in its towns: crowd.ts)
+  if (job.step === CROWD_AT) await loadTownPeople(undefined, job.year);
+  const figures =
+    job.step === CROWD_AT ? onGrid(table.side, () => farCrowd(table, table.ox, table.oz, table.part)) : undefined;
   return {
     table,
     scene: {
@@ -473,6 +469,7 @@ async function build(job: PieceJob) {
       .concat(
         scene.figures ? [scene.figures.a, scene.figures.b, scene.figures.c, scene.figures.d, scene.figures.e] : [],
       )
+      .concat(scene.figures?.at && scene.figures.plan ? [scene.figures.at, scene.figures.plan] : [])
       .map((a) => (a as Float32Array).buffer)
       .filter((buf) => buf.byteLength > 0);
     // (summed before the lists are handed over)

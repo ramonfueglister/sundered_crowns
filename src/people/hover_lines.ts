@@ -1,14 +1,21 @@
 // The lines of the card a figure shows while the pointer rests on it (hover.ts): text only, so it can be tested
 // without a page.
 import type { PersonDetail } from '../net/people';
+import { dayText, nowText } from './plan_lines';
 
 /** The sectors of the calibration table (data/economy/england_1356.json), in its order. */
 const SECTORS = ['Landwirtschaft', 'Gewerbe', 'Dienste'] as const;
 /** Below this age a person is a child (as the figures: src/figures/people.ts FIGURE_FROM_AGE). */
 const CHILD_UNTIL = 14;
 
-/** The lines of the card: a title and [label, value] rows. Text only, so it can be tested without a page. */
-export function hoverLines(p: PersonDetail): { title: string; rows: [string, string][] } {
+/** The lines of the card: a title and [label, value] rows. Text only, so it can be tested without a page. `hour`: the
+ *  hour of the world's day `worldDay` (src/net/client.ts worldHour), null where it is not known; what the person does
+ *  is shown while the person's plan is of that day. */
+export function hoverLines(
+  p: PersonDetail,
+  hour: number | null = null,
+  worldDay = p.day,
+): { title: string; rows: [string, string][] } {
   const h = p.history,
     title = `${h ? h.name : p.female ? 'Frau' : 'Mann'}${p.alive ? '' : ' †'}`,
     rows: [string, string][] = [];
@@ -29,6 +36,10 @@ export function hoverLines(p: PersonDetail): { title: string; rows: [string, str
     children.length ? `${children.length} ${children.length === 1 ? 'Kind' : 'Kinder'}` : '',
   ].filter(Boolean);
   if (kin.length) rows.push(['Familie', kin.join(', ')]);
+  if (p.plan) {
+    rows.push(['Heute', dayText(p.plan)]);
+    if (hour !== null && worldDay === p.day) rows.push(['Jetzt', nowText(p.plan, hour)]);
+  }
   if (p.household && p.household.persons > 1)
     rows.push(['Haushalt', `${p.household.persons} Personen, ${p.household.working} erwerbstätig`]);
   // only the IQ: the Big Five are numbers of the simulation, and no word for them was agreed (Ramon, 19 Nov 2026)

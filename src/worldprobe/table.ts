@@ -12,6 +12,7 @@
 // What a table does not hold is how the land looks: the colours of grass, rock and shore, their grain and the light
 // are worked out when it is drawn (lookprobe/terrain.ts, shore.ts). A change of the look needs no new tables; a
 // change of the land's shape, its cover or its ways does (world.ts, far.ts, roads.ts and the map's data).
+import type { Town } from '../figures';
 import { Batch, type RGB } from '../lookprobe/batch';
 import { type Ground, type GroundTraits, Mat, N, idx, onGrid } from '../lookprobe/layout';
 import { buildShore } from '../lookprobe/shore';
@@ -77,6 +78,8 @@ export interface Table {
   furlongs?: Uint8Array;
   /** where the figures are drawn (crowd.ts CROWD_AT): what the finest step has on the four blocks of each column (a byte to a column, side × side columns), the piece's own columns and RIM round them */
   quarters?: Uint8Array;
+  /** there too, the walled towns on the piece's ground, where the persons of the towns walk (far.ts `Cover`) */
+  towns?: readonly Town[];
   /** blocks to the edge of the nearest way's band at the corners of the columns ((side + 1)², roads.ts `roadOn`), where ways run over the ground; off the piece's own and its rim as far as where no way is near */
   road?: Float32Array;
 }
@@ -298,6 +301,7 @@ export function tableOf(g: Ground, t: GroundTraits, part: Part, roads: Float32Ar
         quarters[idx(x, z)] = t.quarters[idx(x, z)];
     if (quarters.some((v) => v > 0)) table.quarters = quarters;
   }
+  if (t.towns?.length) table.towns = t.towns;
   if (roads) {
     const road = new Float32Array((N + 1) * (N + 1)).fill(FAR_FROM_ROADS);
     for (let z = Math.max(0, part.z0 - RIM); z <= Math.min(N, part.z1 + RIM); z++)

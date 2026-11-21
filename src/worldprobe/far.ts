@@ -15,7 +15,6 @@
 import type { Town } from '../figures';
 import type { Batch, RGB } from '../lookprobe/batch';
 import { type Ground, N, idx, occlude } from '../lookprobe/layout';
-import type { Part } from '../lookprobe/terrain';
 import { CROWD_AT } from './crowd';
 import { layFields } from './far_fields';
 import { type CoverAsks, layingOf } from './far_lay';
@@ -23,6 +22,7 @@ import { layPlaces, layPlanned } from './far_places';
 import { layWoods } from './far_woods';
 import { HOUSE_NUMBERS } from './houses';
 import type { Site } from './settle';
+import { marketOf, worshipOf } from './town_spots';
 
 /** What a column carries as part of itself (GroundTraits.cover): where `has` is set, the colours of its top and sides and how far it stands above its ground. */
 export interface Cover {
@@ -48,6 +48,8 @@ export interface Cover {
   furlongs?: Uint8Array;
   /** where the figures are drawn (crowd.ts CROWD_AT): what the finest step has on the four blocks of each column, which are street and which built on */
   quarters?: Uint8Array;
+  /** there too, the walled towns on the ground as the finest step lays them out, where the persons of the towns walk (`plannedTowns`) */
+  towns?: Town[];
 }
 /**
  * The woods at a column: the share of the ground they cover (0 … 1), the colours of their crowns and whether the
@@ -116,21 +118,6 @@ export function loadPlan(base: string, year: number): Promise<Plan | null> {
 export const usePlan = (p: Plan | null) => {
   plan = p;
 };
-/**
- * The walled towns of the plan about the own columns `part` of a piece of the first far step whose ground starts at
- * the world block ox, oz, in blocks of the finest step: their persons walk in their streets at that step as at the
- * finest (crowd.ts `farCrowd`).
- */
-export function plannedTowns(ox: number, oz: number, part: Part): Town[] {
-  const p = plan;
-  if (!p) return [];
-  const fine = (v: number) => Math.floor((v * 2 ** CROWD_AT) / p.pieceBlocks),
-    towns: Town[] = [];
-  for (let pz = fine(oz + part.z0) - 1; pz <= fine(oz + part.z1) + 1; pz++)
-    for (let px = fine(ox + part.x0) - 1; px <= fine(ox + part.x1) + 1; px++)
-      for (const { site, cx, cz, half } of p.pieces[`${px},${pz}`]?.towns ?? []) towns.push({ site, cx, cz, half });
-  return towns;
-}
 
 /** what a column carries, by the number in `Cover.kind` */
 export const KINDS = [
@@ -146,6 +133,25 @@ export const KINDS = [
   'tall wood',
   'blend',
 ] as const;
+/**
+ * The walled towns of the plan on the ground of a piece of the first far step whose first column is the world block
+ * ox, oz, as the finest step lays them out (settle.ts): in blocks of the finest step, with the market and the houses of
+ * worship of the land register to which the persons of a town go by their plan of the day (town_spots.ts).
+ */
+function plannedTowns(p: Plan, ox: number, oz: number, sites: readonly Site[]): Town[] {
+  const fine = (v: number) => Math.floor((v * 2 ** CROWD_AT) / p.pieceBlocks),
+    towns: Town[] = [];
+  for (let pz = fine(oz) - 1; pz <= fine(oz + N) + 1; pz++)
+    for (let px = fine(ox) - 1; px <= fine(ox + N) + 1; px++)
+      for (const { site, cx, cz, half } of p.pieces[`${px},${pz}`]?.towns ?? []) {
+        const s = sites.find((q) => q.id === site),
+          market = s?.lots ? marketOf(s.lots, cx, cz) : undefined,
+          worship = worshipOf(s?.marks, cx, cz);
+        towns.push({ site, cx, cz, half, ...(market ? { market } : {}), ...(worship.length ? { worship } : {}) });
+      }
+  return towns;
+}
+
 let last: Cover | null = null;
 /** the cover `coverLand` laid out last, for measuring it (piece.worker.ts `compare`) */
 export const laidOut = () => last;
@@ -169,7 +175,10 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
     share: new Float32Array(N * N).fill(1),
     kind: new Uint8Array(N * N),
   };
-  if (step === CROWD_AT) c.quarters = new Uint8Array(N * N);
+  if (step === CROWD_AT) {
+    c.quarters = new Uint8Array(N * N);
+    if (plan) c.towns = plannedTowns(plan, g.ox ?? 0, g.oz ?? 0, sites);
+  }
   const l = layingOf(g, step, things, sites, o, plan, c);
   layPlaces(l);
   layPlanned(l);
