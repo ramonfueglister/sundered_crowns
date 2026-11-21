@@ -58,7 +58,7 @@ import {
 } from 'three/tsl';
 import { SEA_Y } from './layout';
 import { COAST_REACH } from './sea_coast';
-import { RINGS_UNTIL, shoreFoam } from './sea_shore';
+import { RINGS_UNTIL, columnsOf, shoreFoam } from './sea_shore';
 import { TEX, WIND, waveTexture } from './sea_waves';
 import { number, q } from './stage/address';
 import { WATER_DEEP, WATER_SHALLOW } from './terrain';
@@ -154,8 +154,6 @@ const STILL = q.has('w');
  */
 const RATIO = STILL ? 1 : Math.min(globalThis.devicePixelRatio ?? 1, 2);
 const FOAM = new THREE.Color(0xf2f8f6);
-/** how much of the light the foam along the coast gives back (it is lit as the water is, sea_shore.ts) */
-const FOAM_LIGHT = 0.9;
 /**
  * how far the swell reaches, in finest blocks to a dot of the screen (RATIO): it shows fully up to the first and is
  * gone from the second (in a picture 1672 dots wide: fully up to some 400 blocks across, smooth from 1000 on); and the
@@ -174,8 +172,12 @@ const PERIOD = 1024,
   TURN = (2 * Math.PI) / PERIOD;
 
 export interface Sea {
-  /** the water's colour from its corners' colour (which carries the material's colour) */
-  colour(corners: Vec3): Vec3;
+  /**
+   * the water's colour from its corners' colour (which carries the material's colour); `coast`: how many columns from
+   * the coast the place lies, where the mesh knows it better than its corners' colour tells (the sea's faces:
+   * sea_corners.ts)
+   */
+  colour(corners: Vec3, coast?: Float): Vec3;
   /** the surface's direction, in the view's frame */
   normal: Vec3;
   /** what the water gives back: the mirror image (`mirror`) broken by the swell, the sky in the swell, and the flecks */
@@ -207,7 +209,7 @@ export function createSea(mirror: Vec3): Sea {
   const seen = whereSeen(blocks, home, homeCoarse),
     s = surfaceOf(seen);
   return {
-    colour: (corners) => waterColour(corners, depth, seen, s.clock, s.flecksAt),
+    colour: (corners, coast) => waterColour(corners, coast, depth, seen, s.clock, s.flecksAt),
     normal: transformNormalToView(s.facing),
     mirror: mirror
       .mul(s.waved.div(s.level))
@@ -302,6 +304,7 @@ const ramp = (t: Float) => {
 /** The water's colour from its corners' colour (Sea.colour), by the depth picture, and the foam along the coast. */
 function waterColour(
   corners: Vec3,
+  coastAway: Float | undefined,
   depth: ReturnType<typeof readDepths>,
   seen: ReturnType<typeof whereSeen>,
   clock: Float,
@@ -350,8 +353,9 @@ function waterColour(
   // (the near view's light is brighter: the water is as dark there as it looks from afar; the foam is white in it)
   const darker = mix(float(1), float(NEAREST_DARKER), seen.nearest);
   const water = mix(ramp(t), lin(COAST), coast).mul(materialColor.rgb).mul(patches).mul(darker);
-  const foam = shoreFoam(k, seen.pFine, seen.acrossScreen, clock, flecksAt);
-  return mix(water, lin(FOAM).mul(materialColor.rgb).mul(FOAM_LIGHT), foam);
+  const foam = shoreFoam(coastAway ?? columnsOf(k), seen.pFine, seen.acrossScreen, clock, flecksAt);
+  // (the foam is lit as the water is)
+  return mix(water, lin(FOAM).mul(materialColor.rgb), foam);
 }
 
 /** The surface: the swell's slope, the sky it gives back, the flecks and the glitter (and the waves' clock and flecks, for the foam). */
@@ -400,11 +404,13 @@ function surfaceOf({ pFine, pCoarse, acrossDot, nearest, surface, flecked }: Ret
     .sub(gust.sub(1).mul(FLECK_GUST / (PATCHY[1] - 1)))
     .sub(swell.mul(FLECK_CREST))
     .add(sway);
-  const broken = (h: Float) => smoothstep(line.sub(fwidth(h)), line.add(fwidth(h)), h);
-  const fleck = broken(flecksAt(oF))
+  // (the two octaves' waves are added before the line is drawn, not their flecks after: a fleck of an octave half
+  // faded in was a grey smudge)
+  const crests = flecksAt(oF)
     .mul(float(1).sub(fF))
-    .add(broken(flecksAt(oF.add(1))).mul(fF))
-    .mul(flecked);
+    .add(flecksAt(oF.add(1)).mul(fF))
+    .div(float(1).sub(fF).mul(float(1).sub(fF)).add(fF.mul(fF)).sqrt());
+  const fleck = smoothstep(line.sub(fwidth(crests)), line.add(fwidth(crests)), crests).mul(flecked);
   // the glitter: where two pictures of the flecks' waves an octave finer than the swell's, turned apart and drifting
   // against each other, both peak (they meet and part again: the points twinkle), more at a slant to the water
   const glint = (h: Float, k: Float) => smoothstep(SPARKLE, SPARKLE + 0.6, min(h, k));
