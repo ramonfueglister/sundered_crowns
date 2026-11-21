@@ -2,7 +2,7 @@
 // is in the picture, and whether anything walks, so that the stage keeps drawing. Main thread only.
 import type * as THREE from 'three/webgpu';
 import { Group } from 'three/webgpu';
-import { FIGURE_AT } from './aims';
+import { FIGURE_AT, PLAN } from './aims';
 import type { Figures } from './crowd';
 import { figureMeshes as build, figureAt as standing, figureSeconds } from './material';
 import { type FigureClock, figureShown } from './schedule';
@@ -191,3 +191,20 @@ export function figuresAtHour(at: FigureClock): boolean {
 
 /** whether any figures stand on the stage */
 export const anyFigures = () => shown.size > 0;
+
+/** The places (of the game map) of the persons whose figures are on the stage. */
+export function placesOnStage(): number[] {
+  const places = new Set<number>();
+  for (const p of shown)
+    for (let i = 0; p.f.at && p.f.plan && i < p.f.count; i++)
+      if (p.f.at[i] !== FIGURE_AT.anonymous) places.add(p.f.plan[i * PLAN + 2]);
+  return [...places];
+}
+/** The figures among the parts of a group on the stage, and the share of them drawn, if it has any. */
+export function figuresIn(group: THREE.Object3D): { f: Figures; kept: number } | undefined {
+  for (const part of group.children) {
+    const p = pairOf.get(part);
+    if (p) return { f: p.f, kept: p.kept };
+  }
+  return undefined;
+}

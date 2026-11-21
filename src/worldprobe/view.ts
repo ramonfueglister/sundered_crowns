@@ -8,6 +8,8 @@
 // + and - zoom. A click on the ground is told to the page as the event `world-click` (see `click` below).
 // The probe's own page (main.ts) and the game (ui/WorldView.tsx) both show the world through this.
 import * as THREE from 'three/webgpu';
+import type { PlacePeopleList } from '../figures';
+import type { Figures } from '../figures/stage';
 import { NEAR, RIGHT, SEA_Y } from '../lookprobe/layout';
 import { type Stage, bakedSky, createStage } from '../lookprobe/stage';
 import { withCoast } from '../lookprobe/sea_coast';
@@ -72,6 +74,9 @@ export interface WorldView {
   setMarks(marks: readonly WorldMark[]): void;
   /** Asks for a new picture (something drawn changed that the view does not know of, such as the figures' colours). */
   redraw(): void;
+  /** The persons of the towns changed (src/people/town_rolls.ts): see pieces.ts `tellPersons` and `renewFigures`. */
+  tellPersons(lists: readonly PlacePeopleList[]): void;
+  renewFigures(stale: (f: Figures) => boolean, version: number): void;
   /** Stops the view and lets go of all it holds. */
   dispose(): void;
 }
@@ -275,6 +280,8 @@ export async function createWorldView(o: WorldViewOptions): Promise<WorldView> {
     redraw() {
       stage.redraw();
     },
+    tellPersons: (lists) => pieces.tellPersons(lists),
+    renewFigures: (stale, version) => pieces.renewFigures(stale, version),
     setMarks(now) {
       marks.set(now);
       marks.place(laid, place.wide);

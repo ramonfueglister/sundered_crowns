@@ -1,14 +1,16 @@
 // Which of a person's figures is on the stage at an hour of the world: the plan of the day (people feature 12,
 // src/sim/people/day_plan.ts) says what the person does, and this says where in the town that is seen (crowd.ts
-// FIGURE_AT): in the street, at the market, at a house of worship, or nowhere (indoors, in the fields outside the
-// walls, asleep). Main thread only: a person's plan is worked out once a day from what the figures carry
-// (`Figures.plan`), as the world server works it out for the card of the person (src/net/plan.ts).
+// FIGURE_AT): in the street, at the market, at a house of worship, at a furlong of the town, or nowhere (indoors, in
+// the barn, asleep). Main thread only: a person's plan is worked out once a day from what the figures carry
+// (`Figures.plan`) or the newer lists of the persons (people.ts), as the world server works it out for the card of
+// the person (src/net/plan.ts).
 import { CHILDBED_DAYS, sickness } from '../sim/people/absence';
 import { AWAY, DOING, type DayPlan, WHO, dayPlan, doingAt } from '../sim/people/day_plan';
 import { inBarn } from '../sim/people/farm_year';
 import { BORN_UNKNOWN } from '../sim/state';
 import { FIGURE_AT, PLAN } from './aims';
 import type { Figures } from './crowd';
+import { listedPerson, listsVersion } from './people';
 
 /** What the figures follow: the world's day, the hour of it (0 to 24; null where the hours pass too fast to be seen,
  *  `TERCE`), its start year, and the latitude of a place. */
@@ -57,9 +59,11 @@ export function figureAtHour(plan: DayPlan, who: number, hour: number): number {
   }
 }
 
-/** the plans of the day of the persons whose figures are on the stage, by uid, for the day `planned` */
+/** the plans of the day of the persons whose figures are on the stage, by uid, for the day `planned` and the lists of
+ *  the persons as they were at `listed` (people.ts listsVersion) */
 const plans = new Map<number, DayPlan>();
-let planned = Number.NaN;
+let planned = Number.NaN,
+  listed = -1;
 
 /** Why the person `uid` is away on the day (AWAY): sick on the days of sickness the economy has (absence.ts), as
  *  awayOn in src/sim/people/plan_person.ts; in childbed for the days after the birth the list of the persons told. */
@@ -74,20 +78,34 @@ function awayOf(seed: number, uid: number, born: number, child: number, day: num
 
 /**
  * Which of the figure's kinds (FIGURE_AT) the person of figure `i` is seen at by the clock, or NOWHERE; a person
- * without a part (a ruler, or of a server older than the client) is seen in the street at every hour.
+ * without a part (a ruler, or of a server older than the client) is seen in the street at every hour. Where the lists
+ * of the persons are newer than the figures (src/people/town_rolls.ts), they count: a person they no longer hold at
+ * the place (dead, or moved away) is nowhere, and the part, the calendar and a birth are theirs.
  */
 export function figureShown(f: Pick<Figures, 'e' | 'plan' | 'seed'>, i: number, clock: FigureClock): number {
-  const [who, calendar, place, born, child] = f.plan?.subarray(i * PLAN, i * PLAN + PLAN) ?? [];
-  if (who === undefined || who < 0) return FIGURE_AT.street;
-  if (planned !== clock.day) {
+  const [built, builtCalendar, place, born, builtChild] = f.plan?.subarray(i * PLAN, i * PLAN + PLAN) ?? [];
+  if (built === undefined) return FIGURE_AT.street;
+  const uid = f.e[i * 4 + 3] - 1,
+    now = listedPerson(uid, place);
+  if (now === null) return NOWHERE;
+  if (built < 0) return FIGURE_AT.street;
+  const who = now?.who ?? built;
+  if (planned !== clock.day || listed !== listsVersion()) {
     plans.clear();
     planned = clock.day;
+    listed = listsVersion();
   }
-  const uid = f.e[i * 4 + 3] - 1;
   let plan = plans.get(uid);
   if (!plan) {
-    const away = awayOf(f.seed ?? 0, uid, born, child, clock.day);
-    plan = dayPlan({ who, calendar, away, heading: -1 }, place, clock.lat(place), clock.day, clock.startYear);
+    const child = now ? (now.child ?? Number.NEGATIVE_INFINITY) : builtChild,
+      away = awayOf(f.seed ?? 0, uid, born, child, clock.day);
+    plan = dayPlan(
+      { who, calendar: now?.calendar ?? builtCalendar, away, heading: -1 },
+      place,
+      clock.lat(place),
+      clock.day,
+      clock.startYear,
+    );
     plans.set(uid, plan);
   }
   return figureAtHour(plan, who, clock.hour ?? plan.sunrise + (TERCE * (plan.sunset - plan.sunrise)) / 12);

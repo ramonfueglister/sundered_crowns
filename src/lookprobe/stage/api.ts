@@ -1,5 +1,6 @@
 // What a page sees of the stage: its options and the stage itself (the scene it puts on it: ../shape.ts).
 import type * as THREE from 'three/webgpu';
+import type { Figures } from '../../figures/stage';
 import type { Shape, StageScene } from '../shape';
 import type { Light } from './look';
 
@@ -24,6 +25,8 @@ export interface Stage {
   /** Puts a scene on the stage, moved by (x, z) blocks. */
   add(built: StageScene<Shape>, x?: number, z?: number): THREE.Group;
   remove(group: THREE.Group): void;
+  /** Puts these figures on a group on the stage in place of those it has (the persons of its towns changed). */
+  swapFigures(group: THREE.Group, figures: Figures | undefined): void;
   /**
    * Adds more things to a group on the stage, as a mesh of its own that is shown, hidden and dissolved by itself;
    * `drop` takes it off again. The things as lists, or as faces of floats alone (faces.ts `Free`, with no lists

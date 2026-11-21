@@ -1,6 +1,6 @@
 // The workers that build the pieces (piece.worker.ts), for pieces.ts: how many there are, each job to the worker that
 // holds the fewest, and the jobs taken back that the view no longer needs first.
-import type { CancelJob, PieceDone, PieceJob, WarmJob } from './piece.worker';
+import type { CancelJob, PersonsNews, PieceDone, PieceJob, WarmJob } from './piece.worker';
 import { RANK_KIND, type Spot, type Wanted } from './piece_sight';
 
 /**
@@ -24,6 +24,8 @@ interface Builders {
   readonly jobs: ReadonlyMap<number, Job>;
   /** Tells every worker, once, to load the map's data of the finest step. */
   warm(job: WarmJob): void;
+  /** Hands every worker newer lists of persons. */
+  tell(news: PersonsNews): void;
   /**
    * Gives out the pieces from the end of `queue`, each to the worker that holds the fewest jobs, while one holds
    * fewer than DEPTH. `began` is called for each before its job (`jobOf`) is sent.
@@ -82,6 +84,9 @@ export function createBuilders(
       if (warmed) return;
       warmed = true;
       for (const w of workers) w.postMessage(job);
+    },
+    tell(news) {
+      for (const w of workers) w.postMessage(news);
     },
     give(queue, began, jobOf) {
       for (let worker = freest(); worker && queue.length; worker = freest()) {

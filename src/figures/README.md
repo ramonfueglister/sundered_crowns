@@ -24,7 +24,9 @@ hood with a long tail. The head is drawn larger than true so that a figure reads
   person has a figure in the street, and where the plan takes the person, one at the market, one at a house of
   worship and, for the farmers, one at a furlong of the town (`farmers.ts`). Once a second the main thread puts on the stage the one where the plan has the person at the world's hour
   (`schedule.ts`), and none at night; a figure off the stage has a negative phase and is folded into a point by the
-  vertex stage, so nothing is built anew.
+  vertex stage, so nothing is built anew. Once a day of the world the persons' lists are asked for again
+  (`src/people/town_rolls.ts`): the dead leave the stage at once, and the pieces of a town whose persons changed
+  build only their figures again (`Figures.rolls`, `people.ts rollOf`).
 
 ## Rules for this code
 

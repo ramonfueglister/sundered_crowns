@@ -13,7 +13,16 @@
 import * as THREE from 'three/webgpu';
 import { MapControls } from 'three/addons/controls/MapControls.js';
 import { FRAME_W, LAND_Y, N, NEAR, SEA_Y, VIEW } from '../layout';
-import { anyFigures, disposeFigures, figureMeshes, keepFigures, showFigures, warmFigures } from '../../figures/stage';
+import {
+  type Figures,
+  anyFigures,
+  disposeFigures,
+  figureMeshes,
+  figuresIn,
+  keepFigures,
+  showFigures,
+  warmFigures,
+} from '../../figures/stage';
 import { OPEN_WATER } from '../terrain';
 import type { StageScene } from '../shape';
 import type { Stage, StageOptions } from './api';
@@ -191,6 +200,17 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
       smallLists,
     }),
     { staged, cold, cool, warm, parts } = sender;
+  /** puts the figures of a piece on its group, of which the share `kept` is drawn */
+  const addFigures = (group: THREE.Group, figures: Figures | undefined, kept = 1) => {
+    if (!figures?.count) return;
+    const f = figureMeshes(figures);
+    f.near.layers.set(FIGURES_LAYER);
+    f.far.layers.set(FIGURES_LAYER);
+    group.add(f.near, f.far);
+    marked(group);
+    keepFigures(f.near, kept);
+    showFigures(frameW);
+  };
   const stage: Stage = {
     canvas,
     aim,
@@ -224,14 +244,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
           group.add(part);
         }
       }
-      if (built.figures?.count) {
-        const f = figureMeshes(built.figures);
-        f.near.layers.set(FIGURES_LAYER);
-        f.far.layers.set(FIGURES_LAYER);
-        group.add(f.near, f.far);
-        marked(group);
-        showFigures(frameW);
-      }
+      addFigures(group, built.figures);
       scene.add(group);
       pending = Math.max(pending, 3);
       return group;
@@ -242,6 +255,17 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
       for (const mesh of group.children)
         if (mesh.userData.figures === 'near') disposeFigures(mesh);
         else if (!mesh.userData.figures) gone(mesh as THREE.Mesh);
+      redraw();
+    },
+    swapFigures(group, figures) {
+      // (as many of the new figures are drawn as were of the old: the group may be dissolving)
+      const kept = figuresIn(group)?.kept ?? 1;
+      for (const mesh of [...group.children])
+        if (mesh.userData.figures) {
+          if (mesh.userData.figures === 'near') disposeFigures(mesh);
+          group.remove(mesh);
+        }
+      addFigures(group, figures, kept);
       redraw();
     },
     more(group, things) {
