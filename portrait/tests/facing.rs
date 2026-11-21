@@ -6,7 +6,7 @@ mod common;
 
 use common::{head, person_of};
 use sc_portrait::dress::{Hood, COURT_1356, ENGLAND_1356};
-use sc_portrait::facing::{BEYOND, BREADTH, PILE, PILE_MOST};
+use sc_portrait::facing::{BEYOND, BREADTH, FINER, PILE, PILE_MOST, ROUND, TUFT};
 use sc_portrait::{build, Surface};
 
 fn show() -> bool {
@@ -37,16 +37,15 @@ fn with<'a>(s: &'a [Surface], image: &str) -> Vec<&'a Surface> {
 }
 
 /// The corners along the edge of a hood's opening in the files (tools/portrait/pipeline/README.md: the hood on
-/// the head, closed under the chin, and the hood thrown back), the corners round the roll (facing.rs), and the
-/// files' triangles, plain and dagged (tests/hood.rs).
+/// the head, closed under the chin, and the hood thrown back), and the files' triangles, plain and dagged
+/// (tests/hood.rs).
 const EDGE: [usize; 2] = [114, 96];
-const ROUND: usize = 12;
 const PLAIN: [usize; 2] = [11980, 5568];
 // (round 163: the hood thrown back is laid anew, tests/collar.rs; its dagged file has 6 661 triangles for 6 275)
 const DAGGED: [usize; 2] = [12004, 6661];
 
-/// The roll's rings: the corners round it at each place along the edge (two triangles for each of the `ROUND`
-/// pieces between two rings, each beginning with the first ring's corner).
+/// The roll's rings: the corners round it at each place along the edge, `FINER` places for each corner of the edge
+/// (two triangles for each of the `ROUND` pieces between two rings, each beginning with the first ring's corner).
 fn rings(fur: &Surface) -> Vec<Vec<V3>> {
     fur.pos.chunks_exact(6 * ROUND).map(|ring| ring.chunks_exact(6).map(|quad| quad[0]).collect()).collect()
 }
@@ -54,7 +53,7 @@ fn rings(fur: &Surface) -> Vec<Vec<V3>> {
 #[test]
 fn a_lords_hood_is_faced_with_fur_and_a_villagers_is_not() {
     // Only the court's table has a fur for its hoods. On 120 men of 15 to 68: a lord who wears a hood, on the
-    // head or thrown back, has one roll of fur with a ring for every corner of the opening's edge, and the hood
+    // head or thrown back, has one roll of fur with `FINER` rings for every corner of the opening's edge, and the hood
     // under it is whole, plain or dagged; the same man as a villager, a lord without a hood, a crowned head and a
     // lady have none. The fur is pale and nearly without colour, lighter than the wool it lies on.
     assert!(ENGLAND_1356.hood_fur.is_empty() && !COURT_1356.hood_fur.is_empty());
@@ -76,7 +75,7 @@ fn a_lords_hood_is_faced_with_fur_and_a_villagers_is_not() {
         let back = usize::from(hood == Hood::Back);
         seen[back] += 1;
         assert_eq!(furs.len(), 1, "person {k}: the hood's fur");
-        assert_eq!(furs[0].pos.len(), 6 * ROUND * EDGE[back], "person {k}: a ring for every corner of the edge");
+        assert_eq!(furs[0].pos.len(), 6 * ROUND * FINER * EDGE[back], "person {k}: rings for every corner of the edge");
         let wool = with(&out.surfaces, image);
         // (round 161: a hood thrown back has its hood behind the neck, drawn with the same image after it)
         assert_eq!(wool.len(), 1 + back, "person {k}: the hood");
@@ -107,8 +106,8 @@ fn the_fur_lies_on_the_wool_along_the_opening_and_leaves_the_face_free() {
     // On the same men: a hood on the head has its fur round the face, from under the chin to over the brow and on
     // both sides, and nothing of it before the face from 4.5 cm over the chin to 19 cm over it; a hood thrown back has it round the neck, under the
     // chin in front and up to the nape behind. Either way the roll lies on the hood (no corner of it further from the wool than the roll is thick
-    // and broad), it is no broader and no thicker than facing.rs says, and no corner of the wool under its middle
-    // stands through its top.
+    // and broad), it is no broader and no thicker than facing.rs says (round 164: with a tuft at either rim and one
+    // on its top), and no corner of the wool under its middle stands through its top.
     let Some(h) = head() else { return };
     let d = &COURT_1356;
     let wide = |r: &mut (f32, f32), v: f32| *r = (r.0.min(v), r.1.max(v));
@@ -172,8 +171,8 @@ fn the_fur_lies_on_the_wool_along_the_opening_and_leaves_the_face_free() {
             }
             if !show() {
                 assert!(near < 0.12, "person {k}, ring {i}: the roll's middle {near} from the wool");
-                assert!((across - (BREADTH + BEYOND)).abs() < 0.01, "person {k}, ring {i}: the roll {across} broad");
-                assert!(tall > PILE && tall < PILE_MOST + 0.04, "person {k}, ring {i}: the roll {tall} thick");
+                assert!(across > BREADTH + BEYOND - 0.01 && across < BREADTH + BEYOND + 2.0 * TUFT + 0.01, "person {k}, ring {i}: the roll {across} broad");
+                assert!(tall > PILE && tall < PILE_MOST + 0.04 + TUFT, "person {k}, ring {i}: the roll {tall} thick");
                 assert!(highest < 0.0, "person {k}, ring {i}: wool {highest} over the roll's top");
             }
         }
@@ -183,5 +182,54 @@ fn the_fur_lies_on_the_wool_along_the_opening_and_leaves_the_face_free() {
         println!("on the head ({}): fur from {:.2}..{:.2} under the chin to {:.2}..{:.2} over it, to the sides at least {:.2}, its lower rim at the brow {:.2}..{:.2} over the chin, its upper rim before the chin {:.2}..{:.2} over it", seen[0], under.0, under.1, over.0, over.1, side.0, brow.0, brow.1, jaw.0, jaw.1);
         println!("thrown back ({}): the fur's top {:.2}..{:.2} over the chin", seen[1], neck.0, neck.1);
         println!("the roll's middle {:.3}..{:.3} from the wool, {:.3}..{:.3} broad, {:.3}..{:.3} thick; the wool under its middle {:.3}..{:.3} over its top", off.0, off.1, broad.0, broad.1, thick.0, thick.1, through.0, through.1);
+    }
+}
+
+#[test]
+fn the_fur_lies_in_tufts() {
+    // Until round 164 the roll was smooth: one white tube, its outline a clean line, and at a picture's size
+    // nothing told it from a ring of linen. The fur lies in tufts now. Read on 40 lords' hoods off the roll's top
+    // (the corner a quarter round each ring, over the corner under it): how far it stands over the mean of its
+    // neighbours two rings before and after, how many tops there are along 10 cm of the edge, and how dark the
+    // darkest corner of the roll's upper half is beside the lightest. On 27 hoods: 0.8 to 1.2 mm (sd), 2.3 to 3.3
+    // tops, 0.45 to 0.46; held to over 0.6 mm, 1.5 to 5 tops, under 0.7. With `TUFT` and `HOLLOW` at 0 the roll is
+    // smooth as round 148's was, and the test fails on the first hood.
+    let Some(h) = head() else { return };
+    let d = &COURT_1356;
+    let none = (f32::MAX, f32::MIN);
+    let (mut uneven, mut tops, mut dark) = (none, none, none);
+    let mut seen = 0;
+    for k in 0..40u32 {
+        let p = person_of(2 * k + 1, false, [15.0, 24.0, 35.0, 50.0, 58.0, 68.0][k as usize % 6], 3);
+        if d.hood_file(d.hood_of(false, p.age, p.seed), p.seed).is_none() {
+            continue;
+        }
+        seen += 1;
+        let out = build(&h, &p, 1);
+        let fur = with(&out.surfaces, d.hood_fur)[0];
+        let rings = rings(fur);
+        let n = rings.len();
+        let tall: Vec<f32> = rings.iter().map(|r| len(sub(r[ROUND / 4], r[3 * ROUND / 4]))).collect();
+        let over: Vec<f32> = (0..n).map(|i| tall[i] - 0.5 * (tall[(i + n - 2) % n] + tall[(i + 2) % n])).collect();
+        let sd = (over.iter().map(|v| v * v).sum::<f32>() / n as f32).sqrt();
+        let peaks = (0..n).filter(|&i| tall[i] > tall[(i + n - 1) % n] && tall[i] >= tall[(i + 1) % n]).count();
+        let along: f32 = (0..n).map(|i| len(sub(mean(&rings[i]), mean(&rings[(i + 1) % n])))).sum();
+        // (the upper half of each ring: from its first corner to the one before half round)
+        let light = |c: &[f32; 3]| 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+        let upper: Vec<f32> = fur.col.chunks_exact(6 * ROUND).flat_map(|ring| ring.chunks_exact(6).take(ROUND / 2).map(|quad| light(&quad[0]))).collect();
+        let shade = upper.iter().cloned().fold(f32::MAX, f32::min) / upper.iter().cloned().fold(f32::MIN, f32::max);
+        let wide = |r: &mut (f32, f32), v: f32| *r = (r.0.min(v), r.1.max(v));
+        wide(&mut uneven, 100.0 * sd);
+        wide(&mut tops, peaks as f32 / along);
+        wide(&mut dark, shade);
+        if !show() {
+            assert!(sd > 0.006, "person {k}: the roll's top stands {sd} over its neighbours' mean (sd)");
+            assert!((1.5..5.0).contains(&(peaks as f32 / along)), "person {k}: {peaks} tops along {along}");
+            assert!(shade < 0.7, "person {k}: the darkest of the roll's upper half {shade} of its lightest");
+        }
+    }
+    assert!(seen > 20, "{seen} hoods");
+    if show() {
+        println!("tufts on {seen} hoods: the top {:.2}..{:.2} mm uneven (sd), {:.1}..{:.1} tops along 10 cm, the darkest of the upper half {:.2}..{:.2} of the lightest", uneven.0, uneven.1, tops.0, tops.1, dark.0, dark.1);
     }
 }

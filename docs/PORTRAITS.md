@@ -8057,6 +8057,91 @@ Pictures (project files, `portraits/`): `runde163_hof_vorher_nachher.png` (the t
 side, behind and the other side, before above and after below), `runde163_dorf_vorher_nachher.png` (the same
 two men in the village).
 
+**Round 164: the fur on a lord's hood lies in tufts** (2026-11-21). Round 163's own list: "the fur on it is
+still round 148's: one smooth white band of one breadth, a white hoop from in front". All 36 of the sample at
+court on one sheet: eight lords wear a hood, and on each the fur is the first thing seen, a white tube with a
+clean outline, on the head and round the shoulders. Round 148 said so of it when it was made: "smooth, with
+no hair standing on its outline, and at a picture's size the image's hairs do not show". Beside the
+reference's fur (its kings' mantles, `ck3_15`): that lies in tufts with shade between them, and its outline
+is uneven.
+
+What was read. Nothing new. What fur a lord's hood is faced with is round 148's reading (ermine or lettice);
+how such a fur lies was not looked up, and no picture of the time was looked at.
+
+What is changed.
+- **The roll lies in tufts** (`portrait/src/facing.rs`; `TUFT`, `TUFT_LONG`, `TUFTS_ROUND`, `HOLLOW`): the
+  roll's bed is round 148's. On its top and on both its rims the fur stands up to 6 mm over the
+  bed, here more and there less: tufts 1.2 cm long along the edge (a whole number of them round an edge that
+  comes round), eight rows of them round the roll, every second row set off by half a tuft, each tuft's height
+  a draw, evened between neighbours. Nothing stands under the roll, where it lies on the wool. Between tufts
+  the fur is darker, by up to 0.55 where none stands.
+- **A finer roll** (`FINER`, `ROUND`): two rings for each corner of the edge and sixteen corners round each
+  (one ring and twelve), so a tuft has some three rings to its length: 7 296 triangles on the head and 6 144
+  thrown back (2 736 and 2 304). Where the fur faces is read off the tufted form, at each corner square to
+  its neighbours along the edge and round the roll.
+- The fur's image, its colour and the hood are not touched.
+
+Measured, on 120 lords of 15 to 68 years (`portrait/tests/facing.rs`; the tufts on the 27 hoods among the
+first 40):
+
+| | smooth (`TUFT` and `HOLLOW` at 0) | now |
+|---|---|---|
+| the roll's top over the mean of its neighbours two rings before and after (sd) | 0.1 to 0.2 mm | 0.8 to 1.2 mm |
+| tops along 10 cm of the edge | 0.5 to 1.1 | 2.3 to 3.3 |
+| the darkest corner of the roll's upper half beside the lightest | 1.00 | 0.45 to 0.46 |
+| the roll: broad, thick | 3.2 cm; 1.2 to 2.8 cm | 3.3 to 4.3 cm; 1.2 to 3.4 cm |
+| on the head, before the face's middle: the roll's upper rim over the chin's lowest place | 1.9 to 3.8 cm | 2.2 to 4.0 cm |
+| thrown back: the fur's top at the nape over the chin | 4.9 to 6.3 cm | 5.2 to 6.6 cm |
+| the edge read off the roll: thrown back; on the head | 70.9 to 79.6 cm; 68.1 to 80.4 | 71.2 to 79.9; 68.9 to 81.2 |
+| the builder (`sc_portrait.wasm`) | 831 873 bytes | 851 152 |
+
+The smooth roll is this round's builder with the two numbers at 0, which gives round 163's figures in every
+other row (the new test fails on it at the first hood); the builder's size beside it is round 163's file. The
+edge is the same hood's: the rings' middles go with the tufts, and the way read off them is 0.3 to 0.8 cm
+longer.
+
+In the picture (two lords at 880 by 1 100, halved; the pale pixels of the roll): the fur's lightness after
+the mean within 5 pixels is taken off has an sd of 3.9 on the head and 3.4 thrown back (2.6 and 2.4), and its
+darkest tenth lies at L 56 and 62 (62 and 73). The reference's fur read the same way gives 1.3 where it is
+lit and 3.9 in its shade: the figure does not tell a tufted fur from a shaded tube, and nothing is held to it.
+
+Tried and not kept.
+- Tufts in the fur's image only, as shade between clumps (a switch in `fur_tex.py`, a noise evened over 4 by
+  6 mm, the fur a quarter darker where it is low): grey veins on a smooth white tube.
+- Tufts in the image as locks, each over the root of the next (ten across the image and eight down, 0.3
+  darker at the root, in the relief too): a plaited braid, or a knitted cuff. The outline stayed a clean line
+  both times; the switch is taken out of the script again.
+- The tufts in the form at 5 mm and the hollows 0.35 darker: the outline uneven, the roll's face still one
+  white.
+- The builder grew by 19 kB with the tufts. Six ways round it (no clamp between computed bounds, no `round`,
+  no `rem_euclid`, the roll's and the tuft's function not taken into their callers, the draws from the
+  integer generator in place of the sine's) gave 851 096 to 851 510 bytes. The growth is not the roll's code
+  (`facing::face` is 8 783 bytes for 11 078, `tuft` 584): the module has 913 functions for 861, zstd's error
+  formatting among the new ones. Left as it is.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 163 to its last figure, and the
+colour sheet the same (they read skin of the face).
+
+Honest about it. The white hoop is fur at a picture's size now: its outline is uneven and its face has shade.
+It is fleece more than ermine: soft lumps of one size, the same row of them on every lord, as regular as
+beads from the side; no hair stands on the outline, and the fur's image, short hairs that do not show at a
+picture's size, is as it was. It is as white as it was, lighter than anything else in the picture. It is a
+little thicker and comes 2 mm higher before the chin. From straight behind, fur shows at the upper
+corners of the hood behind the neck, as in round 163. The mantle's ermine on a
+crowned head is a flat sheet still. How long, how high and how many the tufts are is by eye beside the
+reference's fur, on two lords from three sides and seven at a picture's size: PLACEHOLDER. No source and no
+picture of the time gives how the fur of a hood's facing lay.
+
+Tests: `portrait/tests/facing.rs`, one new (`the_fur_lies_in_tufts`): on 27 hoods the roll's top stands over
+0.6 mm (sd) over its neighbours' mean, there are 1.5 to 5 tops along 10 cm, and the darkest corner of the
+upper half is under 0.7 of the lightest. Two older tests there are changed because the roll is another: its
+corners (`FINER` rings of `ROUND`, read from `facing.rs` now, as in `tests/collar.rs`), its breadth (to a
+tuft at either rim more) and its thickness (to a tuft more). `cargo test --release` as a whole 138 of 138;
+`tests/portrait.test.ts` and its neighbour 46 of 46; typecheck and lint pass, no new warning.
+Pictures (project files, `portraits/`): `runde164_hof_vorher_nachher.png` (seven of the sample's eight lords
+who wear a hood, before above and after below), `runde164_pelz_gross.png` (two of them large, from the front and
+the side, before above and after below).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair

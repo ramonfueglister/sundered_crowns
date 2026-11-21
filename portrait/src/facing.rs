@@ -4,13 +4,14 @@
 //! the face of a hood on the head and round the neck of one thrown back. The hoods' files have no such part (they
 //! are the villagers' hoods, of wool to the edge), so the facing is laid on the hood here, when everything stands
 //! as it is drawn: a roll of fur along the opening's edge, lying on the wool from a little beyond the edge to the
-//! facing's breadth within it. The hood itself stays as it is.
+//! facing's breadth within it. The hood itself stays as it is. (Round 164) The fur lies in tufts: the roll's top
+//! and rims stand up to `TUFT` over its bed, here more and there less, and the fur between tufts is darker.
 //!
 //! The opening is found as `tools/portrait/pipeline/dag.py` finds a hood's hems: where the rolled hem's tube hangs
 //! on the sheet (`tunic_bind.py`), an edge has more than two triangles; of the hemmed edges the opening's is the one
 //! that lies highest (the other is the cape's, which a dagged hood does not have).
 
-use crate::geo::{add, cross, dot, len, madd, mul, norm, sub, Rgb, Surface, V3};
+use crate::geo::{add, cross, dot, jround, len, lerp, madd, mix, mul, norm, sm, sub, Rgb, Rng, Surface, V3};
 use std::collections::HashMap;
 
 /// The facing's breadth on the wool from the opening's edge, how far it reaches beyond that edge (over the hem's
@@ -27,9 +28,18 @@ pub const PILE_MOST: f32 = 0.25;
 /// either corner of the jaw, which a roll of fur lies over), the corners round the roll, how much of the fur's
 /// image goes on 10 cm, and how dark the fur is where it lies on the wool. PLACEHOLDER, by eye.
 const EVEN: usize = 6;
-const ROUND: usize = 12;
+pub const ROUND: usize = 16;
 const IMAGE: f32 = 1.25;
 const SHADE: f32 = 0.8;
+/// (round 164) The fur lies in tufts: the roll has `FINER` rings for each corner of the edge, a tuft stands up to
+/// `TUFT` over the roll's bed, is `TUFT_LONG` long along the edge, `TUFTS_ROUND` of them lie round the roll (an
+/// even number: every second row is set off by half a tuft), and the fur between tufts is darker by up to
+/// `HOLLOW`. PLACEHOLDER, by eye beside the reference's fur.
+pub const FINER: usize = 2;
+pub const TUFT: f32 = 0.06;
+const TUFT_LONG: f32 = 0.12;
+const TUFTS_ROUND: u32 = 8;
+const HOLLOW: f32 = 0.55;
 
 /// The roll of fur along the edge of `hood`'s opening, drawn with `image` in the colour `fur` (linear). Nothing is
 /// returned for a garment without a hemmed edge.
@@ -97,45 +107,84 @@ pub fn face(hood: &Surface, image: &str, fur: Rgb) -> Option<Surface> {
     for _ in 0..EVEN {
         high = (0..n).map(|i| (high[step(i, -1)] + 2.0 * high[i] + high[step(i, 1)]) / 4.0).collect();
     }
+    // the roll's bed at each place along the edge, `FINER` places for each of its corners: its middle on the edge's
+    // way, across it, how thick it is, and how far along the edge it lies
+    let places = FINER * if closed { n } else { n - 1 };
+    let mut beds: Vec<(V3, V3, V3, f32, f32)> = Vec::with_capacity(places + 1);
+    for k in 0..=places {
+        let (i, t) = ((k / FINER) % n, (k % FINER) as f32 / FINER as f32);
+        let j = step(i, 1);
+        let at = mix(way[i], way[j], t);
+        let along = beds.last().map_or(0.0, |b| b.4 + len(sub(at, b.0)));
+        beds.push((at, norm(mix(frames[i][1], frames[j][1], t)), norm(mix(frames[i][2], frames[j][2], t)), lerp(high[i], high[j], t), along));
+    }
+    // (a whole number of tufts along an edge that comes round)
+    let tufts = jround(beds[places].4 / TUFT_LONG).max(1.0);
+    let per = tufts / beds[places].4.max(1e-6);
     let mut s = Surface::new(hood.mat);
     s.tex = Some(image.to_string());
-    // a ring of corners round the roll at each place along the edge
-    let mut along = 0.0;
-    let mut rings: Vec<Vec<(V3, V3, [f32; 2], Rgb)>> = Vec::with_capacity(n + 1);
-    for k in 0..=if closed { n } else { n - 1 } {
-        let i = k % n;
-        if k > 0 {
-            along += len(sub(way[i], way[step(i, -1)]));
-        }
-        let [_, into, up] = frames[i];
-        rings.push(
+    // a ring of corners round the roll at each place: where the corner lies, where the bed faces there, where it
+    // lies in the image, and its colour
+    let rings: Vec<Vec<(V3, V3, [f32; 2], Rgb)>> = beds
+        .iter()
+        .map(|&(at, into, up, high, along)| {
             (0..=ROUND)
                 .map(|j| {
-                    let a = j as f32 / ROUND as f32 * std::f32::consts::TAU;
-                    let (c, h) = (a.cos(), a.sin());
-                    let tall = if h >= 0.0 { high[i] } else { PILE_UNDER };
-                    let q = madd(madd(way[i], into, mid + half * c), up, tall * h);
+                    let a = (j % ROUND) as f32 / ROUND as f32;
+                    let (c, h) = ((a * std::f32::consts::TAU).cos(), (a * std::f32::consts::TAU).sin());
+                    let tall = if h >= 0.0 { high } else { PILE_UNDER };
                     let face = norm(add(mul(into, c / half), mul(up, h / tall)));
-                    (q, face, [along * IMAGE, a / std::f32::consts::TAU * 2.0 * (BREADTH + BEYOND) * IMAGE], mul(fur, if h < 0.0 { SHADE } else { 1.0 }))
+                    // tufts on the roll's top and on both its rims, none under it
+                    let stand = tuft(along * per, a * TUFTS_ROUND as f32, tufts as u32) * sm(-0.5, 0.0, h);
+                    let q = madd(madd(madd(at, into, mid + half * c), up, tall * h), face, TUFT * stand);
+                    let dark = (if h < 0.0 { SHADE } else { 1.0 }) * (1.0 - HOLLOW * (1.0 - stand) * sm(-0.5, 0.0, h));
+                    (q, face, [along * IMAGE, j as f32 / ROUND as f32 * 2.0 * (BREADTH + BEYOND) * IMAGE], mul(fur, dark))
                 })
-                .collect(),
-        );
-    }
-    for w in rings.windows(2) {
+                .collect()
+        })
+        .collect();
+    // where the fur faces at each corner: square to its neighbours along the edge and round the roll, on the side
+    // the bed faces
+    let ring = |k: isize| -> &Vec<(V3, V3, [f32; 2], Rgb)> { &rings[if closed { (k + places as isize) as usize % places } else { k.max(0).min(places as isize) as usize }] };
+    let faces: Vec<Vec<V3>> = (0..=places as isize)
+        .map(|k| {
+            (0..=ROUND)
+                .map(|j| {
+                    let (before, after) = ((j + ROUND - 1) % ROUND, (j + 1) % ROUND);
+                    let face = norm(cross(sub(ring(k + 1)[j].0, ring(k - 1)[j].0), sub(ring(k)[after].0, ring(k)[before].0)));
+                    if dot(face, ring(k)[j].1) < 0.0 { mul(face, -1.0) } else { face }
+                })
+                .collect()
+        })
+        .collect();
+    for k in 0..places {
         for j in 0..ROUND {
             // (wound so that a triangle faces where its corners face: the stage lights a cloth's back as its back)
-            let quad = [w[0][j], w[1][j], w[1][j + 1], w[0][j + 1]];
-            let turned = dot(cross(sub(quad[1].0, quad[0].0), sub(quad[2].0, quad[0].0)), add(quad[0].1, quad[2].1)) < 0.0;
+            let quad = [(k, j), (k + 1, j), (k + 1, j + 1), (k, j + 1)];
+            let at = |c: usize| rings[quad[c].0][quad[c].1];
+            let turned = dot(cross(sub(at(1).0, at(0).0), sub(at(2).0, at(0).0)), add(at(0).1, at(2).1)) < 0.0;
             for c in if turned { [0, 2, 1, 0, 3, 2] } else { [0, 1, 2, 0, 2, 3] } {
-                let (q, face, uv, col) = quad[c];
+                let (q, _, uv, col) = at(c);
                 s.pos.push(q);
-                s.nrm.push(face);
+                s.nrm.push(faces[quad[c].0][quad[c].1]);
                 s.uv.push(uv);
                 s.col.push(col);
             }
         }
     }
     Some(s)
+}
+
+/// How high the fur's tufts stand at a place `u` tufts along the edge and `v` tufts round the roll, from 0 to 1;
+/// `along` tufts come round the edge. Every second row round the roll is set off by half a tuft.
+fn tuft(u: f32, v: f32, along: u32) -> f32 {
+    let row = |r: f32| -> f32 {
+        let r = r as u32 % TUFTS_ROUND;
+        let u = u + 0.5 * (r % 2) as f32;
+        let at = |i: f32| Rng::new((i as u32 % along) * 7919 + r * 104_729 + 164).next();
+        lerp(at(u.floor()), at(u.floor() + 1.0), sm(0.0, 1.0, u - u.floor()))
+    };
+    lerp(row(v.floor()), row(v.floor() + 1.0), sm(0.0, 1.0, v - v.floor()))
 }
 
 /// A hood's corners, each once (a corner of the file is drawn once for each of its triangles, bit for bit): which

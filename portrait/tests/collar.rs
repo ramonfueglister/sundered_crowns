@@ -6,14 +6,12 @@ mod common;
 
 use common::{dist, head, person_of, V3};
 use sc_portrait::dress::{Hood, COURT_1356};
+use sc_portrait::facing::ROUND;
 use sc_portrait::{build, Portrait};
 
 fn show() -> bool {
     std::env::var("SHOW").is_ok()
 }
-
-/// The corners round the roll of fur along a hood's opening (facing.rs).
-const ROUND: usize = 12;
 
 /// The way of the opening's edge on a lord's hood, read off its fur: the middle of each ring of the roll, which
 /// lies along the edge a centimetre within it (two triangles for each of the `ROUND` pieces between two rings,
@@ -42,7 +40,9 @@ fn a_hood_thrown_back_lies_round_the_shoulders() {
     // head's middle. On 120 lords of 15 to 68, read off the fur: the edge thrown back is 70.9 to 79.6 cm round
     // (mean 75.4; on the head 68.1 to 80.4, mean 74.9), its foremost place lies 5.3 to 7.8 cm under the chin, and
     // it reaches 11.3 to 12.6 cm to either side. Held: over 62 cm round and in the mean within a tenth of the mean
-    // on the head, over 4.5 cm under the chin, over 10.5 cm to the side.
+    // on the head, over 4.5 cm under the chin, over 10.5 cm to the side. (Round 164: the roll lies in tufts and its
+    // rings' middles with them; read off it the edge is 71.2 to 79.9 cm round thrown back, mean 75.7, and 68.9 to
+    // 81.2 on the head, mean 75.7.)
     let Some(h) = head() else { return };
     let d = &COURT_1356;
     let (mut on, mut back): (Vec<f32>, Vec<f32>) = (Vec::new(), Vec::new());
