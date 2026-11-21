@@ -36,7 +36,7 @@
 import { dateToDay, dayToDate } from '../calendar';
 import { CALENDAR, DAY, jdnOfYear, weekday, yearKinds } from '../holy_days';
 import { hash01 } from '../rng';
-import { farmTask } from './farm_year';
+import { FARM_YEAR, farmTask } from './farm_year';
 import { sunHours } from './sun';
 
 /** What a person does in a part of the day. */
@@ -129,8 +129,16 @@ const MARKET = 0x6d61726b;
 /** The market day of a place, 1 Monday to 6 Saturday (OWN RULE, above). */
 export const marketDay = (place: number): number => 1 + Math.floor(hash01(MARKET, place) * 6);
 
-/** The plan of a person living in `place`, at latitude `lat`, on the world's day `day`. */
-export function dayPlan(p: PlanPerson, place: number, lat: number, day: number, startYear: number): DayPlan {
+/** The plan of a person living in `place`, at latitude `lat`, on the world's day `day`; `farmYear`: the farming year
+ *  the place follows (FARM_YEAR, src/sim/people/farm_year.ts; the north's where not given). */
+export function dayPlan(
+  p: PlanPerson,
+  place: number,
+  lat: number,
+  day: number,
+  startYear: number,
+  farmYear: number = FARM_YEAR.north,
+): DayPlan {
   const { y, m, d } = dayToDate(day, startYear),
     doy = dateToDay(y, m, d, y),
     jdn = jdnOfYear(y) + doy,
@@ -138,7 +146,7 @@ export function dayPlan(p: PlanPerson, place: number, lat: number, day: number, 
     kind = yearKinds(p.calendar, y)[doy],
     market = wd === marketDay(place),
     [rise, set] = sunHours(jdn, lat),
-    task = p.who === WHO.farm ? farmTask(day, startYear) : -1;
+    task = p.who === WHO.farm ? farmTask(day, startYear, farmYear) : -1;
   return {
     kind,
     feast: kind === DAY.rest && wd !== weeklyRest(p.calendar),

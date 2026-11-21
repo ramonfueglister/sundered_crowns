@@ -11,6 +11,7 @@ import { type FigureClock, NOWHERE, figureShown } from '../../src/figures/schedu
 import { type Ground, N, idx } from '../../src/lookprobe/layout';
 import { askPersons } from '../../src/people/town_rolls';
 import { AWAY, WHO, dayPlan } from '../../src/sim/people/day_plan';
+import { FARM_YEAR } from '../../src/sim/people/farm_year';
 import { CALENDAR, DAY } from '../../src/sim/holy_days';
 import CITIES_JSON from '../../src/sim/content/cities_1356.json';
 
@@ -103,7 +104,7 @@ describe('the figures of a town whose persons changed', () => {
     plan = (day: number) =>
       dayPlan({ who: WHO.trade, calendar: CALENDAR.latin, away: AWAY.none, heading: -1 }, milan.place, LAT, day, 1356),
     work = [...Array(14).keys()].map((d) => d + 10).find((d) => plan(d).kind === DAY.work)!,
-    clock: FigureClock = { day: work, hour: 10, startYear: 1356, lat: () => LAT };
+    clock: FigureClock = { day: work, hour: 10, startYear: 1356, lat: () => LAT, farm: () => FARM_YEAR.north };
   // a trader in the street at ten on a working day (services work in the streets, schedule.ts), and a woman
   const shown = [...persons(built)].filter(
     (uid) => uid % 4 < 2 && figureShown(built, figureOf(built, uid), clock) === FIGURE_AT.street,

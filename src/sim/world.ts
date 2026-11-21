@@ -192,6 +192,10 @@ export class World {
    *  before it; src/sim/roads.ts), null without any: then goods go over land on the straight line between places.
    *  Set by the loader (tools/sim/load.ts) */
   ways: WayNet | null = null;
+  /** the farming year of every land place (FARM_YEAR, src/sim/people/farm_year.ts: by its region and its climate,
+   *  public/data/place_climate.json), null without the climate: then every place follows the north's. Set by the
+   *  loader (tools/sim/load.ts) */
+  farmYear: Uint8Array | null = null;
   constructor(geo: GeoJson, wj: WorldJson, land: LandJson, cultivation: CultivationJson, economy: EconomySetup) {
     this.W = geo.W;
     this.H = geo.H;

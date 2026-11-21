@@ -1242,6 +1242,41 @@ The farming year (`src/sim/people/farm_year.ts`), on the days of the Julian cale
 | 1 August | the harvest | "five weeks in August and early September" (Ramsey: Owen, Brown & Skinner 2025); reaping paid from the first week of August (Statute of Labourers 1351) |
 | 5 September | ploughing and sowing the winter corn | the seed changed at Michaelmas (Walter of Henley); the winter corn in the autumn (research of feature 7) |
 
+Which farming year a place follows goes by its land, not by the faith of its people (step D of 21 November, after
+the proposal «Vorschlag: Bauernjahr für Süden und Islam», https://claude.ai/artifact/T8KjRYpoP6BCsN8wtTCGC6): the
+Muslim almanacs, too, set the field work by the months of the sun (the calendar of Córdoba by the months January to
+December, Ibn Mammātī by the Coptic months; filaha.org), and the lunar year of the hijra goes round all seasons in
+some 33 years. The farming year of each land place is worked out from the region of its province (data/geo.json) and
+its climate (`public/data/place_climate.json`, written by `tools/worldprobe/build_place_climate.ts` from the world
+graphic's climate layer, the Köppen-Geiger zones), by the world loader (`World.farmYear`) and on the main thread
+(`src/figures/plan_places.ts`) alike:
+
+| Farming year | Places | Source |
+|---|---|---|
+| Mediterranean | the Mediterranean climate (Köppen-Geiger Cs) in Iberia, France, Italy, Greece, the Balkans, Anatolia, the Levant and the Maghreb; OWN RULE: in Iberia, the Maghreb and the Levant also the steppe and the desert (the same winter rains; Toledo and Zaragoza lay in al-Andalus) | the calendar of Córdoba, 961 |
+| Mesopotamia | the region of Mesopotamia | Handbook of Mesopotamia, vol. I (Naval Staff, 1918), pp. 176–177: not medieval |
+| North | everywhere else, also Egypt, Persia, the steppe, Arabia and the Sahel, for which no source with months could be read (Ibn Mammātī's calendar, ed. Pellat 1986; Rabie 1981; Rashīd al-Dīn's *Āthār wa aḥyāʾ*; Lambton 1977 are not online) | above |
+
+The calendar of Córdoba (ʿArīb ibn Saʿd; English extracts by John Brogden after Dozy's edition of 1873, filaha.org)
+names months only; OWN RULE: each work begins on the first of its month, and where a month names the corn and other
+work, the corn's goes first:
+
+| From | Work | The calendar |
+|---|---|---|
+| 1 January | pruning and setting the vines | January "the vines … are pruned", February "the vine shoots transplanted" |
+| 1 March | planting in the gardens and watered fields | March "Sugar cane is planted", April "rice and beans are sown" |
+| 1 May | the harvest | May "farīk is gathered" (the green early wheat), June "the grain on the threshing floor is weighed" |
+| 1 July | threshing out of doors, on the threshing floor | July "grain is harvested and barley is threshed" |
+| 1 August | planting in the gardens | "autumn beans, sky-blue stock, turnips, carrots, chards" |
+| 1 September | ploughing and sowing | September "ploughed and sown in the mountains", November "sowing activities reach their peak" (the olive picking that "commences" in October gives way) |
+| 1 December | planting in the gardens | "White poppy is sown, and also garlic" |
+
+Mesopotamia, after the handbook: from 1 September sowing (wheat and barley "Sep–Oct or Nov–end Jan", the spring crops
+to March), from 1 April the harvest ("The harvest begins in April"), from 1 June threshing on the floor (OWN RULE: the
+handbook says only "after drying", here the two months after the harvest), from 1 August the harvest of the summer
+crops (rice, millet, sesame, cotton; August to October, before the sowing from September). Threshing on the floor is
+field work: the figure stays at the furlong (`src/figures/schedule.ts`), the card says «auf der Tenne».
+
 ### Measured (`npm run dayplan:check -- 3`, world of 1291, seed 1291, all systems)
 
 Days at work a year by the plan, a half day as half (the day labourers by the calendar of their firm; in brackets the
