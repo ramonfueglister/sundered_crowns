@@ -18,24 +18,12 @@
     "src/portrait/wire.ts": {
       "suspicious/useIterableCallbackReturn": 1
     },
-    "src/sim/economy/daily.ts": {
-      "style/useExponentiationOperator": 2
-    },
-    "src/sim/people/lifetable.ts": {
-      "style/useExponentiationOperator": 2
-    },
     "src/sim/settlement/rule.ts": {
       "style/useExponentiationOperator": 2
     },
     "src/sim/settlement/streets.ts": {
       "correctness/noUnusedVariables": 1,
       "style/useExponentiationOperator": 1
-    },
-    "src/sim/systems/deaths.ts": {
-      "style/useExponentiationOperator": 4
-    },
-    "src/sim/systems/harvest.ts": {
-      "style/useExponentiationOperator": 2
     },
     "src/sim/systems/lots.ts": {
       "suspicious/useIterableCallbackReturn": 1
