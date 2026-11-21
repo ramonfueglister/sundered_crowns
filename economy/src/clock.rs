@@ -142,9 +142,9 @@ pub struct DailyClock {
     pub worked: Vec<f64>,
     /// real and nominal GDP of the starting position, per period
     pub start: [f64; 2],
-    /// of the national accounts, the series that the key figures sum over a window ([`crate::summed`]): one row per
-    /// period for the last `window` periods, oldest first; while fewer periods are computed, the first row is the
-    /// starting position. The port's own rows are not kept (no rule reads them).
+    /// of the national accounts, the series that the key figures sum over a window ([`crate::accounts::summed`]): one
+    /// row per period for the last `window` periods, oldest first; while fewer periods are computed, the first row is
+    /// the starting position. The port's own rows are not kept (no rule reads them).
     pub accounts: Vec<[f64; crate::SUMMED]>,
     /// the wage in money (economy feature 7): per firm the wage in money it pays for a unit of work, and the real
     /// wage it had when the wage in money was set. Both empty: the wage follows the consumer prices, as in the port.
