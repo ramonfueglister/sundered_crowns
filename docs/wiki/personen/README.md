@@ -11,7 +11,7 @@ Die Personen von Sundered Crowns: wer als eigene Figur in der Welt lebt und nach
 - [Merkmale verschieben die Raten](merkmale-und-raten.md) *(Gebaut)*: IQ und Big Five wirken auf Tod, weiten Umzug und Heirat
 - [Wer arbeiten will, sucht eine Stelle](stelle-suchen.md) *(Gebaut)*: freie Stellen im Ort und bis 115 km, die Arbeitsquoten der Quelle bleiben
 - [Krankheit und Wochenbett](krankheit-und-wochenbett.md) *(Gebaut)*: Krankheit nach der Kasse von Morcott, ein Monat Wochenbett, der Betrieb arbeitet mit den Anwesenden
-- [Jahresdienst und Tagelohn](jahresdienst-und-tagelohn.md) *(Gebaut)*: Knechte im Jahresdienst, Familienvorstände im Tagelohn, Arbeitslose springen für Kranke ein
+- [Jahresdienst und Tagelohn](jahresdienst-und-tagelohn.md) *(Gebaut)*: Knechte im Jahresdienst, Familienvorstände im Tagelohn, für Kranke springt die Familie ein, sonst Arbeitslose
 - [Haushalte wachsen mit der Wirtschaft](haushalte-wachsen.md) *(Verworfen)*: geprüft und nicht gebaut, die Zahl der Haushalte bleibt fest
 - [Personen der Wirtschaft](../wirtschaft/personen-der-wirtschaft.md) *(Im Spiel)*: Arbeit, Lohn und Erspartes jeder Person der Städte
 - [Haushalt der Familie](../wirtschaft/haushalt-der-familie.md) *(Im Spiel)*: die Familie als Kasse, Verbrauch jeder Person nach Körben

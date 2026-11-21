@@ -146,14 +146,33 @@ describe('what the engine computes', () => {
     }
   });
   it('is written to the persons and firms every day: their sums are the figures of the city', () => {
-    // the places of the workers who work by the day (economy feature 23), as the engine was last given them
-    let byTheDay: Set<number>[] = [];
+    // the places of the workers who work by the day (economy feature 23), and per place the runs of days on which
+    // the family stands in (economy feature 24), counted from the first day `from`, as the engine was last given them
+    let byTheDay: Set<number>[] = [],
+      family: Map<number, number[]>[] = [],
+      from = 0;
     const engine: World['economyEngine'] = {
       ...w.economyEngine,
+      absences: (state, list) => {
+        from = e.day + 1;
+        family = list.map((c) => {
+          const runs = new Map<number, number[]>();
+          for (let r = 0; r < c.worker.length; r++)
+            if (c.family[r]) runs.set(c.worker[r], [...(runs.get(c.worker[r]) ?? []), c.first[r], c.last[r]]);
+          return runs;
+        });
+        return w.economyEngine.absences(state, list);
+      },
       contracts: (state, list) => {
         byTheDay = list.map((c) => new Set(c));
         return w.economyEngine.contracts(state, list);
       },
+    };
+    const standsIn = (k: number, agent: number) => {
+      const runs = family[k]?.get(agent) ?? [],
+        d = e.day - from;
+      for (let r = 0; r < runs.length; r += 2) if (runs[r] <= d && d <= runs[r + 1]) return true;
+      return false;
     };
     // a copy of the world with that engine: Object.create gives `any`, the cast names what the copy is
     const wx = Object.assign(Object.create(Object.getPrototypeOf(w)), w, { economyEngine: engine }) as World;
@@ -186,7 +205,9 @@ describe('what the engine computes', () => {
             continue;
           }
           expect(P.income[id]).toBeGreaterThan(0);
-          expect(P.income[id]).toBeLessThan(P.wage[id]); // the wage after the tax on income
+          // the wage after the tax on income, and on a day on which his family stands in for him also its pay, the
+          // wage times the factor of the day
+          expect(P.income[id]).toBeLessThan((standsIn(k, P.agent[id]) ? 3 : 1) * P.wage[id]);
         }
         expect(employed).toBe(figure(s, k, FIGURE.employees));
         expect(workers.length - employed).toBe(figure(s, k, FIGURE.unemployed));

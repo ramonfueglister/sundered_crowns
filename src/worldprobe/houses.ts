@@ -1,9 +1,9 @@
-// The houses of the near view as the far steps draw them (far.ts HOUSES_UNTIL): each where it stands and as large as
-// it is, its walls in its own colour under a roof of its own tiles, with the gables or the hips the near view gives
-// it. What a house of the far steps leaves out is what is smaller than a dot of their picture: windows, doors, bands,
-// the rows of tiles, chimneys and dormers (buildings/houses/block.ts draws those in the near view).
+// The houses of the near view as the far steps draw them (far_places.ts HOUSES_UNTIL): each where it stands and as
+// large as it is, its walls in its own colour under a roof of its own tiles, with the gables or the hips the near view
+// gives it. What a house of the far steps leaves out is what is smaller than a dot of their picture: windows, doors,
+// bands, the rows of tiles, chimneys and dormers (buildings/houses/block.ts draws those in the near view).
 //
-// A house is HOUSE_NUMBERS numbers (far.ts lays them out, table.ts keeps them): its footprint in columns of the
+// A house is HOUSE_NUMBERS numbers (far_places.ts lays them out, table.ts keeps them): its footprint in columns of the
 // ground (no longer on their grid), the height of its walls and of its roof over the ground it stands on, in blocks of
 // its step, the colours of its walls and roof, and its kind of roof.
 import { FLOOR, m } from '../buildings';

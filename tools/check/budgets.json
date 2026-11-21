@@ -1,0 +1,116 @@
+{
+  "lint": {
+    "src/lookprobe/batch.ts": {
+      "suspicious/noAssignInExpressions": 3
+    },
+    "src/net/people.ts": {
+      "suspicious/noAssignInExpressions": 1
+    },
+    "src/portrait/assets.ts": {
+      "suspicious/useIterableCallbackReturn": 1
+    },
+    "src/portrait/finish.ts": {
+      "style/useExponentiationOperator": 1
+    },
+    "src/portrait/stage.ts": {
+      "suspicious/useIterableCallbackReturn": 1
+    },
+    "src/portrait/wire.ts": {
+      "suspicious/useIterableCallbackReturn": 1
+    },
+    "src/sim/economy/daily.ts": {
+      "style/useExponentiationOperator": 2
+    },
+    "src/sim/economy/engine.ts": {
+      "suspicious/noAssignInExpressions": 1,
+      "suspicious/useIterableCallbackReturn": 1
+    },
+    "src/sim/people/lifetable.ts": {
+      "style/useExponentiationOperator": 2
+    },
+    "src/sim/settlement/rule.ts": {
+      "style/useExponentiationOperator": 2
+    },
+    "src/sim/settlement/streets.ts": {
+      "correctness/noUnusedVariables": 1,
+      "style/useExponentiationOperator": 1
+    },
+    "src/sim/systems/deaths.ts": {
+      "style/useExponentiationOperator": 4
+    },
+    "src/sim/systems/harvest.ts": {
+      "style/useExponentiationOperator": 2
+    },
+    "src/sim/systems/lots.ts": {
+      "suspicious/useIterableCallbackReturn": 1
+    },
+    "src/worldprobe/brotli.ts": {
+      "suspicious/noAssignInExpressions": 1
+    },
+    "src/worldprobe/build.ts": {
+      "correctness/noUnusedImports": 1
+    },
+    "src/worldprobe/pack.ts": {
+      "suspicious/useIterableCallbackReturn": 1
+    },
+    "src/worldprobe/piece.worker.ts": {
+      "complexity/useOptionalChain": 1,
+      "suspicious/noAssignInExpressions": 1
+    },
+    "src/worldprobe/settle.ts": {
+      "style/useImportType": 1
+    },
+    "src/worldprobe/small.ts": {
+      "suspicious/noAssignInExpressions": 1,
+      "suspicious/noConfusingLabels": 1
+    },
+    "src/worldprobe/world.ts": {
+      "correctness/noUnusedVariables": 1,
+      "suspicious/noAssignInExpressions": 1,
+      "suspicious/useIterableCallbackReturn": 1
+    },
+    "tests/portrait.test.ts": {
+      "suspicious/useIterableCallbackReturn": 3
+    },
+    "tests/settlement.test.ts": {
+      "correctness/noUnusedFunctionParameters": 1,
+      "suspicious/useIterableCallbackReturn": 4
+    },
+    "tools/portrait/build_portrait.ts": {
+      "style/useTemplate": 1,
+      "suspicious/noExplicitAny": 1
+    },
+    "tools/portrait/face_colour.mjs": {
+      "correctness/noUnusedFunctionParameters": 2,
+      "style/useTemplate": 1
+    }
+  },
+  "lines": {
+    "economy/src/clock.rs": 1064,
+    "economy/src/lib.rs": 1040,
+    "economy/src/state.rs": 1579,
+    "economy/src/trade.rs": 760,
+    "server/world.ts": 541,
+    "src/sim/economy/engine.ts": 518,
+    "src/sim/settlement/streets.ts": 627,
+    "src/worldprobe/settle.ts": 504,
+    "src/worldprobe/world.ts": 868,
+    "tests/economy-households.test.ts": 533,
+    "tests/economy.test.ts": 1045,
+    "tests/worldprobe/world.test.ts": 754,
+    "tools/atlas/probe.py": 536,
+    "tools/geo/build_export.py": 511,
+    "tools/geo/build_setup.py": 915,
+    "tools/geo/merge_beyond.py": 636,
+    "tools/history/1291/beyond.py": 840,
+    "tools/history/1291/empire.py": 1003,
+    "tools/history/1291/italy_balkans.py": 990,
+    "tools/history/1291/north_east.py": 811,
+    "tools/history/1291/south_east.py": 654,
+    "tools/history/1291/west.py": 560,
+    "tools/history/1356/world.py": 1847,
+    "tools/history/borders/build.py": 690,
+    "tools/history/borders/euratlas_places.py": 670,
+    "tools/worldprobe/build_region.py": 550
+  }
+}

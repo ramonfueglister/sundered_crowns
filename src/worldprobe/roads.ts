@@ -278,7 +278,7 @@ function cheapestOnGround(
 
 /** blocks to a way where none is near (finite, so that the corners can be blended) */
 export const FAR_FROM_ROADS = 1e4;
-/** the ground takes the colour of a path up to about this many blocks from its line (lookprobe/terrain.ts topColor): a way's band edge is put there */
+/** the ground takes the colour of a path up to about this many blocks from its line (lookprobe/terrain_colours.ts topColor): a way's band edge is put there */
 export const ROAD_SHOWS = 1.65;
 /** Blocks to the edge of the nearest way's band at a ground point: bilinear between the corners of the columns, `edge` ((N + 1)² corners) as world.ts `buildWorld` lays it out. */
 export function roadOn(edge: Float32Array, x: number, z: number): number {

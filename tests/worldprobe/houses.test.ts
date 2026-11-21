@@ -4,7 +4,8 @@ import { describe, expect, it } from 'vitest';
 import { Batch, rgb, shade } from '../../src/lookprobe/batch';
 import { N, idx, onGrid } from '../../src/lookprobe/layout';
 import { HOUSE_NUMBERS, drawHouses, housesIn } from '../../src/worldprobe/houses';
-import { drawGround, drawTable, packTable, tableOf, unpackTable } from '../../src/worldprobe/table';
+import { drawGround, drawTable, tableOf } from '../../src/worldprobe/table';
+import { packTable, unpackTable } from '../../src/worldprobe/table_pack';
 import { LAND_STEP, SIDE, land, part } from './land';
 
 const WALL = 0xd8c8a8,

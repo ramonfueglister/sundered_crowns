@@ -28,7 +28,8 @@ import { CROWD_AT } from '../../src/worldprobe/crowd';
 import { extentOf } from '../../src/worldprobe/extent';
 import { FINER, blockOfCell, cellOfBlock } from '../../src/worldprobe/land';
 import { projectionOf } from '../../src/worldprobe/region';
-import { type TablesIndex, keepTables, packTable, tabled, whereTable, withThings } from '../../src/worldprobe/table';
+import { type TablesIndex, keepTables, tabled, whereTable, withThings } from '../../src/worldprobe/table';
+import { packTable } from '../../src/worldprobe/table_pack';
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '../..');
 const year = Number(process.argv[2] ?? 1291),

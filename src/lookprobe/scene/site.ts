@@ -3,7 +3,8 @@
 import * as THREE from 'three/webgpu';
 import { FLOOR, ROOFS, WALLS, house, m, townHouse } from '../../buildings';
 import { Batch, type Rnd } from '../batch';
-import { Mat, N, buildGround, fieldAt, idx, inCity, inGrid, occlude, roadDist, toST } from '../layout';
+import { Mat, N, idx, inGrid, occlude, toST } from '../layout';
+import { buildGround, fieldAt, inCity, roadDist } from './places';
 
 /** A footprint side drawn between two lengths in metres, whole blocks (the footprints were read off the reference image). */
 export const blocks = (r: Rnd, lo: number, hi: number) =>

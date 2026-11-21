@@ -347,7 +347,7 @@ without what the world graphic built of its own, Paris's landmarks drawn togethe
 
 Ramon, 19 November 2026: "Alte Kataster, Stadt für Stadt" (OpenStreetMap shows today's town, Haussmann's Paris; no
 street in it is dated before 1291). The plan gives the form, not the size: where the market lies and how the main
-streets run. Paris first; Venice (the cadastre of 1808, EPFL) is the next that is open.
+streets run. Paris first, then Venice (the land register of 1808, EPFL), whose plan draws its land and water too.
 
 1. **The old plan.** Paris: the streets of the Vasserot cadastre (1810–1836, ALPAGE via Stanford EarthWorks, ODbL)
    inside the convex hull of the wall of Philippe Auguste (1190–1215; ALPAGE walls, Noizet & Lallau 2013). The plan of
@@ -372,6 +372,37 @@ streets run. Paris first; Venice (the cadastre of 1808, EPFL) is the next that i
 | shortest piece | 0.02 radii (18 m) | PLACEHOLDER |
 | one junction | ends within 2 m | PLACEHOLDER |
 
+#### Venice: its land, its water and its bridges
+
+Ramon, 20 November 2026: "Zuerst Boden und Brücken", then "weiter". The Napoleonic land register of Venice (1808,
+"Venice 1808 Land Registers" v1.1, Di Lenardo et al., EPFL DHLAB, DOI 10.5281/zenodo.20715172, CC BY 4.0;
+data/cadastre/venice_1808/) draws every building, courtyard, sottoportico and street as an area
+(tools/settlement/cadastre_venice.py).
+
+1. **The street skeleton.** The register's streets and sottoportici rasterized at 0.5 m and thinned (Lee et al. 1994);
+   the network read off (150 km; dead ends, T-junctions and crossings 0.37, 0.54, 0.09: data/cadastre/venice_1808.json);
+   strokes joined within 60° (Thomson & Richardson 1999); the busiest strokes by edge betweenness kept whole up to as
+   many metres to the hectare as Paris keeps inside its wall (3,500 m on 256 ha, so 5,474 m on Venice's 400 ha). The
+   centre is the Basilica di San Marco, the market the Campo San Giacomo di Rialto (the market since the 11th century),
+   0.28 radii west and 0.37 north. Radius 1,128 m (the circle of the register's land).
+2. **The ground.** Water is what the register does not draw as land, wider than the longest span of a bridge of
+   Venice: the Rialto bridge, 28.80 m (Structurae, structure 20000461). A narrower canal (a rio) was crossed by a
+   bridge wherever a street met it, and is land in the world; what stays is the Grand Canal, the basins of the
+   Arsenal and the lagoon. Stored as the share of water of cells of 0.01 radii (11 m).
+3. **In the world.** The plan's ground is laid at the plan's size (src/sim/settlement/plan_ground.ts): a block of 2 m
+   is water where more than half of it is. The land register lays Venice's parcels, streets and landmarks on it
+   instead of the surveyed ground (src/sim/systems/lots.ts), and the world graphic draws it in place of the map's land
+   and water, round the town's site block (src/worldprobe/plan_ground.ts; the size comes with the register,
+   `ground` in src/net/lots.ts and lots_<year>.json). Where a main street of the plan crosses water no wider than the
+   Rialto spans (at the plan's size, and a block for the rounding), its blocks within the street's half width are
+   land: a bridge. At the Rialto the Grand Canal is no wider than the span, so it is land there already, a flat
+   crossing at the bridge's place.
+
+Venice in the world of 1291: its 48 families fit on its register (before: laid out without regard to the ground),
+238 streets, 1,868 m, the market 64 m from the centre. Its streets meet as Paris's do, not as Venice's: 0.03, 0.83,
+0.14 against 0.37, 0.54, 0.09 in the register. The growth calibrated against Paris joins almost every dead end; the
+dead ends of Venice end at the canals, which the world makes land. Not tuned (no rule of Venice's own read).
+
 ### What the world of 1291 gets (seed 1291)
 
 5,743 rows in the street table: the 557 markets and 5,186 straight pieces. Streets per town 5 / 7 / 60 (fewest,
@@ -383,13 +414,14 @@ because a small town is one or two streets with their ends. (The other counts of
 real plan of Paris and the dead ends joined after the parcels.) 870 blocks are enclosed by streets, 748 of them of 200 m²
 and more, median 578 m², their areas falling off as A^−1.87. 18 towns spread wider (step 7). Two towns are laid out
 without regard to their ground: Venice (islands; it needs bridges) and Hormuz (an island too small for its streets).
+(Venice since its register: on its own ground, see Real plans.)
 
 | Town | Families in the town | Ways | Streets | Length | Width | Market from the centre |
 |---|---|---|---|---|---|---|
 | Limoges | 1 | 3 | 7 | 497 m | 21.1 m | 82 m |
 | Bayonne | 7 | 2 | 6 | 252 m | 11.0 m | 48 m |
 | Zürich | 7 | 3 | 7 | 395 m | 10.9 m | 39 m |
-| Venice | 48 | 1 | 35 | 1,086 m | 7.4 m | 0 m (without its ground) |
+| Venice | 48 | real plan | 238 | 1,868 m | 7.4 m | 64 m (the Rialto) |
 | Paris | 102 | real plan | 161 | 2,814 m | 9.2 m | 231 m (the Halles) |
 | Cairo | 148 | 2 | 60 | 1,854 m | 7.4 m | 34 m |
 
@@ -404,11 +436,11 @@ Founding the land register of a world takes about 2.7 s, 0.5 s before the street
   cities from OpenStreetMap, not medieval ones. No measure of medieval street networks read.
 - Every street of a town is as wide as every other; a highway is no wider than a lane. The street width follows the
   parcel width, so a town of one large parcel (Limoges) has a 21 m street.
-- Only Paris has a real plan yet; every other town grows by the model, calibrated against Paris. The plan's river
+- Only Paris and Venice have a real plan yet; every other town grows by the model, calibrated against Paris. The plan's river
   is not the world's: where the world's Seine lies elsewhere, the main streets end at it or cross ground the real
   Seine covered.
-- No bridges: a town cut by water grows on the side of its market, and Venice and Hormuz are laid out without their
-  ground.
+- No bridges but Venice's: a town cut by water grows on the side of its market. Venice's narrow canals are land and
+  its bridges are flat land where a main street crosses (no arch, no steps).
 - The world graphic paves the streets and the market (`onStreets`, src/worldprobe/settle.ts): every block whose
   middle lies on a street, as wide as the register has it, where the ground is dry and no rock. It draws no kerb,
   no gutter and no lamp, and a highway looks like a lane. `public/data/plan_<year>.json` must be written anew when the
@@ -435,6 +467,10 @@ Founding the land register of a world takes about 2.7 s, 0.5 s before the street
 - Pounds (2005): The Medieval City. Greenwood, pp. 12, 23–26.
 - Vasserot cadastre (1810–1836), streets (VASSEROT_VOIES), ALPAGE, via Stanford EarthWorks; ODbL 1.0
   (`data/cadastre/paris_vasserot/`).
+- Di Lenardo, Viaccoz, Guhennec, Musso & Kaplan, Venice 1808 Land Registers v1.1 (2026), EPFL DHLAB, DOI 10.5281/zenodo.20715172; CC BY 4.0
+- Structurae, Rialto Bridge (structure 20000461): main span 28.80 m. https://structurae.net/en/structures/rialto-bridge
+- Lee, Kashyap & Chu (1994), Building skeleton models via 3-D medial surface/axis thinning algorithms (the thinning of skimage)
+- Thomson & Richardson (1999), The 'good continuation' principle of perceptual organization applied to the generalization of road networks
 - Noizet & Lallau (2013): the walls of Paris, ALPAGE; ODbL 1.0 (`data/cadastre/paris_walls/`).
 - Porta, Crucitti & Latora (2006): The network analysis of urban streets: a primal approach. Environment and Planning
   B 33, 705–725 (edge betweenness).
@@ -648,8 +684,8 @@ Of the 40 buildings known by name in the towns, 17 stand at their spot, 23 moved
 where the water or one laid before took it. Of the 309 churches of a see without a name, 106 stand at the centre of
 their town, the others moved off it (median of all 16 m, nine in ten within 48 m).
 
-Three towns are laid out without regard to their ground (feature 1), but clear of their landmarks: Venice (islands),
-Aberdeen and Seville (a river, and the landmarks at their real place, leave too little ground on one bank). Before
+Two towns are laid out without regard to their ground (feature 1), but clear of their landmarks (before Venice's real
+plan read its ground there were three, with Venice): Aberdeen and Seville (a river, and the landmarks at their real place, leave too little ground on one bank). Before
 feature 5: Venice and Hormuz.
 
 The building ground of the towns (`ground_<year>.json`) is surveyed before anything the world graphic builds of its

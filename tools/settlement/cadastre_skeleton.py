@@ -29,6 +29,12 @@ SNAP = 2.0  # metres: ends this close are one junction. PLACEHOLDER
 KEEP = 3500.0
 STEP = 0.13  # radii: a street is simplified to this before it is laid in steps (120 m in Paris). PLACEHOLDER
 SHORTEST = 0.02  # radii: a shorter piece is left out (18 m in Paris). PLACEHOLDER
+ABOUT = (
+    'Real street skeletons of the large towns whose old plan is open, for settlement feature 3 (docs/SETTLEMENT_DESIGN.md). '
+    'Per site of the gazetteer: the market (x, z) and the streets as pieces [x0, z0, x1, z1] east-west or north-south, east '
+    'and south of the centre of the town, in radii of the real town (radius: the real metres of one; the world lays a plan as '
+    'wide as its own town). Written by tools/settlement/cadastre_skeleton.py (Paris) and cadastre_venice.py (Venice).'
+)
 MARKET = 'Rue du Marché aux Poirées'  # the street of the Halles, the market of Paris since Philippe Auguste
 
 
@@ -120,18 +126,16 @@ def main():
     keep, market, g, total, radius = paris()
     pieces = sorted({q for line in keep for q in steps(line, radius)})
     deg = collections.Counter(d for _, d in g.degree())
-    plan = {
-        'about': 'Real street skeletons of the large towns whose old plan is open, for settlement feature 3 (docs/SETTLEMENT_DESIGN.md). Per site of the gazetteer: the market (x, z) and the streets as pieces [x0, z0, x1, z1] east-west or north-south, east and south of the centre of the town, in radii of the walled town (radius: the real metres of one; the world lays a plan as wide as its own town). Written by tools/settlement/cadastre_skeleton.py.',
-        'towns': {
-            str(PARIS): {
-                'town': 'Paris',
-                'source': 'Vasserot cadastre 1810-1836 (ALPAGE via Stanford EarthWorks, ODbL 1.0) inside the wall of Philippe Auguste (ALPAGE walls, Noizet & Lallau 2013); centre: the parvis of Notre-Dame',
-                'radius': round(radius),
-                'market': [round(market[0], 3), round(market[1], 3)],
-                'streets': [list(q) for q in pieces],
-            }
-        },
+    plan = json.loads(OUT.read_text()) if OUT.exists() else {'about': ABOUT, 'towns': {}}
+    plan['about'] = ABOUT
+    plan['towns'][str(PARIS)] = {
+        'town': 'Paris',
+        'source': 'Vasserot cadastre 1810-1836 (ALPAGE via Stanford EarthWorks, ODbL 1.0) inside the wall of Philippe Auguste (ALPAGE walls, Noizet & Lallau 2013); centre: the parvis of Notre-Dame',
+        'radius': round(radius),
+        'market': [round(market[0], 3), round(market[1], 3)],
+        'streets': [list(q) for q in pieces],
     }
+    plan['towns'] = dict(sorted(plan['towns'].items(), key=lambda kv: int(kv[0])))
     OUT.write_text(json.dumps(plan, ensure_ascii=False) + '\n')
     print(
         f'Paris: {g.number_of_nodes()} junctions and bends, {g.number_of_edges()} edges ({dict(sorted(deg.items()))}); kept {len(keep)} edges, {total:.0f} m, {len(pieces)} pieces; radius {radius:.0f} m; market at {market[0]:.2f}, {market[1]:.2f}'

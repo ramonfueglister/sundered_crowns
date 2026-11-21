@@ -5,7 +5,8 @@
 import * as THREE from 'three/webgpu';
 import { Batch } from '../batch';
 import { borderBand } from '../blocks';
-import { BORDERS, Mat, TRAITS, idx, inGrid } from '../layout';
+import { Mat, idx, inGrid } from '../layout';
+import { BORDERS, TRAITS } from './places';
 import { buildTerrain, buildWater } from '../terrain';
 import { city, farmhouses, islands, landmarks, towns } from './buildings';
 import { fields, meadows, woods } from './country';

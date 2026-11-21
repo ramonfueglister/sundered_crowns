@@ -41,7 +41,8 @@ More: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/DATA_SCHEMA.md](docs/D
 ```
 npx vitest run     # foundation, economy, world server replay and resume, auth, Row Level Security of all migrations
 npm run typecheck
-npm run lint       # Biome: lint rules everywhere, layout in the folders already formatted (biome.json)
+npm run lint       # Biome: lint rules everywhere, layout in the folders already formatted (biome.json); then
+                   # the budgets: no file gets more lint or more lines than it had (tools/check/budgets.ts)
 ruff check && ruff format --check   # the Python tools (ruff.toml; pip install ruff==0.17.4)
 (cd economy && cargo test --release --locked)   # the shell around the port
 (cd economy && cargo fmt --check && cargo clippy --all-targets -- -D warnings)   # its layout (rustfmt.toml) and clippy

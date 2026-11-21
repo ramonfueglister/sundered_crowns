@@ -1,12 +1,12 @@
 // Checks sickness and childbed (people feature 9, economy feature 22, src/sim/people/absence.ts) with the contracts
-// and the stand-ins (people feature 10, economy feature 23, economy/src/workers.rs): one world of 1291 run twice, with
-// the workers who are away and with everybody there (both with their contracts), compared year by year.
+// and the stand-ins (people feature 10, economy features 23 and 24, economy/src/workers.rs): one world of 1291 run
+// twice, with the workers who are away and with everybody there (both with their contracts), compared year by year.
 //   npm run absence:check [-- years]
 // Per year: the days away per worker by group of age and sex against the sick time of Morcott (Riley & Alter 1996,
 // table 2), the days of childbed per woman who works, the new sicknesses of the persons of 20 or more per death of
 // one of them (Morcott 12.6, Ramsey 17.5), the share of the workers who serve by the year and of the days away on
-// which a worker without work stood in, and GDP, prices and employment of the cities against the run in which
-// everybody is there.
+// which the family or a worker without work stood in, and GDP, prices and employment of the cities against the run in
+// which everybody is there.
 import { loadSetup, loadWorld } from './load';
 import { createWorldState } from '../../src/sim/setup';
 import { tick } from '../../src/sim/schedule';
@@ -17,7 +17,7 @@ import { MORCOTT, ageGroup, sickness } from '../../src/sim/people/absence';
 import { presentPersons } from '../../src/sim/people/living';
 import { ROLE } from '../../src/sim/systems/work';
 import { ALIVE } from '../../src/sim/state';
-import { contracts } from '../../src/sim/systems/economy';
+import { contracts } from '../../src/sim/systems/workers';
 import type { World } from '../../src/sim/world';
 
 const YEARS = Number(process.argv.slice(2).find((a) => /^\d+$/.test(a)) ?? 3),
@@ -65,6 +65,7 @@ for (let y = 1; y <= YEARS; y++) {
     away = 0,
     seen = a.person.size,
     missed = 0,
+    family = 0,
     stood = 0;
   // the workers who work by the day at the start of the year, against all workers
   const byTheDay = contracts(a, a.economy.cities!).reduce((n, c) => n + c.length, 0);
@@ -102,9 +103,10 @@ for (let y = 1; y <= YEARS; y++) {
     tick(a, wa, SYSTEMS);
     // the workers away from firms that worked on the day and those who stood in for them (read before b is computed)
     const n = engine.standIns();
-    for (let k = 0; k < n.length; k += 2) {
+    for (let k = 0; k < n.length; k += 3) {
       missed += n[k];
-      stood += n[k + 1];
+      family += n[k + 1];
+      stood += n[k + 2];
     }
     tick(b, wb, SYSTEMS);
     // the children born on the day (new rows; on the first of January the rows close up)
@@ -141,7 +143,7 @@ for (let y = 1; y <= YEARS; y++) {
     `  serve by the year: ${workers - byTheDay} of ${workers} workers (${(((workers - byTheDay) / workers) * 100).toFixed(1)} %; sources 40 to 46 %)`,
   );
   console.log(
-    `  stood in: ${stood} of ${missed} days away at firms that worked (${((stood / missed) * 100).toFixed(1)} %)`,
+    `  stood in: ${family + stood} of ${missed} days away at firms that worked (${(((family + stood) / missed) * 100).toFixed(1)} %): the family ${family} (${((family / missed) * 100).toFixed(1)} %), workers without work ${stood} (${((stood / missed) * 100).toFixed(1)} %)`,
   );
   for (const [k, name] of [
     [FIGURE.realGdp, 'real GDP'],
