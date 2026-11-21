@@ -118,8 +118,8 @@ pub fn load(bytes: &[u8]) -> Result<(AbstractModel<DailyClock>, Xoshiro), String
         if model.data.collection_time.is_empty() {
             return Err("a state of format 4 without a row of the national accounts".into());
         }
-        model.ext.accounts = vec![crate::summed(&model.data, 0)];
-        crate::take_rows(&mut model);
+        model.ext.accounts = vec![crate::accounts::summed(&model.data, 0)];
+        crate::accounts::take_rows(&mut model);
     }
     let (a, households) = (
         &model.ext.attendance,
