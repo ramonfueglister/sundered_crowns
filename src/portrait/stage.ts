@@ -7,7 +7,7 @@
 // diffuse reflection by π, Godot does not); the sky's ambient light of energy 0.75 is a hemisphere light of 0.75·π;
 // Godot's ACES setting there (exposure 0.92 / 0.6 / 1.8, white 14.26) is three.js' ACES at exposure 0.92, which is
 // where Apoleia took it from. Those are Apoleia's values; a set of dress of the game's own may bring others
-// (profile.ts).
+// (profile.ts, profile_1356.ts).
 import {
   ACESFilmicToneMapping, DirectionalLight, Group, HalfFloatType, HemisphereLight, LinearFilter, LinearMipmapLinearFilter, Mesh, NoColorSpace,
   PCFShadowMap, PerspectiveCamera, RepeatWrapping, Scene, SRGBColorSpace, type Texture, TextureLoader, Vector2, Vector3, WebGLRenderer,

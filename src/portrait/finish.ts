@@ -3,7 +3,7 @@
 // brought into what a screen shows through a tone curve that keeps a colour's hue (three.js' own curves bend
 // each of red, green and blue on its own, which turns lit skin yellow and pale); then the picture as a whole is
 // graded, laid on its backdrop and darkened towards its corners. What is measured and what is by eye stands with
-// the values, in profile.ts `finish`.
+// the values, in profile_1356.ts `finish`.
 import { Mesh, OrthographicCamera, PlaneGeometry, Scene, ShaderMaterial, type Texture, Vector2, Vector3, type WebGLRenderer, Color } from 'three';
 import type { StageProfile } from './profile';
 

@@ -7767,6 +7767,13 @@ Pictures (project files, `portraits/`): `runde160_vorher_nachher.png` (four ladi
 after below), `runde160_schraeg.png` (the same from a quarter), `runde160_nah.png` (two necks close by),
 `runde160_maedchen.png` (a girl of the sample and three small ones at court).
 
+Where the stage's values stand (21 November, no change to a value): main now checks that no code file is
+longer than 500 lines (`npm run lint`, `tools/check/budgets.ts`), and `src/portrait/profile.ts` had 503.
+England's profile `ENGLAND_1356`, with its notes of the rounds, and `PLAIN_1356` moved to
+`src/portrait/profile_1356.ts`; `profile.ts` keeps the profile's form (`StageProfile`), `APOLEIA` and
+`profileOf`. Where an older round's text names `profile.ts` for one of England's values, it is in
+`profile_1356.ts` now.
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair

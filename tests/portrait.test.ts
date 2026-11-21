@@ -8,7 +8,8 @@ import { PORTRAIT_PUBLIC, PORTRAIT_TEST_WASM, portraitManifest } from '../tools/
 import { loadPortraitBuilder } from '../tools/portrait/load';
 import { DoubleSide, FrontSide, ShaderLib } from 'three';
 import { LOCK_OPAQUE, drawOrder, portraitSkinTone, skinTone, surfaceKind, surfaceMaterials } from '../src/portrait/materials';
-import { APOLEIA, ENGLAND_1356, profileOf } from '../src/portrait/profile';
+import { APOLEIA, profileOf } from '../src/portrait/profile';
+import { ENGLAND_1356 } from '../src/portrait/profile_1356';
 import { CURVE, toneCurve } from '../src/portrait/finish';
 import { decodePortrait, encodePerson, rankOfHistory, type Portrait, type PortraitPerson } from '../src/portrait/wire';
 import { framing, keyPlaces, standing } from '../src/portrait/stage';

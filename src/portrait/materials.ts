@@ -5,7 +5,7 @@
 // default 0.5), which three.js sets through the index of refraction; hair cards are blended with a depth pass of
 // their opaque parts first (two materials); the light scattering inside skin has no counterpart in three.js and is
 // left out for Apoleia's portraits (docs/PORTRAITS.md lists it as a deviation). What a set of dress of the game's
-// own does differently stands in its profile (profile.ts).
+// own does differently stands in its profile (profile.ts, profile_1356.ts).
 import {
   CustomBlending, DoubleSide, FrontSide, LessEqualDepth, MeshPhysicalMaterial, OneFactor, OneMinusSrcAlphaFactor,
   ShaderChunk, SrcAlphaFactor, type Texture, Vector2, Vector3,
