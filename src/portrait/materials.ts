@@ -284,7 +284,7 @@ function hairLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<Stage
       float hairA = dot( hairT1, hairH ), hairB = dot( hairT2, hairH );
       float hairS1 = pow( sqrt( max( 1.0 - hairA * hairA, 0.0 ) ), ${f(k.whiteSharp)} );
       float hairS2 = pow( sqrt( max( 1.0 - hairB * hairB, 0.0 ) ), ${f(k.ownSharp)} );
-      reflectedLight.directSpecular += ${colour} * hairLit * hairStrand * ( ${f(k.white)} * hairS1 * 0.08 + ${f(k.own)} * hairS2 * ${diffuse} );
+      reflectedLight.directSpecular += ${colour} * hairLit * hairStrand * ( hairWhite * hairS1 * 0.08 + ${f(k.own)} * hairS2 * ${diffuse} );
       float hairN = dot( ${normal}, hairL );
       reflectedLight.directDiffuse += ${colour} * ${diffuse} * RECIPROCAL_PI * ( saturate( ( hairN + ${f(k.wrap)} ) / ( 1.0 + ${f(k.wrap)} ) ) - saturate( hairN ) );`;
   const lights = solid && swap(ShaderChunk.lights_physical_pars_fragment, DIFFUSE, `${DIFFUSE}
@@ -304,11 +304,12 @@ ${solid ? '' : 'float '}hairStrand = 1.0;
 #endif`);
     code = swap(code, '#include <color_fragment>', `#include <color_fragment>
 diffuseColor.rgb *= pow( min( hairStrand / 0.8, 1.0 ), ${f(k.light)} * smoothstep( 0.08, 0.45, dot( vColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ) );
+${solid ? '' : 'float '}hairWhite = mix( ${f(k.white)}, ${f(k.whiteLight)}, smoothstep( 0.0, 0.08, dot( vColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ) );
 diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ), diffuseColor.rgb, ${f(k.colour)} ) * mix( ${f(k.tone)}, ${f(k.toneLight)}, smoothstep( 0.08, 0.45, dot( vColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ) );`);
     if (lights) {
-      // the strands' image is read in the picture's main part and used in each light's share: a value of the
-      // whole shader
-      code = swap(swap(code, '#include <lights_physical_pars_fragment>', lights), '#include <common>', '#include <common>\nfloat hairStrand;');
+      // the strands' image and the white band's strength are read in the picture's main part and used in each
+      // light's share: values of the whole shader
+      code = swap(swap(code, '#include <lights_physical_pars_fragment>', lights), '#include <common>', '#include <common>\nfloat hairStrand;\nfloat hairWhite;');
     } else {
       code = swap(code, '#include <lights_fragment_end>', `#include <lights_fragment_end>
 #if defined( USE_MAP ) && NUM_DIR_LIGHTS > 0

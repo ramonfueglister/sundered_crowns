@@ -97,7 +97,9 @@ export interface StageProfile {
   cards: { rough: number; specular: number; anisotropy: number };
   /** The sheen of hair as strands give it (Kajiya & Kay 1989, two bands as in Scheuermann 2004): null leaves the
    *  cards with their plain glint. Else a white band and a band in the hair's own colour: strength and sharpness
-   *  (exponent) of each, how far each is shifted along the strand, how much the strands' image shifts the bands
+   *  (exponent) of each (the white band's strength is `white` on black hair and `whiteLight` on hair from a middle
+   *  brown on, a brightness of 0.08, where `tone` begins to fall: round 158), how far each is
+   *  shifted along the strand, how much the strands' image shifts the bands
    *  from strand to strand (their ragged look), how much darker the image's dark strands are drawn
    *  (exponent on the image, 1 = as painted), how much darker still on hair as light as white (`light`, a further
    *  exponent that grows with the hair's brightness: white hair has no sheen to show its strands by, so its darker
@@ -107,7 +109,7 @@ export interface StageProfile {
    *  baked between the bundles take half of a hair's colour away before any light falls on it), and how much of
    *  the light that hair passes round to its shaded side reaches it (wrap lighting as on skin: 0 = none, 1 =
    *  Valve's half Lambert). */
-  sheen: null | { white: number; whiteSharp: number; whiteShift: number; own: number; ownSharp: number; ownShift: number; ragged: number; strands: number; light: number; colour: number; tone: number; toneLight: number; wrap: number };
+  sheen: null | { white: number; whiteLight: number; whiteSharp: number; whiteShift: number; own: number; ownSharp: number; ownShift: number; ragged: number; strands: number; light: number; colour: number; tone: number; toneLight: number; wrap: number };
   /** The finish of the picture (finish.ts): null draws it straight onto the canvas through three.js' ACES curve,
    *  as Apoleia's. Else the picture is drawn in linear light `fine` times as fine a side as the canvas (each pixel
    *  of the canvas the mean of fine x fine pixels: the edges of hair, which are cut out and not blended, come out
@@ -442,7 +444,15 @@ export const APOLEIA: StageProfile = {
  *  the chest. `shadow.reach` 0.68 keeps the box of the shadows as large on the figure as it was (0.9 of a
  *  picture's height at 1.12: 0.8 of the builder's frame either way), so that the shadows on the face are drawn
  *  with the same pixels. `rise` 0.11 (0.03) keeps the camera at the eyes' height, where the dress table's eyes
- *  look (with 0.03 it stood 5 cm under them in the wider picture, and the eyes looked 2 degrees over it). */
+ *  look (with 0.03 it stood 5 cm under them in the wider picture, and the eyes looked 2 degrees over it).
+ *  Round 158: a white sheen on black hair (docs/PORTRAITS.md). Black hair read L 5.2 at the crown (four heads,
+ *  `gene=27:60`; the reference's dark head 17.9), a shape without form: the white band of the sheen was 0.3,
+ *  set on brown hair, where the band in the hair's own colour shows the strands. The white band is the
+ *  reflection off a hair's surface and stays as the hair gets darker (Marschner et al. 2003, "Light Scattering
+ *  from Human Hair Fibers", section 2.1: "R highlight, since it is surface reflection, is white"): `sheen.white`
+ *  2 on black hair, `sheen.whiteLight` 0.3 from a middle brown on, as sharp as before. L 13.1 on black, 15.7 on
+ *  a dark brown (9.3), 24.7 on brown (24.4), blond as it was. Stronger and broader (2 at a sharpness of 60: L
+ *  17) the heads read grey, not black. By eye: PLACEHOLDER. */
 export const ENGLAND_1356: StageProfile = {
   key: 'england1356',
   lights: {
@@ -463,7 +473,7 @@ export const ENGLAND_1356: StageProfile = {
   cap: { tone: 1.7, light: 2.6, colour: 0.85, wrap: 1, shadow: false, stubble: 0, beard: { tone: 8.8, light: 3.2, colour: 0.8, wrap: 0.3 } },
   cloth: { wool: 2.6, linen: 1, silk: { tone: 2.6, rough: 0.55, specular: 0.5 }, figured: { gold: [1.2, 0.8, 0.22], rough: 0.4, metal: 0.2 } },
   cards: { rough: 0.72, specular: 0.2, anisotropy: 0.3 },
-  sheen: { white: 0.3, whiteSharp: 120, whiteShift: 0.1, own: 0.45, ownSharp: 40, ownShift: -0.1, ragged: 0.15, strands: 1.35, light: 0.5, colour: 0.85, tone: 1.6, toneLight: 1, wrap: 1 },
+  sheen: { white: 2, whiteLight: 0.3, whiteSharp: 120, whiteShift: 0.1, own: 0.45, ownSharp: 40, ownShift: -0.1, ragged: 0.15, strands: 1.35, light: 0.5, colour: 0.85, tone: 1.6, toneLight: 1, wrap: 1 },
   finish: {
     fine: 2,
     curve: { contrast: 1.4, start: 0.22, length: 0.4, black: 1.5 },

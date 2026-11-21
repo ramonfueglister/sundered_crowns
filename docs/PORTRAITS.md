@@ -7541,6 +7541,75 @@ warning. The module is 798 kB.
 Pictures (project files, `portraits/`): `runde157_vorher_nachher.png` (the page's 36 people, before above and
 after below), `runde157_vier_koepfe.png` (four heads large), `runde157_hof.png` (eighteen at court).
 
+**Round 158: a white sheen on black hair** (2026-11-21). Since round 157 one head in twenty has black hair and
+four in ten a dark brown, and the sheet showed what round 122 had left open: a head of black hair is a dark
+shape. Its locks, a plait's strands and a beard's bundles are there but not to be seen. Read at the crown of
+four heads with black hair (`gene=27:60`; the hair's pixels are those that differ between the same picture
+with blond and with black hair): L 5.2, between 1.3 and 8.6 for four fifths of the pixels; a dark brown
+(`gene=27:95`) 9.3. The reference's dark head reads 17.9 (round 122).
+
+Read: Marschner, Jensen, Cammarano, Worley and Hanrahan 2003, "Light Scattering from Human Hair Fibers"
+(SIGGRAPH 2003), section 2.1: the two highlights of hair "shift in opposite directions, causing them to
+separate into two visually distinguishable highlights"; the "R highlight, since it is surface reflection, is
+white, whereas the TRT highlight, which is formed by light that passes through the interior of the fiber, is
+colored." (The article's first two thirds were read word for word.) The stage has both (after Kajiya and
+Kay 1989 and Scheuermann 2004, `profile.ts` `sheen`): a white band and a band in the hair's own colour. The band in the
+hair's colour is next to nothing on black hair, as it should be; the white one was set to 0.3 on brown hair,
+where the other does the work, and on black hair it was all that was left.
+
+What is changed, on the stage alone.
+- **The white band's strength goes by the hair's darkness** (`src/portrait/materials.ts` `hairLook`,
+  `profile.ts` `sheen.white`, `sheen.whiteLight`): 2 on black hair, 0.3 as before from a middle brown on (a
+  brightness of 0.08, where `sheen.tone` begins to fall), between them by the hair's brightness. Its sharpness
+  is what it was (120: half of its strength 6 degrees off the band's middle). On bundles, locks, a plait's strands, a beard's locks and
+  on cards alike.
+
+Measured, at the crown of the same four heads (L, and the chroma of the mean colour):
+
+| hair (`gene=27:`) | before | now | the reference (round 122) |
+|---|---|---|---|
+| black (60) | 5.2, 2.5 | 13.1, 3.5 | 17.9, 8.0 |
+| dark brown (95) | 9.3, 7.0 | 15.7, 6.9 | |
+| a darker brown (115) | 17.3, 13.2 | 19.5, 12.7 | |
+| brown, the row's middle (130) | 24.4, 18.1 | 24.7, 18.1 | 25.0 to 31.6, 21.1 to 24.9 |
+| light brown (170) | 43.4, 25.6 | 43.4, 25.6 | |
+| blond (240) | 49.6, 25.3 | 49.6, 25.3 | 48.8, 25.3 |
+
+On black hair a tenth of the pixels is now lighter than L 22.7 (8.6): the band, on a head that is otherwise as
+black as it was.
+
+Tried and not kept.
+- The band stronger on every hair (2, and broader, a sharpness of 60): black hair at L 17.2, the reference's
+  number, but brown at 33.1 for 24.4 with less colour (15.5 for 18.1), and blond 54.2: over the reference's.
+- On dark hair alone, but broad (2 at a sharpness of 60): L 16.5 on black, and the boys' bowl cuts read as
+  grey hair, the band lying over most of the head. As sharp as it was the head stays black and shows its
+  locks.
+- Weaker and broad (1.2 at 60, L 11.6), weaker at 100 (9.9), stronger and sharper (3 at 300, 12.7): the last
+  as good as what is kept in a small picture, a wire-thin line in a large one.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in rounds 138 to 157 to its last figure (it
+reads skin). The colour sheet beside it: the eight bearded men's chin reads L 41.3 (40.4) and the place above
+the lip 41.7 (40.7), where a dark beard's locks have their band now.
+
+Honest about it. The reference's number is not reached (13.1 for 17.9) and was not meant to be by this means:
+a white band that brings a black head to L 17 makes it grey. Their dark head has more colour (8.0 for 3.5), a
+warm dark brown rather than our near black; which of their heads is "black" is by eye, one head in one
+screenshot. The band is where the stage's strands run, "down along the head", not where a lock turns: on a
+bowl cut it is a ring round the crown, on a beard it lies on the lower locks, which in a large picture can
+read as the first grey. A short beard, which is its painted layer alone, has no such band and is brown under
+black hair, as before. The strength is the same in every light; in the reference the sheen moves with the
+head. The band's place and the hair's form are untouched: locks are still bands. 2 and the brightness at
+which it ends are by eye: PLACEHOLDER.
+
+Tests: `tests/portrait.test.ts`, one new (black hair has a white sheen to show its form by: the two
+strengths, the sharpness as it was, and the line in the shader of bundles, a plait's strands, a beard's locks
+and cards). `tests/portrait.test.ts` and its neighbour 46 of 46; `cargo test --release` as a whole 130 of
+130 (nothing in the builder is changed, and the module is round 157's); typecheck and lint pass, no new
+warning.
+Pictures (project files, `portraits/`): `runde158_vorher_nachher.png` (six dark heads of the sample, before
+above and after below), `runde158_schwarz.png` (four heads with black hair, the same), `runde158_baerte.png`
+(black beards, the same), `runde158_alle.png` (the page's 36 people).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair

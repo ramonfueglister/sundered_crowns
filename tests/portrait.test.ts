@@ -814,6 +814,29 @@ describe('portraits', { timeout: 20_000 }, () => {
     expect(cap.colour).toBe(sheen.colour);
     expect(cap.beard.tone / sheen.tone).toBeCloseTo(5.5, 5);
   });
+  it('black hair has a white sheen to show its form by (round 158)', () => {
+    // Black hair was a dark shape: drawn lighter it is still next to black (round 122), and the white band of its
+    // sheen was set for brown hair, on which the band in the hair's own colour does the work (L 5.2 at the crown
+    // of four heads for the reference's 17.9). The white band is surface reflection and does not darken with the
+    // hair (Marschner et al. 2003, section 2.1): it is drawn stronger on black hair (`sheen.white`) and as it was
+    // from a middle brown on (`sheen.whiteLight`, the 0.3 it was), as sharp as it was
+    const sheen = ENGLAND_1356.sheen!;
+    expect(sheen.whiteLight).toBe(0.3);
+    expect(sheen.whiteSharp).toBe(120);
+    expect(sheen.white).toBeGreaterThan(1);
+    expect(sheen.white).toBeLessThan(3);
+    // bundles, a plait's strands, a beard's locks, and hair cards (drawn from both sides; their second material)
+    const of = (tex: string) => ({ rough: 0.6, metal: 0, double: tex.includes('roman'), tex, nmap: '', pos: new Float32Array(9), col: new Float32Array(9).fill(0.5), uv: new Float32Array(6), nrm: new Float32Array(9) });
+    for (const tex of ['real/hair1356_body.webp', 'real/plait01_rope.webp', 'real/beard1356_locks.webp', 'real/roman01.webp']) {
+      const shader = { uniforms: {}, vertexShader: ShaderLib.physical.vertexShader, fragmentShader: ShaderLib.physical.fragmentShader };
+      const all = surfaceMaterials(of(tex), null, null, ENGLAND_1356);
+      all[all.length - 1]!.onBeforeCompile(shader as never, null as never);
+      expect(shader.fragmentShader, tex).toContain(`hairWhite = mix( ${sheen.white.toFixed(3)}, ${sheen.whiteLight.toFixed(3)}, smoothstep( 0.0, 0.08, dot( vColor.rgb`);
+      expect(shader.fragmentShader, tex).toContain('hairStrand * ( hairWhite * hairS1 * 0.08 +');
+      // the strength is set where the hair's colour is read, before the lights use it
+      expect(shader.fragmentShader.indexOf('hairWhite = mix(')).toBeLessThan(shader.fragmentShader.lastIndexOf('#include <lights_fragment_end>'));
+    }
+  });
   it('a lock of hair is solid, open below, and frayed where its image is empty', () => {
     // Until round 87 the hair of a man's head was cards: thin sheets blended over each other, lit as one smooth
     // dome (a card's direction was the one from the head's centre), throwing no shadow on the forehead. Then it
