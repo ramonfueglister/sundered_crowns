@@ -6,7 +6,19 @@
 // colour drawn from its row and its place in the row. So the far step can draw the same sheaves from the place of a
 // block alone and the crop of its lot, which far.ts lays down on the columns of the lot (`crops`, a byte to a column).
 import { type Batch, hash2, shade } from '../lookprobe/batch';
-import { HEDGE_GLOW, OATS, OATS_SIDE, WHEAT, WHEAT_GLOW, WHEAT_SIDE } from '../lookprobe/blocks';
+import {
+  HEDGE_GLOW,
+  OATS,
+  OATS_SIDE,
+  OATS_TALL,
+  OATS_TOP,
+  SHEAF_TALLER,
+  WHEAT,
+  WHEAT_GLOW,
+  WHEAT_SIDE,
+  WHEAT_TALL,
+  WHEAT_TOP,
+} from '../lookprobe/blocks';
 import { N } from '../lookprobe/layout';
 import type { Part } from '../lookprobe/terrain';
 import { uprightOf } from './zoom';
@@ -75,14 +87,15 @@ export function drawCrops(
           const fx = (x + ox) * WIDER + dx,
             fz = (z + oz) * WIDER + dz,
             crop = cropAt(crops, x, z, dx, fx, fz);
-          if (crop !== WHEAT_FIELD && crop !== OATS_FIELD) continue;
+          if (crop !== WHEAT_FIELD && crop !== OATS_FIELD && crop !== FALLOW_FIELD) continue;
           const at = lotOf(fx, fz);
-          // blocks.ts `crops`, as the finest step stands a sheaf on the block
-          const ripe = crop === WHEAT_FIELD,
+          // blocks.ts `crops`, as the finest step stands a sheaf on the block (the fallow's are the winter corn's, as
+          // there: the stage keeps them down while it lies fallow, season_codes.ts)
+          const ripe = crop !== OATS_FIELD,
             colours = ripe ? WHEAT : OATS,
             side = ripe ? WHEAT_SIDE : OATS_SIDE;
-          const tall = (ripe ? 1.35 : 0.8) + 0.5 * hash2(at.row, at.k, 51),
-            top = shade(colours[Math.floor(hash2(at.row, at.k, 53) * colours.length)], ripe ? 1.2 : 1.05);
+          const tall = (ripe ? WHEAT_TALL : OATS_TALL) + SHEAF_TALLER * hash2(at.row, at.k, 51),
+            top = shade(colours[Math.floor(hash2(at.row, at.k, 53) * colours.length)], ripe ? WHEAT_TOP : OATS_TOP);
           const cx = (fx + 0.5) * k - ox,
             cz = (fz + 0.5) * k - oz;
           b.box(cx - 0.4 * k, y, cz - 0.4 * k, cx + 0.4 * k, y + tall * UP, cz + 0.4 * k, side, {

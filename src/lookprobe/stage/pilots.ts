@@ -45,13 +45,32 @@ const face = (aimed = false): Shape => ({
 });
 
 /** Puts one mesh of each kind the pieces come as on the stage, and gives back the sea's (see above). */
-export function addPilots(scene: THREE.Scene, meshes: Meshes, m: Pick<Materials, 'water' | 'solid' | 'sinking'>) {
+export function addPilots(
+  scene: THREE.Scene,
+  meshes: Meshes,
+  m: Pick<Materials, 'water' | 'solid' | 'sinking' | 'lake' | 'lakeSinking'>,
+) {
   const { mesh, faceMesh, fieldMesh, freeMesh } = meshes,
-    { water, solid, sinking } = m;
+    { water, solid, sinking, lake, lakeSinking } = m;
   const sea = [...(water !== solid ? [mesh(lists(), water, false)] : []), faceMesh(face(), false, true)];
   for (const pilot of [
     mesh(lists(), solid, true),
     mesh(lists(true), sinking, true),
+    // (water above the sea, where it has materials of its own: it shows no mirror image, and so stays on the stage)
+    ...(lake !== solid
+      ? [
+          mesh(lists(), lake, false),
+          mesh(lists(true), lakeSinking, false),
+          freeMesh(
+            {
+              ...none(),
+              free: { geo: new Float32Array(FREE_GEO), col: new Uint8Array(FACE_COL), nor: new Int8Array(4) },
+            },
+            false,
+            true,
+          ),
+        ]
+      : []),
     faceMesh(face(), true),
     faceMesh(face(true), true),
     fieldMesh(

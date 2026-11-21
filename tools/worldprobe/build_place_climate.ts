@@ -12,8 +12,8 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gunzipSync } from 'node:zlib';
-import { CLIMATE, CLIMATE_LETTERS, type PlaceClimateJson } from '../../src/sim/content/place_climate';
-import { KIND, Land, climateAt } from '../../src/worldprobe/climate';
+import { CLIMATE_LETTERS, type PlaceClimateJson } from '../../src/sim/content/place_climate';
+import { KIND, climateAt, climateOfLand } from '../../src/worldprobe/climate';
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '../..'),
   json = <T>(path: string): T => JSON.parse(readFileSync(resolve(ROOT, path), 'utf8')) as T;
@@ -32,13 +32,7 @@ if (climate.cells.length !== climate.w * climate.h) throw new Error('climate.bin
 const counts = [0, 0, 0];
 let places = '';
 for (let l = 0; l < geo.L; l++) {
-  const kind = climateAt(climate, geo.loc.x[l], geo.loc.y[l]) & KIND,
-    c =
-      kind === Land.Mediterranean
-        ? CLIMATE.mediterranean
-        : kind === Land.Steppe || kind === Land.Desert
-          ? CLIMATE.dry
-          : CLIMATE.other;
+  const c = climateOfLand(climateAt(climate, geo.loc.x[l], geo.loc.y[l]) & KIND);
   counts[c]++;
   places += CLIMATE_LETTERS[c];
 }

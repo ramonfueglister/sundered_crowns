@@ -4,9 +4,9 @@ import { type RGB, fbm2, hash2, mix, noise2, rgb, shade, smooth } from './batch'
 import { type GroundTraits, Mat, SUMMIT } from './layout';
 import { type Corners, lightAt } from './terrain_light';
 
-const GRASS_A = rgb(0xb0c83c),
-  GRASS_B = rgb(0xbcca3e),
-  GRASS_DRY = rgb(0xd2c444),
+export const GRASS_A = rgb(0xb0c83c),
+  GRASS_B = rgb(0xbcca3e);
+const GRASS_DRY = rgb(0xd2c444),
   GRASS_DEEP = rgb(0x98b638);
 const MEADOW_MID = rgb(0x9abf3d),
   MEADOW_DEEP = rgb(0x82ac37),
@@ -17,14 +17,17 @@ const ROAD = rgb(0xe0c6a4),
 export const ISLE_STONE = rgb(0xf0d6bc);
 export const ROCK_TOP_LOW = rgb(0xb4aaa6);
 const ROCK_TOP_HIGH = rgb(0xfdfaf8);
-const SOIL_WHEAT = rgb(0xc4aa4c),
-  SOIL_OATS = rgb(0x6c9634),
-  SOIL_VINE = rgb(0x587a2a);
+/** the soil of the fields under their crops: the colour a field's top is pulled towards (`topColor`), at FIELD_SOIL */
+export const SOIL_WHEAT = rgb(0xc4aa4c),
+  SOIL_OATS = rgb(0x6c9634);
+const SOIL_VINE = rgb(0x587a2a);
 /** the fallow: stubble and weeds, grazed, shows through the grass this far */
 export const SOIL_FALLOW = rgb(0xb0a060),
   FALLOW_SHOWS = 0.65;
 const SHADED_SOIL = rgb(0x6a705c);
-const DIRT = rgb(0xa88a52);
+export const DIRT = rgb(0xa88a52);
+/** how far a field's top takes its soil's colour; the fallow's takes FALLOW_SHOWS */
+export const FIELD_SOIL = 0.85;
 export const QUAY = rgb(0xdcc4b4);
 
 /**
@@ -60,7 +63,7 @@ export function topColor(t: GroundTraits, x: number, z: number, mat: number, wx 
     c =
       crop === 'fallow'
         ? mix(c, SOIL_FALLOW, FALLOW_SHOWS)
-        : mix(c, crop === 'wheat' ? SOIL_WHEAT : crop === 'oats' ? SOIL_OATS : SOIL_VINE, 0.85);
+        : mix(c, crop === 'wheat' ? SOIL_WHEAT : crop === 'oats' ? SOIL_OATS : SOIL_VINE, FIELD_SOIL);
   // paths: soft edges, because the colour is taken at the corners and blended across each block
   const near = t.road(x, z),
     road = 1 - smooth(1.3, 2.0, near + (noise2(wx / 2, wz / 2, 27) - 0.5) * 0.9);

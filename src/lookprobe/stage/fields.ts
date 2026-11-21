@@ -1,17 +1,16 @@
 // The fields of the meshes on the stage (faces.ts `Field`): the colours of their columns' corners, each mesh's field
 // one layer of a single texture that all such meshes share, so that they share their material too. A mesh takes a
 // layer when it comes onto the stage and gives it back when it goes; where all are taken the texture grows to twice
-// as many.
+// as many. The pieces' season maps lie in such a texture too (seasons.ts), four bytes to a column.
 import * as THREE from 'three/webgpu';
 import { texture } from 'three/tsl';
 import { FIELD_SIDE } from '../faces';
 
 /** the layers the texture starts with */
 const FIRST_LAYERS = 4;
-const LAYER_BYTES = FIELD_SIDE * FIELD_SIDE * 4;
 
-const made = (data: Uint8Array, layers: number) => {
-  const t = new THREE.DataArrayTexture(data, FIELD_SIDE, FIELD_SIDE, layers);
+const made = (data: Uint8Array, side: number, layers: number) => {
+  const t = new THREE.DataArrayTexture(data, side, side, layers);
   t.format = THREE.RGBAFormat;
   t.type = THREE.UnsignedByteType;
   t.minFilter = t.magFilter = THREE.NearestFilter;
@@ -26,10 +25,12 @@ const made = (data: Uint8Array, layers: number) => {
   return t;
 };
 
-export function createFields() {
+/** A texture of layers of `side` × `side` colours of four bytes, one to a mesh. */
+export function createFields(side = FIELD_SIDE) {
+  const LAYER_BYTES = side * side * 4;
   let layers = FIRST_LAYERS,
     data = new Uint8Array(LAYER_BYTES * layers),
-    tex = made(data, layers);
+    tex = made(data, side, layers);
   const free = Array.from({ length: layers }, (_, k) => layers - 1 - k);
   /** the texture as the material reads it (its value changes where the texture grows) */
   const node = texture(tex);
@@ -52,7 +53,7 @@ export function createFields() {
         const old = tex;
         layers *= 2;
         data = more;
-        tex = made(data, layers);
+        tex = made(data, side, layers);
         node.value = tex;
         old.dispose();
       }

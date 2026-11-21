@@ -1,7 +1,7 @@
 // The rules of the land: how the blocks lie on the map (world.ts and the realms laid over them, realms.ts), where
 // the trees end and the snow begins, and what grows in which kind of land.
 import { type RGB, rgb } from '../lookprobe/batch';
-import { NEAR, RIGHT } from '../lookprobe/layout';
+import { N, NEAR, RIGHT } from '../lookprobe/layout';
 import { Land } from './climate';
 
 /**
@@ -97,3 +97,21 @@ export const WOODS: Record<number, number> = {
 };
 /** lands without a single tree away from the water */
 export const BARE: readonly number[] = [Land.Desert, Land.Tundra, Land.Ice];
+
+/** A field of N × N columns averaged over a square of columns reaching `reach` to each side (world.ts: the massifs'
+ *  foot and rise). A function out here, not in `buildWorld`: there its loops ran slowly until compiled anew for every piece. */
+export function averaged(field: Float32Array, reach: number) {
+  const out = new Float32Array(N * N);
+  for (let z = 0; z < N; z++) {
+    const z0 = Math.max(0, z - reach),
+      z1 = Math.min(N - 1, z + reach);
+    for (let x = 0; x < N; x++) {
+      const x0 = Math.max(0, x - reach),
+        x1 = Math.min(N - 1, x + reach);
+      let sum = 0;
+      for (let v = z0; v <= z1; v++) for (let u = v * N + x0, end = v * N + x1; u <= end; u++) sum += field[u];
+      out[z * N + x] = sum / ((z1 - z0 + 1) * (x1 - x0 + 1));
+    }
+  }
+  return out;
+}

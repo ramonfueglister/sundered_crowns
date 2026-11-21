@@ -415,6 +415,7 @@ async function build(job: PieceJob) {
           water: sea(built.water),
           raised: (glides ? flat : loose)(built.raised!),
           figures: built.figures,
+          season: built.season,
           cells: built.cells.map((c) => ({ ...c, far: flat(c.far) })),
           counts: built.counts,
         }
@@ -478,6 +479,7 @@ async function build(job: PieceJob) {
         scene.figures ? [scene.figures.a, scene.figures.b, scene.figures.c, scene.figures.d, scene.figures.e] : [],
       )
       .concat(scene.figures?.at && scene.figures.plan ? [scene.figures.at, scene.figures.plan] : [])
+      .concat(scene.season ? [scene.season.cols] : [])
       .map((a) => (a as Float32Array).buffer)
       .filter((buf) => buf.byteLength > 0);
     // (summed before the lists are handed over)
