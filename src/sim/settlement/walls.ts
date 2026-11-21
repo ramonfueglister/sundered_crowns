@@ -31,7 +31,7 @@ export interface Crossing {
 export const WALL_PIECE = { wall: 0, gate: 1, postern: 2 } as const;
 
 /** a straight piece of the ring: its ends and what it is (WALL_PIECE) */
-export interface WallPiece {
+interface WallPiece {
   x0: number;
   z0: number;
   x1: number;
