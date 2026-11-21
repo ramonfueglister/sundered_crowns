@@ -3,7 +3,8 @@
 // "so stelle ich mir das eher vor"): narrow houses each under its own steep gable turned to the street, a ground floor
 // of pale limestone, timber-framed upper storeys, roofs of brown and red tiles and now and then slate, plain chimneys.
 // Every value here is read off that picture and is an assumption until the tradition's sources are worked through
-// (src/buildings/README.md, step 1).
+// (src/buildings/README.md, step 1). The colours, the window width, the tile shades and the shares of timber and jetties
+// are the ones the Paris gauntlet's search found closest to the picture (tools/lookprobe/search_paris.py, 21 Nov 2026).
 import { type RGB, rgb } from '../../lookprobe/batch';
 import { m } from '../houses/style';
 import type { Tradition } from './tradition';
@@ -14,29 +15,33 @@ const hexes = (a: readonly number[]): readonly RGB[] => a.map((h) => rgb(h));
 export const PARIS: Tradition = {
   ...VENICE,
   // the lanes and squares paved with grey-rose stones, as the reference picture draws them (assumption)
-  quay: { ...VENICE.quay, paving: rgb(0x7e6664), joint: 0.18 },
+  quay: { ...VENICE.quay, paving: rgb(0x73635a), joint: 0.18, spread: 1.33 },
   storeys: [2, 3],
   greatStoreys: [3, 4],
-  walls: hexes([0xd2b49c, 0xc8aa92, 0xd8bca4, 0xc4a48c, 0xceb098]),
+  walls: hexes([0xf7c6a8, 0xeebea0, 0xfccdaf, 0xebba9c, 0xf3c3a5]),
   stone: rgb(0xe6d8c2),
   roof: rgb(0x9a5a38),
-  // brown tiles most often, red and orange ones between them, and now and then slate, as the picture shows (assumption)
+  // brown tiles most often, red and orange-red ones between them (no ochre: the picture has none), now and then slate
+  // (assumption)
   roofs: hexes([
-    0x5e3a2a, 0x7e4e36, 0x9e6242, 0x744832, 0x845238, 0xb06e4a, 0x8a3e30, 0xa04838, 0xb85a40, 0xa86a34, 0xc0783c,
-    0xd08a4c, 0x5a4440, 0x5e5c62,
+    0x6e523a, 0x836344, 0x99754f, 0x7c5e41, 0x876646, 0xa78056, 0x8b563f, 0x9b5e46, 0xad6e4d, 0xad7748, 0xba824b,
+    0xc38e53, 0x6c5a4d, 0x5e5c62,
   ]),
   wood: rgb(0x5a3a24),
   chimneyC: rgb(0xd8c8ac),
   arched: 0,
   shutters: 0.25,
   washing: 0.05,
-  jetty: { ...VENICE.jetty, share: 0.35 },
+  jetty: { ...VENICE.jetty, share: 0.4 },
   altana: 0,
   pitch: [0.85, 1.05],
   chimney: { height: [3, 5], perHouse: 2 },
   dormers: 1,
-  tileShades: [0.9, 0.15],
+  tileShades: [0.81, 0.4],
+  // narrow tall windows with pale green glass, as the picture draws them
+  window: [1, 3],
+  glass: rgb(0x798a72),
   plot: { width: [m(4.5), m(6.5)], depth: [m(6), m(8)], greatWidth: [m(9), m(12)] },
-  timber: { share: 0.65, c: rgb(0x5e4838) },
+  timber: { share: 0.94, c: rgb(0x7a5f5b) },
   plainChimney: true,
 };

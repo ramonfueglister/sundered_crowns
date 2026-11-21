@@ -48,12 +48,12 @@ const TR: Tradition = {
   jetty: { ...PARIS.jetty, share: num('jetty', PARIS.jetty.share) },
 };
 /** a block of houses and the lane beside it, in blocks; the square takes two blocks and the lane between them */
-const BLOCK = num('block', 11),
-  LANE = num('lane', 4.5),
+const BLOCK = num('block', 12),
+  LANE = num('lane', 4.6),
   CELL = BLOCK + LANE;
 const GRASS = rgb(0x6a8a3a),
-  OLIVE = hexOf('olive') ?? rgb(0x3a5a12),
-  LIGHT_LEAF = hexOf('leaf') ?? rgb(0x7a9a10),
+  OLIVE = hexOf('olive') ?? rgb(0x32551b),
+  LIGHT_LEAF = hexOf('leaf') ?? rgb(0x5d7212),
   STRIPES: readonly RGB[] = [rgb(0xc8382c), rgb(0x2f5f9a), rgb(0xd8a030)],
   CANVAS = rgb(0xf0e8d8),
   POLE = rgb(0x6b4a2c);
@@ -104,7 +104,7 @@ function side(things: Batch, x0: number, z0: number, x1: number, z1: number, fro
 function block(ground: Batch, things: Batch, x0: number, z0: number, r: Rnd) {
   const x1 = x0 + BLOCK,
     z1 = z0 + BLOCK,
-    d = num('depth', 4.6);
+    d = num('depth', 3.9);
   side(things, x0, z1 - d, x1, z1, 'pz', r);
   side(things, x0, z0, x1, z0 + d, 'nz', r);
   side(things, x1 - d, z0 + d, x1, z1 - d, 'px', r);
@@ -121,7 +121,7 @@ function block(ground: Batch, things: Batch, x0: number, z0: number, r: Rnd) {
       LAND_Y,
       z0 + BLOCK / 2 + r.range(-0.8, 0.8),
       r,
-      r.range(1.8, 2.3) * num('treesize', 1),
+      r.range(1.8, 2.3) * num('treesize', 0.88),
       r.chance(0.4) ? LIGHT_LEAF : OLIVE,
     );
 }
@@ -213,15 +213,20 @@ async function build(): Promise<StageScene> {
   return { ground, things, water, counts: { triangles: ground.triangles + things.triangles + water.triangles } };
 }
 
-/** the light of the near view (stage/look.ts); each strength can be tried out from the address, as in near.ts */
-const LIGHT = { ...NEAR_LIGHT };
-for (const k of ['sun', 'side', 'sky', 'bounce', 'fill'] as const) LIGHT[k] = num(k, NEAR_LIGHT[k]);
-LIGHT.skyColor = colour('skycol') ?? NEAR_LIGHT.skyColor;
-LIGHT.sunColor = colour('suncol') ?? NEAR_LIGHT.sunColor;
+/**
+ * the light of the near view (stage/look.ts) as the Paris gauntlet's search found it closest to the picture
+ * (tools/lookprobe/search_paris.py, 21 Nov 2026), seen through `?tone=neutral&exposure=1.19&saturation=0.88` (the
+ * game's own tone stays AgX); each strength can be tried out from the address, as in near.ts
+ */
+const FOUND = { ...NEAR_LIGHT, sun: 1.35, side: 0.95, sky: 0.75, bounce: 0.31, fill: 0.55, skyColor: 0xc4d1f0 };
+const LIGHT = { ...FOUND };
+for (const k of ['sun', 'side', 'sky', 'bounce', 'fill'] as const) LIGHT[k] = num(k, FOUND[k]);
+LIGHT.skyColor = colour('skycol') ?? FOUND.skyColor;
+LIGHT.sunColor = colour('suncol') ?? FOUND.sunColor;
 
 stage(build, {
-  frameW: Number(q.get('across')) || 66,
-  elevation: Number(q.get('elev')) || 34,
+  frameW: num('across', 63),
+  elevation: num('elev', 36),
   tall: 14,
   light: LIGHT,
   shadowRadius: Number(q.get('soft')) || NEAR_SHADOW,
