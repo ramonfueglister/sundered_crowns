@@ -1,5 +1,5 @@
 // What the world server tells a browser about the land register (src/sim/systems/lots.ts): the parcels of a town,
-// its streets and market, the farmsteads of its hamlets and their fields, for the houses and fields the world graphic sets on them. Read-only HTTP: GET /lots/<site> and GET /lots?sites=<a>,<b>,…
+// its streets and market, its wall, the farmsteads of its hamlets and their fields, for the houses and fields the world graphic sets on them. Read-only HTTP: GET /lots/<site> and GET /lots?sites=<a>,<b>,…
 // (server/main.ts). A town is named by its site: its index into data/content/gazetteer.json.
 import type { WorldState } from '../sim/state';
 import { ALIVE, NO_LOT, LOT_KIND } from '../sim/state';
@@ -39,6 +39,9 @@ export interface TownLots {
    *  src/sim/content/landmarks_<year>.json `named`, −1 for none), the order of a convent (255 for none), and the years
    *  of its building and of its fall (NO_YEAR where none): `builtIn` tells how it stands in a year */
   landmarks: { kind: number[]; x: number[]; z: number[]; w: number[]; d: number[]; named: number[]; order: number[]; start: number[]; end: number[]; ruined: number[] };
+  /** the wall of the town (settlement feature 6): the ends of each straight piece of its ring, in turn round it, and
+   *  what it is (WALL_PIECE in src/sim/settlement/walls.ts: 0 wall, 1 gate, 2 postern); none for a town without one */
+  walls: { x0: number[]; z0: number[]; x1: number[]; z1: number[]; kind: number[] };
   /** a town laid on a real plan that draws its land and water (src/sim/settlement/plan_ground.ts): the metres of a
    *  radius of the plan and how far its streets reach from their middle lines, for the graphic to draw that ground */
   ground?: { radius: number; half: number };
@@ -66,7 +69,7 @@ export function townLots(s: WorldState, site: number): TownLots {
  *  the persons. A site without ground gets an empty list. */
 export function manyTownsLots(s: WorldState, sites: readonly number[]): TownLots[] {
   const L = s.lot.cols, F = s.family.cols, P = s.person.cols;
-  const out = sites.map((site): TownLots => ({ site, day: s.day, id: [], kind: [], hamlet: [], x: [], z: [], w: [], d: [], front: [], family: [], persons: [], hamlets: { id: [], x: [], z: [], farms: [], strips: [] }, streets: { x0: [], z0: [], x1: [], z1: [], kind: [], width: [] }, fields: { hamlet: [], x: [], z: [], w: [], d: [], zelge: [], courses: [], farm: [] }, landmarks: { kind: [], x: [], z: [], w: [], d: [], named: [], order: [], start: [], end: [], ruined: [] } }));
+  const out = sites.map((site): TownLots => ({ site, day: s.day, id: [], kind: [], hamlet: [], x: [], z: [], w: [], d: [], front: [], family: [], persons: [], hamlets: { id: [], x: [], z: [], farms: [], strips: [] }, streets: { x0: [], z0: [], x1: [], z1: [], kind: [], width: [] }, fields: { hamlet: [], x: [], z: [], w: [], d: [], zelge: [], courses: [], farm: [] }, landmarks: { kind: [], x: [], z: [], w: [], d: [], named: [], order: [], start: [], end: [], ruined: [] }, walls: { x0: [], z0: [], x1: [], z1: [], kind: [] } }));
   const at = new Map<number, TownLots>();
   out.forEach((o) => { if (!at.has(o.site)) at.set(o.site, o); });
   const row = new Int32Array(s.lot.size).fill(-1); // the position of a parcel in the list of its town
@@ -95,6 +98,11 @@ export function manyTownsLots(s: WorldState, sites: readonly number[]): TownLots
   for (let k = 0; M && k < s.landmark.size; k++) {
     const o = s.landmark.alive[k] ? at.get(M.site[k]) : undefined;
     if (o) { const q = o.landmarks; q.kind.push(M.kind[k]); q.x.push(M.x[k]); q.z.push(M.z[k]); q.w.push(M.w[k]); q.d.push(M.d[k]); q.named.push(M.named[k]); q.order.push(M.order[k]); q.start.push(M.start[k]); q.end.push(M.end[k]); q.ruined.push(M.ruined[k]); }
+  }
+  const W = s.wall?.cols;
+  for (let k = 0; W && k < s.wall.size; k++) {
+    const o = s.wall.alive[k] ? at.get(W.site[k]) : undefined;
+    if (o) { const q = o.walls; q.x0.push(W.x0[k]); q.z0.push(W.z0[k]); q.x1.push(W.x1[k]); q.z1.push(W.z1[k]); q.kind.push(W.kind[k]); }
   }
   for (const o of at.values()) {
     const parcels = o.id.map((_, i) => i).filter((i) => o.kind[i] === LOT_KIND.parcel);
