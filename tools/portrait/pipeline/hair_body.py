@@ -137,7 +137,15 @@ PARTED = dict(
         dict(kind='part', n=int(_e('PART_N', '50,140,90')[2]), w=(0.04, 0.06), flat=0.26, h=0.062, rise=0.02, gather=(0.1, 0.5, 0.5), blunt=0.5, m=3, across=0.3, ring=0.09, tones=0.07, wave=(0.003, 0.008, 1.0, 1.8), roll=0.35, tone=1.05, seed=7),
     ],
 )
-CUTS['plait01'] = PARTED
+# (round 175) The hair of one who wears plaits runs on to the plait. `PARTED`'s bundles end 0.06 to 0.5 radians
+# before the place below the ear (`gather`: about half a centimetre to 4.5 cm). As fine strands (round 172) they
+# ended there one by one in a ragged ring round the plait's beginning, and behind it skin showed between them (in
+# Blender beside round 174's plait, and in the portrait from three quarters and from the side). `PLAIT_NEAR`:
+# each layer's least and greatest way to the place, times this (0.15: about 1 to 7 mm; with 0.3 single ends
+# still stood beside the plait in Blender; 1 writes round 172's file). The other parted cuts keep `PARTED`'s.
+# PLACEHOLDER by eye.
+NEAR = _e('PLAIT_NEAR', '0.15')[0]
+CUTS['plait01'] = dict(PARTED, layers=[dict(L, gather=(NEAR * L['gather'][0], NEAR * L['gather'][1], L['gather'][2])) for L in PARTED['layers']])
 # A woman's hair under a veil that is set back on the head (round 121; `portrait/src/dress.rs` `hair_veiled`,
 # `Veil::Back`): parted as a girl's, laid over the ears and on to the nape, where it is pinned up under the veil
 # (`to`: there is no plait; `by`: lower at the temple, so that the hair covers the ear down to its lobe). In

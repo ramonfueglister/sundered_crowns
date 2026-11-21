@@ -9066,6 +9066,90 @@ left, after the two on the right; from the front above, from three quarters belo
 `runde174_blender.png` (Blender: the old plaits above the new, whole and near the ear),
 `runde174_blender_hochgesteckt.png` (the pinned plaits, old above new).
 
+**Round 175: the hair runs on to the plait, and a plait's strands are drawn with fine hairs, in the Blender on Ramon's Mac** (2026-11-21).
+Round 174 left skin between the ends of the head's strands beside a plait's beginning, and a plait's strand a
+smooth tube with a coarse image. Looked at near, in the portrait from three quarters and from the side and in
+Blender beside round 174's plait, four faults at that place: the head's strands end one by one in a ragged
+ring round the plait's beginning, half a centimetre to more than a centimetre before it, and the beginning
+stands bare among them; behind it a wedge of skin shows; a plait's strands are drawn with a mottled image of
+128 by 512 (cut from an image of hair cards in round 86) that reads as dough on blond hair; and at the nape the
+hair's lower rim stands off the neck as a lobe with a dark underside. This round mends the first three.
+
+What was read. Nothing. Set by eye, in Blender and in the portrait. The reference was not looked at for it.
+
+What is changed.
+- **The hair of one who wears plaits runs on to the plait** (`tools/portrait/pipeline/hair_body.py`,
+  `PLAIT_NEAR`): the cut `plait01` has the parted hair's layers with each layer's least and greatest way to
+  the place below the ear at which a strand ends times 0.15, about 1 to 7 mm for half a centimetre to 4.5 cm.
+  The strands end under the plait's beginning. The other parted cuts (under a veil, a man's at the jaw, a
+  small girl's) are as they were.
+- **A plait's shade is baked again** with this hair standing in the scene (round 174's two calls, hanging and
+  pinned): the plaits' corners, triangles and binding are round 174's to the last figure; some 110 corners of
+  6672 and 130 of 2640 are darker, where the hair now lies over them, none lighter.
+- **A plait's strands are drawn with fine hairs** (`public/portrait/real/plait01_rope.webp`, written anew, and
+  `plait01_rope_n.webp`, new): the image of a bundle of the head's hair (`bundle_tex.py`, round 109) with
+  finer hairs, five soft parting lines and no darker flanks, 512 by 1024, and its relief (`nmap.py`). The
+  stage takes the relief because it lies beside the image; nothing in the builder or the stage is changed.
+- `rope_tex.py`, which cut the old image out of the cards' image, is gone: nothing uses it.
+- Four files written anew (`plait01_body.txt.zst`, `plait01_rope.txt.zst`, `loop01_rope.txt.zst` by Blender
+  5.1.2 on the Mac; the image in the cloud), one new. The other hair, the stage and the wasm are not touched.
+
+How it was made. The script with the switch at 1 was run first in the Mac's Blender: it writes round 172's
+file byte for byte (and again at the end, with the script as committed). Then, as rounds 171 to 174, the
+scripts were sent to the socket of the Blender that is open on the Mac and run there in scenes of their own,
+with round 174's plait beside the hair, each pass rendered near the place from three quarters, from the side
+and from behind: the old hair, 0.3, 0.15. The file of 0.15 was tried in the portrait and kept; the script as
+committed writes it byte for byte. The plaits' two calls were then run there once with the new hair in the
+scene, and the pinned plaits rendered on it, old and new. The strands' image was made in the cloud and looked
+at in the portrait alone, in two passes; it was not looked at in Blender.
+
+Measured (the files as OBJ, `hairlib.py`; the images; the sheets of 36 against round 174's):
+
+| | before | now |
+|---|---|---|
+| corners, triangles, the head's hair | 39 908, 52 084 | 44 159, 57 996 |
+| the hair's nearest corner to the place, by bearing round it (15 of 24 bearings have hair): median; greatest | 0.8 cm; 1.2 cm | 0.14 cm; 0.23 cm |
+| corners of the hair within 1 cm of the place, one side | 120 | 3495 |
+| a plait's corners, triangles and binding, hanging and pinned | | the same |
+| a plait's shade, mean, hanging; pinned | 0.605; 0.481 | 0.602; 0.474 |
+| the strands' image: size; mean tone; its spread | 128 by 512; 0.795; 0.044 | 512 by 1024; 0.780; 0.111 |
+| the strands' relief | none | 512 by 1024 |
+| portraits of the sheet that differ, village; court | | 7; 9 (those who wear plaits) |
+| the files, packed: hair; plaits; image and relief | 975; 147 and 59; 9 kB | 1041; 147 and 60; 104 and 16 kB |
+
+Tried and not kept.
+- `PLAIT_NEAR=0.3`: in Blender single ends still stood beside the plait's beginning. Not tried in the portrait.
+- The strands' image with the head's hairs (`HAIRS=520 WIDE=4`) and four darker parting lines
+  (`PARTS=4 PART=0.72`): in the portrait a blond plait was striped.
+- The lobe at the nape: not tried. The hair's height over the neck there is every parted cut's.
+- The image looked at in Blender, a strand's hairs turned about the strand, a tie at the plait's end: not tried.
+
+**No test changed.** `portrait/tests/plait.rs`, `hair_body.rs` and `hair_down.rs` pass as they were.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 174. The colour sheet: 160 of 160
+lines to the last figure (it reads skin, and no skin is changed).
+
+Honest about it. Again on the seven of the 36 who wear plaits (nine at court), but more than round 174: from
+three quarters and from the side a plait now reads as plaited hair and comes out of the head's hair in one
+piece; at the size of the sheet of 36 the plaits are a little finer and no more. From the front the place
+below the ear is hidden, and nothing is seen of the first change. The hair now runs together in a point, as if
+tied there, and there is no tie. Under the ends the plait's beginning is still three tubes in one another; in
+Blender its tip shows among the ends as a small cone. The lobe at the nape is as it was: from the side a dark
+fold behind the plait. The strands' hairs are drawn lines that run straight along the strand; they do not turn
+about it, and on black hair they are hard to see. The relief was not looked at alone (with it and without).
+A plait's end is still a blunt point. The pinned plaits are as dark under the lobe as before. The plaits'
+calls were run once on the Mac, the cloud's bake was not compared, and the download of one who wears plaits
+is 0.18 MB larger. Every number is by eye: PLACEHOLDER.
+
+Tests: none changed. `cargo test --release` as a whole 140 of 140; `tests/portrait.test.ts` and its neighbour
+46 of 46; typecheck and lint pass, no new warning. Pictures (project files, `portraits/`):
+`runde175_vorher_nachher.png` (two girls with hanging plaits, each before and after: from three quarters
+above, from the side below), `runde175_nah.png` (the same near the place where the plait begins),
+`runde175_hochgesteckt.png` (two women with pinned plaits, each before and after), `runde175_dorf.png` and
+`runde175_hof.png` (all 36, village and court, after; round 174's sheets are the before),
+`runde175_blender.png` (Blender: the old hair above the new, near the plait's beginning from three sides),
+`runde175_blender_hochgesteckt.png` (the pinned plaits, old above new).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
