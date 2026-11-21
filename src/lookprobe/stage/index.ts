@@ -39,6 +39,7 @@ import { createSender } from './sending';
 export type { Shape, StageScene } from '../shape';
 export type { Stage, StageOptions } from './api';
 export { NEAR_LIGHT, NEAR_SHADOW, type Light } from './look';
+export { fieldsOnDay } from './seasons';
 
 /** Sets up the stage: renderer, light, camera and picture pipeline, with nothing on it yet. */
 export async function createStage(o: StageOptions = {}): Promise<Stage> {
@@ -73,6 +74,7 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     fieldFaced,
     fieldGliding,
     fields,
+    seasons,
     seaFaced,
     freed,
     gliding,
@@ -231,6 +233,9 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     add(built, x = 0, z = 0) {
       const group = new THREE.Group();
       group.position.set(x, 0, z);
+      // the piece's season map, which its ground and what stands on it read (seasons.ts)
+      const season = built.season ? seasons.take(built.season) : null;
+      if (season) group.userData.season = season.z;
       for (const [shape, material, casts] of [
         [built.ground, solid, true],
         [built.carried, solid, true],
@@ -252,6 +257,8 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
           if (part.material === sinking || part.material === lakeSinking) part.userData.glide = 0;
           part.userData.ground = shape === built.ground || shape === built.carried;
           if (shape === built.things || shape === built.carried) part.userData.ink = 0;
+          if (season && shape !== built.water && shape !== built.raised)
+            part.userData.season = season.clone().setW(shape === built.things ? 1 : 0);
           if (shape === built.water) part.layers.set(FIGURES_LAYER);
           group.add(part);
         }
@@ -263,6 +270,8 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
     },
     remove(group) {
       scene.remove(group);
+      // (three keeps userData untyped: `season` is the layer `add` took)
+      if (group.userData.season !== undefined) seasons.give(group.userData.season as number);
       // the figures' kit is shared by every piece: only their own mesh is let go (figures/stage.ts)
       for (const mesh of group.children)
         if (mesh.userData.figures === 'near') disposeFigures(mesh);

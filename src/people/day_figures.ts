@@ -1,7 +1,9 @@
 // The figures of the great cities follow the plan of the day (people feature 12): once a second the world's hour is
 // read (worldHour, src/net/client.ts) and the figures on the stage are put where the plans of their persons have them
-// (figuresAtHour, src/figures/stage.ts and schedule.ts). Main thread only.
+// (figuresAtHour, src/figures/stage.ts and schedule.ts); the fields show the world's day (fieldsOnDay,
+// src/lookprobe/stage/seasons.ts). Main thread only.
 import { figuresAtHour } from '../figures/stage';
+import { fieldsOnDay } from '../lookprobe/stage';
 import { dayLength, world, worldHour } from '../net/client';
 import type { PlanPlaces } from '../figures/plan_places';
 import { FARM_YEAR } from '../sim/people/farm_year';
@@ -11,7 +13,7 @@ import type { WorldView } from '../worldprobe/view';
 const EVERY = 1000;
 
 /** Has the figures on the stage of `view` follow the world's hour, with what `places` tells of the places of the
- *  map. Returns the way to stop. */
+ *  map, and its fields the world's day. Returns the way to stop. */
 export function followDayPlans(view: Pick<WorldView, 'redraw'>, places: Promise<PlanPlaces>): () => void {
   let of: PlanPlaces | null = null;
   void places.then((p) => {
@@ -20,6 +22,8 @@ export function followDayPlans(view: Pick<WorldView, 'redraw'>, places: Promise<
   const timer = setInterval(() => {
     const w = world.value,
       l = of;
+    // (the pieces are built for the world's start year: worldprobe/season_codes.ts)
+    if (w && fieldsOnDay(w.day, w.startYear)) view.redraw();
     if (!w || !l) return;
     // (where an hour of the world is shorter than the time between two puttings, the figures show each day at the
     // hour of the mass: schedule.ts TERCE)

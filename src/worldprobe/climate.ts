@@ -3,6 +3,7 @@
 // forest layer of 1356 knows the place and in bit 6 whether its fields do. With it come the snow line and the tree
 // line of every place (tools/worldprobe/build_lines.py): one byte per sixteen by sixteen map pixels, the height in
 // steps of LINE_STEP.
+import { CLIMATE } from '../sim/content/place_climate';
 import { maybeGunzip } from './gunzip';
 
 export const Land = {
@@ -22,6 +23,14 @@ export const Land = {
 export const KIND = 63,
   WOODS_KNOWN = 128,
   FIELDS_KNOWN = 64;
+/** The climate (CLIMATE, src/sim/content/place_climate.ts) of a kind of land (`Land`), by which the farming year of
+ *  a place goes (src/sim/people/farm_year.ts): the Mediterranean kind (Köppen-Geiger Cs), steppe or desert (B), any other. */
+export const climateOfLand = (kind: number): number =>
+  kind === Land.Mediterranean
+    ? CLIMATE.mediterranean
+    : kind === Land.Steppe || kind === Land.Desert
+      ? CLIMATE.dry
+      : CLIMATE.other;
 /** metres a step of the bytes of the snow line and the tree line */
 const LINE_STEP = 32;
 export interface Climate {

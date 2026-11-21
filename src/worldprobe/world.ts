@@ -17,7 +17,7 @@ import { FIELD_LOT, GEWANN } from '../sim/settlement/fields';
 import { type Forest, WOOD, conifersAt, forestAt, leanOf, stand, tilth } from './forest';
 import { type Rural, ruralAt } from './rural';
 import { HAMLET_TURN, type HamletLands, hamletAt, hamletsOf } from './hamlets';
-import { BARE, FINER, FINER_STEPS, SNOW_LINE, TINT, TREE_LINE, WOODS, blockOfCell, cellOfBlock, lineShift, paleFrom, rockAt, woodsUntil } from './land';
+import { BARE, FINER, FINER_STEPS, SNOW_LINE, TINT, TREE_LINE, WOODS, averaged, blockOfCell, cellOfBlock, lineShift, paleFrom, rockAt, woodsUntil } from './land';
 import { type Region, Water, cellOf, latOf, sample, waterAt } from './region';
 import { type Cover, HOUSES_UNTIL, type Woods, coverLand, lotFill } from './far';
 import { drawGround } from './table';
@@ -26,6 +26,7 @@ import { TREE_NUMBERS, crownTallAt } from './trees';
 import { unshade } from './mean';
 import { FARMS, FIELD_GROUND, LOT_BLOCKS, LOT_FILL, type Lot, type Monument, PEOPLE_PER_PERSON, type Settled, type Site, type Survey, type Told, farmsFor, firstHalf, raise, settle } from './settle';
 import { type Columns, columnsOf } from './nearground';
+import { farmYearsAt, seasonMap, withFarmYears } from './season_codes';
 import { MONUMENTS, bridge, m, modelOf, styleOf } from '../buildings';
 import { FAR_FROM_ROADS, ROAD_KINDS, ROAD_SHOWS, type Road, relaxPoints, roadOn, roadsIn, wayOnGround } from './roads';
 import { Matrix4 } from 'three';
@@ -206,21 +207,6 @@ const columnAt = (x: number, z: number) => idx(Math.max(0, Math.min(N - 1, Math.
 const fieldAt = (field: Float32Array | Int16Array | Uint8Array, x: number, z: number) => field[columnAt(x, z)];
 /** blocks above the plain of a height in metres, where the lines of the climate are shifted by `by`; `flatter` is the step's */
 function levelFor(m: number, by: number, flatter: number) { const treeLine = TREE_LINE + by; return (Math.max(0, (Math.min(m, treeLine) - PLAIN) / METRES_PER_BLOCK) + Math.max(0, m - treeLine) / METRES_PER_BLOCK_HIGH) / flatter; }
-/** a field averaged over a square of blocks reaching `reach` to each side */
-function averaged(field: Float32Array, reach: number) {
-  const out = new Float32Array(N * N);
-  for (let z = 0; z < N; z++) {
-    const z0 = Math.max(0, z - reach), z1 = Math.min(N - 1, z + reach);
-    for (let x = 0; x < N; x++) {
-      const x0 = Math.max(0, x - reach), x1 = Math.min(N - 1, x + reach);
-      let sum = 0;
-      for (let v = z0; v <= z1; v++) for (let u = v * N + x0, end = v * N + x1; u <= end; u++) sum += field[u];
-      out[z * N + x] = sum / ((z1 - z0 + 1) * (x1 - x0 + 1));
-    }
-  }
-  return out;
-}
-
 /** what `buildWorld` reads of the map for every column */
 interface Reading { metres: Float32Array; kind: Uint8Array; shift: Float32Array; lat: Float32Array; snow: Float32Array; woodsEnd: Float32Array; dark: Float32Array | null; land: Uint8Array }
 /** Fills `c`: real height, water class and latitude of every column, taken at its centre, and the lines and the kind of land of its climate (see `buildWorld`). */
@@ -322,8 +308,9 @@ class WorldTraits implements GroundTraits {
   readonly trees: GroundTraits['trees'];
   readonly crops: GroundTraits['crops'];
   readonly quarters: GroundTraits['quarters'];
+  readonly season: GroundTraits['season'];
   constructor(step: number, private readonly town: Uint8Array, private readonly field: Uint8Array | null, private readonly mean: Cover | undefined, private readonly land: Uint8Array, private readonly metres: Float32Array, private readonly snow: Float32Array, private readonly massifs: Massifs, private readonly roads: Float32Array | null) {
-    this.sideTop = sideTopAt(step); this.crownTall = crownTallAt(step); this.houses = mean?.houses; this.trees = mean?.trees; this.crops = mean?.crops; this.quarters = mean?.quarters;
+    this.sideTop = sideTopAt(step); this.crownTall = crownTallAt(step); this.houses = mean?.houses; this.trees = mean?.trees; this.crops = mean?.crops; this.quarters = mean?.quarters; this.season = mean?.season;
   }
   city(x: number, z: number) { return fieldAt(this.town, x, z) === 1; }
   plaza() { return Infinity; }
@@ -725,6 +712,8 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   };
   /** a farm is built as the place nearest to it builds */
   const farm = (x: number, z: number) => { let best = all[0]; for (const s of all) if (Math.hypot(s.at[0] - x, s.at[1] - z) < Math.hypot(best.at[0] - x, best.at[1] - z)) best = s; return best ?? { region: '', style: styleOf('') }; };
+  /** the farming year of the fields at a ground point (season_codes.ts) */
+  const farmYear = farmYearsAt((x, z) => farm(x, z).region, (x, z) => at(land, x, z) & KIND);
   let settled: Settled | undefined, cover: Cover | undefined;
   if (step > 0 && mean) {
     // the mean of the finer step, seen from above (mean.ts); what stands out of it raises the ground
@@ -734,7 +723,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   }
   else if (step > 0) {
     // from farther away the towns, the fields and the woods are part of the ground
-    cover = coverLand(g, step, things, sites, { ploughed, laid: arable !== null || hamlets !== null, courses, field: fieldOf, vines, farm: (x, z) => farm(x, z).style.house, farms, own, clear: (x, z) => stream[idx(x, z)] > 0, woods: (x, z): Woods | null => {
+    cover = coverLand(g, step, things, sites, { ploughed, laid: arable !== null || hamlets !== null, courses, field: fieldOf, vines, farm: (x, z) => farm(x, z).style.house, farms, farmYear, own, clear: (x, z) => stream[idx(x, z)] > 0, woods: (x, z): Woods | null => {
       const i = idx(x, z), here = land[i] & KIND;
       if (metres[i] > woodsEnd[i]) return null;
       if (oasis(i)) return byWater(x, z, Math.max(1, Math.round(0.75 / cell))) ? { share: 0.8, crowns: PALM, tall: true } : null;
@@ -864,5 +853,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   // coarser steps a block is wider than a person is tall
   const figures = settled ? crowd(g, registered ? { ...settled, furlongs: registered.towns } : settled, own) : cover && step === CROWD_AT ? farCrowd({ ...g, town: cover.town, has: cover.has, quarters: cover.quarters, crops: cover.crops }, ox, oz, part) : undefined;
   if (figures) counts.figures = figures.count;
-  return { ground, carried, things, water, raised, figures, cells, counts, standing };
+  // what each field column carries by the season, for the stage (season_codes.ts)
+  const season = seasonMap(settled ? withFarmYears(settled.season, N, part, farmYear) : cover?.season, g.h, N, part, cover);
+  return { ground, carried, things, water, raised, figures, cells, counts, standing, season };
 }

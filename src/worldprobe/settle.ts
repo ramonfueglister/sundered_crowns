@@ -10,6 +10,7 @@ import type { Town } from '../figures';
 import { FINER } from './land';
 import type { FieldShown, Parcels } from './lots';
 import { CROP } from '../sim/settlement/fields';
+import { seasonCode, sow, sowingOf } from './season_codes';
 import { marketOf, streetsOf, worshipOf } from './town_spots';
 import { onWall, wallOf } from './town_wall';
 
@@ -64,6 +65,7 @@ export interface Settled {
   town: Uint8Array;
   /** what each column of a field carries: 0 no field, 1 winter corn, 2 vine, 3 nothing this year (the fallow), 4 spring corn */
   field: Uint8Array;
+  /** the code of each column of a field and its own number (season_codes.ts `sow`, of the north's farming year), two bytes to a column */ season: Uint8Array;
   /** the walled towns as they were laid out, in world blocks */
   towns: Town[];
   /** the houses of this piece that have fine blocks: they are not among the `things`, but for the caller to draw */
@@ -130,7 +132,7 @@ function outwards(r: Rnd, far: number): P2[] {
   }
   return all.sort((a, b) => a[2] - b[2] || a[1] - b[1] || a[0] - b[0]).map(([dx, dz]) => [dx, dz]);
 }
-const CROPS: readonly (Crop | null)[] = [null, 'wheat', 'vine', null, 'oats'];
+const CROPS: readonly (Crop | null)[] = [null, 'wheat', 'vine', 'wheat', 'oats']; // the fallow's sheaves are the winter corn's, kept down by the stage while it lies fallow (season_codes.ts)
 /** a field that lies fallow this year, and one under spring corn */
 export const FALLOW = 3, SPRING = 4;
 /**
@@ -158,7 +160,7 @@ const blocks = (r: Rnd, lo: number, hi: number) => r.int(Math.max(2, Math.round(
  * have fine blocks for the near view: those are handed back as `lots`.
  */
 export function settle(g: Ground, things: Batch, sites: readonly Site[], monuments: readonly Monument[], farm: (x: number, z: number) => Builds, ploughed: (x: number, z: number) => number, vines: (x: number, z: number) => number, counts: Record<string, number>, own: (x: number, z: number) => boolean = () => true, farms: (x: number, z: number) => number = () => FARMS, courses: (x: number, z: number) => number = () => 1, survey?: Survey, told?: Told, fieldOf?: (lx: number, lz: number) => FieldShown | undefined): Settled {
-  const used = new Uint8Array(N * N), town = new Uint8Array(N * N), field = new Uint8Array(N * N), mat = new THREE.Matrix4();
+  const used = new Uint8Array(N * N), town = new Uint8Array(N * N), field = new Uint8Array(N * N), season = new Uint8Array(N * N * 2), mat = new THREE.Matrix4();
   const towns: Town[] = [], lots: Lot[] = [], onRing: number[] = [];
   /** the place that is being built, and what its houses are */
   let now = -1, kind: 'town' | 'village' | 'hamlet' | 'farm' = 'farm';
@@ -462,12 +464,12 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
       // course this year, as deep as the register has it (a shortened furlong ends short of its balk in the south)
       const f = fieldOf(lx, lz);
       if (!f) continue;
-      const mine = own(Math.floor(mx), Math.floor(mz)), fk = f.crop === CROP.fallow ? FALLOW : f.crop === CROP.spring ? SPRING : hash2(lx, lz, 67) < vines(mx, mz) ? 2 : 1, rows = f.rows;
+      const mine = own(Math.floor(mx), Math.floor(mz)), fk = f.crop === CROP.fallow ? FALLOW : f.crop === CROP.spring ? SPRING : hash2(lx, lz, 67) < vines(mx, mz) ? 2 : 1, rows = f.rows, code = seasonCode(0, fk, f.courses), u = sowingOf(lx, lz);
       let tilled = 0;
       for (let k = 0; k < f.strips; k++) {
         const a0 = x0 + Math.round((k * w) / f.strips), a1 = x0 + Math.round(((k + 1) * w) / f.strips);
         if (a1 <= a0) continue;
-        for (let z = z0; z < z0 + rows; z++) for (let x = a0; x < a1; x++) { if (!buildable(x, z)) continue; const i = idx(x, z); field[i] = fk; g.mat[i] = Mat.Soil; tilled++; }
+        for (let z = z0; z < z0 + rows; z++) for (let x = a0; x < a1; x++) { if (!buildable(x, z)) continue; const i = idx(x, z); field[i] = fk; sow(season, i, code, u); g.mat[i] = Mat.Soil; tilled++; }
         // each strip is sown by its own farmstead: its corn stands a little lighter or darker than its neighbours'
         if (mine && CROPS[fk]) crops(things, g, [(a0 + a1) / 2, z0 + rows / 2], a1 - a0, rows, CROPS[fk]!, seeded(Math.floor(hash2(lx * 16 + k, lz, 68) * 4294967296)), f.strips > 1 ? 0.84 + 0.32 * hash2(lx * 16 + k, lz, 69) : 1);
       }
@@ -488,11 +490,11 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
         if (mine) count('farm');
       }
     }
-    const course = courseOf(courses(mx, mz), hash2(...blockOf(mx + ox, mz + oz), 66)), kind = course === 1 && hash2(lx, lz, 67) < vines(mx, mz) ? 2 : course, r = seeded(Math.floor(hash2(lx, lz, 68) * 4294967296));
-    for (let z = z0; z < z0 + d; z++) for (let x = x0; x < x0 + sown; x++) { const i = idx(x, z); field[i] = kind; g.mat[i] = Mat.Soil; }
+    const course = courseOf(courses(mx, mz), hash2(...blockOf(mx + ox, mz + oz), 66)), kind = course === 1 && hash2(lx, lz, 67) < vines(mx, mz) ? 2 : course, r = seeded(Math.floor(hash2(lx, lz, 68) * 4294967296)), code = seasonCode(0, kind, courses(mx, mz)), u = sowingOf(lx, lz);
+    for (let z = z0; z < z0 + d; z++) for (let x = x0; x < x0 + sown; x++) { const i = idx(x, z); field[i] = kind; sow(season, i, code, u); g.mat[i] = Mat.Soil; }
     if (mine) { if (CROPS[kind]) crops(things, g, [x0 + sown / 2, mz], sown, d, CROPS[kind]!, r); count('field'); count('tilled', sown * d); if (kind >= FALLOW) count(kind === FALLOW ? 'fallow' : 'spring'); }
     claim(x0, z0, x0 + w, z0 + d);
   }
   told?.dry?.((x, z) => inGrid(x, z) && !g.wet[idx(x, z)] && g.mat[idx(x, z)] !== Mat.Rock);
-  return { used, town, field, towns, lots };
+  return { used, town, field, season, towns, lots };
 }

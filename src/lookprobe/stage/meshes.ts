@@ -14,6 +14,8 @@ function onStage(lists: THREE.BufferGeometry, material: THREE.Material, casts: b
   made.receiveShadow = true;
   made.userData.dots = new THREE.Vector2(0, 1);
   made.userData.ink = 1;
+  // (no season map: seasons.ts)
+  made.userData.season = new THREE.Vector4(0, 0, -1, 0);
   return made;
 }
 

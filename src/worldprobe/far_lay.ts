@@ -34,6 +34,8 @@ export interface CoverAsks {
   field?(lx: number, lz: number): FieldShown | undefined;
   /** whether a column is kept clear of woods: a stream narrower than a block runs through it (world.ts) */
   clear?(x: number, z: number): boolean;
+  /** the farming year of the fields at a point (FARM_YEAR, season_codes.ts `farmYearsAt`; the north's without it) */
+  farmYear?(x: number, z: number): number;
 }
 
 /** What `coverLand` keeps while it lays out a piece's ground: its parts (far_places.ts, far_fields.ts, far_woods.ts) take it. */

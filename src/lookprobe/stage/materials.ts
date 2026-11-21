@@ -31,6 +31,7 @@ import { COAST_STEPS } from '../sea_corners';
 import { flag } from './address';
 import { faceMaterials } from './face_materials';
 import { LOOK } from './look';
+import { createSeasons } from './seasons';
 import { MOST } from './tones';
 
 /** Makes the materials, and the water's mirror where it is drawn (it lies on `scene`). */
@@ -43,19 +44,22 @@ export function createMaterials(scene: THREE.Scene) {
   // between its corners is kept within MOST (tones.ts).
   const smallLists = flag('small', true);
   const tone = attribute('color', 'vec4');
-  const toned = () =>
-    materialColor.mul(
-      tone.rgb
-        .mul(select(tone.a.lessThan(254.5 / 255), tone.a.mul((2 * 255) / 254), float(1)))
-        .toVarying()
-        .clamp(0, MOST),
-    );
+  const toneOf = () =>
+    smallLists
+      ? tone.rgb.mul(select(tone.a.lessThan(254.5 / 255), tone.a.mul((2 * 255) / 254), float(1)))
+      : vertexColor().rgb;
   const coloured = () => {
     const m = new THREE.MeshLambertNodeMaterial();
-    m.colorNode = smallLists ? toned() : materialColor.mul(vertexColor().rgb.clamp(0, MOST));
+    m.colorNode = materialColor.mul(toneOf().toVarying().clamp(0, MOST));
     return m;
   };
-  const solid = coloured();
+  // what the fields show on the world's day (seasons.ts): the lists of the pieces' ground and of what stands on it take
+  // it, the water's do not
+  const seasons = createSeasons(),
+    season = seasons.either(positionGeometry, attribute('normal', 'vec3'));
+  const solid = new THREE.MeshLambertNodeMaterial();
+  solid.colorNode = materialColor.mul(season.tint(toneOf()).toVarying().clamp(0, MOST));
+  solid.positionNode = season.position;
   // every mesh is drawn on the dots of the picture whose value lies between its two marks (see `dissolve`); the
   // pattern is interleaved gradient noise, which has no stripes or clumps
   // (three's types give a userData node no kind of value: here and below each is cast to the kind it is read as)
@@ -73,6 +77,7 @@ export function createMaterials(scene: THREE.Scene) {
     thing.traverse((part) => {
       part.userData.dots ??= new THREE.Vector2(0, 1);
       part.userData.ink ??= 1;
+      part.userData.season ??= new THREE.Vector4(0, 0, -1, 0);
     });
   // whether a mesh is ground to the map's paper (1) or stands on the ground (0, see Stage.lay); below 0 a marker of
   // the map that the paper is not laid on at all (a ruler riding, worldprobe/view_riders.ts)
@@ -119,15 +124,13 @@ export function createMaterials(scene: THREE.Scene) {
     reflecting.updateBefore = (frame) => (mirrorShare.value > 0 ? draw(frame) : undefined);
   }
   // the faces' materials (face_materials.ts)
-  const { placed, corner, faced, fields, fieldFaced, fieldGliding, gliding, freed, freedAnew } = faceMaterials(
-    drawn,
-    glided,
-  );
+  const { placed, corner, faced, facedColour, fields, fieldFaced, fieldGliding, gliding, freed, freedAnew } =
+    faceMaterials(drawn, glided, seasons);
   // The sea's faces: its level is on no 64th of a block, so the mesh says how far above their numbers its faces lie
   // (faces.ts `lift`); and they mirror as the sea's lists do.
   const seaFaced = new THREE.MeshLambertNodeMaterial();
   seaFaced.positionNode = placed.add(vec3(0, userData('lift', 'float') as unknown as ReturnType<typeof float>, 0));
-  seaFaced.colorNode = faced.colorNode;
+  seaFaced.colorNode = facedColour;
   seaFaced.maskNode = drawn;
   seaFaced.emissiveNode = water.emissiveNode;
   // The sea's depth and its surface (see `Stage.sea`, `?sea=0` leaves both out). Lists and faces of the sea take the
@@ -145,7 +148,7 @@ export function createMaterials(scene: THREE.Scene) {
         coast.x,
         select(corner.lessThan(1.5), coast.y, select(corner.lessThan(2.5), coast.z, coast.w)),
       ).mul(255 / COAST_STEPS);
-    seaFaced.colorNode = surface.colour(faced.colorNode as THREE.Node<'vec3'>, away.toVarying());
+    seaFaced.colorNode = surface.colour(facedColour as THREE.Node<'vec3'>, away.toVarying());
     water.normalNode = seaFaced.normalNode = surface.normal;
     water.emissiveNode = seaFaced.emissiveNode = surface.mirror;
   }
@@ -195,6 +198,7 @@ export function createMaterials(scene: THREE.Scene) {
     fieldFaced,
     fieldGliding,
     fields,
+    seasons,
     seaFaced,
     freed,
     gliding,
