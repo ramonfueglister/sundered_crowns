@@ -42,6 +42,8 @@ export interface Cover {
   houses?: number[];
   /** the crop of the lot on each column where the fields are drawn sheaf by sheaf (crops.ts CROPS_AT): crops.ts WHEAT_FIELD … OATS_FIELD, 0 where no field lies */
   crops?: Uint8Array;
+  /** beside `crops`, a furlong of the land register on the columns of its lot: its strips and rows (crops.ts `furlongOf`) */
+  furlongs?: Uint8Array;
   /** where the figures are drawn (crowd.ts CROWD_AT): what the finest step has on the four blocks of each column, which are street and which built on */
   quarters?: Uint8Array;
 }

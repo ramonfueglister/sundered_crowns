@@ -108,23 +108,38 @@ export function crops(b: Batch, g: Ground, at: P2, w: number, d: number, crop: C
     }
     return;
   }
-  const hedges = hash2(x0, z0, 55) < 0.5, pitchX = hedges ? 0.92 : 1.3, pitchZ = hedges ? 2.4 : 1.2;
-  for (let row = 0.6; row < w - 0.3; row += pitchX) for (let k = 0; k * pitchZ < d - 0.5; k++) {
-    const x = x0 + row, z = z0 + k * pitchZ + 0.6, seed = Math.round(row * 10), lot = hash2(k, seed, 51);
-    if (isWet(g, x, z) || lot < 0.04) continue;
-    const y = groundY(g, x, z), c = VINE[Math.floor(hash2(k, seed, 59) * VINE.length)];
+  // whether a vineyard is hedges is drawn from where its corner lies in the world, so that the far step draws it the same
+  vines(b, x0, z0, w, d, hash2(x0 + (g.ox ?? 0), z0 + (g.oz ?? 0), 55) < 0.5, r, (x, z) => (isWet(g, x, z) ? null : groundY(g, x, z)));
+}
+
+/**
+ * The vines of a field of `w` by `d` blocks from its corner x0, z0, plant by plant: single plants on a grid (a green
+ * body under a head with a yellow top) or hedges along x with yellow tips. `ground` is the height under a plant, null
+ * where none stands (on water). Drawn where a block is `k` wide and stands `up` as tall (worldprobe/crops.ts draws the
+ * finest step's vines at the first far step), only where `drawn` says; the plants that are not drawn still draw their
+ * numbers, so that every plant is the same wherever the field is drawn.
+ */
+export function vines(b: Batch, x0: number, z0: number, w: number, d: number, hedges: boolean, r: Rnd, ground: (x: number, z: number) => number | null, drawn: (x: number, z: number) => boolean = () => true, k = 1, up = 1) {
+  const pitchX = hedges ? 0.92 : 1.3, pitchZ = hedges ? 2.4 : 1.2;
+  for (let row = 0.6; row < w - 0.3; row += pitchX) for (let n = 0; n * pitchZ < d - 0.5; n++) {
+    const x = x0 + row * k, z = z0 + n * pitchZ * k + 0.6 * k, seed = Math.round(row * 10), lot = hash2(n, seed, 51);
+    const y = lot < 0.04 ? null : ground(x, z);
+    if (y === null) continue;
+    const head = !hedges || r.chance(0.7), grapes = r.chance(0.5);
+    if (!drawn(x, z)) continue;
+    const c = VINE[Math.floor(hash2(n, seed, 59) * VINE.length)];
     if (hedges) {
       // a row is a line of bushes of uneven height, not a clipped hedge
-      const h = 1.55 + 0.45 * lot;
-      b.box(x - 0.46, y, z - 0.4, x + 0.46, y + h, z + 0.4, VINE_BODY, { top: mix(VINE_BODY, c, 0.6), foot: 0.7, away: HEDGE_GLOW });
-      if (r.chance(0.7)) b.box(x - 0.3, y + h, z - 0.32, x + 0.3, y + h + 0.32, z + 0.32, VINE_SIDE, { top: c, away: VINE_GLOW });
+      const h = (1.55 + 0.45 * lot) * up;
+      b.box(x - 0.46 * k, y, z - 0.4 * k, x + 0.46 * k, y + h, z + 0.4 * k, VINE_BODY, { top: mix(VINE_BODY, c, 0.6), foot: 0.7, away: HEDGE_GLOW });
+      if (head) b.box(x - 0.3 * k, y + h, z - 0.32 * k, x + 0.3 * k, y + h + 0.32 * up, z + 0.32 * k, VINE_SIDE, { top: c, away: VINE_GLOW });
     } else {
-      const h = 1.7 + 0.6 * lot;
+      const h = (1.7 + 0.6 * lot) * up;
       // the green body shows under a smaller yellow head, so the field reads as speckled, not as one yellow sheet
-      b.box(x - 0.44, y, z - 0.44, x + 0.44, y + h - 0.6, z + 0.44, VINE_BODY, { top: mix(VINE_BODY, c, 0.4), foot: 0.8, away: HEDGE_GLOW });
-      b.box(x - 0.36, y + h - 0.6, z - 0.36, x + 0.36, y + h, z + 0.36, shade(VINE_SIDE, 0.9 + 0.2 * hash2(k, seed, 57)), { top: c, away: VINE_GLOW });
+      b.box(x - 0.44 * k, y, z - 0.44 * k, x + 0.44 * k, y + h - 0.6 * up, z + 0.44 * k, VINE_BODY, { top: mix(VINE_BODY, c, 0.4), foot: 0.8, away: HEDGE_GLOW });
+      b.box(x - 0.36 * k, y + h - 0.6 * up, z - 0.36 * k, x + 0.36 * k, y + h, z + 0.36 * k, shade(VINE_SIDE, 0.9 + 0.2 * hash2(n, seed, 57)), { top: c, away: VINE_GLOW });
     }
-    if (r.chance(0.5)) b.box(x + 0.4, y + 1.1, z - 0.1, x + 0.58, y + 1.36, z + 0.14, GRAPES, { bottom: true, away: [1.7, 0.8, 0.16] });
+    if (grapes) b.box(x + 0.4 * k, y + 1.1 * up, z - 0.1 * k, x + 0.58 * k, y + 1.36 * up, z + 0.14 * k, GRAPES, { bottom: true, away: [1.7, 0.8, 0.16] });
   }
 }
 

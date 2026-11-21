@@ -118,6 +118,8 @@ export interface GroundTraits {
   readonly trees?: ArrayLike<number>;
   /** the crops of the lots where the ground draws the finest step's sheaves one by one (worldprobe/crops.ts, a byte to a column, N × N columns) */
   readonly crops?: ArrayLike<number>;
+  /** beside `crops`, the strips and rows of a furlong of the land register on its lot's columns (worldprobe/crops.ts `furlongOf`, a byte to a column, N × N columns) */
+  readonly furlongs?: ArrayLike<number>;
   /** where the figures are drawn from afar, what the finest step has on the four blocks of a column (worldprobe/crowd.ts, a byte to a column, N × N columns): kept with the ground, not drawn by it */
   readonly quarters?: ArrayLike<number>;
 }

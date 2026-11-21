@@ -1,29 +1,53 @@
-// The fields of the first far step: the very sheaves of the finest step, where it has them, as tall as the land is
-// built and in their colours, on the soil of their crop; laid down by far.ts, kept by a table and drawn from it as
-// they were built.
+// The fields of the first far step: the very sheaves and vines of the finest step, where it has them, as tall as the
+// land is built and in their colours, on the soil of their crop, also in the strips of the land register's furlongs;
+// laid down by far.ts, kept by a table and drawn from it as they were built.
 import { describe, expect, it } from 'vitest';
 import { styleOf } from '../../src/buildings';
 import { Batch, hash2, seeded } from '../../src/lookprobe/batch';
 import { crops } from '../../src/lookprobe/blocks';
 import { type Ground, idx, LAND_Y, Mat, N, onGrid, SEA_Y } from '../../src/lookprobe/layout';
-import { CROP_NAMES, CROPS_AT, drawCrops, FALLOW_FIELD, OATS_FIELD, WHEAT_FIELD } from '../../src/worldprobe/crops';
+import { CROP } from '../../src/sim/settlement/fields';
+import {
+  CROP_NAMES,
+  CROPS_AT,
+  drawCrops,
+  FALLOW_FIELD,
+  OATS_FIELD,
+  VINE_FIELD,
+  WHEAT_FIELD,
+} from '../../src/worldprobe/crops';
 import { coverLand } from '../../src/worldprobe/far';
 import { drawGround, drawTable, tableOf } from '../../src/worldprobe/table';
 import { packTable, unpackTable } from '../../src/worldprobe/table_pack';
 import { uprightOf } from '../../src/worldprobe/zoom';
 import { LAND_STEP, land, part, SIDE } from './land';
 
-/** the boxes of a batch (ten triangles each): the middle of their top, how tall they stand, the colour of their top */
+interface Box {
+  x: number;
+  z: number;
+  y0: number;
+  y1: number;
+  top: number[];
+}
+/**
+ * the boxes of a batch (ten triangles each, twelve with a bottom; each begins with its top): the middle of their top,
+ * how tall they stand, the colour of their top
+ */
 const sheaves = (b: Batch) => {
-  const out: { x: number; z: number; y0: number; y1: number; top: number[] }[] = [];
-  for (let v0 = 0; v0 < b.pos.length / 3; v0 += 30) {
+  const out: Box[] = [],
+    starts: number[] = [];
+  for (let v = 0; v < b.pos.length / 3; v += 6) if (b.nor[v * 3 + 1] > 0.9) starts.push(v);
+  starts.push(b.pos.length / 3);
+  for (let n = 0; n + 1 < starts.length; n++) {
+    const v0 = starts[n],
+      v1 = starts[n + 1];
     let x0 = Infinity,
       x1 = -Infinity,
       z0 = Infinity,
       z1 = -Infinity,
       y0 = Infinity,
       y1 = -Infinity;
-    for (let v = v0; v < v0 + 30; v++) {
+    for (let v = v0; v < v1; v++) {
       x0 = Math.min(x0, b.pos[v * 3]);
       x1 = Math.max(x1, b.pos[v * 3]);
       y0 = Math.min(y0, b.pos[v * 3 + 1]);
@@ -31,12 +55,37 @@ const sheaves = (b: Batch) => {
       z0 = Math.min(z0, b.pos[v * 3 + 2]);
       z1 = Math.max(z1, b.pos[v * 3 + 2]);
     }
-    let top: number[] = [];
-    for (let v = v0; v < v0 + 30; v++)
-      if (b.pos[v * 3 + 1] === y1 && b.nor[v * 3 + 1] > 0.9) top = [b.col[v * 3], b.col[v * 3 + 1], b.col[v * 3 + 2]];
+    const top = [b.col[v0 * 3], b.col[v0 * 3 + 1], b.col[v0 * 3 + 2]];
     out.push({ x: (x0 + x1) / 2, z: (z0 + z1) / 2, y0, y1, top });
   }
   return out;
+};
+/**
+ * That the boxes of the far step are those of the finest, each half as far from the world's corner and standing as
+ * tall over its ground as the far step builds: `base` is the far step's ground, the finest step's is under its lowest.
+ */
+const alike = (fine: Box[], far: Box[], base: number, what: string) => {
+  const up = uprightOf(CROPS_AT),
+    ground = Math.min(...fine.map((q) => q.y0)),
+    near = (a: number, b: number) => Math.abs(a - b) < 1e-6;
+  expect(far.length, what).toBe(fine.length);
+  for (const s of far) {
+    const same = fine.find((q) => near(q.x, 2 * s.x) && near(q.z, 2 * s.z) && near((q.y1 - ground) * up, s.y1 - base));
+    expect(same, `${what} at ${2 * s.x}, ${2 * s.z}`).toBeDefined();
+    expect(s.y0 - base).toBeCloseTo((same!.y0 - ground) * up, 6);
+    expect(s.top).toEqual(same!.top);
+  }
+};
+/** the corner of the field of a lot in finest blocks of the world (settle.ts: every other row set off by half a lot) */
+const cornerOf = (lx: number, lz: number) => [lx * 11 + (lz & 1 ? 5 : 0) + 1, lz * 8 + 1] as const;
+/** what far.ts asks of the land: all of it under the plough */
+const asks = {
+  ploughed: () => 1,
+  courses: () => 3,
+  vines: () => 0,
+  farm: () => styleOf('').house,
+  own: () => true,
+  woods: () => null,
 };
 const meadow = (): Ground => ({
   h: new Int16Array(N * N).fill(LAND_Y),
@@ -83,17 +132,86 @@ describe('the fields of the first far step', () => {
     });
   });
 
+  it("stand a furlong of the land register as the finest step sows it: in its farmsteads' strips, each a little lighter or darker, as deep as the register has it", () => {
+    onGrid(SIDE, () => {
+      for (const [crop, name] of [
+        [CROP.winter, 'wheat'],
+        [CROP.spring, 'oats'],
+      ] as const) {
+        // the lot 7, 5 in three strips five rows deep (settle.ts)
+        const strips = 3,
+          rows = 5,
+          [fx0, fz0] = cornerOf(7, 5),
+          fine = new Batch();
+        for (let k = 0; k < strips; k++) {
+          const a0 = fx0 + Math.round((k * 10) / strips),
+            a1 = fx0 + Math.round(((k + 1) * 10) / strips),
+            r = seeded(Math.floor(hash2(7 * 16 + k, 5, 68) * 4294967296)),
+            tone = 0.84 + 0.32 * hash2(7 * 16 + k, 5, 69);
+          crops(fine, meadow(), [(a0 + a1) / 2, fz0 + rows / 2], a1 - a0, rows, name, r, tone);
+        }
+        const field = (lx: number, lz: number) => (lx === 7 && lz === 5 ? { crop, rows, strips } : undefined),
+          g = meadow(),
+          c = coverLand(g, CROPS_AT, new Batch(), [], { ...asks, field }),
+          far = new Batch();
+        drawCrops(far, c.crops!, g.h, g.wet, 0, 0, { x0: 0, z0: 0, x1: SIDE, z1: SIDE }, () => true, c.furlongs);
+        expect(sheaves(fine).length).toBe(50);
+        alike(sheaves(fine), sheaves(far), g.h[0], name);
+      }
+    });
+  });
+
+  it("plant the finest step's vines plant by plant, on a grid or in hedges, each strip of a furlong by its own numbers, and draw each plant once however a piece is cut", () => {
+    onGrid(SIDE, () => {
+      // (lots whose fields lie on the ground of the finest step too, which is as wide as the far step's here)
+      const lots = [
+        [7, 5],
+        [3, 5],
+        [5, 4],
+        [2, 6],
+        [6, 3],
+        [1, 8],
+      ] as const;
+      // (the lots are both: hedges and plants on a grid; a plant of a lot lies on its field and the balks after it)
+      const onLot = (dx: number, dz: number) => dx > -0.5 && dx < 11 && dz > -0.5 && dz < 8;
+      const hedges = lots.map(([lx, lz]) => hash2(...cornerOf(lx, lz), 55) < 0.5);
+      expect(hedges).toContain(true);
+      expect(hedges).toContain(false);
+      for (const register of [false, true]) {
+        const strips = register ? 2 : 1,
+          rows = register ? 6 : 7,
+          field = register ? () => ({ crop: CROP.winter, rows, strips }) : undefined,
+          g = meadow(),
+          c = coverLand(g, CROPS_AT, new Batch(), [], { ...asks, courses: () => 1, vines: () => 1, field }),
+          far = new Batch();
+        expect(c.crops![idx(43, 22)]).toBe(VINE_FIELD);
+        // two parts of a piece, the line between them through the fields of the lot 7, 5
+        for (const [x0, x1] of [
+          [0, 44],
+          [44, SIDE],
+        ])
+          drawCrops(far, c.crops!, g.h, g.wet, 0, 0, { x0, z0: 0, x1, z1: SIDE }, () => true, c.furlongs);
+        for (const [lx, lz] of lots) {
+          const [fx0, fz0] = cornerOf(lx, lz),
+            fine = new Batch();
+          for (let k = 0; k < strips; k++) {
+            const a0 = fx0 + Math.round((k * 10) / strips),
+              a1 = fx0 + Math.round(((k + 1) * 10) / strips),
+              r = seeded(Math.floor(hash2(register ? lx * 16 + k : lx, lz, 68) * 4294967296));
+            crops(fine, meadow(), [(a0 + a1) / 2, fz0 + rows / 2], a1 - a0, rows, 'vine', r);
+          }
+          const on = sheaves(far).filter((s) => onLot(2 * s.x - fx0, 2 * s.z - fz0));
+          expect(on.length).toBeGreaterThan(20);
+          alike(sheaves(fine), on, g.h[0], `vines of ${lx}, ${lz}${register ? ' in strips' : ''}`);
+        }
+      }
+    });
+  });
+
   it('are laid down by far.ts on the columns of the lots that are fields, on their soil, and the fallow bears nothing', () => {
     onGrid(SIDE, () => {
       const g: Ground = meadow(),
-        c = coverLand(g, CROPS_AT, new Batch(), [], {
-          ploughed: () => 1,
-          courses: () => 3,
-          vines: () => 0,
-          farm: () => styleOf('').house,
-          own: () => true,
-          woods: () => null,
-        });
+        c = coverLand(g, CROPS_AT, new Batch(), [], asks);
       let wheat = 0,
         oats = 0,
         fallow = 0;

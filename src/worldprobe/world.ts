@@ -320,10 +320,10 @@ class WorldTraits implements GroundTraits {
   readonly crownTall: number;
   readonly houses: GroundTraits['houses'];
   readonly trees: GroundTraits['trees'];
-  readonly crops: GroundTraits['crops'];
+  readonly crops: GroundTraits['crops']; readonly furlongs: GroundTraits['furlongs'];
   readonly quarters: GroundTraits['quarters'];
   constructor(step: number, private readonly town: Uint8Array, private readonly field: Uint8Array | null, private readonly mean: Cover | undefined, private readonly land: Uint8Array, private readonly metres: Float32Array, private readonly snow: Float32Array, private readonly massifs: Massifs, private readonly roads: Float32Array | null) {
-    this.sideTop = sideTopAt(step); this.crownTall = crownTallAt(step); this.houses = mean?.houses; this.trees = mean?.trees; this.crops = mean?.crops; this.quarters = mean?.quarters;
+    this.sideTop = sideTopAt(step); this.crownTall = crownTallAt(step); this.houses = mean?.houses; this.trees = mean?.trees; this.crops = mean?.crops; this.furlongs = mean?.furlongs; this.quarters = mean?.quarters;
   }
   city(x: number, z: number) { return fieldAt(this.town, x, z) === 1; }
   plaza() { return Infinity; }
@@ -862,7 +862,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   counts.triangles = ground.triangles + (carried?.triangles ?? 0) + water.triangles + raised.triangles + things.triangles + (standing?.triangles ?? 0) + cells.reduce((n, c) => n + c.far.triangles, 0);
   // the people of the towns, villages and fields: the finest step's, at the first far step too (crowd.ts); on the
   // coarser steps a block is wider than a person is tall
-  const figures = settled ? crowd(g, settled, own) : cover && step === CROWD_AT ? farCrowd({ ...g, town: cover.town, has: cover.has, quarters: cover.quarters, crops: cover.crops }, ox, oz, part) : undefined;
+  const figures = settled ? crowd(g, settled, own) : cover && step === CROWD_AT ? farCrowd({ ...g, town: cover.town, has: cover.has, quarters: cover.quarters, crops: cover.crops, furlongs: cover.furlongs }, ox, oz, part) : undefined;
   if (figures) counts.figures = figures.count;
   return { ground, carried, things, water, raised, figures, cells, counts, standing };
 }

@@ -73,6 +73,8 @@ export interface Table {
   trees?: Uint8Array;
   /** the crops of the lots where the finest step's sheaves are drawn one by one (crops.ts, a byte to a column, side × side columns): the piece's own columns and RIM round them */
   crops?: Uint8Array;
+  /** beside `crops`, a furlong of the land register on the columns of its lot: its strips and rows (crops.ts `furlongOf`) */
+  furlongs?: Uint8Array;
   /** where the figures are drawn (crowd.ts CROWD_AT): what the finest step has on the four blocks of each column (a byte to a column, side × side columns), the piece's own columns and RIM round them */
   quarters?: Uint8Array;
   /** blocks to the edge of the nearest way's band at the corners of the columns ((side + 1)², roads.ts `roadOn`), where ways run over the ground; off the piece's own and its rim as far as where no way is near */
@@ -168,7 +170,7 @@ export function drawGround(
     water = buildWater(g, false, part),
     raised = buildWater(g, true, part);
   buildShore(ground, g, t, bakedSky, part);
-  return { ground, carried, water, raised, standing: standingOn(g, t.trees, t.crops, housesIn(t.houses, part), part) };
+  return { ground, carried, water, raised, standing: standingOn(g, t, housesIn(t.houses, part), part) };
 }
 
 /**
@@ -176,13 +178,8 @@ export function drawGround(
  * the houses at the end: glide.ts `housesOver`). The houses as a table keeps them, in floats, so that drawn from it
  * they are the same. No sheaf stands on a column a house stands on (a farmhouse at the end of its field).
  */
-function standingOn(
-  g: Ground,
-  trees: ArrayLike<number> | undefined,
-  crops: ArrayLike<number> | undefined,
-  houses: Float32Array | undefined,
-  part: Part,
-): Batch | undefined {
+function standingOn(g: Ground, t: GroundTraits, houses: Float32Array | undefined, part: Part): Batch | undefined {
+  const { trees, crops, furlongs } = t;
   if (!trees && !crops && !houses) return undefined;
   const b = new Batch();
   if (trees) drawTrees(b, trees, g.h, g.ox ?? 0, g.oz ?? 0, part);
@@ -192,7 +189,7 @@ function standingOn(
       for (let z = Math.max(0, Math.floor(houses[k + 1])); z < Math.min(N, Math.ceil(houses[k + 3])); z++)
         for (let x = Math.max(0, Math.floor(houses[k])); x < Math.min(N, Math.ceil(houses[k + 2])); x++)
           housed[idx(x, z)] = 1;
-    drawCrops(b, crops, g.h, g.wet, g.ox ?? 0, g.oz ?? 0, part, (x, z) => !housed[idx(x, z)]);
+    drawCrops(b, crops, g.h, g.wet, g.ox ?? 0, g.oz ?? 0, part, (x, z) => !housed[idx(x, z)], furlongs);
   }
   if (houses) drawHouses(b, houses, g.h);
   return b.triangles ? b : undefined;
@@ -284,11 +281,15 @@ export function tableOf(g: Ground, t: GroundTraits, part: Part, roads: Float32Ar
     if (trees.some((v) => v > 0)) table.trees = trees;
   }
   if (t.crops) {
-    const crops = new Uint8Array(n);
+    const crops = new Uint8Array(n),
+      furlongs = new Uint8Array(n);
     for (let z = Math.max(0, part.z0 - RIM); z < Math.min(N, part.z1 + RIM); z++)
-      for (let x = Math.max(0, part.x0 - RIM); x < Math.min(N, part.x1 + RIM); x++)
+      for (let x = Math.max(0, part.x0 - RIM); x < Math.min(N, part.x1 + RIM); x++) {
         crops[idx(x, z)] = t.crops[idx(x, z)];
+        furlongs[idx(x, z)] = t.furlongs?.[idx(x, z)] ?? 0;
+      }
     if (crops.some((v) => v > 0)) table.crops = crops;
+    if (furlongs.some((v) => v > 0)) table.furlongs = furlongs;
   }
   if (t.quarters) {
     const quarters = new Uint8Array(n);
@@ -318,6 +319,7 @@ class TableTraits implements GroundTraits {
   readonly houses: GroundTraits['houses'];
   readonly trees: GroundTraits['trees'];
   readonly crops: GroundTraits['crops'];
+  readonly furlongs: GroundTraits['furlongs'];
   readonly quarters: GroundTraits['quarters'];
   private readonly side: number;
   private readonly last: number;
@@ -332,6 +334,7 @@ class TableTraits implements GroundTraits {
     this.houses = table.houses;
     this.trees = table.trees;
     this.crops = table.crops;
+    this.furlongs = table.furlongs;
     this.quarters = table.quarters;
     this.side = table.side;
     this.last = table.side - 1;

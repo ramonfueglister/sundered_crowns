@@ -67,6 +67,7 @@ export interface CrowdGround {
   has: ArrayLike<number>;
   quarters?: ArrayLike<number>;
   crops?: ArrayLike<number>;
+  furlongs?: ArrayLike<number>;
 }
 
 /**
@@ -77,7 +78,7 @@ export interface CrowdGround {
  */
 export function farCrowd(t: CrowdGround, ox: number, oz: number, part: Part): Figures | undefined {
   const up = uprightOf(CROWD_AT),
-    { quarters, crops } = t;
+    { quarters, crops, furlongs } = t;
   const x0 = 2 * Math.max(0, part.x0 - RIM),
     z0 = 2 * Math.max(0, part.z0 - RIM),
     x1 = 2 * (part.x1 + RIM),
@@ -85,7 +86,7 @@ export function farCrowd(t: CrowdGround, ox: number, oz: number, part: Part): Fi
   const inside = (fx: number, fz: number) => fx >= x0 && fz >= z0 && fx < x1 && fz < z1 && inGrid(fx >> 1, fz >> 1);
   const column = (fx: number, fz: number) => idx(fx >> 1, fz >> 1);
   const field = (fx: number, fz: number) =>
-    crops && inside(fx, fz) ? cropAt(crops, fx >> 1, fz >> 1, fx & 1, fx + 2 * ox, fz + 2 * oz) : 0;
+    crops && inside(fx, fz) ? cropAt(crops, fx >> 1, fz >> 1, fx & 1, fx + 2 * ox, fz + 2 * oz, furlongs) : 0;
   const built = (fx: number, fz: number) => ((quarters?.[column(fx, fz)] ?? 0) >> (BUILT + quarterOf(fx, fz))) & 1;
   const w: Where = {
     free(fx, fz, street) {
