@@ -84,7 +84,6 @@
   "lines": {
     "economy/src/clock.rs": 1064,
     "economy/src/lib.rs": 1040,
-    "economy/src/state.rs": 1579,
     "server/world.ts": 541,
     "src/sim/economy/engine.ts": 518,
     "src/sim/settlement/streets.ts": 622,
