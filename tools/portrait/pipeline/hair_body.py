@@ -51,7 +51,8 @@ W = dirs(180, 52)    # the whorl
 # `fray` (a cut's, round 138): a bundle that is not turned keeps its breadth to its end and is parted there into
 # wisps side by side, each narrowing to a point of its own: over what length before the end (least, greatest), a
 # wisp's breadth, the least share of that length a wisp has (one has all of it), how much flatter a wisp is at
-# its point than the bundle, and how far its point may lie outside its own share of the breadth (`lay(frayed=)`).
+# its point than the bundle, how far its point may lie outside its own share of the breadth, and how much of its
+# breadth a wisp has left where it ends (`lay(frayed=)`).
 # A layer's `fray` (round 141; False: its bundles are not frayed) and `point` (how much of the slant its end is
 # cut at is left, and a power on the way along its end by which it narrows): a lock, broad along its length,
 # narrowing over `tip` to a point near its middle, as a leaf does. Since round 141 a bowl cut has two layers
@@ -61,6 +62,10 @@ W = dirs(180, 52)    # the whorl
 # `locks`: a factor on how high its locks' ridges stand and how much they lean (hair that lies flat under a hood or
 # a hat).
 # All PLACEHOLDER by eye, beside the reference's bowl cuts (docs/PORTRAITS.md, round 109).
+# (round 168) `fray`: wisps of 8 mm over 3 to 9 mm that keep half their breadth at the end (until then of 3.5 mm
+# over 8 to 20 mm, each ending in a point: a saw, tooth by tooth in a picture). The reference's bowl cuts end
+# blunt, in a line that is nearly straight with a few short notches. Parted hair (`page01`, `loose01`) keeps the
+# pointed wisps: blunt, its ends at the jaw and on the shoulders were torn rags.
 # (round 147) `cut` -5 degrees (-12.5 until then): the fringe ends on the middle of the forehead, as the
 # reference's bowl cuts do; at -12.5 it ended two fingers over the eyes, on the brows in a picture.
 _e = lambda k, d: [float(t) for t in os.environ.get(k, d).split(',')]
@@ -69,7 +74,7 @@ BOWL = dict(
     comb=(0.03, 1.6, 0.12, 0.8),
     shell=dict(h=0.085, up=9.0, shade=0.75),
     thin=0.35, thin_over=0.5,
-    fray=tuple(_e('FRAY', '0.08,0.2,0.035,0.45,0.6,0.25')),
+    fray=tuple(_e('FRAY', '0.03,0.09,0.08,0.55,0.6,0.1,0.5')),
     layers=[
         dict(n=52, fit=1.6, vary=0.25, flat=0.16, h=0.115, long=(1.2, 1.8), ends=(-0.5, 0.8), tip=(0.03, 0.06), wave=(0.003, 0.01, 1.2, 2.2), roll=0.15, tone=0.95, seed=3),
         dict(n=34, fit=1.25, vary=0.35, flat=0.2, h=0.155, roots=(0.1, 0.55, 0.3, 0.55), ends=(-1.2, 1.2), tip=(0.04, 0.09), wave=(0.004, 0.015, 1.2, 2.2), roll=0.35, tone=1.0, seed=5),
@@ -142,7 +147,7 @@ CUTS['part01'] = dict(
 CUTS['page01'] = dict(
     PARTED, to=tuple(_e('PAGE_TO', '100,-85')), by=tuple(_e('PAGE_BY', '64,-14')), lift=_e('PAGE_LIFT', '2.2')[0],
     end=_e('PAGE_END', '-50')[0], ends=tuple(_e('PAGE_ENDS', '-2.5,2.5')), comb=tuple(_e('PAGE_COMB', '0.025,0.9,0,1')),
-    layers=[dict(L, gather=(0.05, 0.1, 1.0)) for L in PARTED['layers']], fray=BOWL['fray'],
+    layers=[dict(L, gather=(0.05, 0.1, 1.0)) for L in PARTED['layers']], fray=(0.08, 0.2, 0.035, 0.45, 0.6, 0.25, 0.0),
 )
 # The same in waves (round 130): `waves`: how far the bundles swing to the side and off the head, the length of a
 # wave, and how far from a bundle's beginning the waves begin. All PLACEHOLDER by eye.
@@ -510,14 +515,15 @@ def lay(d, h, hw, ht, roll, run, shade, rng, m=7, rolled=None, frayed=None, wrng
     there; the roll is bound by the place it begins at.
     `frayed` (round 138): the band ends at that ring, and from there on it is parted into wisps side by side (the
     cut's `fray`: a wisp's breadth, the least share of the frayed length a wisp has, how much flatter it is at its
-    point, how far its point may lie outside its own share of the breadth), each a piece of its own that lies in
-    the band's own surface and narrows to a point: hair ends one hair after the other, not as a block."""
+    point, how far its point may lie outside its own share of the breadth, how much of its breadth it has left
+    where it ends), each a piece of its own that lies in the band's own surface and narrows to its end: hair ends
+    one hair after the other, not as a block."""
     turn = np.linspace(-np.pi / 2, np.pi / 2, m)
     if frayed is not None:
         # the wisps' edges are corners of every ring of the band, so that a wisp begins on the band's last ring,
         # corner on corner: the breadth shared out evenly, each edge a little off the even place (a band of two
         # wisps has the seven corners of any other; one of three or four keeps a corner on each flank)
-        wide, least, flat, astray = C['fray'][2:6]
+        wide, least, flat, astray, blunt = C['fray'][2:7]
         nw = int(np.clip(round(2 * hw[frayed] / wide), 2, 7))
         first = [0, 3, 6]
         if nw > 2:
@@ -575,7 +581,7 @@ def lay(d, h, hw, ht, roll, run, shade, rng, m=7, rolled=None, frayed=None, wrng
         point = mid + wrng.uniform(-1, 1) * (0.5 + astray) * (a1 - a0)
         t = np.linspace(0, 1, 6)
         at = run[i0] + t * share[j] * (run[-1] - run[i0])
-        a_ = (mid + (point - mid) * t ** 1.5)[:, None] + (turn[cols] - mid)[None, :] * (1 - t ** 1.6)[:, None]
+        a_ = (mid + (point - mid) * t ** 1.5)[:, None] + (turn[cols] - mid)[None, :] * (1 - (1 - blunt) * t ** 1.6)[:, None]
         a_ = np.clip(a_, -np.pi / 2, np.pi / 2)
         cw = along(c, at)
         wr = arch(cw, unit(along(b, at)), along(h, at), along(hw, at), along(ht, at) * (1 - flat * t), a_)

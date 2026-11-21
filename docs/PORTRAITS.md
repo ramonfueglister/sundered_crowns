@@ -8391,6 +8391,81 @@ Pictures (project files, `portraits/`): `runde167_buben_vorher_nachher.png` (fou
 and from the side, before above and after below), `runde167_gross.png` (two of them large), `runde167_dorf.png`
 (all 36 of the sample in the village's dress, after).
 
+**Round 168: a bowl cut ends blunt, not in a saw** (2026-11-21). Round 167's own list: "The fringe is still a
+saw: wisps of 3.5 mm that each end in a point". Two small boys large, beside four bowl cuts of the reference
+(the sheet of men's and women's heads, three of them bare-headed and one under a hood): there the hair ends
+blunt, in a line that is nearly straight, with a few short notches and steps where one lock ends above the
+next. Ours ends in a row of pointed teeth, each 1 to 2 cm long.
+
+What was read. Nothing new: `hair_body.py`, `lay(frayed=)` (round 138), which parts a bundle's last 0.8 to 2 cm
+into wisps of 3.5 mm that each narrow to a point; and that one picture of the reference. No source on how hair
+was cut.
+
+What is changed.
+- **A wisp may end at a breadth** (`tools/portrait/pipeline/hair_body.py`, `lay`): a cut's `fray` has a seventh
+  number, how much of its breadth a wisp has left where it ends. 0 is the point of before.
+- **A bowl cut's ends are broader, shorter and blunt** (`BOWL`, `fray`): wisps of 8 mm for 3.5, over the bundle's
+  last 3 to 9 mm for 8 to 20, the shortest 0.55 of that length for 0.45, the end at most 0.1 of the wisp's
+  breadth outside its own share for 0.25, and half the breadth left at the end. The nine bowl cuts' files are
+  written anew (`public/portrait/real/bob01_body.txt.zst` to `bob09_body.txt.zst`, 6 767 475 bytes together for
+  6 670 972; the manifest has their sizes).
+- **Parted hair keeps the pointed wisps** (`page01`, `page02`, `loose01`: a man's hair to the jaw and a small
+  girl's worn down): `page01` has the old numbers as its own now, where it took the bowl cut's. Its files are not
+  touched, and the script writes `page01` and `loose01` byte for byte as they are (`plait01`, `part01` and
+  `coil01` too).
+- Nothing in the builder and nothing on the stage.
+
+Measured (`portrait/tests/hair_body.rs`, `hair_that_is_cut_ends_in_wisps`: boys of 8 and men of 29 without a
+hood, 151 heads in `bob01`, `bob06` and `bob07`, two in `bob09`):
+
+| | round 167 | now |
+|---|---|---|
+| a wisp: its breadth; the length of the bundle's end it is parted over; its breadth where it ends | 3.5 mm; 8 to 20 mm; none | 8 mm; 3 to 9 mm; half |
+| how far apart along a bundle its ends lie, the median bundle of a head: `bob01`, `bob06`, `bob07` | 5.6 to 6.5 mm | 1.3 to 1.6 mm |
+| the same, the bundle whose ends lie furthest apart | 10.3 to 10.9 mm | 3.3 to 3.8 mm |
+| the same for `bob09` (turned ends: the fringe alone frays): median; furthest | 6.1 mm; 9.6 mm | 0.7 mm; 3.0 mm |
+| pieces of a bowl cut that end in two ends and more | 86 of 129 | the same |
+| where the fringe ends over the eyes | 3.2 to 3.6 cm on boys of two, 4.1 to 5.0 on men (round 167) | one boy of two 3.4 cm, one man of 24 4.9 cm: within that |
+| the nine files | 6 670 972 bytes | 6 767 475 |
+
+Tried and not kept.
+- The ends blunt and nothing else (the old breadth and length, half the breadth left): a comb of long
+  rectangular teeth.
+- Wisps of 8 mm over 5 to 14 mm, 0.6 of the breadth left: steps as tall as they are broad, battlements.
+- Wisps of 6 mm over 4 to 10 mm, 0.35 of the breadth left: the saw again, finer.
+- **The same blunt ends on parted hair** (`page01`, `page02` and `loose01` were written and looked at): on a man
+  with hair to the jaw the edge beside the forehead was blocks, and on three small girls the ends on the
+  shoulders were torn rags, one with a kink in it. The fine pointed ends read as hair there; kept as they were.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 165 to its last figure. The colour
+sheet under it differs in three values, all on heads with a bowl cut: the forehead's L of the grown men 49.1
+for 49.2 and of the boys of 8 to 17 50.5 for 50.7, and those boys' cheek beyond the nose 18.1 darker than the
+lit one for 17.8. A blunt fringe shades a little more of the forehead than a saw.
+
+Honest about it. From the front and under a hood a bowl cut's fringe is a blunt line with shallow steps now,
+nearer to the reference's than the saw was. It is not the reference's: there the fringe has a thick rounded
+rim, and ours is thin at its edge, flat wisps whose cut ends a close picture shows as small rectangles. From
+the side the edge at the temple and over the ear is stepped in rectangles, and on one of the two heads looked
+at a notch stands in it as in a battlement. Under a crown's band short ends show on the forehead of one of
+two heads, where none showed. The locks' points above the fringe (round 141) stand in a row as before.
+Parted hair still ends in a fine saw at the jaw and on the shoulders. The numbers are by eye, on two small
+boys and five more heads of the sample beside one picture of the reference: PLACEHOLDER. No source was read.
+
+Tests: `portrait/tests/hair_body.rs`, `hair_that_is_cut_ends_in_wisps`, changed in two places, with the reasons
+in it. Its measure counted the places where a triangle has two corners at one place, a point; a blunt end has
+none, and on the new files it found three to six bundles in 129 that fray. It counts ends now, blunt or pointed (the
+places of a bundle's edge that lie further along the bundle than the edge on either side); on round 167's
+files it reads what the old measure read (6 880 of 10 320 pieces, 46 of the turned cut's 258, all of a parted
+cut's, 5.6 to 6.5 mm). And one bound: a bundle's ends were held between 1 mm (the median) and 2 cm (the
+furthest) apart; a bowl cut's are held between 0.5 mm and 5 mm now, parted hair's as before. Round 167's
+files fail it with 10.9 mm. `cargo test --release` as a whole 140 of 140; `tests/portrait.test.ts` and its
+neighbour 46 of 46; typecheck and lint pass, no new warning.
+Pictures (project files, `portraits/`): `runde168_buben_vorher_nachher.png` (two small boys large, before above
+and after below), `runde168_maenner.png` (five more heads of the sample, two of them under hoods, the same),
+`runde168_seite_krone.png` (two heads from the side and under a crown, the same), `runde168_dorf.png` (all 36
+of the sample in the village's dress, after).
+
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair

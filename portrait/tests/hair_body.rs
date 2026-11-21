@@ -128,11 +128,13 @@ fn turning(s: &Surface) -> f32 {
     turns.get(turns.len() / 2).copied().unwrap_or(0.0)
 }
 
-/// The points the bundles of a hair end in (round 138): for each bundle (a piece, as above) how many places it
-/// has where a triangle has two corners at one place (a band that narrows to nothing ends in one; a band that
-/// ends at a breadth has none), and how far apart along the bundle the first and the last of them lie (read from
-/// the image, units of 10 cm).
-fn points(s: &Surface) -> Vec<(usize, f32)> {
+/// The ends the bundles of a hair have (round 138; round 168, since when an end may be blunt): for each bundle (a
+/// piece, as above) how many places of its edge lie further along the image than the edge on either side of
+/// them (a band that narrows to nothing has one, a point; a band that ends at a breadth has one, a side; a band
+/// parted into wisps has one for each wisp), and how far apart along the bundle the first and the last of them
+/// lie (read from the image, units of 10 cm). Until round 168 this counted the places where a triangle has two
+/// corners at one place: a wisp that ends at a breadth has none.
+fn ends(s: &Surface) -> Vec<(usize, f32)> {
     fn root(of: &mut [usize], mut i: usize) -> usize {
         while of[i] != i {
             of[i] = of[of[i]];
@@ -150,16 +152,44 @@ fn points(s: &Surface) -> Vec<(usize, f32)> {
             of[b] = a;
         }
     }
-    let mut found: HashMap<usize, HashMap<usize, f32>> = HashMap::new();
+    // the edge: the sides that one triangle has alone (a triangle with two corners at one place has no area and
+    // no side of its own)
+    let mut along = vec![0f32; place.len()];
+    let mut sides: HashMap<(usize, usize), usize> = HashMap::new();
     for (t, u) in ids.chunks_exact(3).zip(s.uv.chunks_exact(3)) {
-        let piece = found.entry(root(&mut of, t[0])).or_default();
+        for k in 0..3 {
+            along[t[k]] = u[k][1];
+        }
+        if t[0] == t[1] || t[1] == t[2] || t[2] == t[0] {
+            continue;
+        }
         for (a, b) in [(0, 1), (1, 2), (2, 0)] {
-            if t[a] == t[b] {
-                piece.insert(t[a], u[a][1]);
-            }
+            *sides.entry((t[a].min(t[b]), t[a].max(t[b]))).or_default() += 1;
         }
     }
-    found.values().map(|at| (at.len(), at.values().fold((f32::MAX, f32::MIN), |r, v| (r.0.min(*v), r.1.max(*v))))).map(|(n, r)| (n, if n > 0 { (r.1 - r.0) / VSCALE } else { 0.0 })).collect()
+    let edge: Vec<(usize, usize)> = sides.into_iter().filter(|(_, n)| *n == 1).map(|(e, _)| e).collect();
+    // places of the edge as far along the image as their neighbour on it are one place of it (a blunt end's side)
+    let level = |a: usize, b: usize| (along[a] - along[b]).abs() < 1e-5;
+    let mut flat: Vec<usize> = (0..place.len()).collect();
+    for &(a, b) in edge.iter().filter(|e| level(e.0, e.1)) {
+        let (a, b) = (root(&mut flat, a), root(&mut flat, b));
+        flat[b] = a;
+    }
+    // (for each such place: whether the edge beside it lies less far along, and whether any of it lies further)
+    let mut tops: HashMap<usize, (bool, bool)> = HashMap::new();
+    for &(a, b) in edge.iter().filter(|e| !level(e.0, e.1)) {
+        let (hi, lo) = if along[a] > along[b] { (a, b) } else { (b, a) };
+        tops.entry(root(&mut flat, hi)).or_default().0 = true;
+        tops.entry(root(&mut flat, lo)).or_default().1 = true;
+    }
+    let mut found: HashMap<usize, Vec<f32>> = HashMap::new();
+    for i in 0..place.len() {
+        found.entry(root(&mut of, i)).or_default();
+    }
+    for (&top, _) in tops.iter().filter(|(_, t)| t.0 && !t.1) {
+        found.entry(root(&mut of, top)).or_default().push(along[top]);
+    }
+    found.values().map(|at| (at.len(), at.iter().fold((f32::MAX, f32::MIN), |r, v| (r.0.min(*v), r.1.max(*v))))).map(|(n, r)| (n, if n > 0 { (r.1 - r.0) / VSCALE } else { 0.0 })).collect()
 }
 
 fn show() -> bool {
@@ -557,6 +587,10 @@ fn hair_that_is_cut_ends_in_wisps() {
     // is parted there into wisps side by side, two to seven by its breadth, each narrowing to a point of its own
     // and each of a length of its own (`hair_body.py` `fray`, `lay(frayed=)`). Turned ends (`bob09`: at the sides
     // and behind) and hair drawn to a plait or pinned up under a veil end as they did.
+    // Round 168: a bowl cut's wisps are broader and shorter and end blunt, at half their breadth, as the
+    // reference's bowl cuts end in a line that is nearly straight (docs/PORTRAITS.md); a fringe of pointed wisps
+    // of 1 to 2 cm was a saw. Parted hair cut at the jaw keeps the pointed wisps. The measure counts ends, blunt
+    // or pointed (`ends`); on round 167's files it reads what the count of points read.
     let Some(h) = head() else { return };
     let d = &sc_portrait::dress::ENGLAND_1356;
     let mut seen = std::collections::BTreeMap::new();
@@ -567,7 +601,7 @@ fn hair_that_is_cut_ends_in_wisps() {
         let cap = out.surfaces.iter().filter_map(|s| s.tex.as_deref()).find(|t| t.contains("_cap.") && !t.contains("beard")).map(|t| t.rsplit('/').next().unwrap_or(t).trim_end_matches(".webp").trim_end_matches("_cap").to_string()).unwrap_or_default();
         let drawn = d.hair_of(p.seed, p.age);
         let name = if p.female || d.under_of(drawn) != cap { cap } else { drawn.to_string() };
-        let mut found = points(hair);
+        let mut found = ends(hair);
         found.sort_by_key(|f| f.0);
         let n = found.len();
         let many = found.iter().filter(|f| f.0 >= 2).count();
@@ -611,6 +645,12 @@ fn hair_that_is_cut_ends_in_wisps() {
         // as leaves: two thirds of the pieces where it was 99 hundredths, 48 of the turned cut's 258)
         let (enough, most_frayed) = if name == "bob09" { (0.15, 0.3) } else if name.starts_with("bob") { (0.6, 0.75) } else { (0.8, 1.01) };
         assert!(heads >= 2 && share > enough && share < most_frayed, "{name}: on {heads} heads {many} of {pieces} pieces end in two points and more");
-        assert!(least > 0.01 && most < 0.2, "{name}: a bundle's points lie {least} apart along it in the median at least, {most} at most (1 is 10 cm)");
+        // (round 168: a bowl cut's ends lie 0.7 to 1.6 mm apart along the bundle in the median and 3.0 to 3.8 at
+        // most, nearly in a line, where they lay 5.6 to 6.5 and 9.6 to 10.9 apart: held under 5 mm, which round
+        // 167's files fail, and over half a millimetre, not one, for they are still of lengths of their own;
+        // parted hair as it was. The shares above are as they were: 46 of the turned cut's 258 on round 167's
+        // files and on these)
+        let (near, far) = if name.starts_with("bob") { (0.005, 0.05) } else { (0.01, 0.2) };
+        assert!(least > near && most < far, "{name}: a bundle's ends lie {least} apart along it in the median at least, {most} at most (1 is 10 cm)");
     }
 }
