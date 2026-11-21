@@ -6,7 +6,8 @@ import { type HouseStyle, type Model, type Style, tower, townWall } from '../bui
 import { builtOn, streetOn } from './crowd';
 import type { Laying } from './far_lay';
 import { houseShape } from './houses';
-import { PEOPLE_PER_PERSON, PERSONS_PER_FLOOR_BLOCK, POP_OF_SIZE, WALLED_FROM, streetsOf } from './settle';
+import { PEOPLE_PER_PERSON, PERSONS_PER_FLOOR_BLOCK, POP_OF_SIZE, WALLED_FROM } from './settle';
+import { streetsOf } from './town_spots';
 
 /** a house of the finest step has two storeys on most of its ground and stands about five blocks high with its roof */
 const STOREYS = 2,

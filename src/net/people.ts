@@ -14,6 +14,8 @@ import { presentPersons } from '../sim/people/living';
 import { type ArchivedPersons, rowOf } from '../sim/people/archive';
 import type { Track } from '../sim/content/travel';
 import type { PersonPlan } from './plan';
+import { partOf } from '../sim/people/plan_person';
+import { CHILDBED_DAYS } from '../sim/people/absence';
 
 /** The living persons of a place, as columns of equal length (JSON). */
 export interface PlacePeople {
@@ -28,6 +30,16 @@ export interface PlacePeople {
   family: number[];
   /** 1: the person's family lives in a hamlet outside the walls (src/sim/systems/hamlets.ts) */
   hamlet: number[];
+  /** the part of the person and the calendar of the person's days of work, which the plan of the day is chosen by
+   *  (WHO and partOf, src/sim/people/day_plan.ts and plan_person.ts; a ruler's part is the one of a person without a
+   *  crown), and the world's seed, which the days of sickness are drawn from (src/sim/people/absence.ts); absent from
+   *  a server older than the client */
+  who?: number[];
+  calendar?: number[];
+  seed?: number;
+  /** the mothers among them in childbed on the day, and the day the child was born (src/sim/people/absence.ts):
+   *  the figures keep them at home (src/figures/schedule.ts); absent where there are none */
+  childbed?: { uid: number; born: number }[];
   /** the rulers among them (persons who hold a crown) and the colour of the first realm each holds (0xRRGGBB);
    *  absent from a server older than the client */
   rulers?: { uid: number; color: number }[];
@@ -218,14 +230,20 @@ export const MAX_PLACES_PER_REQUEST = 200;
  *  figures of a world with persons in hundreds of towns ask for them in a few requests, not one per place. A person
  *  of history in `stays` (by row) is listed at the place they are staying in, not at home. */
 export function manyPlacesPeople(s: WorldState, places: readonly number[], stays: ReadonlyMap<number, number> = new Map()): PlacePeople[] {
-  const P = s.person.cols, out = places.map((place): PlacePeople => ({ place, day: s.day, id: [], born: [], sex: [], family: [], hamlet: [] }));
-  const at = new Map<number, PlacePeople>();
+  const P = s.person.cols, out = places.map((place): PlacePeople => ({ place, day: s.day, id: [], born: [], sex: [], family: [], hamlet: [], who: [], calendar: [], seed: s.seed >>> 0 }));
+  const at = new Map<number, PlacePeople>(), births = childbedOn(s);
   out.forEach((o) => { if (!at.has(o.place)) at.set(o.place, o); });
   for (const i of presentPersons(s)) {
     if (P.died[i] !== ALIVE) continue;
     const o = at.get(stays.get(i) ?? s.family.cols.place[P.family[i]]);
     if (!o) continue;
     o.id.push(P.uid[i]); o.born.push(P.born[i]); o.sex.push(P.sex[i]); o.family.push(P.family[i]); o.hamlet.push(s.family.cols.hamlet[P.family[i]]);
+    const part = partOf(s, i), born = births.get(P.uid[i]);
+    o.who?.push(part.who); o.calendar?.push(part.calendar);
+    if (born !== undefined && P.sex[i] === 0) {
+      o.childbed ??= [];
+      o.childbed.push({ uid: P.uid[i], born });
+    }
   }
   for (const r of rulersOnMap(s, stays)) {
     const o = at.get(r.place);
@@ -299,4 +317,15 @@ export function archivedDetail(s: WorldState, a: ArchivedPersons, k: number, cul
     genes: Array.from(A.genes.subarray(k * 2 * NG, (k + 1) * 2 * NG)),
     economy: null, household: null, history: null, spouse: -1, children: [], town: null, dwelling: null, farm: null,
   };
+}
+
+/** The mothers in childbed on the world's day, by uid, and the day the youngest child was born: a living child born
+ *  within the days of childbed (CHILDBED_DAYS), as awayOn in src/sim/people/plan_person.ts counts them. */
+function childbedOn(s: WorldState): Map<number, number> {
+  const P = s.person.cols, out = new Map<number, number>();
+  for (let i = 0; i < s.person.size; i++) {
+    const born = P.born[i];
+    if (s.person.alive[i] && born <= s.day && born > s.day - CHILDBED_DAYS) out.set(P.mother[i], Math.max(born, out.get(P.mother[i]) ?? born));
+  }
+  return out;
 }

@@ -172,13 +172,17 @@ function notePause(paused: boolean) {
   }
 }
 
+/** How long a day of the world lasts at its speed, in real milliseconds (0: as fast as the server can reckon). */
+export function dayLength(w: WorldInfo): number {
+  const speed = SPEEDS[(w.speed ?? 1) - 1];
+  return speed === 'own' ? w.secondsPerDay * 1000 : speed;
+}
 /** The hour of the world's day (0 to 24), by the time since the day began here and the world's pace (people feature
  *  12: the day plan); null before the first day here, and at the last speed, where a day has no hours to see. */
 export function worldHour(now = performance.now()): number | null {
   const w = world.value;
   if (!w || !dayBegan) return null;
-  const speed = SPEEDS[(w.speed ?? 1) - 1],
-    ms = speed === 'own' ? w.secondsPerDay * 1000 : speed;
+  const ms = dayLength(w);
   if (!ms) return null;
   return Math.min(0.999, ((pausedAt || now) - dayBegan) / ms) * 24;
 }
