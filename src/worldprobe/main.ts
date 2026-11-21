@@ -3,7 +3,9 @@
 // ?wide=190 (finest blocks across the picture), ?region=world (the cut of the world to show), ?year=1291 (the start year whose realms colour the map; default 1356), ?mode=political, terrain or rulers (the map mode; default:
 // the realms only on the flat world far out), ?at=160:10 (the persons' figures where the plan of the day has them on
 // that day of the world and at that hour, people feature 12; default: in the streets). The address follows the view.
+import { planPlaces } from '../figures/plan_places';
 import { figuresAtHour } from '../figures/stage';
+import { FARM_YEAR } from '../sim/people/farm_year';
 import { showError } from '../lookprobe/stage';
 import { createWorldView } from './view';
 
@@ -17,14 +19,21 @@ const num = (k: string, fallback: number) => {
 let noted = 0;
 const mode = q.get('mode');
 // the figures follow the plan of a day at an hour (src/figures/schedule.ts), as the game has them follow the world's
-// (src/people/day_figures.ts); the latitudes are those the world server has (src/sim/world.ts)
+// (src/people/day_figures.ts); the latitudes and farming years are those the world server has (src/sim/world.ts)
 const [day, hour] = (q.get('at') ?? '').split(':').map(Number);
 if (Number.isFinite(day) && Number.isFinite(hour))
-  void fetch(`${import.meta.env.BASE_URL}data/geo.json`)
-    .then((r) => r.json())
-    .then((g: { loc: { lat: number[] } }) =>
-      figuresAtHour({ day, hour, startYear: num('year', 1356), lat: (place) => Math.fround(g.loc.lat[place]) }),
-    );
+  void planPlaces(
+    import.meta.env.BASE_URL,
+    fetch(`${import.meta.env.BASE_URL}data/geo.json`).then((r) => r.json()),
+  ).then((p) =>
+    figuresAtHour({
+      day,
+      hour,
+      startYear: num('year', 1356),
+      lat: (place) => Math.fround(p.lat[place]),
+      farm: (place) => p.farm[place] ?? FARM_YEAR.north,
+    }),
+  );
 createWorldView({
   region: q.get('region') ?? 'world',
   year: q.has('year') ? num('year', 1356) : undefined,
@@ -49,6 +58,7 @@ createWorldView({
   },
 })
   .then((view) => {
+    if (import.meta.env.DEV) (window as Window & { __world?: unknown }).__world = view; // for browser tests
     if (mode === 'political' || mode === 'terrain' || mode === 'rulers')
       view.mapMode(mode === 'rulers' ? 'political' : mode);
     // the rulers' dots and figures (src/people/rulers_mode.ts), from the world server of the build

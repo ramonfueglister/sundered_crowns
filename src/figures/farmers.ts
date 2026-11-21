@@ -11,7 +11,7 @@ import { FIELD_LOT } from '../sim/settlement/fields';
 import { DIRS, FIGURE_AT, LOOK, personOf } from './aims';
 import type { Gathered, SettledGround, Where } from './crowd';
 import { ESTATES, Mode, dress } from './estates';
-import { type TownPerson, townPeople } from './people';
+import { type TownPerson, rollOf, townPeople } from './people';
 
 /** A field lot (lx, lz) as one number, as worldprobe/lots.ts lotKey (written again here: the figures do not import
  *  the world graphic, which imports them). */
@@ -29,16 +29,17 @@ export function lotOf(wx: number, wz: number): number {
 const BAUER = ESTATES.findIndex((e) => e.name === 'Bauer'),
   BAEUERIN = ESTATES.findIndex((e) => e.name === 'Bäuerin');
 
-const made = new Map<string, Map<number, TownPerson[]>>();
+/** the farmers of each town worked out last, with its furlongs and the roll of its persons they were worked out for */
+const made = new Map<number, { k: string; hands: Map<number, TownPerson[]> }>();
 
 /** The farmers of a town by the furlong (lot) each works on, given its furlongs as pairs (lx, lz). */
 function handsOf(site: number, lots: readonly number[]): Map<number, TownPerson[]> | undefined {
   const people = townPeople(site);
   if (!people?.length || !lots.length) return undefined;
-  const k = `${site}:${lots.length}:${lots[0]}:${lots[1]}:${people.length}`;
-  let hands = made.get(k);
-  if (hands) return hands;
-  hands = new Map();
+  const k = `${lots.length}:${lots[0]}:${lots[1]}:${rollOf(site)}`,
+    had = made.get(site);
+  if (had?.k === k) return had.hands;
+  const hands = new Map<number, TownPerson[]>();
   for (const p of people) {
     if (p.who !== WHO.farm || p.ruler !== undefined) continue;
     const j = 2 * Math.floor(hash2(p.id, 1, 960) * (lots.length / 2)),
@@ -47,7 +48,7 @@ function handsOf(site: number, lots: readonly number[]): Map<number, TownPerson[
     if (list) list.push(p);
     else hands.set(at, [p]);
   }
-  made.set(k, hands);
+  made.set(site, { k, hands });
   return hands;
 }
 

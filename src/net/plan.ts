@@ -3,6 +3,7 @@
 import type { WorldState } from '../sim/state';
 import type { World } from '../sim/world';
 import { type DayPlan, dayPlan } from '../sim/people/day_plan';
+import { FARM_YEAR } from '../sim/people/farm_year';
 import { planPerson } from '../sim/people/plan_person';
 
 /** The plan of a person's day, the part of the person it was chosen by (WHO), and for a ruler on the way the German
@@ -16,11 +17,12 @@ export interface PersonPlan extends DayPlan {
  *  `heading`: for a ruler on the way, the place of the next stop, else −1. */
 export function personPlan(
   s: WorldState,
-  w: Pick<World, 'lat' | 'namesDe'>,
+  w: Pick<World, 'lat' | 'namesDe' | 'farmYear'>,
   id: number,
   at: number,
   heading: number,
 ): PersonPlan {
   const p = planPerson(s, id, heading);
-  return { ...dayPlan(p, at, w.lat[at], s.day, s.startYear), who: p.who, to: heading >= 0 ? w.namesDe[heading] : null };
+  const plan = dayPlan(p, at, w.lat[at], s.day, s.startYear, w.farmYear?.[at] ?? FARM_YEAR.north);
+  return { ...plan, who: p.who, to: heading >= 0 ? w.namesDe[heading] : null };
 }

@@ -1186,7 +1186,10 @@ Step 5 of way A of the proposal «Personen: Archiv der Toten und Tagesplan» (fe
 20 November 2026 («Vorschlag: Tagesplan der Personen und Reisen der Herrscher»,
 https://claude.ai/artifact/Bi91xAnUNQtxCw3hkKKuks), to which Ramon said yes the same day («5. gut aber später») and
 which he set going on 21 November («ok»). The travels of the rulers of the same proposal are in the itineraries
-(`src/sim/content/itineraries.ts`, `src/sim/content/travel.ts`).
+(`src/sim/content/itineraries.ts`, `src/sim/content/travel.ts`). On the map a ruler between two places of the way
+rides it as a horseman, at every distance (step C of 21 November, «wir starten mit a dann b und c»: `src/figures/
+horse.ts`, `src/worldprobe/view_riders.ts`); where the ruler stays, the dot of the ruler stands at the place, and near
+the ruler's figure stands in the town the ruler stays in (GET /people lists a person of history there).
 
 Every person has a plan of the day: what the person does at which hour, and where. The plan is a pure function of
 the person's part in the world, the calendar of the person's days of work, the place and the day
@@ -1238,6 +1241,41 @@ The farming year (`src/sim/people/farm_year.ts`), on the days of the Julian cale
 | 24 June | weeding, the second ploughing of the fallow | after St John's Day (Walter of Henley) |
 | 1 August | the harvest | "five weeks in August and early September" (Ramsey: Owen, Brown & Skinner 2025); reaping paid from the first week of August (Statute of Labourers 1351) |
 | 5 September | ploughing and sowing the winter corn | the seed changed at Michaelmas (Walter of Henley); the winter corn in the autumn (research of feature 7) |
+
+Which farming year a place follows goes by its land, not by the faith of its people (step D of 21 November, after
+the proposal «Vorschlag: Bauernjahr für Süden und Islam», https://claude.ai/artifact/T8KjRYpoP6BCsN8wtTCGC6): the
+Muslim almanacs, too, set the field work by the months of the sun (the calendar of Córdoba by the months January to
+December, Ibn Mammātī by the Coptic months; filaha.org), and the lunar year of the hijra goes round all seasons in
+some 33 years. The farming year of each land place is worked out from the region of its province (data/geo.json) and
+its climate (`public/data/place_climate.json`, written by `tools/worldprobe/build_place_climate.ts` from the world
+graphic's climate layer, the Köppen-Geiger zones), by the world loader (`World.farmYear`) and on the main thread
+(`src/figures/plan_places.ts`) alike:
+
+| Farming year | Places | Source |
+|---|---|---|
+| Mediterranean | the Mediterranean climate (Köppen-Geiger Cs) in Iberia, France, Italy, Greece, the Balkans, Anatolia, the Levant and the Maghreb; OWN RULE: in Iberia, the Maghreb and the Levant also the steppe and the desert (the same winter rains; Toledo and Zaragoza lay in al-Andalus) | the calendar of Córdoba, 961 |
+| Mesopotamia | the region of Mesopotamia | Handbook of Mesopotamia, vol. I (Naval Staff, 1918), pp. 176–177: not medieval |
+| North | everywhere else, also Egypt, Persia, the steppe, Arabia and the Sahel, for which no source with months could be read (Ibn Mammātī's calendar, ed. Pellat 1986; Rabie 1981; Rashīd al-Dīn's *Āthār wa aḥyāʾ*; Lambton 1977 are not online) | above |
+
+The calendar of Córdoba (ʿArīb ibn Saʿd; English extracts by John Brogden after Dozy's edition of 1873, filaha.org)
+names months only; OWN RULE: each work begins on the first of its month, and where a month names the corn and other
+work, the corn's goes first:
+
+| From | Work | The calendar |
+|---|---|---|
+| 1 January | pruning and setting the vines | January "the vines … are pruned", February "the vine shoots transplanted" |
+| 1 March | planting in the gardens and watered fields | March "Sugar cane is planted", April "rice and beans are sown" |
+| 1 May | the harvest | May "farīk is gathered" (the green early wheat), June "the grain on the threshing floor is weighed" |
+| 1 July | threshing out of doors, on the threshing floor | July "grain is harvested and barley is threshed" |
+| 1 August | planting in the gardens | "autumn beans, sky-blue stock, turnips, carrots, chards" |
+| 1 September | ploughing and sowing | September "ploughed and sown in the mountains", November "sowing activities reach their peak" (the olive picking that "commences" in October gives way) |
+| 1 December | planting in the gardens | "White poppy is sown, and also garlic" |
+
+Mesopotamia, after the handbook: from 1 September sowing (wheat and barley "Sep–Oct or Nov–end Jan", the spring crops
+to March), from 1 April the harvest ("The harvest begins in April"), from 1 June threshing on the floor (OWN RULE: the
+handbook says only "after drying", here the two months after the harvest), from 1 August the harvest of the summer
+crops (rice, millet, sesame, cotton; August to October, before the sowing from September). Threshing on the floor is
+field work: the figure stays at the furlong (`src/figures/schedule.ts`), the card says «auf der Tenne».
 
 ### Measured (`npm run dayplan:check -- 3`, world of 1291, seed 1291, all systems)
 
@@ -1292,6 +1330,21 @@ the middle of the hour of the mass, three and a half unequal hours after sunrise
 day of rest at the house of worship, on the market day at the market, on the others at work. The figures stand
 still at the market and at the house of worship; they walk only in the street.
 
+The figures show the persons as they are on the world's day (src/people/town_rolls.ts). A piece's figures are built
+with the lists of the persons the world server gave when the piece was built, which is long ago for a piece kept on
+disk: a day of the world passes in four minutes, a year in a day. Once a day of the world, and at most once a minute
+(OWN RULE, a drawing value: at the highest speeds the pieces of the towns would be built again every second), the
+browser asks for the lists of the places whose figures are on the stage again:
+
+- who is no longer listed at the place (dead, or moved away) leaves the stage at once, and the part, the calendar and
+  a birth are those of the new list: a mother in childbed stays at home (src/figures/schedule.ts);
+- each town has a number drawn from who its persons are (people.ts `rollOf`), which the figures keep from the lists
+  they were built with (`Figures.rolls`). Where a town's persons have changed (the dead, the young who come to the
+  age of 14 from which the figures are drawn, a ruler who arrives or leaves), the workers take the new lists and
+  build the figures of its pieces again; the land of a piece stays on the stage as it is and only its figures change
+  (src/worldprobe/pieces.ts `renewFigures`), and the piece is kept on disk anew. A change of work or a birth changes
+  no figure that is built and is followed on the stage alone.
+
 ### Limits
 
 - **The day labourer works too many days.** By his plan a day labourer works on every working day of his firm on
@@ -1313,7 +1366,7 @@ still at the market and at the house of worship; they walk only in the street.
   barn have no figures of the persons. A farmer works the same furlong every day, one drawn by the id and not that of
   the person's own farmstead, and at the same pose whatever the work of the farming year (the hoe: no plough, scythe or
   sickle in the kit).
-- **The figures know the persons as on the day their list was fetched.** A worker of the world graphic fetches the
-  persons of the cities once (src/figures/people.ts); the part, the calendar and the mothers in childbed are those
-  of that day, the days of sickness are always right (a pure function). A person who dies later still walks, and a
-  child born later keeps no mother at home, until the page is loaded anew. This was so before for who walks at all.
+- **The figures know the persons as on the last day their list was fetched** (above): up to a day of the world, and
+  at least a minute, late. A person whose part changes keeps the figures of the part the piece was built with until
+  the persons of the town change: a farmer who loses his work is not at the hiring place, and one who finds work in
+  the fields is not at the furlong, meanwhile.

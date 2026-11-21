@@ -9,6 +9,7 @@ import { buildOpenSea } from '../lookprobe/terrain';
 import { FACE_GEO, FACE_STEPS } from '../lookprobe/faces';
 import { GRID, N, SEA_Y, onGrid } from '../lookprobe/layout';
 import { maybeGunzip } from './gunzip';
+import { type PlacePeopleList, setPlacePeople } from '../figures';
 import { buildPiece, warmPieces } from './build';
 import { CROWD_AT, farCrowd } from './crowd';
 import { type Cover, KINDS, laidOut } from './far';
@@ -73,6 +74,12 @@ export interface WarmJob {
 /** Tells a worker that a job it was given is no longer wanted: if it has not begun it, it answers `cancelled` and drops it; else the piece comes as usual. */
 export interface CancelJob {
   cancel: number;
+}
+/** Hands a worker newer lists of the persons of some places (src/people/town_rolls.ts): the figures it builds from
+ *  now on show them. */
+export interface PersonsNews {
+  persons: readonly PlacePeopleList[];
+  year?: number;
 }
 export interface PieceDone {
   id: number;
@@ -335,7 +342,11 @@ async function prefetch(job: PieceJob) {
   if (job.glide && job.small && job.faces && job.step >= GLIDES_FROM) void tableOver(job);
 }
 
-self.onmessage = (e: MessageEvent<PieceJob | WarmJob | CancelJob>) => {
+self.onmessage = (e: MessageEvent<PieceJob | WarmJob | CancelJob | PersonsNews>) => {
+  if ('persons' in e.data) {
+    for (const list of e.data.persons) setPlacePeople(list, e.data.year);
+    return;
+  }
   // (a piece asked for meanwhile waits for the same loads, which each happen once)
   if ('warm' in e.data) {
     void warmPieces(e.data).catch(() => undefined);

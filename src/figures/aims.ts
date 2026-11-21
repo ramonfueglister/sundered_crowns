@@ -8,7 +8,7 @@ import { hash2 } from '../lookprobe/batch';
 import { WHO } from '../sim/people/day_plan';
 import type { Gathered, Town, Where } from './crowd';
 import { Mode, dress, townEstate } from './estates';
-import { type TownPerson, townPeople } from './people';
+import { type TownPerson, rollOf, townPeople } from './people';
 
 /** The columns persons of a town aim at, by world block (`key`). */
 export interface TownAims {
@@ -25,7 +25,8 @@ export const key = (wx: number, wz: number) => wx * 1048576 + wz;
  *  inside: those who find no street there are inside). */
 const AT_WORSHIP = 12;
 
-const made = new Map<string, TownAims>();
+/** the columns of each town worked out last, with the town and the roll of its persons they were worked out for */
+const made = new Map<number, { k: string; aims: TownAims }>();
 
 /** The columns of the persons of a town, or none for a town without persons. The rulers are not among them: the
  *  piece that holds the middle of the town stands them in a street (crowd.ts). Only the persons the plan takes to the
@@ -34,10 +35,10 @@ const made = new Map<string, TownAims>();
 export function aimsOf(t: Town): TownAims | undefined {
   const people = townPeople(t.site);
   if (!people?.length) return undefined;
-  const k = `${t.site}:${t.cx}:${t.cz}:${t.half}:${people.length}`;
-  let aims = made.get(k);
-  if (aims) return aims;
-  aims = { street: new Map(), market: new Map(), worship: new Map() };
+  const k = `${t.cx}:${t.cz}:${t.half}:${rollOf(t.site)}`,
+    had = made.get(t.site);
+  if (had?.k === k) return had.aims;
+  const aims: TownAims = { street: new Map(), market: new Map(), worship: new Map() };
   const put = (m: Map<number, TownPerson>, at: number, p: TownPerson) => {
     if (!m.has(at)) m.set(at, p);
   };
@@ -61,7 +62,7 @@ export function aimsOf(t: Town): TownAims | undefined {
       put(aims.worship, key(Math.round(cx + Math.cos(a) * r), Math.round(cz + Math.sin(a) * r)), p);
     }
   }
-  made.set(k, aims);
+  made.set(t.site, { k, aims });
   return aims;
 }
 
