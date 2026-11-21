@@ -88,6 +88,11 @@ describe('a king on the way', () => {
     expect([BRUGES, PARIS]).not.toContain(halfway);
     expect(tr.where(j, arrive)).toBe(PARIS);
   });
+  it('is heading for the next place named while on the way, and for none while staying (the day plan)', () => {
+    expect(tr.heading(j, day('1291-02-01'))).toBe(-1);
+    expect(tr.heading(j, Math.round(arrive - takes / 2))).toBe(PARIS);
+    expect(tr.heading(j, Math.floor(arrive - takes) - 1)).toBe(-1);
+  });
   it('hurries where the days between are fewer than the way takes, and is still on time', () => {
     // a week from Paris to Bruges is less than the way takes at the court's pace (more than 7 days)
     expect(takes).toBeGreaterThan(7);
