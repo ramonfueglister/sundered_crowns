@@ -7,3 +7,4 @@ Wie Dörfer und Städte in Sundered Crowns entstehen und wachsen: wo eine Famili
 - [Gassen und Markt](gassen.md) *(Entwurf)*: wie die Gassen einer Stadt zu ihren Parzellen wachsen
 - [Felder je Hof](felder.md) *(Entwurf)*: die Gewanne, Zelgen und Streifen jedes Hofs
 - [Wahrzeichen](wahrzeichen.md) *(Entwurf)*: Kathedralen, Moscheen, Konvente, Burgen und Abteien an ihrem echten Ort
+- [Stadtmauern und Tore](mauern.md) *(Entwurf)*: der Ring jeder Stadt, offen am Wasser, mit Toren an den Wegen

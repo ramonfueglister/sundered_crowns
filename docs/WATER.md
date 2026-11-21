@@ -4,7 +4,8 @@ The sea, lakes and rivers of the 3D world are drawn by one material (`src/lookpr
 colour, surface and what it gives back come from `src/lookprobe/sea.ts`. EU5's map is the bar of quality for how
 the water changes with the distance (as a comparison only: nothing of its look or assets is copied); its colours are
 the model's own, as clear and full as the land's. Since round 5 the water is calmer than EU5's from its nearest
-distance on, as the low-poly worlds' water is, and its coasts have foam (Ramon's word, 20 November 2026).
+distance on, as the low-poly worlds' water is, and its coasts have foam (Ramon's word, 20 November 2026); since
+round 6 the foam runs in smooth bows.
 
 ## The gauntlet
 
@@ -21,7 +22,7 @@ From some 36000 blocks across on the realms' paper map takes over (its sea: `src
 
 `tools/lookprobe/gauntlet_water.py` finds the water in a picture (blue to cyan, not grey; foam and boats inside it
 count as water, small islands do not) and measures, by each dot's distance from the shore, seven rows per scene, and
-three more where the water moves (the diorama: pictures at 0, 1/30 and 0.5 seconds, `water_frames.mjs`):
+four more where the water moves (the diorama: pictures at 0, 1/30 and 0.5 seconds, `water_frames.mjs`):
 
 | row | what | bar | EU5 |
 | --- | --- | --- | --- |
@@ -35,6 +36,7 @@ three more where the water moves (the diorama: pictures at 0, 1/30 and 0.5 secon
 | Bewegung | mean change of the water's lightness in half a second | ≥ 0.8 | none (no moving pictures) |
 | Flimmern | share of the water whose lightness changes by more than 20 from one picture to the next (1/30 s) | ≤ 0.3 % | none |
 | Schaumsaum | how many points of % more of the water within 4 columns of the shore is white (saturation < 0.3, L > 72) than of the open water, over the three pictures | ≥ 1.0 | none (round 4: 0.42 Valencia, 0.14 Venice) |
+| Schaumbögen | how many degrees the direction of the foam's lines (white shapes by the coast at least 40 dots long) turns to a dot along them, on the median | ≤ 1.3 | none (round 5: 2.2 Valencia, 2.1 Venice) |
 
 The saturation row holds the water to the rest of the world: the land of the model is far fuller in colour than
 EU5's, so its water must be too (EU5's water is about as full as its land, or fuller). It counts HSV's saturation,
@@ -53,6 +55,32 @@ python3 tools/lookprobe/gauntlet_water.py some.png[:x0,y0,x1,y1]                
 PROBE_URL=http://localhost:5199 node tools/lookprobe/water_frames.mjs /tmp/w/d60 "lon=-0.33&lat=39.45&wide=60" 36x0.0833
                                                                    # a row of stills of the moving water (3 s)
 ```
+
+## Round 6 (21 November 2026): the foam in smooth bows, clear flecks
+
+Ramon asked "bist du glücklich mit der grafik?", and from near the answer was no: the lines of foam ran in zigzags,
+and the open water had grey smudges among its white strokes.
+
+- **Why the lines were jagged.** The distance to the coast is read from the colour of the water's corners, and the
+  stage has those as bytes (`worldprobe/small.ts`). WATER_SHALLOW and WATER_DEEP differ by 3 % in their green to
+  their blue, which the bytes tell in some seven steps: a corner's distance is off by a quarter of a column on the
+  mean, each corner its own way, and a line drawn by it kinks at every corner.
+- **The corners' distance, smoothed** (`sea_corners.ts`): where the stage makes the mesh of the sea's faces, each
+  corner takes the distance of the plane that fits the corners within 3 columns of it best. The faces carry it as a
+  byte to a corner beside their colours, and `sea_shore.ts` draws the foam by it. A plane, not a mean: a piece knows
+  its own sea alone, and at its edge a mean lies to one side, so that the lines of two pieces would not meet. On a
+  coast that bends, the smoothed distance is off by 0.07 of a column (the bytes' own: 0.25) and two pieces agree at
+  their edge to 0.04 (`tests/worldprobe/sea_corners.test.ts`). It takes under 10 ms for a piece that is all coast,
+  and next to nothing for a piece of open sea; the pieces' key does not change (the stage's code, not the builders').
+- **The lines** run on to where the land's edge shows (1.9 columns, was 2.2) and are gone as they meet it; they are
+  white (were 0.9 of it), thinner towards the ends of their dashes, sway a little along the coast, each of the two its
+  own way, and the wash lies behind them, out to sea (it lay before them).
+- **The flecks** of two octaves were drawn each by itself and then mixed: one half faded in was a grey smudge. Now
+  the two octaves' waves are added first and the flecks drawn of the sum: every fleck is white.
+
+The gauntlet has a row for the bows (Schaumbögen: how fast the foam's lines turn, in degrees to a dot along them). It
+was 43 of 43, round 5 by the same bars 41 of 43 (its foam turned 2.2 and 2.1 degrees to a dot, now 0.9 and 1.0). Before
+and after, and the foam coming in: project files `wasser/runden/runde6_*`.
 
 ## Round 5 (20 November 2026): calm water, foam along the coast
 

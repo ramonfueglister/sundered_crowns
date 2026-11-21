@@ -14,6 +14,8 @@ export interface Plan {
   radius?: number;
   /** the plan's land and water, where it draws them (below) */
   ground?: PlanGround;
+  /** the corners of its town wall [x, z], in radii as the streets, where the plan has it (settlement feature 6) */
+  wall?: readonly (readonly number[])[];
 }
 
 /** what a block of such a town is: `open` lies outside what the plan draws (the map's own ground holds there) */
