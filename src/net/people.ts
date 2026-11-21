@@ -13,6 +13,7 @@ import { ROLE } from '../sim/systems/work';
 import { presentPersons } from '../sim/people/living';
 import { type ArchivedPersons, rowOf } from '../sim/people/archive';
 import type { Track } from '../sim/content/travel';
+import type { PersonPlan } from './plan';
 
 /** The living persons of a place, as columns of equal length (JSON). */
 export interface PlacePeople {
@@ -135,6 +136,8 @@ export interface PersonDetail {
   dwelling: 'parcel' | 'farmstead' | null;
   /** the farmstead of the person's family and its fields (settlement feature 4); null for a family without one */
   farm: PersonFarm | null;
+  /** the person's plan of the day (people feature 12, src/net/plan.ts), which the world server adds for a living person */
+  plan?: PersonPlan;
 }
 
 /** The farmstead of a person's family and its fields (settlement feature 4, src/sim/systems/fields.ts). */

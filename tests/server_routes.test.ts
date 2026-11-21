@@ -46,6 +46,8 @@ describe('world server over HTTP', () => {
     expect(answer(core, `/people?places=0,${pop}`, false).status).toBe(404);
     const uid = core.s.person.cols.uid[core.s.person.alive.indexOf(1)];
     expect(json(`/person/${uid}`).id).toBe(uid);
+    // with the plan of the day of a living person (people feature 12)
+    expect(json(`/person/${uid}`).plan.slots[0][0]).toBe(0);
     expect(answer(core, '/person/999999999', false).status).toBe(404);
     expect(Array.isArray(json('/rulers'))).toBe(true);
     expect(json('/divergence')).toBeTypeOf('object');
