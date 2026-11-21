@@ -60,6 +60,9 @@ SPACE = {
     'timb_h': (0, 35, 6.492),
     'timb_s': (0.15, 0.65, 0.252),
     'timb_v': (0.15, 0.4, 0.4),
+    'stone_h': (10, 45, 36.7),
+    'stone_s': (0.05, 0.35, 0.157),
+    'stone_v': (0.5, 0.95, 0.902),
     'post': (0.6, 1.5, 0.9),
     'tshare': (0.3, 1, 1.0),
     'tlow': (0.7, 1, 0.812),
@@ -89,7 +92,7 @@ def address(x):
     o.update({k: round(x[k], 3) for k in ('tshare', 'post', 'tlow', 'tspread', 'treesize', 'jetty', 'pspread')})
     o['tone'] = 'neutral'
     o['skycol'] = ''.join(f'{round(c):02x}' for c in SKY_GREY + (SKY_BLUE - SKY_GREY) * x['skyblue'])
-    for knob in ('wall', 'pave', 'roof', 'timber', 'glass', 'leaf', 'olive'):
+    for knob in ('wall', 'pave', 'roof', 'timber', 'glass', 'leaf', 'olive', 'stone'):
         key = 'timb' if knob == 'timber' else knob
         o[knob] = hexc(x[key + '_h'], x[key + '_s'], x[key + '_v'])
     o.update({k: int(x[k]) for k in WHOLE})

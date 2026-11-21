@@ -44,4 +44,5 @@ export const PARIS: Tradition = {
   plot: { width: [m(4.5), m(6.5)], depth: [m(6), m(8)], greatWidth: [m(9), m(12)] },
   timber: { share: 1, c: rgb(0x664f4c) },
   plainChimney: true,
+  stoneGround: true,
 };

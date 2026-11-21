@@ -70,4 +70,6 @@ export interface Tradition {
   tileShades?: readonly [number, number];
   /** the glass of the windows, before the house's own shade of it (dark and warm if not given) */
   glass?: RGB;
+  /** a ground floor of ashlar in `stone` under a plastered or timbered house */
+  stoneGround?: boolean;
 }

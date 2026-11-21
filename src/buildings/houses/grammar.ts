@@ -4,7 +4,7 @@
 // source in a fixed order, so a house is the same for the same seed. Fine blocks (VOXEL) are the unit of every part.
 import { Batch, type RGB, type Rnd, shade } from '../../lookprobe/batch';
 import { gableRoof, hipRoof, roofAt } from '../core/roofs';
-import { SIDES, type Side, arch, wallOf } from '../core/wall';
+import { SIDES, type Side, arch, pane, wallOf } from '../core/wall';
 import { WINDOW_WARM } from '../palette';
 import type { Tradition } from '../traditions/tradition';
 import { awning, jar } from './clutter';
@@ -197,6 +197,10 @@ function facade(
   const axes = Array.from({ length: n }, (_, i) => wl.len / 2 + (i - (n - 1) / 2) * bay),
     [ww, wh] = tr.window;
   if (o.detail && !tr.plaster) ashlar(b, wl, y + V, y + (h - 1) * V, o.wallC, o.seed + k * 7 + SIDES.indexOf(s));
+  if (o.detail && tr.stoneGround && k === 0) {
+    pane(b, wl, 0, y, wl.len, y + (h - 1) * V, shade(tr.stone, 0.7), 0.01);
+    ashlar(b, wl, y, y + (h - 1) * V, tr.stone, o.seed + SIDES.indexOf(s));
+  }
   if (o.detail && o.frame && k >= 1)
     timberFrame(b, wl, y - V, h * V, axes, ww, [V + tr.sill * V, V + (tr.sill + wh) * V], o.frame, tr.timber?.post);
   const win = (t: number, hv = wh) => {

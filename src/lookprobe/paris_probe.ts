@@ -41,6 +41,7 @@ const TR: Tradition = {
   roofs: moved(PARIS.roofs ?? [PARIS.roof], hexOf('roof'), num('roofspread', 1)),
   quay: { ...PARIS.quay, paving: hexOf('pave') ?? PARIS.quay.paving, spread: num('pspread', PARIS.quay.spread ?? 1) },
   glass: hexOf('glass') ?? PARIS.glass,
+  stone: hexOf('stone') ?? PARIS.stone,
   timber: PARIS.timber && {
     share: num('tshare', PARIS.timber.share),
     c: hexOf('timber') ?? PARIS.timber.c,
@@ -52,9 +53,9 @@ const TR: Tradition = {
   jetty: { ...PARIS.jetty, share: num('jetty', PARIS.jetty.share) },
 };
 /**
- * a block of houses and the lane beside it, in blocks; the square takes two blocks and the lane between them. The
- * layout's and the camera's numbers are the search's own, unrounded: a rounded block size draws another town, which
- * measured systematically worse (21 Nov 2026: fine detail over its limit on two of four draws)
+ * a block of houses and the lane beside it, in blocks; the square takes SQ cells. The layout's and the camera's
+ * numbers are the search's own, unrounded: a rounded block size draws another town, which measured systematically
+ * worse (21 Nov 2026: fine detail over its limit on two of four draws)
  */
 const BLOCK = num('block', 12.014),
   LANE = num('lane', 4.608),
@@ -84,6 +85,8 @@ type Front = 'px' | 'nx' | 'pz' | 'nz';
 
 /** the town's draw: another seed gives another town of the same kind, to see how much a measure owes to one draw */
 const SEED = num('seed', 21);
+/** how many cells the market square takes: one, as small as the reference picture's, or two side by side */
+const SQ = num('sq', 1);
 /** the share of houses with a passage after them, its width; how far a block's edges and a house's front may move */
 const GAP = num('gap', 0.35),
   GAP_W = num('gapw', 1.3),
@@ -202,7 +205,7 @@ async function build(): Promise<StageScene> {
   });
   const land: Column = { top: LAND_Y, wet: false, paved: true };
   fineGround(ground, { x0, z0, size, ox: 0, oz: 0, water: LAND_Y - 2 }, () => land, TR.quay);
-  // blocks on a grid of 7 x 7 cells; the square takes the middle 2 x 1 cells. Each block's edges move by up to JIT
+  // blocks on a grid of 7 x 7 cells; the square takes SQ cells in the middle. Each block's edges move by up to JIT
   // blocks, so that the lanes widen and narrow as in the reference picture (OWN RULE for the prototype)
   const rj = seeded(SEED + 3),
     edge = () => rj.range(-JIT, JIT);
@@ -212,18 +215,19 @@ async function build(): Promise<StageScene> {
         bz = z0 + k * CELL + LANE / 2 + edge(),
         sx = x0 + i * CELL + LANE / 2 + BLOCK + edge() - bx,
         sz = z0 + k * CELL + LANE / 2 + BLOCK + edge() - bz;
-      if (k === 3 && (i === 3 || i === 4)) continue;
+      if (k === 3 && (i === 3 || (SQ > 1 && i === 4))) continue;
       block(ground, things, bx, bz, sx, sz, r);
     }
   // the square: stalls in two loose rows, trees at its edge
   const sx = x0 + 3 * CELL + LANE / 2,
     sz = z0 + 3 * CELL + LANE / 2,
     rs = seeded(SEED + 1);
-  for (let k = 0; k < 9; k++) stall(things, sx + 2 + rs.range(0, 2 * CELL - 6), sz + 2 + rs.range(0, BLOCK - 4), rs);
-  for (let k = 0; k < 8; k++)
+  for (let k = 0; k < 4.5 * SQ; k++)
+    stall(things, sx + 2 + rs.range(0, SQ * CELL - 6), sz + 2 + rs.range(0, BLOCK - 4), rs);
+  for (let k = 0; k < 4 * SQ; k++)
     tree(
       things,
-      sx + rs.range(0.5, 2 * CELL - 2),
+      sx + rs.range(0.5, SQ * CELL - 2),
       LAND_Y,
       sz + rs.pick([0.6, BLOCK - 0.6]),
       rs,
@@ -238,7 +242,8 @@ async function build(): Promise<StageScene> {
     if (rf.chance(0.5)) folk(things, lane, along, rf);
     else folk(things, along, lane, rf);
   }
-  for (let k = 0; k < 40; k++) folk(things, sx + rf.range(0.5, 2 * CELL - 1), sz + rf.range(0.5, BLOCK - 0.5), rf);
+  for (let k = 0; k < 20 * SQ; k++)
+    folk(things, sx + rf.range(0.5, SQ * CELL - 1), sz + rf.range(0.5, BLOCK - 0.5), rf);
   return { ground, things, water, counts: { triangles: ground.triangles + things.triangles + water.triangles } };
 }
 
