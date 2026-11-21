@@ -7774,6 +7774,104 @@ England's profile `ENGLAND_1356`, with its notes of the rounds, and `PLAIN_1356`
 `profileOf`. Where an older round's text names `profile.ts` for one of England's values, it is in
 `profile_1356.ts` now.
 
+**Round 161: a hood thrown back hangs behind the neck** (2026-11-21). Round 160's list named it: a hood
+thrown back is a cape with a roll round the neck and no hood behind it, and with round 148's white fur on it
+the roll reads as a neck brace. Looked at on the two men of the sample who wear one (a plain blue hood, a
+dagged red one), at court and in the village, from the front, from either quarter behind and straight from
+behind, ten views. From the side and from behind the cape's back is a bare shoulder piece with a bead at the
+neck; nothing says that this is a hood. The file of a hood thrown back (`cloth_hood_down`, round 35) is the
+cape with the edge of the hood's opening laid round the neck, and that is all of it.
+
+Read on 21 November, as accounts of the pages with their words quoted (not the pages themselves on my
+screen). Wikipedia, Chaperon (headgear): 'The hood could be pulled off the head to hang behind, leaving the
+short cape round the neck and shoulders'; of the early hood: 'The hood was loose at the back, and sometimes
+ended in a tail that came to a point'. Wikipedia, Liripipe: 'Liripipe was popular from the mid-14th to the end
+of the 15th century', and the Eulogium Historiarum of the 1360s 'mentions liripipes that hang right down to
+the heels like ridiculous strips'. Three more pages on hoods (rosaliegilbert.com, encyclopedia.com, the
+Fashion Institute of Technology's timeline entry on the chaperon) say the same of the caped hood and its tail
+and give no measure. So the sources carry that the hood hangs behind the neck and may end in a point. How
+long, how broad and how thick it hangs, none of them says.
+
+What is changed, in the builder.
+- **The hood itself, a flat bag behind the neck** (`hood_back.rs`, new; `build.rs` lays it on for a hood worn
+  `Hood::Back`). It hangs from the rear half of the opening's edge down the back, over the cape, and ends in a
+  point: 3.2 units (32 cm) along the cloth from the crest of the roll to the point (`LONG`), as broad as the
+  opening lies round the neck and a tenth more where it is broadest (`BROAD`), 3 to 4 cm thick under the nape
+  and 6 mm at the point (`THICK`), in three shallow folds (`FOLDS`, `FOLD`). It is drawn with the hood's own
+  image at the hood's own scale and in the hood's wool where no fold shades it, darker at its rim.
+- **It lies on what is seen from behind.** The cape and the gown under it are read as a depth over the plane
+  across the back (their triangles drawn into cells of 2.5 mm, the hindmost kept). Where the cloth falls away
+  under the bag, under the roll and at the cape's hem, which stands 6 cm off the gown, the depth goes straight
+  down from there: the bag hangs, it does not follow the cape in under its hem. A column of the bag runs down
+  that surface cell by cell, and the bag stands off it by its thickness, square to the surface evened out over
+  3 cm.
+- **The mouth.** The bag's first rows rise from beside the opening's edge to the crest of the roll and are
+  held over every corner of the roll near them. They begin a facing's breadth (`facing::BREADTH`) from the
+  edge: the edge itself, and a lord's fur with it, lies on the bag as the rim of a collar.
+- **It goes with the shoulders.** The bag is laid on while the body stands square and is turned by the same
+  `pose::pose` as the cape, so the head keeps its place to the digit (the two tests of `tests/pose.rs` pass
+  unchanged).
+- `facing.rs` hands out the corners of a hood and its opening's edge (`corners`, `opening`) for both files.
+
+Measured (the 20 hoods thrown back among the men `tests/hood_back.rs` builds in the village and at court):
+
+| | |
+|---|---|
+| the bag's lowest place under the cape's highest | 32.3 to 34.0 cm |
+| its breadth | 17.8 to 24.9 cm |
+| its breadth within 3 cm of its lowest place | 1.4 to 1.8 cm |
+| its nearest place behind the head's middle | 9.3 to 10.2 cm |
+| places of the cape or the gown that stand out of it (2 mm or more) | none, on 39 builds |
+| the point round the head for shoulders turned 0.35 radians | 0.283 to 0.289 |
+
+Without the rule that the depth goes straight down, and without the mouth held over the roll, 27 of the 39
+builds had places of the cape through the bag, up to 14 on one. The builder's file is 830 363 bytes (803 967
+before): `hang` is some 10 kB of it.
+
+Tried and not kept.
+- The bag laid on after the pose, in the turned shoulders' frame: places of the head moved by up to 2 cm
+  (`tests/pose.rs` failed twice), since the bag's mouth reaches up behind the head.
+- The rows begun on the opening's inner edge and walked over a height field: the walk stalled on the roll's
+  level top.
+- The bag following the cloth under it everywhere: it dived forward under the cape's hem, and the rows tangled
+  there (triangles facing the body).
+- A short shield (2.6 units long, broadest 1.3 of the opening): from behind it read as a bib on the back.
+- A thin bag, 1 to 2.8 cm: it read as a part of the cape, a seam drawn on it.
+- The mouth begun on the edge itself: at court the fur's rear stood through it as a white tab.
+- For the file's size: the image's scale as a median and the wool as the lightest tenth by sorting (two sorts,
+  some 10 kB each), and `f32::clamp` with bounds that are not constants, which brings the code that writes a
+  number out into the file (25 kB, the builder has none otherwise). Sums and `max`/`min` do the same.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 160 to its last figure, and the
+colour sheet the same (they read skin of the face).
+
+Honest about it. From behind and from the side there is a hood now where there was a bare back. From the
+front little changes: a little of the hood's cloth shows behind the ring on either side of the neck, and the
+ring of white fur is still a thick tube round the throat; that needs another collar (a lower, wider opening),
+not this bag. The bag is a formula, not a drape: one form for everybody, three even folds and no others, the
+same in wool and in a lord's finer cloth, and it does not swing out when the shoulders turn or the bust leans
+back. Its mouth is closed: no lining and no fur show inside it. Where it crosses a dagged hem the dags' tips
+lie ragged beside it. The long tail the pages give to these very years is not built (a hood's tail to the
+heels leaves the picture; a short point is the early hood's). Every measure and the form are by eye, on ten
+views of two men: PLACEHOLDER.
+
+Tests: `portrait/tests/hood_back.rs`, new. Of 120 men in the village and at court, each with a hood thrown
+back has two surfaces with the hood's image (the cape and the bag), the bag with all its corners, no place of
+it at a hem's place in the image, 30 to 36 cm under the cape's top, 15 to 28 cm broad, under 3 cm at the
+point, over 6 cm behind the head's middle, round to the side the shoulders are turned to, and nothing of the
+cape or the gown standing out of it; a hood on the head has one surface and a man without a hood none. And
+with the shoulders square the point hangs straight behind the head (within 0.01 radians), turned 0.35 either
+way 0.25 to 0.32 round to that side. One count of an older test is changed, with its reason in the test:
+`portrait/tests/facing.rs` held every hood to one surface with the hood's image; a hood thrown back has two.
+`cargo test --release` as a whole 134 of 134 (in the round's full run 133 and one failure, of the new test and
+a true one: on one lord the mouth's first row came to a hem's place in the image; the whole bag's image is now
+shifted until its first place stands a tenth off it, and the file run again, 2 of 2, with
+`tests/facing.rs`); `tests/portrait.test.ts` and its neighbour 46 of 46; typecheck and lint pass, no new
+warning.
+Pictures (project files, `portraits/`): `runde161_vorher_nachher.png` (the two lords from the side, from a
+quarter behind and from behind, before above and after below), `runde161_dorf_vorher_nachher.png` (the same in
+the village), `runde161_von_vorn.png` (the two lords from the front, before and after).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
@@ -7808,7 +7906,8 @@ the ends of his hair turned out in rolls (bands side by side, where theirs are l
 men in ten wear a felt hat, since round 135 in two forms (theirs wear many), since round 136 three hoods
 in ten end in a dagged hem (one form, theirs many), and the face still lacks the
 reference's streak of gloss on the nose's flank; the thrown-back hood closes round the neck since round 35, but
-has no folds across its cloth. Since round 111 the people of every part of the world can be drawn, in a plain
+has no folds across its cloth, and since round 161 its hood hangs behind the neck, a flat bag of one form
+(not held against a picture of the reference). Since round 111 the people of every part of the world can be drawn, in a plain
 dress that is no people's own, and without a picture of the reference to hold them against.
 
 **Genes.** Since round 111 there are 23 pools and a founder draws from the pool of their culture

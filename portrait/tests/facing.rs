@@ -77,7 +77,8 @@ fn a_lords_hood_is_faced_with_fur_and_a_villagers_is_not() {
         assert_eq!(furs.len(), 1, "person {k}: the hood's fur");
         assert_eq!(furs[0].pos.len(), 6 * ROUND * EDGE[back], "person {k}: a ring for every corner of the edge");
         let wool = with(&out.surfaces, image);
-        assert_eq!(wool.len(), 1, "person {k}: the hood");
+        // (round 161: a hood thrown back has its hood behind the neck, drawn with the same image after it)
+        assert_eq!(wool.len(), 1 + back, "person {k}: the hood");
         assert_eq!(wool[0].pos.len(), 3 * if file == d.hood_dagged[back] { DAGGED[back] } else { PLAIN[back] }, "person {k}: the hood under the fur is whole");
         // (of the roll's upper side: the side that lies on the wool is drawn darker)
         let light = |c: &[f32; 3]| 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];

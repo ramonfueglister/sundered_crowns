@@ -2128,6 +2128,14 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
             merged.extend(made);
         }
     }
+    // (round 161) the hood of a hood thrown back hangs behind the neck (hood_back.rs): laid on the cape and the
+    // gown while the body still stands square, and turned with them below, so that what of it lies behind the
+    // head keeps its place as the head does
+    let mut behind = garb.filter(|_| hood == crate::dress::Hood::Back).and_then(|d| {
+        let cape = merged.iter().find(|s| s.tex.as_deref().is_some_and(|t| t.contains(d.hood_back)))?;
+        let under: Vec<&Surface> = merged.iter().filter(|s| s.tex.as_deref().is_some_and(|t| t.contains(d.gown) || d.under.iter().any(|n| !n.is_empty() && t.contains(n)))).collect();
+        crate::hood_back::hang(cape, &under)
+    });
     let range = pose.or(garb.map(|d| d.pose)).unwrap_or([0.0; 3]);
     // how the person carries the head: the stage tilts the whole figure, the shoulders are tipped back by as much
     // (a pose asked for by the caller is taken as it is)
@@ -2149,6 +2157,7 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
         }
         let (axis, foot) = ([(lo[0] + hi[0]) / 2.0, (lo[1] + hi[1]) / 2.0], y0 - crate::pose::NECK * (y1 - y0));
         crate::pose::pose(&mut merged, stand, axis, foot, y0);
+        crate::pose::pose(behind.as_mut_slice(), stand, axis, foot, y0);
         neck = [axis[0], foot, axis[1]];
     }
     // (round 155) a veil hangs from the head (hang.rs): bound to the body place by place it went in under the
@@ -2194,6 +2203,8 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
             merged[b] = hair;
         }
     }
+    // (round 161) and the hood that hangs behind the neck, over all of it
+    merged.extend(behind);
     // the bust leaning back, where the dress asks for it
     if lean != 0.0 {
         lean_back(&mut merged, (y0 + y1) / 2.0, hz / hn.max(1) as f32, lean);

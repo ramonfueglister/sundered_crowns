@@ -17,6 +17,7 @@ pub mod geo;
 pub mod hang;
 mod hair;
 pub mod head;
+mod hood_back;
 pub mod look;
 pub mod mantle;
 pub mod measure;

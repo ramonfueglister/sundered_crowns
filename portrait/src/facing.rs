@@ -34,20 +34,7 @@ const SHADE: f32 = 0.8;
 /// The roll of fur along the edge of `hood`'s opening, drawn with `image` in the colour `fur` (linear). Nothing is
 /// returned for a garment without a hemmed edge.
 pub fn face(hood: &Surface, image: &str, fur: Rgb) -> Option<Surface> {
-    // the hood's corners, each once (a corner of the file is drawn once for each of its triangles, bit for bit)
-    let mut ids: HashMap<[u32; 3], usize> = HashMap::new();
-    let of: Vec<usize> = hood
-        .pos
-        .iter()
-        .map(|q| {
-            let n = ids.len();
-            *ids.entry(q.map(f32::to_bits)).or_insert(n)
-        })
-        .collect();
-    let mut at = vec![[0f32; 3]; ids.len()];
-    for (i, &v) in of.iter().enumerate() {
-        at[v] = hood.pos[i];
-    }
+    let (of, at) = corners(hood);
     // the hood's own middle: inside the head or the neck, so the wool's outside faces away from it
     let middle = mul(at.iter().fold([0f32; 3], |a, q| add(a, *q)), 1.0 / at.len() as f32);
     let (edge, closed) = opening(&of, &at)?;
@@ -151,9 +138,28 @@ pub fn face(hood: &Surface, image: &str, fur: Rgb) -> Option<Surface> {
     Some(s)
 }
 
+/// A hood's corners, each once (a corner of the file is drawn once for each of its triangles, bit for bit): which
+/// of them each drawn corner is, and where they lie.
+pub(crate) fn corners(hood: &Surface) -> (Vec<usize>, Vec<V3>) {
+    let mut ids: HashMap<[u32; 3], usize> = HashMap::new();
+    let of: Vec<usize> = hood
+        .pos
+        .iter()
+        .map(|q| {
+            let n = ids.len();
+            *ids.entry(q.map(f32::to_bits)).or_insert(n)
+        })
+        .collect();
+    let mut at = vec![[0f32; 3]; ids.len()];
+    for (i, &v) in of.iter().enumerate() {
+        at[v] = hood.pos[i];
+    }
+    (of, at)
+}
+
 /// The edge of a hood's opening, corner after corner along it, and whether it comes round to its beginning: of the
 /// edges with more than two triangles, those that hang together and lie highest.
-fn opening(of: &[usize], at: &[V3]) -> Option<(Vec<usize>, bool)> {
+pub(crate) fn opening(of: &[usize], at: &[V3]) -> Option<(Vec<usize>, bool)> {
     let sides = |t: usize| (0..3).map(move |k| (of[t + k].min(of[t + (k + 1) % 3]), of[t + k].max(of[t + (k + 1) % 3])));
     let mut count: HashMap<(usize, usize), u32> = HashMap::new();
     for t in (0..of.len()).step_by(3) {
