@@ -1,160 +1,26 @@
-// Economy feature 11 (docs/ECONOMY_DESIGN.md): the family is the purse, and a woman without a husband works. Who
-// works (src/sim/systems/work.ts), the purse of a family and the consumption of a person
-// (src/sim/systems/household.ts), the state, the upgrade, and what the server and the panel say of a household.
-import { namedPersons } from '../src/sim/systems/rulers';
+// Economy feature 11 (docs/ECONOMY_DESIGN.md): the family is the purse. The purse of a family and the consumption of
+// a person (src/sim/systems/household.ts), the need of food (economy feature 15), and what the server and the panel
+// say of a household.
 import { describe, it, expect } from 'vitest';
 import { ALIVE } from '../src/sim/state';
-import { foundDeaths } from '../src/sim/systems/deaths';
-import { newWorldState, loadSetup } from '../tools/sim/load';
+import { newWorldState } from '../tools/sim/load';
 import { advanceDay } from '../src/sim/engine';
 import { FIGURE, FIGURES } from '../src/sim/economy/engine';
-import { ROLE, WORKING_AGE, rateOfOtherWomen, workforce } from '../src/sim/systems/work';
+import { ROLE } from '../src/sim/systems/work';
 import { BASKET_AGE, FOOD_SECTOR, basketsOf, foodPrices, writeHouseholds } from '../src/sim/systems/household';
 import { calibrateEconomy, foodNeedCost } from '../src/sim/economy/calibration';
-import { foundEconomy, workingDays } from '../src/sim/systems/economy';
+import { workingDays } from '../src/sim/systems/economy';
 import { absences, contracts } from '../src/sim/systems/workers';
 import { calendarOf, dayFactor } from '../src/sim/holy_days';
 import { dateToDay, dayToDate } from '../src/sim/calendar';
 import { ageOn } from '../src/sim/systems/people';
-import { hash01 } from '../src/sim/rng';
 import { encodeState, decodeState, hashState } from '../src/sim/snapshot';
-import { upgradeState } from '../src/sim/upgrade';
-import { STATE_VERSION, FAMILY_SCHEMA, PERSON_SCHEMA, type WorldState } from '../src/sim/state';
 import { personDetail, personHousehold } from '../src/net/people';
 import { householdRows, lsd, pence } from '../src/people/economy_rows';
-import { foundMoves } from '../src/sim/systems/moves';
+import { members, near, works } from './setup/households';
 
 const { s, w } = newWorldState();
 const start = decodeState(encodeState(s)); // the world on the day it is founded
-const rate = w.cityEconomies.table.inputs.participation.value;
-const works = (x: WorldState, id: number) => {
-  const r = x.person.cols.role[id];
-  return r === ROLE.worker || r === ROLE.owner || r === ROLE.banker;
-};
-const adult = (x: WorldState, id: number) => ageOn(x.person.cols.born[id], x.day) >= WORKING_AGE;
-/** Equal to the six digits a stored amount has (the components are 32-bit numbers). */
-const near = (a: number, b: number) =>
-  expect(Math.abs(a - b)).toBeLessThanOrEqual(1e-6 * Math.max(Math.abs(a), Math.abs(b)));
-/** The persons of every family. */
-/** The persons of each family of the cities (the rulers, src/sim/systems/rulers.ts, have no part in the economy). */
-function members(x: WorldState): number[][] {
-  const out: number[][] = Array.from({ length: x.family.size }, () => []),
-    named = namedPersons(x);
-  for (let id = 0; id < x.person.size; id++)
-    if (x.person.alive[id] && x.person.cols.died[id] === ALIVE && !named.has(id))
-      out[x.person.cols.family[id]].push(id); // the living: the dead are no members (src/sim/systems/deaths.ts)
-  return out;
-}
-/** A woman without a husband: at the head of a family without a man at its head, or on her own. */
-function withoutHusband(x: WorldState, m: number[][], id: number): boolean {
-  const f = x.person.cols.family[id];
-  return (
-    x.person.cols.sex[id] === 0 && x.family.cols.man[f] < 0 && (x.family.cols.woman[f] === id || m[f].length === 1)
-  );
-}
-/** Per city the women of working age, those of them without a husband, and those who work. */
-function women(x: WorldState): { all: number; alone: number; working: number }[] {
-  const c = x.economy.cities!,
-    at = new Map<number, number>(Array.from(c.places, (p, k) => [p, k])),
-    m = members(x);
-  const out = Array.from(c.places, () => ({ all: 0, alone: 0, working: 0 })),
-    named = namedPersons(x);
-  for (let id = 0; id < x.person.size; id++) {
-    if (x.person.cols.sex[id] !== 0 || !adult(x, id) || named.has(id)) continue;
-    const o = out[at.get(x.family.cols.place[x.person.cols.family[id]])!];
-    o.all++;
-    if (withoutHusband(x, m, id)) o.alone++;
-    if (works(x, id)) o.working++;
-  }
-  return out;
-}
-
-describe('a woman without a husband', () => {
-  for (const [name, x] of [
-    ['1356', start],
-    ['1291', newWorldState(1291, 1291).s],
-  ] as const) {
-    it(`works, in every city of the world of ${name}`, () => {
-      const m = members(x),
-        named = namedPersons(x);
-      let alone = 0;
-      for (let id = 0; id < x.person.size; id++) {
-        if (named.has(id) || !adult(x, id) || !withoutHusband(x, m, id)) continue;
-        alone++;
-        expect(works(x, id)).toBe(true);
-      }
-      expect(alone).toBeGreaterThan(700); // the widows who keep a household and the women who live on their own
-    });
-    it(`leaves the share of the women who work at the table's 43 %, in every city of the world of ${name}`, () => {
-      const by = women(x);
-      let all = 0,
-        working = 0;
-      for (const c of by) {
-        all += c.all;
-        working += c.working;
-        const p = rateOfOtherWomen(rate.women, c.all, c.alone);
-        expect(p).toBeLessThanOrEqual(rate.women + 1e-12); // a town without such a woman: 0.43 up to rounding
-        if (p === 0) {
-          // more than 43 % of the women of the town have no husband (15 small towns of 1291, 17 to 67 women): they all
-          // work, nobody else, and the town is above the table's share
-          expect(c.alone).toBeGreaterThanOrEqual(rate.women * c.all);
-          expect(c.working).toBe(c.alone);
-          continue;
-        }
-        // the women without a husband, and of the others as many as are expected, within four standard deviations
-        // (550 towns in 1291: at three, one or two would be outside by chance)
-        expect(Math.abs(c.working - rate.women * c.all)).toBeLessThan(
-          4 * Math.sqrt((c.all - c.alone) * p * (1 - p)) + 0.5,
-        );
-      }
-      expect(Math.abs(working / all - rate.women)).toBeLessThan(0.01);
-    });
-    it(`leaves few families without a person who works in the world of ${name}`, () => {
-      const m = members(x);
-      let none = 0,
-        families = 0,
-        lone = 0;
-      for (const ids of m) {
-        if (!ids.length) continue;
-        families++;
-        if (ids.some((id) => works(x, id))) continue;
-        none++;
-        if (ids.length === 1 && x.person.cols.sex[ids[0]] === 0 && adult(x, ids[0])) lone++;
-      }
-      expect(families).toBeGreaterThan(4500);
-      expect(none / families).toBeLessThan(0.015); // it was every ninth family; 1.06 % in the 558 towns of 1291
-      expect(lone).toBe(0); // no woman on her own is among them
-    });
-  }
-  it('leaves the men as they were drawn: 97.1 % of them, each by his own draw', () => {
-    const at = new Set(start.economy.cities!.places);
-    let men = 0;
-    for (let id = 0; id < start.person.size; id++) {
-      if (
-        start.person.cols.sex[id] !== 1 ||
-        !adult(start, id) ||
-        !at.has(start.family.cols.place[start.person.cols.family[id]])
-      )
-        continue;
-      men++;
-      expect(works(start, id)).toBe(hash01(start.seed >>> 0, id, 30) < rate.men);
-    }
-    expect(men).toBeGreaterThan(7000);
-  });
-  it("sets the rate of the other women so that the table's share of all is expected to work", () => {
-    expect(rateOfOtherWomen(0.43, 100, 10)).toBeCloseTo(33 / 90, 12);
-    expect(10 + rateOfOtherWomen(0.43, 100, 10) * 90).toBeCloseTo(43, 12);
-    expect(rateOfOtherWomen(0.43, 100, 0)).toBe(0.43);
-    expect(rateOfOtherWomen(0.43, 100, 43)).toBe(0); // the women without a husband are the share already
-    expect(rateOfOtherWomen(0.43, 100, 60)).toBe(0); // more of them than the share: nobody else is drawn
-    expect(rateOfOtherWomen(0.43, 5, 5)).toBe(0);
-  });
-  it('is the same draw for the same seed', () => {
-    const cities = Array.from(start.economy.cities!.places);
-    expect(workforce(start, cities, rate)).toEqual(workforce(decodeState(encodeState(start)), cities, rate));
-    expect(Array.from(newWorldState().s.person.cols.role)).toEqual(Array.from(start.person.cols.role));
-  });
-});
 
 describe('the purse of a family', () => {
   for (let d = 0; d < 20; d++) advanceDay(s, w);
@@ -377,109 +243,6 @@ describe('the need of food (economy feature 15)', () => {
     expect(nobody.length).toBeGreaterThan(0);
     for (const f of nobody) expect(F.fed[f]).toBe(0);
   });
-});
-
-describe('the state', () => {
-  it('holds the purses: a saved world goes on as the running one', () => {
-    const a = decodeState(encodeState(s)),
-      b = decodeState(encodeState(s));
-    expect(a.v).toBe(STATE_VERSION);
-    expect(hashState(a)).toBe(hashState(s));
-    expect(Object.keys(a.family.cols)).toEqual(Object.keys(FAMILY_SCHEMA));
-    for (let d = 0; d < 3; d++) {
-      advanceDay(a, w);
-      advanceDay(b, w);
-    }
-    expect(hashState(decodeState(encodeState(a)))).toBe(hashState(b));
-  });
-  it('of a world that starts in the year of its table goes on where it is through the steps to 34 and 35 (economy features 21 and 22)', () => {
-    // biome-ignore lint/suspicious/noExplicitAny: a state of an older version, which no type of today describes
-    const old = decodeState(encodeState(s)) as any;
-    old.v = 33;
-    const up = upgradeState(old, w);
-    expect(up.v).toBe(STATE_VERSION);
-    // the step to 35 only has the engine given the working days and the absences again before the next day
-    const same = decodeState(encodeState(s));
-    same.economy.cities!.workingTo = -1;
-    expect(up.economy.cities!.workingTo).toBe(-1);
-    expect(hashState(up)).toBe(hashState(same));
-  });
-  it('of a world from before feature 11 gets them by the upgrade: the economies are founded anew with the women without a husband at work', () => {
-    // version 13: no purse, no consumption (who works there was drawn by the rule before; the upgrade draws again)
-    // biome-ignore lint/suspicious/noExplicitAny: a state of an older version, which no type of today describes
-    const old = decodeState(encodeState(s)) as any;
-    for (const k of ['persons', 'working', 'baskets', 'income', 'spent', 'savings']) delete old.family.cols[k];
-    delete old.person.cols.consumed;
-    old.v = 13;
-    old.person.cols.role.fill(0); // whatever the parts were: they are given out again
-    const up = upgradeState(decodeState(encodeState(old)), w, () => loadSetup(1356));
-    expect(up.v).toBe(STATE_VERSION);
-    expect(Object.keys(up.person.cols)).toEqual(Object.keys(PERSON_SCHEMA));
-    expect(Object.keys(up.family.cols)).toEqual(Object.keys(FAMILY_SCHEMA));
-    // step 23 founds the persons anew on the day reached, and everything that hangs on them: as it does for the world that ran
-    const founded = decodeState(encodeState(s));
-    founded.v = 22;
-    upgradeState(founded, w, () => loadSetup(1356));
-    expect(hashState(up)).toBe(hashState(founded));
-    const c = up.economy.cities!;
-    expect(c.day).toBe(s.day);
-    expect(c.years.length).toBe(0);
-    expect(c.halted).toBe('');
-    for (let k = 0; k < c.places.length; k++) expect(c.figures[k * FIGURES + FIGURE.periods]).toBe(0);
-    const m = members(up);
-    for (let id = 0; id < up.person.size; id++)
-      if (adult(up, id) && withoutHusband(up, m, id)) expect(works(up, id)).toBe(true);
-    m.forEach((ids, f) => {
-      expect(up.family.cols.persons[f]).toBe(ids.length);
-      expect(up.family.cols.working[f]).toBe(ids.filter((id) => works(up, id)).length);
-    });
-    advanceDay(up, w);
-    advanceDay(up, w);
-    expect(up.economy.cities!.figures[FIGURE.periods]).toBe(2);
-    expect(up.economy.cities!.halted).toBe('');
-    expect(up.family.cols.income.some((v) => v > 0)).toBe(true);
-  }, 60_000);
-  it('of a world from before feature 15 gets the need by the upgrade: the economies are founded anew with households that spend out of savings', () => {
-    // biome-ignore lint/suspicious/noExplicitAny: a state of an older version, which no type of today describes
-    const old = decodeState(encodeState(s)) as any;
-    delete old.family.cols.need;
-    delete old.family.cols.fed;
-    old.v = 20;
-    const up = upgradeState(decodeState(encodeState(old)), w, () => loadSetup(1356));
-    expect(up.v).toBe(STATE_VERSION);
-    expect(Object.keys(up.family.cols)).toEqual(Object.keys(FAMILY_SCHEMA));
-    // step 23 then founds the persons anew, and the economies with them: as it does for the world that ran
-    const founded = decodeState(encodeState(s));
-    founded.v = 22;
-    upgradeState(founded, w, () => loadSetup(1356));
-    expect(hashState(up)).toBe(hashState(founded));
-    const c = up.economy.cities!;
-    expect(c.day).toBe(s.day);
-    expect(c.years.length).toBe(0);
-    for (let k = 0; k < c.places.length; k++) expect(c.figures[k * FIGURES + FIGURE.periods]).toBe(0);
-    advanceDay(up, w);
-    advanceDay(up, w);
-    expect(up.economy.cities!.halted).toBe('');
-    expect(up.family.cols.fed.some((v) => v === 1)).toBe(true);
-  }, 60_000);
-  it('of a world from before features 16 and 17 is founded anew by the upgrade, with a crown that buys with what it took in and with distance between the cities', () => {
-    // biome-ignore lint/suspicious/noExplicitAny: a state of an older version, which no type of today describes
-    const old = decodeState(encodeState(s)) as any;
-    old.v = 23;
-    const up = upgradeState(decodeState(encodeState(old)), w, () => loadSetup(1356));
-    expect(up.v).toBe(STATE_VERSION);
-    const founded = decodeState(encodeState(s));
-    foundEconomy(founded, w);
-    foundDeaths(founded);
-    foundMoves(founded); // (the steps to 25 and 27 draw the days of the moves and of death on the day reached)
-    expect(hashState(up)).toBe(hashState(founded));
-    const c = up.economy.cities!;
-    expect(c.day).toBe(s.day);
-    expect(c.years.length).toBe(0);
-    advanceDay(up, w);
-    advanceDay(up, w);
-    expect(up.economy.cities!.halted).toBe('');
-  }, 60_000);
 });
 
 describe('a household', () => {
