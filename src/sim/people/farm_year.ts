@@ -133,12 +133,15 @@ export function farmYears(
 ): Uint8Array {
   const out = new Uint8Array(climate.length).fill(FARM_YEAR.north);
   for (const { locs, region } of provinces)
-    for (const l of locs) {
-      if (l < 0 || l >= out.length) continue;
-      const c = climate[l];
-      if (region === 'mesopotamia') out[l] = FARM_YEAR.mesopotamia;
-      else if (AROUND.has(region) && (c === CLIMATE.mediterranean || (c === CLIMATE.dry && DRY_TOO.has(region))))
-        out[l] = FARM_YEAR.mediterranean;
-    }
+    for (const l of locs) if (l >= 0 && l < out.length) out[l] = farmYearOf(region, climate[l]);
   return out;
+}
+
+/** The farming year (FARM_YEAR) of land of the climate `climate` (CLIMATE) in the region `region` of the map (see
+ *  `farmYears`); the fields of the world graphic follow it too (src/worldprobe/season_codes.ts). */
+export function farmYearOf(region: string, climate: number): number {
+  if (region === 'mesopotamia') return FARM_YEAR.mesopotamia;
+  return AROUND.has(region) && (climate === CLIMATE.mediterranean || (climate === CLIMATE.dry && DRY_TOO.has(region)))
+    ? FARM_YEAR.mediterranean
+    : FARM_YEAR.north;
 }
