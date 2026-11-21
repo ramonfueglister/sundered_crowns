@@ -76,13 +76,17 @@ rather than EU5's nearest view.
 - **No light lines on the bed of the shallows:** they read as scribbles. The rim along the coast takes a little more
   of the coast's colour from near instead (0.85, was 0.7), so that the shallows stay as light.
 
-The gauntlet follows: 'nah' is held to the middle distance's chop and flecks and no longer moves, and the diorama has
-a third row of motion, the foam along the coast (Schaumsaum: how many points of % more of the water within 4 columns
-of the shore is white than of the open water; round 4 0.42 and 0.14). The water mask counts the foam by the coast as water,
-as it did the foam within the water, so that the foam does not move the shore: light dots within 6 dots of the
-water, bluish, or white in the sun's warm light (the land's pale stone by the water is darker or redder). Without it
-Venice's shallows measured 2.8 instead of 3.8, the same picture by round 4's mask 4.2. It was RESULT. A picture taken as a screen of fine dots shows it (deviceScaleFactor 2): RETINA. Before and after, and the
-foam coming in: project files `wasser/runden/runde5_*`.
+The gauntlet follows: 'nah' is held to the middle distance's chop and flecks and no longer moves, and the diorama has a
+third row of motion, the foam along the coast (Schaumsaum: how many points of % more of the water within 4 columns of
+the shore is white than of the open water; round 4 0.42 and 0.14). The water mask counts the foam by the coast as water,
+as it did the foam within the water, so that the foam does not move the shore: light dots within 6 dots of the water,
+bluish, or white in the sun's warm light (the land's pale stone by the water is darker or redder). Without it Venice's
+shallows measured 2.8 instead of 3.8, the same picture by round 4's mask 4.2. It was 41 of 41, round 4 by the same bars
+37 of 41 (no foam along the coast; 'nah' too rough, chop 1.23 and flecks 0.13 %). A live picture on a screen of two dots
+a point could not be taken in the cloud (the software renderer does not finish a live picture while the water moves);
+the reach holds there by its making: `RATIO` is the pixel ratio the stage draws at (stage/index.ts:155), so such a
+screen shows the water as a still of 1672 dots does. Before and after, and the foam coming in: project files
+`wasser/runden/runde5_*`.
 
 ## Round 4 (20 November 2026): the water moves
 
