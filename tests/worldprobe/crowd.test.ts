@@ -182,7 +182,14 @@ describe('the people of the first far step', () => {
       greatKinds: [],
       pieces: { '1,1': { houses, towns: [{ site: london.site, cx: 300, cz: 200, half: 40, wall: [] }] } },
     });
-    const site: Site = { id: london.site, at: [150.5, 100.5], size: 3, pop: 2000, region: 'italy', style: styleOf('italy') };
+    const site: Site = {
+      id: london.site,
+      at: [150.5, 100.5],
+      size: 3,
+      pop: 2000,
+      region: 'italy',
+      style: styleOf('italy'),
+    };
     const g = meadow(),
       c = coverLand(g, CROWD_AT, new Batch(), [site], {
         ploughed: () => 0,
