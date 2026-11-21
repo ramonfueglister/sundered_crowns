@@ -11,7 +11,8 @@ import { WHEAT_FIELD, cropAt } from '../../src/worldprobe/crops';
 import { CROWD_AT, type CrowdGround, farCrowd } from '../../src/worldprobe/crowd';
 import { coverLand, usePlan } from '../../src/worldprobe/far';
 import type { Site } from '../../src/worldprobe/settle';
-import { packTable, tableOf, unpackTable } from '../../src/worldprobe/table';
+import { tableOf } from '../../src/worldprobe/table';
+import { packTable, unpackTable } from '../../src/worldprobe/table_pack';
 import { uprightOf } from '../../src/worldprobe/zoom';
 import { land } from './land';
 

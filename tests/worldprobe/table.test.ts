@@ -2,16 +2,8 @@
 import { describe, expect, it } from 'vitest';
 import type { Batch } from '../../src/lookprobe/batch';
 import { Mat, N, SUMMIT, idx, onGrid } from '../../src/lookprobe/layout';
-import {
-  RIM,
-  drawGround,
-  drawTable,
-  keepTables,
-  packTable,
-  tableOf,
-  tabled,
-  unpackTable,
-} from '../../src/worldprobe/table';
+import { RIM, drawGround, drawTable, keepTables, tableOf, tabled } from '../../src/worldprobe/table';
+import { packTable, unpackTable } from '../../src/worldprobe/table_pack';
 import { LAND_STEP, SIDE, land, part } from './land';
 
 const lists = (b: Batch | undefined) => ({ pos: b!.pos, nor: b!.nor, col: b!.col });

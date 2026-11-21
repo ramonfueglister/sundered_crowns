@@ -2,26 +2,8 @@
 // a few houses.
 import { type Rnd, fbm2, seeded, smooth } from '../batch';
 import { bush, crops, cypress, smoke, speck, tree } from '../blocks';
-import {
-  CITY,
-  FIELDS,
-  ISLANDS,
-  LAND_Y,
-  Mat,
-  N,
-  ROADS,
-  TOWNS,
-  fieldAt,
-  idx,
-  inCity,
-  inGrid,
-  isWet,
-  mountainAt,
-  occlude,
-  riverDist,
-  roadDist,
-  toST,
-} from '../layout';
+import { LAND_Y, Mat, N, idx, inGrid, isWet, occlude, toST } from '../layout';
+import { CITY, FIELDS, ISLANDS, ROADS, TOWNS, fieldAt, inCity, mountainAt, riverDist, roadDist } from './places';
 import { type Site, inFrame } from './site';
 
 /** The fields' crops. */

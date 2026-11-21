@@ -12,23 +12,16 @@ import { buildPiece, warmPieces } from './build';
 import { CROWD_AT, farCrowd } from './crowd';
 import { type Cover, KINDS, laidOut } from './far';
 import { glide } from './glide';
-import { above, lay, meanCover, summary } from './mean';
+import { meanCover, summary } from './mean';
+import { above, lay } from './mean_look';
 import { faced, flat as floats, small } from './small';
 import { joinTops } from './tops';
 import { bytesOf, pack, unpack } from './pack';
 import { folderOf, kept } from './store';
 import { unbrotli } from './brotli';
 import { stamped } from './stamp';
-import {
-  type Table,
-  type TablesIndex,
-  drawTable,
-  keepTables,
-  keyOfTable,
-  tabled,
-  unpackTable,
-  whereTable,
-} from './table';
+import { type Table, type TablesIndex, drawTable, keepTables, keyOfTable, tabled, whereTable } from './table';
+import { unpackTable } from './table_pack';
 import type { Piece, WorldScene } from './world';
 
 /** a matrix that moves nothing */

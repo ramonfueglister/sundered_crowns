@@ -2,9 +2,11 @@
 // of block edges. The shore lays a bank into the water's own columns instead: land that follows the smoothed line of
 // the coast and falls to the water over a strip of sand, so that the water's edge is a slanted line and not a stair.
 // The columns themselves stay as they are: what is wet stays wet for everything that asks the ground.
-import { Batch, type RGB, type V3, mix, rgb, smooth } from './batch';
+import { type Batch, type RGB, type V3, mix, rgb, smooth } from './batch';
 import { type Ground, type GroundTraits, Mat, N, idx } from './layout';
-import { type Part, ROCK_TOP_LOW, skyLight, skyShare, topColor } from './terrain';
+import type { Part } from './terrain';
+import { ROCK_TOP_LOW, topColor } from './terrain_colours';
+import { skyLight, skyShare } from './terrain_light';
 
 /** the land's share round a point is taken over this many columns (the width of a bell curve) */
 const SHORE_BLUR = 0.7;

@@ -8,7 +8,8 @@ import { crops } from '../../src/lookprobe/blocks';
 import { type Ground, idx, LAND_Y, Mat, N, onGrid, SEA_Y } from '../../src/lookprobe/layout';
 import { CROP_NAMES, CROPS_AT, drawCrops, FALLOW_FIELD, OATS_FIELD, WHEAT_FIELD } from '../../src/worldprobe/crops';
 import { coverLand } from '../../src/worldprobe/far';
-import { drawGround, drawTable, packTable, tableOf, unpackTable } from '../../src/worldprobe/table';
+import { drawGround, drawTable, tableOf } from '../../src/worldprobe/table';
+import { packTable, unpackTable } from '../../src/worldprobe/table_pack';
 import { uprightOf } from '../../src/worldprobe/zoom';
 import { LAND_STEP, land, part, SIDE } from './land';
 

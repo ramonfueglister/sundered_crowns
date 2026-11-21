@@ -2,7 +2,8 @@
 // sheep on two meadows.
 import { seeded } from '../batch';
 import { crate, person, sheep, stall } from '../blocks';
-import { LAND_Y, Mat, N, ROADS, SITES, idx, inCity, inGrid, isWet, toXZ } from '../layout';
+import { LAND_Y, Mat, N, idx, inGrid, isWet, toXZ } from '../layout';
+import { ROADS, SITES, inCity } from './places';
 import { type Site, inFrame } from './site';
 
 /** Market stalls on the square, goods on the paving near the water. */
