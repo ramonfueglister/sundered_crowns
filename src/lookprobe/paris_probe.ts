@@ -51,12 +51,16 @@ const TR: Tradition = {
   pitch: [num('pitch0', PARIS.pitch[0]), num('pitch1', PARIS.pitch[1])],
   jetty: { ...PARIS.jetty, share: num('jetty', PARIS.jetty.share) },
 };
-/** a block of houses and the lane beside it, in blocks; the square takes two blocks and the lane between them */
-const BLOCK = num('block', 12),
-  LANE = num('lane', 4.6),
+/**
+ * a block of houses and the lane beside it, in blocks; the square takes two blocks and the lane between them. The
+ * layout's and the camera's numbers are the search's own, unrounded: a rounded block size draws another town, which
+ * measured systematically worse (21 Nov 2026: fine detail over its limit on two of four draws)
+ */
+const BLOCK = num('block', 12.014),
+  LANE = num('lane', 4.608),
   CELL = BLOCK + LANE;
 const GRASS = rgb(0x6a8a3a),
-  OLIVE = hexOf('olive') ?? rgb(0x2d551b),
+  OLIVE = hexOf('olive') ?? rgb(0x2b5517),
   LIGHT_LEAF = hexOf('leaf') ?? rgb(0x5d7212),
   STRIPES: readonly RGB[] = [rgb(0xc8382c), rgb(0x2f5f9a), rgb(0xd8a030)],
   CANVAS = rgb(0xf0e8d8),
@@ -124,7 +128,7 @@ function side(things: Batch, x0: number, z0: number, x1: number, z1: number, fro
 function block(ground: Batch, things: Batch, x0: number, z0: number, sx: number, sz: number, r: Rnd) {
   const x1 = x0 + sx,
     z1 = z0 + sz,
-    d = num('depth', 3.9);
+    d = num('depth', 3.922);
   side(things, x0, z1 - d, x1, z1, 'pz', r);
   side(things, x0, z0, x1, z0 + d, 'nz', r);
   side(things, x1 - d, z0 + d, x1, z1 - d, 'px', r);
@@ -141,7 +145,7 @@ function block(ground: Batch, things: Batch, x0: number, z0: number, sx: number,
       LAND_Y,
       z0 + sz / 2 + r.range(-0.8, 0.8),
       r,
-      r.range(1.8, 2.3) * num('treesize', 0.88),
+      r.range(1.8, 2.3) * num('treesize', 0.95),
       r.chance(0.4) ? LIGHT_LEAF : OLIVE,
     );
 }
@@ -250,8 +254,8 @@ LIGHT.skyColor = colour('skycol') ?? FOUND.skyColor;
 LIGHT.sunColor = colour('suncol') ?? FOUND.sunColor;
 
 stage(build, {
-  frameW: num('across', 63),
-  elevation: num('elev', 36),
+  frameW: num('across', 63.12),
+  elevation: num('elev', 36.097),
   tall: 14,
   light: LIGHT,
   shadowRadius: Number(q.get('soft')) || NEAR_SHADOW,

@@ -40,7 +40,7 @@ export const PARIS: Tradition = {
   tileShades: [0.81, 0.4],
   // narrow tall windows with pale green glass, as the picture draws them
   window: [1, 3],
-  glass: rgb(0x748a6b),
+  glass: rgb(0x6c8a6b),
   plot: { width: [m(4.5), m(6.5)], depth: [m(6), m(8)], greatWidth: [m(9), m(12)] },
   timber: { share: 1, c: rgb(0x664f4c) },
   plainChimney: true,
