@@ -20,7 +20,7 @@ export const PARIS: Tradition = {
   storeys: [2, 3],
   greatStoreys: [3, 4],
   walls: hexes([0xf2c3a7, 0xe4b69a, 0xfacdb1, 0xdfb094, 0xecbea2]),
-  stone: rgb(0xe8d7c3),
+  stone: rgb(0xe8d7c2),
   roof: rgb(0x9a5a38),
   // brown tiles most often, red and orange-red ones between them (no ochre: the picture has none), now and then slate
   // (assumption)
@@ -41,7 +41,7 @@ export const PARIS: Tradition = {
   tileShades: [0.811, 0.4],
   // narrow tall windows with pale green glass, as the picture draws them
   window: [1, 3],
-  glass: rgb(0x6c8b6b),
+  glass: rgb(0x6b8b6b),
   plot: { width: [m(4.5), m(6.5)], depth: [m(6), m(8)], greatWidth: [m(9), m(12)] },
   timber: { share: 0.989, c: rgb(0x664f4c), post: 0.883 },
   plainChimney: true,

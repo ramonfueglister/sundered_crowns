@@ -61,7 +61,7 @@ const BLOCK = num('block', 12.033),
   LANE = num('lane', 5.181),
   CELL = BLOCK + LANE;
 const GRASS = rgb(0x6a8a3a),
-  OLIVE = hexOf('olive') ?? rgb(0x3c5528),
+  OLIVE = hexOf('olive') ?? rgb(0x3a5524),
   LIGHT_LEAF = hexOf('leaf') ?? rgb(0x607300),
   STRIPES: readonly RGB[] = [rgb(0xc8382c), rgb(0x2f5f9a), rgb(0xd8a030)],
   CANVAS = rgb(0xf0e8d8),
@@ -252,7 +252,7 @@ async function build(): Promise<StageScene> {
  * (tools/lookprobe/search_paris.py, 21 Nov 2026), seen through `?tone=neutral&exposure=1.2&saturation=0.88` (the
  * game's own tone stays AgX); each strength can be tried out from the address, as in near.ts
  */
-const FOUND = { ...NEAR_LIGHT, sun: 1.364, side: 0.923, sky: 0.755, bounce: 0.299, fill: 0.611, skyColor: 0xc4d1f0 };
+const FOUND = { ...NEAR_LIGHT, sun: 1.364, side: 0.923, sky: 0.755, bounce: 0.299, fill: 0.675, skyColor: 0xc4d1f0 };
 const LIGHT = { ...FOUND };
 for (const k of ['sun', 'side', 'sky', 'bounce', 'fill'] as const) LIGHT[k] = num(k, FOUND[k]);
 LIGHT.skyColor = colour('skycol') ?? FOUND.skyColor;
