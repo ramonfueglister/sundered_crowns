@@ -17,7 +17,7 @@ one, changes nothing: same people in, same pictures out, measured.
 |---|---|---|
 | Builder | `portrait/` (Rust, WebAssembly) | From a person (100 bytes of genes, sex, age, estate, occupation, origin, food, mourning, wealth, worn clothes) to the triangles of head and shoulders: MakeHuman's head morphed by the genes, skin, eyes, hair, beard, clothes, headwear, jewellery |
 | Genes | `portrait/src/dna.rs` | 50 genes of two alleles, one byte each (Apoleia's 34, and 16 since round 112 that a dress with a table shows); a child takes one allele of each gene from either parent, plus a small mutation; founders draw from one of 23 pools (round 111), which one is the culture's (`src/sim/people/pools.ts`) |
-| Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; a culture without a set wears the plain dress of 1356 (round 111), one of Apoleia's seven regions Apoleia's Roman dress. England's has a table for people of rank and one for a crowned head (round 144), chosen by the person's stand; a crowned head wears a mantle faced with ermine over the gown (round 145, `portrait/src/mantle.rs`); a lady of rank shows her plaits and wears a circlet of gilt metal on them (round 146), a lord with nothing else on the head wears one too (round 147); a lord's hood is faced with white fur along the edge of its opening (round 148, `portrait/src/facing.rs`); a lady's gown is cut wide and low at the neck, with no linen in it (round 149, `cloth_kirtle_court`); the court's gown is of silk (round 150, `DressSet::gown_image`) and draped closer, so that it lies smooth (round 151, `DressSet::gown_file`); the ermine's tails stand in rows on the mantle's facing (round 152, `tools/portrait/pipeline/mantle.py`); veil and wimple at court are of a fine bleached linen (round 153, `DressSet::veil_image`, `wimple_image`) |
+| Dress | `portrait/src/dress.rs` | Sets of dress as tables, chosen by where a family comes from; a culture without a set wears the plain dress of 1356 (round 111), one of Apoleia's seven regions Apoleia's Roman dress. England's has a table for people of rank and one for a crowned head (round 144), chosen by the person's stand; a crowned head wears a mantle faced with ermine over the gown (round 145, `portrait/src/mantle.rs`); a lady of rank shows her plaits and wears a circlet of gilt metal on them (round 146), a lord with nothing else on the head wears one too (round 147); a lord's hood is faced with white fur along the edge of its opening (round 148, `portrait/src/facing.rs`); a lady's gown is cut wide and low at the neck, with no linen in it (round 149, `cloth_kirtle_court`); the court's gown is of silk (round 150, `DressSet::gown_image`) and draped closer, so that it lies smooth (round 151, `DressSet::gown_file`); the ermine's tails stand in rows on the mantle's facing (round 152, `tools/portrait/pipeline/mantle.py`); the ermine has a pile (round 165, `portrait/src/pile.rs`); veil and wimple at court are of a fine bleached linen (round 153, `DressSet::veil_image`, `wimple_image`) |
 | Stage profile | `src/portrait/profile.ts` | Light and materials per set of dress; Apoleia's portraits keep Apoleia's |
 | Pipeline | `tools/portrait/pipeline/` | Blender scripts that wrote the draped clothes and hair (not part of the build) |
 | Files of the real look | `public/portrait/` (41.5 MB) | The head (1.1 MB), data files (15.0 MB since round 111, 13.1 since round 110, 12.7 since round 109, 12.9 since round 105, 10.4 before round 104: the hair's bodies, the beard's locks, draped clothes, skin shading), images (24.8 MB: skin by age and sex, wrinkle maps, hair, cloth, eyes) |
@@ -8141,6 +8141,97 @@ tuft at either rim more) and its thickness (to a tuft more). `cargo test --relea
 Pictures (project files, `portraits/`): `runde164_hof_vorher_nachher.png` (seven of the sample's eight lords
 who wear a hood, before above and after below), `runde164_pelz_gross.png` (two of them large, from the front and
 the side, before above and after below).
+
+**Round 165: the ermine of a crowned head's mantle has a pile** (2026-11-21). Round 164's own list: "The
+mantle's ermine on a crowned head is a flat sheet still". All 36 of the sample crowned on one sheet, and two
+of them large: the facing is a part of the mantle's sheet and as thin as the red cloth beside it, white paper
+with tails drawn on it, and the rolled hem at its front edge is a thread. A lord's hood beside it has had a
+roll of tufted fur since round 164. Beside the reference's fur (its kings' mantles, `ck3_15`): that stands
+thick over the cloth, with a fat soft edge, and lies in tufts.
+
+What was read. Nothing new. How thick the ermine of a mantle's facing lay was not looked up, and no picture of
+the time was looked at.
+
+What is changed.
+- **The fur is lifted off the sheet** (`portrait/src/pile.rs`, new, called by `mantle::face` when everything
+  stands as it is drawn; `BED`, `RIM`, `ACROSS`, and the hood's `TUFT` and `HOLLOW` from `facing.rs`): each of
+  the fur's triangles is divided in four at the middles of its sides (20 732 on a mantle for 5 183, sides of
+  5 mm for 1 cm), and each corner is lifted the way the sheet faces there: by a bed of 2 mm, and by tufts of
+  up to 6 mm, a draw at each corner of a grid of cubes 1.6 cm wide, evened between them. Between tufts the fur
+  is darker, by up to 0.55 where none stands, as on the hood. Where the fur faces is read off the lifted form.
+- **Nothing is lifted along the fur's border**, where the red cloth goes on: the pile rises over the first
+  centimetre from it. The fur lies on the mantle as a cushion, and no gap opens beside it.
+- **The rolled hem at the front edge is a roll**: a tube of six corners round, 3 mm in radius, lifted by the
+  bed and half a tuft all round to 8 mm, without tufts (a tube too thin to carry them). The middles of its
+  sides lie between the sides' ends, and it faces round its tube as it did.
+- The brooches sit on the fur as it lies now. The fur's image, its colour, the mantle's file and the red cloth
+  are not touched.
+
+Measured, on sixteen crowned heads from a child of five to an old one (`portrait/tests/mantle.rs`):
+
+| | round 164 | now |
+|---|---|---|
+| triangles of fur on a mantle; of all the mantle's | 5 183; 0.50 | 20 732; 0.80 |
+| the fur over the sheet | 0 | 2 to 8 mm; 0 at its border |
+| sides of the file whose middle is darker or lighter than their ends by 0.05 of the whole step: the middle lies under or over the line between them | none (one lightness) | 21 292 of 21 738 |
+| a tuft's height read off them | none | 5.5 to 6.5 mm |
+| the hem at the front edge, round | 1.9 cm | 4.9 cm |
+| the opening in front, to either side of the middle, at least | 3.2 cm | 2.3 cm |
+| a brooch's middle off the fur at most; the cord's front before the gown at least | 0.37 cm; 1.05 cm | 0.42 cm; 1.48 cm |
+| the fur's image on the chest covers, across; down (of what it is made for) | 0.66 to 1.13; 0.64 to 1.18 | 0.75 to 1.19; 0.67 to 1.23 |
+| the same, across for its length | 0.74 to 1.07 | 0.78 to 1.13 |
+| of the chest's fur, the image's way down is the cloth's | 0.949 | 0.927 |
+| the builder (`sc_portrait.wasm`) | 851 152 bytes | 864 531 |
+
+The image's size is read on the pile now, which is longer than the sheet under it: a tuft's slopes, and the
+pile's top where the sheet is round across (most on a child's shoulders, the two at 1.13). The older test held
+across for its length under 1.1; that bound is 1.15 now, the others stand (across at most 1.19 for 1.2).
+
+Tried and not kept, and the way there.
+- Every corner lifted alike, the hem's with tufts as the facing's: the hem at the front edge a string of
+  beads.
+- The hem at half a tuft all the way: no beads, a dent between every two of its rings (the middle of a side,
+  lifted by itself, lies within the tube's round).
+- The middles of the hem's sides set between their ends: the form smooth, the light on it still in ribs (where
+  it faces read off its few sides). With the hem facing round its tube as it did, it is smooth: kept.
+- For the fine ribs across a child's hem (below): the hem's corners lifted the way their neighbours along the
+  tube are, evened four times. The picture did not change; taken out again.
+- The older test failed at once with 1.30 across on the first mantle. Not the pile: it took the triangles that
+  lie within the image across, and of the strip along the front edge, where the image lies some five times
+  as broad as elsewhere (4.3 to 5.0 for 0.9, as the file has it since round 152), the inner halves were
+  within it after the division. It takes whole triangles of the file now, as before.
+- The builder was 840 811, 860 986, 863 119 and 864 531 bytes over the four steps above, and 868 656 with the
+  evening: 13 kB more than round 164's, which had grown by 19 kB.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 164 to its last figure, and the
+colour sheet the same (they read skin of the face).
+
+Honest about it. The facing has a body now: a cushion with a fat rolled edge and soft shade in its field, and
+behind the neck a collar that stands thick. It is fleece more than ermine, as on the hood: soft lumps, no
+hair on the outline, as white as it was; the tails are the image's and lie on the lumps as they fall, one
+across a hollow here and there. The roll and the pile are as thick on a child of five as on a man, and heavy
+on the child; and on a child, whose picture is taken closer, the roll shows fine ribs across: the fur's image
+is laid along a hem and goes round the tube with a twentieth of its length, 5 mm of hairs round 4.9 cm now
+(1.9 cm before). Not cured. The opening in front is 0.9 cm narrower to either side. Where the fur ends at the
+cloth the fur has two half sides for the cloth's one; their middle is not moved and lies on the cloth's
+side, and no crack shows in the pictures, but nothing but that holds them together. From the side the fur's
+border on the red cloth is still the file's stairs. In one trial's picture from behind a black slit showed in
+the red cloth low on a girl's back; the cloth is not touched this round, and the slit was not looked for in
+an earlier picture. The mantle is a laid tent still. How thick the bed is, how far from the border the pile
+is whole and how broad a tuft is, is by eye beside the reference's fur, on two crowned heads from the front,
+the side and behind and 36 at a picture's size: PLACEHOLDER. No source and no picture of the time gives how
+the ermine of a mantle lay.
+
+Tests: `portrait/tests/mantle.rs`, one new (`the_fur_has_a_pile`): four triangles for each of the file's and
+over 16 000; nine in ten of the sides whose middle is darker or lighter have it lower or higher; a tuft's
+height read off them within 0.7 to 1.3 of `TUFT`; the fur's border at the cloth on the cloth's corners (a
+quarter of it lies on the sheet's own rim); a hem's sides not bent. It fails without `pile::raise`. One older
+test there is changed as said above (whole triangles of the file; across for its length to 1.15).
+`cargo test --release` as a whole 139 of 139; `tests/portrait.test.ts` and its neighbour 46 of 46; typecheck
+and lint pass, no new warning.
+Pictures (project files, `portraits/`): `runde165_mantel_vorher_nachher.png` (two crowned heads large, before
+above and after below), `runde165_seite_hinten.png` (the same two from the side and from behind, after),
+`runde165_alle_gekroent.png` (all 36 of the sample crowned, after).
 
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the

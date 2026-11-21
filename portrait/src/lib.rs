@@ -23,6 +23,7 @@ pub mod mantle;
 pub mod measure;
 mod morph;
 pub mod person;
+pub mod pile;
 pub mod layers;
 pub mod pose;
 pub mod real;

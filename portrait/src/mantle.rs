@@ -5,8 +5,8 @@
 //! both front edges and round the neck, and on either front edge the place where a brooch sits: by whole numbers
 //! added to a triangle's place across the image, which repeats with every whole number (`MARK` for fur, twice
 //! that under a brooch). Here, when everything stands as it is drawn, the sheet is taken apart into its cloth and
-//! its fur, and the clasp is laid on it: a brooch of gold with a stone on either edge and a cord from one to the
-//! other, drawn taut over the gown between them.
+//! its fur, the fur is given its pile (round 165, pile.rs), and the clasp is laid on it: a brooch of gold with a
+//! stone on either edge and a cord from one to the other, drawn taut over the gown between them.
 
 use crate::geo::{add, cross, dot, len, madd, mul, norm, sub, Mat, Rgb, Surface, V3};
 
@@ -44,7 +44,8 @@ pub fn face(sheet: &mut Surface, under: &[&Surface], f: &Facing) -> Vec<Surface>
     let mut cloth = Surface::new(sheet.mat);
     cloth.tex = sheet.tex.clone();
     cloth.nmap = sheet.nmap.clone();
-    let mut marks: Vec<(V3, V3)> = Vec::new();
+    // (which of the fur's triangles lie under a brooch)
+    let mut marked: Vec<bool> = Vec::new();
     for t in (0..sheet.pos.len()).step_by(3) {
         let kind = (sheet.uv[t][0] / MARK).round().max(0.0);
         let (to, dye) = if kind > 0.0 { (&mut fur, f.fur) } else { (&mut cloth, f.cloth) };
@@ -53,12 +54,15 @@ pub fn face(sheet: &mut Surface, under: &[&Surface], f: &Facing) -> Vec<Surface>
             to.nrm.push(sheet.nrm[i]);
             to.uv.push([sheet.uv[i][0] - kind * MARK, sheet.uv[i][1]]);
             to.col.push(std::array::from_fn(|c| sheet.col[i][c] * dye[c]));
-            if kind > 1.0 {
-                marks.push((sheet.pos[i], sheet.nrm[i]));
-            }
+        }
+        if kind > 0.0 {
+            marked.push(kind > 1.0);
         }
     }
     *sheet = cloth;
+    // (round 165) the fur's pile; a brooch sits on the fur as it lies then (four triangles for each of the file's)
+    crate::pile::raise(&mut fur);
+    let mut marks: Vec<(V3, V3)> = (0..fur.pos.len()).filter(|i| marked[i / 12]).map(|i| (fur.pos[i], fur.nrm[i])).collect();
     let mut out = vec![fur];
     // the two brooches: the marked corners fall into two heaps, one on either front edge
     marks.sort_by(|a, b| a.0[0].total_cmp(&b.0[0]));

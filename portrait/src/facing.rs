@@ -39,7 +39,7 @@ pub const FINER: usize = 2;
 pub const TUFT: f32 = 0.06;
 const TUFT_LONG: f32 = 0.12;
 const TUFTS_ROUND: u32 = 8;
-const HOLLOW: f32 = 0.55;
+pub const HOLLOW: f32 = 0.55;
 
 /// The roll of fur along the edge of `hood`'s opening, drawn with `image` in the colour `fur` (linear). Nothing is
 /// returned for a garment without a hemmed edge.

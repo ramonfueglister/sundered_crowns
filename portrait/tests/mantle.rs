@@ -6,7 +6,9 @@ mod common;
 
 use common::{head, person_of};
 use sc_portrait::dress::{COURT_1356, CROWNED_1356, ENGLAND_1356};
+use sc_portrait::facing::{HOLLOW, TUFT};
 use sc_portrait::mantle::{BROOCH, CORD, MARK};
+use sc_portrait::pile::RIM;
 use sc_portrait::{build, Surface};
 
 fn show() -> bool {
@@ -204,7 +206,10 @@ fn the_ermines_tails_stand_whole_on_the_facing_and_hang_down_the_cloth() {
             let down_way: V3 = std::array::from_fn(|i| (e2[i] * d1[0] - e1[i] * d2[0]) / det);
             // on the chest, in front, from under the brooches down to the picture's lower edge
             let front = (0..3).all(|c| fur.pos[t + c][2] > out.cz && fur.pos[t + c][1] < level - 0.3 && fur.pos[t + c][1] > out.chin - 2.4);
-            if front && (0..3).all(|c| fur.uv[t + c][0] > 0.0 && fur.uv[t + c][0] < 1.0) {
+            // (within the image across, the whole triangle of the file: the pile divides each in four, pile.rs, and
+            // the strip along the front edge, where the image lies some five times as broad, stays out as it did)
+            let file = t / 12 * 12;
+            if front && (file..file + 12).all(|i| fur.uv[i][0] > 0.0 && fur.uv[i][0] < 1.0) {
                 chest += area;
                 hangs += area * f32::from(down_way[1] < -0.7 * len(down_way));
                 size_a += area * len(to_right);
@@ -218,10 +223,15 @@ fn the_ermines_tails_stand_whole_on_the_facing_and_hang_down_the_cloth() {
         // (the image is made for 7 cm across the facing where the mantle's sheet stands 12.5 cm off the body's axis,
         // and for 10 cm down it, on the base body: on a grown person's chest the facing is broader than that, and a
         // child's mantle is smaller all round; a woman's is narrower across for its length than a man's)
+        // (round 165: read on the fur's pile, which lies 2 to 8 mm over the sheet in tufts: a tuft's slopes are
+        // longer than the sheet under them, and where the sheet is round across, most on a child's shoulders, so
+        // is the pile's top. The image covered 0.66 to 1.13 across and 0.64 to 1.18 down on the sheet and covers
+        // 0.75 to 1.19 and 0.67 to 1.23 on the pile; across for its length 0.74 to 1.07 then and 0.78 to 1.13
+        // now, on a child of five the most: held to 1.15, was 1.1)
         let (a, d) = (size_a / weight, size_d / weight);
         tall = tall.max(a / d * COVERS[1] / COVERS[0]);
         if !show() {
-            assert!(a > 0.6 && a < 1.2 && d > 0.6 && d < 1.25 && a / d > 0.7 && a / d < 1.1, "person {k}: the image covers {a} by {d} of the cloth");
+            assert!(a > 0.6 && a < 1.2 && d > 0.6 && d < 1.25 && a / d > 0.7 && a / d < 1.15, "person {k}: the image covers {a} by {d} of the cloth");
         }
         seen += 1;
     }
@@ -230,6 +240,89 @@ fn the_ermines_tails_stand_whole_on_the_facing_and_hang_down_the_cloth() {
         println!("on the chest: {:.3} of the fur's image hangs down the cloth; the image covers {:.2}..{:.2} across and {:.2}..{:.2} down, a tail at most {tall:.2} times as broad for its length as in the image", hangs / chest, across.0, across.1, down.0, down.1);
     }
     assert!(ends > 16 * 300 && hems > 16 * 1000 && hangs > 0.9 * chest, "{ends} sides where the fur ends, {hems} triangles of hems, {hangs} of {chest} of the chest's fur hangs");
+}
+
+#[test]
+fn the_fur_has_a_pile() {
+    // (round 165) The fur was a part of the sheet, as flat as the cloth beside it. Now each of the file's triangles
+    // is four (pile.rs), and the fur lies in tufts over the sheet: where the middle of a side of the file is darker
+    // than the side's ends it lies under the line between them, the way the fur faces, and where it is lighter
+    // over it (21 292 of 21 738 such sides on sixteen furs, away from the fur's border, where the pile rises from
+    // the sheet), by as much as a tuft is high for the whole step from a hollow to a top (0.055 to 0.065; `TUFT`
+    // is 0.06). Where the fur ends at the cloth it is not lifted: its border's corners there are the cloth's. A
+    // rolled hem keeps its form: the middle of each of its sides lies between the side's ends.
+    let Some(h) = head() else { return };
+    let bits = |q: &V3| q.map(f32::to_bits);
+    let sub = |a: &V3, b: &V3| -> V3 { [a[0] - b[0], a[1] - b[1], a[2] - b[2]] };
+    let dot = |a: &V3, b: &V3| a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    let (mut fewest, mut loose, mut borders, mut lower, mut steps, mut high, mut bent, mut seen) = (usize::MAX, 0, 0, 0, 0, (f32::MAX, f32::MIN), 0f32, 0);
+    for (k, female, age) in people() {
+        let out = build(&h, &person_of(k, female, age, 4), 1);
+        let m = parts(&out.surfaces, k);
+        let fur = m.fur;
+        assert_eq!(fur.pos.len() % 12, 0, "person {k}: four triangles for each of the file's");
+        fewest = fewest.min(fur.pos.len() / 3);
+        let mut sides: std::collections::HashMap<([u32; 3], [u32; 3]), u32> = std::collections::HashMap::new();
+        let side = |a: &V3, b: &V3| if bits(a) < bits(b) { (bits(a), bits(b)) } else { (bits(b), bits(a)) };
+        for t in (0..fur.pos.len()).step_by(3) {
+            for c in 0..3 {
+                *sides.entry(side(&fur.pos[t + c], &fur.pos[t + (c + 1) % 3])).or_insert(0) += 1;
+            }
+        }
+        // the fur's border: the sides one triangle has. Half a side of the file each, from a corner of the file's
+        // triangle (in pile.rs's order a triangle's 1st, 5th and 9th of twelve) to the side's middle: at the cloth
+        // the corner is a corner of the cloth, and the middle lies on the cloth's side
+        let cloth: std::collections::HashSet<[u32; 3]> = m.cloth.pos.iter().map(bits).collect();
+        let mut border: Vec<V3> = Vec::new();
+        for t in (0..fur.pos.len()).step_by(3) {
+            for c in 0..3 {
+                let (a, b) = (t + c, t + (c + 1) % 3);
+                if sides[&side(&fur.pos[a], &fur.pos[b])] == 1 {
+                    let corner = if a % 12 % 4 == 0 { a } else { b };
+                    assert!(corner % 12 % 4 == 0, "person {k}: a side on the border between two middles");
+                    border.push(fur.pos[corner]);
+                    borders += 1;
+                    loose += usize::from(!cloth.contains(&bits(&fur.pos[corner])));
+                }
+            }
+        }
+        let light = fur.col.iter().map(|c| c[1]).fold(0f32, f32::max);
+        let hem = |t: usize| (t..t + 12).all(|i| fur.uv[i][1].abs() <= HEM);
+        let (mut drop, mut shade) = (0f32, 0f32);
+        for t in (0..fur.pos.len()).step_by(12) {
+            let away = (0..3).all(|c| border.iter().all(|q| dist(q, &fur.pos[t + 4 * c]) > 2.0 * RIM));
+            for (mid, a, b) in [(1, 0, 4), (5, 4, 8), (2, 8, 0)] {
+                let between: V3 = std::array::from_fn(|i| (fur.pos[t + a][i] + fur.pos[t + b][i]) / 2.0);
+                if hem(t) {
+                    bent = bent.max(dist(&fur.pos[t + mid], &between));
+                } else if away {
+                    // how much darker the middle of a side is than its ends, in the whole step from a top to a
+                    // hollow, and how far it lies under the line between them, the way the fur faces
+                    let darker = ((fur.col[t + a][1] + fur.col[t + b][1]) / 2.0 - fur.col[t + mid][1]) / (HOLLOW * light);
+                    let faces = &fur.nrm[t + mid];
+                    let under = dot(&sub(&between, &fur.pos[t + mid]), faces) / dot(faces, faces).sqrt();
+                    if darker.abs() > 0.05 {
+                        steps += 1;
+                        lower += usize::from(darker * under > 0.0);
+                    }
+                    drop += darker * under;
+                    shade += darker * darker;
+                }
+            }
+        }
+        assert!(shade > 0.0, "person {k}: fur of one lightness");
+        high = (high.0.min(drop / shade), high.1.max(drop / shade));
+        seen += 1;
+    }
+    if show() {
+        println!("{seen} furs of at least {fewest} triangles; of {borders} half sides on the fur's border {loose} not at a corner of the cloth; of {steps} sides whose middle is darker or lighter than their ends {lower} have it lower or higher; a tuft {:.3}..{:.3} high; a hem's side bent by at most {bent:.5}", high.0, high.1);
+    }
+    assert!(fewest > 16_000, "a fur of {fewest} triangles");
+    // (on each fur 96 of 402 half sides lie on the sheet's own rim, where no cloth goes on)
+    assert!(3 * loose < borders, "of {borders} half sides on the fur's border {loose} not at a corner of the cloth");
+    assert!(steps > 16 * 300 && 10 * lower > 9 * steps, "of {steps} sides whose middle is darker or lighter than their ends {lower} have it lower or higher");
+    assert!(high.0 > 0.7 * TUFT && high.1 < 1.3 * TUFT, "a tuft {high:?} high");
+    assert!(bent < 1e-4, "a hem's side bent by {bent}");
 }
 
 #[test]
