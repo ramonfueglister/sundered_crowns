@@ -18,24 +18,12 @@
     "src/portrait/wire.ts": {
       "suspicious/useIterableCallbackReturn": 1
     },
-    "src/sim/economy/daily.ts": {
-      "style/useExponentiationOperator": 2
-    },
-    "src/sim/people/lifetable.ts": {
-      "style/useExponentiationOperator": 2
-    },
     "src/sim/settlement/rule.ts": {
       "style/useExponentiationOperator": 2
     },
     "src/sim/settlement/streets.ts": {
       "correctness/noUnusedVariables": 1,
       "style/useExponentiationOperator": 1
-    },
-    "src/sim/systems/deaths.ts": {
-      "style/useExponentiationOperator": 4
-    },
-    "src/sim/systems/harvest.ts": {
-      "style/useExponentiationOperator": 2
     },
     "src/sim/systems/lots.ts": {
       "suspicious/useIterableCallbackReturn": 1
@@ -82,7 +70,7 @@
     "src/sim/settlement/streets.ts": 622,
     "src/worldprobe/world.ts": 868,
     "tools/atlas/probe.py": 536,
-    "tools/geo/merge_beyond.py": 521,
+    "tools/geo/merge_beyond.py": 520,
     "tools/history/1291/beyond.py": 840,
     "tools/history/1291/empire.py": 1003,
     "tools/history/1291/italy_balkans.py": 990,
@@ -90,7 +78,6 @@
     "tools/history/1291/south_east.py": 654,
     "tools/history/1291/west.py": 560,
     "tools/history/1356/world.py": 1847,
-    "tools/history/borders/build.py": 690,
-    "tools/worldprobe/build_region.py": 550
+    "tools/history/borders/build.py": 690
   }
 }

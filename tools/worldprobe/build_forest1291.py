@@ -60,7 +60,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'geo'))
 from common import CACHE, ROOT, H, W
 
 sys.path.insert(0, os.path.dirname(__file__))
-from build_region import WORLD_H, WORLD_W, world_lonlat
+from world_grid import WORLD_H, WORLD_W, world_lonlat
 
 SRC = os.path.join(ROOT, 'data', 'history', '1291', 'forest')
 POLLEN = os.path.join(SRC, 'reveals_1250_1600.csv')

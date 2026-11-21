@@ -43,8 +43,9 @@ import numpy as np
 from scipy import ndimage
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'geo'))
-from build_region import CACHE, WORLD_H, WORLD_W, cached, world_lonlat
-from common import ROOT
+from common import CACHE, ROOT
+from geodata import cached
+from world_grid import WORLD_H, WORLD_W, world_lonlat
 
 BUCKET = 'https://storage.googleapis.com/weatherbench2/datasets/'
 CLIMATE = BUCKET + 'era5-hourly-climatology/1990-2019_6h_512x256_equiangular_conservative.zarr/'
