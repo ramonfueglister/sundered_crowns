@@ -106,8 +106,9 @@ export function fineHouse(w: number, d: number, floors: number, tr: Tradition, r
   } else b.box(base.x0, -1, base.z0, base.x1, top, base.z1, bodyC, { foot: 0.9 });
   // plinth, string courses and cornice as rings of stone round the body (Istrian stone: assumption)
   ring(b, fp(0), 0, V, V * 0.25, shade(mt.stone, 0.88));
-  for (let k = 1; k < hs.length; k++) ring(b, fp(k), ys[k] - V, ys[k], V * 0.5, mt.stone);
-  ring(b, fp(hs.length - 1), top - V, top, V * 0.8, shade(mt.stone, 0.96));
+  // a timber-framed house carries its storeys on beams, where a house of stone has its string courses
+  for (let k = 1; k < hs.length; k++) ring(b, fp(k), ys[k] - V, ys[k], V * 0.5, frame ?? mt.stone);
+  ring(b, fp(hs.length - 1), top - V, top, V * 0.8, shade(frame ?? mt.stone, 0.96));
   for (const s of SIDES) {
     if (blind.has(s)) continue;
     for (let k = 0; k < hs.length; k++)
@@ -202,10 +203,11 @@ function facade(
     pane(b, wl, 0, y, wl.len, y + (h - 1) * V, shade(tr.stone, 0.7), 0.01);
     ashlar(b, wl, y, y + (h - 1) * V, tr.stone, o.seed + SIDES.indexOf(s), tr.ashlarSpread);
   }
-  if (o.detail && o.frame && k >= 1)
-    timberFrame(b, wl, y - V, h * V, axes, ww, [V + tr.sill * V, V + (tr.sill + wh) * V], o.frame, tr.timber?.post);
+  if (o.detail && o.frame && k >= 1) timberFrame(b, wl, y - V, h * V, axes, V + tr.sill * V, o.frame, tr.timber?.post);
+  // in a timber frame the sill and the lintel of a window are timbers too
+  const wm = o.frame && k >= 1 ? { ...mt, stone: o.frame } : mt;
   const win = (t: number, hv = wh) => {
-    window(b, wl, t, y + tr.sill * V, ww, hv, mt, o.arched, o.detail);
+    window(b, wl, t, y + tr.sill * V, ww, hv, wm, o.arched, o.detail);
     if (o.detail && !o.arched && r.chance(tr.shutters))
       shutters(b, wl, t, y + tr.sill * V, ww, hv, tr.shutterC ?? tr.wood, o.seed + Math.round(t * 100));
   };

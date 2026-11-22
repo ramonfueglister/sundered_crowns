@@ -68,8 +68,11 @@ export interface Tradition {
   plainChimney?: boolean;
   /** mean number of dormers on a gable roof */
   dormers?: number;
-  /** the shades of a roof's tiles: the darkest, and how much lighter the lightest is ([0.88, 0.2] if not given) */
-  tileShades?: readonly [number, number];
+  /**
+   * the shades of a roof's tiles: the darkest, how much lighter the lightest is ([0.88, 0.2] if not given), and the
+   * share of tiles that stand out from them, darker or lighter (none if not given)
+   */
+  tileShades?: readonly [number, number, number?];
   /** the glass of the windows, before the house's own shade of it (dark and warm if not given) */
   glass?: RGB;
   /** a ground floor of ashlar in `stone` under a plastered or timbered house */

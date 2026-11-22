@@ -6,7 +6,7 @@
 // (src/buildings/README.md, step 1). The search of the Paris gauntlet (tools/lookprobe/search_paris.py) met its checks
 // but not the eye (Ramon, 21 Nov 2026: "ich bin aber nicht happy"); the values were then set by eye beside the picture
 // at the same scale that evening and checked against the gauntlet on four towns: steeper roofs without dormers, wider
-// windows further apart, half the houses of stone, thick dark timbers, coarser tiles, small cobbles.
+// windows further apart, half the houses of stone, a calm frame of brown timbers, patched tiles, small cobbles.
 import { type RGB, rgb } from '../../lookprobe/batch';
 import { m } from '../houses/style';
 import type { Tradition } from './tradition';
@@ -17,7 +17,7 @@ const hexes = (a: readonly number[]): readonly RGB[] => a.map((h) => rgb(h));
 export const PARIS: Tradition = {
   ...VENICE,
   // the lanes and squares paved with small grey-rose cobbles, as the reference picture draws them (assumption)
-  quay: { ...VENICE.quay, paving: rgb(0xa08880), joint: 0.18, spread: 2.5, slab: 1.5 },
+  quay: { ...VENICE.quay, paving: rgb(0xb89c90), joint: 0.18, spread: 2.5, slab: 1.5 },
   storeys: [2, 3],
   greatStoreys: [3, 4],
   walls: hexes([0xeec9b3, 0xe0bca5, 0xf6d3be, 0xdbb69f, 0xe8c4ae]),
@@ -41,14 +41,16 @@ export const PARIS: Tradition = {
   chimney: { height: [3, 5], perHouse: 2 },
   // no dormers: the picture draws none
   dormers: 0,
-  tileShades: [0.86, 0.3],
+  // even rows, and a fifth of the tiles standing out darker or lighter, as the picture's patched roofs
+  tileShades: [0.86, 0.2, 0.2],
   // windows of two fine blocks with dark glass, two to a gable front, as the picture draws them
   window: [2, 3],
   bay: 6,
   glass: rgb(0x4a4a40),
   plot: { width: [m(4.5), m(6.5)], depth: [m(6), m(8)], greatWidth: [m(9), m(12)] },
-  // about half the houses timber-framed above a stone ground floor, the others of stone throughout (assumption)
-  timber: { share: 0.55, c: rgb(0x5a4038), post: 1.2 },
+  // about half the houses timber-framed above a stone ground floor, the others of stone throughout (assumption);
+  // the timbers a warm mid brown, one fine block wide, as the picture draws them (sampled there: #875236 to #a45b3c)
+  timber: { share: 0.55, c: rgb(0x84533a), post: 1.0 },
   plainChimney: true,
   stoneGround: true,
   ashlarSpread: 2.2,

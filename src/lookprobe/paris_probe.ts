@@ -3,9 +3,20 @@
 // Cité of that day (tools/lookprobe/gauntlet_paris.py). Every house faces its lane; the yards inside the blocks get
 // grass and a tree now and then; the square gets market stalls and trees. The layout is the probe's, by assumption.
 import * as THREE from 'three/webgpu';
-import { type Column, PARIS, type Tradition, fineGround, fineHouse } from '../buildings';
+import {
+  type Column,
+  type GroundCell,
+  PARIS,
+  type Tradition,
+  fineGround,
+  fineHouse,
+  jetty,
+  waterColourAt,
+  waterFlecks,
+} from '../buildings';
 import { Batch, type RGB, type Rnd, mix, rgb, seeded, shade } from './batch';
-import { LAND_Y, N } from './layout';
+import { boat } from './blocks';
+import { LAND_Y, N, SEA_Y } from './layout';
 import { EARTH } from './scenery';
 import { NEAR_LIGHT, type StageScene, showError, stage } from './stage';
 
@@ -56,7 +67,11 @@ const TR: Tradition = {
   bay: num('bay', PARIS.bay),
   ashlarSpread: q.get('aspread') === null ? PARIS.ashlarSpread : num('aspread', 1),
   dormers: num('dormers', PARIS.dormers ?? 0),
-  tileShades: [num('tlow', PARIS.tileShades?.[0] ?? 0.88), num('tspread', PARIS.tileShades?.[1] ?? 0.2)],
+  tileShades: [
+    num('tlow', PARIS.tileShades?.[0] ?? 0.88),
+    num('tspread', PARIS.tileShades?.[1] ?? 0.2),
+    num('todd', PARIS.tileShades?.[2] ?? 0),
+  ],
   pitch: [num('pitch0', PARIS.pitch[0]), num('pitch1', PARIS.pitch[1])],
   jetty: { ...PARIS.jetty, share: num('jetty', PARIS.jetty.share) },
 };
@@ -111,6 +126,10 @@ const PASSAGE_TREE = num('ptree', 0.3),
   GAP_TREES = seeded(SEED + 4);
 /** the townsfolk in the lanes */
 const CROWD = num('crowd', 450);
+/** the cell from which on the river runs in place of blocks (7: no river), and the river's width in blocks */
+const RIVER = num('river', 4),
+  RIVER_W = num('riverw', 16),
+  RIVER_C = hexOf('water') ?? rgb(0x3a6e78);
 
 /**
  * One side of a block: houses from `a` to `b` along the side, fronts towards `front`, as single houses rather than a
@@ -248,6 +267,53 @@ function stall(things: Batch, x: number, z: number, r: Rnd) {
     );
 }
 
+/**
+ * The river from the quay's edge `xq` to the far bank at `xb` (the ground ends at `x9`): the water in the near view's
+ * colours with its flecks, landing stages with boats along the quay, a ship in the stream, and the far bank as a meadow
+ * with trees (the scenery of the reference picture; OWN RULE for the prototype).
+ */
+function riverside(
+  ground: Batch,
+  things: Batch,
+  water: Batch,
+  cell: GroundCell,
+  at: (x: number) => Column,
+  xq: number,
+  xb: number,
+  x9: number,
+) {
+  const z9 = cell.z0 + cell.size,
+    r = seeded(SEED + 5);
+  for (let x = xq; x < xb; x++)
+    for (let z = cell.z0; z < z9; z++)
+      water.quad(
+        [x, SEA_Y, z],
+        [x, SEA_Y, z + 1],
+        [x + 1, SEA_Y, z + 1],
+        [x + 1, SEA_Y, z],
+        waterColourAt(x, z, RIVER_C),
+        [0, 1, 0],
+      );
+  waterFlecks(water, cell, at);
+  for (let z = cell.z0 + r.range(4, 10); z < z9 - 4; z += r.range(11, 17)) {
+    jetty(things, xq, SEA_Y, z, r.range(3.5, 5), 0.9, LAND_Y - 0.15, POLE);
+    boat(things, xq + r.range(1.5, 3), z + r.pick([-2.2, 2.2]), r);
+  }
+  // river boats under one square sail, lying along the stream, as the picture draws them
+  for (let z = cell.z0 + r.range(8, 20); z < z9 - 8; z += r.range(18, 30)) {
+    const x = r.range(xq + 7, xb - 4),
+      hull = shade(POLE, r.range(0.85, 1.1));
+    things.box(x - 0.7, SEA_Y - 0.2, z - 2, x + 0.7, SEA_Y + 0.55, z + 2, hull, { top: shade(hull, 1.35), foot: 0.7 });
+    things.box(x - 0.45, SEA_Y - 0.2, z + 2, x + 0.45, SEA_Y + 0.7, z + 2.6, shade(hull, 0.85));
+    things.box(x - 0.08, SEA_Y + 0.55, z - 0.08, x + 0.08, SEA_Y + 3.6, z + 0.08, shade(hull, 0.7));
+    things.box(x - 1.1, SEA_Y + 1.3, z + 0.1, x + 1.1, SEA_Y + 3.3, z + 0.22, CANVAS);
+  }
+  if (xb >= x9) return;
+  ground.box(xb, LAND_Y - 2, cell.z0, x9, LAND_Y, z9, EARTH, { top: GRASS });
+  for (let z = cell.z0 + 2; z < z9 - 2; z += r.range(2.5, 6))
+    cubeTree(things, r.range(xb + 1.5, xb + 7), z, r, r.range(1.6, 2.4), r.chance(0.5) ? LIGHT_LEAF : OLIVE);
+}
+
 async function build(): Promise<StageScene> {
   const ground = new Batch(),
     things = new Batch(),
@@ -258,11 +324,20 @@ async function build(): Promise<StageScene> {
   const size = 7 * CELL,
     x0 = Math.round(c - size / 2),
     z0 = Math.round(c - size / 2);
-  ground.box(x0 - 10, LAND_Y - 2, z0 - 10, x0 + size + 10, LAND_Y, z0 + size + 10, EARTH, {
+  // the river beyond the town's last cells: the town ends at a quay, the far bank is a meadow behind its own wall
+  const xq = Math.round(x0 + RIVER * CELL + 1.5),
+    xb = xq + RIVER_W,
+    x9 = x0 + size + 10;
+  ground.box(x0 - 10, LAND_Y - 2, z0 - 10, Math.min(xq, x9), LAND_Y, z0 + size + 10, EARTH, {
     top: shade(TR.quay.paving, 0.62),
   });
-  const land: Column = { top: LAND_Y, wet: false, paved: true };
-  fineGround(ground, { x0, z0, size, ox: 0, oz: 0, water: LAND_Y - 2 }, () => land, TR.quay);
+  const land: Column = { top: LAND_Y, wet: false, paved: true },
+    sea: Column = { top: SEA_Y, wet: true, paved: false },
+    bank: Column = { top: LAND_Y, wet: false, paved: false },
+    at = (x: number) => (x < xq ? land : x < xb ? sea : bank),
+    cell = { x0: x0 - 10, z0: z0 - 10, size: size + 20, ox: 0, oz: 0, water: SEA_Y };
+  fineGround(ground, cell, at, TR.quay);
+  if (xq < x9) riverside(ground, things, water, cell, at, xq, Math.min(xb, x9), x9);
   // blocks on a grid of 7 x 7 cells; the square takes SQ cells in the middle. Each block's edges move by up to JIT
   // blocks, so that the lanes widen and narrow as in the reference picture (OWN RULE for the prototype)
   const rj = seeded(SEED + 3),
@@ -273,6 +348,7 @@ async function build(): Promise<StageScene> {
         bz = z0 + k * CELL + LANE / 2 + edge(),
         sx = x0 + i * CELL + LANE / 2 + BLOCK + edge() - bx,
         sz = z0 + k * CELL + LANE / 2 + BLOCK + edge() - bz;
+      if (i >= RIVER) continue;
       if (k === 3 && (i === 3 || (SQ > 1 && i === 4))) {
         // a square smaller than a cell leaves the far part of its cell to a block of houses
         if (SQ < 1) block(ground, things, bx, bz + sz * SQ, sx, sz * (1 - SQ), r);
@@ -295,8 +371,8 @@ async function build(): Promise<StageScene> {
   for (let k = 0; k < CROWD; k++) {
     const lane = x0 + rf.int(0, 7) * CELL + rf.range(-0.9, 0.9),
       along = z0 + rf.range(0, size);
-    if (rf.chance(0.5)) folk(things, lane, along, rf);
-    else folk(things, along, lane, rf);
+    const [fx, fz] = rf.chance(0.5) ? [lane, along] : [along, lane];
+    if (fx < xq - 0.4) folk(things, fx, fz, rf);
   }
   for (let k = 0; k < 20 * Math.max(1, SQ); k++)
     folk(things, sx + rf.range(0.5, wide - 1), sz + rf.range(0.5, deep - 0.5), rf);
@@ -305,12 +381,14 @@ async function build(): Promise<StageScene> {
 
 /**
  * the light of the near view (stage/look.ts) as the Paris gauntlet's search found it closest to the picture
- * (tools/lookprobe/search_paris.py, 21 Nov 2026), seen through `?tone=neutral&exposure=1.2&saturation=0.88` (the
- * game's own tone stays AgX); each strength can be tried out from the address, as in near.ts
+ * (tools/lookprobe/search_paris.py, 21 Nov 2026), seen through `?tone=neutral&exposure=1.2&saturation=0.88&sea=0`
+ * (the river in its own colour, without the sea's surface; the game's own tone stays AgX); each strength can be tried
+ * out from the address, as in near.ts
  */
 const FOUND = { ...NEAR_LIGHT, sun: 1.364, side: 0.923, sky: 0.755, bounce: 0.299, fill: 0.675, skyColor: 0xc4d1f0 };
 const LIGHT = { ...FOUND };
-for (const k of ['sun', 'side', 'sky', 'bounce', 'fill'] as const) LIGHT[k] = num(k, FOUND[k]);
+for (const k of ['sun', 'side', 'sky', 'bounce', 'fill', 'mirror'] as const) LIGHT[k] = num(k, FOUND[k]);
+LIGHT.mirrorTint = colour('mirrortint') ?? FOUND.mirrorTint;
 LIGHT.skyColor = colour('skycol') ?? FOUND.skyColor;
 LIGHT.sunColor = colour('suncol') ?? FOUND.sunColor;
 

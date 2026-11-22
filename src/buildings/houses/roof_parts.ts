@@ -5,8 +5,11 @@
 import { type Batch, type RGB, type V3, hash2, shade } from '../../lookprobe/batch';
 import { VOXEL as V } from './style';
 
-/** the tiles' shades: the darkest, and how much lighter the lightest is */
-export type Shades = readonly [number, number];
+/**
+ * the tiles' shades: the darkest, and how much lighter the lightest is; and the share of tiles that stand out from
+ * them, darker or lighter (none if not given)
+ */
+export type Shades = readonly [number, number, number?];
 const SHADES: Shades = [0.88, 0.2];
 
 const lerp3 = (a: V3, b: V3, t: number): V3 => [
@@ -32,7 +35,7 @@ export function tiles(
   c: RGB,
   seed: number,
   verges = true,
-  [low, spread]: Shades = SHADES,
+  [low, spread, odd]: Shades = SHADES,
 ) {
   const cols = Math.max(1, Math.round(Math.hypot(e1[0] - e0[0], e1[2] - e0[2]) / V)),
     rows = Math.max(1, Math.round(Math.hypot(r0[0] - e0[0], r0[2] - e0[2]) / V));
@@ -46,7 +49,8 @@ export function tiles(
       const a = at(j / cols, k / rows),
         d = at((j + 1) / cols, (k + 1) / rows),
         h = hash2(j, k, seed),
-        col = shade(c, low + spread * hash2(j, k, seed + 5));
+        o = odd === undefined ? 1 : hash2(k, j, seed + 9),
+        col = shade(c, o < (odd ?? 0) ? (o < (odd ?? 0) / 2 ? 0.7 : 1.2) : low + spread * hash2(j, k, seed + 5));
       const rim = (verges && (j === 0 || j === cols - 1)) || k === 0 || k === rows - 1,
         top = Math.max(a[1], d[1]) + V * (0.15 + 0.2 * h) + (rim ? V * 0.7 : 0),
         g = V * 0.05;

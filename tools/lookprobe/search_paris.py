@@ -29,8 +29,8 @@ from gauntlet_paris import REF_BOX, load, measure, spread
 ROOT = Path(__file__).resolve().parents[2]
 # knob: (lowest, highest, start); colours are searched as hue in degrees, saturation and value and given as hex; the
 # starts are the setting src/buildings/traditions/paris.ts and src/lookprobe/paris_probe.ts hold (the searches' best of
-# 21 Nov 2026, then set by eye beside the picture that evening); the timber stays dark (value up to 0.4), as the picture
-# draws it
+# 21 Nov 2026, then set by eye beside the picture that evening and the next morning); the timber stays a mid brown at
+# most (value up to 0.6), as the picture draws it
 SPACE = {
     'across': (40, 70, 52),
     'elev': (28, 42, 36.521),
@@ -49,9 +49,9 @@ SPACE = {
     'wall_s': (0.08, 0.35, 0.25),
     'wall_v': (0.6, 1, 0.91),
     'wallspread': (0.3, 1.6, 1),
-    'pave_h': (-15, 30, 15),
-    'pave_s': (0.04, 0.3, 0.2),
-    'pave_v': (0.35, 0.8, 0.627),
+    'pave_h': (-15, 30, 17.999),
+    'pave_s': (0.04, 0.3, 0.217),
+    'pave_v': (0.35, 0.8, 0.722),
     'pspread': (0.5, 3, 2.5),
     'glass_h': (0, 200, 60),
     'glass_s': (0.1, 0.7, 0.135),
@@ -60,16 +60,16 @@ SPACE = {
     'roof_s': (0.35, 0.75, 0.543),
     'roof_v': (0.35, 0.8, 0.541),
     'roofspread': (0.5, 2, 1),
-    'timb_h': (0, 35, 14.118),
-    'timb_s': (0.15, 0.65, 0.378),
-    'timb_v': (0.15, 0.4, 0.353),
+    'timb_h': (0, 35, 20.27),
+    'timb_s': (0.15, 0.65, 0.561),
+    'timb_v': (0.15, 0.6, 0.518),
     'stone_h': (10, 45, 33.779),
     'stone_s': (0.05, 0.35, 0.16),
     'stone_v': (0.5, 0.95, 0.908),
-    'post': (0.6, 1.5, 1.2),
+    'post': (0.6, 1.5, 1.0),
     'tshare': (0.3, 1, 0.55),
     'tlow': (0.7, 1, 0.86),
-    'tspread': (0.05, 0.4, 0.3),
+    'tspread': (0.05, 0.4, 0.2),
     'treesize': (0.7, 1.6, 1.5),
     'leaf_h': (50, 110, 77.455),
     'leaf_s': (0.5, 1, 0.797),
@@ -94,6 +94,8 @@ def address(x):
     o.update({k: round(x[k], 3) for k in ('sun', 'side', 'sky', 'bounce', 'fill', 'wallspread', 'roofspread')})
     o.update({k: round(x[k], 3) for k in ('tshare', 'post', 'tlow', 'tspread', 'treesize', 'jetty', 'pspread')})
     o['tone'] = 'neutral'
+    # the town alone, as the reference's measured box: no river
+    o['river'] = 7
     o['skycol'] = ''.join(f'{round(c):02x}' for c in SKY_GREY + (SKY_BLUE - SKY_GREY) * x['skyblue'])
     for knob in ('wall', 'pave', 'roof', 'timber', 'glass', 'leaf', 'olive', 'stone'):
         key = 'timb' if knob == 'timber' else knob
