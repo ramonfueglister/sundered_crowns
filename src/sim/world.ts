@@ -174,6 +174,10 @@ export class World {
   /** the chronicle of rulers of the start year of the world this build plays (src/sim/content/chronicle.ts), null
    *  without one: then no realm has a holder. Set by the loader (tools/sim/load.ts) */
   chronicle: Chronicle | null = null;
+  /** how the persons of the chronicle die (src/sim/systems/rulers.ts): 'chronicle' on the days of the sources (the
+   *  game), 'drawn' on days of their own from the life table and the rate of murder of rulers, the chronicle being
+   *  only the plan (a free world to measure how far a world goes from history: tools/sim/drift.ts) */
+  rulerDeaths: 'chronicle' | 'drawn' = 'chronicle';
   /** the chronicle of borders of the start year (src/sim/content/borders.ts), null without one: then the borders stay
    *  as the setup has them. Set by the loader (tools/sim/load.ts) */
   borders: Borders | null = null;

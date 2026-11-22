@@ -17,7 +17,9 @@ export interface ChroniclePerson {
   born: string | null;
   died: string | null;
   /** the keys of the father and the mother where they are persons of the chronicle too (Wikidata P22, P25); absent
-   *  when no source names them or they are not in the chronicle */
+   *  when no source names them or they are not in the chronicle. A person without a reign is kin of the rulers
+   *  (tools/history/rulers/families.py): no ruler, but heir where the world's crown goes another way than history's
+   *  (src/sim/systems/heirs.ts) */
   father?: string;
   mother?: string;
 }
@@ -32,12 +34,24 @@ export interface ChronicleReign {
   /** the source of the row (a Wikipedia revision or a Wikidata statement) */
   source: string;
 }
+/** The orders of succession of Kokkonen & Sundell (2014), src/sim/systems/heirs.ts. */
+export type SuccessionOrder = 'primogeniture' | 'agnatic_seniority' | 'election';
+export interface ChronicleLaw {
+  /** the first day the order holds (a date as the source gives it; null: from before the chronicle) */
+  from: string | null;
+  order: SuccessionOrder;
+  /** where the source says it */
+  source: string;
+}
 export interface ChronicleJson {
   year: number;
   /** the last day the chronicle covers (YYYY-MM-DD) */
   until: string;
   persons: ChroniclePerson[];
   reigns: ChronicleReign[];
+  /** the order of succession of the realms a source codes, oldest first; a realm without one has no order the world
+   *  knows */
+  laws?: Record<string, ChronicleLaw[]>;
 }
 
 /** What happens on a day: a person comes into the world (born, or alive on the first day), a reign ends, a person
@@ -77,7 +91,8 @@ export interface Chronicle {
   fatherOf: readonly (number | null)[];
   motherOf: readonly (number | null)[];
   /** per person whose death no source gives: the last day the sources show the person alive (the end of the last
-   *  reign, the conception of a child the person fathered, the birth of a child she bore); null otherwise */
+   *  reign, the conception of a child the person fathered, the birth of a child she bore); null otherwise, and for
+   *  a ruler whose last reign lasts past the chronicle */
   seenUntil: readonly (number | null)[];
   /** sorted by day, then by what happens, then by person */
   events: readonly ChronicleEvent[];
@@ -85,6 +100,8 @@ export interface Chronicle {
    *  crown stays with another who still reigns; with the dates and the source as the chronicle gives them (for the
    *  readable copy of the rulers, server/rulers_copy.ts) */
   reignsOf: ReadonlyMap<string, readonly ChronicleReignDays[]>;
+  /** the orders of succession of each realm a source codes, with the first day each holds, oldest first */
+  lawsOf: ReadonlyMap<string, readonly { from: number; order: SuccessionOrder }[]>;
 }
 
 /** The days from the conception of a child to its birth: the median from ovulation to birth, Jukic, Baird, Weinberg,
@@ -170,9 +187,30 @@ export function compileChronicle(j: ChronicleJson): Chronicle {
       [fatherOf[p], born - GESTATION_DAYS],
       [motherOf[p], born],
     ] as const)
-      if (parent !== null && seenUntil[parent] !== null && alive > seenUntil[parent]!) seenUntil[parent] = alive;
+      if (parent !== null && diedDay[parent] === null && !open[parent] && alive > (seenUntil[parent] ?? -Infinity))
+        seenUntil[parent] = alive;
   }
-  return { year: Y, persons: j.persons, bornDay, diedDay, home, fatherOf, motherOf, seenUntil, events, reignsOf };
+  const lawsOf = new Map(
+    Object.entries(j.laws ?? {}).map(([realm, l]) => [
+      realm,
+      l
+        .map((x) => ({ from: dayOf(x.from, Y) ?? Number.MIN_SAFE_INTEGER, order: x.order }))
+        .sort((a, b) => a.from - b.from),
+    ]),
+  );
+  return {
+    year: Y,
+    persons: j.persons,
+    bornDay,
+    diedDay,
+    home,
+    fatherOf,
+    motherOf,
+    seenUntil,
+    events,
+    reignsOf,
+    lawsOf,
+  };
 }
 
 /** The index of the first event on or after `day` (binary search). */

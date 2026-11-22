@@ -17,7 +17,12 @@
 //   to draw from, and the person leaves it when the last reign ends (OWN RULE: no age, no life table).
 // Nothing in the world moves a ruler's mortality yet, so the draw of the life table that gives the historical day of
 // death (Pearl 2009, Causality, ch. 7: abduction) would give that same day; it becomes a draw of its own here when
-// something does.
+// something does. A free world (`World.rulerDeaths` 'drawn', to measure how far a world goes from history) draws it.
+// - An accession of history takes the crown where the crown is history's: nobody holds it, or a person history has
+//   reigning there. A crown the world has given to a person of its own (src/sim/systems/succession.ts) stays with
+//   them: history's accession had history's holder before it, and the world has another.
+// - Where a crown is left with nobody though history has it with a person the world lacks, src/sim/systems/
+//   succession.ts names the holder at the end of the day: history's where it can, else the heir by the realm's order.
 //
 // A ruler is a person of the person table like everybody else: the genes, the IQ and the Big Five are drawn as for
 // the founders of the cities, from the gene pool of the ruler's culture. The ruler lives in the capital of
@@ -31,13 +36,15 @@ import type { World } from '../world';
 import type { System } from '../schedule';
 import { type Chronicle, GESTATION_DAYS, Happening, firstEventOn } from '../content/chronicle';
 import { drawDeath } from './deaths';
+import { DRAW, type Persons, lifeEnd, murderDay, settle } from './succession';
 import { setRulerCulture } from './cultures';
 import { hash01 } from '../rng';
 import { founder, NG } from '../people/genes';
 import { poolOf } from '../people/pools';
 import { ALL_CULTURES } from '../content/peoples';
 
-// a stream of draws of its own: the world's seed, the chronicle key of the person, the number of the draw
+// a stream of draws of its own: the world's seed, the chronicle key of the person, the number of the draw (the life and
+// the murder are DRAW of src/sim/systems/succession.ts)
 const K = { trait: 10, genes: 100 } as const;
 function keyHash(key: string): number {
   let h = 0x811c9dc5;
@@ -59,7 +66,7 @@ const clampU8 = (v: number) => Math.min(255, Math.max(0, Math.round(v)));
  *  a person of history comes into the world, or the rows close up on the first of January, src/sim/people/archive.ts). */
 const index = new WeakMap<
   WorldState,
-  { realms: Map<string, number>; persons: Map<string, number>; n: number; table: object }
+  { realms: Map<string, number>; persons: Map<string, number>; keys: Map<number, string>; n: number; table: object }
 >();
 function indexOf(s: WorldState) {
   let x = index.get(s);
@@ -67,6 +74,7 @@ function indexOf(s: WorldState) {
     x = {
       realms: new Map(s.realmText.map((t, k) => [t.key, k])),
       persons: new Map(s.named.map((p) => [p.key, p.person])),
+      keys: new Map(s.named.map((p) => [p.person, p.key])),
       n: s.named.length,
       table: s.person,
     };
@@ -113,19 +121,31 @@ function seatOf(s: WorldState, realm: number): number {
 type Event = Chronicle['events'][number];
 type Index = ReturnType<typeof indexOf>;
 
+/** What a day does besides its happenings: the realms whose crown it touched, with the person of the chronicle who
+ *  left it (-1: nobody), for `settle`; and the deaths it dates. */
+interface Day {
+  touch(r: number, left: number): void;
+  crown(r: number, id: number): void;
+}
+
 /** What one happening does to the state. Returns false when it could not be applied (the realm is not in this world,
- *  or the person is not in the world). */
-function happen(s: WorldState, w: World, c: Chronicle, e: Event): boolean {
+ *  or the person is not in the world). `drawn`: a death the life table drew, not the chronicle's. */
+function happen(s: WorldState, w: World, c: Chronicle, e: Event, d: Day, drawn = false): boolean {
   const x = indexOf(s),
     P = s.person.cols,
     R = s.realm.cols,
     cp = c.persons[e.person];
   const realm = e.realm ? x.realms.get(e.realm) : undefined;
-  if (e.what === Happening.Enter) return realm !== undefined && !unborn(s, c, e.person) && enter(s, w, c, e, x, realm);
+  if (e.what === Happening.Enter)
+    return realm !== undefined && !unborn(s, c, e.person) && enter(s, w, c, e, x, realm, d) !== undefined;
   const id = x.persons.get(cp.key);
+  if (e.what === Happening.Accede && realm !== undefined && (id === undefined || P.died[id] !== ALIVE))
+    d.touch(realm, -1); // history's holder is not there: see that the crown finds somebody
   if (id === undefined) return false;
   if (e.what === Happening.Die) {
     if (P.died[id] !== ALIVE) return true;
+    // a free world: a person with a known birth dies on a day of their own
+    if (!drawn && w.rulerDeaths === 'drawn' && P.born[id] !== BORN_UNKNOWN) return true;
     const seen = c.seenUntil[e.person];
     if (seen !== null && P.born[id] !== BORN_UNKNOWN && P.dies[id] !== e.day) {
       // the sources lose sight of the person here: from the last day they show them alive on, the life table decides
@@ -133,25 +153,34 @@ function happen(s: WorldState, w: World, c: Chronicle, e: Event): boolean {
       return true;
     }
     P.died[id] = e.day;
-    for (let r = 0; r < s.realm.size; r++) if (R.holder[r] === id) passCrown(s, c, e, x, r);
+    for (let r = 0; r < s.realm.size; r++) if (R.holder[r] === id) passCrown(s, c, e, x, r, d);
     return true;
   }
   if (realm === undefined || P.died[id] !== ALIVE) return false;
   if (e.what === Happening.End) {
-    if (R.holder[realm] === id) passCrown(s, c, e, x, realm);
+    if (R.holder[realm] === id) passCrown(s, c, e, x, realm, d);
     return true;
   }
-  R.holder[realm] = id; // Accede
+  const h = R.holder[realm]; // Accede
+  if (h < 0 || h === id || reigning(c, realm, x, h, e.day, s)) d.crown(realm, id);
   return true;
 }
 
-/** The person of history of `e` enters the world in the seat of `realm`, with a family of their own. Returns false
- *  when the realm has no place, or the person is in the world already. */
-function enter(s: WorldState, w: World, c: Chronicle, e: Event, x: Index, realm: number): boolean {
+/** Whether the person in row `id` reigns over `realm` on `day` in history. */
+function reigning(c: Chronicle, realm: number, x: Index, id: number, day: number, s: WorldState): boolean {
+  const p = numberOf(c).get(x.keys.get(id) ?? '');
+  return (c.reignsOf.get(s.realmText[realm].key) ?? []).some(
+    (g) => g.person === p && g.start <= day && (g.end === null || g.end >= day),
+  );
+}
+
+/** The person of history of `e` enters the world in the seat of `realm`, with a family of their own: the row, or
+ *  undefined when the realm has no place, or the person is in the world already. */
+function enter(s: WorldState, w: World, c: Chronicle, e: Event, x: Index, realm: number, d: Day): number | undefined {
   const P = s.person.cols,
     cp = c.persons[e.person];
   const place = seatOf(s, realm);
-  if (place < 0 || x.persons.has(cp.key)) return false;
+  if (place < 0 || x.persons.has(cp.key)) return undefined;
   const id = spawnPerson(s),
     seed = s.seed >>> 0,
     kh = keyHash(cp.key);
@@ -164,8 +193,12 @@ function enter(s: WorldState, w: World, c: Chronicle, e: Event, x: Index, realm:
   P.agent[id] = 0; // as the economy leaves every person outside it (src/sim/systems/economy.ts)
   P.firm[id] = -1;
   P.died[id] = ALIVE;
-  P.dies[id] = ALIVE;
-  P.bears[id] = ALIVE; // a ruler's death is decided by `happen`, and a ruler bears no child here
+  // a ruler's death is decided by `happen`; a kin has no day of death in the chronicle's happenings, and in a free world
+  // nobody with a known birth keeps the chronicle's
+  const end =
+    !c.home[e.person] || w.rulerDeaths === 'drawn' ? lifeEnd(w, c, e.person, drawOf(s, c, e.person, DRAW.life)) : null;
+  P.dies[id] = end === null ? ALIVE : Math.max(end, e.day + 1);
+  P.bears[id] = ALIVE; // and a ruler bears no child here
   P.home[id] = -1;
   P.moves[id] = ALIVE; // and does not move (src/sim/systems/moves.ts)
   setRulerCulture(s, id, realm); // the culture and faith of the realm the ruler enters the world in
@@ -190,11 +223,13 @@ function enter(s: WorldState, w: World, c: Chronicle, e: Event, x: Index, realm:
   // year, which can lie before the birth): its accession found nobody, so the crown is the person's from today
   for (const g of reignsOfPerson(c).get(e.person) ?? []) {
     const r = x.realms.get(g.realm);
-    if (r !== undefined && Math.max(0, g.start) < e.day && (g.end === null || g.end > e.day))
-      s.realm.cols.holder[r] = id;
+    if (r !== undefined && Math.max(0, g.start) < e.day && (g.end === null || g.end > e.day)) d.crown(r, id);
   }
-  return true;
+  return id;
 }
+
+/** The draw `k` of the stream of the person `p` of the chronicle. */
+const drawOf = (s: WorldState, c: Chronicle, p: number, k: number) => u01(s.seed >>> 0, keyHash(c.persons[p].key), k);
 
 /** The reigns of every person of the chronicle, with the realm. */
 const reigns = new WeakMap<Chronicle, Map<number, { realm: string; start: number; end: number | null }[]>>();
@@ -213,19 +248,17 @@ function reignsOfPerson(c: Chronicle) {
   return m;
 }
 
-/** The crown of `r` that the person of `e` leaves goes to a co-ruler who still reigns that day, else to nobody. */
-function passCrown(s: WorldState, c: Chronicle, e: Event, x: Index, r: number): void {
+/** The crown of `r` that the person of `e` leaves goes to a co-ruler who still reigns that day, else to nobody (and
+ *  `settle` looks at it at the end of the day). */
+function passCrown(s: WorldState, c: Chronicle, e: Event, x: Index, r: number, d: Day): void {
   const P = s.person.cols;
-  let next = -1;
+  s.realm.cols.holder[r] = -1;
+  d.touch(r, e.person);
   for (const g of c.reignsOf.get(s.realmText[r].key) ?? []) {
     if (g.person === e.person || g.start > e.day || (g.end !== null && g.end <= e.day)) continue;
     const q = x.persons.get(c.persons[g.person].key);
-    if (q !== undefined && P.died[q] === ALIVE) {
-      next = q;
-      break;
-    }
+    if (q !== undefined && P.died[q] === ALIVE) return d.crown(r, q);
   }
-  s.realm.cols.holder[r] = next;
 }
 
 /** Whether the person `p` of the chronicle cannot be born into this world: a father who is a person of the world
@@ -288,33 +321,88 @@ function drawnDeaths(s: WorldState, c: Chronicle, from: number, to: number): Dra
 /** Applies every happening of the chronicle from day `from` up to and including day `to`, and the deaths the life
  *  table drew for those days; returns the happenings that could not be applied (realms not in this world, persons not
  *  in it). On a day the drawn deaths come where the chronicle's deaths come: after the ends of reigns, before the
- *  accessions. */
+ *  accessions. At the end of each day the crowns the day left with nobody are settled (src/sim/systems/succession.ts). */
 export function playChronicle(s: WorldState, w: World, from: number, to: number): number {
   const c = w.chronicle;
   if (!c || c.year !== s.startYear) return 0;
-  const due = drawnDeaths(s, c, from, to);
+  const P = s.person.cols,
+    R = s.realm.cols,
+    k = numberOf(c),
+    due = drawnDeaths(s, c, from, to),
+    touched = new Map<number, number>();
   let missed = 0,
-    k = 0;
+    next = 0,
+    today = Number.NaN;
+  const d: Day = {
+    touch: (r, left) => touched.set(r, left >= 0 ? left : (touched.get(r) ?? -1)),
+    crown(r, id) {
+      if (w.rulerDeaths === 'drawn' && !R.holder.includes(id)) {
+        const p = k.get(indexOf(s).keys.get(id) ?? '');
+        const m = p === undefined ? ALIVE : Math.max(today + 1, murderDay(today, drawOf(s, c, p, DRAW.murder)));
+        if (m !== ALIVE && (P.dies[id] === ALIVE || m < P.dies[id])) P.dies[id] = m;
+        dated(id);
+      }
+      R.holder[r] = id;
+    },
+  };
+  /** a death dated during the play goes in its place among those still due (an older date of the person is skipped) */
+  const dated = (id: number) => {
+    const day = P.dies[id],
+      person = k.get(indexOf(s).keys.get(id) ?? '');
+    if (day === ALIVE || day < from || day > to || person === undefined) return;
+    const x = { day, person };
+    let at = next;
+    while (at < due.length && byDay(due[at], x) < 0) at++;
+    due.splice(at, 0, x);
+  };
+  const persons: Persons = {
+    row: (p) => indexOf(s).persons.get(c.persons[p].key),
+    unborn: (p) => unborn(s, c, p),
+    enter(p, realm, day) {
+      const id = enter(
+        s,
+        w,
+        c,
+        { day, what: Happening.Enter, person: p, realm: s.realmText[realm].key },
+        indexOf(s),
+        realm,
+        d,
+      );
+      if (id !== undefined) dated(id);
+      return id;
+    },
+    draw: (p, n) => drawOf(s, c, p, n),
+  };
+  const dawn = (day: number) => {
+    if (day === today) return;
+    for (const [r, left] of touched) settle(s, w, c, persons, r, today, left, d.crown);
+    touched.clear();
+    today = day;
+  };
   const dieUntil = (day: number) => {
-    for (; k < due.length && due[k].day <= day; k++)
-      happen(s, w, c, { day: due[k].day, what: Happening.Die, person: due[k].person, realm: '' });
+    for (; next < due.length && due[next].day <= day; next++) {
+      const x = due[next],
+        id = indexOf(s).persons.get(c.persons[x.person].key);
+      if (id === undefined || P.dies[id] !== x.day || P.died[id] !== ALIVE) continue;
+      dawn(x.day);
+      happen(s, w, c, { day: x.day, what: Happening.Die, person: x.person, realm: '' }, d, true);
+    }
   };
   for (let i = firstEventOn(c, from); i < c.events.length && c.events[i].day <= to; i++) {
-    const e = c.events[i];
+    const e: Event = c.events[i];
     dieUntil(e.what < Happening.Die ? e.day - 1 : e.day);
-    if (!happen(s, w, c, e)) missed++;
-    if (e.what !== Happening.Die) continue;
-    const id = indexOf(s).persons.get(c.persons[e.person].key),
-      day = id === undefined ? ALIVE : s.person.cols.dies[id];
-    if (id !== undefined && day !== ALIVE && day <= to && s.person.cols.died[id] === ALIVE) {
-      // drawn just now: in its place among the deaths still due
-      const d = { day, person: e.person };
-      let at = k;
-      while (at < due.length && byDay(due[at], d) < 0) at++;
-      due.splice(at, 0, d);
+    dawn(e.day);
+    const was = e.what === Happening.Die ? indexOf(s).persons.get(c.persons[e.person].key) : undefined,
+      before = was === undefined ? ALIVE : P.dies[was];
+    if (!happen(s, w, c, e, d)) missed++;
+    if (was !== undefined && P.dies[was] !== before) dated(was); // the life table drew the day just now
+    if (e.what === Happening.Enter) {
+      const id = indexOf(s).persons.get(c.persons[e.person].key);
+      if (id !== undefined && P.dies[id] !== ALIVE) dated(id);
     }
   }
   dieUntil(to);
+  dawn(Number.NaN);
   return missed;
 }
 
