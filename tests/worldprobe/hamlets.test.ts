@@ -6,7 +6,7 @@ import { Batch } from '../../src/lookprobe/batch';
 import { LAND_Y, Mat, N, SEA_Y, type Ground } from '../../src/lookprobe/layout';
 import { styleOf, townWall } from '../../src/buildings';
 import { PEOPLE_PER_PERSON, SPRING, type Site, blockOf, settle } from '../../src/worldprobe/settle';
-import { fieldsByLot, lotKey, type TownParcels } from '../../src/worldprobe/lots';
+import { fieldsByLot, lotKey, lotsOfTowns, type TownParcels } from '../../src/worldprobe/lots';
 import { CROP, GEWANN, cropOf, lotCorner } from '../../src/sim/settlement/fields';
 import { HAMLET_FAMILIES, hamletAt, hamletLandsOf, hamletsOf } from '../../src/worldprobe/hamlets';
 
@@ -359,6 +359,12 @@ describe('the fields of the land register (settlement feature 4)', () => {
     // the town's furlongs as pairs of their lots, in the register's order (the farmers', src/figures/farmers.ts)
     expect(by.towns.get(7)).toEqual([3, 2, -4, 5]);
     expect(fieldsByLot(parcels, 1291, () => null).size).toBe(0);
+    // and so to the first far step, from the block of the register's survey, for each town whose file names it
+    const surveyed: TownParcels = Object.assign(new Map([[7, { ...parcels.get(7)!, at: [0, 0] as const }]]), {
+      year: 1291,
+    });
+    expect(lotsOfTowns(surveyed)).toEqual(new Map([[7, [3, 2, -4, 5]]]));
+    expect(lotsOfTowns(parcels).size).toBe(0);
   });
   it('are the only fields round the towns: a furlong in strips, its crop, as deep as the register has it, nothing else ploughed', () => {
     const counts: Record<string, number> = {},

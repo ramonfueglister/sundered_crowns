@@ -14,6 +14,7 @@ import { buildPiece, warmPieces } from './build';
 import { CROWD_AT, farCrowd } from './crowd';
 import { type Cover, KINDS, laidOut } from './far';
 import { glide } from './glide';
+import { loadParcels, lotsOfTowns } from './lots';
 import { meanCover, summary } from './mean';
 import { above, lay } from './mean_look';
 import { faced, flat as floats, small } from './small';
@@ -275,11 +276,13 @@ async function tableOf(job: PieceJob): Promise<{ scene: WorldScene | null; table
   if (table.things && !job.bakedSky) return null;
   const drawn = drawTable(table, job.bakedSky, job.step),
     things = table.things ? Batch.of(table.things.pos, table.things.nor, table.things.col) : new Batch();
-  // (the people of the first far step stand on the table's ground as on the ground the piece was built on, and the
-  // persons of the towns in its towns: crowd.ts)
+  // (the people of the first far step stand on the table's ground as on the ground the piece was built on, the
+  // persons of the towns in its towns, and the farmers among them on their town's furlongs: crowd.ts)
   if (job.step === CROWD_AT) await loadTownPeople(undefined, job.year);
+  const parcels = job.step === CROWD_AT ? await loadParcels(job.base, job.year ?? 1356) : null,
+    lots = parcels ? lotsOfTowns(parcels) : undefined;
   const figures =
-    job.step === CROWD_AT ? onGrid(table.side, () => farCrowd(table, table.ox, table.oz, table.part)) : undefined;
+    job.step === CROWD_AT ? onGrid(table.side, () => farCrowd(table, table.ox, table.oz, table.part, lots)) : undefined;
   return {
     table,
     scene: {

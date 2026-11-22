@@ -3,7 +3,8 @@
 // person's id among the furlongs of the town as every piece of the world near it has them (fieldsByLot,
 // src/worldprobe/lots.ts). Only the piece that owns the middle of the furlong's lot adds the person's figure, at a
 // free block beside the furlong and facing it, so that it stands once; in the furlongs of a town whose persons are
-// known no anonymous farmer works (crowd.ts).
+// known no anonymous farmer works (crowd.ts). The first far step puts them where the finest step does
+// (worldprobe/crowd.ts).
 import { hash2 } from '../lookprobe/batch';
 import { N } from '../lookprobe/layout';
 import { WHO } from '../sim/people/day_plan';
@@ -54,7 +55,7 @@ function handsOf(site: number, lots: readonly number[]): Map<number, TownPerson[
 
 /** The furlongs near this ground that persons work, by lot, each with its farmers (none on some): those of the towns
  *  whose persons are known. */
-export function fieldHands(s: SettledGround): Map<number, readonly TownPerson[]> {
+export function fieldHands(s: Pick<SettledGround, 'furlongs'>): Map<number, readonly TownPerson[]> {
   const out = new Map<number, readonly TownPerson[]>();
   for (const [site, lots] of s.furlongs ?? []) {
     const hands = handsOf(site, lots);
@@ -69,7 +70,8 @@ export function fieldHands(s: SettledGround): Map<number, readonly TownPerson[]>
 
 /**
  * Puts the farmers of each furlong whose lot's middle this piece owns at free blocks beside the furlong, one to a
- * block, each at a block drawn from the person's id. `ox`, `oz`: the piece's ground in the world.
+ * block, each at a block drawn from the person's id. `ox`, `oz`: the piece's ground in the world, `side` how many
+ * blocks of the finest step it is wide (twice the grid at the first far step: worldprobe/crowd.ts).
  */
 export function placeHands(
   out: Gathered,
@@ -78,6 +80,7 @@ export function placeHands(
   ox: number,
   oz: number,
   own: (x: number, z: number) => boolean,
+  side = N,
 ) {
   for (const [lot, people] of hands) {
     if (!people.length) continue;
@@ -87,7 +90,7 @@ export function placeHands(
       z0 = lz * FIELD_LOT.d - oz,
       mx = Math.floor(x0 + FIELD_LOT.w / 2),
       mz = Math.floor(z0 + FIELD_LOT.d / 2);
-    if (mx < 0 || mz < 0 || mx >= N || mz >= N || !own(mx, mz)) continue;
+    if (mx < 0 || mz < 0 || mx >= side || mz >= side || !own(mx, mz)) continue;
     // the free blocks of the lot beside its furlong, and which way the furlong lies from each
     const spots: [number, number, number][] = [];
     for (let z = z0; z < z0 + FIELD_LOT.d; z++)
