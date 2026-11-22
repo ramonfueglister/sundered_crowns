@@ -47,6 +47,11 @@ fn strands(s: &Surface) -> Vec<f32> {
 /// The pieces of a beard: how much of the image's breadth lies on each, and how long it is (the diagonal of the
 /// box round its corners; 1 is 10 cm).
 fn pieces(s: &Surface) -> Vec<(f32, f32)> {
+    boxes(s).into_iter().map(|(across, low, high)| (across, len(sub(high, low)))).collect()
+}
+
+/// The pieces of a beard: how much of the image's breadth lies on each, and the box round its corners.
+fn boxes(s: &Surface) -> Vec<(f32, V3, V3)> {
     fn root(of: &mut [usize], mut i: usize) -> usize {
         while of[i] != i {
             of[i] = of[of[i]];
@@ -76,7 +81,7 @@ fn pieces(s: &Surface) -> Vec<(f32, f32)> {
         let e = span.entry(root(&mut of, i)).or_insert((f32::MAX, f32::MIN, [f32::MAX; 3], [f32::MIN; 3]));
         *e = (e.0.min(uv[0]), e.1.max(uv[0]), [e.2[0].min(q[0]), e.2[1].min(q[1]), e.2[2].min(q[2])], [e.3[0].max(q[0]), e.3[1].max(q[1]), e.3[2].max(q[2])]);
     }
-    span.values().map(|r| (r.1 - r.0, len(sub(r.3, r.2)))).collect()
+    span.values().map(|r| (r.1 - r.0, r.2, r.3)).collect()
 }
 
 #[test]
@@ -296,5 +301,50 @@ fn a_full_beard_ends_in_tufts() {
             continue;
         }
         assert!(mean > 0.007, "{who}: the beard's lower outline lies {} mm off its own mean over 1.8 cm: one closed line", 100.0 * mean);
+    }
+}
+
+#[test]
+fn a_full_beard_grows_thin_towards_the_cheek() {
+    // Round 184. The full beard's upper edge on the cheek was one dark line from the mouth's corner to the ear:
+    // layer and strands began there in full. Now the beard grows thin over 2 cm from that edge (`beards.py`,
+    // `CROP_CHEEK`): fewer painted hairs and less shade in the layer, which comes off the skin as slowly, and
+    // fewer, shorter and narrower bands of strands. Read here, of the strands alone: the band that reaches highest in each
+    // strip of 2 mm from 4.5 to 8.5 cm either side of the face's middle (there the beard's upper edge is the
+    // cheek's), and how much of the image's breadth lies on one of those in the median, against the median of all
+    // the beard's bands (the image lies on a band in true scale, so that is the band's breadth). Measured: 0.61
+    // to 0.70 of it on these seven; round 182's file 1.00 on all seven, and fails. The bound is 0.8: PLACEHOLDER,
+    // by these two rounds. The layer's cover is read by no test here: it lies in its image.
+    let Some(h) = head() else { return };
+    for (k, age) in [(1u32, 24.0f32), (3, 35.0), (5, 50.0), (7, 68.0), (9, 35.0), (11, 50.0), (13, 68.0)] {
+        let mut p = person(k, false, age);
+        p.beard = Some(Beard::Full);
+        let out = build(&h, &p, 1);
+        let who = format!("person {k} of {age}");
+        let beard = out.surfaces.iter().find(|s| s.tex.as_deref().is_some_and(|t| t.contains(BEARD_IMAGE))).unwrap_or_else(|| panic!("{who}: a beard's locks"));
+        let median = |v: &mut Vec<f32>| {
+            v.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            v[v.len() / 2]
+        };
+        let bands = boxes(beard);
+        let all = median(&mut bands.iter().map(|b| b.0).collect());
+        let mut top: [Option<&(f32, V3, V3)>; 40] = [None; 40];
+        for b in &bands {
+            let x = 0.5 * (b.1[0] + b.2[0]) - out.cx;
+            let i = ((x.abs() - 0.45) / 0.02).floor();
+            if (0.0..20.0).contains(&i) {
+                let at = &mut top[i as usize + if x > 0.0 { 20 } else { 0 }];
+                if at.is_none_or(|t| b.2[1] > t.2[1]) {
+                    *at = Some(b);
+                }
+            }
+        }
+        let edge = median(&mut top.iter().flatten().map(|b| b.0).collect());
+        if std::env::var("SHOW").is_ok() {
+            println!("{who}: the highest bands of {} strips are {:.2} as broad as the beard's ({:.3} of the image for {:.3})", top.iter().flatten().count(), edge / all, edge, all);
+            continue;
+        }
+        assert!(top.iter().flatten().count() > 30, "{who}: {} strips of the cheek with a band", top.iter().flatten().count());
+        assert!(edge < 0.8 * all, "{who}: the bands at the beard's upper edge on the cheek are {} as broad as the beard's: it begins in full", edge / all);
     }
 }

@@ -9911,6 +9911,107 @@ quarters: before above, after below), `runde183_nah.png` (their plaits' ends nea
 before), `runde183_blender.png` (Blender, from three sides, whole and near the end: round 180's above, this
 round's below).
 
+**Round 184: the full beard grows thin towards the cheek, in the Blender on Ramon's Mac** (2026-11-22).
+Round 182 said of its beard: its upper edge on the cheek is still the painted layer's line.
+
+What was read. Nothing. Looked at again: the reference's bearded heads (`ck3_05`, `ck3_13`, cut out to the
+size of ours) beside four of ours at twice the usual size, and ours with the layer alone and with the strands
+alone (the test page's `without=`). Theirs grows thin on the cheek, lighter towards the cheekbone, with no
+line. Ours ended on one dark line from the corner of the mouth to the ear. Where it came from: the painted
+layer came to its full cover within 3.75 mm of the zone's edge and to its full distance off the skin within
+13.5 mm, both measured straight down, and the edge runs up the cheek at a slope of 1.4 to 5: across it, seen
+from the front, that is 0.7 to 2.2 mm and 2.6 to 7.8 mm, a step. And the strands began on that line in full
+number, breadth and length. Not measured on the reference, by eye.
+
+What is changed.
+- **A distance from the cheek's edge** (`tools/portrait/pipeline/beards.py`, the new switch `CROP_CHEEK`, four
+  numbers, `0.2,0,0.3,0.25` in the call; `cheek()`): the zone's upper edge from beside the nose's wing to the
+  ear is taken as points on the skin, and a place's distance from it is measured over the skin. Over 2 cm from
+  that edge the beard comes to what it was, by a smooth step.
+- **The painted layer** (`hairlib.py` `paint_cap(thin=)`): by that step, the share of its painted hairs that
+  is left (each hair as it was, none at the edge), the shade under them by its square, and the layer's
+  distance off the skin (`crop_lift`): no step at the edge. The colour is set by the whole layer as before, so
+  it is what it was where nothing grows thin.
+- **The strands** (`hairlib.py` `locks_from_wisps(shape=)`): by where a band begins, the share of the bands
+  that is there at all (none at the edge), a band's length (0.3 at the edge) and its breadth (0.25 at the
+  edge), each rising to the whole over the same 2 cm; and those bands lie over the form that comes down to the
+  skin. The strands themselves are grown and gathered as in round 182, so a band that begins further in lies
+  where it did, corner for corner (41 813 of the 46 761 corners; its shade is baked anew), and so do the
+  tufts and the moustache. 174 bands of 2045 are gone.
+- The files `public/portrait/real/beard_crop_cap.txt.zst`, `beard_crop_cap.webp` and `beard_crop_cap_n.webp`
+  (the layer: painted in the cloud, as since round 53, with numpy and PIL, which the Mac's Blender has not) and
+  `beard_crop_locks.txt.zst` (the strands: Blender 5.1.2 on the Mac) are written anew, with the scripts as
+  committed. Without the switch the calls write the layer's three files of the repository and round 182's
+  strands byte for byte. Nothing in the builder and nothing on the stage; the wasm is the same bytes. The
+  short beard, the stubble and the moustache are not touched.
+
+How it was made. Six trials in the cloud, the first four put into the portrait on two men from the front,
+three quarters and the side: 1.2 cm with 0.15 of the strands kept at the edge and the layer's cover faded as
+one film; 1.4 cm with no strand at the edge and the layer's hairs thinned one by one; 2 cm; 2 cm with the
+bands thinned in the place of the strands' roots; the last two for the bytes (see below). Then, as rounds 171
+to 183, the script was sent to the socket of the Blender that is open on the Mac and run there in scenes of
+its own, one pass: the old call (round 182's file, byte for byte), the new call, the short beard's call
+(round 176's file, byte for byte), the new call once more (the same bytes); the painted layer as the cloud
+wrote it, old and new, put under the strands in the two scenes, and both rendered from the front, three
+quarters and the side, far and near. That pass ran three times, the first two with scripts that were not
+kept. The strands' file in the repository is the Mac's; the cloud's Blender module writes another (1854
+bands for 1871), as in rounds 173 and 182.
+
+Measured (`portrait/tests/locks.rs` with `SHOW=1`, on round 182's file and on this; the sheets of 36 against
+round 183's):
+
+| | before | now |
+|---|---|---|
+| the band that reaches highest in each strip of 2 mm on the cheek is so broad, of the beard's median band (seven men) | 1.00 | 0.61 to 0.70 |
+| the layer covers of its image (cover over a half) | 0.166 | 0.148 |
+| bands, corners, triangles | 2045, 51 219, 60 112 | 1871, 46 761, 54 864 |
+| the beard's lower outline off its own mean over 1.8 cm, on average (round 182's test) | 0.91 to 1.64 mm | 0.91 to 1.64 mm, man for man |
+| portraits of the sheet that change | | 4 of 36 in the village, 3 of 36 at court |
+| the four files, packed | 1.37 MB | 1.31 MB |
+
+Tried and not kept.
+- 1.2 cm, 0.15 of the strands kept at the edge, the layer's cover faded as one film: a fringe of single dark
+  strands standing on bare skin.
+- 1.4 cm: a narrower fringe, the edge still a line from three quarters.
+- The strands' roots thinned, not the bands (2 cm; it ran on the Mac too): every tuft and band of the beard
+  then falls anew, and the lower outline was another than round 182's: on one man of seven 0.70 mm off its
+  mean, under that round's bound of 0.7, and the test failed. The same with the bands thinned but the strands
+  grown over the form that comes down towards the cheek (0.72 on that man; it ran on the Mac too). The test
+  stays as it is: the strands are round 182's now, and so is the beard below the cheek.
+- Not tried: the same towards the neck and under the lower lip; the moustache; hairs as fine as the layer's
+  for the last strands; the hair in front of the ear joined to the head's hair.
+
+**One test new, none changed.** `a_full_beard_grows_thin_towards_the_cheek` (`portrait/tests/locks.rs`) takes
+the band that reaches highest in each strip of 2 mm from 4.5 to 8.5 cm either side of the face's middle, and
+how much of the image's breadth lies on one of those in the median, against the median of all the beard's
+bands (the image lies on a band in true scale): less than 0.8 of it (0.61 to 0.70; round 182's file 1.00 on all
+seven, and fails), and a band in more than 30 of the 40 strips. The layer's cover is read by no test: it lies
+in its image, and was looked at in Blender and in the portrait. The four older tests of the beard pass as
+they were.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 183. The colour sheet: 158 of 160
+lines to the last figure; two move by 0.1, of the grown men, read where the beard lies (the lower lip redder
+than the cheek by a* 5.8 for 5.9, the upper lip's b* 14.7 for 14.8); no line of the gauntlet reads them.
+
+Honest about it. A small to middle step, on the men with a full beard: four of the 36. The dark line on the
+cheek is gone: the beard begins there with single thin strands over a layer that thins out, and at the size
+of the sheet its upper edge is soft where it was ruled. What is not good: from near the last strands are
+still bands of a millimetre, straight and of one kind, a fringe more than a down; the beard is some 7 mm lower
+on the cheek than it was, since nothing of it stands at the old edge. Where the beard is thin now, a coif's
+tie shows on the cheek and ends in the beard (it lay under the beard before). At a few ends small light
+specks show. The beard's edge towards the neck and under the lower lip is as it was, and the moustache is
+round 173's brush. A black beard is still a dark mass. Two kinds of file from two machines: the layer is the
+cloud's, the strands are the Mac's. Every number is by eye: PLACEHOLDER.
+
+Tests: `cargo test --release` as a whole 149 of 149 (one new); `tests/portrait.test.ts` and its neighbour
+46 of 46; typecheck and lint pass, no new warning.
+Pictures (project files, `portraits/`): `runde184_vorher_nachher.png` (the sample's four men with a full
+beard from the front and two of them from three quarters: before above, after below), `runde184_nah.png`
+(their beards near, in the same order), `runde184_wange.png` (the cheek of two men from three quarters at
+twice the size: before left, after right), `runde184_dorf.png` and `runde184_hof.png` (all 36, village and
+court, after; round 183's sheets are the before), `runde184_blender.png` (Blender, from three sides, far and
+near: round 182's above, this round's below).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
