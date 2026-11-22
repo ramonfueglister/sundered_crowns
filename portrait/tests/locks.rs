@@ -263,3 +263,38 @@ fn a_full_beard_closes_round_the_mouth_and_keeps_to_the_jaw() {
     }
     assert!(bad.is_empty(), "{bad:#?}");
 }
+
+#[test]
+fn a_full_beard_ends_in_tufts() {
+    // Round 182. Round 173's full beard was a close mat with one closed outline, where the reference's ends in
+    // pointed tufts. Its strands are gathered into 40 tufts now, each ending in a point, and the points reach
+    // further out of the beard's zone than the strands at a tuft's border (`beards.py`, `CROP_LOCK_TUFT`).
+    // Read here: the beard's lower outline from the front, the lowest corner in each strip of 2 mm to 5 cm
+    // either side of the face's middle, and how far a strip's lowest place lies off the mean of the nine strips
+    // round it (1.8 cm). Measured: 0.91 to 1.64 mm on average on these seven; round 173's file 0.35 to 0.54,
+    // and fails. The bound is 0.7 mm: PLACEHOLDER, by these two rounds.
+    let Some(h) = head() else { return };
+    for (k, age) in [(1u32, 24.0f32), (3, 35.0), (5, 50.0), (7, 68.0), (9, 35.0), (11, 50.0), (13, 68.0)] {
+        let mut p = person(k, false, age);
+        p.beard = Some(Beard::Full);
+        let out = build(&h, &p, 1);
+        let who = format!("person {k} of {age}");
+        let beard = out.surfaces.iter().find(|s| s.tex.as_deref().is_some_and(|t| t.contains(BEARD_IMAGE))).unwrap_or_else(|| panic!("{who}: a beard's locks"));
+        let mut low = [f32::MAX; 50];
+        for q in &beard.pos {
+            let i = ((q[0] - out.cx + 0.5) / 0.02).floor();
+            if (0.0..50.0).contains(&i) {
+                low[i as usize] = low[i as usize].min(q[1]);
+            }
+        }
+        assert!(low.iter().all(|y| *y < f32::MAX), "{who}: the beard goes from side to side under the chin");
+        let off: Vec<f32> = (4..46).map(|i| (low[i] - low[i - 4..=i + 4].iter().sum::<f32>() / 9.0).abs()).collect();
+        let mean = off.iter().sum::<f32>() / off.len() as f32;
+        let most = off.iter().copied().fold(0f32, f32::max);
+        if std::env::var("SHOW").is_ok() {
+            println!("{who}: the lower outline lies {:.2} mm off its own mean over 1.8 cm on average, {:.2} at most", 100.0 * mean, 100.0 * most);
+            continue;
+        }
+        assert!(mean > 0.007, "{who}: the beard's lower outline lies {} mm off its own mean over 1.8 cm: one closed line", 100.0 * mean);
+    }
+}

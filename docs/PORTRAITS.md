@@ -9737,6 +9737,90 @@ behind, before above and after below), `runde181_dorf.png` and `runde181_hof.png
 court, after; round 180's sheets are the before), `runde181_blender.png` (Blender, from five sides: the cut
 at the jaw and the girls' hair, round 180's above and this round's below; then the waved cut).
 
+**Round 182: the full beard ends in tufts, in the Blender on Ramon's Mac** (2026-11-22).
+Round 173 said it of its own beard: a close-cropped mat with a closed outline where the reference has pointed
+tufts.
+
+What was read. Nothing. Looked at again: the reference's bearded heads (`ck3_05`, `ck3_13`, cut out to the
+size of ours) beside four of ours at twice the usual size. Their beard is made of locks that end in points,
+and its outline under the jaw is those points. Ours was 2072 fine strands that all ended near one line: a
+felt shell with a ruled lower edge. Not measured on the reference, by eye.
+
+What is changed.
+- **Tufts** (`tools/portrait/pipeline/beards.py`, the new switch `CROP_LOCK_TUFT`, seven numbers,
+  `40,0.7,0.85,0.4,1.0,0.25,1.2` in the call): the beard's 28 000 grown strands are gathered into 40 tufts,
+  by where they are rooted and where they end. Over the last 0.7 of its way a strand goes 0.85 of the way
+  towards its tuft's middle; the strand that ends farthest from that middle is 0.4 shorter, the others by
+  their share of the way out; a tuft as a whole is up to a quarter longer or shorter, by chance. So a tuft
+  ends in a point.
+- **The points are the outline**: a strand is cut where it leaves the beard's zone by more than
+  `CROP_LOCK_CUT` says. That is 14 units of 1.5 mm in front and 9 at the back now (7 and 5), and a strand at
+  its tuft's border is cut at the zone's edge or before it, the one in its middle at the full distance (the
+  tuft's chance goes on it three times). The points reach some 2 cm out of the zone, the hollows between
+  them go back to it.
+- The strands are then gathered into bands as in round 173 (1800 wisps and the moustache's 320, 3 to 5 mm
+  broad, the shade baked in Blender): 2045 bands for 2072, 60 112 triangles for 67 224. The moustache, the
+  painted layer under the strands and the short beard are not touched: without the switch the call writes
+  round 173's file byte for byte, and round 176's call the short beard's (both on the Mac).
+- The file `public/portrait/real/beard_crop_locks.txt.zst` is written anew, by Blender 5.1.2 on the Mac, with
+  the script as committed. Nothing in the builder and nothing on the stage; the wasm is the same bytes.
+
+How it was made. Five trials in the cloud, each put into the portrait: tufts by shortening alone, 90, 60 and
+45 of them (tufts on the beard's face, but the outline stayed one line: the strands were cut at one distance
+from the zone before they were gathered); then the cut made to go by a strand's place in its tuft, with 60
+and with 40 tufts. Then, as rounds 171 to 181, the script was sent to the socket of the Blender that is open
+on the Mac and run there in scenes of its own, one pass: the old call (round 173's file, byte for byte), the
+new call, the short beard's call (round 176's file, byte for byte), the new call once more (the same bytes);
+old and new rendered from the front, three quarters and the side, far and near. The file in the repository
+is the Mac's; the cloud's Blender module writes another (2040 bands), as it did in round 173.
+
+Measured (`portrait/tests/locks.rs` with `SHOW=1`, on round 173's file and on this; the sheets of 36 against
+round 181's):
+
+| | before | now |
+|---|---|---|
+| the beard's lower outline from the front lies so far off its own mean over 1.8 cm, on average (seven men) | 0.35 to 0.54 mm | 0.91 to 1.64 mm |
+| the same, at most | 1.2 to 1.8 mm | 2.9 to 3.9 mm |
+| bands, corners, triangles | 2072, 56 634, 67 224 | 2045, 51 219, 60 112 |
+| the lowest of the beard below the chin, of the head's height (the bound is 0.1) | not taken | -0.001 to 0.034 |
+| portraits of the sheet that change | | 4 of 36 in the village, 3 of 36 at court |
+| the file, packed | 1.30 MB | 1.17 MB |
+
+Tried and not kept.
+- Tufts by shortening alone (90, 60, 45 tufts): the beard's face in tufts, the outline as closed as before.
+- 60 tufts with the cut going by the tuft: a single long hook behind the jaw on one man, smaller points.
+- Not tried: tufts of the moustache; locks that curl; a tuft's tone; the painted layer drawn back where the
+  hollows are (it shows there, in the beard's colour); other lengths of the strands.
+
+**One test new, none changed.** `a_full_beard_ends_in_tufts` (`portrait/tests/locks.rs`) reads the beard's
+lower outline from the front, the lowest corner in each strip of 2 mm to 5 cm either side of the face's
+middle, and how far a strip's lowest place lies off the mean of the nine strips round it: more than 0.7 mm
+on average (0.91 to 1.64; round 173's file 0.35 to 0.54, and fails). The three older tests of the beard pass
+as they were: the beard keeps to the jaw, closes round the mouth and hangs no lower.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 181. The colour sheet: 157 of 160 lines to the last
+figure; three move, of the grown men, read where the beard lies (the chin's L 40.9 for 39.8, the upper lip's L
+and b* by 0.1); no line of the gauntlet reads them.
+
+Honest about it. A small to middle step, on the men with a full beard: four of the 36. From near and from
+three quarters the beard has a ragged outline of points and its face lies in tufts, where it was felt with a
+ruled edge; at the size of the sheet it is a slightly softer outline and little more. What is not good: the
+tufts are all of one kind and near one size, straight, with no curl; on a white beard they read as fleece.
+In the hollows between the points the painted layer shows, a smooth shell in the beard's colour, so the
+outline is less open than the strands alone would make it. The moustache is round 173's brush, and the
+beard's upper edge on the cheek is still the layer's line. A black beard is a dark mass in which the tufts
+hardly show. The reference's beards are longer and of fewer, larger locks. The file is not the same from
+machine to machine (the repository's is the Mac's). Every number is by eye: PLACEHOLDER.
+
+Tests: `cargo test --release` as a whole 147 of 147 (one new); `tests/portrait.test.ts` and its neighbour
+46 of 46; typecheck and lint pass, no new warning.
+Pictures (project files, `portraits/`): `runde182_vorher_nachher.png` (the sample's four men with a full
+beard, from the front and from three quarters: before above, after below), `runde182_nah.png` (their beards
+near, in the same order), `runde182_gross.png` (one man at twice the size from the front, three quarters and
+the side, before above and after below), `runde182_dorf.png` and `runde182_hof.png` (all 36, village and
+court, after; round 181's sheets are the before), `runde182_blender.png` (Blender, from three sides, far and
+near: round 173's above, this round's below).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair

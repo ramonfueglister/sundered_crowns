@@ -427,7 +427,7 @@ if style in ('crop', 'short') and os.environ.get('CROP_LOCKS'):
     # the share of it by which a strand is cut sooner by chance. With one number for all, the beard hung a
     # centimetre over its zone on the neck below the ear too, a bib with a ruled edge and a corner behind the jaw
     CUTS = [float(t) for t in os.environ.get('CROP_LOCK_CUT', '7').split(',')]
-    def cut(Sl):
+    def cut(Sl, less=None):
         # a strand ends where it comes to the mouth (a lock run on over it lies on the lips as a bar) and where it
         # leaves the zone (below the jaw the form goes on as the neck: a beard down to the collar)
         dl = unit(Sl - hc)
@@ -436,6 +436,9 @@ if style in ('crop', 'short') and os.environ.get('CROP_LOCKS'):
             zs = H.at(dl, 0.0 * dl[..., 0])[..., 2]
             far = CUTS[1] + (CUTS[0] - CUTS[1]) * np.clip((zs - CUTS[2]) / (CUTS[3] - CUTS[2]), 0, 1)
             far = far * (1 - CUTS[4] * np.random.default_rng(92 + len(Sl)).random(len(Sl)))[:, None]
+        if less is not None:
+            # (round 182: a strand at its tuft's border is cut nearer the zone)
+            far = far * less[:, None]
         gone = (mouth_l(dl)[0] < 1) | (margin_l(*ang(dl)) < -far)
         tt = np.arange(Sl.shape[1])
         whole = np.ones(len(Sl), bool)
@@ -480,7 +483,42 @@ if style in ('crop', 'short') and os.environ.get('CROP_LOCKS'):
                             vary='0.4,0.25,0.04', jitter='0.004', ring='0.03', seed=91, label=style, write=False, first='0.9')
         print(style, 'moustache', len(Pm), 'roots', len(Sm), 'strands', len(extra), 'locks')
         Pl, Ll = Pl[~must_l], Ll[~must_l]
-    Sl = cut(grow(form, Pl, Ll, 10, flow, lambda s_, d_, P0: 0.0 * d_[..., 0]))
+    Sl = grow(form, Pl, Ll, 10, flow, lambda s_, d_, P0: 0.0 * d_[..., 0])
+    # CROP_LOCK_TUFT (round 182): the full beard was a close mat with one closed outline (round 173 said so),
+    # where the reference's ends in pointed tufts. The strands are gathered into so many tufts (by where they are
+    # rooted and where they end, as `wisps` gathers them); over the last share of its way (the second number) a
+    # strand goes towards its tuft's middle way by the third number; the strand that ends farthest from the
+    # tuft's middle is shorter by the fourth number, by the power in the fifth of the way out: a tuft ends in a
+    # point; a tuft as a whole is longer or shorter by the sixth, by chance; and the strand farthest out is cut
+    # so much less far outside the beard's zone than `CROP_LOCK_CUT` says (the seventh, as a share; the tuft's
+    # chance goes on it too, three times): the outline is the tufts' points. 0: the beard of round 173.
+    # PLACEHOLDER by eye.
+    TUFT = [float(t) for t in os.environ.get('CROP_LOCK_TUFT', '0').split(',')]
+    far_l = None
+    if TUFT[0] > 0:
+        from hairlib import wisps
+        rt_ = np.random.default_rng(182)
+        of_t = wisps(Sl, int(TUFT[0]), rt_)
+        n_s = Sl.shape[1]
+        along = np.clip((np.arange(n_s) / (n_s - 1) - (1 - TUFT[1])) / TUFT[1], 0, 1) ** 1.5
+        tt = np.arange(n_s)
+        far_l = np.ones(len(Sl))
+        for j in range(int(TUFT[0])):
+            mem = np.where(of_t == j)[0]
+            if len(mem) < 2:
+                continue
+            mid = Sl[mem].mean(0)
+            out_ = np.linalg.norm(Sl[mem, -1] - mid[-1], axis=1)
+            out_ = (out_ / max(out_.max(), 1e-9)) ** TUFT[4]
+            Sl[mem] += TUFT[2] * along[None, :, None] * (mid[None] - Sl[mem])
+            by = rt_.uniform(-1, 1)
+            far_l[mem] = np.clip((1 - TUFT[6] * out_) * (1 + 3 * TUFT[5] * by), 0, 2)
+            for i, k in zip(mem, np.clip((1 - TUFT[3] * out_) * (1 + TUFT[5] * by), 0.2, 1.0)):
+                u = np.linspace(0, k * (n_s - 1), n_s)
+                for c in range(3):
+                    Sl[i, :, c] = np.interp(u, tt, Sl[i, :, c])
+        print(style, 'tufts', int(TUFT[0]))
+    Sl = cut(Sl, far_l)
     # CROP_LOCK_WAVE: a lock swings to the side and off the beard along its way (how far, how far, the length
     # of a wave; 0: straight)
     WAVE = tuple(float(t) for t in os.environ.get('CROP_LOCK_WAVE', '0.012,0.006,0.15').split(','))
