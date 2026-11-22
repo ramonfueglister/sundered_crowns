@@ -54,7 +54,7 @@ export const lotKey = (lx: number, lz: number) => (lx + 32768) * 65536 + lz + 32
  * of its furlongs as pairs (lx, lz) in the register's order: the same on every piece the town is near, so that the
  * farmers of the town are given the same furlongs everywhere (src/figures/farmers.ts).
  */
-export function fieldsByLot(parcels: TownParcels, year: number, centre: (site: number) => [number, number] | null): Map<number, FieldShown> & { towns: Map<number, number[]> } {
+export function fieldsByLot(parcels: TownParcels, year: number, centre: (site: number) => readonly [number, number] | null): Map<number, FieldShown> & { towns: Map<number, number[]> } {
   const out = Object.assign(new Map<number, FieldShown>(), { towns: new Map<number, number[]>() });
   for (const [site, t] of parcels) {
     const f = t.fields;
@@ -73,6 +73,22 @@ export function fieldsByLot(parcels: TownParcels, year: number, centre: (site: n
     }
   }
   return out;
+}
+/** the furlongs of each town by its site worked out once for each file of parcels (lotsOfTowns) */
+const lotsKept = new WeakMap<TownParcels, ReadonlyMap<number, readonly number[]>>();
+/**
+ * The field lots of the furlongs of every town by its site, as fieldsByLot gives them to each piece near the town: the
+ * first far step's farmers work them as the finest step's do (crowd.ts). Only the towns whose file names the block of
+ * the register's survey (`at`, which every town of the files since settlement feature 4 has): the others' furlongs lie
+ * from a centre that the map of a piece gives.
+ */
+export function lotsOfTowns(parcels: TownParcels): ReadonlyMap<number, readonly number[]> {
+  let lots = lotsKept.get(parcels);
+  if (!lots) {
+    lots = fieldsByLot(parcels, parcels.year ?? 1291, (site) => parcels.get(site)?.at ?? null).towns;
+    lotsKept.set(parcels, lots);
+  }
+  return lots;
 }
 // The ground of the towns laid on a real plan that draws its land and water (Venice, from the land register of 1808):
 // in the square the plan draws, the world takes land and water from the plan instead of from the map, at the size the

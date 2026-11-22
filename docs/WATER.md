@@ -6,8 +6,8 @@ the water changes with the distance (as a comparison only: nothing of its look o
 the model's own, as clear and full as the land's. Since round 5 the water is calmer than EU5's from its nearest
 distance on, as the low-poly worlds' water is, and its coasts have foam (Ramon's word, 20 November 2026); since
 round 6 the foam runs in smooth bows, since round 8 the bed shows through the shallows and the open water is rippled,
-and since round 9 the lakes and rivers above the sea have the sea's water too (until then they were flat sheets of
-one colour, drawn as the land is).
+since round 9 the lakes and rivers above the sea have the sea's water too (until then they were flat sheets of
+one colour, drawn as the land is), and since round 10 a depth has one colour at every distance.
 
 ## The gauntlet
 
@@ -58,6 +58,34 @@ PROBE_URL=http://localhost:5199 node tools/lookprobe/water_frames.mjs /tmp/w/d60
                                                                    # a row of stills of the moving water (3 s)
 ```
 
+## Round 10 (22 November 2026): one colour for a depth, a deeper offing
+
+Ramon's "ok" to what was still open after round 9: the tone of the open sea from near, and the colour tipping from
+teal to blue as the view rises.
+
+- **One colour for a depth at every distance.** Round 9 gave each stop of `RAMP` a second, greener colour for the
+  near view, which gave way to the first within one doubling of the distance (130 to 280 blocks across). A lake went
+  from hue 235° at 100 blocks across to 252° at 300. EU5's water changes its colour with the depth, not with the
+  distance (213° over its shallows, 242° to 261° over deep water, in its nearest views alike). `RAMP` has one set of
+  colours again, halfway in CIELAB between the two sets of round 9. The lake is 244° to 245° from 100 to 450 blocks
+  across; the far views are 4° to 5° less violet than they were (Attica 1000: 255°, was 260°).
+- **The offing's depth fades evenly.** From near the sea is at least as deep in colour as it lies from the coast
+  (`OFFING`). That went by the near view's switch too; it now fades over three doublings (`NEAR_UNTIL`, 150 to 1200
+  blocks across in a picture 1672 dots wide), so a shallow sea does not grow lighter at once as the view rises.
+- **A deeper offing** (`OFFING` 0.1 to 0.55 over 3 to 60 blocks, was 0.06 to 0.5 over 4 to 80) and **quieter
+  ripples**: the strokes of lighter water are a third fainter and their troughs twice as dark (`RIPPLE_SHARE` 0.2,
+  `TROUGH` 0.16, were 0.3 and 0.08). The strokes lay on the water as the white lines of a drawing; EU5's ripples have
+  a light and a dark side.
+
+Measured as in round 9 (EU5's nearest views | round 9 | round 10, at Valencia 60, Venice 100 and 190): the open
+water's colour L 43–61, a −3 to −19, b −11 to −21 | 54–58, −18 to −22, −16 to −23 | 53–55, −17 to −19, −19 to −25;
+the lightness blurred over 25 dots, between its 5th and 95th hundredth, 11–21 | 9–13 | 8–16 (Valencia 16, Venice 10
+and 8: the lagoon is no less even than it was). The gauntlet is 43 of 43; Valencia's open hue is 229° (was 217°, at
+the bar's green end). Still short of EU5: over deep water its near sea is darker and greyer (L 42 to 44, chroma 14
+to 21 in two of its nearest views; ours is L 53 to 55, chroma 27 to 28), and it has soft foam round its whitecaps;
+Venice's lagoon is still a light, even blue from 300 blocks across; WebGPU and retina were not seen in the cloud.
+Before and after: project files `wasser/runden/runde10_*`.
+
 ## Round 9 (21 November 2026): lakes and rivers, a greener near sea
 
 Ramon's "weiter" after round 8. Two things were open: water above the sea had none of the new water, and the open sea
@@ -72,8 +100,8 @@ from near was one light blue beyond its shallows, bluer than EU5's.
   shelving bed a river three columns wide was a pale band); no surf runs up its banks. The upright sheets of its
   falls stay as they were. Seen at Lake Geneva from 100 to 1200 blocks across and at Paris from 60 to 420: no jump
   from one step of the view to the next.
-- **The near sea's colour.** Each stop of `RAMP` has a second colour for the near view: greener, a teal that darkens
-  to a slate blue. It darkens faster and further into the offing (`OFFING` 0.06 to 0.5 over 4 to 80 blocks, was 0.1
+- **The near sea's colour.** Each stop of `RAMP` has a second colour for the near view (until round 10): greener, a
+  teal that darkens to a slate blue. It darkens faster and further into the offing (`OFFING` 0.06 to 0.5 over 4 to 80 blocks, was 0.1
   to 0.34 over 8 to 110) and lies in lighter and darker patches over the bed's banks and hollows (`RELIEF`,
   `bedRelief`). From some 300 blocks across nothing changes.
 - **Fine stripes.** The steeper fall into the offing showed dotted stripes a few dots apart. The width of a dot of the
