@@ -161,7 +161,7 @@ export function build(): { chronicle: ChronicleJson; report: RulersReport } {
   const families = readFamilies();
   addKin(people, families, report);
   addParents(people, families, report);
-  const laws = readLaws(report);
+  const laws = readLaws(report, new Set(reigns.map((g) => g.realm)));
   return { chronicle: { year: YEAR, until: UNTIL, persons: people.persons, reigns, laws }, report };
 }
 
@@ -216,16 +216,19 @@ function addParents(people: People, families: Map<string, Record<string, string>
   }
 }
 
-/** The orders of succession of data/history/rulers/succession.csv (realm, from, order, source), oldest first. */
-function readLaws(report: RulersReport): Record<string, ChronicleLaw[]> {
+/** The orders of succession of data/history/rulers/succession.csv (realm, from, order, with, source), oldest first. */
+function readLaws(report: RulersReport, realms: ReadonlySet<string>): Record<string, ChronicleLaw[]> {
   const f = resolve(ROOT, 'data/history/rulers/succession.csv'),
     out: Record<string, ChronicleLaw[]> = {};
   if (!existsSync(f)) return out;
   for (const r of parseCsv(readFileSync(f, 'utf8'))) {
     const order = r.order === 'none' ? null : ORDERS.find((o) => o === r.order);
     if (order === undefined) throw new Error(`succession.csv: no such order: ${r.order}`);
+    if (!realms.has(r.realm)) throw new Error(`succession.csv: no reigns of ${r.realm}`);
+    if ((order === 'union') !== Boolean(r.with) || (r.with && !realms.has(r.with)))
+      throw new Error(`succession.csv: ${r.realm} ${r.from}: a union, and only a union, names a realm with reigns`);
     const list = out[r.realm] ?? [];
-    list.push({ from: date(r.from), order, source: r.source });
+    list.push({ from: date(r.from), order, ...(r.with ? { with: r.with } : {}), source: r.source });
     out[r.realm] = list;
   }
   for (const l of Object.values(out))
@@ -233,7 +236,15 @@ function readLaws(report: RulersReport): Record<string, ChronicleLaw[]> {
   report.laws = Object.keys(out).length;
   return out;
 }
-const ORDERS: readonly SuccessionOrder[] = ['primogeniture', 'agnatic_seniority', 'election'];
+const ORDERS: readonly SuccessionOrder[] = [
+  'primogeniture',
+  'male_primogeniture',
+  'cognatic_primogeniture',
+  'partible',
+  'agnatic_seniority',
+  'election',
+  'union',
+];
 
 /** The persons found so far, counted from 0, the number of each by its key, and the sex of those Wikidata knows. */
 interface People {

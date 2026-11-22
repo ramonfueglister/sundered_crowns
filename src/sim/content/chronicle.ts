@@ -34,15 +34,31 @@ export interface ChronicleReign {
   /** the source of the row (a Wikipedia revision or a Wikidata statement) */
   source: string;
 }
-/** The orders of succession of Kokkonen & Sundell (2014), src/sim/systems/heirs.ts. */
-export type SuccessionOrder = 'primogeniture' | 'agnatic_seniority' | 'election';
+/** The orders of succession of src/sim/systems/heirs.ts (Kokkonen & Sundell 2014, and the house laws and customs
+ *  data/history/rulers/succession.csv cites), and the union of a crown with another (src/sim/systems/succession.ts). */
+export type SuccessionOrder =
+  | 'primogeniture'
+  | 'male_primogeniture'
+  | 'cognatic_primogeniture'
+  | 'partible'
+  | 'agnatic_seniority'
+  | 'election'
+  | 'union';
 export interface ChronicleLaw {
   /** the first day the order holds (a date as the source gives it; null: from before the chronicle) */
   from: string | null;
   /** null: from this day no source codes the order (the realm leaves the sample of the source) */
   order: SuccessionOrder | null;
+  /** for a union: the realm whose holder holds this crown too */
+  with?: string;
   /** where the source says it */
   source: string;
+}
+/** An order of succession with the first day it holds. */
+export interface ChronicleLawDays {
+  from: number;
+  order: SuccessionOrder | null;
+  with: string | null;
 }
 export interface ChronicleJson {
   year: number;
@@ -102,7 +118,7 @@ export interface Chronicle {
    *  readable copy of the rulers, server/rulers_copy.ts) */
   reignsOf: ReadonlyMap<string, readonly ChronicleReignDays[]>;
   /** the orders of succession of each realm a source codes, with the first day each holds, oldest first */
-  lawsOf: ReadonlyMap<string, readonly { from: number; order: SuccessionOrder | null }[]>;
+  lawsOf: ReadonlyMap<string, readonly ChronicleLawDays[]>;
 }
 
 /** The days from the conception of a child to its birth: the median from ovulation to birth, Jukic, Baird, Weinberg,
@@ -195,7 +211,7 @@ export function compileChronicle(j: ChronicleJson): Chronicle {
     Object.entries(j.laws ?? {}).map(([realm, l]) => [
       realm,
       l
-        .map((x) => ({ from: dayOf(x.from, Y) ?? Number.MIN_SAFE_INTEGER, order: x.order }))
+        .map((x) => ({ from: dayOf(x.from, Y) ?? Number.MIN_SAFE_INTEGER, order: x.order, with: x.with ?? null }))
         .sort((a, b) => a.from - b.from),
     ]),
   );

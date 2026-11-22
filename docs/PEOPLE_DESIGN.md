@@ -26,7 +26,7 @@ nothing built before Ramon agrees. Proposal with sources (German): https://claud
 | 8 | The calendar of the town: the firms work on the working days of their owner's faith (step 3 of the day plan) | built 19 Nov 2026 (Ramon, 19 Nov: way A of the proposal, after the archive the day plan; «vorwärts machen alles mergen comitten und feddich»). Economy feature 19. State 31 |
 | 9 | Sickness and childbed keep a worker from work (step 4 of the day plan) | built 20 Nov 2026 (Ramon, 20 Nov: «So bauen, Lohn läuft weiter» on the proposal https://claude.ai/artifact/QK327U5QQQGWNCnL5JhHV5). Economy feature 22. State 35 |
 | 10 | Service by the year and work by the day: a worker who heads a family works by the day, every other worker serves by the year (step 6 of the day plan) | built 20 Nov 2026 (Ramon, 20 Nov: «Phase A bauen und messen» on the proposal https://claude.ai/artifact/Wyqd64rfmZgJnz9GZ7Wof9). Economy feature 23. State 36. Since economy feature 24 (State 39) the family stands in first |
-| 11 | History where the world is still history: the shadow world, the parents of the persons of history, and the divergence | built 20 Nov 2026 (Ramon, 20 Nov: «ok» on the recommendation to build the shadow world and the graph of persons first, then the death of a ruler as luck). No new state | step 2, succession by the order of the realm with the families of the rulers, checked in a free world: built 22 Nov 2026 (Ramon, 22 Nov: «Erbfolge mit Familien» on the decision card). No new state |
+| 11 | History where the world is still history: the shadow world, the parents of the persons of history, and the divergence | built 20 Nov 2026 (Ramon, 20 Nov: «ok» on the recommendation to build the shadow world and the graph of persons first, then the death of a ruler as luck). No new state | step 2, succession by the order of the realm with the families of the rulers, checked in a free world: built 22 Nov 2026 (Ramon, 22 Nov: «Erbfolge mit Familien» on the decision card); step 3, orders for 25 more realms: built 22 Nov 2026 (Ramon, 22 Nov: «Erbrecht für mehr Reiche»). No new state |
 
 ## Feature 1: persons of the 30 largest cities
 
@@ -1254,12 +1254,61 @@ Hohenzollern).
 ### Limits of step 2
 
 - **Most realms have no order.** Kokkonen & Sundell code 27 of the chronicle's realms; the others wait for history's
-  next holder, who is in the world early only when born there. More orders need another source.
+  next holder, who is in the world early only when born there. Step 3 adds 25 more from other sources.
 - **Electors and claimants are not modelled.** An election keeps history's choice and only moves the day.
 - **The orders are de jure** as coded, without the special laws of a realm: where no male of the male line lives,
-  France too goes through the daughters (the OWN RULE above), though its Salic law shut them out.
+  France too goes through the daughters (the OWN RULE above), though its Salic law shut them out (step 3: the male
+  line only from 1316).
 - **Eisner 2011** was read only in its abstract; the rate is taken as constant over time and realms.
 - **Spouses are fetched but not used:** a widow's or widower's second marriage is not in the chronicle.
+
+### Step 3: orders of succession for more realms (22 November 2026)
+
+Ramon chose «Erbrecht für mehr Reiche» on 22 November 2026, after the free world of step 2 showed that most empty
+crowns lie in realms without an order. 25 realms more have one now (52 in all), and the orders of
+`src/sim/systems/heirs.ts` grew by four:
+
+| Order | The heir | Where, and the source |
+|---|---|---|
+| male primogeniture | as primogeniture, the daughters never | the house laws that shut them out or let the fief revert on the extinction of the male stem: Württemberg from 1495, Mömpelgard from 1473, Mecklenburg from 1701, Brunswick-Lüneburg from 1683, Wolfenbüttel from 1535, Anhalt-Bernburg from 1709, Bavaria from 1506, Zollern from 1833 (Velde, Succession Laws in Germany, heraldica.org, after Schulze, Die Hausgesetze der regierenden deutschen Fürstenhäuser, 1862–83); the French crown from 1316 (Velde, The Salic Law: the crown was denied to female claimants in 1316 and 1322); the apanage of Bourbon from 1374 (Velde, Apanages: the male restriction standard by an ordinance of Charles V) |
+| cognatic primogeniture | the sons and then the daughters, each with their line, before the brothers of the last holder | the fiefs of France: Brittany, Flanders, Armagnac, Foix-Béarn, Périgord, Comminges, Albret, Burgundy until 1363, Bourbon until 1374 ("the fiefs of France passed by primogeniture to males and, in the absence of males, to females", Velde, The Salic Law); Brabant and Hainaut (the Low Countries before the Burgundians "not only enabled and permitted female succession but demanded it", Lecuppre 2025, Naturalisation of Power, Micrologus Library 127, p. 225; the order before the brothers is the French one, as Lecuppre gives none) |
+| partible | the sons share the land; OWN RULE: the eldest son keeps the realm, as by male primogeniture (the partitions are realms of the chronicle of their own) | the German houses before their house laws: Württemberg, Hesse, Mecklenburg, Lippe, Brunswick, Oldenburg, Anhalt, Bavaria, Lower Bavaria, Thuringia and Meissen (Velde, as above) |
+| union | the holder of the other crown in the world | where Kokkonen & Sundell (2014, Table B4) have a state leave their sample for a dynastic union: Aragon with Castile from 1479, Sicily with Aragon from 1409, Naples with Aragon from 1504, Milan with Castile from 1535, Norway with Denmark from 1559, Scotland with England from 1625, Bohemia and Hungary with Austria from 1740 |
+
+Württemberg 1482–1495 and Brunswick 1374–1428 are agnatic seniority ("a form of seniorat", Velde). Lippe from 1593,
+Mecklenburg from 1573 and Oldenburg from 1603 are primogeniture as Kokkonen & Sundell code it, since the pages read
+do not say whether daughters were shut out. Burgundy from 1363 has no order: its grant names "haeredes suos", male
+or female (Velde, Apanages). A crown in union is settled after the others of the day, so that it finds the other's
+holder. The realm a union follows is the one whose holder history has holding both (Naples in 1504: Ferdinand of
+Aragon, who did not hold Castile).
+
+#### Measured (world of 1291, free world, mean per seed)
+
+| | Empty crown-years, 1292–1848 (3 seeds) | Crown-years with a holder of the world's own | Crowns held 1491 / 1848 (`drift:check`, 5 seeds; history 131 / 31) |
+|---|---|---|---|
+| step 2 (27 orders) | 24,224 | 7,445 | 79.8 / 14.0 |
+| step 3 (52 orders) | 20,038 | 11,877 | 90.0 / 18.8 |
+
+The empty crown-years fall by a sixth; Lippe from 502 to 260 years, Mecklenburg from 501 to 191. Two causes remain:
+
+- **Realms without a source** (15,786 of the empty crown-years): Circassia, Belozersk, Luxembourg, Schleswig, Ceuta,
+  the Nassau lines, Saarbrücken, Treviso, Ferrara, Namur, the Franche-Comté, Tyrol, Holland, Geneva, the Rus' and the
+  realms outside Europe. No house law or study of their succession could be read: heraldica.org has no page on them,
+  no readable copy of Kollmann 1990 on the collateral succession of the Rus' turned up, nor a study of the Low
+  Countries beyond Brabant and Hainaut.
+- **Lines that die out** (4,252 under a known order): the world brings no child of a ruler into being that history
+  does not have, so a line the world has cut short has nobody after its last kin. Where the order is of the male line
+  only, this shows most: France is empty 186 years per world now (29 when the daughters could inherit), Württemberg
+  403. Children of the rulers of the world's own would be the next step.
+
+### Limits of step 3
+
+- The house laws are read through Velde's pages (heraldica.org), which give Schulze's texts and others; parts of some
+  pages were read only in a summary (the female clause of Lippe 1593, the 1608 Gottorp statute), and those were left
+  out.
+- Partitions are not modelled: a realm of partible inheritance goes to the eldest son (OWN RULE above).
+- The cognatic order of Brabant and Hainaut takes the French order of daughters before brothers; Lecuppre states only
+  that daughters succeeded.
 
 ## Feature 12: the day plan
 
