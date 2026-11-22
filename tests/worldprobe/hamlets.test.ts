@@ -354,8 +354,8 @@ describe('the fields of the land register (settlement feature 4)', () => {
     );
     const by = fieldsByLot(parcels, 1291, () => [0, 0]);
     expect(by.size).toBe(2);
-    expect(by.get(lotKey(3, 2))).toEqual({ crop: cropOf(0, 3, 1291), rows: 7, strips: 4, site: 7 });
-    expect(by.get(lotKey(-4, 5))).toEqual({ crop: cropOf(2, 3, 1291), rows: 3, strips: 1, site: 7 });
+    expect(by.get(lotKey(3, 2))).toEqual({ crop: cropOf(0, 3, 1291), rows: 7, strips: 4, site: 7, courses: 3 });
+    expect(by.get(lotKey(-4, 5))).toEqual({ crop: cropOf(2, 3, 1291), rows: 3, strips: 1, site: 7, courses: 3 });
     // the town's furlongs as pairs of their lots, in the register's order (the farmers', src/figures/farmers.ts)
     expect(by.towns.get(7)).toEqual([3, 2, -4, 5]);
     expect(fieldsByLot(parcels, 1291, () => null).size).toBe(0);
@@ -363,7 +363,7 @@ describe('the fields of the land register (settlement feature 4)', () => {
   it('are the only fields round the towns: a furlong in strips, its crop, as deep as the register has it, nothing else ploughed', () => {
     const counts: Record<string, number> = {},
       [cx, cz] = lotCorner(10, 10);
-    const furlong = { crop: CROP.spring, rows: 4, strips: 5, site: 0 } as const;
+    const furlong = { crop: CROP.spring, rows: 4, strips: 5, site: 0, courses: 3 } as const;
     const { field } = settle(
       meadow(),
       new Batch(),

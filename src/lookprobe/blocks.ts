@@ -18,8 +18,10 @@ export const OATS = [rgb(0x9ccc52), rgb(0x92c44a), rgb(0xa6d25a)], OATS_SIDE = r
 /** sides of crops turned from the sun: brighter than a real surface could be, see `crops` */
 export const WHEAT_GLOW: RGB = [1.6, 0.8, 0.1], HEDGE_GLOW = rgb(0x7ea634);
 const VINE_GLOW: RGB = [0.82, 0.77, 0.09];
-const VINE = [rgb(0xf2d654), rgb(0xe8ce4e), rgb(0xfadc5a), rgb(0xe2c84c)], VINE_SIDE = rgb(0xc8c42c), GRAPES = rgb(0xe89038);
-export const VINE_BODY = rgb(0x4a8c22);
+const VINE = [rgb(0xf2d654), rgb(0xe8ce4e), rgb(0xfadc5a), rgb(0xe2c84c)], GRAPES = rgb(0xe89038);
+export const VINE_BODY = rgb(0x4a8c22), VINE_SIDE = rgb(0xc8c42c);
+/** the sheaves of the fields (`crops`): how tall one of wheat and one of oats stands at least, how much taller at most, and how much lighter its top is than its crop's colour */
+export const WHEAT_TALL = 1.35, OATS_TALL = 0.8, SHEAF_TALLER = 0.5, WHEAT_TOP = 1.2, OATS_TOP = 1.05;
 const POST = rgb(0xb06c3a), POST_CAP = rgb(0xf1e8dc), DECK = rgb(0xa9744a), PIER_STONE = rgb(0xdcc4b4);
 const HULL = rgb(0x9c6238), HULL_DARK = rgb(0x74482a), SHIP_DECK = rgb(0xc09a68), SAIL = rgb(0xf2e0c6), FLAG = rgb(0xd23b2e), GOLD = rgb(0xf0c040);
 const WAKE = rgb(0xd5eeee);
@@ -103,8 +105,8 @@ export function crops(b: Batch, g: Ground, at: P2, w: number, d: number, crop: C
     for (let row = 0; row + 1 <= w; row++) for (let k = 0; k + 1 <= d; k++) {
       const x = x0 + row + 0.5, z = z0 + k + 0.5;
       if (isWet(g, x, z)) continue;
-      const y = groundY(g, x, z), top = y + (ripe ? 1.35 : 0.8) + 0.5 * hash2(row, k, 51);
-      b.box(x - 0.4, y, z - 0.4, x + 0.4, top, z + 0.4, side, { top: shade(tops[Math.floor(hash2(row, k, 53) * tops.length)], (ripe ? 1.2 : 1.05) * tone), foot: 0.85, away: ripe ? WHEAT_GLOW : HEDGE_GLOW });
+      const y = groundY(g, x, z), top = y + (ripe ? WHEAT_TALL : OATS_TALL) + SHEAF_TALLER * hash2(row, k, 51);
+      b.box(x - 0.4, y, z - 0.4, x + 0.4, top, z + 0.4, side, { top: shade(tops[Math.floor(hash2(row, k, 53) * tops.length)], (ripe ? WHEAT_TOP : OATS_TOP) * tone), foot: 0.85, away: ripe ? WHEAT_GLOW : HEDGE_GLOW });
     }
     return;
   }

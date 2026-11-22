@@ -150,8 +150,9 @@ describe('the fields of the first far step', () => {
             tone = 0.84 + 0.32 * hash2(7 * 16 + k, 5, 69);
           crops(fine, meadow(), [(a0 + a1) / 2, fz0 + rows / 2], a1 - a0, rows, name, r, tone);
         }
-        const field = (lx: number, lz: number) => (lx === 7 && lz === 5 ? { crop, rows, strips, site: 0 } : undefined),
-          g = meadow(),
+        const field = (lx: number, lz: number) =>
+          lx === 7 && lz === 5 ? { crop, rows, strips, site: 0, courses: 3 } : undefined;
+        const g = meadow(),
           c = coverLand(g, CROPS_AT, new Batch(), [], { ...asks, field }),
           far = new Batch();
         drawCrops(far, c.crops!, g.h, g.wet, 0, 0, { x0: 0, z0: 0, x1: SIDE, z1: SIDE }, () => true, c.furlongs);
@@ -180,7 +181,7 @@ describe('the fields of the first far step', () => {
       for (const register of [false, true]) {
         const strips = register ? 2 : 1,
           rows = register ? 6 : 7,
-          field = register ? () => ({ crop: CROP.winter, rows, strips, site: 0 }) : undefined,
+          field = register ? () => ({ crop: CROP.winter, rows, strips, site: 0, courses: 1 }) : undefined,
           g = meadow(),
           c = coverLand(g, CROPS_AT, new Batch(), [], { ...asks, courses: () => 1, vines: () => 1, field }),
           far = new Batch();
@@ -208,7 +209,7 @@ describe('the fields of the first far step', () => {
     });
   });
 
-  it('are laid down by far.ts on the columns of the lots that are fields, on their soil, and the fallow bears nothing', () => {
+  it('are laid down by far.ts on the columns of the lots that are fields, on their soil, the fallow with the winter corn’s sheaves the stage keeps down', () => {
     onGrid(SIDE, () => {
       const g: Ground = meadow(),
         c = coverLand(g, CROPS_AT, new Batch(), [], asks);
@@ -230,8 +231,9 @@ describe('the fields of the first far step', () => {
       expect(fallow).toBeGreaterThan(SIDE * SIDE * 0.1);
       const b = new Batch();
       drawCrops(b, c.crops!, g.h, g.wet, 0, 0, { x0: 0, z0: 0, x1: SIDE, z1: SIDE });
-      // a sheaf on a block of every column of wheat and oats, about
-      expect(b.triangles / 10).toBeGreaterThan((wheat + oats) * 2);
+      // a sheaf on a block of every column of wheat, oats and the fallow, about (lookprobe/stage/seasons.ts keeps the
+      // fallow's down while it lies fallow)
+      expect(b.triangles / 10).toBeGreaterThan((wheat + oats + fallow) * 2);
     });
   });
 

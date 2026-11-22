@@ -31,9 +31,10 @@ from PIL import Image
 from scipy import ndimage
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'geo'))
-from build_region import CACHE, WORLD_H, WORLD_W, cached, world_lonlat
 from build_setup import TERRAINS
-from common import ROOT, H, W
+from common import CACHE, ROOT, H, W
+from geodata import cached
+from world_grid import WORLD_H, WORLD_W, world_lonlat
 
 Image.MAX_IMAGE_PIXELS = None
 SOURCE = 'https://raw.githubusercontent.com/cwru-sdle/kgcpy/4bce28ba7596f870e50838a16e3799a9067eb742/kgcpy/kmz_int_reshape.png'

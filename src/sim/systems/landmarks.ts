@@ -12,7 +12,6 @@ import {
   BIG_TOWN,
   LANDMARK_KIND,
   NO_YEAR,
-  ORDERS,
   SIZE_ARCH,
   SIZE_GREAT_MOSQUE,
   SIZE_OF,
@@ -196,6 +195,7 @@ export function edgeLandmarks(
   residence: LandmarkKind | null,
   taken: readonly Box[],
   g: LandmarkGround | null,
+  lagoon = false,
 ): Laid[] {
   const out: Laid[] = [],
     laid: Box[] = [...taken];
@@ -214,6 +214,17 @@ export function edgeLandmarks(
     for (let r = Math.round((EDGE * reach) / STEP) * STEP; r <= reach + 400 && !at; r += STEP) {
       const b = { x: r * ca, z: r * sa, w, d };
       if (!laid.some((o) => overlaps(b, o, LANDMARK_GAP)) && onGround(b, g)) at = b;
+    }
+    // in a town in a lagoon (`lagoon`: its plan draws the water round it) with no ground along its bearing: the
+    // ground nearest the town's centre at any bearing, clear of everything (OWN RULE: a convent stands on land, as
+    // Venice's mendicant churches, the Frari and Santi Giovanni e Paolo, stand among its houses)
+    for (let r = STEP; lagoon && r <= reach + 400 && !at; r += STEP) {
+      const n = Math.max(8, Math.round((2 * Math.PI * r) / STEP));
+      for (let j = 1; j < n && !at; j++) {
+        const t = a + ((j % 2 ? 1 : -1) * Math.ceil(j / 2) * 2 * Math.PI) / n; // nearest its bearing first, both ways
+        const b = { x: r * Math.cos(t), z: r * Math.sin(t), w, d };
+        if (!laid.some((o) => overlaps(b, o, LANDMARK_GAP)) && onGround(b, g)) at = b;
+      }
     }
     if (!at)
       for (let r = Math.round((EDGE * reach) / STEP) * STEP; !at; r += STEP) {
@@ -314,17 +325,4 @@ export function landmarkBoxes(s: WorldState, site: number): Box[] {
   for (let i = 0; C && i < s.landmark.size; i++)
     if (s.landmark.alive[i] && C.site[i] === site) out.push({ x: C.x[i], z: C.z[i], w: C.w[i], d: C.d[i] });
   return out;
-}
-
-/** the name of a landmark in the register, in German */
-export function landmarkName(s: WorldState, id: number): string {
-  const C = s.landmark.cols,
-    n = C.named[id];
-  if (n >= 0) return namedOf(s.startYear)[n]?.name.de ?? '';
-  if (C.order[id] !== 255) return `Konvent der ${ORDERS[C.order[id]].de}`;
-  return (
-    ['Kathedrale', 'Kathedrale', 'Freitagsmoschee', 'Konvent', 'Abtei', 'Burg', 'Palast', 'Kirche', 'Monument'][
-      C.kind[id]
-    ] ?? ''
-  );
 }

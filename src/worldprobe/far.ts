@@ -50,6 +50,8 @@ export interface Cover {
   quarters?: Uint8Array;
   /** there too, the walled towns on the ground as the finest step lays them out, where the persons of the towns walk (`plannedTowns`) */
   towns?: Town[];
+  /** what each field column carries by the season (season_codes.ts `sow`): its code and its own number, two bytes to a column, 0 where no field lies */
+  season?: Uint8Array;
 }
 /**
  * The woods at a column: the share of the ground they cover (0 … 1), the colours of their crowns and whether the

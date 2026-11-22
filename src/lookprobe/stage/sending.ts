@@ -16,10 +16,10 @@ export function createSender(
   mesh: MakeMesh,
   m: Pick<
     Materials,
-    'solid' | 'faced' | 'fieldFaced' | 'fieldGliding' | 'seaFaced' | 'gliding' | 'freed' | 'smallLists'
+    'solid' | 'faced' | 'fieldFaced' | 'fieldGliding' | 'seaFaced' | 'gliding' | 'freed' | 'lakeFreed' | 'smallLists'
   >,
 ) {
-  const { solid, faced, fieldFaced, fieldGliding, seaFaced, gliding, freed, smallLists } = m;
+  const { solid, faced, fieldFaced, fieldGliding, seaFaced, gliding, freed, lakeFreed, smallLists } = m;
   // A mesh's lists go to the graphics card in the picture that first draws it, and that takes the page's thread a
   // millisecond or two for every megabyte and more for every list (measured on a Mac: the 49 meshes of one piece
   // of a town 77 ms; 27 meshes that came into the picture together, one picture of 247 ms). So the lists are sent
@@ -108,13 +108,15 @@ export function createSender(
         made.geometry,
         made.material === seaFaced
           ? faced
-          : made.material === faced ||
-              made.material === fieldFaced ||
-              made.material === fieldGliding ||
-              made.material === gliding ||
-              made.material === freed
-            ? made.material
-            : solid,
+          : made.material === lakeFreed
+            ? freed
+            : made.material === faced ||
+                made.material === fieldFaced ||
+                made.material === fieldGliding ||
+                made.material === gliding ||
+                made.material === freed
+              ? made.material
+              : solid,
       );
       // (all that the material reads of a mesh, as its own mesh has it)
       standIn.userData = { ...made.userData, ground: false, dots: new THREE.Vector2(0, 0) };

@@ -49,9 +49,7 @@ const ENGLAND_HARVEST = ENGLAND_1300.kcalPerHeadDay * ENGLAND_1300.people * DAYS
 export function harvestKcal(soil: number, labour: number, englandLand: number, landShare = LAND_SHARE): number {
   if (!(soil > 0) || !(labour > 0)) return 0; // also covers places without data (NaN)
   return (
-    ENGLAND_HARVEST *
-    Math.pow(soil / englandLand, landShare) *
-    Math.pow(labour / farmers(ENGLAND_1300.people), 1 - landShare)
+    ENGLAND_HARVEST * (soil / englandLand) ** landShare * (labour / farmers(ENGLAND_1300.people)) ** (1 - landShare)
   );
 }
 

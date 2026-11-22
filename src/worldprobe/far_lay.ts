@@ -36,6 +36,8 @@ export interface CoverAsks {
   clear?(x: number, z: number): boolean;
   /** the monuments on the ground as the finest step stands them (settle.ts), where the far step draws their models */
   monuments?: readonly Monument[];
+  /** the farming year of the fields at a point (FARM_YEAR, season_codes.ts `farmYearsAt`; the north's without it) */
+  farmYear?(x: number, z: number): number;
 }
 
 /** What `coverLand` keeps while it lays out a piece's ground: its parts (far_places.ts, far_fields.ts, far_woods.ts) take it. */

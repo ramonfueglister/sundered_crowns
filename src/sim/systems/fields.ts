@@ -32,7 +32,7 @@ import { HAMLET_GAP, HAMLET_OFF, METRES_PER_BLOCK, hamletBox } from '../settleme
 import type { Tilth } from '../content/tilth';
 
 /** What founding the fields found. */
-export interface FieldsFound {
+interface FieldsFound {
   /** hectares the farmsteads of all towns should hold, and hectares their furlongs hold */
   asked: number;
   laid: number;
@@ -170,7 +170,7 @@ export function foundFields(s: WorldState, tilth?: Tilth | null): FieldsFound {
 
 /** What a farmstead holds of its hamlet's fields: its furlongs held whole, and its strips in the furlongs of the open
  *  field (one in each), with their hectares. */
-export interface FarmFields {
+interface FarmFields {
   furlongs: number;
   strips: number;
   hectares: number;

@@ -72,7 +72,7 @@ function nqx(sex: Sex, level: number): number[] {
     c = COEF[sex];
   return X.map((_, j) => {
     const lin = c.a[j] + c.b[j] * e10,
-      log = Math.pow(10, c.a1[j] + c.b1[j] * e10) / 10000;
+      log = 10 ** (c.a1[j] + c.b1[j] * e10) / 10000;
     const slope = c.b[j] / c.b1[j] / Math.LN10 / log;
     return lin <= log ? (slope < 1 ? lin : log) : (lin + log) / 2;
   });
@@ -136,7 +136,7 @@ const OMEGA = Math.max(2.7, 119.3 * LPJ.beta - 1.01 * LPJ.theta - 14.5);
 /** The cumulative hazard up to the age x (years), the integral of μ. */
 function cumulativeHazard(x: number): number {
   const L = (a: number) =>
-    Math.pow(a + 1.5, 1 - OMEGA) / (1 - OMEGA) +
+    (a + 1.5) ** (1 - OMEGA) / (1 - OMEGA) +
     Math.exp(LPJ.theta) * (a + Math.log(1 + Math.exp(a - 16))) +
     Math.log(1 + Math.exp(LPJ.beta * (a - 100))) / LPJ.beta;
   return L(x) - L(0);

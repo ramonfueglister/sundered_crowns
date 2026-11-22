@@ -16,10 +16,10 @@ const from = (turn: number, elev: number) => new THREE.Vector3(...towards(turn, 
 export function createRig(
   scene: THREE.Scene,
   o: StageOptions,
-  m: Pick<Materials, 'tint' | 'water' | 'solid' | 'seaFaced'>,
+  m: Pick<Materials, 'tint' | 'water' | 'solid' | 'seaFaced' | 'lake' | 'lakeSinking' | 'lakeFreed'>,
   redraw: () => void,
 ) {
-  const { tint, water, solid, seaFaced } = m;
+  const { tint, water, solid, seaFaced, lake, lakeSinking, lakeFreed } = m;
   // strengths are multiplied by π because a Lambert surface returns light / π
   const L = { ...LOOK, ...o.light };
   const sun = new THREE.DirectionalLight();
@@ -54,6 +54,8 @@ export function createRig(
     if (water !== solid) {
       water.color.setRGB(1 - tint.value.r, 1 - tint.value.g, 1 - tint.value.b);
       seaFaced.color.copy(water.color);
+      // (water above the sea, where it has materials of its own: materials.ts)
+      if (lake !== solid) for (const above of [lake, lakeSinking, lakeFreed]) above.color.copy(water.color);
     }
     redraw();
   };

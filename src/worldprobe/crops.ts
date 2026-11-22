@@ -8,7 +8,20 @@
 // the same sheaves from the place of a block alone and the crop of its lot, which far.ts lays down on the columns of
 // the lot (`crops`, a byte to a column), with the furlong's strips and rows beside it (`furlongs`).
 import { type Batch, hash2, seeded, shade } from '../lookprobe/batch';
-import { HEDGE_GLOW, OATS, OATS_SIDE, WHEAT, WHEAT_GLOW, WHEAT_SIDE, vines } from '../lookprobe/blocks';
+import {
+  HEDGE_GLOW,
+  OATS,
+  OATS_SIDE,
+  OATS_TALL,
+  OATS_TOP,
+  SHEAF_TALLER,
+  WHEAT,
+  WHEAT_GLOW,
+  WHEAT_SIDE,
+  WHEAT_TALL,
+  WHEAT_TOP,
+  vines,
+} from '../lookprobe/blocks';
 import { N, inGrid } from '../lookprobe/layout';
 import type { Part } from '../lookprobe/terrain';
 import { uprightOf } from './zoom';
@@ -134,7 +147,7 @@ export function drawCrops(
           const fx = (x + ox) * WIDER + dx,
             fz = (z + oz) * WIDER + dz,
             crop = cropAt(crops, x, z, dx, fx, fz, furlongs);
-          if (crop !== WHEAT_FIELD && crop !== OATS_FIELD && crop !== VINE_FIELD) continue;
+          if (crop !== WHEAT_FIELD && crop !== OATS_FIELD && crop !== FALLOW_FIELD && crop !== VINE_FIELD) continue;
           const at = lotOf(fx, fz),
             furlong = furlongs?.[z * N + ownOf(x, dx, fx, fz)] ?? 0,
             strips = furlong & 15 || 1,
@@ -148,14 +161,18 @@ export function drawCrops(
             continue;
           }
           // blocks.ts `crops`, as the finest step stands a sheaf on the block: by its row in its strip, and each strip
-          // a little lighter or darker than its neighbours' (settle.ts)
+          // a little lighter or darker than its neighbours' (settle.ts); the fallow's are the winter corn's, as there:
+          // the stage keeps them down while it lies fallow (season_codes.ts)
           const row = at.row - stripStart(s, strips),
             tone = strips > 1 ? 0.84 + 0.32 * hash2(at.lx * 16 + s, at.lz, 69) : 1;
-          const ripe = crop === WHEAT_FIELD,
+          const ripe = crop !== OATS_FIELD,
             colours = ripe ? WHEAT : OATS,
             side = ripe ? WHEAT_SIDE : OATS_SIDE;
-          const tall = (ripe ? 1.35 : 0.8) + 0.5 * hash2(row, at.k, 51),
-            top = shade(colours[Math.floor(hash2(row, at.k, 53) * colours.length)], (ripe ? 1.2 : 1.05) * tone);
+          const tall = (ripe ? WHEAT_TALL : OATS_TALL) + SHEAF_TALLER * hash2(row, at.k, 51),
+            top = shade(
+              colours[Math.floor(hash2(row, at.k, 53) * colours.length)],
+              (ripe ? WHEAT_TOP : OATS_TOP) * tone,
+            );
           const cx = (fx + 0.5) * k - ox,
             cz = (fz + 0.5) * k - oz;
           b.box(cx - 0.4 * k, y, cz - 0.4 * k, cx + 0.4 * k, y + tall * UP, cz + 0.4 * k, side, {

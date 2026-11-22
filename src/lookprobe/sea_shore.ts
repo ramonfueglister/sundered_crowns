@@ -1,7 +1,10 @@
-// The foam along the coast, for the sea's colour (sea.ts): lines of foam that come in to the shore, one after the
-// other, as the water of the low-poly worlds has them (Ramon, 20 November 2026: "gibt es schöneres wasser auch im poly
-// bereich nicht?"). OWN RULE: no published model gives them; their numbers are chosen by eye, the gauntlet's foam
-// row (tools/lookprobe/gauntlet_water.py) holds how much of the water by the coast they cover.
+// The foam along the coast, for the sea's colour (sea.ts): a thin line of foam where the water laps at the land, and
+// fainter lines that come in to the shore, one after the other, as the water of the low-poly worlds has them (Ramon,
+// 20 November 2026: "gibt es schöneres wasser auch im poly bereich nicht?"). Until round 7 the lines that come in
+// were two rows of thick white strokes round every coast, the loudest thing on the water; EU5 has no lines along its
+// shores at all (Ramon, 21 November 2026: "das wasser ist das problem"). OWN RULE: no published model gives them;
+// their numbers are chosen by eye, the gauntlet's foam row (tools/lookprobe/gauntlet_water.py) holds how much of the
+// water by the coast they cover.
 //
 // How far a point lies from the coast, d in columns: the sea's faces know it at their corners, smoothed
 // (sea_corners.ts); the water's lists have it from their corners' colour alone, which terrain.ts (buildWater) mixes
@@ -35,19 +38,30 @@ type Vec2 = THREE.Node<'vec2'>;
 /**
  * a line comes in from RING_FROM columns out to RING_TO, where the land's edge shows, in RING_PERIOD seconds, and the
  * next half a period later; a line is RING_WIDTH columns wide (at least RING_DOTS dots) and thinner towards the ends
- * of its dashes (down to RING_THIN of that), and the water it has passed (out to sea) is lighter for RING_WASH columns,
- * by up to RING_WASH_SHARE of the foam: the wave's wash. A line does not run level with the coast: it sways by up to
- * RING_SWAY columns over some nine blocks, each of the two lines its own way
+ * of its dashes (down to RING_THIN of that), RING_SHARE of the foam's white, and the water it has passed (out to sea)
+ * is lighter for RING_WASH columns, by up to RING_WASH_SHARE of the foam: the wave's wash. A line does not run level
+ * with the coast: it sways by up to RING_SWAY columns over some nine blocks, each of the two lines its own way
  */
 const RING_FROM = 4.5,
   RING_TO = 1.9,
   RING_PERIOD = 4.5,
-  RING_WIDTH = 0.2,
+  RING_WIDTH = 0.1,
   RING_THIN = 0.35,
-  RING_DOTS = 1.5,
+  RING_DOTS = 1.2,
+  RING_SHARE = 0.3,
   RING_WASH = 0.8,
-  RING_WASH_SHARE = 0.28,
+  RING_WASH_SHARE = 0.1,
   RING_SWAY = 0.22;
+/**
+ * the line at the water's edge: EDGE_WIDTH columns to either side (at least EDGE_DOTS dots in all), EDGE_SHARE of the
+ * foam's white (0.7 of that where the lines are broken), and it laps out from the land's edge by up to EDGE_LAP
+ * columns and back in EDGE_PERIOD seconds, a little sooner here and later there
+ */
+const EDGE_WIDTH = 0.1,
+  EDGE_LAP = 0.22,
+  EDGE_PERIOD = 3.2,
+  EDGE_DOTS = 2,
+  EDGE_SHARE = 1;
 /** along which the two lines sway (in turns of the view's PERIOD: some nine blocks to a wave, sea.ts) */
 const SWAYS = [
   [97, 61],
@@ -108,8 +122,18 @@ export function shoreFoam(
       .sub(smoothstep(at, at.add(RING_WASH), d))
       .mul(step(at, d))
       .mul(RING_WASH_SHARE);
-    foam = max(foam, max(line, wash).mul(strength));
+    foam = max(foam, max(line.mul(RING_SHARE), wash).mul(strength));
   }
+  // the water's edge: a thin line of foam where the water laps at the land, a little out and back again
+  const lap = sin(clock.mul((2 * Math.PI) / EDGE_PERIOD).add(lag.mul(40)))
+      .mul(0.5)
+      .add(0.5)
+      .mul(EDGE_LAP),
+    edgeWide = max(float(EDGE_WIDTH), fwidth(d).mul(EDGE_DOTS / 2)),
+    edge = float(1)
+      .sub(smoothstep(edgeWide, edgeWide.add(fwidth(d)), d.sub(RING_TO).sub(lap).abs()))
+      .mul(mix(float(0.7), float(1), kept))
+      .mul(EDGE_SHARE);
   // (how much d rises to a column, from the screen's steps: the water's sheet lies in columns of its piece)
   const sx = dFdx(positionLocal.xz),
     sy = dFdy(positionLocal.xz),
@@ -121,5 +145,5 @@ export function shoreFoam(
   );
   const sloped = smoothstep(RING_SLOPE[0], RING_SLOPE[1], rise);
   const reach = float(1).sub(smoothstep(RINGS_UNTIL[0], RINGS_UNTIL[1], acrossScreen));
-  return foam.mul(kept).mul(sloped).mul(reach);
+  return max(foam.mul(kept), edge).mul(sloped).mul(reach);
 }

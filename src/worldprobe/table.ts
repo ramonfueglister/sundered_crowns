@@ -21,6 +21,7 @@ import { drawnTops } from '../lookprobe/terrain_woods';
 import { HOUSE_NUMBERS, drawHouses, housesBatch, housesIn } from './houses';
 import { FAR_FROM_ROADS, ROAD_SHOWS, roadOn } from './roads';
 import { CROP_NAMES, drawCrops } from './crops';
+import { type SeasonMap, seasonMap } from './season_codes';
 import { TREE_NUMBERS, crownTallAt, drawTrees } from './trees';
 
 /**
@@ -82,6 +83,8 @@ export interface Table {
   towns?: readonly Town[];
   /** blocks to the edge of the nearest way's band at the corners of the columns ((side + 1)², roads.ts `roadOn`), where ways run over the ground; off the piece's own and its rim as far as where no way is near */
   road?: Float32Array;
+  /** what each field column carries by the season (season_codes.ts `sow`, two bytes to a column, side × side columns): the piece's own columns and RIM round them */
+  season?: Uint8Array;
 }
 
 /**
@@ -294,6 +297,14 @@ export function tableOf(g: Ground, t: GroundTraits, part: Part, roads: Float32Ar
     if (crops.some((v) => v > 0)) table.crops = crops;
     if (furlongs.some((v) => v > 0)) table.furlongs = furlongs;
   }
+  if (t.season) {
+    // (a sheaf on a balk's column of the piece's border is its field's, which may lie in the rim: crops.ts `cropAt`)
+    const season = new Uint8Array(n * 2);
+    for (let z = Math.max(0, part.z0 - RIM); z < Math.min(N, part.z1 + RIM); z++)
+      for (let x = Math.max(0, part.x0 - RIM); x < Math.min(N, part.x1 + RIM); x++)
+        season.set(t.season.subarray(idx(x, z) * 2, idx(x, z) * 2 + 2), idx(x, z) * 2);
+    if (season.some((v) => v > 0)) table.season = season;
+  }
   if (t.quarters) {
     const quarters = new Uint8Array(n);
     for (let z = Math.max(0, part.z0 - RIM); z < Math.min(N, part.z1 + RIM); z++)
@@ -325,6 +336,7 @@ class TableTraits implements GroundTraits {
   readonly crops: GroundTraits['crops'];
   readonly furlongs: GroundTraits['furlongs'];
   readonly quarters: GroundTraits['quarters'];
+  readonly season: GroundTraits['season'];
   private readonly side: number;
   private readonly last: number;
   private readonly pulls: (readonly [RGB, number])[] = [];
@@ -340,6 +352,7 @@ class TableTraits implements GroundTraits {
     this.crops = table.crops;
     this.furlongs = table.furlongs;
     this.quarters = table.quarters;
+    this.season = table.season;
     this.side = table.side;
     this.last = table.side - 1;
     const tints = table.tints;
@@ -454,12 +467,12 @@ export function housesOf(table: Table): { batch: Batch; ends: number[] } | undef
   return onGrid(table.side, () => housesBatch(table.houses, table.h));
 }
 
-/** Draws the piece of a table, as its build drew it. */
+/** Draws the piece of a table, as its build drew it, with what its field columns carry by the season (season_codes.ts). */
 export function drawTable(
   table: Table,
   bakedSky: boolean,
   step: number,
-): { ground: Batch; carried?: Batch; water: Batch; raised: Batch; standing?: Batch } {
+): { ground: Batch; carried?: Batch; water: Batch; raised: Batch; standing?: Batch; season?: SeasonMap } {
   const g: Ground = {
     h: table.h,
     mat: table.mat,
@@ -473,7 +486,10 @@ export function drawTable(
   const keeping = wanted;
   wanted = false;
   try {
-    return onGrid(table.side, () => drawGround(g, traitsOf(table, step), bakedSky, table.part, true));
+    return onGrid(table.side, () => ({
+      ...drawGround(g, traitsOf(table, step), bakedSky, table.part, true),
+      season: seasonMap(table.season, table.h, table.side, table.part, table),
+    }));
   } finally {
     wanted = keeping;
   }

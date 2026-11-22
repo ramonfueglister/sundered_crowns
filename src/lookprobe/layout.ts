@@ -125,6 +125,8 @@ export interface GroundTraits {
   readonly quarters?: ArrayLike<number>;
   /** there too, the walled towns on the ground, where the persons of the towns walk (worldprobe/far.ts `Cover`): kept with the ground, not drawn by it */
   readonly towns?: readonly Town[];
+  /** what each field column carries by the season (worldprobe/season_codes.ts `sow`, two bytes to a column, N × N columns): kept with the ground for the stage, not drawn by it */
+  readonly season?: Uint8Array;
 }
 export const idx = (x: number, z: number) => z * N + x;
 export const inGrid = (x: number, z: number) => x >= 0 && z >= 0 && x < N && z < N;
