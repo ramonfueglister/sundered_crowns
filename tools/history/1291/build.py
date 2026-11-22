@@ -244,7 +244,7 @@ def main():
 
     def reach(i):
         if i > L0:
-            return 380  # the rest of the globe (tools/geo/merge_beyond.py)
+            return 380  # the rest of the globe (tools/geo/beyond_holders.py, REACH)
         if lon[i - 1] < -30 or lat[i - 1] < 10:
             return 260
         if lon[i - 1] > 40 or lat[i - 1] < 30:
