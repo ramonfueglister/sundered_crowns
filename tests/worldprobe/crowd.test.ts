@@ -1,9 +1,10 @@
 // The people of the first far step: the finest step's figures where the far ground holds what the finest step's does,
-// the persons of the towns and their rulers too, farmers on the balks of the fields laid down, none in a house, and
-// from a piece's table the figures of the piece built.
+// the persons of the towns and their rulers too, farmers on the balks of the fields laid down, the farmers among the
+// persons on their town's furlongs where the finest step puts them, none in a house, and from a piece's table the
+// figures of the piece built.
 import { afterAll, describe, expect, it } from 'vitest';
 import { styleOf } from '../../src/buildings';
-import { type Figures, type SettledGround, type Town, crowd, setPlacePeople } from '../../src/figures';
+import { type Figures, type SettledGround, type Town, crowd, lotOf, setPlacePeople } from '../../src/figures';
 import { FIGURE_AT } from '../../src/figures/aims';
 import { Mode } from '../../src/figures/estates';
 import { Batch } from '../../src/lookprobe/batch';
@@ -11,6 +12,7 @@ import { type Ground, type GroundTraits, LAND_Y, Mat, N, SEA_Y, idx } from '../.
 import CITIES_JSON from '../../src/sim/content/cities_1356.json';
 import { CALENDAR } from '../../src/sim/holy_days';
 import { WHO } from '../../src/sim/people/day_plan';
+import { lotCorner } from '../../src/sim/settlement/fields';
 import { WHEAT_FIELD, cropAt } from '../../src/worldprobe/crops';
 import { CROWD_AT, type CrowdGround, farCrowd } from '../../src/worldprobe/crowd';
 import { coverLand, usePlan } from '../../src/worldprobe/far';
@@ -102,8 +104,10 @@ function expectSame(got: Figures | undefined, fine: Figures) {
   expect([got?.at, got?.plan, got?.seed]).toEqual([fine.at, fine.plan, fine.seed]);
 }
 
-// 300 persons of London, two of them rulers, in each part of work by turns
+// 300 persons of London, two of them rulers, in each part of work by turns; 400 of Cologne, three in four of them
+// farmers
 const london = CITIES.find((c) => c.name === 'London')!,
+  cologne = CITIES.find((c) => c.name === 'Cologne')!,
   PARTS = [WHO.trade, WHO.seeking, WHO.craft, WHO.home];
 setPlacePeople({
   place: london.place,
@@ -117,6 +121,16 @@ setPlacePeople({
     { uid: 90000, color: 0xaa2222 },
     { uid: 90001, color: 0x2222aa },
   ],
+});
+
+setPlacePeople({
+  place: cologne.place,
+  day: 0,
+  id: Array.from({ length: 400 }, (_, k) => 95000 + k),
+  born: Array.from({ length: 400 }, () => -365 * 30),
+  sex: Array.from({ length: 400 }, (_, k) => k % 2),
+  who: Array.from({ length: 400 }, (_, k) => (k % 4 === 0 ? WHO.craft : WHO.farm)),
+  calendar: Array.from({ length: 400 }, () => CALENDAR.latin),
 });
 
 describe('the people of the first far step', () => {
@@ -170,6 +184,49 @@ describe('the people of the first far step', () => {
       expect(sown(fx + Math.round(Math.sin(facing)), fz + Math.round(Math.cos(facing)))).toBe(WHEAT_FIELD);
     }
     expect(farmers).toBeGreaterThan(20);
+  });
+
+  it('and the farmers of a town on its furlongs where the finest step puts them, and no anonymous one there', () => {
+    // wheat laid on the far columns 10 … 50 each way, and the finest ground of the same fields; the furlongs of the
+    // lots lx 3 … 7, lz 3 … 10 are Cologne's
+    const crops = new Uint8Array(N * N);
+    for (let z = 10; z < 50; z++) for (let x = 10; x < 50; x++) crops[idx(x, z)] = WHEAT_FIELD;
+    const lots: number[] = [];
+    for (let lz = 3; lz <= 10; lz++) for (let lx = 3; lx <= 7; lx++) lots.push(lx, lz);
+    const furlongs = new Map([[cologne.site, lots]]),
+      g = meadow(),
+      s: SettledGround = { used: new Uint8Array(N * N), town: new Uint8Array(N * N), field: new Uint8Array(N * N) };
+    for (let z = 0; z < N; z++)
+      for (let x = 0; x < N; x++) {
+        const crop = cropAt(crops, x >> 1, z >> 1, x & 1, x, z);
+        s.field[idx(x, z)] = crop;
+        s.used[idx(x, z)] = crop ? 1 : 0;
+      }
+    const far: CrowdGround = {
+      h: new Float64Array(N * N).fill(LAND_Y * up),
+      mat: new Uint8Array(N * N).fill(Mat.Grass),
+      wet: new Uint8Array(N * N),
+      town: new Uint8Array(N * N),
+      has: new Uint8Array(N * N),
+      crops,
+    };
+    const fine = crowd(g, { ...s, furlongs }, (x, z) => x >= 20 && x < 100 && z >= 20 && z < 100),
+      got = farCrowd(far, 0, 0, { x0: 10, z0: 10, x1: 50, z1: 50 }, furlongs),
+      theirs = new Set(
+        Array.from({ length: lots.length / 2 }, (_, j) => lotOf(...lotCorner(lots[2 * j], lots[2 * j + 1]))),
+      );
+    const hands = Array.from({ length: fine.count }, (_, k) => k).filter((k) => fine.at?.[k] === FIGURE_AT.field);
+    expect(hands.length).toBeGreaterThan(30);
+    for (let k = 0; got && k < got.count; k++) {
+      if (got.c[k * 4] !== Mode.Work) continue;
+      const facing = got.e[k * 4 + 2],
+        lot = lotOf(
+          Math.floor(got.a[k * 4]) + Math.round(Math.sin(facing)),
+          Math.floor(got.a[k * 4 + 2]) + Math.round(Math.cos(facing)),
+        );
+      expect(theirs.has(lot)).toBe(got.at?.[k] === FIGURE_AT.field);
+    }
+    expectSame(got, fine);
   });
 
   it('stand in the streets of a town and in no house, and come from its table as from the piece built', () => {

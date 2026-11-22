@@ -24,4 +24,5 @@ export {
   townPeople,
 } from './people';
 export { ESTATES, Mode } from './estates';
+export { fieldHands, lotOf, placeHands } from './farmers';
 export { HEIGHT, MICRO, buildKit, FAR_PARTS, NEAR_PARTS } from './kit';
