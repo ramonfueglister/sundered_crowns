@@ -21,9 +21,6 @@
     "src/sim/settlement/rule.ts": {
       "style/useExponentiationOperator": 2
     },
-    "src/sim/systems/lots.ts": {
-      "suspicious/useIterableCallbackReturn": 1
-    },
     "src/worldprobe/brotli.ts": {
       "suspicious/noAssignInExpressions": 1
     },

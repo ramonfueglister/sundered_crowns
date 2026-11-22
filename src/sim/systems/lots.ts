@@ -330,7 +330,9 @@ export function foundLots(s: WorldState, ground?: Ground | null, dry?: Ground | 
   const g = widened(ground && ground.year === s.startYear ? ground : null, wide);
   const cities = citiesOf(s.startYear), towns = cities.length ? townFamilies(s) : [];
   const farmersOfPlace = new Map<number, number>();
-  cities.forEach((city, k) => farmersOfPlace.set(city.place, (farmersOfPlace.get(city.place) ?? 0) + towns[k].farmPersons));
+  cities.forEach((city, k) => {
+    farmersOfPlace.set(city.place, (farmersOfPlace.get(city.place) ?? 0) + towns[k].farmPersons);
+  });
   const seats = seatTowns(s.startYear);
   cities.forEach((city, k) => {
     const { families, persons, farmers, farmPersons } = towns[k];
