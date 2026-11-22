@@ -25,13 +25,17 @@ fn len(a: V3) -> f32 {
 const ROUND: usize = 8;
 /// Two plaits of three strands.
 const STRANDS: usize = 6;
+/// The corners of the thinner locks that follow each strand of a plait that hangs, at its loose end (round 183,
+/// `styles.py` `PLAIT_ROPE_END`): four locks of eight pieces of six corners round, two triangles a corner.
+const END_LOCKS: usize = 4 * 8 * 6 * 2 * 3;
 
 /// The middle line of each of the two plaits: the mean of its three strands, piece by piece down the plait (a
-/// piece: the band of triangles between two rings of a strand).
+/// piece: the band of triangles between two rings of a strand). Of plaits that hang: each strand is followed by
+/// the thinner locks of its end, which are no part of the line.
 fn middle_lines(pos: &[V3]) -> [Vec<V3>; 2] {
     let per_strand = pos.len() / STRANDS;
     let per_piece = 2 * ROUND * 3;
-    let pieces = per_strand / per_piece;
+    let pieces = (per_strand - END_LOCKS) / per_piece;
     let piece = |strand: usize, s: usize| -> V3 {
         let at = strand * per_strand + s * per_piece;
         let sum = pos[at..at + per_piece].iter().fold([0f32; 3], |a, p| [a[0] + p[0], a[1] + p[1], a[2] + p[2]]);
@@ -49,6 +53,19 @@ fn turned_over(pos: &[V3], nrm: &[V3]) -> usize {
             len(face) > 1e-7 && n.iter().any(|c| dot(*c, face) <= 0.0)
         })
         .count()
+}
+
+/// The breadth of the plait at a girl's left (from side to side), in slices of 1 cm upward from its lowest point.
+fn breadths(pos: &[V3]) -> [f32; 16] {
+    let low = pos.iter().filter(|p| p[0] > 0.0).map(|p| p[1]).fold(f32::MAX, f32::min);
+    let mut span = [(f32::MAX, f32::MIN); 16];
+    for p in pos.iter().filter(|p| p[0] > 0.0) {
+        let i = ((p[1] - low) / 0.1) as usize;
+        if i < span.len() {
+            span[i] = (span[i].0.min(p[0]), span[i].1.max(p[0]));
+        }
+    }
+    span.map(|(a, b)| (b - a).max(0.0))
 }
 
 /// Whether plaits are pinned up beside the cheeks (round 126, `DressSet::hair_looped`): they end above the chin;
@@ -105,6 +122,37 @@ fn a_girl_of_england_wears_plaits_of_round_strands() {
             assert!(plus / area > 0.15 && minus / area > 0.15, "girl {k}, {name}: {} and {} of the surface", plus / area, minus / area);
         }
     }
+}
+
+#[test]
+fn a_plait_that_hangs_ends_in_loose_hair() {
+    // Until round 183 a plait ran out as three strands ever thinner, to a point of 0.3 of their thickness: from
+    // side to side it was narrower the nearer its end. Now it is plaited to 4.5 cm before its end, where it is
+    // narrowest (as if bound), and below that its hair hangs loose in locks that spread: the plait has a waist.
+    // Read from side to side in slices of 1 cm: the narrowest slice between 2 and 9 cm over the end is less than
+    // 0.7 times as broad as the plait is 12 to 16 cm over its end, and below it the hair is more than 1.4 times
+    // as broad again (now 0.38 to 0.59 and 1.8 to 2.5; round 180's file 0.85 to 1.14 and 0.67 to 0.74: no slice
+    // below its narrowest is broader, and it fails both).
+    let Some(h) = head() else { return };
+    let mut seen = 0;
+    for k in 0..12u32 {
+        let age = [8.0, 10.0, 13.0][k as usize % 3];
+        let out = build_posed(&h, &person(2 * k, true, age), 1, Some([0.0; 3]));
+        let rope = out.surfaces.iter().find(|s| s.tex.as_deref().is_some_and(|t| t.contains("/plait01_rope."))).expect("the plaits' strands");
+        assert!(!pinned_up(&out, rope), "girl {k} of {age}: plaits pinned up");
+        let broad = breadths(&rope.pos);
+        let full = broad[12..].iter().copied().fold(0f32, f32::max);
+        let (at, waist) = (2..9).map(|i| (i, broad[i])).fold((0, f32::MAX), |a, b| if b.1 < a.1 { b } else { a });
+        let loose = broad[..at].iter().copied().fold(0f32, f32::max);
+        if std::env::var("SHOW").is_ok() {
+            println!("girl {k} of {age}: the plait is {full} broad, {} at its waist {at} cm over the end, {} below it", waist / full, loose / waist);
+            continue;
+        }
+        assert!(waist < 0.7 * full, "girl {k} of {age}: the plait is {full} broad and {waist} at its narrowest");
+        assert!(loose > 1.4 * waist, "girl {k} of {age}: below its waist of {waist} the plait is {loose} broad");
+        seen += 1;
+    }
+    assert!(seen == 12 || std::env::var("SHOW").is_ok());
 }
 
 #[test]

@@ -9821,6 +9821,96 @@ the side, before above and after below), `runde182_dorf.png` and `runde182_hof.p
 court, after; round 181's sheets are the before), `runde182_blender.png` (Blender, from three sides, far and
 near: round 173's above, this round's below).
 
+**Round 183: a plait that hangs ends in loose hair, in the Blender on Ramon's Mac** (2026-11-22).
+Rounds 174 and 175 said it of their own plaits: a plait's end is a blunt point. It ran out as three strands
+ever thinner, to 0.3 of their thickness, and stopped.
+
+What was read. Nothing. Looked at again: the reference's one head with plaits over the chest (`ck3_04`, cut out
+to the size of ours) beside two of ours. Its plaits keep their breadth to near the end and end a little
+narrower; at that size (a plait is some 12 pixels broad) neither a tie nor loose hair below one can be made
+out. So the loose end is not taken from the reference: it is how a plait ends, by eye.
+
+What is changed.
+- **A loose end** (`tools/portrait/pipeline/styles.py`, the new switch `PLAIT_ROPE_END`, eight numbers,
+  `0.45,0.32,0.3,0.11,4,1.6,0.55,0.75` in the call): the plait is plaited to 4.5 cm before its end. Over the
+  7.5 cm before that place it thins to 0.32 of its thickness: a waist, as if bound there. Below it each of the
+  three strands goes on as a lock: the plaiting runs out over the first 0.3 of it, it swells 2.6-fold (to 0.83
+  of a strand's thickness), ends up to 0.8 cm to the side of the plait's line and from 0.55 of its length on
+  runs out in a point, 3.4 to 4.5 cm long. Beside each go four thinner locks of six corners, 3 to 5 mm broad
+  and 2.5 to 4.3 cm long, ending up to 1.7 cm to the side, each begun at a corner of the strand at the waist,
+  at that corner's very place: the builder takes corners at one place for one corner, so a lock goes with its
+  strand on every body. Fifteen locks a plait.
+- No tie is laid: no source for one was read. The hair looks bound and nothing binds it.
+- The pinned plaits have no end to see and are not touched: with the switch set their call writes round 180's
+  file byte for byte. Without the switch the hanging plaits' call does too (both on the Mac).
+- The file `public/portrait/real/plait01_rope.txt.zst` is written anew, by Blender 5.1.2 on the Mac, with the
+  script as committed; the cloud's Blender module writes the same bytes. Nothing in the builder and nothing on
+  the stage; the wasm is the same bytes.
+
+How it was made. Sixteen trials in the cloud, each put into the portrait on two girls from the front and from
+three quarters, and from the fourth on built on forty girls of 8 to 19 and read for triangles folded over
+(`portrait/tests/plait.rs`): thinner locks of five corners (black faces: with five the image stands still
+across one face, and the relief has no direction there); of six; four of them a strand; blunter points; then
+the strands drawn together at the waist over 1.2, 2.5, 4, 5 and 7 cm (the best waist to look at, but on
+girls of 8 and 10 one to six triangles of a strand folded over wherever the drawing-in began, and seventy
+with the thinner locks flat, 0.6 as thick as broad: they are 0.9 now); without thinning (more folds); without
+drawing together (none above the waist); the waist by thinning alone, to 0.45, 0.5 and 0.32, over 4.8 and over
+7.5 cm (4.8 folded one triangle where the thinning began); the fourth number 0.13, 0.1 and 0.11. Then, as
+rounds 171 to 182, the script was sent to the socket of the Blender that is open on the Mac and run there in
+scenes of its own, one pass: the old call (round 180's file, byte for byte), the new call, the pinned plaits
+with the old call and with the switch (round 180's file both times), the new call once more (the same
+bytes); old and new rendered from the front, three quarters and the side, whole and near the end. The pass
+was run twice, the second time with the script as committed (its comment was written after the first).
+
+Measured (`portrait/tests/plait.rs` with `SHOW=1`, on round 180's file and on this, twelve girls of 8 to 13
+as the body carries the plait, in no pose; the sheets of 36 against round 182's):
+
+| | before | now |
+|---|---|---|
+| the plait's narrowest slice of 1 cm, 2 to 9 cm over its end, against its breadth 12 to 16 cm over the end | 0.85 to 1.14 | 0.38 to 0.59 |
+| the broadest slice below that, against it | 0.67 to 0.74 | 1.8 to 2.5 |
+| the plait's middle line turns within 2 cm, as laid; in the pose (forty girls; the bounds are 30 and 40 degrees) | 22.3; 32.1 | 22.3; 33.3 |
+| triangles folded over, forty girls | 0 | 0 |
+| corners, triangles | 6672, 13 248 | 7968, 15 552 |
+| the shade, mean | 0.602 | 0.596 |
+| portraits of the sheet that change | | 5 of 36 in the village, 5 of 36 at court |
+| the file, packed | 149 kB | 173 kB |
+
+Tried and not kept.
+- The strands drawn together at the waist: folds on small girls, whatever the length.
+- Thinner locks of five corners; flat ones; the fourth number 0.13 (a whisk).
+- Not tried: a tie; locks that curl or turn; more and finer locks; the loose end drawn with the head's fine
+  strands in place of locks; an end to the pinned plaits.
+
+**One test new, one reads anew.** `a_plait_that_hangs_ends_in_loose_hair` (`portrait/tests/plait.rs`) reads the
+breadth of a plait from side to side in slices of 1 cm upward from its lowest point, on twelve girls of 8 to
+13: the narrowest slice 2 to 9 cm over the end is less than 0.7 of the plait's breadth higher up, and below it
+the hair is more than 1.4 times as broad again (0.38 to 0.59 and 1.8 to 2.5; round 180's file 0.85 to 1.14
+and 0.67 to 0.74, and fails both). `a_plait_hangs_without_a_kink_on_every_body` reads a plait's middle line as
+the mean of its three strands: the thinner locks that now follow each strand in the file are left out of it
+(`END_LOCKS`, a count); its bounds are as they were, and so is the count of folded triangles, none.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 182. The colour sheet: 160 of 160
+lines to the last figure.
+
+Honest about it. A small step, on the five of the 36 who wear their plaits hanging, and on a small place: the
+last 5 cm of a plait. From near a plait now ends as a plait does, thinner to a waist and below it a tuft of
+loose hair, where it was a rat's tail; at the size of the sheet it is a small tuft at the end and little more.
+What is not good: the tuft is fifteen locks, each a smooth pointed tube: from near they read as petals or
+claws, not as hair that fans out; they are straight, all of a kind, and do not hang (they follow the plait's
+line on the chest). Nothing binds the waist, and three strands still cross in it. The plait above it is as
+it was: smooth round strands, three tubes in one another at its beginning. In Blender, with no image on the
+locks, they are plainly tubes. The reference shows no such end, so this is our own reading of a plait. The
+download of one who wears plaits is 24 kB larger. Every number is by eye: PLACEHOLDER.
+
+Tests: `cargo test --release` as a whole 148 of 148 (one new); `tests/portrait.test.ts` and its neighbour
+46 of 46; typecheck and lint pass, no new warning.
+Pictures (project files, `portraits/`): `runde183_vorher_nachher.png` (two girls from the front and from three
+quarters: before above, after below), `runde183_nah.png` (their plaits' ends near, in the same order),
+`runde183_dorf.png` and `runde183_hof.png` (all 36, village and court, after; round 182's sheets are the
+before), `runde183_blender.png` (Blender, from three sides, whole and near the end: round 180's above, this
+round's below).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
