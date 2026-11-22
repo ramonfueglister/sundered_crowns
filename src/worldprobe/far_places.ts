@@ -456,12 +456,11 @@ export function layPlanned(l: Laying) {
                   if (c.quarters) streetOn(c.quarters, x, z, ox, oz, street);
                 } else if (c.kind![idx(x, z)] === 1) g.mat[idx(x, z)] = Mat.Paved;
               }
-          // the wall as long as the great buildings stay themselves: the finest step's wall (settle.ts), made smaller,
-          // on the lowest ground of its ring, with its gates and its openings for the water; nothing grows on its ring
+          // the wall and the bridges as long as the great buildings stay themselves: those of the land register
+          // (settlement features 6 and 7, settle.ts) made smaller, each piece of the world drawing what lies on its
+          // ground; nothing grows on the ring. A town without a ring of the register keeps the square wall below.
           const ring = t.wall === null ? undefined : s?.lots?.walls;
           if (step <= MODELS_UNTIL && s?.lots && (ring?.length || s.lots.bridges?.length)) {
-            // the ring and the bridges of the land register (settlement features 6 and 7), made smaller: each piece of
-            // the world draws what of them lies on its own ground
             const mx = t.cx / wider - ox,
               mz = t.cz / wider - oz,
               at = (x: number, z: number): [number, number] => [Math.floor(mx + x), Math.floor(mz + z)];
