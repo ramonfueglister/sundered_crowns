@@ -3,15 +3,24 @@
 // asks for an heir only where the world has gone another way than history and history's next holder is not there.
 //
 // The orders are those Kokkonen & Sundell (2014, Delivering Stability: Primogeniture and Autocratic Survival in
-// European Monarchies 1000–1800, American Political Science Review 108(2), p. 443) code for every monarch:
+// European Monarchies 1000–1800, American Political Science Review 108(2), p. 443) code for every monarch, and those
+// of the house laws and customs data/history/rulers/succession.csv cites for the realms they do not code:
 // - primogeniture: "the principle of letting the oldest son inherit power" (p. 439), the line of a son who died before
 //   his father coming before his younger brothers; coded as agnatic primogeniture (p. 441), so the kin in the male
 //   line come first. OWN RULE: where no male in the male line lives, the crown goes by the same order through the
 //   daughters (male preference): the sources read give no rule for an extinct male line, and the crowns of Naples,
 //   Castile, Portugal and Scotland went so.
+// - male primogeniture: the same in the male line only, where the source shuts the daughters out (a house law, the
+//   apanages of France, the French crown after 1316).
+// - cognatic primogeniture: the sons first and then the daughters, each with their line, before the brothers of the
+//   last holder: "the fiefs of France passed by primogeniture to males and, in the absence of males, to females"
+//   (Velde, The Salic Law, heraldica.org).
+// - partible: the sons share the land (a house law before primogeniture). OWN RULE: the eldest son keeps the realm
+//   and nobody the others' shares, as by male primogeniture: the world has one holder for each realm, and the
+//   partitions are realms of the chronicle of their own.
 // - agnatic seniority: "the ruler's oldest brother inherited the throne before any of his sons" (p. 438): the eldest
 //   living male of the male line of the nearest forefather who has one.
-// - election: no heir by blood (src/sim/systems/succession.ts gives the crown to the next holder of history instead).
+// - election, and a union with another crown: no heir by blood (src/sim/systems/succession.ts decides).
 import type { Chronicle, SuccessionOrder } from '../content/chronicle';
 
 /** More generations than the chronicle's years hold: a guard against a loop of parents in the data. */
@@ -72,14 +81,14 @@ function agnates(c: Chronicle, a: number, seen: Set<number>, out: number[]): voi
 }
 
 /** The heir of the person `left` (a person of the chronicle who held the crown) by `order`: a person of the chronicle
- *  for whom `alive` holds, or null when the order knows nobody (and for an election). */
+ *  for whom `alive` holds, or null when the order knows nobody (and for an election or a union). */
 export function heirOf(
   c: Chronicle,
   left: number,
   order: SuccessionOrder,
   alive: (p: number) => boolean,
 ): number | null {
-  if (order === 'election') return null;
+  if (order === 'election' || order === 'union') return null;
   const line = maleLine(c, left);
   if (order === 'agnatic_seniority') {
     for (let g = 1; g < line.length; g++) {
@@ -93,7 +102,8 @@ export function heirOf(
     }
     return null;
   }
-  for (const agnatic of [true, false]) {
+  const passes = order === 'primogeniture' ? [true, false] : order === 'cognatic_primogeniture' ? [false] : [true];
+  for (const agnatic of passes) {
     const seen = new Set([left]);
     for (let g = 0; g < line.length; g++) {
       const heir = firstOfLine(c, line[g], g > 0 ? line[g - 1] : -1, agnatic, alive, seen);

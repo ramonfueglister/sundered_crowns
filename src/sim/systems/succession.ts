@@ -7,8 +7,11 @@
 // - Else the crown goes back to history where it can: to a person history has reigning that day whom the world has
 //   alive (the minimal-rewrite rule of Tetlock & Belkin 1996, Counterfactual Thought Experiments in World Politics,
 //   ch. 1: change as little of history as the counterfactual needs).
-// - Else to the heir of the last holder by the realm's order of succession (src/sim/systems/heirs.ts, the orders of
-//   Kokkonen & Sundell 2014 by realm and year in the chronicle); a kin who never reigned comes into the world for it.
+// - Else, where the crown is in a dynastic union with another (Kokkonen & Sundell 2014, online appendix, Table B4,
+//   the year a state leaves their sample for one), to the holder of that crown in the world: the union is that one
+//   person holds both.
+// - Else to the heir of the last holder by the realm's order of succession (src/sim/systems/heirs.ts, by realm and
+//   year in the chronicle); a kin who never reigned comes into the world for it.
 // - Else (an election, a realm whose order no source codes, or no heir by blood) to the next person history let
 //   take the crown whom the world has alive, only earlier. OWN RULE: no model of an election or of an unknown order
 //   was read; this keeps the choice of the electors and of history, and moves only the day (the minimal rewrite).
@@ -23,7 +26,7 @@
 import type { WorldState } from '../state';
 import { ALIVE, BORN_UNKNOWN } from '../state';
 import type { World } from '../world';
-import type { Chronicle, SuccessionOrder } from '../content/chronicle';
+import type { Chronicle, ChronicleLawDays } from '../content/chronicle';
 import { heirOf } from './heirs';
 import { ageAtDeath } from './deaths';
 
@@ -63,16 +66,32 @@ export function murderDay(day: number, u: number): number {
 }
 
 /** The order of succession of the realm `key` on `day`, undefined where no source codes one. */
-function orderOf(c: Chronicle, key: string, day: number): SuccessionOrder | undefined {
-  let order: SuccessionOrder | null = null;
-  for (const l of c.lawsOf.get(key) ?? []) if (l.from <= day) order = l.order;
-  return order ?? undefined;
+function lawOf(c: Chronicle, key: string, day: number): ChronicleLawDays | undefined {
+  let law: ChronicleLawDays | undefined;
+  for (const l of c.lawsOf.get(key) ?? []) if (l.from <= day) law = l;
+  return law?.order ? law : undefined;
+}
+
+/** Settles the crowns of the realms `touched` (each with the person who left it, or -1) at the end of `day`; a crown
+ *  in union with another after the others, so that it finds the other's holder of the day. */
+export function settleAll(
+  s: WorldState,
+  w: World,
+  c: Chronicle,
+  persons: Persons,
+  touched: ReadonlyMap<number, number>,
+  day: number,
+  take: (r: number, id: number) => void,
+): void {
+  const union = (r: number) => lawOf(c, s.realmText[r].key, day)?.order === 'union';
+  for (const late of [false, true])
+    for (const [r, left] of touched) if (union(r) === late) settle(s, w, c, persons, r, day, left, take);
 }
 
 /** Gives the crown of `r`, if nobody holds it at the end of `day` though history has it with a person the world
  *  lacks, to whom the rules above name; `left` is the person of the chronicle who left it that day, or -1. `take`
  *  gives the crown. */
-export function settle(
+function settle(
   s: WorldState,
   w: World,
   c: Chronicle,
@@ -119,9 +138,14 @@ function successor(
     const id = persons.row(g.person);
     if (id !== undefined && alive(g.person)) return id;
   }
-  const order = orderOf(c, key, day),
+  const law = lawOf(c, key, day),
     last = left >= 0 ? left : predecessor(reigns, now, day);
-  const heir = order && last !== null ? heirOf(c, last, order, alive) : null;
+  if (law?.order === 'union' && law.with) {
+    // the holder of the other crown in the world, as history's union has the holder of both
+    const h = s.realm.cols.holder[s.realmText.findIndex((t) => t.key === law.with)] ?? -1;
+    if (h >= 0 && P.died[h] === ALIVE) return h;
+  }
+  const heir = law?.order && last !== null ? heirOf(c, last, law.order, alive) : null;
   if (heir !== null) {
     const id = persons.row(heir) ?? persons.enter(heir, r, day);
     if (id !== undefined) return id;
