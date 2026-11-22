@@ -137,7 +137,7 @@ function happen(s: WorldState, w: World, c: Chronicle, e: Event, d: Day, drawn =
     cp = c.persons[e.person];
   const realm = e.realm ? x.realms.get(e.realm) : undefined;
   if (e.what === Happening.Enter)
-    return realm !== undefined && !unborn(s, c, e.person) && enter(s, w, c, e, x, realm, d) !== undefined;
+    return realm !== undefined && !unborn(s, w, c, e.person) && enter(s, w, c, e, x, realm, d) !== undefined;
   const id = x.persons.get(cp.key);
   if (e.what === Happening.Accede && realm !== undefined && (id === undefined || P.died[id] !== ALIVE))
     d.touch(realm, -1); // history's holder is not there: see that the crown finds somebody
@@ -257,32 +257,55 @@ function passCrown(s: WorldState, c: Chronicle, e: Event, x: Index, r: number, d
   for (const g of c.reignsOf.get(s.realmText[r].key) ?? []) {
     if (g.person === e.person || g.start > e.day || (g.end !== null && g.end <= e.day)) continue;
     const q = x.persons.get(c.persons[g.person].key);
-    if (q !== undefined && P.died[q] === ALIVE) return d.crown(r, q);
+    if (q !== undefined && P.died[q] === ALIVE) {
+      d.crown(r, q);
+      return;
+    }
   }
 }
 
 /** Whether the person `p` of the chronicle cannot be born into this world: a father who is a person of the world
- *  died before the child's conception, or a mother before its birth, though history has them alive then; or a parent
- *  of history was not born either. Without a day of birth there is no day of conception, and the person comes as
- *  history has it (OWN RULE: no date to test against). */
-export function unborn(s: WorldState, c: Chronicle, p: number, depth = 0): boolean {
-  const born = c.bornDay[p];
-  if (born === null || depth > MAX_GENERATIONS) return false;
-  return gone(s, c, c.fatherOf[p], born - GESTATION_DAYS, depth) || gone(s, c, c.motherOf[p], born, depth);
+ *  died before the child's conception, or a mother before its birth, though history has them alive then; in a free
+ *  world also a parent the world does not have who dies then on a day of their own (`lifeEnd`, the day they would die
+ *  on in the world); or a parent of history was not born either. Without a day of birth there is no day of conception,
+ *  and the person comes as history has it (OWN RULE: no date to test against). `known` keeps the answers for the state
+ *  as it is, to share among several questions: the forefathers of the persons of the chronicle are many, and shared. */
+export function unborn(s: WorldState, w: World, c: Chronicle, p: number, known = new Map<number, boolean>()): boolean {
+  const was = known.get(p);
+  if (was !== undefined) return was;
+  known.set(p, false); // a loop of parents in the data ends here
+  const born = c.bornDay[p],
+    out =
+      born !== null &&
+      (gone(s, w, c, c.fatherOf[p], born - GESTATION_DAYS, known) || gone(s, w, c, c.motherOf[p], born, known));
+  known.set(p, out);
+  return out;
 }
-/** More generations than the chronicle's 557 years hold: a guard against a loop of parents in the data. */
-const MAX_GENERATIONS = 40;
 
 /** Whether the parent `q` (a person of the chronicle, or none) was not alive in this world on `day` though history
  *  has them alive then. A parent who never came into the world is gone when not born either; one the world had no
- *  seat for is no difference between the world and history. */
-function gone(s: WorldState, c: Chronicle, q: number | null, day: number, depth: number): boolean {
+ *  seat for is no difference between the world and history, except in a free world, where every person of history
+ *  dies on a day of their own. */
+function gone(
+  s: WorldState,
+  w: World,
+  c: Chronicle,
+  q: number | null,
+  day: number,
+  known: Map<number, boolean>,
+): boolean {
   if (q === null) return false;
-  const id = indexOf(s).persons.get(c.persons[q].key);
-  if (id === undefined) return unborn(s, c, q, depth + 1);
-  const died = s.person.cols.died[id],
-    history = c.diedDay[q];
-  return died !== ALIVE && died <= day && history !== null && history > day;
+  const id = indexOf(s).persons.get(c.persons[q].key),
+    history = c.diedDay[q],
+    alive = history !== null && history > day;
+  if (id !== undefined) {
+    const died = s.person.cols.died[id];
+    return alive && died !== ALIVE && died <= day;
+  }
+  if (unborn(s, w, c, q, known)) return true;
+  if (!alive || w.rulerDeaths !== 'drawn') return false;
+  const end = lifeEnd(w, c, q, drawOf(s, c, q, DRAW.life));
+  return end !== null && end <= day;
 }
 
 /** The number of each person in the chronicle, by key. */
@@ -357,7 +380,7 @@ export function playChronicle(s: WorldState, w: World, from: number, to: number)
   };
   const persons: Persons = {
     row: (p) => indexOf(s).persons.get(c.persons[p].key),
-    unborn: (p) => unborn(s, c, p),
+    unborn: (p) => unborn(s, w, c, p, known),
     enter(p, realm, day) {
       const id = enter(
         s,
@@ -373,8 +396,12 @@ export function playChronicle(s: WorldState, w: World, from: number, to: number)
     },
     draw: (p, n) => drawOf(s, c, p, n),
   };
+  /** the persons not born into the world, as far as asked since the deaths of the day (nobody dies while the crowns
+   *  are settled) */
+  let known = new Map<number, boolean>();
   const dawn = (day: number) => {
     if (day === today) return;
+    known = new Map();
     for (const [r, left] of touched) settle(s, w, c, persons, r, today, left, d.crown);
     touched.clear();
     today = day;

@@ -24,6 +24,8 @@ the person's life (P569/P570) overlaps 1250–1848. Filter to 1291–1848 downst
 | `positions.csv` | 13,346 | Every position found under the three roots, with its jurisdiction |
 | `holders.csv` | 16,077 | One row per P39 statement, all regions |
 | `holders_EU_NA_NE.csv` | 5,065 | Subset of `holders.csv` with `region = EU_NA_NE`, minus Captains Regent of San Marino (Q258045, ~2,000 rows of six-month terms) |
+| `families/persons.csv` | 32,577 | The families of the persons of the chronicle of 1291 (below) |
+| `families/report.json` | | What the families fetch counted and dropped |
 | `queries/` | | SPARQL queries. `positions*.rq` and `holders_*.rq` produced these CSVs; `persons_*.rq` fetched per-person fields (sex, parents, family); `jurisdictions.rq` fetched jurisdiction coordinates. `p97_*` / `persons_p97_*` belong to a separate noble-title (P97) fetch that is not included here. |
 
 ## Columns
@@ -58,3 +60,16 @@ precision "year" (or decade/century) is stored as `YYYY-01-01`, so a `-01-01`
 date may only mean "some time in that year". `unknown` means Wikidata has an
 explicit "unknown value"; empty means no value. About a third of holder rows have
 no `start`.
+
+## Families (`families/`)
+
+Fetched 2026-11-22 by `tools/history/rulers/families.py` (on a Mac: the Query Service refuses the cloud) for the
+succession of the game (`src/sim/systems/heirs.ts`). It starts from the 3,138 Wikidata persons of
+`public/data/rulers_1291.json` and walks father (P22), mother (P25) and child (P40), both ways, up to 4 steps; spouses
+(P26) are recorded but not walked. A person born or dead outside 1100–1848 is dropped (1,121), as are items that are
+not humans (98). 3,134 of the 3,138 start persons are found.
+
+`families/persons.csv`: `qid`, `label`, `sex` (`m`, `f` or empty), `birth`, `death` (the most precise date Wikidata
+gives, the earliest of equals; precision day, month or year is kept as `YYYY-MM-DD`, `YYYY-MM` or `YYYY`, coarser is
+dropped), `father`, `mother`, `spouses` (QIDs, `|`-separated if several), `family`, `familyLabel` (P53), `hop` (the
+steps from the nearest person of the chronicle). Unlike the files above, the dates here keep their precision.

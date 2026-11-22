@@ -1,6 +1,6 @@
 // Who is heir to a crown by the order of succession of the realm, among the persons of the chronicle and their kin
-// (src/sim/content/chronicle.ts: the persons without a reign are kin, from Wikidata). src/sim/systems/rulers.ts asks
-// for an heir only where the world has gone another way than history and history's next holder is not there.
+// (src/sim/content/chronicle.ts: the persons without a reign are kin, from Wikidata). src/sim/systems/succession.ts
+// asks for an heir only where the world has gone another way than history and history's next holder is not there.
 //
 // The orders are those Kokkonen & Sundell (2014, Delivering Stability: Primogeniture and Autocratic Survival in
 // European Monarchies 1000–1800, American Political Science Review 108(2), p. 443) code for every monarch:
@@ -11,7 +11,7 @@
 //   Castile, Portugal and Scotland went so.
 // - agnatic seniority: "the ruler's oldest brother inherited the throne before any of his sons" (p. 438): the eldest
 //   living male of the male line of the nearest forefather who has one.
-// - election: no heir by blood (src/sim/systems/rulers.ts gives the crown to the next holder of history instead).
+// - election: no heir by blood (src/sim/systems/succession.ts gives the crown to the next holder of history instead).
 import type { Chronicle, SuccessionOrder } from '../content/chronicle';
 
 /** More generations than the chronicle's years hold: a guard against a loop of parents in the data. */

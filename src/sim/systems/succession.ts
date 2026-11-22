@@ -64,9 +64,9 @@ export function murderDay(day: number, u: number): number {
 
 /** The order of succession of the realm `key` on `day`, undefined where no source codes one. */
 function orderOf(c: Chronicle, key: string, day: number): SuccessionOrder | undefined {
-  let order: SuccessionOrder | undefined;
+  let order: SuccessionOrder | null = null;
   for (const l of c.lawsOf.get(key) ?? []) if (l.from <= day) order = l.order;
-  return order;
+  return order ?? undefined;
 }
 
 /** Gives the crown of `r`, if nobody holds it at the end of `day` though history has it with a person the world
@@ -83,6 +83,21 @@ export function settle(
   take: (r: number, id: number) => void,
 ): void {
   if (s.realm.cols.holder[r] >= 0) return;
+  const id = successor(s, w, c, persons, r, day, left);
+  if (id !== undefined) take(r, id);
+}
+
+/** The row of the person the rules above give the empty crown of `r` on `day`, entering a kin who inherits; undefined
+ *  for nobody. */
+function successor(
+  s: WorldState,
+  w: World,
+  c: Chronicle,
+  persons: Persons,
+  r: number,
+  day: number,
+  left: number,
+): number | undefined {
   const P = s.person.cols,
     key = s.realmText[r].key,
     reigns = c.reignsOf.get(key) ?? [];
@@ -91,7 +106,7 @@ export function settle(
     const died = c.diedDay[g.person];
     return g.start <= day && (g.end === null || g.end > day) && (died === null || died > day);
   });
-  if (!now.some((g) => persons.row(g.person) !== undefined || persons.unborn(g.person))) return;
+  if (!now.some((g) => persons.row(g.person) !== undefined || persons.unborn(g.person))) return undefined;
   const alive = (p: number): boolean => {
     const id = persons.row(p);
     if (id !== undefined) return P.died[id] === ALIVE && (P.born[id] === BORN_UNKNOWN || P.born[id] <= day);
@@ -102,19 +117,20 @@ export function settle(
   };
   for (const g of now) {
     const id = persons.row(g.person);
-    if (id !== undefined && alive(g.person)) return take(r, id);
+    if (id !== undefined && alive(g.person)) return id;
   }
   const order = orderOf(c, key, day),
     last = left >= 0 ? left : predecessor(reigns, now, day);
   const heir = order && last !== null ? heirOf(c, last, order, alive) : null;
   if (heir !== null) {
     const id = persons.row(heir) ?? persons.enter(heir, r, day);
-    if (id !== undefined) return take(r, id);
+    if (id !== undefined) return id;
   }
   for (const g of [...reigns].sort((a, b) => a.start - b.start)) {
     const id = persons.row(g.person);
-    if (g.start > day && id !== undefined && alive(g.person)) return take(r, id);
+    if (g.start > day && id !== undefined && alive(g.person)) return id;
   }
+  return undefined;
 }
 
 /** History's holder before the day, other than those of the day: whose heir the crown seeks when nobody left it on

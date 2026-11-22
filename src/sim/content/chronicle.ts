@@ -39,7 +39,8 @@ export type SuccessionOrder = 'primogeniture' | 'agnatic_seniority' | 'election'
 export interface ChronicleLaw {
   /** the first day the order holds (a date as the source gives it; null: from before the chronicle) */
   from: string | null;
-  order: SuccessionOrder;
+  /** null: from this day no source codes the order (the realm leaves the sample of the source) */
+  order: SuccessionOrder | null;
   /** where the source says it */
   source: string;
 }
@@ -101,7 +102,7 @@ export interface Chronicle {
    *  readable copy of the rulers, server/rulers_copy.ts) */
   reignsOf: ReadonlyMap<string, readonly ChronicleReignDays[]>;
   /** the orders of succession of each realm a source codes, with the first day each holds, oldest first */
-  lawsOf: ReadonlyMap<string, readonly { from: number; order: SuccessionOrder }[]>;
+  lawsOf: ReadonlyMap<string, readonly { from: number; order: SuccessionOrder | null }[]>;
 }
 
 /** The days from the conception of a child to its birth: the median from ovulation to birth, Jukic, Baird, Weinberg,
