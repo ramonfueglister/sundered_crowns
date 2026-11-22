@@ -69,11 +69,13 @@ export function divergence(s: WorldState, w: World, setup: SetupState): Divergen
     row = new Map(s.named.map((n) => [n.key, n.person])),
     key = new Map(s.named.map((n) => [n.person, n.key])),
     number = new Map(c.persons.map((q, k) => [q.key, k]));
-  const unbornNow = new Set<string>();
+  // the kin of the rulers are no difference while not born: history never brings them into the world either
+  const unbornNow = new Set<string>(),
+    known = new Map<number, boolean>();
   for (let p = 0; p < c.persons.length; p++) {
     const born = c.bornDay[p],
       k = c.persons[p].key;
-    if (born === null || born > d || row.has(k) || !unborn(s, c, p)) continue;
+    if (born === null || born > d || !c.home[p] || row.has(k) || !unborn(s, w, c, p, known)) continue;
     unbornNow.add(k);
     if (out.unborn++ < EXAMPLES) out.examples.unborn.push(k);
   }
