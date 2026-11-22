@@ -47,7 +47,10 @@ export interface Table {
   surf: Float32Array;
   /** 1: paved town ground */
   town: Uint8Array;
-  /** what the column carries (GroundTraits.cover): 0 nothing, 1 something that stands on the ground, 2 the ground's own */
+  /**
+   * what the column carries (GroundTraits.cover): 0 nothing, 1 something that stands on the ground, 2 the ground's own,
+   * 3 trees that stand on it
+   */
   has: Uint8Array;
   rise: Uint8Array;
   share: Float32Array;
@@ -269,7 +272,7 @@ export function tableOf(g: Ground, t: GroundTraits, part: Part, roads: Float32Ar
       }
       const cover = t.cover?.(x, z);
       if (!cover) continue;
-      table.has[i] = cover.stands === false ? 2 : 1;
+      table.has[i] = cover.stands === false ? 2 : cover.trees === false ? 1 : 3;
       table.rise[i] = cover.rise;
       table.share[i] = cover.share ?? 1;
       table.top[i] = colourOf(cover.top);
@@ -399,7 +402,8 @@ class TableTraits implements GroundTraits {
           side: this.colour(table.flank[i]),
           rise: table.rise[i],
           share: table.share[i],
-          stands: table.has[i] === 1,
+          stands: table.has[i] !== 2,
+          trees: table.has[i] === 3,
         }
       : null;
   }

@@ -5,9 +5,17 @@ import { type Ground, type GroundTraits, N } from './layout';
 import { type Corners, skyLight, skyShare } from './terrain_light';
 
 type Cover = ReturnType<NonNullable<GroundTraits['cover']>>;
-/** whether what a column carries is trees: green and standing on the ground (a field is green, but does not rise) */
+/**
+ * whether what a column carries is trees: far.ts laid woods there (GroundTraits.cover `trees`), and they are green. A
+ * green field or roof is no wood: told by its colour alone, the spring corn of the far steps was drawn as the floor
+ * of a wood, FLOOR as light as it is.
+ */
 export const wooded = (cover: Cover) =>
-  !!cover && cover.stands !== false && cover.top[1] > cover.top[0] && cover.top[1] > cover.top[2];
+  !!cover &&
+  cover.stands !== false &&
+  cover.trees !== false &&
+  cover.top[1] > cover.top[0] &&
+  cover.top[1] > cover.top[2];
 /**
  * The trees of a far step. The tables give a wooded column the rise of its trees above its ground (at the first far
  * step two blocks where a tree stands on it and one where a crown reaches over it, farther out one where trees
