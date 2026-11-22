@@ -83,7 +83,7 @@ describe('the fields of the first far step', () => {
     });
   });
 
-  it('are laid down by far.ts on the columns of the lots that are fields, on their soil, and the fallow bears nothing', () => {
+  it('are laid down by far.ts on the columns of the lots that are fields, on their soil, the fallow with the winter corn’s sheaves the stage keeps down', () => {
     onGrid(SIDE, () => {
       const g: Ground = meadow(),
         c = coverLand(g, CROPS_AT, new Batch(), [], {
@@ -112,8 +112,9 @@ describe('the fields of the first far step', () => {
       expect(fallow).toBeGreaterThan(SIDE * SIDE * 0.1);
       const b = new Batch();
       drawCrops(b, c.crops!, g.h, g.wet, 0, 0, { x0: 0, z0: 0, x1: SIDE, z1: SIDE });
-      // a sheaf on a block of every column of wheat and oats, about
-      expect(b.triangles / 10).toBeGreaterThan((wheat + oats) * 2);
+      // a sheaf on a block of every column of wheat, oats and the fallow, about (lookprobe/stage/seasons.ts keeps the
+      // fallow's down while it lies fallow)
+      expect(b.triangles / 10).toBeGreaterThan((wheat + oats + fallow) * 2);
     });
   });
 

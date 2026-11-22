@@ -1,12 +1,14 @@
 // The fields of a far piece (far.ts `coverLand`): the lots of the finest step in the colours of their crops, or the
 // furlongs of the land register.
-import { type RGB, hash2, mix, shade } from '../lookprobe/batch';
+import { type RGB, hash2, shade } from '../lookprobe/batch';
 import { OATS, OATS_SIDE, VINE_BODY, WHEAT, WHEAT_SIDE } from '../lookprobe/blocks';
 import { Mat, N, idx, inGrid } from '../lookprobe/layout';
 import { FALLOW_SHOWS, SOIL_FALLOW } from '../lookprobe/terrain_colours';
 import { CROP } from '../sim/settlement/fields';
 import { CROPS_AT, FALLOW_FIELD, OATS_FIELD, WHEAT_FIELD } from './crops';
 import type { Laying } from './far_lay';
+import { SEEN_FALLOW, SEEN_SPRING, SEEN_VINES, SEEN_WINTER, VINEYARD, field, tinted } from './field_colours';
+import { FAR_LOOK, seasonCode, sow, sowingOf } from './season_codes';
 import { FALLOW, FIELD_GROUND, SPRING, blockOf, courseOf } from './settle';
 
 /** fields at the finest step lie in lots of eleven by eight blocks (settle.ts) */
@@ -29,22 +31,6 @@ function spotOf(fx: number, fz: number) {
     lx = Math.floor((fx - shift) / LOT_W);
   return { lx, lz, shift };
 }
-/** a field from above: the tops of its crop with a little of their sides, and with more of them where it is no longer raised */
-const field = (crop: RGB, flat: boolean, side: RGB = WHEAT_SIDE) => mix(crop, side, flat ? 0.6 : 0.3),
-  VINEYARD = mix(VINE_BODY, WHEAT_SIDE, 0.3);
-const tinted = (c: RGB, by: readonly [number, number, number]): RGB => [c[0] * by[0], c[1] * by[1], c[2] * by[2]];
-/**
- * The fields as the camera sees them from above, measured against the mean of the finest step (mean.ts,
- * `?mean=compare`), as a share of the colours far.ts gave them by eye: the rows of the winter corn stand in
- * each other's shade and creases, the spring corn shows more of its ground, and the finest step's vineyards are not
- * dark green but the colour of their ground between the rows. The fallow's soil showed too pale and grey beside the
- * finest step's stubble in the grass. Measured at Paris and in the Black Forest.
- */
-const SEEN_WINTER = [0.84, 0.9, 0.9] as const,
-  SEEN_SPRING = [1.08, 0.83, 0.94] as const,
-  SEEN_VINES = [1.53, 1.1, 1.13] as const,
-  SEEN_FALLOW = [0.99, 1.14, 0.76] as const;
-
 /** The fields on a far piece's free ground. */
 export function layFields(l: Laying) {
   const { g, step, o, c, wider, ox, oz, taken, walls, free, put, pick } = l;
@@ -56,6 +42,12 @@ export function layFields(l: Laying) {
   const grown = 2 ** Math.max(0, step - LOTS_UNTIL),
     salt = grown > 1 ? 7 * step : 0;
   const courses = (x: number, z: number) => o.courses?.(x, z) ?? 1;
+  // what each field column carries by the season (season_codes.ts): the field's code and its own number; a field laid
+  // in the colour of its crop shows that colour from afar, one with its sheaves its soil and sheaves
+  const season = new Uint8Array(N * N * 2),
+    sown = (x: number, z: number, kind: number, tilled: number, sowing: number, far = true) =>
+      sow(season, idx(x, z), seasonCode(o.farmYear?.(x, z) ?? 0, kind, tilled) + (far ? FAR_LOOK : 0), sowing);
+  c.season = season;
   const springOf = (lx: number, lz: number): [RGB, RGB] => [
     tinted(field(pick(OATS, hash2(lx, lz, 68 + salt)), true, OATS_SIDE), SEEN_SPRING),
     OATS_SIDE,
@@ -125,9 +117,11 @@ export function layFields(l: Laying) {
         if (f.crop === CROP.fallow) {
           put(x, z, 0, tinted(SOIL_FALLOW, SEEN_FALLOW), SOIL_FALLOW, 4);
           c.share[idx(x, z)] = FALLOW_SHOWS;
+          sown(x, z, FALLOW, f.courses, sowingOf(lx, lz));
           continue;
         }
         const vines = f.crop === CROP.winter && hash2(lx, lz, 67) < o.vines(mx, mz);
+        sown(x, z, f.crop === CROP.spring ? SPRING : vines ? 2 : 1, f.courses, sowingOf(lx, lz));
         put(
           x,
           z,
@@ -149,7 +143,8 @@ export function layFields(l: Laying) {
         if (hash2(lx, lz, 65 + salt) > o.ploughed(mx, mz) / FIELD_GROUND || !room(lx, lz, shift)) continue;
         // the course of the block of fields the lot lies in, the same as at the finest step (settle.ts)
         const course = courseOf(courses(mx, mz), hash2(...blockOf(fx / grown, fz / grown), 66 + salt));
-        const vines = course !== SPRING && course !== FALLOW && hash2(lx, lz, 67 + salt) < o.vines(mx, mz);
+        const vines = course !== SPRING && course !== FALLOW && hash2(lx, lz, 67 + salt) < o.vines(mx, mz),
+          sowing = sowingOf(lx, lz, salt);
         // at the first far step a field is the finest step's: its soil, and its sheaves standing on it (crops.ts draws
         // them from the crop laid down here); the vineyards stay a colour of their own
         if (step === CROPS_AT && !vines) {
@@ -159,8 +154,10 @@ export function layFields(l: Laying) {
           c.kind![i] = course === FALLOW ? 4 : course === SPRING ? 5 : 6;
           c.crops ??= new Uint8Array(N * N);
           c.crops[i] = course === FALLOW ? FALLOW_FIELD : course === SPRING ? OATS_FIELD : WHEAT_FIELD;
+          sown(x, z, course, courses(mx, mz), sowing, false);
           continue;
         }
+        sown(x, z, vines ? 2 : course, courses(mx, mz), sowing);
         if (course === FALLOW) {
           put(x, z, 0, tinted(SOIL_FALLOW, SEEN_FALLOW), SOIL_FALLOW, 4);
           c.share[idx(x, z)] = FALLOW_SHOWS;

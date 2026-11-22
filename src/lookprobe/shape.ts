@@ -3,6 +3,7 @@
 import type { Batch } from './batch';
 import type { Figures } from '../figures/stage';
 import type { Faces, Field, Free } from './faces';
+import type { SeasonMap } from '../worldprobe/season_codes';
 
 /**
  * A mesh as flat lists: three numbers per corner for position, direction and colour. A `Batch` is one. Or, where
@@ -41,5 +42,7 @@ export interface StageScene<S extends Shape = Batch> {
   carried?: S;
   /** the people standing and walking on it (figures/crowd.ts) */
   figures?: Figures;
+  /** what its field columns carry by the season, by which the stage shows them on the world's day (worldprobe/season_codes.ts) */
+  season?: SeasonMap;
   counts: Record<string, number>;
 }

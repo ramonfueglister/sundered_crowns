@@ -17,7 +17,7 @@ import { ALL_CULTURES } from '../src/sim/content/peoples';
 import type { WorldCore } from './world';
 
 /** An answer: its status, the headers it adds to the JSON headers, and its body. */
-export interface Answer {
+interface Answer {
   status: number;
   headers?: Record<string, string>;
   body: string | Buffer;

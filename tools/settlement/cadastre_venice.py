@@ -10,7 +10,11 @@
 # keeps (PARIS) and laid as in Paris (cadastre_skeleton.py): in radii of the town, east-west and north-south.
 # The ground of the town is the register's too: water where it draws none of its land and the water is wider than the
 # longest bridge spans (the narrower canals were bridged wherever a street met them); per cell of CELL radii its share
-# of water.
+# of water. Round it the lagoon (`around`, in coarser cells): water but for the islands and the shores of OpenStreetMap
+# (data/cadastre/venice_lagoon/, ODbL), less the land made after the register. Both are laid at the size of the
+# world's Venice; where a cell lies nearer another town of the world than Venice it is open, and that town's ground
+# holds there (the towns stand where the world's scale sets them: Chioggia, Treviso and Padua are nearer Venice than
+# the real lagoon is wide).
 # Writes Venice into src/sim/content/town_plans_1291.json and its measure into data/cadastre/venice_1808.json.
 #   pip install scikit-image scipy sknw pillow shapely networkx
 #   python3 tools/settlement/cadastre_venice.py   (about 15 minutes, most of it the thinning)
@@ -30,6 +34,7 @@ import numpy as np
 import sknw
 from PIL import Image, ImageDraw
 from scipy import ndimage
+from shapely import contains_xy
 from shapely.geometry import LineString, Polygon, shape
 from shapely.ops import transform, unary_union
 from skimage.morphology import skeletonize
@@ -56,6 +61,24 @@ CELL = 0.01  # radii (about 11 m): a cell of the ground; a block of the world (2
 SUB = 8  # sub-cells a side of a cell, over which its share of water is counted
 # metres: the Rialto bridge, the longest span over a canal (BRIDGE_SPAN in src/sim/settlement/plan_ground.ts)
 SPAN = 28.8
+LOTS = Path('public/data/lots_1291.json')  # the world's towns: their centres (`at`, blocks of 2 m) and Venice's size
+LAGOON = Path('data/cadastre/venice_lagoon')
+# real metres east, west, north and south of the centre the lagoon round the register is drawn. PLACEHOLDER
+AROUND = 6000
+AROUND_CELL = 0.03  # radii (about 34 m): a cell of the lagoon round the register. PLACEHOLDER
+# OWN RULE: the land OpenStreetMap draws that was made after the register of 1808, left out: the "sacche" (land made
+# of dredged mud and refuse, e.g. Sacca Sessola, Sacca Fisola, Sacca San Biagio: en.wikipedia, their articles) and the
+# made land of the port and the fort (Tronchetto, 1957–61: en.wikipedia "Tronchetto"; the Stazione Marittima, the
+# Isola Nuova delle Tresse, the Isola dei Petroli, Forte Marghera); the islands without a name (shoals, made ground);
+# and Venezia itself, which the register draws
+MADE = (
+    'Tronchetto',
+    'Stazione Marittima',
+    'Isola Nuova delle Tresse',
+    'Isola dei Petroli',
+    'Forte Marghera',
+    'Venezia',
+)
 
 
 def xy(x, y, z=None):
@@ -101,11 +124,11 @@ def picture(tmp):
 
 
 def ground(radius):
-    """The register's ground round the centre in cells of CELL radii, rows from north to south, west to east: the share
-    of each cell that is water, in sixteenths of its 8 x 8 sub-cells (0 to 15, 16 counted as 15), packed two cells to a
-    byte, the lower half first. Water is what the register does not draw as land: the lagoon and the canals. A canal
+    """The register's ground round the centre in cells of CELL radii (raster), and the lagoon round it in cells of
+    AROUND_CELL radii out to AROUND metres. Water is what the register does not draw as land: the lagoon and the canals. A canal
     no wider than the longest bridge spans was crossed by a bridge wherever a street met it, and is land here; the
-    world's Venice keeps the wider water only (the Grand Canal, the Giudecca, the basins)."""
+    world's Venice keeps the wider water only (the Grand Canal, the Giudecca, the basins). Beyond what the register
+    draws, the islands and shores of the lagoon (lagoonLand) are land."""
     feats = json.loads(gzip.decompress(SRC.read_bytes()))['features']
     drawn = [(f['properties']['geometry_type'], transform(xy, shape(f['geometry']).buffer(0))) for f in feats]
     # the canals the register leaves open between the blocks are holes of what it draws: filled, as the canals it
@@ -117,8 +140,67 @@ def ground(radius):
     # the water wider than the span stays (an opening by a disk as wide as the span)
     wide = water.buffer(-SPAN / 2).buffer(SPAN / 2).intersection(water)
     land = filled.difference(wide)
-    x0, y0, x1, y1 = covered.bounds
-    cell = CELL * radius
+    lagoon = lagoonLand().difference(filled)
+    # the town the register draws is Venice's own, also where it reaches past the middle to a neighbour (its west end
+    # lies farther from San Marco than half the way to Treviso at the world's distances): only beyond it the
+    # neighbour's ground holds
+    shut = nearer(radius)
+
+    def near(x, y):
+        return shut(x, y) & ~contains_xy(filled, x, y)
+
+    plan = raster(land.union(lagoon), covered.bounds, CELL, radius, near)
+    span = (-AROUND, -AROUND, AROUND, AROUND)
+    return plan, raster(land.union(lagoon), span, AROUND_CELL, radius, near)
+
+
+def nearer(radius):
+    """Whether a point (real metres east and south of San Marco) lies nearer another town of the world than Venice, with
+    the plan laid at the world's size of Venice (its register's `ground.radius`, lots_<year>.json) and the towns at their
+    centres there (`at`, blocks of 2 m)."""
+    towns = json.loads(LOTS.read_text())['towns']
+    venice = next(t for t in towns if t['site'] == VENICE)
+    if 'ground' not in venice or 'at' not in venice:
+        raise SystemExit('lots_1291.json holds no ground or centre of Venice: write it first (tools/sim/write_lots.ts)')
+    k = venice['ground']['radius'] / radius / 2  # blocks of the world per real metre of the plan
+    vx, vz = venice['at']
+    others = np.array([(t['at'][0] - vx, t['at'][1] - vz) for t in towns if 'at' in t and t['site'] != VENICE], float)
+
+    def test(x, y):
+        bx, bz = x * k, y * k
+        own = bx * bx + bz * bz
+        theirs = ((others[:, 0, None] - bx) ** 2 + (others[:, 1, None] - bz) ** 2).min(axis=0)
+        return theirs < own
+
+    return test
+
+
+def lagoonLand():
+    """The land of the lagoon round the register, in metres: the islands and the shores of OpenStreetMap that were
+    there in 1808 (MADE)."""
+    islands = json.loads((LAGOON / 'islands.geojson').read_text())['features']
+    shores = json.loads((LAGOON / 'shore_land.geojson').read_text())['features']
+
+    def made(name):
+        return not name or name in MADE or name.startswith('Sacca')
+
+    def metres(f):
+        return transform(xy, shape(f['geometry']).buffer(0))
+
+    # (OpenStreetMap's edge of the lagoon takes the made land by the mainland, the Tresse, the Petroli and the fort,
+    # as shore: it is cut off again)
+    cut = unary_union([metres(f) for f in islands if f['properties']['name'] in MADE])
+    old = unary_union([metres(f) for f in islands if not made(f['properties']['name'])])
+    return old.union(unary_union([metres(f) for f in shores]).difference(cut))
+
+
+def raster(land, bounds, unit, radius, near):
+    """`land` within `bounds` (metres) in cells of `unit` radii, rows from north to south, west to east: the share of
+    each cell that is water, in sixteenths of its 8 x 8 sub-cells (0 to 15, 16 counted as 15), packed two cells to a
+    byte, the lower half first; and `open`, a bit a cell (the lowest bit first), 1 where the cell's middle lies nearer
+    another town (`near`)."""
+    x0, y0, x1, y1 = bounds
+    cell = unit * radius
     sub = cell / SUB
     u0, v0 = math.floor(x0 / cell), math.floor(y0 / cell)
     w, h = math.ceil(x1 / cell) - u0, math.ceil(y1 / cell) - v0
@@ -129,6 +211,8 @@ def ground(radius):
         return [((x - u0 * cell) / sub, (y - v0 * cell) / sub) for x, y in cs]
 
     for p in getattr(land, 'geoms', [land]):
+        if p.is_empty:
+            continue
         draw.polygon(px(p.exterior.coords), fill=1)
         for hole in p.interiors:
             draw.polygon(px(hole.coords), fill=0)
@@ -137,14 +221,20 @@ def ground(radius):
     if len(wet) % 2:
         wet = np.append(wet, 0)
     packed = wet[0::2] | (wet[1::2] << 4)
-    print(f'ground: {w} x {h} cells of {cell:.1f} m, water {1 - dry.mean():.3f}', flush=True)
+    xs = (u0 + np.arange(w) + 0.5) * cell
+    ys = (v0 + np.arange(h) + 0.5) * cell
+    gx, gy = np.meshgrid(xs, ys)
+    shut = near(gx.ravel(), gy.ravel())
+    bits = np.packbits(shut, bitorder='little')
+    print(f'ground: {w} x {h} cells of {cell:.1f} m, water {1 - dry.mean():.3f}, open {shut.mean():.3f}', flush=True)
     return {
-        'x0': round(u0 * CELL, 3),
-        'z0': round(v0 * CELL, 3),
-        'cell': CELL,
+        'x0': round(u0 * unit, 3),
+        'z0': round(v0 * unit, 3),
+        'cell': unit,
         'w': w,
         'h': h,
         'water': base64.b64encode(packed.tobytes()).decode(),
+        'open': base64.b64encode(bits.tobytes()).decode(),
     }
 
 
@@ -306,8 +396,8 @@ def main():
         'radius': round(radius),
         'market': [round(mx / radius, 3), round(mz / radius, 3)],
         'streets': [list(q) for q in pieces],
-        'ground': ground(radius),
     }
+    plan['towns'][str(VENICE)]['ground'], plan['towns'][str(VENICE)]['around'] = ground(radius)
     plan['towns'] = dict(sorted(plan['towns'].items(), key=lambda kv: int(kv[0])))
     OUT.write_text(json.dumps(plan, ensure_ascii=False) + '\n')
     print(

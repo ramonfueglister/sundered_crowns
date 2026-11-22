@@ -36,6 +36,13 @@ const BED_METRES = 8,
   BED_LEAST = 0.9;
 /** at the water's edge the bed lies under this much water already (the bank's foot) */
 const BED_FOOT = 0.25;
+/**
+ * a river's or a lake's bed (water above the sea) falls this many blocks to a block from its bank, from a foot this
+ * deep: a river three columns wide is the water's colour in its middle and but a little lighter by its banks, where
+ * the sea's shelving bed made all of it a pale band
+ */
+const BED_INLAND_FALL = 1.2,
+  BED_INLAND_FOOT = 1;
 /** from this many finest blocks out by the depth picture's coast the bed falls on, by this much to a block where the sea is deep */
 const BED_OFFING = 12,
   BED_OFFING_FALL = 0.2;
@@ -43,19 +50,27 @@ const BED_OFFING = 12,
 const TURN = (2 * Math.PI) / 1024;
 
 /**
- * How much of the bed's red, green and blue shows through the water at a place `out` finest blocks from the water's
- * edge: `p` where it lies in finest blocks, `share` the depth picture's share there (smoothed), `steep` 1 for water
- * that has no bed in the picture (a river, a lake: their beds fall steeply).
+ * The bed's banks and hollows at a place `p` in finest blocks: -1 … 1, in patches some 15 to 20 blocks across (two
+ * wound waves 40 and 32 blocks long, which fit the view's period whole).
  */
-export function bedThrough(out: Float, offing: Float, p: Vec2, share: Float, steep: Float): Vec3 {
-  const banks = sin(dot(p, vec2(23, 11).mul(TURN)).add(sin(dot(p, vec2(-9, 17).mul(TURN))).mul(1.3)))
+export function bedRelief(p: Vec2): Float {
+  return sin(dot(p, vec2(23, 11).mul(TURN)).add(sin(dot(p, vec2(-9, 17).mul(TURN))).mul(1.3)))
     .add(sin(dot(p, vec2(13, -29).mul(TURN)).add(sin(dot(p, vec2(31, 7).mul(TURN))).mul(1.7))))
     .mul(0.5);
+}
+
+/**
+ * How much of the bed's red, green and blue shows through the water at a place `out` finest blocks from the water's
+ * edge: `p` where it lies in finest blocks, `share` the depth picture's share there (smoothed), `steep` 1 for water
+ * that has no bed in the picture (its bed falls steeply), `inland` 1 for water above the sea (a river, a lake).
+ */
+export function bedThrough(out: Float, offing: Float, p: Vec2, share: Float, steep: Float, inland: Float): Vec3 {
+  const banks = bedRelief(p);
   const fall = mix(
     mix(float(BED_FALL[0]), float(BED_FALL[1]), smoothstep(BED_DEEP[0], BED_DEEP[1], share)).mul(
       exp2(banks.mul(BED_UNEVEN)),
     ),
-    float(BED_FALL[1]),
+    mix(float(BED_FALL[1]), float(BED_INLAND_FALL), inland),
     steep,
   );
   // (the bed falls no deeper than the sea is there, and lies under BED_LEAST blocks of water at the least)
@@ -70,7 +85,7 @@ export function bedThrough(out: Float, offing: Float, p: Vec2, share: Float, ste
       .mul(fall)
       .min(mix(most, float(1e3), steep))
       .add(beyond)
-      .add(BED_FOOT)
+      .add(mix(float(BED_FOOT), float(BED_INLAND_FOOT), inland))
       .div(-BED_HALF),
   );
   return vec3(pow(left, BED_RED), pow(left, BED_GREEN), left);

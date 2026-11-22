@@ -42,7 +42,7 @@ export function loadParcels(base: string, year: number): Promise<(Map<number, Pl
 
 /** A furlong of the register as the world graphic shows it: what it carries this year, how many rows of blocks deep it
  *  is from its north edge (a shortened furlong is shorter at the south), and in how many strips it is shared. */
-export interface FieldShown { crop: Crop; rows: number; strips: number; /** the town the furlong belongs to (gazetteer index) */ site: number }
+export interface FieldShown { crop: Crop; rows: number; strips: number; /** the town the furlong belongs to (gazetteer index) */ site: number; /** in how many courses its town tills its fields */ courses: number }
 /** the key of a field lot of the world graphic's grid */
 export const lotKey = (lx: number, lz: number) => (lx + 32768) * 65536 + lz + 32768;
 
@@ -67,7 +67,7 @@ export function fieldsByLot(parcels: TownParcels, year: number, centre: (site: n
       const x0 = c[0] + Math.round((f.x[k] - w / 2) / 2), z0 = c[1] + Math.round((f.z[k] - f.d[k] / 2) / 2), lot = lotAt(x0, z0);
       if (!lot) continue;
       const strips = f.farm[k] < 0 ? Math.max(1, t.hamlets?.[f.hamlet[k]]?.x.length ?? 1) : 1;
-      out.set(lotKey(...lot), { crop: cropOf(f.zelge[k], t.courses ?? 3, year), rows: Math.max(1, Math.min(GEWANN.d, Math.round(f.d[k] / 2))), strips, site });
+      out.set(lotKey(...lot), { crop: cropOf(f.zelge[k], t.courses ?? 3, year), rows: Math.max(1, Math.min(GEWANN.d, Math.round(f.d[k] / 2))), strips, site, courses: t.courses ?? 3 });
       if (!out.towns.has(site)) out.towns.set(site, []);
       out.towns.get(site)!.push(...lot);
     }

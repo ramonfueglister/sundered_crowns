@@ -18,8 +18,9 @@ import sys
 
 import numpy as np
 import tiles as tiles_file
-from build_region import ACROSS, PARTS, ROOT, SEA, TILE, tile_start
+from build_region import PARTS, ROOT, SEA
 from scipy import ndimage
+from world_grid import ACROSS, TILE, tile_start
 
 # the step is spread over this many cells to either side of the line
 REACH = 96

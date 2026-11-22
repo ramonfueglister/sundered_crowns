@@ -120,6 +120,8 @@ export interface GroundTraits {
   readonly crops?: ArrayLike<number>;
   /** where the figures are drawn from afar, what the finest step has on the four blocks of a column (worldprobe/crowd.ts, a byte to a column, N × N columns): kept with the ground, not drawn by it */
   readonly quarters?: ArrayLike<number>;
+  /** what each field column carries by the season (worldprobe/season_codes.ts `sow`, two bytes to a column, N × N columns): kept with the ground for the stage, not drawn by it */
+  readonly season?: Uint8Array;
 }
 export const idx = (x: number, z: number) => z * N + x;
 export const inGrid = (x: number, z: number) => x >= 0 && z >= 0 && x < N && z < N;

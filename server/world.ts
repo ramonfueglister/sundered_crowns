@@ -22,7 +22,9 @@ import { applyEntry, type LogEntry, replayLines } from './log';
 import { type Conn, Session, type UserAuth } from './session';
 import { NullStore, type WorldStore } from './store';
 import { BorderHistory } from './history';
-import { type ArchivedPersons, indexIn, takeArchived, yearsWith } from '../src/sim/people/archive';
+import { type ArchivedPersons, takeArchived } from '../src/sim/people/archive';
+import { OrderLimit } from './order_limit';
+import { DeadYears } from './dead_years';
 import { type Divergence, divergence } from '../src/sim/divergence';
 import type { SetupState } from '../src/sim/setup';
 
@@ -56,25 +58,6 @@ interface Queued {
   id: number;
 }
 
-class Bucket {
-  t: number;
-  last = Date.now();
-  constructor(
-    private cap: number,
-    private perSec: number,
-  ) {
-    this.t = cap;
-  }
-  take(): boolean {
-    const now = Date.now();
-    this.t = Math.min(this.cap, this.t + ((now - this.last) / 1000) * this.perSec);
-    this.last = now;
-    if (this.t < 1) return false;
-    this.t -= 1;
-    return true;
-  }
-}
-
 export class WorldCore {
   readonly cfg: WorldConfig;
   readonly store: WorldStore;
@@ -88,14 +71,18 @@ export class WorldCore {
   private files!: WorldFiles;
   private queue: Queued[] = [];
   private sessions = new Set<Session>();
-  private buckets = new Map<string, Bucket>();
+  /** how many commands each ruler may give */
+  private readonly orders: OrderLimit;
   private timer: ReturnType<typeof setTimeout> | null = null;
   private running = false;
   private prevOwner!: Int16Array;
   /** the copy of the world in the store */
   private readonly backup: StoreBackup;
-  /** the years of the archive of the dead read from the disk lately (a browser that opens the ancestors asks often) */
-  private deadYears = new Map<number, ArchivedPersons>();
+  /** the years of the archive of the dead read from the disk lately */
+  private readonly deadYears = new DeadYears(
+    (day) => this.files.readArchived(day),
+    (m) => this.log(m),
+  );
   /** real time of the last snapshot (FAST_SNAPSHOT_MS) */
   private lastSnapshotAt = Date.now();
   private log: (m: string) => void;
@@ -113,6 +100,7 @@ export class WorldCore {
   constructor(cfg: WorldConfig, store: WorldStore = new NullStore()) {
     this.cfg = cfg;
     this.store = store;
+    this.orders = new OrderLimit(cfg.cmdsPerDay, cfg.secondsPerDay);
     this.log = cfg.log ?? ((m) => console.log(`[world ${cfg.id}] ${m}`));
     this.backup = new StoreBackup({
       id: cfg.id,
@@ -185,19 +173,12 @@ export class WorldCore {
   /** Puts the years that went to the archive of the dead on this day (or in a replay) on the disk, before anything
    *  else is written: a snapshot after the first of January no longer holds them. */
   private keepArchived() {
-    let any = false;
-    for (const a of takeArchived(this.s)) {
-      this.files.putArchived(a);
-      this.deadYears.set(a.day, a);
-      any = true;
-    }
-    if (any) {
-      this.trimDeadYears();
+    const years = takeArchived(this.s);
+    for (const a of years) this.files.putArchived(a);
+    if (years.length) {
+      this.deadYears.add(years);
       this.backup.sendArchive();
     }
-  }
-  private trimDeadYears() {
-    while (this.deadYears.size > 8) this.deadYears.delete(this.deadYears.keys().next().value!);
   }
   /** How far the world has gone from history on its day (src/sim/divergence.ts). */
   divergence(): Divergence {
@@ -207,23 +188,7 @@ export class WorldCore {
   /** A dead person of the archive (GET /person/<uid>): the year that holds the person, and the place there; null where
    *  the archive has no such person. */
   archived(uid: number): { year: ArchivedPersons; k: number } | null {
-    for (const y of yearsWith(this.s, uid)) {
-      let a = this.deadYears.get(y.day) ?? null;
-      if (!a) {
-        try {
-          a = this.files.readArchived(y.day);
-        } catch (e) {
-          this.log(`the year of the archive of day ${y.day} cannot be read: ${(e as Error).message}`);
-        }
-      }
-      if (!a) continue;
-      this.deadYears.delete(y.day);
-      this.deadYears.set(y.day, a);
-      this.trimDeadYears();
-      const k = indexIn(a, uid);
-      if (k >= 0) return { year: a, k };
-    }
-    return null;
+    return this.deadYears.find(this.s, uid);
   }
   private saveMeta() {
     writeFileDurable(join(this.root, 'meta.json'), JSON.stringify(this.meta));
@@ -445,12 +410,8 @@ export class WorldCore {
         const seat = this.meta.seats[ss.user.uid];
         const id = Number(m.id) || 0;
         if (!seat || ss.user.observer) return ss.send({ type: 'result', id, ok: false, err: 'you rule no realm' });
-        let b = this.buckets.get(ss.user.uid);
-        if (!b) {
-          b = new Bucket(this.cfg.cmdsPerDay, this.cfg.cmdsPerDay / Math.max(0.05, this.cfg.secondsPerDay));
-          this.buckets.set(ss.user.uid, b);
-        }
-        if (!b.take()) return ss.send({ type: 'result', id, ok: false, err: 'too many orders, wait a moment' });
+        if (!this.orders.take(ss.user.uid))
+          return ss.send({ type: 'result', id, ok: false, err: 'too many orders, wait a moment' });
         const cmd = { ...(m.cmd ?? {}), realm: seat.realm } as Command;
         this.queue.push({ e: { k: 'cmd', uid: ss.user.uid, cmd }, session: ss, id });
         return;

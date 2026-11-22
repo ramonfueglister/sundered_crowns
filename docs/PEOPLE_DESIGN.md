@@ -1243,7 +1243,8 @@ The farming year (`src/sim/people/farm_year.ts`), on the days of the Julian cale
 | 5 September | ploughing and sowing the winter corn | the seed changed at Michaelmas (Walter of Henley); the winter corn in the autumn (research of feature 7) |
 
 Which farming year a place follows goes by its land, not by the faith of its people (step D of 21 November, after
-the proposal «Vorschlag: Bauernjahr für Süden und Islam», https://claude.ai/artifact/T8KjRYpoP6BCsN8wtTCGC6): the
+the proposal «Vorschlag: Bauernjahr für Süden und Islam», https://claude.ai/artifact/T8KjRYpoP6BCsN8wtTCGC6, in the
+variant Ramon chose, «Mittelmeer und Irak», merged and deployed on his word «mergen deployen»): the
 Muslim almanacs, too, set the field work by the months of the sun (the calendar of Córdoba by the months January to
 December, Ibn Mammātī by the Coptic months; filaha.org), and the lunar year of the hijra goes round all seasons in
 some 33 years. The farming year of each land place is worked out from the region of its province (data/geo.json) and
@@ -1276,6 +1277,32 @@ to March), from 1 April the harvest ("The harvest begins in April"), from 1 June
 handbook says only "after drying", here the two months after the harvest), from 1 August the harvest of the summer
 crops (rice, millet, sesame, cotton; August to October, before the sowing from September). Threshing on the floor is
 field work: the figure stays at the furlong (`src/figures/schedule.ts`), the card says «auf der Tenne».
+
+### The fields by the season
+
+The fields of the world graphic show the world's day: the corn ploughed, sown, young and green, grown tall, turning
+gold, reaped, the stubble, and the vines bare, in leaf and turned, on every step of the zoom; and they go round their
+rotation year by year (Ramon, 21 November 2026, «Felder nach Jahreszeit», in the variant «Voll, mit Fruchtfolge»).
+What a field shows on a day is a pure function of its farming year, its course in the year the pieces are built for,
+its courses, its own number and the day (`src/worldprobe/field_season.ts`):
+
+- Each field is ploughed and sown on a day of the sowing weeks of its farming year, and reaped on a day of the harvest
+  weeks (the weeks above), spread over them by the field's own number.
+- Between sowing and reaping the corn goes by the phases of wheat in the benchmark season of the AHDB Wheat growth
+  guide, counted back from the day it is harvest ripe: first node 120 days before, flowering 59, the canopy
+  senescing 50, all green lost 11. The harvest of the north begins about 7 August of the Julian calendar (Pribyl,
+  Cornes & Pfister 2012, Table 2).
+- Of three courses the winter corn comes on last year's fallow, the spring corn on last year's winter corn, the
+  fallow follows the spring corn; of two, corn and fallow take turns (Slicher van Bath 1963).
+- OWN RULES, where the sources give no number: the corn comes up two weeks after it is sown and stands at a sixth of
+  its height until it shoots; a ploughed fallow shows its earth for four weeks; the vines' leaves come out over a
+  month and turn and fall over the month after the vintage; the colours of bare wood and turned leaves are by eye.
+
+The pieces are built in the high summer of the year they are built for, as before, and carry a season map: the code
+and own number of each field column (`src/worldprobe/season_codes.ts`). The stage reads the world's day and turns
+the fields' colours and heights from there (`src/lookprobe/stage/season_look.ts`, `seasons.ts`). The farming year of a
+field is that of its nearest place's region and its own land, as for the places above. The pieces' key changed with
+it: the world is downloaded once more, and the tables of steps 1 to 7 were built again.
 
 ### Measured (`npm run dayplan:check -- 3`, world of 1291, seed 1291, all systems)
 
