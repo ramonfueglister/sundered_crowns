@@ -46,13 +46,55 @@ const farGround = (g: Ground, c: ReturnType<typeof coverLand>): CrowdGround => (
 const lists = (f: Figures | undefined) => (f ? [f.a, f.b, f.c, f.d, f.e].map((l) => [...l]) : []);
 
 /**
+ * What the finest step has on the quarters of each far column, as far.ts lays it down (crowd.ts): street where nothing
+ * stands on the paving of a town, a house's where a building stands off it or a wall runs, ground of its own where a
+ * building stands on the paving or round the houses of a hamlet (settle.ts `used` 3). The crop of a field is its lot's.
+ */
+function quartersOf(s: SettledGround): Uint8Array {
+  const quarters = new Uint8Array(N * N);
+  for (let z = 0; z < N / 2; z++)
+    for (let x = 0; x < N / 2; x++)
+      for (let q = 0; q < 4; q++) {
+        const j = idx(2 * x + (q & 1), 2 * z + (q >> 1)),
+          street = s.town[j] === 1 && s.used[j] === 2,
+          house = s.used[j] === 1 && !s.town[j] && !s.field[j],
+          own = (s.used[j] === 1 && s.town[j] === 1) || s.used[j] === 3;
+        quarters[idx(x, z)] |= (street ? 1 : house ? 16 : own ? 17 : 0) << q;
+      }
+  return quarters;
+}
+/** the far ground over a finest one, a column to two blocks each way, and what the finest step has on its quarters */
+function farOf(g: Ground, s: SettledGround): CrowdGround {
+  const h = new Float64Array(N * N),
+    mat = new Uint8Array(N * N),
+    wet = new Uint8Array(N * N),
+    town = new Uint8Array(N * N);
+  for (let z = 0; z < N / 2; z++)
+    for (let x = 0; x < N / 2; x++) {
+      const i = idx(x, z),
+        f = idx(2 * x, 2 * z);
+      h[i] = g.h[f] * up;
+      mat[i] = g.mat[f];
+      wet[i] = g.wet[f];
+      town[i] = s.town[f];
+    }
+  return { h, mat, wet, town, has: new Uint8Array(N * N), quarters: quartersOf(s) };
+}
+/** an empty finest ground of what settle() leaves on it */
+const unsettled = (): SettledGround => ({
+  used: new Uint8Array(N * N),
+  town: new Uint8Array(N * N),
+  field: new Uint8Array(N * N),
+});
+
+/**
  * The finest ground of a town of streets between buildings from block 40 to 100 each way, houses beyond it, a river
  * two blocks wide and the land a step higher every sixteen blocks, all of it on whole columns of the far step; and the
- * far ground over it, a column to two blocks each way, with what the finest step has on its quarters.
+ * far ground over it.
  */
 function streetsAndHouses(): { g: Ground; s: SettledGround; far: CrowdGround } {
   const g = meadow(),
-    s: SettledGround = { used: new Uint8Array(N * N), town: new Uint8Array(N * N), field: new Uint8Array(N * N) };
+    s = unsettled();
   for (let z = 0; z < N; z++)
     for (let x = 0; x < N; x++) {
       const i = idx(x, z);
@@ -66,27 +108,7 @@ function streetsAndHouses(): { g: Ground; s: SettledGround; far: CrowdGround } {
         g.mat[i] = Mat.Paved;
       } else if (x % 30 < 4 && z % 26 < 4) s.used[i] = 1;
     }
-  // the far ground over it, a column to two blocks each way, and what the finest step has on its quarters
-  const h = new Float64Array(N * N),
-    mat = new Uint8Array(N * N),
-    wet = new Uint8Array(N * N),
-    town = new Uint8Array(N * N),
-    quarters = new Uint8Array(N * N);
-  for (let z = 0; z < N / 2; z++)
-    for (let x = 0; x < N / 2; x++) {
-      const i = idx(x, z),
-        f = idx(2 * x, 2 * z);
-      h[i] = g.h[f] * up;
-      mat[i] = g.mat[f];
-      wet[i] = g.wet[f];
-      town[i] = s.town[f];
-      for (let q = 0; q < 4; q++) {
-        const j = idx(2 * x + (q & 1), 2 * z + (q >> 1));
-        if (s.town[j] === 1 && s.used[j] === 2) quarters[i] |= 1 << q;
-        if (s.used[j] === 1) quarters[i] |= 16 << q;
-      }
-    }
-  return { g, s, far: { h, mat, wet, town, has: new Uint8Array(N * N), quarters } };
+  return { g, s, far: farOf(g, s) };
 }
 /** the far piece's columns 20 … 50 each way are the finest blocks 40 … 100 */
 const PART = { x0: 20, z0: 20, x1: 50, z1: 50 };
@@ -159,6 +181,81 @@ describe('the people of the first far step', () => {
     expectSame(farCrowd({ ...far, towns }, 0, 0, PART), fine);
   });
 
+  it('stand about the houses where the finest step does, not on the ground of a hamlet nor about a town building', () => {
+    // houses four blocks a side every twenty blocks, those west of block 68 a hamlet's with its ground one block round
+    // them, the paving of a town with its buildings north-east of block 80, 60, and a wall north to south at block 70
+    const g = meadow(),
+      s = unsettled();
+    for (let z = 0; z < N; z++)
+      for (let x = 0; x < N; x++) {
+        const i = idx(x, z),
+          house = x % 20 < 4 && z % 20 < 4;
+        if (x >= 80 && z < 60) {
+          s.town[i] = 1;
+          s.used[i] = house ? 1 : 2;
+          g.mat[i] = Mat.Paved;
+        } else if (house || x === 70) s.used[i] = 1;
+      }
+    const round = (x: number, z: number) =>
+      [-1, 0, 1].some((dz) => [-1, 0, 1].some((dx) => s.used[idx(x + dx, z + dz)] === 1));
+    for (let z = 1; z < N - 1; z++)
+      for (let x = 1; x < 68; x++) if (!s.used[idx(x, z)] && round(x, z)) s.used[idx(x, z)] = 3;
+    const fine = crowd(g, s, ownFine),
+      at = (k: number) => idx(Math.floor(fine.a[k * 4]), Math.floor(fine.a[k * 4 + 2])),
+      about = Array.from({ length: fine.count }, (_, k) => at(k)).filter((i) => !s.town[i]);
+    expect(about.length).toBeGreaterThan(20);
+    expect(about.every((i) => s.used[i] === 0)).toBe(true);
+    expectSame(farCrowd(farOf(g, s), 0, 0, PART), fine);
+  });
+
+  it('know from the plan where the finest step has a house and where ground of its own', () => {
+    // a farmhouse at 140, 120 of the finest step and a hamlet's house at 180, 120; a walled town at 300, 200 with a
+    // house in its square and the wall of its land register 100 m (50 blocks) round its middle
+    const R = 100;
+    usePlan({
+      pieceBlocks: 200,
+      houseKinds: ['town', 'village', 'hamlet', 'farm'],
+      greatKinds: [],
+      pieces: {
+        '0,0': { houses: [140, 120, 6, 4, 1, 40, 0xc8b496, 0xa0522d, 3, 180, 120, 6, 4, 1, 40, 0xc8b496, 0xa0522d, 2] },
+        '1,1': {
+          houses: [296, 196, 6, 8, 2, 60, 0xc8b496, 0xa0522d, 0],
+          towns: [{ site: london.site, cx: 300, cz: 200, half: 40, wall: [] }],
+        },
+      },
+    });
+    const walls = [
+      [-R, -R, R, -R, 0],
+      [R, -R, R, R, 0],
+      [R, R, -R, R, 0],
+      [-R, R, -R, -R, 0],
+    ];
+    const site: Site = {
+      id: london.site,
+      at: [150.5, 100.5],
+      size: 3,
+      pop: 2000,
+      region: 'italy',
+      style: styleOf('italy'),
+      lots: { w: 6, d: 10, x: [], z: [], front: [], walls },
+    };
+    const c = coverLand(meadow(), CROWD_AT, new Batch(), [site], {
+        ploughed: () => 0,
+        vines: () => 0,
+        farm: () => styleOf('').house,
+        own: () => true,
+        woods: () => null,
+      }),
+      on = (fx: number, fz: number) => (c.quarters![idx(fx >> 1, fz >> 1)] >> ((fx & 1) + 2 * (fz & 1))) & 17;
+    // the farmhouse is a house, the town's house on its paving is not; the ground round the hamlet's house is its own
+    expect([on(140, 120), on(145, 123), on(296, 196), on(301, 203)]).toEqual([16, 16, 17, 17]);
+    expect([on(179, 119), on(186, 124), on(183, 119), on(179, 122)]).toEqual([17, 17, 17, 17]);
+    expect([on(178, 118), on(139, 119), on(146, 124), on(187, 121)]).toEqual([0, 0, 0, 0]);
+    // the wall a house's where it runs over open ground, as the finest step has it
+    expect([on(300, 250), on(250, 200), on(350, 170), on(320, 150)]).toEqual([16, 16, 16, 16]);
+    expect([on(300, 248), on(252, 200)]).toEqual([0, 0]);
+  });
+
   it('stand farmers on the balks of the fields laid down, facing their crop', () => {
     // wheat laid on every column of 40 × 40: each block of them is field or balk as its lot makes it (crops.ts)
     const crops = new Uint8Array(N * N);
@@ -195,7 +292,7 @@ describe('the people of the first far step', () => {
     for (let lz = 3; lz <= 10; lz++) for (let lx = 3; lx <= 7; lx++) lots.push(lx, lz);
     const furlongs = new Map([[cologne.site, lots]]),
       g = meadow(),
-      s: SettledGround = { used: new Uint8Array(N * N), town: new Uint8Array(N * N), field: new Uint8Array(N * N) };
+      s = unsettled();
     for (let z = 0; z < N; z++)
       for (let x = 0; x < N; x++) {
         const crop = cropAt(crops, x >> 1, z >> 1, x & 1, x, z);
