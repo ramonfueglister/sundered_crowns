@@ -17,9 +17,7 @@ game map). Run once on the files as committed before the merge: python3 tools/ge
 """
 
 import gzip
-import heapq
 import json
-import math
 import os
 import sys
 from pathlib import Path
@@ -28,8 +26,10 @@ import numpy as np
 from scipy.spatial import cKDTree
 
 sys.path.insert(0, os.path.dirname(__file__))
+from beyond_holders import spread_holders, xyz
+from beyond_terrain import terrain_of
+from beyond_yield import add_yield
 from build_beyond import frame, load_step
-from build_land import yield_curve
 from climate import climate
 from common import CACHE, ROOT
 from common import H as MAP_H
@@ -166,10 +166,6 @@ def main():
     )
     an = hist['demography']
 
-    def xyz(lo, la):
-        lo, la = np.radians(lo), np.radians(la)
-        return np.stack([np.cos(la) * np.cos(lo), np.cos(la) * np.sin(lo), np.sin(la)], -1)
-
     tree = cKDTree(xyz(np.array([a['lon'] for a in an]), np.array([a['lat'] for a in an])))
     nl = slice(1, L2 + 1)
     dd, jj = tree.query(xyz(lon[nl], lat[nl]), k=3)
@@ -184,33 +180,7 @@ def main():
     coastal = np.zeros(L2, bool)
     for i in range(L2):
         coastal[i] = any(v > Lt for v in adj[L + 1 + i])
-    terrain, forest = [], np.zeros(L2)
-    for i in range(L2):
-        T, A, e, r, em = temp[i], arid[i], elev[1 + i], rough[1 + i], emax[1 + i]
-        if (lat[1 + i] > 60 and e > 500) or (A > 0.95 and dens[i] < 0.1) or e > 4200:
-            t = 'wasteland'
-        elif em > 2300 or (e > 1200 and r > 220) or r > 420:
-            t = 'mountains'
-        elif A > 0.85:
-            t = 'desert'
-        elif T > 23 and A < 0.35 and abs(lat[1 + i]) < 15:
-            t = 'jungle'
-        elif T < -1.5:
-            t = 'tundra'
-        elif e > 450 or r > 130:
-            t = 'hills'
-        elif A > 0.55:
-            t = 'steppe'
-            forest[i] = float(np.clip((0.68 - A) * 2.2 - dens[i] / 60, 0, 0.3))
-        else:
-            fc = float(np.clip((1 - A) * 1.15 - dens[i] / 32.0, 0, 1))
-            if lat[1 + i] > 58:
-                fc = min(1, fc + 0.25)
-            forest[i] = fc
-            t = 'forest' if fc > 0.55 else ('farmland' if dens[i] > 14 else 'plains')
-        if t in ('hills', 'mountains'):
-            forest[i] = float(np.clip((1 - A) * 0.9 - dens[i] / 50, 0, 1))
-        terrain.append(t)
+    terrain, forest = terrain_of(temp, arid, lat, elev, rough, emax, dens, L2)
     resource = assign_resources(L2, lon[nl], lat[nl], terrain, coastal, T=temp, A=arid, dens=dens, forest=forest)
     tmul = {
         'wasteland': 0.02,
@@ -269,129 +239,7 @@ def main():
 
     # --- holders in 1356 -------------------------------------------------------------------------------------------------
     setup = read('setup_1356.json')
-    states = setup['states']
-    ids_of = {s['id']: k for k, s in enumerate(states)}
-    for s in hist['states']:
-        if s['id'] in ids_of:
-            raise SystemExit(f'realm {s["id"]} exists already')
-        o = dict(s)
-        o['capital_loc'] = 0
-        o.pop('reach_km', None)
-        ids_of[s['id']] = len(states)
-        states.append(o)
-    owner = np.full(Lt + 1, -1, np.int32)
-    owner[1 : L + 1] = [-1 if v is None else v for v in setup['owner']]
-    tree_new = cKDTree(xyz(lon[nl], lat[nl]))
-
-    def place_at(lo, la):
-        d, j = tree_new.query(xyz(np.array([lo]), np.array([la]))[0])
-        return L + 1 + int(j) if d < math.radians(1.5) else 0
-
-    REACH = 380
-    rank_w = {
-        'kingdom': 0.8,
-        'empire': 0.75,
-        'khanate': 0.7,
-        'sultanate': 0.85,
-        'duchy': 1.0,
-        'principality': 1.1,
-        'lordship': 1.5,
-        'chiefdom': 1.2,
-    }
-    best = np.full(Lt + 1, np.inf)
-    pq = []
-
-    def anchor(si, p, wgt):
-        l = place_at(p['lon'], p['lat'])
-        if not l or best[l] == 0:
-            return l
-        best[l] = 0
-        owner[l] = si
-        heapq.heappush(pq, (0.0, l, si, wgt))
-        return l
-
-    for s in hist['states']:
-        # a small realm whose land the sources bound (the chiefdoms of the Philippines) spreads only as far as its reach
-        si = ids_of[s['id']]
-        wgt = rank_w.get(s['rank'], 1.0) * (REACH / s['reach_km'] if s.get('reach_km') else 1.0)
-        cap = anchor(si, s['capital'], wgt)
-        states[si]['capital_loc'] = int(cap) if cap else 0
-        for p in s['holdings'][1:]:
-            anchor(si, p, wgt)
-    for sid, pts in hist['extends'].items():
-        si = ids_of[sid]
-        wgt = rank_w.get(states[si].get('rank'), 1.0)
-        for spec in pts:
-            nm, c = spec.split('@')
-            la, lo = map(float, c.split(','))
-            anchor(si, {'lon': lo, 'lat': la}, wgt)
-
-    def wander(lo, la, k):
-        """a smooth field in 0..1 of a few hundred km, so that the spread's fronts are not circles or straight lines"""
-        a, b = math.radians(lo), math.radians(la)
-        v = (
-            math.sin(7.3 * a + 2.1 * b + k)
-            + math.sin(-3.1 * a + 9.7 * b + 1.7 + 2 * k)
-            + math.sin(11.9 * a - 6.2 * b + 4.4 + 3 * k)
-            + 0.5 * math.sin(23.0 * a + 17.0 * b + k)
-        )
-        return min(1.0, max(0.0, 0.5 + v / 7))
-
-    # realms of the game map that reach beyond it go on across its edge: a new place next to one of their places
-    # starts their spread as well, so that their land does not end on the meridian of the edge
-    for u in range(L + 1, Lt + 1):
-        if best[u] == 0:
-            continue
-        for v in adj[u]:
-            o = owner[v] if 1 <= v <= L else -1
-            if o >= 0 and states[o]['id'] in hist['extends']:
-                # a head start that wanders along the edge, so that the realm's new border does not run parallel to it
-                d0 = 0.45 * REACH * wander(lon[u - L], lat[u - L], 0)
-                if d0 < best[u]:
-                    best[u] = d0
-                    owner[u] = o
-                    heapq.heappush(pq, (d0, u, o, rank_w.get(states[o].get('rank'), 1.0)))
-                break
-    old_owner = owner.copy()
-    new_ids = {s['id'] for s in hist['states']}
-    lon0, lat0 = geo['loc']['lon'], geo['loc']['lat']
-
-    def ll(u):
-        return (lon[u - L], lat[u - L]) if u > L else (lon0[u - 1], lat0[u - 1])
-
-    def km_between(u, v):
-        return float(np.degrees(np.arccos(np.clip((xyz(*ll(u)) * xyz(*ll(v))).sum(), -1, 1)))) * 111.2
-
-    while pq:
-        d, u, si, wgt = heapq.heappop(pq)
-        if d > best[u] or owner[u] != si:
-            continue
-        for v in adj[u]:
-            # the new realms also take land of the game map that no realm holds next to theirs (Sindh beside Delhi),
-            # so that no realm ends on the meridian of the map's edge
-            # (those reaching beyond it too in the steppe south of 55° N, not the forest of Yugra to the north)
-            if not (
-                L < v <= Lt
-                or (
-                    1 <= v <= L
-                    and old_owner[v] < 0
-                    and (states[si]['id'] in new_ids or (states[si]['id'] in hist['extends'] and lat0[v - 1] < 55))
-                )
-            ):
-                continue
-            nd = d + km_between(u, v) * wgt * (0.7 + 0.6 * wander(*ll(v), 1))
-            if nd < best[v] and nd < REACH:
-                best[v] = nd
-                owner[v] = si
-                heapq.heappush(pq, (nd, v, si, wgt))
-    taken = [int(v) for v in range(1, L + 1) if owner[v] != old_owner[v]]
-    print('places of the game map no realm held that the new realms take', len(taken))
-    held = int((owner[L + 1 :] >= 0).sum())
-    print('new places held', held, 'of', L2)
-    for s in hist['states']:
-        si = ids_of[s['id']]
-        if not states[si]['capital_loc']:
-            print('  no capital place for', s['id'])
+    states, owner = spread_holders(geo, setup, hist, adj, lon, lat, L, L2)
     # culture and faith of a realm's own core where the people's points say nothing better
     minority = [None] * L2
 
@@ -456,41 +304,7 @@ def main():
         json.dumps(world, ensure_ascii=False, separators=(',', ':')), encoding='utf-8'
     )
     land = read('land.json')
-    # the Caloric Suitability Index of the whole globe (tools/geo/build_csi_crop.py --world), read over the new places as
-    # tools/geo/build_land.py reads it over the game map: each cell of the step takes the index cell its centre lies in
-    cmeta = json.loads(
-        Path(os.path.join(ROOT, 'tools', 'geo', 'data', 'csi', 'pre1500_max_world.json')).read_text(encoding='utf-8')
-    )
-    if cmeta['raster']['sha256'] != land['source']['sha256']:
-        raise SystemExit('the whole raster is not the one of land.json')
-    cc = cmeta['crop']
-    csi = np.frombuffer(
-        gzip.decompress(Path(os.path.join(ROOT, 'tools', 'geo', 'data', 'csi', cc['file'])).read_bytes()), dtype='<f4'
-    ).reshape(cc['height'], cc['width'])
-    clon = np.mod(lon_of(np.mod((xs + 0.5) / cells, worldW)) + 180.0, 360.0) - 180.0
-    clat = lat_of((ys + 0.5) / cells)
-    ccol = np.clip(np.floor((clon - cc['lon0']) / cc['cell_lon']).astype(np.int64), 0, cc['width'] - 1)
-    crow = np.floor((cc['lat0'] - clat) / cc['cell_lat']).astype(np.int64)
-    inside = (crow >= 0) & (crow < cc['height'])
-    cv = np.full(flat.size, np.nan, np.float32)
-    cv[inside] = csi[crow[inside], ccol[inside]]
-    has = np.isfinite(cv)
-    cv0 = np.where(has, cv, 0.0).astype(np.float64)
-    km2c = kmc**2
-    nland = (flat >= 1) & (flat <= L2)
-    cov = np.bincount(flat, weights=km2c * has, minlength=n)[1 : L2 + 1]
-    tot = np.bincount(flat, weights=km2c * cv0, minlength=n)[1 : L2 + 1]
-    ymean = np.divide(tot, cov, out=np.full(L2, np.nan), where=cov > 0)
-    cell_ix = np.where(inside, crow, 0) * cc['width'] + ccol
-    fert2, steps2 = yield_curve(flat, nland, cell_ix, cc['width'] * cc['height'], cv0, km2c, L2)
-    land['yield'] += [None if np.isnan(m) else round(float(m), 1) for m in ymean]
-    land['curve']['fertile'] += [float(f) for f in fert2]
-    land['curve']['steps'] += steps2
-    land['source']['beyond'] = 'places beyond the game map: the whole raster, {}'.format(cc['file'])
-    print(
-        'yield of the new places: without data %d, median %.0f'
-        % (int(np.isnan(ymean).sum()), float(np.nanmedian(ymean)))
-    )
+    add_yield(land, flat, xs, ys, cells, worldW, lon_of, lat_of, kmc, n, L2)
     Path(os.path.join(DATA, 'land.json')).write_text(
         json.dumps(land, ensure_ascii=False, separators=(',', ':')), encoding='utf-8'
     )
