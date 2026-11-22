@@ -199,7 +199,10 @@ describe('what the fields show on a day', () => {
       },
       soil = (c: RGB) => mix(mix(GRASS_A, GRASS_B, 0.5), c, FIELD_SOIL);
     /** the colour a part of the winter corn turns into, where it is built in `built` (all of it the season's) */
-    const into = (part: number, built: RGB) => numbers(look, winter, part).slice(0, 3).map((n) => n * lum(built));
+    const into = (part: number, built: RGB) =>
+      numbers(look, winter, part)
+        .slice(0, 3)
+        .map((n) => n * lum(built));
     const green = tinted(field(mean(OATS), true, OATS_SIDE), SEEN_SPRING),
       near = into(PART.soil, soil(SOIL_WHEAT)),
       far = into(PART.far, tinted(field(mean(WHEAT), true, WHEAT_SIDE), SEEN_WINTER));
