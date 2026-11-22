@@ -21,7 +21,8 @@ import { createTable, spawn } from '../ecs';
 import { citiesOf } from '../content/cities';
 import { SCALE } from '../scale';
 import { townGround, parcelSize, footprint, FRONT, type Parcel, type ParcelSize } from '../settlement/rule';
-import { layTown, planDraw, streetReach, type Street, type Town, type Tuning } from '../settlement/streets';
+import { layTown, planDraw, streetReach, type Tuning } from '../settlement/streets';
+import type { Street, Town } from '../settlement/town_layout';
 import { GROUND, groundBlocks } from '../settlement/plan_ground';
 import { waysOf } from '../content/town_ways';
 import { planOf } from '../content/town_plans';
@@ -330,7 +331,9 @@ export function foundLots(s: WorldState, ground?: Ground | null, dry?: Ground | 
   const g = widened(ground && ground.year === s.startYear ? ground : null, wide);
   const cities = citiesOf(s.startYear), towns = cities.length ? townFamilies(s) : [];
   const farmersOfPlace = new Map<number, number>();
-  cities.forEach((city, k) => farmersOfPlace.set(city.place, (farmersOfPlace.get(city.place) ?? 0) + towns[k].farmPersons));
+  cities.forEach((city, k) => {
+    farmersOfPlace.set(city.place, (farmersOfPlace.get(city.place) ?? 0) + towns[k].farmPersons);
+  });
   const seats = seatTowns(s.startYear);
   cities.forEach((city, k) => {
     const { families, persons, farmers, farmPersons } = towns[k];
