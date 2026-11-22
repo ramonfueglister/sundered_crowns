@@ -61,16 +61,18 @@ function showOf(pieces: Held[], ahead = true) {
       pictures: 0,
       whole: [] as [THREE.Group, boolean][],
       glide: new Map<THREE.Group, number>(),
+      thin: new Map<THREE.Group, number>(),
       dots: new Map<THREE.Group, [number, number]>(),
     };
   const stage = {
     pictures: () => seen.pictures,
     whole: (g: THREE.Group, on: boolean) => seen.whole.push([g, on]),
     glide: (g: THREE.Group, share: number) => seen.glide.set(g, share),
+    thin: (g: THREE.Group, share: number) => seen.thin.set(g, share),
     dissolve: (g: THREE.Group, from: number, until: number) => seen.dots.set(g, [from, until]),
     probe: { ready: false, counts, backend: 'test' },
   };
-  // (the showing uses only these members of the stage: pictures, whole, glide, dissolve and probe.counts)
+  // (the showing uses only these members of the stage: pictures, whole, glide, thin, dissolve and probe.counts)
   const show = createShow(stage as unknown as Stage, held, ahead, (step) => 2 * step + 1);
   /** a look `ms` after the last, showing `shown` */
   const look = (shown: Held[], ms = 0, o: Partial<Look> = {}) => {
@@ -93,6 +95,24 @@ describe('a piece on the stage', () => {
       SEA_Y * (1 - tall),
       (3 * PIECE - margin) * 2 - 20,
     ]);
+  });
+
+  it('of the first far step lets its figures go as the view nears the next step, those of the finest step stay', () => {
+    const fine = heldOf(0, 0, 0),
+      far = heldOf(1, 0, 0);
+    const { seen, look } = showOf([fine, far]);
+    /** the shares of the two pieces' figures gone in a view `wide` across */
+    const gone = (wide: number) => {
+      look([fine, far], 0, { v: view(200, 200, wide) });
+      return [seen.thin.get(fine.group), seen.thin.get(far.group)];
+    };
+    // over the stretch in which the far steps glide to the next one (glideOf), all gone at the border
+    expect(gone(600)).toEqual([0, 0]);
+    expect(gone(1000)).toEqual([0, glideOf(1000, 1)]);
+    expect(glideOf(1000, 1)).toBeGreaterThan(0.2);
+    expect(glideOf(1000, 1)).toBeLessThan(0.8);
+    expect(gone(1199)[0]).toBe(0);
+    expect(gone(1199)[1]).toBeGreaterThan(0.99);
   });
 
   it('comes into the picture and leaves it at once where it takes no other one’s place', () => {

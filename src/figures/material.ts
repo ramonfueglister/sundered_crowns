@@ -45,6 +45,15 @@ const turnX = (v: V3, a: F): V3 =>
 /** The figures' clock in seconds: the page's own, so that a click can find where a walker is (stage.ts figureAt). */
 export const figureSeconds = () => performance.now() / 1000;
 const time = uniform(0).onFrameUpdate(figureSeconds);
+/**
+ * The share of a mesh's figures that has gone (stage.ts `thinFigures`), each by a number of its own drawn from its
+ * phase, so that they go one by one all over the piece and not row by row as they were placed.
+ */
+const thinned = uniform(0).onObjectUpdate(({ object }) => Number(object?.userData.thinned ?? 0));
+/** spreads the phases (a hundred times a figure's hash, crowd.ts) anew, so that which go is not where they walk */
+const SPREAD = 13.7;
+/** Whether a figure of this phase has gone where `share` of the figures has (the same as the vertex stage below). */
+export const thinnedOut = (phase: number, share: number) => phase >= 0 && (phase * SPREAD) % 1 < share;
 
 /** Where a figure stands at a time, in its piece (the same as the vertex stage below, on the processor). */
 export function figureAt(
@@ -115,8 +124,8 @@ function material(): THREE.MeshLambertNodeMaterial {
       )
       .or(variant.greaterThan(9.5).and(abs(variant.sub(head)).greaterThan(0.1)));
     // a figure with a negative phase is not on the stage: a person's figure where the plan of the day does not have
-    // the person at the hour (schedule.ts), folded into a point as a part not worn
-    const away = A.w.lessThan(0);
+    // the person at the hour (schedule.ts), folded into a point as a part not worn; nor is one that has gone
+    const away = A.w.lessThan(0).or(fract(A.w.mul(SPREAD)).lessThan(thinned));
     // the way: there and back again, at the figure's pace
     const way = B.xyz.sub(A.xyz),
       long = max(length(way.xz), float(0.001));
