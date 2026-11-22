@@ -9546,6 +9546,104 @@ hair: before above, after below), `runde179_dorf.png` and `runde179_hof.png` (al
 after; round 178's sheets are the before), `runde179_blender.png` (Blender, one cut from four sides: round
 178's above, this round's below), `runde179_blender_alle.png` (Blender: the nine cuts).
 
+**Round 180: parted hair lies in locks, in the Blender on Ramon's Mac** (2026-11-22).
+Round 179 named what came next: the parted hair of the women, the girls and the men with hair to the jaw was
+still round 172's, every strand by itself.
+
+What was read. Nothing. Looked at again: five women's heads of the reference (`ck3_14`, cut out to the size
+of ours) beside four of ours. Their parted hair is smooth, a few broad soft locks from the parting to the
+ear. Ours was a field of fine light and dark stripes: each strand had its own tone, its own place in the
+image, its own height and lean. Not measured on the reference, by eye.
+
+What is changed.
+- **Locks in parted hair** (`tools/portrait/pipeline/hair_body.py`, `PARTED`'s `lock`, ten numbers): the
+  strands that begin side by side, along the parting or along the hairline, lie in one arch to their ends
+  (1 mm high in the middle, one border 0.8 mm higher and the other lower, as a bowl cut's since round 178),
+  have one tone and take neighbouring places of the image. 15 locks a side begin along the parting (both of
+  its layers share them) and 5 along the hairline; a border between two is left out by a chance of 0.3, so
+  locks are of uneven breadth, and a broad one takes the image there and back as round 179's. A strand keeps
+  0.4 of its own tone, lean and height and 0.3 of its own arch. The layer underneath has no locks.
+- The five cuts made of it take it: the girls' and young women's (`plait01`), the hair under a veil set back
+  (`part01`), the men's cut at the jaw, straight and in waves (`page01`, `page02`), the small girls' worn
+  down (`loose01`). Their strands, their ends and their number are round 172's and 175's; with `PART_LOCK=0`
+  the script writes round 175's `plait01` and round 172's `page01` byte for byte (on the Mac).
+- **The plaits' shade baked anew** (`plait01_rope`, `loop01_rope`): round 175's two calls with the new hair
+  standing in the scene. With round 175's hair standing there they write round 175's files byte for byte;
+  with the new hair the shade differs on 123 of 6672 corners of the hanging plaits and on 443 of 2640 of the
+  pinned ones (mean 0.602 and 0.475 for 0.602 and 0.474). Their corners and triangles are the same.
+- The seven files `public/portrait/real/{plait01,part01,page01,page02,loose01}_body.txt.zst` and
+  `{plait01,loop01}_rope.txt.zst` are written anew, by Blender 5.1.2 on the Mac, with the script as
+  committed. Nothing in the builder and nothing on the stage; the wasm is the same bytes. Bowl cuts are not
+  touched (`bob01` run on the Mac: byte for byte as round 179's).
+
+How it was made. Two trials in the cloud, each put into the portrait on four women from the front and from
+three quarters: arch and lean of 1 and 0.8 mm, and of 1.6 and 1.4 mm with more of the lock's tone. Then the
+first on a man with hair to the jaw, a woman under a veil, a grey woman and two small girls, and on the sheet
+of 36. Then, as rounds 171 to 179, the script was sent to the socket of the Blender that is open on the Mac
+and run there in scenes of its own: `plait01` and `page01` with the locks off, all five cuts, one bowl cut,
+the plaits' two calls; each cut rendered from the front, three quarters, the side, behind and above. The
+first pass wrote a `plait01` of round 172: round 175's check had left `PLAIT_NEAR=1` in that Blender's
+environment. The second pass took it out, wrote `plait01` and the plaits again and all five cuts once more:
+byte for byte the same, and the same bytes as the cloud's Blender module wrote. Those are the files in the
+repository.
+
+Measured (`portrait/tests/hair_body.rs` with `SHOW=1`, on round 179's files and on these; the sheets of 36
+against round 179's):
+
+| | before | now |
+|---|---|---|
+| strands that begin along the parting on the top of the head, a side (eight heads) | 12 to 30 | 12 to 31 |
+| two neighbours of them are drawn so far apart in the image's breadth, the middle one of all | 0.16 to 0.41 | 0.03 to 0.06 |
+| neighbours drawn more than a third of the image apart | 4 to 15 of 11 to 29 | 0 to 2 of 11 to 30 |
+| corners and triangles (`plait01`; `page01`) | 44 159, 57 996; 35 037, 45 988 | the same |
+| portraits of the sheet that change | | 16 of 36 in the village, 18 of 36 at court |
+| the five hair files, packed | 4.86 MB | 4.84 MB (18 kB less) |
+| the plaits' two files, packed | 207 kB | 208 kB |
+
+Tried and not kept.
+- Arch and lean of 1.6 and 1.4 mm, a lock's tone 0.08 off: nearly the same picture, with a few dark slits
+  between the locks.
+- Not tried: a bow to one side as a bowl cut's (round 179); other numbers of locks than 15 and 5; locks in
+  the layer underneath; locks that part where the hair hangs free.
+
+**One test new, none changed.** `parted_hair_lies_in_locks` (`portrait/tests/hair_body.rs`) reads, on the
+strands that begin along the parting on the top of the head in front of its middle, those of each side in
+their order along it, how far apart in the image's breadth two neighbours are drawn: the middle one of all
+less than a tenth (0.03 to 0.06; round 179's files 0.16 to 0.41, and fail), fewer than a third of them more
+than a third of the image apart, ten strands and more a side. On four girls and women with plaits, the first
+woman of 30 with her veil set back, two small girls and a man with hair to the jaw. A strand's beginning is
+its corner first along the image: under a veil a strand's highest corner lies anywhere along it, and by that
+the order was mixed. The arch is read by no test, as a bowl cut's: it was looked at in Blender and in the
+portrait.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 179. The colour sheet: 160 of 160
+lines to the last figure.
+
+Honest about it. A middle step, on every woman and girl and on the men with hair to the jaw: 16 of the 36 in
+the village. From the front and from three quarters a woman's hair now reads as combed hair, smooth, with
+soft broad locks from the parting, where it was a striped cloth; in Blender from every side. It is the
+plainest gain on the plaited cut and under the veil, where the hair is drawn to one place. What is not good:
+where the hair hangs free (the men's cut at the jaw and the small girls' hair, from the side and from
+behind) the locks come apart into the strands' ends, cords still, as round 172 left them; the fringe of
+points a bowl cut got in round 177 has no like here. Beside the face fine lines still show inside a lock. A
+cut has one pattern of locks, the same on every head that wears it, and its two sides differ only by chance.
+The locks do not bow or cross (round 179's bow is not in parted hair). The waved cut (`page02`) was looked
+at in Blender alone: no man on the sheets wears it. The parting is a straight furrow. The plaits are round
+175's tubes; their shade moved on a few corners. The veil, the coif, the fillet, the circlet and the crown
+were fitted to the hair as it was; the tests that hold them pass. Baked on one machine (the cloud's module
+wrote the same bytes). Every number is by eye: PLACEHOLDER.
+
+Tests: `cargo test --release` as a whole 145 of 145 (one new); `tests/portrait.test.ts` and its neighbour
+46 of 46; typecheck and lint pass, no new warning.
+Pictures (project files, `portraits/`): `runde180_vorher_nachher.png` (four women from the front, before
+above and after below, then from three quarters, before and after), `runde180_nah.png` (their hair near, in
+the same order), `runde180_sonderfaelle.png` (a man with hair to the jaw from the front and from three
+quarters, a woman under a veil, a grey woman, two small girls: before above, after below),
+`runde180_dorf.png` and `runde180_hof.png` (all 36, village and court, after; round 179's sheets are the
+before), `runde180_blender.png` (Blender, from five sides: the plaited cut before and after, then the cut at
+the jaw before and after), `runde180_blender_alle.png` (Blender: the hair under the veil, the waved cut, the
+small girls' hair).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair

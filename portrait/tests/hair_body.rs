@@ -644,6 +644,98 @@ fn two_men_in_ten_wear_their_hair_parted_and_cut_at_the_jaw() {
     assert!(names.len() == 2 && names.values().all(|&n| n >= 2), "{names:?}");
 }
 
+/// The strands of parted hair that begin along the parting over the forehead and the top of the head and fall to
+/// one side (a piece of 24 triangles and more that begins above `top` and in front of the head's middle, ends on
+/// the side `right` and takes less than half the image's breadth: not a band of the layer underneath): for each how
+/// far to the front it begins and the middle of what it takes of the image's breadth, in their order along the
+/// parting.
+fn strands_from_the_parting(hair: &Surface, out: &Portrait, top: f32, right: bool) -> Vec<(f32, f32)> {
+    fn root(of: &mut [usize], mut i: usize) -> usize {
+        while of[i] != i {
+            of[i] = of[of[i]];
+            i = of[i];
+        }
+        i
+    }
+    let mut place: HashMap<[u32; 3], usize> = HashMap::new();
+    let ids: Vec<usize> = hair.pos.iter().map(|p| { let n = place.len(); *place.entry(p.map(f32::to_bits)).or_insert(n) }).collect();
+    let mut of: Vec<usize> = (0..place.len()).collect();
+    for t in ids.chunks_exact(3) {
+        let a = root(&mut of, t[0]);
+        for &k in &t[1..] {
+            let b = root(&mut of, k);
+            of[b] = a;
+        }
+    }
+    // for each piece: its triangles, where it begins (the corner first along the image) and how far along the
+    // image that is, its lowest corner, the least and greatest place across the image
+    let mut found: HashMap<usize, (usize, V3, f32, V3, f32, f32)> = HashMap::new();
+    for ((t, p), u) in ids.chunks_exact(3).zip(hair.pos.chunks_exact(3)).zip(hair.uv.chunks_exact(3)) {
+        let e = found.entry(root(&mut of, t[0])).or_insert((0, [0.0; 3], f32::MAX, [0.0, f32::MAX, 0.0], f32::MAX, f32::MIN));
+        e.0 += 1;
+        for (p, u) in p.iter().zip(u) {
+            if u[1] < e.2 {
+                (e.1, e.2) = (*p, u[1]);
+            }
+            if p[1] < e.3[1] {
+                e.3 = *p;
+            }
+            e.4 = e.4.min(u[0]);
+            e.5 = e.5.max(u[0]);
+        }
+    }
+    let mut side: Vec<(f32, f32)> = found
+        .values()
+        .filter(|&&(n, begin, _, low, lo, hi)| n >= 24 && hi - lo < 0.5 && begin[1] > top && begin[2] > out.cz && (low[0] > out.cx) == right)
+        .map(|&(_, begin, _, _, lo, hi)| (begin[2], 0.5 * (lo + hi)))
+        .collect();
+    side.sort_by(|a, b| a.0.total_cmp(&b.0));
+    side
+}
+
+#[test]
+fn parted_hair_lies_in_locks() {
+    // Round 180. Since round 172 every strand of parted hair lay by itself and took a place of its own in the
+    // image: a field of fine light and dark stripes. Now the strands that begin side by side along the parting
+    // or along the hairline lie in one arch to their ends, lean with it, have one tone and take neighbouring
+    // places of the image (`hair_body.py` `PARTED`'s `lock`), as a bowl cut's do since round 178.
+    // Read on the strands that begin along the parting on the top of the head, in front of its middle, those
+    // of each side in their order along the parting: how far apart in the image's breadth two neighbours are
+    // drawn, the middle one of all neighbours, and how many are drawn more than a third of the image apart
+    // (where one lock ends and the next begins; a band of the layer underneath that begins there belongs to
+    // none). A strand begins at its corner first along the image: its highest corner lies anywhere along it
+    // where a veil holds the hair down, and by that the order along the parting was mixed.
+    // On four girls and women with plaits, a woman under a veil, two small girls with their hair down and a
+    // man with his hair cut at the jaw: 12 to 31 such strands a side; two neighbours 0.030 to 0.059 of the
+    // image apart in the middle (round 179's files: 0.161 to 0.406), 0 to 2 of 11 to 30 more than a third
+    // apart (4 to 15 of 11 to 29). The arch itself is read by no test: it was looked at in Blender and in the
+    // portrait.
+    let Some(h) = head() else { return };
+    // (the first woman of 30 who wears her veil set back, and under it the hair `part01`: `DressSet::veils`)
+    let veiled = (0..200u32).map(|k| 2 * k).find(|k| person(*k, true, 30.0).veil() == sc_portrait::dress::Veil::Back).expect("a woman with her veil set back");
+    for (k, woman, age) in [(0, true, 8.0), (2, true, 13.0), (4, true, 17.0), (6, true, 19.0), (veiled, true, 30.0), (28, true, 5.0), (30, true, 6.0), (43, false, 29.0)] {
+        let out = build(&h, &person(k, woman, age), 1);
+        let who = format!("{} {k} of {age}", if woman { "woman" } else { "man" });
+        let hair = body(&out).unwrap_or_else(|| panic!("{who}: a body of hair"));
+        let (_, crown) = skin(&out);
+        let top = crown - 0.12 * (crown - out.chin);
+        for right in [false, true] {
+            let side = strands_from_the_parting(hair, &out, top, right);
+            let mut apart: Vec<f32> = side.windows(2).map(|w| (w[1].1 - w[0].1).abs()).collect();
+            let far = apart.iter().filter(|a| **a > 1.0 / 3.0).count();
+            apart.sort_by(f32::total_cmp);
+            let middle = apart.get(apart.len() / 2).copied().unwrap_or(9.0);
+            if show() {
+                println!("{who}, {}: {} strands from the parting; two neighbours are drawn {middle:.3} of the image apart in the middle, {far} of {} more than a third", if right { "right" } else { "left" }, side.len(), apart.len());
+                continue;
+            }
+            assert!(side.len() >= 10, "{who}: {} strands begin along the parting on one side", side.len());
+            assert!(middle < 0.1, "{who}: two neighbouring strands are drawn {middle} of the image apart: each by itself");
+            assert!(3 * far < apart.len(), "{who}: {far} of {} neighbouring strands are drawn more than a third of the image apart", apart.len());
+        }
+    }
+}
+
 #[test]
 fn one_man_in_ten_wears_his_hair_to_the_jaw_with_its_ends_turned_out() {
     // Round 133. Of the two men in ten whose bowl cut reaches the jaw, one has its ends turned out and up in rolls

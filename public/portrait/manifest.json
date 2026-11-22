@@ -467,11 +467,11 @@
   },
   {
    "name": "loop01_rope.txt.zst",
-   "bytes": 59854
+   "bytes": 58818
   },
   {
    "name": "loose01_body.txt.zst",
-   "bytes": 1123740
+   "bytes": 1133094
   },
   {
    "name": "metal_circlet.txt.zst",
@@ -487,19 +487,19 @@
   },
   {
    "name": "page01_body.txt.zst",
-   "bytes": 831295
+   "bytes": 821180
   },
   {
    "name": "page02_body.txt.zst",
-   "bytes": 825299
+   "bytes": 823542
   },
   {
    "name": "part01_body.txt.zst",
-   "bytes": 1038563
+   "bytes": 1032437
   },
   {
    "name": "plait01_body.txt.zst",
-   "bytes": 1040858
+   "bytes": 1031154
   },
   {
    "name": "plait01_cap.txt",
@@ -507,7 +507,7 @@
   },
   {
    "name": "plait01_rope.txt.zst",
-   "bytes": 146721
+   "bytes": 148880
   },
   {
    "name": "plait01_scalp.txt",

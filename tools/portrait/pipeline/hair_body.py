@@ -154,11 +154,25 @@ CUTS = {
 # them) and 90 of 4 to 6 mm on top (`PART_N`, `PART_FIT`). `short` (the layer underneath): by how many degrees
 # its bands end above the cut's line on hair that is cut, so that no broad band shows under the strands' ends.
 # All PLACEHOLDER by eye.
+# (round 180) Locks, as a bowl cut's since round 178, made and looked at in the same Blender. The strands over
+# the layer underneath lay each by itself (its own height, lean, tone and place in the image): parted hair was a
+# field of fine light and dark stripes, the reference's is smooth with a few broad soft locks. `lock`: strands
+# that begin side by side, along the parting or along the hairline, lie in one arch to their ends. Its numbers:
+# how much higher the strand at a lock's middle lies than one at its border (units of 10 cm: 1 mm; each strand
+# leans as the arch does where it lies); how much higher one border lies than the middle and the other lower
+# (0.8 mm, to either side by chance); how far a lock's tone is off the hair's; how much a strand keeps of its
+# own tone, lean and height; how much of the image's breadth a lock takes to either side of its middle; how
+# much lower than the full arch a lock's may be; how much of its own arch (`flat`) a strand keeps; how many
+# locks a side begin along the parting and how many along the hairline; the chance by which a border between
+# two is left out (locks of uneven breadth; one of more than one takes the image there and back, as round
+# 179's). The layer underneath has none. 0 as the first: none, and the files are round 172's and 175's. With
+# arch and lean of 1.6 and 1.4 mm dark slits opened between the locks. All PLACEHOLDER by eye.
 PARTED = dict(
     parted=True, to=(92.0, -44.0), by=(60.0, 4.0), over=(8, 6, 35, 30, -50, -42), trend=14, lift=1.0, round=1.0,
     line=[(0, 8), (20, 4.9), (32, -2.4), (44, -8.4), (58, -13), (66, -17.5), (71, -24), (75, -20), (78, -12), (84, -12), (102, -12), (112, -16), (126, -28), (145, -40), (165, -46), (180, -48)],
     comb=(0.012, 0.7, 0.0, 1.0),
     shell=dict(h=0.02),
+    lock=tuple(_e('PART_LOCK', '0.010,0.008,0.06,0.4,0.3,0.6,0.3,15,5,0.3')),
     layers=[
         dict(kind='under', n=44, w=(0.2, 0.32), flat=_e('PART_UFLAT', '0.1')[0], h=0.03, rise=0.012, gather=(0.1, 0.3, 0.35), short=_e('PART_SHORT', '4')[0], m=5, across=0.3, ring=0.09, wave=(0.002, 0.006, 1.2, 2.2), roll=0.1, tone=0.9, seed=3),
         dict(kind='edge', n=int(_e('PART_N', '50,140,90')[0]), fit=_e('PART_FIT', '2.3')[0], vary=0.3, flat=0.22, h=0.036, rise=0.016, gather=(0.1, 0.3, 0.3), blunt=0.6, m=3, across=0.3, ring=0.09, tones=0.07, wave=(0.002, 0.006, 1.2, 2.2), roll=0.3, tone=0.97, seed=4),
@@ -558,17 +572,21 @@ def parted(L, rng):
             right = 0.5 * (at + np.roll(at, -1)); left = np.roll(right, 1)
             left[0], right[-1] = 0.0, span
             mid = 0.5 * (left + right)
-            d0 = np.where((mid <= 90 - front)[:, None], dirs(0 * mid, front + mid), dirs(180 + 0 * mid, 90 - (mid - (90 - front))))
+            begin_at = lambda m: np.where((m <= 90 - front)[:, None], dirs(0 * m, front + m), dirs(180 + 0 * m, 90 - (m - (90 - front))))
+            d0 = begin_at(mid)
             d0 = unit(d0 + sgn * np.array([0.004, 0, 0]))
             room = np.radians(right - left) * OVER.skin(d0)
             key = np.radians(mid)
+            reach = (0.0, span)
         elif L['kind'] == 'edge':
             jit = L.get('vary', 0.25)
             at = 4 + (np.arange(n) + rng.uniform(-jit, jit, n) + 0.5) * 62 / n
             right = 0.5 * (at + np.roll(at, -1)); left = np.roll(right, 1)
             left[0], right[-1] = 4.0, 66.0
             mid = 0.5 * (left + right)
-            d0 = dirs(sgn * mid, np.interp(mid, line[:, 0], line[:, 1]) + 3.5)
+            begin_at = lambda m: dirs(sgn * m, np.interp(m, line[:, 0], line[:, 1]) + 3.5)
+            d0 = begin_at(mid)
+            reach = (4.0, 66.0)
             room = np.linalg.norm(OVER.at(dirs(sgn * right, np.interp(right, line[:, 0], line[:, 1]) + 3.5), 0 * mid) - OVER.at(dirs(sgn * left, np.interp(left, line[:, 0], line[:, 1]) + 3.5), 0 * mid), axis=1)
             key = np.radians(mid)
         else:
@@ -578,6 +596,29 @@ def parted(L, rng):
             P = P[(P[:, 0] * sgn > 0.1) & (el - np.interp(np.abs(th), line[:, 0], line[:, 1]) > 6)][:n]
             d0, room, key = P, np.zeros(len(P)), np.radians(ang(P)[1])
         near = rng.uniform(L['gather'][0], L['gather'][1], len(d0))
+        lock = C.get('lock') if L['kind'] != 'under' and C.get('lock', (0,))[0] > 0 else None
+        if lock:
+            # (round 180) strands that begin side by side lie in one lock: the locks' borders along the parting
+            # (the same for both of its layers) and along the hairline, each side of the head its own; a border
+            # is left out by the chance `lock[9]`, so locks are of uneven breadth. For each strand: where across
+            # its lock it begins (-1 and 1: the borders), how many locks' breadth its lock has, and the lock's
+            # lean, tone, place in the image and height
+            lrng = np.random.default_rng(SEED + 5171 + (0 if sgn > 0 else 1) + (0 if L['kind'] == 'part' else 10))
+            nl = int(lock[7] if L['kind'] == 'part' else lock[8])
+            edge = reach[0] + (reach[1] - reach[0]) * np.clip((np.arange(nl + 1) + lrng.uniform(-0.3, 0.3, nl + 1)) / nl, 0, 1)
+            keep = lrng.random(nl + 1) >= lock[9]
+            keep[0] = keep[-1] = True
+            edge[0], edge[-1] = reach
+            edge = edge[keep]
+            of = np.clip(np.searchsorted(edge, mid) - 1, 0, len(edge) - 2)
+            across_l = 2 * (mid - edge[of]) / (edge[of + 1] - edge[of]) - 1
+            many_l = np.maximum(np.rint((edge[of + 1] - edge[of]) * nl / (reach[1] - reach[0])), 1)
+            broad_l = 0.5 * np.linalg.norm(OVER.at(begin_at(edge[of + 1]), 0 * mid) - OVER.at(begin_at(edge[of]), 0 * mid), axis=1)
+            along_l = begin_at(mid + 0.5) - begin_at(mid - 0.5)
+            lean_l = (lrng.choice([-1.0, 1.0], len(edge)) * lrng.uniform(0.5, 1.0, len(edge)))[of]
+            tone_l = np.clip(lrng.lognormal(0, lock[2], len(edge)), 0.8, 1.25)[of]
+            u_l = lrng.uniform(-0.08, 0.08, len(edge))[of]
+            high_l = lrng.uniform(1 - lock[5], 1.0, len(edge))[of]
         # (hair that is cut: each bundle ends where it crosses the cut's line, a little above or below it)
         low = C['end'] + L.get('short', 0.0) + rng.uniform(C['ends'][0], C['ends'][1], len(d0)) if 'end' in C else None
         clump = C.get('clump') if low is not None else None
@@ -645,16 +686,28 @@ def parted(L, rng):
                 off = off + clump[1] * rng.uniform(0.6, 1.0) * ((mid_c - d[-1]) @ side[-1]) * OVER.skin(d[-1:])[0] * smooth((run - (total - clump[2])) / clump[2])
             d = unit(d + side * (off / OVER.skin(d))[:, None])
             lift = free(d)
-            h = lift * (L['h'] + L['rise'] * run) * (0.2 + 0.8 * smooth(r)) + lift * rng.uniform(-0.004, 0.004) + up
+            h = lift * (L['h'] + L['rise'] * run) * (0.2 + 0.8 * smooth(r)) + lift * rng.uniform(-0.004, 0.004) * (lock[3] if lock else 1.0) + up
             if C.get('tuck') and low is not None:
                 # (round 172) hair cut at the jaw turns in at its end, as a bowl cut's rim: over the cut's `tuck`
                 # (how long before the end, how high over the skin it ends there)
                 te = np.clip((run - (total - C['tuck'][0])) / C['tuck'][0], 0, 1)
                 h = h - (h - lift * C['tuck'][1]) * (1 - np.sqrt(1 - te ** 2))
-            ht = ROUND * L['flat'] * hw
+            ht = ROUND * L['flat'] * hw * (lock[6] if lock else 1.0)
             h = np.maximum(h, ht + 0.004)
             roll = L['roll'] * rng.uniform(-1, 1) * ROUND
-            out_ += lay(d, h, hw, ht, roll, run, L['tone'] * float(np.clip(rng.lognormal(0, L.get('tones', 0.1)), 0.78, 1.25)) * (0.75 + 0.25 * smooth(run / 0.2)), rng, m=L.get('m', 7), across=L.get('across'))
+            tone = float(np.clip(rng.lognormal(0, L.get('tones', 0.1)), 0.78, 1.25))
+            u_mid = None
+            if lock:
+                # (round 180) the strands of a lock lie in one arch, each leaning as the arch does at its place;
+                # the arch comes in over the first 3 cm and is as much lower as the lock is narrower where the
+                # hair is drawn together; one tone a lock, and neighbouring places of the image
+                s_, in_ = across_l[k], smooth(run / 0.3)
+                h = np.maximum(h + lift * (lock[0] * high_l[k] * (0.5 - s_ ** 2) + lock[1] * lean_l[k] * s_) * g * in_, ht + 0.004)
+                lie = np.sign(along_l[k] @ side[min(4, len(side) - 1)])
+                roll = roll * lock[3] - lie * lift * (-2 * lock[0] * high_l[k] * s_ + lock[1] * lean_l[k]) / max(broad_l[k], 0.05) * in_
+                tone = tone_l[k] * tone ** lock[3]
+                u_mid = 0.5 + u_l[k] + lock[4] * (s_ if many_l[k] == 1 else 1 - 2 * abs((s_ * many_l[k] + 1) / 2 % 2 - 1))
+            out_ += lay(d, h, hw, ht, roll, run, L['tone'] * tone * (0.75 + 0.25 * smooth(run / 0.2)), rng, m=L.get('m', 7), across=L.get('across'), u_mid=u_mid)
     return out_
 
 
