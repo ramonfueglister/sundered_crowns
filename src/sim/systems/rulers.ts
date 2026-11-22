@@ -36,7 +36,7 @@ import type { World } from '../world';
 import type { System } from '../schedule';
 import { type Chronicle, GESTATION_DAYS, Happening, firstEventOn } from '../content/chronicle';
 import { drawDeath } from './deaths';
-import { DRAW, type Persons, lifeEnd, murderDay, settle } from './succession';
+import { DRAW, type Persons, lifeEnd, murderDay, settleAll } from './succession';
 import { setRulerCulture } from './cultures';
 import { hash01 } from '../rng';
 import { founder, NG } from '../people/genes';
@@ -402,7 +402,7 @@ export function playChronicle(s: WorldState, w: World, from: number, to: number)
   const dawn = (day: number) => {
     if (day === today) return;
     known = new Map();
-    for (const [r, left] of touched) settle(s, w, c, persons, r, today, left, d.crown);
+    settleAll(s, w, c, persons, touched, today, d.crown);
     touched.clear();
     today = day;
   };

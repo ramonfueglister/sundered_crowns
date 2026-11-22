@@ -6,13 +6,26 @@
 // A column of the first far step holds four blocks of the finest step, its quarters. What the finest step has on
 // each of them that the column does not tell, far.ts lays down (`quarters`, a byte to a column): which quarters are
 // street, the paving of a town on which nothing stands (settle.ts), and which a building stands on. The crop of a
-// quarter is that of its lot (crops.ts), a farmhouse is a building like any other.
-import { type Figures, type Town, type Where, figuresOf, gathered, placer } from '../figures';
-import { Mat, idx, inGrid } from '../lookprobe/layout';
+// quarter is that of its lot (crops.ts), a farmhouse is a building like any other. The farmers among the persons of the
+// great cities work the furlongs of their town as at the finest step (src/figures/farmers.ts).
+import {
+  type Figures,
+  type Town,
+  type Where,
+  fieldHands,
+  figuresOf,
+  gathered,
+  loadTownPeople,
+  lotOf,
+  placeHands,
+  placer,
+} from '../figures';
+import { Mat, N, idx, inGrid, onGrid } from '../lookprobe/layout';
 import type { Part } from '../lookprobe/terrain';
 import { cropAt } from './crops';
+import { loadParcels, lotsOfTowns } from './lots';
 import { PIECE } from './piece_sight';
-import { RIM } from './table';
+import { RIM, type Table } from './table';
 import { uprightOf } from './zoom';
 
 /** the step whose columns hold four blocks of the finest step, the only far step that draws figures */
@@ -77,11 +90,19 @@ export interface CrowdGround {
  * The figures of the own columns `part` of a piece of the first far step whose ground starts at the world block ox,
  * oz, or none. Only the columns the table of a piece keeps count (`part` and RIM round it), so that a piece drawn from
  * its table has the figures of the piece built. The figures are given in blocks of the finest step from the piece's
- * first block, and their `scale` makes them the step's.
+ * first block, and their `scale` makes them the step's. `lots`: the field lots of the furlongs of each town by its
+ * site, as the finest step has them (src/figures/crowd.ts `SettledGround`).
  */
-export function farCrowd(t: CrowdGround, ox: number, oz: number, part: Part): Figures | undefined {
+export function farCrowd(
+  t: CrowdGround,
+  ox: number,
+  oz: number,
+  part: Part,
+  lots?: ReadonlyMap<number, readonly number[]>,
+): Figures | undefined {
   const up = uprightOf(CROWD_AT),
-    { quarters, crops, furlongs } = t;
+    { quarters, crops, furlongs } = t,
+    hands = fieldHands({ furlongs: lots });
   const x0 = 2 * Math.max(0, part.x0 - RIM),
     z0 = 2 * Math.max(0, part.z0 - RIM),
     x1 = 2 * (part.x1 + RIM),
@@ -111,6 +132,7 @@ export function farCrowd(t: CrowdGround, ox: number, oz: number, part: Part): Fi
     },
     field,
     h: (fx, fz) => t.h[column(fx, fz)] / up,
+    tended: (fx, fz) => hands.has(lotOf(fx + 2 * ox, fz + 2 * oz)),
   };
   // the persons of the towns stand where the finest step stands them: a ruler in the piece of the finest step that
   // holds the town's middle (a piece of this step holds four of them whole: piece_sight.ts)
@@ -120,6 +142,18 @@ export function farCrowd(t: CrowdGround, ox: number, oz: number, part: Part): Fi
     at = placer(t.towns ?? [], w, 2 * ox, 2 * oz, holds);
   const out = gathered();
   for (let fz = 2 * part.z0; fz < 2 * part.z1; fz++) for (let fx = 2 * part.x0; fx < 2 * part.x1; fx++) at(out, fx, fz);
+  placeHands(out, w, hands, 2 * ox, 2 * oz, own, 2 * N);
   const f = figuresOf(out, 2 * ox, 2 * oz, [1 / 2, up]);
   return f.count ? f : undefined;
+}
+
+/**
+ * The figures of a piece of the first far step drawn from its table (piece.worker.ts), once the persons of the towns
+ * and their towns' furlongs (lots.ts `lotsOfTowns`) are loaded: from the map's data at `base`, of the start year
+ * `year`.
+ */
+export async function tableCrowd(t: Table, base: string, year?: number): Promise<Figures | undefined> {
+  const [, parcels] = await Promise.all([loadTownPeople(undefined, year), loadParcels(base, year ?? 1356)]),
+    lots = parcels ? lotsOfTowns(parcels) : undefined;
+  return onGrid(t.side, () => farCrowd(t, t.ox, t.oz, t.part, lots));
 }

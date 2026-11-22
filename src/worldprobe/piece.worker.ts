@@ -2,7 +2,6 @@
 // as flat lists that are handed over, not copied. A piece of a coarse step whose table was built ahead is drawn from
 // that (table.ts), which takes a third of the time and none of the map's data.
 import * as THREE from 'three/webgpu';
-import { loadTownPeople } from '../figures';
 import { Batch } from '../lookprobe/batch';
 import type { Shape } from '../lookprobe/shape';
 import { buildOpenSea } from '../lookprobe/terrain';
@@ -11,7 +10,7 @@ import { GRID, N, SEA_Y, onGrid } from '../lookprobe/layout';
 import { maybeGunzip } from './gunzip';
 import { type PlacePeopleList, setPlacePeople } from '../figures';
 import { buildPiece, warmPieces } from './build';
-import { CROWD_AT, farCrowd } from './crowd';
+import { CROWD_AT, tableCrowd } from './crowd';
 import { type Cover, KINDS, laidOut } from './far';
 import { glide } from './glide';
 import { meanCover, summary } from './mean';
@@ -275,11 +274,9 @@ async function tableOf(job: PieceJob): Promise<{ scene: WorldScene | null; table
   if (table.things && !job.bakedSky) return null;
   const drawn = drawTable(table, job.bakedSky, job.step),
     things = table.things ? Batch.of(table.things.pos, table.things.nor, table.things.col) : new Batch();
-  // (the people of the first far step stand on the table's ground as on the ground the piece was built on, and the
-  // persons of the towns in its towns: crowd.ts)
-  if (job.step === CROWD_AT) await loadTownPeople(undefined, job.year);
-  const figures =
-    job.step === CROWD_AT ? onGrid(table.side, () => farCrowd(table, table.ox, table.oz, table.part)) : undefined;
+  // (the people of the first far step stand on the table's ground as on the ground the piece was built on, the
+  // persons of the towns in its towns, and the farmers among them on their town's furlongs: crowd.ts)
+  const figures = job.step === CROWD_AT ? await tableCrowd(table, job.base, job.year) : undefined;
   return {
     table,
     scene: {

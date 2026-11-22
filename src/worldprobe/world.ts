@@ -95,13 +95,17 @@ const RIVER_HALF = 0.5, BROOK_HALF = 0.3;
  * through: by its width as a share of the block, STREAM_SEEN times that for the banks that show with it, and never
  * less than STREAM_LEAST, so that its line can be followed. The greatest rivers of a step stay water: by the data's
  * step (1 is the first coarser than the land's cells) those of at most this rank, the rivers that are still there
- * two steps farther out (tools/worldprobe/build_overviews.py RANK).
+ * two steps farther out (tools/worldprobe/build_overviews.py RANK). (A brook is 0.6 blocks wide at the second far
+ * step: as a row of water a block wide, with its banks, it was twice as wide as at the first far step, where it is
+ * 1.2 of that step's blocks and a row of its own, and the border between them doubled it at once.)
  */
-const STREAM_BELOW = 0.4, STREAM_SEEN = 1.5, STREAM_LEAST = 0.35, STREAM_RANK: Record<number, number> = { 1: 8, 2: 6, 3: 5, 4: 4, 5: 3, 6: 2, 7: 2 };
+const STREAM_BELOW = 1, STREAM_SEEN = 1.5, STREAM_LEAST = 0.35, STREAM_RANK: Record<number, number> = { 1: 8, 2: 6, 3: 5, 4: 4, 5: 3, 6: 2, 7: 2 };
 /** trees stand on a world grid of this pitch, each moved a little off its point */
 const TREE_PITCH = 2.4;
 /** what far.ts lays on a column (far.ts KINDS) that stands on the ground: houses, walls, great buildings, crops and woods; fallow soil is the ground's own */
 const STANDS: ReadonlySet<number> = new Set([1, 2, 3, 5, 6, 7, 8, 9]);
+/** what far.ts lays on a column (far.ts KINDS) that is woods */
+const WOODED: ReadonlySet<number> = new Set([8, 9]);
 /** of the places for a tree, this share carries one on the open land (single trees), and this much more inside a wood: the woods stand closed, the land between them is clear */
 const STRAY_TREES = 0.01, CLOSED = 0.88;
 /** from afar a way's band is at least this many blocks to each side of its line, by kind (track, road, highway) */
@@ -746,12 +750,14 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
     } });
   }
   // the rivers narrower than a block lie on what covers the ground: the blocks they run through take the water's colour
-  // (no woods stand on them: a stream shows as a line through a wood, as a river does)
+  // (from the third far step on no woods stand on them: a stream shows as a line through a wood, as a river does)
   if (cover) for (let i = 0; i < N * N; i++) {
     const wet = stream[i];
     if (wet && cover.trees) cover.trees.fill(0, i * TREE_NUMBERS, (i + 1) * TREE_NUMBERS);
     if (wet && cover.crops?.[i]) { cover.crops[i] = 0; g.mat[i] = Mat.Grass; }
     if (!wet || g.wet[i] || g.mat[i] === Mat.Rock || cover.town[i]) continue;
+    // (at the second far step a wood keeps its crowns over a stream: at the first the trees beside its water hide it)
+    if (step <= FINER_STEPS && cover.has[i] && WOODED.has(cover.kind?.[i] ?? 0)) continue;
     const was = cover.has[i] ? cover.share[i] * (1 - wet) : 0, all = wet + was;
     for (let k = 0; k < 3; k++) cover.top[i * 3 + k] = (WATER_SHALLOW[k] * wet + cover.top[i * 3 + k] * was) / all;
     if (!cover.has[i]) { cover.has[i] = 1; cover.rise[i] = 0; cover.side.set(WATER_SHALLOW, i * 3); }
@@ -851,7 +857,7 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
   counts.triangles = ground.triangles + (carried?.triangles ?? 0) + water.triangles + raised.triangles + things.triangles + (standing?.triangles ?? 0) + cells.reduce((n, c) => n + c.far.triangles, 0);
   // the people of the towns, villages and fields: the finest step's, at the first far step too (crowd.ts); on the
   // coarser steps a block is wider than a person is tall
-  const figures = settled ? crowd(g, registered ? { ...settled, furlongs: registered.towns } : settled, own) : cover && step === CROWD_AT ? farCrowd({ ...g, town: cover.town, has: cover.has, quarters: cover.quarters, crops: cover.crops, furlongs: cover.furlongs, towns: cover.towns }, ox, oz, part) : undefined;
+  const figures = settled ? crowd(g, registered ? { ...settled, furlongs: registered.towns } : settled, own) : cover && step === CROWD_AT ? farCrowd({ ...g, town: cover.town, has: cover.has, quarters: cover.quarters, crops: cover.crops, furlongs: cover.furlongs, towns: cover.towns }, ox, oz, part, registered?.towns) : undefined;
   if (figures) counts.figures = figures.count;
   // what each field column carries by the season, for the stage (season_codes.ts)
   const season = seasonMap(settled ? withFarmYears(settled.season, N, part, farmYear) : cover?.season, g.h, N, part, cover);

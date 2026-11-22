@@ -104,6 +104,17 @@ describe('the heir by the order of the realm', () => {
   it('is nobody in an election', () => {
     expect(heirOf(c, n('QA'), 'election', all)).toBeNull();
   });
+  it('shuts the daughters out by male primogeniture, and puts them before the brothers by cognatic primogeniture', () => {
+    const key = (p: number | null) => (p === null ? null : c.persons[p].key);
+    const noSons = (p: number) => !['QK', 'QD', 'QB'].includes(c.persons[p].key);
+    expect(key(heirOf(c, n('QA'), 'primogeniture', noSons))).toBe('QU');
+    expect(key(heirOf(c, n('QA'), 'male_primogeniture', noSons))).toBe('QU');
+    expect(key(heirOf(c, n('QA'), 'cognatic_primogeniture', noSons))).toBe('QS');
+    const noMen = (p: number) => noSons(p) && c.persons[p].key !== 'QU';
+    expect(key(heirOf(c, n('QA'), 'primogeniture', noMen))).toBe('QS');
+    expect(heirOf(c, n('QA'), 'male_primogeniture', noMen)).toBeNull();
+    expect(heirOf(c, n('QA'), 'partible', noMen)).toBeNull();
+  });
 });
 
 describe('a crown history gives to a person not born into the world', () => {
@@ -126,6 +137,17 @@ describe('a crown history gives to a person not born into the world', () => {
   }, 60_000);
   it('goes to the eldest of the male line by agnatic seniority', () => {
     const s = early('agnatic_seniority');
+    until(s, w, '1295-01-02');
+    expect(holder(s)).toBe('QU');
+  }, 60_000);
+  it('goes with the other crown of a union to its holder in the world', () => {
+    const j = fixture(null);
+    // Uncle U reigns in France: without the union the crown would go to C, history's next holder of England
+    j.reigns.push({ realm: 'france', person: 4, start: '1291-01-01', end: '1330-01-01', source: 'fixture' });
+    j.laws = { england: [{ from: null, order: 'union', with: 'france', source: 'fixture' }] };
+    w.chronicle = compileChronicle(j);
+    const s = createWorldState(w, setup, 1291);
+    s.person.cols.dies[row(s, 'QA')!] = day('1295-01-01');
     until(s, w, '1295-01-02');
     expect(holder(s)).toBe('QU');
   }, 60_000);
