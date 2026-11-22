@@ -14,6 +14,7 @@ import {
   STREET_SCHEMA,
   FIELD_SCHEMA,
   WALL_SCHEMA,
+  BRIDGE_SCHEMA,
   LANDMARK_SCHEMA,
 } from './state';
 import { createTable, spawn } from './ecs';
@@ -30,6 +31,7 @@ import { foundBorders } from './systems/borders';
 import { foundLots } from './systems/lots';
 import { foundFields } from './systems/fields';
 import { foundWalls } from './systems/walls';
+import { foundBridges } from './systems/bridges';
 import { foundDeaths } from './systems/deaths';
 import { foundBirths } from './systems/families';
 import { foundMoves } from './systems/moves';
@@ -95,7 +97,8 @@ export function createWorldState(w: World, setup: SetupState, seed: number): Wor
     street: createTable(STREET_SCHEMA),
     field: createTable(FIELD_SCHEMA),
     landmark: createTable(LANDMARK_SCHEMA),
-    wall: createTable(WALL_SCHEMA), // in the order
+    wall: createTable(WALL_SCHEMA),
+    bridge: createTable(BRIDGE_SCHEMA), // in the order
     // the fields were added (src/sim/upgrade.ts), so an upgraded world encodes as a new one
   };
   addRealms(s, setup, 0, L);
@@ -121,6 +124,7 @@ export function createWorldState(w: World, setup: SetupState, seed: number): Wor
   foundLots(s, w.ground, w.dry); // the parcels of the families who live in the towns (after the hamlets: their families have none)
   foundFields(s, w.tilth); // the fields of the farmsteads, on the arable of the year before the start
   foundWalls(s, w.dry); // the walls of the towns, round their parcels and landmarks
+  foundBridges(s, w.riverGround, w.dry); // the bridges where the streets of the ways cross a river
   return s;
 }
 

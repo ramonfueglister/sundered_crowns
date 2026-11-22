@@ -5,6 +5,7 @@
 // every TOWER_EVERY blocks; no source in hand gives one measure for the walls of all towns.
 import { Batch, type RGB, rgb, shade } from '../../lookprobe/batch';
 import { battlements } from '../core/solids';
+import { along } from '../core/along';
 
 /** what a piece of the ring is (src/sim/settlement/walls.ts WALL_PIECE) */
 const GATE = 1,
@@ -38,7 +39,6 @@ export function ringWall(
   const b = new Batch(),
     c = rgb(0xcdb89c),
     t = T * size;
-  /** a straight block from a to b, `w` thick, from y0 to y1, its top with battlements where `crenel` */
   const top = shade(c, 0.94),
     low = shade(c, 0.82);
   /** a straight block from a to b, `w` thick, from y0 to y1, its top with merlons along both sides where `crenel`;
@@ -54,22 +54,11 @@ export function ringWall(
     crenel: boolean,
     bottom = false,
   ) => {
-    const len = Math.hypot(bx - ax, bz - az);
-    if (len < 1e-6) return;
-    const dx = (bx - ax) / len,
-      dz = (bz - az) / len;
-    // a box along the run: u along it, v across it
-    const block = (u0: number, v0: number, u1: number, v1: number, lo: number, hi: number, foot: RGB) => {
-      const at = (u: number, v: number): [number, number] => [ax + u * dx - v * dz, az + u * dz + v * dx];
-      const [p, q, r, t] = [at(u0, v0), at(u1, v0), at(u1, v1), at(u0, v1)];
-      b.quadAt(p[0], hi, p[1], t[0], hi, t[1], r[0], hi, r[1], q[0], hi, q[1], top, top, top, top, 0, 1, 0);
-      if (bottom)
-        b.quadAt(p[0], lo, p[1], q[0], lo, q[1], r[0], lo, r[1], t[0], lo, t[1], foot, foot, foot, foot, 0, -1, 0);
-      b.quadAt(q[0], lo, q[1], r[0], lo, r[1], r[0], hi, r[1], q[0], hi, q[1], foot, foot, c, c, dx, 0, dz);
-      b.quadAt(t[0], lo, t[1], p[0], lo, p[1], p[0], hi, p[1], t[0], hi, t[1], foot, foot, c, c, -dx, 0, -dz);
-      b.quadAt(t[0], lo, t[1], r[0], lo, r[1], r[0], hi, r[1], t[0], hi, t[1], foot, foot, c, c, -dz, 0, dx);
-      b.quadAt(q[0], lo, q[1], p[0], lo, p[1], p[0], hi, p[1], q[0], hi, q[1], foot, foot, c, c, dz, 0, -dx);
-    };
+    const line = along(b, ax, az, bx, bz);
+    if (!line) return;
+    const { len } = line,
+      block = (u0: number, v0: number, u1: number, v1: number, lo: number, hi: number, foot: RGB) =>
+        line.box(u0, v0, u1, v1, lo, hi, { side: c, foot, top }, bottom);
     block(0, -w / 2, len, w / 2, y0, y1, bottom ? c : low);
     if (!crenel) return;
     const m = MERLON * size,

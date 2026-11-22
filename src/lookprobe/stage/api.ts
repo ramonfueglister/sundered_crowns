@@ -65,6 +65,11 @@ export interface Stage {
    * their faces lies and looks as that step has it there (worldprobe/glide.ts).
    */
   glide(group: THREE.Group, share: number): void;
+  /**
+   * Lets a share of a group's figures go, 0 … 1, one by one all over it: the figures of the last step that draws
+   * them, as the view nears the border of the next (worldprobe/piece_show.ts).
+   */
+  thin(group: THREE.Group, share: number): void;
   /** How many pictures the stage has drawn. */
   pictures(): number;
   /** Puts a thing of the page's own making on the stage, or takes it off again (the page lets go of what it is made of). */

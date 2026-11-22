@@ -21,6 +21,7 @@ import {
   figuresIn,
   keepFigures,
   showFigures,
+  thinFigures,
   warmFigures,
 } from '../../figures/stage';
 import { OPEN_WATER } from '../terrain';
@@ -333,6 +334,9 @@ export async function createStage(o: StageOptions = {}): Promise<Stage> {
           part.userData.glide = share;
           redraw();
         }
+    },
+    thin(group, share) {
+      for (const part of group.children) if (part.userData.figures && thinFigures(part, share)) redraw();
     },
     pictures: () => pictures,
     put(thing) {
