@@ -6,10 +6,9 @@
 import { type ColumnAt, type GroundCell, type Side, pane, wallOf, waterColourAt, waterFlecks } from '../buildings';
 import { battlements } from '../buildings/core/solids';
 import { arch } from '../buildings/core/wall';
-import { ashlar } from '../buildings/houses/parts';
 import { type Batch, type RGB, type Rnd, rgb, shade } from './batch';
-import { boat } from './blocks';
 import { LAND_Y, SEA_Y } from './layout';
+import { type Rect, SLATE, STONE, courses, masonry, pyramid } from './paris_stone';
 import { EARTH } from './scenery';
 
 /** what the river takes from the probe: its colours, and how the probe draws a tree */
@@ -37,8 +36,6 @@ export interface Arm {
   bridge: number;
 }
 
-/** a rectangle of the ground: x0, z0, x1, z1 */
-export type Rect = readonly [number, number, number, number];
 /**
  * The rectangle from `u0` to `u1` across an arm and from `v0` to `v1` along it. Every part of an arm is laid out in
  * these two, so that the same bridge crosses an arm that flows along z and one that flows along x.
@@ -48,13 +45,16 @@ const rect = (a: Arm, u0: number, v0: number, u1: number, v1: number): Rect =>
 const block = (b: Batch, [x0, z0, x1, z1]: Rect, y0: number, y1: number, c: RGB, o?: Parameters<Batch['box']>[7]) =>
   b.box(x0, y0, z0, x1, y1, z1, c, o);
 
-/** the stone of the bridge and the town wall, the slate of the towers' roofs, the dark of a gateway */
-const STONE = rgb(0xd6c2a6),
-  SLATE = rgb(0x6c7080),
-  DARK = rgb(0x3a2e28);
-/** how far a bridge's deck rises over the quays, so that its arches clear the water, and the length of its ramps */
-const HUMP = 1.8,
-  RAMP = 4;
+/** the dark of a gateway */
+const DARK = rgb(0x3a2e28);
+/**
+ * The river's surface: lower than the look probe's sea, so that the quays stand as high over the water as the
+ * picture's, about two blocks.
+ */
+export const RIVER_Y = SEA_Y - 0.9;
+/** how far a bridge's deck rises over the quays, so that its arches are near half rounds, and the length of its ramps */
+const HUMP = 0.8,
+  RAMP = 2;
 /** a fine block, the grain of the landing stages' planks and the bridges' arches */
 const FINE = 0.25;
 
@@ -63,7 +63,7 @@ const FINE = 0.25;
  * blocks or so, and river boats under one square sail out in the stream.
  */
 function traffic(things: Batch, a: Arm, look: RiverLook, r: Rnd) {
-  const deck = LAND_Y - 0.15;
+  const deck = RIVER_Y + 0.7;
   for (let v = a.from + r.range(4, 10); v < a.to - 4; v += r.range(11, 17)) {
     const len = r.range(3.5, 5),
       u0 = a.side > 0 ? a.quay : a.quay - len;
@@ -79,46 +79,29 @@ function traffic(things: Batch, a: Arm, look: RiverLook, r: Rnd) {
       );
     for (let u = u0 + 0.4; u < u0 + len; u += 1)
       for (const s of [-0.78, 0.78])
-        block(things, rect(a, u - 0.12, v + s - 0.12, u + 0.12, v + s + 0.12), SEA_Y - 3, deck + FINE, look.wood, {
+        block(things, rect(a, u - 0.12, v + s - 0.12, u + 0.12, v + s + 0.12), RIVER_Y - 3, deck + FINE, look.wood, {
           top: shade(look.wood, 1.3),
           foot: 0.7,
         });
-    const [bx, bz] = rect(a, a.quay + a.side * r.range(1.5, 3), v + r.pick([-2.2, 2.2]), 0, 0);
-    boat(things, bx, bz, r);
+    const [bx, bz] = rect(a, a.quay + a.side * r.range(1.5, 3), v + r.pick([-2.2, 2.2]), 0, 0),
+      [hx, hz] = r.chance(0.5) ? [1.1, 0.42] : [0.42, 1.1];
+    things.box(bx - hx, RIVER_Y - 0.2, bz - hz, bx + hx, RIVER_Y + 0.4, bz + hz, shade(look.wood, 0.7), {
+      top: shade(look.canvas, 0.8),
+      foot: 0.7,
+    });
   }
   for (let v = a.from + r.range(8, 20); v < a.to - 8; v += r.range(18, 30)) {
     const u = a.quay + a.side * r.range(7, a.width - 4),
       hull = shade(look.wood, r.range(0.85, 1.1));
     if (Math.abs(v - a.bridge) < 6) continue;
-    block(things, rect(a, u - 0.7, v - 2, u + 0.7, v + 2), SEA_Y - 0.2, SEA_Y + 0.55, hull, {
+    block(things, rect(a, u - 0.7, v - 2, u + 0.7, v + 2), RIVER_Y - 0.2, RIVER_Y + 0.55, hull, {
       top: shade(hull, 1.35),
       foot: 0.7,
     });
-    block(things, rect(a, u - 0.45, v + 2, u + 0.45, v + 2.6), SEA_Y - 0.2, SEA_Y + 0.7, shade(hull, 0.85));
-    block(things, rect(a, u - 0.08, v - 0.08, u + 0.08, v + 0.08), SEA_Y + 0.55, SEA_Y + 3.6, shade(hull, 0.7));
-    block(things, rect(a, u - 1.1, v + 0.1, u + 1.1, v + 0.22), SEA_Y + 1.3, SEA_Y + 3.3, look.canvas);
+    block(things, rect(a, u - 0.45, v + 2, u + 0.45, v + 2.6), RIVER_Y - 0.2, RIVER_Y + 0.7, shade(hull, 0.85));
+    block(things, rect(a, u - 0.08, v - 0.08, u + 0.08, v + 0.08), RIVER_Y + 0.55, RIVER_Y + 3.6, shade(hull, 0.7));
+    block(things, rect(a, u - 1.1, v + 0.1, u + 1.1, v + 0.22), RIVER_Y + 1.3, RIVER_Y + 3.3, look.canvas);
   }
-}
-
-/** A box of stone with ashlar on the two sides the picture's camera sees (+x and +z). */
-export function masonry(b: Batch, at: Rect, y0: number, y1: number, seed: number, c: RGB = STONE) {
-  block(b, at, y0, y1, shade(c, 0.86), { top: shade(c, 0.95) });
-  ashlar(b, wallOf(...at, 'px'), Math.max(y0, SEA_Y), y1, c, seed, 2);
-  ashlar(b, wallOf(...at, 'pz'), Math.max(y0, SEA_Y), y1, c, seed + 1, 2);
-}
-
-/** A pyramid on the square of half side `s` round (xc, zc) at `y`, `h` high: four slopes up to one point. */
-export function pyramid(b: Batch, xc: number, zc: number, s: number, y: number, h: number, c: RGB) {
-  const corners: [number, number][] = [
-    [xc - s, zc - s],
-    [xc - s, zc + s],
-    [xc + s, zc + s],
-    [xc + s, zc - s],
-  ];
-  corners.forEach(([ax, az], k) => {
-    const [bx, bz] = corners[(k + 1) % 4];
-    b.tri([ax, y, az], [bx, y, bz], [xc, y + h, zc], c, c, shade(c, 1.15), [(ax + bx) / 2 - xc, s, (az + bz) / 2 - zc]);
-  });
 }
 
 /**
@@ -157,32 +140,39 @@ function bridge(b: Batch, arm: Arm, look: RiverLook) {
     pier = 1.2,
     span = (ub - ua) / 3,
     a = (span - pier) / 2,
-    spring = SEA_Y + 0.1,
-    body = shade(STONE, 0.9);
+    spring = RIVER_Y + 0.1,
+    body = shade(STONE, 0.7);
   /** the deck's height at u: up the ramps, level between them */
   const deck = (u: number) => LAND_Y + HUMP * Math.min(1, (u - ua) / RAMP, (ub - u) / RAMP);
+  /** the underside at u: the arch over the water, or far below it where a pier or an abutment stands */
+  const soffit = (u: number) => {
+    const mid = ua + (Math.min(2, Math.floor((u - ua) / span)) + 0.5) * span,
+      m = Math.abs(u - mid);
+    return m < a ? spring + (deck(mid) - 0.45 - spring) * Math.sqrt(1 - (m / a) ** 2) : RIVER_Y - 1.5;
+  };
   for (let u = ua; u < ub - 1e-6; u += FINE) {
     const um = u + FINE / 2,
-      mid = ua + (Math.min(2, Math.floor((um - ua) / span)) + 0.5) * span,
-      m = Math.abs(um - mid),
-      // an arch's crown stays under the deck over its middle, so the arches under the ramps are lower
-      crown = deck(mid) - 0.45,
-      soffit = m < a ? spring + (crown - spring) * Math.sqrt(1 - (m / a) ** 2) : SEA_Y - 1.5,
       y = deck(um);
-    block(b, rect(arm, u, v - hw, u + FINE, v + hw), soffit, y, body, { top: look.paving, bottom: true, foot: 0.6 });
+    block(b, rect(arm, u, v - hw, u + FINE, v + hw), soffit(um), y, body, { top: look.paving, bottom: true });
     // the parapets of the ramps; those of the level deck are one piece each, below
     if (y < top - 1e-6)
       for (const v0 of [v - hw, v + hw - rim])
         block(b, rect(arm, u, v0, u + FINE, v0 + rim), y, y + 0.6, STONE, { top: shade(STONE, 0.95) });
   }
+  // the ashlar of the side the camera sees, left out where the arches open and over the deck's ramps
+  const side = wallOf(...rect(arm, ua, v - hw, ub, v + hw), arm.turn ? 'px' : 'pz');
+  courses(b, side, RIVER_Y, top, STONE, 7, (t, y) => {
+    const u = arm.turn ? ub - t : ua + t;
+    return y > soffit(u) + 0.2 && y < deck(u) - 0.1;
+  });
   // the cutwaters: each pier stands out of the bridge's sides up to where the arches spring
   for (const k of [1, 2]) {
     const u = ua + k * span;
-    masonry(b, rect(arm, u - pier / 2, v - hw - 0.35, u + pier / 2, v + hw + 0.35), SEA_Y - 1.5, spring + 0.9, k);
+    masonry(b, rect(arm, u - pier / 2, v - hw - 0.35, u + pier / 2, v + hw + 0.35), RIVER_Y - 0.5, spring + 1, k);
   }
   for (const v0 of [v - hw, v + hw - rim]) {
     const [x0, z0, x1, z1] = rect(arm, ua + RAMP, v0, ub - RAMP, v0 + rim);
-    masonry(b, [x0, z0, x1, z1], top - 0.4, top + 0.6, 31 + v0);
+    masonry(b, [x0, z0, x1, z1], top, top + 0.6, 31 + v0);
     battlements(b, x0, z0, x1, z1, top + 0.6, STONE, 0.3, 0.3, 0.9);
   }
   const gate = arm.turn ? 'pz' : 'px';
@@ -225,10 +215,10 @@ export function river(
     for (let z = cell.z0; z < z9; z++)
       if (at(x, z)?.wet)
         water.quad(
-          [x, SEA_Y, z],
-          [x, SEA_Y, z + 1],
-          [x + 1, SEA_Y, z + 1],
-          [x + 1, SEA_Y, z],
+          [x, RIVER_Y, z],
+          [x, RIVER_Y, z + 1],
+          [x + 1, RIVER_Y, z + 1],
+          [x + 1, RIVER_Y, z],
           waterColourAt(x, z, look.water),
           [0, 1, 0],
         );

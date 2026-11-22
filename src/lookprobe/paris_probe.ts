@@ -5,9 +5,10 @@
 import * as THREE from 'three/webgpu';
 import { type Column, PARIS, type Tradition, fineGround, fineHouse } from '../buildings';
 import { Batch, type RGB, type Rnd, mix, rgb, seeded, shade } from './batch';
-import { LAND_Y, N, SEA_Y } from './layout';
+import { LAND_Y, N } from './layout';
 import { CATHEDRAL, cathedral } from './paris_cathedral';
-import { river } from './paris_river';
+import { RIVER_Y, river } from './paris_river';
+import { STONE } from './paris_stone';
 import { EARTH } from './scenery';
 import { NEAR_LIGHT, type StageScene, showError, stage } from './stage';
 
@@ -43,6 +44,9 @@ const TR: Tradition = {
   roofs: moved(PARIS.roofs ?? [PARIS.roof], hexOf('roof'), num('roofspread', 1)),
   quay: {
     ...PARIS.quay,
+    // the quay walls in the stone of the bridges and the town wall, as in the picture
+    wall: shade(STONE, 0.92),
+    coping: shade(STONE, 1.06),
     paving: hexOf('pave') ?? PARIS.quay.paving,
     spread: num('pspread', PARIS.quay.spread ?? 1),
     slab: num('slab', PARIS.quay.slab ?? 2),
@@ -284,12 +288,12 @@ async function build(): Promise<StageScene> {
   // the town takes the grid's cells up to the fifth along x and from the third along z; its quays lie a block and a
   // half beyond its outer lanes, the river beyond them
   const [nx, nz] = RIVER ? [5, 2] : [7, 0],
-    cell = { x0: x0 - 10, z0: z0 - 10, size: size + 20, ox: 0, oz: 0, water: SEA_Y },
+    cell = { x0: x0 - 10, z0: z0 - 10, size: size + 20, ox: 0, oz: 0, water: RIVER_Y },
     xq = RIVER ? Math.round(x0 + nx * CELL + 1.5) : cell.x0 + cell.size,
     zt = RIVER ? Math.round(z0 + nz * CELL - 1.5) : cell.z0;
   ground.box(cell.x0, LAND_Y - 2, zt, xq, LAND_Y, cell.z0 + cell.size, EARTH, { top: shade(TR.quay.paving, 0.62) });
   const land: Column = { top: LAND_Y, wet: false, paved: true },
-    sea: Column = { top: SEA_Y, wet: true, paved: false },
+    sea: Column = { top: RIVER_Y, wet: true, paved: false },
     bank: Column = { top: LAND_Y, wet: false, paved: false },
     at = (x: number, z: number) =>
       x < xq && z >= zt ? land : z < zt - RIVER_W[0] || (z >= zt && x >= xq + RIVER_W[1]) ? bank : sea;
@@ -386,12 +390,15 @@ async function build(): Promise<StageScene> {
 }
 
 /**
- * the light of the near view (stage/look.ts) as the Paris gauntlet's search found it closest to the picture
- * (tools/lookprobe/search_paris.py, 21 Nov 2026), seen through `?tone=neutral&exposure=1.2&saturation=0.88&sea=0`
- * (the river in its own colour, without the sea's surface; the game's own tone stays AgX); each strength can be tried
- * out from the address, as in near.ts
+ * the light of the near view (stage/look.ts) for the picture, seen through
+ * `?tone=neutral&exposure=1.2&saturation=0.88&sea=0` (the river in its own colour, without the sea's surface; the
+ * game's own tone stays AgX). Sky and bounce are as the Paris gauntlet's search found them
+ * (tools/lookprobe/search_paris.py, 21 Nov 2026); its sun, side and fill (1.364, 0.923, 0.675) lit every face alike,
+ * where the picture's faces turned from the sun are clearly darker, so those three are set by eye: more sun, less of
+ * the two lights that brighten the shade (OWN RULE for the prototype). Each strength can be tried out from the
+ * address, as in near.ts
  */
-const FOUND = { ...NEAR_LIGHT, sun: 1.364, side: 0.923, sky: 0.755, bounce: 0.299, fill: 0.675, skyColor: 0xc4d1f0 };
+const FOUND = { ...NEAR_LIGHT, sun: 1.8, side: 0.45, sky: 0.755, bounce: 0.299, fill: 0.35, skyColor: 0xc4d1f0 };
 const LIGHT = { ...FOUND };
 for (const k of ['sun', 'side', 'sky', 'bounce', 'fill', 'mirror'] as const) LIGHT[k] = num(k, FOUND[k]);
 LIGHT.mirrorTint = colour('mirrortint') ?? FOUND.mirrorTint;
