@@ -105,8 +105,8 @@ describe('the codes of the field columns', () => {
         const what = seasonOf(code % FAR_LOOK)!;
         expect(what.farmYear).toBe(FARM_YEAR.mediterranean);
         expect(what.first).toBe([CROP.fallow, CROP.spring, CROP.winter, CROP.vine][kind - 4]);
-        // at the first far step the corn stands as sheaves on its soil, the vines are a colour from afar
-        expect(code >= FAR_LOOK).toBe(step > CROPS_AT || kind === 7);
+        // at the first far step the corn stands as sheaves on its soil and the vines plant by plant (crops.ts)
+        expect(code >= FAR_LOOK).toBe(step > CROPS_AT);
       }
       expect(fields).toBeGreaterThan(1000);
       // where two grounds overlap, a column is the same field with the same number on both

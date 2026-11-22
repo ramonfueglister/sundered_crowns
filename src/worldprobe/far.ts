@@ -12,6 +12,7 @@
 //
 // The parts: far_lay.ts (what the laying out keeps while it runs), far_places.ts (towns, villages and the finest
 // step's plan), far_fields.ts, far_woods.ts.
+import type { Town } from '../figures';
 import type { Batch, RGB } from '../lookprobe/batch';
 import { type Ground, N, idx, occlude } from '../lookprobe/layout';
 import { CROWD_AT } from './crowd';
@@ -21,6 +22,7 @@ import { layPlaces, layPlanned } from './far_places';
 import { layWoods } from './far_woods';
 import { HOUSE_NUMBERS } from './houses';
 import type { Site } from './settle';
+import { marketOf, worshipOf } from './town_spots';
 
 /** What a column carries as part of itself (GroundTraits.cover): where `has` is set, the colours of its top and sides and how far it stands above its ground. */
 export interface Cover {
@@ -42,8 +44,12 @@ export interface Cover {
   houses?: number[];
   /** the crop of the lot on each column where the fields are drawn sheaf by sheaf (crops.ts CROPS_AT): crops.ts WHEAT_FIELD … OATS_FIELD, 0 where no field lies */
   crops?: Uint8Array;
+  /** beside `crops`, a furlong of the land register on the columns of its lot: its strips and rows (crops.ts `furlongOf`) */
+  furlongs?: Uint8Array;
   /** where the figures are drawn (crowd.ts CROWD_AT): what the finest step has on the four blocks of each column, which are street and which built on */
   quarters?: Uint8Array;
+  /** there too, the walled towns on the ground as the finest step lays them out, where the persons of the towns walk (`plannedTowns`) */
+  towns?: Town[];
   /** what each field column carries by the season (season_codes.ts `sow`): its code and its own number, two bytes to a column, 0 where no field lies */
   season?: Uint8Array;
 }
@@ -62,7 +68,7 @@ export interface Woods {
 }
 
 // (world.ts takes it from here)
-export { HOUSES_UNTIL } from './far_places';
+export { HOUSES_UNTIL, MODELS_UNTIL } from './far_places';
 
 /** The share of a lot's ground that is its field at a step: of the land's lots `ploughed / lotFill` are fields. */
 export const lotFill = (_step: number) => 1;
@@ -129,6 +135,25 @@ export const KINDS = [
   'tall wood',
   'blend',
 ] as const;
+/**
+ * The walled towns of the plan on the ground of a piece of the first far step whose first column is the world block
+ * ox, oz, as the finest step lays them out (settle.ts): in blocks of the finest step, with the market and the houses of
+ * worship of the land register to which the persons of a town go by their plan of the day (town_spots.ts).
+ */
+function plannedTowns(p: Plan, ox: number, oz: number, sites: readonly Site[]): Town[] {
+  const fine = (v: number) => Math.floor((v * 2 ** CROWD_AT) / p.pieceBlocks),
+    towns: Town[] = [];
+  for (let pz = fine(oz) - 1; pz <= fine(oz + N) + 1; pz++)
+    for (let px = fine(ox) - 1; px <= fine(ox + N) + 1; px++)
+      for (const { site, cx, cz, half } of p.pieces[`${px},${pz}`]?.towns ?? []) {
+        const s = sites.find((q) => q.id === site),
+          market = s?.lots ? marketOf(s.lots, cx, cz) : undefined,
+          worship = worshipOf(s?.marks, cx, cz);
+        towns.push({ site, cx, cz, half, ...(market ? { market } : {}), ...(worship.length ? { worship } : {}) });
+      }
+  return towns;
+}
+
 let last: Cover | null = null;
 /** the cover `coverLand` laid out last, for measuring it (piece.worker.ts `compare`) */
 export const laidOut = () => last;
@@ -152,7 +177,10 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
     share: new Float32Array(N * N).fill(1),
     kind: new Uint8Array(N * N),
   };
-  if (step === CROWD_AT) c.quarters = new Uint8Array(N * N);
+  if (step === CROWD_AT) {
+    c.quarters = new Uint8Array(N * N);
+    if (plan) c.towns = plannedTowns(plan, g.ox ?? 0, g.oz ?? 0, sites);
+  }
   const l = layingOf(g, step, things, sites, o, plan, c);
   layPlaces(l);
   layPlanned(l);
