@@ -1,0 +1,27 @@
+{
+ "fetched": "2026-11-22",
+ "endpoint": "https://query.wikidata.org/sparql",
+ "chronicle": "rulers_1291.json",
+ "seeds": 3138,
+ "hops": 4,
+ "window": [
+  1100,
+  1848
+ ],
+ "persons": 32577,
+ "by_hop": {
+  "0": 3134,
+  "1": 6585,
+  "2": 6320,
+  "3": 7407,
+  "4": 9131
+ },
+ "dropped": {
+  "not human": 98,
+  "outside the window": 1121
+ },
+ "with_father": 25146,
+ "with_mother": 21164,
+ "with_birth": 22669,
+ "with_death": 25454
+}
