@@ -1,0 +1,148 @@
+{
+ "source": "see each row",
+ "note": "written by tools/settlement/bridges.py from data/history/1291/settlement/bridges_1291.csv",
+ "named": [
+  {
+   "site": 753,
+   "name": "London Bridge",
+   "stone": true,
+   "houses": true,
+   "source": "Old London Bridge, en.wikipedia.org (read 21 November 2026): of stone 1176-1209, 19 arches, houses on it from the start; Harrison 2004"
+  },
+  {
+   "site": 68,
+   "name": "Grand-Pont",
+   "stone": true,
+   "houses": false,
+   "source": "Grand-Pont (Pont au Change), fr.wikipedia.org (read 21 November 2026): of stone under Louis VI, carried away by the flood of 1296; Boyer 1976"
+  },
+  {
+   "site": 68,
+   "name": "Petit-Pont",
+   "stone": true,
+   "houses": false,
+   "source": "Petit-Pont, fr.wikipedia.org (read 21 November 2026): of stone under Louis VI, carried away by the flood of 1296; Boyer 1976"
+  },
+  {
+   "site": 325,
+   "name": "Pont Saint-Bénézet",
+   "stone": true,
+   "houses": false,
+   "source": "Pont Saint-Bénézet, en.wikipedia.org (read 21 November 2026): stone arches, built 1177-1188; Boyer 1976"
+  },
+  {
+   "site": 1410,
+   "name": "Ponte Vecchio",
+   "stone": true,
+   "houses": false,
+   "source": "Ponte Vecchio, en.wikipedia.org (read 21 November 2026): rebuilt in stone after the flood of 1117, swept away 1333"
+  },
+  {
+   "site": 1329,
+   "name": "Rialto Bridge",
+   "stone": false,
+   "houses": false,
+   "source": "Rialto Bridge, en.wikipedia.org (read 21 November 2026): a timber bridge from 1255, of stone only from 1591"
+  },
+  {
+   "site": 2266,
+   "name": "Judith Bridge",
+   "stone": true,
+   "houses": false,
+   "source": "Judith Bridge, en.wikipedia.org (read 21 November 2026): of stone 1158-1172"
+  },
+  {
+   "site": 993,
+   "name": "Krämerbrücke",
+   "stone": false,
+   "houses": false,
+   "source": "Liste mittelalterlicher Steinbrücken in Deutschland, de.wikipedia.org (read 21 November 2026): of stone only 1325; Krämerbrücke, de.wikipedia.org: of timber before"
+  },
+  {
+   "site": 1099,
+   "name": "Steinerne Brücke",
+   "stone": true,
+   "houses": false,
+   "source": "Liste mittelalterlicher Steinbrücken in Deutschland, de.wikipedia.org (read 21 November 2026): of stone 1135-1146, finished by 1147 at the latest"
+  },
+  {
+   "site": 1057,
+   "name": "Alte Mainbrücke",
+   "stone": true,
+   "houses": false,
+   "source": "Liste mittelalterlicher Steinbrücken in Deutschland, de.wikipedia.org (read 21 November 2026): of stone about 1120, destroyed 1342"
+  },
+  {
+   "site": 915,
+   "name": "Dammtorbrücke",
+   "stone": true,
+   "houses": false,
+   "source": "Liste mittelalterlicher Steinbrücken in Deutschland, de.wikipedia.org (read 21 November 2026): of stone 1159 or soon after"
+  },
+  {
+   "site": 961,
+   "name": "Hohe Brücke",
+   "stone": true,
+   "houses": false,
+   "source": "Liste mittelalterlicher Steinbrücken in Deutschland, de.wikipedia.org (read 21 November 2026): built of stone between 1172 and 1200"
+  },
+  {
+   "site": 938,
+   "name": "Steinbrücke",
+   "stone": true,
+   "houses": false,
+   "source": "Liste mittelalterlicher Steinbrücken in Deutschland, de.wikipedia.org (read 21 November 2026): first named lapideus pons in 1229, 23 arches, 103 m"
+  },
+  {
+   "site": 1117,
+   "name": "Pliensaubrücke",
+   "stone": true,
+   "houses": false,
+   "source": "Liste mittelalterlicher Steinbrücken in Deutschland, de.wikipedia.org (read 21 November 2026): built about 1213-1259, first named 1286"
+  },
+  {
+   "site": 1039,
+   "name": "Alte Brücke",
+   "stone": true,
+   "houses": false,
+   "source": "Liste mittelalterlicher Steinbrücken in Deutschland, de.wikipedia.org (read 21 November 2026): first named as a stone bridge in 1276"
+  }
+ ],
+ "ferry": [
+  {
+   "site": 998,
+   "name": "Cologne",
+   "source": "Die Geschichte der Kölner Rheinbrücken, stadt-koeln.de (read 21 November 2026): no fixed crossing of the Rhine for almost 900 years until the boat bridge of Deutz in 1822; in between only boats and ferry ships"
+  },
+  {
+   "site": 1045,
+   "name": "Mainz",
+   "source": "Historische Brücken, Blätter zum Land, Landeszentrale für politische Bildung Rheinland-Pfalz (read 21 November 2026): Charlemagne's timber bridge burnt in 813, the first fixed Rhine bridge again in 1862; travellers and goods were taken over by ferry"
+  },
+  {
+   "site": 1867,
+   "name": "Seville",
+   "source": "Triana (Seville), en.wikipedia.org (read 21 November 2026): a bridge of boats from 1171, destroyed by Ferdinand III in 1248; the first solid bridge in 1852 (Puente de Triana)"
+  },
+  {
+   "site": 278,
+   "name": "Bordeaux",
+   "source": "Pont de pierre (Bordeaux), en.wikipedia.org (read 21 November 2026): the first bridge over the Garonne at Bordeaux, 1819-1822; until then the river was crossed by boat"
+  },
+  {
+   "site": 271,
+   "name": "Valence",
+   "source": "Les deux ponts, Département de la Drôme (read 21 November 2026): fords, a supposed timber bridge and boatmen, joined in the Middle Ages by a cable ferry (bac à traille); the first bridge, of wire, in 1830"
+  },
+  {
+   "site": 2342,
+   "name": "Pressburg",
+   "source": "List of bridges in Bratislava city, en.wikipedia.org (read 21 November 2026): but for a short-lived bridge of the 15th century, the first bridge over the Danube was the pontoon bridge of Caroline Augusta of 1825"
+  },
+  {
+   "site": 2363,
+   "name": "Buda",
+   "source": "Buza, Péter (1999): Bridges of the Danube, Budapest, p. 8 (library.hungaricana.hu, read 21 November 2026): the boat-bridges of the Middle Ages lay at the foot of the Tabán valley; a fixed bridge between the twin towns only centuries later"
+  }
+ ]
+}

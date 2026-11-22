@@ -65,9 +65,11 @@ import type { Table } from './ecs';
  *  src/sim/settlement/plan_ground.ts): its parcels, streets and landmarks lie on the register's land.
  *  41: the town walls and their gates (settlement feature 6, src/sim/systems/walls.ts): every town but Venice has a
  *  ring round it, open at the water, with a gate where a street crosses it.
- *  42: the country folk of the towns (src/sim/people/country_folk.ts): a town has its people after Chandler with the
+ *  42: the bridges of the towns (settlement feature 7, src/sim/systems/bridges.ts): a street along a way of the world
+ *  crosses a river in its town on a bridge, of stone where a source says so, else of timber.
+ *  43: the country folk of the towns (src/sim/people/country_folk.ts): a town has its people after Chandler with the
  *  farmers of a town, and the farmers its economy needs live in the hamlets round it. */
-export const STATE_VERSION = 42;
+export const STATE_VERSION = 43;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {
@@ -286,6 +288,20 @@ export const WALL_SCHEMA = {
   kind: 'u8',
 } as const;
 export type WallSchema = typeof WALL_SCHEMA;
+/** The bridges of the towns (settlement feature 7, src/sim/settlement/bridges.ts): where a street along a way of the
+ *  world crosses a river in its town, from the bank where the street ends to the other. A row is never freed. */
+export const BRIDGE_SCHEMA = {
+  /** the town (its site, as in the land register) */
+  site: 'i16',
+  /** its ends on the banks, on the street's middle line: metres east and south of the centre of the town, at the
+   *  scale of the houses */
+  x0: 'f32', z0: 'f32', x1: 'f32', z1: 'f32',
+  /** what it is built of (BRIDGE_KIND in src/sim/settlement/bridges.ts) */
+  kind: 'u8',
+  /** its row in `bridges_<year>.json` `named` (src/sim/content/bridges.ts), −1 for one without a name */
+  named: 'i16',
+} as const;
+export type BridgeSchema = typeof BRIDGE_SCHEMA;
 /** A firm of the economy of a city (economy feature 10): an entity for every firm the engine computes. The firms of
  *  a city lie one after the other, in the engine's order (`CityEconomies.firm0`). All but the place and the owner
  *  are written by the economy after every day (src/sim/systems/economy.ts). */
@@ -391,6 +407,8 @@ export interface WorldState {
   landmark: Table<LandmarkSchema>;
   /** the walls and gates of the towns (src/sim/systems/walls.ts) */
   wall: Table<WallSchema>;
+  /** the bridges of the towns (src/sim/systems/bridges.ts) */
+  bridge: Table<BridgeSchema>;
   economy: {
     /** the cities as economies that trade; null in a world that does not start in the year of their calibration */
     cities: CityEconomies | null;

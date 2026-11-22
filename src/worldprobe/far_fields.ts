@@ -5,7 +5,7 @@ import { OATS, OATS_SIDE, VINE_BODY, WHEAT, WHEAT_SIDE } from '../lookprobe/bloc
 import { Mat, N, idx, inGrid } from '../lookprobe/layout';
 import { FALLOW_SHOWS, SOIL_FALLOW } from '../lookprobe/terrain_colours';
 import { CROP } from '../sim/settlement/fields';
-import { CROPS_AT, FALLOW_FIELD, OATS_FIELD, WHEAT_FIELD } from './crops';
+import { CROPS_AT, FALLOW_FIELD, OATS_FIELD, VINE_FIELD, WHEAT_FIELD, furlongOf } from './crops';
 import type { Laying } from './far_lay';
 import { SEEN_FALLOW, SEEN_SPRING, SEEN_VINES, SEEN_WINTER, VINEYARD, field, tinted } from './field_colours';
 import { FAR_LOOK, seasonCode, sow, sowingOf } from './season_codes';
@@ -98,8 +98,22 @@ export function layFields(l: Laying) {
     rooms.set(key, fits);
     return fits;
   };
+  // at the first far step a field is the finest step's: its soil, and its sheaves or its vines standing on it (crops.ts
+  // draws them from the crop laid down here, and with the land register from the furlong's strips and rows)
+  const lay = (x: number, z: number, crop: number, furlong: number) => {
+    const i = idx(x, z);
+    g.mat[i] = Mat.Soil;
+    taken[i] = 1;
+    c.kind![i] = crop === FALLOW_FIELD ? 4 : crop === OATS_FIELD ? 5 : crop === VINE_FIELD ? 7 : 6;
+    c.crops ??= new Uint8Array(N * N);
+    c.crops[i] = crop;
+    if (!furlong) return;
+    c.furlongs ??= new Uint8Array(N * N);
+    c.furlongs[i] = furlong;
+  };
   // with the land register's fields: a block is field where its middle lies on a furlong of the register (from the
-  // second far step on, where a block is half a lot and more, anywhere on its lot), in the colour of its course's crop
+  // second far step on, where a block is half a lot and more, anywhere on its lot), in the colour of its course's crop;
+  // at the first far step where a block of it lies on the furlong (crops.ts `cropAt` gives each block its own)
   if (o.field)
     for (let z = 0; z < N; z++)
       for (let x = 0; x < N; x++) {
@@ -109,19 +123,26 @@ export function layFields(l: Laying) {
           { lx, lz, shift } = spotOf(px, pz),
           f = o.field(lx, lz);
         if (!f) continue;
-        const ax = px - (lx * LOT_W + shift),
-          az = pz - lz * LOT_D;
-        if (wider < 4 && (ax < 1 || az < 1 || az >= 1 + f.rows)) continue;
         const mx = ((lx + 0.5) * LOT_W + shift) / wider - ox,
           mz = ((lz + 0.5) * LOT_D) / wider - oz;
+        const vines = f.crop === CROP.winter && hash2(lx, lz, 67) < o.vines(mx, mz),
+          kind = f.crop === CROP.fallow ? FALLOW : f.crop === CROP.spring ? SPRING : vines ? 2 : 1;
+        if (step === CROPS_AT) {
+          // the middle of the column is the corner of its four blocks: the block after it must lie on the field, and
+          // the block before it in z within the furlong's rows (settle.ts: `rows` deep from the balk)
+          if (px - (lx * LOT_W + shift) < 1 || pz - lz * LOT_D - 2 >= f.rows) continue;
+          const crop = f.crop === CROP.fallow ? FALLOW_FIELD : f.crop === CROP.spring ? OATS_FIELD : WHEAT_FIELD;
+          lay(x, z, vines ? VINE_FIELD : crop, furlongOf(f.strips, f.rows));
+          sown(x, z, kind, f.courses, sowingOf(lx, lz), false);
+          continue;
+        }
         if (f.crop === CROP.fallow) {
           put(x, z, 0, tinted(SOIL_FALLOW, SEEN_FALLOW), SOIL_FALLOW, 4);
           c.share[idx(x, z)] = FALLOW_SHOWS;
-          sown(x, z, FALLOW, f.courses, sowingOf(lx, lz));
+          sown(x, z, kind, f.courses, sowingOf(lx, lz));
           continue;
         }
-        const vines = f.crop === CROP.winter && hash2(lx, lz, 67) < o.vines(mx, mz);
-        sown(x, z, f.crop === CROP.spring ? SPRING : vines ? 2 : 1, f.courses, sowingOf(lx, lz));
+        sown(x, z, kind, f.courses, sowingOf(lx, lz));
         put(
           x,
           z,
@@ -145,16 +166,10 @@ export function layFields(l: Laying) {
         const course = courseOf(courses(mx, mz), hash2(...blockOf(fx / grown, fz / grown), 66 + salt));
         const vines = course !== SPRING && course !== FALLOW && hash2(lx, lz, 67 + salt) < o.vines(mx, mz),
           sowing = sowingOf(lx, lz, salt);
-        // at the first far step a field is the finest step's: its soil, and its sheaves standing on it (crops.ts draws
-        // them from the crop laid down here); the vineyards stay a colour of their own
-        if (step === CROPS_AT && !vines) {
-          const i = idx(x, z);
-          g.mat[i] = Mat.Soil;
-          taken[i] = 1;
-          c.kind![i] = course === FALLOW ? 4 : course === SPRING ? 5 : 6;
-          c.crops ??= new Uint8Array(N * N);
-          c.crops[i] = course === FALLOW ? FALLOW_FIELD : course === SPRING ? OATS_FIELD : WHEAT_FIELD;
-          sown(x, z, course, courses(mx, mz), sowing, false);
+        // (the courses go by the numbers of their crops, as settle.ts lays them down on the finest step's fields)
+        if (step === CROPS_AT) {
+          lay(x, z, vines ? VINE_FIELD : course, 0);
+          sown(x, z, vines ? 2 : course, courses(mx, mz), sowing, false);
           continue;
         }
         sown(x, z, vines ? 2 : course, courses(mx, mz), sowing);

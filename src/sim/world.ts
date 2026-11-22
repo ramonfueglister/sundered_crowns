@@ -176,6 +176,10 @@ export class World {
   /** the chronicle of rulers of the start year of the world this build plays (src/sim/content/chronicle.ts), null
    *  without one: then no realm has a holder. Set by the loader (tools/sim/load.ts) */
   chronicle: Chronicle | null = null;
+  /** how the persons of the chronicle die (src/sim/systems/rulers.ts): 'chronicle' on the days of the sources (the
+   *  game), 'drawn' on days of their own from the life table and the rate of murder of rulers, the chronicle being
+   *  only the plan (a free world to measure how far a world goes from history: tools/sim/drift_check.ts) */
+  rulerDeaths: 'chronicle' | 'drawn' = 'chronicle';
   /** the chronicle of borders of the start year (src/sim/content/borders.ts), null without one: then the borders stay
    *  as the setup has them. Set by the loader (tools/sim/load.ts) */
   borders: Borders | null = null;
@@ -186,6 +190,9 @@ export class World {
    *  than the building ground and nothing said of steps and buildings), null without one: then the land register
    *  lays its hamlets by the building ground, as far as that reaches */
   dry: Ground | null = null;
+  /** the rivers round the towns of the start year (public/data/rivers_<year>.json: a river's water, not a lake's or
+   *  the sea's), null without one: then the towns have no bridges */
+  riverGround: Ground | null = null;
   /** the ground round the towns of the start year that the fields can lie on (public/data/tilth_<year>.json,
    *  src/sim/content/tilth.ts), null without one: then the land register lays the fields round the hamlets without
    *  regard to the ground */

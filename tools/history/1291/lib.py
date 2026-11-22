@@ -1,24 +1,17 @@
-import os
-from pathlib import Path
-
 """Compact DSL for writing data/history/1291/*.json.
 
 S(...) builds a state; continuing states inherit name/short/adjective/colour/coa/culture/faith/rank/government
 from their 1356 entry (inherit=True or inherit='<1356 id>').  Places are resolved to coordinates from the 1356
 holdings, the gazetteer and the map's named locations; 'Name@lat,lon' gives explicit coordinates.
 """
+
+import contextlib
 import glob
 import json
 import math
-import sys
+import os
 import unicodedata
-
-import numpy as np
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')) + '/tools/geo')
-import contextlib
-
-from common import H, W, lonlat_to_px
+from pathlib import Path
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')) + ''
 OLD = {}
@@ -59,23 +52,6 @@ for i in range(L):
     _add(_loc['name'][i], _loc['lat'][i], _loc['lon'][i], 'geo')
     if _loc['alt'][i]:
         _add(_loc['alt'][i], _loc['lat'][i], _loc['lon'][i], 'geo-alt')
-IDS = np.load(os.environ.get('GEO_CACHE', '/home/user/geo-cache') + '/stage/ids.npy')
-
-
-def loc_at(lo, la):
-    x, y = lonlat_to_px(lo, la)
-    xi, yi = int(x), int(y)
-    if not (0 <= xi < W and 0 <= yi < H):
-        return 0
-    v = IDS[yi, xi]
-    if 1 <= v <= L:
-        return int(v)
-    for r in range(1, 12):
-        win = IDS[max(0, yi - r) : yi + r + 1, max(0, xi - r) : xi + r + 1]
-        m = (win >= 1) & (win <= L)
-        if m.any():
-            return int(np.bincount(win[m]).argmax())
-    return 0
 
 
 def km(a, b):
@@ -115,43 +91,9 @@ def place(spec, near=None, sid='?'):
     return {'name': spec, 'lat': round(best[0], 3), 'lon': round(best[1], 3)}
 
 
-def P(name, born, dyn, gov, sta, gen, traits='', female=False):
-    return {
-        'name': name,
-        'born': born,
-        'dynasty': dyn,
-        'female': female,
-        'skills': [gov, sta, gen],
-        'traits': traits.split() if traits else [],
-    }
-
-
-def F(name, born, dyn, gov, sta, gen, traits=''):
-    return P(name, born, dyn, gov, sta, gen, traits, True)
-
-
-def COUNCIL(name='City council', sk=(3, 3, 1), traits='mercantile cautious'):
-    return {'name': name, 'born': None, 'dynasty': None, 'female': False, 'skills': list(sk), 'traits': traits.split()}
-
-
-def C(blazon, field, charges=(), division='plain', field2=None, ordinary=None, otinc=None):
-    ch = []
-    for c in charges:
-        d = {'type': c[0], 'tincture': c[1], 'count': c[2] if len(c) > 2 else 1}
-        if len(c) > 3 and c[3]:
-            d['arrangement'] = c[3]
-        if len(c) > 4:
-            d['text'] = c[4]
-        ch.append(d)
-    return {
-        'blazon': blazon,
-        'field': field,
-        'division': division,
-        'field2': field2,
-        'ordinary': ordinary,
-        'ordinary_tincture': otinc,
-        'charges': ch,
-    }
+def C(*pts):
+    """places for hold= or outposts=, one per argument, as S splits them (on ';')"""
+    return ';'.join(pts)
 
 
 def ids(s):

@@ -26,7 +26,7 @@ nothing built before Ramon agrees. Proposal with sources (German): https://claud
 | 8 | The calendar of the town: the firms work on the working days of their owner's faith (step 3 of the day plan) | built 19 Nov 2026 (Ramon, 19 Nov: way A of the proposal, after the archive the day plan; «vorwärts machen alles mergen comitten und feddich»). Economy feature 19. State 31 |
 | 9 | Sickness and childbed keep a worker from work (step 4 of the day plan) | built 20 Nov 2026 (Ramon, 20 Nov: «So bauen, Lohn läuft weiter» on the proposal https://claude.ai/artifact/QK327U5QQQGWNCnL5JhHV5). Economy feature 22. State 35 |
 | 10 | Service by the year and work by the day: a worker who heads a family works by the day, every other worker serves by the year (step 6 of the day plan) | built 20 Nov 2026 (Ramon, 20 Nov: «Phase A bauen und messen» on the proposal https://claude.ai/artifact/Wyqd64rfmZgJnz9GZ7Wof9). Economy feature 23. State 36. Since economy feature 24 (State 39) the family stands in first |
-| 11 | History where the world is still history: the shadow world, the parents of the persons of history, and the divergence | built 20 Nov 2026 (Ramon, 20 Nov: «ok» on the recommendation to build the shadow world and the graph of persons first, then the death of a ruler as luck). No new state |
+| 11 | History where the world is still history: the shadow world, the parents of the persons of history, and the divergence | built 20 Nov 2026 (Ramon, 20 Nov: «ok» on the recommendation to build the shadow world and the graph of persons first, then the death of a ruler as luck). No new state | step 2, succession by the order of the realm with the families of the rulers, checked in a free world: built 22 Nov 2026 (Ramon, 22 Nov: «Erbfolge mit Familien» on the decision card). No new state |
 
 ## Feature 1: persons of the 30 largest cities
 
@@ -1174,11 +1174,92 @@ are not born, the crown stays with nobody, and the divergence names the king, th
 
 ### Limits
 
-- **Nobody takes a crown that history gave to an unborn person.** A succession of the world's own is the next step.
+- **Nobody takes a crown that history gave to an unborn person.** Step 2 (below) gives it to somebody.
 - **Few mothers, no spouses.** The children of a queen who dies early stay unborn only where the chronicle knows her
-  as their mother (44 persons); weddings are not in the chronicle.
+  as their mother (44 persons); weddings are not in the chronicle. Step 2 fetched the families: 1,934 mothers.
 - **Wikidata could not be read from the cloud** (query.wikidata.org refuses it); the parents are those of the
-  holders.csv already in the repository.
+  holders.csv already in the repository. Step 2 fetched them on Ramon's Mac.
+
+### Step 2: the heir by the order of the realm, and a free world (22 November 2026)
+
+Ramon chose «Erbfolge mit Familien» on 22 November 2026: the families of the rulers from Wikidata, the succession by
+the realm's order (Kokkonen & Sundell 2014), checked in a free test world where the rulers die on days of their own;
+the game stays on history.
+
+**The families.** `tools/history/rulers/families.py` walks Wikidata from the 3,138 persons of the chronicle along
+father, mother and child, up to 4 steps, born and dead within 1100–1848 (OWN RULE: the window keeps the forefathers a
+succession of 1291 can go through, and leaves out the ancient lines Wikidata links to; 4 steps reach a ruler's first
+cousins and the grandfather's brothers, and further through the rulers among them): 32,577 persons (`data/history/rulers/wikidata/families/`). The chronicle carries the
+29,379 who never reigned as kin (64 without a known sex are left out: the orders go by sex), with father and mother;
+4,222 rulers now have 2,403 fathers and 1,934 mothers (892 and 44 before). Where Wikidata names two fathers or two
+mothers the person has none (213, counted). A kin has no happenings: history never brings them into the world, and
+they come into it only when they inherit.
+
+**The orders of succession** are those Kokkonen & Sundell (2014, Delivering Stability: Primogeniture and Autocratic
+Survival in European Monarchies 1000–1800, APSR 108(2), online appendix Table B1) code de jure for each monarch,
+carried to the 27 realms of the chronicle that are states of their sample, with the year an order begins and the year
+a state leaves the sample (Table B4; then no order is known): `data/history/rulers/succession.csv`.
+`src/sim/systems/heirs.ts`:
+
+| Order | The heir | Source |
+|---|---|---|
+| primogeniture | the eldest son, the line of a son who died before his father before his younger brothers; the male line first | "the principle of letting the oldest son inherit power" (p. 439), coded as agnatic primogeniture (p. 441) |
+| primogeniture, no male of the male line alive | by the same order through the daughters (male preference) | OWN RULE: the sources read give no rule for an extinct male line; Naples, Castile, Portugal and Scotland went so |
+| agnatic seniority | the eldest living male of the male line of the nearest forefather who has one | "the ruler's oldest brother inherited the throne before any of his sons" (p. 438) |
+| election | nobody by blood | p. 438 |
+
+**Where a crown goes** when history's holder of the day is not in the world (unborn, or dead in the world before the
+day history lets them die), at the end of the day (`src/sim/systems/succession.ts`):
+
+1. To a person history has reigning that day whom the world has alive (the minimal-rewrite rule: Tetlock & Belkin
+   1996, Counterfactual Thought Experiments in World Politics, ch. 1).
+2. Else to the heir of the last holder by the realm's order; a kin comes into the world for it.
+3. Else (an election, no order known, or no heir by blood) to the next person history let take the crown whom the
+   world has alive, only earlier. OWN RULE: no model of an election or of an unknown order was read; this keeps the
+   choice of history and moves only the day.
+4. Else the crown stays with nobody until history's next holder takes it.
+
+An accession of history takes the crown only where the crown is history's: nobody holds it, or a person history has
+reigning there. A crown the world gave to a person of its own stays with them.
+
+**The free world** (`World.rulerDeaths = 'drawn'`, only in `npm run drift:check`): every person of history with a known
+birth dies on a day of the life table (feature 2), the same day once in the world as before (`lifeEnd`), and a ruler
+can be murdered while holding a crown at a constant rate of 1,000 per 100,000 ruler-years (Eisner 2011, Killing
+Kings: Patterns of Regicide in Europe, AD 600–1800, British Journal of Criminology 51(3), 556–577; only the abstract
+was read). A parent the world does not have also dies on that day, so a child conceived after it is not born.
+
+### Measured (`npm run drift:check -- 5 25`, world of 1291, 5 seeds, mean per seed)
+
+The world that nothing touches is still history on every 91st day from 1291 to 1848 with the kin and the orders
+(`tests/divergence.test.ts`). The free world:
+
+| Year | Crowns not with history's holder | Crowns held (history) | Held by kin | Persons alive in one, dead in the other | Persons of history not born |
+|---|---|---|---|---|---|
+| 1316 | 39.4 | 177.0 (202) | 3.6 | 74.6 | 16.6 |
+| 1366 | 58.4 | 137.0 (177) | 6.0 | 38.0 | 79.0 |
+| 1416 | 69.4 | 108.0 (157) | 6.2 | 25.0 | 169.0 |
+| 1491 | 71.2 | 79.8 (131) | 4.6 | 21.2 | 311.0 |
+| 1566 | 70.4 | 57.6 (105) | 4.6 | 15.6 | 432.6 |
+| 1666 | 56.0 | 39.4 (64) | 1.8 | 10.4 | 540.0 |
+| 1766 | 49.6 | 27.6 (59) | 0.6 | 4.2 | 625.0 |
+| 1848 | 30.4 | 14.0 (31) | 1.0 | 2.8 | 658.0 |
+
+Of the 4,222 rulers, 658 are never born by 1848. The crowns that differ are mostly empty, and almost all empty ones
+are in realms without a known order: in one world (seed 1292) 56 of the 60 empty crowns of 1366 and 73 of the 80 of
+1491, mostly bishoprics, the principalities of the Empire, the Rus' and the realms outside Europe. A realm with an
+order finds an heir: in that world 12 of its 16 differing crowns of 1366 have one (Bohemia, Austria, Naples, Norway
+and Moscow with a kin), and an heir by the daughters can bring a crown far (Naples to a Portuguese, Milan to a
+Hohenzollern).
+
+### Limits of step 2
+
+- **Most realms have no order.** Kokkonen & Sundell code 27 of the chronicle's realms; the others wait for history's
+  next holder, who is in the world early only when born there. More orders need another source.
+- **Electors and claimants are not modelled.** An election keeps history's choice and only moves the day.
+- **The orders are de jure** as coded, without the special laws of a realm: where no male of the male line lives,
+  France too goes through the daughters (the OWN RULE above), though its Salic law shut them out.
+- **Eisner 2011** was read only in its abstract; the rate is taken as constant over time and realms.
+- **Spouses are fetched but not used:** a widow's or widower's second marriage is not in the chronicle.
 
 ## Feature 12: the day plan
 

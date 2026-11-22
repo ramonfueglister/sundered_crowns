@@ -4,7 +4,7 @@
 import * as THREE from 'three/webgpu';
 import { Batch, type RGB, type Rnd, hash2, seeded } from '../lookprobe/batch';
 import { crops } from '../lookprobe/blocks';
-import { type Model, type Side, type Style, heightOf, houseOf, m, m2, styleOf, ringWall, tower, townWall, type WallGap } from '../buildings';
+import { type Model, type Side, type Style, heightOf, houseOf, m, m2, styleOf, tower, townWall, type WallGap } from '../buildings';
 import { type Crop, type Ground, Mat, N, type P2, idx, inGrid, occlude } from '../lookprobe/layout';
 import type { Town } from '../figures';
 import { FINER } from './land';
@@ -12,7 +12,7 @@ import type { FieldShown, Parcels } from './lots';
 import { CROP } from '../sim/settlement/fields';
 import { seasonCode, sow, sowingOf } from './season_codes';
 import { marketOf, streetsOf, worshipOf } from './town_spots';
-import { onWall, wallOf } from './town_wall';
+import { onWall, townWorks } from './town_wall';
 
 /** A place of the gazetteer on the ground. */
 export interface Site { /** the same in every ground the place falls on */ id: number; at: P2; /** 1 village … 5 great city */ size: number; /** inhabitants in 1356, where an estimate exists */ pop: number | null; /** the region it builds as (buildings/traditions/regions.ts) */ region: string; style: Style; /** a hamlet of a town's farming families before its walls (hamlets.ts): houses close together, no church */ hamlet?: boolean; /** the parcels of its families in the land register (lots.ts): a house stands on each, at its street */ lots?: Parcels; /** its landmarks in the land register (landmarks.ts): each at its middle, `x` metres east and `z` south of the town's centre; with them the town has no church of the graphic's own */ marks?: readonly Mark[] }
@@ -37,6 +37,8 @@ export interface Told {
   town(site: number, cx: number, cz: number, half: number, y: number, wall: readonly WallGap[] | null): void;
   /** before anything is built (no water filled, no rock paved): whether a column of the ground is dry and no rock */
   dry?(at: (x: number, z: number) => boolean): void;
+  /** once all is built: whether a column of the ground is a river's water (not a lake's or the sea's), for the bridges of the land register (world.ts) */
+  river?(at: (x: number, z: number) => boolean): void;
   /** once the towns and hamlets stand, before the fields: whether a furlong can lie on the field lot (`lx`, `lz`) of
    *  the grid (dry ground without rock, nothing built, level to within two blocks, with a balk round it), for the
    *  simulation's fields (tools/worldprobe/build_tilth.ts; world.ts adds that no woods stand there, and gives the world
@@ -423,16 +425,14 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     // so that no figure stands or walks in it (src/figures/crowd.ts)
     const streets: number[] = [];
     for (let i = 0; i < N * N; i++) if (town[i] && used[i] !== 1) { used[i] = 2; streets.push(i); }
-    // a town of the land register has the wall the simulation lays along its ring (settlement feature 6): it steps
-    // with the ground, and each piece of the world draws what of it lies on its ground
+    // a town of the land register has the wall the simulation lays along its ring (settlement feature 6), stepping
+    // with the ground, and its bridges (feature 7); each piece of the world draws what of them lies on its ground
     const ring = s.lots?.walls;
-    if (ring?.length) {
-      const pieces = wallOf(s.lots!), ground = (x: number, z: number) => { const i = idx(Math.floor(cx + x), Math.floor(cz + z)); return inGrid(Math.floor(cx + x), Math.floor(cz + z)) && own(Math.floor(cx + x), Math.floor(cz + z)) && !g.wet[i] ? g.h[i] + 1 : null; };
-      things.append(ringWall(pieces, ground), mat.makeRotationY(0).setPosition(cx, 0, cz));
-      if (own(cx, cz)) count('wall');
-      // nothing else stands or grows on the ring, once the fields' ground is surveyed (the survey comes before the
-      // register, which lays the ring: tools/worldprobe/build_tilth.ts)
-      onWall(pieces, cx, cz, (x, z) => { if (inGrid(x, z)) onRing.push(idx(x, z)); });
+    if (s.lots) {
+      const at = (x: number, z: number): [number, number] => [Math.floor(cx + x), Math.floor(cz + z)], mine = (x: number, z: number) => inGrid(...at(x, z)) && own(...at(x, z));
+      const pieces = townWorks(things, mat.makeRotationY(0).setPosition(cx, 0, cz), s.lots, 1, 1, (x, z) => (inGrid(...at(x, z)) ? g.h[idx(...at(x, z))] + 1 : null), mine, (x, z) => !g.wet[idx(...at(x, z))]);
+      // nothing else stands or grows on the ring once the fields' ground is surveyed (before the ring: build_tilth.ts)
+      if (ring?.length && own(cx, cz)) count('wall'); onWall(pieces, cx, cz, (x, z) => { if (inGrid(x, z)) onRing.push(idx(x, z)); });
     }
     const walled = ring?.length ? true : carries && hi - lo <= 2;
     if (walled && !ring?.length) {

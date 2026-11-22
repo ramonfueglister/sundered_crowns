@@ -4,6 +4,7 @@
 // dots so that its lists reach the graphics card first, and every piece is scaled and placed for the view's step.
 import { SEA_Y } from '../lookprobe/layout';
 import type { Stage } from '../lookprobe/stage';
+import { CROWD_AT } from './crowd';
 import type { Held } from './piece_arrival';
 import { PIECE, type Spot, type View, outside } from './piece_sight';
 import { keyOf } from './pyramid';
@@ -199,6 +200,9 @@ export function createShow(
     if (settled === undefined) h.settle = undefined;
     else fading = true;
     stage.glide(h.group, settled ?? glideOf(l.v.wide, h.step));
+    // the figures of the last step that draws them go one by one over the same stretch, so that its border takes none
+    // away at once (the finest step's stay: the first far step draws them too, crowd.ts)
+    stage.thin(h.group, h.step >= CROWD_AT ? glideOf(l.v.wide, h.step) : 0);
     h.dots = [h.fade && !h.fade.rising ? share : 0, h.fade?.rising ? share : 1];
     // a piece laid in takes the first of the dots, as many as its share, and the view's own pieces under it the
     // rest (a piece that stands in for missing finer ones keeps all of its dots)

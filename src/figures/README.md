@@ -19,7 +19,8 @@ hood with a long tail. The head is drawn larger than true so that a figure reads
   bending of a farmer at work are computed on the graphics card from five numbers per figure that never change. The
   processor does nothing per frame for them.
 - Near: 516 triangles a figure (including the folded parts). Far, beyond 260 blocks across the picture: 108.
-- Only on the finest step of the map. On a coarser step a block is wider than a person is tall.
+- On the finest step of the map and on the first far step, which draws the finest step's figures, persons and all,
+  as large as it draws its houses (`worldprobe/crowd.ts`). On a coarser step a block is wider than a person is tall.
 - The persons of the 30 great cities follow the plan of the day (people feature 12, `docs/PEOPLE_DESIGN.md`): a
   person has a figure in the street, and where the plan takes the person, one at the market, one at a house of
   worship and, for the farmers, one at a furlong of the town (`farmers.ts`). Once a second the main thread puts on the stage the one where the plan has the person at the world's hour

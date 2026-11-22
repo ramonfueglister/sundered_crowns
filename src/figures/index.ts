@@ -14,7 +14,7 @@
 // schedule.ts which of a person's figures the plan of the day puts on the stage at the world's hour (main thread)
 //
 // index.ts exports only what runs in a worker; the stage takes stage.ts directly.
-export { type Figures, type SettledGround, type Town, type Where, crowd, figuresOf, gathered, place } from './crowd';
+export { type Figures, type SettledGround, type Town, type Where, crowd, figuresOf, gathered, placer } from './crowd';
 export {
   type PlacePeopleList,
   type TownPerson,

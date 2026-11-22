@@ -19,8 +19,9 @@ computes is in the world: what a town shows must be state of the ECS.
 | 4 | Every farmstead has its fields: the furlongs of each hamlet in the courses of its open field, a strip of each farmstead in every furlong | agreed by Ramon 19 Nov 2026 ("ok"); built in state 37. The world graphic draws only these fields round the towns |
 | 5 | The landmarks of every town at their real place and size: the church of its see, the great buildings known by name, the convents of the mendicants, the ruler's residence, the great abbeys alone | agreed by Ramon 19 Nov 2026 ("Ja, alles wie vorgeschlagen"); built in state 38. The world graphic draws only these landmarks |
 | 6 | Every town has its wall and gates: a ring round the town (or the walled share the sources know), open at water, a gate where a way crosses it | agreed by Ramon 21 Nov 2026 ("ja alle"); built in state 41. The world graphic draws only this wall |
-| 7 | The country folk: a town has its people after Chandler, with the farmers of a town; the farmers its economy needs live in the hamlets round it | chosen by Ramon 22 Nov 2026 ("Ja, Dörfer fertig bauen", after a measured build); built in state 42 |
-| – | Where a new house arises while the world runs; more real plans of the large towns; bridges; building by players | not proposed yet |
+| 7 | The bridges of every town: where a street along a way meets a river, a bridge to the other bank, of stone where a source says so, none where the sources say ferry | agreed by Ramon 21 Nov 2026 ("ok"); built in state 42. The world graphic draws these bridges in the towns |
+| 8 | The country folk: a town has its people after Chandler, with the farmers of a town; the farmers its economy needs live in the hamlets round it | chosen by Ramon 22 Nov 2026 ("Ja, Dörfer fertig bauen", after a measured build); built in state 43 |
+| – | Where a new house arises while the world runs (town growth, to be discussed first); the bridges of the ways between the towns; more real plans of the large towns; building by players | not proposed yet |
 
 ## Feature 1: every family of a town has a parcel
 
@@ -113,7 +114,7 @@ Salé.
 - All families of a town get equal parcels; who lives in the centre is the order of the ids.
 - One family a parcel. No source read on families per house; the narrowest attested front is not reached.
 - The law is fitted to the whole population of a town. Up to state 41 the world applied it to the persons who lived
-  inside (the farmers of the town lived in hamlets, about three quarters of its persons); since feature 7 a town's
+  inside (the farmers of the town lived in hamlets, about three quarters of its persons); since feature 8 a town's
   persons are its people after Chandler, of whom 1.6 % farm, so the law meets the population it was fitted to.
 - The law is fitted to western European towns of 1,000 to 200,000; Cairo (382,000) and towns outside western Europe
   are extrapolated.
@@ -312,8 +313,8 @@ keeps its exact ground (feature 1): the step is the parcel's width divided by th
 | street width | 6 × w × (1/√0.76 − 1): 6.6 / 9.3 / 21.1 m (smallest, median, widest of 1291) | as wide as the streets of feature 1's grid: Grenade's share of parcels round a block of two rows of six (Boerefijn 2000) |
 | market | a parcel deep, a lane round it | PLACEHOLDER, no measure of a market read |
 | r_c | 0.3 of the packed radius | calibrated: the blocks of the world of 1291 fall off as A^−1.89 above 200 m² (Dresden: A^−1.9, Lämmer et al. 2006; Barthelemy & Flammini 2008 get it with an exponential density of centres) |
-| join | 2.25 parcel depths | calibrated against the share of dead ends of medieval Paris (Vasserot, 0.10), with the townsfolk of feature 7; 3 with the landmarks of feature 5, 5 before |
-| crossing | 2 parcel widths | calibrated against the share of crossings of medieval Paris (0.12), with the townsfolk of feature 7; 2.5 with the landmarks of feature 5, 2 before |
+| join | 2.25 parcel depths | calibrated against the share of dead ends of medieval Paris (Vasserot, 0.10), with the townsfolk of feature 8; 3 with the landmarks of feature 5, 5 before |
+| crossing | 2 parcel widths | calibrated against the share of crossings of medieval Paris (0.12), with the townsfolk of feature 8; 2.5 with the landmarks of feature 5, 2 before |
 | served | 1 parcel depth | PLACEHOLDER: a spot this near a street takes its parcel there |
 | market search | 3 parcel depths | PLACEHOLDER |
 | ways | 1.5 px near, 3 px on, 30° | PLACEHOLDER: what reads the road map of 1291 as the ways of a town |
@@ -346,7 +347,7 @@ without what the world graphic built of its own, Paris's landmarks drawn togethe
 | 0.5, 5, 3 | 0.10 (0.05) | 0.78 (0.84) | 0.12 (0.11) |
 | 0.45, 5, 2.5 | 0.12 (0.05) | 0.73 (0.84) | 0.15 (0.10) |
 
-Recalibrated with feature 7 (22 Nov 2026): the towns hold their townsfolk, four to five times the families of before.
+Recalibrated with feature 8 (22 Nov 2026): the towns hold their townsfolk, four to five times the families of before.
 Paris alone in brackets; τ of the blocks.
 
 | r_c, join, crossing | dead ends | T-junctions | crossings | τ |
@@ -732,7 +733,7 @@ their town, the others moved off it (median of all 16 m, nine in ten within 48 m
 
 Six towns are laid out without regard to their ground (feature 1), but clear of their landmarks: Baghdad, Dax,
 Hamburg, Seville, Strasbourg and Valladolid (a river, and the landmarks at their real place, leave too little ground
-on one bank for the townsfolk of feature 7). Before feature 7: Aberdeen and Seville; before Venice's real plan read
+on one bank for the townsfolk of feature 8). Before feature 8: Aberdeen and Seville; before Venice's real plan read
 its ground, Venice too; before feature 5: Venice and Hormuz.
 
 The building ground of the towns (`ground_<year>.json`) is surveyed before anything the world graphic builds of its
@@ -790,7 +791,7 @@ Code: `src/sim/settlement/walls.ts` (the geometry: where a ring opens, its gates
 `data/history/1291/settlement/cesaretti_2016_s2_walled.csv`), the wall of Paris in `src/sim/content/town_plans_1291.json`
 (`tools/settlement/plan_walls.py`), `src/sim/systems/walls.ts` (`foundWalls`), state in `src/sim/state.ts` (`wall`),
 `src/net/lots.ts` and `tools/sim/write_lots.ts` (the wall in the answer of the server and in the file), the drawing in
-`src/buildings/fortified/ring-wall.ts`, `src/worldprobe/register.ts`, `settle.ts` and `far_places.ts`. Tests:
+`src/buildings/fortified/ring-wall.ts`, `src/worldprobe/town_wall.ts`, `settle.ts` and `far_places.ts`. Tests:
 `tests/walls.test.ts`.
 
 Written once when a world is founded, after the fields, or by the upgrade 40 → 41 of a running world (a world that has
@@ -889,8 +890,97 @@ town of the world lie closer than those of the real one, so a ring a street clea
   268–269 (very few fortifications in the lagoon up to the modern era).
 - Noizet, Hélène; Lallau, Émilie (2013): ALPAGE, the wall of Philippe Auguste (ODbL), `data/cadastre/`.
 
+## Feature 7: the bridges of every town
 
-## Feature 7: the country folk of the towns
+Proposal with the sources as Ramon read it: https://claude.ai/artifact/NEzEmY4UhDhPuCT7oo8X1j (Ramon chose "Brücken" on
+21 November 2026). Agreed with "ok" on 21 November 2026, all three recommendations with it: a bridge at every crossing
+of a way's street over a river in a town but where a source says ferry or boats; stone only where a source says stone,
+else timber; the towns only in this step, the bridges of the ways between the towns later as their own.
+
+Code: `src/sim/settlement/bridges.ts` (the geometry: from the end of a street over the river to the dry bank),
+`src/sim/content/bridges.ts` and `src/sim/content/bridges_1291.json` (written by `tools/settlement/bridges.py` from
+`data/history/1291/settlement/bridges_1291.csv`, every row with its source), `src/sim/systems/bridges.ts`
+(`foundBridges`), state in `src/sim/state.ts` (`bridge`), the rivers round the towns in `public/data/rivers_1291.json`
+(written by `tools/worldprobe/build_plan.ts` from the world graphic's ground, as the dry ground), `src/net/lots.ts` and
+`tools/sim/write_lots.ts` (the bridges in the answer of the server and in the file), the drawing in
+`src/buildings/works/town-bridge.ts` and `src/worldprobe/town_wall.ts` (`townWorks`, with the wall). Tests:
+`tests/bridges.test.ts`.
+
+Written once when a world is founded, after the walls, or by the upgrade 41 → 42 of a running world (a world that has
+not run gets them exactly as a new world). Nothing changes while the world runs.
+
+| Table | Column | Type | Meaning |
+|---|---|---|---|
+| bridge | site | i16 | the town |
+| bridge | x0, z0, x1, z1 | f32 | its ends on the banks, on the middle line of its street, metres east and south of the town's centre |
+| bridge | kind | u8 | 0 timber, 1 stone |
+| bridge | named | i16 | its row among the bridges known by name of `bridges_<year>.json`, −1 none |
+
+### Steps
+
+1. **Where a way meets a river, a bridge.** "Where a major road met a river there was a bridge", and the major bridges
+   stood "either in towns or between two towns" (Harrison 2010, pp. 33, 36). A street along a way of the world (above a
+   lane) that goes on into no other way and meets a river within 1.5 street widths of its end gets a bridge on its
+   line to the first dry ground beyond the water. Two streets that meet over one river share one bridge. Water that
+   ends in a lake, the sea or rock gets none: the ways of the world wait for a ferry there.
+2. **Ferry or boats.** Where a source says the town's great river was crossed by ferry or on boats in 1291 (Cologne,
+   Mainz, Seville, Bordeaux, Valence, Pressburg, Buda), the crossings at least half as wide as its widest get no
+   bridge; the narrower ones (an arm, a brook) keep theirs.
+3. **The bridges known by name** go to the widest crossings of their town, in the order of the file: London Bridge,
+   the Grand-Pont and the Petit-Pont of Paris, the Pont Saint-Bénézet, the Ponte Vecchio, the Rialto, the Judith
+   Bridge, the Krämerbrücke, and the stone bridges of the German towns in the list of medieval stone bridges
+   (Regensburg, Würzburg, Hildesheim, Halle, Quedlinburg, Esslingen, Frankfurt). A bridge known by name whose town has
+   no crossing in the world is left out (Regensburg, Würzburg and Hildesheim: no way's street of theirs meets the
+   river).
+4. **Stone or timber.** A bridge is of stone where its source says stone in 1291, every other one of timber: "we do not
+   know when most major bridges were stone. Was it 1300 or 1500?" (Harrison 2010, p. 37). Houses stand on it where its
+   source says so (London Bridge).
+
+The world graphic draws these bridges in the towns (`townBridge`), at every zoom of the towns' models: a bridge of
+stone on arches, its deck ramping up from both banks, with parapets; a bridge of timber on trestles with rails; houses
+along both sides of London Bridge. The bridges the graphic lays where its ways cross a river stay as they were.
+
+### Parameters
+
+| Parameter | Value | Source |
+|---|---|---|
+| towns crossed by ferry or on boats | 7 | each row of `bridges_1291.csv` |
+| bridges known by name | 15, 10 of stone, London Bridge with houses | each row of `bridges_1291.csv` |
+| a street meets a river | within 1.5 street widths of its end | OWN RULE: a street ends a block before the water it meets, its ground half a street wide |
+| great river of a ferry town | crossings at least half as wide as its widest | OWN RULE: the sources name the river, the world knows only how wide each crossing is |
+| graphic | an arch of 15 m, a trestle every 6 m, a stone deck 2 m above the higher bank | OWN RULE: London Bridge had 19 arches over 282 m, Regensburg 16 over 336 m; no source in hand for all |
+
+### What the world of 1291 gets (seed 1291)
+
+250 bridges in 211 towns, 10 of stone, 12 of them known by name. A bridge is 18 m long in the median, 24 m at the 90th
+percentile, the Rialto the longest with 84 m. The rivers round the towns are those of the world graphic, narrower than
+the real ones: London Bridge is 12 m long, the real one 282 m.
+
+### Own rules and gaps (no source)
+
+- How near its end a street meets a river, and which crossings of a ferry town are its great river.
+- The graphic's measures of arches, trestles and decks.
+- Only the bridges in the towns: the ways between the towns keep the graphic's own bridges, and inside a town the
+  graphic's bridge of a way can stand beside the town's own.
+- Most towns' bridges are not known from a source; the GIS of Brookes, Rye & Oksanen (2019) and Boyer's list of French
+  bridges (1976) are not used yet.
+- The rivers are the world graphic's, not the real ones: their widths and where they cross the towns.
+
+### Sources
+
+- Harrison, David (2010): Bridges: Past and Future. Medieval Settlement Research 25, pp. 32–39 (pp. 33, 36, 37).
+- Harrison, David (2004): The Bridges of Medieval England. Transport and Society 400–1800. Oxford, Clarendon.
+- Boyer, Marjorie Nice (1976): Medieval French Bridges. A History. Cambridge MA, Mediaeval Academy of America.
+- Brookes, Stuart; Rye, Eleanor; Oksanen, Eljas (2019): Bridges of Medieval England to c.1250. York, Archaeology Data
+  Service, doi:10.5284/1053676 (CC BY 4.0).
+- Liste mittelalterlicher Steinbrücken in Deutschland, de.wikipedia.org (read 21 November 2026).
+- The articles and pages named in each row of `data/history/1291/settlement/bridges_1291.csv`: London Bridge, the
+  Grand-Pont and Petit-Pont, the Pont Saint-Bénézet, the Ponte Vecchio, the Rialto, the Judith Bridge; the rivers of
+  Cologne (stadt-koeln.de), Mainz (Landeszentrale für politische Bildung Rheinland-Pfalz), Seville, Bordeaux, Valence
+  (Département de la Drôme), Pressburg and Buda (Buza 1999).
+
+
+## Feature 8: the country folk of the towns
 
 Code: `src/sim/people/country_folk.ts` (the rule), `src/sim/systems/people.ts` (`foundPeople` founds the townsfolk,
 then the country folk, and settles the families of the country folk in hamlets), `src/sim/systems/economy.ts`
@@ -928,7 +1018,7 @@ work the farms first and the townsfolk the other firms; who lives in a hamlet st
 
 ### What the world of 1291 gets (seed 1291, 60 days run)
 
-| | state 41 | state 42 |
+| | state 41 | state 43 |
 |---|---|---|
 | persons | 102,042 | 234,604 |
 | of them in the towns | 19,719 | 97,098 |
@@ -960,6 +1050,6 @@ work the farms first and the townsfolk the other firms; who lives in a hamlet st
   services of a village (BCvL's semi-rural and rural parts have both); the economy stays England's in the small.
 - Coventry 1522 is the only town of the source, from after the Black Death and in England; every town of the world
   takes its share. Florence 1427 (0.4 %) agrees on the order.
-- A world saved before state 42 keeps its persons, hamlets and register at 41 → 42: its old farming families would
+- A world saved before state 43 keeps its persons, hamlets and register at 41 → 42: its old farming families would
   need parcels in town by a rule we do not have. The live world of 1291 was started anew instead (Ramon, 22 November
   2026: "setze spielwelt zurück und starte neu bei 1291").

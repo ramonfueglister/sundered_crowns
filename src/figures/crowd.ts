@@ -108,7 +108,7 @@ export const gathered = (): Gathered => [[], [], [], [], [], [], []];
  * `person` the person of a town who stands there, `inTown` whether the block lies in a town whose street holds its
  * persons and not chance.
  */
-export function place(
+function place(
   out: Gathered,
   w: Where,
   x: number,
@@ -204,6 +204,57 @@ export function figuresOf(out: Gathered, ox: number, oz: number, scale?: [number
   };
 }
 
+/**
+ * What places the figures of a block x, z of a piece whose first block is the world block ox, oz (`place`), in and
+ * out of the walled towns `towns`. In a town with persons its street holds them, not chance, and each person has a
+ * figure at the market and at a house of worship too, shown when the plan of the day takes them there. The rulers of
+ * a town always stand in it: the piece of the finest step that holds the town's middle puts each in the free street
+ * block nearest the middle that it holds, one block to a ruler. `holds(x, z, cx, cz)` says whether the block x, z
+ * belongs to the piece of the finest step that holds the block cx, cz (a far step draws the finest step's figures:
+ * worldprobe/crowd.ts).
+ */
+export function placer(
+  towns: readonly Town[],
+  w: Where,
+  ox: number,
+  oz: number,
+  holds: (x: number, z: number, cx: number, cz: number) => boolean,
+): (out: Gathered, x: number, z: number) => void {
+  const peopled: { t: Town; aims: TownAims }[] = towns.flatMap((t) => {
+    const aims = aimsOf(t);
+    return aims ? [{ t, aims }] : [];
+  });
+  const rulerAt = new Map<number, TownPerson>();
+  for (const { t } of peopled) {
+    const cx = t.cx - ox,
+      cz = t.cz - oz;
+    if (!holds(cx, cz, cx, cz)) continue;
+    for (const p of townPeople(t.site) ?? []) {
+      if (p.ruler === undefined) continue;
+      search: for (let r = 0; r <= t.half + 2; r++)
+        for (let dz = -r; dz <= r; dz++)
+          for (let dx = -r; dx <= r; dx++) {
+            if (Math.max(Math.abs(dx), Math.abs(dz)) !== r) continue;
+            const x = cx + dx,
+              z = cz + dz;
+            if (!w.free(x, z, true) || !holds(x, z, cx, cz) || rulerAt.has(key(x + ox, z + oz))) continue;
+            rulerAt.set(key(x + ox, z + oz), p);
+            break search;
+          }
+    }
+  }
+  return (out, x, z) => {
+    const wx = x + ox,
+      wz = z + oz,
+      town = peopled.find(({ t }) => Math.abs(wx - t.cx) <= t.half && Math.abs(wz - t.cz) <= t.half),
+      k = key(wx, wz);
+    place(out, w, x, z, wx, wz, rulerAt.get(k) ?? town?.aims.street.get(k), !!town);
+    if (!town) return;
+    place(out, w, x, z, wx, wz, town.aims.market.get(k), true, FIGURE_AT.market);
+    place(out, w, x, z, wx, wz, town.aims.worship.get(k), true, FIGURE_AT.worship);
+  };
+}
+
 /** Builds the figures of a ground. `own` says whether a column belongs to this piece. */
 export function crowd(g: Ground, s: SettledGround, own: (x: number, z: number) => boolean): Figures {
   const ox = g.ox ?? 0,
@@ -231,47 +282,14 @@ export function crowd(g: Ground, s: SettledGround, own: (x: number, z: number) =
     h: (x, z) => g.h[idx(x, z)],
     tended: (x, z) => hands.has(lotOf(x + ox, z + oz)),
   };
-  const towns: { t: Town; aims: TownAims }[] = (s.towns ?? []).flatMap((t) => {
-    const aims = aimsOf(t);
-    return aims ? [{ t, aims }] : [];
-  });
-  // the rulers of a town always stand in it: the piece that holds the town's middle puts each in the free street
-  // column nearest the middle that it holds, one column to a ruler
-  const rulerAt = new Map<number, TownPerson>();
-  for (const { t } of towns) {
-    const cx = t.cx - ox,
-      cz = t.cz - oz;
-    if (cx < 0 || cz < 0 || cx >= N || cz >= N || !own(cx, cz)) continue;
-    for (const p of townPeople(t.site) ?? []) {
-      if (p.ruler === undefined) continue;
-      search: for (let r = 0; r <= t.half + 2; r++)
-        for (let dz = -r; dz <= r; dz++)
-          for (let dx = -r; dx <= r; dx++) {
-            if (Math.max(Math.abs(dx), Math.abs(dz)) !== r) continue;
-            const x = cx + dx,
-              z = cz + dz;
-            if (!w.free(x, z, true) || !own(x, z) || rulerAt.has(key(x + ox, z + oz))) continue;
-            rulerAt.set(key(x + ox, z + oz), p);
-            break search;
-          }
-    }
-  }
-  for (let z = 2; z < N - 2; z++)
-    for (let x = 2; x < N - 2; x++) {
-      if (!own(x, z)) continue;
-      const wx = x + ox,
-        wz = z + oz;
-      // in a town with persons the street holds them, not chance
-      const town = towns.find(({ t }) => Math.abs(wx - t.cx) <= t.half && Math.abs(wz - t.cz) <= t.half);
-      const k = key(wx, wz);
-      place(out, w, x, z, wx, wz, rulerAt.get(k) ?? town?.aims.street.get(k), !!town);
-      // the same person's figures at the market and at a house of worship, shown when the plan takes them there
-      if (!town) continue;
-      place(out, w, x, z, wx, wz, town.aims.market.get(k), true, FIGURE_AT.market);
-      place(out, w, x, z, wx, wz, town.aims.worship.get(k), true, FIGURE_AT.worship);
-    }
+  // (this piece is the finest step's: it holds the blocks it owns)
+  const holds = (x: number, z: number, cx: number, cz: number) =>
+    cx >= 0 && cz >= 0 && cx < N && cz < N && own(cx, cz) && own(x, z);
+  const at = placer(s.towns ?? [], w, ox, oz, holds);
+  for (let z = 2; z < N - 2; z++) for (let x = 2; x < N - 2; x++) if (own(x, z)) at(out, x, z);
   placeHands(out, w, hands, ox, oz, own);
+  // (a town whose list holds no figure yet counts too: once its persons change, they may walk)
   const f = figuresOf(out, ox, oz),
-    rolls = rollsOf([...towns.map(({ t }) => t.site), ...(s.furlongs?.keys() ?? [])]);
+    rolls = rollsOf([...(s.towns ?? []).map((t) => t.site), ...(s.furlongs?.keys() ?? [])]);
   return rolls.length ? { ...f, rolls } : f;
 }
