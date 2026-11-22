@@ -10,15 +10,16 @@
 // the same way from every distance: from the second far step on woods are blocks in the colours of their crowns
 // standing out of the open land and fields patches of their crops, however much land a block holds.
 //
-// The parts: far_lay.ts (what the laying out keeps while it runs), far_places.ts (towns, villages and the finest
-// step's plan), far_fields.ts, far_woods.ts.
+// The parts: far_lay.ts (what the laying out keeps while it runs), far_places.ts (towns, villages and the houses and
+// great buildings of the finest step's plan), far_towns.ts (the plan's walled towns), far_fields.ts, far_woods.ts.
 import type { Town } from '../figures';
 import type { Batch, RGB } from '../lookprobe/batch';
 import { type Ground, N, idx, occlude } from '../lookprobe/layout';
-import { CROWD_AT } from './crowd';
+import { CROWD_AT, hamletGroundOn } from './crowd';
 import { layFields } from './far_fields';
 import { type CoverAsks, layingOf } from './far_lay';
 import { layPlaces, layPlanned } from './far_places';
+import { layTowns } from './far_towns';
 import { layWoods } from './far_woods';
 import { HOUSE_NUMBERS } from './houses';
 import type { Site } from './settle';
@@ -81,6 +82,8 @@ export const lotFill = (_step: number) => 1;
  */
 export interface Plan {
   pieceBlocks: number;
+  /** the kinds of the houses: town, village, hamlet, farm (settle.ts `Told`) */
+  houseKinds?: readonly string[];
   /** the kinds of the great buildings: church, landmark (a town's greatest), tower, monument */
   greatKinds?: readonly string[];
   pieces: Record<
@@ -184,6 +187,9 @@ export function coverLand(g: Ground, step: number, things: Batch, sites: readonl
   const l = layingOf(g, step, things, sites, o, plan, c);
   layPlaces(l);
   layPlanned(l);
+  layTowns(l);
+  // the ground of a hamlet one block round its houses, after the walls, as the finest step lays it (settle.ts)
+  if (c.quarters && plan) hamletGroundOn(c.quarters, l.ox, l.oz, plan, l.wider);
   layFields(l);
   layWoods(l);
   const { raised } = l;
