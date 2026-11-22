@@ -11,10 +11,10 @@
 //    which their patches of light and shade leave alone), wider out within some dots of the coast as the depth
 //    picture has it (`withCoast`, sea_coast.ts). From near the bed shows through the shallows in place of that band
 //    (sea_bed.ts): sand at the water's edge, turquoise over it, and the sea's own blue where the bed has fallen
-//    away, which darkens out to the offing; from near its colours are greener, a teal, and lie in lighter and
-//    darker patches over the bed's banks and hollows. Lakes and rivers above the sea have the same colour and
-//    surface (stage/materials.ts), as deep in colour as they lie from their banks, without the surf and without
-//    the mirror's picture.
+//    away, which darkens out to the offing and lies in lighter and darker patches over the bed's banks and
+//    hollows; as the view rises, the offing's depth gives way to the depth picture's, evenly over three doublings
+//    of the distance. Lakes and rivers above the sea have the same colour and surface (stage/materials.ts), as deep
+//    in colour as they lie from their banks, without the surf and without the mirror's picture.
 //  - its surface changes with the distance: from near a calm swell, a few long soft waves in which the sky and what
 //    stands by the water are mirrored, and on it the wind's ripples, strokes of lighter water with darker troughs,
 //    small, a little bent, across the wind, in fields with calm water between them and fewer in the lee of the land,
@@ -72,19 +72,20 @@ import { WATER_DEEP, WATER_SHALLOW } from './terrain';
 /**
  * The water's colours (sRGB) by the depth picture's share: at the coast, over the shallows (some 30 m), at the
  * shelf's edge (some 150 m), over the slope (some 700 m) and over the deep sea (some 3000 m). As the stage lights
- * them and mirrors the sky in them, they come out some 7 lighter and a little greener. Each stop's second colour is
- * the water's from near (HALO_UNTIL): greener, a teal that darkens to a slate blue, where the first colours' pure
- * blue read as a swimming pool's beside houses and trees (round 9; EU5's open water from near is Lab 44-56 / -3 to
- * -14 / -14 to -21, ours was 56-59 / -17 to -21 / -21 to -26 with the first colours and is 54-58 / -18 to -22 / -16
- * to -23 with these). OWN RULE: chosen by eye between the first colours and EU5's, which are greyer than the land of
- * this game would bear.
+ * them and mirrors the sky in them, they come out some 7 lighter and a little greener. One colour for a depth at
+ * every distance, as in EU5, whose water is teal where it is shallow and blue where it is deep from near and from
+ * afar alike. (Until round 8 the stops were a purer blue, 0x22a6bd, 0x1a8cc4, 0x1673b4, 0x155d9c, 0x124a84, which
+ * read as a swimming pool's beside houses and trees. Round 9 gave the near view greener stops of its own, 0x3bb0b6,
+ * 0x2c97b0, 0x25799f, 0x215f88, 0x1c4a70: the water tipped from teal to blue as the view rose, a lake from hue 235
+ * to 252 degrees between 100 and 300 blocks across. These lie halfway between the two in CIELAB.) OWN RULE: by eye
+ * between the model's clear blue and EU5's water, which is greyer than the land of this game would bear.
  */
-const RAMP: readonly (readonly [number, number, number])[] = [
-  [0, 0x22a6bd, 0x3bb0b6],
-  [0.18, 0x1a8cc4, 0x2c97b0],
-  [0.38, 0x1673b4, 0x25799f],
-  [0.62, 0x155d9c, 0x215f88],
-  [0.88, 0x124a84, 0x1c4a70],
+const RAMP: readonly (readonly [number, number])[] = [
+  [0, 0x30abba],
+  [0.18, 0x2691ba],
+  [0.38, 0x2076a9],
+  [0.62, 0x1d5e92],
+  [0.88, 0x184a7a],
 ];
 /** the colour the water is drawn towards by the coast (within a few columns of the land, and within HALO dots of it) */
 const COAST = new THREE.Color(0x48c3cb);
@@ -111,10 +112,11 @@ const BED_UNTIL: readonly [number, number] = [0.5, 0.9];
  * from near the water is at least as deep in colour as these shares of the depth picture: by the land, and in the
  * offing, OFFING_BLOCKS finest blocks out by the picture's coast (0.1 to 0.34 over 8 to 110 blocks until round 8: a
  * picture a hundred blocks across was one colour beyond its shallows, where EU5's nearest views darken into the
- * deep). OWN RULE: by eye against EU5's nearest views
+ * deep; 0.06 to 0.5 over 4 to 80 in round 9, still a light sea a street's length from the shore). OWN RULE: by eye
+ * against EU5's nearest views
  */
-const OFFING: readonly [number, number] = [0.06, 0.5],
-  OFFING_BLOCKS: readonly [number, number] = [4, 80];
+const OFFING: readonly [number, number] = [0.1, 0.55],
+  OFFING_BLOCKS: readonly [number, number] = [3, 60];
 /**
  * water above the sea (lakes, rivers) is as deep in colour as these shares of the depth picture: by its banks, and
  * from the second of INLAND_COLUMNS columns out (the corners know the bank's distance up to some 8 columns). OWN
@@ -127,7 +129,8 @@ const INLAND: readonly [number, number] = [0.2, 0.34],
  * from near the water is this much deeper or shallower in colour, in shares of the depth picture, over the bed's
  * hollows and banks (sea_bed.ts `bedRelief`): the open water lies in darker and lighter patches some 15 to 20 blocks
  * across and not as one sheet (the lightness of the water in a near picture, blurred over 25 dots, between its 5th
- * and 95th hundredth: 11-21 in EU5's nearest views, 7-8 in round 8, 9-13 with this and OFFING). OWN RULE: by eye
+ * and 95th hundredth: 11-21 in EU5's nearest views, 7-8 in round 8, 9-13 with this and round 9's OFFING, 8-16 with
+ * round 10's). OWN RULE: by eye
  */
 const RELIEF = 0.09;
 /** how much darker the water's colour is in the nearest views, against their brighter light */
@@ -162,13 +165,15 @@ const FLECK = 3.35,
  * the ripples: the flecks' waves show from RIPPLE_BELOW spreads under the flecks' line as strokes of lighter water
  * (towards RIPPLE, by RIPPLE_SHARE), and their troughs as far below the mean as water darker by TROUGH: a fleck is
  * the white top of a wave among others, and the water between the flecks no smooth sheet (EU5's nearest water is
- * rippled all over, its whitecaps the tops of its ripples; ours was white strokes on a sheet of one blue). OWN RULE:
- * the numbers by eye against EU5's nearest pictures
+ * rippled all over, its whitecaps the tops of its ripples; ours was white strokes on a sheet of one blue). The
+ * strokes were half again as light and the troughs half as dark in rounds 8 and 9 (0.3, 0.08): they lay on the water
+ * as the white lines of a drawing, where EU5's ripples have a light and a dark side. OWN RULE: the numbers by eye
+ * against EU5's nearest pictures
  */
 const RIPPLE = new THREE.Color(0xbfeef0),
   RIPPLE_BELOW = 1.8,
-  RIPPLE_SHARE = 0.3,
-  TROUGH = 0.08;
+  RIPPLE_SHARE = 0.2,
+  TROUGH = 0.16;
 /**
  * the flecks' groups drift at this share of the pace of a swell as long as they are: from near, half as fast as the
  * flecks' own waves, as a group of waves on deep water runs half as fast as the waves in it (the group velocity:
@@ -210,6 +215,13 @@ const FOAM = new THREE.Color(0xf2f8f6);
 const SURFACE_UNTIL: readonly [number, number] = [0.25, 0.6],
   FLECKS_UNTIL: readonly [number, number] = [0.18, 0.42],
   RIPPLES_UNTIL: readonly [number, number] = [0.1, 0.3];
+/**
+ * how far the offing's depth of the near view reaches (OFFING), in finest blocks to a dot of the screen: fully up to
+ * the first and gone from the second, evenly over the doublings between them (in a picture 1672 dots wide: from 150
+ * to 1200 blocks across). In round 9 it went by HALO_UNTIL, within one doubling (130 to 280 blocks across): a
+ * shallow sea grew lighter at once as the view rose. OWN RULE
+ */
+const NEAR_UNTIL: readonly [number, number] = [0.09, 0.72];
 /** TSL's nodes of one number, a pair and a colour (or a direction) */
 type Float = THREE.Node<'float'>;
 type Vec2 = THREE.Node<'vec2'>;
@@ -305,7 +317,9 @@ function whereSeen(blocks: Float, home: Vec2, homeCoarse: Vec2) {
   const surface = float(1).sub(smoothstep(SURFACE_UNTIL[0], SURFACE_UNTIL[1], acrossScreen)),
     flecked = float(1).sub(smoothstep(FLECKS_UNTIL[0], FLECKS_UNTIL[1], acrossScreen)),
     rippled = float(1).sub(smoothstep(RIPPLES_UNTIL[0], RIPPLES_UNTIL[1], acrossScreen));
-  return { pFine, pCoarse, acrossDot, acrossScreen, nearest, surface, flecked, rippled, blocks };
+  /** 1 where the water is as deep in colour as the near view's offing, 0 where it is as deep as the depth picture has it */
+  const near = float(1).sub(smoothstep(Math.log2(NEAR_UNTIL[0]), Math.log2(NEAR_UNTIL[1]), log2(acrossScreen)));
+  return { pFine, pCoarse, acrossDot, acrossScreen, nearest, surface, flecked, rippled, near, blocks };
 }
 
 /** a colour as a node (three keeps a Color's components in linear light) */
@@ -313,11 +327,11 @@ const lin = (c: THREE.Color) => vec3(c.r, c.g, c.b);
 /** the green and blue of the water's corners at the coast and some 8 columns out (terrain.ts) */
 const [, gs, bs] = WATER_SHALLOW,
   [, gd, bd] = WATER_DEEP;
-/** the colour of the depth's share t, through the stops of RAMP: their first colours, or (`near` 1) their second */
-const ramp = (t: Float, near: Float) => {
-  const at = (i: number) => mix(lin(new THREE.Color(RAMP[i][1])), lin(new THREE.Color(RAMP[i][2])), near);
-  let c: Vec3 = at(0);
-  for (let i = 1; i < RAMP.length; i++) c = mix(c, at(i), smoothstep(RAMP[i - 1][0], RAMP[i][0], t));
+/** the colour of the depth's share t, through the stops of RAMP */
+const ramp = (t: Float) => {
+  let c: Vec3 = lin(new THREE.Color(RAMP[0][1]));
+  for (let i = 1; i < RAMP.length; i++)
+    c = mix(c, lin(new THREE.Color(RAMP[i][1])), smoothstep(RAMP[i - 1][0], RAMP[i][0], t));
   return c;
 };
 
@@ -379,14 +393,14 @@ function waterColour(
   // smoothed over its dots, and the sea darkens out to the offing as it lies farther from the land (rivers and lakes
   // are the shelf's colour beyond their banks)
   const offing = mix(float(OFFING[0]), float(OFFING[1]), smoothstep(OFFING_BLOCKS[0], OFFING_BLOCKS[1], coastBlocks)),
-    ofSea = mix(share, max(shareSmooth, mix(float(RAMP[1][0]), offing, sea)), coarse);
+    ofSea = max(mix(share, shareSmooth, coarse), mix(float(RAMP[1][0]), offing, sea).mul(seen.near));
   // (a lake or a river lies on the land of the depth picture, which knows no depth there: its depth goes by how far
   // the water lies from its banks, at every distance alike)
   const inland = mix(float(INLAND[0]), float(INLAND[1]), smoothstep(INLAND_COLUMNS[0], INLAND_COLUMNS[1], d)),
     t = mix(ofSea, inland, above).add(bedRelief(seen.pFine).mul(RELIEF).mul(coarse));
   // (the near view's light is brighter: the water is as dark there as it looks from afar; the foam is white in it)
   const darker = mix(float(1), float(NEAREST_DARKER), seen.nearest);
-  const body = mix(ramp(t, coarse), lin(COAST), coast).mul(through.z.oneMinus()).add(lin(BED).mul(through));
+  const body = mix(ramp(t), lin(COAST), coast).mul(through.z.oneMinus()).add(lin(BED).mul(through));
   // the wind's ripples and flecks leave the shallows by the shore calm
   const offShore = smoothstep(FLECK_OFF[0], FLECK_OFF[1], d),
     water = mix(body, lin(RIPPLE), ripple.mul(offShore).mul(RIPPLE_SHARE)).mul(
