@@ -15,15 +15,17 @@ import {
   fieldHands,
   figuresOf,
   gathered,
+  loadTownPeople,
   lotOf,
   placeHands,
   placer,
 } from '../figures';
-import { Mat, N, idx, inGrid } from '../lookprobe/layout';
+import { Mat, N, idx, inGrid, onGrid } from '../lookprobe/layout';
 import type { Part } from '../lookprobe/terrain';
 import { cropAt } from './crops';
+import { loadParcels, lotsOfTowns } from './lots';
 import { PIECE } from './piece_sight';
-import { RIM } from './table';
+import { RIM, type Table } from './table';
 import { uprightOf } from './zoom';
 
 /** the step whose columns hold four blocks of the finest step, the only far step that draws figures */
@@ -143,4 +145,15 @@ export function farCrowd(
   placeHands(out, w, hands, 2 * ox, 2 * oz, own, 2 * N);
   const f = figuresOf(out, 2 * ox, 2 * oz, [1 / 2, up]);
   return f.count ? f : undefined;
+}
+
+/**
+ * The figures of a piece of the first far step drawn from its table (piece.worker.ts), once the persons of the towns
+ * and their towns' furlongs (lots.ts `lotsOfTowns`) are loaded: from the map's data at `base`, of the start year
+ * `year`.
+ */
+export async function tableCrowd(t: Table, base: string, year?: number): Promise<Figures | undefined> {
+  const [, parcels] = await Promise.all([loadTownPeople(undefined, year), loadParcels(base, year ?? 1356)]),
+    lots = parcels ? lotsOfTowns(parcels) : undefined;
+  return onGrid(t.side, () => farCrowd(t, t.ox, t.oz, t.part, lots));
 }
