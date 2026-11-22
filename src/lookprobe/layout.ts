@@ -112,6 +112,8 @@ export interface GroundTraits {
     share?: number;
     /** false: the cover is the ground's own, bare soil for one, not something that stands on it (terrain.ts `carried`) */
     stands?: boolean;
+    /** false: what stands there is no trees, a field or a house (terrain_woods.ts `wooded`) */
+    trees?: boolean;
   } | null;
   /** the houses that stand on the ground as houses where it is seen from afar (worldprobe/houses.ts, HOUSE_NUMBERS numbers each) */
   readonly houses?: ArrayLike<number>;

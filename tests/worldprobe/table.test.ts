@@ -1,7 +1,8 @@
 // A far piece drawn from the table of its columns is the piece its build drew.
 import { describe, expect, it } from 'vitest';
-import type { Batch } from '../../src/lookprobe/batch';
-import { Mat, N, SUMMIT, idx, onGrid } from '../../src/lookprobe/layout';
+import type { Batch, RGB } from '../../src/lookprobe/batch';
+import { type GroundTraits, Mat, N, SUMMIT, idx, onGrid } from '../../src/lookprobe/layout';
+import { FLOOR } from '../../src/lookprobe/terrain_woods';
 import { RIM, drawGround, drawTable, keepTables, tableOf, tabled } from '../../src/worldprobe/table';
 import { packTable, unpackTable } from '../../src/worldprobe/table_pack';
 import { LAND_STEP, SIDE, land, part } from './land';
@@ -101,6 +102,44 @@ describe('the table of a far piece', () => {
           expect(back.summit[i] > SUMMIT, `${table.summit[i]}`).toBe(table.summit[i] > SUMMIT);
       // (a column that changed sides would split its walls elsewhere: other shapes)
       expect(again.ground.pos).toEqual(exact.ground.pos);
+    });
+  });
+
+  it('draws a green field that is no wood in its own colour, not as the floor of a wood, and keeps it so', () => {
+    onGrid(SIDE, () => {
+      const { g, t } = land();
+      // the spring corn of a far step: green and standing on the ground as the woods do, but no trees (world.ts tells
+      // them by what far.ts laid: far_fields.ts); without a word of it a green cover counts as trees. (In single
+      // floats, as a table keeps its colours.)
+      const SPRING: RGB = [Math.fround(0.3), Math.fround(0.55), Math.fround(0.07)],
+        sown = new Set<number>();
+      for (let z = part.z0; z < part.z1; z++)
+        for (let x = part.x0; x < part.x1; x++)
+          if (!g.wet[idx(x, z)] && g.mat[idx(x, z)] === Mat.Grass && !t.cover!(x, z)) sown.add(idx(x, z));
+      const withCorn = (trees: boolean | undefined): GroundTraits => ({
+        ...t,
+        cover: (x, z) =>
+          sown.has(idx(x, z))
+            ? { top: SPRING, side: SPRING, rise: 0, share: 1, stands: true, trees }
+            : t.cover!(x, z),
+      });
+      /** the green of the tops of the sown columns, all summed */
+      const green = (b: Batch) => {
+        let sum = 0;
+        for (let v = 0; v < b.pos.length / 3; v += 3)
+          if (b.nor[v * 3 + 1] > 0.99) {
+            const x = Math.floor((b.pos[v * 3] + b.pos[v * 3 + 3] + b.pos[v * 3 + 6]) / 3),
+              z = Math.floor((b.pos[v * 3 + 2] + b.pos[v * 3 + 5] + b.pos[v * 3 + 8]) / 3);
+            if (sown.has(idx(x, z))) for (let c = 0; c < 3; c++) sum += b.col[(v + c) * 3 + 1];
+          }
+        return sum;
+      };
+      expect(sown.size).toBeGreaterThan(300);
+      const field = drawGround(g, withCorn(false), true, part, true),
+        wood = drawGround(g, withCorn(undefined), true, part, true);
+      expect(green(wood.carried!) / green(field.carried!)).toBeCloseTo(FLOOR, 2);
+      const again = drawTable(tableOf(g, withCorn(false), part), true, LAND_STEP);
+      for (const name of ['ground', 'carried'] as const) expect(lists(again[name]), name).toEqual(lists(field[name]));
     });
   });
 });

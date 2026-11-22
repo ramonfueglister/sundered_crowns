@@ -323,7 +323,7 @@ class WorldTraits implements GroundTraits {
     const cover = this.mean;
     if (!cover) return null;
     const i = idx(x, z);
-    return cover.has[i] ? { top: [cover.top[i * 3], cover.top[i * 3 + 1], cover.top[i * 3 + 2]] as const, side: [cover.side[i * 3], cover.side[i * 3 + 1], cover.side[i * 3 + 2]] as const, rise: cover.rise[i], share: cover.share[i], stands: !cover.kind || STANDS.has(cover.kind[i]) } : null;
+    return cover.has[i] ? { top: [cover.top[i * 3], cover.top[i * 3 + 1], cover.top[i * 3 + 2]] as const, side: [cover.side[i * 3], cover.side[i * 3 + 1], cover.side[i * 3 + 2]] as const, rise: cover.rise[i], share: cover.share[i], stands: !cover.kind || STANDS.has(cover.kind[i]), trees: !cover.kind || WOODED.has(cover.kind[i]) } : null;
   }
   /** the low country is sun-bleached, the mountain meadows are green */
   bleach(x: number, z: number) { return smooth(900, 200, fieldAt(this.metres, x, z)); }
