@@ -1,12 +1,13 @@
 // The places of a far piece (far.ts `coverLand`): where the finest step's plan is not known, towns and villages laid
 // out by rules of their own; where it is, the finest step's own houses, great buildings and walled towns.
-import { type RGB, type Rnd, hash2, rgb, seeded, shade } from '../lookprobe/batch';
+import { type Batch, type RGB, type Rnd, hash2, rgb, seeded, shade } from '../lookprobe/batch';
 import { Mat, N, idx, inGrid, occlude } from '../lookprobe/layout';
 import { type HouseStyle, type Model, type Style, ringWall, tower, townWall } from '../buildings';
 import { builtOn, streetOn } from './crowd';
 import type { Laying } from './far_lay';
+import { type PlannedTown, greatOn, markOn, monumentOn, plannedTown } from './far_marks';
 import { houseShape } from './houses';
-import { PEOPLE_PER_PERSON, PERSONS_PER_FLOOR_BLOCK, POP_OF_SIZE, WALLED_FROM } from './settle';
+import { PEOPLE_PER_PERSON, PERSONS_PER_FLOOR_BLOCK, POP_OF_SIZE, type Site, WALLED_FROM } from './settle';
 import { streetsOf } from './town_spots';
 import { onWall, wallOf } from './town_wall';
 
@@ -27,7 +28,7 @@ const STREETS = 18;
 const WALL = rgb(0xcdb89c),
   STONE = rgb(0xe6dccc);
 /** up to this step the great buildings are their own models, made smaller; beyond it they are blocks of stone under their roofs */
-const MODELS_UNTIL = 2;
+export const MODELS_UNTIL = 2;
 /**
  * Up to this step the houses of the finest step are drawn as houses, each where it stands and as large as it is, with
  * its walls and roof (lookprobe/houses.ts), and no longer as blocks of their roof's colour: from near to far the same
@@ -212,7 +213,16 @@ export function layPlanned(l: Laying) {
   // block shows the roofs of the houses on it as far as they cover it
   if (plan) {
     /** how much of a block the houses laid on it cover */
-    const housed = new Float32Array(N * N);
+    const housed = new Float32Array(N * N),
+      marked = new Map<string, (Batch | null)[]>(),
+      walled = new Map<number, PlannedTown | null>(),
+      greats = new Map<string, Map<string, Batch>>();
+    // a walled town's other great buildings as the finest step built them (far_marks.ts `greatOn`)
+    const greatOf = (s: Site, gx: number, gz: number, gw: number, gd: number) => {
+      if (!walled.has(s.id)) walled.set(s.id, plannedTown(plan, s.id, (s.at[0] + ox) * wider, (s.at[1] + oz) * wider));
+      const t = walled.get(s.id);
+      return t ? greatOn(s, gx, gz, gw, gd, t.cx, t.cz, t.stood, greats) : null;
+    };
     const side = plan.pieceBlocks,
       fine = (v: number) => Math.floor((v * wider) / side);
     for (let pz = fine(oz); pz <= fine(oz + N); pz++)
@@ -292,12 +302,23 @@ export function layPlanned(l: Laying) {
                 : name === 'tower'
                   ? { build: tower, w: 3, d: 3, height: 10 }
                   : null;
+          // a landmark of the register or a monument: the finest step's own model, as large as it is (far_marks.ts)
+          const world = (x: number, z: number): [number, number] => [(x + ox) * wider, (z + oz) * wider];
+          let mark: Batch | null = null;
+          if (step <= MODELS_UNTIL && name !== 'tower' && s?.marks)
+            mark = markOn(s, gx, gz, gw, gd, world(s.at[0], s.at[1]), marked);
+          else if (step <= MODELS_UNTIL && id < 0) mark = monumentOn(o.monuments ?? [], gx, gz, gw, gd, world);
+          else if (step <= MODELS_UNTIL && s) mark = greatOf(s, gx, gz, gw, gd);
+          // else a town's first great building is its church or its cathedral, built from its numbers as they start
+          // (settle.ts: a village's church, a walled town's building in the middle, before its other churches)
+          const first = name === 'landmark' || (name === 'church' && (s?.size ?? 0) < 4),
+            made = mark ? () => mark : model ? () => model.build(seeded(1000 + id + (first ? 0 : k))) : null;
           const roof = s ? pick(s.style.house.roofs, 0) : STONE,
             x0 = Math.floor(gx / wider) - ox,
             z0 = Math.floor(gz / wider) - oz,
             x1 = Math.max(x0 + 1, Math.round((gx + gw) / wider) - ox),
             z1 = Math.max(z0 + 1, Math.round((gz + gd) / wider) - oz);
-          if (step > MODELS_UNTIL || !model) {
+          if (step > MODELS_UNTIL || !made) {
             const covers = Math.min(1, (seenStanding * gw * gd) / ((x1 - x0) * (z1 - z0) * wider * wider));
             if (covers >= 0.25)
               for (let z = z0; z < z1; z++)
@@ -325,10 +346,7 @@ export function layPlanned(l: Laying) {
           const mx = (gx + gw / 2) / wider - ox,
             mz = (gz + gd / 2) / wider - oz;
           if (o.own(Math.floor(mx), Math.floor(mz)))
-            things.append(
-              model.build(seeded(1000 + id + k)),
-              m.makeScale(1 / wider, up, 1 / wider).setPosition(mx, y, mz),
-            );
+            things.append(made(), m.makeScale(1 / wider, up, 1 / wider).setPosition(mx, y, mz));
           occlude(g, x0, z0, x1, z1, y + (tenths / 10) * up);
         }
       }

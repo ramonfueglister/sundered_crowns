@@ -2,6 +2,7 @@
 // image, the kinds of ground, what the mesher asks of a ground (`GroundTraits`), and a few helpers on its columns.
 // One ground block is one unit. Where the probe scene's sea, river, roads, mountains, city and fields lie is in
 // scene/places.ts.
+import type { Town } from '../figures';
 
 /** side of the square ground grid, as a rule */
 export const GRID = 400;
@@ -118,8 +119,12 @@ export interface GroundTraits {
   readonly trees?: ArrayLike<number>;
   /** the crops of the lots where the ground draws the finest step's sheaves one by one (worldprobe/crops.ts, a byte to a column, N × N columns) */
   readonly crops?: ArrayLike<number>;
+  /** beside `crops`, the strips and rows of a furlong of the land register on its lot's columns (worldprobe/crops.ts `furlongOf`, a byte to a column, N × N columns) */
+  readonly furlongs?: ArrayLike<number>;
   /** where the figures are drawn from afar, what the finest step has on the four blocks of a column (worldprobe/crowd.ts, a byte to a column, N × N columns): kept with the ground, not drawn by it */
   readonly quarters?: ArrayLike<number>;
+  /** there too, the walled towns on the ground, where the persons of the towns walk (worldprobe/far.ts `Cover`): kept with the ground, not drawn by it */
+  readonly towns?: readonly Town[];
   /** what each field column carries by the season (worldprobe/season_codes.ts `sow`, two bytes to a column, N × N columns): kept with the ground for the stage, not drawn by it */
   readonly season?: Uint8Array;
 }
