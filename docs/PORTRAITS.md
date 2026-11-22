@@ -9644,6 +9644,99 @@ before), `runde180_blender.png` (Blender, from five sides: the plaited cut befor
 the jaw before and after), `runde180_blender_alle.png` (Blender: the hair under the veil, the waved cut, the
 small girls' hair).
 
+**Round 181: hair that hangs free ends lock by lock, in the Blender on Ramon's Mac** (2026-11-22).
+Round 180 left it untried: locks that part where the hair hangs free. The men's cut at the jaw and the small
+girls' loose hair were looked at from the side and from behind.
+
+What was read. Nothing. Looked at again: four heads of the reference with hair to the jaw or the neck
+(`ck3_05`, `ck3_09`, `ck3_13`, cut out to the size of ours) beside ours. Theirs ends in a few broad soft
+locks with rounded ends, a closed mass. Ours ended in 30 cords a head with a dark gap between each two, and
+through the gaps the neck showed: round 172's clumps, each strand drawn four fifths of the way to its
+clump's middle over its last 6 cm, and round 180's locks came apart into them. No reference picture shows
+such hair from the side or from behind; none shows a child. Not measured on the reference, by eye.
+
+What is changed.
+- **A lock ends together** (`tools/portrait/pipeline/hair_body.py`, `PARTED`'s `lock`, its eleventh and
+  twelfth number): the strands of one of round 180's locks end on one line, the strand at the lock's middle
+  on it and one at its border 2 degrees above it (about 3 mm at a man's jaw; the same length where hair
+  hangs lower), by the power 1.5 of the way from the middle: a lock ends in one round point, as a bowl cut's
+  clump since round 177. A lock ends a little above or below the cut's line, as a clump did; a strand keeps
+  0.4 of its own way off it.
+- **The ends are drawn together by a third only** (`clump`'s second number, 0.35 for 0.8, in `page01` and
+  `loose01`), and towards the middle of where the lock's strands end, not the clump's. The layer underneath
+  keeps the clumps.
+- The three cuts with free ends take it: the men's cut at the jaw, straight and in waves (`page01`,
+  `page02`), and the small girls' worn down (`loose01`). With 0 as the eleventh number and
+  `PART_CLUMP=30,0.8,0.6,0.45,1.5` (`LOOSE_CLUMP` the same) the script writes round 180's `page01` and
+  `loose01` byte for byte (on the Mac). The hair with plaits and the hair under a veil have no free ends and
+  are not touched (`plait01`, `part01` and a bowl cut, `bob01`, run on the Mac: byte for byte as before), so
+  the plaits' shade is not baked anew.
+- The three files `public/portrait/real/{page01,page02,loose01}_body.txt.zst` are written anew, by Blender
+  5.1.2 on the Mac, with the script as committed. Nothing in the builder and nothing on the stage; the wasm
+  is the same bytes.
+
+How it was made. Five trials in the cloud, each put into the portrait on a man with hair to the jaw and two
+small girls from the front, three quarters and the side: the ends drawn together by 0.35 alone; with the
+round point of 3 degrees; the point of the same length on every cut (it was four times as deep on a girl's
+hair, which hangs lower); the point of 2 degrees; the switch off (round 180's file again). Then, as rounds
+171 to 180, the script was sent to the socket of the Blender that is open on the Mac and run there in scenes
+of its own, one pass: the switches of earlier rounds taken out of that Blender's environment first (round
+180's lesson), `page01` and `loose01` with the old numbers, the three cuts anew, three cuts that must not
+change, and the three once more; each of the three rendered from the front, three quarters, the side, behind
+and above. Both times the same bytes, and the same as the cloud's Blender module wrote. Those are the files
+in the repository.
+
+Measured (`portrait/tests/hair_body.rs` with `SHOW=1`, on round 180's files and on these; the sheets of 36
+against round 180's):
+
+| | before | now |
+|---|---|---|
+| ends behind the ears (four men, two small girls) | 409 to 473 | 419 to 475 |
+| of the round behind the ears, in gaps of more than 3 degrees between two neighbouring ends | 0.42 to 0.46 | 0.20 to 0.26 |
+| the same, gaps of more than 2 degrees | 0.48 to 0.53 | 0.35 to 0.43 |
+| the widest gap, degrees (men; girls) | 11.6 to 13.1; 9.4 to 9.5 | 7.1 to 9.2; 10.2 to 10.6 |
+| corners and triangles (`page01`; `loose01`) | 35 037, 45 988; 48 220, 63 576 | 34 539, 45 340; 48 133, 63 460 |
+| portraits of the sheet that change | | 4 of 36 in the village, 4 of 36 at court |
+| the three hair files, packed | 2.78 MB | 2.76 MB (17 kB less) |
+
+Tried and not kept.
+- A point of 3 degrees: on a small girl's hair dark wedges between the locks behind.
+- The point in degrees alike on every cut: four times as deep where hair hangs lower.
+- Not tried: locks of the layer underneath; ends at more than one height (a second row of ends above the
+  first); a lock that turns in or out at its end; other numbers of locks.
+
+**One test new, none changed.** `hair_that_hangs_free_ends_lock_by_lock` (`portrait/tests/hair_body.rs`)
+reads the strands' ends behind the ears in their order round the head, and how much of that round lies in
+gaps of more than 3 degrees between two neighbours (3 degrees are about 5 mm at the nape): less than a third
+(0.20 to 0.26; round 180's files 0.42 to 0.46, and fail), and 300 ends and more. On two men with the
+straight cut, two with the waved one and two small girls. With 2 degrees the two rounds lay too close (0.43
+for 0.48), so 3 it is; the widest gap alone does not tell them apart on the girls. The round point is read
+by no test: it was looked at in Blender and in the portrait.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 180. The colour sheet: 160 of 160
+lines to the last figure.
+
+Honest about it. A small to middle step, and on few heads: of the 36 only the four small girls change; no
+man among them shows hair to the jaw (the men were looked at by themselves: the test page's men 940043 and
+940035). From the side and from behind the hair now ends as one hem with soft points, where it was cords with the
+neck showing between them; in Blender the difference is plain, in the portrait at its usual size it is
+small, and from the front there is next to none. What is not good: the hem is still ragged from near, with
+thin single ends below it, and at a few ends small black specks show (they were there before). A small
+girl's widest gap is no smaller than it was. The hair is one length all round: the reference's is layered,
+with shorter locks over longer ones, and its ends turn in or out; ours hang straight down. The waved cut's
+waves are round 172's. A man's cut at the jaw still looks much like a bowl cut from behind. The reference
+shows no such hair from the side or behind, so what "right" looks like there is our guess. Baked on one
+machine. Every number is by eye: PLACEHOLDER.
+
+Tests: `cargo test --release` as a whole 146 of 146 (one new); `tests/portrait.test.ts` and its neighbour
+46 of 46; typecheck and lint pass, no new warning.
+Pictures (project files, `portraits/`): `runde181_vorher_nachher.png` (two men with hair to the jaw, straight
+and waved, from the front, three quarters, the side and behind: before above, after below),
+`runde181_maedchen.png` (two small girls, the same), `runde181_nah.png` (their hair near, from the side and
+behind, before above and after below), `runde181_dorf.png` and `runde181_hof.png` (all 36, village and
+court, after; round 180's sheets are the before), `runde181_blender.png` (Blender, from five sides: the cut
+at the jaw and the girls' hair, round 180's above and this round's below; then the waved cut).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair

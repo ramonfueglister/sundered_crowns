@@ -736,6 +736,80 @@ fn parted_hair_lies_in_locks() {
     }
 }
 
+/// Where the strands of a hair end round the head (a piece of 24 triangles and more that takes less than half
+/// the image's breadth and ends below `under`): for each the angle of its lowest corner round the head's upright,
+/// in degrees from straight behind, in their order round the head.
+fn ends_round_the_head(hair: &Surface, out: &Portrait, under: f32) -> Vec<f32> {
+    fn root(of: &mut [usize], mut i: usize) -> usize {
+        while of[i] != i {
+            of[i] = of[of[i]];
+            i = of[i];
+        }
+        i
+    }
+    let mut place: HashMap<[u32; 3], usize> = HashMap::new();
+    let ids: Vec<usize> = hair.pos.iter().map(|p| { let n = place.len(); *place.entry(p.map(f32::to_bits)).or_insert(n) }).collect();
+    let mut of: Vec<usize> = (0..place.len()).collect();
+    for t in ids.chunks_exact(3) {
+        let a = root(&mut of, t[0]);
+        for &k in &t[1..] {
+            let b = root(&mut of, k);
+            of[b] = a;
+        }
+    }
+    let mut found: HashMap<usize, (usize, V3, f32, f32)> = HashMap::new();
+    for ((t, p), u) in ids.chunks_exact(3).zip(hair.pos.chunks_exact(3)).zip(hair.uv.chunks_exact(3)) {
+        let e = found.entry(root(&mut of, t[0])).or_insert((0, [0.0, f32::MAX, 0.0], f32::MAX, f32::MIN));
+        e.0 += 1;
+        for (p, u) in p.iter().zip(u) {
+            if p[1] < e.1[1] {
+                e.1 = *p;
+            }
+            e.2 = e.2.min(u[0]);
+            e.3 = e.3.max(u[0]);
+        }
+    }
+    let mut round: Vec<f32> = found
+        .values()
+        .filter(|&&(n, low, lo, hi)| n >= 24 && hi - lo < 0.5 && low[1] < under)
+        .map(|&(_, low, _, _)| (low[0] - out.cx).atan2(out.cz - low[2]).to_degrees())
+        .collect();
+    round.sort_by(f32::total_cmp);
+    round
+}
+
+#[test]
+fn hair_that_hangs_free_ends_lock_by_lock() {
+    // Round 181. The cut at the jaw (`page01`, waved `page02`) and a small girl's loose hair (`loose01`) hang
+    // free at their ends. Round 180's ended in 30 clumps a head, each clump's strands drawn 0.8 of the way to
+    // the clump's middle: cords, with a dark gap between each two (looked at in the portrait from the side and
+    // from behind). Now a lock's strands end together in one round point and are drawn a third of the way to the
+    // lock's middle (`hair_body.py`, `PARTED`'s `lock`, its last two numbers, and `clump`'s second).
+    // Read here: the ends behind the ears in their order round the head, and how much of that round lies in
+    // gaps of more than 3 degrees between two neighbouring ends (3 degrees are 5 mm at the nape). Measured:
+    // 0.20 to 0.26 on these six; round 180's files 0.42 to 0.46, and fail. The bound is a third: PLACEHOLDER,
+    // by these two rounds.
+    let Some(h) = head() else { return };
+    for (k, woman, age) in [(43u32, false, 29.0f32), (87, false, 29.0), (35, false, 29.0), (91, false, 29.0), (28, true, 5.0), (30, true, 6.0)] {
+        let out = build(&h, &person(k, woman, age), 1);
+        let who = format!("{} {k} of {age}", if woman { "girl" } else { "man" });
+        let hair = body(&out).unwrap_or_else(|| panic!("{who}: a body of hair"));
+        let (_, crown) = skin(&out);
+        let round = ends_round_the_head(hair, &out, crown - 0.5 * (crown - out.chin));
+        // (behind the ears: within 110 degrees of straight behind)
+        let gaps: Vec<f32> = round.windows(2).filter(|w| w[0].abs() < 110.0 && w[1].abs() < 110.0).map(|w| w[1] - w[0]).collect();
+        let all: f32 = gaps.iter().sum();
+        let wide: f32 = gaps.iter().filter(|g| **g > 3.0).sum();
+        let most = gaps.iter().copied().fold(0f32, f32::max);
+        if show() {
+            println!("{who}: {} ends behind the ears; {:.2} of the round lies in gaps of more than 3 degrees, the widest gap {most:.1} degrees", gaps.len() + 1, wide / all);
+            continue;
+        }
+        assert!(gaps.len() >= 300, "{who}: {} ends behind the ears", gaps.len() + 1);
+        assert!(3.0 * wide < all, "{who}: {} of the round behind the ears lies in gaps of more than 3 degrees between the ends: cords", wide / all);
+    }
+}
+
 #[test]
 fn one_man_in_ten_wears_his_hair_to_the_jaw_with_its_ends_turned_out() {
     // Round 133. Of the two men in ten whose bowl cut reaches the jaw, one has its ends turned out and up in rolls

@@ -167,12 +167,22 @@ CUTS = {
 # two is left out (locks of uneven breadth; one of more than one takes the image there and back, as round
 # 179's). The layer underneath has none. 0 as the first: none, and the files are round 172's and 175's. With
 # arch and lean of 1.6 and 1.4 mm dark slits opened between the locks. All PLACEHOLDER by eye.
+# (round 181) Hair that hangs free (the cuts with an `end`: `page01`, `page02`, `loose01`) ended in the cut's 30
+# clumps, each strand going four fifths of the way to its clump's middle over its last 6 cm: thirty cords with
+# dark gaps between them, from the side and from behind, and round 180's locks came apart into them. Now a lock
+# ends together. `lock`'s eleventh and twelfth number: by how many degrees a strand at a lock's border ends
+# above the lock's line (2 at the height of a man's jaw, the same length where hair hangs lower) and the power
+# of the way from the lock's middle by which it does: a lock ends in a round point, as a bowl cut's clump since
+# round 177. Its strands go towards the middle of where the lock's strands end, a third of the way (`clump`'s
+# second number, 0.35 for 0.8); the layer underneath keeps the clumps. With 0 as the eleventh and
+# `PART_CLUMP=30,0.8,0.6,0.45,1.5` (`LOOSE_CLUMP` the same) the files are round 180's. With 3 degrees a small
+# girl's hair showed dark wedges between the locks behind. All PLACEHOLDER by eye.
 PARTED = dict(
     parted=True, to=(92.0, -44.0), by=(60.0, 4.0), over=(8, 6, 35, 30, -50, -42), trend=14, lift=1.0, round=1.0,
     line=[(0, 8), (20, 4.9), (32, -2.4), (44, -8.4), (58, -13), (66, -17.5), (71, -24), (75, -20), (78, -12), (84, -12), (102, -12), (112, -16), (126, -28), (145, -40), (165, -46), (180, -48)],
     comb=(0.012, 0.7, 0.0, 1.0),
     shell=dict(h=0.02),
-    lock=tuple(_e('PART_LOCK', '0.010,0.008,0.06,0.4,0.3,0.6,0.3,15,5,0.3')),
+    lock=tuple(_e('PART_LOCK', '0.010,0.008,0.06,0.4,0.3,0.6,0.3,15,5,0.3,2.0,1.5')),
     layers=[
         dict(kind='under', n=44, w=(0.2, 0.32), flat=_e('PART_UFLAT', '0.1')[0], h=0.03, rise=0.012, gather=(0.1, 0.3, 0.35), short=_e('PART_SHORT', '4')[0], m=5, across=0.3, ring=0.09, wave=(0.002, 0.006, 1.2, 2.2), roll=0.1, tone=0.9, seed=3),
         dict(kind='edge', n=int(_e('PART_N', '50,140,90')[0]), fit=_e('PART_FIT', '2.3')[0], vary=0.3, flat=0.22, h=0.036, rise=0.016, gather=(0.1, 0.3, 0.3), blunt=0.6, m=3, across=0.3, ring=0.09, tones=0.07, wave=(0.002, 0.006, 1.2, 2.2), roll=0.3, tone=0.97, seed=4),
@@ -219,7 +229,7 @@ CUTS['page01'] = dict(
     PARTED, to=tuple(_e('PAGE_TO', '100,-85')), by=tuple(_e('PAGE_BY', '64,-14')), lift=_e('PAGE_LIFT', '2.2')[0],
     end=_e('PAGE_END', '-50')[0], ends=tuple(_e('PAGE_ENDS', '-2.5,2.5')), comb=tuple(_e('PAGE_COMB', '0.025,0.9,0,1')),
     layers=[dict(L, gather=(0.05, 0.1, 1.0)) for L in PARTED['layers']],
-    clump=tuple(_e('PART_CLUMP', '30,0.8,0.6,0.45,1.5')), tuck=tuple(_e('PAGE_TUCK', '0.12,0.03')),
+    clump=tuple(_e('PART_CLUMP', '30,0.35,0.6,0.45,1.5')), tuck=tuple(_e('PAGE_TUCK', '0.12,0.03')),
 )
 # The same in waves (round 130): `waves`: how far the bundles swing to the side and off the head, the length of a
 # wave, and how far from a bundle's beginning the waves begin. All PLACEHOLDER by eye.
@@ -233,7 +243,7 @@ CUTS['page02'] = dict(CUTS['page01'], waves=tuple(_e('PAGE_WAVES', '0.055,0.04,0
 # in the first pass in Blender).
 CUTS['loose01'] = dict(
     CUTS['page01'], to=tuple(_e('LOOSE_TO', '170,-87')), end=_e('LOOSE_END', '-60')[0], ends=tuple(_e('LOOSE_ENDS', '-1.5,1.5')), lift=_e('LOOSE_LIFT', '1.7')[0],
-    hang=_e('LOOSE_HANG', '0')[0], part_to=_e('LOOSE_PART', '-25')[0], tuck=None, clump=tuple(_e('LOOSE_CLUMP', '30,0.8,0.6,0.45,1.5')),
+    hang=_e('LOOSE_HANG', '0')[0], part_to=_e('LOOSE_PART', '-25')[0], tuck=None, clump=tuple(_e('LOOSE_CLUMP', '30,0.35,0.6,0.45,1.5')),
 )
 # Tightly curled hair (round 111): no bundles and no strands that run anywhere. Each hair is a coil of a few
 # millimetres, and a head of them is one springy mass that stands off the skull the same height all round, its
@@ -630,6 +640,14 @@ def parted(L, rng):
             th_c = np.sort((np.arange(int(clump[0])) + crng.uniform(-clump[3], clump[3], int(clump[0]))) * 360 / int(clump[0]) - 180)
             up_c = crng.uniform(-clump[4], clump[4], len(th_c))
             nearest = lambda p: np.abs((ang(p)[0][:, None] - th_c[None, :] + 180) % 360 - 180).argmin(1)
+        # (round 181) a lock ends together: its strands end on one line (a lock a little above or below the
+        # cut's, as a clump was; a strand keeps `lock[3]` of its own way off it), the strand at the lock's
+        # middle on it and one at its border `lock[10]` degrees above it: a lock ends in a round point (degrees
+        # at 50 below the horizon, a man's cut at the jaw; the same length where hair hangs lower)
+        ends_l = lock is not None and clump is not None and len(lock) > 10 and lock[10] > 0
+        if ends_l:
+            tip = lock[10] * (np.cos(np.radians(C['end'])) / np.cos(np.radians(50))) ** 2
+            low = C['end'] + lock[3] * (low - C['end']) + lrng.uniform(-clump[4], clump[4], len(edge))[of] + tip * np.abs(across_l) ** lock[11]
         G = dirs(sgn * to0, to1)
         d = d0.copy()
         ways = [[p] for p in d0]
@@ -638,12 +656,16 @@ def parted(L, rng):
             dn = unit(d + flow(d) * (STEP / OVER.skin(d))[:, None])
             alive &= np.arccos(np.clip(dn @ G, -1, 1)) > near
             if low is not None:
-                alive &= ang(dn)[1] > low + (up_c[nearest(dn)] if clump else 0.0)
+                alive &= ang(dn)[1] > low + (up_c[nearest(dn)] if clump and not ends_l else 0.0)
             if not alive.any():
                 break
             d = np.where(alive[:, None], dn, d)
             for k in np.where(alive)[0]:
                 ways[k].append(d[k])
+        if ends_l:
+            # (where a lock's strands end, the middle of them: they go towards it at their ends, not to a clump)
+            last = np.array([w[-1] for w in ways])
+            mid_l = np.stack([unit(last[of == j].mean(0, keepdims=True))[0] if (of == j).any() else last[0] for j in range(len(edge) - 1)])
         for k, way in enumerate(ways):
             if len(way) < 12:
                 continue
@@ -682,7 +704,7 @@ def parted(L, rng):
                 up = wu * ramp * (0.5 + 0.5 * np.sin(ph + 1.3))
             if clump:
                 # (towards its clump's middle over the clump's length before the end, by a share of the way there)
-                mid_c = dirs(th_c[nearest(d[-1:])], ang(d[-1:])[1])[0]
+                mid_c = mid_l[of[k]] if ends_l else dirs(th_c[nearest(d[-1:])], ang(d[-1:])[1])[0]
                 off = off + clump[1] * rng.uniform(0.6, 1.0) * ((mid_c - d[-1]) @ side[-1]) * OVER.skin(d[-1:])[0] * smooth((run - (total - clump[2])) / clump[2])
             d = unit(d + side * (off / OVER.skin(d))[:, None])
             lift = free(d)

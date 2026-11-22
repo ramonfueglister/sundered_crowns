@@ -471,7 +471,7 @@
   },
   {
    "name": "loose01_body.txt.zst",
-   "bytes": 1133094
+   "bytes": 1126585
   },
   {
    "name": "metal_circlet.txt.zst",
@@ -487,11 +487,11 @@
   },
   {
    "name": "page01_body.txt.zst",
-   "bytes": 821180
+   "bytes": 812010
   },
   {
    "name": "page02_body.txt.zst",
-   "bytes": 823542
+   "bytes": 821990
   },
   {
    "name": "part01_body.txt.zst",
