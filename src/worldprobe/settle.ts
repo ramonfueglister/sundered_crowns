@@ -430,10 +430,8 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     if (s.lots) {
       const at = (x: number, z: number): [number, number] => [Math.floor(cx + x), Math.floor(cz + z)], mine = (x: number, z: number) => inGrid(...at(x, z)) && own(...at(x, z));
       const pieces = townWorks(things, mat.makeRotationY(0).setPosition(cx, 0, cz), s.lots, 1, 1, (x, z) => (inGrid(...at(x, z)) ? g.h[idx(...at(x, z))] + 1 : null), mine, (x, z) => !g.wet[idx(...at(x, z))]);
-      if (ring?.length && own(cx, cz)) count('wall');
-      // nothing else stands or grows on the ring, once the fields' ground is surveyed (the survey comes before the
-      // register, which lays the ring: tools/worldprobe/build_tilth.ts)
-      onWall(pieces, cx, cz, (x, z) => { if (inGrid(x, z)) onRing.push(idx(x, z)); });
+      // nothing else stands or grows on the ring once the fields' ground is surveyed (before the ring: build_tilth.ts)
+      if (ring?.length && own(cx, cz)) count('wall'); onWall(pieces, cx, cz, (x, z) => { if (inGrid(x, z)) onRing.push(idx(x, z)); });
     }
     const walled = ring?.length ? true : carries && hi - lo <= 2;
     if (walled && !ring?.length) {
