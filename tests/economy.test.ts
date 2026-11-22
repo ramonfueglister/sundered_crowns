@@ -212,7 +212,7 @@ describe('the economy engine (WebAssembly)', () => {
       expect(y[FIGURE.priceLevel]).toBe(1);
       expect(y[FIGURE.depositsHouseholds] + y[FIGURE.depositsFirms]).toBeCloseTo(a.coin, 3);
     });
-    expect(city(f, 0)[FIGURE.realGdp]).toBeCloseTo((45247.8 * 60862) / 2583180, 3); // London: its share of England's GDP at 1:100
+    expect(city(f, 0)[FIGURE.realGdp]).toBeCloseTo((45247.8 * (60862 + 79100)) / 2583180, 3); // London with its country folk (791 persons): its share of England's GDP at 1:100
   });
   it('moves a little every day: the sums of the last 365 days and the price level of today', () => {
     let state = create(1356);

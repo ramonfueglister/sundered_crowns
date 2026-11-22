@@ -37,6 +37,10 @@ export function marketAt(
     marketWithin(free, Math.round(4 * MARKET_SEARCH * size.d), hw, half) ?? [0, 0]
   );
 }
+/** Whether a market at the centre, and the street round it, lie on open ground. */
+export const centreOpen = (free: (x: number, z: number) => boolean, dims: { hw: number; half: number }): boolean =>
+  marketWithin(free, 0, dims.hw, dims.half) !== null;
+
 function marketWithin(
   free: (x: number, z: number) => boolean,
   q: number,

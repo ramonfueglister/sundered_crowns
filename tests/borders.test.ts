@@ -170,5 +170,5 @@ describe('a world of 1291 saved before the borders', () => {
     s.v = 22;
     upgradeState(s, w, () => loadSetup(1291));
     expect(hashState(up)).toBe(hashState(s));
-  }, 120_000);
+  }, 300_000); // the world of 1291 with its country folk (feature 7), upgraded twice
 });

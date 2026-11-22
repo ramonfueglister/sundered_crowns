@@ -35,7 +35,7 @@ export interface Told {
   great(kind: string, x: number, z: number, w: number, d: number, y: number, height: number, site: number): void;
   /** a walled town: its middle, half the side of its paved square, the openings of its wall or null without a wall */
   town(site: number, cx: number, cz: number, half: number, y: number, wall: readonly WallGap[] | null): void;
-  /** once all is built: whether a column of the ground is dry and no rock */
+  /** before anything is built (no water filled, no rock paved): whether a column of the ground is dry and no rock */
   dry?(at: (x: number, z: number) => boolean): void;
   /** once the towns and hamlets stand, before the fields: whether a furlong can lie on the field lot (`lx`, `lz`) of
    *  the grid (dry ground without rock, nothing built, level to within two blocks, with a balk round it), for the
@@ -166,6 +166,7 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
   let now = -1, kind: 'town' | 'village' | 'hamlet' | 'farm' = 'farm';
   const count = (k: string, n = 1) => { counts[k] = (counts[k] ?? 0) + n; };
   const buildable = (x: number, z: number) => x >= 2 && z >= 2 && x < N - 2 && z < N - 2 && !g.wet[idx(x, z)] && !used[idx(x, z)] && g.mat[idx(x, z)] !== Mat.Rock;
+  told?.dry?.((x, z) => inGrid(x, z) && !g.wet[idx(x, z)] && g.mat[idx(x, z)] !== Mat.Rock);
   /** The height to build at on a footprint, if it is free with `gap` columns round it and level to within a step. */
   const lot = (x0: number, z0: number, x1: number, z1: number, gap: number, steps = 1): number | null => {
     let lo = Infinity, hi = -Infinity;
@@ -495,6 +496,5 @@ export function settle(g: Ground, things: Batch, sites: readonly Site[], monumen
     if (mine) { if (CROPS[kind]) crops(things, g, [x0 + sown / 2, mz], sown, d, CROPS[kind]!, r); count('field'); count('tilled', sown * d); if (kind >= FALLOW) count(kind === FALLOW ? 'fallow' : 'spring'); }
     claim(x0, z0, x0 + w, z0 + d);
   }
-  told?.dry?.((x, z) => inGrid(x, z) && !g.wet[idx(x, z)] && g.mat[idx(x, z)] !== Mat.Rock);
   return { used, town, field, season, towns, lots };
 }

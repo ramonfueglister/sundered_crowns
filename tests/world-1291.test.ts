@@ -129,9 +129,12 @@ describe('a world of 1291', () => {
     }
     old.v = 14;
     asBeforeCultures(old);
-    const thirty = all.slice(0, 30).reduce((t, c) => t + Math.round(c.people / SCALE) + countryFolk(Math.round(c.people / SCALE)), 0);
+    const thirty = all
+      .slice(0, 30)
+      .reduce((t, c) => t + Math.round(c.people / SCALE) + countryFolk(Math.round(c.people / SCALE)), 0);
     expect(thirty).toBe(57_079); // with their country folk (24,828 before them)
-    expect(old.person.size - old.named.length).toBe(thirty); // and the rulers after them expect(old.economy.cities!.places.length).toBe(30);
+    expect(old.person.size - old.named.length).toBe(thirty); // and the rulers after them
+    expect(old.economy.cities!.places.length).toBe(30);
     const before = decodeState(encodeState(old));
     const up = upgradeState(old, w, () => s1291);
     expect(up.v).toBe(STATE_VERSION);
@@ -225,7 +228,7 @@ describe('the peoples of 1291', () => {
     const up = upgradeState(old, w, () => s1291);
     expect(up.v).toBe(STATE_VERSION);
     expect(hashState(up)).toBe(hashState(s));
-  }, 60_000); // copies and hashes the whole world of 558 towns several times, and founds its economies anew
+  }, 150_000); // copies and hashes the whole world of 558 towns several times, and founds its economies anew
   it("are the persons' own: the persons of Bursa and Smyrna are Greek and Orthodox, those of Acre Frankish and Latin", () => {
     const P = s.person.cols,
       F = s.family.cols;

@@ -216,7 +216,7 @@ describe('the traits in a world of 1291', () => {
           odds(share((id) => Q.sex[id] === sex && Q.o[id] <= 42)),
       ).toBeLessThan(0.85);
     }
-  }, 400_000);
+  }, 1_200_000); // 60 years of the world of 1291 with its country folk (feature 7): about 14 minutes here
 });
 
 describe('the state of the traits', () => {

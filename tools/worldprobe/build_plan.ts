@@ -17,7 +17,7 @@
 //           (side nz | px | pz | nx, from and to along the side from its middle; buildings/fortified/town-wall.ts)
 //
 // It also writes public/data/dry_<year>.json for the simulation's land register: round every town with hamlets, as
-// far as its hamlets may lie or the register asks (DRY_REACH=<file>, at most 260 blocks), whether a block is dry ground without rock. Same shape as
+// far as its hamlets may lie or the register asks (DRY_REACH=<file>, at most 400 blocks), whether a block is dry ground without rock. Same shape as
 // ground_<year>.json (build_ground.ts): per site `w`, `d` (odd, the middle block is the town's centre) and `cells`,
 // base64 of a bit field, rows north to south, west to east, lowest bit first, 1 = dry and no rock. It says nothing
 // of slopes and buildings: the ground of a hamlet is levelled when it is built.
@@ -80,7 +80,7 @@ const proj = await projectionOf('world', base, FINER),
   inhabitants = await loadInhabitants(base, year);
 
 /** the dry ground is written at most this far from a town's middle, in blocks */
-const DRY_MOST = 260;
+const DRY_MOST = 400;
 /** how far the land register needs the dry ground round each town: `{reach: {site: blocks}}`, the file named by DRY_REACH (tools/sim of the land register writes it) */
 const asked: Record<string, number> = process.env.DRY_REACH
   ? (JSON.parse(readFileSync(process.env.DRY_REACH, 'utf8')) as { reach: Record<string, number> }).reach

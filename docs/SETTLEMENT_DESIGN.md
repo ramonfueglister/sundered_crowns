@@ -311,7 +311,7 @@ keeps its exact ground (feature 1): the step is the parcel's width divided by th
 |---|---|---|
 | street width | 6 × w × (1/√0.76 − 1): 6.6 / 9.3 / 21.1 m (smallest, median, widest of 1291) | as wide as the streets of feature 1's grid: Grenade's share of parcels round a block of two rows of six (Boerefijn 2000) |
 | market | a parcel deep, a lane round it | PLACEHOLDER, no measure of a market read |
-| r_c | 0.35 of the packed radius | calibrated: the blocks of the world of 1291 fall off as A^−1.89 above 200 m² (Dresden: A^−1.9, Lämmer et al. 2006; Barthelemy & Flammini 2008 get it with an exponential density of centres) |
+| r_c | 0.3 of the packed radius | calibrated: the blocks of the world of 1291 fall off as A^−1.89 above 200 m² (Dresden: A^−1.9, Lämmer et al. 2006; Barthelemy & Flammini 2008 get it with an exponential density of centres) |
 | join | 2.25 parcel depths | calibrated against the share of dead ends of medieval Paris (Vasserot, 0.10), with the townsfolk of feature 7; 3 with the landmarks of feature 5, 5 before |
 | crossing | 2 parcel widths | calibrated against the share of crossings of medieval Paris (0.12), with the townsfolk of feature 7; 2.5 with the landmarks of feature 5, 2 before |
 | served | 1 parcel depth | PLACEHOLDER: a spot this near a street takes its parcel there |
@@ -356,10 +356,23 @@ Paris alone in brackets; τ of the blocks.
 | 0.4, 2, 2 | 0.15 (0.15) | 0.74 (0.78) | 0.11 (0.07) | 1.94 |
 | 0.3, 2.25, 2 | 0.14 (0.11) | 0.75 (0.79) | 0.11 (0.10) | 1.95 |
 | 0.3, 2.25, 1.9 | 0.14 (0.10) | 0.76 (0.81) | 0.10 (0.09) | 1.93 |
-| **0.35, 2.25, 2 (chosen)** | 0.14 (0.09) | 0.74 (0.82) | 0.13 (0.09) | 1.89 |
+| 0.35, 2.25, 2 | 0.14 (0.09) | 0.74 (0.82) | 0.13 (0.09) | 1.89 |
 | 0.6, 2.5, 2 | 0.15 (0.05) | 0.73 (0.87) | 0.12 (0.08) | 1.80 |
 
-The chosen set lays out 6 towns without regard to the ground (0.3 lays 8); every share lies within 0.05 of Paris's.
+Measured again once the dry ground round the towns reached as far as their hamlets in the end (the rebuild order
+tilth → lots → plan, run until the hamlets stay put): the ground that widens a town changed Paris most.
+
+| r_c, join, crossing | dead ends | T-junctions | crossings | τ |
+|---|---|---|---|---|
+| 0.35, 2.25, 2 (the set before) | 0.14 (0.16) | 0.74 (0.77) | 0.13 (0.07) | 1.89 |
+| 0.35, 2.5, 2.25 | 0.13 (0.08) | 0.72 (0.83) | 0.16 (0.09) | 1.86 |
+| 0.35, 2, 2 | 0.14 (0.19) | 0.74 (0.76) | 0.12 (0.05) | 1.94 |
+| 0.4, 2.5, 2 | 0.15 (0.08) | 0.75 (0.84) | 0.11 (0.08) | 1.86 |
+| 0.3, 2, 2 | 0.13 (0.14) | 0.76 (0.75) | 0.11 (0.11) | 1.99 |
+| **0.3, 2.25, 2 (chosen)** | 0.13 (0.13) | 0.76 (0.76) | 0.11 (0.11) | 1.95 |
+
+The chosen set lays out 6 towns without regard to the ground; every share lies within 0.05 of Paris's, the towns' and
+Paris's alike.
 
 ### Real plans
 
@@ -717,9 +730,10 @@ Of the 40 buildings known by name in the towns, 17 stand at their spot, 23 moved
 where the water or one laid before took it. Of the 309 churches of a see without a name, 106 stand at the centre of
 their town, the others moved off it (median of all 16 m, nine in ten within 48 m).
 
-Two towns are laid out without regard to their ground (feature 1), but clear of their landmarks (before Venice's real
-plan read its ground there were three, with Venice): Aberdeen and Seville (a river, and the landmarks at their real place, leave too little ground on one bank). Before
-feature 5: Venice and Hormuz.
+Six towns are laid out without regard to their ground (feature 1), but clear of their landmarks: Baghdad, Dax,
+Hamburg, Seville, Strasbourg and Valladolid (a river, and the landmarks at their real place, leave too little ground
+on one bank for the townsfolk of feature 7). Before feature 7: Aberdeen and Seville; before Venice's real plan read
+its ground, Venice too; before feature 5: Venice and Hormuz.
 
 The building ground of the towns (`ground_<year>.json`) is surveyed before anything the world graphic builds of its
 own (`build_ground.ts`, settle.ts): before it had the graphic's church and towers at the centre of every town as
@@ -923,6 +937,22 @@ work the farms first and the townsfolk the other firms; who lives in a hamlet st
 | founding a world | 11 s | 21 s |
 | one day | 132 ms | 215 ms |
 | snapshot | 82 MB | 124 MB |
+
+### What else changed with it
+
+- The streets were calibrated again (feature 3, the last two tables of the calibration): R_C 0.3, join 2.25, crossing 2.
+- A town whose families do not all fit round its market is laid round its centre only where the centre is open
+  (`centreOpen`, src/sim/settlement/market.ts): with the church of the see at the centre (feature 5) the market lay on
+  it in Piacenza and Hamburg. Such a town is laid out without the ground instead, clear of its landmarks.
+- A street of one cell at the end of a street of another kind is a piece of the network too
+  (src/sim/settlement/street_network.ts): a parcel of Lecce fronted such a cell and the register had no street there.
+- The dry ground round a town is written up to 400 blocks from its middle (`DRY_MOST`, tools/worldprobe/build_plan.ts):
+  the hamlets of the largest towns lie up to 376 blocks out.
+- The dry ground is told before the world graphic builds anything (src/worldprobe/settle.ts): before, the ground a
+  town or hamlet filled or paved counted as dry, so that the dry ground hung on the land register laid from it.
+- A wall stretched beyond its town (walled area above the settled one, feature 6) is shaped clear of the farmsteads
+  drawn in by the same factor, so that the stretched ring still runs clear of them (King's Lynn cut two). A ring is
+  laid anew up to 64 times to take in or bend round the parcels it cuts (London's suburb on the road north takes 20).
 
 ### Own rules and gaps
 

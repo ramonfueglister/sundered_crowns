@@ -287,15 +287,16 @@ describe('the land register of a world of 1291', () => {
       for (const a of ids) for (const b of ids) if (a < b) expect(overlap({ x: L.x[a], z: L.z[a], front: L.front[a] }, { x: L.x[b], z: L.z[b], front: L.front[b] }, { w: L.w[a], d: L.d[a] })).toBe(false);
     }
   });
-  it('lays every parcel where its house can stand, by the building ground of the towns (Venice\'s by its land register), but in two towns cut by water', { timeout: 60_000 }, () => {
+  it('lays every parcel where its house can stand, by the building ground of the towns (Venice\'s by its land register), but in a few towns cut by water', { timeout: 60_000 }, () => {
     const g = w.ground!, gw = widened(g, w.dry)!, house = (t: WorldState, i: number) => { const C = t.lot.cols; return houseGround(registerGround(t, gw, C.site[i])!, C.site[i], { x: C.x[i], z: C.z[i], front: C.front[i] }, { w: C.w[i], d: C.d[i] }); };
     expect(g.year).toBe(1291);
     for (const c of cities) expect(g.has(c.site)).toBe(true);
-    // in Aberdeen and Seville the rivers leave too little ground on one bank once the landmarks stand at their real
-    // place: they are laid out without regard to the ground (but clear of the landmarks); Venice lies on its register
+    // in six towns on rivers the water leaves too little ground on one bank for the townsfolk of feature 7 once the
+    // landmarks stand at their real place: they are laid out without regard to the ground (but clear of the
+    // landmarks); Venice lies on its register
     // (src/sim/settlement/plan_ground.ts)
     const bare = decodeState(encodeState(s)), tight = foundLots(bare, g, w.dry).tight;
-    expect(tight.map((x) => cities.find((c) => c.site === x)!.name).sort()).toEqual(['Aberdeen', 'Seville']);
+    expect(tight.map((x) => cities.find((c) => c.site === x)!.name).sort()).toEqual(['Baghdad', 'Dax', 'Hamburg', 'Seville', 'Strasbourg', 'Valladolid']);
     let off = 0;
     for (const i of parcels) if (!tight.includes(L.site[i]) && !house(s, i)) off++;
     expect(off).toBe(0);
@@ -430,7 +431,7 @@ describe('a world of 1291 saved before the streets', () => {
 });
 
 describe('a world of 1291 saved before the land register', () => {
-  it('gets the parcels a new world has, and encodes as one', { timeout: 60_000 }, () => {
+  it('gets the parcels a new world has, and encodes as one', { timeout: 150_000 }, () => {
     const old = decodeState(encodeState(s)) as WorldState;
     old.v = 19;
     delete (old.family.cols as Record<string, unknown>).lot; delete (old as Partial<WorldState>).lot; delete (old as Partial<WorldState>).hamlets;

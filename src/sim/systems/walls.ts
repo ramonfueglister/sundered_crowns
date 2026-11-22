@@ -51,8 +51,9 @@ const STEP = 2;
 const GATE_STREETS = 2;
 /** metres: farther than any town reaches */
 const FAR = 1e6;
-/** How often a ring is laid anew to bend round the parcels and landmarks it cuts, at most. */
-const TAKE_IN = 16;
+/** How often a ring is laid anew to bend round the parcels and landmarks it cuts, at most: London's suburb along the
+ *  road north takes 20 rounds, parcel by parcel, with the country folk of feature 7. */
+const TAKE_IN = 64;
 /** The ring is smoothed over bays this many streets wide, and its corners lie this many metres off a straight line at
  *  the least (src/sim/settlement/wall_shape.ts). OWN RULE: the sources give where some rings ran, not how closely a
  *  ring followed its town; three streets keep it from going in and out round every parcel. */
@@ -136,9 +137,14 @@ export function ringsOf(s: WorldState, site: number, t: ReturnType<typeof townOf
         ? [...t.parcels].sort((a, b) => near(a) - near(b)).slice(0, Math.max(1, Math.round(k * t.parcels.length)))
         : t.parcels,
     clear = t.farms;
-  // (above one: stretched from the market until it holds that share)
+  // (above one: stretched from the market until it holds that share; what it must stay clear of is drawn in by the
+  // same factor before the ring is shaped, so that the stretched ring still runs clear of it)
+  const drawnIn = (b: Box): Box =>
+    k > 1
+      ? { x: t.market.x + (b.x - t.market.x) / k, z: t.market.z + (b.z - t.market.z) / k, w: b.w / k, d: b.d / k }
+      : b;
   const around = () =>
-    shapeAround([...held, ...t.core], clear, t.width, SMOOTH_STREETS * t.width, CORNER).map((r) =>
+    shapeAround([...held, ...t.core], clear.map(drawnIn), t.width, SMOOTH_STREETS * t.width, CORNER).map((r) =>
       k > 1 ? scaled(r, t.market.x, t.market.z, k) : r,
     );
   let rings = around();

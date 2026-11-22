@@ -349,7 +349,7 @@ describe('what a player sees of the economy', () => {
     const p = cityCalibrations()[k].calibration.parameters as PortJson;
     const d0 = placeDetail(s, w, london)!.cityEconomy!;
     expect(d0).toMatchObject({ day: 0, baseYear: 1356, scale: 0.01 });
-    expect(d0.realGdp).toBeCloseTo((45247.8 * 60862) / 2583180, 3); // London's share of England's GDP at 1:100
+    expect(d0.realGdp).toBeCloseTo((45247.8 * (60862 + 79100)) / 2583180, 3); // London and its country folk (791 persons): their share of England's GDP at 1:100
     expect(d0.realGdpIndex).toBeCloseTo(100, 9);
     expect(d0.priceToday).toBe(100);
     expect(d0.employed + d0.unemployed).toBe(p.H_act);
