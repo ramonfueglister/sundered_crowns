@@ -764,8 +764,8 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
       return mx >= 0 && mz >= 0 && mx < N && mz < N && fits(lx, lz) && wooded(mx, mz) < 0.5;
     }, { centre: fineOf, courses: (site) => { const p = places[site], at = p && toGround(...cellOf(region, p.lon, p.lat)); return at && onGround(at) ? courses(Math.floor(at[0]), Math.floor(at[1])) : null; } }) } : told;
     const built = settled = settle(g, things, sites, monuments, farm, ploughed, vines, counts, own, farms, courses, survey, surveyed, fieldOf);
-    // a survey of the building ground needs no more than the towns' ground
-    if (survey || told) return { ground: new Batch(), things, water: new Batch(), cells: [], counts };
+    // a survey of the building ground needs no more than the towns' ground (and where the rivers run, for the bridges)
+    if (survey || told) { told?.river?.((x, z) => inGrid(x, z) && g.wet[idx(x, z)] === 1 && kind[idx(x, z)] === Water.Land); return { ground: new Batch(), things, water: new Batch(), cells: [], counts }; }
 
     // woods where the forest of the world's year stood (`wooded`), up to the tree line:
     // leafy in the low country, dark conifers towards the heights and in the north, the crowns of the rain forest, flat

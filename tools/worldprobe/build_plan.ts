@@ -20,7 +20,9 @@
 // far as its hamlets may lie or the register asks (DRY_REACH=<file>, at most 260 blocks), whether a block is dry ground without rock. Same shape as
 // ground_<year>.json (build_ground.ts): per site `w`, `d` (odd, the middle block is the town's centre) and `cells`,
 // base64 of a bit field, rows north to south, west to east, lowest bit first, 1 = dry and no rock. It says nothing
-// of slopes and buildings: the ground of a hamlet is levelled when it is built.
+// of slopes and buildings: the ground of a hamlet is levelled when it is built. In the same shape it writes
+// public/data/rivers_<year>.json: 1 where a block is a river's water (not a lake's or the sea's), for the bridges of the
+// register (src/sim/systems/bridges.ts).
 //
 //   npx tsx tools/worldprobe/build_plan.ts 1291
 //   DRY_REACH=dry_reach_1291.json npx tsx tools/worldprobe/build_plan.ts 1291
@@ -130,12 +132,20 @@ interface Walled {
   wall: { side: string; from: number; to: number }[] | null;
 }
 const pieces: Record<string, { houses: number[]; greats: number[]; towns: Walled[] }> = {};
-/** per piece that was built, its own square: 1 where the ground is dry and no rock */
-const dry = new Map<string, Uint8Array>();
+/** per piece that was built, its own square: 1 where the ground is dry and no rock, and 1 where a river runs */
+const dry = new Map<string, Uint8Array>(),
+  rivers = new Map<string, Uint8Array>();
 /** a colour of the graphic (linear light) as 0xRRGGBB, as `rgb` of lookprobe/batch.ts reads it */
 const tone = new Color(),
   hex = (c: readonly [number, number, number]) => tone.setRGB(c[0], c[1], c[2]).getHex();
 const tenths = (v: number) => Math.round(v * 10);
+/** a piece's own square of the ground as 0 and 1, from `at` on the piece's ground (its margin round it) */
+const square = (at: (x: number, z: number) => boolean) => {
+  const bits = new Uint8Array(PIECE * PIECE);
+  for (let z = 0; z < PIECE; z++)
+    for (let x = 0; x < PIECE; x++) bits[z * PIECE + x] = at(x + MARGIN, z + MARGIN) ? 1 : 0;
+  return bits;
+};
 let done = 0,
   houses = 0,
   greats = 0,
@@ -199,12 +209,8 @@ for (const key of [...wanted].sort()) {
             wall: wall ? wall.map((g) => ({ ...g })) : null,
           });
         },
-        dry: (at) => {
-          const bits = new Uint8Array(PIECE * PIECE);
-          for (let z = 0; z < PIECE; z++)
-            for (let x = 0; x < PIECE; x++) bits[z * PIECE + x] = at(x + MARGIN, z + MARGIN) ? 1 : 0;
-          dry.set(key, bits);
-        },
+        dry: (at) => dry.set(key, square(at)),
+        river: (at) => rivers.set(key, square(at)),
       },
     );
   if (here.houses.length + here.greats.length + here.towns.length) {
@@ -231,25 +237,28 @@ writeFileSync(
     pieces,
   })}\n`,
 );
-const sites = round
-  .sort((a, b) => a.site - b.site)
-  .map(({ site, wx, wz, r }) => {
-    const side = 2 * r + 1,
-      bits = new Uint8Array(Math.ceil((side * side) / 8));
-    for (let dz = -r; dz <= r; dz++)
-      for (let dx = -r; dx <= r; dx++) {
-        const x = wx + dx,
-          z = wz + dz,
-          px = Math.floor(x / PIECE),
-          pz = Math.floor(z / PIECE);
-        if (dry.get(`${px},${pz}`)?.[(z - pz * PIECE) * PIECE + x - px * PIECE]) {
-          const k = (dz + r) * side + dx + r;
-          bits[k >> 3] |= 1 << (k & 7);
+/** the towns' squares of one layer of the pieces, in the shape of ground_<year>.json */
+const sitesOf = (layer: Map<string, Uint8Array>) =>
+  round
+    .sort((a, b) => a.site - b.site)
+    .map(({ site, wx, wz, r }) => {
+      const side = 2 * r + 1,
+        bits = new Uint8Array(Math.ceil((side * side) / 8));
+      for (let dz = -r; dz <= r; dz++)
+        for (let dx = -r; dx <= r; dx++) {
+          const x = wx + dx,
+            z = wz + dz,
+            px = Math.floor(x / PIECE),
+            pz = Math.floor(z / PIECE);
+          if (layer.get(`${px},${pz}`)?.[(z - pz * PIECE) * PIECE + x - px * PIECE]) {
+            const k = (dz + r) * side + dx + r;
+            bits[k >> 3] |= 1 << (k & 7);
+          }
         }
-      }
-    return { site, w: side, d: side, cells: Buffer.from(bits).toString('base64') };
-  });
-if (!process.argv[3])
+      return { site, w: side, d: side, cells: Buffer.from(bits).toString('base64') };
+    });
+const sites = sitesOf(dry);
+if (!process.argv[3]) {
   writeFileSync(
     resolve(ROOT, `public/data/dry_${year}.json`),
     `${JSON.stringify({
@@ -260,7 +269,18 @@ if (!process.argv[3])
       sites,
     })}\n`,
   );
-console.log(`dry_${year}.json: ${sites.length} towns`);
+  writeFileSync(
+    resolve(ROOT, `public/data/rivers_${year}.json`),
+    `${JSON.stringify({
+      year,
+      about:
+        "The rivers round the towns of the world graphic, per site of the gazetteer: w x d blocks of 2 m at the scale of the houses round the centre, rows north to south, bit 1 = a river's water (not a lake's or the sea's). Written by tools/worldprobe/build_plan.ts.",
+      metresPerBlock: 2,
+      sites: sitesOf(rivers),
+    })}\n`,
+  );
+}
+console.log(`dry_${year}.json and rivers_${year}.json: ${sites.length} towns`);
 console.log(
   `plan_${year}.json: ${Object.keys(pieces).length} pieces, ${houses} houses, ${greats} great buildings, ${towns} walled towns`,
 );

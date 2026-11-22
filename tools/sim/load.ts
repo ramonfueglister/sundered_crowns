@@ -142,6 +142,11 @@ function loadDry(year: number): Ground | null {
   const f = dataPath(`dry_${year}.json`);
   return existsSync(f) ? compileGround(JSON.parse(readFileSync(f, 'utf8'))) : null;
 }
+/** The rivers round the towns of a start year (public/data/rivers_<year>.json), compiled; null when there is none. */
+function loadRivers(year: number): Ground | null {
+  const f = dataPath(`rivers_${year}.json`);
+  return existsSync(f) ? compileGround(JSON.parse(readFileSync(f, 'utf8'))) : null;
+}
 /** The ground the fields can lie on round the towns of a start year (public/data/tilth_<year>.json), compiled; null when there is none. */
 export function loadTilth(year: number): Tilth | null {
   const f = dataPath(`tilth_${year}.json`);
@@ -161,13 +166,14 @@ export function loadWays(year: number, places: number): WayNet | null {
   return new WayNet(waysOf(f.between), places, year, laid);
 }
 /** The world with the chronicles of rulers and of borders, the building ground of the towns of `year`, the dry
- *  ground round them and the ways of the year. */
+ *  ground and the rivers round them and the ways of the year. */
 export function loadWorldFor(year: number): World {
   const w = loadWorld();
   if (w.chronicle?.year !== year) w.chronicle = loadChronicle(year);
   if (w.borders?.year !== year) w.borders = loadBorders(year);
   if (w.ground?.year !== year) w.ground = loadGround(year);
   if (w.dry?.year !== year) w.dry = loadDry(year);
+  if (w.riverGround?.year !== year) w.riverGround = loadRivers(year);
   if (w.tilth?.year !== year) w.tilth = loadTilth(year);
   if (w.ways?.year !== year) w.ways = loadWays(year, w.N);
   return w;

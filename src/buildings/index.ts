@@ -44,6 +44,7 @@ export { castle } from './fortified/castle';
 export { townWall, type WallGap } from './fortified/town-wall';
 export { ringWall } from './fortified/ring-wall';
 export { bridge } from './works/bridge';
+export { townBridge } from './works/town-bridge';
 export { lighthouse } from './works/lighthouse';
 export { type FileModel, MONUMENTS, MONUMENT_FILES, type MonumentPart, isFile, modelOf } from './landmarks';
 export { basilica, campanile, palace } from './landmarks/st-marks';
