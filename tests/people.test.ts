@@ -1,5 +1,6 @@
 // Feature 1 of the people (docs/PEOPLE_DESIGN.md): the life table, the persons and families of the 30 cities, their
 // inheritance, the state, the snapshot and the upgrade of an older world.
+import { countryFolk } from '../src/sim/people/country_folk';
 import { describe, it, expect } from 'vitest';
 import { lifeExpectancy, survivorship } from '../src/sim/people/lifetable';
 import { CITIES, SCALE, ageOn, cityPeopleByPlace, personsIn, MOTHER_AGE } from '../src/sim/systems/people';
@@ -59,10 +60,11 @@ describe('the persons of a world founded in 1356', () => {
     F = s.family.cols,
     N = s.person.size;
 
-  it('are one per hundred people of each city', () => {
-    expect(N).toBe(CITIES.reduce((t, c) => t + Math.round(c.people / SCALE), 0));
+  it('are one per hundred people of each city, and the country folk of its villages', () => {
+    const of = (c: (typeof CITIES)[number]) => Math.round(c.people / SCALE) + countryFolk(Math.round(c.people / SCALE));
+    expect(N).toBe(CITIES.reduce((t, c) => t + of(c), 0));
     const london = CITIES.find((c) => c.name === 'London')!;
-    expect(personsIn(s, london.place).length).toBe(Math.round(london.people / SCALE));
+    expect(personsIn(s, london.place).length).toBe(of(london));
   });
   it('are all alive, with no freed rows: ids are never reused', () => {
     expect(s.person.free.length).toBe(0);

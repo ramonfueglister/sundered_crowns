@@ -14,6 +14,10 @@ import { manyPlacesPeople } from '../src/net/people';
 import { placeDetail } from '../src/net/views';
 import { loadSetup, dataPath } from '../tools/sim/load';
 import { readFileSync } from 'node:fs';
+import { TOWN_AGRICULTURE, countryFolk } from '../src/sim/people/country_folk';
+import { townFamilies } from '../src/sim/systems/lots';
+import { citiesOf } from '../src/sim/content/cities';
+import { SCALE } from '../src/sim/scale';
 
 const { s, w } = newWorldState(1291, 1291);
 const P = s.person.cols,
@@ -36,12 +40,12 @@ describe('the hamlets of a world of 1291', () => {
     expect(differ).toBe(0);
     expect(hamlets).toBeGreaterThan(10_000);
   });
-  it('hold about three quarters of the persons, as the economies of the towns put them in agriculture', () => {
+  it('hold the country folk: the townsfolk farm at the share of a town, all persons at the share of the table', () => {
     const { people, farmers } = residents(s);
     const all = people.reduce((a, b) => a + b, 0),
       farm = farmers.reduce((a, b) => a + b, 0);
-    expect(farm / all).toBeGreaterThan(0.6);
-    expect(farm / all).toBeLessThan(0.85);
+    expect(farm / all).toBeGreaterThan(0.5);
+    expect(farm / all).toBeLessThan(0.65);
     const paris = w.names.indexOf('Paris');
     expect(farmersOf(s, paris)).toBe(farmers[paris]);
     expect(farmers[paris]).toBeGreaterThan(0);
@@ -49,6 +53,43 @@ describe('the hamlets of a world of 1291', () => {
   });
   it('keep their families in the place of their town; rulers live in town', () => {
     for (const n of s.named) expect(F.hamlet[P.family[n.person]]).toBe(0);
+  });
+});
+
+describe('the country folk of a world of 1291 (src/sim/people/country_folk.ts)', () => {
+  it('are as many as make the share of agriculture of the table with the townsfolk', () => {
+    expect(countryFolk(1000, 0.572)).toBe(Math.round((1000 * (0.572 - 12 / 749)) / 0.428));
+    expect(countryFolk(10, TOWN_AGRICULTURE)).toBe(0);
+    expect(() => countryFolk(10, Number.NaN)).toThrow();
+  });
+  it('leave the townsfolk of Chandler in the town: of Venice nearly all, of every town most', () => {
+    const towns = townFamilies(s);
+    citiesOf(1291).forEach((c, k) => {
+      const t = Math.round(c.people / SCALE);
+      expect(towns[k].persons + towns[k].farmPersons).toBe(t + countryFolk(t));
+      if (c.placeName === 'Venice') expect(towns[k].persons).toBeGreaterThan(0.95 * t);
+    });
+    const town = towns.reduce((a, t) => a + t.persons, 0),
+      chandler = citiesOf(1291).reduce((a, c) => a + Math.round(c.people / SCALE), 0);
+    expect(town / chandler).toBeGreaterThan(0.9);
+  });
+  it('work the land: the workers of agriculture are the share of the table, the townsfolk the share of a town', () => {
+    let workers = 0,
+      farming = 0,
+      townWorkers = 0,
+      townFarming = 0;
+    for (let id = 0; id < s.person.size; id++) {
+      if (!living(id) || (P.role[id] !== ROLE.worker && P.role[id] !== ROLE.owner) || P.firm[id] < 0) continue;
+      const farms = s.firm.cols.sector[P.firm[id]] === AGRICULTURE ? 1 : 0;
+      workers++;
+      farming += farms;
+      if (!F.hamlet[P.family[id]]) {
+        townWorkers++;
+        townFarming += farms;
+      }
+    }
+    expect(Math.abs(farming / workers - 0.572)).toBeLessThan(0.03);
+    expect(townFarming / townWorkers).toBeLessThan(0.03);
   });
 });
 

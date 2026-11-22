@@ -1,6 +1,7 @@
 // The world of 1291: its realms and borders (public/data/setup_1291.json), the people before the Black Death, the
 // persons of every town of the world graphic inside the world frame, and the economy of 1356 as a placeholder (src/sim/tables.ts); a world of 1291 founded
 // with the people and persons of 1356 got those of 1291 by upgrades this build no longer has (state versions 8 and 11).
+import { countryFolk } from '../src/sim/people/country_folk';
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { newWorldState, loadSetup, dataPath } from '../tools/sim/load';
@@ -100,12 +101,13 @@ describe('a world of 1291', () => {
     expect(cities.map((c) => c.site).sort((a, b) => a - b)).toEqual(expected);
     expect(cities[0].name).toBe('Cairo');
     for (const out of ['Texcoco', 'Tenayuca', 'Mali']) expect(cities.some((c) => c.name === out)).toBe(false); // outside the world
-    expect(s.person.size - s.named.length).toBe(cities.reduce((t, c) => t + Math.round(c.people / SCALE), 0)); // the rest are rulers
+    const persons = (c: City) => Math.round(c.people / SCALE) + countryFolk(Math.round(c.people / SCALE)); // with its country folk
+    expect(s.person.size - s.named.length).toBe(cities.reduce((t, c) => t + persons(c), 0)); // the rest are rulers
     expect(s.person.size).toBeGreaterThan(100_000);
     for (const c of cities) {
       expect(towns.people[c.site]).toBe(c.people); // the town of the picture holds the city's people
       expect(towns.place[c.site]).toBe(c.place);
-      expect(s.place.pop[c.place]).toBeGreaterThanOrEqual(Math.round(c.people / SCALE));
+      expect(s.place.pop[c.place]).toBeGreaterThanOrEqual(persons(c));
     }
     // Chandler's towns first, each group largest first: the 30 largest of Chandler are the first 30
     const ch = cities.filter((c) => c.source === 'chandler');
@@ -127,15 +129,17 @@ describe('a world of 1291', () => {
     }
     old.v = 14;
     asBeforeCultures(old);
-    expect(old.person.size - old.named.length).toBe(24_828); // and the rulers after them expect(old.economy.cities!.places.length).toBe(30);
+    const thirty = all.slice(0, 30).reduce((t, c) => t + Math.round(c.people / SCALE) + countryFolk(Math.round(c.people / SCALE)), 0);
+    expect(thirty).toBe(57_079); // with their country folk (24,828 before them)
+    expect(old.person.size - old.named.length).toBe(thirty); // and the rulers after them expect(old.economy.cities!.places.length).toBe(30);
     const before = decodeState(encodeState(old));
     const up = upgradeState(old, w, () => s1291);
     expect(up.v).toBe(STATE_VERSION);
     expect(hashState(up)).toBe(hashState(s)); // as a new world
     const P = up.person.cols,
       B = before.person.cols;
-    let differ = 0; // counted, not one expect per person: 24,828 persons
-    for (let id = 0; id < 24_828; id++) {
+    let differ = 0; // counted, not one expect per person: 57,079 persons
+    for (let id = 0; id < thirty; id++) {
       if (
         P.born[id] !== B.born[id] ||
         P.sex[id] !== B.sex[id] ||
@@ -145,7 +149,7 @@ describe('a world of 1291', () => {
       )
         differ++;
     }
-    for (let k = 0; k < 24_828 * 100; k++) if (P.genes[k] !== B.genes[k]) differ++; // 100 gene bytes a person
+    for (let k = 0; k < thirty * 100; k++) if (P.genes[k] !== B.genes[k]) differ++; // 100 gene bytes a person
     expect(differ).toBe(0);
     expect(up.economy.cities!.places.length).toBe(550);
   }, 120_000);

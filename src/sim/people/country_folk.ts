@@ -27,3 +27,27 @@ export function countryFolk(town: number, share = agricultureLabour.share): numb
   if (!(share >= 0 && share < 1)) throw new Error(`no world has been built: the share of agriculture is ${share}`);
   return Math.max(0, Math.round((town * (share - TOWN_AGRICULTURE)) / (1 - share)));
 }
+
+/** Whether each uid founded with the towns of a start year is one of the country folk: the persons are founded town
+ *  by town, first the townsfolk of a town, then its country folk (src/sim/systems/people.ts), and a founder's uid is
+ *  the number of its founding. `towns`: the persons of each town in the order of the founding. Returns the test and
+ *  the number of the uids founded. */
+export function foundedCountryFolk(towns: readonly number[]): { of: (uid: number) => boolean; founded: number } {
+  const starts: number[] = [];
+  let at = 0;
+  for (const t of towns) {
+    starts.push(at + t, at + t + countryFolk(t)); // the first uid of its country folk, and the first after them
+    at += t + countryFolk(t);
+  }
+  const of = (uid: number) => {
+    let lo = 0,
+      hi = starts.length / 2 - 1;
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1;
+      if (starts[2 * mid - 1] <= uid) lo = mid;
+      else hi = mid - 1;
+    }
+    return uid >= starts[2 * lo] && uid < starts[2 * lo + 1];
+  };
+  return { of, founded: at };
+}

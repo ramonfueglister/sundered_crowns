@@ -64,8 +64,10 @@ import type { Table } from './ecs';
  *  40: Venice on the land and water of its land register of 1808 (settlement feature 3, real plans,
  *  src/sim/settlement/plan_ground.ts): its parcels, streets and landmarks lie on the register's land.
  *  41: the town walls and their gates (settlement feature 6, src/sim/systems/walls.ts): every town but Venice has a
- *  ring round it, open at the water, with a gate where a street crosses it. */
-export const STATE_VERSION = 41;
+ *  ring round it, open at the water, with a gate where a street crosses it.
+ *  42: the country folk of the towns (src/sim/people/country_folk.ts): a town has its people after Chandler with the
+ *  farmers of a town, and the farmers its economy needs live in the hamlets round it. */
+export const STATE_VERSION = 42;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {

@@ -108,6 +108,9 @@ describe('a world whose households pass on', () => {
     heirs = 0,
     noCustomHeirs = 0;
   const sonsFirst = { sons: 0, daughters: 0 }; // where the eldest son, the youngest son or the sons inherit
+  let foundedSeats = 0; // the households and the persons of the founding
+  for (let f = 0; f < s.family.size; f++) if (F.seat[f]) foundedSeats++;
+  const founded = s.person.size;
   for (let y = 1; y <= YEARS; y++)
     for (let mo = 1; mo <= 12; mo++) {
       const day = Math.round((y - 1 + mo / 12) * 365.25);
@@ -167,8 +170,8 @@ describe('a world whose households pass on', () => {
       living = 0;
     for (let f = 0; f < s.family.size; f++) if (F.seat[f]) seats++;
     for (let id = 0; id < s.person.size; id++) if (P.died[id] === ALIVE && P.dies[id] !== ALIVE) living++;
-    expect(seats).toBe(17702);
-    expect(living).toBeGreaterThan(95000);
-    expect(living).toBeLessThan(104000);
+    expect(seats).toBe(foundedSeats); // 40,408 (17,702 before the country folk)
+    expect(living).toBeGreaterThan(0.93 * founded); // 95,000 and 104,000 of 102,042 before the country folk
+    expect(living).toBeLessThan(1.02 * founded);
   });
 }, 120_000);

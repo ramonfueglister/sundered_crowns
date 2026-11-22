@@ -19,6 +19,7 @@ computes is in the world: what a town shows must be state of the ECS.
 | 4 | Every farmstead has its fields: the furlongs of each hamlet in the courses of its open field, a strip of each farmstead in every furlong | agreed by Ramon 19 Nov 2026 ("ok"); built in state 37. The world graphic draws only these fields round the towns |
 | 5 | The landmarks of every town at their real place and size: the church of its see, the great buildings known by name, the convents of the mendicants, the ruler's residence, the great abbeys alone | agreed by Ramon 19 Nov 2026 ("Ja, alles wie vorgeschlagen"); built in state 38. The world graphic draws only these landmarks |
 | 6 | Every town has its wall and gates: a ring round the town (or the walled share the sources know), open at water, a gate where a way crosses it | agreed by Ramon 21 Nov 2026 ("ja alle"); built in state 41. The world graphic draws only this wall |
+| 7 | The country folk: a town has its people after Chandler, with the farmers of a town; the farmers its economy needs live in the hamlets round it | chosen by Ramon 22 Nov 2026 ("Ja, Dörfer fertig bauen", after a measured build); built in state 42 |
 | – | Where a new house arises while the world runs; more real plans of the large towns; bridges; building by players | not proposed yet |
 
 ## Feature 1: every family of a town has a parcel
@@ -111,8 +112,9 @@ Salé.
 - The measured towns keep their distance from the line when the world counts them differently (ratio 0.4 to 3.3).
 - All families of a town get equal parcels; who lives in the centre is the order of the ids.
 - One family a parcel. No source read on families per house; the narrowest attested front is not reached.
-- The law is fitted to the whole population of a town. The world applies it to the persons who live inside (the
-  farmers of the town live in hamlets), so its towns stand for real towns of 300 to 94,700 people.
+- The law is fitted to the whole population of a town. Up to state 41 the world applied it to the persons who lived
+  inside (the farmers of the town lived in hamlets, about three quarters of its persons); since feature 7 a town's
+  persons are its people after Chandler, of whom 1.6 % farm, so the law meets the population it was fitted to.
 - The law is fitted to western European towns of 1,000 to 200,000; Cairo (382,000) and towns outside western Europe
   are extrapolated.
 - The grid was a placeholder (no square, no bent streets, no wall), replaced by the streets of feature 3; the church
@@ -309,9 +311,9 @@ keeps its exact ground (feature 1): the step is the parcel's width divided by th
 |---|---|---|
 | street width | 6 × w × (1/√0.76 − 1): 6.6 / 9.3 / 21.1 m (smallest, median, widest of 1291) | as wide as the streets of feature 1's grid: Grenade's share of parcels round a block of two rows of six (Boerefijn 2000) |
 | market | a parcel deep, a lane round it | PLACEHOLDER, no measure of a market read |
-| r_c | 0.5 of the packed radius | calibrated: the blocks of the world of 1291 fall off as A^−1.87 above 200 m² (Dresden: A^−1.9, Lämmer et al. 2006; Barthelemy & Flammini 2008 get it with an exponential density of centres) |
-| join | 3 parcel depths | calibrated against the share of dead ends of medieval Paris (Vasserot, 0.10), with the landmarks of feature 5: 4 gives Paris 0.05 dead ends; 5 before feature 5 |
-| crossing | 2.5 parcel widths | calibrated against the share of crossings of medieval Paris (0.12), with the landmarks of feature 5: 2 makes 0.09, 2.5 makes 0.12; 2 before feature 5 |
+| r_c | 0.35 of the packed radius | calibrated: the blocks of the world of 1291 fall off as A^−1.89 above 200 m² (Dresden: A^−1.9, Lämmer et al. 2006; Barthelemy & Flammini 2008 get it with an exponential density of centres) |
+| join | 2.25 parcel depths | calibrated against the share of dead ends of medieval Paris (Vasserot, 0.10), with the townsfolk of feature 7; 3 with the landmarks of feature 5, 5 before |
+| crossing | 2 parcel widths | calibrated against the share of crossings of medieval Paris (0.12), with the townsfolk of feature 7; 2.5 with the landmarks of feature 5, 2 before |
 | served | 1 parcel depth | PLACEHOLDER: a spot this near a street takes its parcel there |
 | market search | 3 parcel depths | PLACEHOLDER |
 | ways | 1.5 px near, 3 px on, 30° | PLACEHOLDER: what reads the road map of 1291 as the ways of a town |
@@ -343,6 +345,21 @@ without what the world graphic built of its own, Paris's landmarks drawn togethe
 | **0.5, 3, 2.5 (chosen)** | 0.11 (0.08) | 0.77 (0.78) | 0.12 (0.15) |
 | 0.5, 5, 3 | 0.10 (0.05) | 0.78 (0.84) | 0.12 (0.11) |
 | 0.45, 5, 2.5 | 0.12 (0.05) | 0.73 (0.84) | 0.15 (0.10) |
+
+Recalibrated with feature 7 (22 Nov 2026): the towns hold their townsfolk, four to five times the families of before.
+Paris alone in brackets; τ of the blocks.
+
+| r_c, join, crossing | dead ends | T-junctions | crossings | τ |
+|---|---|---|---|---|
+| 0.5, 3, 2.5 (as before) | 0.14 (0.04) | 0.67 (0.87) | 0.19 (0.09) | 1.77 |
+| 0.5, 2, 2 | 0.18 (0.12) | 0.70 (0.78) | 0.12 (0.11) | 1.93 |
+| 0.4, 2, 2 | 0.15 (0.15) | 0.74 (0.78) | 0.11 (0.07) | 1.94 |
+| 0.3, 2.25, 2 | 0.14 (0.11) | 0.75 (0.79) | 0.11 (0.10) | 1.95 |
+| 0.3, 2.25, 1.9 | 0.14 (0.10) | 0.76 (0.81) | 0.10 (0.09) | 1.93 |
+| **0.35, 2.25, 2 (chosen)** | 0.14 (0.09) | 0.74 (0.82) | 0.13 (0.09) | 1.89 |
+| 0.6, 2.5, 2 | 0.15 (0.05) | 0.73 (0.87) | 0.12 (0.08) | 1.80 |
+
+The chosen set lays out 6 towns without regard to the ground (0.3 lays 8); every share lies within 0.05 of Paris's.
 
 ### Real plans
 
@@ -858,3 +875,61 @@ town of the world lie closer than those of the real one, so a ring a street clea
   268–269 (very few fortifications in the lagoon up to the modern era).
 - Noizet, Hélène; Lallau, Émilie (2013): ALPAGE, the wall of Philippe Auguste (ODbL), `data/cadastre/`.
 
+
+## Feature 7: the country folk of the towns
+
+Code: `src/sim/people/country_folk.ts` (the rule), `src/sim/systems/people.ts` (`foundPeople` founds the townsfolk,
+then the country folk, and settles the families of the country folk in hamlets), `src/sim/systems/economy.ts`
+(`villagersTillTheLand`: the country folk take the farms first), `src/sim/systems/lots.ts` (`townFamilies` counts them
+with their town). State 42. Tests: `tests/hamlets.test.ts`.
+
+### Why (Ramon, 22 November 2026)
+
+Every town's economy is England in 1356 at the town's size (`data/economy/england_1356.json`), with England's labour
+force of 57.2 % in agriculture. The people of a town after Chandler are only those inside it. So up to state 41 about
+four of five persons of a town worked the land and lived in its hamlets: Venice had 221 persons in the town and 843 in
+the hamlets, and the towns looked empty.
+
+### The sources
+
+| What | Value | Source |
+|---|---|---|
+| England's labour force by sector, 1381 | 57.2 / 19.2 / 23.6 % | Broadberry, Campbell, van Leeuwen (2013), When did Britain industrialise?, Explorations in Economic History 50(1), table 1B (accepted manuscript p. 28) |
+| how that share is made | the poll tax of 1381 weighted "urban 10%, semi-rural 10%, rural 80%"; urban = the towns of over 2,000 people of A. Dyer (2000) | same, pp. 4–5 and the note of table 1 |
+| the farmers of a town | 12 of 749 men with a known occupation (1.6 %) | same, table 2A, p. 29: Coventry, muster rolls of 1522 (Hulton 1999) |
+| a check from Italy | 0.4 % of the declared occupations in agriculture | Fochesato and Bettarini (2025), Florence, catasto of 1427, table 3, p. 472 (a provisional sample of four gonfaloni) |
+
+So England's share of farmers is the realm's, not a town's: a town's own share is Coventry's.
+
+### The rule
+
+A town gets its people after Chandler (at the scale of the world) as before, founded as before. Then its country folk
+are founded in the same place, with the same ages and households (`src/sim/systems/people.ts`), and their families
+live in hamlets: as many persons as make the economy's share of agriculture with the townsfolk,
+v = t · (L − a) / (1 − L), with t the persons of the town, L = 0.572 the table's share of agriculture and a = 12/749
+Coventry's. The economy of the town is calibrated on all of them, as England at their share of England's people. The
+engine gives out the firms by sector, agriculture first (the port's `assign_workers`), so the country folk own and
+work the farms first and the townsfolk the other firms; who lives in a hamlet still follows from the firm
+(`settleHamlets`).
+
+### What the world of 1291 gets (seed 1291, 60 days run)
+
+| | state 41 | state 42 |
+|---|---|---|
+| persons | 102,042 | 234,604 |
+| of them in the towns | 19,719 | 97,098 |
+| Venice: town / hamlets | 221 / 843 | 1,050 / 1,396 |
+| Paris: town / hamlets | 429 / 1,718 | 1,991 / 2,945 |
+| founding a world | 11 s | 21 s |
+| one day | 132 ms | 215 ms |
+| snapshot | 82 MB | 124 MB |
+
+### Own rules and gaps
+
+- OWN RULE: the villages hold only the farmers the town's economy needs and their families, not the crafts and
+  services of a village (BCvL's semi-rural and rural parts have both); the economy stays England's in the small.
+- Coventry 1522 is the only town of the source, from after the Black Death and in England; every town of the world
+  takes its share. Florence 1427 (0.4 %) agrees on the order.
+- A world saved before state 42 keeps its persons, hamlets and register at 41 → 42: its old farming families would
+  need parcels in town by a rule we do not have. The live world of 1291 was started anew instead (Ramon, 22 November
+  2026: "setze spielwelt zurück und starte neu bei 1291").

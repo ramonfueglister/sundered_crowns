@@ -348,6 +348,12 @@ export function upgradeState(s: WorldState, w: World, setup?: () => SetupState):
     foundWalls(s, w.dry);
     s.v = 41;
   }
+  if (s.v === 41) { // 41 → 42: the country folk of the towns (src/sim/people/country_folk.ts). A world that has run
+    // keeps its persons, its hamlets and its register as they are: only a new world founds the country folk (its old
+    // farming families would need parcels in town by a rule we do not have). The live world of 1291 is founded anew
+    // (Ramon, 22 November 2026: "setze spielwelt zurück und starte neu bei 1291").
+    s.v = 42;
+  }
   if (s.v !== STATE_VERSION) throw new Error(`state version ${s.v} cannot be upgraded to ${STATE_VERSION}`);
   // the fields in the order of a new world (src/sim/setup.ts), so an upgraded world encodes byte for byte as one
   const o = s as unknown as Record<string, unknown>;

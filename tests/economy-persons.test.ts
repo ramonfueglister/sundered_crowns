@@ -94,7 +94,8 @@ describe('who works', () => {
     const by = parts(start);
     cities.forEach((c, k) => {
       const firms = (c.calibration.parameters as { I_s: number[] }).I_s.reduce((a, b) => a + b, 0);
-      expect(force[k].working).toEqual(c.working);
+      // the same persons; those of the hamlets own the farms and take the jobs first (villagersTillTheLand)
+      expect([...c.working].sort((a, b) => a - b)).toEqual([...force[k].working].sort((a, b) => a - b));
       expect(activePersons(c.calibration)).toBe(c.working.length);
       expect(by[k][ROLE.owner].length).toBe(firms);
       expect(by[k][ROLE.banker].length).toBe(1);

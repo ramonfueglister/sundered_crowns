@@ -61,21 +61,25 @@ export const marketSide = (p: ParcelSize) => p.d;
 
 /** The characteristic distance of the density, as a share of the radius the parcels would take packed round the
  *  market (with their streets). Calibrated (tools/settlement/streets_probe.ts): the blocks of the world of 1291 fall
- *  off as A^−1.87 above 200 m², where Dresden's fall off as A^−1.9 (Lämmer et al. 2006). */
-export const R_C = 0.5;
+ *  off as A^−1.89 above 200 m², where Dresden's fall off as A^−1.9 (Lämmer et al. 2006). Recalibrated with JOIN_DEEP
+ *  and CROSS when the towns got their townsfolk (settlement feature 7, 22 November 2026): 0.5 made 1.76 and left Paris
+ *  0.04 dead ends; on the grid 0.3 to 0.8 this value and the two below meet all six shares of Paris best. */
+export const R_C = 0.35;
 
 /** a family's parcel lies at a street if one passes within this many parcel depths of its spot; else a street grows to it */
 const NEAR_DEEP = 1;
 /** a new street, and at the end every dead end, runs on to another that lies ahead of it or to either side within this
  *  many parcel depths. Calibrated against medieval Paris (the Vasserot cadastre inside the wall of Philippe Auguste,
  *  tools/settlement/cadastre_paris.py: dead ends 0.10, T-junctions 0.78, crossings 0.12), recalibrated with the
- *  landmarks laid before the streets (feature 5): with CROSS the towns of 20 streets and more get 0.11, 0.77, 0.12 and
- *  Paris 0.08, 0.78, 0.15; 4 gives Paris 0.05 dead ends, 5 (before feature 5) 0.05 */
-const JOIN_DEEP = 3;
+ *  landmarks laid before the streets (feature 5), and again with the townsfolk of feature 7 (R_C 0.35, CROSS 2): the
+ *  towns of 20 streets and more get 0.14, 0.74, 0.13 and Paris 0.09, 0.82, 0.09; 3 (the value before) gives them
+ *  0.14, 0.67, 0.19 and Paris 0.04 dead ends, 2 Paris 0.10 but the towns 0.15 */
+const JOIN_DEEP = 2.25;
 /** a lane leaves from a T-junction facing its spot rather than from the nearest point if that costs at most this many
  *  parcel widths more. Calibrated against the share of crossings of medieval Paris (0.12), with the landmarks laid
- *  before the streets (feature 5): 2 makes 0.09 (and 0.14 dead ends), 2.5 makes 0.12, 3 makes 0.12 */
-const CROSS = 2.5;
+ *  before the streets (feature 5): 2 made 0.09 (and 0.14 dead ends), 2.5 made 0.12; with the townsfolk of feature 7
+ *  2.5 makes 0.18 in the towns of 20 streets and more, 2 makes 0.13, 2.25 makes 0.16 */
+const CROSS = 2;
 
 const EMPTY = 0, BLOCKED = 1, ROAD = 2, PARCEL = 3, MARKET = 4, UNKNOWN = 5;
 

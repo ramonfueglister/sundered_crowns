@@ -23,9 +23,15 @@ export const REFERENCE = { year: 1356, seed: 1356 } as const;
 let reference: { s: WorldState; w: World } | null = null;
 /** The cities of the reference world as the game founds them, each with its persons who work and its calibration;
  *  with `t`, as the game would found them from that table. */
-export function cityCalibrations(
-  t?: CalibrationTable,
-): { place: number; name: string; people: number; working: number[]; idle: number; calibration: EconomyCalibration }[] {
+export function cityCalibrations(t?: CalibrationTable): {
+  place: number;
+  name: string;
+  people: number;
+  country: number;
+  working: number[];
+  idle: number;
+  calibration: EconomyCalibration;
+}[] {
   reference ??= newWorldState(REFERENCE.seed, REFERENCE.year);
   const { s, w } = reference;
   return calibrationsOf(

@@ -257,7 +257,7 @@ describe('the calibration of the cities', () => {
       expect(io.sb_other).toBe(0);
       expect(io.sb_inact).toBe(0);
       // the same city with the rate of feature 6: 55 % of the last wage after tax, from the first day
-      const on = dailyEconomy(calibrateEconomy(cityTable(withBenefit, c.people, c.working.length)), 365, 30);
+      const on = dailyEconomy(calibrateEconomy(cityTable(withBenefit, c.people + c.country, c.working.length)), 365, 30);
       const p = on.parameters as PortJson,
         ic = on.initial_conditions as PortJson;
       expect(p.theta_UB).toBeCloseTo(0.55 * (1 - p.tau_INC) * (1 - p.tau_SIW), 15);
@@ -268,7 +268,7 @@ describe('the calibration of the cities', () => {
       expect(ic.w_UB).toBeCloseTo(p.theta_UB * meanWage, 15);
       expect(ic.w_UB * 365).toBeCloseTo((p.theta_UB * sum(a.wages)) / sum(a.employees), 12);
       // the same city as a year: the benefit of a day is a 365th of the benefit of the year
-      const year = calibrateEconomy(cityTable(withBenefit, c.people, c.working.length));
+      const year = calibrateEconomy(cityTable(withBenefit, c.people + c.country, c.working.length));
       expect(ic.w_UB).toBe((year.initial_conditions as PortJson).w_UB / 365);
       expect(p.theta_UB).toBe((year.parameters as PortJson).theta_UB);
       // Between the two: with the benefit households spend from an income that includes the benefit of the one
@@ -287,11 +287,11 @@ describe('the calibration of the cities', () => {
   it('gives a city the economy of England at its share of the people, without a duty', () => {
     const englandPeople = table.inputs.population_thousand.value * 1e3;
     for (const c of cities) {
-      const share = c.people / englandPeople;
+      const share = (c.people + c.country) / englandPeople; // the town and its villages (src/sim/people/country_folk.ts)
       const p = c.calibration.parameters as PortJson,
         a = c.calibration.accounts as PortJson;
       expect(c.calibration.scale).toBeCloseTo(0.01 * share, 15);
-      expect(a.people).toBeCloseTo(c.people / 100, 6); // the model computes the city at 1:100
+      expect(a.people).toBeCloseTo((c.people + c.country) / 100, 6); // the model computes the city at 1:100
       expect(a.gdp / ae.gdp).toBeCloseTo(share, 12);
       expect(a.coin / ae.coin).toBeCloseTo(share, 12);
       expect(a.duty).toBe(0);
