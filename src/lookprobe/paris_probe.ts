@@ -6,6 +6,7 @@ import * as THREE from 'three/webgpu';
 import { type Column, PARIS, type Tradition, fineGround, fineHouse } from '../buildings';
 import { Batch, type RGB, type Rnd, mix, rgb, seeded, shade } from './batch';
 import { LAND_Y, N, SEA_Y } from './layout';
+import { CATHEDRAL, cathedral } from './paris_cathedral';
 import { river } from './paris_river';
 import { EARTH } from './scenery';
 import { NEAR_LIGHT, type StageScene, showError, stage } from './stage';
@@ -119,13 +120,16 @@ const CROWD = num('crowd', 450);
 /**
  * The river round the town (0: none), as in the reference picture: one arm behind the town and one before it, which
  * meet at the picture's right. The town's grid is moved by SHIFT (x, z) under the camera, so that the quays lie where
- * the picture has them; the arms' widths (behind, before) and the lanes of the grid that the two bridges continue.
+ * the picture has them; the arms' widths (behind, before), and where the two bridges cross, in cells of the grid (the
+ * one behind the town to the left of the cathedral, as in the picture; the one before it at the end of a lane).
  */
 const RIVER = num('river', 1) > 0,
   SHIFT = RIVER ? [num('shiftx', -4), num('shiftz', 14)] : [0, 0],
   RIVER_W = [num('riverw0', 12), num('riverw', 16)],
   RIVER_C = hexOf('water') ?? rgb(0x3a6e78),
-  BRIDGES = [num('bridge0', 3), num('bridge1', 3)];
+  BRIDGES = [num('bridge0', 2.4), num('bridge1', 3)];
+/** the cathedral before the square (0: none); it stands with its apse to the river, so only where the river is */
+const MINSTER = RIVER && num('cathedral', 1) > 0;
 
 /**
  * One side of a block: houses from `a` to `b` along the side, fronts towards `front`, as single houses rather than a
@@ -326,33 +330,58 @@ async function build(): Promise<StageScene> {
         sx = x0 + i * CELL + LANE / 2 + BLOCK + edge() - bx,
         sz = z0 + k * CELL + LANE / 2 + BLOCK + edge() - bz;
       if (i >= nx || k < nz) continue;
-      if (k === 3 && (i === 3 || (SQ > 1 && i === 4))) {
+      if (MINSTER && (i === 3 || i === 4) && (k === 2 || k === 3)) continue;
+      if (!MINSTER && k === 3 && (i === 3 || (SQ > 1 && i === 4))) {
         // a square smaller than a cell leaves the far part of its cell to a block of houses
         if (SQ < 1) block(ground, things, bx, bz + sz * SQ, sx, sz * (1 - SQ), r);
         continue;
       }
       block(ground, things, bx, bz, sx, sz, r);
     }
-  // the square: stalls in two loose rows, trees at its edge
-  const sx = x0 + 3 * CELL + LANE / 2,
+  // the square: one cell of the grid, or SQ of it; with the cathedral, the close of four cells: the cathedral with its
+  // apse to the river behind the town, a row of houses on either side of it, and the square before its front
+  let sx = x0 + 3 * CELL + LANE / 2,
     sz = z0 + 3 * CELL + LANE / 2,
-    rs = seeded(SEED + 1);
-  const wide = Math.max(1, SQ) * CELL,
-    deep = Math.min(1, SQ) * BLOCK;
-  for (let k = 0; k < 4.5 * Math.max(1, SQ); k++)
+    wide = Math.max(1, SQ) * CELL,
+    deep = Math.min(1, SQ) * BLOCK,
+    /** the close up to the cathedral's front, where no townsfolk walk: x0, z0, x1, z1 */
+    close = [0, 0, 0, 0];
+  if (MINSTER) {
+    const row = 4.5,
+      x1 = sx + 2 * CELL - LANE,
+      zf = z0 + 2 * CELL + LANE / 2 - 1 + CATHEDRAL.length;
+    cathedral(things, sx + row + 0.5 + CATHEDRAL.width / 2, zf);
+    side(things, sx, zf - CATHEDRAL.length + 1, sx + row, zf, 'nx', r);
+    side(things, x1 - row, zf - CATHEDRAL.length + 1, x1, zf, 'px', r);
+    close = [sx - 1, z0 + 2 * CELL, x1 + 1, zf];
+    deep = sz + CELL - LANE - zf;
+    wide = x1 - sx;
+    sz = zf;
+  }
+  const rs = seeded(SEED + 1),
+    busy = Math.max(1, wide / CELL);
+  // stalls in two loose rows, trees at its edge (before the cathedral only at the edge away from its portals)
+  for (let k = 0; k < 4.5 * busy; k++)
     stall(things, sx + 2 + rs.range(0, wide - 6), sz + 1 + rs.range(0, Math.max(0.5, deep - 2.5)), rs);
-  for (let k = 0; k < 4 * Math.max(1, SQ); k++)
-    cubeTree(things, sx + rs.range(0.5, wide - 2), sz + rs.pick([0.6, deep - 0.6]), rs, rs.range(1.2, 1.6), OLIVE);
+  for (let k = 0; k < 4 * busy; k++)
+    cubeTree(
+      things,
+      sx + rs.range(0.5, wide - 2),
+      sz + (MINSTER ? deep - 0.6 : rs.pick([0.6, deep - 0.6])),
+      rs,
+      rs.range(1.2, 1.6),
+      OLIVE,
+    );
   // people in the lanes and on the square
   const rf = seeded(SEED + 2);
   for (let k = 0; k < CROWD; k++) {
     const lane = x0 + rf.int(0, 7) * CELL + rf.range(-0.9, 0.9),
       along = z0 + rf.range(0, size);
     const [fx, fz] = rf.chance(0.5) ? [lane, along] : [along, lane];
+    if (fx > close[0] && fx < close[2] && fz > close[1] && fz < close[3]) continue;
     if (fx < xq - 0.4 && fz > zt + 0.4) folk(things, fx, fz, rf);
   }
-  for (let k = 0; k < 20 * Math.max(1, SQ); k++)
-    folk(things, sx + rf.range(0.5, wide - 1), sz + rf.range(0.5, deep - 0.5), rf);
+  for (let k = 0; k < 20 * busy; k++) folk(things, sx + rf.range(0.5, wide - 1), sz + rf.range(0.5, deep - 0.5), rf);
   return { ground, things, water, counts: { triangles: ground.triangles + things.triangles + water.triangles } };
 }
 

@@ -38,7 +38,7 @@ export interface Arm {
 }
 
 /** a rectangle of the ground: x0, z0, x1, z1 */
-type Rect = readonly [number, number, number, number];
+export type Rect = readonly [number, number, number, number];
 /**
  * The rectangle from `u0` to `u1` across an arm and from `v0` to `v1` along it. Every part of an arm is laid out in
  * these two, so that the same bridge crosses an arm that flows along z and one that flows along x.
@@ -100,11 +100,25 @@ function traffic(things: Batch, a: Arm, look: RiverLook, r: Rnd) {
   }
 }
 
-/** A box of the stone with ashlar on the two sides the picture's camera sees (+x and +z). */
-function masonry(b: Batch, at: Rect, y0: number, y1: number, seed: number) {
-  block(b, at, y0, y1, shade(STONE, 0.86), { top: shade(STONE, 0.95) });
-  ashlar(b, wallOf(...at, 'px'), Math.max(y0, SEA_Y), y1, STONE, seed, 2);
-  ashlar(b, wallOf(...at, 'pz'), Math.max(y0, SEA_Y), y1, STONE, seed + 1, 2);
+/** A box of stone with ashlar on the two sides the picture's camera sees (+x and +z). */
+export function masonry(b: Batch, at: Rect, y0: number, y1: number, seed: number, c: RGB = STONE) {
+  block(b, at, y0, y1, shade(c, 0.86), { top: shade(c, 0.95) });
+  ashlar(b, wallOf(...at, 'px'), Math.max(y0, SEA_Y), y1, c, seed, 2);
+  ashlar(b, wallOf(...at, 'pz'), Math.max(y0, SEA_Y), y1, c, seed + 1, 2);
+}
+
+/** A pyramid on the square of half side `s` round (xc, zc) at `y`, `h` high: four slopes up to one point. */
+export function pyramid(b: Batch, xc: number, zc: number, s: number, y: number, h: number, c: RGB) {
+  const corners: [number, number][] = [
+    [xc - s, zc - s],
+    [xc - s, zc + s],
+    [xc + s, zc + s],
+    [xc + s, zc - s],
+  ];
+  corners.forEach(([ax, az], k) => {
+    const [bx, bz] = corners[(k + 1) % 4];
+    b.tri([ax, y, az], [bx, y, bz], [xc, y + h, zc], c, c, shade(c, 1.15), [(ax + bx) / 2 - xc, s, (az + bz) / 2 - zc]);
+  });
 }
 
 /**
@@ -117,24 +131,8 @@ function tower(b: Batch, at: Rect, h: number, roofed: boolean, gate: Side | null
   masonry(b, at, LAND_Y - 1, top, Math.round(x0 * 7 + z0 * 13));
   battlements(b, x0, z0, x1, z1, top, STONE, 0.45, 0.45);
   if (roofed) {
-    const s = Math.min(x1 - x0, z1 - z0) / 2 - 0.5,
-      xc = (x0 + x1) / 2,
-      zc = (z0 + z1) / 2;
-    // a pyramid as four slopes up to one point
-    const corners: [number, number][] = [
-      [xc - s, zc - s],
-      [xc - s, zc + s],
-      [xc + s, zc + s],
-      [xc + s, zc - s],
-    ];
-    corners.forEach(([ax, az], k) => {
-      const [bx, bz] = corners[(k + 1) % 4];
-      b.tri([ax, top, az], [bx, top, bz], [xc, top + s * 2.2, zc], SLATE, SLATE, shade(SLATE, 1.15), [
-        (ax + bx) / 2 - xc,
-        s,
-        (az + bz) / 2 - zc,
-      ]);
-    });
+    const s = Math.min(x1 - x0, z1 - z0) / 2 - 0.5;
+    pyramid(b, (x0 + x1) / 2, (z0 + z1) / 2, s, top, s * 2.2, SLATE);
   }
   for (const side of ['px', 'pz'] as const) {
     const w = wallOf(...at, side);
