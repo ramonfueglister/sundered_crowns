@@ -21,13 +21,6 @@
     "src/sim/settlement/rule.ts": {
       "style/useExponentiationOperator": 2
     },
-    "src/sim/settlement/streets.ts": {
-      "correctness/noUnusedVariables": 1,
-      "style/useExponentiationOperator": 1
-    },
-    "src/sim/systems/lots.ts": {
-      "suspicious/useIterableCallbackReturn": 1
-    },
     "src/worldprobe/brotli.ts": {
       "suspicious/noAssignInExpressions": 1
     },
@@ -67,7 +60,6 @@
   },
   "lines": {
     "server/world.ts": 502,
-    "src/sim/settlement/streets.ts": 622,
     "src/worldprobe/world.ts": 868,
     "tools/history/1291/beyond.py": 840,
     "tools/history/1291/empire.py": 1003,
