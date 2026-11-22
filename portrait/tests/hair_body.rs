@@ -362,6 +362,66 @@ fn a_body_of_hair_lies_on_a_head_of_any_size() {
     }
 }
 
+/// The lower outline of the hair in front of the face, seen from the front: for each of `n` columns between `from`
+/// and `to` (shares of the head's half breadth `broad` from the face's middle) the lowest place a triangle in
+/// front of the head's middle reaches in it. (A triangle's lowest place in a column lies on one of its edges.)
+fn outline(hair: &Surface, out: &Portrait, broad: f32, from: f32, to: f32, n: usize) -> Vec<f32> {
+    let mut low = vec![f32::MAX; n];
+    let (x0, w) = (out.cx + from * broad, (to - from) * broad / n as f32);
+    for t in hair.pos.chunks_exact(3).filter(|t| t.iter().all(|p| p[2] > out.cz)) {
+        for e in 0..3 {
+            let (a, b) = if t[e][0] <= t[(e + 1) % 3][0] { (t[e], t[(e + 1) % 3]) } else { (t[(e + 1) % 3], t[e]) };
+            let at = |x: f32| if b[0] - a[0] < 1e-9 { a[1].min(b[1]) } else { a[1] + (b[1] - a[1]) * ((x - a[0]) / (b[0] - a[0])).clamp(0.0, 1.0) };
+            for (c, l) in low.iter_mut().enumerate() {
+                let (left, right) = (x0 + c as f32 * w, x0 + (c + 1) as f32 * w);
+                if left <= b[0] && right >= a[0] {
+                    *l = l.min(at(left.max(a[0]))).min(at(right.min(b[0])));
+                }
+            }
+        }
+    }
+    low
+}
+
+#[test]
+fn a_bowl_cuts_fringe_ends_in_points_and_runs_round_the_temple() {
+    // Round 177. Round 171's fringe was a ruled line with small square notches (its clumps ended together, each
+    // within 1.5 degrees of the cut's line) and stepped down to the sides at the temple within 3 degrees round the
+    // head. The reference's bowl cuts end in points a finger broad and of uneven length, and their fringe runs
+    // round the temple into the sides (docs/PORTRAITS.md). Now a clump ends in a point (`hair_body.py` `tuft`) and
+    // the line goes down to the sides over 18 degrees (`corner`).
+    // Read on the hair's lower outline seen from the front (`outline`), across the face's middle (a quarter of
+    // the head's half breadth to either side, in 40 columns of about a millimetre): how far the lowest column's
+    // end lies under the highest's, and of how many neighbouring columns the ends lie more than 0.4 mm apart in
+    // height (a point's flanks slope; a line with notches is level but at a notch's walls). And over 0.84 to 0.92
+    // of the half breadth: how far under the fringe's lowest end the hair ends there at the least.
+    // On these six: 14 to 18 of the 39 neighbours (round 176's files 6 to 10), the ends 8.4 to 14.0 mm apart (2.4
+    // to 10.5), at the temples 9.8 to 36.8 mm under the fringe (2.4 to 7.2 on three, on the boy of 5 one side
+    // above the fringe, on the man under a hood no hair in a column; the cut gone back at the temples, man 45,
+    // has its hair 10 cm lower there in round 176's file and passes that bound with it).
+    let Some(h) = head() else { return };
+    for (k, age) in [(1u32, 8.0f32), (3, 13.0), (45, 13.0), (5, 17.0), (21, 24.0), (31, 5.0)] {
+        let out = build(&h, &person(k, false, age), 1);
+        let who = format!("man {k} of {age}");
+        let hair = body(&out).unwrap_or_else(|| panic!("{who}: a body of hair"));
+        let (skin, crown) = skin(&out);
+        let upper = crown - 0.3 * (crown - out.chin);
+        let broad = skin.pos.iter().filter(|p| p[1] > upper).map(|p| (p[0] - out.cx).abs()).fold(0f32, f32::max);
+        let cols = outline(hair, &out, broad, -0.25, 0.25, 40);
+        assert!(cols.iter().all(|y| *y < f32::MAX), "{who}: a column of the fringe without hair");
+        let (lowest, highest) = (cols.iter().copied().fold(f32::MAX, f32::min), cols.iter().copied().fold(f32::MIN, f32::max));
+        let sloping = cols.windows(2).filter(|w| (w[1] - w[0]).abs() > 0.004).count();
+        let temple = [(-0.92f32, -0.84f32), (0.84, 0.92)].map(|(from, to)| lowest - outline(hair, &out, broad, from, to, 8).into_iter().fold(f32::MIN, f32::max));
+        if show() {
+            println!("{who}: the fringe's ends {:.1} mm apart in height, {sloping} of 39 neighbours more than 0.4 mm apart; at the temples the hair ends {:.1} and {:.1} mm under the fringe", 100.0 * (highest - lowest), 100.0 * temple[0], 100.0 * temple[1]);
+            continue;
+        }
+        assert!(sloping >= 12, "{who}: of the fringe's 39 neighbouring columns {sloping} end more than 0.4 mm apart: a line");
+        assert!((6.0..22.0).contains(&(100.0 * (highest - lowest))), "{who}: the fringe's ends lie {} mm apart in height", 100.0 * (highest - lowest));
+        assert!(temple.iter().all(|t| 100.0 * t > 8.0), "{who}: at the temples the hair ends {temple:?} under the fringe: a step further out");
+    }
+}
+
 #[test]
 fn a_girl_wears_her_hair_parted_and_drawn_to_her_plaits() {
     // A girl's and a young woman's hair is parted in the middle and drawn to one place below each ear, where
@@ -626,6 +686,9 @@ fn hair_that_is_cut_ends_in_no_wisps() {
     // is parted into wisps (its pointed wisps, 5.6 to 6.1 mm apart along a bundle on every one of its 161 pieces,
     // were the saw at a man's jaw), and what was held of the wisps is held of no cut now: `fray` is gone from
     // `hair_body.py` with the last cut that used it.
+    // Round 177: a bowl cut's clumps end in points (the test of the fringe above); a strand still ends as one end.
+    // Round 168 read the reference's fringe as a line that is nearly straight; looked at again at three times its
+    // size it is a row of points a finger broad (docs/PORTRAITS.md).
     let Some(h) = head() else { return };
     let d = &sc_portrait::dress::ENGLAND_1356;
     let mut seen = std::collections::BTreeMap::new();

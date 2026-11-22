@@ -75,15 +75,24 @@ W = dirs(180, 52)    # the whorl
 # neighbours': combed waves). `FLAT`: the lift of hair under a hood, a hat, a circlet and round a bare top
 # (0.38: as high as the bundles were there, 0.5 cm; at 0.45 hair came through a lord's circlet on three heads
 # of eighty, at 0.22 a hood's rim stood open over it). All PLACEHOLDER by eye, in Blender and in the portrait.
+# (round 177) A fringe of pointed tufts, made and looked at in the same Blender. Round 171's fringe was a ruled
+# line with square notches and a step down at the temple; the reference's bowl cuts, looked at again at three times
+# their size, end in points a finger broad and of uneven length, and their fringe runs round the temple into the
+# sides. A cut's `tuft` (how many degrees above its clump's line a strand at the clump's border ends; the power of
+# the way from the clump's middle to its border by which it does; how much of that the cut has at the sides and
+# back; by how many degrees more a clump of the fringe ends above or below the cut's line): a clump ends in a
+# point. With it `clump` is 28 clumps whose strands go a third of the way to the middle (36 and four fifths: with
+# the points that was a row of spikes) and `corner` 48 and 18 (57 and 3: the step). All PLACEHOLDER by eye.
 # (round 172) Parted hair of fine strands, made and looked at in the same Blender (docs/PORTRAITS.md): `PARTED`
 # and the cuts made of it, below.
 _e = lambda k, d: [float(t) for t in os.environ.get(k, d).split(',')]
 BOWL = dict(
-    cut=-5.0, end=-43.0, corner=tuple(_e('CORNER', '57,3')), over=(8, 6, 35, 30), lift=1.0, round=1.0,
+    cut=-5.0, end=-43.0, corner=tuple(_e('CORNER', '48,18')), over=(8, 6, 35, 30), lift=1.0, round=1.0,
     comb=(0.012, 1.6, 0.05, 0.8),
     shell=dict(h=0.05, up=7.0, shade=0.7),
     thin=0.0, thin_over=0.5,
-    clump=tuple(_e('CLUMP', '36,0.8,0.6,0.45,1.5')),
+    clump=tuple(_e('CLUMP', '28,0.35,0.6,0.45,1.5')),
+    tuft=tuple(_e('TUFT', '3.5,1.3,0.4,1.5')),
     layers=[
         dict(n=70, fit=3.2, vary=0.3, flat=0.12, h=0.066, long=(1.2, 1.8), ends=(-0.3, 0.3), tip=(0.09, 0.12), tuck=(0.09, 0.02), blunt=0.8, point=(0.0, 2.0), m=5, across=0.3, ring=0.09, clump=False, wave=(0.002, 0.006, 1.2, 2.2), roll=0.1, tone=0.9, seed=3),
         dict(n=200, fit=1.9, vary=0.4, flat=0.22, h=0.082, roots=(0.1, 0.55, 0.3, 0.55), ends=(-0.5, 0.5), tip=(0.1, 0.13), tuck=(0.1, 0.02), blunt=0.7, point=(0.15, 2.0), m=3, across=0.3, ring=0.09, wave=(0.002, 0.006, 1.2, 2.2), roll=0.3, tone=1.0, tones=0.07, seed=5),
@@ -341,14 +350,29 @@ def bundles(L, rng):
     n = len(th_end)
     ends = rng.uniform(L['ends'][0], L['ends'][1], n)
     clump = C.get('clump') if L.get('clump', True) else None
+    tuft = C.get('tuft')
+    if tuft:
+        corner = C.get('corner', (45, 25))
+        front = 1 - smooth((np.abs(th_end) - corner[0]) / corner[1])
     if clump:
         # (round 171) strands that end together: the cut's clumps are the same for all its layers, each strand
         # belongs to the one whose middle is nearest on the cut's line and ends as high as it does
         crng = np.random.default_rng(SEED + 4241)
         th_c, _ = rim(int(clump[0]), crng, clump[3])
-        near = np.abs((th_end[:, None] - th_c[None, :] + 180) % 360 - 180).argmin(1)
+        gap = np.abs((th_end[:, None] - th_c[None, :] + 180) % 360 - 180)
+        near = gap.argmin(1)
         ends = ends + crng.uniform(-clump[4], clump[4], len(th_c))[near]
         d_clump = dirs(th_c, level(th_c))[near]
+        if tuft:
+            # (round 177) a clump ends in a point: the strand at its middle ends on the clump's line, one at its
+            # border `tuft[0]` degrees above it (a power `tuft[1]` of the way from the middle to the border), and
+            # a clump of the fringe ends up to `tuft[3]` degrees further above or below the cut's line
+            two = np.sort(gap, axis=1)[:, :2]
+            ends = ends + crng.uniform(-tuft[3], tuft[3], len(th_c))[near] * front
+            ends = ends + tuft[0] * (tuft[2] + (1 - tuft[2]) * front) * (two[:, 0] / np.maximum(0.5 * two.sum(1), 1e-6)) ** tuft[1]
+    elif tuft:
+        # (a layer without clumps ends above the fringe's notches, so skin shows between the points)
+        ends = ends + (tuft[0] + tuft[3]) * (tuft[2] + (1 - tuft[2]) * front)
     d_end = dirs(th_end, level(th_end) + ends)
     if 'roots' in L:
         stop = np.array([L['roots'][k % len(L['roots'])] for k in range(n)]) * rng.uniform(0.85, 1.2, n)

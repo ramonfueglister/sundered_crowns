@@ -9250,6 +9250,103 @@ sheets are the before), `runde176_blender.png` (Blender, near: the painted layer
 it below), `runde176_blender_durchgaenge.png` (Blender: the layer alone, the first, third and last pass).
 
 
+**Round 177: a bowl cut's fringe of pointed tufts, in the Blender on Ramon's Mac** (2026-11-22).
+After round 176 the sheets of 36 were looked at for what stands out: the fringe of the bowl cuts, on 16 of the
+18 men and boys. Round 171 made it "clumps a finger broad with small
+notches between them": in the portrait a ruled, level line with small square notches, and at the temple a
+step down to the sides with a square corner. A helmet's rim.
+
+What was read. Nothing. Looked at again: the reference's bowl cuts (`ck3_09`, three men bare-headed and one
+under a hood), cut out at three times their size beside ours at the same size. Their fringe ends in points a
+finger broad and of uneven length, skin between them, and it runs round the temple down into the sides
+without a corner. Round 168 had read the same fringe as "a line that is nearly straight" and round 171 as
+small clumps; at this size it is a row of points. Not measured on the reference, by eye.
+
+What is changed.
+- **A clump ends in a point** (`tools/portrait/pipeline/hair_body.py`, `BOWL`'s new key `tuft`): the strand
+  at a clump's middle ends on the clump's line, one at its border 3.5 degrees above it (some 6 mm), by the
+  power 1.3 of the way between; a clump of the fringe ends up to 1.5 degrees more above or below the cut's
+  line, beside the 1.5 it had. At the sides and back a clump has 0.4 of it. The lowest layer, which has no
+  clumps and closes the cap, ends above the notches, so skin shows between the points.
+- **28 clumps, loosely gathered** (`clump`): 28 round the head for 36, and a strand goes a third of the way
+  to its clump's middle for four fifths. With round 171's numbers the points were a row of dark spikes.
+- **Round the temple** (`corner` 48, 18 for 57, 3): the fringe's line goes down to the sides' over 18
+  degrees round the head, and strands end along it.
+- The nine files `public/portrait/real/bob01_body.txt.zst` to `bob09_body.txt.zst` are written anew, by
+  Blender 5.1.2 on the Mac, with the script as committed. Nothing in the builder and nothing on the stage;
+  the wasm is the same bytes. Parted hair is not touched (`page01` run on the Mac: byte for byte as before).
+
+How it was made. Three trials of one cut in the cloud, each put into the portrait (the points with round
+171's clumps; fewer clumps loosely gathered; smaller points). Then, as rounds 171 to 176, the script was
+sent to the socket of the Blender that is open on the Mac and run there in scenes of its own, each pass
+rendered from the front, three quarters and the side: the points on the old corner; the corner over 18 and
+over 10 degrees; all nine cuts with points of 4.5 degrees; all nine with the finer points. The fourth pass
+was put into the portrait and rendered on both sheets of 36: on black hair and under a hood its teeth, up
+to 1.5 cm, read as drips. The finer points were tried in the cloud on three cuts beside it and then written
+on the Mac; those are the files in the repository.
+
+Measured (`portrait/tests/hair_body.rs` with `SHOW=1`, on round 176's files and on these; the sheets of 36
+against round 176's):
+
+| | before | now |
+|---|---|---|
+| the fringe's lower outline across the face's middle: the lowest end under the highest (six men and boys) | 2.4 to 10.5 mm | 8.4 to 14.0 mm |
+| of 39 neighbouring columns of a millimetre, their ends more than 0.4 mm apart | 6 to 10 | 14 to 18 |
+| at 0.84 to 0.92 of the head's half breadth the hair ends under the fringe by | 2.4 to 7.2 mm on three of the six | 9.8 to 36.8 mm on all six |
+| the fringe's lowest end over the eyes, of the way from eyes to chin (seven heads) | 0.31 to 0.39 (3.4 to 4.9 cm) | 0.33 to 0.44 (3.8 to 5.4 cm) |
+| strands of a bowl cut (`bob01`) | 451 | 451 |
+| strands of the horseshoe round a bare top (`bob04`) | 287 | 361 |
+| portraits of the sheet that change | | 16 of 36 in the village, 16 of 36 at court |
+| the nine files, packed | 9.08 MB | 9.16 MB |
+
+Tried and not kept.
+- The points with round 171's clumps (36, a strand four fifths of the way to the middle; in the cloud): the
+  strands of a clump lay on one another, a row of narrow dark spikes under a level line.
+- Points of 6 and of 4.5 degrees on 22 clumps (first and fourth pass): teeth up to 1.5 cm; on brown hair
+  tufts, on black hair and under a hood drips.
+- The points on round 171's corner (first pass): the step at the temple beside a ragged fringe. The corner
+  over 10 degrees from 52 (third pass): a step with a notch.
+- Not tried: points of another pattern for each man (a cut has one); thinner strands at the fringe's end; a
+  fringe that lies on the forehead without the round rim.
+
+**One test new, none changed.** `a_bowl_cuts_fringe_ends_in_points_and_runs_round_the_temple`
+(`portrait/tests/hair_body.rs`) holds the new form on six men and boys. It reads the hair's lower outline
+seen from the front from its triangles (the new helper `outline`: the lowest place a triangle reaches in
+each column; by corners alone a column of a millimetre is often empty): across the face's middle 12 and
+more of 39 neighbouring columns end more than 0.4 mm apart, the lowest end lies 6 to 22 mm under the
+highest, and at the temples the hair ends more than 8 mm under the fringe. Round 176's files fail the first
+on every one of the six. The bound at the temples is close (9.8 mm for 7.2), and the cut gone back at the
+temples passes it on the old file too, where it has no hair at the fringe's height there. The tests on the
+fringe's height, its depth in strands, the hood, the circlet, the hat and the rolls are as they were and pass.
+A comment in `hair_that_is_cut_ends_in_no_wisps` names what round 168 read.
+
+**The gauntlet**: 22 of 22 over the whole sample; one line moves by 0.1 against round 176 (a man's far
+cheek against the lit, -2.2 for -2.3). The colour sheet: 153 of 160 lines to the last figure; seven move by
+0.1, the grown men's shaded cheek L (39.5 for 39.4) and six of the boys of 8 to 17, who all wear a bowl cut.
+
+Honest about it. A middle step, on every head with a bowl cut: 16 of the 36. From near the fringe reads as
+hair that was cut, with points and skin between them, and the cut goes round the temple; it read as the rim
+of a helmet. At the size of the sheet it is a slightly ragged line, no more. What is not good: a cut has
+one pattern of points, the same on every man who wears it. A point is made of strands 4 to 5 mm broad that
+end blunt, so from near it has steps, not hairs. Down the temple the edge is a row of small steps, a fine
+saw from three quarters. The points' ends are dark: a strand turns in to the skin at its end and takes the
+baked shade there. On black hair the fringe is a cut-out outline, and under a hood dark teeth. The rim at
+the sides and back has 0.4 of the points and looks as it did. The fringe's lowest end lies some 4 mm higher
+on the forehead than it did. The horseshoe round a bare top begins a little further forward at the temple
+(361 strands for 287): not meant, looked at on the man who wears it, hardly seen. Nothing else of the hair
+is changed: the crown of the head is fine stripes without the reference's broad locks, even and tidy, a wig
+still; that is the larger fault and it stays. The hats, the coif, the fillet and the crown were fitted to
+the hair as it was. The download grows by 78 kB. Baked on one machine. Every number is by eye: PLACEHOLDER.
+
+Tests: `cargo test --release` as a whole 141 of 141 before the new test, `portrait/tests/hair_body.rs` 8 of
+8 with it; `tests/portrait.test.ts` and its neighbour 46 of 46; typecheck and lint pass, no new warning.
+Pictures (project files, `portraits/`): `runde177_vorher_nachher.png` (four men from the front and from
+three quarters, before above and after below), `runde177_nah.png` (their fringes near, before above),
+`runde177_sonderfaelle.png` (after: brown hair, under a hood, the bare top, a small boy with black hair),
+`runde177_dorf.png` and `runde177_hof.png` (all 36, village and court, after; round 176's sheets are the
+before), `runde177_blender.png` (Blender, one cut from three sides: round 176's, the first, the second and
+the last pass), `runde177_blender_alle.png` (Blender: the nine cuts of the last pass).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair
