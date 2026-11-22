@@ -12,8 +12,8 @@ describe('a river', () => {
   const ROW = 280,
     POINTS = [-180, -80, 20, 120, 220],
     EVERY = 10;
-  /** the window of the land that the ground at (ox, oz) needs, with the river */
-  const land = (ox: number, oz: number, bedded = true): Region => {
+  /** the window of the land that the ground at (ox, oz) needs, with the river (of this rank: 6 or less a great one) */
+  const land = (ox: number, oz: number, bedded = true, rank = 3): Region => {
     const w = windowOf(ox, oz),
       n = w.w * w.h;
     const r: Region = {
@@ -38,7 +38,7 @@ describe('a river', () => {
     for (let y = 0; y < w.h; y++) for (let x = 0; x < w.w; x++) r.shaped[y * w.w + x] = height(x + w.gx0 + 0.5);
     const river: Region['rivers'][number] = {
       name: 'river',
-      rank: 3,
+      rank,
       pts: POINTS.map((u) => [u - w.gx0, ROW - w.gy0]),
     };
     if (bedded) {
@@ -51,10 +51,10 @@ describe('a river', () => {
     r.rivers.push(river);
     return r;
   };
-  /** the river's water over the world's blocks 100 to 300 each way, as the ground at (ox, oz) shows it: the height of every column of water, by its place in the world */
-  const water = (ox: number, oz: number, bedded = true) => {
+  /** the river's water over the world's blocks 100 to 300 each way, as the ground at (ox, oz) of the step shows it: the height of every column of water, by its place in the world */
+  const water = (ox: number, oz: number, bedded = true, rank = 3, step = FINER_STEPS) => {
     const part = { x0: 100 - ox, z0: 100 - oz, x1: 300 - ox, z1: 300 - oz };
-    const scene = buildWorld(land(ox, oz, bedded), { ox, oz, part }, [], [], true, FINER_STEPS) as never as {
+    const scene = buildWorld(land(ox, oz, bedded, rank), { ox, oz, part }, [], [], true, step) as never as {
       raised: { pos: number[] };
     };
     const tops = new Map<string, number>(),
@@ -97,5 +97,11 @@ describe('a river', () => {
   it('without a bed lies on its valley floor, over the ridge', () => {
     const down = profile(water(0, 0, false));
     expect(down.some((y, k) => k > 0 && y > down[k - 1])).toBe(true);
+  }, 60000);
+
+  it('that is a brook is water at the first far step, and colours its blocks at the second, narrower than one', () => {
+    // (a brook is 1.2 blocks wide at the first far step and 0.6 at the second: world.ts STREAM_BELOW)
+    expect(water(0, 0, true, 9, FINER_STEPS - 1).size).toBeGreaterThan(200);
+    expect(water(0, 0, true, 9, FINER_STEPS).size).toBe(0);
   }, 60000);
 });

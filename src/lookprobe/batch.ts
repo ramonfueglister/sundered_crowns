@@ -295,7 +295,13 @@ export class Batch {
     return b;
   }
 
-  /** Adds another batch, moved by `m` (rotation, one scale for all axes, translation). */
+  /**
+   * Adds another batch, moved by `m` (rotation, scale, translation). Where the scale is not the same for all axes (a
+   * model of a far step, made lower than wide: worldprobe/far_places.ts), the normals turn by the cofactors of the
+   * matrix (its inverse transposed, times its determinant) and are made unit again, so that they stay square to the
+   * faces: turned as the faces, a roof's normal stood the more upright the lower the model was made, and a far
+   * step lit its roofs otherwise than the finer step did.
+   */
   append(o: Batch, m: THREE.Matrix4) {
     const e = m.elements,
       p = o.pos,
@@ -306,6 +312,26 @@ export class Batch {
     const pos = this.p,
       nor = this.n,
       at = this.filled;
+    // (with one scale for all axes the matrix's own turn, made unit by `k`, is the same and the faster)
+    const even =
+      Math.abs(e[0] * e[4] + e[1] * e[5] + e[2] * e[6]) < 1e-9 &&
+      Math.abs(e[0] * e[8] + e[1] * e[9] + e[2] * e[10]) < 1e-9 &&
+      Math.abs(e[4] * e[8] + e[5] * e[9] + e[6] * e[10]) < 1e-9 &&
+      Math.abs(Math.hypot(e[4], e[5], e[6]) * k - 1) < 1e-9 &&
+      Math.abs(Math.hypot(e[8], e[9], e[10]) * k - 1) < 1e-9;
+    const t = even
+      ? [e[0], e[4], e[8], e[1], e[5], e[9], e[2], e[6], e[10]]
+      : [
+          e[5] * e[10] - e[6] * e[9],
+          e[2] * e[9] - e[1] * e[10],
+          e[1] * e[6] - e[2] * e[5],
+          e[6] * e[8] - e[4] * e[10],
+          e[0] * e[10] - e[2] * e[8],
+          e[2] * e[4] - e[0] * e[6],
+          e[4] * e[9] - e[5] * e[8],
+          e[1] * e[8] - e[0] * e[9],
+          e[0] * e[5] - e[1] * e[4],
+        ];
     for (let i = 0; i < p.length; i += 3) {
       const x = p[i],
         y = p[i + 1],
@@ -315,10 +341,14 @@ export class Batch {
       pos[at + i + 2] = e[2] * x + e[6] * y + e[10] * z + e[14];
       const a = n[i],
         b = n[i + 1],
-        c = n[i + 2];
-      nor[at + i] = (e[0] * a + e[4] * b + e[8] * c) * k;
-      nor[at + i + 1] = (e[1] * a + e[5] * b + e[9] * c) * k;
-      nor[at + i + 2] = (e[2] * a + e[6] * b + e[10] * c) * k;
+        c = n[i + 2],
+        u = t[0] * a + t[1] * b + t[2] * c,
+        v = t[3] * a + t[4] * b + t[5] * c,
+        w = t[6] * a + t[7] * b + t[8] * c,
+        l = even ? k : 1 / Math.sqrt(u * u + v * v + w * w);
+      nor[at + i] = u * l;
+      nor[at + i + 1] = v * l;
+      nor[at + i + 2] = w * l;
     }
     this.c.set(tints, this.tinted);
     this.filled += p.length;
