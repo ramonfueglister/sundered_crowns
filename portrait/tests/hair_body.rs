@@ -502,6 +502,45 @@ fn a_bowl_cuts_strands_lie_in_locks() {
 }
 
 #[test]
+fn a_bowl_cuts_locks_are_of_uneven_breadth() {
+    // Round 179. Round 178's locks were all one clump broad, some 2 cm at the fringe, and ran side by side from
+    // the whorl to the rim: ribs. Now a clump joins the one before it round the head by a chance of 0.45, three
+    // at most to a lock (`hair_body.py` `lock`'s tenth number), and a lock of two or three clumps takes the same
+    // breadth of the image as one clump does, there and back: its hairs are as fine as a narrow lock's.
+    // Read on the strands that end in front of the face, in their order across it, between neighbours drawn
+    // less than a third of the image apart (within one lock): how far the places in the image go on across the
+    // face and how far they go back. In a lock of one clump they go on alone, but for the order of its strands'
+    // ends, which is not the order they lie in; in a broad lock they go back as far as on.
+    // On the six together they go back 0.78 of what they go on (round 178's files: 0.41); a head by itself
+    // 0.50 to 1.12 (0.27 to 0.78: on one of the six the two rounds are alike, 0.79 for 0.78, so the six are
+    // read together). That a lock bows to one side (`lock`'s eleventh and twelfth number) is read by no test:
+    // two measures of it on the built head did not tell the rounds apart (docs/PORTRAITS.md, round 179).
+    let Some(h) = head() else { return };
+    let (mut on, mut back) = (0f32, 0f32);
+    for (k, age) in [(1u32, 8.0f32), (3, 13.0), (45, 13.0), (5, 17.0), (21, 24.0), (31, 5.0)] {
+        let out = build(&h, &person(k, false, age), 1);
+        let who = format!("man {k} of {age}");
+        let hair = body(&out).unwrap_or_else(|| panic!("{who}: a body of hair"));
+        let (skin, crown) = skin(&out);
+        let upper = crown - 0.3 * (crown - out.chin);
+        let broad = skin.pos.iter().filter(|p| p[1] > upper).map(|p| (p[0] - out.cx).abs()).fold(0f32, f32::max);
+        let front = strands_in_front(hair, &out, 0.5 * broad);
+        let near: Vec<f32> = front.windows(2).map(|w| w[1].1 - w[0].1).filter(|d| d.abs() < 1.0 / 3.0).collect();
+        let (a, b) = (near.iter().filter(|d| **d > 0.0).sum::<f32>(), -near.iter().filter(|d| **d < 0.0).sum::<f32>());
+        if show() {
+            println!("{who}: across the face the image's places go on by {a:.2} and back by {b:.2} ({:.2})", b / a);
+        }
+        on += a;
+        back += b;
+    }
+    if show() {
+        println!("the six together: on by {on:.2}, back by {back:.2} ({:.2})", back / on);
+        return;
+    }
+    assert!(back > 0.6 * on, "across the face the image's places go on by {on} and back by {back}: every lock one clump broad");
+}
+
+#[test]
 fn a_girl_wears_her_hair_parted_and_drawn_to_her_plaits() {
     // A girl's and a young woman's hair is parted in the middle and drawn to one place below each ear, where
     // her plait begins (`hair_body.py`, the parted cut): bundles that begin side by side along the parting,

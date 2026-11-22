@@ -96,6 +96,12 @@ W = dirs(180, 52)    # the whorl
 # much lower than the full arch a lock's may be (uneven); how much of its own arch (`flat`) a strand keeps.
 # 0 as the first: none, and the files are round 177's. A cut's `low` (hair that lies flat, `FLAT`): its locks'
 # highest place is the height its strands had. All PLACEHOLDER by eye.
+# (round 179) Round 178's locks were all one clump broad and ran side by side from the whorl to the rim: ribs. The
+# reference's are of uneven breadth and lie over one another. `lock`'s tenth number: the chance by which a clump
+# joins the one before it round the head (three at most to a lock; 0: every lock one clump). Its eleventh and
+# twelfth: by how much a lock bows to one side (units of 10 cm: up to 7 mm, each lock by its own chance) and over
+# what length before its end (12 cm; the end stays where the fringe has it). With `0,0,1` as the last three the
+# files are round 178's. All PLACEHOLDER by eye.
 # (round 172) Parted hair of fine strands, made and looked at in the same Blender (docs/PORTRAITS.md): `PARTED`
 # and the cuts made of it, below.
 _e = lambda k, d: [float(t) for t in os.environ.get(k, d).split(',')]
@@ -106,7 +112,7 @@ BOWL = dict(
     thin=0.0, thin_over=0.5,
     clump=tuple(_e('CLUMP', '28,0.35,0.6,0.45,1.5')),
     tuft=tuple(_e('TUFT', '3.5,1.3,0.4,1.5')),
-    lock=tuple(_e('LOCK', '0.016,0.016,0.15,0.5,0.06,0.4,0.3,0.6,0.2')),
+    lock=tuple(_e('LOCK', '0.016,0.016,0.15,0.5,0.06,0.4,0.3,0.6,0.2,0.45,0.07,1.2')),
     layers=[
         dict(n=70, fit=3.2, vary=0.3, flat=0.12, h=0.066, long=(1.2, 1.8), ends=(-0.3, 0.3), tip=(0.09, 0.12), tuck=(0.09, 0.02), blunt=0.8, point=(0.0, 2.0), m=5, across=0.3, ring=0.09, clump=False, wave=(0.002, 0.006, 1.2, 2.2), roll=0.1, tone=0.9, seed=3),
         dict(n=200, fit=1.9, vary=0.4, flat=0.22, h=0.082, roots=(0.1, 0.55, 0.3, 0.55), ends=(-0.5, 0.5), tip=(0.1, 0.13), tuck=(0.1, 0.02), blunt=0.7, point=(0.15, 2.0), m=3, across=0.3, ring=0.09, wave=(0.002, 0.006, 1.2, 2.2), roll=0.3, tone=1.0, tones=0.07, seed=5),
@@ -390,10 +396,23 @@ def bundles(L, rng):
             # the lock leans, its tone, its place in the image and its arch's height (drawn after the fringe's
             # numbers: the fringe is round 177's)
             across_c = ((th_end - th_c[near] + 180) % 360 - 180) / np.maximum(0.5 * two.sum(1), 1e-6)
-            lean_c = (crng.choice([-1.0, 1.0], len(th_c)) * crng.uniform(0.5, 1.0, len(th_c)))[near]
-            tone_c = np.clip(crng.lognormal(0, lock[4], len(th_c)), 0.8, 1.25)[near]
-            u_c = crng.uniform(-0.08, 0.08, len(th_c))[near]
-            high_c = crng.uniform(1 - lock[7], 1.0, len(th_c))[near]
+            lean_c = crng.choice([-1.0, 1.0], len(th_c)) * crng.uniform(0.5, 1.0, len(th_c))
+            tone_c = np.clip(crng.lognormal(0, lock[4], len(th_c)), 0.8, 1.25)
+            u_c = crng.uniform(-0.08, 0.08, len(th_c))
+            high_c = crng.uniform(1 - lock[7], 1.0, len(th_c))
+            # (round 179) locks of uneven breadth: a clump joins the one before it round the head by the chance
+            # `lock[9]`, three at most to a lock; a lock's strands lie in one arch across all of it, and it has
+            # one lean, tone and place in the image. And a lock goes its own way: a bow to one side (`bow_c`)
+            first = np.arange(len(th_c))
+            for i in np.where(crng.random(len(th_c)) < lock[9])[0]:
+                if i > 0 and i - first[i - 1] < 3:
+                    first[i] = first[i - 1]
+            many = np.bincount(first, minlength=len(th_c))[first]
+            wide_c = many[near]
+            across_c = np.where(wide_c == 1, across_c, 2 * (near - first[near] + 0.5 * (across_c + 1)) / wide_c - 1)
+            own = first[near]
+            lean_c, tone_c, u_c, high_c = lean_c[own], tone_c[own], u_c[own], high_c[own]
+            bow_c = crng.uniform(-1.0, 1.0, len(th_c))[own]
     elif tuft:
         # (a layer without clumps ends above the fringe's notches, so skin shows between the points)
         ends = ends + (tuft[0] + tuft[3]) * (tuft[2] + (1 - tuft[2]) * front)
@@ -460,6 +479,10 @@ def bundles(L, rng):
         if clump:
             # (towards its clump's middle over the clump's length before the end, by a share of the way there)
             off = off + clump[1] * rng.uniform(0.6, 1.0) * ((d_clump[k] - d[-1]) @ side[-1]) * OVER.skin(d[-1:])[0] * smooth((run - (total - clump[2])) / clump[2])
+        if lock:
+            # (round 179) over `lock[11]` before its end a lock bows to one side, by up to `lock[10]`: locks
+            # lie over their neighbours here and leave them there; its end stays where the fringe has it
+            off = off + lock[10] * bow_c[k] * np.sin(np.pi * np.clip((total - run) / lock[11], 0, 1)) ** 2 * smooth(run / 0.4)
         up = 0.0
         if curl:
             # (neighbours wave nearly together: a head of waves, not of worms)
@@ -496,11 +519,14 @@ def bundles(L, rng):
             # lay without locks; with the arch about that height hair came through a lord's circlet)
             top = 0.5 * lock[0] * high_c[k] + lock[1] * abs(lean_c[k]) if C.get('low') else 0.0
             h = np.maximum(h + LIFT * (lock[0] * high_c[k] * (0.5 - s_ ** 2) + lock[1] * lean_c[k] * s_ - top) * g, ht + 0.004)
-            broad = np.radians(0.5 * two[k].sum()) * OVER.skin(d[-1:])[0] * np.cos(np.radians(level(th_end[k])))
+            broad = wide_c[k] * np.radians(0.5 * two[k].sum()) * OVER.skin(d[-1:])[0] * np.cos(np.radians(level(th_end[k])))
             lie = np.sign((dirs(th_end[k] + 1.0, level(th_end[k])) - dirs(th_end[k] - 1.0, level(th_end[k]))) @ side[-1])
             roll = roll * lock[5] - lie * LIFT * (-2 * lock[0] * high_c[k] * s_ + lock[1] * lean_c[k]) / max(broad, 0.06) * g
             tone = tone_c[k] * tone ** lock[5]
-            u_mid = 0.5 + u_c[k] + lock[6] * s_
+            # (round 179: a lock of more clumps than one takes the same breadth of the image, there and back: the
+            # image is one lock's, darker at its borders, and laid on across a broad lock's whole breadth its
+            # borders fell in the lock's middle, dark bands; so its hairs are as fine on a broad lock, too)
+            u_mid = 0.5 + u_c[k] + lock[6] * (s_ if wide_c[k] == 1 else 1 - 2 * abs((s_ * wide_c[k] + 1) / 2 % 2 - 1))
         out_ += lay(d, h, hw, ht, roll, run, L['tone'] * tone * (0.7 + 0.3 * smooth(run / 0.3)), rng, m=L.get('m', 7), rolled=rolled, across=L.get('across'), u_mid=u_mid)
     return out_
 
