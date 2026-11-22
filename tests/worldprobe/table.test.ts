@@ -119,9 +119,7 @@ describe('the table of a far piece', () => {
       const withCorn = (trees: boolean | undefined): GroundTraits => ({
         ...t,
         cover: (x, z) =>
-          sown.has(idx(x, z))
-            ? { top: SPRING, side: SPRING, rise: 0, share: 1, stands: true, trees }
-            : t.cover!(x, z),
+          sown.has(idx(x, z)) ? { top: SPRING, side: SPRING, rise: 0, share: 1, stands: true, trees } : t.cover!(x, z),
       });
       /** the green of the tops of the sown columns, all summed */
       const green = (b: Batch) => {
