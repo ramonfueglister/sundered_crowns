@@ -25,32 +25,10 @@
 // nearest of the four directions.
 import { FRONT, PARCEL_SHARE, PARCELS_PER_ROW, type Parcel, type ParcelSize } from './rule';
 import type { Plan } from './plan_ground';
-import { seedRng, rand } from '../rng';
-
-/** a way of the world that leaves the town: its direction (radians, east 0, south positive) and its kind (0 track, 1 road, 2 highway) */
-export interface Way { a: number; k: number }
-
-/** the kinds of street: a lane grown to the parcels, and the streets that run out along the ways */
-export const STREET = { lane: 0, track: 1, road: 2, highway: 3 } as const;
-
-/** a straight piece of street, east-west or north-south: its ends (metres east and south of the town's centre, on the street's middle line) and its kind (STREET) */
-export interface Street { x0: number; z0: number; x1: number; z1: number; kind: number }
-
-
-export interface Town {
-  parcels: Parcel[];
-  streets: Street[];
-  /** the market: its middle (x, z), `half` metres to each side */
-  market: { x: number; z: number; half: number };
-  /** the street network's junctions by the number of streets that meet in them: ends, T-junctions, crossings (and the bends, where two meet) */
-  nodes: { ends: number; bends: number; tees: number; crosses: number };
-  /** the areas of the blocks the streets enclose (m²): the ground between the streets not open to the land round the town */
-  blocks: number[];
-  /** how often the families had to spread wider before all had a parcel (0: at the density of R_C) */
-  spread?: number;
-  /** how wide every street is drawn (metres of the plan): its middle line and `hw` to either side */
-  width: number;
-}
+import { familySpots } from './family_spots';
+import { marketAt } from './market';
+import { blockAreas, junctions, streetPieces } from './street_network';
+import { STREET, type Town, type Way } from './town_layout';
 
 /** The width of a street in metres: the share of Grenade's ground that is not parcels, around a block of two rows of
  *  PARCELS_PER_ROW parcels (feature 1, Boerefijn 2000): as wide as the grid of feature 1 made its streets. */
@@ -87,47 +65,6 @@ export interface Tuning { rc: number; join: number; cross: number; /** false: th
  *  of the centre), whether a parcel's house can stand (`stands`, optional), and the metres beyond which nothing is free */
 export interface TownGround { free: (x: number, z: number) => boolean; stands?: (p: Parcel) => boolean; reach: number }
 
-/** how far from the centre the market looks for open ground, in parcel depths. PLACEHOLDER */
-const MARKET_SEARCH = 3;
-
-/** the offsets of a square of 2q + 1 by 2q + 1, the nearest first (ties: north before south, west before east) */
-const offsets = new Map<number, Int16Array>();
-const offsetsOf = (q: number) => {
-  let o = offsets.get(q);
-  if (!o) {
-    const all: [number, number][] = [];
-    for (let z = -q; z <= q; z++) for (let x = -q; x <= q; x++) if (x * x + z * z <= q * q) all.push([x, z]);
-    all.sort((a, b) => a[0] * a[0] + a[1] * a[1] - (b[0] * b[0] + b[1] * b[1]) || a[1] - b[1] || a[0] - b[0]);
-    o = Int16Array.from(all.flat()); offsets.set(q, o);
-  }
-  return o;
-};
-
-/** Where the market of a town lies: the middle nearest the centre whose square and the street round it lie on
- *  open ground. In the world graphic the church stands at the centre (src/worldprobe/settle.ts), and the market lies
- *  beside it, as the market of many a medieval town lay at the church (OWN RULE). Without such ground within
- *  MARKET_SEARCH parcel depths, within four times as far (a town whose landmarks take the open ground at its centre,
- *  feature 5), and without it at all at the centre. */
-function marketAt(size: ParcelSize, free: (x: number, z: number) => boolean): [number, number] {
-  // first near (most churches are small), then as far as the search goes: the same answer, the nearest first
-  return marketWithin(size, free, Math.round(size.d)) ?? marketWithin(size, free, Math.round(MARKET_SEARCH * size.d)) ?? marketWithin(size, free, Math.round(4 * MARKET_SEARCH * size.d)) ?? [0, 0];
-}
-function marketWithin(size: ParcelSize, free: (x: number, z: number) => boolean, q: number): [number, number] | null {
-  const { hw, half } = dims(size), k = half + 2 * hw, S = q + k, n = 2 * S + 2;
-  // the blocked metres summed over the square of the search, to test a market's square in one step
-  const taken = new Int32Array(n * n);
-  for (let z = 1; z < n; z++) for (let x = 1, row = 0; x < n; x++) {
-    if (!free(x - 1 - S, z - 1 - S)) row++;
-    taken[z * n + x] = taken[(z - 1) * n + x] + row;
-  }
-  const o = offsetsOf(q);
-  for (let j = 0; j < o.length; j += 2) {
-    const a = o[j] - k + S, b = o[j + 1] - k + S, c = o[j] + k + S + 1, d = o[j + 1] + k + S + 1;
-    if (taken[d * n + c] - taken[b * n + c] - taken[d * n + a] + taken[b * n + a] === 0) return [o[j], o[j + 1]];
-  }
-  return null;
-}
-
 /** the radius the parcels of a town take packed round its market, their streets with them, in its steps */
 const packedRadius = (families: number, size: ParcelSize) =>
   Math.sqrt((families * Math.max(1, Math.round(size.w)) * Math.max(1, Math.round(size.d))) / PARCEL_SHARE / Math.PI) + dims(size).half;
@@ -163,7 +100,7 @@ export function layTown(families: number, size: ParcelSize, ways: readonly Way[]
   // within 3.9 r_c ≈ 2 packed). OWN RULE: the wall held the town.
   const r = 2 * packedRadius(families, size);
   const real = plan && { market: [plan.market[0] * r, plan.market[1] * r] as const, streets: plan.streets.map((q) => q.map((v) => v * r)) };
-  const [ox, oz] = real ? [Math.round(real.market[0]), Math.round(real.market[1])] : ground ? marketAt(size, ground.free) : [0, 0];
+  const [ox, oz] = real ? [Math.round(real.market[0]), Math.round(real.market[1])] : ground ? marketAt(size, ground.free, dims(size)) : [0, 0];
   const t = layAround(families, size, ways, seed, ground, tune, ox, oz, real);
   if (t.parcels.length >= families || (!ox && !oz)) return t;
   const c = layAround(families, size, ways, seed, ground, tune, 0, 0, real);
@@ -182,7 +119,7 @@ function layAround(families: number, size: ParcelSize, ways: readonly Way[], see
   // by half until they all have one (OWN RULE; counted in `spread`)
   let best: Town | null = null;
   for (let k = 0; k < 8; k++) {
-    const t = layOnce(families, size, ways, seed, g?.free, g?.stands, g?.reach ?? Infinity, tune.rc * Math.pow(1.5, k), tune, main);
+    const t = layOnce(families, size, ways, seed, g?.free, g?.stands, g?.reach ?? Infinity, tune.rc * 1.5 ** k, tune, main);
     t.spread = k;
     if (!best || t.parcels.length > best.parcels.length) best = t;
     if (t.parcels.length >= families) break;
@@ -313,18 +250,7 @@ function layOnce(families: number, size: ParcelSize, ways: readonly Way[], seed:
   }
 
   // 3. the spots of the families, drawn from the exponential density round the market, the nearest first
-  const rng = seedRng(seed);
-  const rc = share * packed, spots: [number, number][] = [];
-  for (let f = 0; f < families; f++) {
-    let sx = 0, sz = 0;
-    for (let tries = 0; tries < 64; tries++) {
-      const r = half + rc * -Math.log(Math.max(1e-12, rand(rng)) * Math.max(1e-12, rand(rng))), a = 2 * Math.PI * rand(rng); // r − half ~ Gamma(2, r_c): density ∝ e^(−r/r_c) on the plane
-      sx = Math.round(r * Math.cos(a)); sz = Math.round(r * Math.sin(a));
-      if (inside(sx, sz) && st(at(sx, sz)) === EMPTY) break;
-    }
-    spots.push([sx, sz]);
-  }
-  spots.sort((p, q) => Math.hypot(p[0], p[1]) - Math.hypot(q[0], q[1]) || p[1] - q[1] || p[0] - q[0]);
+  const spots = familySpots(families, seed, half, share * packed, (x, z) => inside(x, z) && st(at(x, z)) === EMPTY);
 
   // a parcel at the street through (x, z), on the side `side` of it; null where it cannot lie
   const slot = (x: number, z: number, side: number): (Parcel & { cx: number; cz: number }) | null => {
@@ -498,7 +424,6 @@ function layOnce(families: number, size: ParcelSize, ways: readonly Way[], seed:
   /** a lane two parcels deep into open ground, square from the street point nearest the spot that has such ground beside it; false where there is none */
   const explore = (sx: number, sz: number): boolean => {
     laneNo++;
-    const len = hw + 1 + 2 * d;
     // the street points from the nearest on, ring of buckets by ring (ties in the order laid)
     const bx = Math.floor((Math.max(-R, Math.min(R, sx)) + R) / BUCKET), bz = Math.floor((Math.max(-R, Math.min(R, sz)) + R) / BUCKET);
     let pending: [number, number, number, number][] = [];
@@ -565,58 +490,10 @@ function layOnce(families: number, size: ParcelSize, ways: readonly Way[], seed:
   // 5. the dead ends that are left run on to the nearest street where no parcel stands in the way
   if (tune.ends !== false) joinEnds();
 
-  // the streets as straight pieces, and what the network looks like
-  const streets: Street[] = [];
-  const sorted = all.slice().sort((a, b) => a - b); // north to south, west to east
-  for (const i of sorted) {
-    const x = (i % N) - R, z = Math.floor(i / N) - R;
-    // a piece runs over the cells of one kind, and on into the street of another kind it meets, so that they join
-    const k = kind[at(x, z)];
-    if (isLine(x + 1, z) && (!isLine(x - 1, z) || kind[at(x - 1, z)] !== k)) {
-      let e = x; while (isLine(e + 1, z) && kind[at(e + 1, z)] === k) e++;
-      if (e > x) streets.push({ x0: isLine(x - 1, z) ? x - 1 : x, z0: z, x1: isLine(e + 1, z) ? e + 1 : e, z1: z, kind: k });
-    }
-    if (isLine(x, z + 1) && (!isLine(x, z - 1) || kind[at(x, z - 1)] !== k)) {
-      let e = z; while (isLine(x, e + 1) && kind[at(x, e + 1)] === k) e++;
-      if (e > z) streets.push({ x0: x, z0: isLine(x, z - 1) ? z - 1 : z, x1: x, z1: isLine(x, e + 1) ? e + 1 : e, kind: k });
-    }
-  }
-  const nodes = { ends: 0, bends: 0, tees: 0, crosses: 0 };
-  if (tune.measure) for (const i of all) {
-    const x = (i % N) - R, z = Math.floor(i / N) - R;
-    const e = +isLine(x + 1, z), wv = +isLine(x - 1, z), s = +isLine(x, z + 1), n = +isLine(x, z - 1), deg = e + wv + s + n;
-    if (deg === 1) nodes.ends++;
-    else if (deg === 2 && e + wv === 1) nodes.bends++;
-    else if (deg === 3) nodes.tees++;
-    else if (deg === 4) nodes.crosses++;
-  }
-  // the blocks: ground the street lines enclose, found as the pieces of the plane between the lines that do not reach the edge of the town's box
-  const box = (() => {
-    let x0 = Infinity, z0 = Infinity, x1 = -Infinity, z1 = -Infinity;
-    for (const i of all) { const x = (i % N) - R, z = Math.floor(i / N) - R; x0 = Math.min(x0, x); z0 = Math.min(z0, z); x1 = Math.max(x1, x); z1 = Math.max(z1, z); }
-    return { x0, z0, x1, z1 };
-  })();
-  const blocks: number[] = [];
-  if (tune.measure && box.x0 <= box.x1) {
-    const seen = new Uint8Array(N * N), stack: number[] = [];
-    for (let z = box.z0; z <= box.z1; z++) for (let x = box.x0; x <= box.x1; x++) {
-      const i0 = at(x, z);
-      if (seen[i0] || line[i0] || cell[i0] === MARKET) continue;
-      let area = 0, open = false;
-      stack.push(i0); seen[i0] = 1;
-      while (stack.length) {
-        const i = stack.pop()!, cx = (i % N) - R, cz = Math.floor(i / N) - R;
-        area++;
-        for (const [dx, dz] of STEP) {
-          const nx = cx + dx, nz = cz + dz;
-          if (nx < box.x0 || nx > box.x1 || nz < box.z0 || nz > box.z1) { open = true; continue; }
-          const j = at(nx, nz);
-          if (seen[j] || line[j] || cell[j] === MARKET) continue;
-          seen[j] = 1; stack.push(j);
-        }
-      }
-      if (!open) blocks.push(area);
-    }
-  }
+  // what the network looks like: its straight pieces, and for the calibration its junctions and blocks
+  const grid = { all, line, kind, N, R };
+  const streets = streetPieces(grid);
+  const nodes = tune.measure ? junctions(grid) : { ends: 0, bends: 0, tees: 0, crosses: 0 };
+  const blocks = tune.measure ? blockAreas(grid, (i) => cell[i] === MARKET) : [];
   return { parcels, streets, market: { x: 0, z: 0, half }, nodes, blocks, width: 2 * hw + 1 };
 }
