@@ -59,7 +59,6 @@
     }
   },
   "lines": {
-    "server/world.ts": 502,
     "src/worldprobe/world.ts": 868,
     "tools/history/1291/beyond.py": 840,
     "tools/history/1291/empire.py": 1003,

@@ -1,7 +1,8 @@
 // World server core: one authoritative, persistent world that runs without end. No sockets here (server/main.ts is
 // the transport), so tests can drive it in-process. Its parts: the log entries and their replay (log.ts), the files
-// on disk (files.ts), the copy in the store (backup.ts), the settings (config.ts) and the connections (session.ts).
-import { mkdirSync, existsSync, readFileSync } from 'node:fs';
+// on disk (files.ts) and the world's own file (meta.ts), the copy in the store (backup.ts), the settings (config.ts) and
+// the connections (session.ts).
+import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { WorldState } from '../src/sim/state';
 import type { World } from '../src/sim/world';
@@ -16,8 +17,9 @@ import { Travels } from '../src/sim/content/travel';
 import { realmInfos, placeDetail } from '../src/net/views';
 import { encodeOwners, SPEEDS, type ClientMsg, type WorldInfo, type Me } from '../src/net/protocol';
 import type { WorldConfig } from './config';
-import { type BackupMarks, restoreFromStore, StoreBackup } from './backup';
-import { WorldFiles, writeFileDurable } from './files';
+import { restoreFromStore, StoreBackup } from './backup';
+import { WorldFiles } from './files';
+import { type Meta, readMeta, type Seat, writeMeta } from './meta';
 import { applyEntry, type LogEntry, replayLines } from './log';
 import { type Conn, Session, type UserAuth } from './session';
 import { NullStore, type WorldStore } from './store';
@@ -37,21 +39,6 @@ const FAST_SNAPSHOT_MS = 20_000;
 /** smoothed real time of the parts of a day */
 const ema = (a: number, b: number) => a * 0.9 + b * 0.1;
 
-interface Seat {
-  uid: string;
-  name: string;
-  realm: number;
-  joinedAt: number;
-  lastSeen: number;
-}
-interface Meta extends BackupMarks {
-  id: string;
-  name: string;
-  seed: number;
-  startedAt: number;
-  paused: boolean;
-  seats: Record<string, Seat>;
-}
 interface Queued {
   e: LogEntry;
   session: Session | null;
@@ -128,10 +115,7 @@ export class WorldCore {
     this.itineraries = loadItineraries(this.cfg.startYear, this.w);
     this.travels = this.itineraries ? new Travels(this.w) : null;
     mkdirSync(this.root, { recursive: true });
-    const metaPath = join(this.root, 'meta.json');
-    this.meta = existsSync(metaPath)
-      ? JSON.parse(readFileSync(metaPath, 'utf8'))
-      : { id: this.cfg.id, name: this.cfg.name, seed: this.cfg.seed, startedAt: Date.now(), paused: false, seats: {} };
+    this.meta = readMeta(this.root, this.cfg);
     this.files = new WorldFiles(join(this.root, 'world'));
     const latest = this.files.latest();
     if (!latest) {
@@ -191,7 +175,7 @@ export class WorldCore {
     return this.deadYears.find(this.s, uid);
   }
   private saveMeta() {
-    writeFileDurable(join(this.root, 'meta.json'), JSON.stringify(this.meta));
+    writeMeta(this.root, this.meta);
   }
   /** Resolves when every upload to the store queued so far has ended. */
   flushUploads(): Promise<void> {
