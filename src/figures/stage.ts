@@ -4,7 +4,7 @@ import type * as THREE from 'three/webgpu';
 import { Group } from 'three/webgpu';
 import { FIGURE_AT, PLAN } from './aims';
 import type { Figures } from './crowd';
-import { figureMeshes as build, riderMesh, figureAt as standing, figureSeconds } from './material';
+import { figureMeshes as build, riderMesh, figureAt as standing, figureSeconds, thinnedOut } from './material';
 import { type FigureClock, figureShown } from './schedule';
 
 export type { Figures } from './crowd';
@@ -24,6 +24,8 @@ interface Pair {
   f: Figures;
   /** the share of the figures that is drawn */
   kept: number;
+  /** the share of them that has gone (`thinFigures`) */
+  thinned: number;
 }
 const shown = new Set<Pair>(),
   pairOf = new WeakMap<THREE.Object3D, Pair>();
@@ -49,7 +51,7 @@ export const disposeFigures = (mesh: THREE.Object3D) => mesh.dispatchEvent({ typ
 
 /** Makes the two meshes of a piece's figures and keeps them until the stage disposes of the near one (`disposeFigures`). */
 export function figureMeshes(f: Figures) {
-  const pair: Pair = { ...build(f), f, kept: 1 };
+  const pair: Pair = { ...build(f), f, kept: 1, thinned: 0 };
   pairOf.set(pair.near, pair);
   pairOf.set(pair.far, pair);
   draw(pair);
@@ -91,6 +93,21 @@ export function keepFigures(mesh: THREE.Object3D, kept: number) {
 }
 
 /**
+ * Lets a share of the figures a mesh belongs to go, 0 … 1: they go one by one all over the piece (material.ts), as
+ * the view nears the border of a step that draws no figures. Returns whether that changed (the stage then needs a
+ * picture).
+ */
+export function thinFigures(mesh: THREE.Object3D, share: number) {
+  const p = pairOf.get(mesh);
+  if (!p || p.thinned === share) return false;
+  p.thinned = share;
+  // (the shader reads it from the mesh it draws)
+  p.near.userData.thinned = share;
+  p.far.userData.thinned = share;
+  return true;
+}
+
+/**
  * The person whose figure stands nearest a point of the world (finest world blocks; y in blocks as the piece was
  * built), within `reach` blocks across (the click hits the ground just behind a figure) and three up or down, or null: anonymous figures (outside the 30 cities, or
  * without a world server) do not count.
@@ -127,8 +144,11 @@ const PHASE = 3,
 /** the numbers of a piece's figures as the graphics card has them (one list for both kits, material.ts) */
 const numbersOf = (p: Pair, name: 'figureA' | 'figureD') =>
   (p.near.geometry.getAttribute(name) as THREE.InterleavedBufferAttribute).data;
-/** whether figure `i` of a piece is on the stage: a negative phase keeps it off (material.ts) */
-const onStage = (p: Pair, i: number) => (numbersOf(p, 'figureA').array as Float32Array)[i * STRIDE + PHASE] >= 0;
+/** whether figure `i` of a piece is on the stage: a negative phase keeps it off, and so does its going (material.ts) */
+const onStage = (p: Pair, i: number) => {
+  const phase = (numbersOf(p, 'figureA').array as Float32Array)[i * STRIDE + PHASE];
+  return phase >= 0 && !thinnedOut(phase, p.thinned);
+};
 /** Paints the figures of these rulers in their colours (garment and headwear), or back as they were built. */
 function paint(p: Pair) {
   const buf = numbersOf(p, 'figureD'),
