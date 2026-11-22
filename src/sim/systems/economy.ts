@@ -62,6 +62,7 @@ import { ROLE, workforce } from './work';
 import { citiesByPlace, writeHouseholds } from './household';
 import { presentPersons } from '../people/living';
 import { absences, contracts } from './workers';
+import { AGRICULTURE } from './hamlets';
 
 /** The state of the economies that the engine keeps for a world (economy/src/lib.rs `LAST`): their bytes
  *  (`CityEconomies.model`) are written only when something reads them, a snapshot or a hash. */
@@ -188,8 +189,25 @@ export function cityCalibrations(
       throw new Error(
         `${x.name} has ${working.length} persons who work, its calibration ${activePersons(calibration)} active persons`,
       );
-    return { ...x, working, idle, calibration };
+    return { ...x, working: villagersTillTheLand(s, working, calibration), idle, calibration };
   });
+}
+
+/** The persons who work in the order in which the parts are given out (`foundEconomy`), so that the persons of the
+ *  hamlets (src/sim/people/country_folk.ts) take the farms first: the engine gives the firms out in the order of the
+ *  sectors, agriculture first, their owners one by one and their jobs to the next workers (the port's
+ *  `assign_workers`, economy/vendor/port-beforeit/src/lib.rs). The owners of the farms are the first persons of the
+ *  hamlets, the owners of the other firms and of the bank the first of the town, the workers those of the hamlets
+ *  before those of the town; each part keeps the order of src/sim/systems/work.ts. */
+function villagersTillTheLand(s: WorldState, working: readonly number[], calibration: EconomyCalibration): number[] {
+  const P = s.person.cols,
+    hamlet = s.family.cols.hamlet,
+    I_s = (calibration.parameters as { I_s: number[] }).I_s;
+  const village = working.filter((id) => hamlet[P.family[id]]),
+    town = working.filter((id) => !hamlet[P.family[id]]);
+  const farms = Math.min(I_s[AGRICULTURE], village.length),
+    others = I_s.reduce((a, b) => a + b, 0) - farms + 1; // the owners of the other firms, and of the bank
+  return [...village.slice(0, farms), ...town.slice(0, others), ...village.slice(farms), ...town.slice(others)];
 }
 
 /** Founds the economies of the cities of a world on the day it has reached: the starting position of every city,

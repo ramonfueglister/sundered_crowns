@@ -35,6 +35,7 @@ import { type City, citiesOf, hasCities } from '../content/cities';
 import { SCALE, toHeads } from '../scale';
 import { presentPersons } from '../people/living';
 import { rowOf, spawnPerson } from '../people/archive';
+import { countryFolk } from '../people/country_folk';
 
 export type { City } from '../content/cities';
 /** The cities of a world of 1356 (src/sim/content/cities.ts has those of every start year). */
@@ -115,14 +116,24 @@ export function foundPeople(s: WorldState): void {
     z: { iq: [], o: [], c: [], e: [], a: [], n: [] },
   };
   for (const city of citiesOf(s.startYear)) {
-    const c = founders(founding, city.place, Math.round(city.people / SCALE));
-    const wives = households(founding, c);
-    children(founding, c, wives);
-    // 4. whoever is left is a family of their own, without a seat
-    for (const id of c.ids) if (P.family[id] < 0) P.family[id] = newFamily(founding, c.place, -1, -1, 0);
-    traits(founding, c.ids);
+    const town = Math.round(city.people / SCALE);
+    foundGroup(founding, city.place, town);
+    // the villages round the town (src/sim/people/country_folk.ts): their families live in hamlets
+    for (const id of foundGroup(founding, city.place, countryFolk(town)).ids) founding.F.hamlet[P.family[id]] = 1;
   }
   // (the genes follow the cultures: `giveGenes`, called by `foundPersonCultures`)
+}
+
+/** Founds `n` persons of a place in the steps 1 to 5 below. */
+function foundGroup(founding: Founding, place: number, n: number): Founders {
+  const c = founders(founding, place, n),
+    P = founding.P;
+  const wives = households(founding, c);
+  children(founding, c, wives);
+  // 4. whoever is left is a family of their own, without a seat
+  for (const id of c.ids) if (P.family[id] < 0) P.family[id] = newFamily(founding, c.place, -1, -1, 0);
+  traits(founding, c.ids);
+  return c;
 }
 
 /** What the founding of every city shares: the world and its tables, the draws, and the traits drawn so far. */
