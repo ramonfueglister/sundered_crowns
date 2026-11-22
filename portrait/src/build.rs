@@ -1108,8 +1108,8 @@ pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Po
         if let Some(sf) = mh_hair2(dir, name, &x.pp, &h.base, hcb, &bcol, true, (0.0, 0)) {
             out.push(sf);
         }
-        // a beard's locks (England's `beard_crop_locks`): solid as a head's, drawn with the dress set's image of
-        // a beard's locks
+        // a beard's locks (England's `beard_crop_locks`, and the short beard's strands `beard_short1356_locks`,
+        // round 176): solid as a head's, drawn with the dress set's image of a beard's locks
         if let Some(sf) = mh_rope(dir, &format!("{name}_locks"), garb.map_or("", |d| d.beard_lock_image), &x.pp, &h.base, &bcol) {
             out.push(sf);
         }

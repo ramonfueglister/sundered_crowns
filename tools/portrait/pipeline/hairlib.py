@@ -258,7 +258,7 @@ LOCK_BODY = 0.75     # the share of a lock's image that is its length; the rest 
 LOCK_END = 0.985     # how far down the image a lock's very end lies: at the lower edge the image's top shows again
 
 
-def locks_from_wisps(head, S, lab, K, rng, wmin, wmax, flat, layer, m=5, tip=(0.3, 0.25, 0.8, 0.4), root=(0.15, 0.2, 0.7, 0.3), jitter=0.012, wave=None, vlen=1.0, ring=0.14, clump=(0.12, 0.65), over=None, spread=4.0, back=0.0, vary=None, first=0.0, across=None, least=6):
+def locks_from_wisps(head, S, lab, K, rng, wmin, wmax, flat, layer, m=5, tip=(0.3, 0.25, 0.8, 0.4), root=(0.15, 0.2, 0.7, 0.3), jitter=0.012, wave=None, vlen=1.0, ring=0.14, clump=(0.12, 0.65), over=None, spread=4.0, back=0.0, vary=None, first=0.0, across=None, least=6, ends=3):
     """Locks: one arched band per wisp along its centre line: in section the upper half of a lens, as broad as the
     wisp (`spread` times the mean distance of its strands from its middle, between `wmin` and `wmax`) and `flat`
     times as high, `m` corners from flank to flank. Its image's length part lies back and forth
@@ -282,7 +282,8 @@ def locks_from_wisps(head, S, lab, K, rng, wmin, wmax, flat, layer, m=5, tip=(0.
     narrower (of the lock's breadth), and the lock itself shorter than its strands by up to so much. `across`
     (round 173, fine strands): the image's breadth in units; a band takes as much of the image's breadth as it is
     broad, so the image's hairs are as fine on a strand of 4 mm as on a lock of 14 (none: every band has the whole
-    breadth). `least`: a wisp of fewer strands makes no band. Returns bands for write_tubes(closed=False)."""
+    breadth). `least`: a wisp of fewer strands makes no band. `ends` (round 176): rings along a lock's end (3; a
+    strand of a short beard, 5 to 10 mm long, ends in one: a point). Returns bands for write_tubes(closed=False)."""
     over = head if over is None else over
     steps = S.shape[1] - 1
     turn = np.linspace(-np.pi / 2, np.pi / 2, m)
@@ -326,7 +327,7 @@ def locks_from_wisps(head, S, lab, K, rng, wmin, wmax, flat, layer, m=5, tip=(0.
         body = total - rl - el
         half = max(1, int(round(body / (2 * vlen))))                 # how often the image goes back and forth
         per = int(np.ceil(body / (2 * half) / ring))                # rings between two turns
-        run = np.concatenate([[0], rl + body * np.arange(2 * half * per + 1) / (2 * half * per), total - el + el * np.arange(1, 4) / 3])
+        run = np.concatenate([[0], rl + body * np.arange(2 * half * per + 1) / (2 * half * per), total - el + el * np.arange(1, ends + 1) / ends])
         c = np.stack([np.interp(run, run0, c0[:, i]) for i in range(3)], -1)
         w = np.interp(run, run0, w0)
         n0 = unit(c - head.hc)
@@ -569,6 +570,7 @@ def write_locks(head, bind, out, name, S, key, wave=None, over='8,6,35,30', tip=
     and measured apart from the rest).
     Round 173, fine strands in the locks' place: `<key>_LOCK_ACROSS` (the image's breadth in units,
     `locks_from_wisps(across=)`), `<key>_LOCK_LEAST` (a wisp of fewer strands makes no band; 6),
+    `<key>_LOCK_ENDS` (round 176: rings along a band's end, `locks_from_wisps(ends=)`),
     `<key>_LOCK_TONES` (each band of a tone of its own: how far off the hair's, as `hair_body.py`'s `tones`) and
     `<key>_LOCK_AO` (`dist,samples,floor,power`, as `hair_body.py`'s `AO`: the shade between the bands baked in
     Blender with `blockers` standing in the scene; the script then runs with Blender's Python). With either of
@@ -590,7 +592,7 @@ def write_locks(head, bind, out, name, S, key, wave=None, over='8,6,35,30', tip=
     bands = locks_from_wisps(head, S, lab2, int(LK), rl, LW0, LW1, LFLAT, tuple(LAYER), m=int(get('_LOCK_M', m)), jitter=float(get('_LOCK_JITTER', jitter)),
                              tip=fours('_LOCK_TIP', tip), root=fours('_LOCK_ROOT', root),
                              wave=wave, ring=float(get('_LOCK_RING', ring)), back=float(get('_LOCK_BACK', back)), vary=VARY, first=float(get('_LOCK_FIRST', first)),
-                             across=float(get('_LOCK_ACROSS', '0')) or None, least=int(get('_LOCK_LEAST', '6')),
+                             across=float(get('_LOCK_ACROSS', '0')) or None, least=int(get('_LOCK_LEAST', '6')), ends=int(get('_LOCK_ENDS', '3')),
                              over=form if form is not None else head.covered(cover[0], cover[1], beside, trend=float(get('_LOCK_TREND', trend))) if cover[0] > 0 else None)
     if not write:
         return bands

@@ -381,7 +381,11 @@ def mouth_cut(root, d):
 # at the chin, on the upper lip), cut where they come to the lips and where they leave the beard's zone
 # (CROP_LOCK_CUT: how far outside it, in units of 1.5 mm), and gathered into locks as a head's hair is
 # (`hairlib.py` `write_locks`, switches `CROP_LOCK_...`).
-if style == 'crop' and os.environ.get('CROP_LOCKS'):
+# Round 176: the short beard has strands too (`short` with the same switches in front of it, which keep their
+# names; `LIPS=1` with them, for the mouth). Its painted layer alone was a dark shell on the jaw with one outline,
+# beside a full beard of strands (round 173). Its strands are grown over the skin of its own zone, lifted by
+# `CROP_LIFT` as the full beard's form is (a millimetre or two, and not drawn taut under the jaw: `CROP_TAUT=0`).
+if style in ('crop', 'short') and os.environ.get('CROP_LOCKS'):
     from hairlib import grow, write_locks, farthest
     def beard_form():
         V, T = H.V, H.T

@@ -9150,6 +9150,106 @@ above, from the side below), `runde175_nah.png` (the same near the place where t
 `runde175_blender.png` (Blender: the old hair above the new, near the plait's beginning from three sides),
 `runde175_blender_hochgesteckt.png` (the pinned plaits, old above new).
 
+**Round 176: the short beard of short strands, in the Blender on Ramon's Mac** (2026-11-22).
+Rounds 171 to 175 made the hair of the head, the full beard and the plaits of strands. The short beard was still
+its painted layer alone (round 62): on the man of the sample who wears one in the village a dark mass on jaw and
+chin with one outline, under his hood; on blond and on grey hair a patch of felt. Beside it stands the full beard
+of strands (round 173).
+
+What was read. Nothing. Set by eye, in Blender and in the portrait. The reference was not looked at for it.
+
+What is changed.
+- **A short beard has strands** (`tools/portrait/pipeline/beards.py`): the code that grows the full beard's
+  strands (`crop`) grows them for `short` too; the call is in the pipeline's README. 4586 strands on cheeks, jaw,
+  chin and throat and 672 of the moustache: flat bands 1.2 to 2 mm broad (the moustache's 1 to 1.6), grown 7 mm
+  long on the cheeks, 10 at the chin and 6 on the lip, ending in a point, drawn with the full beard's image,
+  each of a tone of its own. They lie over the skin lifted by 1 to 2 mm: a short beard has no form of its own as
+  the full one has, and is not drawn taut under the jaw. Their shade is baked in Blender as the full beard's
+  (Cycles, ambient occlusion per corner within 1.5 cm, the head and the painted layer standing in the scene; no
+  darker than 0.5).
+- `hairlib.py`: `locks_from_wisps(ends=)`, read as `<key>_LOCK_ENDS`: the rings along a strand's end. With one
+  a strand has five rings where it had seven. Without the switch every file is what it was (the full beard's
+  call writes round 173's file byte for byte on the Mac, with the scripts as committed).
+- A new file, `public/portrait/real/beard_short1356_locks.txt.zst`, written by Blender 5.1.2 on the Mac. The
+  builder draws `<beard>_locks` where such a file lies (round 90): two of its comments are changed and nothing
+  else, the wasm is the same bytes. The painted layer stays under the strands as it was.
+
+How it was made. A first trial in the cloud; then, as rounds 171 to 175, the scripts were sent to the socket of
+the Blender that is open on the Mac and run there in scenes of their own, each pass rendered from the front,
+three quarters and the side, whole and near: the cloud's trial again; shorter, narrower and flat; with pointed
+ends and more strands; that with fewer rings. The trial and the second, third and fourth pass were tried in
+the portrait; the last is the file in the repository, and run again on the Mac with the scripts as committed the call
+writes it byte for byte. The helper that renders the passes left the beard's painted layer out of the first
+three (skin showed between the strands, where the portrait has the layer); it was mended, and the first, the
+third and the last pass were rendered again with the layer.
+
+Measured (the file; `portrait/tests/locks.rs` with `SHOW=1`, seven men; the sheets of 36 against round 175's):
+
+| | before | now |
+|---|---|---|
+| strands of a short beard | none | 5258, of them 672 the moustache's |
+| their corners, triangles | | 52 580, 42 064 |
+| a strand's length in the median, as built | | 6.3 to 6.6 mm (the same men's full beard 3.2 to 3.7 cm) |
+| a corner's shade in the file; its mean | | 0.40 to 1.22; 0.76 |
+| the lightest corner as drawn against the darkest | | 1.8 to 3.2 times |
+| portraits of the sheet that change | | 1 of 36 in the village, 6 of 36 at court |
+| the file, packed | | 1215 kB (the full beard's 1296) |
+
+Tried and not kept.
+- The cloud's trial (bands of 2 to 3.5 mm with three corners across, 10 to 14 mm long, the moustache's 10): in
+  the portrait the moustache a roll on the upper lip and the beard close to a full one; 1.87 MB.
+- Shorter, narrower and flat, with the full beard's ends (second pass): chips with square ends in Blender.
+- Three rings along a strand's end (third pass): 73 612 corners and 1.71 MB, and in the portrait the same
+  picture as with one.
+- Not tried: an image of its own for strands this short; a beard without the painted layer under it; finer
+  strands in greater number.
+
+**Two tests changed, one new.** In `portrait/tests/locks.rs`:
+`a_full_beard_of_england_is_locks_over_its_painted_layer` held, at its end, that a man with a short beard
+wears no locks on the jaw. That is the form this round changes on purpose, so the short beard left that list
+(a shaven man and one with stubble stay in it). The new test,
+`a_short_beard_of_england_is_short_strands_over_its_painted_layer`, holds the new form on the same seven men:
+one surface of strands with the painted layer under it, 4500 to 6500 strands of 30 000 to 55 000 triangles,
+4 to 10 mm long in the median and less than 0.3 of the same man's full beard's, the lightest corner more than
+1.5 times the darkest, nothing lower than 0.08 of the head's height below the chin or above the eyes, and no
+further off the skin than the measure reads (5.5 mm in the median: it reads to the skin's nearest corner).
+Its helper `pieces` is `strands` with a strand's length beside its breadth in the image.
+In `tests/portrait.test.ts` the test of the full beard's locks on the stage held the same thing for the sample
+(a beard's locks on the men with a full beard alone) and failed on the new file: it now holds them on the men
+with a full or a short beard (four and one of the sample) and draws the short beard's strands with the same
+material. Its comment named why a short beard was left painted in round 90: with that round's locks it read as
+a dark full beard on a boy of 17. Looked at again: the sample's man set to 17 has a dark beard of short strands
+where he had a dark painted one; it is no full beard, and no lighter than it was.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 175. The colour sheet: 148 of 160
+lines to the last figure. Twelve move, all in the group of the boys of 8 to 17 and all on the chin and round the
+mouth (the chin's L 40.7 for 39.4, the others by 0.1 to 0.8): a boy of 16 or 17 can wear a short beard, and the
+sheet's places on chin and lip lie in it. No gauntlet line reads them.
+
+Honest about it. A middle step, for those who wear a short beard: one of the 36 in the village, six at court.
+At the size of the sheet the beard has a grain and is a little darker, nothing more. From near it is no longer
+felt: it has strands with depth between them and an edge of ends at the throat. What is not good: a strand is a
+flat band with the image of several hairs on it, so on blond hair the beard reads as straw and on white as
+flakes, not as single hairs. All strands of a place are of one length, a lawn. The upper edge on the cheek is
+still the painted layer's line, and the strands begin at it in a row. The moustache lies on the lip as a brush
+and hides the upper lip's edge on some men; under the lower lip a band is the painted layer alone. On brown and
+red hair the beard is darker than it was: the strands are drawn as the full beard's are, the layer under them
+with the lighter values of rounds 80 and 159; not measured. Stubble is still painted alone. The shade is baked
+on a bare head, so under a hood it is the shade of a beard in the open. The file weighs 1.2 MB, as much as the
+full beard's. It was baked on one machine; the cloud's trial was not compared with it. Every number is by eye:
+PLACEHOLDER.
+
+Tests: `cargo test --release` as a whole 141 of 141 (one new); `tests/portrait.test.ts` and its neighbour 45
+of 46 in the whole run, the one that failed changed as above and run again alone, passing; typecheck and lint
+pass, no new warning. Pictures (project files, `portraits/`):
+`runde176_vorher_nachher.png` (the man of the village: from the front before and after, from three quarters
+before and after), `runde176_nah.png` (near, each pair before and after: above the same man with blond hair
+and at 68, below two men at court), `runde176_hof_sechs.png` (the six at court from three quarters: before
+above, after below), `runde176_dorf.png` and `runde176_hof.png` (all 36, village and court, after; round 175's
+sheets are the before), `runde176_blender.png` (Blender, near: the painted layer alone above, the strands over
+it below), `runde176_blender_durchgaenge.png` (Blender: the layer alone, the first, third and last pass).
+
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair

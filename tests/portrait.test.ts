@@ -260,18 +260,21 @@ describe('portraits', { timeout: 20_000 }, () => {
     // Until round 90 a full beard was its painted layer alone: a smooth shell with hairs drawn on it, lit as one
     // form, its outline the layer's own edge (relief round the lit jaw 5 to 9 L between the darkest and the
     // lightest tenth; with locks 10 to 17). Now 300 short locks lie over the layer, solid hair as a head's
-    // locks: open bands seen from both sides, cut out by their image, in the stage's shadows. The short beard
-    // and stubble stay painted (a short beard of locks read as a dark full beard on a boy of 17)
+    // locks: open bands seen from both sides, cut out by their image, in the stage's shadows. Stubble stays
+    // painted. The short beard stayed painted until round 176 (a short beard of round 90's locks read as a dark
+    // full beard on a boy of 17): it has short strands of its own over its layer now (5 to 10 mm long, modelled
+    // in Blender, docs/PORTRAITS.md; portrait/tests/locks.rs), drawn with the same image and as the full beard's
     const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
     const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
-    let full = 0;
+    let full = 0, short = 0;
     for (const p of sample) {
       const surfaces = b.build(p).surfaces, worn = surfaces.map(s => s.tex);
       const locks = surfaces.filter(s => s.tex.includes('/beard1356_locks.'));
-      const wears = worn.some(t => t.includes('/beard_crop_cap.'));
-      expect(locks.length, `person ${p.pid}: a beard's locks with the full beard alone`).toBe(wears ? 1 : 0);
-      if (!wears) continue;
-      full++;
+      const wears = worn.some(t => t.includes('/beard_crop_cap.')), strands = worn.some(t => t.includes('/beard_short1356_cap.'));
+      expect(locks.length, `person ${p.pid}: a beard's locks with the full and the short beard alone`).toBe(wears || strands ? 1 : 0);
+      if (!wears && !strands) continue;
+      full += Number(wears);
+      short += Number(strands);
       const lock = locks[0]!;
       expect([surfaceKind(lock), lock.double, drawOrder(lock)], `person ${p.pid}`).toEqual(['rope', true, 0]);
       const [m, ...more] = surfaceMaterials(lock, null, null, ENGLAND_1356);
@@ -282,8 +285,8 @@ describe('portraits', { timeout: 20_000 }, () => {
       expect(lock.tex.includes('/hair1356_body.')).toBe(false);
       expect(lock.pos.length / 9).toBeGreaterThan(8000);
     }
-    // four of the sample's men wear the full beard (940011, 940013, 940021, 940027)
-    expect(full).toBe(4);
+    // four of the sample's men wear the full beard (940011, 940013, 940021, 940027), one the short (940019)
+    expect([full, short]).toEqual([4, 1]);
     expect(people.some(p => b.build(p).surfaces.some(s => s.tex.includes('/beard1356_locks.'))), "no Roman wears England's beard").toBe(false);
     // The image of locks has dark strands between light ones. The stage darkens them further on light hair
     // (`sheen.light`, an exponent that grows with the hair's brightness), which cards needed: blended sheets

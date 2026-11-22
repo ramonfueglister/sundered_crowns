@@ -465,7 +465,7 @@ pub struct DressSet {
     /// The file of the short beard. In Apoleia's, hairs are rooted in the gap between the lips and run on over the
     /// line of the mouth; on a mouth that is closed by raising the lower lip they lie on that lip as dark bars, a
     /// row of teeth. England's `beard_short1356` is the same beard with the mouth left free and the moustache
-    /// ending over it (beards.py `LIPS=1`).
+    /// ending over it (beards.py `LIPS=1`), and since round 176 short strands over it (`beard_short1356_locks`).
     pub beard_short: &'static str,
     /// The file of the stubble. Apoleia's has the same hairs in the gap between the lips as its short beard; they
     /// are short, and seen large they lie on the lower lip as a row of dark dashes along the line of the mouth.
