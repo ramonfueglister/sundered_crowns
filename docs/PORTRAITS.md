@@ -9347,6 +9347,108 @@ three quarters, before above and after below), `runde177_nah.png` (their fringes
 before), `runde177_blender.png` (Blender, one cut from three sides: round 176's, the first, the second and
 the last pass), `runde177_blender_alle.png` (Blender: the nine cuts of the last pass).
 
+**Round 178: a bowl cut's strands lie in locks, in the Blender on Ramon's Mac** (2026-11-22).
+Round 177 named the larger fault it left: the crown of a bowl cut is fine stripes, even and tidy, a wig. Since
+round 171 each of a cut's 450 strands lay by itself: its own height over the head, its own lean, its own tone
+and its own place in the image. Side by side that is straw.
+
+What was read. Nothing. Looked at again: the reference's bowl cuts (`ck3_09`, the cut-out of round 177 at three
+times their size) beside ours at the same size. Theirs is a close cap of broad locks, some ten across the head
+from the front, each smooth with a dark line at one flank, their ends at more than one height. Ours had some
+forty stripes there. Not measured on the reference, by eye.
+
+What is changed.
+- **A clump is a lock** (`tools/portrait/pipeline/hair_body.py`, `BOWL`'s new key `lock`): the strands that end
+  in one clump (round 177's 28 round the head, some 2 cm broad at the fringe) lie in one arch from the whorl to
+  their ends. The strand at a clump's middle lies up to 1.6 mm higher than one at its border, and each strand
+  leans as the arch does at its place. One border of a lock lies 0.8 to 1.6 mm higher and the other as much
+  lower, to either side by chance: locks overlap as tiles do. Near the whorl, where the strands begin, there is
+  no arch; it comes in over half a radian.
+- **A lock is drawn as one**: its strands take neighbouring places of the image, so the image's hairs run on
+  from strand to strand; a lock has one tone, and a strand keeps 0.4 of its own tone, lean and height and 0.2
+  of its own arch.
+- **Hair that lies flat keeps its height** (`bob02` under a hood, a hat or a band, `bob04` round a bare top:
+  the cut's new key `low`): a lock's highest place is the height the strands had, and the arch and the lean
+  go down from it. With the arch about that height one lord of eighty had hair through his circlet
+  (`portrait/tests/court.rs`); the test is as it was.
+- The fringe, the rim and the number of strands are round 177's: the lock's numbers are drawn after the
+  fringe's. With `LOCK=0` the script writes round 177's file byte for byte (checked on the Mac on `bob01`).
+- The nine files `public/portrait/real/bob01_body.txt.zst` to `bob09_body.txt.zst` are written anew, by Blender
+  5.1.2 on the Mac, with the script as committed. Nothing in the builder and nothing on the stage; the wasm is
+  the same bytes. Parted hair is not touched (`page01` run on the Mac: byte for byte as before).
+
+How it was made. Eight trials of one cut in the cloud, each put into the portrait: the arch at 2.5 mm; three
+strengths with a second row of lock ends over the fringe; three with that row in front of the face alone or
+without it; and the last after a fault was found by reckoning: the side a strand leans to was read from its
+own end, and on a third of the strands it came out the wrong way round (a lock's border leaned up, not down).
+It is read from the cut's line now. Then, as rounds 171 to 177, the script was sent to the socket of the
+Blender that is open on the Mac and run there in scenes of its own, each pass rendered from four sides: all
+nine cuts with the cloud's last numbers; one cut at three strengths with the strands' own arch and height
+calmed; all nine with the calmest of the three; and, after the circlet's test failed on those, all nine again
+with `low` on the two flat cuts (the other seven byte for byte as in the third pass). The three strengths
+were put into the portrait side by side; the calmest, of the fourth pass, is in the repository.
+
+Measured (`portrait/tests/hair_body.rs` with `SHOW=1`, on round 177's files and on these; the sheets of 36
+against round 177's):
+
+| | before | now |
+|---|---|---|
+| strands that end in front of the face, within half the head's half breadth (six men and boys) | 50 to 64 | 50 to 64 |
+| two neighbours of them are drawn so far apart in the image's breadth, the middle one of all | 0.22 to 0.33 | 0.05 to 0.07 |
+| neighbours drawn more than a third of the image apart | 20 to 27 of 49 to 63 | 4 to 6 |
+| corners and triangles of a bowl cut (`bob01`) | 39 266, 53 552 | the same |
+| portraits of the sheet that change | | 16 of 36 in the village, 16 of 36 at court |
+| the nine files, packed | 9.16 MB | 9.12 MB (38 kB less) |
+
+Tried and not kept.
+- An arch of 2.5 mm (first trial) and of 2.2 mm with a lean of 2 mm (second pass on the Mac): ropes side by
+  side with a deep dark groove between, a pumpkin's ribs.
+- A flat lock with a lean of 2.4 mm (second pass): tiles with a black slit at each step.
+- A second row of lock ends, 4 to 22 degrees above the fringe, on a third to a half of the locks of the top
+  layer (five trials): the ends turn in to the head as the rim's do and went through the layer under them;
+  in the portrait knots in front, and at the temple a row of scales.
+- Not tried: locks of another pattern for each man; locks that cross one another; fewer, broader strands in
+  place of the fine ones; a lock end that lies flat on the hair under it.
+
+**One test new, none changed.** `a_bowl_cuts_strands_lie_in_locks` (`portrait/tests/hair_body.rs`) holds on six
+men and boys what is drawn: of the strands that end in front of the face, in their order across it, two
+neighbours are drawn less than 0.12 of the image's breadth apart in the middle, and fewer than a third of all
+neighbours more than a third of the image apart. Round 177's files fail the first on every one of the six.
+Its helper `strands_in_front` gathers a surface's pieces as `pieces` does and gives each strand's lowest corner
+and the middle of what it takes of the image. The arch itself is read by no test: it was looked at in Blender
+and in the portrait. The tests on the fringe, its depth in strands, the hood, the circlet, the hat and the
+rolls are as they were and pass.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 177. The colour sheet: 158 of 160
+lines to the last figure; two move, both of the boys of 8 to 17, who all wear a bowl cut (beside the nose
+darker than the cheek, L 25.6 for 25.4; the cheek beyond the nose, 17.4 for 17.3).
+
+Honest about it. A middle step, on every head with a bowl cut: 16 of the 36. From near the top of the head
+reads as locks a finger or two broad with a soft sheen, where it was stripes; at the size of the sheet the
+hair is a little calmer and no more. What is not good: the locks run side by side from the whorl to the rim,
+all of one kind, with a dark line between each two: ribs, less than a pumpkin's but of that family. The
+reference's locks are of uneven breadth, cross one another and end at more than one height; ours end
+together at the rim, and the trial of a second row of ends failed. A cut has one pattern of locks, the same
+on every man who wears it. Inside a lock the strands still show from three quarters and from the side, as
+fine lines, and at the sides and the back of the head the hair is closer to round 177's than in front. Near
+the whorl there are no locks. In Blender the back of the head has dark blotches where the baked shade falls
+between layers; it had them before, and no portrait shows the back. The curls (`bob05`) and the turned ends
+(`bob09`) take the locks as the others do and were looked at in Blender alone, not near in the portrait. The
+fringe's points are round 177's, with their steps. The hats, the coif, the fillet and the crown were fitted
+to the hair as it was; the tests that hold them pass. Baked on one machine. Every number is by eye:
+PLACEHOLDER.
+
+Tests: `cargo test --release` as a whole 143 of 143 (one new); on the third pass's files it was 142 of 143,
+the circlet's test failing on one lord, which `low` mended without a change to the test. `tests/portrait.test.ts`
+and its neighbour 46 of 46; typecheck and lint pass, no new warning. Pictures (project files, `portraits/`): `runde178_vorher_nachher.png` (four men from the front,
+before above and after below, then from three quarters, before and after), `runde178_nah.png` (their hair
+near, in the same order), `runde178_sonderfaelle.png` (brown hair, under a hood, the bare top, a small boy
+with black hair: before above, after below), `runde178_dorf.png` and `runde178_hof.png` (all 36, village and
+court, after; round 177's sheets are the before), `runde178_blender.png` (Blender, one cut from four sides:
+round 177's above, this round's below), `runde178_blender_durchgaenge.png` (Blender, one cut: the first pass
+and the three strengths of the second), `runde178_blender_alle.png` (Blender: the nine cuts of the third
+pass; the two flat cuts of the fourth were looked at beside it and are not in this picture).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair

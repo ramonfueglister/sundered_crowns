@@ -83,6 +83,19 @@ W = dirs(180, 52)    # the whorl
 # back; by how many degrees more a clump of the fringe ends above or below the cut's line): a clump ends in a
 # point. With it `clump` is 28 clumps whose strands go a third of the way to the middle (36 and four fifths: with
 # the points that was a row of spikes) and `corner` 48 and 18 (57 and 3: the step). All PLACEHOLDER by eye.
+# (round 178) Locks, made and looked at in the same Blender. Since round 171 every strand lay by itself: its own
+# height, its own lean, its own tone and its own place in the image, so the top of a bowl cut was a field of fine
+# stripes, a wig of straw; the reference's is a close cap of broad locks. A cut's `lock`: the strands that end in
+# one clump lie in one arch from the whorl to their ends. Its numbers: how much higher the strand at a clump's
+# middle lies than one at its border (units of 10 cm: 1.6 mm; each strand leans as the arch does where it lies);
+# how much higher one border lies than the middle and the other lower (to either side by chance, a half to the
+# whole of it): locks overlap as tiles do; from what angle from the whorl, and over how many more (radians), the
+# arch comes in: none where the strands begin; how far a lock's tone is off the hair's; how much a strand keeps
+# of its own tone, lean and height; how much of the image's breadth a lock takes to either side of its middle
+# (strands side by side take neighbouring places of the image, so its hairs run on from strand to strand); how
+# much lower than the full arch a lock's may be (uneven); how much of its own arch (`flat`) a strand keeps.
+# 0 as the first: none, and the files are round 177's. A cut's `low` (hair that lies flat, `FLAT`): its locks'
+# highest place is the height its strands had. All PLACEHOLDER by eye.
 # (round 172) Parted hair of fine strands, made and looked at in the same Blender (docs/PORTRAITS.md): `PARTED`
 # and the cuts made of it, below.
 _e = lambda k, d: [float(t) for t in os.environ.get(k, d).split(',')]
@@ -93,6 +106,7 @@ BOWL = dict(
     thin=0.0, thin_over=0.5,
     clump=tuple(_e('CLUMP', '28,0.35,0.6,0.45,1.5')),
     tuft=tuple(_e('TUFT', '3.5,1.3,0.4,1.5')),
+    lock=tuple(_e('LOCK', '0.016,0.016,0.15,0.5,0.06,0.4,0.3,0.6,0.2')),
     layers=[
         dict(n=70, fit=3.2, vary=0.3, flat=0.12, h=0.066, long=(1.2, 1.8), ends=(-0.3, 0.3), tip=(0.09, 0.12), tuck=(0.09, 0.02), blunt=0.8, point=(0.0, 2.0), m=5, across=0.3, ring=0.09, clump=False, wave=(0.002, 0.006, 1.2, 2.2), roll=0.1, tone=0.9, seed=3),
         dict(n=200, fit=1.9, vary=0.4, flat=0.22, h=0.082, roots=(0.1, 0.55, 0.3, 0.55), ends=(-0.5, 0.5), tip=(0.1, 0.13), tuck=(0.1, 0.02), blunt=0.7, point=(0.15, 2.0), m=3, across=0.3, ring=0.09, wave=(0.002, 0.006, 1.2, 2.2), roll=0.3, tone=1.0, tones=0.07, seed=5),
@@ -106,9 +120,9 @@ CUTS = {
     'bob01': BOWL,                                          # to the ear's lower end
     'bob06': dict(BOWL, end=-31.0),                         # to above the ear
     'bob07': dict(BOWL, end=-51.0),                         # to the jaw
-    'bob02': dict(BOWL, lift=_e('FLAT', '0.38')[0], round=0.6),   # under a hood: lying flat
+    'bob02': dict(BOWL, lift=_e('FLAT', '0.38')[0], round=0.6, low=True),   # under a hood: lying flat
     'bob03': dict(BOWL, recede=(34.0, 11.0, 22.0)),         # gone back at the temples: the fringe's line rises there
-    'bob04': dict(BOWL, lift=_e('FLAT', '0.38')[0], round=0.6, bare=True),    # a horseshoe round a bare top
+    'bob04': dict(BOWL, lift=_e('FLAT', '0.38')[0], round=0.6, bare=True, low=True),    # a horseshoe round a bare top
     'bob05': dict(BOWL, curl=tuple(_e('CURL', '0.035,0.022,0.65,0.3'))),          # curls
     # a small child's: to the ear's lobe, closer to the head. (round 167) Its fringe ends where a man's does, on
     # the middle of the forehead; until then it was cut at 2 degrees, in the forehead's upper half (round 105,
@@ -351,6 +365,7 @@ def bundles(L, rng):
     ends = rng.uniform(L['ends'][0], L['ends'][1], n)
     clump = C.get('clump') if L.get('clump', True) else None
     tuft = C.get('tuft')
+    lock = C.get('lock') if clump and C.get('lock', (0,))[0] > 0 else None
     if tuft:
         corner = C.get('corner', (45, 25))
         front = 1 - smooth((np.abs(th_end) - corner[0]) / corner[1])
@@ -363,13 +378,22 @@ def bundles(L, rng):
         near = gap.argmin(1)
         ends = ends + crng.uniform(-clump[4], clump[4], len(th_c))[near]
         d_clump = dirs(th_c, level(th_c))[near]
+        two = np.sort(gap, axis=1)[:, :2]
         if tuft:
             # (round 177) a clump ends in a point: the strand at its middle ends on the clump's line, one at its
             # border `tuft[0]` degrees above it (a power `tuft[1]` of the way from the middle to the border), and
             # a clump of the fringe ends up to `tuft[3]` degrees further above or below the cut's line
-            two = np.sort(gap, axis=1)[:, :2]
             ends = ends + crng.uniform(-tuft[3], tuft[3], len(th_c))[near] * front
             ends = ends + tuft[0] * (tuft[2] + (1 - tuft[2]) * front) * (two[:, 0] / np.maximum(0.5 * two.sum(1), 1e-6)) ** tuft[1]
+        if lock:
+            # (round 178) a clump is a lock: where across it a strand ends (-1 and 1: its borders), to which side
+            # the lock leans, its tone, its place in the image and its arch's height (drawn after the fringe's
+            # numbers: the fringe is round 177's)
+            across_c = ((th_end - th_c[near] + 180) % 360 - 180) / np.maximum(0.5 * two.sum(1), 1e-6)
+            lean_c = (crng.choice([-1.0, 1.0], len(th_c)) * crng.uniform(0.5, 1.0, len(th_c)))[near]
+            tone_c = np.clip(crng.lognormal(0, lock[4], len(th_c)), 0.8, 1.25)[near]
+            u_c = crng.uniform(-0.08, 0.08, len(th_c))[near]
+            high_c = crng.uniform(1 - lock[7], 1.0, len(th_c))[near]
     elif tuft:
         # (a layer without clumps ends above the fringe's notches, so skin shows between the points)
         ends = ends + (tuft[0] + tuft[3]) * (tuft[2] + (1 - tuft[2]) * front)
@@ -452,15 +476,32 @@ def bundles(L, rng):
         # its height over the skin: it comes up from under the shell, and the hair is thinner towards its ends
         thin = 1 - C['thin'] * smooth((run - (total - C['thin_over'])) / C['thin_over'])
         low = C['shell']['h'] - 0.03
-        h = LIFT * (low + (L['h'] - low) * smooth(run / 0.35)) * thin + LIFT * rng.uniform(-0.006, 0.006) + up
+        h = LIFT * (low + (L['h'] - low) * smooth(run / 0.35)) * thin + LIFT * rng.uniform(-0.006, 0.006) * (lock[5] if lock else 1.0) + up
         if 'tuck' in L:
             # (round 171) the end turns in to the head over a quarter of a circle: a rim that is thick and round
             te = np.clip((run - (total - L['tuck'][0])) / L['tuck'][0], 0, 1)
             h = h - (h - LIFT * L['tuck'][1]) * (1 - np.sqrt(1 - te ** 2))
-        ht = ROUND * L['flat'] * hw
+        ht = ROUND * L['flat'] * hw * (lock[8] if lock else 1.0)
         h = np.maximum(h, ht + 0.004)                                 # its flanks stay off the skin
         roll = L['roll'] * rng.uniform(-1, 1) * ROUND
-        out_ += lay(d, h, hw, ht, roll, run, L['tone'] * float(np.clip(rng.lognormal(0, L.get('tones', 0.1)), 0.78, 1.25)) * (0.7 + 0.3 * smooth(run / 0.3)), rng, m=L.get('m', 7), rolled=rolled, across=L.get('across'))
+        tone = float(np.clip(rng.lognormal(0, L.get('tones', 0.1)), 0.78, 1.25))
+        u_mid = None
+        if lock:
+            # (round 178) the strands of a clump lie in one arch, each leaning as the arch does at its place
+            # (`roll` is a height for each unit across the strand; a clump is taken as no narrower than 6 mm
+            # there: on the fringe's corner clumps are close in angle)
+            s_, a_ = across_c[k], np.arccos(np.clip(d @ W, -1, 1))
+            g = smooth((a_ - lock[2]) / lock[3])
+            # (`low`, hair worn under a hood, a hat or a band: a lock's highest place is as high as the strands
+            # lay without locks; with the arch about that height hair came through a lord's circlet)
+            top = 0.5 * lock[0] * high_c[k] + lock[1] * abs(lean_c[k]) if C.get('low') else 0.0
+            h = np.maximum(h + LIFT * (lock[0] * high_c[k] * (0.5 - s_ ** 2) + lock[1] * lean_c[k] * s_ - top) * g, ht + 0.004)
+            broad = np.radians(0.5 * two[k].sum()) * OVER.skin(d[-1:])[0] * np.cos(np.radians(level(th_end[k])))
+            lie = np.sign((dirs(th_end[k] + 1.0, level(th_end[k])) - dirs(th_end[k] - 1.0, level(th_end[k]))) @ side[-1])
+            roll = roll * lock[5] - lie * LIFT * (-2 * lock[0] * high_c[k] * s_ + lock[1] * lean_c[k]) / max(broad, 0.06) * g
+            tone = tone_c[k] * tone ** lock[5]
+            u_mid = 0.5 + u_c[k] + lock[6] * s_
+        out_ += lay(d, h, hw, ht, roll, run, L['tone'] * tone * (0.7 + 0.3 * smooth(run / 0.3)), rng, m=L.get('m', 7), rolled=rolled, across=L.get('across'), u_mid=u_mid)
     return out_
 
 
@@ -591,7 +632,7 @@ def parted(L, rng):
     return out_
 
 
-def lay(d, h, hw, ht, roll, run, shade, rng, m=7, rolled=None, across=None):
+def lay(d, h, hw, ht, roll, run, shade, rng, m=7, rolled=None, across=None, u_mid=None):
     """A band laid over the skin: its middle's directions, its height, half breadth and half thickness ring by
     ring, how much it leans to one flank. Returns it as a list of one piece: its rings, their places in the image,
     the points they are bound by, a shade for each ring and for each ring how far it is turned off the head (0:
@@ -608,7 +649,7 @@ def lay(d, h, hw, ht, roll, run, shade, rng, m=7, rolled=None, across=None):
         # the band's surface at the angles `a_` across it (a quarter turn to either flank), ring by ring
         lat = hw_[:, None] * np.sin(a_)
         dd = unit(c_[:, None, :] + b_[:, None, :] * lat[..., None] - hc)
-        return hc + dd * (OVER.skin(dd) + h_[:, None] + ht_[:, None] * (2 * np.cos(a_) - 1) + roll * lat)[..., None]
+        return hc + dd * (OVER.skin(dd) + h_[:, None] + ht_[:, None] * (2 * np.cos(a_) - 1) + np.asarray(roll)[..., None] * lat)[..., None]
 
     rings = arch(c, b, h, hw, ht, turn[None, :])
     out = np.zeros(len(c))
@@ -639,7 +680,8 @@ def lay(d, h, hw, ht, roll, run, shade, rng, m=7, rolled=None, across=None):
         # (round 171) a strand takes as much of the image's breadth as it is broad: the image's hairs are as fine
         # on a strand of 5 mm as on a bundle of 3 cm
         lat = hw[:, None] * np.sin(turn)[None, :] / across
-        uv[..., 0] = rng.uniform(0.5 * hw.max() / across, 1 - 0.5 * hw.max() / across) + (-lat if flip else lat)
+        mid = rng.uniform(0.5 * hw.max() / across, 1 - 0.5 * hw.max() / across)
+        uv[..., 0] = (mid if u_mid is None else u_mid) + (-lat if flip else lat)
     return [(rings, uv, c, shade, out)]
 
 

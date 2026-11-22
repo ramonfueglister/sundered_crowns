@@ -422,6 +422,85 @@ fn a_bowl_cuts_fringe_ends_in_points_and_runs_round_the_temple() {
     }
 }
 
+/// The strands of a hair in front of the face (a piece of 24 triangles and more that ends in front of the head's
+/// middle, within `reach` of the face's middle, and takes less than half the image's breadth: not the shell): for
+/// each where its lowest corner lies across the face and the middle of what it takes of the image's breadth.
+fn strands_in_front(hair: &Surface, out: &Portrait, reach: f32) -> Vec<(f32, f32)> {
+    fn root(of: &mut [usize], mut i: usize) -> usize {
+        while of[i] != i {
+            of[i] = of[of[i]];
+            i = of[i];
+        }
+        i
+    }
+    let mut place: HashMap<[u32; 3], usize> = HashMap::new();
+    let ids: Vec<usize> = hair.pos.iter().map(|p| { let n = place.len(); *place.entry(p.map(f32::to_bits)).or_insert(n) }).collect();
+    let mut of: Vec<usize> = (0..place.len()).collect();
+    for t in ids.chunks_exact(3) {
+        let a = root(&mut of, t[0]);
+        for &k in &t[1..] {
+            let b = root(&mut of, k);
+            of[b] = a;
+        }
+    }
+    // for each piece: its triangles, its lowest corner, the least and greatest place across the image
+    let mut found: HashMap<usize, (usize, V3, f32, f32)> = HashMap::new();
+    for ((t, p), u) in ids.chunks_exact(3).zip(hair.pos.chunks_exact(3)).zip(hair.uv.chunks_exact(3)) {
+        let e = found.entry(root(&mut of, t[0])).or_insert((0, [0.0, f32::MAX, 0.0], f32::MAX, f32::MIN));
+        e.0 += 1;
+        for (p, u) in p.iter().zip(u) {
+            if p[1] < e.1[1] {
+                e.1 = *p;
+            }
+            e.2 = e.2.min(u[0]);
+            e.3 = e.3.max(u[0]);
+        }
+    }
+    let mut front: Vec<(f32, f32)> = found
+        .values()
+        .filter(|&&(n, low, lo, hi)| n >= 24 && hi - lo < 0.5 && low[2] > out.cz && (low[0] - out.cx).abs() < reach)
+        .map(|&(_, low, lo, hi)| (low[0], 0.5 * (lo + hi)))
+        .collect();
+    front.sort_by(|a, b| a.0.total_cmp(&b.0));
+    front
+}
+
+#[test]
+fn a_bowl_cuts_strands_lie_in_locks() {
+    // Round 178. Since round 171 every strand of a bowl cut lay by itself and took a place of its own in the
+    // image: the top of the head was a field of fine stripes. Now the strands that end in one clump lie in one
+    // arch, lean with it and take neighbouring places of the image (`hair_body.py` `lock`): its hairs run on from
+    // strand to strand, and a clump is drawn as one lock.
+    // Read on the strands that end in front of the face, within half of the head's half breadth of its middle,
+    // in their order across the face: how far apart in the image's breadth two neighbours are drawn, the middle
+    // one of all neighbours; and how many neighbours are drawn more than a third of the image apart (where one
+    // lock ends and the next begins; the lowest layer's strands lie under the locks and belong to none).
+    // On these six: 50 to 64 such strands; two neighbours 0.050 to 0.069 of the image apart in the middle (round
+    // 177's files: 0.217 to 0.329), 4 to 6 of 49 to 63 more than a third apart (20 to 27). The arch itself is
+    // read by no test: it was looked at in Blender and in the portrait.
+    let Some(h) = head() else { return };
+    for (k, age) in [(1u32, 8.0f32), (3, 13.0), (45, 13.0), (5, 17.0), (21, 24.0), (31, 5.0)] {
+        let out = build(&h, &person(k, false, age), 1);
+        let who = format!("man {k} of {age}");
+        let hair = body(&out).unwrap_or_else(|| panic!("{who}: a body of hair"));
+        let (skin, crown) = skin(&out);
+        let upper = crown - 0.3 * (crown - out.chin);
+        let broad = skin.pos.iter().filter(|p| p[1] > upper).map(|p| (p[0] - out.cx).abs()).fold(0f32, f32::max);
+        let front = strands_in_front(hair, &out, 0.5 * broad);
+        assert!(front.len() >= 30, "{who}: {} strands end in front of the face", front.len());
+        let mut apart: Vec<f32> = front.windows(2).map(|w| (w[1].1 - w[0].1).abs()).collect();
+        let far = apart.iter().filter(|a| **a > 1.0 / 3.0).count();
+        apart.sort_by(f32::total_cmp);
+        let middle = apart[apart.len() / 2];
+        if show() {
+            println!("{who}: {} strands in front of the face; two neighbours are drawn {middle:.3} of the image apart in the middle, {far} of {} more than a third", front.len(), apart.len());
+            continue;
+        }
+        assert!(middle < 0.12, "{who}: two neighbouring strands are drawn {middle} of the image apart: each by itself");
+        assert!(3 * far < apart.len(), "{who}: {far} of {} neighbouring strands are drawn more than a third of the image apart", apart.len());
+    }
+}
+
 #[test]
 fn a_girl_wears_her_hair_parted_and_drawn_to_her_plaits() {
     // A girl's and a young woman's hair is parted in the middle and drawn to one place below each ear, where
