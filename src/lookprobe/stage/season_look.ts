@@ -156,14 +156,14 @@ function cornParts(first: number, f: FieldLook | null): number[][] {
       : standing
         ? byRipe(r, soil(SOIL_OATS), soil(SOIL_WHEAT))
         : [[1, soil(SOIL_FALLOW, FALLOW_SHOWS)]];
+  // (between the young corn a field from afar shows the soil the first far step draws there, `ground`: flat at both
+  // steps, it is seen alike, where the tops of the sheaves are seen darker than they are, SEEN_* in field_colours.ts)
   const covers = Math.max(0, Math.min(1, COVERS_YOUNG + ((1 - COVERS_YOUNG) * (f.height - YOUNG)) / (1 - YOUNG))),
     far: Shares = !standing
       ? [[1, f.ground === GROUND.earth ? tinted(DIRT, SEEN_FALLOW) : STUBBLE_FAR]]
       : [
           ...byRipe(r, CORN_FAR[0], CORN_FAR[1]).map(([w, c]) => [w * covers, c] as const),
-          ...byRipe(r, tinted(SOIL_OATS, SEEN_FALLOW), tinted(SOIL_WHEAT, SEEN_FALLOW)).map(
-            ([w, c]) => [w * (1 - covers), c] as const,
-          ),
+          ...ground.map(([w, c]) => [w * (1 - covers), c] as const),
         ];
   return [
     turned(b.soil, ground),

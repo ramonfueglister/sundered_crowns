@@ -1,15 +1,18 @@
 // The fields by the season (people feature 12): what the pieces tell the stage of their field columns
 // (src/worldprobe/season_codes.ts), and what the stage makes of it on a day (src/lookprobe/stage/season_look.ts).
 import { describe, expect, it } from 'vitest';
-import { Batch } from '../../src/lookprobe/batch';
+import { Batch, type RGB, mix } from '../../src/lookprobe/batch';
+import { OATS, OATS_SIDE, WHEAT, WHEAT_SIDE } from '../../src/lookprobe/blocks';
 import { styleOf } from '../../src/buildings';
 import { N } from '../../src/lookprobe/layout';
+import { FIELD_SOIL, GRASS_A, GRASS_B, SOIL_OATS, SOIL_WHEAT } from '../../src/lookprobe/terrain_colours';
 import { LOOK_NUMBERS, LUMA, PART, PARTS, SOWINGS, fillLook } from '../../src/lookprobe/stage/season_look';
 import { dateToDay } from '../../src/sim/calendar';
 import { FARM_YEAR } from '../../src/sim/people/farm_year';
 import { Land } from '../../src/worldprobe/climate';
 import { CROPS_AT } from '../../src/worldprobe/crops';
 import { coverLand } from '../../src/worldprobe/far';
+import { SEEN_SPRING, SEEN_WINTER, field, tinted } from '../../src/worldprobe/field_colours';
 import { CROP, YOUNG } from '../../src/worldprobe/field_season';
 import {
   FAR_LOOK,
@@ -184,6 +187,31 @@ describe('what the fields show on a day', () => {
     expect(tall(look, fallow)).toBe(0);
     // the fallow's stubble stays as it is built
     expect(share(look, fallow, PART.soil)).toBe(0);
+  });
+
+  it('shows from afar between the young corn the soil the first far step draws there', () => {
+    // in January the winter corn is young: green, its sheaves low, the oats' soil between them (season_look.ts)
+    const look = lookOn(START, 1, 15),
+      lum = (c: readonly number[]) => LUMA[0] * c[0] + LUMA[1] * c[1] + LUMA[2] * c[2],
+      mean = (cs: readonly RGB[]): RGB => {
+        const at = (k: number) => cs.reduce((a, c) => a + c[k], 0) / cs.length;
+        return [at(0), at(1), at(2)];
+      },
+      soil = (c: RGB) => mix(mix(GRASS_A, GRASS_B, 0.5), c, FIELD_SOIL);
+    /** the colour a part of the winter corn turns into, where it is built in `built` (all of it the season's) */
+    const into = (part: number, built: RGB) =>
+      numbers(look, winter, part)
+        .slice(0, 3)
+        .map((n) => n * lum(built));
+    const green = tinted(field(mean(OATS), true, OATS_SIDE), SEEN_SPRING),
+      near = into(PART.soil, soil(SOIL_WHEAT)),
+      far = into(PART.far, tinted(field(mean(WHEAT), true, WHEAT_SIDE), SEEN_WINTER));
+    for (const k of [0, 1, 2]) expect(near[k]).toBeCloseTo(soil(SOIL_OATS)[k], 5);
+    // from afar: the sheaves' tops as they are seen, over what they cover, and the same soil between them
+    const covers = (far[1] - near[1]) / (green[1] - near[1]);
+    expect(covers).toBeGreaterThan(0.5);
+    expect(covers).toBeLessThan(1);
+    for (const k of [0, 1, 2]) expect(far[k]).toBeCloseTo(covers * green[k] + (1 - covers) * near[k], 5);
   });
 
   it('turns the spring corn of the year after into the fallow’s course, and takes the stubble off the winter corn', () => {
