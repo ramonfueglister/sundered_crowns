@@ -37,7 +37,7 @@ export interface Told {
   town(site: number, cx: number, cz: number, half: number, y: number, wall: readonly WallGap[] | null): void;
   /** before anything is built (no water filled, no rock paved): whether a column of the ground is dry and no rock */
   dry?(at: (x: number, z: number) => boolean): void;
-  /** once all is built: whether a column of the ground is a river's water (not a lake's or the sea's), for the bridges of the land register (world.ts) */
+  /** before anything is built: whether a column is a river's water (no lake, no sea), for the bridges of the register */
   river?(at: (x: number, z: number) => boolean): void;
   /** once the towns and hamlets stand, before the fields: whether a furlong can lie on the field lot (`lx`, `lz`) of
    *  the grid (dry ground without rock, nothing built, level to within two blocks, with a balk round it), for the

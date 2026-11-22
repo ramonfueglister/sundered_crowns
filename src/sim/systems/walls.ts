@@ -52,7 +52,7 @@ const GATE_STREETS = 2;
 /** metres: farther than any town reaches */
 const FAR = 1e6;
 /** How often a ring is laid anew to bend round the parcels and landmarks it cuts, at most: London's suburb along the
- *  road north takes 20 rounds, parcel by parcel, with the country folk of feature 7. */
+ *  road north takes 20 rounds, parcel by parcel, with the country folk of feature 8. */
 const TAKE_IN = 64;
 /** The ring is smoothed over bays this many streets wide, and its corners lie this many metres off a straight line at
  *  the least (src/sim/settlement/wall_shape.ts). OWN RULE: the sources give where some rings ran, not how closely a

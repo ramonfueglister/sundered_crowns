@@ -291,7 +291,7 @@ describe('the land register of a world of 1291', () => {
     const g = w.ground!, gw = widened(g, w.dry)!, house = (t: WorldState, i: number) => { const C = t.lot.cols; return houseGround(registerGround(t, gw, C.site[i])!, C.site[i], { x: C.x[i], z: C.z[i], front: C.front[i] }, { w: C.w[i], d: C.d[i] }); };
     expect(g.year).toBe(1291);
     for (const c of cities) expect(g.has(c.site)).toBe(true);
-    // in six towns on rivers the water leaves too little ground on one bank for the townsfolk of feature 7 once the
+    // in six towns on rivers the water leaves too little ground on one bank for the townsfolk of feature 8 once the
     // landmarks stand at their real place: they are laid out without regard to the ground (but clear of the
     // landmarks); Venice lies on its register
     // (src/sim/settlement/plan_ground.ts)
