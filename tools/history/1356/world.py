@@ -7,7 +7,7 @@ Arakan, Kamata, Champa, Angkor, Jaffna, the Shan of Mong Mao), the record says s
 placeholders: tools/map/palette.py chooses them.
 
 Extra anchors for realms of the game map that reach beyond it (the Golden Horde's eastern steppe, the Purépecha west
-of 100° W) are in EXTENDS: the spread of tools/geo/merge_beyond.py starts from them too.
+of 100° W) are in EXTENDS: the spread of tools/geo/beyond_holders.py starts from them too.
 
 Run: python3 tools/history/1356/world.py
 """
