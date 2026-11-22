@@ -3,7 +3,8 @@
 // world and what the world server tells of it.
 import { describe, it, expect } from 'vitest';
 import { AREA_LAW, PARCEL_SHARE, DEPTH_PER_WIDTH, NARROWEST_FRONT, FRONT, settledHectares, townGround, parcelSize, measuredTown, footprint, type Parcel } from '../src/sim/settlement/rule';
-import { layTown, streetWidth, DEFAULT_TUNING, STREET, type Town } from '../src/sim/settlement/streets';
+import { layTown, streetWidth, DEFAULT_TUNING } from '../src/sim/settlement/streets';
+import { STREET, type Town } from '../src/sim/settlement/town_layout';
 import { planOf } from '../src/sim/content/town_plans';
 import { foundLots, houseGround, planGroundOf, registerGround, townFamilies } from '../src/sim/systems/lots';
 import { GROUND, groundBlocks } from '../src/sim/settlement/plan_ground';

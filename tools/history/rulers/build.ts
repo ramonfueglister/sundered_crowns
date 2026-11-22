@@ -1,7 +1,9 @@
 // Builds the chronicle of rulers of 1291 (public/data/rulers_1291.json, src/sim/content/chronicle.ts) from the sourced
 // lists of every realm (data/history/rulers/lists/<realm>.csv, one row per holder of the title from 1 January 1291
-// to 1848, every row with its Wikipedia revision) and the Wikidata fetch (data/history/rulers/wikidata/holders.csv,
-// for the sex of a person and the father and mother). Prints what it could not use.
+// to 1848, every row with its Wikipedia revision), the Wikidata fetch (data/history/rulers/wikidata/holders.csv, for
+// the sex of a person), the families of the rulers from Wikidata (data/history/rulers/wikidata/families/persons.csv,
+// tools/history/rulers/families.py) and the orders of succession of the realms (data/history/rulers/succession.csv).
+// Prints what it could not use.
 //
 //   npx tsx tools/history/rulers/build.ts
 //
@@ -14,11 +16,22 @@
 //   a claimant or "not a monarch" (they did not hold the title), unless the note says the claimant was in control.
 // - The sex is that of Wikidata where the person has an id there; else female when the name or note calls the person
 //   queen, empress, duchess, countess, margravine, princess, abbess or lady, else male (counted, so it can be checked).
-// - The father and the mother are those of Wikidata (P22, P25), kept only where they are persons of the chronicle too:
-//   the world knows no other (src/sim/systems/rulers.ts, `unborn`).
+// - The kin of the rulers are the persons of the family walk who are in no list: persons of the chronicle without a
+//   reign (src/sim/systems/heirs.ts), with the name, dates and sex Wikidata gives; one without a sex stays out
+//   (counted): the orders of succession need it.
+// - The father and the mother are those of Wikidata (P22, P25): of the family walk, else of holders.csv; kept only
+//   where they are persons of the chronicle too (the world knows no other: src/sim/systems/rulers.ts, `unborn`). Where
+//   Wikidata names two fathers or two mothers, the person has none (counted): the source does not decide.
+// - The order of succession of a realm is that of data/history/rulers/succession.csv, with its source.
 import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-import type { ChronicleJson, ChroniclePerson, ChronicleReign } from '../../../src/sim/content/chronicle';
+import type {
+  ChronicleJson,
+  ChronicleLaw,
+  ChroniclePerson,
+  ChronicleReign,
+  SuccessionOrder,
+} from '../../../src/sim/content/chronicle';
 
 const ROOT = resolve(import.meta.dirname, '../../..');
 const LISTS = resolve(ROOT, 'data/history/rulers/lists');
@@ -82,9 +95,15 @@ interface RulersReport {
   sexByWikidata: number;
   sexByWord: number;
   sexAssumed: number;
-  /** persons whose father, whose mother is a person of the chronicle too */
+  /** persons whose father, whose mother is a person of the chronicle too; with two in Wikidata */
   fathers: number;
   mothers: number;
+  twoParents: number;
+  /** kin of the rulers from the family walk, and those left out for want of a sex */
+  kin: number;
+  kinWithoutSex: number;
+  /** realms with an order of succession */
+  laws: number;
   problems: string[];
 }
 
@@ -103,6 +122,10 @@ export function build(): { chronicle: ChronicleJson; report: RulersReport } {
     sexAssumed: 0,
     fathers: 0,
     mothers: 0,
+    twoParents: 0,
+    kin: 0,
+    kinWithoutSex: 0,
+    laws: 0,
     problems: [],
   };
   const files = existsSync(LISTS)
@@ -135,28 +158,82 @@ export function build(): { chronicle: ChronicleJson; report: RulersReport } {
       reigns.push({ realm, person, start, end: end && pad(end) <= UNTIL ? end : null, source });
     });
   }
-  addParents(people, report);
-  return { chronicle: { year: YEAR, until: UNTIL, persons: people.persons, reigns }, report };
+  const families = readFamilies();
+  addKin(people, families, report);
+  addParents(people, families, report);
+  const laws = readLaws(report);
+  return { chronicle: { year: YEAR, until: UNTIL, persons: people.persons, reigns, laws }, report };
+}
+
+/** The persons of the family walk by their Wikidata id (empty without the file). */
+function readFamilies(): Map<string, Record<string, string>> {
+  const f = resolve(ROOT, 'data/history/rulers/wikidata/families/persons.csv');
+  return new Map(existsSync(f) ? parseCsv(readFileSync(f, 'utf8')).map((r) => [r.qid, r]) : []);
+}
+
+/** Adds the persons of the family walk who are in no list, as kin of the rulers. */
+function addKin(people: People, families: Map<string, Record<string, string>>, report: RulersReport): void {
+  for (const [qid, r] of families) {
+    if (people.byKey.has(qid)) continue;
+    if (r.sex !== 'm' && r.sex !== 'f') {
+      report.kinWithoutSex++;
+      continue;
+    }
+    const house = r.familyLabel.split('|')[0] ?? '';
+    const p: ChroniclePerson = {
+      key: qid,
+      name: r.label || qid,
+      house,
+      qid,
+      sex: r.sex === 'm' ? 1 : 0,
+      born: date(r.birth),
+      died: date(r.death),
+    };
+    people.byKey.set(qid, people.persons.push(p) - 1);
+    report.kin++;
+  }
 }
 
 /** Gives every person the father and the mother that Wikidata names, where they are persons of the chronicle too. */
-function addParents(people: People, report: RulersReport): void {
+function addParents(people: People, families: Map<string, Record<string, string>>, report: RulersReport): void {
   const wd = resolve(ROOT, 'data/history/rulers/wikidata/holders.csv');
-  if (!existsSync(wd)) return;
   const parents = new Map<string, { father: string; mother: string }>();
-  for (const r of parseCsv(readFileSync(wd, 'utf8'))) parents.set(r.person, { father: r.father, mother: r.mother });
+  if (existsSync(wd))
+    for (const r of parseCsv(readFileSync(wd, 'utf8'))) parents.set(r.person, { father: r.father, mother: r.mother });
+  for (const [qid, r] of families) parents.set(qid, { father: r.father, mother: r.mother });
   for (const p of people.persons) {
     const known = p.qid ? parents.get(p.qid) : undefined;
-    if (known?.father && people.byKey.has(known.father)) {
+    if (!known) continue;
+    if (known.father.includes('|') || known.mother.includes('|')) report.twoParents++;
+    if (known.father && !known.father.includes('|') && people.byKey.has(known.father)) {
       p.father = known.father;
       report.fathers++;
     }
-    if (known?.mother && people.byKey.has(known.mother)) {
+    if (known.mother && !known.mother.includes('|') && people.byKey.has(known.mother)) {
       p.mother = known.mother;
       report.mothers++;
     }
   }
 }
+
+/** The orders of succession of data/history/rulers/succession.csv (realm, from, order, source), oldest first. */
+function readLaws(report: RulersReport): Record<string, ChronicleLaw[]> {
+  const f = resolve(ROOT, 'data/history/rulers/succession.csv'),
+    out: Record<string, ChronicleLaw[]> = {};
+  if (!existsSync(f)) return out;
+  for (const r of parseCsv(readFileSync(f, 'utf8'))) {
+    const order = r.order === 'none' ? null : ORDERS.find((o) => o === r.order);
+    if (order === undefined) throw new Error(`succession.csv: no such order: ${r.order}`);
+    const list = out[r.realm] ?? [];
+    list.push({ from: date(r.from), order, source: r.source });
+    out[r.realm] = list;
+  }
+  for (const l of Object.values(out))
+    l.sort((a, b) => (a.from === null ? -1 : b.from === null ? 1 : a.from < b.from ? -1 : 1));
+  report.laws = Object.keys(out).length;
+  return out;
+}
+const ORDERS: readonly SuccessionOrder[] = ['primogeniture', 'agnatic_seniority', 'election'];
 
 /** The persons found so far, counted from 0, the number of each by its key, and the sex of those Wikidata knows. */
 interface People {

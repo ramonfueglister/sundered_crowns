@@ -38,66 +38,26 @@ Rules (nothing is invented; what the sources leave open is counted):
   once that realm holds no place a row covers any more (it has left the map), or its title has ended for good (the
   ruler lists, no succession: Byzantium after 29 May 1453), the place goes to the realm that holds
   most (more than half) of its neighbours over the land, again and again while places follow.
-- The date of a change: Cliopatria gives only the first year of the row that shows it, so the change happened after
-  the first year of the row that held the places before, and after 1291 and the places' last change (the window). Within that window, in this order:
-  1. the end of the losing realm's title in the ruler lists, when the change takes the realm's last places (Bosnia
-     5 June 1463, Granada 1492);
-  2. a row of the Wikipedia timelines of geopolitical changes (data/history/borders/wikipedia_timeline.json) that
-     links both the gaining and the losing polity (their Wikidata ids); the latest such row;
-  3. else the middle of the window, precision "window" with the window's years (counted). Merges carry their day.
-- An undated change (3.) does not move all its places on one day: it spreads from the land the new owner holds that day
-  outward, province by province (`spread_windows`). Ring 1 is the change's land in the provinces that touch the new
-  owner's land over the land (or a strait), ring 2 the land in the provinces that touch ring 1, and so on; each ring
-  moves on one day. Why: a polity attacks only across its border (Turchin et al. 2013, PNAS 110(41):16384-16389;
-  Bennett 2022, PLOS ONE 17(1):e0261816, supplement p. 5), and in Cliopatria land does go from the new owner's side
-  outward (Spearman rho 0.40 in 1000-1225, 0.16 in 1291-1475) while 40-49 % of the changed places move with their
-  whole province (tools/research/expansion, results/order_check.txt and the plan doc there). The pace is Bennett's: a
-  front moves at most one region deep per step of 2 years, and his region (~25'000 km2) is about our province
-  (~20'000 km2). The rings are 2 years apart around the middle of the window; where the window is shorter than that,
-  they share it evenly (ring k of n at its start + (k - 1/2) / n of its length). No source gives the pace inside a
-  window, so the evenly shared window is our own rule. What the order does not cover stays on the middle of the
-  window: a change to a realm that holds no land yet (a new state comes as one block, round 2 of the study), and land
-  with no way over the land from the new owner's. A split that would change the order of two changes of one place is
-  not made.
+- The date of a change: dating.py (the end of a title in the ruler lists, a row of the Wikipedia timelines, else
+  the middle of the window).
+- An undated change spreads over its window from the new owner's land outward, province by province: spread.py.
 
     python3 tools/history/borders/build.py
 """
 
 import collections
-import datetime
 import json
 import os
-import re
+import sys
 from pathlib import Path
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from dating import date_events, precision
+from names import core, short_of, slug
+from spread import spread_windows
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 FIRST, LAST = 1291, 1848
-STOP = (
-    r'\b(kingdom|duchy|grand|county|principality|margraviate|electorate|landgraviate|republic|sultanate|empire|'
-    r'dynasty|khanate|emirate|beylik|of|the|despotate|free|city|imperial|archbishopric|bishopric|prince|house|'
-    r'lordship|banate|giudicato|crown|old|first|second|great|order|state|confederation|caliphate|tsardom|commonwealth)\b'
-)
-
-
-def core(n):
-    n = n.lower()
-    n = re.sub(r'\(.*?\)', '', n)
-    n = re.sub(STOP, ' ', n)
-    n = re.sub(r'[^a-zà-ÿ ]', ' ', n)
-    return ' '.join(n.split())
-
-
-def short_of(name):
-    """the name for the map: after the title ("Kingdom of Great Britain" -> "Great Britain"), else the whole name"""
-    name = re.sub(r'\s*\(.*?\)', '', name)
-    if ' of ' not in name:
-        return name
-    rest = name.split(' of ', 1)[1]
-    return rest[4:] if rest.startswith('the ') else rest
-
-
-def slug(name):
-    return 'c_' + re.sub(r'[^a-z0-9]+', '_', name.lower()).strip('_')
 
 
 def year_of(d):
@@ -522,162 +482,6 @@ def build():
         },
     }
     return out, report, keys, current, frame
-
-
-def precision(d):
-    return {4: 'year', 7: 'month', 10: 'day'}[len(d)]
-
-
-def date_events(events, rulers):
-    """the dates of the transfers (rules in the header); removes the helper fields"""
-    tl = json.loads(
-        Path(os.path.join(ROOT, 'data', 'history', 'borders', 'wikipedia_timeline.json')).read_text(encoding='utf-8')
-    )
-    rows = tl['rows']
-    by_q = collections.defaultdict(list)
-    for i, t in enumerate(rows):
-        for l in t['links']:
-            if l.get('qid'):
-                by_q[l['qid']].append(i)
-    ends, open_ = {}, set()
-    for r in rulers['reigns']:
-        if r['end'] is None:
-            open_.add(r['realm'])
-        elif r['realm'] not in ends or r['end'] > ends[r['realm']]:
-            ends[r['realm']] = r['end']
-    for e in events:
-        if e['kind'] == 'transfer':
-            y = int(e['date'])
-            lo = min(e['_since'], y - 1)  # a place that moved twice in one year: that year
-            d, how = None, None
-            end = ends.get(e['from']) if e['from'] not in open_ else None
-            if end and lo < int(end[:4]) <= y and e['_last']:
-                d, how = end, 'title'
-            if d is None:
-                cand = [
-                    i
-                    for i in set(by_q.get(e['_gain'], [])) | {i for q in e['_lost'] for i in by_q.get(q, [])}
-                    if lo < rows[i]['year'] <= y
-                ]
-                good = [
-                    i
-                    for i in cand
-                    if any(l.get('qid') == e['_gain'] for l in rows[i]['links'])
-                    and any(l.get('qid') in e['_lost'] for l in rows[i]['links'])
-                ]
-                if good:
-                    t = rows[max(good, key=lambda i: (rows[i]['year'], i))]
-                    d, how = t['date'], 'timeline'
-                    e['source'] += f'; date: {t["page"]} (revision {t["revid"]}): {t["text"]}'
-            if d:
-                e['date'], e['precision'] = d, precision(d)
-                if how == 'title':
-                    e['source'] += f'; date: end of the title of {e["from"]} in the ruler lists'
-            else:  # undated: the middle of the window
-                a, b = datetime.date(lo + 1, 1, 1), datetime.date(y, 12, 31)
-                e['date'], e['precision'], e['window'] = (a + (b - a) / 2).isoformat(), 'window', [str(lo + 1), str(y)]
-        for k in ('_gain', '_lost', '_since', '_last'):
-            e.pop(k, None)
-    events.sort(key=lambda e: e['date'])  # stable: equal dates keep the order as built
-
-
-STEP_DAYS = 730  # Bennett 2022: one step of his model is 2 years, a front moves at most one region per step
-
-
-def ring_dates(window, n):
-    """The days of n rings in a window [first year, last year]: 2 years apart around its middle, or the window
-    shared evenly when it is too short for that."""
-    a, b = datetime.date(int(window[0]), 1, 1), datetime.date(int(window[1]), 12, 31)
-    width = (b - a).days
-    if (n - 1) * STEP_DAYS <= width:
-        mid = a + (b - a) / 2
-        return [mid + datetime.timedelta(days=(k - (n - 1) / 2) * STEP_DAYS) for k in range(n)]
-    return [a + datetime.timedelta(days=width * (k + 0.5) / n) for k in range(n)]
-
-
-def rings(places, to, held, nbr, prov):
-    """The provinces of a change in rings from the new owner's land: [[places of ring 1], ...], places left over."""
-    inside = set(places)
-    mine = held[to] - inside
-    by_prov = collections.defaultdict(list)
-    for p in places:
-        by_prov[prov[p]].append(p)
-    ring = {q: 0 for q, ps in by_prov.items() if any(n in mine for p in ps for n in nbr[p])}
-    adj = collections.defaultdict(set)
-    for p in places:
-        for n in nbr[p]:
-            if n in inside and prov[n] != prov[p]:
-                adj[prov[p]].add(prov[n])
-    front = sorted(ring)
-    while front:
-        nxt = []
-        for q in front:
-            for r in sorted(adj[q]):
-                if r not in ring:
-                    ring[r] = ring[q] + 1
-                    nxt.append(r)
-        front = nxt
-    n = max(ring.values(), default=-1) + 1
-    out = [[p for p in places if ring.get(prov[p]) == k] for k in range(n)]
-    return out, [p for p in places if prov[p] not in ring]
-
-
-def spread_windows(events, setup, nbr, provinces, report):
-    """An undated change spreads over its window from the new owner's land outward (rules in the header)."""
-    keys = [st['id'] for st in setup['states']]
-    P = len(setup['owner'])
-    prov = [-1 - p for p in range(P)]  # a place in no province is a province of its own
-    for pi, pv in enumerate(provinces):
-        for loc in pv['locs']:
-            if 0 < loc <= P:
-                prov[loc - 1] = pi
-    skip = set()
-    while True:
-        own = [keys[o] if o >= 0 else None for o in setup['owner']]
-        held = collections.defaultdict(set)
-        for p, o in enumerate(own):
-            if o:
-                held[o].add(p)
-        out = []
-        for i, e in enumerate(events):
-            parts = [(e, i)]
-            if e['kind'] == 'transfer' and e['precision'] == 'window' and i not in skip:
-                ring_places, rest = rings(e['places'], e['to'], held, nbr, prov)
-                if len(ring_places) > 1:
-                    parts = []
-                    days = ring_dates(e['window'], len(ring_places))
-                    for k, (ps, d) in enumerate(zip(ring_places, days)):
-                        why = f'; order: ring {k + 1} of {len(ring_places)} from the land of {e["to"]} (spread_windows)'
-                        parts.append(({**e, 'places': ps, 'date': d.isoformat(), 'source': e['source'] + why}, i))
-                    if rest:
-                        why = f'; no way over the land from the land of {e["to"]}: the middle of the window'
-                        parts.append(({**e, 'places': rest, 'source': e['source'] + why}, i))
-            out += parts
-            if e['kind'] != 'name':
-                for p in e['places']:
-                    if own[p]:
-                        held[own[p]].discard(p)
-                    own[p] = e['to']
-                    held[e['to']].add(p)
-        out.sort(key=lambda x: x[0]['date'])  # stable: equal dates keep the order as built
-        # a split must not change the order of two changes of one place
-        last = {}
-        bad = set()
-        for e, i in out:
-            if e['kind'] == 'name':
-                continue
-            for p in e['places']:
-                if last.get(p, -1) > i:
-                    bad |= {i, last[p]}
-                last[p] = max(last.get(p, -1), i)
-        bad -= {i for i, e in enumerate(events) if e['kind'] != 'transfer' or e['precision'] != 'window'}
-        if not bad - skip:
-            break
-        skip |= bad
-    report['spread_changes'] = len({i for e, i in out if 'spread_windows' in e['source']})
-    report['spread_events'] = sum('spread_windows' in e['source'] for e, _ in out)
-    report['spread_kept_for_order'] = len(skip)
-    return [e for e, _ in out]
 
 
 if __name__ == '__main__':
