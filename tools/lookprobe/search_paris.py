@@ -95,7 +95,7 @@ def address(x):
     o.update({k: round(x[k], 3) for k in ('tshare', 'post', 'tlow', 'tspread', 'treesize', 'jetty', 'pspread')})
     o['tone'] = 'neutral'
     # the town alone, as the reference's measured box: no river
-    o['river'] = 7
+    o['river'] = 0
     o['skycol'] = ''.join(f'{round(c):02x}' for c in SKY_GREY + (SKY_BLUE - SKY_GREY) * x['skyblue'])
     for knob in ('wall', 'pave', 'roof', 'timber', 'glass', 'leaf', 'olive', 'stone'):
         key = 'timb' if knob == 'timber' else knob
