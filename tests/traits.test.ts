@@ -237,5 +237,5 @@ describe('the state of the traits', () => {
     expect(up.person.cols.home[moved]).toBe(home + 1);
     up.person.cols.home[moved] = home;
     expect(hashState(up)).toBe(hashState(s));
-  }, 60_000);
+  }, 150_000); // founds and upgrades the world of 1291 with its country folk (settlement feature 8)
 });

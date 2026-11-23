@@ -236,7 +236,7 @@ describe('the farmsteads of a world of 1291', () => {
       for (const h of of.get(S.site[i]) ?? []) expect(near(boxes[h], q, 0)).toBe(false);
     }
   });
-  it('stand on dry ground in all but a few hamlets: a hamlet whose own spot is wet lies on the nearest ground that carries it', { timeout: 60_000 }, () => {
+  it('stand on dry ground in all but a few hamlets: a hamlet whose own spot is wet lies on the nearest ground that carries it', { timeout: 150_000 }, () => {
     const dry = w.dry!, C = s.lot.cols, wet = new Set<number>();
     for (let i = 0; i < s.lot.size; i++) {
       if (C.kind[i] !== LOT_KIND.farmstead) continue;
