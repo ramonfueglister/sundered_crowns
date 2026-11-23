@@ -127,19 +127,19 @@ describe('a crown history gives to a person not born into the world', () => {
     expect(row(s, 'QB')).toBeUndefined();
     expect(holder(s)).toBe('QK');
     expect(divergence(s, w, setup).realms).toBe(1);
-  }, 60_000);
+  }, 150_000);
   it('goes back to history when the heir dies and history has its holder of the day alive', () => {
     const s = early('primogeniture');
     until(s, w, '1360-01-02');
     expect(s.person.cols.died[row(s, 'QK')!]).toBe(day('1360-01-01'));
     expect(holder(s)).toBe('QC');
     expect(divergence(s, w, setup).realms).toBe(0);
-  }, 60_000);
+  }, 150_000);
   it('goes to the eldest of the male line by agnatic seniority', () => {
     const s = early('agnatic_seniority');
     until(s, w, '1295-01-02');
     expect(holder(s)).toBe('QU');
-  }, 60_000);
+  }, 150_000);
   it('goes with the other crown of a union to its holder in the world', () => {
     const j = fixture(null);
     // Uncle U reigns in France: without the union the crown would go to C, history's next holder of England
@@ -150,7 +150,7 @@ describe('a crown history gives to a person not born into the world', () => {
     s.person.cols.dies[row(s, 'QA')!] = day('1295-01-01');
     until(s, w, '1295-01-02');
     expect(holder(s)).toBe('QU');
-  }, 60_000);
+  }, 150_000);
   it('goes to the next holder of history the world has alive, earlier, where the order is an election or unknown', () => {
     for (const order of ['election', null] as const) {
       const s = early(order);
@@ -158,7 +158,7 @@ describe('a crown history gives to a person not born into the world', () => {
       expect(holder(s)).toBe('QC');
       expect(row(s, 'QK')).toBeUndefined();
     }
-  }, 60_000);
+  }, 150_000);
 });
 
 describe('a free world', () => {

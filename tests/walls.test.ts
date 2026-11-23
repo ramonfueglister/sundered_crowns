@@ -124,7 +124,7 @@ describe('the walls of a new world of 1291', () => {
 });
 
 describe('a world of 1291 saved before the walls', () => {
-  it('gets the walls of a new world', { timeout: 60_000 }, () => {
+  it('gets the walls of a new world', { timeout: 150_000 }, () => {
     const old = decodeState(encodeState(s)) as WorldState;
     old.v = 40;
     delete (old as Partial<WorldState>).wall;

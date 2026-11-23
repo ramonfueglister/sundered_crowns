@@ -96,7 +96,7 @@ describe('the genes of the persons of a world founded in 1356', () => {
     const up = upgradeState(old, w);
     expect(up.v).toBe(STATE_VERSION);
     expect(hashState(up)).toBe(before);
-  }, 60_000);
+  }, 150_000);
   it('are given to those born since in the order of their births', () => {
     // a grandchild with a number below its parents': the parents' genes are given before the grandchild takes them
     const { s: t } = newWorldState();

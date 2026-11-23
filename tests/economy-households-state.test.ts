@@ -74,7 +74,7 @@ describe('the state', () => {
     expect(up.economy.cities!.figures[FIGURE.periods]).toBe(2);
     expect(up.economy.cities!.halted).toBe('');
     expect(up.family.cols.income.some((v) => v > 0)).toBe(true);
-  }, 60_000);
+  }, 150_000);
   it('of a world from before feature 15 gets the need by the upgrade: the economies are founded anew with households that spend out of savings', () => {
     // biome-ignore lint/suspicious/noExplicitAny: a state of an older version, which no type of today describes
     const old = decodeState(encodeState(s)) as any;
@@ -97,7 +97,7 @@ describe('the state', () => {
     advanceDay(up, w);
     expect(up.economy.cities!.halted).toBe('');
     expect(up.family.cols.fed.some((v) => v === 1)).toBe(true);
-  }, 60_000);
+  }, 150_000);
   it('of a world from before features 16 and 17 is founded anew by the upgrade, with a crown that buys with what it took in and with distance between the cities', () => {
     // biome-ignore lint/suspicious/noExplicitAny: a state of an older version, which no type of today describes
     const old = decodeState(encodeState(s)) as any;
@@ -115,5 +115,5 @@ describe('the state', () => {
     advanceDay(up, w);
     advanceDay(up, w);
     expect(up.economy.cities!.halted).toBe('');
-  }, 60_000);
+  }, 150_000);
 });

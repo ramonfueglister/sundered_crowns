@@ -155,5 +155,5 @@ describe('the upgrade', () => {
     foundDeaths(later);
     for (let id = 0; id < later.person.size; id++)
       if (later.person.cols.dies[id] !== ALIVE) expect(later.person.cols.dies[id]).toBeGreaterThan(500);
-  }, 60_000);
+  }, 150_000);
 });

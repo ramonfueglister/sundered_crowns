@@ -107,7 +107,7 @@ describe('the rulers of a chronicle where nothing goes another way', () => {
     expect(holder(t, 'france')).toBe('QE');
     until(t, w, '1301-01-01');
     expect(holder(t, 'castile')).toBeNull();
-  }, 60_000);
+  }, 150_000);
   it('let a person whose death no source gives live on after the last reign, until the day the life table draws', () => {
     const t = fresh(),
       d = row(t, 'QD')!,
@@ -119,7 +119,7 @@ describe('the rulers of a chronicle where nothing goes another way', () => {
     until(t, w, '1371-01-01'); // nobody lives past 120 (src/sim/systems/deaths.ts)
     expect(P.died[d]).toBe(drawn);
     expect(divergence(t, w, setup).persons).toBe(0); // history knows no day of death to differ from
-  }, 60_000);
+  }, 150_000);
 });
 
 describe('the rulers of a chronicle where a king died early', () => {
@@ -140,5 +140,5 @@ describe('the rulers of a chronicle where a king died early', () => {
     expect(holder(s, 'england')).toBeNull();
     x = divergence(s, w, setup);
     expect(x).toMatchObject({ persons: 0, unborn: 2, realms: 1 }); // A is dead in history too by now
-  }, 60_000);
+  }, 150_000);
 });

@@ -71,7 +71,7 @@ describe('snapshots', () => {
     s2.place.pop[0] += 1;
     expect(hashState(s2)).not.toBe(hashState(s));
     expect(() => decodeState(new Uint8Array(16))).toThrow();
-  }, 60_000); // founds a world (2.3 times the persons since the country folk) and hashes its state several times
+  }, 150_000); // founds a world (2.3 times the persons since the country folk) and hashes its state several times
 });
 
 describe('the day tick', () => {

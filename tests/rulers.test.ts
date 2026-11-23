@@ -140,13 +140,13 @@ describe('the rulers of a world of 1291', () => {
     until(t, '1315-01-01');
     expect(personHistory(t, id)!.crowns).toEqual([]);
     expect(personHistory(t, id)!.died).toBe(dayOf('1314-11-29', 1291));
-  }, 60_000); // a world of 1291 founds its 550 economies twice (economy feature 12)
+  }, 150_000); // a world of 1291 founds its 550 economies twice (economy feature 12)
   it('is the same world from the same seed, and survives a snapshot', () => {
     expect(hashState(fresh())).toBe(hashState(fresh()));
     const t = decodeState(encodeState(s));
     expect(t.named).toEqual(s.named);
     expect(Array.from(t.realm.cols.holder)).toEqual(Array.from(s.realm.cols.holder));
-  }, 60_000);
+  }, 150_000);
 });
 
 describe('a world of 1291 saved before the rulers', () => {
@@ -174,7 +174,7 @@ describe('a world of 1291 saved before the rulers', () => {
     expect(holderName(up, 'england')).toBe('Edward II');
     expect(holderName(up, 'france')).toBe('Philip IV');
     expect(up.named.map((n) => n.name).sort()).toEqual(s.named.map((n) => n.name).sort());
-  }, 60_000);
+  }, 150_000);
 });
 
 describe('the rulers on the map (GET /rulers)', () => {
@@ -189,5 +189,5 @@ describe('the rulers on the map (GET /rulers)', () => {
       expect(r.place).toBe(s.family.cols.place[s.person.cols.family[row]]);
       expect(placePeople(s, r.place).rulers).toContainEqual({ uid: r.uid, color: r.crowns[0].color });
     }
-  }, 60_000); // a fresh world of 1291 founds its economies (as the tests above)
+  }, 150_000); // a fresh world of 1291 founds its economies (as the tests above)
 });

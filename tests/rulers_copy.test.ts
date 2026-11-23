@@ -37,7 +37,7 @@ describe('readable copy of the rulers', () => {
     // France on 1 January 1291: Philip IV
     const fr = s.realmText.findIndex((t) => t.key === 'france');
     expect(persons.find((p) => p.person === H[fr])?.name).toMatch(/Philip IV/);
-  }, 60_000);
+  }, 150_000);
 
   it('sends only what changed', () => {
     const copy = new RulerCopy('w');

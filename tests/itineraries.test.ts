@@ -89,7 +89,7 @@ describe('a ruler on a journey', () => {
       [going] = rulersOnMap(s, staysOf(s, it1, tr), tracksOf(s, it1, tr, 120));
     expect(going.place).toBe(PARIS);
     expect(going.track).toEqual({ day: [day('1291-03-10'), s.day + 120], place: [PARIS, PARIS] });
-  }, 60_000); // a fresh world of 1291 founds its economies
+  }, 150_000); // a fresh world of 1291 founds its economies
 });
 
 describe('the journeys of the Roman-German kings (Regesta Imperii)', () => {

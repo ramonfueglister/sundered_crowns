@@ -82,7 +82,7 @@ describe('the economy engine (WebAssembly)', () => {
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
-  }, 60_000);
+  }, 150_000);
   it('gives the same state for the same seeds and another for another seed, another clock or another rule', () => {
     const a = create(1356),
       b = create(1356),

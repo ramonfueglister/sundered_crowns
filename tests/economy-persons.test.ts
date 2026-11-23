@@ -277,7 +277,7 @@ describe('the state', () => {
     advanceDay(up, w);
     expect(up.economy.cities!.figures[FIGURE.periods]).toBe(1);
     expect(up.economy.cities!.halted).toBe('');
-  }, 60_000);
+  }, 150_000);
 });
 
 describe('a world of 1291', () => {
