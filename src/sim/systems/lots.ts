@@ -31,19 +31,20 @@ import { widened, type Ground } from '../content/ground';
 import { LANDMARK_GAP, aloneLandmarks, coreLandmarks, edgeLandmarks, latinAt, newLandmarks, residenceAt, writeLandmarks, type Laid, type LandmarkGround } from './landmarks';
 import { LANDMARK_KIND, URBAN } from '../settlement/landmarks';
 import { namedOf } from '../content/landmarks';
+import { countryFolk } from '../people/country_folk';
 
 /** The families of each town of the start year, in the order of the towns (src/sim/content/cities.ts): those who
  *  live in it (`families`, lowest id first) with their persons, and those who live from agriculture and live in its
  *  hamlets outside the walls (`farmers`; `family.hamlet`, src/sim/systems/hamlets.ts) with theirs. The people were
  *  founded town by town (src/sim/systems/people.ts), so the persons of a town are the next `round(people / SCALE)`
- *  ids; a family stores only its place, and a place may hold several towns. Holds while nobody has been born or has
+ *  ids and those of its villages the next `countryFolk` of them (src/sim/people/country_folk.ts); a family stores only its place, and a place may hold several towns. Holds while nobody has been born or has
  *  moved since the founding. */
 export function townFamilies(s: WorldState): { families: number[]; persons: number; farmers: number[]; farmPersons: number }[] {
   const P = s.person.cols, F = s.family.cols, out: { families: number[]; persons: number; farmers: number[]; farmPersons: number }[] = [];
   const order = (set: Set<number>) => [...set].sort((a, b) => a - b);
   let id = 0;
   for (const city of citiesOf(s.startYear)) {
-    const n = Math.round(city.people / SCALE), town = new Set<number>(), farm = new Set<number>();
+    const t = Math.round(city.people / SCALE), n = t + countryFolk(t), town = new Set<number>(), farm = new Set<number>();
     let persons = 0, farmPersons = 0;
     for (const end = id + n; id < end; id++) {
       const f = P.family[id];

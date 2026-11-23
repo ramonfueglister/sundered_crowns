@@ -769,9 +769,10 @@ export function buildWorld(region: Region, piece: Piece, places: readonly Place[
       const x0 = lx * FIELD_LOT.w - ox + (lz & 1 ? Math.floor(FIELD_LOT.w / 2) : 0) + 1, z0 = lz * FIELD_LOT.d - oz + 1, mx = x0 + GEWANN.w / 2, mz = z0 + GEWANN.d / 2;
       return mx >= 0 && mz >= 0 && mx < N && mz < N && fits(lx, lz) && wooded(mx, mz) < 0.5;
     }, { centre: fineOf, courses: (site) => { const p = places[site], at = p && toGround(...cellOf(region, p.lon, p.lat)); return at && onGround(at) ? courses(Math.floor(at[0]), Math.floor(at[1])) : null; } }) } : told;
+    told?.river?.((x, z) => inGrid(x, z) && g.wet[idx(x, z)] === 1 && kind[idx(x, z)] === Water.Land); // before a place fills it
     const built = settled = settle(g, things, sites, monuments, farm, ploughed, vines, counts, own, farms, courses, survey, surveyed, fieldOf);
     // a survey of the building ground needs no more than the towns' ground (and where the rivers run, for the bridges)
-    if (survey || told) { told?.river?.((x, z) => inGrid(x, z) && g.wet[idx(x, z)] === 1 && kind[idx(x, z)] === Water.Land); return { ground: new Batch(), things, water: new Batch(), cells: [], counts }; }
+    if (survey || told) return { ground: new Batch(), things, water: new Batch(), cells: [], counts };
 
     // woods where the forest of the world's year stood (`wooded`), up to the tree line:
     // leafy in the low country, dark conifers towards the heights and in the north, the crowns of the rain forest, flat

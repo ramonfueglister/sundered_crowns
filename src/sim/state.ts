@@ -66,8 +66,10 @@ import type { Table } from './ecs';
  *  41: the town walls and their gates (settlement feature 6, src/sim/systems/walls.ts): every town but Venice has a
  *  ring round it, open at the water, with a gate where a street crosses it.
  *  42: the bridges of the towns (settlement feature 7, src/sim/systems/bridges.ts): a street along a way of the world
- *  crosses a river in its town on a bridge, of stone where a source says so, else of timber. */
-export const STATE_VERSION = 42;
+ *  crosses a river in its town on a bridge, of stone where a source says so, else of timber.
+ *  43: the country folk of the towns (src/sim/people/country_folk.ts): a town has its people after Chandler with the
+ *  farmers of a town, and the farmers its economy needs live in the hamlets round it. */
+export const STATE_VERSION = 43;
 
 /** Components of every land place (index = place id, 0 … L − 1). */
 export interface Places {

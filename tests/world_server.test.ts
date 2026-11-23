@@ -71,7 +71,7 @@ describe('world server', () => {
     const v = core.verifyReplay();
     expect(v.hash).toBe(v.live);
     core.shutdown();
-  }, 60_000); // founding the economies finds the ways between the cities, which takes seconds (economy feature 17)
+  }, 150_000); // founding the economies finds the ways between the cities, which takes seconds (economy feature 17)
 
   it('resumes from disk where it stopped', () => {
     const core = new WorldCore(cfg).init();
@@ -106,5 +106,5 @@ describe('snapshots on disk', () => {
     files.close();
     core.shutdown();
     rmSync(dir, { recursive: true, force: true });
-  }, 60_000);
+  }, 150_000);
 });

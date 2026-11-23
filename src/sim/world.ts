@@ -1,5 +1,7 @@
 // Static world data (geography). Built once from the baked map files; identical in browser and world server.
 import { participation } from './systems/work';
+import { agricultureLabour } from './people/country_folk';
+import { AGRICULTURE } from './systems/hamlets';
 import { deName } from './content/names_de';
 import { refineNames } from './content/placenames';
 import { TERRAINS, RESOURCE_INDEX } from './geo';
@@ -250,6 +252,7 @@ export class World {
       { clock, rules } = economyRulesOf(t);
     participation.men = t.inputs.participation.value.men;
     participation.women = t.inputs.participation.value.women;
+    agricultureLabour.share = t.inputs.labour_share.value[AGRICULTURE];
     this.cityEconomies = { year: t.year, scale: t.scale.value, clock, rules, foodNeed: foodNeedCost(t), table: t };
     this.names = new Array(N);
     for (let i = 0; i < N; i++) this.names[i] = (i < L ? wj.name[i] : geo.loc.name[i]) || `#${i}`;

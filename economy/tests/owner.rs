@@ -36,7 +36,8 @@ fn net(e: &Economy) -> f64 {
 
 #[test]
 fn the_profit_of_the_first_day_is_the_papers_without_the_stock_that_was_built() {
-    let (mut paper, mut owner) = (city(7), city(7).with_owner_household());
+    // a seed on whose first day firms put goods in stock (with the country folk of settlement feature 8, 7 puts none)
+    let (mut paper, mut owner) = (city(9), city(9).with_owner_household());
     paper.step(1);
     owner.step(1);
     // up to the profits the day is the same: the same goods were made, sold and put in stock (the two figures left out are the

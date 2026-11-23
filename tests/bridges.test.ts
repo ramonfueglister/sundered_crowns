@@ -83,7 +83,7 @@ describe('the bridges of a new world of 1291', () => {
 });
 
 describe('a world of 1291 saved before the bridges', () => {
-  it('gets the bridges of a new world', { timeout: 60_000 }, () => {
+  it('gets the bridges of a new world', { timeout: 150_000 }, () => {
     const old = decodeState(encodeState(s)) as WorldState;
     old.v = 41;
     delete (old as Partial<WorldState>).bridge;

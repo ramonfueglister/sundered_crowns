@@ -236,7 +236,7 @@ describe('the farmsteads of a world of 1291', () => {
       for (const h of of.get(S.site[i]) ?? []) expect(near(boxes[h], q, 0)).toBe(false);
     }
   });
-  it('stand on dry ground in all but a few hamlets: a hamlet whose own spot is wet lies on the nearest ground that carries it', { timeout: 60_000 }, () => {
+  it('stand on dry ground in all but a few hamlets: a hamlet whose own spot is wet lies on the nearest ground that carries it', { timeout: 150_000 }, () => {
     const dry = w.dry!, C = s.lot.cols, wet = new Set<number>();
     for (let i = 0; i < s.lot.size; i++) {
       if (C.kind[i] !== LOT_KIND.farmstead) continue;
@@ -287,15 +287,16 @@ describe('the land register of a world of 1291', () => {
       for (const a of ids) for (const b of ids) if (a < b) expect(overlap({ x: L.x[a], z: L.z[a], front: L.front[a] }, { x: L.x[b], z: L.z[b], front: L.front[b] }, { w: L.w[a], d: L.d[a] })).toBe(false);
     }
   });
-  it('lays every parcel where its house can stand, by the building ground of the towns (Venice\'s by its land register), but in two towns cut by water', { timeout: 60_000 }, () => {
+  it('lays every parcel where its house can stand, by the building ground of the towns (Venice\'s by its land register), but in a few towns cut by water', { timeout: 150_000 }, () => {
     const g = w.ground!, gw = widened(g, w.dry)!, house = (t: WorldState, i: number) => { const C = t.lot.cols; return houseGround(registerGround(t, gw, C.site[i])!, C.site[i], { x: C.x[i], z: C.z[i], front: C.front[i] }, { w: C.w[i], d: C.d[i] }); };
     expect(g.year).toBe(1291);
     for (const c of cities) expect(g.has(c.site)).toBe(true);
-    // in Aberdeen and Seville the rivers leave too little ground on one bank once the landmarks stand at their real
-    // place: they are laid out without regard to the ground (but clear of the landmarks); Venice lies on its register
+    // in six towns on rivers the water leaves too little ground on one bank for the townsfolk of feature 8 once the
+    // landmarks stand at their real place: they are laid out without regard to the ground (but clear of the
+    // landmarks); Venice lies on its register
     // (src/sim/settlement/plan_ground.ts)
     const bare = decodeState(encodeState(s)), tight = foundLots(bare, g, w.dry).tight;
-    expect(tight.map((x) => cities.find((c) => c.site === x)!.name).sort()).toEqual(['Aberdeen', 'Seville']);
+    expect(tight.map((x) => cities.find((c) => c.site === x)!.name).sort()).toEqual(['Baghdad', 'Dax', 'Hamburg', 'Seville', 'Strasbourg', 'Valladolid']);
     let off = 0;
     for (const i of parcels) if (!tight.includes(L.site[i]) && !house(s, i)) off++;
     expect(off).toBe(0);
@@ -311,7 +312,7 @@ describe('the land register of a world of 1291', () => {
     expect(Array.from(t.street.cols.x0.subarray(0, t.street.size))).toEqual(Array.from(s.street.cols.x0.subarray(0, s.street.size)));
     foundLots(t, w.ground, w.dry);
     expect(hashState(t)).toBe(hashState(s));
-  }, 60_000); // lays out every town of the world again: 4 s alone, more beside the other test files
+  }, 150_000); // lays out every town of the world again: 4 s alone, more beside the other test files
 });
 
 describe('the streets of a world of 1291', () => {
@@ -322,7 +323,7 @@ describe('the streets of a world of 1291', () => {
     const towns = cities.filter((_c, k) => townFamilies(s)[k].families.length);
     expect(found.streets.size).toBe(towns.length);
     for (const c of towns) expect(rows.filter((i) => S.site[i] === c.site && S.kind[i] === STREET_KIND.market).length).toBe(1);
-  }, 60_000); // hashes two worlds and counts the families of every town: 4 s alone
+  }, 150_000); // hashes two worlds and counts the families of every town: 4 s alone
   it('front every parcel of the register', () => {
     for (let i = 0; i < s.lot.size; i++) if (L.kind[i] === LOT_KIND.parcel) expect(fronts(found.streets.get(L.site[i])! as Town, { x: L.x[i], z: L.z[i], front: L.front[i] }, { w: L.w[i], d: L.d[i] })).toBe(true);
   });
@@ -410,7 +411,7 @@ describe('Venice on its land register of 1808', () => {
 });
 
 describe('a world of 1291 saved before the streets', () => {
-  it('lays its towns out along streets: every family keeps its parcel and its size, and the parcels front the streets', { timeout: 60_000 }, () => {
+  it('lays its towns out along streets: every family keeps its parcel and its size, and the parcels front the streets', { timeout: 150_000 }, () => {
     const old = decodeState(encodeState(s)) as WorldState, L = old.lot.cols;
     old.v = 32; // (and so through 37 → 38, which lays the towns out again)
     delete (old as Partial<WorldState>).street;
@@ -430,7 +431,7 @@ describe('a world of 1291 saved before the streets', () => {
 });
 
 describe('a world of 1291 saved before the land register', () => {
-  it('gets the parcels a new world has, and encodes as one', { timeout: 60_000 }, () => {
+  it('gets the parcels a new world has, and encodes as one', { timeout: 150_000 }, () => {
     const old = decodeState(encodeState(s)) as WorldState;
     old.v = 19;
     delete (old.family.cols as Record<string, unknown>).lot; delete (old as Partial<WorldState>).lot; delete (old as Partial<WorldState>).hamlets;

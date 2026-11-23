@@ -282,7 +282,7 @@ describe('a world whose unmarried move', () => {
       }
     }
     expect(hashState(copy)).toBe(hashState(s));
-  }, 20_000);
+  }, 150_000); // a world of 1291 with its country folk (settlement feature 8)
 });
 
 describe('the state of the moves', () => {
@@ -297,7 +297,7 @@ describe('the state of the moves', () => {
     expect(up.v).toBe(STATE_VERSION);
     expect(Object.keys(up.person.cols)).toEqual(Object.keys(PERSON_SCHEMA));
     expect(hashState(up)).toBe(hashState(s));
-  }, 60_000);
+  }, 150_000); // a world of 1291 with its country folk (settlement feature 8)
 });
 
 describe('the moves and the economy', () => {

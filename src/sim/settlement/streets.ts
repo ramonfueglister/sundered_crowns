@@ -26,7 +26,7 @@
 import { FRONT, PARCEL_SHARE, PARCELS_PER_ROW, type Parcel, type ParcelSize } from './rule';
 import type { Plan } from './plan_ground';
 import { familySpots } from './family_spots';
-import { marketAt } from './market';
+import { centreOpen, marketAt } from './market';
 import { blockAreas, junctions, streetPieces } from './street_network';
 import { STREET, type Town, type Way } from './town_layout';
 
@@ -39,21 +39,20 @@ export const marketSide = (p: ParcelSize) => p.d;
 
 /** The characteristic distance of the density, as a share of the radius the parcels would take packed round the
  *  market (with their streets). Calibrated (tools/settlement/streets_probe.ts): the blocks of the world of 1291 fall
- *  off as A^−1.87 above 200 m², where Dresden's fall off as A^−1.9 (Lämmer et al. 2006). */
-export const R_C = 0.5;
+ *  off as A^−1.95 above 200 m², where Dresden's fall off as A^−1.9 (Lämmer et al. 2006). Recalibrated with JOIN_DEEP
+ *  and CROSS for the townsfolk of settlement feature 8 (22 November 2026; the tables in docs/SETTLEMENT_DESIGN.md). */
+export const R_C = 0.3;
 
 /** a family's parcel lies at a street if one passes within this many parcel depths of its spot; else a street grows to it */
 const NEAR_DEEP = 1;
 /** a new street, and at the end every dead end, runs on to another that lies ahead of it or to either side within this
  *  many parcel depths. Calibrated against medieval Paris (the Vasserot cadastre inside the wall of Philippe Auguste,
- *  tools/settlement/cadastre_paris.py: dead ends 0.10, T-junctions 0.78, crossings 0.12), recalibrated with the
- *  landmarks laid before the streets (feature 5): with CROSS the towns of 20 streets and more get 0.11, 0.77, 0.12 and
- *  Paris 0.08, 0.78, 0.15; 4 gives Paris 0.05 dead ends, 5 (before feature 5) 0.05 */
-const JOIN_DEEP = 3;
+ *  tools/settlement/cadastre_paris.py: dead ends 0.10, T-junctions 0.78, crossings 0.12), again with the landmarks
+ *  (feature 5) and the townsfolk (feature 8): the towns of 20 streets and more get 0.13, 0.76, 0.11, Paris the same */
+const JOIN_DEEP = 2.25;
 /** a lane leaves from a T-junction facing its spot rather than from the nearest point if that costs at most this many
- *  parcel widths more. Calibrated against the share of crossings of medieval Paris (0.12), with the landmarks laid
- *  before the streets (feature 5): 2 makes 0.09 (and 0.14 dead ends), 2.5 makes 0.12, 3 makes 0.12 */
-const CROSS = 2.5;
+ *  parcel widths more. Calibrated against the share of crossings of medieval Paris (0.12), with JOIN_DEEP */
+const CROSS = 2;
 
 const EMPTY = 0, BLOCKED = 1, ROAD = 2, PARCEL = 3, MARKET = 4, UNKNOWN = 5;
 
@@ -102,7 +101,9 @@ export function layTown(families: number, size: ParcelSize, ways: readonly Way[]
   const real = plan && { market: [plan.market[0] * r, plan.market[1] * r] as const, streets: plan.streets.map((q) => q.map((v) => v * r)) };
   const [ox, oz] = real ? [Math.round(real.market[0]), Math.round(real.market[1])] : ground ? marketAt(size, ground.free, dims(size)) : [0, 0];
   const t = layAround(families, size, ways, seed, ground, tune, ox, oz, real);
-  if (t.parcels.length >= families || (!ox && !oz)) return t;
+  // round the centre where the market's ground does not hold every family, but only where the centre is open: not
+  // where a landmark stands (feature 5; a town that holds its townsfolk, feature 8, is wider than its ground)
+  if (t.parcels.length >= families || (!ox && !oz) || (ground && !centreOpen(ground.free, dims(size)))) return t;
   const c = layAround(families, size, ways, seed, ground, tune, 0, 0, real);
   return c.parcels.length > t.parcels.length ? c : t;
 }

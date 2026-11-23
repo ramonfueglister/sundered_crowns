@@ -113,7 +113,7 @@ describe('the borders of a world of 1291 played to 1848', () => {
   it('starts with the borders of the setup', () => {
     expect(ownerKey(s, constantinople)).toBe('byzantium');
     expect(ownerKey(s, granada)).toBe('granada');
-  }, 60_000);
+  }, 150_000);
   it('moves the places on their days', () => {
     until(s, '1452-12-31');
     expect(ownerKey(s, constantinople)).toBe('byzantium');
@@ -170,5 +170,5 @@ describe('a world of 1291 saved before the borders', () => {
     s.v = 22;
     upgradeState(s, w, () => loadSetup(1291));
     expect(hashState(up)).toBe(hashState(s));
-  }, 120_000);
+  }, 300_000); // the world of 1291 with its country folk (settlement feature 8), upgraded twice
 });

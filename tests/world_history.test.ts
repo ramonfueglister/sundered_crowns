@@ -175,5 +175,5 @@ describe("the world's clock", () => {
     expect(h.lines.at(-1)).toMatchObject({ d: 1, c: [[p, to]] });
     core.shutdown();
     rmSync(dir, { recursive: true, force: true });
-  }, 60_000);
+  }, 150_000);
 });

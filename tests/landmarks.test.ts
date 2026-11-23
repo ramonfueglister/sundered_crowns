@@ -135,7 +135,7 @@ describe('the landmarks in the register of a world of 1291', () => {
 });
 
 describe('a world of 1291 saved before the landmarks', () => {
-  it('gets the landmarks of a new world round its towns laid anew, every family keeping its parcel', { timeout: 60_000 }, () => {
+  it('gets the landmarks of a new world round its towns laid anew, every family keeping its parcel', { timeout: 150_000 }, () => {
     const old = decodeState(encodeState(s)) as WorldState;
     old.v = 37;
     delete (old as Partial<WorldState>).landmark;

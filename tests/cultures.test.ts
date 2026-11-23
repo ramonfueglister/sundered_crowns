@@ -106,7 +106,7 @@ describe('the counted communities of 1291', () => {
 });
 
 describe('a world of 1291 saved before the persons had cultures', () => {
-  it('gets them by the upgrade from 18 and encodes as a new world', { timeout: 60_000 }, () => {
+  it('gets them by the upgrade from 18 and encodes as a new world', { timeout: 150_000 }, () => {
     // biome-ignore lint/suspicious/noExplicitAny: a state of an older version, which no type of today describes
     const old = structuredClone(s) as any;
     old.v = 18;

@@ -62,6 +62,9 @@ import { ROLE, workforce } from './work';
 import { citiesByPlace, writeHouseholds } from './household';
 import { presentPersons } from '../people/living';
 import { absences, contracts } from './workers';
+import { AGRICULTURE } from './hamlets';
+import { countryFolk, foundedCountryFolk } from '../people/country_folk';
+import { SCALE } from '../scale';
 
 /** The state of the economies that the engine keeps for a world (economy/src/lib.rs `LAST`): their bytes
  *  (`CityEconomies.model`) are written only when something reads them, a snapshot or a hash. */
@@ -150,13 +153,17 @@ export function citySeed(seed: number, place: number): number {
 }
 
 /** The places that have a city in a world that starts in `year`, in the order of its list of cities, each with its
- *  name and the real people of its cities (several cities of the list may lie in one place: they are one economy). */
-export function cityPlaces(year: number): { place: number; name: string; people: number }[] {
-  const out: { place: number; name: string; people: number }[] = [];
+ *  name, the real people of its cities and those of the villages round them (src/sim/people/country_folk.ts; several
+ *  cities of the list may lie in one place: they are one economy). */
+export function cityPlaces(year: number): { place: number; name: string; people: number; country: number }[] {
+  const out: { place: number; name: string; people: number; country: number }[] = [];
   for (const c of citiesOf(year)) {
-    const at = out.find((x) => x.place === c.place);
-    if (at) at.people += c.people;
-    else out.push({ place: c.place, name: c.placeName, people: c.people });
+    const country = countryFolk(Math.round(c.people / SCALE)) * SCALE,
+      at = out.find((x) => x.place === c.place);
+    if (at) {
+      at.people += c.people;
+      at.country += country;
+    } else out.push({ place: c.place, name: c.placeName, people: c.people, country });
   }
   return out;
 }
@@ -171,7 +178,15 @@ export const cityAt = (e: CityEconomies, place: number): number => e.places.inde
 export function cityCalibrations(
   s: WorldState,
   w: World,
-): { place: number; name: string; people: number; working: number[]; idle: number; calibration: EconomyCalibration }[] {
+): {
+  place: number;
+  name: string;
+  people: number;
+  country: number;
+  working: number[];
+  idle: number;
+  calibration: EconomyCalibration;
+}[] {
   const c = w.cityEconomies;
   if (s.startYear !== c.year && !(c.year === 1356 && uses1356Tables(s.startYear))) return [];
   const cities = cityPlaces(s.startYear);
@@ -183,13 +198,38 @@ export function cityCalibrations(
   return cities.map((x, k) => {
     const { working, idle } = force[k];
     if (idle < 0) throw new Error(`every adult of ${x.name} works: the model needs a person who does not`);
-    const calibration = dailyCalibration(cityTable(c.table, x.people, working.length), Math.min(c.year, s.startYear));
+    // the economy is England at the share of England's people of the town and its villages
+    const calibration = dailyCalibration(
+      cityTable(c.table, x.people + x.country, working.length),
+      Math.min(c.year, s.startYear),
+    );
     if (activePersons(calibration) !== working.length)
       throw new Error(
         `${x.name} has ${working.length} persons who work, its calibration ${activePersons(calibration)} active persons`,
       );
-    return { ...x, working, idle, calibration };
+    return { ...x, working: villagersTillTheLand(s, working, calibration), idle, calibration };
   });
+}
+
+/** The persons who work in the order in which the parts are given out (`foundEconomy`), so that the country folk
+ *  (src/sim/people/country_folk.ts) take the farms first: the engine gives the firms out in the order of the sectors,
+ *  agriculture first, their owners one by one and their jobs to the next workers (the port's `assign_workers`,
+ *  economy/vendor/port-beforeit/src/lib.rs). The owners of the farms are the first of the country folk, the owners of
+ *  the other firms and of the bank the first of the townsfolk, the workers the country folk before the townsfolk;
+ *  each part keeps the order of src/sim/systems/work.ts. A founder is of the country folk by the founding (so that
+ *  the economies founded again on the same persons come out the same), a person born since by the hamlet of the
+ *  family. */
+function villagersTillTheLand(s: WorldState, working: readonly number[], calibration: EconomyCalibration): number[] {
+  const P = s.person.cols,
+    hamlet = s.family.cols.hamlet,
+    I_s = (calibration.parameters as { I_s: number[] }).I_s,
+    folk = foundedCountryFolk(citiesOf(s.startYear).map((c) => Math.round(c.people / SCALE)));
+  const country = (id: number) => (P.uid[id] < folk.founded ? folk.of(P.uid[id]) : hamlet[P.family[id]] === 1);
+  const village = working.filter(country),
+    town = working.filter((id) => !country(id));
+  const farms = Math.min(I_s[AGRICULTURE], village.length),
+    others = I_s.reduce((a, b) => a + b, 0) - farms + 1; // the owners of the other firms, and of the bank
+  return [...village.slice(0, farms), ...town.slice(0, others), ...village.slice(farms), ...town.slice(others)];
 }
 
 /** Founds the economies of the cities of a world on the day it has reached: the starting position of every city,

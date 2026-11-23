@@ -34,19 +34,22 @@ export function streetPieces(g: StreetGrid): Street[] {
   for (const i of sorted) {
     const x = (i % N) - R,
       z = Math.floor(i / N) - R;
-    // a piece runs over the cells of one kind, and on into the street of another kind it meets, so that they join
+    // a piece runs over the cells of one kind, and on into the street of another kind it meets, so that they join;
+    // a single cell of one kind at the end of a street of another is a piece too (a parcel may front it)
     const k = kind[at(x, z)];
     if (isLine(x + 1, z) && (!isLine(x - 1, z) || kind[at(x - 1, z)] !== k)) {
       let e = x;
       while (isLine(e + 1, z) && kind[at(e + 1, z)] === k) e++;
-      if (e > x)
-        streets.push({ x0: isLine(x - 1, z) ? x - 1 : x, z0: z, x1: isLine(e + 1, z) ? e + 1 : e, z1: z, kind: k });
+      const x0 = isLine(x - 1, z) ? x - 1 : x,
+        x1 = isLine(e + 1, z) ? e + 1 : e;
+      if (e > x || !isLine(x - 1, z)) streets.push({ x0, z0: z, x1, z1: z, kind: k });
     }
     if (isLine(x, z + 1) && (!isLine(x, z - 1) || kind[at(x, z - 1)] !== k)) {
       let e = z;
       while (isLine(x, e + 1) && kind[at(x, e + 1)] === k) e++;
-      if (e > z)
-        streets.push({ x0: x, z0: isLine(x, z - 1) ? z - 1 : z, x1: x, z1: isLine(x, e + 1) ? e + 1 : e, kind: k });
+      const z0 = isLine(x, z - 1) ? z - 1 : z,
+        z1 = isLine(x, e + 1) ? e + 1 : e;
+      if (e > z || !isLine(x, z - 1)) streets.push({ x0: x, z0, x1: x, z1, kind: k });
     }
   }
   return streets;

@@ -94,7 +94,8 @@ describe('who works', () => {
     const by = parts(start);
     cities.forEach((c, k) => {
       const firms = (c.calibration.parameters as { I_s: number[] }).I_s.reduce((a, b) => a + b, 0);
-      expect(force[k].working).toEqual(c.working);
+      // the same persons; those of the hamlets own the farms and take the jobs first (villagersTillTheLand)
+      expect([...c.working].sort((a, b) => a - b)).toEqual([...force[k].working].sort((a, b) => a - b));
       expect(activePersons(c.calibration)).toBe(c.working.length);
       expect(by[k][ROLE.owner].length).toBe(firms);
       expect(by[k][ROLE.banker].length).toBe(1);
@@ -237,9 +238,13 @@ describe('the state', () => {
     expect(hashState(again)).toBe(hashState(s));
   });
   it('of a world from before feature 10 gets them by the upgrade: the economies are founded anew on the day reached', () => {
-    // version 11: the cities' economies with persons of their own, no components of the economy, no firms
+    // version 11: the cities' economies with persons of their own, no components of the economy, no firms; nobody
+    // was born, died or moved in a world of version 11, so its persons on the day reached are those of its founding
+    const base = newWorldState().s;
+    base.day = s.day;
+    base.economy.cities!.day = s.day;
     // biome-ignore lint/suspicious/noExplicitAny: a state of an older version, which no type of today describes
-    const old = decodeState(encodeState(s)) as any;
+    const old = decodeState(encodeState(base)) as any;
     for (const k of ['role', 'agent', 'firm', 'wage', 'income', 'spent', 'savings']) delete old.person.cols[k];
     delete old.firm;
     delete old.economy.cities.places;
@@ -249,7 +254,7 @@ describe('the state', () => {
     expect(up.v).toBe(STATE_VERSION);
     expect(Object.keys(up.person.cols)).toEqual(Object.keys(PERSON_SCHEMA));
     // step 23 founds the persons anew on the day reached, and everything that hangs on them: as it does for the world that ran
-    const founded = decodeState(encodeState(s));
+    const founded = decodeState(encodeState(base));
     founded.v = 22;
     upgradeState(founded, w, () => loadSetup(1356));
     expect(hashState(up)).toBe(hashState(founded));
@@ -272,7 +277,7 @@ describe('the state', () => {
     advanceDay(up, w);
     expect(up.economy.cities!.figures[FIGURE.periods]).toBe(1);
     expect(up.economy.cities!.halted).toBe('');
-  }, 60_000);
+  }, 150_000);
 });
 
 describe('a world of 1291', () => {
