@@ -10012,6 +10012,113 @@ twice the size: before left, after right), `runde184_dorf.png` and `runde184_hof
 court, after; round 183's sheets are the before), `runde184_blender.png` (Blender, from three sides, far and
 near: round 182's above, this round's below).
 
+**Round 185: a strand of hair ends in single wisps** (2026-11-22 to 24; written in the cloud, the look in the
+Blender on Ramon's Mac is owed: see below).
+Round 177 said of a bowl cut: a strand still ends as one end. Round 180 said of hair that hangs free the same.
+
+What was read. Nothing. Looked at again: round 184's two sheets, and on them the place where hair ends. A
+strand of the head's hair is a band of 4 to 6 mm with an image of hairs that covered everywhere, so a strand
+ended as its form ends: cut off blunt, or (round 177) the clump's bands cut to a point. A fringe was a row of
+teeth, and hair that hangs free on the shoulder of a small girl or at a man's jaw ended in blocks of a few
+millimetres with steps between them. The reference's hair ends in hairs: a fringe is a soft line, hair that
+hangs free grows thin over its last centimetre. Not measured on the reference, by eye.
+
+What is changed.
+- **The image's hairs end** (`tools/portrait/pipeline/bundle_tex.py`, the new switch
+  `ENDS=74,2,9,19,15,45,6`): the image `hair1356_body` has a cover now. Side by side across its breadth lie
+  wisps of 9 to 19 of its 512 points (0.5 to 1.1 mm on a strand); each ends at a row of its own within the
+  74 rows (2 cm) above the sixth row over the image's lower edge, more of them low than high (the chance
+  squared: half of them within 5 mm), and runs to a point over its last 15 to 45 rows (4 to 12 mm). Above row
+  912 of 1024 the image covers as it did; of the row 2 cm above the edge 0.90 is covered, 1 cm above it 0.46,
+  3 mm above it 0.03. `WAVES=2`: the hairs' waves are as long on a strand as they were (the image is 2.08
+  times as long on it).
+- **Where a strand lies in the image** (`hair_body.py`, `WISP_ENDS`, on unless `WISP_ENDS=0`; `TIP`,
+  `VSCALE`): the image is laid once along a strand, its lower edge at the strand's end (4 of its 1024 rows
+  beyond it), and no longer goes on at its upper edge along a strand of any length, begun at a place by
+  chance. So it is as long as the longest strand of any cut and a little more: 27.8 cm (`VSCALE` 0.36 for
+  0.75; the longest strand is 25.2 cm, on `bob09`). The shell under a bowl cut's strands, which ends nowhere,
+  keeps to the part that covers (to 0.72 of the image's height).
+- **The stage** is not touched: it draws a surface of this kind only where its image covers
+  more than half (`src/portrait/materials.ts`, `LOCK_OPAQUE`), and throws its shadow only there. The image
+  covered everywhere until now. Nothing in the builder either; the wasm is the same bytes.
+- The files `public/portrait/real/hair1356_body.webp`, `hair1356_body_n.webp` and the 14 cuts
+  `bob01` to `bob09`, `page01`, `page02`, `plait01`, `part01`, `loose01` (`_body.txt.zst`) are written anew
+  with the scripts as committed. In the cuts only the place along the image of each triangle's three corners
+  changes (781 612 triangles): no point, no binding, no shade. The fleece (`coil01` to `coil04`, another
+  image), the plaits' ropes and the beards are not touched.
+
+How it was made. In the cloud: the image painted and looked at alone (whole, and its lowest 125 rows), then
+six cuts written and put into the portrait on two men with a bowl cut, the man with hair to the jaw and a
+small girl, from the front and three quarters, far and near, beside round 184's; then all 14. With
+`WISP_ENDS=0` and round 184's image the script writes round 184's files (`loose01` byte for byte in the
+cloud; the old call for all 14 was started in the Blender on the Mac on 22 November, and five files were
+seen written there before the thread's machine was restarted). **The Mac could not be reached after that
+(24 November), so this round's 14 files are the cloud's**, written by the same script with Blender's Python
+module 5.2.3, where rounds 171 to 184 took the Mac's. The difference between the two machines is known since
+round 177: on the nine bowl cuts 6 to 16 points of each (108 of 580 495 rows) differ from round 184's in the
+last digit; the five parted cuts' points are round 184's byte for byte. The scripts for the Mac's pass lie
+ready there (`_blender185`: the old call against round 184's bytes, the 14 cuts anew, old and new rendered
+with the image's cover cut at a half as the stage cuts it); what it shows is to be added here, and the files
+are replaced by the Mac's only if they differ in more than such digits.
+
+Measured (`portrait/tests/hair_body.rs` with `SHOW=1` on round 184's files and on these; the image; the
+sheets of 36 against round 184's):
+
+| | before | now |
+|---|---|---|
+| a strand ends in the image (19 heads, 450 to 648 strands each) | anywhere: on the first head at 0.84 to 2.47 of its height (it went on at its upper edge) | at 0.9961 of its height, every strand |
+| the highest a strand begins in the image | anywhere | 0.16 to 0.33 of its height under its upper edge |
+| the image is so long on a strand | 13.3 cm | 27.8 cm |
+| the image covers (cover over a half) | all of it | 0.956; of its last 2 cm, row by row, 0.90 down to nothing |
+| the shell under a bowl cut reaches in the image | to 1.5 of its height | to 0.72 |
+| portraits of the sheet that change by more than a few points | | 32 of 36 in the village, 34 of 36 at court (every head whose hair shows: the streaks lie anew) |
+| the 14 cuts and the two images, packed | 13.93 MB and 100 kB | 13.70 MB and 146 kB |
+
+Tried and not kept.
+- The image parted in two, a part that covers for the strand's length and a part with the ends, each strand's
+  triangles taking from one or the other: it changes how the image lies across and along a strand, which
+  several tests of `hair_body.rs` read, and wants margins against the smoothed reading of the image at the seam.
+  Not built.
+- Ends in the strand's form (round 138's wisps, taken out again in rounds 171 and 172): a form's point is as
+  broad as a band, a saw.
+- Not tried: a cover that thins the hair above its end as well (single hairs standing off a strand's side);
+  another image for a fringe than for hair that hangs; the same on the beard's strands and the plait's loose
+  end (their own images).
+
+**One test new, none changed in what it holds.** `a_strand_ends_where_the_images_hairs_end`
+(`portrait/tests/hair_body.rs`): on 19 heads (men of 29, girls of 12, a girl of 2, a boy of 5) every strand
+of more than 300 ends 4 rows over the image's lower edge to 1e-4 of its height, none begins over its upper
+edge, and a shell (ten of the heads) keeps above the rows where hairs end. Round 184's files fail it. The
+tests' constant `VSCALE` (how long the image is on a strand) is 0.36 for 0.75, as in the script: the tests
+that read a strand's length from where it lies in the image read the same lengths with it, and every bound
+stands as it was. The image's cover is read by no test: it was looked at alone and in the portrait.
+
+**The gauntlet**: 22 of 22 over the whole sample, every line as in round 184. The colour sheet: 157 of 160
+lines to the last figure; three move by 0.1, read on the forehead under a fringe (the grown men's L 49.3 for
+49.2 and b* 24.2 for 24.1, the boys' of 8 to 17 L 51.1 for 51.0); no line of the gauntlet moves by them.
+
+Honest about it. A middle step, and one that shows at the size of a portrait: it is on every bowl cut (16
+of the 36), the small girls with their hair down (4) and men with hair to the jaw. A fringe is a nearly
+straight, fine edge of hair ends where it was a row of teeth; hair that hangs free ends in fine hairs where
+it ended in blocks. What is not good: the wisps are half a millimetre to a millimetre broad, not single
+hairs, and from near their points read as a comb; the fringe ends some millimetres higher than it did (most
+wisps end within 5 mm of the form's end, some 2 cm before it), and round 177's points of a clump lie mostly
+in the part that is no longer drawn: the tests that read the fringe's outline read the form, not what the
+image covers. One image for every cut, so a fringe and a girl's hair on the shoulder end in the same way. A
+few light specks at the ends, where the smoothed image is read at its edge. Hair that is turned in at its
+end (`bob09`) or drawn into a plait ends in the same wisps, hidden or not. The streaks on every head of hair
+lie anew (the image is laid once and is longer), finer than they were; not better or worse by any measure.
+And the Blender look on the Mac, which rounds 171 to 184 had, is missing. Every number is by eye:
+PLACEHOLDER.
+
+Tests: `cargo test --release` as a whole 150 of 150 (one new); `tests/portrait.test.ts` and its neighbour
+46 of 46; typecheck and lint pass, no new warning.
+Pictures (project files, `portraits/`): `runde185_vorher_nachher.png` (two men with a bowl cut, the man with
+hair to the jaw and a small girl, from the front and three quarters: before above, after below),
+`runde185_nah.png` (a fringe and a girl's hair on the shoulder near, in the same order), `runde185_bild.png`
+(the image's lowest 125 rows, round 184's left and this round's right, on grey), `runde185_dorf.png` and
+`runde185_hof.png` (all 36, village and court, after; round 184's sheets are the before).
+
 **Reference.** The rounds were held against screenshots of Crusader Kings III (Ramon: until that level). Not
 reached. Since round 107 real pictures are set beside ours (above): the face's proportions, the tone of the
 skin and, since round 108, how light and how coloured the clothes are, are close; since round 109 the hair

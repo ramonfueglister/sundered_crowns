@@ -25,8 +25,15 @@ fn len(a: V3) -> f32 {
 
 /// The image all bundles of England's hair are drawn with (`DressSet::body_image`).
 const IMAGE: &str = "/hair1356_body.";
-/// The image's height to a unit of a bundle's length (`hair_body.py` `VSCALE`).
-const VSCALE: f32 = 0.75;
+/// The image's height to a unit of a bundle's length (`hair_body.py` `VSCALE`: 0.75 until round 184, when the
+/// image went on at its upper edge along a strand of any length; since round 185 it is laid once along a strand
+/// and is as long as the longest, 28 cm).
+const VSCALE: f32 = 0.36;
+/// How far above the image's lower edge a strand ends, of the image's height (`hair_body.py` `TIP`).
+const TIP: f32 = 4.0 / 1024.0;
+/// The part of the image's height at its lower edge in which its hairs end one after the other
+/// (`bundle_tex.py` `ENDS=74,2,9,19,15,45,6`: 74, 45 and 6 rows of 1024).
+const HAIRS_END: f32 = 125.0 / 1024.0;
 
 /// The shell under the bundles is a grid of 5 degrees round the head, 45 degrees to the image's breadth
 /// (`hair_body.py` `shell`): a step across it takes a ninth of the image.
@@ -49,9 +56,11 @@ fn skin(out: &Portrait) -> (&Surface, f32) {
 }
 
 /// The pieces of a surface, its triangles gathered by the corners they share (a bundle is one piece, the shell
-/// under the bundles another): for each how many triangles it has and how long it is as it was laid, read from
-/// the image (units of 10 cm).
-fn pieces(s: &Surface) -> Vec<(usize, f32)> {
+/// under the bundles another): for each how many triangles it has, the least and the greatest place along the
+/// image it takes, and whether it is the shell (a step across it takes a ninth of the image on more than half
+/// of its triangles, and it has more than 500 of them: a strand's step is as broad on some strands of parted
+/// hair, which have 400 triangles at most; a shell has 1100 and more).
+fn spans(s: &Surface) -> Vec<(usize, f32, f32, bool)> {
     fn root(of: &mut [usize], mut i: usize) -> usize {
         while of[i] != i {
             of[i] = of[of[i]];
@@ -69,16 +78,23 @@ fn pieces(s: &Surface) -> Vec<(usize, f32)> {
             of[b] = a;
         }
     }
-    let mut found: HashMap<usize, (usize, f32, f32)> = HashMap::new();
+    let mut found: HashMap<usize, (usize, f32, f32, usize)> = HashMap::new();
     for (t, u) in ids.chunks_exact(3).zip(s.uv.chunks_exact(3)) {
-        let e = found.entry(root(&mut of, t[0])).or_insert((0, f32::MAX, f32::MIN));
+        let e = found.entry(root(&mut of, t[0])).or_insert((0, f32::MAX, f32::MIN, 0));
         e.0 += 1;
         for u in u {
             e.1 = e.1.min(u[1]);
             e.2 = e.2.max(u[1]);
         }
+        e.3 += usize::from((0..3).any(|i| (u[i][1] - u[(i + 1) % 3][1]).abs() < 1e-5 && shell_step((u[i][0] - u[(i + 1) % 3][0]).abs())));
     }
-    found.values().map(|&(n, lo, hi)| (n, (hi - lo) / VSCALE)).collect()
+    found.into_values().map(|(n, lo, hi, steps)| (n, lo, hi, 2 * steps > n && n > 500)).collect()
+}
+
+/// The pieces of a surface: for each how many triangles it has and how long it is as it was laid, read from the
+/// image (units of 10 cm).
+fn pieces(s: &Surface) -> Vec<(usize, f32)> {
+    spans(s).into_iter().map(|(n, lo, hi, _)| (n, (hi - lo) / VSCALE)).collect()
 }
 
 /// How much the bundles of a hair turn along their way (round 130): for each bundle (a piece, as above) the line
@@ -878,8 +894,9 @@ fn one_man_in_ten_wears_his_hair_to_the_jaw_with_its_ends_turned_out() {
 
 #[test]
 fn hair_that_is_cut_runs_to_the_cut_and_wears_the_image_along_its_length() {
-    // The image of a bundle is laid along it at one scale, whatever its length (it goes on at its lower edge),
-    // and the fringe is several bundles deep: the layers lie over each other where the hair is cut.
+    // The image of a bundle is laid along it at one scale, whatever its length (until round 184 it went on at its
+    // lower edge; since round 185 it is as long as the longest strand and laid once, `VSCALE` above), and the
+    // fringe is several bundles deep: the layers lie over each other where the hair is cut.
     let Some(h) = head() else { return };
     // (the last number: how far to either side of the face's middle the fringe is looked at, in the head's half
     // breadth: none on the bald man, and the hair gone back at the temples has its fringe in the middle only)
@@ -954,6 +971,50 @@ fn hair_that_is_cut_runs_to_the_cut_and_wears_the_image_along_its_length() {
 }
 
 #[test]
+fn a_strand_ends_where_the_images_hairs_end() {
+    // Round 185. A strand ended as its form ends: a band of 4 to 6 mm cut off blunt or run to a point, so a
+    // fringe was a row of teeth and hair that hangs free ended in steps. Now the image's hairs end one after the
+    // other towards its lower edge (`bundle_tex.py` `ENDS`; where the image covers less than half the stage draws
+    // nothing), and every strand is laid in the image so that its end lies there: a strand ends in single wisps
+    // of half a millimetre to a millimetre. The image no longer goes on at its upper edge, so no strand may reach
+    // over it, and the shell under the strands, which ends nowhere, keeps to the part that covers.
+    // On these 19 heads: 450 to 648 strands, each ending `TIP` over the image's lower edge to the digit, the
+    // highest beginning 0.16 of the image's height under its upper edge; under the 10 bowl cuts the shell to
+    // 0.72 of the height.
+    // Round 184's files fail: a strand began anywhere in the image and ran over its lower edge, ending anywhere
+    // (the first of these heads: at 0.84 to 2.47 of its height).
+    // The image itself is read by no test (it was looked at alone and in the portrait): this holds where the
+    // strands lie in it.
+    let Some(h) = head() else { return };
+    let d = &sc_portrait::dress::ENGLAND_1356;
+    let (mut heads, mut shells) = (0, 0);
+    let people = (1..60u32).step_by(2).map(|k| person(k, false, 29.0)).filter(|p| !d.head_covered(false, p.age, p.seed)).chain((0..12u32).step_by(2).map(|k| person(k, true, 12.0))).chain([person(28, true, 2.0), person(31, false, 5.0)]);
+    for p in people {
+        let out = build(&h, &p, 1);
+        let Some(hair) = body(&out) else { continue };
+        let who = format!("seed {} of {}", p.seed, p.age);
+        let found = spans(hair);
+        let strands: Vec<_> = found.iter().filter(|f| !f.3).collect();
+        let (begins, ends_lo, ends_hi) = strands.iter().fold((f32::MAX, f32::MAX, f32::MIN), |m, f| (m.0.min(f.1), m.1.min(f.2), m.2.max(f.2)));
+        // (parted hair has no shell under its strands: nothing to hold there)
+        let shell = found.iter().filter(|f| f.3).map(|f| f.2).reduce(f32::max);
+        if show() {
+            let under = shell.map_or("no shell".to_string(), |v| format!("the shell to {v:.3}"));
+            println!("{who}: {} strands, the highest begins at {begins:.3} of the image's height, they end at {ends_lo:.4} to {ends_hi:.4}; {under}", strands.len());
+        }
+        assert!(strands.len() > 300, "{who}: {} strands", strands.len());
+        assert!(begins > 0.0, "{who}: a strand begins {begins} of the image's height over its upper edge");
+        assert!((ends_lo - (1.0 - TIP)).abs() < 1e-4 && (ends_hi - (1.0 - TIP)).abs() < 1e-4, "{who}: the strands end at {ends_lo} to {ends_hi} of the image's height, not where its hairs end ({})", 1.0 - TIP);
+        if let Some(shell) = shell {
+            assert!(shell < 1.0 - HAIRS_END, "{who}: the shell reaches to {shell} of the image's height, where its hairs end");
+            shells += 1;
+        }
+        heads += 1;
+    }
+    assert!(heads >= 15 && shells >= 5, "{heads} heads with a body of hair, {shells} of them with a shell under it");
+}
+
+#[test]
 fn hair_that_is_cut_ends_in_no_wisps() {
     // Round 138. Until then a bundle of a man's hair ended as it was broad, cut at a slant: one point each, and a
     // fringe and a cut's edge that were a row of teeth. Now a bundle that is cut keeps its breadth to its end and
@@ -973,6 +1034,8 @@ fn hair_that_is_cut_ends_in_no_wisps() {
     // Round 177: a bowl cut's clumps end in points (the test of the fringe above); a strand still ends as one end.
     // Round 168 read the reference's fringe as a line that is nearly straight; looked at again at three times its
     // size it is a row of points a finger broad (docs/PORTRAITS.md).
+    // Round 185: a strand ends in wisps again, but in its image (the test above), not in its form: a piece still
+    // ends as one end, which is what this test reads.
     let Some(h) = head() else { return };
     let d = &sc_portrait::dress::ENGLAND_1356;
     let mut seen = std::collections::BTreeMap::new();

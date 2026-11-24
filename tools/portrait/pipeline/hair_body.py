@@ -24,7 +24,15 @@ base, out, name = argv[:3]
 cut = argv[3] if len(argv) > 3 else name
 
 STEP = 0.02          # a bundle's way is traced in steps of 2 mm
-VSCALE = 0.75        # the image's height to a unit of a bundle's length (10 cm), as the locks' image
+# (round 185) A strand ends in single wisps: the image's hairs end one after the other towards its lower edge
+# (`bundle_tex.py` `ENDS`), and the image is laid once along a strand, its lower edge (`TIP` of its height above
+# it: the stage reads the image smoothed, and its upper edge goes on below the lower one) at the strand's end.
+# So the image is as long as the longest strand of any cut and a little more: 28 cm (the longest is 25 cm, on
+# `bob09`), where it was 13 cm and went on at its upper edge along a strand of any length. `WISP_ENDS=0`: as
+# until round 184 (the files of that round, byte for byte, with that round's image).
+WISP_ENDS = os.environ.get('WISP_ENDS', '1') != '0'
+TIP = 4 / 1024
+VSCALE = 0.36 if WISP_ENDS else 0.75      # the image's height to a unit of a strand's length (10 cm)
 W = dirs(180, 52)    # the whorl
 
 # A cut: where the hair ends in front of the face and at the sides and back (degrees), how high it stands
@@ -776,6 +784,9 @@ def lay(d, h, hw, ht, roll, run, shade, rng, m=7, rolled=None, across=None, u_mi
     u = np.linspace(0, 1, m)
     u = 1 - u if flip else u
     v0 = rng.random()
+    if WISP_ENDS:
+        v0 = 1 - TIP - run[-1] * VSCALE
+        assert v0 + run[0] * VSCALE > 0, 'a strand longer than the image'
     uv = np.stack(np.broadcast_arrays(u[None, :], (v0 + run * VSCALE)[:, None]), -1)
     if across:
         # (round 171) a strand takes as much of the image's breadth as it is broad: the image's hairs are as fine
@@ -805,7 +816,7 @@ def shell():
     P = OVER.at(d, np.maximum(LIFT * S['h'] * thin[:, None] * np.ones_like(el), 0.003))
     n = len(th)
     verts = list(P.reshape(-1, 3))
-    uvs = [(t / 45.0, 1.5 * qq) for qq in q for t in th]
+    uvs = [(t / 45.0, 2 * VSCALE * qq) for qq in q for t in th]
     tris = []
     closed = not C.get('bare')
     for i in range(len(q) - 1):
