@@ -7,7 +7,10 @@
 # a flow t(d, th, el) along the scalp, lengths, lifts and widths.
 import os
 import numpy as np
-from PIL import Image
+try:
+    from PIL import Image
+except ImportError:      # (a Blender without PIL, as the one on Ramon's Mac: only the painted cap needs it)
+    Image = None
 
 
 def dirs(th, el):
@@ -46,8 +49,18 @@ def farthest(hc, A, B, C, D):
     return R
 
 
+BUST_Y, BUST_X = 1.5, 3.9
+
+
+def bust_faces(vs, body):
+    """The body's faces below and beside what head.bin keeps as the head and shoulders (above 3.4, within 2.85 of the
+    middle): down to `BUST_Y`, out to `BUST_X` (base units; the waist, the forearm below the elbow)."""
+    head = lambda f: all(vs[i][1] > 3.4 and abs(vs[i][0]) < 2.85 for i in f)
+    return [f for f in body if not head(f) and all(vs[i][1] > BUST_Y and abs(vs[i][0]) < BUST_X for i in f)]
+
+
 class Head:
-    def __init__(self, base, ymin=6.4, hc=None, xmax=2.85, elmin=-70, step=2.0, tkeep=None):
+    def __init__(self, base, ymin=6.4, hc=None, xmax=2.85, elmin=-70, step=2.0, tkeep=None, bust=False):
         vs, faces, g = [], {}, None
         for l in open(base):
             if l.startswith('v '):
@@ -62,9 +75,13 @@ class Head:
         parts = [[f for f in faces['body'] if keep(f)], [f for f in faces['helper-tights'] if keep(f)],
                  faces['helper-hair'], faces['helper-l-eye'], faces['helper-r-eye']]
         self.used = sorted({i for p in parts for f in p for i in f})
+        # (round 124) the bust's vertices, which head.bin holds after the head's own: the body from the chest's cut
+        # down to the waist and out to the forearm. They carry cloth and are not drawn (`extend_head.py`)
+        self.bust = bust_faces(vs, faces['body'])
+        self.used += sorted({i for f in self.bust for i in f} - set(self.used))
         self.remap = {o: n for n, o in enumerate(self.used)}
         tris = []
-        for f in parts[0]:
+        for f in parts[0] + (self.bust if bust else []):
             if min(V[i][1] for i in f) > ymin and max(abs(V[i][0]) for i in f) < xmax and (tkeep is None or tkeep(V[f])):
                 for k in range(1, len(f) - 1):
                     tris.append([f[0], f[k], f[k + 1]])
@@ -241,7 +258,7 @@ LOCK_BODY = 0.75     # the share of a lock's image that is its length; the rest 
 LOCK_END = 0.985     # how far down the image a lock's very end lies: at the lower edge the image's top shows again
 
 
-def locks_from_wisps(head, S, lab, K, rng, wmin, wmax, flat, layer, m=5, tip=(0.3, 0.25, 0.8, 0.4), root=(0.15, 0.2, 0.7, 0.3), jitter=0.012, wave=None, vlen=1.0, ring=0.14, clump=(0.12, 0.65), over=None, spread=4.0, back=0.0, vary=None, first=0.0):
+def locks_from_wisps(head, S, lab, K, rng, wmin, wmax, flat, layer, m=5, tip=(0.3, 0.25, 0.8, 0.4), root=(0.15, 0.2, 0.7, 0.3), jitter=0.012, wave=None, vlen=1.0, ring=0.14, clump=(0.12, 0.65), over=None, spread=4.0, back=0.0, vary=None, first=0.0, across=None, least=6, ends=3, shape=None):
     """Locks: one arched band per wisp along its centre line: in section the upper half of a lens, as broad as the
     wisp (`spread` times the mean distance of its strands from its middle, between `wmin` and `wmax`) and `flat`
     times as high, `m` corners from flank to flank. Its image's length part lies back and forth
@@ -262,8 +279,14 @@ def locks_from_wisps(head, S, lab, K, rng, wmin, wmax, flat, layer, m=5, tip=(0.
     against the way the lock sets off; 0: in the middle): at the edge of hair that nothing lies over, a beard's on
     the cheek and under the lip, the locks began a patch's half breadth inside the edge, in a row. `vary` (three numbers and a
     seed): each lock's end by chance longer or shorter than `tip` says (the share of that length), broader or
-    narrower (of the lock's breadth), and the lock itself shorter than its strands by up to so much. Returns bands
-    for write_tubes(closed=False)."""
+    narrower (of the lock's breadth), and the lock itself shorter than its strands by up to so much. `across`
+    (round 173, fine strands): the image's breadth in units; a band takes as much of the image's breadth as it is
+    broad, so the image's hairs are as fine on a strand of 4 mm as on a lock of 14 (none: every band has the whole
+    breadth). `least`: a wisp of fewer strands makes no band. `ends` (round 176): rings along a lock's end (3; a
+    strand of a short beard, 5 to 10 mm long, ends in one: a point). `shape` (round 184): by where a band begins,
+    whether it is there at all, and how long and how broad it is (shares of what it would be: a beard's bands
+    towards the cheek); a band that is not there is None in the list, and every other band is what it was.
+    Returns bands for write_tubes(closed=False)."""
     over = head if over is None else over
     steps = S.shape[1] - 1
     turn = np.linspace(-np.pi / 2, np.pi / 2, m)
@@ -273,7 +296,7 @@ def locks_from_wisps(head, S, lab, K, rng, wmin, wmax, flat, layer, m=5, tip=(0.
     tip0 = tuple(tip)
     for j in range(K):
         mk = lab == j
-        if mk.sum() < 6:
+        if mk.sum() < least:
             continue
         Sj = S[mk]
         c0 = Sj.mean(0)
@@ -289,6 +312,15 @@ def locks_from_wisps(head, S, lab, K, rng, wmin, wmax, flat, layer, m=5, tip=(0.
             w0 = np.concatenate([w0[:1], w0])
         run0 = np.concatenate([[0], np.cumsum(np.linalg.norm(np.diff(c0, axis=0), axis=1))])
         total = max(run0[-1], 1e-6)
+        there = True
+        if shape is not None:
+            there, long, broad = shape(c0[0])
+            w0 = w0 * broad
+            if long < 1:
+                keep = run0 <= long * total
+                last = np.array([np.interp(long * total, run0, c0[:, i]) for i in range(3)])
+                c0 = np.concatenate([c0[keep], last[None]]); w0 = np.concatenate([w0[keep], [np.interp(long * total, run0, w0)]])
+                run0 = np.concatenate([run0[keep], [long * total]]); total = long * total
         tb = tip[2]
         if vary is not None:
             # no two locks end alike: this one's end is longer or shorter and broader or narrower than the style's,
@@ -307,7 +339,7 @@ def locks_from_wisps(head, S, lab, K, rng, wmin, wmax, flat, layer, m=5, tip=(0.
         body = total - rl - el
         half = max(1, int(round(body / (2 * vlen))))                 # how often the image goes back and forth
         per = int(np.ceil(body / (2 * half) / ring))                # rings between two turns
-        run = np.concatenate([[0], rl + body * np.arange(2 * half * per + 1) / (2 * half * per), total - el + el * np.arange(1, 4) / 3])
+        run = np.concatenate([[0], rl + body * np.arange(2 * half * per + 1) / (2 * half * per), total - el + el * np.arange(1, ends + 1) / ends])
         c = np.stack([np.interp(run, run0, c0[:, i]) for i in range(3)], -1)
         w = np.interp(run, run0, w0)
         n0 = unit(c - head.hc)
@@ -342,8 +374,10 @@ def locks_from_wisps(head, S, lab, K, rng, wmin, wmax, flat, layer, m=5, tip=(0.
         frayed = LOCK_BODY + (LOCK_END - LOCK_BODY) * e if len(tip) < 5 or tip[4] else along
         v = np.where(run < rl, LOCK_END - (LOCK_END - LOCK_BODY) * r, np.where(run > total - el, frayed, along))
         uv = np.stack(np.broadcast_arrays(u_round[None, :] + rng.random(), v[:, None]), -1)
+        if across:
+            uv[..., 0] = uv[:1, :1, 0] + hw[:, None] * np.sin(turn)[None, :] / across
         cc = head.hc + n0 * (over.skin(n0) + h)[:, None]
-        bands.append((rings, uv, cc))
+        bands.append((rings, uv, cc) if there else None)
     return bands
 
 
@@ -373,14 +407,15 @@ def bind_points(head, verts, anc):
     return bind
 
 
-def write_bound(out, name, bind, tri_list, tri_uv, even=None):
+def write_bound(out, name, bind, tri_list, tri_uv, even=None, shades=None):
     """The file the builder reads: the number of points and of triangles (and for tubes, if given, how often the
     builder evens out their way with the body along them), a line for each point (three corners of the head,
-    three weights, the way from there), a line for each triangle (three points, three places in the image)."""
+    three weights, the way from there; `shades`: and how light it is against the hair's colour), a line for each
+    triangle (three points, three places in the image)."""
     with open(os.path.join(out, name + '.txt'), 'w') as f:
         f.write(f'{len(bind)} {len(tri_list)}' + ('' if even is None else f' {even}') + '\n')
-        for r, w_, o in bind:
-            f.write(' '.join(map(str, r)) + ' ' + ' '.join(f'{x:.6f}' for x in list(w_) + list(o)) + '\n')
+        for k, (r, w_, o) in enumerate(bind):
+            f.write(' '.join(map(str, r)) + ' ' + ' '.join(f'{x:.6f}' for x in list(w_) + list(o)) + ('' if shades is None else f' {shades[k]:.3f}') + '\n')
         for t, uv in zip(tri_list, tri_uv):
             # v as in OBJ files (up from the bottom): the reader flips it
             f.write(' '.join(map(str, t)) + ' ' + ' '.join(f'{u:.6f} {1 - v:.6f}' for u, v in uv) + '\n')
@@ -422,7 +457,7 @@ def write_cards(head, out, name, cards, tiles, ntiles=8, anchors=None, vstart=No
     return len(verts), len(tri_list)
 
 
-def write_tubes(head, out, name, tubes, even=None, closed=True):
+def write_tubes(head, out, name, tubes, even=None, closed=True, shade=None):
     """Round strands (a plait's): each tube is its rings (n rings of m corners, closed round, counted so that the
     corners go round the strand's direction as the fingers of the right hand go round its thumb), the place in the
     image of each corner (n rings of m + 1: the first corner again at the end, so that the image may have a seam
@@ -432,13 +467,15 @@ def write_tubes(head, out, name, tubes, even=None, closed=True):
     tubes' way with the body along them (a plait, which hangs from jaw to chest, by the builder's own count; locks
     on the head a few times). `closed=False`: bands instead of tubes, the rings not closed round (m corners
     from flank to flank, and m places in the image): the builder takes a surface that is not closed as one seen
-    from both sides."""
-    verts, anc, tri_list, tri_uv = [], [], [], []
-    for rings, uv, anchors in tubes:
+    from both sides. `shade` (round 173): a function of the corners, the triangles, their places in the image and
+    each corner's tube that gives how light each corner is; it is written as the corners' tenth number."""
+    verts, anc, tri_list, tri_uv, of = [], [], [], [], []
+    for tube, (rings, uv, anchors) in enumerate(tubes):
         n, m = rings.shape[:2]
         o = len(verts)
         verts += list(rings.reshape(-1, 3))
         anc += list(np.repeat(anchors, m, axis=0))
+        of += [tube] * (n * m)
         for s in range(n - 1):
             for j in range(m if closed else m - 1):
                 k = (j + 1) % m
@@ -447,7 +484,8 @@ def write_tubes(head, out, name, tubes, even=None, closed=True):
                 tri_list.append([a, b, c]); tri_uv.append([tuple(ua), tuple(ub), tuple(uc)])
                 tri_list.append([b, d, c]); tri_uv.append([tuple(ub), tuple(ud), tuple(uc)])
     verts = np.array(verts).reshape(-1, 3)
-    write_bound(out, name, bind_points(head, verts, np.array(anc).reshape(-1, 3)), tri_list, tri_uv, even)
+    shades = None if shade is None else shade(verts, tri_list, tri_uv, np.array(of))
+    write_bound(out, name, bind_points(head, verts, np.array(anc).reshape(-1, 3)), tri_list, tri_uv, even, shades)
     with open(os.path.join(out, name + '.obj'), 'w') as f:
         for p in verts:
             f.write('v %.5f %.5f %.5f\n' % tuple(p))
@@ -456,7 +494,63 @@ def write_tubes(head, out, name, tubes, even=None, closed=True):
     return len(verts), len(tri_list)
 
 
-def write_locks(head, bind, out, name, S, key, wave=None, over='8,6,35,30', tip='0.3,0.25,0.8,0.4', root='0.15,0.2,0.7,0.3', back='0', trend='0', jitter='0.012', vary='', seed=87, form=None, label='', ring='0.14', m='5', extra=(), write=True, first='0'):
+def in_blender(name, verts, tris, tri_uv, scene=None):
+    """Hair as a Blender object (to look at, to work on by hand, to bake), in base.obj's coordinates, with its
+    places in the image. In a Blender that is open (run through its MCP add-on) it is made in a scene of its own
+    (`scene`, or the object's name) and nothing of the scene that is open there is touched; in one that runs in
+    the background the scene is cleared for it. Returns the scene and the object."""
+    import bpy
+    me = bpy.data.meshes.new(name)
+    me.from_pydata([tuple(v) for v in verts], [], [tuple(t) for t in tris])
+    lay = me.uv_layers.new(name='UVMap')
+    for p in me.polygons:
+        for k, li_ in enumerate(p.loop_indices):
+            lay.data[li_].uv = tri_uv[p.index][k]
+    ob = bpy.data.objects.new(name, me)
+    if bpy.app.background:
+        sc = bpy.context.scene
+        for o_ in list(sc.objects):
+            bpy.data.objects.remove(o_)
+    else:
+        sc = bpy.data.scenes.new(scene or name)
+    sc.collection.objects.link(ob)
+    return sc, ob
+
+
+def bake_ao(sc, ob, blockers, dist, samples):
+    """The shade between the strands of the object `ob`, baked in Blender (Cycles, ambient occlusion per corner):
+    how much of the sky each corner sees within `dist`, with `blockers` (name, corners, triangles: the head, a
+    beard's painted layer) standing in the scene. Returns a number from 0 to 1 for each corner."""
+    import bpy
+    for name, V, T in blockers:
+        hm = bpy.data.meshes.new(name)
+        hm.from_pydata([tuple(v) for v in V], [], [tuple(int(i) for i in t) for t in T])
+        sc.collection.objects.link(bpy.data.objects.new(name, hm))
+    sc.render.engine = 'CYCLES'
+    sc.cycles.device = 'CPU'
+    sc.cycles.samples = int(samples)
+    if sc.world is None:
+        sc.world = bpy.data.worlds.new('world')
+    sc.world.light_settings.distance = dist
+    me = ob.data
+    me.materials.append(bpy.data.materials.new('hair'))
+    col = me.color_attributes.new('ao', 'FLOAT_COLOR', 'POINT')
+    me.color_attributes.active_color = col
+    if bpy.app.background:
+        for o_ in sc.objects:
+            o_.select_set(False)
+        ob.select_set(True)
+        bpy.context.view_layer.objects.active = ob
+        bpy.ops.object.bake(type='AO', target='VERTEX_COLORS')
+    else:
+        with bpy.context.temp_override(scene=sc, view_layer=sc.view_layers[0], active_object=ob, object=ob, selected_objects=[ob]):
+            bpy.ops.object.bake(type='AO', target='VERTEX_COLORS')
+    ao = np.array([c.color[0] for c in me.color_attributes['ao'].data])
+    print('shade: mean', round(float(ao.mean()), 3), 'lowest tenth', round(float(np.quantile(ao, 0.1)), 3), 'highest tenth', round(float(np.quantile(ao, 0.9)), 3))
+    return ao
+
+
+def write_locks(head, bind, out, name, S, key, wave=None, over='8,6,35,30', tip='0.3,0.25,0.8,0.4', root='0.15,0.2,0.7,0.3', back='0', trend='0', jitter='0.012', vary='', seed=87, form=None, label='', ring='0.14', m='5', extra=(), write=True, first='0', blockers=(), shape=None):
     """Locks (round 87): the grown strands `S` gathered into wisps, each an arched band that is solid (`hairlib.py`
     `locks_from_wisps`), written as `name_locks.txt` in `out`, bound to the head `bind`; `head`: the head they are
     laid over (its centre and skin). The switches are read under the style's own name `key` (`BOB`, `PLAIT`,
@@ -485,7 +579,14 @@ def write_locks(head, bind, out, name, S, key, wave=None, over='8,6,35,30', tip=
     of a style stay as they were. `form`: the skin the locks lie over, given whole (a beard's own form:
     `<key>_LOCK_OVER` is not read then). `write=False`: the bands are returned and no file is written; `extra`:
     bands made so that are written into this file with its own (a beard's moustache, whose locks are gathered
-    and measured apart from the rest). All PLACEHOLDER by eye."""
+    and measured apart from the rest).
+    Round 173, fine strands in the locks' place: `<key>_LOCK_ACROSS` (the image's breadth in units,
+    `locks_from_wisps(across=)`), `<key>_LOCK_LEAST` (a wisp of fewer strands makes no band; 6),
+    `<key>_LOCK_ENDS` (round 176: rings along a band's end, `locks_from_wisps(ends=)`),
+    `<key>_LOCK_TONES` (each band of a tone of its own: how far off the hair's, as `hair_body.py`'s `tones`) and
+    `<key>_LOCK_AO` (`dist,samples,floor,power`, as `hair_body.py`'s `AO`: the shade between the bands baked in
+    Blender with `blockers` standing in the scene; the script then runs with Blender's Python). With either of
+    the last two the file's corners have a tenth number, how light each is. All PLACEHOLDER by eye."""
     get = lambda name, default: os.environ.get(key + name, default)
     LK, LW0, LW1, LFLAT, *LAYER = [float(t) for t in os.environ[key + '_LOCKS'].split(',')]
     rl = np.random.default_rng(seed)
@@ -503,11 +604,24 @@ def write_locks(head, bind, out, name, S, key, wave=None, over='8,6,35,30', tip=
     bands = locks_from_wisps(head, S, lab2, int(LK), rl, LW0, LW1, LFLAT, tuple(LAYER), m=int(get('_LOCK_M', m)), jitter=float(get('_LOCK_JITTER', jitter)),
                              tip=fours('_LOCK_TIP', tip), root=fours('_LOCK_ROOT', root),
                              wave=wave, ring=float(get('_LOCK_RING', ring)), back=float(get('_LOCK_BACK', back)), vary=VARY, first=float(get('_LOCK_FIRST', first)),
+                             across=float(get('_LOCK_ACROSS', '0')) or None, least=int(get('_LOCK_LEAST', '6')), ends=int(get('_LOCK_ENDS', '3')),
+                             shape=shape,
                              over=form if form is not None else head.covered(cover[0], cover[1], beside, trend=float(get('_LOCK_TREND', trend))) if cover[0] > 0 else None)
     if not write:
         return bands
     bands = bands + list(extra)
-    nvr, ntr = write_tubes(bind, out, name + '_locks', bands, even=int(get('_LOCK_EVEN', '3')), closed=False)
+    # (round 184: a band that `shape` left out keeps its place in the draw of the tones, so every other band's is what it was)
+    there, drawn = np.array([i for i, b in enumerate(bands) if b is not None]), len(bands)
+    tones, ao = float(get('_LOCK_TONES', '0')), [float(t) for t in get('_LOCK_AO', '0').split(',')]
+    def shade(verts, tris, tri_uv, of):
+        # (random numbers of their own, so that the bands are what they were without a tone)
+        tone = np.clip(np.random.default_rng(seed + 7919).lognormal(0, tones, drawn), 0.78, 1.25)[there[of]] if tones > 0 else np.ones(len(verts))
+        if ao[0] > 0:
+            sc, ob = in_blender(name + '_locks', verts, tris, tri_uv, os.environ.get('SCENE'))
+            tone = tone * (ao[2] + (1 - ao[2]) * np.clip(bake_ao(sc, ob, blockers, ao[0], ao[1]), 0, 1) ** ao[3])
+        return tone
+    bands = [bands[i] for i in there]
+    nvr, ntr = write_tubes(bind, out, name + '_locks', bands, even=int(get('_LOCK_EVEN', '3')), closed=False, shade=shade if tones > 0 or ao[0] > 0 else None)
     print(label, 'locks', len(bands), 'corners', nvr, 'tris', ntr)
     return bands
 
@@ -518,6 +632,14 @@ def write_head_obj(head, path):
             f.write('v %.5f %.5f %.5f\n' % tuple(p))
         for t in head.T:
             f.write('f %d %d %d\n' % tuple(t + 1))
+
+
+def read_obj(path):
+    """The corners and triangles of an OBJ as this pipeline writes them to look at (`v x y z`, `f a b c`)."""
+    rows = [ln.split() for ln in open(path)]
+    V = np.array([[float(t) for t in r[1:4]] for r in rows if r and r[0] == 'v'])
+    T = [[int(t.split('/')[0]) - 1 for t in r[1:4]] for r in rows if r and r[0] == 'f']
+    return V, T
 
 
 def outside(margin, step=0.5):
@@ -547,7 +669,7 @@ def outside(margin, step=0.5):
 
 
 def paint_cap(head, out, name, margin, flow, rng, Lc, shade, n=60000, steps=10, curl=0.0, curl_len=0.06,
-              base=0.8, base_ramp=7.0, mean=0.6, tex=2048, pick=None, ymin=6.6, uvc=None, lift=None, cut=None, fade=None):
+              base=0.8, base_ramp=7.0, mean=0.6, tex=2048, pick=None, ymin=6.6, uvc=None, lift=None, cut=None, fade=None, thin=None):
     """The cap: scalp triangles lifted 0.008, textured with n painted fine
     hairs along the flow (length Lc(th, el) each, brightness shade(dirs)),
     over a darker base inside the margin. curl: sideways swing (radians of
@@ -559,7 +681,9 @@ def paint_cap(head, out, name, margin, flow, rng, Lc, shade, n=60000, steps=10, 
     fade (from, to; degrees): the layer ends outside the hair, between so many degrees from it (`outside`): the
     painted hairs run on over the hairline, and without this the layer ends where its net ends, covering in full,
     in the straight edges of the skin's triangles (under a head of hair that covers it nobody sees that; a short
-    cut leaves the temple and the place in front of the ear bare: a dark block with corners)."""
+    cut leaves the temple and the place in front of the ear bare: a dark block with corners).
+    thin(directions): the share of the painted hairs that is left at a place, and (squared) of the shade under
+    them (a beard that grows thin towards the cheek)."""
     V, T, hc = head.V, head.T, head.hc
     cdir = unit(V - hc)
     cm = margin(*ang(cdir))
@@ -615,6 +739,9 @@ def paint_cap(head, out, name, margin, flow, rng, Lc, shade, n=60000, steps=10, 
     if cut is not None:
         keep = np.minimum.accumulate(np.stack([cut(Q, QP[:, s1]) for s1 in range(steps + 1)], 1), axis=1)
     Aacc = np.zeros((tex, tex)); Cacc = np.zeros((tex, tex))
+    if thin is not None:
+        stays = np.random.default_rng(184).random(len(Q)) < thin(Q)
+        Aacc_t = np.zeros((tex, tex)); Cacc_t = np.zeros((tex, tex))
     for s1 in range(steps):
         p0, p1 = px[:, s1], px[:, s1 + 1]
         ln = np.linalg.norm(p1 - p0, axis=-1)
@@ -632,6 +759,9 @@ def paint_cap(head, out, name, margin, flow, rng, Lc, shade, n=60000, steps=10, 
             xi = np.clip(x0 + dx, 0, tex - 1); yi = np.clip(y0 + dy, 0, tex - 1)
             np.add.at(Aacc, (yi, xi), wgt * ww)
             np.add.at(Cacc, (yi, xi), wgt * ww * shd)
+            if thin is not None:
+                np.add.at(Aacc_t, (yi[stays[idx]], xi[stays[idx]]), (wgt * ww)[stays[idx]])
+                np.add.at(Cacc_t, (yi[stays[idx]], xi[stays[idx]]), (wgt * ww * shd)[stays[idx]])
     a_s = 1 - np.exp(-1.4 * Aacc)
     c_s = Cacc / np.maximum(Aacc, 1e-6)
     gy, gx = np.mgrid[0:tex, 0:tex]
@@ -645,7 +775,15 @@ def paint_cap(head, out, name, margin, flow, rng, Lc, shade, n=60000, steps=10, 
     if fade is not None:
         g = np.clip((beyond(gd) - fade[0]) / (fade[1] - fade[0]), 0, 1)
         a = a * (1 - g * g * (3 - 2 * g))
-    c = c / max(1e-6, (c * a).sum() / max(a.sum(), 1e-6)) * mean
+    whole = max(1e-6, (c * a).sum() / max(a.sum(), 1e-6))
+    c = c / whole * mean
+    if thin is not None:
+        # (round 184) fewer hairs, each as it was, and less of the shade under them. The colour is set by the whole
+        # layer (`whole`), so that it stays what it was where nothing grows thin
+        a_t = 1 - np.exp(-1.4 * Aacc_t)
+        b_t = a_b * thin(gd) ** 2
+        a = 1 - (1 - a_t) * (1 - b_t)
+        c = (Cacc_t / np.maximum(Aacc_t, 1e-6) * a_t + c_b * b_t * (1 - a_t)) / np.maximum(a, 1e-6) / whole * mean
     img = np.dstack([np.clip(c, 0, 1)] * 3 + [np.clip(a, 0, 1)])
     Image.fromarray((img * 255).astype(np.uint8), 'RGBA').save(os.path.join(out, name + '_cap.png'))
     more = lift(V, cm, tsel) if lift is not None else np.zeros_like(V)

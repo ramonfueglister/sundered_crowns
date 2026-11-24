@@ -13,7 +13,8 @@ export interface PortraitPerson {
   female: boolean;
   /** Years. */
   age: number;
-  /** 0..3, with `job` the look worn (portrait/src/person.rs look_stand). */
+  /** 0..4, with `job` the look worn (portrait/src/person.rs look_stand): 2 and 3 are people of rank, 4 a crowned head
+   *  (round 144: a dress with a table for them dresses them so, portrait/src/dress.rs `Dress::ranked`). */
   stand: number;
   job: string;
   /** Where the founders of the family came from; "Graecia", "Syria" and "Aegyptus" wear full beards. */
@@ -28,6 +29,20 @@ export interface PortraitPerson {
   rank?: number;
   /** Clothing held of the need in per cent. */
   clothes_pct?: number;
+}
+
+/** The ranks of realm (src/sim/state.ts RANKS) whose holder wears a crown in the portrait. */
+const CROWNED: ReadonlySet<string> = new Set(['empire', 'kingdom']);
+
+/**
+ * (round 144) The `stand` and `job` of a person of history (a ruler, src/sim/systems/rulers.ts), by the realms
+ * whose crown the person holds on the day: of a ruler's house and dressed as people of rank are, with a crown while
+ * they hold a kingdom or an empire (where the person's dress has a table for it: portrait/src/dress.rs
+ * `Dress::ranked`). The game knows no ranks between a ruler's house and everybody else, and no dress of the clergy:
+ * a prince-bishop is dressed as a lord.
+ */
+export function rankOfHistory(crowns: readonly { rank?: string }[]): { stand: number; job: string } {
+  return { stand: crowns.some((c) => CROWNED.has(c.rank ?? '')) ? 4 : 3, job: 'Adel' };
 }
 
 /** One material's triangles, three vertices each, counter-clockwise seen from outside. */
@@ -57,6 +72,12 @@ export interface Portrait {
   /** How much of a child's skin the person has: 1 a child up to eleven, 0 the grown (the stage draws a child's skin
    *  smoother: profile.ts `skin.child`). */
   young: number;
+  /** How the person carries the head (portrait/src/dress.rs `head`): turned further than the profile turns every
+   *  head, and tilted towards a shoulder (radians), and the place the tilt is about: the neck's foot (x and
+   *  height). The stage turns and tilts the whole figure; the builder has tipped the shoulders back. All 0 on a
+   *  portrait of Apoleia's. */
+  head: [number, number];
+  neck: [number, number];
   tris: number;
   /** Background of the look: inner and outer colour, sRGB 0..1. */
   bg: [[number, number, number], [number, number, number]];
@@ -93,7 +114,7 @@ export function decodePortrait(b: Uint8Array): Portrait {
   const str = (): string => { const n = v.getUint16(o, true); o += 2 + n; return text.decode(b.subarray(o - n, o)); };
   /** `n` floats, copied (the bytes are not aligned). */
   const floats = (n: number): Float32Array => { const out = new Float32Array(b.slice(o, o + 4 * n).buffer); o += 4 * n; return out; };
-  const [top, chin, cx, cz, fill, young] = [f32(), f32(), f32(), f32(), f32(), f32()];
+  const [top, chin, cx, cz, fill, young, yaw, tilt, nx, ny] = [f32(), f32(), f32(), f32(), f32(), f32(), f32(), f32(), f32(), f32()];
   const tris = u32();
   const c = floats(6);
   const look = str();
@@ -104,5 +125,5 @@ export function decodePortrait(b: Uint8Array): Portrait {
     surfaces.push({ rough, metal, double, tex, nmap, pos: floats(3 * verts), col: floats(3 * verts), uv: floats(2 * uvs), nrm: floats(3 * nrms) });
   }
   if (o !== b.length) throw new Error('the bytes of the portrait do not end where the portrait ends');
-  return { top, chin, cx, cz, fill, young, tris, bg: [[c[0], c[1], c[2]], [c[3], c[4], c[5]]], look, surfaces };
+  return { top, chin, cx, cz, fill, young, head: [yaw, tilt], neck: [nx, ny], tris, bg: [[c[0], c[1], c[2]], [c[3], c[4], c[5]]], look, surfaces };
 }

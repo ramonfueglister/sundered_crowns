@@ -1,19 +1,20 @@
 # A woven cloth as a tileable texture with its normal map: plain weave (one
 # over, one under), every thread a little uneven, wool with a fulled, fuzzy
-# face, linen finer and smoother. Grey around 0.85: the garment's dye comes
+# face, linen finer and smoother; or felt, which has no weave; or silk (round 150), a fine even weave with no nap
+# and hardly a relief; or a fine linen (round 153), bleached and pressed. Grey around 0.85: the garment's dye comes
 # from the vertex colours.
-# usage: python3 -I fabric_tex.py out.png out_n.png wool|linen [threads per tile]
+# usage: python3 -I fabric_tex.py out.png out_n.png wool|linen|felt|silk|fine [threads per tile]
 import os
 import sys
 import numpy as np
 from PIL import Image, ImageFilter
 out, out_n, kind = sys.argv[1:4]
-N = int(sys.argv[4]) if len(sys.argv) > 4 else (32 if kind == 'wool' else 48)
+N = int(sys.argv[4]) if len(sys.argv) > 4 else {'wool': 32, 'silk': 320, 'fine': 240}.get(kind, 48)
 S = 1024
 # wool: how much of the weave the nap hides (`NAP`), how deep the weave's relief is (`DEPTH`), how strongly the
 # cloth is mottled, lighter and darker over 1 to 5 cm (`MOTT`)
 NAP, DEPTH, MOTT = (float(os.environ.get(k, d)) for k, d in (('NAP', '0.45'), ('DEPTH', '1.5'), ('MOTT', '0.06')))
-rng = np.random.default_rng(7 if kind == 'wool' else 9)
+rng = np.random.default_rng({'wool': 7, 'silk': 11, 'fine': 13}.get(kind, 9))
 v, u = np.meshgrid(np.arange(S) / S, np.arange(S) / S, indexing='ij')
 iu, iv = np.floor(u * N).astype(int), np.floor(v * N).astype(int)
 # each thread's own thickness and shade
@@ -36,6 +37,24 @@ if kind == 'wool':
     h = (1 - NAP) * h + NAP * hb
     h = h + noise(2, 0.10) + noise(8, 0.05)
     depth, mott, CON = DEPTH, MOTT, 0.035
+elif kind == 'felt':
+    # (round 134) felt has no threads: matted fibres, fine and a little coarser
+    h = noise(2, 0.10) + noise(4, 0.08) + noise(8, 0.05)
+    shade = 1.0
+    depth, mott, CON = DEPTH, MOTT, 0.035
+elif kind == 'silk':
+    # threads too fine to show at a picture's size, all alike: the cloth is told by how it shines (the stage)
+    # (a fifth of the threads' own shades: with all of it the cloth was a plaid)
+    h = h + noise(2, 0.02)
+    shade = 1 + 0.2 * (shade - 1)
+    depth, mott, CON = DEPTH, MOTT, 0.012
+elif kind == 'fine':
+    # the linen's weave with five threads for one, too fine to show at a picture's size, and a third of the
+    # threads' own shades (with all of it the cloth is a sack's, round 153); its relief and mottling by `DEPTH`
+    # and `MOTT`
+    h = h + noise(2, 0.04)
+    shade = 1 + 0.33 * (shade - 1)
+    depth, mott, CON = DEPTH, MOTT, 0.02
 else:
     h = h + noise(2, 0.04)
     depth, mott, CON = 1.1, 0.035, 0.03

@@ -16,6 +16,8 @@ pub const KEEP_DAYS: i64 = 60;
 /// clerks, scholars, priests and nobles below the upper stands as traders.
 pub fn look_stand(stand: u8, job: &str) -> usize {
     match (stand, job) {
+        // (round 144) a crowned head
+        (4, _) => crate::look::KAISER,
         (3, _) => SENATOR,
         (2, _) => DECURIO,
         (_, "Unfreie") => SKLAVE,
@@ -116,7 +118,7 @@ pub fn look_of(genes: &[u8], female: bool, age: f32, stand: u8, job: &str, weigh
         age,
         stand: st,
         east: matches!(origin, "Graecia" | "Syria" | "Aegyptus"),
-        dress: crate::dress::Dress::of(origin),
+        dress: crate::dress::Dress::of(origin).ranked(st),
         seed,
         mood,
         life,

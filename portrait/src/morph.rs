@@ -170,6 +170,186 @@ pub(crate) fn skull_grow_over(h: &Head, pp: &mut [V3], by: [f32; 3], reach: f32)
     }
 }
 
+/// Where `jaw_narrow` works on MakeHuman's base head, in units (1 unit = 10 cm): from the tragion's depth this far
+/// forward nothing of it, from this far all of it (the ears and the neck's sides stay); and over how far under the
+/// chin's lowest point it fades out, from a little over it (the neck stays, and the skin under the jaw is drawn
+/// out over a hand's breadth, not folded at the jaw's edge); and from how far beside the middle it sets in and is whole
+/// (the mouth, whose corners lie about 0.23 out, and the chin's front keep their breadth: the outline moves);
+/// and (round 117) from how far in front of the tragion's depth it fades out again and is gone (the jaw's corners
+/// lie 0.09 to 0.34 in front of it and take all of it, the cheek beside the mouth, about 0.8, none: the cheek
+/// turned away from the camera keeps its fullness and the side turned to it comes in). PLACEHOLDER: by eye.
+pub const JAW_NARROW: ([f32; 2], [f32; 2], [f32; 2], [f32; 2]) = ([0.02, 0.22], [0.1, 0.9], [0.25, 0.45], [0.35, 0.75]);
+
+/// How much of `jaw_narrow` each vertex of the base head takes: 0 at and over the cheekbones' lowest landmark,
+/// rising to 1 at the chin's lowest point, fading out under it, and only in front of the ears and behind the
+/// cheeks' front.
+pub fn jaw_field(h: &Head) -> Vec<f32> {
+    use crate::measure::{CHEEKBONES, MENTON, TRAGION};
+    let b = &h.base;
+    let (top, chin) = (b[CHEEKBONES[2].0][1], b[MENTON][1]);
+    let tz = (b[TRAGION.0][2] + b[TRAGION.1][2]) / 2.0;
+    let (front, under, _, fore) = JAW_NARROW;
+    b.iter()
+        .map(|q| {
+            let down = sm(0.0, 1.0, (top - q[1]) / (top - chin));
+            let neck = 1.0 - sm(under[0], under[1], chin - q[1]);
+            down * neck * sm(front[0], front[1], q[2] - tz) * (1.0 - sm(fore[0], fore[1], q[2] - tz))
+        })
+        .collect()
+}
+
+/// The lower face drawn narrower towards the chin (`Style::jaw`): each vertex towards the middle by `k` times its
+/// share of `jaw_field`, as far as it stands out beside the middle on the base head (`JAW_NARROW`).
+pub(crate) fn jaw_narrow(h: &Head, pp: &mut [V3], k: f32) {
+    let side = JAW_NARROW.2;
+    for (v, w) in jaw_field(h).into_iter().enumerate().take(pp.len()) {
+        if w > 0.0 {
+            pp[v][0] *= 1.0 - k * w * sm(side[0], side[1], h.base[v][0].abs());
+        }
+    }
+}
+
+/// Where `jaw_soften` works on MakeHuman's base head, in units (1 unit = 10 cm): how far over and under the jaw's
+/// lower edge (a straight line from the chin's lowest point to the jaw's corners, by depth) all of it and none of
+/// it, and how often the skin there is averaged over its neighbours. PLACEHOLDER: by eye.
+pub const JAW_SOFT: ([f32; 2], usize) = ([0.12, 0.3], 8);
+
+/// How much of `jaw_soften` each vertex of the base head takes: all of it on the jaw's lower edge from the chin
+/// to the jaw's corners, none of it at the mouth, on the neck a hand under the jaw, behind the ears and on what
+/// lines the mouth.
+pub fn jaw_edge_field(h: &Head) -> Vec<f32> {
+    use crate::measure::{JAW, MENTON, TRAGION};
+    let b = &h.base;
+    let chin = b[MENTON];
+    let corner: [f32; 2] = [1, 2].map(|c| JAW.iter().map(|&(i, j)| b[i][c] + b[j][c]).sum::<f32>() / (2 * JAW.len()) as f32);
+    let tz = (b[TRAGION.0][2] + b[TRAGION.1][2]) / 2.0;
+    let (front, _, _, _) = JAW_NARROW;
+    let band = JAW_SOFT.0;
+    // the skin that faces away from the mouth's inside: what lines the mouth (it lies in the band too, behind the
+    // chin) faces a point in the middle of it and stays as it is
+    let (n, inside) = (vnormals(b, h.body_full()), [0.0, corner[0], (corner[1] + chin[2]) / 2.0 - 0.15]);
+    b.iter()
+        .enumerate()
+        .map(|(v, q)| {
+            let out = sub(*q, inside);
+            if len(n[v]) == 0.0 || len(out) == 0.0 {
+                return 0.0;
+            }
+            let t = ((chin[2] - q[2]) / (chin[2] - corner[1])).clamp(0.0, 1.0);
+            let edge = chin[1] + t * (corner[0] - chin[1]);
+            (1.0 - sm(band[0], band[1], (q[1] - edge).abs())) * sm(front[0], front[1], q[2] - tz) * sm(0.0, 0.2, dot(n[v], out) / (len(n[v]) * len(out)))
+        })
+        .collect()
+}
+
+/// (round 120) Where `jaw_soften` reaches up the cheek beside the mouth, in units: from how far beside the
+/// face's middle none and all of it, and up to where against the line of the mouth all and none of it (4 mm
+/// under it, 3 mm over it). Under the mouth's corner and a thumb's breadth beside it MakeHuman's net has a
+/// second fold, from the cheek down to the jaw's edge: with the fuller cheeks and the narrower jaw of the women
+/// it was a notch in the cheek's outline and a dark line on the shaded cheek, at a game's size a scar. It
+/// begins 4 cm beside the middle: nearer lie the lips' corners and what `seam_shut` moves about them (0.31 and
+/// `SEAM_REACH`), which keep their own form to the hundredth of a millimetre (tests/faces.rs). Higher lie the
+/// cheek's pad and the folds of the gene "folds": with the band up to the nose's foot the far cheek ran in by
+/// 3 mm at the mouth's height and the gene showed a third less. PLACEHOLDER: by eye, on two women's heads.
+pub const CHEEK_SOFT: ([f32; 2], [f32; 2]) = ([0.4, 0.45], [-0.04, 0.03]);
+
+/// How much of `jaw_soften` each vertex of the base head takes on the cheek beside the mouth, over what
+/// `jaw_edge_field` gives it (`CHEEK_SOFT`): none on the mouth, the nose, the cheekbones and the ears.
+pub fn cheek_soft_field(h: &Head) -> Vec<f32> {
+    use crate::measure::{JAW, MENTON, STOMION, TRAGION};
+    let b = &h.base;
+    let chin = b[MENTON];
+    let corner: [f32; 2] = [1, 2].map(|c| JAW.iter().map(|&(i, j)| b[i][c] + b[j][c]).sum::<f32>() / (2 * JAW.len()) as f32);
+    let tz = (b[TRAGION.0][2] + b[TRAGION.1][2]) / 2.0;
+    let (front, _, _, _) = JAW_NARROW;
+    let (mouth, (beside, up)) = ((b[STOMION[0]][1] + b[STOMION[1]][1]) / 2.0, CHEEK_SOFT);
+    let (n, inside) = (vnormals(b, h.body_full()), [0.0, corner[0], (corner[1] + chin[2]) / 2.0 - 0.15]);
+    let edge = jaw_edge_field(h);
+    b.iter()
+        .enumerate()
+        .map(|(v, q)| {
+            let out = sub(*q, inside);
+            if len(n[v]) == 0.0 || len(out) == 0.0 {
+                return 0.0;
+            }
+            let t = ((chin[2] - q[2]) / (chin[2] - corner[1])).clamp(0.0, 1.0);
+            let under = chin[1] + t * (corner[0] - chin[1]);
+            let w = if q[1] > under { sm(beside[0], beside[1], q[0].abs()) * (1.0 - sm(mouth + up[0], mouth + up[1], q[1])) } else { 0.0 };
+            (w * sm(front[0], front[1], q[2] - tz) * sm(0.0, 0.2, dot(n[v], out) / (len(n[v]) * len(out))) - edge[v]).max(0.0)
+        })
+        .collect()
+}
+
+/// The jaw's lower edge drawn soft (`Style::edge`): the skin along it moved towards the middle of its
+/// neighbours, `JAW_SOFT.1` times, by `k` times its share of `jaw_edge_field` each time. A fold becomes a round.
+/// The chin's lowest point stays where it is: the face's length and the mouth's place are measured from it
+/// (its neighbours move by under half a millimetre about it). On the cheek beside the mouth (`cheek_soft_field`,
+/// round 120) the skin moves in and out alone, along its own normal: moved towards its neighbours whole, the
+/// net's uneven facets there slide along the cheek by up to 7 mm and take the skin's image with them.
+pub fn jaw_soften(h: &Head, pp: &mut [V3], k: f32) {
+    let (edge, cheek) = (jaw_edge_field(h), cheek_soft_field(h));
+    let field: Vec<f32> = edge.iter().zip(&cheek).map(|(a, b)| a + b).collect();
+    let mut near: Vec<Vec<u32>> = vec![Vec::new(); pp.len()];
+    for t in h.body_full().chunks_exact(3) {
+        if t.iter().any(|&v| (v as usize) < field.len() && field[v as usize] > 0.0) {
+            for a in 0..3 {
+                for c in 1..3 {
+                    let (v, u) = (t[a] as usize, t[(a + c) % 3]);
+                    if v < pp.len() && (u as usize) < pp.len() && !near[v].contains(&u) {
+                        near[v].push(u);
+                    }
+                }
+            }
+        }
+    }
+    for _ in 0..JAW_SOFT.1 {
+        let was = pp.to_vec();
+        let normals = vnormals(&was, h.body_full());
+        for (v, w) in field.iter().enumerate().take(pp.len()) {
+            if *w > 0.0 && !near[v].is_empty() && v != crate::measure::MENTON {
+                let n = near[v].len() as f32;
+                let d: V3 = [0, 1, 2].map(|c| near[v].iter().map(|&u| was[u as usize][c]).sum::<f32>() / n - was[v][c]);
+                let along = if len(normals[v]) > 0.0 { dot(d, normals[v]) / dot(normals[v], normals[v]) } else { 0.0 };
+                for c in 0..3 {
+                    pp[v][c] += k * (edge[v] * d[c] + cheek[v] * along * normals[v][c]);
+                }
+            }
+        }
+    }
+}
+
+/// Where `chin_round` works on MakeHuman's base head: over which share of the way from the line of the mouth
+/// down to the chin's lowest point it sets in and is whole, and from how far beside the middle, in units (1 unit
+/// = 10 cm; the chin's own middle keeps its breadth, a point would be a beak). PLACEHOLDER: by eye.
+pub const CHIN_ROUND: ([f32; 2], [f32; 2]) = ([0.15, 1.0], [0.03, 0.2]);
+
+/// How much of `chin_round` each vertex of the base head takes: 0 at and over the line of the mouth, rising to
+/// 1 at the chin's lowest point, fading out under it and only in front of the ears as `jaw_field` does.
+pub fn chin_field(h: &Head) -> Vec<f32> {
+    use crate::measure::{MENTON, STOMION, TRAGION};
+    let b = &h.base;
+    let (top, chin) = ((b[STOMION[0]][1] + b[STOMION[1]][1]) / 2.0, b[MENTON][1]);
+    let tz = (b[TRAGION.0][2] + b[TRAGION.1][2]) / 2.0;
+    let (front, under, _, _) = JAW_NARROW;
+    let (down, side) = CHIN_ROUND;
+    b.iter()
+        .map(|q| {
+            let neck = 1.0 - sm(under[0], under[1], chin - q[1]);
+            sm(down[0], down[1], (top - q[1]) / (top - chin)) * neck * sm(front[0], front[1], q[2] - tz) * sm(side[0], side[1], q[0].abs())
+        })
+        .collect()
+}
+
+/// The chin's end drawn in to a round (`Style::chin`): each vertex towards the middle by `k` times its share of
+/// `chin_field`. `jaw_narrow` leaves the chin's own breadth, and under a narrowed jaw that is a block.
+pub fn chin_round(h: &Head, pp: &mut [V3], k: f32) {
+    for (v, w) in chin_field(h).into_iter().enumerate().take(pp.len()) {
+        if w > 0.0 {
+            pp[v][0] *= 1.0 - k * w;
+        }
+    }
+}
+
 /// Where the face's front begins on MakeHuman's base head (`face_front`), in units before tragion (1 unit =
 /// 10 cm): nothing of it up to the first (the ear, the neck's front, the back of the jaw's corner), all of it
 /// from the second (the nose, the mouth, the chin, the cheeks' front). PLACEHOLDER: by anatomy and by eye.
@@ -245,14 +425,71 @@ fn fullness(p: &Look, f: &crate::dress::Fullness) -> f32 {
     ((p.phen(WEIGHT) - 0.5) * f.spread).tanh() * (0.35 + 0.65 * p.grown())
 }
 
-pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize) {
+/// How the arms come down from the spread pose MakeHuman's base stands in: about each shoulder's joint, softly
+/// weighted around it. The joints (x, y) of the side towards +x and of the side towards -x, as they lie on the
+/// morphed body; none where the head file has no shoulder.
+#[derive(Clone, Copy)]
+pub(crate) struct Arms {
+    joint: [Option<[f32; 2]>; 2],
+}
+
+/// How far the arms come down (radians), and between which distances from the middle on the base body a place
+/// takes none of it and all of it.
+const ARM_DOWN: f32 = 0.66;
+const ARM_FROM: [f32; 2] = [1.3, 1.8];
+
+impl Arms {
+    /// The joints of the body `pp`, which stands with its arms spread.
+    fn of(h: &Head, pp: &[V3]) -> Arms {
+        let joint = [1.0f32, -1.0].map(|sg| {
+            let (mut px, mut py, mut n) = (0f32, 0f32, 0);
+            for i in 0..h.n {
+                let (bx, by) = (h.base[i][0] * sg, h.base[i][1]);
+                if bx > 1.58 && bx < 1.78 && by > 4.95 && by < 5.55 {
+                    px += pp[i][0];
+                    py += pp[i][1];
+                    n += 1;
+                }
+            }
+            (n > 0).then(|| [px / n as f32, py / n as f32])
+        });
+        Arms { joint }
+    }
+
+    /// How much of the arms' way a place takes whose x on the base body is `bx`, counted outward on its own side.
+    pub(crate) fn share(bx: f32) -> f32 {
+        let t = c01((bx.abs() - ARM_FROM[0]) / (ARM_FROM[1] - ARM_FROM[0]));
+        t * t * (3.0 - 2.0 * t)
+    }
+
+    /// Where the place `q` goes that takes the share `w` of the way of the arm on the side `sg` (1: towards +x,
+    /// -1: towards -x): down with the arm (`way` 1), or from where it lies with the arm down back to the spread
+    /// pose (`way` -1).
+    pub(crate) fn turned(&self, q: V3, sg: f32, w: f32, way: f32) -> V3 {
+        let Some([px, py]) = self.joint[if sg > 0.0 { 0 } else { 1 }] else { return q };
+        let ang = -sg * ARM_DOWN * way;
+        let (cs, sn) = ((ang * w).cos(), (ang * w).sin());
+        let (dx, dy) = (q[0] - px, q[1] - py);
+        [px + dx * cs - dy * sn, py + dx * sn + dy * cs, q[2]]
+    }
+
+    /// Where a vertex of the body goes whose x on the base body is `bx`: by its share of its side's arm.
+    pub(crate) fn moved(&self, q: V3, bx: f32, way: f32) -> V3 {
+        if bx.abs() < ARM_FROM[0] {
+            return q;
+        }
+        self.turned(q, bx.signum(), Arms::share(bx), way)
+    }
+}
+
+pub(crate) fn morph(h: &Head, p: &Look) -> (Vec<V3>, usize, Arms) {
     morph_as(h, p, None, None, None, None, None, None, true)
 }
 
 #[allow(clippy::too_many_arguments)]
 /// (`drawn`: with the drawing of a dress with a table, `DressSet::style`, as a portrait shows the head; without
 /// it the face as it is measured)
-fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, skull: Option<[f32; 3]>, wide: Option<f32>, nose: Option<f32>, mut list: Option<&mut Vec<(String, f32)>>, drawn: bool) -> (Vec<V3>, usize) {
+fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, skull: Option<[f32; 3]>, wide: Option<f32>, nose: Option<f32>, mut list: Option<&mut Vec<(String, f32)>>, drawn: bool) -> (Vec<V3>, usize, Arms) {
     let mut pp = h.base.clone();
     let mut used = 0;
     // targets a dress with a table takes nothing of (`DressSet::without`)
@@ -260,7 +497,7 @@ fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, s
     // Ears under a veil keep MakeHuman's form: they are hidden there, and linen is bound to the skin under it. The
     // wimple, close on the skin, went out with an ear that is large or has grown with age, the veil over it,
     // further off, did not: the wimple came through the veil at the ears (round 70)
-    let ears_hidden = p.dress.set().is_some_and(|d| d.veiled(p.female, p.age));
+    let ears_hidden = p.dress.set().is_some_and(|d| d.veiled(p.female, p.age, p.seed));
     // targets a dress with a table takes the part below the cheekbones of only (`DressSet::lower_only`)
     let lower: &[&str] = p.dress.set().map_or(&[], |d| d.lower_only);
     let band = lower_band(h);
@@ -598,7 +835,7 @@ fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, s
     // and each ball set in its socket so that the pupil stands between the lids as a real one does (`DressSet::pupil`)
     if let Some(d) = p.dress.set().filter(|d| d.pupil > 0.0) {
         let lean = crate::dress::by_sex(d.lean[0], d.lean[1], p.female, p.grown());
-        pupils_set(h, &mut pp, d.pupil, |side| d.gaze_of(side, lean)[1]);
+        pupils_set(h, &mut pp, d.pupil, |side| d.gaze_at(side, lean, d.head_of(p.seed))[1]);
     }
     // a child's nose as long against a grown one's as a real child's, where a dress with a table asks for it
     // (`DressSet::child_nose`); heights of the face's front between the lower lids and the chin only
@@ -614,37 +851,24 @@ fn morph_as(h: &Head, p: &Look, mouth_at: Option<f32>, seam_shut: Option<f32>, s
     if let Some(by) = p.dress.set().filter(|_| drawn).map(|d| d.style_skull_of(p.female, p.age)).filter(|by| by.iter().any(|k| *k != 1.0)) {
         skull_grow_over(h, &mut pp, by, STYLE_REACH);
     }
-    // arms down from the A pose, softly weighted around the shoulder joint
-    for sg in [1.0f32, -1.0] {
-        let (mut px, mut py, mut n) = (0f32, 0f32, 0);
-        for i in 0..h.n {
-            let (bx, by) = (h.base[i][0] * sg, h.base[i][1]);
-            if bx > 1.58 && bx < 1.78 && by > 4.95 && by < 5.55 {
-                px += pp[i][0];
-                py += pp[i][1];
-                n += 1;
-            }
-        }
-        if n == 0 {
-            continue;
-        }
-        px /= n as f32;
-        py /= n as f32;
-        let ang = -sg * 0.66;
-        for i in 0..h.n {
-            let bx = h.base[i][0] * sg;
-            if bx < 1.3 {
-                continue;
-            }
-            let t = c01((bx - 1.3) / 0.5);
-            let w = t * t * (3.0 - 2.0 * t);
-            let (cs, sn) = ((ang * w).cos(), (ang * w).sin());
-            let (dx, dy) = (pp[i][0] - px, pp[i][1] - py);
-            pp[i][0] = px + dx * cs - dy * sn;
-            pp[i][1] = py + dx * sn + dy * cs;
-        }
+    // and the drawn face's lower face narrower towards the chin (`Style::jaw`)
+    if let Some(k) = p.dress.set().filter(|_| drawn).map(|d| d.style_jaw_of(p.female, p.grown(), p.age)).filter(|k| *k != 0.0) {
+        jaw_narrow(h, &mut pp, k);
     }
-    (pp, used)
+    // and the chin's end drawn in to a round (`Style::chin`)
+    if let Some(k) = p.dress.set().filter(|_| drawn).map(|d| d.style_chin_of(p.female, p.grown(), p.age)).filter(|k| *k != 0.0) {
+        chin_round(h, &mut pp, k);
+    }
+    // and the jaw's lower edge drawn soft (`Style::edge`), on every drawn head
+    if let Some(k) = p.dress.set().filter(|_| drawn).map(|d| d.style_edge_of(p.female, p.grown())).filter(|k| *k != 0.0) {
+        jaw_soften(h, &mut pp, k);
+    }
+    // arms down from the A pose, softly weighted around the shoulder joint
+    let arms = Arms::of(h, &pp);
+    for i in 0..h.n {
+        pp[i] = arms.moved(pp[i], h.base[i][0], 1.0);
+    }
+    (pp, used, arms)
 }
 
 /// The field in which the mouth is moved down (`mouth_set`), on the base head (1 unit = 10 cm). By height: in

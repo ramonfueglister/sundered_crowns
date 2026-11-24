@@ -5,7 +5,7 @@
 // default 0.5), which three.js sets through the index of refraction; hair cards are blended with a depth pass of
 // their opaque parts first (two materials); the light scattering inside skin has no counterpart in three.js and is
 // left out for Apoleia's portraits (docs/PORTRAITS.md lists it as a deviation). What a set of dress of the game's
-// own does differently stands in its profile (profile.ts).
+// own does differently stands in its profile (profile.ts, profile_1356.ts).
 import {
   CustomBlending, DoubleSide, FrontSide, LessEqualDepth, MeshPhysicalMaterial, OneFactor, OneMinusSrcAlphaFactor,
   ShaderChunk, SrcAlphaFactor, type Texture, Vector2, Vector3,
@@ -192,11 +192,30 @@ diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.072
   m.customProgramCacheKey = () => `portrait-cap-${p.key}-${stubble ? 'stubble' : v === k ? 'hair' : 'beard'}`;
 }
 
+/** (round 156) A figured silk (an image named `_figured`, tools/portrait/pipeline/silk_figure.py): where the
+ *  image's covering is less than 1 a second thread lies on the cloth, gold. There the cloth has the gold's colour
+ *  in place of its dye's, under the weave's own shade, and the gold's roughness and share of metal: by the share
+ *  `cover` (round 169), the rest of it the ground's. */
+function figuredLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageProfile['cloth']>['figured']): void {
+  m.onBeforeCompile = shader => {
+    let code = swap(shader.fragmentShader, '#include <color_fragment>', `#include <color_fragment>
+float silkFigure = 0.0;
+#ifdef USE_MAP
+silkFigure = ( 1.0 - sampledDiffuseColor.a ) * ${f(k.cover)};
+diffuseColor.rgb = mix( diffuseColor.rgb, vec3( ${k.gold.map(f).join(', ')} ) * sampledDiffuseColor.rgb, silkFigure );
+#endif`);
+    code = swap(code, '#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>\nroughnessFactor = mix( roughnessFactor, ${f(k.rough)}, silkFigure );`);
+    shader.fragmentShader = swap(code, '#include <metalnessmap_fragment>', `#include <metalnessmap_fragment>\nmetalnessFactor = mix( metalnessFactor, ${f(k.metal)}, silkFigure );`);
+  };
+  m.customProgramCacheKey = () => `portrait-figured-${p.key}`;
+}
+
 /** The eyeball of a profile: the upper lid's shadow (the key light's shadow map is too coarse for a lid, so the
  *  ball darkens towards its top), a tint and less colour. */
 function eyeLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageProfile['eye']>): void {
   m.roughness = k.rough; m.ior = ior(k.specular);
-  const lights = wrapped(`vec3( ${f(k.wrap)} )`);
+  // the light's reach round the ball is the iris' or the white's by the place (`eyeWrap`, set where the image tells them apart)
+  const lights = wrapped('vec3( eyeWrap )');
   m.onBeforeCompile = shader => {
     shader.vertexShader = swap(swap(shader.vertexShader, '#include <common>', '#include <common>\nvarying float vLidY; varying float vLidX;'),
       '#include <beginnormal_vertex>', '#include <beginnormal_vertex>\nvLidY = objectNormal.y; vLidX = abs( objectNormal.x );');
@@ -205,10 +224,13 @@ function eyeLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<StageP
     const code = swap(shader.fragmentShader, '#include <map_fragment>', `#include <map_fragment>
 float eyeWhite = 1.0;
 float eyeRing = 0.0;
+float eyePupil = 0.0;
 #ifdef USE_MAP
   eyeWhite = smoothstep( 0.22, 0.36, min( sampledDiffuseColor.r, min( sampledDiffuseColor.g, sampledDiffuseColor.b ) ) );
   // the iris' rim: a living iris is darkest in a ring where it meets the white (the cornea's edge lies over it)
   eyeRing = smoothstep( 0.62, 0.98, length( fract( vMapUv * 4.0 ) - 0.5 ) / ${f(27.5 / 360)} ) * ( 1.0 - eyeWhite );
+  eyeWrap = mix( ${f(k.wrap)}, ${f(k.wrapWhite)}, eyeWhite );
+  eyePupil = ${k.pupil.size > 0 ? `1.0 - smoothstep( ${f(k.pupil.size - k.pupil.soft)}, ${f(k.pupil.size + k.pupil.soft)}, length( fract( vMapUv * 4.0 ) - 0.5 ) / ${f(27.5 / 360)} )` : '0.0'};
 #endif`);
     // the cornea: over the iris the eye's surface is a cap of a smaller ball, so its normal leans outward from the
     // iris' middle, the more the nearer its rim, and the key light's glint lies on the iris instead of on the white
@@ -229,9 +251,9 @@ float eyeRing = 0.0;
   }
 }
 #endif`);
-    shader.fragmentShader = swap(swap(swap(bulged, '#include <lights_physical_pars_fragment>', lights), '#include <common>', '#include <common>\nvarying float vLidY; varying float vLidX;'),
+    shader.fragmentShader = swap(swap(swap(bulged, '#include <lights_physical_pars_fragment>', lights), '#include <common>', `#include <common>\nvarying float vLidY; varying float vLidX; float eyeWrap = ${f(k.wrapWhite)};`),
       '#include <color_fragment>', `#include <color_fragment>
-diffuseColor.rgb *= mix( ${f(k.iris)} * ( 1.0 - ${f(k.ring)} * eyeRing ), ${f(k.white)}, eyeWhite ) * vec3( ${k.tint.map(f).join(', ')} ) * mix( 1.0, ${f(k.lid.dark)}, smoothstep( ${f(k.lid.from)}, ${f(k.lid.to)}, vLidY ) ) * mix( 1.0, ${f(k.corner.dark)}, smoothstep( ${f(k.corner.from)}, ${f(k.corner.to)}, vLidX ) );
+diffuseColor.rgb *= mix( ${f(k.iris)} * ( 1.0 - ${f(k.ring)} * eyeRing ) * mix( 1.0, ${f(k.pupil.dark)}, eyePupil ), ${f(k.white)}, eyeWhite ) * vec3( ${k.tint.map(f).join(', ')} ) * mix( vec3( 1.0 ), vec3( ${k.blush.map(f).join(', ')} ), eyeWhite ) * mix( 1.0, ${f(k.lid.dark)}, smoothstep( ${f(k.lid.from)}, ${f(k.lid.to)}, vLidY ) ) * mix( 1.0, ${f(k.corner.dark)}, smoothstep( ${f(k.corner.from)}, ${f(k.corner.to)}, vLidX ) );
 diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ), pow( diffuseColor.rgb, vec3( ${f(k.lift)} ) ), ${f(k.colour)} );`);
   };
   m.customProgramCacheKey = () => `portrait-eye-${p.key}`;
@@ -263,7 +285,7 @@ function hairLook(m: MeshPhysicalMaterial, p: StageProfile, k: NonNullable<Stage
       float hairA = dot( hairT1, hairH ), hairB = dot( hairT2, hairH );
       float hairS1 = pow( sqrt( max( 1.0 - hairA * hairA, 0.0 ) ), ${f(k.whiteSharp)} );
       float hairS2 = pow( sqrt( max( 1.0 - hairB * hairB, 0.0 ) ), ${f(k.ownSharp)} );
-      reflectedLight.directSpecular += ${colour} * hairLit * hairStrand * ( ${f(k.white)} * hairS1 * 0.08 + ${f(k.own)} * hairS2 * ${diffuse} );
+      reflectedLight.directSpecular += ${colour} * hairLit * hairStrand * ( hairWhite * hairS1 * 0.08 + ${f(k.own)} * hairS2 * ${diffuse} );
       float hairN = dot( ${normal}, hairL );
       reflectedLight.directDiffuse += ${colour} * ${diffuse} * RECIPROCAL_PI * ( saturate( ( hairN + ${f(k.wrap)} ) / ( 1.0 + ${f(k.wrap)} ) ) - saturate( hairN ) );`;
   const lights = solid && swap(ShaderChunk.lights_physical_pars_fragment, DIFFUSE, `${DIFFUSE}
@@ -283,11 +305,12 @@ ${solid ? '' : 'float '}hairStrand = 1.0;
 #endif`);
     code = swap(code, '#include <color_fragment>', `#include <color_fragment>
 diffuseColor.rgb *= pow( min( hairStrand / 0.8, 1.0 ), ${f(k.light)} * smoothstep( 0.08, 0.45, dot( vColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ) );
-diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ), diffuseColor.rgb, ${f(k.colour)} );`);
+${solid ? '' : 'float '}hairWhite = mix( ${f(k.white)}, ${f(k.whiteLight)}, smoothstep( 0.0, 0.08, dot( vColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ) );
+diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ), diffuseColor.rgb, ${f(k.colour)} ) * mix( ${f(k.tone)}, ${f(k.toneLight)}, smoothstep( 0.08, 0.45, dot( vColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ) );`);
     if (lights) {
-      // the strands' image is read in the picture's main part and used in each light's share: a value of the
-      // whole shader
-      code = swap(swap(code, '#include <lights_physical_pars_fragment>', lights), '#include <common>', '#include <common>\nfloat hairStrand;');
+      // the strands' image and the white band's strength are read in the picture's main part and used in each
+      // light's share: values of the whole shader
+      code = swap(swap(code, '#include <lights_physical_pars_fragment>', lights), '#include <common>', '#include <common>\nfloat hairStrand;\nfloat hairWhite;');
     } else {
       code = swap(code, '#include <lights_fragment_end>', `#include <lights_fragment_end>
 #if defined( USE_MAP ) && NUM_DIR_LIGHTS > 0
@@ -338,7 +361,12 @@ export function surfaceMaterials(s: PortraitSurface, map: Texture | null, normal
     case 'skin': if (p.skin) skinLook(m, p, p.skin, tone ?? skinTone(s.col), young); break;
     case 'cloth':
       m.side = DoubleSide; m.roughness = 0.95; m.ior = ior(0.15);
-      if (p.cloth) m.color.setScalar(/_veil|_wimple|_smock/.test(s.tex) ? p.cloth.linen : p.cloth.wool);
+      if (p.cloth) m.color.setScalar(/_veil|_wimple|_smock|_fillet/.test(s.tex) ? p.cloth.linen : p.cloth.wool);
+      // (round 150) silk shines: a smoother cloth with a glint along its folds
+      if (p.cloth && s.tex.includes('_silk')) {
+        m.color.setScalar(p.cloth.silk.tone); m.roughness = p.cloth.silk.rough; m.ior = ior(p.cloth.silk.specular);
+        if (s.tex.includes('_figured')) figuredLook(m, p, p.cloth.figured);
+      }
       break;
     case 'cap': blended(m); m.roughness = 0.85; m.ior = ior(0.15); m.side = DoubleSide; if (p.cap) capLook(m, p, p.cap, s.tex); break;
     case 'eyeball': m.roughness = 0.08; m.ior = ior(0.6); if (p.eye) eyeLook(m, p, p.eye); break;

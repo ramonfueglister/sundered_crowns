@@ -8,10 +8,11 @@ import { PORTRAIT_PUBLIC, PORTRAIT_TEST_WASM, portraitManifest } from '../tools/
 import { loadPortraitBuilder } from '../tools/portrait/load';
 import { DoubleSide, FrontSide, ShaderLib } from 'three';
 import { LOCK_OPAQUE, drawOrder, portraitSkinTone, skinTone, surfaceKind, surfaceMaterials } from '../src/portrait/materials';
-import { APOLEIA, ENGLAND_1356, profileOf } from '../src/portrait/profile';
+import { APOLEIA, profileOf } from '../src/portrait/profile';
+import { ENGLAND_1356 } from '../src/portrait/profile_1356';
 import { CURVE, toneCurve } from '../src/portrait/finish';
-import { decodePortrait, encodePerson, type Portrait, type PortraitPerson } from '../src/portrait/wire';
-import { framing, keyPlaces } from '../src/portrait/stage';
+import { decodePortrait, encodePerson, rankOfHistory, type Portrait, type PortraitPerson } from '../src/portrait/wire';
+import { framing, keyPlaces, standing } from '../src/portrait/stage';
 
 interface GoldenSurface { rough: number; metal: number; double: boolean; tex: string; nmap: string; verts: number; pos: number; col: number; uv: number; nrm: number }
 interface Golden { pid: number; top: number; chin: number; cx: number; cz: number; fill: number; tris: number; surfaces: GoldenSurface[] }
@@ -103,6 +104,7 @@ describe('portraits', { timeout: 20_000 }, () => {
   it('people of England wear the dress of 1356, Apoleia\'s own people Apoleia\'s', () => {
     const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
     const list = portraitManifest(), images = new Set(list.images.map(n => `${list.folder}/${n}`));
+    const ways = new Set<string>();
     for (const p of people) {
       const roman = b.build(p), english = b.build({ ...p, origin: 'England' });
       expect(roman.look.includes('/'), `person ${p.pid}`).toBe(false);
@@ -110,15 +112,24 @@ describe('portraits', { timeout: 20_000 }, () => {
       expect(english.look.startsWith('england1356/'), `person ${p.pid}`).toBe(true);
       expect(profileOf(english.look)).toBe(ENGLAND_1356);
       const worn = english.surfaces.map(s => s.tex);
-      expect(worn.some(t => t.includes('/cloth_cote.')), `person ${p.pid} wears the gown`).toBe(true);
+      // (a person of rank wears it in silk since round 150, plain or figured since round 156)
+      expect(worn.some(t => /\/cloth_cote(_silk(_figured)?)?\./.test(t)), `person ${p.pid} wears the gown`).toBe(true);
       expect(worn.some(t => t.includes('/cloth_tunic.') || t.includes('/cloth_veil.')), `person ${p.pid} wears nothing Roman`).toBe(false);
       for (const t of worn) if (t) expect(images.has(t), `${t} is in the repository`).toBe(true);
-      // women from the age of the veil wear it, men never
-      expect(worn.some(t => t.includes('/cloth_veil_linen.'))).toBe(p.female && p.age >= 20);
-      const plaited = p.female && p.age >= 7 && p.age < 20;
-      expect(worn.some(t => t.includes('/plait01_cap.')), `person ${p.pid}: plaits before the veil`).toBe(plaited);
+      // no man and no girl wears the veil. A woman from the age of the veil wears it one of two ways (round
+      // 121): set back over parted hair, which lies on a girl's painted layer, or on forehead and cheeks with
+      // no hair under it; or, until 30, she goes in a girl's plaits. From 30 every woman wears it; a lady of rank
+      // from 50 (round 146: at court the hair is shown in plaits)
+      const veil = worn.some(t => t.includes('/cloth_veil_linen.')), cap = worn.some(t => t.includes('/plait01_cap.'));
       // the plaits themselves are round strands, a surface of their own (round 86)
-      expect(worn.some(t => t.includes('/plait01_rope.')), `person ${p.pid}: the plaits' strands`).toBe(plaited);
+      const plaits = worn.some(t => t.includes('/plait01_rope.'));
+      const woman = p.female && p.age >= 20;
+      expect(veil, `person ${p.pid}: the veil`).toBe(woman && !plaits);
+      if (woman && p.age >= (p.stand >= 2 ? 50 : 30)) expect(veil, `person ${p.pid}: the veil from 30`).toBe(true);
+      if (!woman) expect(plaits, `person ${p.pid}: plaits before the veil`).toBe(p.female && p.age >= 7);
+      if (plaits) expect(cap, `person ${p.pid}: the painted layer under the plaits`).toBe(true);
+      if (cap) expect(plaits || veil, `person ${p.pid}: a girl's hair on a girl or under a veil`).toBe(true);
+      if (woman) ways.add(plaits ? 'plaits' : cap ? 'back' : 'closed');
       // hair is a body (round 109; locks from round 87, cards before): one surface of thick bundles, arched
       // bands seen from both sides, drawn with the one image of England's bundles, over the painted layer of
       // the cut. No cards and no locks of England's head hair are left
@@ -127,7 +138,7 @@ describe('portraits', { timeout: 20_000 }, () => {
       expect(body.every(s => s.double && surfaceKind(s) === 'rope'), `person ${p.pid}: bundles are open bands of solid hair`).toBe(true);
       expect(worn.some(t => t.includes('/hair1356_locks.')), `person ${p.pid}: no locks of England's head hair`).toBe(false);
       expect(worn.some(t => /\/bob0\d_cap\./.test(t)) && p.female, `person ${p.pid}: a woman wears no man's cut`).toBe(false);
-      expect(worn.some(t => /\/(bob0\d|plait01)\./.test(t)), `person ${p.pid}: no cards of England's hair`).toBe(false);
+      expect(worn.some(t => /\/(bob0\d|plait01|part01)\./.test(t)), `person ${p.pid}: no cards of England's hair`).toBe(false);
       // everyone wears the brows that sit level on these heads (the finer ones tried for women sit slanted: a
       // frown): MakeHuman's `eyebrow001`, whose cards a Roman wears with Apoleia's image of them, a closed band,
       // and a person of England with England's own, the hairs as soft as MakeHuman drew them (round 76). So with
@@ -153,6 +164,26 @@ describe('portraits', { timeout: 20_000 }, () => {
         expect(worn.some(t => t.includes(not)), `person ${p.pid} wears no ${not}`).toBe(false);
       }
     }
+    expect(ways.has('back'), 'a veil set back over hair').toBe(true);
+  });
+  it('the grown women of England\'s sample do not all wear their hair one way', () => {
+    // Until round 120 every woman from 20 wore the veil on forehead and cheeks: eight grown women of the sample,
+    // eight ovals of grey linen, and no hair on any of them. Now (portrait/src/dress.rs `veils`) five wear the
+    // veil set back over parted hair, two as before, and one of the three under 30 a girl's plaits
+    const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
+    const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
+    const ways = { plaits: 0, back: 0, closed: 0 };
+    for (const p of sample.filter(p => p.female && p.age >= 20)) {
+      const worn = b.build(p).surfaces.map(s => s.tex);
+      const veil = worn.some(t => t.includes('/cloth_veil_linen.')), plaits = worn.some(t => t.includes('/plait01_rope.'));
+      expect(veil, `person ${p.pid}: the veil or plaits`).toBe(!plaits);
+      if (plaits) expect(p.age, `person ${p.pid}: plaits until 30`).toBeLessThan(30);
+      // hair under the veil: a body of bundles on a girl's painted layer, and no plaits
+      const hair = worn.some(t => t.includes('/hair1356_body.'));
+      expect(hair, `person ${p.pid}: bundles on the painted layer`).toBe(worn.some(t => t.includes('/plait01_cap.')));
+      ways[plaits ? 'plaits' : hair ? 'back' : 'closed']++;
+    }
+    expect(ways).toEqual({ plaits: 1, back: 5, closed: 2 });
   });
   it('the skin of a person of England is light enough to take the whole tint, whatever is painted darker on it', () => {
     // the tint goes by the person's skin as a whole (the median of its colours), not point by point: a point
@@ -217,23 +248,33 @@ describe('portraits', { timeout: 20_000 }, () => {
     expect(cap.beard.light).toBeGreaterThan(cap.light);
     expect(cap.beard.wrap).toBeLessThan(0.5);
     expect(cap.wrap).toBe(1);
+    // Round 159: a short beard was lit as if nothing stood before it (no shadow fell on a painted layer since
+    // round 53, when shadows had hard edges; they are soft since round 81) and from a third of the way round its
+    // shaded side: in the shade of a hood, on a jaw that is turned away, a light beard was a bright flat patch
+    // (the layer of three hooded men with light brown hair L 41.1 over skin that reads 32.5 without it; 33.3 now).
+    // Shadows fall on the painted layers, and a beard's layer is lit as far round as its surface faces the light
+    expect(cap.shadow).toBe(true);
+    expect(cap.beard.wrap).toBe(0);
   });
   it('a full beard of England is locks over its painted layer, and light hair keeps its strands', () => {
     // Until round 90 a full beard was its painted layer alone: a smooth shell with hairs drawn on it, lit as one
     // form, its outline the layer's own edge (relief round the lit jaw 5 to 9 L between the darkest and the
     // lightest tenth; with locks 10 to 17). Now 300 short locks lie over the layer, solid hair as a head's
-    // locks: open bands seen from both sides, cut out by their image, in the stage's shadows. The short beard
-    // and stubble stay painted (a short beard of locks read as a dark full beard on a boy of 17)
+    // locks: open bands seen from both sides, cut out by their image, in the stage's shadows. Stubble stays
+    // painted. The short beard stayed painted until round 176 (a short beard of round 90's locks read as a dark
+    // full beard on a boy of 17): it has short strands of its own over its layer now (5 to 10 mm long, modelled
+    // in Blender, docs/PORTRAITS.md; portrait/tests/locks.rs), drawn with the same image and as the full beard's
     const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
     const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
-    let full = 0;
+    let full = 0, short = 0;
     for (const p of sample) {
       const surfaces = b.build(p).surfaces, worn = surfaces.map(s => s.tex);
       const locks = surfaces.filter(s => s.tex.includes('/beard1356_locks.'));
-      const wears = worn.some(t => t.includes('/beard_crop_cap.'));
-      expect(locks.length, `person ${p.pid}: a beard's locks with the full beard alone`).toBe(wears ? 1 : 0);
-      if (!wears) continue;
-      full++;
+      const wears = worn.some(t => t.includes('/beard_crop_cap.')), strands = worn.some(t => t.includes('/beard_short1356_cap.'));
+      expect(locks.length, `person ${p.pid}: a beard's locks with the full and the short beard alone`).toBe(wears || strands ? 1 : 0);
+      if (!wears && !strands) continue;
+      full += Number(wears);
+      short += Number(strands);
       const lock = locks[0]!;
       expect([surfaceKind(lock), lock.double, drawOrder(lock)], `person ${p.pid}`).toEqual(['rope', true, 0]);
       const [m, ...more] = surfaceMaterials(lock, null, null, ENGLAND_1356);
@@ -244,8 +285,8 @@ describe('portraits', { timeout: 20_000 }, () => {
       expect(lock.tex.includes('/hair1356_body.')).toBe(false);
       expect(lock.pos.length / 9).toBeGreaterThan(8000);
     }
-    // four of the sample's men wear the full beard (940011, 940013, 940021, 940027)
-    expect(full).toBe(4);
+    // four of the sample's men wear the full beard (940011, 940013, 940021, 940027), one the short (940019)
+    expect([full, short]).toEqual([4, 1]);
     expect(people.some(p => b.build(p).surfaces.some(s => s.tex.includes('/beard1356_locks.'))), "no Roman wears England's beard").toBe(false);
     // The image of locks has dark strands between light ones. The stage darkens them further on light hair
     // (`sheen.light`, an exponent that grows with the hair's brightness), which cards needed: blended sheets
@@ -316,14 +357,14 @@ describe('portraits', { timeout: 20_000 }, () => {
     // the ball's middle to the camera.
     const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
     const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
-    const offs = (p: PortraitPerson, profile = ENGLAND_1356): [number, number][] => {
-      const built = b.build(p), ball = built.surfaces.find(s => surfaceKind(s) === 'eyeball')!;
-      const f = framing(built, profile), [cs, sn] = [Math.cos(profile.turn), Math.sin(profile.turn)];
-      // a point or a direction of the portrait as the stage turns it about the upright axis through the head
-      const turned = (q: number[], point: boolean): number[] => {
-        const [x, z] = [q[0]! - (point ? built.cx : 0), q[2]! - (point ? built.cz : 0)];
-        return [x * cs + z * sn + (point ? built.cx : 0), q[1]!, -x * sn + z * cs + (point ? built.cz : 0)];
-      };
+    // (each person is built once: until round 145 the heads below were read off a second build of everybody, and on
+    // GitHub's machine the test ran into its 20 seconds twice in a day)
+    const offs = (p: PortraitPerson, profile = ENGLAND_1356, built = b.build(p)): [number, number][] => {
+      const ball = built.surfaces.find(s => surfaceKind(s) === 'eyeball')!;
+      const f = framing(built, profile), stands = standing(built, profile);
+      // a point or a direction of the portrait as the stage stands it: turned about the upright axis through the
+      // head by the profile's turn and the person's own, tilted about the neck's foot (round 127)
+      const turned = (q: number[], point: boolean): number[] => stands.place(q, point);
       const n = ball.pos.length / 3, all = Array.from({ length: n }, (_, i) => i);
       const mid = all.reduce((a, i) => a + ball.pos[3 * i]!, 0) / n;
       return [all.filter(i => ball.pos[3 * i]! < mid), all.filter(i => ball.pos[3 * i]! >= mid)].map(eye => {
@@ -342,17 +383,49 @@ describe('portraits', { timeout: 20_000 }, () => {
         return [(yaw(sight) - yaw(to)) * 180 / Math.PI, (pitch(sight) - pitch(to)) * 180 / Math.PI] as [number, number];
       });
     };
+    const heads: number[][] = [];
     for (const p of sample) {
-      for (const [beside, above] of offs(p)) {
+      const built = b.build(p);
+      heads.push([...built.head]);
+      for (const [beside, above] of offs(p, ENGLAND_1356, built)) {
         expect(Math.abs(beside), `person ${p.pid}: beside the camera`).toBeLessThan(1.5);
         expect(Math.abs(above), `person ${p.pid}: above the camera`).toBeLessThan(1.5);
       }
     }
+    // (round 127) and the heads are carried each its own way: turned further than the stage turns them and tilted,
+    // by no more than the dress table says, and not all alike
+    for (const [yaw, tilt] of heads) { expect(Math.abs(yaw)).toBeLessThanOrEqual(0.1001); expect(Math.abs(tilt)).toBeLessThanOrEqual(0.0701); }
+    for (const k of [0, 1]) expect(Math.max(...heads.map(h => h[k]!)) - Math.min(...heads.map(h => h[k]!))).toBeGreaterThan(k ? 0.07 : 0.1);
     // on a stage that turns the person the other way the same eyes look past the camera by twice the turn
     const other = offs(sample[6]!, { ...ENGLAND_1356, turn: -ENGLAND_1356.turn });
     for (const [beside] of other) expect(Math.abs(beside)).toBeGreaterThan(20);
     // and a Roman looks straight ahead of the head, past the viewer by the turn of Apoleia's stage
     for (const [beside] of offs({ ...sample[6]!, origin: 'Italia' }, APOLEIA)) expect(Math.abs(Math.abs(beside) - Math.abs(APOLEIA.turn) * 180 / Math.PI)).toBeLessThan(3);
+  });
+  it('a picture of England is a bust that ends on cloth', () => {
+    // Until round 124 the figure ended in ragged sleeves at the upper arm and the picture stood so close that its
+    // foot lay over them (`close` 1.12: the head on 0.59 of the height). The body's data reaches to under the
+    // waist now (portrait/tests/bust.rs) and the picture shows the bust: the head from the chin to over the crown
+    // on 0.45 of the height (more for a small child, whose short body would end inside the picture), the picture's
+    // foot on the gown, with the gown hanging on below it.
+    const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
+    const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
+    for (const p of sample) {
+      const built = b.build(p), f = framing(built, ENGLAND_1356);
+      const head = Math.max(0.8, built.top - built.chin) / f.height;
+      expect(head, `person ${p.pid}: the head's share of the height`).toBeGreaterThan(0.44);
+      expect(head, `person ${p.pid}: the head's share of the height`).toBeLessThan(p.age < 12 ? 0.75 : 0.46);
+      // (the picture's middle lies 0.36 of its height under the top: its foot 0.86 under it)
+      const foot = built.top - 0.86 * f.height, gown = built.surfaces.find(s => s.tex.includes('/cloth_cote.'))!;
+      let lowest = Infinity;
+      for (let i = 0; i < gown.pos.length; i += 3) if (Math.abs(gown.pos[i]! - built.cx) < 1) lowest = Math.min(lowest, gown.pos[i + 1]!);
+      expect(lowest, `person ${p.pid}: the gown ends under the picture's foot`).toBeLessThan(foot - 0.3);
+    }
+    // the box in which the key's shadows are thrown is as large on the figure as it was at `close` 1.12 (0.9 of
+    // the picture's height either way), so that the shadows on the face are drawn with the same pixels: what the
+    // gauntlet reads on the face is read under the same shadows
+    expect(Math.abs(ENGLAND_1356.shadow.reach / ENGLAND_1356.close / (0.9 / 1.12) - 1)).toBeLessThan(0.02);
+    expect(APOLEIA.shadow.reach / APOLEIA.close).toBe(0.9);
   });
   it('the hems of the garments of England are wound outward', () => {
     // a hem is a thin tube along a garment's edge (tools/portrait/pipeline/tunic_bind.py). Wound inward its normals
@@ -366,6 +439,8 @@ describe('portraits', { timeout: 20_000 }, () => {
     for (const p of sample) {
       for (const s of b.build(p).surfaces) {
         if (surfaceKind(s) !== 'cloth') continue;
+        // (a man's coif, round 132, drawn with the fillet's image: its edge is the sheet itself turned in, no tube)
+        if (s.tex.includes('/cloth_fillet.')) continue;
         let hem = 0, outward = 0;
         for (let t = 0; t + 2 < s.pos.length / 3; t += 3) {
           // the hem's texture coordinates run along it and a twentieth of the image round it
@@ -397,7 +472,7 @@ describe('portraits', { timeout: 20_000 }, () => {
     const seen = new Set<string>();
     for (const p of sample) {
       for (const s of b.build(p).surfaces) {
-        if (surfaceKind(s) !== 'cloth') continue;
+        if (surfaceKind(s) !== 'cloth' || s.tex.includes('/cloth_fillet.')) continue;
         const at = (v: number) => `${s.pos[v * 3]},${s.pos[v * 3 + 1]},${s.pos[v * 3 + 2]}`;
         const hem = (t: number) => [0, 1, 2].every(k => Math.abs(s.uv[(t + k) * 2 + 1]!) <= 0.05);
         const cloth = new Set<string>();
@@ -458,10 +533,12 @@ describe('portraits', { timeout: 20_000 }, () => {
   it('the lid\'s edge of a person of England is dark where the lashes grow', () => {
     // MakeHuman's lashes are long single hairs that point at the viewer where they grow: the eye lay in the face
     // without an outline (until round 65). The skin within reach of the eyeball against the lid further out:
-    // 0.36 to 0.59 with the lash line, 0.73 to 0.83 without (the shade of the fold alone)
+    // 0.36 to 0.59 with the lash line, 0.73 to 0.83 without (the shade of the fold alone). Since round 118 the
+    // line is the upper lid's (the lower lid's rim keeps a share of it, `lid_under`): on England's people the
+    // upper lid alone is read, 0.29 to 0.59; all round the eye they have 0.52 to 0.75
     const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
     const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
-    const edgeToLid = (p: Portrait): number => {
+    const edgeToLid = (p: Portrait, upper: boolean): number => {
       const eye = p.surfaces.find(s => surfaceKind(s) === 'eyeball')!, skin = p.surfaces.find(s => surfaceKind(s) === 'skin')!;
       const sums = { edge: 0, edges: 0, lid: 0, lids: 0 };
       for (const side of [1, -1]) {
@@ -473,16 +550,50 @@ describe('portraits', { timeout: 20_000 }, () => {
           if (skin.pos[i + 2]! < c[2]! + 0.3 * r) continue;
           const d = Math.hypot(skin.pos[i]! - c[0]!, skin.pos[i + 1]! - c[1]!, skin.pos[i + 2]! - c[2]!) / r;
           const light = 0.2126 * skin.col[i]! + 0.7152 * skin.col[i + 1]! + 0.0722 * skin.col[i + 2]!;
+          if (upper && skin.pos[i + 1]! < c[1]!) continue;
           if (d < 1.15) { sums.edge += light; sums.edges++; } else if (d > 1.45 && d < 1.9) { sums.lid += light; sums.lids++; }
         }
       }
-      expect(sums.edges).toBeGreaterThan(300);
-      expect(sums.lids).toBeGreaterThan(300);
+      expect(sums.edges).toBeGreaterThan(upper ? 150 : 300);
+      expect(sums.lids).toBeGreaterThan(upper ? 150 : 300);
       return sums.edge / sums.edges / (sums.lid / sums.lids);
     };
-    for (const p of sample) expect(edgeToLid(b.build(p)), `person ${p.pid}`).toBeLessThan(0.65);
+    for (const p of sample) expect(edgeToLid(b.build(p), true), `person ${p.pid}`).toBeLessThan(0.65);
     // and everyone else's lids are Apoleia's
-    for (const p of people) expect(edgeToLid(b.build(p)), `person ${p.pid}`).toBeGreaterThan(0.7);
+    for (const p of people) expect(edgeToLid(b.build(p), false), `person ${p.pid}`).toBeGreaterThan(0.7);
+  });
+  it('the lower lid\'s rim of a person of England is not drawn round with a dark line', () => {
+    // (round 118) the stare. The shade of the eye's socket (skin_ao.txt) is darkest where a lid lies against the
+    // ball, and it and the lash line lay on the lower lid's rim as on the upper's: a dark line all round the eye,
+    // as drawn with a pen. Lashes are thick on the upper lid, and the lower lid's rim faces the light: England
+    // keeps a share of both there (portrait/src/dress.rs `lid_under`). The skin within reach of the eyeball,
+    // below the eye's middle against above it: 1.02 to 1.67 with the tables as they are (1.25 over all), 1.35 to
+    // 2.40 since (1.76)
+    const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
+    const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
+    const underToOver = (p: Portrait): number => {
+      const eye = p.surfaces.find(s => surfaceKind(s) === 'eyeball')!, skin = p.surfaces.find(s => surfaceKind(s) === 'skin')!;
+      const sums = { under: 0, unders: 0, over: 0, overs: 0 };
+      for (const side of [1, -1]) {
+        const own: number[] = [];
+        for (let i = 0; i < eye.pos.length; i += 3) if ((eye.pos[i]! - p.cx) * side > 0) own.push(i);
+        const c = [0, 1, 2].map(k => own.reduce((a, i) => a + eye.pos[i + k]!, 0) / own.length);
+        const r = own.reduce((a, i) => a + Math.hypot(eye.pos[i]! - c[0]!, eye.pos[i + 1]! - c[1]!, eye.pos[i + 2]! - c[2]!), 0) / own.length;
+        for (let i = 0; i < skin.pos.length; i += 3) {
+          if (skin.pos[i + 2]! < c[2]! + 0.3 * r) continue;
+          if (Math.hypot(skin.pos[i]! - c[0]!, skin.pos[i + 1]! - c[1]!, skin.pos[i + 2]! - c[2]!) / r >= 1.15) continue;
+          const light = 0.2126 * skin.col[i]! + 0.7152 * skin.col[i + 1]! + 0.0722 * skin.col[i + 2]!;
+          if (skin.pos[i + 1]! < c[1]!) { sums.under += light; sums.unders++; } else { sums.over += light; sums.overs++; }
+        }
+      }
+      expect(sums.unders).toBeGreaterThan(100);
+      expect(sums.overs).toBeGreaterThan(100);
+      return sums.under / sums.unders / (sums.over / sums.overs);
+    };
+    const all = sample.map(p => underToOver(b.build(p)));
+    // every one of them, and all of them together
+    for (const [k, v] of all.entries()) expect(v, `person ${sample[k]!.pid}`).toBeGreaterThan(1.3);
+    expect(all.reduce((a, x) => a + x, 0) / all.length).toBeGreaterThan(1.6);
   });
   it('the lips of a person of England close over the mouth, in a colour that goes with the skin', () => {
     // MakeHuman's closed mouth is a slit of a millimetre between the edges where the lips turn inward: one looked
@@ -549,7 +660,28 @@ describe('portraits', { timeout: 20_000 }, () => {
     const eye = compiled('real/eyeball.webp', false);
     expect(surfaceKind({ tex: 'real/eyeball.webp', double: false } as never)).toBe('eyeball');
     expect(eye).toContain('eyeWhite = smoothstep(');
-    expect(eye).toContain(`mix( ${ENGLAND_1356.eye!.iris.toFixed(3)} * ( 1.0 - ${ENGLAND_1356.eye!.ring.toFixed(3)} * eyeRing ), ${ENGLAND_1356.eye!.white.toFixed(3)}, eyeWhite )`);
+    expect(eye).toContain(`mix( ${ENGLAND_1356.eye!.iris.toFixed(3)} * ( 1.0 - ${ENGLAND_1356.eye!.ring.toFixed(3)} * eyeRing ) * mix( 1.0, ${ENGLAND_1356.eye!.pupil.dark.toFixed(3)}, eyePupil ), ${ENGLAND_1356.eye!.white.toFixed(3)}, eyeWhite )`);
+    // (round 118) the stare. The image's pupil is 0.29 of the iris with a hard edge, a pinpoint as of an eye in
+    // glaring light: the stage draws its own, larger and soft-edged, as an eye has it indoors. The white of the
+    // eye was grey beside warm skin (a 6.6, b 9.2 in CIELAB where the skin under the eye has 14.0 and 20.9) and
+    // stood out of the face by its colour: it is drawn warmer, and as light as it was. The key's glint: rough enough
+    // that the stage's eight key lights (`shadow.lights`) are one glint and not a cluster of dots
+    expect(eye).toContain('eyePupil = 1.0 - smoothstep(');
+    expect(ENGLAND_1356.eye!.pupil.size).toBeGreaterThan(0.35);
+    expect(ENGLAND_1356.eye!.pupil.size).toBeLessThan(0.5);
+    expect(ENGLAND_1356.eye!.pupil.soft).toBeGreaterThan(0.05);
+    const [br, bg, bb] = ENGLAND_1356.eye!.blush;
+    expect(br).toBeGreaterThan(bg); expect(bg).toBeGreaterThan(bb);
+    expect(Math.abs(0.2126 * br + 0.7152 * bg + 0.0722 * bb - 1)).toBeLessThan(0.03);
+    expect(ENGLAND_1356.eye!.rough).toBeGreaterThan(0.2);
+    expect(ENGLAND_1356.eye!.rough).toBeLessThan(0.3);
+    // round 119: light reaches less far round the white of the eye than round the iris, so that the white goes into the
+    // shade with the skin beside it (on the face's shaded half it was lighter than the cheek under it; the reference's is darker)
+    expect(eye).toContain(`eyeWrap = mix( ${ENGLAND_1356.eye!.wrap.toFixed(3)}, ${ENGLAND_1356.eye!.wrapWhite.toFixed(3)}, eyeWhite );`);
+    expect(eye).toContain('vec3 wrapBy = vec3( eyeWrap );');
+    expect(ENGLAND_1356.eye!.wrapWhite).toBeGreaterThan(0.03);
+    expect(ENGLAND_1356.eye!.wrapWhite).toBeLessThan(0.2);
+    expect(ENGLAND_1356.eye!.wrap).toBeGreaterThan(0.4);
     // the white of the eye lighter than the image gives it. The iris too, since round 103, and its darks lifted:
     // from round 65 to 102 it was drawn darker (0.7), by one brown-eyed face of the reference, and a blue or a
     // green iris was as black as a brown one, a hole in the face. It is darkest in a ring at its rim
@@ -669,6 +801,53 @@ describe('portraits', { timeout: 20_000 }, () => {
     // a profile without a sheen of strands (Apoleia's) draws a plait's strands as plain solid hair
     expect(surfaceMaterials(rope, null, null, APOLEIA)[0]!.transparent).toBe(false);
   });
+  it('dark hair of England is drawn lighter and hair keeps most of its colour', () => {
+    // Round 122: the strands' image and the shade baked between the bundles take half of a hair's colour away
+    // before any light falls on it, and the stage left 0.7 of its colour (set in round 47 for cards, which were
+    // lighter): brown hair at the crown read L 14 to 27 and a chroma of 9 to 15, where the reference's brown and
+    // red heads read L 25 to 42 and 21 to 30. Hair is drawn lighter where it is dark (`sheen.tone`), as it was
+    // where it is as light as white (`sheen.toneLight`: blond and white hair were as light as the reference's),
+    // and keeps more of its colour
+    const sheen = ENGLAND_1356.sheen!, cap = ENGLAND_1356.cap!;
+    expect(sheen.tone).toBeGreaterThan(1.3);
+    expect(sheen.tone).toBeLessThan(2);
+    expect(sheen.toneLight).toBe(1);
+    expect(sheen.colour).toBeGreaterThan(0.75);
+    expect(sheen.colour).toBeLessThan(1);
+    const of = (tex: string) => ({ rough: 0.6, metal: 0, double: false, tex, nmap: '', pos: new Float32Array(9), col: new Float32Array(9).fill(0.5), uv: new Float32Array(6), nrm: new Float32Array(9) });
+    for (const tex of ['real/hair1356_body.webp', 'real/plait01_rope.webp', 'real/beard1356_locks.webp']) {
+      const shader = { uniforms: {}, vertexShader: ShaderLib.physical.vertexShader, fragmentShader: ShaderLib.physical.fragmentShader };
+      surfaceMaterials(of(tex), null, null, ENGLAND_1356)[0]!.onBeforeCompile(shader as never, null as never);
+      expect(shader.fragmentShader, tex).toContain(`diffuseColor.rgb, ${sheen.colour.toFixed(3)} ) * mix( ${sheen.tone.toFixed(3)}, ${sheen.toneLight.toFixed(3)}, smoothstep( 0.08, 0.45, dot( vColor.rgb`);
+    }
+    // the painted layers go with it: the shade under the hair keeps as much colour as the hair over it, and a short
+    // beard, which is its layer alone, stays lighter than the man's hair as it was (5.5 times before the hair's 1)
+    expect(cap.colour).toBe(sheen.colour);
+    expect(cap.beard.tone / sheen.tone).toBeCloseTo(5.5, 5);
+  });
+  it('black hair has a white sheen to show its form by (round 158)', () => {
+    // Black hair was a dark shape: drawn lighter it is still next to black (round 122), and the white band of its
+    // sheen was set for brown hair, on which the band in the hair's own colour does the work (L 5.2 at the crown
+    // of four heads for the reference's 17.9). The white band is surface reflection and does not darken with the
+    // hair (Marschner et al. 2003, section 2.1): it is drawn stronger on black hair (`sheen.white`) and as it was
+    // from a middle brown on (`sheen.whiteLight`, the 0.3 it was), as sharp as it was
+    const sheen = ENGLAND_1356.sheen!;
+    expect(sheen.whiteLight).toBe(0.3);
+    expect(sheen.whiteSharp).toBe(120);
+    expect(sheen.white).toBeGreaterThan(1);
+    expect(sheen.white).toBeLessThan(3);
+    // bundles, a plait's strands, a beard's locks, and hair cards (drawn from both sides; their second material)
+    const of = (tex: string) => ({ rough: 0.6, metal: 0, double: tex.includes('roman'), tex, nmap: '', pos: new Float32Array(9), col: new Float32Array(9).fill(0.5), uv: new Float32Array(6), nrm: new Float32Array(9) });
+    for (const tex of ['real/hair1356_body.webp', 'real/plait01_rope.webp', 'real/beard1356_locks.webp', 'real/roman01.webp']) {
+      const shader = { uniforms: {}, vertexShader: ShaderLib.physical.vertexShader, fragmentShader: ShaderLib.physical.fragmentShader };
+      const all = surfaceMaterials(of(tex), null, null, ENGLAND_1356);
+      all[all.length - 1]!.onBeforeCompile(shader as never, null as never);
+      expect(shader.fragmentShader, tex).toContain(`hairWhite = mix( ${sheen.white.toFixed(3)}, ${sheen.whiteLight.toFixed(3)}, smoothstep( 0.0, 0.08, dot( vColor.rgb`);
+      expect(shader.fragmentShader, tex).toContain('hairStrand * ( hairWhite * hairS1 * 0.08 +');
+      // the strength is set where the hair's colour is read, before the lights use it
+      expect(shader.fragmentShader.indexOf('hairWhite = mix(')).toBeLessThan(shader.fragmentShader.lastIndexOf('#include <lights_fragment_end>'));
+    }
+  });
   it('a lock of hair is solid, open below, and frayed where its image is empty', () => {
     // Until round 87 the hair of a man's head was cards: thin sheets blended over each other, lit as one smooth
     // dome (a card's direction was the one from the head's centre), throwing no shadow on the forehead. Then it
@@ -702,6 +881,57 @@ describe('portraits', { timeout: 20_000 }, () => {
     lock!.onBeforeCompile(shader as never, null as never);
     expect(shader.fragmentShader).toContain('directLight.color * hairLit * hairStrand');
     expect(shader.fragmentShader).not.toContain('directionalLights[ i ].color * hairLit');
+  });
+  it('silk is drawn smoother than wool and shines (round 150)', () => {
+    // The court's gown is of silk (`DressSet::gown_image`, an image named `_silk`): the stage draws wool and
+    // linen as matt cloth, silk with a glint along its folds. Until then a lord's gown was the villagers' wool
+    // in a stronger dye.
+    const of = (tex: string) => ({ rough: 0.5, metal: 0, double: false, tex, nmap: '', pos: new Float32Array(9), col: new Float32Array(9).fill(0.5), uv: new Float32Array(6), nrm: new Float32Array(9) });
+    const look = (tex: string) => { const m = surfaceMaterials(of(tex), null, null, ENGLAND_1356)[0]!; return { rough: m.roughness, ior: m.ior, tone: m.color.r, side: m.side }; };
+    const [wool, silk, linen] = [look('real/cloth_cote.webp'), look('real/cloth_cote_silk.webp'), look('real/cloth_smock.webp')];
+    expect(surfaceKind(of('real/cloth_cote_silk.webp'))).toBe('cloth');
+    const k = ENGLAND_1356.cloth!;
+    expect([wool.rough, linen.rough, silk.rough]).toEqual([0.95, 0.95, k.silk.rough]);
+    expect(silk.rough).toBeLessThan(0.7);
+    expect(silk.ior).toBeGreaterThan(wool.ior);
+    expect([wool.tone, linen.tone, silk.tone]).toEqual([k.wool, k.linen, k.silk.tone]);
+    expect(silk.side).toBe(DoubleSide);
+    // Apoleia's profile has no cloth of its own: an image named so is drawn as any cloth
+    expect(surfaceMaterials(of('real/cloth_cote_silk.webp'), null, null, APOLEIA)[0]!.roughness).toBe(0.95);
+  });
+  it('a figured silk has its figure drawn in gold (round 156)', () => {
+    // Half of the court's gowns are of a silk with a figure woven in in gold thread (`DressSet::gown_figured`, an
+    // image named `_figured`): the figure is the image's covering, and where the covering is less than 1 the
+    // stage draws the gold's colour in place of the dye's, with the gold's roughness and share of metal. The
+    // rest of the cloth is the plain silk's.
+    // (round 169) Not all of the figure is gold: `cover` of it, the rest the ground between the gold's threads.
+    const of = (tex: string) => ({ rough: 0.5, metal: 0, double: false, tex, nmap: '', pos: new Float32Array(9), col: new Float32Array(9).fill(0.5), uv: new Float32Array(6), nrm: new Float32Array(9) });
+    const drawn = (tex: string, profile = ENGLAND_1356) => {
+      const m = surfaceMaterials(of(tex), null, null, profile)[0]!;
+      const shader = { uniforms: {}, vertexShader: ShaderLib.physical.vertexShader, fragmentShader: ShaderLib.physical.fragmentShader };
+      m.onBeforeCompile(shader as never, null as never);
+      return { m, code: shader.fragmentShader, key: m.customProgramCacheKey() };
+    };
+    const [plain, figured] = [drawn('real/cloth_cote_silk.webp'), drawn('real/cloth_cote_silk_figured.webp')];
+    const k = ENGLAND_1356.cloth!;
+    expect([figured.m.roughness, figured.m.color.r, figured.m.ior]).toEqual([plain.m.roughness, plain.m.color.r, plain.m.ior]);
+    expect(plain.code).toBe(ShaderLib.physical.fragmentShader);
+    expect(figured.code).toContain(`silkFigure = ( 1.0 - sampledDiffuseColor.a ) * ${k.figured.cover.toFixed(3)};`);
+    expect(k.figured.cover).toBeGreaterThan(0.5);
+    expect(k.figured.cover).toBeLessThan(1);
+    expect(figured.code).toContain(`vec3( ${k.figured.gold.map(c => c.toFixed(3)).join(', ')} )`);
+    expect(figured.code).toContain(`roughnessFactor = mix( roughnessFactor, ${k.figured.rough.toFixed(3)}, silkFigure );`);
+    expect(figured.code).toContain(`metalnessFactor = mix( metalnessFactor, ${k.figured.metal.toFixed(3)}, silkFigure );`);
+    // the figure is declared before it is used, and both after the image is read
+    const at = (piece: string) => figured.code.indexOf(piece);
+    expect(at('#include <map_fragment>')).toBeLessThan(at('float silkFigure'));
+    expect(at('float silkFigure')).toBeLessThan(at('roughnessFactor = mix'));
+    expect(figured.key).not.toBe(plain.key);
+    // gold is yellow and lighter than any dye is drawn
+    const [r, g, b] = k.figured.gold;
+    expect(r > g && g > 2 * b && r > 1).toBe(true);
+    // Apoleia's profile has no cloth of its own: an image named so is drawn as any cloth
+    expect(drawn('real/cloth_cote_silk_figured.webp', APOLEIA).code).toBe(ShaderLib.physical.fragmentShader);
   });
   it('a scar takes the tone of the skin it lies in', () => {
     // a scar of the real look is a small surface of skin of its own, lighter than the skin as a whole: with a
@@ -827,8 +1057,11 @@ describe('portraits', { timeout: 20_000 }, () => {
     // normal (36 until round 85), and half of the head's shadow is taken off it (round 83; as light, and since
     // round 94 without the highlight of a lamp that is hidden there)
     expect(facing(rim, Math.PI / 2)).toBeGreaterThan(0.6);
-    expect(ENGLAND_1356.rimShadow).toBeGreaterThan(0.3);
-    expect(ENGLAND_1356.rimShadow).toBeLessThan(0.7);
+    // (round 123) under a key twice as large again the key itself reaches further round the nose, and the shade
+    // beside it was lighter than five faces of the reference have it: a tenth of the rim passes the head now,
+    // not half. Not none: the stage still has no light that goes through a nose or comes back off a cheek
+    expect(ENGLAND_1356.rimShadow).toBeGreaterThan(0.5);
+    expect(ENGLAND_1356.rimShadow).toBeLessThan(1);
     // two weak lights lighten the shade. What chest and ground throw back (round 78) comes from below and in
     // front, from the middle, and reaches what faces down: the jaw's underside and the neck under it, the upper
     // lip, the skin under the brow. Until then the one fill stood level on the far side (10 degrees below, 0.07
@@ -919,15 +1152,16 @@ describe('portraits', { timeout: 20_000 }, () => {
     const of = (tex: string) => ({ rough: 0.9, metal: 0, double: true, tex, nmap: '', pos: new Float32Array(9), col: new Float32Array(9).fill(0.2), uv: new Float32Array(6), nrm: new Float32Array(9) });
     const light = (tex: string, p = ENGLAND_1356): number => surfaceMaterials(of(tex), null, null, p)[0]!.color.r;
     for (const wool of ['real/cloth_cote.webp', 'real/cloth_hood_up.webp', 'real/cloth_hood_down.webp']) expect(light(wool), wool).toBe(k.wool);
-    for (const linen of ['real/cloth_veil_linen.webp', 'real/cloth_wimple.webp', 'real/cloth_smock.webp']) expect(light(linen), linen).toBe(k.linen);
+    for (const linen of ['real/cloth_veil_linen.webp', 'real/cloth_wimple.webp', 'real/cloth_smock.webp', 'real/cloth_fillet.webp']) expect(light(linen), linen).toBe(k.linen);
     expect(light('real/cloth_tunic.webp', APOLEIA)).toBe(1);
     // the garments England's sample wears are those: the stage tells wool from linen by an image's name
     const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
     const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
     const worn = new Set(sample.flatMap(p => b.build(p).surfaces.filter(s => surfaceKind(s) === 'cloth').map(s => s.tex)));
     // (since round 110 with the linen under the gown, a smock's and a shirt's, drawn with one image; the gown's
-    // cuts are drawn with the gown's)
-    expect([...worn].sort()).toEqual(['cloth_cote', 'cloth_hood_down', 'cloth_hood_up', 'cloth_smock', 'cloth_veil_linen', 'cloth_wimple'].map(n => `real/${n}.webp`));
+    // cuts are drawn with the gown's; since round 132 with a man's coif, drawn with the fillet's image: until
+    // then the stage took that image for wool, and the fillet of round 128 was drawn `cloth.wool` times too light)
+    expect([...worn].sort()).toEqual(['cloth_cote', 'cloth_fillet', 'cloth_hood_down', 'cloth_hood_up', 'cloth_smock', 'cloth_veil_linen', 'cloth_wimple'].map(n => `real/${n}.webp`));
     // what the factor is for: a wool of the builder under the light a chest gets lies deep in the curve's toe,
     // where a value is drawn darker than it is; lifted, it comes out at more than three times its lightness
     const y = (x: number): number => toneCurve(x, ENGLAND_1356.finish!.curve);
@@ -982,9 +1216,10 @@ describe('portraits', { timeout: 20_000 }, () => {
         }
       }
     }
-    // half of the rim light's red still comes through the head as light (round 83), less of its green and blue,
-    // and none of it as a highlight
-    expect(shown(0, ENGLAND_1356.rimShadow, 0)[0]).toBeGreaterThan(0.3);
+    // some of the rim light's red still comes through the head as light (half of it from round 83, a tenth
+    // since round 123, under a larger key), less of its green and blue, and none of it as a highlight
+    expect(shown(0, ENGLAND_1356.rimShadow, 0)[0]).toBeGreaterThan(0.05);
+    expect(shown(0, ENGLAND_1356.rimShadow, 0)[0]).toBeLessThan(0.5);
     expect(shown(0, ENGLAND_1356.rimShadow, 2)[0]).toBeLessThan(0.6 * shown(0, ENGLAND_1356.rimShadow, 0)[0]);
     expect(shown(0, ENGLAND_1356.rimShadow, 0)[1]).toBe(0);
     // a light that throws no shadow (the fill, what chest and ground throw back) keeps its colour and its highlight
@@ -1001,9 +1236,11 @@ describe('portraits', { timeout: 20_000 }, () => {
     // edge of a shadow is as broad as that angle times how far the thing that throws it stands off the skin.
     // The stage draws such a light as several lights spread over its disc, which share its energy
     const { shadow, lights } = ENGLAND_1356, from = lights.key.from;
-    // a window or a lamp with a shade, not the sun (a quarter of a degree) and not the whole sky
+    // a window or a lamp with a shade, not the sun (a quarter of a degree) and not the whole sky: at most a
+    // window a metre and a half wide a metre from the head (round 123: 35 degrees; until then at most 20, under
+    // which the shadow of a man's nose lay on his far cheek 9 L darker than on the reference's men)
     expect(shadow.spread).toBeGreaterThanOrEqual(6);
-    expect(shadow.spread).toBeLessThanOrEqual(20);
+    expect(shadow.spread).toBeLessThanOrEqual(37);
     expect(shadow.lights).toBeGreaterThanOrEqual(6);
     // WebGL 2 promises 16 images to a material: the key's shadows, the rim's, the surface's image and its normals
     expect(shadow.lights + 1 + 2).toBeLessThanOrEqual(16);
@@ -1028,7 +1265,63 @@ describe('portraits', { timeout: 20_000 }, () => {
     // a light without size, or drawn as one light, is the key itself; Apoleia's is such a light
     expect(keyPlaces(from, 0, 8)).toEqual([[...from]]);
     expect(keyPlaces(from, 10, 1)).toEqual([[...from]]);
-    expect(APOLEIA.shadow).toEqual({ map: 512, strength: 0.7, radius: 1, spread: 0, lights: 1 });
+    expect(APOLEIA.shadow).toEqual({ map: 512, strength: 0.7, radius: 1, spread: 0, lights: 1, reach: 0.9 });
     expect(keyPlaces(APOLEIA.lights.key.from, APOLEIA.shadow.spread, APOLEIA.shadow.lights)).toEqual([[-3.5, 4.5, 5.0]]);
+  });
+
+  it('a person of history is dressed as people of rank are, and who holds a kingdom wears a crown of gold', () => {
+    // (round 144) Until then the game handed over every person as one of the common people, and England's table knew
+    // one estate: Edward III stood in a villager's russet gown. A person of history is of a ruler's house; with a
+    // kingdom or an empire among the realms held on the day the portrait wears a crown (src/people/panel.ts).
+    expect(rankOfHistory([])).toEqual({ stand: 3, job: 'Adel' });
+    expect(rankOfHistory([{ rank: 'duchy' }, { rank: 'prince_bishopric' }])).toEqual({ stand: 3, job: 'Adel' });
+    expect(rankOfHistory([{ rank: 'county' }, { rank: 'kingdom' }])).toEqual({ stand: 4, job: 'Adel' });
+    expect(rankOfHistory([{ rank: 'empire' }]).stand).toBe(4);
+    // (a world server older than this round names no rank: no crown then)
+    expect(rankOfHistory([{}]).stand).toBe(3);
+    const b = loadPortraitBuilder(PORTRAIT_TEST_WASM);
+    const sample: PortraitPerson[] = JSON.parse(readFileSync(here('sample_england.json'), 'utf8'));
+    for (const given of sample.filter(p => p.age >= 24).slice(0, 4)) {
+      // (each stand built once: the test asks for them some twenty times, and took 17 of its 20 seconds)
+      const known = new Map<number, ReturnType<typeof b.build>>();
+      const built = (stand: number) => known.get(stand) ?? known.set(stand, b.build({ ...given, ...(stand > 1 ? { stand, job: 'Adel' } : {}) })).get(stand)!;
+      const metal = (stand: number) => built(stand).surfaces.filter(s => !s.tex && s.metal === 1);
+      const at = `person ${given.pid}`;
+      expect(metal(1), `${at}: the common people wear no metal`).toEqual([]);
+      // the look's name is England's whatever the estate: the stage lights by it
+      for (const stand of [1, 3, 4]) expect(profileOf(built(stand).look), `${at}, stand ${stand}`).toBe(ENGLAND_1356);
+      // the crown: gold (the larger piece of metal: the gown's buttons are the other), stones and pearls, drawn as
+      // the builder says: metal that shines, without an image and seen from outside only
+      const king = built(4), gold = metal(4).sort((x, y) => y.pos.length - x.pos.length)[0]!;
+      expect(gold.pos.length / 9, `${at}: the crown's gold`).toBeGreaterThan(2500);
+      expect(surfaceKind(gold)).toBe('plain');
+      const m = surfaceMaterials(gold, null, null, ENGLAND_1356)[0]!;
+      expect([m.metalness, m.side, m.map], at).toEqual([1, FrontSide, null]);
+      expect(m.roughness).toBeGreaterThan(0.2);
+      expect(m.roughness).toBeLessThan(0.45);
+      // (round 145: and the stones of the mantle's two brooches, each the upper part of a ball, 48 triangles)
+      const stones = king.surfaces.filter(s => !s.tex && s.metal === 0 && s.rough < 0.5);
+      expect(stones.map(s => s.pos.length / 9).sort((x, y) => y - x), `${at}: stones and pearls`).toEqual([24 * 64, 18 * 64, 2 * 48]);
+      // (round 145) a mantle on the crowned head alone: its cloth and its fur, each cloth to the stage with an image
+      // of its own, the fur's the lighter
+      const mantle = (stand: number) => built(stand).surfaces.filter(s => /cloth_mantle/.test(s.tex)).sort((x, y) => x.tex.length - y.tex.length);
+      expect(mantle(4).map(s => s.tex.replace(/^.*\/|\..*$/g, '')), `${at}: the mantle`).toEqual(['cloth_mantle', 'cloth_mantle_fur']);
+      for (const s of mantle(4)) expect([surfaceKind(s), s.uv.length / 2, s.nrm.length / 3], `${at}: ${s.tex}`).toEqual(['cloth', s.pos.length / 3, s.pos.length / 3]);
+      const light = (s: (typeof king.surfaces)[number]) => s.col.reduce((a, x) => a + x, 0) / s.col.length;
+      expect(light(mantle(4)[1]!), `${at}: the fur against the cloth`).toBeGreaterThan(3 * light(mantle(4)[0]!));
+      expect(mantle(3), `${at}: no mantle without a kingdom`).toEqual([]);
+      // and nothing else on a crowned head
+      expect(king.surfaces.filter(s => /cloth_(hood|veil|wimple|fillet|coif|hat)/.test(s.tex)), at).toEqual([]);
+      // a person of rank without a crown: none, and a gown of another cloth than the common people's
+      expect(metal(3).every(s => s.pos.length / 9 < 2500), `${at}: no crown without a kingdom`).toBe(true);
+      // (round 150: the common people's gown is drawn with the wool's image, the court's with the silk's)
+      // (round 156: at court the silk is plain or figured by the person's seed, a crowned head's always figured)
+      const gown = (stand: number) => built(stand).surfaces.find(s => /cloth_cote(_silk(_figured)?)?\./.test(s.tex))!;
+      const cloth = [1, 3, 4].map(stand => gown(stand).tex.replace(/^.*\/|\..*$/g, ''));
+      expect([cloth[0], cloth[2]], `${at}: the gown's cloth`).toEqual(['cloth_cote', 'cloth_cote_silk_figured']);
+      expect(['cloth_cote_silk', 'cloth_cote_silk_figured'], `${at}: the court's cloth`).toContain(cloth[1]);
+      const red = (stand: number) => { const c = gown(stand).col; let r = 0, g = 0; for (let i = 0; i < c.length; i += 3) { r += c[i]!; g += c[i + 1]!; } return r / g; };
+      expect(Math.abs(Math.log(red(3) / red(1))), `${at}: the court's cloth`).toBeGreaterThan(0.15);
+    }
   });
 });

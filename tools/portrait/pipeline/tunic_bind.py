@@ -8,11 +8,15 @@ import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import numpy as np
 from PIL import Image
-from hairlib import Head, unit
+from hairlib import Head, unit, BUST_Y, BUST_X
 
 base, cloth, out, name = sys.argv[1:5]
 # (a veil binds to the head too: HEAD=1 keeps the head's triangles)
-H = Head(base, ymin=3.4, hc=(0.0, 5.0, 0.2), xmax=2.85, tkeep=None if os.environ.get('HEAD') == '1' else (lambda P: P[:, 1].max() < 6.6))
+# (round 145) BUST=1: bound to the bust's body too (`hairlib.bust_faces`) and kept down to `YCUT`, the waist: for a
+# cloth that is laid and not draped, which needs no second drape sewn under it as a gown does (`bust_bind.py`)
+BUST = os.environ.get('BUST') == '1'
+YCUT = float(os.environ.get('YCUT', '1.9' if BUST else '3.45'))
+H = Head(base, ymin=BUST_Y if BUST else 3.4, hc=(0.0, 5.0, 0.2), xmax=BUST_X if BUST else 2.85, tkeep=None if os.environ.get('HEAD') == '1' else (lambda P: P[:, 1].max() < 6.6), bust=BUST)
 A, B, C, HT = H.A, H.B, H.C, H.T
 HCEN = (A + B + C) / 3
 def nearest(p):
@@ -53,7 +57,7 @@ tris = []
 for f in cf:
     for k in range(1, len(f) - 1):
         t = [f[0], f[k], f[k + 1]]
-        if CV[t, 1].min() > 3.45 and np.abs(CV[t, 0]).max() < float(os.environ.get('XMAX', '9')):
+        if CV[t, 1].min() > YCUT and np.abs(CV[t, 0]).max() < float(os.environ.get('XMAX', '9')):
             tris.append(t)
 used = sorted({i for t in tris for i in t}); rm = {o: k for k, o in enumerate(used)}
 P = CV[used]
@@ -74,7 +78,7 @@ from collections import Counter, defaultdict
 ec = Counter(tuple(sorted((t[k], t[(k + 1) % 3]))) for t in T for k in range(3))
 if os.environ.get('HEM', 'neck') == 'all':
     # every edge in the portrait (not the cut at the bottom)
-    bed = [e for e, n in ec.items() if n == 1 and P[list(e), 1].min() > 3.6]
+    bed = [e for e, n in ec.items() if n == 1 and P[list(e), 1].min() > YCUT + 0.15]
 else:
     # (`HEMX`, `HEMY`: how far out on the shoulders and how far down the chest the neck's edge is looked for: a
     # neckline that is cut wide or has a notch reaches further than the close one)

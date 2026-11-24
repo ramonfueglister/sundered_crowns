@@ -87,7 +87,9 @@ fn the_grown_of_england_are_drawn_broader_than_they_are_measured() {
         let between = |k: usize, lo: f32, hi: f32| assert!(share[k] > lo && share[k] < hi, "{sex}, {}: drawn {} of measured ({} and {} mm)", name(k), share[k], drawn[k], measured[k]);
         between(0, 0.88, 0.96); // face length
         between(4, 1.07, 1.16); // breadth at the cheekbones
-        between(5, 1.05, 1.20); // breadth at the jaw's corners
+        // breadth at the jaw's corners: a woman's lower face runs in to the chin as the reference draws it (round
+        // 115, `Style::jaw`), a man's by half as much
+        if female { between(5, 0.98, 1.10) } else { between(5, 1.03, 1.20) }
         between(6, 1.07, 1.18); // between the pupils
         between(11, 1.12, 1.30); // the eye's opening, length
         between(12, 1.05, 1.35); // the eye's opening, height
@@ -106,7 +108,12 @@ fn the_grown_of_england_are_drawn_broader_than_they_are_measured() {
         let female = k % 2 == 0;
         for age in [2.0, 5.0, 8.0, 11.0] {
             let p = person(k, female, age);
-            assert!(set.style_of(female, age) == 0.0 && morph_test(&h, &p) == morph_test_measured(&h, &p), "a child of {age} ({k}) is drawn another head");
+            // (but for the jaw's soft edge, which every drawn head has: round 117, `Style::edge`; there the skin
+            // lies within 8 mm of the measured head's; 6 mm was seen, at the sharpest of the fold)
+            let (drawn, mut measured) = (morph_test(&h, &p), morph_test_measured(&h, &p));
+            let soft = drawn.iter().zip(&measured).map(|(a, b)| (0..3).map(|c| (a[c] - b[c]).abs()).fold(0.0f32, f32::max)).fold(0.0f32, f32::max);
+            sc_portrait::jaw_soften(&h, &mut measured, set.style_edge_of(female, p.grown()));
+            assert!(set.style_of(female, age) == 0.0 && drawn == measured && soft > 0.0 && soft < 0.08, "a child of {age} ({k}) is drawn another head ({soft} units off along the jaw's edge)");
         }
         let breadth = |age: f32| {
             let p = person(k, female, age);
@@ -183,7 +190,8 @@ fn the_upper_lip_of_a_woman_of_england_does_not_stand_out_as_a_beak() {
     let Some(h) = head() else { return };
     let red = real::rows("real/skin_lip.txt").expect("the lips' red");
     let front = |pp: &[[f32; 3]], upper: bool| {
-        (0..pp.len()).filter(|&v| red[v][0] > 0.5 && (red[v][1] > 0.5) == upper && pp[v][0].abs() < 0.1).map(|v| pp[v][2]).fold(f32::MIN, f32::max)
+        // (the file's rows are the head's own vertices; the bust's, after them in head.bin, have no lips)
+        (0..red.len().min(pp.len())).filter(|&v| red[v][0] > 0.5 && (red[v][1] > 0.5) == upper && pp[v][0].abs() < 0.1).map(|v| pp[v][2]).fold(f32::MIN, f32::max)
     };
     let (n, mut sum, mut most) = (24, 0.0, f32::MIN);
     for k in 0..n {
@@ -418,7 +426,7 @@ fn a_scar_of_england_is_a_pale_line_in_the_skin() {
         assert!(scar.tex == skin.tex && scar.nmap == skin.nmap && scar.uv.len() == scar.pos.len() && scar.nrm.len() == scar.pos.len(), "person {k}: in the skin's image");
         // on the skin: no corner further from a corner of the skin than the skin's triangles are long (on cheek
         // and forehead up to 2 cm)
-        let (mut dark, mut light) = (f32::MAX, 0f32);
+        let (mut dark, mut light, mut read) = (f32::MAX, 0f32, 0);
         for ((q, c), uv) in scar.pos.iter().zip(&scar.col).zip(&scar.uv) {
             let near = (0..idx.len()).min_by(|&a, &b| dist(q, &skin.pos[a]).total_cmp(&dist(q, &skin.pos[b]))).unwrap();
             assert!(dist(q, &skin.pos[near]) < 0.2, "person {k}: a corner {} off the skin", dist(q, &skin.pos[near]));
@@ -427,13 +435,24 @@ fn a_scar_of_england_is_a_pale_line_in_the_skin() {
             // has a corner of the lid's dark edge, which lies elsewhere in the image)
             let d2 = |a: &[f32; 2], b: &[f32; 2]| (a[0] - b[0]).powi(2) + (a[1] - b[1]).powi(2);
             let beside = (0..idx.len()).min_by(|&a, &b| d2(uv, &skin.uv[a]).total_cmp(&d2(uv, &skin.uv[b]))).unwrap();
+            // (round 121: not where the skin itself changes its tone within one triangle. A woman who wears her
+            // veil set back shows her hair, and the scalp under hair is darkened towards the hair's colour: a
+            // scar on the forehead that runs up under the hair takes that tone, and the corner next to it may
+            // lie on the other side of the hairline)
+            let tri: [f32; 3] = std::array::from_fn(|q| grey(&skin.col[beside / 3 * 3 + q]));
+            if tri.iter().cloned().fold(0.0, f32::max) > 1.25 * tri.iter().cloned().fold(f32::MAX, f32::min) {
+                continue;
+            }
+            read += 1;
             let against = grey(c) / grey(&skin.col[beside]);
             dark = dark.min(against);
             light = light.max(against);
         }
         if std::env::var("SHOW").is_ok() {
-            println!("person {k}: {} corners, {dark:.2} to {light:.2} of the skin's lightness beside them", scar.pos.len());
+            println!("person {k}: {} corners, {read} of them on skin of one tone, {dark:.2} to {light:.2} of the skin's lightness beside them", scar.pos.len());
         }
+        // (of two scars one may lie at the hairline whole)
+        assert!(4 * read >= scar.pos.len(), "person {k}: {read} of {} corners of the scars on skin of one tone", scar.pos.len());
         assert!(dark > 0.8 && light > 1.1 && light < 1.6, "person {k}: {dark} to {light} of the skin's lightness");
     }
 }
@@ -954,7 +973,9 @@ fn the_cheek_of_a_woman_of_england_keeps_its_breadth_to_the_mouth() {
     if show {
         println!("{n} grown women: the far cheek's outline at the mouth's height {:.1} mm inside its top, {:.1} without the fill ({n} men {men:.1}); its pad {:.2} mm, {:.2} without; the dent under it {:.2} mm; breadths and lengths differ by {worst:.3} mm at most, the lips' length by {lips_most:.2}", sums[0], sums[1], sums[2], sums[3], sums[4]);
     }
-    assert!(sums[0] > 6.0 && sums[0] < 9.5 && sums[1] > 12.0, "the far cheek's outline at the mouth's height: {} mm inside its top, {} without the fill", sums[0], sums[1]);
+    // (round 115: the drawn lower face runs in to the chin, `Style::jaw`, about as far as on the reference's woman
+    // A of round 114; the woman traced in round 97 had about 6 mm. The fill still keeps 5 mm of the breadth.)
+    assert!(sums[0] > 9.0 && sums[0] < 15.0 && sums[1] > sums[0] + 4.0, "the far cheek's outline at the mouth's height: {} mm inside its top, {} without the fill", sums[0], sums[1]);
     assert!(men > 11.0, "a man's far cheek lies {men} mm inside its top at the mouth's height");
     assert!(sums[2] < sums[3] + 0.2 && sums[4] < 1.0, "the pad {} mm ({} without the fill), the dent {}", sums[2], sums[3], sums[4]);
     assert!(worst < 0.01 && lips_most < 0.01, "the fill moves a breadth by {worst} mm, the lips' length by {lips_most}");
@@ -1583,8 +1604,8 @@ fn the_lids_of_england_stand_to_the_pupil_as_real_lids_do() {
         let (female, age) = (k % 2 == 0, [2.0, 5.0, 8.0, 13.0, 17.0, 24.0, 35.0, 50.0, 68.0][(k / 2) as usize % 9]);
         let p = person(k, female, age);
         let lean = sc_portrait::dress::by_sex(set.lean[0], set.lean[1], female, p.grown());
-        let [over, under] = sc_portrait::measure::lids_to_pupil(&h, &morph_test_measured(&h, &p), set.gaze_of(1.0, lean)[1]);
-        let [drawn_over, drawn_under] = sc_portrait::measure::lids_to_pupil(&h, &morph_test(&h, &p), set.gaze_of(1.0, lean)[1]);
+        let [over, under] = sc_portrait::measure::lids_to_pupil(&h, &morph_test_measured(&h, &p), set.gaze_at(1.0, lean, set.head_of(p.seed))[1]);
+        let [drawn_over, drawn_under] = sc_portrait::measure::lids_to_pupil(&h, &morph_test(&h, &p), set.gaze_at(1.0, lean, set.head_of(p.seed))[1]);
         let drawn_iris = set.iris_of(female, age) / 2.0;
         if std::env::var("SHOW").is_ok() {
             println!("{} of {age}: the upper lid {over:.1} mm over the pupil, the lower lid {under:.1} mm under it; drawn {drawn_over:.1} and {drawn_under:.1}, the iris {drawn_iris:.2} mm", if female { "woman" } else { "man" });
@@ -1601,4 +1622,205 @@ fn the_lids_of_england_stand_to_the_pupil_as_real_lids_do() {
             assert!(drawn_over + drawn_under > over + under + 0.5 && drawn_iris == set.style.iris_mm / 2.0, "person {k} of {age}: the opening {} mm, measured {}", drawn_over + drawn_under, over + under);
         }
     }
+}
+
+/// Round 115: the drawn lower face runs in to the chin (`Style::jaw`, morph.rs `jaw_narrow`). Its field leaves the
+/// cheekbones, the ears and the face's middle (nose, the lips' middle, the chin's front) where they are; a grown
+/// woman's outline is narrower at the mouth and under it than at the eyes by what the sheets read, and a small
+/// child's head has none of it.
+#[test]
+fn the_drawn_lower_face_runs_in_to_the_chin() {
+    let Some(h) = head() else { return };
+    let field = sc_portrait::jaw_field(&h);
+    for &(a, b) in &CHEEKBONES {
+        // (the band begins at the lowest of them on the base head: under a hundredth, a tenth of a millimetre)
+        assert!(field[a] < 0.01 && field[b] < 0.01, "the field moves a cheekbone's landmark: {} {}", field[a], field[b]);
+    }
+    assert!(field[TRAGION.0] < 1e-6 && field[TRAGION.1] < 1e-6, "the field moves an ear");
+    // (round 117) the jaw's sides come in, not the cheeks' front and not the chin's own end (`chin_round` has that)
+    assert!(field[MENTON] < 1e-6, "the field at the chin's lowest point: {}", field[MENTON]);
+    assert!(field[JAW[0].0] > 0.4 && field[JAW[0].1] > 0.4, "the field at the jaw's corners: {} {}", field[JAW[0].0], field[JAW[0].1]);
+    // across the face at the mouth's height, 15 mm in front of the jaw's corners and further forward (as
+    // examples/outline.rs reads the picture, here straight from in front)
+    let across = |pp: &[[f32; 3]], y: f32| {
+        let back = JAW.iter().map(|&(a, b)| pp[a][2] + pp[b][2]).sum::<f32>() / (2 * JAW.len()) as f32 + 0.15;
+        let (mut lo, mut hi) = (f32::MAX, f32::MIN);
+        for t in h.body_full().chunks_exact(3) {
+            for k in 0..3 {
+                let (p, q) = (pp[t[k] as usize], pp[t[(k + 1) % 3] as usize]);
+                if (p[1] - y) * (q[1] - y) < 0.0 {
+                    let f = (y - p[1]) / (q[1] - p[1]);
+                    if p[2] + f * (q[2] - p[2]) > back {
+                        let x = p[0] + f * (q[0] - p[0]);
+                        lo = lo.min(x);
+                        hi = hi.max(x);
+                    }
+                }
+            }
+        }
+        (hi - lo) * 100.0
+    };
+    let n = 40;
+    let (mut drawn, mut plain, mut lips_moved, mut nose_moved) = (0.0f32, 0.0f32, 0.0f32, 0.0f32);
+    for k in 0..n {
+        let p = person(2 * k, true, [24.0, 35.0, 50.0][k as usize % 3]);
+        let with = morph_test(&h, &p);
+        // the same head with the narrowing taken off again
+        let k_jaw = p.dress.set().unwrap().style_jaw_of(true, p.grown(), p.age);
+        assert!(k_jaw > 0.0, "a grown woman of England has no narrowing");
+        let side = sc_portrait::JAW_NARROW.2;
+        let mut without = with.clone();
+        for (v, q) in without.iter_mut().enumerate() {
+            let t = ((h.base[v][0].abs() - side[0]) / (side[1] - side[0])).clamp(0.0, 1.0);
+            q[0] /= 1.0 - k_jaw * field[v] * t * t * (3.0 - 2.0 * t);
+        }
+        let mouth = |pp: &[[f32; 3]]| (pp[STOMION[0]][1] + pp[STOMION[1]][1]) / 2.0;
+        drawn += across(&with, mouth(&with)) / n as f32;
+        plain += across(&without, mouth(&without)) / n as f32;
+        let (a, b) = (face(&h, &with), face(&h, &without));
+        let pos = |name: &str| MEASURES.iter().position(|m| m.0.starts_with(name)).unwrap();
+        lips_moved = lips_moved.max((a[pos("lip length")] - b[pos("lip length")]).abs());
+        nose_moved = nose_moved.max((a[pos("nose breadth")] - b[pos("nose breadth")]).abs());
+    }
+    if std::env::var("SHOW").is_ok() {
+        println!("{n} grown women: across the face at the mouth {drawn:.1} mm, {plain:.1} without the narrowing; the lips' length moves by {lips_moved:.2} mm, the nose's breadth by {nose_moved:.2}");
+    }
+    assert!(drawn < plain - 8.0 && drawn > plain - 22.0, "across the face at the mouth: {drawn} mm, {plain} without the narrowing");
+    assert!(lips_moved < 1.5 && nose_moved < 0.01, "the narrowing moves the lips' length by {lips_moved} mm, the nose's breadth by {nose_moved}");
+    let child = person(1, true, 5.0);
+    assert!(child.dress.set().unwrap().style_jaw_of(true, child.grown(), child.age) == 0.0, "a child of five has the narrowing");
+}
+
+/// Round 117: the chin's end is drawn in to a round and the jaw's lower edge soft (`Style::chin`, `Style::edge`;
+/// morph.rs `chin_round`, `jaw_soften`). Their fields leave the mouth, the nose, the cheekbones and the ears where
+/// they are, and the chin's middle its place; on a grown woman's measured head the skin along the jaw's edge
+/// bends less from facet to facet after them, the lips keep their length, and a small child's head has the soft
+/// edge alone (the fold is the mesh's, at every age).
+#[test]
+fn the_drawn_chin_is_round_and_the_jaws_edge_soft() {
+    let Some(h) = head() else { return };
+    let (chin, edge) = (sc_portrait::chin_field(&h), sc_portrait::jaw_edge_field(&h));
+    for v in CHEEKBONES.iter().flat_map(|&(a, b)| [a, b]).chain([TRAGION.0, TRAGION.1, STOMION[0], STOMION[1], LIP_TOP[0], LIP_TOP[1]]) {
+        assert!(chin[v] < 1e-6 && edge[v] < 1e-6, "a field moves the landmark {v}: {} {}", chin[v], edge[v]);
+    }
+    assert!(chin[MENTON] < 1e-6, "the chin's middle is drawn aside: {}", chin[MENTON]);
+    assert!(edge[MENTON] > 0.9, "the edge's field at the chin's lowest point: {}", edge[MENTON]);
+    // (which stays all the same: the face's length and the mouth's place are measured from it)
+    let p = person(0, true, 24.0);
+    let (plain, mut soft) = (morph_test_measured(&h, &p), morph_test_measured(&h, &p));
+    sc_portrait::jaw_soften(&h, &mut soft, 0.5);
+    assert!(soft[MENTON] == plain[MENTON] && soft != plain, "the soft edge moves the chin's lowest point, or nothing");
+    // how far the skin bends from facet to facet along the jaw's edge: the mean angle between the normals of
+    // two triangles that share an edge whose ends take more than half of the field, in degrees
+    let fold = |pp: &[[f32; 3]]| {
+        let normal = |t: &[u32]| {
+            let (a, b, c) = (pp[t[0] as usize], pp[t[1] as usize], pp[t[2] as usize]);
+            let (u, v) = ([b[0] - a[0], b[1] - a[1], b[2] - a[2]], [c[0] - a[0], c[1] - a[1], c[2] - a[2]]);
+            let n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+            let l = (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]).sqrt().max(1e-12);
+            [n[0] / l, n[1] / l, n[2] / l]
+        };
+        let mut sides: std::collections::HashMap<(u32, u32), Vec<[f32; 3]>> = std::collections::HashMap::new();
+        for t in h.body_full().chunks_exact(3) {
+            if t.iter().all(|&v| (v as usize) < edge.len() && edge[v as usize] > 0.5) {
+                for k in 0..3 {
+                    let (a, b) = (t[k].min(t[(k + 1) % 3]), t[k].max(t[(k + 1) % 3]));
+                    sides.entry((a, b)).or_default().push(normal(t));
+                }
+            }
+        }
+        let angles: Vec<f32> = sides.values().filter(|n| n.len() == 2).map(|n| (n[0][0] * n[1][0] + n[0][1] * n[1][1] + n[0][2] * n[1][2]).clamp(-1.0, 1.0).acos().to_degrees()).collect();
+        (angles.iter().sum::<f32>() / angles.len() as f32, angles.iter().cloned().fold(0.0f32, f32::max))
+    };
+    let n = 40;
+    let (mut before, mut after, mut sharpest, mut lips_moved, mut nose_moved) = ([0.0f32; 2], [0.0f32; 2], 0.0f32, 0.0f32, 0.0f32);
+    for k in 0..n {
+        let p = person(2 * k, true, [24.0, 35.0, 50.0][k as usize % 3]);
+        let set = p.dress.set().unwrap();
+        let (k_chin, k_edge) = (set.style_chin_of(true, p.grown(), p.age), set.style_edge_of(true, p.grown()));
+        assert!(k_chin > 0.0 && k_edge > 0.0, "a grown woman of England has no round chin or no soft edge");
+        let plain = morph_test_measured(&h, &p);
+        let mut with = plain.clone();
+        sc_portrait::chin_round(&h, &mut with, k_chin);
+        sc_portrait::jaw_soften(&h, &mut with, k_edge);
+        let (a, b) = (fold(&plain), fold(&with));
+        before = [before[0] + a.0 / n as f32, before[1] + a.1 / n as f32];
+        after = [after[0] + b.0 / n as f32, after[1] + b.1 / n as f32];
+        sharpest = sharpest.max(b.1);
+        let (a, b) = (face(&h, &with), face(&h, &plain));
+        let pos = |name: &str| MEASURES.iter().position(|m| m.0.starts_with(name)).unwrap();
+        lips_moved = lips_moved.max((a[pos("lip length")] - b[pos("lip length")]).abs());
+        nose_moved = nose_moved.max((a[pos("nose breadth")] - b[pos("nose breadth")]).abs());
+    }
+    if std::env::var("SHOW").is_ok() {
+        println!("{n} grown women, the skin along the jaw's edge bends from facet to facet by {:.1} degrees in the mean and {:.1} at the sharpest fold; drawn {:.1} and {:.1} (the sharpest of all {sharpest:.1}); the lips' length moves by {lips_moved:.3} mm, the nose's breadth by {nose_moved:.3}", before[0], before[1], after[0], after[1]);
+    }
+    assert!(after[0] < 0.8 * before[0] && after[1] < 0.7 * before[1], "the jaw's edge bends by {:?} degrees (mean, sharpest), drawn by {:?}", before, after);
+    assert!(lips_moved < 0.01 && nose_moved < 0.01, "the round chin and the soft edge move the lips' length by {lips_moved} mm, the nose's breadth by {nose_moved}");
+    let child = person(1, true, 5.0);
+    let set = child.dress.set().unwrap();
+    assert!(set.style_chin_of(true, child.grown(), child.age) == 0.0 && set.style_edge_of(true, child.grown()) > 0.0, "a child of five has the round chin or no soft edge");
+}
+
+/// Round 120: the soft edge reaches up the cheek under the mouth's corner (morph.rs `cheek_soft_field`,
+/// `CHEEK_SOFT`), where MakeHuman's net has a second fold. Its field leaves the mouth, the nose, the cheekbones
+/// and the ears where they are and takes nothing of what the lips' seam moves; on a grown woman's measured head
+/// the skin there bends less from facet to facet after it, and moves in and out by a millimetre or two (moved
+/// towards its neighbours whole, as on the jaw's edge, the net's uneven facets slid along the cheek by up to
+/// 7.6 mm and took the skin's image with them).
+#[test]
+fn the_cheek_under_the_mouths_corner_is_drawn_without_its_fold() {
+    let Some(h) = head() else { return };
+    let (cheek, edge, lips) = (sc_portrait::cheek_soft_field(&h), sc_portrait::jaw_edge_field(&h), seam_field(&h));
+    for v in CHEEKBONES.iter().flat_map(|&(a, b)| [a, b]).chain([TRAGION.0, TRAGION.1, STOMION[0], STOMION[1], LIP_TOP[0], LIP_TOP[1], MENTON, SUBNASALE]) {
+        assert!(cheek[v] == 0.0, "the cheek's field moves the landmark {v}: {}", cheek[v]);
+    }
+    // nothing of the lips' seam, nor a neighbour of it: what the seam moves keeps its form to the last digit
+    for t in h.body_full().chunks_exact(3) {
+        let (of_lips, of_cheek) = (t.iter().any(|&v| lips[v as usize].0 != 0.0), t.iter().any(|&v| cheek[v as usize] > 0.0));
+        assert!(!(of_lips && of_cheek), "a facet at {:?} has a corner in the lips' seam and one in the cheek's field", h.base[t[0] as usize]);
+    }
+    let taking = |left: bool| (0..h.base.len()).filter(|&v| cheek[v] > 0.0 && (h.base[v][0] > 0.0) == left).count();
+    let whole = (0..h.base.len()).filter(|&v| cheek[v] > 0.5).count();
+    assert!(taking(true) == taking(false) && taking(true) >= 4 && taking(true) < 120 && whole >= 4, "the cheek's field: {} and {} vertices, {whole} over half", taking(true), taking(false));
+    let fold = |pp: &[[f32; 3]]| {
+        let normal = |t: &[u32]| {
+            let (a, b, c) = (pp[t[0] as usize], pp[t[1] as usize], pp[t[2] as usize]);
+            let (u, v) = ([b[0] - a[0], b[1] - a[1], b[2] - a[2]], [c[0] - a[0], c[1] - a[1], c[2] - a[2]]);
+            let n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+            let l = (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]).sqrt().max(1e-12);
+            [n[0] / l, n[1] / l, n[2] / l]
+        };
+        // the edges at a vertex that takes more than a tenth of the cheek's field
+        let mut sides: std::collections::HashMap<(u32, u32), Vec<[f32; 3]>> = std::collections::HashMap::new();
+        for t in h.body_full().chunks_exact(3) {
+            for k in 0..3 {
+                let (a, b) = (t[k].min(t[(k + 1) % 3]), t[k].max(t[(k + 1) % 3]));
+                if cheek[a as usize] > 0.1 || cheek[b as usize] > 0.1 {
+                    sides.entry((a, b)).or_default().push(normal(t));
+                }
+            }
+        }
+        let angles: Vec<f32> = sides.values().filter(|n| n.len() == 2).map(|n| (n[0][0] * n[1][0] + n[0][1] * n[1][1] + n[0][2] * n[1][2]).clamp(-1.0, 1.0).acos().to_degrees()).collect();
+        (angles.iter().sum::<f32>() / angles.len() as f32, angles.iter().cloned().fold(0.0f32, f32::max))
+    };
+    let n = 40;
+    let (mut before, mut after, mut far) = ([0.0f32; 2], [0.0f32; 2], 0.0f32);
+    for k in 0..n {
+        let p = person(2 * k, true, [24.0, 35.0, 50.0][k as usize % 3]);
+        let plain = morph_test_measured(&h, &p);
+        let mut with = plain.clone();
+        sc_portrait::jaw_soften(&h, &mut with, p.dress.set().unwrap().style_edge_of(true, p.grown()));
+        let (a, b) = (fold(&plain), fold(&with));
+        before = [before[0] + a.0 / n as f32, before[1] + a.1 / n as f32];
+        after = [after[0] + b.0 / n as f32, after[1] + b.1 / n as f32];
+        for v in (0..plain.len()).filter(|&v| cheek[v] > 0.0 && edge[v] == 0.0) {
+            far = far.max(100.0 * (0..3).map(|c| (with[v][c] - plain[v][c]).powi(2)).sum::<f32>().sqrt());
+        }
+    }
+    if std::env::var("SHOW").is_ok() {
+        println!("{n} grown women, the skin of the cheek under the mouth's corner bends from facet to facet by {:.1} degrees in the mean and {:.1} at the sharpest fold; drawn {:.1} and {:.1}; it moves by {far:.2} mm at most", before[0], before[1], after[0], after[1]);
+    }
+    assert!(after[0] < 0.9 * before[0] && after[1] < before[1], "the cheek under the mouth's corner bends by {:?} degrees (mean, sharpest), drawn by {:?}", before, after);
+    assert!(far > 0.3 && far < 3.0, "the skin of the cheek under the mouth's corner moves by {far} mm at most");
 }

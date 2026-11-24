@@ -7,7 +7,7 @@
 // diffuse reflection by π, Godot does not); the sky's ambient light of energy 0.75 is a hemisphere light of 0.75·π;
 // Godot's ACES setting there (exposure 0.92 / 0.6 / 1.8, white 14.26) is three.js' ACES at exposure 0.92, which is
 // where Apoleia took it from. Those are Apoleia's values; a set of dress of the game's own may bring others
-// (profile.ts).
+// (profile.ts, profile_1356.ts).
 import {
   ACESFilmicToneMapping, DirectionalLight, Group, HalfFloatType, HemisphereLight, LinearFilter, LinearMipmapLinearFilter, Mesh, NoColorSpace,
   PCFShadowMap, PerspectiveCamera, RepeatWrapping, Scene, SRGBColorSpace, type Texture, TextureLoader, Vector2, Vector3, WebGLRenderer,
@@ -46,6 +46,24 @@ export function framing(p: Pick<Portrait, 'top' | 'chin' | 'cx' | 'cz' | 'fill'>
   const h = Math.max(0.8, p.top - p.chin), hv = h / (p.fill * profile.close);
   const cy = p.top - 0.36 * hv, dist = (hv * 0.5) / Math.tan((FOV / 2) * Math.PI / 180);
   return { at: [p.cx, cy, p.cz], camera: [p.cx, cy + profile.rise * hv, p.cz + dist], height: hv };
+}
+
+/** How a portrait stands on the stage: turned about the upright axis through the head's centre by the profile's
+ *  turn and the person's own (`Portrait.head`), and before that tilted about the axis from back to front through
+ *  the neck's foot (`Portrait.neck`). `at`: where the portrait's origin then lies, seen from the head's centre
+ *  before the turn. `place` says where a point of the portrait stands (the camera's world). */
+export function standing(p: Pick<Portrait, 'cx' | 'cz' | 'head' | 'neck'>, profile: StageProfile): { turn: number; tilt: number; at: [number, number, number]; place(q: readonly number[], point?: boolean): [number, number, number] } {
+  const [turn, tilt] = [profile.turn + p.head[0], p.head[1]], [c, s] = [Math.cos(tilt), Math.sin(tilt)], [nx, ny] = p.neck;
+  // about the neck's foot n: R (q - n) + n, as a turn about the origin and a shift
+  const at: [number, number, number] = [nx - (nx * c - ny * s) - p.cx, ny - (nx * s + ny * c), -p.cz];
+  const [ct, st] = [Math.cos(turn), Math.sin(turn)];
+  return {
+    turn, tilt, at,
+    place(q, point = true) {
+      const k = point ? 1 : 0, [x, y, z] = [q[0]! * c - q[1]! * s + k * at[0], q[0]! * s + q[1]! * c + k * at[1], q[2]! + k * at[2]];
+      return [x * ct + z * st + k * p.cx, y, -x * st + z * ct + k * p.cz];
+    },
+  };
 }
 
 export interface StageOptions {
@@ -207,9 +225,11 @@ export class PortraitStage {
    *  above the middle; the person turns about the axis through the head's centre. */
   private frame(p: Portrait, inner: Group, profile: StageProfile): void {
     const f = framing(p, profile), hv = f.height;
+    const s = standing(p, profile);
     this.pivot.position.set(p.cx, 0, p.cz);
-    this.pivot.rotation.y = profile.turn;
-    inner.position.set(-p.cx, 0, -p.cz);
+    this.pivot.rotation.y = s.turn;
+    inner.position.set(...s.at);
+    inner.rotation.z = s.tilt;
     this.pivot.add(inner);
     const at = new Vector3(...f.at);
     this.camera.position.set(...f.camera);
@@ -226,7 +246,7 @@ export class PortraitStage {
     // the shadows of the key light and, where the profile has them, of the rim light: a box around head and
     // shoulders
     for (const l of [this.lights.rim, ...keys]) {
-      const c = l.shadow.camera, r = hv * 0.9;
+      const c = l.shadow.camera, r = hv * profile.shadow.reach;
       c.left = -r; c.right = r; c.top = r; c.bottom = -r; c.near = 0.5; c.far = 30;
       c.updateProjectionMatrix();
     }

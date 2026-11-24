@@ -41,6 +41,14 @@ pub struct Portrait {
     /// draws a child's skin with less of the grown's pores, relief, blotches and speckle (src/portrait/profile.ts
     /// `skin.child`): the skin's images and the stage's noise are a grown person's.
     pub young: f32,
+    /// (round 127) How the person carries the head (`DressSet::head_of`): turned further than the stage turns
+    /// every head, and tilted (radians), and the place the tilt is about: the neck's foot (x and height). The
+    /// stage turns the figure about the upright axis through the head's centre and tilts it about the axis from
+    /// back to front through that place; the shoulders are tipped back by the tilt here, so that they stand as
+    /// the pose has them (to within the bust's lean: the tilt's axis leans with the bust, the stage's does not,
+    /// which leaves the shoulders turned by an eighth of the tilt). All 0 in a look without a dress table.
+    pub head: [f32; 2],
+    pub neck: [f32; 2],
     pub tris: usize,
     /// Morph targets in use.
     pub targets: usize,
@@ -124,10 +132,46 @@ impl<'a> Ctx<'a> {
     }
 }
 
+/// (round 144) The crown of a dress with a table (`DressSet::crown`, tools/portrait/pipeline/crown.py): read and
+/// carried as a fillet is, then taken apart by what each triangle is of, which the file says by the triangle's
+/// place across its (empty) image, in fifths: gold, the circlet's stones of two kinds, a large fleuron's stone,
+/// pearls. The triangles without area that tie a stone to the gold are left out. Gold is drawn as metal; a stone
+/// is polished, a pearl a little dull (by eye: PLACEHOLDER).
+/// (round 146) A circlet (`DressSet::circlet`) is the same script's file without fleurons, and read the same way.
+fn crown(dir: &str, file: &str, d: &crate::dress::DressSet, pp: &[V3], base: &[V3]) -> Vec<Surface> {
+    const KINDS: f32 = 5.0;
+    let Some(all) = mh_rope(dir, file, "", pp, base, &|_| [1.0; 3]) else { return Vec::new() };
+    let stone = |rough: f32| Surface::new(Mat { rough, metal: 0.0, double: false });
+    let mut parts = [Surface::new(crate::fasten::METAL), stone(0.12), stone(0.3)];
+    for t in (0..all.pos.len()).step_by(3) {
+        if all.pos[t + 1] == all.pos[t + 2] {
+            continue;
+        }
+        let (part, col) = match (all.uv[t][0] * KINDS) as usize {
+            0 => (0, d.crown_gold),
+            4 => (2, d.crown_stones[3]),
+            k => (1, d.crown_stones[(k - 1).min(2)]),
+        };
+        let col = linear(hex(col));
+        for i in t..t + 3 {
+            parts[part].pos.push(all.pos[i]);
+            parts[part].nrm.push(all.nrm[i]);
+            parts[part].col.push(col);
+        }
+    }
+    parts.into_iter().filter(|s| !s.pos.is_empty()).collect()
+}
+
 pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
+    build_posed(h, p, lod, None)
+}
+
+/// As `build`, in another pose than the dress table's (`DressSet::pose`: the least and the most turn of the
+/// shoulders, the most tip). For tests: `Some([0.0; 3])` is the portrait as one stiff piece.
+pub fn build_posed(h: &Head, p: &Look, lod: usize, pose: Option<[f32; 3]>) -> Portrait {
     let real = crate::real::folder();
     let lod = if real.is_some() { LODS - 1 } else { lod.min(LODS - 1) };
-    let (pp, targets) = morph(h, p);
+    let (pp, targets, arms) = morph(h, p);
     let mut x = Ctx { h, pp, rng: Rng::new(p.seed ^ 0x5bd1_e995) };
     let body_full = h.body_full();
     let mut uniq = Vec::new();
@@ -388,9 +432,10 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
                 }
             }
             // the scalp under the hair this person wears (name_scalp.txt beside it), if bare-headed
-            let bare = !matches!(p.hat_style(), Hat::Cap | Hat::Pileus | Hat::Petasos) && !(long_hair && p.hair_style() == Hair::Veil);
+            // (round 121: under a veil set back the hair shows over the forehead, and its scalp with it)
+            let bare = !matches!(p.hat_style(), Hat::Cap | Hat::Pileus | Hat::Petasos) && !(long_hair && p.hair_style() == Hair::Veil && p.veil() != crate::dress::Veil::Back);
             let sf = if bare { mh_pick(p, long_hair).map(|(d, n)| format!("{d}/{}_scalp.txt", garb.map_or(n.as_str(), |g| g.under_of(&n)))).filter(|f| crate::real::exists(f)) } else { None };
-            real_skin(&mut s, &h.parts["body"][lod], &x.pp, dir, p.age, fem, hair, sf, lf.sun, p.seed, garb.map_or((1.0, "skin_red.txt"), |d| (d.flush[if fem { 0 } else { 1 }] * d.flush_of(p), d.flush_map)), garb.map_or(0.0, |d| d.lash_line[if fem { 0 } else { 1 }] * d.eyes_of(fem, p.age)[1]), garb.map_or((0.5, "#140d08"), |d| d.lash_tone), garb.map(|d| d.lips_of(fem, p.age)), garb.is_some_and(|d| !fem && p.age < d.boy_skin), { let l = linear(skin); 0.2126 * l[0] + 0.7152 * l[1] + 0.0722 * l[2] });
+            real_skin(&mut s, &h.parts["body"][lod], &x.pp, dir, p.age, fem, hair, sf, lf.sun, p.seed, garb.map_or((1.0, "skin_red.txt"), |d| (d.flush[if fem { 0 } else { 1 }] * d.flush_of(p), d.flush_map)), garb.map_or(0.0, |d| d.lash_line[if fem { 0 } else { 1 }] * d.eyes_of(fem, p.age)[1]), garb.map_or([1.0; 2], |d| d.lid_under), garb.map_or((0.5, "#140d08"), |d| d.lash_tone), garb.map(|d| d.lips_of(fem, p.age)), garb.is_some_and(|d| !fem && p.age < d.boy_skin), { let l = linear(skin); 0.2126 * l[0] + 0.7152 * l[1] + 0.0722 * l[2] });
         }
         out.push(s);
     }
@@ -924,7 +969,7 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
                 let old = ((p.age - 45.0) / 35.0).clamp(0.0, 1.0);
                 // where the eyes look, seen from the head: straight ahead, or turned as the dress asks (the ball's
                 // image is laid round that direction, which on a ball is the same as turning the eye)
-                let gaze = garb.map(|d| d.gaze_of(temporal, crate::dress::by_sex(d.lean[0], d.lean[1], fem, grown))).filter(|g| *g != [0.0, 0.0]).map(|[yaw, pitch]| {
+                let gaze = garb.map(|d| d.gaze_at(temporal, crate::dress::by_sex(d.lean[0], d.lean[1], fem, grown), d.head_of(p.seed))).filter(|g| *g != [0.0, 0.0]).map(|[yaw, pitch]| {
                     let g = [yaw.sin() * pitch.cos(), pitch.sin(), yaw.cos() * pitch.cos()];
                     let r = norm(cross([0.0, 1.0, 0.0], g));
                     (r, cross(g, r), g)
@@ -982,10 +1027,10 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
     };
     let hatted_mh = hatted;
     let veiled = long_hair && p.hair_style() == Hair::Veil;
-    // (a dress with a table has hair under the veil, the Roman veil the builder's own; a dress whose veil hides
-    // all hair has none, `hair_veiled` empty)
+    // (a dress with a table has hair under a veil set back, the Roman veil the builder's own; under a veil that
+    // lies on forehead and cheeks there is none: `Veil::Closed`)
     let mh = if hatted_mh || veiled && garb.is_none() { None } else { mh_pick(p, long_hair) };
-    let no_hair = veiled && garb.is_some_and(|d| d.hair_veiled.is_empty());
+    let no_hair = veiled && garb.is_some() && p.veil() != crate::dress::Veil::Back;
     if let Some((dir, name)) = &mh {
         // hair thins with age: women diffusely over the crown (female pattern
         // hair loss, rising to about half of women past 80; Gan & Sinclair,
@@ -1005,11 +1050,47 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
         // (England's `plait01_rope`), drawn with their own
         // (tightly curled hair, round 111: one mass, drawn with the image of its coils)
         let body_image = garb.map_or("", |d| d.coily.as_ref().filter(|_| d.is_coily(name)).map_or(d.body_image, |c| c.image));
-        if let Some(sf) = mh_rope(dir, &format!("{name}_body"), body_image, &x.pp, &h.base, &|_| hair) {
-            out.push(sf);
+        // (round 126: plaits pinned up are laid on a girl's hair: her body of hair, and her strands' image)
+        let under = garb.map_or(name.as_str(), |g| g.under_of(name));
+        let body = if crate::real::exists(&format!("{dir}/{name}_body.txt")) { name.as_str() } else { under };
+        // (under a coif the hair's painted layer alone: the cap lies close on the skull, and a body of bundles
+        // a centimetre thick under it made a helmet of it)
+        let coifed = garb.is_some_and(|d| d.coif_of(fem, p.age, p.seed));
+        if !coifed {
+            if let Some(sf) = mh_rope(dir, &format!("{body}_body"), body_image, &x.pp, &h.base, &|_| hair) {
+                out.push(sf);
+            }
+            if let Some(sf) = mh_rope(dir, &format!("{name}_rope"), &format!("{under}_rope"), &x.pp, &h.base, &|_| hair) {
+                out.push(sf);
+            }
         }
-        if let Some(sf) = mh_rope(dir, &format!("{name}_rope"), "", &x.pp, &h.base, &|_| hair) {
-            out.push(sf);
+        // (round 128) a fillet on the hair: a stiff band of linen, bound and carried as a plait's strands are
+        // (round 146) at court a circlet in its place: gilt metal with stones, read as the crown is
+        // (round 147) and on a lord's head with nothing else on it
+        if let Some((d, file)) = garb.and_then(|d| d.circlet_of(fem, p.age, p.seed).map(|f| (d, f))) {
+            out.extend(crown(dir, file, d, &x.pp, &h.base));
+        } else if let Some(d) = garb.filter(|d| d.fillet_of(fem, p.age, p.seed)) {
+            if let Some(sf) = mh_rope(dir, d.fillet, "", &x.pp, &h.base, &|_| hex(d.linen)) {
+                out.push(sf);
+            }
+        }
+        // (round 144) a crown: gold, its stones and its pearls, bound and carried as the fillet is
+        if let Some(d) = garb.filter(|d| !d.crown.is_empty()) {
+            out.extend(crown(dir, d.crown, d, &x.pp, &h.base));
+        }
+        // (round 132) a man's coif: a close cap of linen over the hair and the ears with its strings under the
+        // chin, bound and carried as the fillet is
+        if let Some(d) = garb.filter(|_| coifed) {
+            if let Some(sf) = mh_rope(dir, d.coif, d.fillet, &x.pp, &h.base, &|_| hex(d.linen)) {
+                out.push(sf);
+            }
+        }
+        // (round 134) a man's felt hat: a round crown and a broad brim over hair that lies flat, bound and carried
+        // as the fillet is
+        if let Some(d) = garb.filter(|d| d.hat_of(fem, p.age, p.seed)) {
+            if let Some(sf) = mh_rope(dir, d.hat_file(p.seed), d.hat, &x.pp, &h.base, &|_| hex(d.hat_tone(p.seed))) {
+                out.push(sf);
+            }
         }
         // real look: a painted cap of fine hairs under the cards, if there is one
         // (grey and white fuzz is see-through: the cap fades towards the skin as
@@ -1027,8 +1108,8 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
         if let Some(sf) = mh_hair2(dir, name, &x.pp, &h.base, hcb, &bcol, true, (0.0, 0)) {
             out.push(sf);
         }
-        // a beard's locks (England's `beard_crop_locks`): solid as a head's, drawn with the dress set's image of
-        // a beard's locks
+        // a beard's locks (England's `beard_crop_locks`, and the short beard's strands `beard_short1356_locks`,
+        // round 176): solid as a head's, drawn with the dress set's image of a beard's locks
         if let Some(sf) = mh_rope(dir, &format!("{name}_locks"), garb.map_or("", |d| d.beard_lock_image), &x.pp, &h.base, &bcol) {
             out.push(sf);
         }
@@ -1388,14 +1469,28 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
                 Some(d) => hex(d.linen),
                 None => dress(hex(st.palla.unwrap_or(["#e9e2d2", "#c8b68c", "#8396ad", "#a4664f", "#6f7d5c"][(p.seed % 5) as usize])), [0.0, 7.5, 0.0]),
             };
-            // real look: the veil draped in Blender
-            let real_veil = if real.is_some() { crate::real::folder().and_then(|d| mh_cloth(&d, garb.map_or("cloth_veil", |t| t.veil), &x.pp, &h.base, &|_| vcol, None, if garb.is_some() { Layer::Over } else { Layer::Bound })) } else { None };
-            if let Some(s) = real_veil {
+            // real look: the veil draped in Blender (round 121: a dress's veil set back is a cloth of its own,
+            // drawn with the image of the veil that lies on forehead and cheeks)
+            let (cloth, image) = match garb {
+                Some(t) if p.veil() == crate::dress::Veil::Back => (t.veil_back, t.veil),
+                Some(t) => (t.veil, ""),
+                None => ("cloth_veil", ""),
+            };
+            let real_veil = if real.is_some() { crate::real::folder().and_then(|d| mh_cloth_as(&d, cloth, image, &x.pp, &h.base, &|_| vcol, None, if garb.is_some() { Layer::Over } else { Layer::Bound }, &arms)) } else { None };
+            if let Some(mut s) = real_veil {
+                // (round 153) a table's own linen for the veil and the wimple: the court's fine one
+                let own = |name: &str| crate::real::folder().filter(|_| !name.is_empty()).map(|d| crate::real::image(&d, name));
                 // the wimple under the veil of older women
                 if let Some(t) = garb.filter(|t| p.age >= t.wimple_from) {
-                    if let Some(w) = crate::real::folder().and_then(|d| mh_cloth(&d, t.wimple, &x.pp, &h.base, &|_| vcol, None, Layer::Over)) {
+                    if let Some(mut w) = crate::real::folder().and_then(|d| mh_cloth(&d, t.wimple, &x.pp, &h.base, &|_| vcol, None, Layer::Over, &arms)) {
+                        if let Some(image) = own(t.wimple_image) {
+                            w.tex = Some(image);
+                        }
                         out.push(w);
                     }
+                }
+                if let Some(image) = garb.and_then(|t| own(t.veil_image)) {
+                    s.tex = Some(image);
                 }
                 out.push(s);
             } else {
@@ -1507,6 +1602,7 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
     };
     // which cut of a dress's gown: a woman's or a man's, and whether a wimple covers its neck
     let cut = if fem { 0 } else { 1 };
+    let tc2 = garb.filter(|d| d.parted_of(fem, p.age, p.seed)).map(|d| hex(d.wool[(p.seed as usize + 2) % d.wool.len()]));
     let wimpled = garb.is_some_and(|t| fem && p.age >= t.wimple_from);
     let real_tunic = if real.is_some() && !swaddled {
         crate::real::folder().and_then(|d| {
@@ -1514,15 +1610,31 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
                 if st.stripe > 0.0 && !fem && !st.toga && v[2] > 0.3 && (v[0].abs() - 0.4).abs() < st.stripe && v[1] < ym(5.35) {
                     return hex("#5e1a44");
                 }
-                cloth_col(tc, v)
+                // (round 144) mi-parti: a man's gown of two cloths, one on each side of the body
+                cloth_col(if v[0] < 0.0 { tc2.unwrap_or(tc) } else { tc }, v)
             };
             // (a dress with a table cuts the gown's neck by who wears it; the cuts are of the gown's cloth)
             let (name, image) = match garb {
-                Some(t) if !t.gown_cut[cut].is_empty() && !wimpled => (t.gown_cut[cut], t.gown),
+                Some(t) if !t.gown_cut[cut].is_empty() && !wimpled && p.age >= t.gown_cut_from[cut] => (t.gown_cut[cut], t.gown),
+                // (round 151: the round gown from a file of its own where the table has one, with the gown's image)
+                Some(t) if !t.gown_file.is_empty() => (t.gown_file, t.gown),
                 Some(t) => (t.gown, ""),
                 None => ("cloth_tunic", ""),
             };
-            mh_cloth_as(&d, name, image, &x.pp, &h.base, &col, Some(&cell), if garb.is_some() { Layer::Gown } else { Layer::Bound })
+            // (round 160) a gown with no linen under it lies on the skin at its neck (under a wimple the round gown
+            // is worn, close at the throat: as it was)
+            let layer = match garb {
+                Some(t) if t.under[cut].is_empty() && !wimpled => Layer::Bare,
+                Some(_) => Layer::Gown,
+                None => Layer::Bound,
+            };
+            let mut gown = mh_cloth_as(&d, name, image, &x.pp, &h.base, &col, Some(&cell), layer, &arms)?;
+            // (round 150) a table's own cloth for the gown, whatever its cut: the court's silk, plain or figured
+            // (round 156)
+            if let Some(image) = garb.map(|t| t.gown_image_of(p.seed)).filter(|i| !i.is_empty()) {
+                gown.tex = Some(crate::real::image(&d, image));
+            }
+            Some(gown)
         })
     } else {
         None
@@ -1532,10 +1644,10 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
         // what is worn under the gown and shows at its neck: a woman's smock, a man's shirt, of the dress's linen
         if let Some(t) = garb {
             // (nothing under a wimple: it covers the gown's neckline and what would show in it)
-            let (name, image) = if wimpled { ("", "") } else { (t.under[cut], if cut == 0 { "" } else { t.under[0] }) };
+            let (name, image) = if wimpled { ("", "") } else { (t.under[cut], t.under_image) };
             if !name.is_empty() {
                 let linen = hex(t.linen);
-                if let Some(u) = crate::real::folder().and_then(|d| mh_cloth_as(&d, name, image, &x.pp, &h.base, &|_| linen, None, Layer::Under)) {
+                if let Some(u) = crate::real::folder().and_then(|d| mh_cloth_as(&d, name, image, &x.pp, &h.base, &|_| linen, None, Layer::Under, &arms)) {
                     out.push(u);
                 }
             }
@@ -1544,16 +1656,19 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
     }
     // the hood of a dress with a table, on the head or thrown back, in another of its wools
     if let (Some(d), true) = (garb, real.is_some()) {
-        let name = match hood {
-            crate::dress::Hood::Up => Some(d.hood_up),
-            crate::dress::Hood::Back => Some(d.hood_back),
-            crate::dress::Hood::None => None,
-        };
-        if let Some(name) = name {
+        // (round 136: plain, or with the cape's hem dagged; the dagged file is drawn with the plain one's image)
+        if let Some((name, image)) = d.hood_file(hood, p.seed) {
             let hc = hex(d.wool[((p.seed / 10) as usize + 3) % d.wool.len()]);
-            if let Some(s) = crate::real::folder().and_then(|f| mh_cloth(&f, name, &x.pp, &h.base, &|v| cloth_col(hc, v), None, Layer::Over)) {
+            if let Some(s) = crate::real::folder().and_then(|f| mh_cloth_as(&f, name, image, &x.pp, &h.base, &|v| cloth_col(hc, v), None, Layer::Over, &arms)) {
                 out.push(s);
             }
+        }
+    }
+    // (round 145) a mantle round the shoulders, over the gown
+    if let (Some(d), true) = (garb.filter(|d| !d.mantle.is_empty()), real.is_some()) {
+        // (drawn white: its cloth and its fur are dyed where they are taken apart, at the end)
+        if let Some(s) = crate::real::folder().and_then(|f| mh_cloth_as(&f, d.mantle, "", &x.pp, &h.base, &|_| [1.0; 3], None, Layer::Over, &arms)) {
+            out.push(s);
         }
     }
     if !had_tunic {
@@ -1588,7 +1703,7 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
     }
     // real look: the toga draped in Blender
     let real_toga = if st.toga && !fem && !swaddled && real.is_some() {
-        crate::real::folder().and_then(|d| mh_cloth(&d, "cloth_toga", &x.pp, &h.base, &|v| cloth_col(toga_dye, v), Some(&cell), Layer::Bound))
+        crate::real::folder().and_then(|d| mh_cloth(&d, "cloth_toga", &x.pp, &h.base, &|v| cloth_col(toga_dye, v), Some(&cell), Layer::Bound, &arms))
     } else {
         None
     };
@@ -1623,7 +1738,7 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
     let real_palla = match (cloak, swaddled) {
         (Some(c), false) if fem && real.is_some() => {
             let dye = hex(c);
-            crate::real::folder().and_then(|d| mh_cloth(&d, "cloth_palla", &x.pp, &h.base, &|v| cloth_col(dye, v), Some(&cell), Layer::Bound))
+            crate::real::folder().and_then(|d| mh_cloth(&d, "cloth_palla", &x.pp, &h.base, &|v| cloth_col(dye, v), Some(&cell), Layer::Bound, &arms))
         }
         _ => None,
     };
@@ -1973,19 +2088,157 @@ pub fn build(h: &Head, p: &Look, lod: usize) -> Portrait {
             merged.push(s);
         }
     }
-    let tris = merged.iter().map(|s| s.tris()).sum();
-    // the bust leaning back, where the dress asks for it
+    // the pose, where the dress has one: the shoulders turned further than the head, the neck twisting between
+    // the chin and its foot (pose.rs). The neck stands where the skin between chin and shoulders has its middle
+    // what lies over the gown lifted off it (a veil's fall, a hood's cape, a wimple)
+    if let Some(d) = garb {
+        if let Some(g) = merged.iter().position(|s| s.tex.as_deref().is_some_and(|t| t.contains(d.gown))) {
+            let gown = std::mem::replace(&mut merged[g], Surface::new(mat(0.0)));
+            for s in merged.iter_mut().filter(|s| s.tex.as_deref().is_some_and(|t| d.over_gown().iter().any(|n| !n.is_empty() && t.contains(n)))) {
+                crate::layers::lift(s, &gown, y0, crate::layers::GAP, crate::layers::REACH);
+            }
+            merged[g] = gown;
+        }
+        // (round 139) and the veil off the wimple, which is worn under it: both were set as far outside the gown,
+        // and the wimple's end stood through the veil's fall on the shoulder, a dark slit under it
+        if let Some(w) = merged.iter().position(|s| !d.wimple.is_empty() && s.tex.as_deref().is_some_and(|t| t.contains(d.wimple))) {
+            let wimple = std::mem::replace(&mut merged[w], Surface::new(mat(0.0)));
+            for s in merged.iter_mut().filter(|s| s.tex.as_deref().is_some_and(|t| [d.veil, d.veil_back].iter().any(|n| !n.is_empty() && t.contains(n)))) {
+                crate::layers::lift(s, &wimple, y0, crate::layers::GAP, crate::layers::REACH);
+            }
+            merged[w] = wimple;
+        }
+    }
+    // a woman's bust held by her gown (before the body is turned: the body's middle line is the picture's still)
+    if let Some(share) = garb.map(|d| d.bust).filter(|s| fem && *s > 0.0 && crate::pose::FRONT.iter().all(|&v| v < h.n)) {
+        let line = crate::pose::FRONT.map(|v| [x.pp[v][1], x.pp[v][2]]);
+        crate::pose::hold_bust(&mut merged, &line, x.pp[crate::pose::FRONT_TOP][1], crate::pose::BUST_SIDE, share);
+    }
+    // how a gown is closed in front: a lace or buttons laid on the gown as it lies now (fasten.rs), left out
+    // where a veil's fall, a wimple or a hood's cape lies over it
+    if let Some(d) = garb.filter(|_| crate::pose::FRONT.iter().all(|&v| v < h.n)) {
+        let kind = d.fasten_of(fem, p.age, p.seed);
+        if let Some(g) = merged.iter().position(|s| s.tex.as_deref().is_some_and(|t| t.contains(d.gown))).filter(|_| kind != crate::fasten::Fasten::None) {
+            let over: Vec<&Surface> = merged.iter().filter(|s| s.tex.as_deref().is_some_and(|t| d.over_gown().iter().any(|n| !n.is_empty() && t.contains(n)))).collect();
+            let middle = crate::pose::FRONT.iter().map(|&v| x.pp[v][0]).sum::<f32>() / crate::pose::FRONT.len() as f32;
+            let behind = crate::pose::FRONT.iter().map(|&v| x.pp[v][2]).fold(f32::MAX, f32::min) - 0.3;
+            let under = crate::real::folder().filter(|_| !d.under_image.is_empty()).map(|dir| (crate::real::image(&dir, d.under_image), linear(hex(d.linen))));
+            let metal = Some(d.buttons).filter(|m| !m.is_empty()).map(|m| linear(hex(m)));
+            let made = crate::fasten::fasten(&merged[g], &over, under, kind, metal, middle, y0, behind);
+            merged.extend(made);
+        }
+    }
+    // (round 161) the hood of a hood thrown back hangs behind the neck (hood_back.rs): laid on the cape and the
+    // gown while the body still stands square, and turned with them below, so that what of it lies behind the
+    // head keeps its place as the head does
+    let mut behind = garb.filter(|_| hood == crate::dress::Hood::Back).and_then(|d| {
+        let cape = merged.iter().find(|s| s.tex.as_deref().is_some_and(|t| t.contains(d.hood_back)))?;
+        let under: Vec<&Surface> = merged.iter().filter(|s| s.tex.as_deref().is_some_and(|t| t.contains(d.gown) || d.under.iter().any(|n| !n.is_empty() && t.contains(n)))).collect();
+        crate::hood_back::hang(cape, &under)
+    });
+    let range = pose.or(garb.map(|d| d.pose)).unwrap_or([0.0; 3]);
+    // how the person carries the head: the stage tilts the whole figure, the shoulders are tipped back by as much
+    // (a pose asked for by the caller is taken as it is)
+    let head = garb.map_or([0.0; 2], |d| d.head_of(p.seed));
+    let mut stand = crate::pose::pose_of(range, p.seed);
+    if pose.is_none() {
+        stand.tip -= head[1];
+    }
+    let mut neck = [0.0; 3];
+    if garb.is_some() || range != [0.0; 3] {
+        let (mut lo, mut hi) = ([f32::MAX; 2], [f32::MIN; 2]);
+        for &v in body_full {
+            let b = h.base[v as usize];
+            if b[1] > 5.7 && b[1] < 6.0 && b[0].abs() < 0.75 {
+                let q = x.pp[v as usize];
+                lo = [lo[0].min(q[0]), lo[1].min(q[2])];
+                hi = [hi[0].max(q[0]), hi[1].max(q[2])];
+            }
+        }
+        let (axis, foot) = ([(lo[0] + hi[0]) / 2.0, (lo[1] + hi[1]) / 2.0], y0 - crate::pose::NECK * (y1 - y0));
+        crate::pose::pose(&mut merged, stand, axis, foot, y0);
+        crate::pose::pose(behind.as_mut_slice(), stand, axis, foot, y0);
+        neck = [axis[0], foot, axis[1]];
+    }
+    // (round 155) a veil hangs from the head (hang.rs): bound to the body place by place it went in under the
+    // back of the head to the nape and out again over the shoulders, a ball with a ledge under it. Here, where
+    // the pose has turned the shoulders under the head, and as the figure is drawn: leant back (below) and
+    // tilted by the stage
     let lean = garb.map_or(0.0, |d| crate::dress::by_sex(d.lean[0], d.lean[1], fem, p.grown()));
+    if let Some(d) = garb {
+        let ears: V3 = std::array::from_fn(|k| (x.pp[crate::measure::TRAGION.0][k] + x.pp[crate::measure::TRAGION.1][k]) / 2.0);
+        for s in merged.iter_mut().filter(|s| s.tex.as_deref().is_some_and(|t| [d.veil, d.veil_back].iter().any(|n| !n.is_empty() && t.contains(n)))) {
+            crate::hang::hang(s, ears, lean, head[1]);
+        }
+    }
+    // (round 137) What of the gown still stands through the cloth over it is set under that cloth (layers.rs
+    // `sink`): the lift above moved that cloth's corners, and a fold of the gown between three of them came
+    // through all the same. Done here, where everything stands as it is drawn: the pose shears the layers
+    // against each other at the neck
+    if let Some(d) = garb {
+        // (round 139) first the wimple under the veil, and with it what lies beside what is sunk (`tuck`): the
+        // veil's fall is of few long triangles, and the wimple's end and its rolled hem came through between
+        // their corners. Before the gown, which is then set under both as they stand
+        if let Some(w) = merged.iter().position(|s| !d.wimple.is_empty() && s.tex.as_deref().is_some_and(|t| t.contains(d.wimple))) {
+            let mut wimple = std::mem::replace(&mut merged[w], Surface::new(mat(0.0)));
+            for s in merged.iter().filter(|s| s.tex.as_deref().is_some_and(|t| [d.veil, d.veil_back].iter().any(|n| !n.is_empty() && t.contains(n)))) {
+                crate::layers::tuck(&mut wimple, s, y0, crate::layers::UNDER, crate::layers::THROUGH, crate::layers::PASS);
+            }
+            merged[w] = wimple;
+        }
+        if let Some(g) = merged.iter().position(|s| s.tex.as_deref().is_some_and(|t| t.contains(d.gown))) {
+            let mut gown = std::mem::replace(&mut merged[g], Surface::new(mat(0.0)));
+            for s in merged.iter().filter(|s| s.tex.as_deref().is_some_and(|t| d.over_gown().iter().any(|n| !n.is_empty() && t.contains(n)))) {
+                crate::layers::sink(&mut gown, s, y0, crate::layers::UNDER, crate::layers::THROUGH);
+            }
+            merged[g] = gown;
+        }
+        // (round 140) and the hair under a veil or a hood on the head: its bundles are bound to the skull as the
+        // cloth is, each for itself, and over the ears a strand of them stood through a hood, a finger long
+        if let Some(b) = merged.iter().position(|s| !d.body_image.is_empty() && s.tex.as_deref().is_some_and(|t| t.contains(d.body_image))) {
+            let mut hair = std::mem::replace(&mut merged[b], Surface::new(mat(0.0)));
+            for s in merged.iter().filter(|s| s.tex.as_deref().is_some_and(|t| [d.veil, d.veil_back, d.hood_up].iter().any(|n| !n.is_empty() && t.contains(n)))) {
+                crate::layers::sink(&mut hair, s, f32::MAX, crate::layers::UNDER, crate::layers::THROUGH);
+            }
+            merged[b] = hair;
+        }
+    }
+    // (round 161) and the hood that hangs behind the neck, over all of it
+    merged.extend(behind);
+    // the bust leaning back, where the dress asks for it
     if lean != 0.0 {
         lean_back(&mut merged, (y0 + y1) / 2.0, hz / hn.max(1) as f32, lean);
+        // (the neck's foot leans with the rest)
+        neck[1] = (y0 + y1) / 2.0 + (neck[1] - (y0 + y1) / 2.0) * lean.cos() + (neck[2] - hz / hn.max(1) as f32) * lean.sin();
     }
-    // the picture's foot (0.86 of its height below the top) stays above
-    // where the chest's data ends
+    // the picture's foot (0.86 of its height below the top) stays above where the skin's data ends, on a stage
+    // that stands as the builder frames it (a stage that shows more of the figure, as England's bust since round
+    // 124, has its foot on the gown, which hangs on the bust's data to under the waist)
     let top = (y1 + 0.12).max(hat_top + 0.06);
     let low = body_full.iter().filter(|&&v| h.base[v as usize][0].abs() < 1.0).map(|&v| x.pp[v as usize][1]).fold(f32::MAX, f32::min);
     let fill = (0.86 * (top - y0).max(0.8) / (top - low - 0.1)).max(0.53);
     let young = garb.map_or(0.0, |d| crate::dress::child_share(d.adult[if fem { 0 } else { 1 }], p.age));
-    Portrait { surfaces: merged, top, chin: y0, cx: hx / hn.max(1) as f32, cz: hz / hn.max(1) as f32, fill, young, tris, targets }
+    // (round 145) the mantle's facing of fur and its clasp, on everything as it is drawn (mantle.rs)
+    if let Some(d) = garb.filter(|d| !d.mantle.is_empty()) {
+        if let (Some(m), Some(dir)) = (merged.iter().position(|s| s.tex.as_deref().is_some_and(|t| t.contains(d.mantle))), crate::real::folder()) {
+            let mut sheet = std::mem::replace(&mut merged[m], Surface::new(mat(0.0)));
+            let under: Vec<&Surface> = merged.iter().filter(|s| s.tex.as_deref().is_some_and(|t| t.contains(d.gown) || d.under.iter().any(|n| !n.is_empty() && t.contains(n)))).collect();
+            let dye = d.mantle_dyes.map(|c| linear(hex(c)));
+            let facing = crate::mantle::Facing { image: crate::real::image(&dir, d.mantle_fur), cloth: linear(hex(d.mantle_cloth)), fur: dye[0], gold: dye[1], stone: dye[2], cord: dye[3] };
+            let made = crate::mantle::face(&mut sheet, &under, &facing);
+            merged[m] = sheet;
+            merged.extend(made);
+        }
+    }
+    // (round 148) a hood's facing of fur, laid on the hood as it is drawn (facing.rs)
+    if let (Some(d), Some(dir)) = (garb.filter(|d| !d.hood_fur.is_empty()), crate::real::folder()) {
+        let hood = merged.iter().find(|s| s.tex.as_deref().is_some_and(|t| t.contains(d.hood_up) || t.contains(d.hood_back)));
+        if let Some(fur) = hood.and_then(|h| crate::facing::face(h, &crate::real::image(&dir, d.hood_fur), linear(hex(d.hood_fur_dye)))) {
+            merged.push(fur);
+        }
+    }
+    let tris = merged.iter().map(|s| s.tris()).sum();
+    Portrait { surfaces: merged, top, chin: y0, cx: hx / hn.max(1) as f32, cz: hz / hn.max(1) as f32, fill, young, head, neck: [neck[0], neck[1]], tris, targets }
 }
 
 /// Leans surfaces back by `a` radians about the axis from ear to ear at height `cy` and depth `cz`: what lies above

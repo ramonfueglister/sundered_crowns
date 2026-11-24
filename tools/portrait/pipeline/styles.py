@@ -6,6 +6,7 @@ import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(sys.argv[0])))
 import numpy as np
 from hairlib import Head, dirs, ang, unit, tangent, roots, grow, wisps, cards_from_wisps, write_cards, write_tubes, paint_cap, make_shade, write_head_obj
+from hairlib import in_blender, bake_ao, read_obj
 from hairlib import write_locks as _write_locks
 
 base, out, style, name = sys.argv[1:5]
@@ -253,10 +254,46 @@ elif style == 'plait':
     # across the image from one flank of the strand over its front to the other, and back again behind it; along
     # it down the image and up again: the image has no seam anywhere
     u_round = 1 - np.abs(2 * np.arange(ROUND + 1) / ROUND - 1)
+    # `PLAIT_LOOP` (round 126; `loop01`): the plait does not hang. It is laid from the place below the ear forward
+    # under the lobe and up in front of the ear to the temple, where its end is pinned under the hair: a loop
+    # beside the cheek. Its way as places on the head, `th,el,h;...` (degrees as the hairline's, and the height
+    # over the skin), after the place below the ear where it begins.
+    LOOP = [[float(t) for t in q.split(',')] for q in os.environ['PLAIT_LOOP'].split(';')] if os.environ.get('PLAIT_LOOP') else None
+    # `PLAIT_ROPE_ROOT` (round 174; `el,h,thin,part`; with `PLAIT_ROPE_ONLY`): the plait does not begin at the
+    # place below the ear, where the head's hair is drawn together, but before it, under that hair: at this angle
+    # below the horizon (the place's own is `PLAIT_G`'s) and this height over the skin, with `thin` of its
+    # thickness, and from there it comes up to the place's height and to its thickness. The head's strands
+    # (round 172) run together 1.1 to 1.6 cm over the skin there; until now the plait began at their point with a
+    # round knob and skin showed between the strands' ends above it. `part`: the length after the place over
+    # which the strands part (0.3 without a root. With a root and 0.3, on girls of 8 a few triangles folded over
+    # where the strands part, tests/plait.rs; 0.4 folds them as laid; 0.5 does not). By eye in Blender: PLACEHOLDER.
+    ROOT = [float(t) for t in os.environ['PLAIT_ROPE_ROOT'].split(',')] if os.environ.get('PLAIT_ROPE_ROOT') else None
+    # `PLAIT_ROPE_END` (round 183; `tail,thin,fade,spread,extra,swell,point,run`; a plait that hangs): the plait
+    # does not run out as three strands ever thinner to a point of 0.3 of their thickness. It is plaited to `tail`
+    # before its end, where it has `thin` of its thickness, lost over the length `run` before that place: a
+    # waist, as if bound there (no tie is laid, no source for one was read). Below it the hair hangs loose: each
+    # strand goes on as a lock, the plaiting runs out over the first `fade` of it, it swells by `swell`, ends up
+    # to 0.7 `spread` to the side of the plait's line, and from `point` of its length on runs out in a point.
+    # Beside each go `extra` thinner locks of six corners (with five the image stood still across one face, and
+    # the stage drew that face black), each begun at a corner of the strand at the waist, at that corner's very
+    # place: the builder takes corners at one place for one, so a lock goes with its strand on every body. They
+    # end up to 1.55 `spread` to the side. The locks follow their strand's tube in the file (tests/plait.rs
+    # counts them). Tried: the strands drawn together at the waist, over 1.2 to 7 cm: on girls of 8 and 10
+    # triangles folded over where the drawing-in began; thinner locks 0.6 as thick as broad: their flanks folded
+    # over on every body (0.9 now); `run` 0.48: one triangle folded where the thinning began. By eye: PLACEHOLDER.
+    END = [float(t) for t in os.environ['PLAIT_ROPE_END'].split(',')] if os.environ.get('PLAIT_ROPE_END') and not LOOP else None
+    r_end = np.random.default_rng(183)
+    step = lambda x: np.clip(x, 0, 1) ** 2 * (3 - 2 * np.clip(x, 0, 1))
     tubes = []
     for sgn in (1.0, -1.0):
         way = WAY * np.array([sgn, 1, 1])
+        if LOOP:
+            way = np.concatenate([way[:1], [H.at(dirs(np.array([sgn * th]), np.array([el])), np.array([h]))[0] for th, el, h in LOOP]])
         way[0] = H.at(dirs(np.array([sgn * GTH]), np.array([GEL])), np.array([0.05]))[0]
+        before = 0.0                                # the length of plait that lies before the place below the ear
+        if ROOT:
+            way = np.concatenate([H.at(dirs(np.array([sgn * GTH]), np.array([ROOT[0]])), np.array([ROOT[1]])), way])
+            before = float(np.linalg.norm(way[1] - way[0]))
         # a smooth line through the table's points
         u0 = np.concatenate([[0], np.cumsum(np.linalg.norm(np.diff(way, axis=0), axis=1))])
         uu = np.linspace(0, u0[-1], 400)
@@ -281,22 +318,86 @@ elif style == 'plait':
         nrm = unit(nrm - (nrm * tg).sum(-1, keepdims=True) * tg)
         bn = unit(np.cross(tg, nrm))
         g = np.clip((total - tt) / (0.14 * total), 0, 1); thin = 0.3 + 0.7 * g * g * (3 - 2 * g)   # the end runs out thin
-        g = np.clip(tt / 0.3, 0, 1); part = g * g * (3 - 2 * g)              # gathered below the ear, the strands part over 3 cm
+        if END:
+            tie = total - END[0]                                       # where the plait is bound
+            i_tie = int(np.argmin(np.abs(tt - tie)))
+            thin = END[1] + (1 - END[1]) * step((tie - tt) / END[7])
+        g = np.clip((tt - before) / (ROOT[3] if ROOT else 0.3), 0, 1); part = g * g * (3 - 2 * g)   # gathered below the ear, the strands part over 3 cm (`ROOT`: over its fourth number)
         e = 0.06; tip = np.sqrt(np.clip(1 - (np.clip(tt - (total - e), 0, None) / e) ** 2, 0, 1))   # a round end
+        g = np.clip(tt / before, 0, 1) if ROOT else 1 + 0 * tt; up = g * g * (3 - 2 * g)            # from under the head's hair up to the place
+        grown = ROOT[2] + (1 - ROOT[2]) * up if ROOT else up
+        # (before the place the three strands lie in one another, a hair's breadth apart: the builder takes corners
+        # at one place for one corner, and three strands at one place are no closed surface to it)
+        part = np.maximum(part, 0.02 * g) if ROOT else part
+        if END:
+            tip = 1 + 0 * tt
+            fan = END[3] * r_end.permutation([-0.7, 0.0, 0.7])
         tip = tip * np.sqrt(np.clip(1 - np.clip(1 - tt / e, 0, None) ** 2, 0, 1))                    # and a round beginning, in the hair below the ear
         for k in range(3):
-            ph = 2 * np.pi * tt / LAM + 2 * np.pi * k / 3
-            q = c + bn * (RA * thin * part * np.sin(ph))[:, None] + nrm * (RD * thin * part * np.sin(2 * ph) + (RD + RH) * thin + 0.01)[:, None]
-            tg2 = unit(np.gradient(q, axis=0))
+            ph = 2 * np.pi * (tt - before) / LAM + 2 * np.pi * k / 3     # (the strands cross where they did, counted from the place)
+            swing = part
+            if END:
+                # below the tie the strand is a lock: to its own length, the rings after its point all at the point,
+                # and over the first `fade` of it the plaiting runs out
+                i_end = min(len(tt) - 1, i_tie + int(round(END[0] * r_end.uniform(0.75, 1.0) / 0.025)))
+                at = np.minimum(np.arange(len(tt)), i_end)
+                u = np.clip((tt[at] - tie) / (tt[i_end] - tie), 0, 1)
+                swing = part * (1 - step(np.clip((tt - tie) / (tt[i_end] - tie), 0, 1) / END[2]))
+            q = c + bn * (RA * thin * swing * np.sin(ph))[:, None] + nrm * (RD * thin * swing * np.sin(2 * ph) + (RD + RH) * thin * up + 0.01)[:, None]
+            size = thin * tip * grown * (1 + 0.35 * (1 - part))
+            held = c
+            if END:
+                q = q[at] + bn[at] * (fan[k] * step(u / 0.7))[:, None]
+                size = size[at] * (1 + END[5] * step(u / 0.3)) * (1 - step((u - END[6]) / (1 - END[6])))
+                held = c[at]
+            tg2 = np.gradient(q, axis=0)
+            if END:
+                tg2[i_end:] = tg[i_end:]
+            tg2 = unit(tg2)
             n2 = unit(nrm - (nrm * tg2).sum(-1, keepdims=True) * tg2)
             b2 = np.cross(tg2, n2)
-            size = thin * tip * (1 + 0.35 * (1 - part))
             rings = q[:, None, :] + n2[:, None, :] * (RH * size[:, None] * np.cos(turn)[None, :])[..., None] + b2[:, None, :] * (RW * size[:, None] * np.sin(turn)[None, :])[..., None]
             along = np.concatenate([[0], np.cumsum(np.linalg.norm(np.diff(q, axis=0), axis=1))]) / V_LEN + 0.37 * k
             v = 1 - np.abs(along % 2 - 1)
             uv = np.stack(np.broadcast_arrays(u_round[None, :], v[:, None]), -1)
-            tubes.append((rings, uv, c))
-    nvr, ntr = write_tubes(H2, out, name + '_rope', tubes)
+            tubes.append((rings, uv, held))
+            for x in range(int(END[4]) if END else 0):
+                # a thinner lock beside it, from a corner of the strand's ring at the tie
+                j = (k + 3 * x) % ROUND
+                p0 = rings[i_tie, j]
+                x0, y0 = (p0 - c[i_tie]) @ bn[i_tie], (p0 - c[i_tie]) @ nrm[i_tie]
+                long_ = END[0] * r_end.uniform(0.55, 0.95)
+                w = np.linspace(0, 1, 9)
+                ts = tie + w * long_
+                mid, side, up_ = [np.stack([np.interp(ts, tt, a[:, i]) for i in range(3)], -1) for a in (c, bn, nrm)]
+                x1 = END[3] * np.clip(x0 / (RW * END[1]), -1, 1) * r_end.uniform(0.6, 1.3) + END[3] * r_end.uniform(-0.25, 0.25)
+                broad = RW * END[1] * (1 + END[5]) * r_end.uniform(0.3, 0.5) * step(w / 0.25) * (1 - step((w - END[6]) / (1 - END[6])))
+                y1 = max(y0 * r_end.uniform(0.7, 1.0), 0.012 + 0.9 * broad.max())
+                lq = mid + side * (x0 + (x1 - x0) * step(w / 0.8))[:, None] + up_ * (y0 + (y1 - y0) * step(w / 0.5))[:, None]
+                lq[0] = p0
+                lt = unit(np.gradient(lq, axis=0))
+                ln = unit(up_ - (up_ * lt).sum(-1, keepdims=True) * lt)
+                lb = np.cross(lt, ln)
+                round_ = -np.pi / 2 + 2 * np.pi * np.arange(6) / 6
+                lr = lq[:, None, :] + ln[:, None, :] * (0.9 * broad[:, None] * np.cos(round_)[None, :])[..., None] + lb[:, None, :] * (broad[:, None] * np.sin(round_)[None, :])[..., None]
+                u0, uw = r_end.uniform(0, 0.5), r_end.uniform(0.35, 0.5)
+                la = np.concatenate([[0], np.cumsum(np.linalg.norm(np.diff(lq, axis=0), axis=1))]) / V_LEN + r_end.uniform(0, 2)
+                luv = np.stack(np.broadcast_arrays((u0 + uw * (1 - np.abs(2 * np.arange(7) / 6 - 1)))[None, :], (1 - np.abs(la % 2 - 1))[:, None]), -1)
+                held_l = mid.copy(); held_l[0] = c[i_tie]
+                tubes.append((lr, luv, held_l))
+    # `PLAIT_ROPE_AO` (round 174; `dist,samples,floor,power`): the shade where the strands cross and where the plait
+    # lies against the neck and under the head's hair, baked in Blender as a full beard's (round 173; `bake_ao`),
+    # with the body and the OBJs named in `PLAIT_ROPE_BLOCK` (the head's hair, `<name>_body_view.obj`) standing in
+    # the scene, and written as each corner's tenth number. Until then a plait had no shade of its own: three
+    # smooth tubes, as light in the crossings as on their backs. Every number by eye in Blender: PLACEHOLDER.
+    AO = [float(t) for t in os.environ.get('PLAIT_ROPE_AO', '0,0,0,1').split(',')]
+
+    def rope_shade(verts, tris, tri_uv, of):
+        sc, ob = in_blender(name + '_rope', verts, tris, tri_uv, os.environ.get('SCENE'))
+        block = [('head', H2.V, H2.T)] + [(os.path.basename(p)[:-4],) + read_obj(p) for p in os.environ.get('PLAIT_ROPE_BLOCK', '').split(',') if p]
+        return AO[2] + (1 - AO[2]) * np.clip(bake_ao(sc, ob, block, AO[0], AO[1]), 0, 1) ** AO[3]
+
+    nvr, ntr = write_tubes(H2, out, name + '_rope', tubes, shade=rope_shade if AO[0] > 0 else None)
     if rope_only:
         print(style, 'plaits alone: corners', nvr, 'tris', ntr)
         sys.exit(0)
