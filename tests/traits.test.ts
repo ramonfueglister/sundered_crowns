@@ -2,6 +2,9 @@
 // taken at a wedding (Jokela et al. 2013, Calvin et al. 2011, Jokela 2009, Jokela et al. 2011).
 import { describe, it, expect } from 'vitest';
 import { loadSetup, newWorldState } from '../tools/sim/load';
+import { type City, citiesOf } from '../src/sim/content/cities';
+import { createWorldState } from '../src/sim/setup';
+import type { World } from '../src/sim/world';
 import {
   DEATH,
   MARRIES,
@@ -87,6 +90,21 @@ describe('the factors of the traits', () => {
   });
 });
 
+/** The world of 1291 founded with every fourth of its towns, each with its country folk. The run of 60 years takes a
+ *  quarter of the world: the whole of it (235,000 persons since settlement feature 8) ran past 20 minutes on CI, and a
+ *  quarter keeps more than 1,500 persons in each group whose odds of a wedding are compared (300 are asked). */
+function everyFourthTown(w: World) {
+  // the list the founding reads, narrowed for this world and given back whole (as tests/world-1291.test.ts does)
+  const list = citiesOf(1291) as City[],
+    all = list.slice();
+  list.splice(0, list.length, ...all.filter((_, i) => i % 4 === 0));
+  try {
+    return createWorldState(w, loadSetup(1291), 1291);
+  } finally {
+    list.splice(0, list.length, ...all);
+  }
+}
+
 describe('the traits in a world of 1291', () => {
   const { s, w } = newWorldState(1291, 1291),
     P = s.person.cols,
@@ -168,6 +186,8 @@ describe('the traits in a world of 1291', () => {
     expect(n).toBeGreaterThan(3000);
   });
   it('over 60 years the extraverted marry more often and the open less often, and a saved world goes on the same', () => {
+    const s = everyFourthTown(w),
+      F = s.family.cols;
     const ever = new Uint8Array(4 * s.person.size);
     let copy = s;
     for (let y = 1; y <= 60; y++) {
@@ -216,7 +236,7 @@ describe('the traits in a world of 1291', () => {
           odds(share((id) => Q.sex[id] === sex && Q.o[id] <= 42)),
       ).toBeLessThan(0.85);
     }
-  }, 1_200_000); // 60 years of the world of 1291 with its country folk (settlement feature 8): about 14 minutes here
+  }, 600_000); // 60 years of a quarter of the towns of 1291
 });
 
 describe('the state of the traits', () => {
